@@ -317,16 +317,16 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
    pData->dwArg2 = htonl(m_iParam2);
    switch(m_iDataType)
    {
-      case DT_INTEGER:
+      case DTYPE_INTEGER:
          pData->value.dwInt32 = htonl(m_value.iInteger);
          break;
-      case DT_INT64:
+      case DTYPE_INT64:
          pData->value.qwInt64 = htonq(m_value.qwInt64);
          break;
-      case DT_FLOAT:
+      case DTYPE_FLOAT:
          pData->value.dFloat = htond(m_value.dFloat);
          break;
-      case DT_STRING:
+      case DTYPE_STRING:
          strcpy(pData->value.szString,  m_pszValueStr);
          break;
       default:
@@ -349,25 +349,30 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
    safe_free(m_pszValueStr);
    switch(m_iDataType)
    {
-      case DT_INTEGER:
+      case DTYPE_INTEGER:
          m_value.iInteger = ntohl(pData->value.dwInt32);
          m_pszValueStr = (char *)malloc(32);
          sprintf(m_pszValueStr, "%ld", m_value.iInteger);
          break;
-      case DT_INT64:
+      case DTYPE_INT64:
          m_value.qwInt64 = ntohq(pData->value.qwInt64);
          m_pszValueStr = (char *)malloc(32);
+#ifdef _WIN32
          sprintf(m_pszValueStr, "%64I", m_value.qwInt64);
+#else
+         sprintf(m_pszValueStr, "%lld", m_value.qwInt64);
+#endif
          break;
-      case DT_FLOAT:
+      case DTYPE_FLOAT:
          m_value.dFloat = ntohd(pData->value.dFloat);
          m_pszValueStr = (char *)malloc(32);
          sprintf(m_pszValueStr, "%f", m_value.dFloat);
          break;
-      case DT_STRING:
+      case DTYPE_STRING:
          m_pszValueStr = strdup(pData->value.szString);
          break;
       default:
+         DbgPrintf(AF_DEBUG_DC, "WARNING: Invalid datatype %d in threshold object %d\n", m_iDataType, m_dwId);
          break;
    }
 }
