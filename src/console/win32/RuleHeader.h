@@ -25,6 +25,7 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CRuleHeader)
+	protected:
 	//}}AFX_VIRTUAL
 
    virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
@@ -35,7 +36,10 @@ public:
 
 	// Generated message map functions
 protected:
+	COLORREF m_rgbBkColor;
+	COLORREF m_rgbTextColor;
 	//{{AFX_MSG(CRuleHeader)
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()

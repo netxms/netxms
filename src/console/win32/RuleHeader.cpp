@@ -16,6 +16,8 @@ static char THIS_FILE[] = __FILE__;
 
 CRuleHeader::CRuleHeader()
 {
+   m_rgbTextColor = RGB(255, 255, 255);
+   m_rgbBkColor = RGB(0, 0, 127);
 }
 
 CRuleHeader::~CRuleHeader()
@@ -25,6 +27,7 @@ CRuleHeader::~CRuleHeader()
 
 BEGIN_MESSAGE_MAP(CRuleHeader, CHeaderCtrl)
 	//{{AFX_MSG_MAP(CRuleHeader)
+	ON_WM_ERASEBKGND()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -40,8 +43,11 @@ void CRuleHeader::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
    HDITEM hdi;
    TCHAR lpBuffer[256];
-   COLORREF rgbOldColor;
-   RECT rcText;
+   COLORREF rgbOldTextColor, rgbOldBkColor;
+   RECT rcText, rcBorder;
+   CPen pen;
+   CBrush brush;
+   HGDIOBJ hOldPen, hOldBrush;
 
    // Get item's text
    hdi.mask = HDI_TEXT;
@@ -51,20 +57,46 @@ void CRuleHeader::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
    // Calculate text rectangle
    memcpy(&rcText, &lpDrawItemStruct->rcItem, sizeof(RECT));
-   rcText.left += 3;
-   rcText.right -= 3;
+   rcText.left += 2;
+   rcText.right -= 2;
    if (rcText.right < rcText.left)
       rcText.right = rcText.left;
 
    // Draw frame.
-//   DrawFrameControl(lpDrawItemStruct->hDC, 
-//      &lpDrawItemStruct->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH);
    DrawEdge(lpDrawItemStruct->hDC, &lpDrawItemStruct->rcItem, 
             BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_RECT);
+   if (lpDrawItemStruct->itemID == (UINT)(GetItemCount() - 1))
+   {
+      rcBorder.left = lpDrawItemStruct->rcItem.right;
+      rcBorder.top = lpDrawItemStruct->rcItem.top;
+      rcBorder.right = rcBorder.left + 1;
+      rcBorder.bottom = lpDrawItemStruct->rcItem.bottom;
+      DrawEdge(lpDrawItemStruct->hDC, &rcBorder, 
+               BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_LEFT);
+   }
 
    // Draw the items text
-   rgbOldColor = SetTextColor(lpDrawItemStruct->hDC, RGB(0, 0, 50));
+   pen.CreatePen(PS_SOLID, 1, m_rgbBkColor);
+   brush.CreateSolidBrush(m_rgbBkColor);
+   hOldPen = SelectObject(lpDrawItemStruct->hDC, pen.m_hObject);
+   hOldBrush = SelectObject(lpDrawItemStruct->hDC, brush.m_hObject);
+   Rectangle(lpDrawItemStruct->hDC, rcText.left, rcText.top, rcText.right, rcText.bottom);
+   rgbOldTextColor = SetTextColor(lpDrawItemStruct->hDC, m_rgbTextColor);
+   rgbOldBkColor = SetBkColor(lpDrawItemStruct->hDC, m_rgbBkColor);
    DrawText(lpDrawItemStruct->hDC, lpBuffer, strlen(lpBuffer), 
       &rcText, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-   SetTextColor(lpDrawItemStruct->hDC, rgbOldColor);
+   SetTextColor(lpDrawItemStruct->hDC, rgbOldTextColor);
+   SetBkColor(lpDrawItemStruct->hDC, rgbOldBkColor);
+   SelectObject(lpDrawItemStruct->hDC, hOldPen);
+   SelectObject(lpDrawItemStruct->hDC, hOldBrush);
+}
+
+
+//
+// WM_ERASEBKGND message handler
+//
+
+BOOL CRuleHeader::OnEraseBkgnd(CDC* pDC) 
+{
+   return TRUE;
 }

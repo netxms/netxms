@@ -165,7 +165,7 @@ void CRuleList::OnPaint()
 	
    // Calculate drawing rect
    GetClientRect(&rcClient);
-   rect.top = RULE_HEADER_HEIGHT;
+   rcClient.top = RULE_HEADER_HEIGHT;
 
    // Draw frames
    for(i = 0, rect.bottom = rcClient.top; i < m_iNumRows; i++)
@@ -178,7 +178,9 @@ void CRuleList::OnPaint()
          rect.right += m_pColList[j].m_iWidth;
 theApp.DebugPrintf("l=%d t=%d r=%d b=%d",rect.left,rect.top,rect.right,rect.bottom);
          dc.DrawEdge(&rect, BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_RECT);
-         dc.DrawText("zz", 2, &rect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+char szBuffer[256];
+sprintf(szBuffer,"%d %d", i,j);
+         dc.DrawText(szBuffer, strlen(szBuffer), &rect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
       }
       rect.left = rect.right;
 //      rect.right++;
