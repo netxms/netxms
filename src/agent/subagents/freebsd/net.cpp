@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.2 2005-01-23 05:08:06 alk Exp $ */
+/* $Id: net.cpp,v 1.3 2005-02-14 17:03:37 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -184,24 +184,11 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 			{
 			case AF_INET:
 				pIp = inet_ntoa(((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr);
-
-				nMask = 0;
-				while(1)
-				{
-					if (((~(unsigned long)(((struct sockaddr_in *)
-											(pNext->ifa_netmask))->sin_addr.s_addr))
-								& nDiv) != nDiv)
-					{
-						nMask++;
-					}
-
-					if (nDiv == 1)
-					{
-						break;
-					}
-
-					nDiv /= 2;
-				}
+				nMask = BitsInMask(htonl(
+							((struct sockaddr_in *)
+								(pNext->ifa_netmask))->sin_addr.s_addr
+							)
+						);
 				break;
 			case AF_LINK:
 				{
@@ -229,6 +216,12 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/23 05:08:06  alk
++ System.CPU.Count
++ System.Memory.Physical.*
++ System.ProcessCount
++ System.ProcessList
+
 Revision 1.1  2005/01/17 17:14:32  alk
 freebsd agent, incomplete (but working)
 
