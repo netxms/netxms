@@ -149,6 +149,9 @@ static void NetReceiver(void *pArg)
             case CMD_USER_DB_EOF:
                ProcessUserDBRecord(pMsg);
                break;
+            case CMD_USER_DB_UPDATE:
+               ProcessUserDBUpdate(pMsg);
+               break;
             default:
                m_msgWaitQueue.Put(pMsg);
                bMsgNotNeeded = FALSE;

@@ -35,6 +35,51 @@ static CONDITION m_hCondLoadFinished = NULL;
 
 
 //
+// Process user database update
+//
+
+void ProcessUserDBUpdate(CSCPMessage *pMsg)
+{
+   int iCode;
+   DWORD dwUserId;
+   NXC_USER *pUser;
+
+   iCode = pMsg->GetVariableShort(VID_UPDATE_TYPE);
+   dwUserId = pMsg->GetVariableLong(VID_USER_ID);
+   pUser = NXCFindUserById(dwUserId);
+
+   switch(iCode)
+   {
+      case USER_DB_CREATE:
+         if (pUser == NULL)
+         {
+            // No user with this id, create one
+            m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
+            memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
+
+            // Process common fields
+            m_pUserList[m_dwNumUsers].dwId = dwUserId;
+            pMsg->GetVariableStr(VID_USER_NAME, m_pUserList[m_dwNumUsers].szName, MAX_USER_NAME);
+            pUser = &m_pUserList[m_dwNumUsers];
+            m_dwNumUsers++;
+         }
+         break;
+      case USER_DB_MODIFY:
+         break;
+      case USER_DB_DELETE:
+         if (pUser != NULL)
+            pUser->wFlags |= UF_DELETED;
+         break;
+      default:
+         break;
+   }
+
+   if (pUser != NULL)
+      CallEventHandler(NXC_EVENT_USER_DB_CHANGED, iCode, pUser);
+}
+
+
+//
 // Process record from network
 //
 
@@ -74,7 +119,6 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
          }
 
          m_dwNumUsers++;
-         break;
          break;
       default:
          break;
@@ -180,10 +224,12 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
 // Create new user or group on server
 //
 
-DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup)
+DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwNewId)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRetCode;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
 
    msg.SetCode(CMD_CREATE_USER);
    msg.SetId(dwRqId);
@@ -195,6 +241,8 @@ DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup)
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+         *pdwNewId = pResponce->GetVariableLong(VID_USER_ID);
       delete pResponce;
    }
    else
@@ -209,10 +257,12 @@ DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup)
 // Delete user or group
 //
 
-DWORD DeleteUser(DWORD dwRqId, DWORD dwId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRetCode;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
 
    msg.SetCode(CMD_DELETE_USER);
    msg.SetId(dwRqId);

@@ -128,6 +128,7 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
 
 void ProcessUserDBRecord(CSCPMessage *pMsg);
+void ProcessUserDBUpdate(CSCPMessage *pMsg);
 
 BOOL SendMsg(CSCPMessage *pMsg);
 CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
