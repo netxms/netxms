@@ -64,6 +64,7 @@ typedef int socklen_t;
 #include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 typedef int BOOL;
 typedef long int LONG;

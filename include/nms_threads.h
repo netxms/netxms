@@ -134,11 +134,11 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
    usleep(dwMilliseconds * 1000);   // Convert to microseconds
 }
 
-inline THREAD ThreadCreate(void * (*start_address )(void *), int stack_size, void *args)
+inline THREAD ThreadCreate(void (*start_address )(void *), int stack_size, void *args)
 {
 	THREAD id;
 
-	if (pthread_create(&id, NULL, start_address, args) == 0) {
+	if (pthread_create(&id, NULL, (void *(*)(void *))start_address, args) == 0) {
 		return id;
 	} else {
 		return 0;
