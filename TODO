@@ -28,6 +28,7 @@ GENERAL:
 
 SERVER:
 
+- Use separate AgentConnection for service status polling
 - Implement sending of all alarms from database
 - Implement normal mailer shutdown
 - Check if object indexes always locked when used
