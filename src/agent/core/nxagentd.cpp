@@ -47,7 +47,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 #elif defined(_NETWARE)
 #define VALID_OPTIONS   "c:CDhv"
 #else
-#define VALID_OPTIONS   "c:CdDhv"
+#define VALID_OPTIONS   "c:CdDhp:v"
 #endif
 
 
@@ -77,6 +77,10 @@ DWORD g_dwServerAddr[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
 DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
 time_t g_dwAgentStartTime;
+
+#if !defined(_WIN32) && !defined(_NETWARE)
+char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
+#endif
 
 #ifdef _WIN32
 DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
@@ -329,6 +333,11 @@ void Shutdown(void)
 
    // Notify main thread about shutdown
    ConditionSet(m_hCondShutdown);
+   
+   // Remove PID file
+#if !defined(_WIN32) && !defined(_NETWARE)
+   remove(g_szPidFile);
+#endif
 }
 
 
@@ -399,6 +408,9 @@ int main(int argc, char *argv[])
             break;
          case 'c':   // Configuration file
             strncpy(g_szConfigFile, optarg, MAX_PATH - 1);
+            break;
+         case 'p':   // PID file
+            strncpy(g_szPidFile, optarg, MAX_PATH - 1);
             break;
          case 'C':   // Configuration check only
             iAction = ACTION_CHECK_CONFIG;
@@ -471,6 +483,17 @@ int main(int argc, char *argv[])
             {
                if (Initialize())
                {
+#ifndef _NETWARE
+                  FILE *fp;
+
+                  // Write PID file
+                  fp = fopen(g_szPidFile, "w");
+                  if (fp != NULL)
+                  {
+                     fprintf(fp, "%d", getpid());
+                     fclose(fp);
+                  }   
+#endif
                   Main();
                }
                else

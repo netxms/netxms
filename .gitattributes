@@ -507,5 +507,6 @@ src/server/tools/nxget/Makefile.am -text
 src/server/tools/nxget/nxget.cpp -text
 src/server/tools/nxget/nxget.dsp -text
 src/server/tools/nxget/nxget.dsw -text
+tools/Makefile.am -text
 tools/mc.pl -text
 tools/nwmkimp.pl -text
