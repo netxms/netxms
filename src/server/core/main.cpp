@@ -166,7 +166,7 @@ BOOL Initialize(void)
    DWORD dwAddr;
    char szInfo[256];
 
-   InitLog();
+   InitLog(g_dwFlags & AF_USE_EVENT_LOG, g_szLogFile, g_dwFlags & AF_STANDALONE);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -179,7 +179,7 @@ BOOL Initialize(void)
    g_pLazyRequestQueue = new Queue(64, 16);
 
    // Initialize database driver and connect to database
-   if (!DBInit())
+   if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS))
       return FALSE;
 
    g_hCoreDB = DBConnect();

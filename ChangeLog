@@ -10,6 +10,7 @@
 - Windows console: fixed bug in object browser which cause console to crash
 - Added internal statistics collection for average data collector queue length
   and average database writer queue length
+- All IP addresses now stored in database as text
 
 
 *

@@ -37,6 +37,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
+#include <dbdrv.h>
 #include <nms_cscp.h>
 #include <nxcscpapi.h>
 #include <nxsrvapi.h>

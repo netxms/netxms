@@ -41,6 +41,28 @@
 #include <nxcscpapi.h>
 #include <nms_agent.h>
 #include <rwlock.h>
+#include <messages.h>
+
+
+//
+// DB-related constants
+//
+
+#define MAX_DB_LOGIN          64
+#define MAX_DB_PASSWORD       64
+#define MAX_DB_NAME           32
+
+
+//
+// Win32 service constants
+//
+
+#ifdef _WIN32
+
+#define CORE_SERVICE_NAME  _T("NetXMSCore")
+#define CORE_EVENT_SOURCE  _T("NetXMSCore")
+
+#endif   /* _WIN32 */
 
 
 //
@@ -164,5 +186,47 @@ void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
+void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen);
+void LIBNXSRV_EXPORTABLE CloseLog(void);
+void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...);
+
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors);
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
+void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
+BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery);
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery);
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, char *szQuery);
+BOOL LIBNXSRV_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult);
+char LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn);
+long LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
+INT64 LIBNXSRV_EXPORTABLE DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn);
+QWORD LIBNXSRV_EXPORTABLE DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn);
+double LIBNXSRV_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn);
+char LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize);
+long LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn);
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
+INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn);
+QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn);
+double LIBNXSRV_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn);
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn);
+int LIBNXSRV_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
+void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult);
+void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
+void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
+
+
+//
+// Variables
+//
+
+extern char LIBNXSRV_EXPORTABLE g_szDbDriver[];
+extern char LIBNXSRV_EXPORTABLE g_szDbDriver[];
+extern char LIBNXSRV_EXPORTABLE g_szDbDrvParams[];
+extern char LIBNXSRV_EXPORTABLE g_szDbServer[];
+extern char LIBNXSRV_EXPORTABLE g_szDbLogin[];
+extern char LIBNXSRV_EXPORTABLE g_szDbPassword[];
+extern char LIBNXSRV_EXPORTABLE g_szDbName[];
 
 #endif   /* _nxsrvapi_h_ */

@@ -131,7 +131,7 @@ void InitService(void)
 // Create service
 //
 
-void InstallService(char *execName)
+void InstallService(char *execName, char *dllName)
 {
    SC_HANDLE mgr,service;
    char cmdLine[MAX_PATH*2];
@@ -163,7 +163,7 @@ void InstallService(char *execName)
 
    CloseServiceHandle(mgr);
 
-   InstallEventSource(execName);
+   InstallEventSource(dllName);
 }
 
 

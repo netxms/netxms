@@ -95,9 +95,6 @@
 
 #endif   /* _WIN32 */
 
-#define MAX_DB_LOGIN          64
-#define MAX_DB_PASSWORD       64
-#define MAX_DB_NAME           32
 #define MAX_LINE_SIZE         4096
 
 #define UNLOCKED           ((DWORD)0xFFFFFFFF)
@@ -152,18 +149,6 @@ typedef void * HSNMPSESSION;
 
 #define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
-
-
-//
-// Win32 service constants
-//
-
-#ifdef _WIN32
-
-#define CORE_SERVICE_NAME  "NetXMSCore"
-#define CORE_EVENT_SOURCE  "NetXMSCore"
-
-#endif   /* _WIN32 */
 
 
 //
@@ -339,10 +324,6 @@ BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
 BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
 BOOL ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate);
 
-void InitLog(void);
-void CloseLog(void);
-void WriteLog(DWORD msg, WORD wType, char *format, ...);
-
 BOOL ParseCommandLine(int argc, char *argv[]);
 BOOL LoadConfig(void);
 
@@ -353,32 +334,6 @@ void Main(void);
 BOOL SleepAndCheckForShutdown(int iSeconds);
 
 void SaveObjects(void);
-
-BOOL DBInit(void);
-DB_HANDLE DBConnect(void);
-void DBDisconnect(DB_HANDLE hConn);
-BOOL DBQuery(DB_HANDLE hConn, char *szQuery);
-DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery);
-DB_ASYNC_RESULT DBAsyncSelect(DB_HANDLE hConn, char *szQuery);
-BOOL DBFetch(DB_ASYNC_RESULT hResult);
-char *DBGetField(DB_RESULT hResult, int iRow, int iColumn);
-long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
-DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
-INT64 DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn);
-QWORD DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn);
-double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
-DWORD DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn);
-char *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize);
-long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn);
-DWORD DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
-INT64 DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn);
-QWORD DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn);
-double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn);
-DWORD DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn);
-int DBGetNumRows(DB_RESULT hResult);
-void DBFreeResult(DB_RESULT hResult);
-void DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
-void DBUnloadDriver(void);
 
 void QueueSQLRequest(char *szQuery);
 void StartDBWriter(void);
@@ -442,7 +397,7 @@ void GetAccelarVLANIfList(DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_L
 #ifdef _WIN32
 
 void InitService(void);
-void InstallService(char *execName);
+void InstallService(char *execName, char *dllName);
 void RemoveService(void);
 void StartCoreService(void);
 void StopCoreService(void);
@@ -470,14 +425,6 @@ extern char g_szLogFile[];
 extern char g_szPIDFile[];
 #endif
 extern char g_szDataDir[];
-
-extern char g_szDbDriver[];
-extern char g_szDbDriver[];
-extern char g_szDbDrvParams[];
-extern char g_szDbServer[];
-extern char g_szDbLogin[];
-extern char g_szDbPassword[];
-extern char g_szDbName[];
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;

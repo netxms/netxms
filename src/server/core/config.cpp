@@ -191,7 +191,7 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if ((!strcmp(argv[i], "install"))||
                (!strcmp(argv[i], "install-events")))
       {
-         char path[MAX_PATH], *ptr;
+         char exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
 
          ptr = strrchr(argv[0], '\\');
          if (ptr != NULL)
@@ -199,15 +199,22 @@ BOOL ParseCommandLine(int argc, char *argv[])
          else
             ptr = argv[0];
 
-         _fullpath(path, ptr, 255);
+         _fullpath(exePath, ptr, 255);
 
-         if (stricmp(&path[strlen(path)-4], ".exe"))
-            strcat(path, ".exe");
+         if (stricmp(&exePath[strlen(exePath)-4], ".exe"))
+            strcat(exePath, ".exe");
+         strcpy(dllPath, exePath);
+         ptr = strrchr(dllPath, '\\');
+         if (ptr != NULL)  // Shouldn't be NULL
+         {
+            ptr++;
+            strcpy(ptr, "libnxsrv.dll");
+         }
 
          if (!strcmp(argv[i], "install"))
-            InstallService(path);
+            InstallService(exePath, dllPath);
          else
-            InstallEventSource(path);
+            InstallEventSource(dllPath);
          return FALSE;
       }
       else if (!strcmp(argv[i], "remove"))

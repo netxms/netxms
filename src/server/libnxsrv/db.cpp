@@ -20,25 +20,27 @@
 **
 **/
 
-#include "nms_core.h"
+#include "libnxsrv.h"
 
 
 //
 // Global variables
 //
 
-char g_szDbDriver[MAX_PATH] = "";
-char g_szDbDrvParams[MAX_PATH] = "";
-char g_szDbServer[MAX_PATH] = "127.0.0.1";
-char g_szDbLogin[MAX_DB_LOGIN] = "netxms";
-char g_szDbPassword[MAX_DB_PASSWORD] = "";
-char g_szDbName[MAX_DB_NAME] = "netxms_db";
+char LIBNXSRV_EXPORTABLE g_szDbDriver[MAX_PATH] = "";
+char LIBNXSRV_EXPORTABLE g_szDbDrvParams[MAX_PATH] = "";
+char LIBNXSRV_EXPORTABLE g_szDbServer[MAX_PATH] = "127.0.0.1";
+char LIBNXSRV_EXPORTABLE g_szDbLogin[MAX_DB_LOGIN] = "netxms";
+char LIBNXSRV_EXPORTABLE g_szDbPassword[MAX_DB_PASSWORD] = "";
+char LIBNXSRV_EXPORTABLE g_szDbName[MAX_DB_NAME] = "netxms_db";
 
 
 //
 // Static data
 //
 
+static BOOL m_bWriteLog = FALSE;
+static BOOL m_bLogSQLErrors = FALSE;
 static HMODULE m_hDriver = NULL;
 static DB_HANDLE (* m_fpDrvConnect)(char *, char *, char *, char *) = NULL;
 static void (* m_fpDrvDisconnect)(DB_HANDLE) = NULL;
@@ -64,7 +66,7 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, char *pszSymbol)
    char szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
-   if (pFunc == NULL)
+   if ((pFunc == NULL) && m_bWriteLog)
       WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, "ss", pszSymbol, szErrorText);
    return pFunc;
 }
@@ -74,16 +76,20 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, char *pszSymbol)
 // Load and initialize database driver
 //
 
-BOOL DBInit(void)
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors)
 {
    BOOL (* fpDrvInit)(char *);
    char szErrorText[256];
+
+   m_bWriteLog = bWriteLog;
+   m_bLogSQLErrors = bLogErrors && bWriteLog;
 
    // Load driver's module
    m_hDriver = DLOpen(g_szDbDriver, szErrorText);
    if (m_hDriver == NULL)
    {
-      WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", g_szDbDriver, szErrorText);
+      if (m_bWriteLog)
+         WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", g_szDbDriver, szErrorText);
       return FALSE;
    }
 
@@ -107,21 +113,24 @@ BOOL DBInit(void)
        (m_fpDrvUnload == NULL) || (m_fpDrvAsyncSelect == NULL) || (m_fpDrvFetch == NULL) ||
        (m_fpDrvFreeAsyncResult == NULL) || (m_fpDrvGetFieldAsync == NULL))
    {
-      WriteLog(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
+      if (m_bWriteLog)
+         WriteLog(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
       return FALSE;
    }
 
    // Initialize driver
    if (!fpDrvInit(g_szDbDrvParams))
    {
-      WriteLog(MSG_DBDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
+      if (m_bWriteLog)
+         WriteLog(MSG_DBDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
       DLClose(m_hDriver);
       m_hDriver = NULL;
       return FALSE;
    }
 
    // Success
-   WriteLog(MSG_DBDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_szDbDriver);
+   if (m_bWriteLog)
+      WriteLog(MSG_DBDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_szDbDriver);
    return TRUE;
 }
 
@@ -130,7 +139,7 @@ BOOL DBInit(void)
 // Notify driver of unload
 //
 
-void DBUnloadDriver(void)
+void LIBNXSRV_EXPORTABLE DBUnloadDriver(void)
 {
    m_fpDrvUnload();
    DLClose(m_hDriver);
@@ -141,7 +150,7 @@ void DBUnloadDriver(void)
 // Connect to database
 //
 
-DB_HANDLE DBConnect(void)
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void)
 {
    return m_fpDrvConnect(g_szDbServer, g_szDbLogin, g_szDbPassword, g_szDbName);
 }
@@ -151,7 +160,7 @@ DB_HANDLE DBConnect(void)
 // Disconnect from database
 //
 
-void DBDisconnect(DB_HANDLE hConn)
+void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 {
    m_fpDrvDisconnect(hConn);
 }
@@ -161,13 +170,13 @@ void DBDisconnect(DB_HANDLE hConn)
 // Perform a non-SELECT SQL query
 //
 
-BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
+BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
 {
    BOOL bResult;
 
    bResult = m_fpDrvQuery(hConn, szQuery);
-   DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", bResult ? "Successful" : "Failed", szQuery);
-   if ((!bResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
+   //DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", bResult ? "Successful" : "Failed", szQuery);
+   if ((!bResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return bResult;
 }
@@ -177,13 +186,13 @@ BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
 // Perform SELECT query
 //
 
-DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery)
 {
    DB_RESULT hResult;
    
    hResult = m_fpDrvSelect(hConn, szQuery);
-   DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
-   if ((!hResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
+   //DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
+   if ((!hResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
 }
@@ -193,7 +202,7 @@ DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
 // Get field's value
 //
 
-char *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
+char LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
 {
    return m_fpDrvGetField(hResult, iRow, iColumn);
 }
@@ -203,7 +212,7 @@ char *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
 // Get field's value as unsigned long
 //
 
-DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
 {
    long iVal;
    DWORD dwVal;
@@ -222,7 +231,7 @@ DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
 // Get field's value as unsigned 64-bit int
 //
 
-QWORD DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn)
+QWORD LIBNXSRV_EXPORTABLE DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn)
 {
    INT64 iVal;
    QWORD qwVal;
@@ -241,7 +250,7 @@ QWORD DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn)
 // Get field's value as signed long
 //
 
-long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
+long LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 {
    char *szVal;
 
@@ -254,7 +263,7 @@ long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 // Get field's value as signed 64-bit int
 //
 
-INT64 DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn)
+INT64 LIBNXSRV_EXPORTABLE DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn)
 {
    char *szVal;
 
@@ -267,7 +276,7 @@ INT64 DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn)
 // Get field's value as double
 //
 
-double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
+double LIBNXSRV_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
 {
    char *szVal;
 
@@ -280,7 +289,7 @@ double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
 // Get field's value as IP address
 //
 
-DWORD DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 {
    char *szVal;
 
@@ -293,7 +302,7 @@ DWORD DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 // Get number of rows in result
 //
 
-int DBGetNumRows(DB_RESULT hResult)
+int LIBNXSRV_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
 {
    return m_fpDrvGetNumRows(hResult);
 }
@@ -303,7 +312,7 @@ int DBGetNumRows(DB_RESULT hResult)
 // Free result
 //
 
-void DBFreeResult(DB_RESULT hResult)
+void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 {
    m_fpDrvFreeResult(hResult);
 }
@@ -313,13 +322,13 @@ void DBFreeResult(DB_RESULT hResult)
 // Asyncronous SELECT query
 //
 
-DB_ASYNC_RESULT DBAsyncSelect(DB_HANDLE hConn, char *szQuery)
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, char *szQuery)
 {
    DB_RESULT hResult;
    
    hResult = m_fpDrvAsyncSelect(hConn, szQuery);
-   DbgPrintf(AF_DEBUG_SQL, "%s async query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
-   if ((!hResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
+   //DbgPrintf(AF_DEBUG_SQL, "%s async query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
+   if ((!hResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
 }
@@ -329,7 +338,7 @@ DB_ASYNC_RESULT DBAsyncSelect(DB_HANDLE hConn, char *szQuery)
 // Fetch next row from asynchronous SELECT result
 //
 
-BOOL DBFetch(DB_ASYNC_RESULT hResult)
+BOOL LIBNXSRV_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 {
    return m_fpDrvFetch(hResult);
 }
@@ -339,7 +348,7 @@ BOOL DBFetch(DB_ASYNC_RESULT hResult)
 // Get field's value from asynchronous SELECT result
 //
 
-char *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+char LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
 {
    return m_fpDrvGetFieldAsync(hResult, iColumn, pBuffer, iBufSize);
 }
@@ -349,7 +358,7 @@ char *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int i
 // Get field's value as unsigned long from asynchronous SELECT result
 //
 
-DWORD DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
 {
    long iVal;
    DWORD dwVal;
@@ -367,7 +376,7 @@ DWORD DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
 // Get field's value as unsigned 64-bit int from asynchronous SELECT result
 //
 
-QWORD DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn)
+QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn)
 {
    INT64 iVal;
    QWORD qwVal;
@@ -385,7 +394,7 @@ QWORD DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn)
 // Get field's value as signed long from asynchronous SELECT result
 //
 
-long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
+long LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 {
    char szBuffer[64];
    
@@ -397,7 +406,7 @@ long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 // Get field's value as signed 64-bit int from asynchronous SELECT result
 //
 
-INT64 DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn)
+INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn)
 {
    char szBuffer[64];
    
@@ -409,7 +418,7 @@ INT64 DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn)
 // Get field's value as signed long from asynchronous SELECT result
 //
 
-double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
+double LIBNXSRV_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
 {
    char szBuffer[64];
    
@@ -421,7 +430,7 @@ double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
 // Get field's value as IP address from asynchronous SELECT result
 //
 
-DWORD DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
+DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
 {
    char szBuffer[64];
    
@@ -434,7 +443,7 @@ DWORD DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
 // Free asynchronous SELECT result
 //
 
-void DBFreeAsyncResult(DB_ASYNC_RESULT hResult)
+void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult)
 {
    m_fpDrvFreeAsyncResult(hResult);
 }

@@ -1,6 +1,6 @@
 /* 
-** Network Management System Core
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "libnxsrv.h"
 
 
 //
@@ -39,19 +39,25 @@ extern char *g_szMessages[];
 
 #ifdef _WIN32
 static HANDLE m_hEventLog = INVALID_HANDLE_VALUE;
+static HMODULE m_hLibraryHandle = NULL;
 #endif
 static FILE *m_hLogFile = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
+static BOOL m_bUseSystemLog = FALSE;
+static BOOL m_bPrintToScreen = FALSE;
 
 
 //
 // Initialize log
 //
 
-void InitLog(void)
+void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen)
 {
+   m_bUseSystemLog = bUseSystemLog;
+   m_bPrintToScreen = bPrintToScreen;
 #ifdef _WIN32
-   if (g_dwFlags & AF_USE_EVENT_LOG)
+   m_hLibraryHandle = GetModuleHandle(_T("LIBNXSRV.DLL"));
+   if (m_bUseSystemLog)
    {
       m_hEventLog = RegisterEventSource(NULL, CORE_EVENT_SOURCE);
    }
@@ -62,7 +68,7 @@ void InitLog(void)
       struct tm *loc;
       time_t t;
 
-      m_hLogFile = fopen(g_szLogFile, "a");
+      m_hLogFile = fopen(pszLogFile, "a");
       t = time(NULL);
       loc = localtime(&t);
       strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
@@ -80,10 +86,10 @@ void InitLog(void)
 // Close log
 //
 
-void CloseLog(void)
+void LIBNXSRV_EXPORTABLE CloseLog(void)
 {
 #ifdef _WIN32
-   if (g_dwFlags & AF_USE_EVENT_LOG)
+   if (m_bUseSystemLog)
    {
       DeregisterEventSource(m_hEventLog);
    }
@@ -128,7 +134,7 @@ static void WriteLogToFile(char *szMessage)
    strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
    fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
    fflush(m_hLogFile);
-   if (IsStandalone())
+   if (m_bPrintToScreen)
       printf("%s %s", szBuffer, szMessage);
 
    MutexUnlock(m_mutexLogAccess);
@@ -141,7 +147,7 @@ static void WriteLogToFile(char *szMessage)
 
 #ifndef _WIN32
 
-char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
+static char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 {
    char *p, *pMsg;
    int i, iSize, iLen;
@@ -204,7 +210,7 @@ char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 //             a - IP address in network byte order
 //
 
-void WriteLog(DWORD msg, WORD wType, char *format, ...)
+void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...)
 {
    va_list args;
    char *strings[16], *pMsg;
@@ -270,7 +276,7 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
    }
 
 #ifdef _WIN32
-   if (g_dwFlags & AF_USE_EVENT_LOG)
+   if (m_bUseSystemLog)
    {
       ReportEvent(m_hEventLog, wType, 0, msg, NULL, numStrings, 0, (const char **)strings, NULL);
    }
@@ -278,8 +284,9 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
    {
       LPVOID lpMsgBuf;
 
-      if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                        NULL, msg, 0, (LPTSTR)&lpMsgBuf, 0, strings)>0)
+      if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                        FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                        m_hLibraryHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, strings)>0)
       {
          char *pCR;
 
@@ -304,7 +311,7 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
    }
 #else  /* _WIN32 */
    pMsg = FormatMessageUX(msg, strings);
-   if (g_dwFlags & AF_USE_EVENT_LOG)
+   if (m_bUseSystemLog)
    {
    }
    else

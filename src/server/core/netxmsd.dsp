@@ -128,10 +128,6 @@ SOURCE=.\datacoll.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\db.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\dbwrite.cpp
 # End Source File
 # Begin Source File
@@ -193,10 +189,6 @@ SOURCE=.\interface.cpp
 # Begin Source File
 
 SOURCE=.\locks.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\log.cpp
 # End Source File
 # Begin Source File
 
@@ -378,63 +370,6 @@ SOURCE=..\..\..\include\unicode.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-# Begin Source File
-
-SOURCE=.\core.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\MSG00001.bin
-# End Source File
-# End Group
-# Begin Group "Message files"
-
-# PROP Default_Filter ".mc"
-# Begin Source File
-
-SOURCE=.\messages.mc
-
-!IF  "$(CFG)" == "netxmsd - Win32 Release"
-
-# Begin Custom Build - Running Message Compiler on $(InputPath)
-ProjDir=.
-InputPath=.\messages.mc
-InputName=messages
-
-BuildCmds= \
-	mc -s -U -h $(ProjDir) -r $(ProjDir) $(InputName) \
-	del $(ProjDir)\$(InputName).rc \
-	
-
-"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "netxmsd - Win32 Debug"
-
-# Begin Custom Build - Running Message Compiler on $(InputPath)
-ProjDir=.
-InputPath=.\messages.mc
-InputName=messages
-
-BuildCmds= \
-	mc -s -U -h $(ProjDir) -r $(ProjDir) $(InputName) \
-	del $(ProjDir)\$(InputName).rc \
-	
-
-"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
 # End Group
 # End Target
 # End Project

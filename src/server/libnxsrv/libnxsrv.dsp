@@ -106,6 +106,14 @@ SOURCE=.\agent.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\db.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\log.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -160,6 +168,59 @@ SOURCE=..\include\rwlock.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\libnxsrv.rc
+# End Source File
+# End Group
+# Begin Group "Message Files"
+
+# PROP Default_Filter ".mc"
+# Begin Source File
+
+SOURCE=.\messages.mc
+
+!IF  "$(CFG)" == "libnxsrv - Win32 Release"
+
+# Begin Custom Build - Running Message Compiler on $(InputPath)
+ProjDir=.
+InputPath=.\messages.mc
+InputName=messages
+
+BuildCmds= \
+	mc -s -U -h $(ProjDir)\..\include -r $(ProjDir) $(InputName) \
+	del $(ProjDir)\$(InputName).rc \
+	
+
+"..\include\$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "libnxsrv - Win32 Debug"
+
+# Begin Custom Build - Running Message Compiler on $(InputPath)
+ProjDir=.
+InputPath=.\messages.mc
+InputName=messages
+
+BuildCmds= \
+	mc -s -U -h $(ProjDir)\..\include -r $(ProjDir) $(InputName) \
+	del $(ProjDir)\$(InputName).rc \
+	
+
+"..\include\$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Group
 # End Target
 # End Project

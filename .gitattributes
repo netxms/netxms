@@ -381,9 +381,7 @@ src/server/core/alarm.cpp -text
 src/server/core/client.cpp -text
 src/server/core/config.cpp -text
 src/server/core/container.cpp -text
-src/server/core/core.rc -text
 src/server/core/datacoll.cpp -text
-src/server/core/db.cpp -text
 src/server/core/dbwrite.cpp -text
 src/server/core/dcitem.cpp -text
 src/server/core/dcithreshold.cpp -text
@@ -400,9 +398,7 @@ src/server/core/id.cpp -text
 src/server/core/image.cpp -text
 src/server/core/interface.cpp -text
 src/server/core/locks.cpp -text
-src/server/core/log.cpp -text
 src/server/core/main.cpp -text
-src/server/core/messages.mc -text
 src/server/core/netinfo.cpp -text
 src/server/core/netobj.cpp -text
 src/server/core/netxmsd.dsp -text
@@ -419,7 +415,6 @@ src/server/core/node.cpp -text
 src/server/core/nortel.cpp -text
 src/server/core/np.cpp -text
 src/server/core/objects.cpp -text
-src/server/core/resource.h -text
 src/server/core/rootobj.cpp -text
 src/server/core/session.cpp -text
 src/server/core/snmp.cpp -text
@@ -459,10 +454,15 @@ src/server/include/nxsrvapi.h -text
 src/server/include/rwlock.h -text
 src/server/libnxsrv/Makefile.am -text
 src/server/libnxsrv/agent.cpp -text
+src/server/libnxsrv/db.cpp -text
 src/server/libnxsrv/libnxsrv.dsp -text
 src/server/libnxsrv/libnxsrv.dsw -text
 src/server/libnxsrv/libnxsrv.h -text
+src/server/libnxsrv/libnxsrv.rc -text
+src/server/libnxsrv/log.cpp -text
 src/server/libnxsrv/main.cpp -text
+src/server/libnxsrv/messages.mc -text
+src/server/libnxsrv/resource.h -text
 src/server/libnxsrv/rwlock.cpp -text
 src/server/tools/Makefile.am -text
 src/server/tools/nxaction/Makefile.am -text
