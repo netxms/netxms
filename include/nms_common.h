@@ -23,6 +23,9 @@
 #ifndef _nms_common_h_
 #define _nms_common_h_
 
+#include <ctype.h>
+
+
 //
 // Version constants 
 //
@@ -157,10 +160,12 @@ typedef struct tagICMPHDR
 
 
 //
-// Convert half-byte's value to hex digit
+// Convert half-byte's value to hex digit and vice versa
 //
 
 #define bin2hex(x) ((x) < 10 ? ((x) + '0') : ((x) + ('A' - 10)))
+#define hex2bin(x) ((((x) >= '0') && ((x) <= '9')) ? ((x) - '0') : \
+                    (((toupper(x) >= 'A') && (toupper(x) <= 'F')) ? (toupper(x) - 'A' + 10) : 0))
 
 
 #endif   /* _nms_common_h_ */

@@ -87,6 +87,7 @@ typedef struct
 #define DT_STRING    1
 #define DT_INT64     2
 #define DT_INT16     3
+#define DT_BINARY    4
 
 
 //

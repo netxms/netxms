@@ -55,7 +55,7 @@ private:
    DWORD m_dwNumVar;    // Number of variables
    CSCP_DF **m_ppVarList;   // List of variables
 
-   void Set(DWORD dwVarId, BYTE bType, void *pValue);
+   void Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
    void *Get(DWORD dwVarId, BYTE bType);
    DWORD FindVariable(DWORD dwVarId);
 
@@ -78,11 +78,13 @@ public:
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, DT_INTEGER, &dwValue); }
    void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, DT_INT64, &qwValue); }
    void SetVariable(DWORD dwVarId, char *szValue) { Set(dwVarId, DT_STRING, szValue); }
+   void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, DT_BINARY, pValue, dwSize); }
 
    DWORD GetVariableLong(DWORD dwVarId);
    QWORD GetVariableInt64(DWORD dwVarId);
    WORD GetVariableShort(DWORD dwVarId);
    char *GetVariableStr(DWORD dwVarId, char *szBuffer = NULL, DWORD dwBufSize = 0);
+   DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);
 
    void DeleteAllVariables(void);
 };
@@ -144,6 +146,8 @@ extern "C"
    void EXPORTABLE *MemAlloc(DWORD dwSize);
    void EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
    void EXPORTABLE MemFree(void *pBlock);
+
+   void EXPORTABLE CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 }
 
 #endif   /* _nms_util_h_ */
