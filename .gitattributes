@@ -126,6 +126,11 @@ src/console/win32/res/login.bmp -text
 src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
+src/console/win32starter/nxcstart.cpp -text
+src/console/win32starter/nxcstart.dsp -text
+src/console/win32starter/nxcstart.dsw -text
+src/console/win32starter/nxcstart.rc -text
+src/console/win32starter/resource.h -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text
