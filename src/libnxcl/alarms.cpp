@@ -31,7 +31,8 @@
 static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pAlarm->dwAckByUser = pMsg->GetVariableLong(VID_ACK_BY_USER);
-   pAlarm->dwSourceEvent = pMsg->GetVariableLong(VID_EVENT_ID);
+   pAlarm->qwSourceEventId = pMsg->GetVariableInt64(VID_EVENT_ID);
+   pAlarm->dwSourceEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
    pAlarm->dwSourceObject = pMsg->GetVariableLong(VID_OBJECT_ID);
    pAlarm->dwTimeStamp = pMsg->GetVariableLong(VID_TIMESTAMP);
    pMsg->GetVariableStr(VID_ALARM_KEY, pAlarm->szKey, MAX_DB_STRING);

@@ -165,13 +165,13 @@ void CTrapEditDlg::UpdateEventInfo()
    static UINT nIconID[] = { IDI_SEVERITY_NORMAL, IDI_SEVERITY_WARNING, IDI_SEVERITY_MINOR,
                              IDI_SEVERITY_MAJOR, IDI_SEVERITY_CRITICAL };
 
-   NXCGetEventText(m_trap.dwEventId, szBuffer, MAX_DB_STRING);
+   NXCGetEventText(m_trap.dwEventCode, szBuffer, MAX_DB_STRING);
    SetDlgItemText(IDC_EDIT_MESSAGE, szBuffer);
 
-   NXCGetEventNameEx(m_trap.dwEventId, szBuffer, MAX_DB_STRING);
+   NXCGetEventNameEx(m_trap.dwEventCode, szBuffer, MAX_DB_STRING);
    SetDlgItemText(IDC_EDIT_EVENT, szBuffer);
 
-   iSeverity = NXCGetEventSeverity(m_trap.dwEventId);
+   iSeverity = NXCGetEventSeverity(m_trap.dwEventCode);
    if (iSeverity != -1)
       m_wndEventIcon.SetIcon(theApp.LoadIcon(nIconID[iSeverity]));
    else
@@ -190,7 +190,7 @@ void CTrapEditDlg::OnSelectEvent()
    dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {
-      m_trap.dwEventId = dlg.m_pdwEventList[0];
+      m_trap.dwEventCode = dlg.m_pdwEventList[0];
       UpdateEventInfo();
    }
 }

@@ -14,6 +14,21 @@ CREATE TABLE config
 
 
 /*
+** Loadable modules
+*/
+
+CREATE TABLE modules
+(
+	module_id integer not null,
+	module_name varchar(63),
+	exec_name varchar(255),
+	module_flags integer not null default 0,
+	description SQL_TEXT,
+	PRIMARY KEY(module_id)
+);
+
+
+/*
 ** Users
 */
 
@@ -96,7 +111,7 @@ CREATE TABLE nodes
 	status_poll_type integer,
 	inherit_access_rights integer,
 	image_id integer,
-	description TEXT,
+	description SQL_TEXT,
 	node_type integer,
 	PRIMARY KEY(id)
 );
@@ -151,7 +166,7 @@ CREATE TABLE containers
 	status integer,
 	is_deleted integer not null,
 	category integer,
-	description TEXT,
+	description SQL_TEXT,
 	image_id integer,
 	object_class integer not null,
 	PRIMARY KEY(id)
@@ -169,7 +184,7 @@ CREATE TABLE templates
 	is_deleted integer not null,
 	image_id integer,
 	version integer,
-	description TEXT,
+	description SQL_TEXT,
 	PRIMARY KEY(id)
 );
 
@@ -219,7 +234,7 @@ CREATE TABLE container_categories
 	category integer not null,
 	name varchar(63),
 	image_id integer not null,
-	description TEXT,
+	description SQL_TEXT,
 	PRIMARY KEY(category)
 );
 
@@ -273,7 +288,7 @@ CREATE TABLE items
 	retention_time integer,
 	status integer,			// ACTIVE, DISABLED or NOT_SUPPORTED
 	delta_calculation integer,
-	transformation TEXT,		// Transformation formula
+	transformation SQL_TEXT,	// Transformation formula
 	instance varchar(255),		// Free form text which can be used in events
 	PRIMARY KEY(item_id)
 );
@@ -331,7 +346,7 @@ CREATE TABLE actions
 	// Field "action_data" holds message text for e-mail and sms actions,
 	// command line for external command execution actions, or
 	// action name with optional arguments for remote execution actions
-	action_data TEXT not null,
+	action_data SQL_TEXT not null,
 	PRIMARY KEY(action_id)
 );
 
@@ -369,7 +384,7 @@ CREATE TABLE event_policy
 (
 	rule_id integer not null,   // Rule number
 	flags integer not null,
-	comments TEXT,
+	comments SQL_TEXT,
 	alarm_message varchar(255),
 	alarm_severity integer,
 	alarm_key varchar(255),	    // Alarm key (used for auto acknowlegment)

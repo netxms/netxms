@@ -292,23 +292,23 @@ void CEventEditor::OnEventEdit()
 
 void CEventEditor::OnEventNew() 
 {
-   DWORD dwNewId, dwResult;
+   DWORD dwNewCode, dwResult;
    NXC_EVENT_TEMPLATE *pData;
    TCHAR szBuffer[32];
    int iItem;
 
-   dwResult = DoRequestArg1(NXCGenerateEventId, &dwNewId, _T("Generating ID for new event..."));
+   dwResult = DoRequestArg1(NXCGenerateEventCode, &dwNewCode, _T("Generating code for new event..."));
    if (dwResult == RCC_SUCCESS)
    {
       // Create new item in list view
-      _stprintf(szBuffer, _T("%ld"), dwNewId);
+      _stprintf(szBuffer, _T("%ld"), dwNewCode);
       iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
-      m_wndListCtrl.SetItemData(iItem, dwNewId);
+      m_wndListCtrl.SetItemData(iItem, dwNewCode);
 
       // Create empty record in template list
       pData = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));
       memset(pData, 0, sizeof(NXC_EVENT_TEMPLATE));
-      pData->dwCode = dwNewId;
+      pData->dwCode = dwNewCode;
       NXCAddEventTemplate(pData);
 
       // Pointers inside client library can change after adding new template, so we reget it
@@ -318,13 +318,13 @@ void CEventEditor::OnEventNew()
       if (!EditEvent(iItem))
       {
          m_wndListCtrl.DeleteItem(iItem);
-         NXCDeleteEDBRecord(dwNewId);
+         NXCDeleteEDBRecord(dwNewCode);
          NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
       }
    }
    else
    {
-      theApp.ErrorBox(dwResult, _T("Unable to generate ID for new event: %s"));
+      theApp.ErrorBox(dwResult, _T("Unable to generate code for new event: %s"));
    }
 }
 

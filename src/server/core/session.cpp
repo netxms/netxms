@@ -462,8 +462,8 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_EVENT_TEMPLATE:
             DeleteEventTemplate(pMsg);
             break;
-         case CMD_GENERATE_EVENT_ID:
-            GenerateEventId(pMsg->GetId());
+         case CMD_GENERATE_EVENT_CODE:
+            GenerateEventCode(pMsg->GetId());
             break;
          case CMD_MODIFY_OBJECT:
             ModifyObject(pMsg);
@@ -722,12 +722,12 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       msg.SetCode(CMD_EVENT_DB_RECORD);
       msg.SetId(dwRqId);
 
-      hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_code,name,severity,flags,message,description FROM event_cfg");
+      hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_code,event_name,severity,flags,message,description FROM event_cfg");
       if (hResult != NULL)
       {
          while(DBFetch(hResult))
          {
-            msg.SetVariable(VID_EVENT_ID, DBGetFieldAsyncULong(hResult, 0));
+            msg.SetVariable(VID_EVENT_CODE, DBGetFieldAsyncULong(hResult, 0));
             msg.SetVariable(VID_NAME, DBGetFieldAsync(hResult, 1, szBuffer, 1024));
             msg.SetVariable(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
             msg.SetVariable(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
@@ -747,7 +747,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       }
 
       // Send end-of-list indicator
-      msg.SetVariable(VID_EVENT_ID, (DWORD)0);
+      msg.SetVariable(VID_EVENT_CODE, (DWORD)0);
       SendMessage(&msg);
    }
 }
@@ -842,13 +842,13 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
       if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
       {
          char szQuery[4096], szName[MAX_EVENT_NAME];
-         DWORD dwEventId;
+         DWORD dwEventCode;
          BOOL bEventExist = FALSE;
          DB_RESULT hResult;
 
-         // Check if event with specific id exists
-         dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
-         sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%ld", dwEventId);
+         // Check if event with specific code exists
+         dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+         sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%ld", dwEventCode);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -858,7 +858,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
          }
 
          // Check that we are not trying to create event below 100000
-         if (bEventExist || (dwEventId >= FIRST_USER_EVENT_ID))
+         if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
          {
             // Prepare and execute SQL query
             pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
@@ -875,15 +875,15 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
                if (bEventExist)
                {
-                  sprintf(szQuery, "UPDATE event_cfg SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_code=%ld",
+                  sprintf(szQuery, "UPDATE event_cfg SET event_name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_code=%ld",
                           szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
-                          pszEscMsg, pszEscDescr, dwEventId);
+                          pszEscMsg, pszEscDescr, dwEventCode);
                }
                else
                {
-                  sprintf(szQuery, "INSERT INTO event_cfg (event_code,name,severity,flags,"
+                  sprintf(szQuery, "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
                                    "message,description) VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
-                          dwEventId, szName, pRequest->GetVariableLong(VID_SEVERITY),
+                          dwEventCode, szName, pRequest->GetVariableLong(VID_SEVERITY),
                           pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
                }
 
@@ -928,7 +928,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwEventId;
+   DWORD dwEventCode;
 
    // Prepare reply message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -941,14 +941,14 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
    }
    else
    {
-      dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
+      dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
 
       // Check access rights
-      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventId >= FIRST_USER_EVENT_ID))
+      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
       {
          TCHAR szQuery[256];
 
-         _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%ld"), dwEventId);
+         _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%ld"), dwEventCode);
          if (DBQuery(g_hCoreDB, szQuery))
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -974,7 +974,7 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
 // Generate ID for new event template
 //
 
-void ClientSession::GenerateEventId(DWORD dwRqId)
+void ClientSession::GenerateEventCode(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -992,7 +992,7 @@ void ClientSession::GenerateEventId(DWORD dwRqId)
       // Check access rights
       if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
       {
-         msg.SetVariable(VID_EVENT_ID, CreateUniqueId(IDG_EVENT));
+         msg.SetVariable(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
       }
       else
       {
@@ -3108,7 +3108,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
       // User should have SEND_EVENTS access right to object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
-         dwEventCode = pRequest->GetVariableLong(VID_EVENT_ID);
+         dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
          iNumArgs = pRequest->GetVariableShort(VID_NUM_ARGS);
          for(i = 0; i < iNumArgs; i++)
             pszArgList[i] = pRequest->GetVariableStr(VID_EVENT_ARG_BASE + i);

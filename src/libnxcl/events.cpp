@@ -46,7 +46,8 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
             // Allocate new event structure and fill it with values from message
             pEvent = (NXC_EVENT *)malloc(sizeof(NXC_EVENT));
             memcpy(pEvent, pRawMsg->df, sizeof(NXC_EVENT));
-            pEvent->dwEventId = ntohl(pEvent->dwEventId);
+            pEvent->dwEventCode = ntohl(pEvent->dwEventCode);
+            pEvent->qwEventId = ntohq(pEvent->qwEventId);
             pEvent->dwSeverity = ntohl(pEvent->dwSeverity);
             pEvent->dwSourceId = ntohl(pEvent->dwSourceId);
             pEvent->dwTimeStamp = ntohl(pEvent->dwTimeStamp);
@@ -101,7 +102,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, DWORD dwObjectId, int i
 
    msg.SetCode(CMD_TRAP);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_EVENT_ID, dwEventCode);
+   msg.SetVariable(VID_EVENT_CODE, dwEventCode);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)

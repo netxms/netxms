@@ -12,7 +12,7 @@
 ** System events
 */
 
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_ADDED, 'SYS_NODE_ADDED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -21,7 +21,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SUBNET_ADDED, 'SYS_SUBNET_ADDED',
 		EVENT_SEVERITY_NORMAL, 0,
@@ -30,7 +30,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_ADDED, 'SYS_IF_ADDED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -44,7 +44,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   4) Interface netmask#0D#0A' CONCAT
 		'   5) Interface index'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_UP, 'SYS_IF_UP',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -58,7 +58,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   4) Interface netmask#0D#0A' CONCAT
 		'   5) Interface index'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_DOWN, 'SYS_IF_DOWN',
 		EVENT_SEVERITY_WARNING, 1,
@@ -72,7 +72,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   4) Interface netmask#0D#0A' CONCAT
 		'   5) Interface index'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_NORMAL, 'SYS_NODE_NORMAL',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -81,7 +81,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_WARNING, 'SYS_NODE_WARNING', 
 		EVENT_SEVERITY_WARNING, 1,
@@ -90,7 +90,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_MINOR, 'SYS_NODE_MINOR',
 		EVENT_SEVERITY_MINOR, 1,
@@ -99,7 +99,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_MAJOR, 'SYS_NODE_MAJOR', 
 		EVENT_SEVERITY_MAJOR, 1,
@@ -108,7 +108,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_CRITICAL, 'SYS_NODE_CRITICAL', 
 		EVENT_SEVERITY_CRITICAL, 1,
@@ -117,7 +117,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_UNKNOWN, 'SYS_NODE_UNKNOWN',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -126,7 +126,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_UNMANAGED, 'SYS_NODE_UNMANAGED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -135,7 +135,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_FLAGS_CHANGED, 'SYS_NODE_CAP_CHANGED',
 		EVENT_SEVERITY_NORMAL, 0,
@@ -145,7 +145,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   1) Old capabilities#0D#0A' CONCAT
 		'   2) New capabilities'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHEABLE', 
 		EVENT_SEVERITY_NORMAL, 0,
@@ -154,7 +154,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_AGENT_FAIL, 'SYS_AGENT_UNREACHEABLE',
 		EVENT_SEVERITY_NORMAL, 0,
@@ -163,7 +163,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_DELETED, 'SYS_IF_DELETED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -176,7 +176,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   3) Interface IP address#0D#0A' CONCAT
 		'   4) Interface netmask'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REACHED, 'SYS_THRESHOLD_REACHED',
 		EVENT_SEVERITY_WARNING, 1,
@@ -185,7 +185,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REARMED, 'SYS_THRESHOLD_REARMED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -196,7 +196,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   2) Item description#0D#0A' CONCAT
 		'   3) Data collection item ID'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SUBNET_DELETED, 'SYS_SUBNET_DELETED',
 		EVENT_SEVERITY_NORMAL, 0,
@@ -205,7 +205,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_THREAD_HANGS, 'SYS_THREAD_HANG', 
 		EVENT_SEVERITY_CRITICAL, 1,
@@ -214,7 +214,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Thread name'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_THREAD_RUNNING, 'SYS_THREAD_RUNNING',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -223,7 +223,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Thread name'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SMTP_FAILURE, 'SYS_SMTP_FAILURE', 
 		EVENT_SEVERITY_WARNING, 1,
@@ -235,7 +235,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   3) Recipient address#0D#0A' CONCAT
 		'   4) Mail subject'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_MAC_ADDR_CHANGED, 'SYS_MAC_ADDR_CHANGED', 
 		EVENT_SEVERITY_WARNING, 1,
@@ -248,7 +248,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   4) Old MAC address#0D#0A' CONCAT
 		'   5) New MAC address'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_INCORRECT_NETMASK, 'SYS_INCORRECT_NETMASK', 
 		EVENT_SEVERITY_MINOR, 1,
@@ -267,7 +267,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 ** SNMP traps
 */
 
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_UNMATCHED_TRAP, 'SNMP_UNMATCHED_TRAP',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -277,7 +277,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   1) SNMP trap OID#0D#0A' CONCAT
 		'   2) Trap parameters'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_COLD_START, 'SNMP_COLD_START',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -286,7 +286,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) SNMP trap OID'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_WARM_START, 'SNMP_WARM_START',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -295,7 +295,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) SNMP trap OID'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_LINK_DOWN, 'SNMP_LINK_DOWN',
 		EVENT_SEVERITY_MAJOR, 1,
@@ -305,7 +305,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   1) SNMP trap OID#0D#0A' CONCAT
 		'   2) Interface index'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_LINK_UP, 'SNMP_LINK_UP',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -315,7 +315,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   1) SNMP trap OID#0D#0A' CONCAT
 		'   2) Interface index'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_AUTH_FAILURE, 'SNMP_AUTH_FAILURE',
 		EVENT_SEVERITY_WARNING, 1,
@@ -324,7 +324,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) SNMP trap OID'
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_EGP_NL, 'SNMP_EGP_NEIGHBOR_LOSS',
 		EVENT_SEVERITY_WARNING, 1,
@@ -340,7 +340,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 ** These events can occupy ID space 4000 ... 4999
 */
 
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4000, 'DC_HIGH_CPU_UTIL',
 		EVENT_SEVERITY_MINOR, 1,
@@ -349,7 +349,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4001, 'DC_HIGH_PROCLOAD',
 		EVENT_SEVERITY_MINOR, 1,
@@ -358,7 +358,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4002, 'DC_HOST_RESTARTED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -367,7 +367,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4003, 'DC_AGENT_RESTARTED',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -376,7 +376,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4004, 'DC_SERVICE_NOT_RUNNING',
 		EVENT_SEVERITY_MAJOR, 1,
@@ -385,7 +385,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4005, 'DC_MAILBOX_TOO_LARGE',
 		EVENT_SEVERITY_WARNING, 1,
@@ -394,7 +394,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4006, 'DC_AGENT_VERSION_CHANGE',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -403,7 +403,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4007, 'DC_HOSTNAME_CHANGE',
 		EVENT_SEVERITY_WARNING, 1,
@@ -412,7 +412,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		4008, 'DC_FILE_CHANGE',
 		EVENT_SEVERITY_WARNING, 1,

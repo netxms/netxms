@@ -108,13 +108,13 @@ void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
 // Delete record from list
 //
 
-void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventId)
+void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventCode)
 {
    DWORD i;
 
    MutexLock(m_mutexEventAccess, INFINITE);
    for(i = 0; i < m_dwNumTemplates; i++)
-      if (m_ppEventTemplates[i]->dwCode == dwEventId)
+      if (m_ppEventTemplates[i]->dwCode == dwEventCode)
       {
          m_dwNumTemplates--;
          safe_free(m_ppEventTemplates[i]->pszDescription);
@@ -135,16 +135,16 @@ void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventId)
 void ProcessEventDBRecord(CSCPMessage *pMsg)
 {
    NXC_EVENT_TEMPLATE *pEventTemplate;
-   DWORD dwEventId;
+   DWORD dwEventCode;
 
    if (pMsg->GetCode() == CMD_EVENT_DB_RECORD)
    {
-      dwEventId = pMsg->GetVariableLong(VID_EVENT_ID);
-      if (dwEventId != 0)
+      dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+      if (dwEventCode != 0)
       {
          // Allocate new event template structure and fill it with values from message
          pEventTemplate = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));
-         pEventTemplate->dwCode = dwEventId;
+         pEventTemplate->dwCode = dwEventCode;
          pEventTemplate->dwSeverity = pMsg->GetVariableLong(VID_SEVERITY);
          pEventTemplate->dwFlags = pMsg->GetVariableLong(VID_FLAGS);
          pMsg->GetVariableStr(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
@@ -205,7 +205,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg)
    // Prepare message
    msg.SetCode(CMD_SET_EVENT_INFO);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_EVENT_ID, pArg->dwCode);
+   msg.SetVariable(VID_EVENT_CODE, pArg->dwCode);
    msg.SetVariable(VID_SEVERITY, pArg->dwSeverity);
    msg.SetVariable(VID_FLAGS, pArg->dwFlags);
    msg.SetVariable(VID_NAME, pArg->szName);
@@ -222,7 +222,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg)
 // Delete event template
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventCode)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -232,7 +232,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventId)
    // Prepare message
    msg.SetCode(CMD_DELETE_EVENT_TEMPLATE);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_EVENT_ID, dwEventId);
+   msg.SetVariable(VID_EVENT_CODE, dwEventCode);
    SendMsg(&msg);
    
    // Wait for reply
@@ -244,7 +244,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventId)
 // Generate ID for new event
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGenerateEventId(DWORD *pdwEventId)
+DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(DWORD *pdwEventCode)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode;
@@ -252,7 +252,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateEventId(DWORD *pdwEventId)
    dwRqId = g_dwMsgId++;
 
    // Prepare message
-   msg.SetCode(CMD_GENERATE_EVENT_ID);
+   msg.SetCode(CMD_GENERATE_EVENT_CODE);
    msg.SetId(dwRqId);
    SendMsg(&msg);
    
@@ -262,7 +262,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateEventId(DWORD *pdwEventId)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwEventId = pResponce->GetVariableLong(VID_EVENT_ID);
+         *pdwEventCode = pResponce->GetVariableLong(VID_EVENT_CODE);
    }
    else
    {

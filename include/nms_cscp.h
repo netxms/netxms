@@ -256,7 +256,7 @@ typedef struct
 #define CMD_COPY_DCI                0x005B
 #define CMD_WAKEUP_NODE             0x005C
 #define CMD_DELETE_EVENT_TEMPLATE   0x005D
-#define CMD_GENERATE_EVENT_ID       0x005E
+#define CMD_GENERATE_EVENT_CODE     0x005E
 #define CMD_LOCK_TRAP_CFG           0x005F
 #define CMD_UNLOCK_TRAP_CFG         0x0060
 #define CMD_CREATE_TRAP             0x0061
@@ -297,7 +297,7 @@ typedef struct
 #define VID_VALUE                   ((DWORD)21)
 #define VID_ERROR                   ((DWORD)22)
 #define VID_NOTIFICATION_CODE       ((DWORD)23)
-#define VID_EVENT_ID                ((DWORD)24)
+#define VID_EVENT_CODE              ((DWORD)24)
 #define VID_SEVERITY                ((DWORD)25)
 #define VID_MESSAGE                 ((DWORD)26)
 #define VID_DESCRIPTION             ((DWORD)27)
@@ -396,6 +396,7 @@ typedef struct
 #define VID_TRAP_NUM_MAPS           ((DWORD)120)
 #define VID_SERVER_VERSION          ((DWORD)121)
 #define VID_SUPPORTED_ENCRYPTION    ((DWORD)122)
+#define VID_EVENT_ID                ((DWORD)123)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

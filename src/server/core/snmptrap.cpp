@@ -70,7 +70,7 @@ static BOOL LoadTrapCfg(void)
             WriteLog(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, "s", DBGetField(hResult, i, 1));
             bResult = FALSE;
          }
-         m_pTrapCfg[i].dwEventId = DBGetFieldULong(hResult, i, 2);
+         m_pTrapCfg[i].dwEventCode = DBGetFieldULong(hResult, i, 2);
          _tcsncpy(m_pTrapCfg[i].szDescription, DBGetField(hResult, i, 3), MAX_DB_STRING);
          DecodeSQLString(m_pTrapCfg[i].szDescription);
       }
@@ -159,7 +159,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
    }
 
    szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 1] = 0;
-   PostEvent(m_pTrapCfg[dwIndex].dwEventId, dwObjectId, szFormat,
+   PostEvent(m_pTrapCfg[dwIndex].dwEventCode, dwObjectId, szFormat,
              pdu->GetTrapId()->GetValueAsText(),
              pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
              pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
@@ -329,7 +329,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
       msg.SetVariable(VID_TRAP_ID, m_pTrapCfg[i].dwId);
       msg.SetVariable(VID_TRAP_OID_LEN, m_pTrapCfg[i].dwOidLen); 
       msg.SetVariableToInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
-      msg.SetVariable(VID_EVENT_ID, m_pTrapCfg[i].dwEventId);
+      msg.SetVariable(VID_EVENT_CODE, m_pTrapCfg[i].dwEventCode);
       msg.SetVariable(VID_DESCRIPTION, m_pTrapCfg[i].szDescription);
       msg.SetVariable(VID_TRAP_NUM_MAPS, m_pTrapCfg[i].dwNumMaps);
       for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
@@ -404,7 +404,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
    m_pTrapCfg = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapCfg, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
    memset(&m_pTrapCfg[m_dwNumTraps], 0, sizeof(NXC_TRAP_CFG_ENTRY));
    m_pTrapCfg[m_dwNumTraps].dwId = *pdwTrapId;
-   m_pTrapCfg[m_dwNumTraps].dwEventId = EVENT_SNMP_UNMATCHED_TRAP;
+   m_pTrapCfg[m_dwNumTraps].dwEventCode = EVENT_SNMP_UNMATCHED_TRAP;
    m_dwNumTraps++;
 
    MutexUnlock(m_mutexTrapCfgAccess);
@@ -436,7 +436,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
       if (m_pTrapCfg[i].dwId == dwTrapId)
       {
          // Read trap configuration from event
-         m_pTrapCfg[i].dwEventId = pMsg->GetVariableLong(VID_EVENT_ID);
+         m_pTrapCfg[i].dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
          m_pTrapCfg[i].dwOidLen = pMsg->GetVariableLong(VID_TRAP_OID_LEN);
          m_pTrapCfg[i].pdwObjectId = (DWORD *)realloc(m_pTrapCfg[i].pdwObjectId, sizeof(DWORD) * m_pTrapCfg[i].dwOidLen);
          pMsg->GetVariableInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
@@ -465,7 +465,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          pszEscDescr = EncodeSQLString(m_pTrapCfg[i].szDescription);
          SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
          _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%ld,description='%s' WHERE trap_id=%ld"),
-                    szOID, m_pTrapCfg[i].dwEventId, pszEscDescr, m_pTrapCfg[i].dwId);
+                    szOID, m_pTrapCfg[i].dwEventCode, pszEscDescr, m_pTrapCfg[i].dwId);
          free(pszEscDescr);
          bSuccess = DBQuery(g_hCoreDB, szQuery);
          if (bSuccess)

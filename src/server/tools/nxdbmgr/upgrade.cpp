@@ -145,6 +145,16 @@ static BOOL H_UpgradeFromV17(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
+   _sntprintf(szQuery, 4096,
+      _T("CREATE TABLE modules (module_id integer not null,"
+	      "module_name varchar(63),exec_name varchar(255),"
+	      "module_flags integer not null default 0,description %s,"
+	      "PRIMARY KEY(module_id))"),
+              g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   if (!SQLQuery(szQuery))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
    if (!SQLQuery(_T("UPDATE config SET var_value='18' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;

@@ -38,7 +38,8 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
    pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
-   pMsg->SetVariable(VID_EVENT_ID, pAlarm->dwSourceEvent);
+   pMsg->SetVariable(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
+   pMsg->SetVariable(VID_EVENT_ID, pAlarm->qwSourceEventId);
    pMsg->SetVariable(VID_OBJECT_ID, pAlarm->dwSourceObject);
    pMsg->SetVariable(VID_TIMESTAMP, pAlarm->dwTimeStamp);
    pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
@@ -82,7 +83,7 @@ BOOL AlarmManager::Init(void)
 
    // Load unacknowleged alarms into memory
    hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,alarm_timestamp,source_object_id,"
-                                 "source_event_code,message,severity,alarm_key "
+                                 "source_event_code,source_event_id,message,severity,alarm_key "
                                  "FROM alarms WHERE is_ack=0");
    if (hResult == NULL)
       return FALSE;
@@ -96,11 +97,12 @@ BOOL AlarmManager::Init(void)
          m_pAlarmList[i].dwAlarmId = DBGetFieldULong(hResult, i, 0);
          m_pAlarmList[i].dwTimeStamp = DBGetFieldULong(hResult, i, 1);
          m_pAlarmList[i].dwSourceObject = DBGetFieldULong(hResult, i, 2);
-         m_pAlarmList[i].dwSourceEvent = DBGetFieldULong(hResult, i, 3);
-         strncpy(m_pAlarmList[i].szMessage, DBGetField(hResult, i, 4), MAX_DB_STRING);
+         m_pAlarmList[i].dwSourceEventCode = DBGetFieldULong(hResult, i, 3);
+         m_pAlarmList[i].qwSourceEventId = DBGetFieldUInt64(hResult, i, 4);
+         strncpy(m_pAlarmList[i].szMessage, DBGetField(hResult, i, 5), MAX_DB_STRING);
          DecodeSQLString(m_pAlarmList[i].szMessage);
-         m_pAlarmList[i].wSeverity = (WORD)DBGetFieldLong(hResult, i, 5);
-         strncpy(m_pAlarmList[i].szKey, DBGetField(hResult, i, 6), MAX_DB_STRING);
+         m_pAlarmList[i].wSeverity = (WORD)DBGetFieldLong(hResult, i, 6);
+         strncpy(m_pAlarmList[i].szKey, DBGetField(hResult, i, 7), MAX_DB_STRING);
          DecodeSQLString(m_pAlarmList[i].szKey);
          m_pAlarmList[i].wIsAck = 0;
          m_pAlarmList[i].dwAckByUser = 0;
@@ -127,7 +129,8 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
 
    // Create new alarm structure
    alarm.dwAlarmId = CreateUniqueId(IDG_ALARM);
-   alarm.dwSourceEvent = pEvent->Code();
+   alarm.qwSourceEventId = pEvent->Id();
+   alarm.dwSourceEventCode = pEvent->Code();
    alarm.dwSourceObject = pEvent->SourceId();
    alarm.dwTimeStamp = time(NULL);
    alarm.dwAckByUser = 0;
@@ -154,10 +157,16 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    pszExpMsg = EncodeSQLString(alarm.szMessage);
    pszExpKey = EncodeSQLString(alarm.szKey);
    sprintf(szQuery, "INSERT INTO alarms (alarm_id,alarm_timestamp,source_object_id,"
-                    "source_event_code,message,severity,alarm_key,is_ack,ack_by)"
-                    " VALUES (%ld,%ld,%ld,%ld,'%s',%d,'%s',%d,%ld)",
-           alarm.dwAlarmId, alarm.dwTimeStamp, alarm.dwSourceObject, alarm.dwSourceEvent,
-           pszExpMsg, alarm.wSeverity, pszExpKey, alarm.wIsAck, alarm.dwAckByUser);
+                    "source_event_code,message,severity,alarm_key,is_ack,ack_by,"
+                    "source_event_id) VALUES (%ld,%ld,%ld,%ld,'%s',%d,'%s',%d,%ld,"
+#ifdef _WIN32
+                    "%I64d)",
+#else
+                    "%lld)",
+#endif
+           alarm.dwAlarmId, alarm.dwTimeStamp, alarm.dwSourceObject, alarm.dwSourceEventCode,
+           pszExpMsg, alarm.wSeverity, pszExpKey, alarm.wIsAck, alarm.dwAckByUser,
+           alarm.qwSourceEventId);
    free(pszExpMsg);
    free(pszExpKey);
    DBQuery(g_hCoreDB, szQuery);

@@ -274,7 +274,7 @@ private:
    void UnlockEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pRequest);
    void DeleteEventTemplate(CSCPMessage *pRequest);
-   void GenerateEventId(DWORD dwRqId);
+   void GenerateEventCode(DWORD dwRqId);
    void ModifyObject(CSCPMessage *pRequest);
    void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
    void OpenNodeDCIList(CSCPMessage *pRequest);

@@ -417,7 +417,8 @@ typedef struct
    DWORD dwAlarmId;        // Unique alarm ID
    DWORD dwTimeStamp;      // Timestamp in time() format
    DWORD dwSourceObject;   // Source object ID
-   DWORD dwSourceEvent;    // Originating event ID
+   DWORD dwSourceEventCode;// Originating event code
+   QWORD qwSourceEventId;  // Originating event ID
    TCHAR szMessage[MAX_DB_STRING];
    TCHAR szKey[MAX_DB_STRING];
    WORD wSeverity;         // Alarm's severity
@@ -485,7 +486,7 @@ struct NXC_TRAP_CFG_ENTRY
    DWORD dwId;             // Entry ID
    DWORD *pdwObjectId;     // Trap OID
    DWORD dwOidLen;         // Trap OID length
-   DWORD dwEventId;        // Event ID
+   DWORD dwEventCode;      // Event code
    DWORD dwNumMaps;        // Number of parameter mappings
    NXC_OID_MAP *pMaps;
    TCHAR szDescription[MAX_DB_STRING];
@@ -869,10 +870,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
 DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg);
-DWORD LIBNXCL_EXPORTABLE NXCGenerateEventId(DWORD *pdwEventId);
+DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(DWORD *pdwEventCode);
 void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate);
-void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventId);
-DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventId);
+void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventCode);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventCode);
 DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(void);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);

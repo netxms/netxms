@@ -91,17 +91,17 @@ INSERT INTO event_groups (id,name,description)
 INSERT INTO event_groups (id,name,description) 
    VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation');
 
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_NORMAL);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_MINOR);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_WARNING);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_MAJOR);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_CRITICAL);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_UNKNOWN);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_UNMANAGED);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_NORMAL);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_MINOR);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_WARNING);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_MAJOR);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_CRITICAL);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_UNKNOWN);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_UNMANAGED);
 
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
-INSERT INTO event_group_members (group_id,event_id) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
+INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
 
 
 /*

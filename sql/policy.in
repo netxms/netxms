@@ -14,11 +14,11 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 	VALUES (2,7944,'Generate alarm when incorrect network mask detected on interface',
 		'%m',2,'BAD_NETMASK_%i_%2','BAD_NETMASK_%i_%2');
 
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_WARNING);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_MINOR);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_MAJOR);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_CRITICAL);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_UNKNOWN);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_UNMANAGED);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (1,EVENT_NODE_NORMAL);
-INSERT INTO policy_event_list (rule_id,event_id) VALUES (2,EVENT_INCORRECT_NETMASK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_WARNING);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_MINOR);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_MAJOR);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_CRITICAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_UNKNOWN);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_UNMANAGED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_NORMAL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_INCORRECT_NETMASK);

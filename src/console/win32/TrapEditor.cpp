@@ -214,11 +214,11 @@ void CTrapEditor::UpdateItem(int iItem, DWORD dwIndex)
    SNMPConvertOIDToText(m_pTrapList[dwIndex].dwOidLen, m_pTrapList[dwIndex].pdwObjectId,
                         szBuffer, 1024);
    m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
-   m_wndListCtrl.SetItemText(iItem, 2, NXCGetEventName(m_pTrapList[dwIndex].dwEventId));
+   m_wndListCtrl.SetItemText(iItem, 2, NXCGetEventName(m_pTrapList[dwIndex].dwEventCode));
    m_wndListCtrl.SetItemText(iItem, 3, m_pTrapList[dwIndex].szDescription);
    
    m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, 
-                         NXCGetEventSeverity(m_pTrapList[dwIndex].dwEventId),
+                         NXCGetEventSeverity(m_pTrapList[dwIndex].dwEventCode),
                          0, 0, 0);
 }
 
@@ -265,7 +265,7 @@ void CTrapEditor::OnTrapNew()
       m_pTrapList = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapList, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
       memset(&m_pTrapList[m_dwNumTraps], 0, sizeof(NXC_TRAP_CFG_ENTRY));
       m_pTrapList[m_dwNumTraps].dwId = dwTrapId;
-      m_pTrapList[m_dwNumTraps].dwEventId = EVENT_SNMP_UNMATCHED_TRAP;
+      m_pTrapList[m_dwNumTraps].dwEventCode = EVENT_SNMP_UNMATCHED_TRAP;
       m_dwNumTraps++;
       SelectListViewItem(&m_wndListCtrl, AddItem(m_dwNumTraps - 1));
       PostMessage(WM_COMMAND, ID_TRAP_EDIT);
@@ -462,8 +462,8 @@ static int CALLBACK TrapCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
             iResult = COMPARE_NUMBERS(pTrap1->dwOidLen, pTrap2->dwOidLen);
          break;
       case 2:     // Event
-         NXCGetEventNameEx(pTrap1->dwEventId, szEvent1, MAX_EVENT_NAME);
-         NXCGetEventNameEx(pTrap2->dwEventId, szEvent2, MAX_EVENT_NAME);
+         NXCGetEventNameEx(pTrap1->dwEventCode, szEvent1, MAX_EVENT_NAME);
+         NXCGetEventNameEx(pTrap2->dwEventCode, szEvent2, MAX_EVENT_NAME);
          iResult = _tcsicmp(szEvent1, szEvent2);
          break;
       case 3:     // Description
