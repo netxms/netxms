@@ -118,7 +118,7 @@ static BOOL H_UpgradeFromV20(void)
          dwFlags = 0;
          for(j = 1; j <= 6; j++)
             if (DBGetFieldLong(hResult, i, j))
-               dwFlags |= m_dwFlag[j];
+               dwFlags |= m_dwFlag[j - 1];
          _sntprintf(szQuery, 256, _T("UPDATE nodes SET node_flags=%ld WHERE id=%ld"),
                     dwFlags, DBGetFieldULong(hResult, i, 0));
          if (!SQLQuery(szQuery))
