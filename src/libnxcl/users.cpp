@@ -158,3 +158,87 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
    *pdwNumUsers = m_dwNumUsers;
    return TRUE;
 }
+
+
+//
+// Create new user or group on server
+//
+
+DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode;
+
+   msg.SetCode(CMD_DELETE_USER);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_USER_NAME, pszName);
+   msg.SetVariable(VID_IS_GROUP, (WORD)bIsGroup);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Delete user or group
+//
+
+DWORD DeleteUser(DWORD dwRqId, DWORD dwId)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode;
+
+   msg.SetCode(CMD_DELETE_USER);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_USER_ID, dwId);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Lock/unlock user database
+//
+
+DWORD LockUserDB(DWORD dwRqId, BOOL bLock)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode;
+
+   msg.SetCode(bLock ? CMD_LOCK_USER_DB : CMD_UNLOCK_USER_DB);
+   msg.SetId(dwRqId);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}

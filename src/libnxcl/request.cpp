@@ -83,6 +83,18 @@ HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...)
             hRequest = CreateRequest(RQ_MODIFY_OBJECT, 
                                      DuplicateObjectUpdate(va_arg(args, NXC_OBJECT_UPDATE *)), TRUE);
             break;
+         case NXC_OP_CREATE_USER:
+            if (va_arg(args, BOOL))
+               hRequest = CreateRequest(RQ_CREATE_USER_GROUP, nx_strdup(va_arg(args, char *)), TRUE);
+            else
+               hRequest = CreateRequest(RQ_CREATE_USER, nx_strdup(va_arg(args, char *)), TRUE);
+            break;
+         case NXC_OP_DELETE_USER:
+            hRequest = CreateRequest(RQ_DELETE_USER, (void *)va_arg(args, DWORD), FALSE);
+            break;
+         case NXC_OP_LOCK_USER_DB:
+            hRequest = CreateRequest(RQ_LOCK_USER_DB, (void *)va_arg(args, BOOL), FALSE);
+            break;
          default:
             hRequest = INVALID_REQUEST_HANDLE;
             break;
@@ -140,6 +152,18 @@ void RequestProcessor(void *pArg)
             break;
          case RQ_LOAD_USER_DB:
             dwRetCode = LoadUserDB(pRequest->dwHandle);
+            break;
+         case RQ_CREATE_USER:
+            dwRetCode = CreateUser(pRequest->dwHandle, (char *)pRequest->pArg, FALSE);
+            break;
+         case RQ_CREATE_USER_GROUP:
+            dwRetCode = CreateUser(pRequest->dwHandle, (char *)pRequest->pArg, TRUE);
+            break;
+         case RQ_DELETE_USER:
+            dwRetCode = DeleteUser(pRequest->dwHandle, (DWORD)pRequest->pArg);
+            break;
+         case RQ_LOCK_USER_DB:
+            dwRetCode = LockUserDB(pRequest->dwHandle, (BOOL)pRequest->pArg);
             break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, (void *)"Internal error");

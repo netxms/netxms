@@ -37,4 +37,9 @@ extern "C"
    DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
    DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData) { return NXCRequest(NXC_OP_MODIFY_OBJECT, pData); }
    DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void) { return NXCRequest(NXC_OP_LOAD_USER_DB); }
+   DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName) { return NXCRequest(NXC_OP_CREATE_USER, FALSE, pszName); }
+   DWORD LIBNXCL_EXPORTABLE NXCCreateUserGroup(char *pszName) { return NXCRequest(NXC_OP_CREATE_USER, TRUE, pszName); }
+   DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId) { return NXCRequest(NXC_OP_DELETE_USER, dwId); }
+   DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void) { return NXCRequest(NXC_OP_LOCK_USER_DB, TRUE); }
+   DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void) { return NXCRequest(NXC_OP_LOCK_USER_DB, FALSE); }
 }

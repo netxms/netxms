@@ -138,6 +138,9 @@ typedef unsigned long HREQUEST;
 #define NXC_OP_SET_EVENT_INFO    5
 #define NXC_OP_MODIFY_OBJECT     6
 #define NXC_OP_LOAD_USER_DB      7
+#define NXC_OP_CREATE_USER       8
+#define NXC_OP_DELETE_USER       9
+#define NXC_OP_LOCK_USER_DB      10
 
 
 //
@@ -159,6 +162,7 @@ typedef unsigned long HREQUEST;
 #define RCC_OUT_OF_STATE_REQUEST    ((DWORD)5)
 #define RCC_DB_FAILURE              ((DWORD)6)
 #define RCC_INVALID_OBJECT_ID       ((DWORD)7)
+#define RCC_ALREADY_EXIST           ((DWORD)8)
 
 
 //
@@ -208,6 +212,7 @@ typedef unsigned long HREQUEST;
 #define OBJECT_ACCESS_CREATE        0x00000004
 #define OBJECT_ACCESS_DELETE        0x00000008
 #define OBJECT_ACCESS_MOVE          0x00000010
+#define OBJECT_ACCESS_CONTROL       0x00000020
 
 
 //
@@ -407,6 +412,11 @@ inline DWORD NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
 inline DWORD NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
 inline DWORD NXCModifyObject(NXC_OBJECT_UPDATE *pData) { return NXCRequest(NXC_OP_MODIFY_OBJECT, pData); }
 inline DWORD NXCLoadUserDB(void) { return NXCRequest(NXC_OP_LOAD_USER_DB); }
+inline DWORD NXCCreateUser(char *pszName) { return NXCRequest(NXC_OP_CREATE_USER, FALSE, pszName); }
+inline DWORD NXCCreateUserGroup(char *pszName) { return NXCRequest(NXC_OP_CREATE_USER, TRUE, pszName); }
+inline DWORD NXCDeleteUser(DWORD dwId) { return NXCRequest(NXC_OP_DELETE_USER, dwId); }
+inline DWORD NXCLockUserDB(void) { return NXCRequest(NXC_OP_LOCK_USER_DB, TRUE); }
+inline DWORD NXCUnlockUserDB(void) { return NXCRequest(NXC_OP_LOCK_USER_DB, FALSE); }
 #endif   /* __libnxcl_inline_c__ */
 
 #else    /* __cplusplus */
@@ -417,6 +427,11 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName);
+DWORD LIBNXCL_EXPORTABLE NXCCreateUserGroup(char *pszName);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
+DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
 
 #endif   /* __cplusplus */
 

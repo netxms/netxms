@@ -103,9 +103,10 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Request timed out",
       "Request is out of state",
       "Database failure",
-      "Invalid object ID"
+      "Invalid object ID",
+      "Object already exist"
    };
-   return ((dwError >= 0) && (dwError <= 7)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= 8)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

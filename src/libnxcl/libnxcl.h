@@ -55,14 +55,18 @@
 // Request codes
 //
 
-#define RQ_CONNECT         1
-#define RQ_SYNC_OBJECTS    2
-#define RQ_SYNC_EVENTS     3
-#define RQ_OPEN_EVENT_DB   4
-#define RQ_CLOSE_EVENT_DB  5
-#define RQ_SET_EVENT_INFO  6
-#define RQ_MODIFY_OBJECT   7
-#define RQ_LOAD_USER_DB    8
+#define RQ_CONNECT            1
+#define RQ_SYNC_OBJECTS       2
+#define RQ_SYNC_EVENTS        3
+#define RQ_OPEN_EVENT_DB      4
+#define RQ_CLOSE_EVENT_DB     5
+#define RQ_SET_EVENT_INFO     6
+#define RQ_MODIFY_OBJECT      7
+#define RQ_LOAD_USER_DB       8
+#define RQ_CREATE_USER        9
+#define RQ_CREATE_USER_GROUP  10
+#define RQ_DELETE_USER        11
+#define RQ_LOCK_USER_DB       12
 
 
 //
@@ -146,7 +150,10 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
 
 DWORD LoadUserDB(DWORD dwRqId);
+DWORD LockUserDB(DWORD dwRqId, BOOL bLock);
 void ProcessUserDBRecord(CSCPMessage *pMsg);
+DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup);
+DWORD DeleteUser(DWORD dwRqId, DWORD dwId);
 
 void SyncObjects(void);
 DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg);
