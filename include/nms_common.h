@@ -76,4 +76,38 @@ typedef void * HMODULE;
 #define IFTYPE_FRAME_RELAY          32
 
 
+//
+// IP Header -- RFC 791
+//
+
+typedef struct tagIPHDR
+{
+	BYTE m_cVIHL;	         // Version and IHL
+	BYTE m_cTOS;			   // Type Of Service
+	WORD m_wLen;			   // Total Length
+	WORD m_wId;			      // Identification
+	WORD m_wFlagOff;	      // Flags and Fragment Offset
+	BYTE m_cTTL;			   // Time To Live
+	BYTE m_cProtocol;	      // Protocol
+	WORD m_wChecksum;	      // Checksum
+	struct in_addr m_iaSrc;	// Internet Address - Source
+	struct in_addr m_iaDst;	// Internet Address - Destination
+} IPHDR;
+
+
+//
+// ICMP Header - RFC 792
+//
+
+typedef struct tagICMPHDR
+{
+	BYTE m_cType;			// Type
+	BYTE m_cCode;			// Code
+	WORD m_wChecksum;		// Checksum
+	WORD m_wId;				// Identification
+	WORD m_wSeq;			// Sequence
+	char m_cData[1];		// Data
+} ICMPHDR;
+
+
 #endif   /* _nms_common_h_ */
