@@ -122,7 +122,7 @@ CREATE TABLE Items
 	node_id integer not null,
 	name varchar(255),
 	description varchar(255),
-	source integer,			-- 0 for SNMP or 1 for native agent
+	source integer,			-- 0 for internal or 1 for native agent or 2 for SNMP
 	datatype integer,
 	polling_interval integer,
 	retention_time integer,
