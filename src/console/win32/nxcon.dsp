@@ -54,6 +54,11 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
 # ADD LINK32 libnxcl.lib libnetxms.lib libsnmp.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release"
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Release\nxcon.exe C:\NetXMS\bin
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxcon - Win32 Debug"
 
