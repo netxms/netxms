@@ -32,6 +32,7 @@ public:
 
 // Implementation
 public:
+	void Refresh(void);
 	virtual BOOL Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext);
 	virtual ~CNodeSummary();
 
@@ -41,7 +42,6 @@ protected:
 	//{{AFX_MSG(CNodeSummary)
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

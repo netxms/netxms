@@ -41,6 +41,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ObjectPropsSecurity.h"
 #include "UserEditor.h"
 #include "NetSummaryFrame.h"
+#include "DataCollectionEditor.h"
 
 
 //
@@ -123,6 +124,7 @@ private:
 
    // Inline functions
 public:
+	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);
 	CMenu * GetContextMenu(int iIndex);
 	void ObjectProperties(DWORD dwObjectId);

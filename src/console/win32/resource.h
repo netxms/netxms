@@ -14,6 +14,7 @@
 #define IDC_EDIT_SEARCH_STRING          107
 #define IDR_NETWORK_SUMMARY             107
 #define ID_FIND_OBJECT                  108
+#define IDR_EDIT_DCI                    108
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -140,6 +141,8 @@
 #define ID_USER_RENAME                  32810
 #define ID_OBJECT_DATACOLLECTION        32819
 #define ID_VIEW_NETWORKSUMMARY          32821
+#define ID_OBJECT_MANAGE                32822
+#define ID_OBJECT_UNMANAGE              32823
 
 // Next default values for new objects
 // 
@@ -147,7 +150,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        174
-#define _APS_NEXT_COMMAND_VALUE         32822
+#define _APS_NEXT_COMMAND_VALUE         32826
 #define _APS_NEXT_CONTROL_VALUE         1057
 #define _APS_NEXT_SYMED_VALUE           109
 #endif

@@ -187,8 +187,10 @@ BEGIN
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Manage object(s)\tCtrl+M",   ID_OBJECT_MANAGE
+        MENUITEM "&Unmanage object(s)\tCtrl+U", ID_OBJECT_UNMANAGE
         MENUITEM SEPARATOR
+        MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
     POPUP "User"
@@ -225,8 +227,10 @@ BEGIN
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Manage",                     ID_OBJECT_MANAGE
+        MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
         MENUITEM SEPARATOR
+        MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
 END
@@ -713,6 +717,7 @@ BEGIN
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
+    IDR_EDIT_DCI            "\nData Collection Configuration\nData Collection Configuration"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

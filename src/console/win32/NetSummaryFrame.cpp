@@ -29,7 +29,11 @@ BEGIN_MESSAGE_MAP(CNetSummaryFrame, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CNetSummaryFrame)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_WM_SIZE()
+	ON_WM_GETMINMAXINFO()
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -76,4 +80,49 @@ void CNetSummaryFrame::OnDestroy()
 {
    theApp.OnViewDestroy(IDR_NETWORK_SUMMARY, this);
 	CMDIChildWnd::OnDestroy();
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CNetSummaryFrame::OnSize(UINT nType, int cx, int cy) 
+{
+	CMDIChildWnd::OnSize(nType, cx, cy);
+
+   m_wndNodeSummary.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+}
+
+
+//
+// WM_GETMINMAXINFO message handler
+//
+
+void CNetSummaryFrame::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
+{
+	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
+   lpMMI->ptMinTrackSize.x = 370;
+   lpMMI->ptMinTrackSize.y = 230;
+}
+
+
+//
+// WM_OBJECT_CHANGE message handler
+//
+
+void CNetSummaryFrame::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
+{
+   if (pObject->iClass == OBJECT_NODE)
+      m_wndNodeSummary.Refresh();
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_REFRESH message handler
+//
+
+void CNetSummaryFrame::OnViewRefresh() 
+{
+   m_wndNodeSummary.Refresh();
 }

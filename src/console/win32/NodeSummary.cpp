@@ -32,7 +32,6 @@ BEGIN_MESSAGE_MAP(CNodeSummary, CWnd)
 	//{{AFX_MSG_MAP(CNodeSummary)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
-	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -171,10 +170,10 @@ void CNodeSummary::UpdateStatus()
 
 
 //
-// WM_COMMAND::ID_VIEW_REFRESH message handler
+// Refresh window
 //
 
-void CNodeSummary::OnViewRefresh() 
+void CNodeSummary::Refresh()
 {
 	UpdateStatus();
    Invalidate();

@@ -94,6 +94,7 @@ public:
 
 // Implementation
 protected:
+	void ChangeMgmtStatus(BOOL bIsManaged);
 	NXC_OBJECT * m_pCurrentObject;
 	DWORD GetSelectedObject(void);
 	void ClearListSelection(void);
@@ -130,6 +131,10 @@ protected:
 	afx_msg void OnUpdateObjectProperties(CCmdUI* pCmdUI);
 	afx_msg void OnObjectDatacollection();
 	afx_msg void OnUpdateObjectDatacollection(CCmdUI* pCmdUI);
+	afx_msg void OnObjectManage();
+	afx_msg void OnObjectUnmanage();
+	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateObjectManage(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);

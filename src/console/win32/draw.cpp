@@ -32,9 +32,10 @@
 
 void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors)
 {
-   int i, iTotalSize, cx, cy, ncx, ncy;
+   int i, iTotalSize, cx, cy, ncx, ncy, dir, inc;
    int *piSize;
    CBrush brush, *pOldBrush; 
+   CPen pen, *pOldPen;
    DWORD dwTotal;
 
    // Calculate total value
@@ -44,21 +45,67 @@ void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLO
    // Calculate size of each sector
    piSize = (int *)malloc(sizeof(int) * iNumElements);
    iTotalSize = ((pRect->bottom - pRect->top) + (pRect->right - pRect->left)) * 2;
-   for(i = 0, dwTotal = 0; i < iNumElements; i++)
+   for(i = 0; i < iNumElements; i++)
       piSize[i] = (int)(iTotalSize * ((double)pdwValues[i] / (double)dwTotal));
 
-   cx = pRect->left;
-   cy = pRect->top;
+   // Start coordinates
+   ncx = cx = pRect->left;
+   ncy = cy = pRect->top + (pRect->bottom - pRect->top) / 2;
 
-   for(i = 0; i < iNumElements; i++)
+   // Select pen for line drawing
+   pen.CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
+   pOldPen = dc.SelectObject(&pen);
+
+   // Draw sectors
+   for(i = 0, dir = 0; i < iNumElements; i++, cx = ncx, cy = ncy)
    {
+      if (piSize[i] > 0)
+      {
+         do
+         {
+            switch(dir)
+            {
+               case 0:
+                  inc = min(piSize[i], pRect->bottom - ncy);
+                  ncy += inc;
+                  piSize[i] -= inc;
+                  if (ncy == pRect->bottom)
+                     dir++;
+                  break;
+               case 1:
+                  inc = min(piSize[i], pRect->right - ncx);
+                  ncx += inc;
+                  piSize[i] -= inc;
+                  if (ncx == pRect->right)
+                     dir++;
+                  break;
+               case 2:
+                  inc = min(piSize[i], ncy - pRect->top);
+                  ncy -= inc;
+                  piSize[i] -= inc;
+                  if (ncy == pRect->top)
+                     dir++;
+                  break;
+               case 3:
+                  inc = min(piSize[i], ncx - pRect->left);
+                  ncx -= inc;
+                  piSize[i] -= inc;
+                  if (ncx == pRect->left)
+                     dir = 0;
+                  break;
+            }
+         }
+         while(piSize[i] > 0);
 
-      brush.CreateSolidBrush(pColors[i]);
-      pOldBrush = dc.SelectObject(&brush);
-      dc.Pie(pRect, CPoint(cx, cy), CPoint(ncx, ncy));
-      dc.SelectObject(pOldBrush);
-      brush.DeleteObject();
+         brush.CreateSolidBrush(pColors[i]);
+         pOldBrush = dc.SelectObject(&brush);
+         dc.Pie(pRect, CPoint(cx, cy), CPoint(ncx, ncy));
+         dc.SelectObject(pOldBrush);
+         brush.DeleteObject();
+      }
    }
 
+   // Cleanup
+   dc.SelectObject(pOldPen);
    free(piSize);
 }

@@ -47,6 +47,8 @@ src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
+src/console/win32/DataCollectionEditor.cpp -text
+src/console/win32/DataCollectionEditor.h -text
 src/console/win32/DebugFrame.cpp -text
 src/console/win32/DebugFrame.h -text
 src/console/win32/EditBox.cpp -text

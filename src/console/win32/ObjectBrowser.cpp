@@ -157,6 +157,10 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_PROPERTIES, OnUpdateObjectProperties)
 	ON_COMMAND(ID_OBJECT_DATACOLLECTION, OnObjectDatacollection)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_DATACOLLECTION, OnUpdateObjectDatacollection)
+	ON_COMMAND(ID_OBJECT_MANAGE, OnObjectManage)
+	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_MANAGE, OnUpdateObjectManage)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1120,15 +1124,37 @@ void CObjectBrowser::OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI)
 
 void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_pCurrentObject != NULL);
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+      pCmdUI->Enable(m_pCurrentObject != NULL);
+   else
+      pCmdUI->Enable((m_pCurrentObject != NULL) &&
+                     (m_wndListCtrl.GetSelectedCount() == 1));
 }
 
 void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
 {
    if (m_pCurrentObject == NULL)
+   {
       pCmdUI->Enable(FALSE);
+   }
    else
-      pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
+   {
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+         pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
+      else
+         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_NODE) &&
+                        (m_wndListCtrl.GetSelectedCount() == 1));
+   }
+}
+
+void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+void CObjectBrowser::OnUpdateObjectManage(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
 }
 
 
@@ -1150,4 +1176,51 @@ void CObjectBrowser::OnObjectDatacollection()
 {
    if (m_pCurrentObject != NULL)
       theApp.StartObjectDCEditor(m_pCurrentObject);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_MANAGE message handler
+//
+
+void CObjectBrowser::OnObjectManage() 
+{
+   ChangeMgmtStatus(TRUE);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_UNMANAGE message handler
+//
+
+void CObjectBrowser::OnObjectUnmanage() 
+{
+   ChangeMgmtStatus(FALSE);
+}
+
+
+//
+// Change management status for currently selected object(s)
+//
+
+void CObjectBrowser::ChangeMgmtStatus(BOOL bIsManaged)
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      if (m_pCurrentObject != NULL)
+         theApp.SetObjectMgmtStatus(m_pCurrentObject, bIsManaged);
+   }
+   else
+   {
+      int iItem;
+      NXC_OBJECT *pObject;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         theApp.SetObjectMgmtStatus(pObject, bIsManaged);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
 }

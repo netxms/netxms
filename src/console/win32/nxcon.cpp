@@ -646,7 +646,25 @@ CMenu *CConsoleApp::GetContextMenu(int iIndex)
 
 void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
 {
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   NXC_DCI_LIST *pItemList;
+   DWORD dwResult;
 
+   dwResult = DoRequestArg2(NXCOpenNodeDCIList, (void *)pObject->dwId, 
+                            &pItemList, "Loading node's data collection information...");
+   if (dwResult == RCC_SUCCESS)
+   {
+	   pFrame->CreateNewChild(
+		   RUNTIME_CLASS(CDataCollectionEditor), IDR_EDIT_DCI, m_hMDIMenu, m_hMDIAccel);	
+   }
+   else
+   {
+      char szBuffer[256];
+
+      sprintf(szBuffer, "Unable to load data collection information for node:\n%s", 
+              NXCGetErrorText(dwResult));
+      m_pMainWnd->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+   }
 }
 
 
@@ -664,4 +682,25 @@ void CConsoleApp::OnViewNetworksummary()
    else
 	   pFrame->CreateNewChild(
 		   RUNTIME_CLASS(CNetSummaryFrame), IDR_NETWORK_SUMMARY, m_hMDIMenu, m_hMDIAccel);	
+}
+
+
+//
+// Set object's management status
+//
+
+void CConsoleApp::SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged)
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg2(NXCSetObjectMgmtStatus, (void *)pObject->dwId, 
+                            (void *)bIsManaged, "Changing object status...");
+   if (dwResult != RCC_SUCCESS)
+   {
+      char szBuffer[256];
+
+      sprintf(szBuffer, "Unable to change management status for object %s:\n%s", 
+              pObject->szName, NXCGetErrorText(dwResult));
+      GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+   }
 }

@@ -104,6 +104,10 @@ SOURCE=.\ControlPanel.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DataCollectionEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
@@ -242,6 +246,10 @@ SOURCE=.\UserSelectDlg.cpp
 # Begin Source File
 
 SOURCE=.\ControlPanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DataCollectionEditor.h
 # End Source File
 # Begin Source File
 
