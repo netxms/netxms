@@ -64,6 +64,7 @@ src/console/win32/res/login.bmp -text
 src/console/win32/res/nxcon.ico -text
 src/console/win32/resource.h -text
 src/libnxcl/comm.cpp -text
+src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
@@ -73,7 +74,6 @@ src/libnxcl/misc.cpp -text
 src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/request.cpp -text
-src/libnxcl/rqproc.cpp -text
 src/server/core/NmsCore.dsp -text
 src/server/core/NmsCore.dsw -text
 src/server/core/acl.cpp -text

@@ -32,22 +32,31 @@ HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
 {
    HREQUEST hRequest;
 
-   switch(dwOperation)
+   if (g_dwState == STATE_DISCONNECTED)
    {
-      case NXC_OP_SYNC_OBJECTS:
-         hRequest = CreateRequest(RQ_SYNC_OBJECTS, NULL, FALSE);
-         break;
-      case NXC_OP_SYNC_EVENTS:
-         hRequest = CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
-         break;
-      case NXC_OP_OPEN_EVENT_DB:
-         hRequest = CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
-         break;
-      default:
-         hRequest = INVALID_REQUEST_HANDLE;
-         break;
+      hRequest = INVALID_REQUEST_HANDLE;
    }
-
+   else
+   {
+      switch(dwOperation)
+      {
+         case NXC_OP_SYNC_OBJECTS:
+            hRequest = CreateRequest(RQ_SYNC_OBJECTS, NULL, FALSE);
+            break;
+         case NXC_OP_SYNC_EVENTS:
+            hRequest = CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
+            break;
+         case NXC_OP_OPEN_EVENT_DB:
+            hRequest = CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
+            break;
+         case NXC_OP_CLOSE_EVENT_DB:
+            hRequest = CreateRequest(RQ_CLOSE_EVENT_DB, NULL, FALSE);
+            break;
+         default:
+            hRequest = INVALID_REQUEST_HANDLE;
+            break;
+      }
+   }
    return hRequest;
 }
 
@@ -59,17 +68,23 @@ HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
 void RequestProcessor(void *pArg)
 {
    REQUEST *pRequest;
+   DWORD dwRetCode;
 
    while(1)
    {
       pRequest = (REQUEST *)g_pRequestQueue->GetOrBlock();
+      dwRetCode = RCC_SUCCESS;
       switch(pRequest->dwCode)
       {
          case RQ_CONNECT:
             if (Connect())
+            {
                ChangeState(STATE_IDLE);
+            }
             else
+            {
                ChangeState(STATE_DISCONNECTED);
+            }
             break;
          case RQ_SYNC_OBJECTS:
             SyncObjects();
@@ -78,13 +93,17 @@ void RequestProcessor(void *pArg)
             SyncEvents();
             break;
          case RQ_OPEN_EVENT_DB:
-            OpenEventDB();
+            dwRetCode = OpenEventDB(pRequest->dwHandle);
+            break;
+         case RQ_CLOSE_EVENT_DB:
+            dwRetCode = CloseEventDB(pRequest->dwHandle);
             break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
+            dwRetCode = RCC_INVALID_REQUEST;
             break;
       }
-      CallEventHandler(NXC_EVENT_REQUEST_COMPLETED, pRequest->dwHandle, NULL);
+      CallEventHandler(NXC_EVENT_REQUEST_COMPLETED, pRequest->dwHandle, (void *)dwRetCode);
       MemFree(pRequest);
    }
 }

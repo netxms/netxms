@@ -72,6 +72,7 @@ static void NetReceiver(void *pArg)
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
    int iErr;
+   BOOL bMsgNotNeeded;
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
@@ -115,22 +116,20 @@ static void NetReceiver(void *pArg)
       else
       {
          pMsg = new CSCPMessage(pRawMsg);
+         bMsgNotNeeded = TRUE;
          DebugPrintf("RECV_MSG: Code=%d ID=%d", pMsg->GetCode(), pMsg->GetId());
 
          // Process message
          switch(pMsg->GetCode())
          {
             case CMD_KEEPALIVE:     // Keepalive message, ignore it
-               delete pMsg;
                break;
             case CMD_OBJECT:        // Object information
             case CMD_OBJECT_LIST_END:
                ProcessObjectUpdate(pMsg);
-               delete pMsg;
                break;
             case CMD_EVENT_LIST_END:
                ProcessEvent(pMsg, NULL);
-               delete pMsg;
                break;
             case CMD_EVENT_DB_RECORD:
             case CMD_EVENT_DB_EOF:
@@ -138,8 +137,11 @@ static void NetReceiver(void *pArg)
                break;
             default:
                m_msgWaitQueue.Put(pMsg);
+               bMsgNotNeeded = FALSE;
                break;
          }
+         if (bMsgNotNeeded)
+            delete pMsg;
       }
    }
 
@@ -271,4 +273,14 @@ void EXPORTABLE NXCDisconnect(void)
 
    // Clear message wait queue
    m_msgWaitQueue.Clear();
+}
+
+
+//
+// Wait for specific message
+//
+
+CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut)
+{
+   return m_msgWaitQueue.WaitForMessage(dwCode, dwId, dwTimeOut);
 }

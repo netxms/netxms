@@ -56,6 +56,7 @@
 #define RQ_SYNC_OBJECTS    2
 #define RQ_SYNC_EVENTS     3
 #define RQ_OPEN_EVENT_DB   4
+#define RQ_CLOSE_EVENT_DB  5
 
 
 //
@@ -127,14 +128,20 @@ public:
 // Functions
 //
 
-HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
-void ChangeState(DWORD dwState);
 BOOL Connect(void);
-void ProcessObjectUpdate(CSCPMessage *pMsg);
 void SyncObjects(void);
 void SyncEvents(void);
+DWORD OpenEventDB(DWORD dwRqId);
+DWORD CloseEventDB(DWORD dwRqId);
+void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
+void ProcessEventDBRecord(CSCPMessage *pMsg);
+
 BOOL SendMsg(CSCPMessage *pMsg);
+CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
+
+HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
+void ChangeState(DWORD dwState);
 void DebugPrintf(char *szFormat, ...);
 
 
@@ -145,6 +152,7 @@ void DebugPrintf(char *szFormat, ...);
 extern NXC_EVENT_HANDLER g_pEventHandler;
 extern NXC_DEBUG_CALLBACK g_pDebugCallBack;
 extern DWORD g_dwState;
+extern DWORD g_dwRequestId;
 extern Queue *g_pRequestQueue;
 
 
