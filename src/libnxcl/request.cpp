@@ -46,7 +46,7 @@ HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
 // Process async user request
 //
 
-HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
+HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...)
 {
    HREQUEST hRequest;
    va_list args;

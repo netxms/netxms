@@ -27,6 +27,16 @@
 #include <nms_common.h>
 #include <nxevent.h>
 
+#ifdef _WIN32
+#ifdef LIBNXCL_EXPORTS
+#define LIBNXCL_EXPORTABLE __declspec(dllexport)
+#else
+#define LIBNXCL_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define LIBNXCL_EXPORTABLE
+#endif
+
 
 //
 // Custom data types
@@ -235,20 +245,20 @@ typedef struct
 extern "C" {
 #endif
 
-DWORD EXPORTABLE NXCGetVersion(void);
-BOOL EXPORTABLE NXCInitialize(void);
-BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
-void EXPORTABLE NXCDisconnect(void);
-void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
-void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
-HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...);
+DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void);
+BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
+BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
+void LIBNXCL_EXPORTABLE NXCDisconnect(void);
+void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
+void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
+HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
-NXC_OBJECT EXPORTABLE *NXCFindObjectById(DWORD dwId);
-void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
-NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId);
+void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetRootObject(void);
 
-BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
-void EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
+BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
+void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
                                        DWORD dwSeverity, DWORD dwFlags, const char *pszName,
                                        const char *pszMessage, const char *pszDescription);
 
@@ -272,10 +282,10 @@ inline DWORD NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE
 
 #else    /* __cplusplus */
 
-DWORD EXPORTABLE NXCSyncObjects(void);
-DWORD EXPORTABLE NXCSyncEvents(void);
-DWORD EXPORTABLE NXCOpenEventDB(void);
-DWORD EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
+DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
+DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
 
 #endif   /* __cplusplus */
 

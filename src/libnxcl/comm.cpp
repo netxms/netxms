@@ -246,7 +246,7 @@ BOOL Connect(void)
 // Initiate connection to server
 //
 
-BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
+BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
 {
    if (g_dwState != STATE_DISCONNECTED)
       return FALSE;
@@ -265,7 +265,7 @@ BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
 // Disconnect from server
 //
 
-void EXPORTABLE NXCDisconnect(void)
+void LIBNXCL_EXPORTABLE NXCDisconnect(void)
 {
    // Close socket
    shutdown(m_hSocket, 2);

@@ -31,8 +31,8 @@
 
 extern "C"
 {
-   DWORD EXPORTABLE NXCSyncObjects(void) { return NXCRequest(NXC_OP_SYNC_OBJECTS); }
-   DWORD EXPORTABLE NXCSyncEvents(void) { return NXCRequest(NXC_OP_SYNC_EVENTS); }
-   DWORD EXPORTABLE NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
-   DWORD EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
+   DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void) { return NXCRequest(NXC_OP_SYNC_OBJECTS); }
+   DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void) { return NXCRequest(NXC_OP_SYNC_EVENTS); }
+   DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
+   DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
 }

@@ -246,7 +246,7 @@ DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg)
 // Get pointer to event templates list
 //
 
-BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords)
+BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords)
 {
    if (!m_bEventDBOpened)
       return FALSE;
@@ -261,7 +261,7 @@ BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwN
 // Modify event template
 //
 
-void EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
+void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
                                        DWORD dwSeverity, DWORD dwFlags, const char *pszName,
                                        const char *pszMessage, const char *pszDescription)
 {

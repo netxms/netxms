@@ -297,7 +297,7 @@ void SyncObjects(void)
 // Find object by ID
 //
 
-NXC_OBJECT EXPORTABLE *NXCFindObjectById(DWORD dwId)
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId)
 {
    DWORD dwPos;
 
@@ -310,7 +310,7 @@ NXC_OBJECT EXPORTABLE *NXCFindObjectById(DWORD dwId)
 // Enumerate all objects
 //
 
-void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
+void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
 {
    DWORD i;
 
@@ -324,7 +324,7 @@ void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
 // Get root ("Entire Network") object
 //
 
-NXC_OBJECT EXPORTABLE *NXCGetRootObject(void)
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetRootObject(void)
 {
    if (m_dwNumObjects > 0)
       if (m_pIndexById[0].dwKey == 1)

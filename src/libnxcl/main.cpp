@@ -46,7 +46,7 @@ DWORD g_dwRequestId;
 // Initialization function
 //
 
-BOOL EXPORTABLE NXCInitialize(void)
+BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
    g_dwRequestId = 1;
    g_pRequestQueue = new Queue;
@@ -61,7 +61,7 @@ BOOL EXPORTABLE NXCInitialize(void)
 // Get library version
 //
 
-DWORD EXPORTABLE NXCGetVersion(void)
+DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void)
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_RELEASE;
 }
@@ -71,7 +71,7 @@ DWORD EXPORTABLE NXCGetVersion(void)
 // Set event handler
 //
 
-void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler)
+void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler)
 {
    g_pEventHandler = pHandler;
 }
@@ -81,7 +81,7 @@ void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler)
 // Set callback for debug messages
 //
 
-void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
+void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 {
    g_pDebugCallBack = pFunc;
 }
