@@ -1980,16 +1980,15 @@ void ClientSession::SendMIBList(DWORD dwRqId)
    dir = opendir(szBuffer);
    if (dir != NULL)
    {
-#ifdef _WIN32
-      strcat(szBuffer, "\\");
-#else
-      strcat(szBuffer, "/");
-#endif
+      strcat(szBuffer, FS_PATH_SEPARATOR);
       iBufPos = strlen(szBuffer);
       dwId1 = VID_MIB_NAME_BASE;
       dwId2 = VID_MIB_HASH_BASE;
       while((dptr = readdir(dir)) != NULL)
       {
+         if (dptr->d_name[0] == '.')
+            continue;
+
          strcpy(&szBuffer[iBufPos], dptr->d_name);
          if (CalculateFileMD5Hash(szBuffer, md5Hash))
          {
