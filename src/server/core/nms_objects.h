@@ -263,7 +263,7 @@ public:
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
    void StatusPoll(ClientSession *pSession, DWORD dwRqId);
-   void ConfigurationPoll(void);
+   void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);
    BOOL ReadyForDiscoveryPoll(void);

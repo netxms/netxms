@@ -54,6 +54,7 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnAlarmAcknowlege();
 	afx_msg void OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI);
+	afx_msg void OnClose();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

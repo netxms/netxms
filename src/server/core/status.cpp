@@ -78,7 +78,7 @@ THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
          if (pNode->ReadyForConfigurationPoll())
          {
-            pNode->ConfigurationPoll();
+            pNode->ConfigurationPoll(NULL, 0);
             WatchdogNotify(dwWatchdogId);
          }
       }

@@ -22,6 +22,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
 	ON_COMMAND(ID_UPDATE_EVENT_LIST, OnUpdateEventList)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 //   ON_UPDATE_COMMAND_UI(ID_INDICATOR_CONNECT, OnUpdateConnState)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
@@ -125,14 +126,7 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 void CMainFrame::OnDestroy() 
 {
-   WINDOWPLACEMENT wndPlacement;
-
 	CMDIFrameWnd::OnDestroy();
-
-   // Save window placement
-   GetWindowPlacement(&wndPlacement);
-   AfxGetApp()->WriteProfileBinary(_T("General"), _T("WindowPlacement"),
-                                   (BYTE *)&wndPlacement, sizeof(WINDOWPLACEMENT));
 }
 
 
@@ -140,15 +134,23 @@ void CMainFrame::OnDestroy()
 // Broadcast message to all MDI child windows
 //
 
-void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam, BOOL bUsePost)
 {
    CWnd *pWnd;
 
    pWnd = MDIGetActive();
    while(pWnd != NULL)
    {
-      pWnd->PostMessage(msg, wParam, lParam);
-      pWnd = pWnd->GetNextWindow();
+      if (bUsePost)
+         pWnd->PostMessage(msg, wParam, lParam);
+      else
+         pWnd->SendMessage(msg, wParam, lParam);
+
+      // If pWnd still exist, call GetNextWindow()
+      if (IsWindow(pWnd->m_hWnd))
+         pWnd = pWnd->GetNextWindow();
+      else
+         pWnd = MDIGetActive();
    }
    theApp.DebugPrintf("CMainFrame::BroadcastMessage(%d, %d, %d)", msg, wParam, lParam);
 }
@@ -160,7 +162,7 @@ void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   BroadcastMessage(WM_OBJECT_CHANGE, wParam, lParam);
+   BroadcastMessage(WM_OBJECT_CHANGE, wParam, lParam, TRUE);
 }
 
 
@@ -170,7 +172,7 @@ void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 {
-   BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam);
+   BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam, TRUE);
 }
 
 
@@ -217,4 +219,24 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    if (pWnd != NULL)
       pWnd->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
    free((void *)lParam);
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CMainFrame::OnClose() 
+{
+   WINDOWPLACEMENT wndPlacement;
+
+   // Save window placement
+   GetWindowPlacement(&wndPlacement);
+   AfxGetApp()->WriteProfileBinary(_T("General"), _T("WindowPlacement"),
+                                   (BYTE *)&wndPlacement, sizeof(WINDOWPLACEMENT));
+
+   // Send WM_CLOSE to all active MDI windows
+   BroadcastMessage(WM_CLOSE, 0, 0, FALSE);
+
+   CMDIFrameWnd::OnClose();
 }

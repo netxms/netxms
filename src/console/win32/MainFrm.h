@@ -29,7 +29,7 @@ public:
 
 // Implementation
 public:
-	void BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+	void BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam, BOOL bUsePost);
 	virtual ~CMainFrame();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -47,6 +47,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
 	afx_msg void OnUpdateEventList();
+	afx_msg void OnClose();
 	//}}AFX_MSG
    afx_msg void OnStateChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);

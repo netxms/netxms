@@ -608,7 +608,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 
    PollerLock();
    m_pPollRequestor = pSession;
-   SendPollerMsg(dwRqId, "Starting status poll for node %s\r\n", m_szName);
+   SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
    for(i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_UNMANAGED))
@@ -626,7 +626,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 // Perform configuration poll on node
 //
 
-void Node::ConfigurationPoll(void)
+void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
 {
    DWORD dwOldFlags = m_dwFlags;
    AgentConnection *pAgentConn;
@@ -634,14 +634,18 @@ void Node::ConfigurationPoll(void)
    BOOL bHasChanges = FALSE;
 
    PollerLock();
+   m_pPollRequestor = pSession;
+   SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
    DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)\n", m_szName, m_dwId);
 
    // Check node's capabilities
+   SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
+      SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
    }
    else
    {
@@ -651,6 +655,7 @@ void Node::ConfigurationPoll(void)
             PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
          m_iSnmpAgentFails++;
       }
+      SendPollerMsg(dwRqId, _T("   SNMP agent is not responding\r\n"));
    }
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
@@ -659,6 +664,7 @@ void Node::ConfigurationPoll(void)
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       m_iNativeAgentFails = 0;
       pAgentConn->Disconnect();
+      SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
    }
    else
    {
@@ -668,6 +674,7 @@ void Node::ConfigurationPoll(void)
             PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
          m_iNativeAgentFails++;
       }
+      SendPollerMsg(dwRqId, _T("   NetXMS native agent is not responding\r\n"));
    }
    delete pAgentConn;
 
@@ -679,6 +686,8 @@ void Node::ConfigurationPoll(void)
    }
 
    // Retrieve interface list
+   SendPollerMsg(dwRqId, _T("Capability check finished\r\n"
+                            "Checking interface configuration...\r\n"));
    pIfList = GetInterfaceList();
    if (pIfList != NULL)
    {
@@ -699,6 +708,8 @@ void Node::ConfigurationPoll(void)
             if (j == pIfList->iNumEntries)
             {
                // No such interface in current configuration, delete it
+               SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
+                             pInterface->Name());
                PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
                          pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
                DeleteInterface(pInterface);
@@ -723,6 +734,8 @@ void Node::ConfigurationPoll(void)
          if (i == m_dwChildCount)
          {
             // New interface
+            SendPollerMsg(dwRqId, _T("   Found new interface \"%s\"\r\n"), 
+                          pIfList->pInterfaces[j].szName);
             CreateNewInterface(pIfList->pInterfaces[j].dwIpAddr, 
                                pIfList->pInterfaces[j].dwIpNetMask,
                                pIfList->pInterfaces[j].szName,
@@ -736,6 +749,10 @@ void Node::ConfigurationPoll(void)
    }
 
    m_tLastConfigurationPoll = time(NULL);
+   SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"
+                            "Finished configuration poll for node %s\r\n"
+                            "Node configuration was%schanged after poll\r\n"),
+                 m_szName, bHasChanges ? _T(" ") : _T(" not "));
    PollerUnlock();
    DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)\n", m_szName, m_dwId);
 

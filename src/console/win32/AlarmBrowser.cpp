@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEGE, OnUpdateAlarmAcknowlege)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -70,6 +71,8 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    static int icons[5] = { IDI_SEVERITY_NORMAL, IDI_SEVERITY_WARNING, IDI_SEVERITY_MINOR,
                            IDI_SEVERITY_MAJOR, IDI_SEVERITY_CRITICAL };
    int i;
+   BYTE *pwp;
+   UINT iBytes;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -111,6 +114,19 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(3, _T("Time Stamp"), LVCFMT_LEFT, 135);
    m_wndListCtrl.InsertColumn(4, _T("Ack"), LVCFMT_CENTER, 30);
 	
+   // Restore window size and position if we have one
+   if (theApp.GetProfileBinary(_T("AlarmBrowser"), _T("WindowPlacement"),
+                               &pwp, &iBytes))
+   {
+      if (iBytes == sizeof(WINDOWPLACEMENT))
+      {
+         SetWindowPlacement((WINDOWPLACEMENT *)pwp);
+         if (IsIconic())
+            ShowWindow(SW_RESTORE);
+      }
+      delete pwp;
+   }
+
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_ALARMS, this);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -325,4 +341,19 @@ void CAlarmBrowser::UpdateStatusBar(void)
    }
    _stprintf(szBuffer, _T("Total: %d"), iSum);
    m_wndStatusBar.SetText(szBuffer, 5, 0);
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CAlarmBrowser::OnClose() 
+{
+   WINDOWPLACEMENT wp;
+
+   GetWindowPlacement(&wp);
+   theApp.WriteProfileBinary(_T("AlarmBrowser"), _T("WindowPlacement"), 
+                             (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
+	CMDIChildWnd::OnClose();
 }

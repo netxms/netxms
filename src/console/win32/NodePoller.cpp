@@ -32,6 +32,7 @@ BEGIN_MESSAGE_MAP(CNodePoller, CMDIChildWnd)
 	ON_COMMAND(ID_POLL_RESTART, OnPollRestart)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(WM_POLLER_MESSAGE, OnPollerMessage)
@@ -55,11 +56,11 @@ int CNodePoller::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create and setup message area
    GetClientRect(&rect);
    m_wndMsgArea.Create(WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | 
-                       WS_VSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL, rect, this, -1);
-   m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                       WS_VSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL, rect, this, ID_EDIT_BOX);
+   m_font.CreateFont(-MulDiv(10, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                      0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                     FIXED_PITCH | FF_DONTCARE, "Courier");
+                     FIXED_PITCH | FF_DONTCARE, _T("Courier"));
    m_wndMsgArea.SetFont(&m_font);
 
    return 0;
@@ -157,4 +158,23 @@ void CNodePoller::OnSetFocus(CWnd* pOldWnd)
 	CMDIChildWnd::OnSetFocus(pOldWnd);
 
    m_wndMsgArea.SetFocus();
+}
+
+
+//
+// WM_CTLCOLOR message handler
+//
+
+HBRUSH CNodePoller::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) 
+{
+	HBRUSH hbr = CMDIChildWnd::OnCtlColor(pDC, pWnd, nCtlColor);
+
+   if (pWnd->GetDlgCtrlID() == ID_EDIT_BOX)
+   {
+      pDC->SetTextColor(RGB(0, 0, 0));
+      pDC->SetBkColor(RGB(255, 255, 255));
+      return CreateSolidBrush(RGB(255, 255, 255));
+   }
+	
+	return hbr;
 }

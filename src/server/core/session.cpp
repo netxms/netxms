@@ -2633,6 +2633,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
    NetObj *pObject;
 
    pData = (POLLER_START_DATA *)malloc(sizeof(POLLER_START_DATA));
+   pData->pSession = this;
    MutexLock(m_mutexPollerInit, INFINITE);
 
    // Prepare responce message
@@ -2710,7 +2711,18 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    MutexLock(m_mutexPollerInit, INFINITE);
    MutexUnlock(m_mutexPollerInit);
 
-   pNode->StatusPoll(this, dwRqId);
+   switch(iPollType)
+   {
+      case POLL_STATUS:
+         pNode->StatusPoll(this, dwRqId);
+         break;
+      case POLL_CONFIGURATION:
+         pNode->ConfigurationPoll(this, dwRqId);
+         break;
+      default:
+         SendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
+         break;
+   }
    pNode->DecRefCount();
 
    msg.SetCode(CMD_POLLING_INFO);

@@ -168,6 +168,10 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_DELETE, OnObjectDelete)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_DELETE, OnUpdateObjectDelete)
 	ON_COMMAND(ID_OBJECT_POLL_STATUS, OnObjectPollStatus)
+	ON_COMMAND(ID_OBJECT_POLL_CONFIGURATION, OnObjectPollConfiguration)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_STATUS, OnUpdateObjectPollStatus)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_CONFIGURATION, OnUpdateObjectPollConfiguration)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -179,6 +183,11 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CObjectBrowser message handlers
+
+
+//
+// WM_DESTROY message handler
+//
 
 void CObjectBrowser::OnDestroy() 
 {
@@ -195,9 +204,15 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
    RECT rect;
    LVCOLUMN lvCol;
+   BYTE *pwp;
+   UINT iBytes;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
+
+   // Read browser configuration
+   m_dwFlags = theApp.GetProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
+   m_dwSortMode = theApp.GetProfileInt(_T("ObjectBrowser"), _T("SortMode"), m_dwSortMode);
 
    // Create preview pane
    GetClientRect(&rect);
@@ -245,13 +260,26 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Mark sorting column in list control
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = m_iLastObjectImage;
-   m_wndListCtrl.SetColumn(m_dwSortMode, &lvCol);
+   lvCol.iImage = m_iLastObjectImage + SortDir(m_dwSortMode);
+   m_wndListCtrl.SetColumn(SortMode(m_dwSortMode), &lvCol);
 
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
       m_wndTreeCtrl.ShowWindow(SW_SHOW);
    else
       m_wndListCtrl.ShowWindow(SW_SHOW);
+
+   // Restore window size and position if we have one
+   if (theApp.GetProfileBinary(_T("ObjectBrowser"), _T("WindowPlacement"),
+                               &pwp, &iBytes))
+   {
+      if (iBytes == sizeof(WINDOWPLACEMENT))
+      {
+         SetWindowPlacement((WINDOWPLACEMENT *)pwp);
+         if (IsIconic())
+            ShowWindow(SW_RESTORE);
+      }
+      delete pwp;
+   }
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_OBJECTS, this);
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -1142,18 +1170,7 @@ void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI)
 
 void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
 {
-   if (m_pCurrentObject == NULL)
-   {
-      pCmdUI->Enable(FALSE);
-   }
-   else
-   {
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-         pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
-      else
-         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_NODE) &&
-                        (m_wndListCtrl.GetSelectedCount() == 1));
-   }
+   pCmdUI->Enable(CurrObjectIsNode());
 }
 
 void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
@@ -1187,6 +1204,16 @@ void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI)
                          (m_pCurrentObject->iClass == OBJECT_SERVICEROOT)) &&
                         (m_wndListCtrl.GetSelectedCount() == 1));
    }
+}
+
+void CObjectBrowser::OnUpdateObjectPollStatus(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode());
+}
+
+void CObjectBrowser::OnUpdateObjectPollConfiguration(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode());
 }
 
 
@@ -1355,4 +1382,70 @@ void CObjectBrowser::OnObjectPollStatus()
          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_POLL_CONFIGURATION message handler
+//
+
+void CObjectBrowser::OnObjectPollConfiguration() 
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      if (m_pCurrentObject != NULL)
+         theApp.PollNode(m_pCurrentObject->dwId, POLL_CONFIGURATION);
+   }
+   else
+   {
+      int iItem;
+      NXC_OBJECT *pObject;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         theApp.PollNode(pObject->dwId, POLL_CONFIGURATION);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
+}
+
+
+//
+// returns TRUE if currently selected object is node
+//
+
+BOOL CObjectBrowser::CurrObjectIsNode()
+{
+   if (m_pCurrentObject == NULL)
+   {
+      return FALSE;
+   }
+   else
+   {
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+         return (m_pCurrentObject->iClass == OBJECT_NODE);
+      else
+         return ((m_pCurrentObject->iClass == OBJECT_NODE) &&
+                 (m_wndListCtrl.GetSelectedCount() == 1));
+   }
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CObjectBrowser::OnClose() 
+{
+   WINDOWPLACEMENT wp;
+
+   theApp.WriteProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
+   theApp.WriteProfileInt(_T("ObjectBrowser"), _T("SortMode"), m_dwSortMode);
+   GetWindowPlacement(&wp);
+   theApp.WriteProfileBinary(_T("ObjectBrowser"), _T("WindowPlacement"), 
+                             (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
+	
+	CMDIChildWnd::OnClose();
 }

@@ -32,6 +32,7 @@ BEGIN_MESSAGE_MAP(CNetSummaryFrame, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_GETMINMAXINFO()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
@@ -60,6 +61,8 @@ BOOL CNetSummaryFrame::PreCreateWindow(CREATESTRUCT& cs)
 int CNetSummaryFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   BYTE *pwp;
+   UINT iBytes;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -67,6 +70,18 @@ int CNetSummaryFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    GetClientRect(&rect);
    m_wndNodeSummary.Create(WS_CHILD | WS_VISIBLE, rect, this, 0, NULL);
 
+   // Restore window size and position if we have one
+   if (theApp.GetProfileBinary(_T("NetSummaryFrame"), _T("WindowPlacement"),
+                               &pwp, &iBytes))
+   {
+      if (iBytes == sizeof(WINDOWPLACEMENT))
+      {
+         SetWindowPlacement((WINDOWPLACEMENT *)pwp);
+         if (IsIconic())
+            ShowWindow(SW_RESTORE);
+      }
+      delete pwp;
+   }
    theApp.OnViewCreate(IDR_NETWORK_SUMMARY, this);
 	return 0;
 }
@@ -102,8 +117,8 @@ void CNetSummaryFrame::OnSize(UINT nType, int cx, int cy)
 void CNetSummaryFrame::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
 {
 	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
-   lpMMI->ptMinTrackSize.x = 370;
-   lpMMI->ptMinTrackSize.y = 230;
+   lpMMI->ptMinTrackSize.x = 405;
+   lpMMI->ptMinTrackSize.y = 270;
 }
 
 
@@ -125,4 +140,19 @@ void CNetSummaryFrame::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
 void CNetSummaryFrame::OnViewRefresh() 
 {
    m_wndNodeSummary.Refresh();
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CNetSummaryFrame::OnClose() 
+{
+   WINDOWPLACEMENT wp;
+
+   GetWindowPlacement(&wp);
+   theApp.WriteProfileBinary(_T("NetSummaryFrame"), _T("WindowPlacement"), 
+                             (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
+   CMDIChildWnd::OnClose();
 }

@@ -998,11 +998,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Interface options",IDC_STATIC,7,7,216,37
+    GROUPBOX        "Interface options",IDC_STATIC,7,7,216,47
     CONTROL         "&Expand Control Panel",IDC_CHECK_EXPAND,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,17,84,10
     CONTROL         "Show &grid in list views",IDC_CHECK_GRID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,28,85,10
+    CONTROL         "&Save desktop at exit",IDC_CHECK_SAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,39,83,10
 END
 
 IDD_NEW_ACTION DIALOG DISCARDABLE  0, 0, 174, 60

@@ -701,7 +701,8 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType,
 
    do
    {
-      pResponce = WaitForMessage(CMD_POLLING_INFO, dwRqId, 10000);
+      // Polls can take a long time, so we wait up to 120 seconds for each message
+      pResponce = WaitForMessage(CMD_POLLING_INFO, dwRqId, 120000);
       if (pResponce != NULL)
       {
          dwRetCode = pResponce->GetVariableLong(VID_RCC);

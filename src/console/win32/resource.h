@@ -116,6 +116,7 @@
 #define IDI_DATACOLLECT                 226
 #define IDI_DCT                         227
 #define IDD_POLL_NODE                   228
+#define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -257,6 +258,7 @@
 #define IDC_EDIT_EVENT                  1167
 #define IDC_POLL_PROGRESS               1169
 #define IDC_EDIT_MSG                    1170
+#define IDC_CHECK_SAVE                  1172
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -337,7 +339,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        229
 #define _APS_NEXT_COMMAND_VALUE         32882
-#define _APS_NEXT_CONTROL_VALUE         1172
-#define _APS_NEXT_SYMED_VALUE           119
+#define _APS_NEXT_CONTROL_VALUE         1173
+#define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

@@ -42,6 +42,7 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnClose();
 	//}}AFX_MSG
    afx_msg void OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject);
 	DECLARE_MESSAGE_MAP()
