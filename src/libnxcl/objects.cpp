@@ -144,6 +144,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pMsg->GetVariableStr(VID_OBJECT_NAME, pObject->szName, MAX_OBJECT_NAME);
    pObject->iStatus = pMsg->GetVariableShort(VID_OBJECT_STATUS);
    pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
+   pObject->bIsDeleted = pMsg->GetVariableShort(VID_IS_DELETED);
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
@@ -214,9 +215,15 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          pNewObject = NewObjectFromMsg(pMsg);
          pObject = NXCFindObjectById(pNewObject->dwId);
          if (pObject == NULL)
+         {
             AddObject(pNewObject, TRUE);
+            pObject = pNewObject;
+         }
          else
+         {
             ReplaceObject(pObject, pNewObject);
+         }
+         CallEventHandler(NXC_EVENT_OBJECT_CHANGED, pObject->dwId, pObject);
          break;
       default:
          break;

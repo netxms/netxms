@@ -81,6 +81,17 @@ typedef unsigned long HREQUEST;
 
 
 //
+// Node flags
+//
+
+#define NF_IS_SNMP         0x0001
+#define NF_IS_NATIVE_AGENT 0x0002
+#define NF_IS_BRIDGE       0x0004
+#define NF_IS_ROUTER       0x0008
+#define NF_IS_LOCAL_MGMT   0x0010
+
+
+//
 // Events
 //
 
@@ -89,6 +100,7 @@ typedef unsigned long HREQUEST;
 #define NXC_EVENT_LOGIN_RESULT         3
 #define NXC_EVENT_NEW_ELOG_RECORD      4
 #define NXC_EVENT_REQUEST_COMPLETED    5
+#define NXC_EVENT_OBJECT_CHANGED       6
 
 
 //
@@ -213,6 +225,7 @@ typedef struct
    DWORD *pdwParentList;
    DWORD dwNumChilds;
    DWORD *pdwChildList;
+   BOOL bIsDeleted;     // TRUE for deleted objects
    union
    {
       struct
