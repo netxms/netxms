@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.3 2004-08-17 15:17:32 alk Exp $ */
+/* $Id: linux.cpp,v 1.4 2004-08-17 23:19:20 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -27,6 +27,7 @@
 
 #include <locale.h>
 #include <sys/utsname.h>
+#include <sys/statvfs.h>
 
 
 //
@@ -101,21 +102,56 @@ static LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
    return nRet;
 }
 
-
-static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_DiskFree(char *pszParam, char *pArg, char *pValue)
 {
-   int i;
-   char szValue[256];
+	int nRet = SYSINFO_RC_ERROR;
+	struct statvfs s;
+   char szArg[512] = {0};
 
-   for(i = 0; i < 10; i++)
-   {
-      sprintf(szValue, "Value %d", i);
-      NxAddResultString(pValue, szValue);
-   }
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-   return SYSINFO_RC_SUCCESS;
+	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
+	{
+		ret_uint64(pValue, (QWORD)s.f_bfree * (QWORD)s.f_bsize);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
 }
 
+static LONG H_DiskTotal(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	struct statvfs s;
+   char szArg[512] = {0};
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
+	{
+		ret_uint64(pValue, (QWORD)s.f_blocks * (QWORD)s.f_frsize);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
+}
+
+static LONG H_DiskUsed(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	struct statvfs s;
+   char szArg[512] = {0};
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
+	{
+		ret_uint64(pValue, (QWORD)(s.f_blocks - s.f_bfree) * (QWORD)s.f_frsize);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
+}
 
 //
 // Subagent information
@@ -125,15 +161,17 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "System.Uptime",    H_Uptime,      NULL },
    { "System.Uname",     H_Uname,       NULL },
-   { "System.Hostname",  H_Hostname,    NULL }
+   { "System.Hostname",  H_Hostname,    NULL },
+
+   { "Disk.Free(*)",     H_DiskFree,    NULL },
+   { "Disk.Total(*)",    H_DiskTotal,   NULL },
+   { "Disk.Used(*)",     H_DiskUsed,    NULL },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "Skeleton.Enum", H_Enum, NULL }
 };
 
-//static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, sizeof(m_parameters), m_parameters, sizeof(m_enums), m_enums };
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	0x01000000,
@@ -158,6 +196,10 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/08/17 15:17:32  alk
++ linux agent: system.uptime, system.uname, system.hostname
+! skeleton: amount of _PARM & _ENUM filled with sizeof()
+
 Revision 1.1  2004/08/17 10:24:18  alk
 + subagent selection based on "uname -s"
 
