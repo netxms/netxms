@@ -36,6 +36,7 @@ typedef unsigned __int64 QWORD;
 #else
 
 typedef int BOOL;
+typedef long int LONG;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
@@ -46,6 +47,8 @@ typedef void * HMODULE;
 #define FALSE  0
 
 #define EXPORTABLE
+
+#include <netinet/in.h>
 
 #endif
 
