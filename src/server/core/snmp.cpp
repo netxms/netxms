@@ -41,6 +41,7 @@ struct OID_TABLE
 
 static OID_TABLE *m_pOidTable = NULL;
 static DWORD m_dwOidTableSize = 0;
+static m_dwRequestId = 1;
 
 
 //
@@ -51,8 +52,6 @@ void SnmpInit(void)
 {
    DB_RESULT hResult;
    DWORD i;
-
-   init_mib();
 
    // Load OID to type translation table
    hResult = DBSelect(g_hCoreDB, _T("SELECT snmp_oid,node_type,node_flags FROM oid_to_type ORDER BY pair_id"));
@@ -93,66 +92,35 @@ DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags)
 
 
 //
-// Convert OID to from binary to string representation
-//
-
-void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize)
-{
-   int i;
-   char *pCurr;
-
-   szBuffer[0] = 0;
-   for(i = 0, pCurr = szBuffer; i < iOidLen; i++)
-   {
-      if (strlen(szBuffer) + 4 >= dwBufferSize)
-         break;   // String is too large
-      sprintf(pCurr, ".%d", pOid[i]);
-      while(*pCurr)
-         pCurr++;
-   }
-}
-
-
-//
 // Get value for SNMP variable
 // If szOidStr is not NULL, string representation of OID is used, otherwise -
 // binary representation from oidBinary and iOidLen
 //
 
 BOOL SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szOidStr,
-             const oid *oidBinary, size_t iOidLen, void *pValue,
+             const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
              DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult)
 {
-   struct snmp_session session;
-   struct snmp_pdu *pdu, *response;
-   HSNMPSESSION hSession;
-   oid oidName[MAX_OID_LEN];
-   size_t iNameLen = MAX_OID_LEN;
-   struct variable_list *pVar;
-   int iStatus;
-   char szNodeName[32];
+   SNMP_Transport *pTransport;
+   SNMP_PDU *pRqPDU, *pRespPDU;
+   DWORD dwNameLen, pdwVarName[MAX_OID_LEN], dwResult;
    BOOL bResult = TRUE;
 
    // Open SNMP session
-   snmp_sess_init(&session);
-   session.version = dwVersion;
-   session.peername = IpToStr(dwAddr, szNodeName);
-   session.community = (unsigned char *)szCommunity;
-   session.community_len = strlen((char *)session.community);
-
-   hSession = snmp_sess_open(&session);
-   if(hSession == NULL)
+   pTransport = new SNMP_Transport;
+   if (!pTransport->CreateUDPTransport(NULL, htonl(dwAddr)))
    {
-      WriteLog(MSG_SNMP_OPEN_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      WriteLog(MSG_SNMP_TRANSPORT_FAILED, EVENTLOG_ERROR_TYPE, NULL);
       bResult = FALSE;
    }
    else
    {
       // Create PDU and send request
-      pdu = snmp_pdu_create(SNMP_MSG_GET);
+      pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)szCommunity, m_dwRequestId++, dwVersion);
       if (szOidStr != NULL)
       {
-         if (read_objid(szOidStr, oidName, &iNameLen) == 0)
+         dwNameLen = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
+         if (dwNameLen == 0)
          {
             WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
             bResult = FALSE;
@@ -160,76 +128,71 @@ BOOL SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char 
       }
       else
       {
-         memcpy(oidName, oidBinary, iOidLen * sizeof(oid));
-         iNameLen = iOidLen;
+         memcpy(pdwVarName, oidBinary, dwOidLen * sizeof(DWORD));
+         dwNameLen = dwOidLen;
       }
 
       if (bResult)   // Still no errors
       {
-         snmp_add_null_var(pdu, oidName, iNameLen);
-         iStatus = snmp_sess_synch_response(hSession, pdu, &response);
+         pRqPDU->BindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
+         dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
 
          // Analyze response
-         if ((iStatus == STAT_SUCCESS) && (response->errstat == SNMP_ERR_NOERROR))
+         if (dwResult == SNMP_ERR_SUCCESS)
          {
-            for(pVar = response->variables; pVar != NULL; pVar = pVar->next_variable)
+            if (pRespPDU->GetNumVariables() > 0)
             {
-               switch(pVar->type)
+               SNMP_Variable *pVar = pRespPDU->GetVariable(0);
+
+               if (bStringResult)
                {
-                  case ASN_INTEGER:
-                  case ASN_UINTEGER:
-                  case ASN_COUNTER:
-                  case ASN_GAUGE:
-                     if (bStringResult)
-                        sprintf((char *)pValue, "%ld", *pVar->val.integer);
-                     else
-                        *((long *)pValue) = *pVar->val.integer;
-                     break;
-                  case ASN_IPADDRESS:
-                     if (bStringResult)
-                        IpToStr(ntohl(*pVar->val.integer), (char *)pValue);
-                     else
-                        *((long *)pValue) = ntohl(*pVar->val.integer);
-                     break;
-                  case ASN_OCTET_STR:
-                     memcpy(pValue, pVar->val.string, min(pVar->val_len, dwBufferSize - 1));
-                     ((char *)pValue)[min(pVar->val_len, dwBufferSize - 1)] = 0;
-                     break;
-                  case ASN_OBJECT_ID:
-                     OidToStr(pVar->val.objid, pVar->val_len / sizeof(oid), (char *)pValue, dwBufferSize);
-                     break;
-                  default:
-                     WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "d", pVar->type);
-                     bResult = FALSE;
-                     break;
+                  pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
                }
-            }
-         }
-         else
-         {
-            if (iStatus == STAT_SUCCESS)
-            {
-               if (bVerbose)
-                  WriteLog(MSG_SNMP_BAD_PACKET, EVENTLOG_ERROR_TYPE, "s", snmp_errstring(response->errstat));
-               bResult = FALSE;
+               else
+               {
+                  switch(pVar->GetType())
+                  {
+                     case ASN_INTEGER:
+                     case ASN_UINTEGER32:
+                     case ASN_COUNTER32:
+                     case ASN_GAUGE32:
+                     case ASN_TIMETICKS:
+                        *((long *)pValue) = pVar->GetValueAsInt();
+                        break;
+                     case ASN_IP_ADDR:
+                        *((long *)pValue) = ntohl(pVar->GetValueAsUInt());
+                        break;
+                     case ASN_OCTET_STRING:
+                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
+                        break;
+                     case ASN_OBJECT_ID:
+                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
+                        break;
+                     default:
+                        WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->GetType());
+                        bResult = FALSE;
+                        break;
+                  }
+               }
             }
             else
             {
-               if (bVerbose)
-                  WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", iStatus);
                bResult = FALSE;
             }
+            delete pRespPDU;
          }
-
-         // Destroy response PDU if needed
-         if (response)
-            snmp_free_pdu(response);
+         else
+         {
+            if (bVerbose)
+               WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+            bResult = FALSE;
+         }
       }
 
-      // Close session and cleanup
-      snmp_sess_close(hSession);
+      delete pRqPDU;
    }
 
+   delete pTransport;
    return bResult;
 }
 
@@ -240,93 +203,85 @@ BOOL SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char 
 
 BOOL SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
                    const char *szRootOid,
-                   void (* pHandler)(DWORD, DWORD, const char *, variable_list *, void *), 
+                   void (* pHandler)(DWORD, DWORD, const char *, SNMP_Variable *, void *), 
                    void *pUserArg, BOOL bVerbose)
 {
-   struct snmp_session session;
-   struct snmp_pdu *pdu, *response;
-   HSNMPSESSION hSession;
-   oid oidName[MAX_OID_LEN], oidRoot[MAX_OID_LEN];
-   size_t iNameLen, iRootLen = MAX_OID_LEN;
-   struct variable_list *pVar;
-   int iStatus;
-   char szNodeName[32];
+   DWORD pdwRootName[MAX_OID_LEN], dwRootLen, pdwName[MAX_OID_LEN], dwNameLen, dwResult;
+   SNMP_PDU *pRqPDU, *pRespPDU;
+   SNMP_Transport *pTransport;
    BOOL bRunning = TRUE, bResult = TRUE;
 
    // Open SNMP session
-   snmp_sess_init(&session);
-   session.version = dwVersion;
-   session.peername = IpToStr(dwAddr, szNodeName);
-   session.community = (unsigned char *)szCommunity;
-   session.community_len = strlen((char *)session.community);
-
-   hSession = snmp_sess_open(&session);
-   if(hSession == NULL)
+   pTransport = new SNMP_Transport;
+   if (!pTransport->CreateUDPTransport(NULL, htonl(dwAddr)))
    {
-      WriteLog(MSG_SNMP_OPEN_FAILED, EVENTLOG_ERROR_TYPE, NULL);
-      return FALSE;
+      WriteLog(MSG_SNMP_TRANSPORT_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      bResult = FALSE;
    }
-
-   // Get root
-   if (read_objid(szRootOid, oidRoot, &iRootLen) == 0)
+   else
    {
-      WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
-      return FALSE;
-   }
-   memcpy(oidName, oidRoot, iRootLen * sizeof(oid));
-   iNameLen = iRootLen;
-
-   // Walk the MIB
-   while(bRunning)
-   {
-      pdu = snmp_pdu_create(SNMP_MSG_GETNEXT);
-      snmp_add_null_var(pdu, oidName, iNameLen);
-      iStatus = snmp_sess_synch_response(hSession, pdu, &response);
-
-      if ((iStatus == STAT_SUCCESS) && (response->errstat == SNMP_ERR_NOERROR))
+      // Get root
+      dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
+      if (dwRootLen == 0)
       {
-         for(pVar = response->variables; pVar != NULL; pVar = pVar->next_variable)
-         {
-            // Should we stop walking?
-            if ((pVar->name_length < iRootLen) ||
-                (memcmp(oidRoot, pVar->name, iRootLen * sizeof(oid))))
-            {
-               bRunning = 0;
-               break;
-            }
-            memmove(oidName, pVar->name, pVar->name_length * sizeof(oid));
-            iNameLen = pVar->name_length;
-
-            // Call user's callback function for processing
-            pHandler(dwVersion, dwAddr, szCommunity, pVar, pUserArg);
-         }
+         WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
+         bResult = FALSE;
       }
       else
       {
-         if (iStatus == STAT_SUCCESS)
-         {
-            if (bVerbose)
-               WriteLog(MSG_SNMP_BAD_PACKET, EVENTLOG_ERROR_TYPE, "s", snmp_errstring(response->errstat));
-            bResult = FALSE;
-         }
-         else
-         {
-            if (bVerbose)
-               WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", iStatus);
-            bResult = FALSE;
-         }
-         bRunning = FALSE;
-      }
+         memcpy(pdwName, pdwRootName, dwRootLen * sizeof(DWORD));
+         dwNameLen = dwRootLen;
 
-      // Destroy responce PDU if needed
-      if (response)
-      {
-         snmp_free_pdu(response);
+         // Walk the MIB
+         while(bRunning)
+         {
+            pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (char *)szCommunity, m_dwRequestId++, dwVersion);
+            pRqPDU->BindVariable(new SNMP_Variable(pdwName, dwNameLen));
+            dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
+
+            // Analyze response
+            if (dwResult == SNMP_ERR_SUCCESS)
+            {
+               if (pRespPDU->GetNumVariables() > 0)
+               {
+                  SNMP_Variable *pVar = pRespPDU->GetVariable(0);
+
+                  // Should we stop walking?
+                  if ((pVar->GetName()->Length() < dwRootLen) ||
+                      (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))))
+                  {
+                     bRunning = FALSE;
+                     delete pRespPDU;
+                     delete pRqPDU;
+                     break;
+                  }
+                  memcpy(pdwName, pVar->GetName()->GetValue(), 
+                         pVar->GetName()->Length() * sizeof(DWORD));
+                  dwNameLen = pVar->GetName()->Length();
+
+                  // Call user's callback function for processing
+                  pHandler(dwVersion, dwAddr, szCommunity, pVar, pUserArg);
+               }
+               else
+               {
+                  bResult = FALSE;
+                  bRunning = FALSE;
+               }
+               delete pRespPDU;
+            }
+            else
+            {
+               if (bVerbose)
+                  WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+               bResult = FALSE;
+               bRunning = FALSE;
+            }
+            delete pRqPDU;
+         }
       }
    }
 
-   // Close session and cleanup
-   snmp_sess_close(hSession);
+   delete pTransport;
    return bResult;
 }
 
@@ -335,10 +290,11 @@ BOOL SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 // Handler for enumerating indexes
 //
 
-static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, variable_list *pVar,void *pArg)
+static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+                         SNMP_Variable *pVar, void *pArg)
 {
    if (((INTERFACE_LIST *)pArg)->iEnumPos < ((INTERFACE_LIST *)pArg)->iNumEntries)
-      ((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iEnumPos].dwIndex = *pVar->val.integer;
+      ((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iEnumPos].dwIndex = pVar->GetValueAsUInt();
    ((INTERFACE_LIST *)pArg)->iEnumPos++;
 }
 
@@ -347,19 +303,21 @@ static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 // Handler for enumerating IP addresses
 //
 
-static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, variable_list *pVar, void *pArg)
+static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+                          SNMP_Variable *pVar, void *pArg)
 {
-   DWORD dwIndex, dwNetMask;
-   oid oidName[MAX_OID_LEN];
+   DWORD dwIndex, dwNetMask, dwNameLen;
+   DWORD oidName[MAX_OID_LEN];
 
-   memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
-   oidName[pVar->name_length - 5] = 3;  // Retrieve network mask for this IP
-   if (!SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, pVar->name_length,
+   dwNameLen = pVar->GetName()->Length();
+   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
+   if (!SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
                 &dwNetMask, sizeof(DWORD), FALSE, FALSE))
       return;
 
-   oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, pVar->name_length,
+   oidName[dwNameLen - 5] = 2;  // Retrieve interface index for this IP
+   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
                &dwIndex, sizeof(DWORD), FALSE, FALSE))
    {
       int i;
@@ -385,7 +343,7 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity
                }
                i = ((INTERFACE_LIST *)pArg)->iNumEntries - 1;
             }
-            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = ntohl(*pVar->val.integer);
+            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = ntohl(pVar->GetValueAsUInt());
             ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpNetMask = dwNetMask;
             break;
          }
@@ -397,7 +355,8 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity
 // Get interface list via SNMP
 //
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, DWORD dwNodeType)
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, 
+                                     const char *szCommunity, DWORD dwNodeType)
 {
    long i, iNumIf;
    char szOid[128], szBuffer[256];
@@ -461,26 +420,27 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, const char *
 // Handler for ARP enumeration
 //
 
-static void HandlerArp(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, variable_list *pVar,void *pArg)
+static void HandlerArp(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+                       SNMP_Variable *pVar,void *pArg)
 {
-   oid oidName[MAX_OID_LEN];
+   DWORD oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
    BYTE bMac[64];
-   DWORD dwIndex = 0;
 
-   memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
+   dwNameLen = pVar->GetName()->Length();
+   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
 
-   oidName[pVar->name_length - 6] = 1;  // Retrieve interface index
-   SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex,
+   oidName[dwNameLen - 6] = 1;  // Retrieve interface index
+   SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen, &dwIndex,
            sizeof(DWORD), FALSE, FALSE);
 
-   oidName[pVar->name_length - 6] = 2;  // Retrieve MAC address for this IP
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, pVar->name_length, bMac,
+   oidName[dwNameLen - 6] = 2;  // Retrieve MAC address for this IP
+   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen, bMac,
                64, FALSE, FALSE))
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(*pVar->val.integer);
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(pVar->GetValueAsUInt());
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }

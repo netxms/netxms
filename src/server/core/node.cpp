@@ -327,14 +327,14 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    PollerLock();
 
    // Determine node's capabilities
-   if (SnmpGet(SNMP_VERSION_2c, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+   if (SnmpGet(SNMP_VERSION_2C, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
       DWORD dwNodeFlags;
 
       m_dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
       m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
-      m_iSNMPVersion = SNMP_VERSION_2c;
+      m_iSNMPVersion = SNMP_VERSION_2C;
    }
    else
    {

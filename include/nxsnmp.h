@@ -35,6 +35,13 @@
 
 
 //
+// Various constants
+//
+
+#define MAX_OID_LEN        128
+
+
+//
 // libnxsnmp error codes
 //
 
@@ -135,6 +142,7 @@ private:
 public:
    SNMP_Variable();
    SNMP_Variable(TCHAR *pszName);
+   SNMP_Variable(DWORD *pdwName, DWORD dwNameLen);
    ~SNMP_Variable();
 
    BOOL Parse(BYTE *pData, DWORD dwVarLength);
@@ -238,8 +246,8 @@ public:
 //
 
 void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
-DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
-BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(TCHAR *pszText);
+DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
+BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText);
 
 
 #endif

@@ -310,11 +310,11 @@ void NetObjDelete(NetObj *pObject)
    char szQuery[256], szIpAddr[16], szNetMask[16];
 
    // Write object to deleted objects table
-   snprintf(szQuery, 256, "INSERT INTO deleted_objects (object_id,object_class,name,"
-                          "ip_addr,ip_netmask) VALUES (%ld,%ld,'%s','%s','%s')",
-           pObject->Id(), pObject->Type(), pObject->Name(), 
-           IpToStr(pObject->IpAddr(), szIpAddr),
-           IpToStr(GetObjectNetmask(pObject), szNetMask));
+   _sntprintf(szQuery, 256, _T("INSERT INTO deleted_objects (object_id,object_class,name,"
+                               "ip_addr,ip_netmask) VALUES (%ld,%ld,'%s','%s','%s')"),
+              pObject->Id(), pObject->Type(), pObject->Name(), 
+              IpToStr(pObject->IpAddr(), szIpAddr),
+              IpToStr(GetObjectNetmask(pObject), szNetMask));
    DBQuery(g_hCoreDB, szQuery);
 
    // Delete object from index by ID

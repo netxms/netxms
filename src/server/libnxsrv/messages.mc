@@ -171,9 +171,9 @@ Error parsing SNMP OID '%1'
 .
 
 MessageId=
-SymbolicName=MSG_SNMP_OPEN_FAILED
+SymbolicName=MSG_SNMP_TRANSPORT_FAILED
 Language=English
-Unable to open SNMP session
+Unable to create UDP transport for SNMP
 .
 
 MessageId=

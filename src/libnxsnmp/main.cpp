@@ -47,9 +47,9 @@ void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, 
 // Buffer size should be given in number of DWORDs
 //
 
-DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize)
+DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize)
 {
-   TCHAR *pCurr = pszText, *pEnd, szNumber[32];
+   TCHAR *pCurr = (TCHAR *)pszText, *pEnd, szNumber[32];
    DWORD dwLength = 0;
    int iNumLen;
 
@@ -77,12 +77,12 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD 
 // Check if given OID is syntaxically correct
 //
 
-BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(TCHAR *pszText)
+BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
 {
    DWORD dwLength, *pdwBuffer;
 
-   pdwBuffer = (DWORD *)malloc(sizeof(DWORD) * 1024);
-   dwLength = SNMPParseOID(pszText, pdwBuffer, 1024);
+   pdwBuffer = (DWORD *)malloc(sizeof(DWORD) * MAX_OID_LEN);
+   dwLength = SNMPParseOID(pszText, pdwBuffer, MAX_OID_LEN);
    free(pdwBuffer);
    return (dwLength > 0);
 }

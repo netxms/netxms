@@ -51,8 +51,8 @@
 #define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
 #endif   /* _WIN32 */
 
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/net-snmp-includes.h>
+//#include <net-snmp/net-snmp-config.h>
+//#include <net-snmp/net-snmp-includes.h>
 
 #include <nms_threads.h>
 #include <dbdrv.h>
@@ -62,6 +62,7 @@
 #include <nxcscpapi.h>
 #include <nximage.h>
 #include <nxqueue.h>
+#include <nxsnmp.h>
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nms_objects.h"
@@ -343,12 +344,11 @@ void StopDBWriter(void);
 
 void SnmpInit(void);
 BOOL SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szOidStr,
-             const oid *oidBinary, size_t iOidLen, void *pValue,
+             const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
              DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
 BOOL SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szRootOid,
-                   void (* pHandler)(DWORD, DWORD, const char *, variable_list *, void *), 
+                   void (* pHandler)(DWORD, DWORD, const char *, SNMP_Variable *, void *), 
                    void *pUserArg, BOOL bVerbose);
-void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 

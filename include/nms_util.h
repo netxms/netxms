@@ -123,6 +123,31 @@ inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 
 
 //
+// Structures for opendir() / readdir() / closedir()
+//
+
+#ifdef _WIN32
+
+typedef struct direct
+{
+   long            d_ino;  /* inode number (not used by MS-DOS) */
+   int             d_namlen;       /* Name length */
+   char            d_name[257];    /* file name */
+} _DIRECT;
+
+typedef struct _dir_struc
+{
+   char           *start;  /* Starting position */
+   char           *curr;   /* Current position */
+   long            size;   /* Size of string table */
+   long            nfiles; /* number if filenames in table */
+   struct direct   dirstr; /* Directory structure to return */
+} DIR;
+
+#endif   /* _WIN32 */
+
+
+//
 // Functions
 //
 
@@ -212,6 +237,12 @@ extern "C"
 #endif
 #if !(HAVE_STRTOULL)
    QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+#endif
+
+#ifdef _WIN32
+    DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
+    struct direct LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
+    int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
 #endif
 
 #ifdef __cplusplus

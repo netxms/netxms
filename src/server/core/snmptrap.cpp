@@ -21,7 +21,6 @@
 **/
 
 #include "nms_core.h"
-#include <nxsnmp.h>
 
 
 //

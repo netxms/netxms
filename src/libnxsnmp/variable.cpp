@@ -49,10 +49,23 @@ SNMP_Variable::SNMP_Variable(TCHAR *pszName)
    m_dwType = ASN_NULL;
    m_dwValueLength = 0;
 
-   pdwOid = (DWORD *)malloc(sizeof(DWORD) * 1024);
-   dwLength = SNMPParseOID(pszName, pdwOid, 1024);
+   pdwOid = (DWORD *)malloc(sizeof(DWORD) * MAX_OID_LEN);
+   dwLength = SNMPParseOID(pszName, pdwOid, MAX_OID_LEN);
    m_pName = new SNMP_ObjectId(dwLength, pdwOid);
    free(pdwOid);
+}
+
+
+//
+// Create variable of ASN_NULL type
+//
+
+SNMP_Variable::SNMP_Variable(DWORD *pdwName, DWORD dwNameLen)
+{
+   m_pValue = NULL;
+   m_dwType = ASN_NULL;
+   m_dwValueLength = 0;
+   m_pName = new SNMP_ObjectId(dwNameLen, pdwName);
 }
 
 

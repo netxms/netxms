@@ -386,6 +386,7 @@ src/libnetxms/Makefile.am -text
 src/libnetxms/Makefile.nw -text
 src/libnetxms/c_lgcc3.cpp -text
 src/libnetxms/config.cpp -text
+src/libnetxms/dir.c -text
 src/libnetxms/dload.cpp -text
 src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text

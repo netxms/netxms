@@ -71,11 +71,11 @@
 
 #define FS_PATH_SEPARATOR  _T("\\")
 
+#include <winsock2.h>
 #include <windows.h>
+#include <process.h>
 #ifndef UNDER_CE
-# include <fcntl.h>
-#else
-# include <winsock2.h>
+#include <fcntl.h>
 #endif
 
 typedef unsigned __int64 QWORD;
@@ -86,8 +86,6 @@ typedef int socklen_t;
 #define SHUT_RD      0
 #define SHUT_WR      1
 #define SHUT_RDWR    2
-
-#define getpid() GetCurrentProcessId()
 
 #elif defined(_NETWARE)
 
