@@ -21,6 +21,8 @@ public:
 
 // Attributes
 public:
+	BOOL m_bShowGrid;
+	BOOL m_bAutoScale;
 	COLORREF m_rgbLabelTextColor;
 	COLORREF m_rgbLabelBkColor;
 	COLORREF m_rgbLineColors[MAX_GRAPH_ITEMS];
@@ -71,8 +73,6 @@ private:
 	DWORD m_dwNumItems;
 	double m_dMaxValue;
 	int m_iGridSize;
-	BOOL m_bShowGrid;
-	BOOL m_bAutoScale;
 	NXC_DCI_DATA *m_pData[MAX_GRAPH_ITEMS];
 };
 

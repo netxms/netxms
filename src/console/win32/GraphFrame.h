@@ -8,6 +8,24 @@
 // GraphFrame.h : header file
 //
 
+
+class CGraphStatusBar : public CStatusBarCtrl
+{
+public:
+   DWORD m_dwMaxValue;
+
+protected:
+   virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+};
+
+
+//
+// Flags
+//
+
+#define GF_AUTOUPDATE      0x0001
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CGraphFrame frame
 
@@ -35,6 +53,9 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwSeconds;
+	CGraphStatusBar m_wndStatusBar;
+	UINT m_hTimer;
 
 	// Generated message map functions
 	//{{AFX_MSG(CGraphFrame)
@@ -43,9 +64,14 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnGraphProperties();
+	afx_msg void OnDestroy();
+	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	int m_iStatusBarHeight;
+	DWORD m_dwRefreshInterval;
+	DWORD m_dwFlags;
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	DWORD m_pdwItemId[MAX_GRAPH_ITEMS];

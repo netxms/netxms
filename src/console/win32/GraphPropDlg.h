@@ -28,6 +28,9 @@ public:
 	//{{AFX_DATA(CGraphPropDlg)
 	enum { IDD = IDD_GRAPH_PROPERTIES };
 	DWORD	m_dwRefreshInterval;
+	BOOL	m_bAutoUpdate;
+	BOOL	m_bShowGrid;
+	BOOL	m_bAutoscale;
 	//}}AFX_DATA
 
 

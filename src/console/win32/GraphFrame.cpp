@@ -13,6 +13,28 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
+// CGraphStatusBar
+
+void CGraphStatusBar::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
+{
+   CDC *pdc;
+   CBrush brush;
+   RECT rect;
+
+   brush.CreateSolidBrush(RGB(0, 0, 128));
+   pdc = CDC::FromHandle(lpDrawItemStruct->hDC);
+   memcpy(&rect, &lpDrawItemStruct->rcItem, sizeof(RECT));
+   rect.left++;
+   rect.top++;
+   rect.bottom--;
+   rect.right = rect.left + 
+      (lpDrawItemStruct->rcItem.right - lpDrawItemStruct->rcItem.left - 1) * 
+         lpDrawItemStruct->itemData / m_dwMaxValue;
+   pdc->FillRect(&rect, &brush);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 // CGraphFrame
 
 IMPLEMENT_DYNCREATE(CGraphFrame, CMDIChildWnd)
@@ -20,6 +42,10 @@ IMPLEMENT_DYNCREATE(CGraphFrame, CMDIChildWnd)
 CGraphFrame::CGraphFrame()
 {
    m_dwNumItems = 0;
+   m_dwRefreshInterval = 30;
+   m_dwFlags = 0;
+   m_hTimer = 0;
+   m_dwSeconds = 0;
 }
 
 CGraphFrame::~CGraphFrame()
@@ -34,6 +60,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_GRAPH_PROPERTIES, OnGraphProperties)
+	ON_WM_DESTROY()
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -48,15 +76,29 @@ END_MESSAGE_MAP()
 int CGraphFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   static int widths[3] = { 70, 170, -1 };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
    GetClientRect(&rect);
+
+   m_wndStatusBar.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_STATUS_BAR);
+   m_wndStatusBar.SetParts(3, widths);
+
+   m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
+   rect.bottom -= m_iStatusBarHeight;
    m_wndGraph.SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
    m_wndGraph.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_GRAPH);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+   if (m_dwFlags & GF_AUTOUPDATE)
+      m_hTimer = SetTimer(1, 1000, NULL);
+
+   m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
+   m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
+   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
+                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 
 	return 0;
 }
@@ -70,7 +112,8 @@ void CGraphFrame::OnSize(UINT nType, int cx, int cy)
 {
 	CMDIChildWnd::OnSize(nType, cx, cy);
 
-   m_wndGraph.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
+   m_wndGraph.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
 }
 
 
@@ -166,6 +209,10 @@ void CGraphFrame::OnGraphProperties()
    CGraphPropDlg dlg;
    int i;
 
+   dlg.m_bAutoscale = m_wndGraph.m_bAutoScale;
+   dlg.m_bShowGrid = m_wndGraph.m_bShowGrid;
+   dlg.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
+   dlg.m_dwRefreshInterval = m_dwRefreshInterval;
    dlg.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
    dlg.m_rgbBackground = m_wndGraph.m_rgbBkColor;
    dlg.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
@@ -176,6 +223,24 @@ void CGraphFrame::OnGraphProperties()
       dlg.m_rgbItems[i] = m_wndGraph.m_rgbLineColors[i];
    if (dlg.DoModal() == IDOK)
    {
+      if (m_hTimer != 0)
+         KillTimer(m_hTimer);
+      m_dwRefreshInterval = dlg.m_dwRefreshInterval;
+      m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
+      if (dlg.m_bAutoUpdate)
+      {
+         m_dwFlags |= GF_AUTOUPDATE;
+         m_hTimer = SetTimer(1, 1000, NULL);
+         m_dwSeconds = 0;
+      }
+      else
+      {
+         m_dwFlags &= ~GF_AUTOUPDATE;
+      }
+
+      m_wndGraph.m_bAutoScale = dlg.m_bAutoscale;
+      m_wndGraph.m_bShowGrid = dlg.m_bShowGrid;
+
       m_wndGraph.m_rgbAxisColor = dlg.m_rgbAxisLines;
       m_wndGraph.m_rgbBkColor = dlg.m_rgbBackground;
       m_wndGraph.m_rgbGridColor = dlg.m_rgbGridLines;
@@ -186,5 +251,39 @@ void CGraphFrame::OnGraphProperties()
          m_wndGraph.m_rgbLineColors[i] = dlg.m_rgbItems[i];
 
       m_wndGraph.InvalidateRect(NULL, FALSE);
+
+      m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
+      m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
+                             (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
    }
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CGraphFrame::OnDestroy() 
+{
+   if (m_hTimer != 0)
+      KillTimer(m_hTimer);
+
+	CMDIChildWnd::OnDestroy();
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CGraphFrame::OnTimer(UINT nIDEvent) 
+{
+   m_dwSeconds++;
+   if (m_dwSeconds == m_dwRefreshInterval)
+   {
+      PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+      m_dwSeconds = 0;
+   }
+   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
+                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 }

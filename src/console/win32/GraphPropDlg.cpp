@@ -20,6 +20,9 @@ CGraphPropDlg::CGraphPropDlg(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CGraphPropDlg)
 	m_dwRefreshInterval = 0;
+	m_bAutoUpdate = FALSE;
+	m_bShowGrid = FALSE;
+	m_bAutoscale = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -30,6 +33,9 @@ void CGraphPropDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CGraphPropDlg)
 	DDX_Text(pDX, IDC_EDIT_REFRESH, m_dwRefreshInterval);
 	DDV_MinMaxDWord(pDX, m_dwRefreshInterval, 5, 3600);
+	DDX_Check(pDX, IDC_CHECK_REFRESH, m_bAutoUpdate);
+	DDX_Check(pDX, IDC_CHECK_GRID, m_bShowGrid);
+	DDX_Check(pDX, IDC_CHECK_AUTOSCALE, m_bAutoscale);
 	//}}AFX_DATA_MAP
 }
 
