@@ -68,19 +68,27 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 //
 
 void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
-										   TCHAR *szSymbol,
+										   TCHAR *pszSymbol,
 										   TCHAR *pszErrorText)
 {
    void *pAddr;
 
 #ifdef _WIN32
-   pAddr = GetProcAddress(hModule, szSymbol);
+#if !defined(UNDER_CE) && defined(UNICODE)
+   char szBuffer[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pszSymbol, -1, szBuffer, 256, NULL, NULL);
+   pAddr = GetProcAddress(hModule, szBuffer);
+#else
+   pAddr = GetProcAddress(hModule, pszSymbol);
+#endif
    if (pAddr == NULL)
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #else    /* _WIN32 */
    pAddr = dlsym(hModule, szSymbol);
    if (pAddr == NULL)
-      strncpy(pszErrorText, dlerror(), 255);
+      _tscncpy(pszErrorText, dlerror(), 255);
 #endif
    return pAddr;
 }

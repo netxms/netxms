@@ -41,8 +41,12 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
    {
       if (bPrint)
 #ifndef UNDER_CE
-         _tprintf(_T("Unable to open configuration file: %s\n"), _tcserror(errno));
-#endif // UNDER_CE
+#ifdef UNICODE
+         wprintf(L"Unable to open configuration file\n");
+#else
+         printf("Unable to open configuration file: %s\n", strerror(errno));
+#endif   /* UNICODE */
+#endif   /* UNDER_CE */
       return NXCFG_ERR_NOFILE;
    }
 

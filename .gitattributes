@@ -46,6 +46,7 @@ include/nxcscpapi.h -text
 include/nxevent.h -text
 include/nximage.h -text
 include/nxqueue.h -text
+include/unicode.h -text
 m4/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text

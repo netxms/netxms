@@ -172,6 +172,10 @@ SOURCE=..\..\include\nms_util.h
 
 SOURCE=.\sha1.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\include\unicode.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

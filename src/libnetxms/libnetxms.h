@@ -24,16 +24,6 @@
 #ifndef _libnetxms_h_
 #define _libnetxms_h_
 
-#include <stdio.h>
-
-#if defined(_WIN32) || defined(UNDER_CE)
-#include <windows.h>
-#else    /* _WIN32 */
-#include <unistd.h>
-#include <string.h>
-#include <ctype.h>
-#endif   /* _WIN32 */
-
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>

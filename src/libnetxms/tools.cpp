@@ -22,7 +22,7 @@
 
 #include "libnetxms.h"
 
-#if !defined(_WIN32) || !defined(UNDER_CE)
+#if !defined(_WIN32) && !defined(UNDER_CE)
 #include <sys/time.h>
 #endif
 

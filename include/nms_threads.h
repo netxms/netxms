@@ -66,7 +66,12 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), in
    HANDLE hThread;
    unsigned int dwThreadId;
 
+#ifdef UNDER_CE
+	hThread = CreateThread(NULL, (DWORD)stack_size, start_address,
+		                    arglist, 0, &dwThreadId);
+#else
    hThread = (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
+#endif
    if (hThread != NULL)
       CloseHandle(hThread);
    return (hThread != NULL);
@@ -81,10 +86,10 @@ inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *)
 
 inline void ThreadExit(void)
 {
-#ifndef UNDER_CE
-   _endthread();
-#else
+#ifdef UNDER_CE
    ExitThread(0);
+#else
+   _endthreadex(0);
 #endif
 }
 

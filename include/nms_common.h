@@ -23,7 +23,10 @@
 #ifndef _nms_common_h_
 #define _nms_common_h_
 
+#include <unicode.h>
 #include <ctype.h>
+#include <stdio.h>
+#include <string.h>
 
 
 //
@@ -47,31 +50,6 @@
 //
 // Platform dependent includes and defines
 //
-
-#ifdef UNDER_CE
-inline unsigned long _beginthreadex(void *security,
-									unsigned stack_size,
-									unsigned (__stdcall *start_address)(void *),
-									void *arglist, unsigned initflag, 
-									unsigned *thrdaddr)
-{
-	return (unsigned long)CreateThread((LPSECURITY_ATTRIBUTES)security,
-		(DWORD)stack_size,
-		(LPTHREAD_START_ROUTINE)start_address,
-		(LPVOID)arglist,
-		(DWORD)initflag | CREATE_SUSPENDED,
-		(LPDWORD)thrdaddr);
-}
-
-inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
-{
-	SYSTEMTIME sysTime;
-	
-	GetSystemTime(&sysTime);
-	SystemTimeToFileTime(&sysTime, pFt);
-}
-
-#endif // UNDER_CE
 
 #if defined(_WIN32) || defined(UNDER_CE)
 

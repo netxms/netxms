@@ -106,6 +106,23 @@ typedef struct
 
 
 //
+// Win32 API functions missing under WinCE
+//
+
+#ifdef UNDER_CE
+
+inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
+{
+	SYSTEMTIME sysTime;
+	
+	GetSystemTime(&sysTime);
+	SystemTimeToFileTime(&sysTime, pFt);
+}
+
+#endif // UNDER_CE
+
+
+//
 // Functions
 //
 
