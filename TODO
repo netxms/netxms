@@ -55,3 +55,4 @@ WINDOWS CONSOLE:
 SUBAGENTS:
 
 - libperl-driven subagent, allow to run perl scripts w/o forking/executing
+- bandwidth meter; data in/out for last N seconds
