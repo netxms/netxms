@@ -51,6 +51,8 @@ Node::Node()
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
+   m_dwNumParams = 0;
+   m_pParamList = NULL;
 }
 
 
@@ -84,6 +86,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
+   m_dwNumParams = 0;
+   m_pParamList = NULL;
 }
 
 
@@ -97,6 +101,7 @@ Node::~Node()
    MutexDestroy(m_hAgentAccessMutex);
    if (m_pAgentConnection != NULL)
       delete m_pAgentConnection;
+   safe_free(m_pParamList);
 }
 
 
@@ -376,6 +381,8 @@ void Node::NewNodePoll(DWORD dwNetMask)
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
       pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, m_szPlatformName);
+
+      pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
    }
 
    // Get interface list
@@ -730,8 +737,15 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    {
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       m_iNativeAgentFails = 0;
+      
+      Lock();
       pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
       pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, m_szPlatformName);
+
+      safe_free(m_pParamList);
+      pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
+
+      Unlock();
       pAgentConn->Disconnect();
       SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
    }
@@ -841,6 +855,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                             "Finished configuration poll for node %s\r\n"
                             "Node configuration was%schanged after poll\r\n"),
                  m_szName, bHasChanges ? _T(" ") : _T(" not "));
+
+   // Finish configuration poll
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    PollerUnlock();
    DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
@@ -1189,4 +1205,31 @@ int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
    }
 
    return iStatus;
+}
+
+
+//
+// Put list of supported parameters into CSCP message
+//
+
+void Node::WriteParamListToMessage(CSCPMessage *pMsg)
+{
+   DWORD i, dwId;
+
+   Lock();
+   if (m_pParamList != NULL)
+   {
+      pMsg->SetVariable(VID_NUM_PARAMETERS, m_dwNumParams);
+      for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_dwNumParams; i++)
+      {
+         pMsg->SetVariable(dwId++, m_pParamList[i].szName);
+         pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
+         pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+      }
+   }
+   else
+   {
+      pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)0);
+   }
+   Unlock();
 }

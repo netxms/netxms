@@ -719,6 +719,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_REMOVE_PACKAGE:
             RemovePackage(pMsg);
             break;
+         case CMD_GET_PARAMETER_LIST:
+            SendParametersList(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -3840,6 +3843,42 @@ void ClientSession::RemovePackage(CSCPMessage *pRequest)
    {
       // Current user has no rights for package management
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of parameters supported by given node to client
+//
+
+void ClientSession::SendParametersList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         ((Node *)pObject)->WriteParamListToMessage(&msg);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send responce

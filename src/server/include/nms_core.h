@@ -334,6 +334,7 @@ private:
    void SendAllPackages(DWORD dwRqId);
    void InstallPackage(CSCPMessage *pRequest);
    void RemovePackage(CSCPMessage *pRequest);
+   void SendParametersList(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
