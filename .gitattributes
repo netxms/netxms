@@ -1,5 +1,5 @@
 * text=auto !eol
-doc/NMS[!!-~]Architecture.doc -text
+doc/internals.rtf -text
 include/nms_agent.h -text
 include/nms_common.h -text
 sql/schema.sql -text
