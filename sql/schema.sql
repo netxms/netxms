@@ -132,13 +132,14 @@ create table IDATA
 -- Events configuration
 --
 
-create table EVENTS
+CREATE TABLE Events
 (
 	id integer not null,
 	severity integer,
 	message varchar(255),		-- Message template
 	retention_time integer,
-	description blob
+	description blob,
+	PRIMARY KEY(id)
 );
 
 
