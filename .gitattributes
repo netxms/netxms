@@ -549,6 +549,7 @@ src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
 src/nxevent/nxevent.h -text
+src/nxreport/Makefile.am -text
 src/nxreport/nxreport.cpp -text
 src/nxreport/nxreport.dsp -text
 src/nxreport/nxreport.dsw -text
