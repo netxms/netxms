@@ -82,15 +82,30 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndPreviewPane.Create(WS_CHILD | ((m_dwFlags & SHOW_OBJECT_PREVIEW) ? WS_VISIBLE : 0),
                            rect, this, IDC_PREVIEW_PANE);
 
-   // Create list view control
+   // Create tree view control
    GetClientRect(&rect);
    if (m_dwFlags & SHOW_OBJECT_PREVIEW)
    {
       rect.left = PREVIEW_PANE_WIDTH;
       rect.right -= PREVIEW_PANE_WIDTH;
    }
-   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
+   m_wndTreeCtrl.Create(WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
                         rect, this, IDC_TREE_VIEW);
+
+   // Create list view control
+   m_wndListCtrl.Create(WS_CHILD | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
+                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+   m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
+
+   // Setup list view columns
+   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(2, "Class", LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(3, "IP Address", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(4, "IP Netmask", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(5, "IFIndex", LVCFMT_LEFT, 50);
+   m_wndListCtrl.InsertColumn(6, "IFType", LVCFMT_LEFT, 70);
 
    // Create image list
    m_pImageList = new CImageList;
@@ -100,6 +115,12 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_NODE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SUBNET));
    m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
+   m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
+
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+      m_wndTreeCtrl.ShowWindow(SW_SHOW);
+   else
+      m_wndListCtrl.ShowWindow(SW_SHOW);
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_OBJECTS, this);
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -158,7 +179,10 @@ static int CompareTreeHashItems(const void *p1, const void *p2)
 void CObjectBrowser::OnViewRefresh() 
 {
    NXC_OBJECT *pObject;
+   NXC_OBJECT_INDEX *pIndex;
+   DWORD i, dwNumObjects;
    
+   // Populate objects' tree
    m_wndTreeCtrl.DeleteAllItems();
    m_dwTreeHashSize = 0;
    pObject = NXCGetRootObject();
@@ -167,6 +191,13 @@ void CObjectBrowser::OnViewRefresh()
       AddObjectToTree(pObject, TVI_ROOT);
       qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
    }
+
+   // Populate object's list
+   NXCLockObjectIndex();
+   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
+   for(i = 0; i < dwNumObjects; i++)
+      AddObjectToList(pIndex[i].pObject);
+   NXCUnlockObjectIndex();
 }
 
 
@@ -282,127 +313,7 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 
 void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   NXC_OBJECT *pObject = (NXC_OBJECT *)lParam;
-   DWORD i, j, dwIndex;
-
-   // Find object in tree
-   dwIndex = FindObjectInTree(wParam);
-
-   if (pObject->bIsDeleted)
-   {
-      // Delete all tree items
-      while(dwIndex != INVALID_INDEX)
-      {
-         DeleteObjectTreeItem(m_pTreeHash[dwIndex].hTreeItem);
-         dwIndex = FindObjectInTree(wParam);
-      }
-   }
-   else
-   {
-      HTREEITEM hItem;
-
-      if (dwIndex != INVALID_INDEX)
-      {
-         char szBuffer[256];
-         DWORD j, dwId, *pdwParentList;
-
-theApp.DebugPrintf("** Modifying object %s",pObject->szName);
-         // Create a copy of object's parent list
-         pdwParentList = (DWORD *)nx_memdup(pObject->pdwParentList, 
-                                            sizeof(DWORD) * pObject->dwNumParents);
-
-         CreateTreeItemText(pObject, szBuffer);
-restart_parent_check:;
-         for(i = dwIndex; (i < m_dwTreeHashSize) && (m_pTreeHash[i].dwObjectId == wParam); i++)
-         {
-            // Check if this item's parent still in object's parents list
-            hItem = m_wndTreeCtrl.GetParentItem(m_pTreeHash[i].hTreeItem);
-            if (hItem != NULL)
-            {
-               dwId = m_wndTreeCtrl.GetItemData(hItem);
-               for(j = 0; j < pObject->dwNumParents; j++)
-                  if (pObject->pdwParentList[j] == dwId)
-                  {
-                     pdwParentList[j] = 0;   // Mark this parent as presented
-                     break;
-                  }
-               if (j == pObject->dwNumParents)  // Not a parent anymore
-               {
-                  // Delete this tree item
-                  DeleteObjectTreeItem(m_pTreeHash[i].hTreeItem);
-                  goto restart_parent_check;   // Restart loop, because m_dwTreeHashSize was changed
-               }
-               else  // Current tree item is still valid
-               {
-                  m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
-               }
-            }
-            else  // Current tree item has no parent
-            {
-               m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
-            }
-         }
-
-         // Now walk through all object's parents which hasn't corresponding
-         // items in tree view
-         for(i = 0; i < pObject->dwNumParents; i++)
-            if (pdwParentList[i] != 0)
-            {
-theApp.DebugPrintf("** Check parent %d",pdwParentList[i]);
-               dwIndex = FindObjectInTree(pdwParentList[i]);
-               if (dwIndex != INVALID_INDEX)
-               {
-theApp.DebugPrintf("** Parent index == %d",dwIndex);
-                  // Walk through all occurences of current parent object
-                  for(j = dwIndex; (j < m_dwTreeHashSize) && 
-                                   (m_pTreeHash[j].dwObjectId == pdwParentList[i]); j++)
-                  {
-theApp.DebugPrintf("** Adding to parent at index %d, hItem %d",j,m_pTreeHash[j].hTreeItem);
-                     AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
-                  }
-                  qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
-               }
-            }
-
-         // Destroy copy of object's parents list
-         MemFree(pdwParentList);
-      }
-      else
-      {
-         // New object, link to all parents
-theApp.DebugPrintf("** Adding new object %s",pObject->szName);
-         for(i = 0; i < pObject->dwNumParents; i++)
-         {
-            dwIndex = FindObjectInTree(pObject->pdwParentList[i]);
-theApp.DebugPrintf("** Parent index = %d",dwIndex);
-            if (dwIndex != INVALID_INDEX)
-            {
-               // Walk through all occurences of current parent object
-               for(j = dwIndex; (j < m_dwTreeHashSize) && 
-                                (m_pTreeHash[j].dwObjectId == pObject->pdwParentList[i]); j++)
-               {
-theApp.DebugPrintf("** Adding to parent at index %d, hItem %d",j,m_pTreeHash[j].hTreeItem);
-                  AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
-               }
-               qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
-            }
-         }
-      }
-
-      if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
-      {
-         dwIndex = FindObjectInTree(wParam);
-         if (dwIndex != INVALID_INDEX)    // Shouldn't happen
-            m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
-      }
-      else
-      {
-         // Check if current item has been changed
-         hItem = m_wndTreeCtrl.GetSelectedItem();
-         if (m_wndTreeCtrl.GetItemData(hItem) == wParam)
-            m_wndPreviewPane.Refresh();
-      }
-   }
+   UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
 }
 
 
@@ -492,8 +403,6 @@ void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
    HTREEITEM hItem;
    DWORD dwIndex, dwId;
 
-theApp.DebugPrintf("CObjectBrowser::DeleteObjectTreeItem(%d, %d)",hRootItem,m_wndTreeCtrl.GetItemData(hRootItem));
-
    // Delete all child items
    hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
    while(hItem != NULL)
@@ -518,4 +427,132 @@ theApp.DebugPrintf("CObjectBrowser::DeleteObjectTreeItem(%d, %d)",hRootItem,m_wn
 
    // Delete item from tree control
    m_wndTreeCtrl.DeleteItem(hRootItem);
+}
+
+
+//
+// Update objects' tree when we receive WM_OBJECT_CHANGE message
+//
+
+void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
+{
+   DWORD i, j, dwIndex;
+
+   // Find object in tree
+   dwIndex = FindObjectInTree(dwObjectId);
+
+   if (pObject->bIsDeleted)
+   {
+      // Delete all tree items
+      while(dwIndex != INVALID_INDEX)
+      {
+         DeleteObjectTreeItem(m_pTreeHash[dwIndex].hTreeItem);
+         dwIndex = FindObjectInTree(dwObjectId);
+      }
+   }
+   else
+   {
+      HTREEITEM hItem;
+
+      if (dwIndex != INVALID_INDEX)
+      {
+         char szBuffer[256];
+         DWORD j, dwId, *pdwParentList;
+
+         // Create a copy of object's parent list
+         pdwParentList = (DWORD *)nx_memdup(pObject->pdwParentList, 
+                                            sizeof(DWORD) * pObject->dwNumParents);
+
+         CreateTreeItemText(pObject, szBuffer);
+restart_parent_check:;
+         for(i = dwIndex; (i < m_dwTreeHashSize) && (m_pTreeHash[i].dwObjectId == dwObjectId); i++)
+         {
+            // Check if this item's parent still in object's parents list
+            hItem = m_wndTreeCtrl.GetParentItem(m_pTreeHash[i].hTreeItem);
+            if (hItem != NULL)
+            {
+               dwId = m_wndTreeCtrl.GetItemData(hItem);
+               for(j = 0; j < pObject->dwNumParents; j++)
+                  if (pObject->pdwParentList[j] == dwId)
+                  {
+                     pdwParentList[j] = 0;   // Mark this parent as presented
+                     break;
+                  }
+               if (j == pObject->dwNumParents)  // Not a parent anymore
+               {
+                  // Delete this tree item
+                  DeleteObjectTreeItem(m_pTreeHash[i].hTreeItem);
+                  goto restart_parent_check;   // Restart loop, because m_dwTreeHashSize was changed
+               }
+               else  // Current tree item is still valid
+               {
+                  m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
+               }
+            }
+            else  // Current tree item has no parent
+            {
+               m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
+            }
+         }
+
+         // Now walk through all object's parents which hasn't corresponding
+         // items in tree view
+         for(i = 0; i < pObject->dwNumParents; i++)
+            if (pdwParentList[i] != 0)
+            {
+               dwIndex = FindObjectInTree(pdwParentList[i]);
+               if (dwIndex != INVALID_INDEX)
+               {
+                  // Walk through all occurences of current parent object
+                  for(j = dwIndex; (j < m_dwTreeHashSize) && 
+                                   (m_pTreeHash[j].dwObjectId == pdwParentList[i]); j++)
+                     AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
+                  qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+               }
+            }
+
+         // Destroy copy of object's parents list
+         MemFree(pdwParentList);
+      }
+      else
+      {
+         // New object, link to all parents
+         for(i = 0; i < pObject->dwNumParents; i++)
+         {
+            dwIndex = FindObjectInTree(pObject->pdwParentList[i]);
+            if (dwIndex != INVALID_INDEX)
+            {
+               // Walk through all occurences of current parent object
+               for(j = dwIndex; (j < m_dwTreeHashSize) && 
+                                (m_pTreeHash[j].dwObjectId == pObject->pdwParentList[i]); j++)
+                  AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
+               qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+            }
+         }
+      }
+
+      if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
+      {
+         dwIndex = FindObjectInTree(dwObjectId);
+         if (dwIndex != INVALID_INDEX)    // Shouldn't happen
+            m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
+      }
+      else
+      {
+         // Check if current item has been changed
+         hItem = m_wndTreeCtrl.GetSelectedItem();
+         if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
+            m_wndPreviewPane.Refresh();
+      }
+   }
+}
+
+
+//
+// Add new object to objects' list
+//
+
+void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
+{
+
 }

@@ -10,8 +10,9 @@
 #include "ObjectPreview.h"
 
 
-#define SHOW_OBJECT_PREVIEW   ((DWORD)0x00000001)
-#define FOLLOW_OBJECT_UPDATES ((DWORD)0x00000002)
+#define SHOW_OBJECT_PREVIEW      ((DWORD)0x00000001)
+#define FOLLOW_OBJECT_UPDATES    ((DWORD)0x00000002)
+#define VIEW_OBJECTS_AS_TREE     ((DWORD)0x00000004)
 
 
 //
@@ -23,6 +24,18 @@ struct OBJ_TREE_HASH
    DWORD dwObjectId;
    HTREEITEM hTreeItem;
 };
+
+
+//
+// libnxcl object index structure
+//
+
+struct NXC_OBJECT_INDEX
+{
+   DWORD dwKey;
+   NXC_OBJECT *pObject;
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -49,6 +62,8 @@ public:
 
 // Implementation
 protected:
+	void AddObjectToList(NXC_OBJECT *pObject);
+	CListCtrl m_wndListCtrl;
 	void DeleteObjectTreeItem(HTREEITEM hItem);
 	DWORD m_dwFlags;
 	void CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer);
@@ -74,6 +89,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	void UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject);
 	CImageList *m_pImageList;
 	void AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hRoot);
 };
