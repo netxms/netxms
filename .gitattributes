@@ -344,6 +344,10 @@ src/server/dbdrv/mysql/mysql.cpp -text
 src/server/dbdrv/mysql/mysql.dsp -text
 src/server/dbdrv/mysql/mysql.dsw -text
 src/server/dbdrv/mysql/mysqldrv.h -text
+src/server/dbdrv/odbc/odbc.cpp -text
+src/server/dbdrv/odbc/odbc.dsp -text
+src/server/dbdrv/odbc/odbc.dsw -text
+src/server/dbdrv/odbc/odbcdrv.h -text
 src/server/dbdrv/pgsql/Makefile.am -text
 src/server/dbdrv/pgsql/pgsql.cpp -text
 src/server/dbdrv/pgsql/pgsql.dsp -text
