@@ -673,9 +673,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
 
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-DWORD rc;
-   if ((rc=SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE)) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags, dwNodeType;
 
@@ -694,7 +693,6 @@ DWORD rc;
    }
    else
    {
-printf("%s: rc=%d (%s)\n",m_szName,rc,SNMPGetErrorText(rc));      
       if (m_dwFlags & NF_IS_SNMP)
       {
          if (m_iSnmpAgentFails == 0)
