@@ -36,8 +36,15 @@
 
 #define MAX_LINE_SIZE      4096
 #define NXGET_VERSION      "1"
+
 #define TRACE_IN           0
 #define TRACE_OUT          1
+
+#define CMD_GET            0
+#define CMD_LIST_PARAMS    1
+#define CMD_LIST_SUBAGENTS 2
+#define CMD_LIST_ARP       3
+#define CMD_LIST_IF        4
 
 
 //
@@ -54,6 +61,7 @@ static char **m_ppDataLines = NULL;
 static char m_szNetBuffer[MAX_LINE_SIZE * 2];
 static BOOL m_bVerbose = TRUE;
 static BOOL m_bTrace = FALSE;
+static DWORD m_dwTimeout = 3;
 
 
 //
@@ -131,7 +139,7 @@ int RecvLine(int iBufSize, char *szBuffer)
       // Wait for data
       FD_ZERO(&rdfs);
       FD_SET(m_hSocket, &rdfs);
-      timeout.tv_sec = 3;
+      timeout.tv_sec = m_dwTimeout;
       timeout.tv_usec = 0;
       if (select(m_hSocket + 1, &rdfs, NULL, NULL, &timeout) == 0)
       {
@@ -199,7 +207,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
    // Wait for responce
    FD_ZERO(&rdfs);
    FD_SET(m_hSocket, &rdfs);
-   timeout.tv_sec = 3;
+   timeout.tv_sec = m_dwTimeout;
    timeout.tv_usec = 0;
    if (select(m_hSocket + 1, &rdfs, NULL, NULL, &timeout) == 0)
    {
@@ -388,7 +396,6 @@ void Disconnect(void)
       closesocket(m_hSocket);
       m_hSocket = -1;
    }
-   DestroyResultData();
 }
 
 
@@ -401,25 +408,32 @@ int main(int argc, char *argv[])
    char *eptr, szBuffer[1024];
    DWORD dwError;
    BOOL bStart = TRUE;
-   int i, ch, iExitCode = 3;
+   int i, ch, iExitCode = 3, iCommand = CMD_GET;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hp:qs:tv")) != -1)
+   while((ch = getopt(argc, argv, "a:hp:qs:tvw:AILS")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxget [options] <host> <parameter>\n\n"
+            printf("Usage: nxget [<options>] <host> <parameter>\n"
+                   "   or: nxget [<options>] <command> <host>\n\n"
                    "Valid options are:\n"
-                   "   -a <auth>   : Authentication method. Valid methods are \"none\", \"plain-text\",\n"
-                   "                 \"md5\" and \"sha1\". Default is \"none\".\n"
-                   "   -h          : Display help and exit.\n"
-                   "   -p <port>   : Specify agent's port number. Default is %d.\n"
-                   "   -q          : Quiet mode.\n"
-                   "   -s <secret> : Specify shared secret for authentication.\n"
-                   "   -t          : Turn on protocol trace\n"
-                   "   -v          : Display version and exit.\n"
+                   "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
+                   "                  \"plain-text\", \"md5\" and \"sha1\". Default is \"none\".\n"
+                   "   -h           : Display help and exit.\n"
+                   "   -p <port>    : Specify agent's port number. Default is %d.\n"
+                   "   -q           : Quiet mode.\n"
+                   "   -s <secret>  : Specify shared secret for authentication.\n"
+                   "   -t           : Turn on protocol trace\n"
+                   "   -v           : Display version and exit.\n"
+                   "   -w <seconds> : Specify command timeout (default is 3 seconds)\n"
+                   "\nValid commands are:\n"
+                   "   -A           : Retrieve ARP cache\n"
+                   "   -I           : Retrieve a list of interfaces\n"
+                   "   -L           : Retrieve a list of supported parameters\n"
+                   "   -S           : Retrieve a list of loaded subagents\n"
                    "\n", m_wPort);
             bStart = FALSE;
             break;
@@ -448,6 +462,30 @@ int main(int argc, char *argv[])
             printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "." NXGET_VERSION "\n");
             bStart = FALSE;
             break;
+         case 'w':   // Command timeout
+            i = strtol(optarg, &eptr, 0);
+            if ((*eptr != 0) || (i < 1) || (i > 120))
+            {
+               printf("Invalid timeout \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               m_dwTimeout = (DWORD)i;
+            }
+            break;
+         case 'A':
+            iCommand = CMD_LIST_ARP;
+            break;
+         case 'I':
+            iCommand = CMD_LIST_IF;
+            break;
+         case 'L':
+            iCommand = CMD_LIST_PARAMS;
+            break;
+         case 'S':
+            iCommand = CMD_LIST_SUBAGENTS;
+            break;
          case '?':
             bStart = FALSE;
             break;
@@ -458,7 +496,7 @@ int main(int argc, char *argv[])
 
    if (bStart)
    {
-      if (argc - optind < 2)
+      if (argc - optind < (iCommand == CMD_GET ? 2 : 1))
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
       }
@@ -492,11 +530,45 @@ int main(int argc, char *argv[])
             // Connect to agent
             if (Connect())
             {
-               dwError = GetParameter(argv[optind + 1], 1024, szBuffer);
+               switch(iCommand)
+               {
+                  case CMD_GET:
+                     dwError = GetParameter(argv[optind + 1], 1024, szBuffer);
+                     break;
+                  case CMD_LIST_ARP:
+                     dwError = ExecuteCommand("ARP", TRUE, TRUE);
+                     break;
+                  case CMD_LIST_IF:
+                     dwError = ExecuteCommand("IFLIST", TRUE, TRUE);
+                     break;
+                  case CMD_LIST_PARAMS:
+                     dwError = ExecuteCommand("LIST", TRUE, TRUE);
+                     break;
+                  case CMD_LIST_SUBAGENTS:
+                     dwError = ExecuteCommand("SALIST", TRUE, TRUE);
+                     break;
+                  default:
+                     break;
+               }
                Disconnect();
                if (dwError == ERR_SUCCESS)
                {
-                  puts(szBuffer);
+                  switch(iCommand)
+                  {
+                     case CMD_GET:
+                        puts(szBuffer);
+                        break;
+                     case CMD_LIST_ARP:
+                     case CMD_LIST_IF:
+                     case CMD_LIST_PARAMS:
+                     case CMD_LIST_SUBAGENTS:
+                        for(i = 0; i < (int)m_dwNumDataLines; i++)
+                           printf("%s\n", m_ppDataLines[i]);
+                        DestroyResultData();
+                        break;
+                     default:
+                        break;
+                  }
                   iExitCode = 0;
                }
                else
