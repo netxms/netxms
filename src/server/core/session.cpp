@@ -2223,10 +2223,6 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          DCI_DATA_HEADER *pData = NULL;
          DCI_DATA_ROW *pCurr;
 
-         // Send CMD_REQUEST_COMPLETED message
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         SendMessage(&msg);
-
          // Get request parameters
          dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
          dwMaxRows = pRequest->GetVariableLong(VID_MAX_ROWS);
@@ -2275,6 +2271,10 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          hResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
+            // Send CMD_REQUEST_COMPLETED message
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            SendMessage(&msg);
+
             // Allocate initial memory block and prepare data header
             pData = (DCI_DATA_HEADER *)malloc(dwAllocatedRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
             pData->dwDataType = htonl((DWORD)iType);
