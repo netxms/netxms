@@ -72,5 +72,14 @@ typedef struct t_ProcEnt
 int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
 LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName, char *pszStat, char *pValue);
 
+THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg);
+
+
+//
+// Global variables
+//
+
+extern BOOL g_bShutdown;
+
 
 #endif

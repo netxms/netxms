@@ -21,7 +21,7 @@
 **/
 
 #include "sunos_subagent.h"
-#include <sys/systeminfo.h>
+#include <sys/sysinfo.h>
 
 
 //
@@ -58,7 +58,7 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
       {
          if (kstat_read(kc, kp, NULL) != -1)
          {
-            memcpy(pData, ((cpu_stat_t *)kp->data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
+            memcpy(pData, ((cpu_stat_t *)kp->ks_data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
          }
       }
    }
@@ -74,9 +74,9 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	kstat_ctl_t *kc;
 	kstat_t *kp;
 	kstat_named_t *kn;
-   int i, j;
+   int i, j, iIdleTime;
    DWORD *pdwHistory, dwHistoryPos, dwCurrPos, dwIndex;
-   DWORD dwSum[MAX_CPU_COUNT];
+   DWORD dwSum[MAX_CPU_COUNT + 1];
    uint_t *pnLastTimes, *pnCurrTimes, *pnTemp;
    uint_t nSum, nSysSum, nSysCurrIdle, nSysLastIdle;
 
@@ -84,7 +84,9 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	kc = kstat_open();
 	if (kc == NULL)
 	{
-      NxWriteAgentLog(EVENTLOG_ERROR_TYPE, "Unable to open kstat() context: %s", strerror(errno));
+      NxWriteAgentLog(EVENTLOG_ERROR_TYPE,
+							 "Unable to open kstat() context: %s", 
+							 strerror(errno));
       return THREAD_OK;
    }
 
@@ -103,9 +105,9 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	}
 
    // Initialize data
-   memset(m_dUsage, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
-   memset(m_dUsage5, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
-   memset(m_dUsage15, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
+   memset(m_dwUsage, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
+   memset(m_dwUsage5, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
+   memset(m_dwUsage15, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
    pdwHistory = (DWORD *)malloc(sizeof(DWORD) * (m_nCPUCount + 1) * 900);
    memset(pdwHistory, 0, sizeof(DWORD) * (m_nCPUCount + 1) * 900);
    pnLastTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
@@ -117,17 +119,18 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
    ThreadSleep(1);
 
    // Collection loop
-   while(1)
+   while(!g_bShutdown)
    {
       ReadCPUTimes(kc, pnCurrTimes);
 
       // Calculate utilization for last second for each CPU
       dwIndex = dwHistoryPos * (m_nCPUCount + 1);
-      for(i = 0, j = 0, nSysSum = 0, nSysIdle = 0; i < m_nCPUCount; i++)
+      for(i = 0, j = 0, nSysSum = 0, nSysCurrIdle = 0, nSysLastIdle = 0;
+		    i < m_nCPUCount; i++)
       {
          iIdleTime = j + CPU_IDLE;
-         for(uSum = 0; j < CPU_STATES; j++)
-            uSum += pnCurrTimes[j] - pnLastTimes[j];
+         for(nSum = 0; j < CPU_STATES; j++)
+            nSum += pnCurrTimes[j] - pnLastTimes[j];
          nSysSum += nSum;
          nSysCurrIdle += pnCurrTimes[iIdleTime];
          nSysLastIdle += pnLastTimes[iIdleTime];
@@ -139,22 +142,18 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
       pdwHistory[dwIndex] = 
          1000 - ((nSysCurrIdle - nSysLastIdle) * 1000 / nSysSum);
 
-      // Increment history buffer position
-      dwHistoryPos++;
-      if (dwHistoryPos == 900)
-         dwHistoryPos = 0;
-      
       // Copy current times to last
       pnTemp = pnLastTimes;
       pnLastTimes = pnCurrTimes;
       pnCurrTimes = pnTemp;
 
       // Calculate averages
+		memset(dwSum, 0, sizeof(dwSum));
       for(i = 0, dwCurrPos = dwHistoryPos; i < 900; i++)
       {
          dwIndex = dwCurrPos * (m_nCPUCount + 1);
          for(j = 0; j < m_nCPUCount; j++, dwIndex++)
-            dwSum[j] += pdwHistory[dwIndex]
+            dwSum[j] += pdwHistory[dwIndex];
          dwSum[MAX_CPU_COUNT] += pdwHistory[dwIndex];
 
          switch(i)
@@ -174,6 +173,8 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
                   m_dwUsage15[j] = dwSum[j] / 900;
                m_dwUsage15[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 900;
                break;
+				default:
+					break;
          }
 
          if (dwCurrPos > 0)
@@ -182,6 +183,11 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
             dwCurrPos = 899;
       }
 
+      // Increment history buffer position
+      dwHistoryPos++;
+      if (dwHistoryPos == 900)
+         dwHistoryPos = 0;
+      
       ThreadSleep(1);
    }
 
@@ -232,7 +238,7 @@ LONG H_CPUUsage(char *pszParam, char *pArg, char *pValue)
       char *eptr, szBuffer[32] = "error";
 
       // Get CPU number
-      NxGetParameterArg(pszParam, szBuffer, 32);
+      NxGetParameterArg(pszParam, 1, szBuffer, 32);
       nCPU = strtol(szBuffer, &eptr, 0);
       if ((*eptr == 0) && (nCPU >= 0) && (nCPU < m_nCPUCount))
       {

@@ -46,10 +46,24 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue);
 
 
 //
+// Global variables
+//
+
+BOOL g_bShutdown = FALSE;
+
+
+//
+// Static data
+//
+
+static THREAD m_hCPUStatThread = INVALID_THREAD_HANDLE;
+
+
+//
 // Detect support for source packages
 //
 
-LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
+static LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
@@ -62,6 +76,8 @@ LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
 
 static void UnloadHandler(void)
 {
+	g_bShutdown = TRUE;
+	ThreadJoin(m_hCPUStatThread);
 }
 
 
@@ -129,6 +145,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
+	m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+
    *ppInfo = &m_info;
    return TRUE;
 }
