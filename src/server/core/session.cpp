@@ -1601,12 +1601,12 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          szCond[0] = 0;
          if (dwTimeFrom != 0)
          {
-            sprintf(szCond, " AND timestamp>=%d", dwTimeFrom);
+            sprintf(szCond, " AND idata_timestamp>=%d", dwTimeFrom);
             iPos = strlen(szCond);
          }
          if (dwTimeTo != 0)
          {
-            sprintf(&szCond[iPos], " AND timestamp<=%d", dwTimeTo);
+            sprintf(&szCond[iPos], " AND idata_timestamp<=%d", dwTimeTo);
          }
 
          sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
