@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.1 2004-10-22 22:08:34 alk Exp $ */
+/* $Id: net.cpp,v 1.2 2004-10-23 22:53:23 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -118,6 +118,14 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				{
 					int nIndex;
 					struct ifreq irq;
+
+					if (nMAC1 == 0 && nMAC2 == 0 &&
+						nMAC3 == 0 && nMAC4 == 0 &&
+						nMAC5 == 0 && nMAC6 == 0)
+					{
+						// incomplete
+						continue;
+					}
 
 					strncpy(irq.ifr_name, szIf, IFNAMSIZ);
 					if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
@@ -240,5 +248,15 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/22 22:08:34  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 
 */
