@@ -234,7 +234,7 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
                                  MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), // Default language
                                  (LPSTR)&pMsg,0,NULL)>0)
                {
-                  pMsg[strcspn(msgBuf,"\r\n")] = 0;
+                  pMsg[strcspn(pMsg,"\r\n")] = 0;
                   strings[numStrings]=(char *)malloc(strlen(pMsg) + 1);
                   strcpy(strings[numStrings], pMsg);
                   LocalFree(pMsg);

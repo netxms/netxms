@@ -186,7 +186,7 @@ BOOL EPRule::LoadFromDB(void)
    }
 
    // Load rule's events
-   sprintf(szQuery, "SELECT event_id FROM PolicyEventList WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT event_id FROM policy_event_list WHERE rule_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -202,7 +202,7 @@ BOOL EPRule::LoadFromDB(void)
    }
 
    // Load rule's actions
-   sprintf(szQuery, "SELECT action_id FROM PolicyActionList WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT action_id FROM policy_action_list WHERE rule_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -255,7 +255,7 @@ BOOL EventPolicy::LoadFromDB(void)
    DB_RESULT hResult;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT id,flags,comments FROM EventPolicy ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,flags,comments FROM event_policy ORDER BY id");
    if (hResult != NULL)
    {
       DWORD i;

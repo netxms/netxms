@@ -352,7 +352,7 @@ void Main(void)
 
                   for(i = 0; i < 10000; i++)
                   {
-                     sprintf(szQuery, "INSERT INTO newnodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,65535,%d)",
+                     sprintf(szQuery, "INSERT INTO new_nodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,65535,%d)",
                         i + 1000, htonl(0x0A800001 + i), DF_DEFAULT);
                      DBQuery(g_hCoreDB, szQuery);
                   }

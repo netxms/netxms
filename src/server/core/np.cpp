@@ -77,7 +77,7 @@ void NodePoller(void *arg)
          break;      // Shutdown has arrived
       WatchdogNotify(dwWatchdogId);
 
-      hResult = DBSelect(g_hCoreDB, "SELECT id,ip_addr,ip_netmask,discovery_flags FROM NewNodes");
+      hResult = DBSelect(g_hCoreDB, "SELECT id,ip_addr,ip_netmask,discovery_flags FROM new_nodes");
       if (hResult != 0)
       {
          int i, iNumRows;
@@ -97,7 +97,7 @@ void NodePoller(void *arg)
             PollNode(dwIpAddr, dwNetMask, dwFlags);
 
             // Delete processed node
-            sprintf(szQuery, "DELETE FROM NewNodes WHERE id=%ld", dwId);
+            sprintf(szQuery, "DELETE FROM new_nodes WHERE id=%ld", dwId);
             DBQuery(g_hCoreDB, szQuery);
          }
          DBFreeResult(hResult);

@@ -31,7 +31,7 @@ static void CleanDeletedObjects(void)
 {
    DB_RESULT hResult;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT object_id FROM DeletedObjects");
+   hResult = DBSelect(g_hCoreDB, "SELECT object_id FROM deleted_objects");
    if (hResult != NULL)
    {
       DB_ASYNC_RESULT hAsyncResult;
@@ -45,14 +45,14 @@ static void CleanDeletedObjects(void)
          dwObjectId = DBGetFieldULong(hResult, i, 0);
 
          // Check if there are references to this object in event log
-         sprintf(szQuery, "SELECT source FROM EventLog WHERE source=%ld", dwObjectId);
+         sprintf(szQuery, "SELECT source FROM event_log WHERE source=%ld", dwObjectId);
          hAsyncResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hAsyncResult != NULL)
          {
             if (!DBFetch(hAsyncResult))
             {
                // No records with that source ID, so we can purge this object
-               sprintf(szQuery, "DELETE FROM DeletedObjects WHERE object_id=%ld", dwObjectId);
+               sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%ld", dwObjectId);
                DBQuery(g_hCoreDB, szQuery);
                DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %ld was purged\n", dwObjectId);
             }
@@ -110,7 +110,7 @@ void HouseKeeper(void *pArg)
       // Remove outdated event log records
       if (dwEventLogRetentionTime > 0)
       {
-         sprintf(szQuery, "DELETE FROM EventLog WHERE timestamp<%ld", currTime - dwEventLogRetentionTime);
+         sprintf(szQuery, "DELETE FROM event_log WHERE timestamp<%ld", currTime - dwEventLogRetentionTime);
          DBQuery(g_hCoreDB, szQuery);
       }
 

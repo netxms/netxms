@@ -53,7 +53,7 @@ void EventProcessor(void *arg)
       {
          char szQuery[1024];
 
-         sprintf(szQuery, "INSERT INTO eventlog (event_id,timestamp,source,severity,message) "
+         sprintf(szQuery, "INSERT INTO event_log (event_id,timestamp,source,severity,message) "
                           "VALUES (%d,%d,%d,%d,'%s')", pEvent->Id(), pEvent->TimeStamp(),
                  pEvent->SourceId(), pEvent->Severity(), pEvent->Message());
          DBQuery(g_hCoreDB, szQuery);

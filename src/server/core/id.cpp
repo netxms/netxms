@@ -89,7 +89,7 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
-   hResult = DBSelect(g_hCoreDB, "SELECT max(object_id) FROM DeletedObjects");
+   hResult = DBSelect(g_hCoreDB, "SELECT max(object_id) FROM deleted_objects");
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -99,7 +99,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available network object group id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM NodeGroups");
+   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM node_groups");
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -135,7 +135,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available data collection template item id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(item_id) FROM dctitems");
+   hResult = DBSelect(g_hCoreDB, "SELECT max(item_id) FROM dct_items");
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -153,7 +153,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available event group id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM EventGroups");
+   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM event_groups");
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)

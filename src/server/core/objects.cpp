@@ -284,7 +284,7 @@ void NetObjDelete(NetObj *pObject)
    char szQuery[256];
 
    // Write object to deleted objects table
-   sprintf(szQuery, "INSERT INTO DeletedObjects (object_id,object_class,name,ip_addr,ip_netmask) VALUES (%ld,%ld,'%s',%ld,%ld)",
+   sprintf(szQuery, "INSERT INTO deleted_objects (object_id,object_class,name,ip_addr,ip_netmask) VALUES (%ld,%ld,'%s',%ld,%ld)",
            pObject->Id(), pObject->Type(), pObject->Name(), pObject->IpAddr(),
            GetObjectNetmask(pObject));
    DBQuery(g_hCoreDB, szQuery);

@@ -213,7 +213,7 @@ void DiscoveryThread(void *arg)
    dwWatchdogId = WatchdogAddThread("Network Discovery Thread");
 
    // Flush new nodes table
-   DBQuery(g_hCoreDB, "DELETE FROM newnodes");
+   DBQuery(g_hCoreDB, "DELETE FROM new_nodes");
 
    while(!ShutdownInProgress())
    {
@@ -248,7 +248,7 @@ void DiscoveryThread(void *arg)
                         {
                            char szQuery[256];
 
-                           sprintf(szQuery, "INSERT INTO newnodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,%d,%d)",
+                           sprintf(szQuery, "INSERT INTO new_nodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,%d,%d)",
                                    dwNewNodeId++, pArpCache->pEntries[j].dwIpAddr,
                                    pInterface->IpNetMask(), DF_DEFAULT);
                            DBQuery(g_hCoreDB, szQuery);

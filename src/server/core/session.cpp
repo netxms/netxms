@@ -368,7 +368,7 @@ void ClientSession::SendAllEvents(void)
    MutexLock(m_hMutexSendEvents, INFINITE);
 
    // Retrieve events from database
-   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog ORDER BY timestamp");
+   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM event_log ORDER BY timestamp");
    if (hResult != NULL)
    {
       // Send events, one per message

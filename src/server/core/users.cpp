@@ -78,7 +78,7 @@ BOOL LoadUsers(void)
    DBFreeResult(hResult);
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access FROM UserGroups ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access FROM user_groups ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -95,7 +95,7 @@ BOOL LoadUsers(void)
    DBFreeResult(hResult);
 
    // Add users to groups
-   hResult = DBSelect(g_hCoreDB, "SELECT user_id,group_id FROM UserGroupMembers");
+   hResult = DBSelect(g_hCoreDB, "SELECT user_id,group_id FROM user_group_members");
    if (hResult == 0)
       return FALSE;
 
@@ -168,9 +168,9 @@ void SaveUsers(void)
       if (m_pGroupList[i].wFlags & UF_DELETED)
       {
          // Delete group record from database
-         sprintf(szQuery, "DELETE FROM usergroups WHERE id=%d", m_pGroupList[i].dwId);
+         sprintf(szQuery, "DELETE FROM user_groups WHERE id=%d", m_pGroupList[i].dwId);
          DBQuery(g_hCoreDB, szQuery);
-         sprintf(szQuery, "DELETE FROM usergroupmembers WHERE group_id=%d", m_pGroupList[i].dwId);
+         sprintf(szQuery, "DELETE FROM user_group_members WHERE group_id=%d", m_pGroupList[i].dwId);
          DBQuery(g_hCoreDB, szQuery);
 
          // Delete group record from memory
@@ -186,7 +186,7 @@ void SaveUsers(void)
          BOOL bGroupExists = FALSE;
 
          // Check if group record exists in database
-         sprintf(szQuery, "SELECT name FROM usergroups WHERE id=%d", m_pGroupList[i].dwId);
+         sprintf(szQuery, "SELECT name FROM user_groups WHERE id=%d", m_pGroupList[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -197,22 +197,22 @@ void SaveUsers(void)
 
          // Create or update record in database
          if (bGroupExists)
-            sprintf(szQuery, "UPDATE usergroups SET name='%s',access=%d WHERE id=%d",
+            sprintf(szQuery, "UPDATE user_groups SET name='%s',access=%d WHERE id=%d",
                     m_pGroupList[i].szName, m_pGroupList[i].wSystemRights, m_pGroupList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO usergroupss (id,name,access) VALUES (%d,'%s',%d)",
+            sprintf(szQuery, "INSERT INTO user_groups (id,name,access) VALUES (%d,'%s',%d)",
                     m_pGroupList[i].dwId, m_pGroupList[i].szName, m_pGroupList[i].wSystemRights);
          DBQuery(g_hCoreDB, szQuery);
 
          if (bGroupExists)
          {
-            sprintf(szQuery, "DELETE FROM usergroupmembers WHERE group_id=%d", m_pGroupList[i].dwId);
+            sprintf(szQuery, "DELETE FROM user_group_members WHERE group_id=%d", m_pGroupList[i].dwId);
             DBQuery(g_hCoreDB, szQuery);
          }
 
          for(DWORD j = 0; j < m_pGroupList[i].dwNumMembers; j++)
          {
-            sprintf(szQuery, "INSERT INTO UserGroupMembers (group_id, user_id) VALUES (%d, %d)",
+            sprintf(szQuery, "INSERT INTO user_group_members (group_id, user_id) VALUES (%d, %d)",
                     m_pGroupList[i].dwId, m_pGroupList[i].pMembers[j]);
             DBQuery(g_hCoreDB, szQuery);
          }

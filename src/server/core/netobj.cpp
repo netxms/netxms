@@ -352,7 +352,7 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 {
    char szQuery[256];
 
-   sprintf(szQuery, "INSERT INTO acl (objecft_id,user_id,access_rights) VALUES (%d,%d,%d)",
+   sprintf(szQuery, "INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)",
            (DWORD)pArg, dwUserId, dwAccessRights);
    DBQuery(g_hCoreDB, szQuery);
 }
