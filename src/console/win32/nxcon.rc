@@ -486,19 +486,19 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,102,83,10
     CONTROL         "Edi&t event database",IDC_CHECK_EDIT_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,113,79,10
-    DEFPUSHBUTTON   "OK",IDOK,111,226,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,165,226,50,14
-    LTEXT           "Name:",IDC_STATIC,7,10,22,8
-    LTEXT           "Description:",IDC_STATIC,7,30,38,8
-    GROUPBOX        "System Rights",IDC_STATIC,7,79,208,49
-    GROUPBOX        "Flags",IDC_STATIC,7,46,208,27
-    GROUPBOX        "Members",IDC_STATIC,7,134,208,86
     CONTROL         "List1",IDC_LIST_MEMBERS,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
                     LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,12,
                     144,143,72,WS_EX_CLIENTEDGE
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,160,144,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,160,163,50,14
+    DEFPUSHBUTTON   "OK",IDOK,110,226,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,226,50,14
+    LTEXT           "Name:",IDC_STATIC,7,10,22,8
+    LTEXT           "Description:",IDC_STATIC,7,30,38,8
+    GROUPBOX        "System Rights",IDC_STATIC,7,79,208,49
+    GROUPBOX        "Flags",IDC_STATIC,7,46,208,27
+    GROUPBOX        "Members",IDC_STATIC,7,134,208,86
 END
 
 

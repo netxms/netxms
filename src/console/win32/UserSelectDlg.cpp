@@ -21,6 +21,8 @@ CUserSelectDlg::CUserSelectDlg(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CUserSelectDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
+
+   m_bOnlyUsers = FALSE;
 }
 
 
@@ -62,7 +64,7 @@ BOOL CUserSelectDlg::OnInitDialog()
    m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 
                               rect.right - GetSystemMetrics(SM_CXVSCROLL) - 4);
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
-   m_wndListCtrl.SetHoverTime();
+   m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Create image list
    pImageList = new CImageList;
@@ -77,13 +79,14 @@ BOOL CUserSelectDlg::OnInitDialog()
    {
       for(i = 0; i < dwNumUsers; i++)
          if (!(pUserList[i].wFlags & UF_DELETED))
-         {
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUserList[i].szName,
-               (pUserList[i].dwId == GROUP_EVERYONE) ? 2 :
-                  ((pUserList[i].dwId & GROUP_FLAG) ? 1 : 0));
-            if (iItem != -1)
-               m_wndListCtrl.SetItemData(iItem, pUserList[i].dwId);
-         }
+            if (!m_bOnlyUsers || !(pUserList[i].dwId & GROUP_FLAG))
+            {
+               iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUserList[i].szName,
+                  (pUserList[i].dwId == GROUP_EVERYONE) ? 2 :
+                     ((pUserList[i].dwId & GROUP_FLAG) ? 1 : 0));
+               if (iItem != -1)
+                  m_wndListCtrl.SetItemData(iItem, pUserList[i].dwId);
+            }
    }
 
 	return TRUE;

@@ -106,10 +106,9 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "UID", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(1, "Login", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(2, "Full Name", LVCFMT_LEFT, 170);
-   m_wndListCtrl.InsertColumn(3, "Description", LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(1, "Full Name", LVCFMT_LEFT, 170);
+   m_wndListCtrl.InsertColumn(2, "Description", LVCFMT_LEFT, 300);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -146,17 +145,14 @@ void CUserEditor::OnSize(UINT nType, int cx, int cy)
 int CUserEditor::AddListItem(NXC_USER *pUser)
 {
    int iItem;
-   char szBuffer[32];
 
-   sprintf(szBuffer, "%08X", pUser->dwId);
-   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer,
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
                  (pUser->dwId == GROUP_EVERYONE) ? 2 : ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
    if (iItem != -1)
    {
       m_wndListCtrl.SetItemData(iItem, pUser->dwId);
-      m_wndListCtrl.SetItemText(iItem, 1, pUser->szName);
-      m_wndListCtrl.SetItemText(iItem, 2, pUser->szFullName);
-      m_wndListCtrl.SetItemText(iItem, 3, pUser->szDescription);
+      m_wndListCtrl.SetItemText(iItem, 1, pUser->szFullName);
+      m_wndListCtrl.SetItemText(iItem, 2, pUser->szDescription);
    }
    return iItem;
 }
@@ -290,6 +286,16 @@ void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
             AddListItem(pUserInfo);
          break;
       case USER_DB_MODIFY:
+         if (iItem == -1)
+         {
+            AddListItem(pUserInfo);
+         }
+         else
+         {
+            m_wndListCtrl.SetItemText(iItem, 0, pUserInfo->szName);
+            m_wndListCtrl.SetItemText(iItem, 1, pUserInfo->szFullName);
+            m_wndListCtrl.SetItemText(iItem, 2, pUserInfo->szDescription);
+         }
          break;
       case USER_DB_DELETE:
          if (iItem != -1)
@@ -329,41 +335,95 @@ void CUserEditor::OnUserProperties()
       pUser = NXCFindUserById(dwId);
       if (pUser != NULL)
       {
+         NXC_USER userInfo;
+         BOOL bModify = FALSE;
+
+         memset(&userInfo, 0, sizeof(NXC_USER));
          if (dwId & GROUP_FLAG)
          {
             CGroupPropDlg dlg;
 
+            dlg.m_pGroup = pUser;
             dlg.m_strName = pUser->szName;
             dlg.m_strDescription = pUser->szDescription;
-            dlg.m_bDisabled = pUser->wFlags & UF_DISABLED;
-            dlg.m_bDropConn = pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS;
-            dlg.m_bEditConfig = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG;
-            dlg.m_bViewConfig = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG;
-            dlg.m_bEditEventDB = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB;
-            dlg.m_bViewEventDB = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB;
-            dlg.m_bManageUsers = pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS;
+            dlg.m_bDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
+            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS) ? TRUE : FALSE;
+            dlg.m_bEditConfig = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG) ? TRUE : FALSE;
+            dlg.m_bViewConfig = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG) ? TRUE : FALSE;
+            dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
+               userInfo.dwId = pUser->dwId;
+               strcpy(userInfo.szName, (LPCTSTR)dlg.m_strName);
+               strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
+               userInfo.wFlags = dlg.m_bDisabled ? UF_DISABLED : 0;
+               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_DROP_CONNECTIONS : 0) |
+                                        (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
+                                        (dlg.m_bEditConfig ? SYSTEM_ACCESS_EDIT_CONFIG : 0) |
+                                        (dlg.m_bViewConfig ? SYSTEM_ACCESS_VIEW_CONFIG : 0) |
+                                        (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
+                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0);
+               userInfo.dwNumMembers = dlg.m_dwNumMembers;
+               if (userInfo.dwNumMembers > 0)
+               {
+                  userInfo.pdwMemberList = (DWORD *)malloc(sizeof(DWORD) * userInfo.dwNumMembers);
+                  memcpy(userInfo.pdwMemberList, dlg.m_pdwMembers, sizeof(DWORD) * userInfo.dwNumMembers);
+               }
+               bModify = TRUE;
             }
          }
          else
          {
             CUserPropDlg dlg;
 
+            dlg.m_pUser = pUser;
             dlg.m_strLogin = pUser->szName;
             dlg.m_strFullName = pUser->szFullName;
             dlg.m_strDescription = pUser->szDescription;
-            dlg.m_bAccountDisabled = pUser->wFlags & UF_DISABLED;
-            dlg.m_bChangePassword = pUser->wFlags & UF_CHANGE_PASSWORD;
-            dlg.m_bDropConn = pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS;
-            dlg.m_bEditConfig = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG;
-            dlg.m_bViewConfig = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG;
-            dlg.m_bEditEventDB = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB;
-            dlg.m_bViewEventDB = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB;
-            dlg.m_bManageUsers = pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS;
+            dlg.m_bAccountDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
+            dlg.m_bChangePassword = (pUser->wFlags & UF_CHANGE_PASSWORD) ? TRUE : FALSE;
+            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS) ? TRUE : FALSE;
+            dlg.m_bEditConfig = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG) ? TRUE : FALSE;
+            dlg.m_bViewConfig = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG) ? TRUE : FALSE;
+            dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
+               userInfo.dwId = pUser->dwId;
+               strcpy(userInfo.szName, (LPCTSTR)dlg.m_strLogin);
+               strcpy(userInfo.szFullName, (LPCTSTR)dlg.m_strFullName);
+               strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
+               userInfo.wFlags = (dlg.m_bAccountDisabled ? UF_DISABLED : 0) |
+                                 (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
+               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_DROP_CONNECTIONS : 0) |
+                                        (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
+                                        (dlg.m_bEditConfig ? SYSTEM_ACCESS_EDIT_CONFIG : 0) |
+                                        (dlg.m_bViewConfig ? SYSTEM_ACCESS_VIEW_CONFIG : 0) |
+                                        (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
+                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0);
+               bModify = TRUE;
             }
+         }
+
+         // Modify user if OK was pressed
+         if (bModify)
+         {
+            DWORD dwResult;
+
+            dwResult = DoRequestArg1(NXCModifyUser, &userInfo, "Updating user database...");
+            if (dwResult != RCC_SUCCESS)
+            {
+               char szBuffer[256];
+
+               sprintf(szBuffer, "Cannot modify user record: %s", NXCGetErrorText(dwResult));
+               MessageBox(szBuffer, "Error", MB_ICONSTOP | MB_OK);
+            }
+
+            // Destroy group members list
+            safe_free(userInfo.pdwMemberList);
          }
       }
       else

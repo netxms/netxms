@@ -14,6 +14,7 @@ class CUserPropDlg : public CDialog
 {
 // Construction
 public:
+	NXC_USER * m_pUser;
 	CUserPropDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
@@ -45,7 +46,7 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CUserPropDlg)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

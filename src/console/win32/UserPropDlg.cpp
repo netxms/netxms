@@ -58,9 +58,27 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CUserPropDlg, CDialog)
 	//{{AFX_MSG_MAP(CUserPropDlg)
-		// NOTE: the ClassWizard will add message map macros here
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CUserPropDlg message handlers
+
+BOOL CUserPropDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+
+   if (m_pUser->dwId == 0)
+   {
+      // Disable checkboxes with system access rights for superuser
+      GetDlgItem(IDC_CHECK_DISABLED)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_DROP_CONN)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_MANAGE_USERS)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_VIEW_CONFIG)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_EDIT_CONFIG)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_VIEW_EVENTDB)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_EDIT_EVENTDB)->EnableWindow(FALSE);
+   }
+
+	return TRUE;
+}

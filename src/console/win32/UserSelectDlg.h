@@ -14,6 +14,7 @@ class CUserSelectDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bOnlyUsers;
 	DWORD m_dwUserId;
 	CUserSelectDlg(CWnd* pParent = NULL);   // standard constructor
 

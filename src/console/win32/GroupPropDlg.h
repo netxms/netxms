@@ -14,7 +14,11 @@ class CGroupPropDlg : public CDialog
 {
 // Construction
 public:
+	DWORD * m_pdwMembers;
+	DWORD m_dwNumMembers;
+	NXC_USER * m_pGroup;
 	CGroupPropDlg(CWnd* pParent = NULL);   // standard constructor
+   virtual ~CGroupPropDlg();
 
 // Dialog Data
 	//{{AFX_DATA(CGroupPropDlg)
@@ -44,7 +48,9 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CGroupPropDlg)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
