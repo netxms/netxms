@@ -62,6 +62,38 @@ inline void SetInfoText(HWND hWnd, char *pszText)
 
 
 //
+// Check if MIB file is exist and up-to-date
+//
+
+static DWORD CheckMIBFile(char *pszName, BYTE *pHash)
+{
+   char szFileName[MAX_PATH];
+   BYTE currHash[MD5_DIGEST_SIZE];
+   BOOL bNeedUpdate = TRUE;
+   DWORD dwResult = RCC_SUCCESS;
+
+   // Build full file name
+   strcpy(szFileName, g_szWorkDir);
+   strcat(szFileName, WORKDIR_MIBCACHE);
+   strcat(szFileName, "\\");
+   strcat(szFileName, pszName);
+
+   // Check file hash
+   if (CalculateFileMD5Hash(szFileName, currHash))
+      bNeedUpdate = memcmp(currHash, pHash, MD5_DIGEST_SIZE);
+
+   // Download file from server if needed
+   if (bNeedUpdate)
+   {
+      strcpy(szFileName, g_szWorkDir);
+      strcat(szFileName, WORKDIR_MIBCACHE);
+      dwResult = NXCDownloadMIBFile(pszName, szFileName);
+   }
+   return dwResult;
+}
+
+
+//
 // Login thread
 //
 
@@ -76,17 +108,35 @@ static DWORD WINAPI LoginThread(void *pArg)
       // Now we are connected, request data sync
       SetInfoText(hWnd, "Synchronizing objects...");
       dwResult = NXCSyncObjects();
+   }
 
+   if (dwResult == RCC_SUCCESS)
+   {
+      SetInfoText(hWnd, "Loading user database...");
+      dwResult = NXCLoadUserDB();
+   }
+
+   if (dwResult == RCC_SUCCESS)
+   {
+      NXC_MIB_LIST *pMibList;
+      DWORD i;
+
+      SetInfoText(hWnd, "Loading and initializing MIB files...");
+      dwResult = NXCGetMIBList(&pMibList);
       if (dwResult == RCC_SUCCESS)
       {
-         SetInfoText(hWnd, "Loading user database...");
-         dwResult = NXCLoadUserDB();
+         for(i = 0; i < pMibList->dwNumFiles; i++)
+            if ((dwResult = CheckMIBFile(pMibList->ppszName[i], pMibList->ppHash[i])) != RCC_SUCCESS)
+               break;
+         NXCDestroyMIBList(pMibList);
+         if (dwResult == RCC_SUCCESS)
+            CreateMIBTree();
       }
-
-      // Disconnect if some of post-login operations was failed
-      if (dwResult != RCC_SUCCESS)
-         NXCDisconnect();
    }
+
+   // Disconnect if some of post-login operations was failed
+   if (dwResult != RCC_SUCCESS)
+      NXCDisconnect();
 
    PostMessage(hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;

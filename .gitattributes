@@ -65,6 +65,8 @@ src/console/win32/EventBrowser.cpp -text
 src/console/win32/EventBrowser.h -text
 src/console/win32/EventEditor.cpp -text
 src/console/win32/EventEditor.h -text
+src/console/win32/EventPolicyEditor.cpp -text
+src/console/win32/EventPolicyEditor.h -text
 src/console/win32/Graph.cpp -text
 src/console/win32/Graph.h -text
 src/console/win32/GraphFrame.cpp -text
@@ -73,6 +75,8 @@ src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
 src/console/win32/LoginDialog.cpp -text
 src/console/win32/LoginDialog.h -text
+src/console/win32/MIBBrowserDlg.cpp -text
+src/console/win32/MIBBrowserDlg.h -text
 src/console/win32/MainFrm.cpp -text
 src/console/win32/MainFrm.h -text
 src/console/win32/MapFrame.cpp -text
@@ -107,6 +111,10 @@ src/console/win32/PasswordChangeDlg.cpp -text
 src/console/win32/PasswordChangeDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
 src/console/win32/RequestProcessingDlg.h -text
+src/console/win32/RuleHeader.cpp -text
+src/console/win32/RuleHeader.h -text
+src/console/win32/RuleList.cpp -text
+src/console/win32/RuleList.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/ThresholdDlg.cpp -text

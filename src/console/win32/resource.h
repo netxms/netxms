@@ -19,9 +19,12 @@
 #define IDR_DCI_DATA_VIEW               109
 #define ID_INDICATOR_NUM_ROWS           109
 #define ID_INDICATOR_CURR_ROW           110
+#define IDR_EPP_EDITOR                  110
 #define IDC_STATUS_BAR                  111
 #define IDC_GRAPH                       112
 #define IDR_DCI_HISTORY_GRAPH           113
+#define ID_RULE_LIST                    114
+#define ID_HEADER_CTRL                  115
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -74,6 +77,7 @@
 #define IDB_UP_ARROW                    178
 #define IDB_DOWN_ARROW                  179
 #define IDD_THRESHOLD                   180
+#define IDD_MIB_BROWSER                 181
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -132,6 +136,7 @@
 #define IDC_RADIO_ACTIVE                1066
 #define IDC_RADIO_DISABLED              1067
 #define IDC_RADIO6                      1068
+#define IDC_RADIO_NOT_SUPPORTED         1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
@@ -144,6 +149,17 @@
 #define IDC_STATIC_FOR                  1083
 #define IDC_STATIC_SAMPLES              1084
 #define IDC_STATIC_COMPARE              1085
+#define IDC_TREE_MIB                    1086
+#define IDC_BUTTON_DETAILS              1088
+#define IDC_STATIC_DESCRIPTION          1093
+#define IDC_STATIC_OID_TEXT             1094
+#define IDC_EDIT_OID_TEXT               1095
+#define IDC_EDIT_TYPE                   1098
+#define IDC_EDIT_STATUS                 1099
+#define IDC_EDIT_ACCESS                 1100
+#define IDC_STATIC_STATUS               1101
+#define IDC_STATIC_ACCESS               1102
+#define IDC_STATIC_TYPE                 1103
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -183,15 +199,19 @@
 #define ID_ITEM_DISABLE                 32830
 #define ID_ITEM_SHOWDATA                32836
 #define ID_ITEM_GRAPH                   32837
+#define ID_TOOLS_MIBBROWSER             32840
+#define ID_CONTROLPANEL_EVENTPOLICY     32841
+#define IDS_GETFOLDERPATH_FAILED        61216
+#define IDS_WORKDIR_CREATION_FAILED     61217
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        181
-#define _APS_NEXT_COMMAND_VALUE         32840
-#define _APS_NEXT_CONTROL_VALUE         1086
-#define _APS_NEXT_SYMED_VALUE           114
+#define _APS_NEXT_RESOURCE_VALUE        183
+#define _APS_NEXT_COMMAND_VALUE         32842
+#define _APS_NEXT_CONTROL_VALUE         1104
+#define _APS_NEXT_SYMED_VALUE           116
 #endif
 #endif

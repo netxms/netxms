@@ -25,6 +25,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CDCIThresholdsPage)
 	enum { IDD = IDD_DCI_THRESHOLDS };
+	CButton	m_wndButtonDelete;
+	CButton	m_wndButtonModify;
 	CButton	m_wndButtonDown;
 	CButton	m_wndButtonUp;
 	CListCtrl	m_wndListCtrl;
@@ -40,12 +42,19 @@ public:
 
 // Implementation
 protected:
+	void RecalcIndexes(DWORD dwIndex);
+	void UpdateListEntry(int iItem, DWORD dwIndex);
 	BOOL EditThreshold(NXC_DCI_THRESHOLD *pThreshold);
 	int AddListEntry(DWORD dwIndex);
 	// Generated message map functions
 	//{{AFX_MSG(CDCIThresholdsPage)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonModify();
+	afx_msg void OnButtonDelete();
+	afx_msg void OnButtonMoveup();
+	afx_msg void OnButtonMovedown();
+	afx_msg void OnItemchangedListThresholds(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

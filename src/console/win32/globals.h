@@ -65,7 +65,25 @@ extern CConsoleApp theApp;
 
 
 //
-// Functions
+// Subdirectories in working directory
+//
+
+#define WORKDIR_MIBCACHE   "\\MIBCache"
+
+
+//
+// Code translation structure
+//
+
+struct CODE_TO_TEXT
+{
+   int iCode;
+   char *pszText;
+};
+
+
+//
+// Communication functions
 //
 
 DWORD DoLogin(void);
@@ -90,6 +108,19 @@ void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLO
 
 char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
+void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
+const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText = "Unknown");
+char *TranslateUNIXText(const char *pszText);
+
+
+//
+// MIB functions
+//
+
+BOOL CreateMIBTree(void);
+void DestroyMIBTree(void);
+void BuildOIDString(struct tree *pNode, char *pszBuffer);
+char *BuildSymbolicOIDString(struct tree *pNode);
 
 
 //
@@ -99,6 +130,7 @@ CSize GetWindowSize(CWnd *pWnd);
 extern char g_szServer[];
 extern char g_szLogin[];
 extern char g_szPassword[];
+extern char g_szWorkDir[];
 extern char *g_szStatusText[];
 extern char *g_szStatusTextSmall[];
 extern COLORREF g_statusColorTable[];
@@ -112,5 +144,8 @@ extern char *g_pszThresholdOperation[];
 extern char *g_pszThresholdOperationLong[];
 extern char *g_pszThresholdFunction[];
 extern char *g_pszThresholdFunctionLong[];
+extern CODE_TO_TEXT g_ctSnmpMibStatus[];
+extern CODE_TO_TEXT g_ctSnmpMibAccess[];
+extern CODE_TO_TEXT g_ctSnmpMibType[];
 
 #endif

@@ -36,6 +36,13 @@ char g_szPassword[MAX_PASSWORD_LEN] = "";
 
 
 //
+// Global configurable parameters
+//
+
+char g_szWorkDir[MAX_PATH] = "";
+
+
+//
 // Global string constants
 //
 
@@ -106,5 +113,58 @@ char *g_pszItemDataType[] = { "Integer", "Int64", "String", "Float" };
 char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
 char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
 char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", "greater or equal", "greater", "not equal", "like", "not like" };
-char *g_pszThresholdFunction[] = { "LAST", "AVG", "DEV" };
+char *g_pszThresholdFunction[] = { "last", "average", "deviation" };
 char *g_pszThresholdFunctionLong[] = { "last polled value", "average value", "mean deviation" };
+
+
+//
+// SNMP codes
+//
+
+CODE_TO_TEXT g_ctSnmpMibStatus[] =
+{
+   { MIB_STATUS_MANDATORY, "Mandatory" },
+   { MIB_STATUS_OPTIONAL, "Optional" },
+   { MIB_STATUS_OBSOLETE, "Obsolete" },
+   { MIB_STATUS_DEPRECATED, "Deprecated" },
+   { MIB_STATUS_CURRENT, "Current" },
+   { 0, NULL }    // End of list
+};
+CODE_TO_TEXT g_ctSnmpMibAccess[] =
+{
+   { MIB_ACCESS_READONLY, "Read" },
+   { MIB_ACCESS_READWRITE, "Read/Write" },
+   { MIB_ACCESS_WRITEONLY, "Write" },
+   { MIB_ACCESS_NOACCESS, "None" },
+   { MIB_ACCESS_NOTIFY, "Notify" },
+   { MIB_ACCESS_CREATE, "Create" },
+   { 0, NULL }    // End of list
+};
+CODE_TO_TEXT g_ctSnmpMibType[] =
+{
+   { TYPE_OTHER, "Other" },
+   { TYPE_OBJID, "Object ID" }, 
+   { TYPE_OCTETSTR, "Octet String" },
+   { TYPE_INTEGER, "Integer" },
+   { TYPE_NETADDR, "Net Address" },
+   { TYPE_IPADDR, "IP Address" },
+   { TYPE_COUNTER, "Counter" },
+   { TYPE_GAUGE, "Gauge" },
+   { TYPE_TIMETICKS, "Timeticks" },
+   { TYPE_OPAQUE, "Opaque" },
+   { TYPE_NULL, "Null" },
+   { TYPE_COUNTER64, "Counter 64bit" },
+   { TYPE_BITSTRING, "Bit String" },
+   { TYPE_NSAPADDRESS, "NSAP Address" },
+   { TYPE_UINTEGER, "Unsigned Integer" },
+   { TYPE_UNSIGNED32, "Unsigned Integer 32bit" },
+   { TYPE_INTEGER32, "Integer 32bit" },
+   { TYPE_TRAPTYPE, "TRAPTYPE" },
+   { TYPE_NOTIFTYPE, "NOTIFTYPE" },
+   { TYPE_OBJGROUP, "Object Group" },
+   { TYPE_NOTIFGROUP, "NOTIFGROUP" },
+   { TYPE_MODID, "Module ID" },
+   { TYPE_AGENTCAP, "AGENTCAP" },
+   { TYPE_MODCOMP, "MODCOMP" },
+   { 0, NULL }    // End of list
+};

@@ -34,6 +34,7 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDCIPropPage)
+	DDX_Control(pDX, IDC_EDIT_NAME, m_wndEditName);
 	DDX_Control(pDX, IDC_COMBO_ORIGIN, m_wndOriginList);
 	DDX_Control(pDX, IDC_COMBO_DT, m_wndTypeList);
 	DDX_Control(pDX, IDC_BUTTON_SELECT, m_wndSelectButton);
@@ -52,6 +53,8 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCIPropPage)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT, OnButtonSelect)
+	ON_CBN_SELCHANGE(IDC_COMBO_ORIGIN, OnSelchangeComboOrigin)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -73,6 +76,7 @@ BOOL CDCIPropPage::OnInitDialog()
    for(i = 0; i < 3; i++)
       m_wndOriginList.AddString(g_pszItemOriginLong[i]);
    m_wndOriginList.SelectString(-1, g_pszItemOriginLong[m_iOrigin]);
+   m_wndSelectButton.EnableWindow(m_iOrigin == DS_SNMP_AGENT);
 	
    // Add data types
    for(i = 0; i < 4; i++)
@@ -80,4 +84,30 @@ BOOL CDCIPropPage::OnInitDialog()
    m_wndTypeList.SelectString(-1, g_pszItemDataType[m_iDataType]);
 	
 	return TRUE;
+}
+
+
+//
+// Select MIB variable from tree
+//
+
+void CDCIPropPage::OnButtonSelect() 
+{
+   CMIBBrowserDlg dlg;
+
+   if (dlg.DoModal() == IDOK)
+      m_wndEditName.SetWindowText(dlg.m_strOID);
+}
+
+
+//
+// Handler for selection change in origin combo box
+//
+
+void CDCIPropPage::OnSelchangeComboOrigin() 
+{
+   char szBuffer[256];
+
+   m_wndOriginList.GetWindowText(szBuffer, 256);
+   m_wndSelectButton.EnableWindow(!strcmp(szBuffer, g_pszItemOriginLong[DS_SNMP_AGENT]));
 }

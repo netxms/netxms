@@ -30,6 +30,8 @@ void CDCIThresholdsPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDCIThresholdsPage)
+	DDX_Control(pDX, IDC_BUTTON_DELETE, m_wndButtonDelete);
+	DDX_Control(pDX, IDC_BUTTON_MODIFY, m_wndButtonModify);
 	DDX_Control(pDX, IDC_BUTTON_MOVEDOWN, m_wndButtonDown);
 	DDX_Control(pDX, IDC_BUTTON_MOVEUP, m_wndButtonUp);
 	DDX_Control(pDX, IDC_LIST_THRESHOLDS, m_wndListCtrl);
@@ -40,6 +42,11 @@ void CDCIThresholdsPage::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDCIThresholdsPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCIThresholdsPage)
 	ON_BN_CLICKED(IDC_BUTTON_ADD, OnButtonAdd)
+	ON_BN_CLICKED(IDC_BUTTON_MODIFY, OnButtonModify)
+	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
+	ON_BN_CLICKED(IDC_BUTTON_MOVEUP, OnButtonMoveup)
+	ON_BN_CLICKED(IDC_BUTTON_MOVEDOWN, OnButtonMovedown)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_THRESHOLDS, OnItemchangedListThresholds)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -66,6 +73,8 @@ BOOL CDCIThresholdsPage::OnInitDialog()
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, "Operation", LVCFMT_LEFT, rect.right - 80 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.InsertColumn(1, "Event", LVCFMT_LEFT, 80);
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
+   m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Add items to list
    for(i = 0; i < m_pItem->dwNumThresholds; i++)
@@ -81,8 +90,24 @@ BOOL CDCIThresholdsPage::OnInitDialog()
 
 int CDCIThresholdsPage::AddListEntry(DWORD dwIndex)
 {
-   char szBuffer[256], szArgs[256], szValue[MAX_DCI_STRING_VALUE];
    int iItem;
+
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, "");
+   if (iItem != -1)
+      UpdateListEntry(iItem, dwIndex);
+   return iItem;
+}
+
+
+//
+// Update list entry
+//
+
+void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
+{
+   char szBuffer[256], szArgs[256], szValue[MAX_DCI_STRING_VALUE];
+
+   m_wndListCtrl.SetItemData(iItem, dwIndex);
 
    switch(m_pItem->pThresholdList[dwIndex].wFunction)
    {
@@ -113,12 +138,15 @@ int CDCIThresholdsPage::AddListEntry(DWORD dwIndex)
          break;
    }
 
+   // Threshold expression
    sprintf(szBuffer, "%s(%s) %s %s", g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction],
            szArgs, g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation],
            szValue);
-   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
+   m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
-   return iItem;
+   // Event
+   sprintf(szBuffer, "%d", m_pItem->pThresholdList[dwIndex].dwEvent);
+   m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
 }
 
 
@@ -200,5 +228,150 @@ void CDCIThresholdsPage::OnButtonAdd()
 
       dwIndex = NXCAddThresholdToItem(m_pItem, &dct);
       AddListEntry(dwIndex);
+   }
+}
+
+
+//
+// WM_COMMAND::IDC_BUTTON_MODIFY message handler
+//
+
+void CDCIThresholdsPage::OnButtonModify() 
+{
+   int iItem;
+   DWORD dwIndex;
+   NXC_DCI_THRESHOLD dct;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+   if (iItem != -1)
+   {
+      dwIndex = m_wndListCtrl.GetItemData(iItem);
+      memcpy(&dct, &m_pItem->pThresholdList[dwIndex], sizeof(NXC_DCI_THRESHOLD));
+      if (EditThreshold(&dct))
+      {
+         memcpy(&m_pItem->pThresholdList[dwIndex], &dct, sizeof(NXC_DCI_THRESHOLD));
+         UpdateListEntry(iItem, dwIndex);
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::IDC_BUTTON_DELETE message handler
+//
+
+void CDCIThresholdsPage::OnButtonDelete() 
+{
+   int iItem;
+   DWORD dwIndex;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   while(iItem != -1)
+   {
+      dwIndex = m_wndListCtrl.GetItemData(iItem);
+      if (NXCDeleteThresholdFromItem(m_pItem, dwIndex))
+      {
+         m_wndListCtrl.DeleteItem(iItem);
+         RecalcIndexes(dwIndex);
+      }
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   }
+}
+
+
+//
+// WM_COMMAND::IDC_BUTTON_MOVEUP message handler
+//
+
+void CDCIThresholdsPage::OnButtonMoveup() 
+{
+   int iItem;
+
+   if (m_wndListCtrl.GetSelectedCount() == 1)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+      if (iItem > 0)
+      {
+         DWORD dwIndex1, dwIndex2;
+
+         dwIndex1 = m_wndListCtrl.GetItemData(iItem);
+         dwIndex2 = m_wndListCtrl.GetItemData(iItem - 1);
+         if (NXCSwapThresholds(m_pItem, dwIndex1, dwIndex2))
+         {
+            UpdateListEntry(iItem - 1, dwIndex2);
+            UpdateListEntry(iItem, dwIndex1);
+            SelectListViewItem(&m_wndListCtrl, iItem - 1);
+         }
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::IDC_BUTTON_MOVEDOWN message handler
+//
+
+void CDCIThresholdsPage::OnButtonMovedown() 
+{
+   int iItem;
+
+   if (m_wndListCtrl.GetSelectedCount() == 1)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+      if (iItem < (m_wndListCtrl.GetItemCount() - 1))
+      {
+         DWORD dwIndex1, dwIndex2;
+
+         dwIndex1 = m_wndListCtrl.GetItemData(iItem);
+         dwIndex2 = m_wndListCtrl.GetItemData(iItem + 1);
+         if (NXCSwapThresholds(m_pItem, dwIndex1, dwIndex2))
+         {
+            UpdateListEntry(iItem + 1, dwIndex2);
+            UpdateListEntry(iItem, dwIndex1);
+            SelectListViewItem(&m_wndListCtrl, iItem + 1);
+         }
+      }
+   }
+}
+
+
+//
+// Handler for LVN_ITEMCHANGED notification message
+//
+
+void CDCIThresholdsPage::OnItemchangedListThresholds(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+   BOOL bEnable;
+
+   // Disable some buttons if multiple items selected
+   bEnable = (m_wndListCtrl.GetSelectedCount() == 1);
+   m_wndButtonModify.EnableWindow(bEnable);
+   //m_wndButtonUp.EnableWindow(bEnable);
+   //m_wndButtonDown.EnableWindow(bEnable);
+   m_wndButtonDelete.EnableWindow(m_wndListCtrl.GetSelectedCount() > 0);
+
+	*pResult = 0;
+}
+
+
+//
+// Recalculate item indexes after item deletion
+//
+
+void CDCIThresholdsPage::RecalcIndexes(DWORD dwIndex)
+{
+   int iItem, iMaxItem;
+   DWORD dwData;
+
+   iMaxItem = m_wndListCtrl.GetItemCount();
+   for(iItem = 0; iItem < iMaxItem; iItem++)
+   {
+      dwData = m_wndListCtrl.GetItemData(iItem);
+      if (dwData > dwIndex)
+      {
+         dwData--;
+         m_wndListCtrl.SetItemData(iItem, dwData);
+      }
    }
 }

@@ -15,6 +15,13 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
+// Constants
+//
+
+#define LAST_APP_MENU   4
+
+
+//
 // Wrapper for client library event handler
 //
 
@@ -50,6 +57,8 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_DEBUG, OnViewDebug)
 	ON_COMMAND(ID_CONTROLPANEL_USERS, OnControlpanelUsers)
 	ON_COMMAND(ID_VIEW_NETWORKSUMMARY, OnViewNetworksummary)
+	ON_COMMAND(ID_TOOLS_MIBBROWSER, OnToolsMibbrowser)
+	ON_COMMAND(ID_CONTROLPANEL_EVENTPOLICY, OnControlpanelEventpolicy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -67,6 +76,7 @@ CConsoleApp::CConsoleApp()
    m_bObjectBrowserActive = FALSE;
    m_bDebugWindowActive = FALSE;
    m_bNetSummaryActive = FALSE;
+   m_bEventPolicyEditorActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
 }
@@ -89,6 +99,46 @@ CConsoleApp theApp;
 
 
 //
+// Setup working directory
+//
+
+BOOL CConsoleApp::SetupWorkDir()
+{
+   int iLastChar;
+
+   // Get path to user's "Application Data" folder
+   if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, g_szWorkDir) != S_OK)
+   {
+		AfxMessageBox(IDS_GETFOLDERPATH_FAILED, MB_OK | MB_ICONSTOP);
+      return FALSE;
+   }
+
+   // Create working directory root
+   strcat(g_szWorkDir, "\\NetXMS Console");
+   if (!CreateDirectory(g_szWorkDir, NULL))
+      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         AfxMessageBox(IDS_WORKDIR_CREATION_FAILED, MB_OK | MB_ICONSTOP);
+         return FALSE;
+      }
+   iLastChar = strlen(g_szWorkDir);
+
+   // Create MIB cache directory
+   strcpy(&g_szWorkDir[iLastChar], WORKDIR_MIBCACHE);
+   if (!CreateDirectory(g_szWorkDir, NULL))
+      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         AfxMessageBox(IDS_WORKDIR_CREATION_FAILED, MB_OK | MB_ICONSTOP);
+         return FALSE;
+      }
+
+   // Success
+   g_szWorkDir[iLastChar] = 0;
+   return TRUE;
+}
+
+
+//
 // CConsoleApp initialization
 //
 
@@ -98,6 +148,10 @@ BOOL CConsoleApp::InitInstance()
    DWORD dwBytes;
    BYTE *pData;
    HMENU hMenu;
+
+   // Setup our working directory
+   if (!SetupWorkDir())
+      return FALSE;
 
 	if (!AfxSocketInit())
 	{
@@ -148,23 +202,23 @@ BOOL CConsoleApp::InitInstance()
 	hMenu  = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDM_VIEW_SPECIFIC));
 
    m_hMDIMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
-   InsertMenu(m_hMDIMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hMDIMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
 
    m_hEventBrowserMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
-   InsertMenu(m_hEventBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hEventBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
+   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
 
    m_hObjectBrowserMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
-   InsertMenu(m_hObjectBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hObjectBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
+   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
 
    m_hUserEditorMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
-   InsertMenu(m_hUserEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hUserEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
+   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
 
    m_hDCEditorMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
-   InsertMenu(m_hDCEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hDCEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
 
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -191,6 +245,7 @@ BOOL CConsoleApp::InitInstance()
 	   pFrame->ShowWindow(m_nCmdShow);
    }
 	pFrame->UpdateWindow();
+   //pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
    pFrame->PostMessage(WM_COMMAND, ID_CONNECT_TO_SERVER, 0);
 
 	return TRUE;
@@ -337,6 +392,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
                break;
             }
          break;
+      case IDR_EPP_EDITOR:
+         m_bEventPolicyEditorActive = TRUE;
+         m_pwndEventPolicyEditor = (CEventPolicyEditor *)pWnd;
+         break;
       default:
          break;
    }
@@ -384,6 +443,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
                m_openDCEditors[i].dwNodeId = 0;
                break;
             }
+         break;
+      case IDR_EPP_EDITOR:
+         m_bEventPolicyEditorActive = FALSE;
          break;
       default:
          break;
@@ -889,4 +951,44 @@ void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName
 	{
 		delete pWnd;
 	}
+}
+
+
+//
+// WM_COMMAND::ID_TOOLS_MIBBROWSER message handler
+//
+
+void CConsoleApp::OnToolsMibbrowser() 
+{
+   CMIBBrowserDlg dlg;
+   dlg.DoModal();
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_EVENTPOLICY message handler
+//
+
+void CConsoleApp::OnControlpanelEventpolicy() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bEventPolicyEditorActive)
+      m_pwndEventPolicyEditor->BringWindowToTop();
+   else
+   {
+      DWORD dwResult;
+
+      dwResult = DoRequestArg1(NXCOpenEventPolicy, &m_pEventPolicy, "Loading event processing policy...");
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(
+		      RUNTIME_CLASS(CEventPolicyEditor), IDR_EPP_EDITOR, m_hMDIMenu, m_hMDIAccel);
+      }
+      else
+      {
+         ErrorBox(dwResult, "Unable to lock user database:\n%s");
+      }
+   }
 }

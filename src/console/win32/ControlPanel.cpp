@@ -135,6 +135,9 @@ void CControlPanel::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResul
 {
    switch(pInfo->iItem)
    {
+      case CP_ITEM_EPP:
+         PostMessage(WM_COMMAND, ID_CONTROLPANEL_EVENTPOLICY, 0);
+         break;
       case CP_ITEM_EVENTS:
          PostMessage(WM_COMMAND, ID_CONTROLPANEL_EVENTS, 0);
          break;

@@ -199,15 +199,7 @@ void CObjectPropsSecurity::OnAddUser()
 
       // Select new item
       if (iItem != -1)
-      {
-         int iOldItem;
-
-         iOldItem = m_wndUserList.GetNextItem(-1, LVNI_SELECTED);
-         m_wndUserList.SetItemState(iItem, 0, LVIS_SELECTED | LVIS_FOCUSED);
-         m_wndUserList.EnsureVisible(iItem, FALSE);
-         m_wndUserList.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
-                                    LVIS_SELECTED | LVIS_FOCUSED);
-      }
+         SelectListViewItem(&m_wndUserList, iItem);
    }
 }
 

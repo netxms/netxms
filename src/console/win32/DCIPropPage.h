@@ -21,6 +21,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CDCIPropPage)
 	enum { IDD = IDD_DCI_COLLECTION };
+	CEdit	m_wndEditName;
 	CComboBox	m_wndOriginList;
 	CComboBox	m_wndTypeList;
 	CButton	m_wndSelectButton;
@@ -46,6 +47,8 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CDCIPropPage)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonSelect();
+	afx_msg void OnSelchangeComboOrigin();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

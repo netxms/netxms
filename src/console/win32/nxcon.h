@@ -44,6 +44,8 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "DataCollectionEditor.h"
 #include "DCIDataView.h"
 #include "GraphFrame.h"
+#include "MIBBrowserDlg.h"
+#include "EventPolicyEditor.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -90,6 +92,7 @@ public:
 
 // Implementation
 protected:
+	BOOL SetupWorkDir(void);
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
@@ -100,6 +103,7 @@ protected:
 	CWnd *m_pwndCtrlPanel;
    CDebugFrame *m_pwndDebugWindow;
    CNetSummaryFrame *m_pwndNetSummary;
+   CEventPolicyEditor *m_pwndEventPolicyEditor;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -128,6 +132,8 @@ public:
 	afx_msg void OnViewDebug();
 	afx_msg void OnControlpanelUsers();
 	afx_msg void OnViewNetworksummary();
+	afx_msg void OnToolsMibbrowser();
+	afx_msg void OnControlpanelEventpolicy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -138,10 +144,13 @@ private:
 	BOOL m_bCtrlPanelActive;
    BOOL m_bDebugWindowActive;
    BOOL m_bNetSummaryActive;
+   BOOL m_bEventPolicyEditorActive;
 
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+   NXC_EPP *m_pEventPolicy;
+
 	void ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
 	void ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
 	void ErrorBox(DWORD dwError, char *pszMessage = NULL, char *pszTitle = NULL);
