@@ -24,6 +24,53 @@
 
 
 //
+// Upgrade from V15 to V16
+//
+
+static BOOL H_UpgradeFromV15(void)
+{
+   static TCHAR m_szBatch[] =
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(4005, 'DC_MAILBOX_TOO_LARGE', 1, 1,"
+		   "'Mailbox #22%6#22 exceeds size limit (allowed size: %3; actual size: %4)',"
+		   "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(4006, 'DC_AGENT_VERSION_CHANGE',	0, 1,"
+         "'NetXMS agent version was changed from %3 to %4',"
+         "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(4007, 'DC_HOSTNAME_CHANGE',	1, 1,"
+         "'Host name was changed from %3 to %4',"
+         "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(4008, 'DC_FILE_CHANGE',	1, 1,"
+         "'File #22%6#22 was changed',"
+         "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   if (!SQLQuery(_T("UPDATE config SET var_value='16' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   return TRUE;
+}
+
+
+//
 // Upgrade from V14 to V15
 //
 
@@ -86,6 +133,7 @@ static struct
 } m_dbUpgradeMap[] =
 {
    { 14, H_UpgradeFromV14 },
+   { 15, H_UpgradeFromV15 },
    { 0, NULL }
 };
 
