@@ -160,6 +160,55 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 
 
 //
+// Set references to this object in parent objects
+//
+
+static void LinkObject(NXC_OBJECT *pObject)
+{
+   DWORD i;
+   NXC_OBJECT *pParent;
+
+   for(i = 0; i < pObject->dwNumParents; i++)
+   {
+      pParent = NXCFindObjectById(pObject->pdwParentList[i]);
+      if (pParent != NULL)
+      {
+         DWORD j;
+
+         for(j = 0; j < pParent->dwNumChilds; j++)
+            if (pParent->pdwChildList[j] == pObject->dwId)
+               break;
+         if (j == pParent->dwNumChilds)
+         {
+            pParent->dwNumChilds++;
+            pParent->pdwChildList = (DWORD *)realloc(pParent->pdwChildList, 
+                                                     sizeof(DWORD) * pParent->dwNumChilds);
+            pParent->pdwChildList[j] = pObject->dwId;
+         }
+      }
+      else
+      {
+         DebugPrintf("LinkObject(): Object %d contains a link to non-existing parent object %d",
+                     pObject->dwId, pObject->pdwParentList[i]);
+      }
+   }
+}
+
+
+//
+// Set references to child objects for received object list
+//
+
+static void LinkAllObjects(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumObjects; i++)
+      LinkObject(m_pIndexById[i].pObject);
+}
+
+
+//
 // Process object information received from server
 //
 
@@ -173,6 +222,7 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          if (g_dwState == STATE_SYNC_OBJECTS)
          {
             qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
+            LinkAllObjects();
             ConditionSet(m_hCondSyncFinished);
          }
          break;
