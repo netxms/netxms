@@ -62,6 +62,7 @@ typedef unsigned long HREQUEST;
 #define GROUP_FLAG               ((DWORD)0x80000000)
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
+#define OBJECT_STATUS_COUNT      7
 
 
 //
