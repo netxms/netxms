@@ -109,6 +109,10 @@ SOURCE=.\InfoLine.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\LoginDialog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
@@ -139,6 +143,10 @@ SOURCE=.\globals.h
 # Begin Source File
 
 SOURCE=.\InfoLine.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LoginDialog.h
 # End Source File
 # Begin Source File
 

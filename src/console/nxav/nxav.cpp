@@ -5,6 +5,7 @@
 #include "nxav.h"
 
 #include "MainFrm.h"
+#include "LoginDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,8 +71,6 @@ BOOL CAlarmViewApp::InitInstance()
 #endif
 
 	// Change the registry key under which our settings are stored.
-	// TODO: You should modify this string to be something appropriate
-	// such as the name of your company or organization.
 	SetRegistryKey(_T("NetXMS Alarm Viewer"));
 
 	// To create the main window, this code creates a new frame window
@@ -81,6 +80,18 @@ BOOL CAlarmViewApp::InitInstance()
 
 	// create and load the frame with its resources
    pFrame->Create(NULL, _T("NetXMS Alarm Viewer"));
+
+   // Ask for credentials
+   CLoginDialog dlg;
+
+   dlg.m_szServer = g_szServer;
+   dlg.m_szLogin = g_szLogin;
+   dlg.m_szPassword = _T("");
+   if (dlg.DoModal() != IDOK)
+      return FALSE;
+   _tcsncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
+   _tcsncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
+   _tcsncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
 
    // Connect
    dwResult = DoLogin();

@@ -2,26 +2,28 @@
 
 [General Info]
 Version=1
-LastClass=CRequestProcessingDlg
+LastClass=CLoginDialog
 LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxav.h"
 LastPage=0
 
-ClassCount=7
+ClassCount=8
 Class1=CAlarmViewApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=4
+ResourceCount=5
 Resource1=IDR_MAINFRAME
-Resource2=IDD_ABOUTBOX
+Resource2=IDD_REQUEST_WAIT
 Class2=CChildView
 Class5=CAlarmList
 Class6=CInfoLine
 Class7=CRequestProcessingDlg
-Resource3=IDD_REQUEST_WAIT
-Resource4=IDM_CONTEXT
+Class8=CLoginDialog
+Resource3=IDD_LOGIN
+Resource4=IDD_ABOUTBOX
+Resource5=IDM_CONTEXT
 
 [CLS:CAlarmViewApp]
 Type=0
@@ -108,9 +110,37 @@ BaseClass=CDialog
 Filter=D
 LastObject=CRequestProcessingDlg
 
+[CLS:CLoginDialog]
+Type=0
+HeaderFile=LoginDialog.h
+ImplementationFile=LoginDialog.cpp
+BaseClass=CDialog
+Filter=D
+LastObject=CLoginDialog
+
 [MNU:IDM_CONTEXT]
 Type=1
 Class=?
 Command1=ID_VIEW_REFRESH
 CommandCount=1
+
+[DLG:IDD_LOGIN]
+Type=1
+Class=CLoginDialog
+ControlCount=15
+Control1=IDC_EDIT_SERVER,edit,1350631552
+Control2=IDC_EDIT_LOGIN,edit,1350631552
+Control3=IDC_EDIT_PASSWORD,edit,1350631584
+Control4=IDOK,button,1342242817
+Control5=IDCANCEL,button,1342242816
+Control6=IDC_STATIC,static,1342179342
+Control7=IDC_STATIC,static,1342308352
+Control8=IDC_STATIC,static,1342177296
+Control9=IDC_STATIC,static,1342308352
+Control10=IDC_STATIC,static,1342308352
+Control11=IDC_STATIC,static,1342308352
+Control12=IDC_STATIC,static,1342308352
+Control13=IDC_STATIC,static,1342177296
+Control14=IDC_RADIO_CLEAR,button,1342308361
+Control15=IDC_RADIO_BLOWFISH,button,1342177289
 

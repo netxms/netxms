@@ -118,6 +118,33 @@ BEGIN
     LTEXT           "Static",IDC_INFO_TEXT,35,13,207,8
 END
 
+IDD_LOGIN DIALOG DISCARDABLE  0, 0, 215, 205
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connect to server"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_SERVER,52,71,156,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LOGIN,52,92,156,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PASSWORD,52,113,156,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,35,184,50,14
+    PUSHBUTTON      "&Quit",IDCANCEL,129,184,50,14
+    CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,
+                    201,44
+    LTEXT           "Connect to server",IDC_STATIC,7,58,59,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,68,62,140,1
+    LTEXT           "User name:",IDC_STATIC,7,95,37,8
+    LTEXT           "Server:",IDC_STATIC,7,73,24,8
+    LTEXT           "Password:",IDC_STATIC,7,115,34,8
+    LTEXT           "Encryption",IDC_STATIC,7,137,37,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,44,141,163,1
+    CONTROL         "&No encryption",IDC_RADIO_CLEAR,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,7,150,60,10
+    CONTROL         "Encrypt connection using &Blowfish + SHA1",
+                    IDC_RADIO_BLOWFISH,"Button",BS_AUTORADIOBUTTON,7,164,151,
+                    10
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -184,6 +211,14 @@ BEGIN
         RIGHTMARGIN, 242
         TOPMARGIN, 7
         BOTTOMMARGIN, 27
+    END
+
+    IDD_LOGIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 208
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 198
     END
 END
 #endif    // APSTUDIO_INVOKED

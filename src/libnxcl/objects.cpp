@@ -97,6 +97,9 @@ static DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey)
 {
    DWORD dwFirst, dwLast, dwMid;
 
+   if (dwIndexSize == 0)
+      return INVALID_INDEX;
+
    dwFirst = 0;
    dwLast = dwIndexSize - 1;
 

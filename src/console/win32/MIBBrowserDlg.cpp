@@ -71,6 +71,8 @@ END_MESSAGE_MAP()
 BOOL CMIBBrowserDlg::OnInitDialog() 
 {
    RECT rect1, rect2;
+   oid oidName[MAX_OID_LEN];
+   unsigned int uNameLen = MAX_OID_LEN;
 
 	CDialog::OnInitDialog();
 
@@ -93,6 +95,10 @@ BOOL CMIBBrowserDlg::OnInitDialog()
    m_mibTreeRoot.label = "[root]";
    m_mibTreeRoot.child_list = get_tree_head();
 	AddTreeNode(TVI_ROOT, &m_mibTreeRoot);
+
+   // Select node with given OID (or closest match)
+   if (read_objid((LPCTSTR)m_strOID, oidName, &uNameLen) != 0)
+      SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oidName, uNameLen);
 	return TRUE;
 }
 
@@ -215,4 +221,32 @@ HBRUSH CMIBBrowserDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
    	hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
    }
 	return hbr;
+}
+
+
+//
+// Select node with given OID
+//
+
+void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, oid *oidName, unsigned int uNameLen)
+{
+   HTREEITEM hItem;
+   struct tree *pNode;
+   BOOL bMatch = FALSE;
+
+   for(hItem = m_wndTreeCtrl.GetChildItem(hRoot); hItem != NULL; 
+       hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT))
+   {
+      pNode = (struct tree *)m_wndTreeCtrl.GetItemData(hItem);
+      if (pNode->subid == oidName[0])
+      {
+         bMatch = TRUE;
+         if (uNameLen == 1)
+            m_wndTreeCtrl.SelectItem(hItem);
+         else
+            SelectNode(hItem, &oidName[1], uNameLen - 1);
+      }
+   }
+   if ((!bMatch) && (hRoot != TVI_ROOT))
+      m_wndTreeCtrl.SelectItem(hRoot);
 }

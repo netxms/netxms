@@ -16,7 +16,13 @@
 #define IDI_SEVERITY_MAJOR              137
 #define IDI_SEVERITY_MINOR              138
 #define IDI_SEVERITY_NORMAL             139
+#define IDD_LOGIN                       140
 #define IDC_INFO_TEXT                   1000
+#define IDC_EDIT_SERVER                 1000
+#define IDC_EDIT_LOGIN                  1001
+#define IDC_EDIT_PASSWORD               1002
+#define IDC_RADIO_CLEAR                 1108
+#define IDC_RADIO_BLOWFISH              1109
 #define ID_VIEW_REFRESH                 32771
 #define IDS_SOCKETS_INIT_FAILED         59142
 #define IDS_NXC_INIT_FAILED             59143

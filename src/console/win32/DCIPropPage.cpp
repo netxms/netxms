@@ -98,6 +98,7 @@ void CDCIPropPage::OnButtonSelect()
 {
    CMIBBrowserDlg dlg;
 
+   m_wndEditName.GetWindowText(dlg.m_strOID);
    if (dlg.DoModal() == IDOK)
       m_wndEditName.SetWindowText(dlg.m_strOID);
 }

@@ -40,6 +40,7 @@ public:
 
 // Implementation
 protected:
+	void SelectNode(HTREEITEM hRoot, oid *oidName, unsigned int iNameLen);
 
 	// Generated message map functions
 	//{{AFX_MSG(CMIBBrowserDlg)
