@@ -33,6 +33,7 @@
 
 #define NXC_EVENT_STATE_CHANGED     1
 #define NXC_EVENT_ERROR             2
+#define NXC_EVENT_LOGIN_RESULT      3
 
 
 //

@@ -97,9 +97,9 @@ inline void ConditionSet(CONDITION hCond)
    SetEvent(hCond);
 }
 
-inline void ConditionWait(CONDITION hCond, DWORD dwTimeOut)
+inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 {
-   WaitForSingleObject(hCond, dwTimeOut);
+   return WaitForSingleObject(hCond, dwTimeOut) == WAIT_OBJECT_0;
 }
 
 #else    /* _WIN32 */
