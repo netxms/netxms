@@ -93,8 +93,8 @@ void SyncCleanup(void)
 #ifdef _WIN32
    CloseHandle(m_condSyncOp);
 #else
-   pthread_mutex_destroy(m_mutexSyncOp);
-   pthread_cond_destroy(m_condSyncOp);
+   pthread_mutex_destroy(&m_mutexSyncOp);
+   pthread_cond_destroy(&m_condSyncOp);
 #endif
 }
 
