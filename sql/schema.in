@@ -487,6 +487,7 @@ CREATE TABLE thresholds
 ) TABLE_TYPE;
 
 CREATE INDEX idx_item_id ON thresholds(item_id);
+CREATE INDEX idx_sequence ON thresholds(sequence_number);
 
 
 /*

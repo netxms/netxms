@@ -41,7 +41,9 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%ld (item_id integer not null,idata_timestamp integer,idata_value varchar(255))',0,1);
 #endif
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('IDataIndexCreationCommand','CREATE INDEX idx_item_id ON idata_%ld(item_id)',0,1);
+	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_item_id ON idata_%ld(item_id)',0,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_timestamp ON idata_%ld(idata_timestamp)',0,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('RunNetworkDiscovery','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

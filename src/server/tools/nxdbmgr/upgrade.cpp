@@ -75,6 +75,100 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V25 to V26
+//
+
+static BOOL H_UpgradeFromV25(void)
+{
+   DB_RESULT hResult;
+
+   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='IDataIndexCreationCommand'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         if (!CreateConfigParam(_T("IDataIndexCreationCommand_0"), DBGetField(hResult, 0, 0), 0, 1))
+         {
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+
+      if (!SQLQuery(_T("DELETE FROM config WHERE var_name='IDataIndexCreationCommand'")))
+         if (!g_bIgnoreErrors)
+            return FALSE;
+   }
+
+   if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), 
+                          _T("CREATE INDEX idx_timestamp ON idata_%ld(idata_timestamp)"), 0, 1))
+   {
+      if (!g_bIgnoreErrors)
+      {
+         DBFreeResult(hResult);
+         return FALSE;
+      }
+   }
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='26' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
+// Upgrade from V24 to V25
+//
+
+static BOOL H_UpgradeFromV24(void)
+{
+   DB_RESULT hResult;
+   int i, iNumRows;
+   DWORD dwNodeId;
+   TCHAR szQuery[256];
+
+   _tprintf("Create indexes on existing IDATA tables? (Y/N) ");
+   if (GetYesNo())
+   {
+      hResult = SQLSelect(_T("SELECT id FROM nodes WHERE is_deleted=0"));
+      if (hResult != NULL)
+      {
+         iNumRows = DBGetNumRows(hResult);
+         for(i = 0; i < iNumRows; i++)
+         {
+            dwNodeId = DBGetFieldULong(hResult, i, 0);
+            _tprintf(_T("Creating indexes for table \"idata_%ld\"...\n"), dwNodeId);
+            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_timestamp ON idata_%ld(idata_timestamp)"), dwNodeId);
+            if (!SQLQuery(szQuery))
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         if (!g_bIgnoreErrors)
+            return FALSE;
+      }
+   }
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='25' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V23 to V24
 //
 
@@ -137,8 +231,9 @@ static BOOL H_UpgradeFromV23(void)
 static BOOL H_UpgradeFromV22(void)
 {
    static TCHAR m_szBatch[] =
-      "ALTER TABLE items ADD template_item_id integer not null\n"
+      "ALTER TABLE items ADD template_item_id integer\n"
       "UPDATE items SET template_item_id=0\n"
+      "CREATE INDEX idx_sequence ON thresholds(sequence_number)\n"
       "<END>";
 
    if (!SQLBatch(m_szBatch))
@@ -752,6 +847,8 @@ static struct
    { 21, H_UpgradeFromV21 },
    { 22, H_UpgradeFromV22 },
    { 23, H_UpgradeFromV23 },
+   { 24, H_UpgradeFromV24 },
+   { 25, H_UpgradeFromV25 },
    { 0, NULL }
 };
 

@@ -174,16 +174,21 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       if (pObject->Type() == OBJECT_NODE)
       {
          char szQuery[256], szQueryTemplate[256];
+         DWORD i;
 
          ConfigReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
          sprintf(szQuery, szQueryTemplate, pObject->Id());
          DBQuery(g_hCoreDB, szQuery);
 
-         ConfigReadStr("IDataIndexCreationCommand", szQueryTemplate, 255, "");
-         if (szQueryTemplate[0] != 0)
+         for(i = 0; i < 10; i++)
          {
-            sprintf(szQuery, szQueryTemplate, pObject->Id());
-            DBQuery(g_hCoreDB, szQuery);
+            sprintf(szQuery, "IDataIndexCreationCommand_%d", i);
+            ConfigReadStr(szQuery, szQueryTemplate, 255, "");
+            if (szQueryTemplate[0] != 0)
+            {
+               sprintf(szQuery, szQueryTemplate, pObject->Id());
+               DBQuery(g_hCoreDB, szQuery);
+            }
          }
       }
    }
@@ -405,6 +410,7 @@ BOOL LoadObjects(void)
    char szQuery[256];
 
    // Load container categories
+   DbgPrintf(AF_DEBUG_MISC, "Loading container categories...");
    hResult = DBSelect(g_hCoreDB, "SELECT category,name,image_id,description FROM container_categories");
    if (hResult != NULL)
    {
@@ -421,11 +427,13 @@ BOOL LoadObjects(void)
    }
 
    // Load built-in object properties
+   DbgPrintf(AF_DEBUG_MISC, "Loading built-in object properties...");
    g_pEntireNet->LoadFromDB();
    g_pServiceRoot->LoadFromDB();
    g_pTemplateRoot->LoadFromDB();
 
    // Load subnets
+   DbgPrintf(AF_DEBUG_MISC, "Loading subnets...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
    if (hResult != 0)
    {
@@ -452,6 +460,7 @@ BOOL LoadObjects(void)
    }
 
    // Load nodes
+   DbgPrintf(AF_DEBUG_MISC, "Loading nodes...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM nodes");
    if (hResult != 0)
    {
@@ -476,6 +485,7 @@ BOOL LoadObjects(void)
    }
 
    // Load interfaces
+   DbgPrintf(AF_DEBUG_MISC, "Loading interfaces...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM interfaces");
    if (hResult != 0)
    {
@@ -500,6 +510,7 @@ BOOL LoadObjects(void)
    }
 
    // Load network services
+   DbgPrintf(AF_DEBUG_MISC, "Loading network services...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM network_services");
    if (hResult != 0)
    {
@@ -524,6 +535,7 @@ BOOL LoadObjects(void)
    }
 
    // Load templates
+   DbgPrintf(AF_DEBUG_MISC, "Loading templates...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
    if (hResult != 0)
    {
@@ -548,6 +560,7 @@ BOOL LoadObjects(void)
    }
 
    // Load container objects
+   DbgPrintf(AF_DEBUG_MISC, "Loading containers...");
    sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_CONTAINER);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
@@ -573,6 +586,7 @@ BOOL LoadObjects(void)
    }
 
    // Load template group objects
+   DbgPrintf(AF_DEBUG_MISC, "Loading template groups...");
    sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_TEMPLATEGROUP);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
@@ -598,6 +612,7 @@ BOOL LoadObjects(void)
    }
 
    // Link childs to container and template group objects
+   DbgPrintf(AF_DEBUG_MISC, "Linking objects...");
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER) ||
           (g_pIndexById[i].pObject->Type() == OBJECT_TEMPLATEGROUP))
