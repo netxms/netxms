@@ -22,3 +22,247 @@
 
 #include "sunos_subagent.h"
 #include <sys/systeminfo.h>
+
+
+//
+// Constants
+//
+
+#define MAX_CPU_COUNT   64
+
+
+//
+// Collected statistic
+//
+
+static int m_nCPUCount = 1;
+static DWORD m_dwUsage[MAX_CPU_COUNT + 1];
+static DWORD m_dwUsage5[MAX_CPU_COUNT + 1];
+static DWORD m_dwUsage15[MAX_CPU_COUNT + 1];
+
+
+//
+// Read CPU times
+//
+
+static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
+{
+	kstat_t *kp;
+   int i;
+   uint_t *pData;
+
+   for(i = 0, pData = pValues; i < m_nCPUCount; i++, pData += CPU_STATES)
+   {
+      kp = kstat_lookup(kc, "cpu_stat", i, NULL);
+      if (kp != NULL)
+      {
+         if (kstat_read(kc, kp, NULL) != -1)
+         {
+            memcpy(pData, ((cpu_stat_t *)kp->data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
+         }
+      }
+   }
+}
+
+
+//
+// CPU usage statistics collector thread
+//
+
+THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
+{
+	kstat_ctl_t *kc;
+	kstat_t *kp;
+	kstat_named_t *kn;
+   int i, j;
+   DWORD *pdwHistory, dwHistoryPos, dwCurrPos, dwIndex;
+   DWORD dwSum[MAX_CPU_COUNT];
+   uint_t *pnLastTimes, *pnCurrTimes, *pnTemp;
+   uint_t nSum, nSysSum, nSysCurrIdle, nSysLastIdle;
+
+   // Open kstat
+	kc = kstat_open();
+	if (kc == NULL)
+	{
+      NxWriteAgentLog(EVENTLOG_ERROR_TYPE, "Unable to open kstat() context: %s", strerror(errno));
+      return THREAD_OK;
+   }
+
+   // Read number of CPUs
+	kp = kstat_lookup(kc, "unix", 0, "system_misc");
+	if (kp != NULL)
+	{
+		if(kstat_read(kc, kp, 0) != -1)
+		{
+			kn = (kstat_named_t *)kstat_data_lookup(kp, "ncpus");
+			if (kn != NULL)
+			{
+            m_nCPUCount = kn->value.ui32;
+			}
+		}
+	}
+
+   // Initialize data
+   memset(m_dUsage, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
+   memset(m_dUsage5, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
+   memset(m_dUsage15, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
+   pdwHistory = (DWORD *)malloc(sizeof(DWORD) * (m_nCPUCount + 1) * 900);
+   memset(pdwHistory, 0, sizeof(DWORD) * (m_nCPUCount + 1) * 900);
+   pnLastTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
+   pnCurrTimes = (uint_t *)malloc(sizeof(uint_t) * m_nCPUCount * CPU_STATES);
+   dwHistoryPos = 0;
+
+   // Do first read
+   ReadCPUTimes(kc, pnLastTimes);
+   ThreadSleep(1);
+
+   // Collection loop
+   while(1)
+   {
+      ReadCPUTimes(kc, pnCurrTimes);
+
+      // Calculate utilization for last second for each CPU
+      dwIndex = dwHistoryPos * (m_nCPUCount + 1);
+      for(i = 0, j = 0, nSysSum = 0, nSysIdle = 0; i < m_nCPUCount; i++)
+      {
+         iIdleTime = j + CPU_IDLE;
+         for(uSum = 0; j < CPU_STATES; j++)
+            uSum += pnCurrTimes[j] - pnLastTimes[j];
+         nSysSum += nSum;
+         nSysCurrIdle += pnCurrTimes[iIdleTime];
+         nSysLastIdle += pnLastTimes[iIdleTime];
+         pdwHistory[dwIndex++] = 
+            1000 - ((pnCurrTimes[iIdleTime] - pnLastTimes[iIdleTime]) * 1000 / nSum);
+      }
+
+      // Average utilization for last second for all CPUs
+      pdwHistory[dwIndex] = 
+         1000 - ((nSysCurrIdle - nSysLastIdle) * 1000 / nSysSum);
+
+      // Increment history buffer position
+      dwHistoryPos++;
+      if (dwHistoryPos == 900)
+         dwHistoryPos = 0;
+      
+      // Copy current times to last
+      pnTemp = pnLastTimes;
+      pnLastTimes = pnCurrTimes;
+      pnCurrTimes = pnTemp;
+
+      // Calculate averages
+      for(i = 0, dwCurrPos = dwHistoryPos; i < 900; i++)
+      {
+         dwIndex = dwCurrPos * (m_nCPUCount + 1);
+         for(j = 0; j < m_nCPUCount; j++, dwIndex++)
+            dwSum[j] += pdwHistory[dwIndex]
+         dwSum[MAX_CPU_COUNT] += pdwHistory[dwIndex];
+
+         switch(i)
+         {
+            case 59:
+               for(j = 0; j < m_nCPUCount; j++)
+                  m_dwUsage[j] = dwSum[j] / 60;
+               m_dwUsage[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 60;
+               break;
+            case 299:
+               for(j = 0; j < m_nCPUCount; j++)
+                  m_dwUsage5[j] = dwSum[j] / 300;
+               m_dwUsage5[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 300;
+               break;
+            case 899:
+               for(j = 0; j < m_nCPUCount; j++)
+                  m_dwUsage15[j] = dwSum[j] / 900;
+               m_dwUsage15[MAX_CPU_COUNT] = dwSum[MAX_CPU_COUNT] / 900;
+               break;
+         }
+
+         if (dwCurrPos > 0)
+            dwCurrPos--;
+         else
+            dwCurrPos = 899;
+      }
+
+      ThreadSleep(1);
+   }
+
+   // Cleanup
+   free(pnLastTimes);
+   free(pnCurrTimes);
+   free(pdwHistory);
+   kstat_close(kc);
+   return THREAD_OK;
+}
+
+
+//
+// Handlers for System.CPU.Usage parameters
+//
+
+LONG H_CPUUsage(char *pszParam, char *pArg, char *pValue)
+{
+   LONG nRet = SYSINFO_RC_SUCCESS;
+
+   if (pArg[0] == 'T')
+   {
+      switch(pArg[1])
+      {
+         case '0':
+            sprintf(pValue, "%d.%d00000",
+                    m_dwUsage[MAX_CPU_COUNT] / 10,
+                    m_dwUsage[MAX_CPU_COUNT] % 10);
+            break;
+         case '1':
+            sprintf(pValue, "%d.%d00000",
+                    m_dwUsage5[MAX_CPU_COUNT] / 10,
+                    m_dwUsage5[MAX_CPU_COUNT] % 10);
+            break;
+         case '2':
+            sprintf(pValue, "%d.%d00000",
+                    m_dwUsage15[MAX_CPU_COUNT] / 10,
+                    m_dwUsage15[MAX_CPU_COUNT] % 10);
+            break;
+         default:
+            nRet = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+   }
+   else
+   {
+      LONG nCPU;
+      char *eptr, szBuffer[32] = "error";
+
+      // Get CPU number
+      NxGetParameterArg(pszParam, szBuffer, 32);
+      nCPU = strtol(szBuffer, &eptr, 0);
+      if ((*eptr == 0) && (nCPU >= 0) && (nCPU < m_nCPUCount))
+      {
+         switch(pArg[1])
+         {
+            case '0':
+               sprintf(pValue, "%d.%d00000",
+                       m_dwUsage[nCPU] / 10,
+                       m_dwUsage[nCPU] % 10);
+               break;
+            case '1':
+               sprintf(pValue, "%d.%d00000",
+                       m_dwUsage5[nCPU] / 10,
+                       m_dwUsage5[nCPU] % 10);
+               break;
+            case '2':
+               sprintf(pValue, "%d.%d00000",
+                       m_dwUsage15[nCPU] / 10,
+                       m_dwUsage15[nCPU] % 10);
+               break;
+            default:
+               nRet = SYSINFO_RC_UNSUPPORTED;
+               break;
+         }
+      }
+      else
+      {
+         nRet = SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+
+   return nRet;
+}
