@@ -142,6 +142,7 @@ BOOL Initialize(void)
    ThreadCreate(Syncer, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
    ThreadCreate(StatusPoller, 0, NULL);
+   ThreadCreate(ConfigurationPoller, 0, NULL);
    
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);

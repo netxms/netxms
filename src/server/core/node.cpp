@@ -44,6 +44,7 @@ Node::Node()
    m_tLastConfigurationPoll = 0;
    m_iSnmpAgentFails = 0;
    m_iNativeAgentFails = 0;
+   m_hPollerMutex = MutexCreate();
 }
 
 
@@ -70,6 +71,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_tLastConfigurationPoll = 0;
    m_iSnmpAgentFails = 0;
    m_iNativeAgentFails = 0;
+   m_hPollerMutex = MutexCreate();
 }
 
 
@@ -79,6 +81,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
 
 Node::~Node()
 {
+   MutexDestroy(m_hPollerMutex);
 }
 
 
@@ -259,8 +262,6 @@ BOOL Node::DeleteFromDB(void)
 
 BOOL Node::NewNodePoll(DWORD dwNetMask)
 {
-   Interface *pInterface;
-   Subnet *pSubnet;
    AgentConnection *pAgentConn;
 
    // Determine node's capabilities
@@ -287,71 +288,22 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
       if (pIfList != NULL)
       {
          for(i = 0; i < pIfList->iNumEntries; i++)
-         {
-            pInterface = new Interface(pIfList->pInterfaces[i].szName, 
-               pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr,
-               pIfList->pInterfaces[i].dwIpNetMask, pIfList->pInterfaces[i].dwType);
-            NetObjInsert(pInterface, TRUE);
-            AddInterface(pInterface);
-            PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-                      pInterface->Name(), pInterface->IpAddr(),
-                      pInterface->IpNetMask(), pInterface->IfIndex());
-
-            // Bind node to appropriate subnet
-            if (pInterface->IpAddr() != 0)   // Do not link non-IP interfaces to 0.0.0.0 subnet
-            {
-               pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-               if (pSubnet == NULL)
-               {
-                  // Create new subnet object
-                  pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
-                  NetObjInsert(pSubnet, TRUE);
-                  g_pEntireNet->AddSubnet(pSubnet);
-               }
-               pSubnet->AddNode(this);
-            }
-         }
+            CreateNewInterface(pIfList->pInterfaces[i].dwIpAddr, 
+                               pIfList->pInterfaces[i].dwIpNetMask,
+                               pIfList->pInterfaces[i].szName,
+                               pIfList->pInterfaces[i].dwIndex,
+                               pIfList->pInterfaces[i].dwType);
          DestroyInterfaceList(pIfList);
       }
       else
       {
          // We cannot get interface list from node for some reasons, create dummy one
-         pInterface = new Interface(m_dwIpAddr, dwNetMask);
-         NetObjInsert(pInterface, TRUE);
-         AddInterface(pInterface);
-         PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-                   pInterface->Name(), m_dwIpAddr, dwNetMask, pInterface->IfIndex());
-
-         // Bind node to appropriate subnet
-         pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-         if (pSubnet == NULL)
-         {
-            // Create new subnet object
-            pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
-            NetObjInsert(pSubnet, TRUE);
-            g_pEntireNet->AddSubnet(pSubnet);
-         }
-         pSubnet->AddNode(this);
+         CreateNewInterface(m_dwIpAddr, dwNetMask);
       }
    }
    else  // No SNMP, no native agent - create pseudo interface object
    {
-      pInterface = new Interface(m_dwIpAddr, dwNetMask);
-      NetObjInsert(pInterface, TRUE);
-      AddInterface(pInterface);
-      PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-                pInterface->Name(), m_dwIpAddr, dwNetMask, pInterface->IfIndex());
-
-      // Bind node to appropriate subnet
-      pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-      if (pSubnet == NULL)
-      {
-         // Create new subnet object
-         pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
-         NetObjInsert(pSubnet, TRUE);
-         g_pEntireNet->AddSubnet(pSubnet);
-      }
-      pSubnet->AddNode(this);
+      CreateNewInterface(m_dwIpAddr, dwNetMask);
    }
 
    // Clean up agent connection
@@ -449,6 +401,74 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
 
 
 //
+// Create new interface
+//
+
+void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName, DWORD dwIndex, DWORD dwType)
+{
+   Interface *pInterface;
+   Subnet *pSubnet;
+
+   // Create interface object
+   if (szName != NULL)
+      pInterface = new Interface(szName, dwIndex, dwIpAddr, dwNetMask, dwType);
+   else
+      pInterface = new Interface(dwIpAddr, dwNetMask);
+
+   // Insert to objects' list and generate event
+   NetObjInsert(pInterface, TRUE);
+   AddInterface(pInterface);
+   PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+             pInterface->Name(), pInterface->IpAddr(),
+             pInterface->IpNetMask(), pInterface->IfIndex());
+
+   // Bind node to appropriate subnet
+   if (pInterface->IpAddr() != 0)   // Do not link non-IP interfaces to 0.0.0.0 subnet
+   {
+      pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
+      if (pSubnet == NULL)
+      {
+         // Create new subnet object
+         pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+         NetObjInsert(pSubnet, TRUE);
+         g_pEntireNet->AddSubnet(pSubnet);
+      }
+      pSubnet->AddNode(this);
+   }
+}
+
+
+//
+// Delete interface from node
+//
+
+void Node::DeleteInterface(Interface *pInterface)
+{
+   DWORD i;
+
+   // Check if we should unlink node from interface's subnet
+   if (pInterface->IpAddr() != 0)
+   {
+      for(i = 0; i < m_dwChildCount; i++)
+         if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+            if (m_pChildList[i] != pInterface)
+               if ((((Interface *)m_pChildList[i])->IpAddr() & ((Interface *)m_pChildList[i])->IpNetMask()) ==
+                   (pInterface->IpAddr() & pInterface->IpNetMask()))
+                  break;
+      if (i == m_dwChildCount)
+      {
+         // Last interface in subnet, should unlink node
+         Subnet *pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
+         if (pSubnet != NULL)
+            pSubnet->DeleteChild(this);
+         DeleteParent(pSubnet);
+      }
+   }
+   pInterface->Delete();
+}
+
+
+//
 // Calculate node status based on child objects status
 //
 
@@ -473,11 +493,13 @@ void Node::StatusPoll(void)
 {
    DWORD i;
 
+   PollerLock();
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
          ((Interface *)m_pChildList[i])->StatusPoll();
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
+   PollerUnlock();
 }
 
 
@@ -490,6 +512,8 @@ void Node::ConfigurationPoll(void)
    DWORD dwOldFlags = m_dwFlags;
    AgentConnection *pAgentConn;
    INTERFACE_LIST *pIfList;
+
+   PollerLock();
 
    // Check node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4))
@@ -526,13 +550,13 @@ void Node::ConfigurationPoll(void)
    if (pIfList != NULL)
    {
       DWORD i;
+      int j;
 
       // Find non-existing interfaces
       for(i = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
          {
             Interface *pInterface = (Interface *)m_pChildList[i];
-            int j;
 
             for(j = 0; j < pIfList->iNumEntries; j++)
                if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
@@ -544,10 +568,35 @@ void Node::ConfigurationPoll(void)
                // No such interface in current configuration, delete it
                PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
                          pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
-               pInterface->Delete();
+               DeleteInterface(pInterface);
                i = 0;   // Restart loop
             }
          }
 
+      // Add new interfaces
+      for(j = 0; j < pIfList->iNumEntries; j++)
+      {
+         for(i = 0; i < m_dwChildCount; i++)
+            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+            {
+               Interface *pInterface = (Interface *)m_pChildList[i];
+
+               if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
+                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
+                   (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
+                  break;
+            }
+         if (i == m_dwChildCount)
+         {
+            // New interface
+            CreateNewInterface(pIfList->pInterfaces[j].dwIpAddr, 
+                               pIfList->pInterfaces[j].dwIpNetMask,
+                               pIfList->pInterfaces[j].szName,
+                               pIfList->pInterfaces[j].dwIndex,
+                               pIfList->pInterfaces[j].dwType);
+         }
+      }
    }
+
+   PollerUnlock();
 }

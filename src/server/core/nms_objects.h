@@ -271,6 +271,10 @@ protected:
    time_t m_tLastConfigurationPoll;
    int m_iSnmpAgentFails;
    int m_iNativeAgentFails;
+   MUTEX m_hPollerMutex;
+
+   void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
+   void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
 
 public:
    Node();
@@ -295,6 +299,8 @@ public:
    const char *ObjectId(void) { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
+   void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, char *szName = NULL, DWORD dwIndex = 0, DWORD dwType = 0);
+   void DeleteInterface(Interface *pInterface);
 
    BOOL NewNodePoll(DWORD dwNetMask);
 
