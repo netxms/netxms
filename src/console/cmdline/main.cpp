@@ -94,6 +94,11 @@ int main(int argc, char *argv[])
    DWORD dwVersion;
    char szServer[256], szLogin[256], szPassword[256];
 
+QWORD x = 111, y;
+y = htonq(x);
+printf("%016I64X %016I64X %016I64X\n", x, y, ntohq(y));
+exit(1);
+
 #ifdef _WIN32
    WSADATA wsaData;
 
@@ -107,7 +112,7 @@ int main(int argc, char *argv[])
           (dwVersion >> 16) & 255, dwVersion & 0xFFFF);
    NXCInitialize();
    NXCSetEventHandler(EventHandler);
-   //NXCSetDebugCallback(DebugCallback);
+   NXCSetDebugCallback(DebugCallback);
 
 strcpy(szServer,"eagle");
 strcpy(szLogin,"admin");
@@ -124,6 +129,7 @@ strcpy(szPassword," ");
    printf("Connection established.\n");
 
    // Load oblects from server
+   printf("Loading objects...\n");
    NXCSyncObjects();
    ConditionWait(g_hCondOperationComplete, INFINITE);
    printf("Objects synchronized.\n");
