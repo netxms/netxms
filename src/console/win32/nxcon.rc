@@ -108,6 +108,7 @@ IDI_OVL_STATUS_TESTING  ICON    DISCARDABLE     "icons\\ovl_status_testing.ico"
 IDI_TRAP                ICON    DISCARDABLE     "icons\\trap.ico"
 IDI_PACKAGE             ICON    DISCARDABLE     "icons\\package.ico"
 IDI_DATABASE            ICON    DISCARDABLE     "icons\\database.ico"
+IDI_DEPLOY              ICON    DISCARDABLE     "icons\\deploy.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

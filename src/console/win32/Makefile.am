@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	ActionEditor.cpp ActionEditor.h ActionSelDlg.cpp ActionSelDlg.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	comm.cpp \
+	ColorSelector.cpp ColorSelector.h \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
 	ControlPanel.cpp ControlPanel.h \
 	CreateContainerDlg.cpp CreateContainerDlg.h \
@@ -27,6 +28,7 @@ EXTRA_DIST = \
 	DCIThresholdsPage.cpp DCIThresholdsPage.h \
 	DCITransformPage.cpp DCITransformPage.h \
 	DebugFrame.cpp DebugFrame.h \
+	DeploymentView.cpp DeploymentView.h \
 	draw.cpp \
 	EditActionDlg.cpp EditActionDlg.h \
 	EditBox.cpp EditBox.h \
@@ -36,20 +38,22 @@ EXTRA_DIST = \
 	EventPolicyEditor.cpp EventPolicyEditor.h \
 	EventSelDlg.cpp EventSelDlg.h \
 	globals.cpp globals.h \
-	Graph.cpp \
+	Graph.cpp Graph.h \
 	GraphFrame.cpp GraphFrame.h \
-	Graph.h \
+	GraphPropDlg.cpp GraphPropDlg.h \
 	GroupPropDlg.cpp GroupPropDlg.h \
 	LoginDialog.cpp LoginDialog.h \
 	MainFrm.cpp MainFrm.h \
 	MapFrame.cpp MapFrame.h \
 	MapView.cpp MapView.h \
 	MIBBrowserDlg.cpp MIBBrowserDlg.h \
+	NetSrvPropsGeneral.cpp NetSrvPropsGeneral.h \
 	NetSummaryFrame.cpp NetSummaryFrame.h \
 	NewActionDlg.cpp NewActionDlg.h \
 	NewUserDlg.cpp NewUserDlg.h \
 	NodePoller.cpp NodePoller.h \
 	NodePropsGeneral.cpp NodePropsGeneral.h \
+	NodePropsPolling.cpp NodePropsPolling.h \
 	NodeSummary.cpp NodeSummary.h \
 	nxcon.clw nxcon.dsp nxcon.dsw \
 	nxcon.cpp nxcon.h \
@@ -64,6 +68,7 @@ EXTRA_DIST = \
 	ObjectPropsSecurity.cpp ObjectPropsSecurity.h \
 	ObjectSearchBox.cpp ObjectSearchBox.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
+	PackageMgr.cpp PackageMgr.h \
 	PasswordChangeDlg.cpp PasswordChangeDlg.h \
 	RequestProcessingDlg.cpp RequestProcessingDlg.h \
 	resource.h \

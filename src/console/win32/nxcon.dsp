@@ -794,6 +794,10 @@ SOURCE=.\icons\dctemplate.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\deploy.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\disabled.ico
 # End Source File
 # Begin Source File
