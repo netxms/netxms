@@ -172,7 +172,8 @@ public:
    DCItem(const DCItem *pItem);
    DCItem(DB_RESULT hResult, int iRow, Template *pNode);
    DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
-          int iPollingInterval, int iRetentionTime, Template *pNode);
+          int iPollingInterval, int iRetentionTime, Template *pNode,
+          char *pszDescription = NULL);
    ~DCItem();
 
    BOOL SaveToDB(void);
@@ -210,6 +211,14 @@ public:
 
 BOOL InitDataCollector(void);
 void DeleteAllItemsForNode(DWORD dwNodeId);
+
+
+//
+// Variables
+//
+
+extern double g_dAvgPollerQueueSize;
+extern double g_dAvgDBWriterQueueSize;
 
 
 #endif   /* _nms_dcoll_h_ */

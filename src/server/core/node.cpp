@@ -893,6 +893,21 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    {
       sprintf(szBuffer, "%d", m_iStatus);
    }
+   else if (m_dwFlags & NF_IS_LOCAL_MGMT)
+   {
+      if (!stricmp(szParam, "Server.AverageDCPollerQueueSize"))
+      {
+         sprintf(szBuffer, "%f", g_dAvgPollerQueueSize);
+      }
+      else if (!stricmp(szParam, "Server.AverageDBWriterQueueSize"))
+      {
+         sprintf(szBuffer, "%f", g_dAvgDBWriterQueueSize);
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
    else
    {
       dwError = DCE_NOT_SUPPORTED;

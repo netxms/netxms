@@ -24,6 +24,14 @@
 
 
 //
+// Global data
+//
+
+double g_dAvgPollerQueueSize = 0;
+double g_dAvgDBWriterQueueSize = 0;
+
+
+//
 // Static data
 //
 
@@ -133,16 +141,31 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 
 static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
+   DWORD i, dwPollerQS[12], dwDBWriterQS[12], dwCurrPos = 0;
+   double dSum1, dSum2;
+
+   memset(dwPollerQS, 0, sizeof(DWORD) * 12);
+   memset(dwDBWriterQS, 0, sizeof(DWORD) * 12);
+   g_dAvgPollerQueueSize = 0;
+   g_dAvgDBWriterQueueSize = 0;
    while(!ShutdownInProgress())
    {
-      if (SleepAndCheckForShutdown(10))
+      if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived
 
-      if (g_dwFlags & AF_DEBUG_DC)
+      // Get current values
+      dwPollerQS[dwCurrPos] = m_pItemQueue->Size();
+      dwDBWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size();
+      dwCurrPos++;
+
+      // Calculate new averages
+      for(i = 0, dSum1 = 0, dSum2 = 0; i < 12; i++)
       {
-//         printf("*** Poller Queue size: %d ***\n", m_pItemQueue->Size());
-//         printf("*** DB Writer Queue size: %d ***\n", g_pLazyRequestQueue->Size());
+         dSum1 += dwPollerQS[i];
+         dSum2 += dwDBWriterQS[i];
       }
+      g_dAvgPollerQueueSize = dSum1 / 12;
+      g_dAvgDBWriterQueueSize = dSum2 / 12;
    }
    return THREAD_OK;
 }

@@ -60,8 +60,18 @@ void CheckForMgmtNode(void)
                else
                {
                   g_dwMgmtNode = pNode->Id();   // Set local management node ID
-                  /* DEBUG */
-                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+                  
+                  // Add default data collection items
+                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", 
+                                            DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                            "Server.AverageDCPollerQueueSize", 
+                                            DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                            "Average length of data collection poller's request queue for last minute"));
+                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                            "Server.AverageDBWriterQueueSize", 
+                                            DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                            "Average length of database writer's request queue for last minute"));
                }
                break;
             }

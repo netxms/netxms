@@ -125,12 +125,16 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 //
 
 DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
-               int iPollingInterval, int iRetentionTime, Template *pNode)
+               int iPollingInterval, int iRetentionTime, Template *pNode,
+               char *pszDescription)
 {
    m_dwId = dwId;
    m_dwTemplateId = 0;
    strncpy(m_szName, szName, MAX_ITEM_NAME);
-   strcpy(m_szDescription, m_szName);
+   if (pszDescription != NULL)
+      strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
+   else
+      strcpy(m_szDescription, m_szName);
    m_iSource = iSource;
    m_iDataType = iDataType;
    m_iPollingInterval = iPollingInterval;
