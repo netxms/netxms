@@ -23,6 +23,17 @@
 #ifndef _nms_core_h_
 #define _nms_core_h_
 
+#ifdef _WIN32
+#ifdef NXCORE_EXPORTS
+#define NXCORE_EXPORTABLE __declspec(dllexport)
+#else
+#define NXCORE_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define NXCORE_EXPORTABLE
+#endif
+
+
 #define LIBNXCL_NO_DECLARATIONS  1
 
 #include <nms_common.h>
@@ -326,21 +337,21 @@ public:
 // Functions
 //
 
-BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault);
-int ConfigReadInt(char *szVar, int iDefault);
-DWORD ConfigReadULong(char *szVar, DWORD dwDefault);
-BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
-BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
-BOOL ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault);
+int NXCORE_EXPORTABLE ConfigReadInt(char *szVar, int iDefault);
+DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault);
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate);
 
-BOOL ParseCommandLine(int argc, char *argv[]);
-BOOL LoadConfig(void);
+BOOL NXCORE_EXPORTABLE LoadConfig(void);
 
-void Shutdown(void);
-BOOL Initialize(void);
-void Main(void);
+void NXCORE_EXPORTABLE Shutdown(void);
+BOOL NXCORE_EXPORTABLE Initialize(void);
+void NXCORE_EXPORTABLE Main(void);
+void NXCORE_EXPORTABLE ShutdownDB(void);
 
-BOOL SleepAndCheckForShutdown(int iSeconds);
+BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
 void SaveObjects(void);
 
@@ -395,12 +406,12 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat);
 void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD wFormat);
 void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId);
 
-char *EncodeSQLString(const char *pszIn);
-void DecodeSQLString(char *pszStr);
+char NXCORE_EXPORTABLE *EncodeSQLString(const char *pszIn);
+void NXCORE_EXPORTABLE DecodeSQLString(char *pszStr);
 
 void InitMailer(void);
 void ShutdownMailer(void);
-void PostMail(char *pszRcpt, char *pszSubject, char *pszText);
+void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText);
 
 void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
 
@@ -412,15 +423,11 @@ DWORD DeleteTrap(DWORD dwId);
 
 #ifdef _WIN32
 
-void InitService(void);
-void InstallService(char *execName, char *dllName);
-void RemoveService(void);
-void StartCoreService(void);
-void StopCoreService(void);
-void InstallEventSource(char *path);
-void RemoveEventSource(void);
+char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error);
 
-char *GetSystemErrorText(DWORD error);
+#else
+
+void NXCORE_EXPORTABLE OnSignal(int iSignal);
 
 #endif   /* _WIN32 */
 
@@ -434,11 +441,11 @@ void DumpSessions(void);
 // Global variables
 //
 
-extern DWORD g_dwFlags;
-extern char g_szConfigFile[];
-extern char g_szLogFile[];
+extern DWORD NXCORE_EXPORTABLE g_dwFlags;
+extern char NXCORE_EXPORTABLE g_szConfigFile[];
+extern char NXCORE_EXPORTABLE g_szLogFile[];
 #ifndef _WIN32
-extern char g_szPIDFile[];
+extern char NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
 extern char g_szDataDir[];
 

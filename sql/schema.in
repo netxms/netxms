@@ -285,13 +285,13 @@ CREATE TABLE items
 
 CREATE TABLE events
 (
-	event_id integer not null,
+	event_code integer not null,
 	name varchar(63) not null,	// Short event name
 	severity integer,
 	flags integer,
 	message varchar(255),		// Message template
 	description DT_TEXT,
-	PRIMARY KEY(event_id)
+	PRIMARY KEY(event_code)
 );
 
 
@@ -301,11 +301,14 @@ CREATE TABLE events
 
 CREATE TABLE event_log
 (
-	event_id integer,
+	event_id bigint,
+	event_code integer,
 	event_timestamp integer,
 	event_source integer,			// Source object ID
 	event_severity integer,
-	event_message varchar(255)
+	event_message varchar(255),
+	correlated_to bigint default 0,
+	PRIMARY KEY(event_id)
 );
 
 

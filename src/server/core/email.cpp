@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "nxcore.h"
 
 
 //
@@ -328,7 +328,7 @@ void ShutdownMailer(void)
 // Post e-mail to queue
 //
 
-void PostMail(char *pszRcpt, char *pszSubject, char *pszText)
+void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText)
 {
    MAIL_ENVELOPE *pEnvelope;
 

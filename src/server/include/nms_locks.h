@@ -16,60 +16,40 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: rootobj.cpp
+** $module: nms_locks.h
 **
 **/
 
-#include "nxcore.h"
+#ifndef _nms_locks_h_
+#define _nms_locks_h_
+
+
+#define UNLOCKED           ((DWORD)0xFFFFFFFF)
 
 
 //
-// Service root class default constructor
+// Component identifiers used for locking
 //
 
-ServiceRoot::ServiceRoot()
-            :UniversalRoot()
-{
-   m_dwId = 2;
-   strcpy(m_szName, "All Services");
-}
-
-
-//
-// Service root class destructor
-//
-
-ServiceRoot::~ServiceRoot()
-{
-}
+#define CID_EPP               0
+#define CID_USER_DB           1
+#define CID_EVENT_DB          2
+#define CID_ACTION_DB         3
+#define CID_TRAP_CFG          4
 
 
 //
-// Template root class default constructor
+// Functions
 //
 
-TemplateRoot::TemplateRoot()
-             :UniversalRoot()
-{
-   m_dwId = 3;
-   strcpy(m_szName, "Templates");
-}
+#ifndef _NETXMS_DB_SCHEMA_
 
+BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
+void UnlockComponent(DWORD dwId);
+void RemoveAllSessionLocks(DWORD dwSessionId);
+void NXCORE_EXPORTABLE UnlockDB(void);
 
-//
-// Template root class destructor
-//
+#endif
 
-TemplateRoot::~TemplateRoot()
-{
-}
-
-
-//
-// Redefined status calculation for template root
-//
-
-void TemplateRoot::CalculateCompoundStatus(void)
-{
-   m_iStatus = STATUS_UNMANAGED;
-}
+#endif

@@ -20,49 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
-
-
-//
-// Help text
-//
-
-static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
-                        "Copyright (c) 2003 SecurityProjects.org\n\n"
-                        "Usage: netxmsd [<options>] <command>\n\n"
-                        "Valid options are:\n"
-                        "   --config <file>     : Set non-default configuration file\n"
-                        "                       : Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   --debug-all         : Turn on all possible debug output\n"
-                        "   --debug-actions     : Print debug information for event actions.\n"
-                        "   --debug-cscp        : Print client-server communication protocol debug\n"
-                        "                       : information to console.\n"
-                        "   --debug-dc          : Print data collection debug information to console.\n"
-                        "   --debug-discovery   : Print network discovery debug information to console.\n"
-                        "   --debug-events      : Print events to console.\n"
-                        "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
-                        "   --debug-locks       : Print debug information about component locking.\n"
-                        "   --debug-snmp        : Print SNMP debug information.\n"
-                        "   --dump-sql          : Dump all SQL queries to log.\n"
-#ifndef _WIN32
-                        "   --pid-file <file>   : Specify pid file.\n"
-#endif
-                        "\n"
-                        "Valid commands are:\n"
-                        "   check-config        : Check configuration file syntax\n"
-#ifdef _WIN32
-                        "   install             : Install Win32 service\n"
-                        "   install-events      : Install Win32 event source\n"
-#endif
-                        "   help                : Display help and exit\n"
-#ifdef _WIN32
-                        "   remove              : Remove Win32 service\n"
-                        "   remove-events       : Remove Win32 event source\n"
-#endif
-                        "   standalone          : Run in standalone mode (not as service)\n"
-                        "   version             : Display version and exit\n"
-                        "\n"
-                        "NOTE: All debug options will work only in standalone mode.\n\n";
+#include "nxcore.h"
 
 
 //
@@ -83,7 +41,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
-BOOL LoadConfig(void)
+BOOL NXCORE_EXPORTABLE LoadConfig(void)
 {
    BOOL bSuccess = FALSE;
 
@@ -108,157 +66,10 @@ BOOL LoadConfig(void)
 
 
 //
-// Parse command line
-// Returns TRUE on success and FALSE on failure
-//
-
-BOOL ParseCommandLine(int argc, char *argv[])
-{
-   int i;
-
-   for(i = 1; i < argc; i++)
-   {
-      if (!strcmp(argv[i], "help"))    // Display help and exit
-      {
-         printf(help_text);
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "version"))    // Display version and exit
-      {
-         printf("NMS Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "--config"))  // Config file
-      {
-         i++;
-         strcpy(g_szConfigFile, argv[i]);     // Next word should contain name of the config file
-      }
-#ifndef _WIN32
-      else if (!strcmp(argv[i], "--pid-file"))  // PID file
-      {
-         i++;
-         strcpy(g_szPIDFile, argv[i]);     // Next word should contain name of the PID file
-      }
-#endif
-      else if (!strcmp(argv[i], "--debug-all"))
-      {
-         g_dwFlags |= AF_DEBUG_ALL;
-      }
-      else if (!strcmp(argv[i], "--debug-events"))
-      {
-         g_dwFlags |= AF_DEBUG_EVENTS;
-      }
-      else if (!strcmp(argv[i], "--debug-cscp"))
-      {
-         g_dwFlags |= AF_DEBUG_CSCP;
-      }
-      else if (!strcmp(argv[i], "--debug-discovery"))
-      {
-         g_dwFlags |= AF_DEBUG_DISCOVERY;
-      }
-      else if (!strcmp(argv[i], "--debug-dc"))
-      {
-         g_dwFlags |= AF_DEBUG_DC;
-      }
-      else if (!strcmp(argv[i], "--debug-locks"))
-      {
-         g_dwFlags |= AF_DEBUG_LOCKS;
-      }
-      else if (!strcmp(argv[i], "--debug-housekeeper"))
-      {
-         g_dwFlags |= AF_DEBUG_HOUSEKEEPER;
-      }
-      else if (!strcmp(argv[i], "--debug-actions"))
-      {
-         g_dwFlags |= AF_DEBUG_ACTIONS;
-      }
-      else if (!strcmp(argv[i], "--debug-snmp"))
-      {
-         g_dwFlags |= AF_DEBUG_SNMP;
-      }
-      else if (!strcmp(argv[i], "--dump-sql"))
-      {
-         g_dwFlags |= AF_DEBUG_SQL;
-      }
-      else if (!strcmp(argv[i], "check-config"))
-      {
-         g_dwFlags |= AF_STANDALONE;
-         printf("Checking configuration file (%s):\n\n", g_szConfigFile);
-         LoadConfig();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "standalone"))  // Run in standalone mode
-      {
-         g_dwFlags |= AF_STANDALONE;
-         return TRUE;
-      }
-#ifdef _WIN32
-      else if ((!strcmp(argv[i], "install"))||
-               (!strcmp(argv[i], "install-events")))
-      {
-         char exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
-
-         ptr = strrchr(argv[0], '\\');
-         if (ptr != NULL)
-            ptr++;
-         else
-            ptr = argv[0];
-
-         _fullpath(exePath, ptr, 255);
-
-         if (stricmp(&exePath[strlen(exePath)-4], ".exe"))
-            strcat(exePath, ".exe");
-         strcpy(dllPath, exePath);
-         ptr = strrchr(dllPath, '\\');
-         if (ptr != NULL)  // Shouldn't be NULL
-         {
-            ptr++;
-            strcpy(ptr, "libnxsrv.dll");
-         }
-
-         if (!strcmp(argv[i], "install"))
-            InstallService(exePath, dllPath);
-         else
-            InstallEventSource(dllPath);
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "remove"))
-      {
-         RemoveService();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "remove-events"))
-      {
-         RemoveEventSource();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "start"))
-      {
-         StartCoreService();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "stop"))
-      {
-         StopCoreService();
-         return FALSE;
-      }
-#endif   /* _WIN32 */
-      else
-      {
-         printf("ERROR: Invalid command line argument\n\n");
-         return FALSE;
-      }
-   }
-
-   return TRUE;
-}
-
-
-//
 // Read string value from configuration table
 //
 
-BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault)
+BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault)
 {
    DB_RESULT hResult;
    char szQuery[256];
@@ -288,7 +99,7 @@ BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefa
 // Read integer value from configuration table
 //
 
-int ConfigReadInt(char *szVar, int iDefault)
+int NXCORE_EXPORTABLE ConfigReadInt(char *szVar, int iDefault)
 {
    char szBuffer[64];
 
@@ -303,7 +114,7 @@ int ConfigReadInt(char *szVar, int iDefault)
 // Read unsigned long value from configuration table
 //
 
-DWORD ConfigReadULong(char *szVar, DWORD dwDefault)
+DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault)
 {
    char szBuffer[64];
 
@@ -318,7 +129,7 @@ DWORD ConfigReadULong(char *szVar, DWORD dwDefault)
 // Write string value to configuration table
 //
 
-BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
 {
    DB_RESULT hResult;
    char szQuery[1024];
@@ -355,7 +166,7 @@ BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
 // Write integer value to configuration table
 //
 
-BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
 {
    char szBuffer[64];
 
@@ -368,7 +179,7 @@ BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
 // Write unsigned long value to configuration table
 //
 
-BOOL ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate)
 {
    char szBuffer[64];
 

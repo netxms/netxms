@@ -9,8 +9,6 @@
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_pgsql.sql
-src/server/core/messages.c
-src/server/core/messages.h
 src/server/core/netxmsd
 /stamp-h1
 /status

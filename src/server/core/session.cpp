@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "nxcore.h"
 
 #ifndef _WIN32
 #include <dirent.h>

@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "nxcore.h"
 
 
 //
@@ -99,7 +99,7 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
 // Unlock database
 //
 
-void UnlockDB(void)
+void NXCORE_EXPORTABLE UnlockDB(void)
 {
    ConfigWriteStr("DBLockStatus", "UNLOCKED", FALSE);
    ConfigWriteStr("DBLockInfo", "", FALSE);

@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "nxcore.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -39,7 +39,7 @@
 
 #ifdef _WIN32
 
-char *GetSystemErrorText(DWORD error)
+char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error)
 {
    char *msgBuf;
    static char staticBuffer[1024];
@@ -275,7 +275,7 @@ static char m_szSpecialChars[] = "\x01\x02\x03\x04\x05\x06\x07\x08"
 // Escape some special characters in string for writing into database
 //
 
-char *EncodeSQLString(const char *pszIn)
+char NXCORE_EXPORTABLE *EncodeSQLString(const char *pszIn)
 {
    char *pszOut;
    int iPosIn, iPosOut, iStrSize;
@@ -309,7 +309,7 @@ char *EncodeSQLString(const char *pszIn)
 // Characters are decoded "in place"
 //
 
-void DecodeSQLString(char *pszStr)
+void NXCORE_EXPORTABLE DecodeSQLString(char *pszStr)
 {
    int iPosIn, iPosOut;
 

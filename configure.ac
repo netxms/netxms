@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.40 2004-11-29 08:30:06 victor Exp $
+# $Id: configure.ac,v 1.41 2004-12-07 16:18:50 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -380,6 +380,7 @@ AC_CONFIG_FILES([
 	src/nxevent/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
+	src/server/netxmsd/Makefile
 	src/server/dbdrv/Makefile
 	src/server/dbdrv/odbc/Makefile
 	src/server/dbdrv/mssql/Makefile

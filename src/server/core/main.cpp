@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "nxcore.h"
 #include <netxmsdb.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H
@@ -59,11 +59,11 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
 // Global variables
 //
 
-DWORD g_dwFlags = AF_USE_EVENT_LOG;
-char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
-char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+DWORD NXCORE_EXPORTABLE g_dwFlags = AF_USE_EVENT_LOG;
+char NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
+char NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 #ifndef _WIN32
-char g_szPIDFile[MAX_PATH] = "/var/run/netxmsd.pid";
+char NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = "/var/run/netxmsd.pid";
 #endif
 DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
@@ -84,9 +84,21 @@ static CONDITION m_hEventShutdown;
 // Function will return TRUE if shutdown event occurs
 //
 
-BOOL SleepAndCheckForShutdown(int iSeconds)
+BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds)
 {
    return ConditionWait(m_hEventShutdown, iSeconds * 1000);
+}
+
+
+//
+// Disconnect from database (exportable function for startup module)
+//
+
+void NXCORE_EXPORTABLE ShutdownDB(void)
+{
+   if (g_hCoreDB != NULL)
+      DBDisconnect(g_hCoreDB);
+   DBUnloadDriver();
 }
 
 
@@ -161,7 +173,7 @@ static void LoadGlobalConfig()
 // Server initialization
 //
 
-BOOL Initialize(void)
+BOOL NXCORE_EXPORTABLE Initialize(void)
 {
    int i, iNumThreads, iDBVersion;
    DWORD dwAddr;
@@ -319,7 +331,7 @@ void NotifyClient(ClientSession *pSession, void *pArg)
 // Server shutdown
 //
 
-void Shutdown(void)
+void NXCORE_EXPORTABLE Shutdown(void)
 {
    DWORD i, dwNumThreads;
 
@@ -352,7 +364,7 @@ void Shutdown(void)
    UnlockDB();
 
    // Disconnect from database and unload driver
-   if (g_hCoreDB != 0)
+   if (g_hCoreDB != NULL)
       DBDisconnect(g_hCoreDB);
    DBUnloadDriver();
    DbgPrintf(AF_DEBUG_MISC, "Database driver unloaded");
@@ -476,7 +488,7 @@ static BOOL ProcessCommand(char *pszCmdLine)
 
 #ifndef _WIN32
 
-void OnSignal(int iSignal)
+void NXCORE_EXPORTABLE OnSignal(int iSignal)
 {
    WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
    switch(iSignal)
@@ -500,7 +512,7 @@ void OnSignal(int iSignal)
 // Common main()
 //
 
-void Main(void)
+void NXCORE_EXPORTABLE Main(void)
 {
    WriteLog(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
@@ -565,89 +577,4 @@ void Main(void)
       Shutdown();
 #endif
    }
-}
-
-
-//
-// Startup code
-//
-
-int main(int argc, char *argv[])
-{
-#ifndef _WIN32
-   int i;
-   FILE *fp;
-#endif
-
-   if (!ParseCommandLine(argc, argv))
-      return 1;
-
-   if (!LoadConfig())
-   {
-      if (IsStandalone())
-         printf("Error loading configuration file\n");
-      return 1;
-   }
-
-#ifdef _WIN32
-   if (!IsStandalone())
-   {
-      InitService();
-   }
-   else
-   {
-      if (!Initialize())
-      {
-         printf("NMS Core initialization failed\n");
-
-         // Remove database lock
-         if (g_dwFlags & AF_DB_LOCKED)
-         {
-            UnlockDB();
-            DBDisconnect(g_hCoreDB);
-         }
-         return 3;
-      }
-      Main();
-   }
-#else    /* not _WIN32 */
-   if (!IsStandalone())
-   {
-      if (daemon(0, 0) == -1)
-      {
-         perror("Call to daemon() failed");
-         return 2;
-      }
-   }
-
-   // Write PID file
-   fp = fopen(g_szPIDFile, "w");
-   if (fp != NULL)
-   {
-      fprintf(fp, "%d", getpid());
-      fclose(fp);
-   }
-
-   // Setup signal handlers
-   for(i = 0; i < 32; i++)
-      signal(i, SIG_IGN);
-   signal(SIGTERM, OnSignal);
-   signal(SIGSEGV, OnSignal);
-
-   // Initialize server
-   if (!Initialize())
-   {
-      // Remove database lock
-      if (g_dwFlags & AF_DB_LOCKED)
-      {
-         UnlockDB();
-         DBDisconnect(g_hCoreDB);
-      }
-      return 3;
-   }
-
-   // Everything is OK, start common main loop
-   Main();
-#endif   /* _WIN32 */
-   return 0;
 }

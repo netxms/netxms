@@ -1,5 +1,6 @@
 /* 
 ** NetXMS - Network Management System
+** Server Core
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -16,60 +17,13 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: rootobj.cpp
+** $module: nxcore.h
 **
 **/
 
-#include "nxcore.h"
+#ifndef _nxcore_h_
+#define _nxcore_h_
 
+#include <nms_core.h>
 
-//
-// Service root class default constructor
-//
-
-ServiceRoot::ServiceRoot()
-            :UniversalRoot()
-{
-   m_dwId = 2;
-   strcpy(m_szName, "All Services");
-}
-
-
-//
-// Service root class destructor
-//
-
-ServiceRoot::~ServiceRoot()
-{
-}
-
-
-//
-// Template root class default constructor
-//
-
-TemplateRoot::TemplateRoot()
-             :UniversalRoot()
-{
-   m_dwId = 3;
-   strcpy(m_szName, "Templates");
-}
-
-
-//
-// Template root class destructor
-//
-
-TemplateRoot::~TemplateRoot()
-{
-}
-
-
-//
-// Redefined status calculation for template root
-//
-
-void TemplateRoot::CalculateCompoundStatus(void)
-{
-   m_iStatus = STATUS_UNMANAGED;
-}
+#endif   /* _nxcore_h_ */

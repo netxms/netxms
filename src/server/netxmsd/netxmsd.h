@@ -1,5 +1,6 @@
 /* 
 ** NetXMS - Network Management System
+** Server startup module
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -16,40 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_locks.h
+** $module: netxmsd.h
 **
 **/
 
-#ifndef _nms_locks_h_
-#define _nms_locks_h_
+#ifndef _netxmsd_h_
+#define _netxmsd_h_
 
+#include <nms_core.h>
 
-#define UNLOCKED           ((DWORD)0xFFFFFFFF)
+#ifdef _WIN32
 
+void InitService(void);
+void InstallService(char *execName, char *dllName);
+void RemoveService(void);
+void StartCoreService(void);
+void StopCoreService(void);
+void InstallEventSource(char *path);
+void RemoveEventSource(void);
 
-//
-// Component identifiers used for locking
-//
+#endif   /* _WIN32 */
 
-#define CID_EPP               0
-#define CID_USER_DB           1
-#define CID_EVENT_DB          2
-#define CID_ACTION_DB         3
-#define CID_TRAP_CFG          4
-
-
-//
-// Functions
-//
-
-#ifndef _NETXMS_DB_SCHEMA_
-
-BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
-void UnlockComponent(DWORD dwId);
-void RemoveAllSessionLocks(DWORD dwSessionId);
-void UnlockDB(void);
-
-#endif
-
-#endif
+#endif   /* _netxmsd_h_ */

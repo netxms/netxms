@@ -267,6 +267,7 @@ typedef struct
 #define CMD_QUERY_PARAMETER         0x0066
 #define CMD_GET_SERVER_INFO         0x0067
 #define CMD_SET_DCI_STATUS          0x0068
+#define CMD_FILE_DATA               0x0069
 
 
 //

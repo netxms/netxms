@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="netxmsd" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="nxcore" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
-# TARGTYPE "Win32 (x86) Console Application" 0x0103
+# TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=netxmsd - Win32 Release
+CFG=nxcore - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "netxmsd.mak".
+!MESSAGE NMAKE /f "nxcore.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "netxmsd.mak" CFG="netxmsd - Win32 Release"
+!MESSAGE NMAKE /f "nxcore.mak" CFG="nxcore - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "netxmsd - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "netxmsd - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "nxcore - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "nxcore - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -26,9 +26,10 @@ CFG=netxmsd - Win32 Release
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 CPP=cl.exe
+MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "netxmsd - Win32 Release"
+!IF  "$(CFG)" == "nxcore - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -41,23 +42,25 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\include" /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD BASE RSC /l 0x809 /d "NDEBUG"
-# ADD RSC /l 0x809 /d "NDEBUG"
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\include" /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /YX /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib /nologo /version:0.1 /subsystem:console /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\libnxsrv\Release" /libpath:"..\..\libnxsnmp\Release"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\libnxsrv\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\netxmsd.exe C:\NetXMS\bin
+PostBuild_Cmds=copy Release\nxcore.dll C:\NetXMS\bin
 # End Special Build Tool
 
-!ELSEIF  "$(CFG)" == "netxmsd - Win32 Debug"
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -70,27 +73,30 @@ PostBuild_Cmds=copy Release\netxmsd.exe C:\NetXMS\bin
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD BASE RSC /l 0x809 /d "_DEBUG"
-# ADD RSC /l 0x809 /d "_DEBUG"
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /YX /FD /GZ /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x409 /d "_DEBUG"
+# ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib /nologo /version:0.1 /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\libnxsrv\Debug" /libpath:"..\..\libnxsnmp\Debug"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\libnxsrv\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy Debug\netxmsd.exe ..\..\..\bin
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Debug\nxcore.dll ..\..\..\bin
 # End Special Build Tool
 
 !ENDIF 
 
 # Begin Target
 
-# Name "netxmsd - Win32 Release"
-# Name "netxmsd - Win32 Debug"
+# Name "nxcore - Win32 Release"
+# Name "nxcore - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -266,10 +272,6 @@ SOURCE=.\users.cpp
 
 SOURCE=.\watchdog.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\winsrv.cpp
-# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -284,6 +286,10 @@ SOURCE=..\include\local_admin.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\messages.h
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\include\netxms-version.h"
 # End Source File
 # Begin Source File
@@ -292,7 +298,7 @@ SOURCE=..\..\..\include\netxmsdb.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_actions.h
+SOURCE=..\include\nms_actions.h
 # End Source File
 # Begin Source File
 
@@ -300,7 +306,7 @@ SOURCE=..\..\..\include\nms_agent.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_alarm.h
+SOURCE=..\include\nms_alarm.h
 # End Source File
 # Begin Source File
 
@@ -308,7 +314,7 @@ SOURCE=..\..\..\include\nms_common.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_core.h
+SOURCE=..\include\nms_core.h
 # End Source File
 # Begin Source File
 
@@ -316,19 +322,19 @@ SOURCE=..\..\..\include\nms_cscp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_dcoll.h
+SOURCE=..\include\nms_dcoll.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_events.h
+SOURCE=..\include\nms_events.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_locks.h
+SOURCE=..\include\nms_locks.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_objects.h
+SOURCE=..\include\nms_objects.h
 # End Source File
 # Begin Source File
 
@@ -336,7 +342,7 @@ SOURCE=..\..\..\include\nms_threads.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\nms_users.h
+SOURCE=..\include\nms_users.h
 # End Source File
 # Begin Source File
 
@@ -345,6 +351,10 @@ SOURCE=..\..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxclapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxcore.h
 # End Source File
 # Begin Source File
 
@@ -360,6 +370,10 @@ SOURCE=..\..\..\include\nximage.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxnt.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nxqueue.h
 # End Source File
 # Begin Source File
@@ -369,6 +383,10 @@ SOURCE=..\..\..\include\nxsnmp.h
 # Begin Source File
 
 SOURCE=..\include\nxsrvapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\rwlock.h
 # End Source File
 # Begin Source File
 

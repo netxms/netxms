@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nms_core.h"
+#include "netxmsd.h"
 
 #ifdef _WIN32
 
@@ -94,8 +94,8 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
       // Remove database lock
       if (g_dwFlags & AF_DB_LOCKED)
       {
-         DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
-         DBDisconnect(g_hCoreDB);
+         UnlockDB();
+         ShutdownDB();
       }
 
       // Now service is stopped
