@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib iphlpapi.lib /nologo /subsystem:console /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib iphlpapi.lib psapi.lib /nologo /subsystem:console /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release"
 
 !ELSEIF  "$(CFG)" == "nxagentd - Win32 Debug"
 
@@ -74,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib iphlpapi.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib iphlpapi.lib psapi.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -112,6 +112,10 @@ SOURCE=.\nxagentd.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\procinfo.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\service.cpp
 # End Source File
 # Begin Source File
@@ -129,6 +133,10 @@ SOURCE=.\sysinfo.cpp
 # Begin Source File
 
 SOURCE=.\tools.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\win32.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
