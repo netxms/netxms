@@ -481,3 +481,30 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		4009, 'DC_HDD_TEMP_WARNING',
+		EVENT_SEVERITY_WARNING, 1,
+		'Temperature of hard disk %6 is above warning level of %3 (current: %4)',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		4010, 'DC_HDD_TEMP_MAJOR',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Temperature of hard disk %6 is above %3 (current: %4)',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		4011, 'DC_HDD_TEMP_CRITICAL',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Temperature of hard disk %6 is above critical level of %3 (current: %4)',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
