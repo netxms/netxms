@@ -205,6 +205,9 @@ typedef struct
 #define VID_DCI_DATA_TYPE           ((DWORD)47)
 #define VID_DCI_STATUS              ((DWORD)48)
 #define VID_MGMT_STATUS             ((DWORD)49)
+#define VID_MAX_ROWS                ((DWORD)50)
+#define VID_TIME_FROM               ((DWORD)51)
+#define VID_TIME_TO                 ((DWORD)52)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
