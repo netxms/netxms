@@ -32,22 +32,10 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
 {
 #if defined(_WIN32)
 
-   TCHAR szInstallDir[MAX_PATH], szCmdLine[1024];
-   HKEY hKey;
-   DWORD dwSize;
-
-   // Read current installation directory
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\NetXMS Agent"), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-      return ERR_ACCESS_DENIED;
-
-   dwSize = MAX_PATH * sizeof(TCHAR);
-   if (RegQueryValueEx(hKey, _T("InstallDir"), NULL, NULL,
-                       (BYTE *)szInstallDir, &dwSize) != ERROR_SUCCESS)
-      return ERR_INTERNAL_ERROR;
+   TCHAR szCmdLine[1024];
 
    // Start installation
-   _sntprintf(szCmdLine, 1024, _T("msiexec.exe /quiet /qn /i %s TARGETDIR=\"%s\""),
-              pszPkgFile, szInstallDir);
+   _sntprintf(szCmdLine, 1024, _T("%s /VERYSILENT"), pszPkgFile);
    return ExecuteCommand(szCmdLine, NULL);
 
 #else
