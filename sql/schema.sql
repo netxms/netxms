@@ -88,7 +88,7 @@ create table NSMAP
 (
 	subnet_id integer not null,
 	node_id integer not null,
-	PRIMARY KEY (subnet_id)
+	KEY (subnet_id)
 );
 
 
