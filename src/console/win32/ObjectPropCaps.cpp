@@ -51,11 +51,15 @@ END_MESSAGE_MAP()
 
 BOOL CObjectPropCaps::OnInitDialog() 
 {
+   RECT rect;
+
 	CPropertyPage::OnInitDialog();
 
    // Initialize list control
+   m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, "Capability", LVCFMT_LEFT, 180);
-   m_wndListCtrl.InsertColumn(1, "Value", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(1, "Value", LVCFMT_LEFT, 
+                              rect.right - 180 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
    // Fill list control with data
@@ -66,6 +70,7 @@ BOOL CObjectPropCaps::OnInitDialog()
    AddListRecord(_T("isBridge"), (m_pObject->node.dwFlags & NF_IS_BRIDGE));
    AddListRecord(_T("isRouter"), (m_pObject->node.dwFlags & NF_IS_ROUTER));
    AddListRecord(_T("nodeType"), CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
+   AddListRecord(_T("platformName"), m_pObject->node.szPlatformName);
    AddListRecord(_T("snmpOID"), m_pObject->node.szObjectId);
 	
 	return TRUE;
