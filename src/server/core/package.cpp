@@ -161,6 +161,9 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       if (pNode == NULL)
          break;   // Queue is empty, exit
 
+      // Preset node id in notification message
+      msg.SetVariable(VID_OBJECT_ID, pNode->Id());
+
       // Create agent connection
       pAgentConn = pNode->CreateAgentConnection();
       if (pAgentConn != NULL)
@@ -190,11 +193,77 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
          if (bCheckOK)
          {
             // Change deployment status to "File Transfer"
-            msg.SetVariable(VID_OBJECT_ID, pNode->Id());
             msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
             pStartup->pSession->SendMessage(&msg);
 
-            //!pAgentConn->UploadFile(szBuffer);
+            // Upload package file to agent
+            strcpy(szBuffer, g_szDataDir);
+            strcat(szBuffer, DDIR_PACKAGES);
+            strcat(szBuffer, FS_PATH_SEPARATOR);
+            strcat(szBuffer, pStartup->szPkgFile);
+            if (pAgentConn->UploadFile(szBuffer) == ERR_SUCCESS)
+            {
+               if (pAgentConn->StartUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
+               {
+                  BOOL bConnected = FALSE;
+                  DWORD i;
+
+                  // Disconnect from agent
+                  pAgentConn->Disconnect();
+
+                  // Change deployment status to "Package installation"
+                  msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
+                  pStartup->pSession->SendMessage(&msg);
+
+                  // Wait for agent's restart
+                  ThreadSleep(20);
+                  for(i = 20; i < 120; i += 20)
+                  {
+                     ThreadSleep(20);
+                     if (pAgentConn->Connect())
+                     {
+                        bConnected = TRUE;
+                        break;   // Connected successfully
+                     }
+                  }
+
+                  // Last attempt to reconnect
+                  if (!bConnected)
+                     bConnected = pAgentConn->Connect();
+
+                  if (bConnected)
+                  {
+                     // Check version
+                     if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+                     {
+                        if (!stricmp(szBuffer, pStartup->szVersion))
+                        {
+                           bSuccess = TRUE;
+                        }
+                        else
+                        {
+                           pszErrorMsg = "Agent's version doesn't match package version after upgrade";
+                        }
+                     }
+                     else
+                     {
+                        pszErrorMsg = "Unable to get agent's version after upgrade";
+                     }
+                  }
+                  else
+                  {
+                     pszErrorMsg = "Unable to contact agent after upgrade";
+                  }
+               }
+               else
+               {
+                  pszErrorMsg = "Unable to start upgrade process";
+               }
+            }
+            else
+            {
+               pszErrorMsg = "File transfer failed";
+            }
          }
          else
          {
@@ -209,7 +278,6 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       }
 
       // Finish node processing
-      msg.SetVariable(VID_OBJECT_ID, pNode->Id());
       msg.SetVariable(VID_DEPLOYMENT_STATUS, 
          bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
       msg.SetVariable(VID_ERROR_MESSAGE, pszErrorMsg);
@@ -269,6 +337,10 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    // Wait for all worker threads termination
    for(i = 0; i < dwNumThreads; i++)
       ThreadJoin(pThreadList[i]);
+
+   // Send final notification to client
+   msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
+   pStartup->pSession->SendMessage(&msg);
 
    // Cleanup
    MutexDestroy(pStartup->mutex);

@@ -3914,7 +3914,8 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
    DWORD i, j, dwNumObjects, *pdwObjectList, dwNumNodes, dwPkgId;
    Node **ppNodeList;
    NetObj *pObject;
-   TCHAR szQuery[256], szPkgFile[MAX_PATH], szPlatform[MAX_PLATFORM_NAME_LEN];
+   TCHAR szQuery[256], szPkgFile[MAX_PATH];
+   TCHAR szVersion[MAX_AGENT_VERSION_LEN], szPlatform[MAX_PLATFORM_NAME_LEN];
    DB_RESULT hResult;
    BOOL bSuccess = TRUE;
    MUTEX hMutex;
@@ -3933,12 +3934,13 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
       if (IsValidPackageId(dwPkgId))
       {
          // Read package information
-         _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+         _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if ((hResult != NULL) && (DBGetNumRows(hResult) > 0))
          {
             _tcsncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
             _tcsncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
+            _tcsncpy(szVersion, DBGetField(hResult, 0, 2), MAX_AGENT_VERSION_LEN);
 
             // Create list of nodes to be upgraded
             dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
@@ -4015,6 +4017,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          pInfo->dwPackageId = dwPkgId;
          _tcscpy(pInfo->szPkgFile, szPkgFile);
          _tcscpy(pInfo->szPlatform, szPlatform);
+         _tcscpy(pInfo->szVersion, szVersion);
 
          ThreadCreate(DeploymentManager, 0, pInfo);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);

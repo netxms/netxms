@@ -146,7 +146,7 @@ static void SaveActionToDB(NXC_ACTION *pAction)
 {
    DB_RESULT hResult;
    BOOL bExist = FALSE;
-   char szQuery[4096];
+   TCHAR *pszEscRcpt, *pszEscSubj, *pszEscData, szQuery[4096];
 
    // Check if action with given ID already exist in database
    sprintf(szQuery, "SELECT action_id FROM actions WHERE action_id=%ld", pAction->dwId);
@@ -158,20 +158,25 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    }
 
    // Prepare and execute INSERT or UPDATE query
+   pszEscRcpt = EncodeSQLString(pAction->szRcptAddr);
+   pszEscSubj = EncodeSQLString(pAction->szEmailSubject);
+   pszEscData = EncodeSQLString(pAction->pszData == NULL ? "" : pAction->pszData);
    if (bExist)
       sprintf(szQuery, "UPDATE actions SET action_name='%s',action_type=%d,is_disabled=%d,"
                        "rcpt_addr='%s',email_subject='%s',action_data='%s'"
                        "WHERE action_id=%ld",
               pAction->szName, pAction->iType, pAction->bIsDisabled,
-              pAction->szRcptAddr, pAction->szEmailSubject,
-              (pAction->pszData == NULL ? "" : pAction->pszData), pAction->dwId);
+              pszEscRcpt, pszEscSubj, pszEscData, pAction->dwId);
    else
       sprintf(szQuery, "INSERT INTO actions (action_id,action_name,action_type,"
                        "is_disabled,rcpt_addr,email_subject,action_data) VALUES"
                        " (%ld,'%s',%d,%d,'%s','%s','%s')",
               pAction->dwId,pAction->szName, pAction->iType, pAction->bIsDisabled,
-              pAction->szRcptAddr, pAction->szEmailSubject, CHECK_NULL_EX(pAction->pszData));
+              pszEscRcpt, pszEscSubj, pszEscData);
    DBQuery(g_hCoreDB, szQuery);
+   free(pszEscRcpt);
+   free(pszEscSubj);
+   free(pszEscData);
 }
 
 
