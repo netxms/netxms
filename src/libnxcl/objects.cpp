@@ -84,6 +84,7 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 
 static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
+   DebugPrintf("AddObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
    m_pIndexById = (INDEX *)MemReAlloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
    m_pIndexById[m_dwNumObjects].pObject = pObject;
@@ -99,6 +100,7 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 
 static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
+   DebugPrintf("ReplaceObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
    if (pObject->pdwChildList != NULL)
       MemFree(pObject->pdwChildList);
    if (pObject->pdwParentList != NULL)
@@ -114,6 +116,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 
 static void DestroyObject(NXC_OBJECT *pObject)
 {
+   DebugPrintf("DestroyObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
    if (pObject->pdwChildList != NULL)
       MemFree(pObject->pdwChildList);
    if (pObject->pdwParentList != NULL)
@@ -148,6 +151,12 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_PARENT_ID_BASE; i < pObject->dwNumParents; i++, dwId++)
       pObject->pdwParentList[i] = pMsg->GetVariableLong(dwId);
 
+   // Childs
+   pObject->dwNumChilds = pMsg->GetVariableLong(VID_CHILD_CNT);
+   pObject->pdwChildList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumChilds);
+   for(i = 0, dwId = VID_CHILD_ID_BASE; i < pObject->dwNumChilds; i++, dwId++)
+      pObject->pdwChildList[i] = pMsg->GetVariableLong(dwId);
+
    // Class-specific attributes
    switch(pObject->iClass)
    {
@@ -177,55 +186,6 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 
 
 //
-// Set references to this object in parent objects
-//
-
-static void LinkObject(NXC_OBJECT *pObject)
-{
-   DWORD i;
-   NXC_OBJECT *pParent;
-
-   for(i = 0; i < pObject->dwNumParents; i++)
-   {
-      pParent = NXCFindObjectById(pObject->pdwParentList[i]);
-      if (pParent != NULL)
-      {
-         DWORD j;
-
-         for(j = 0; j < pParent->dwNumChilds; j++)
-            if (pParent->pdwChildList[j] == pObject->dwId)
-               break;
-         if (j == pParent->dwNumChilds)
-         {
-            pParent->dwNumChilds++;
-            pParent->pdwChildList = (DWORD *)MemReAlloc(pParent->pdwChildList, 
-                                                     sizeof(DWORD) * pParent->dwNumChilds);
-            pParent->pdwChildList[j] = pObject->dwId;
-         }
-      }
-      else
-      {
-         DebugPrintf("LinkObject(): Object %d contains a link to non-existing parent object %d",
-                     pObject->dwId, pObject->pdwParentList[i]);
-      }
-   }
-}
-
-
-//
-// Set references to child objects for received object list
-//
-
-static void LinkAllObjects(void)
-{
-   DWORD i;
-
-   for(i = 0; i < m_dwNumObjects; i++)
-      LinkObject(m_pIndexById[i].pObject);
-}
-
-
-//
 // Process object information received from server
 //
 
@@ -239,7 +199,6 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          if (g_dwState == STATE_SYNC_OBJECTS)
          {
             qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-            LinkAllObjects();
             ConditionSet(m_hCondSyncFinished);
          }
          break;

@@ -42,17 +42,15 @@ void ChangeState(DWORD dwState)
 void DebugPrintf(char *szFormat, ...)
 {
    va_list args;
-   char *pBuffer;
+   char szBuffer[4096];
 
    if (g_pDebugCallBack == NULL)
       return;
 
-   pBuffer = (char *)MemAlloc(4096);
    va_start(args, szFormat);
-   vsprintf(pBuffer, szFormat, args);
+   vsprintf(szBuffer, szFormat, args);
    va_end(args);
-   g_pDebugCallBack(pBuffer);
-   MemFree(pBuffer);
+   g_pDebugCallBack(szBuffer);
 }
 
 

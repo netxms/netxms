@@ -37,6 +37,55 @@ static MsgWaitQueue m_msgWaitQueue;
 
 
 //
+// Get symbolic name for message code
+// This function is intended to be used from receiver thread only,
+// so we don't care about reentrancy
+//
+
+static char *MessageCodeName(WORD wCode)
+{
+   static char *pszMsgNames[] =
+   {
+      "CMD_LOGIN",
+      "CMD_LOGIN_RESP",
+      "CMD_KEEPALIVE",
+      "CMD_EVENT",
+      "CMD_GET_OBJECTS",
+      "CMD_OBJECT",
+      "CMD_DELETE_OBJECT",
+      "CMD_UPDATE_OBJECT",
+      "CMD_OBJECT_LIST_END",
+      "CMD_OBJECT_UPDATE",
+      "CMD_GET_EVENTS",
+      "CMD_EVENT_LIST_END",
+      "CMD_GET_CONFIG_VARLIST",
+      "CMD_SET_CONFIG_VARIABLE",
+      "CMD_CONFIG_VARIABLE",
+      "CMD_CONFIG_VARLIST_END",
+      "CMD_DELETE_CONFIG_VARIABLE",
+      "CMD_NOTIFY",
+      "CMD_OPEN_EPP",
+      "CMD_CLOSE_EPP",
+      "CMD_INSTALL_EPP",
+      "CMD_SAVE_EPP",
+      "CMD_EPP_RECORD",
+      "CMD_OPEN_EVENT_DB",
+      "CMD_CLOSE_EVENT_DB",
+      "CMD_SET_EVENT_INFO",
+      "CMD_EVENT_DB_RECORD",
+      "CMD_EVENT_DB_EOF",
+      "CMD_REQUEST_COMPLETED"
+   };
+   static char szBuffer[32];
+
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_REQUEST_COMPLETED))
+      return pszMsgNames[wCode - CMD_LOGIN];
+   sprintf(szBuffer, "CMD_UNKNOWN(%d)", wCode);
+   return szBuffer;
+}
+
+
+//
 // Send raw message
 //
 
@@ -55,6 +104,7 @@ BOOL SendMsg(CSCPMessage *pMsg)
    CSCP_MESSAGE *pRawMsg;
    BOOL bResult;
 
+   DebugPrintf("SendMsg(\"%s\", id:%ld)", MessageCodeName(pMsg->GetCode()), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    bResult = SendRawMsg(pRawMsg);
    MemFree(pRawMsg);
@@ -91,7 +141,7 @@ static void NetReceiver(void *pArg)
       // Check that actual received packet size is equal to encoded in packet
       if (ntohs(pRawMsg->wSize) != iErr)
       {
-         DebugPrintf("RECV_MSG: Bad packet length [wSize=%d ActualSize=%d]", ntohs(pRawMsg->wSize), iErr);
+         DebugPrintf("RecvMsg: Bad packet length [wSize=%d ActualSize=%d]", ntohs(pRawMsg->wSize), iErr);
          continue;   // Bad packet, wait for next
       }
 
@@ -102,6 +152,8 @@ static void NetReceiver(void *pArg)
          pRawMsg->wCode = ntohs(pRawMsg->wCode) & 0x0FFF;   // Clear flag bits from code
          pRawMsg->wSize = ntohs(pRawMsg->wSize);
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
+
+         DebugPrintf("RecvRawMsg(\"%s\", id:%ld)", MessageCodeName(pRawMsg->wCode), pRawMsg->dwId);
 
          // Process message
          switch(pRawMsg->wCode)
@@ -117,7 +169,7 @@ static void NetReceiver(void *pArg)
       {
          pMsg = new CSCPMessage(pRawMsg);
          bMsgNotNeeded = TRUE;
-         DebugPrintf("RECV_MSG: Code=%d ID=%d", pMsg->GetCode(), pMsg->GetId());
+         DebugPrintf("RecvMsg(\"%s\", id:%ld)", MessageCodeName(pMsg->GetCode()), pMsg->GetId());
 
          // Process message
          switch(pMsg->GetCode())
