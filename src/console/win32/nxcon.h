@@ -75,6 +75,7 @@ public:
 
 // Implementation
 protected:
+	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
 	CEventBrowser *m_pwndEventBrowser;
    CEventEditor *m_pwndEventEditor;
@@ -119,6 +120,7 @@ private:
 
    // Inline functions
 public:
+	CMenu * GetContextMenu(int iIndex);
 	void ObjectProperties(DWORD dwObjectId);
 	void DebugPrintf(char *szFormat, ...);
    void DebugCallback(char *pszMsg)

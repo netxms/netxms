@@ -36,6 +36,8 @@ BEGIN_MESSAGE_MAP(CUserEditor, CMDIChildWnd)
 	ON_COMMAND(ID_USER_CREATE_USER, OnUserCreateUser)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_USER_PROPERTIES, OnUserProperties)
+	ON_COMMAND(ID_USER_DELETE, OnUserDelete)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
@@ -432,4 +434,74 @@ void CUserEditor::OnUserProperties()
          PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_USER_DELETE message handler
+//
+
+void CUserEditor::OnUserDelete() 
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+   if (iItem != -1)
+   {
+      DWORD dwId;
+
+      dwId = m_wndListCtrl.GetItemData(iItem);
+      if (dwId == 0)
+      {
+         MessageBox("System administrator account cannot be deleted",
+                    "Warning", MB_ICONEXCLAMATION | MB_OK);
+      }
+      else if (dwId == GROUP_EVERYONE)
+      {
+         MessageBox("Everyone group cannot be deleted",
+                    "Warning", MB_ICONEXCLAMATION | MB_OK);
+      }
+      else
+      {
+         NXC_USER *pUser;
+
+         pUser = NXCFindUserById(dwId);
+         if (pUser != NULL)
+         {
+            char szBuffer[256];
+
+            sprintf(szBuffer, "Do you really wish to delete %s %s ?",
+                    dwId & GROUP_FLAG ? "group" : "user", pUser->szName);
+            if (MessageBox(szBuffer, "Delete account", MB_ICONQUESTION | MB_YESNO) == IDYES)
+            {
+               DWORD dwResult;
+
+               dwResult = DoRequestArg1(NXCDeleteUser, (void *)dwId, "Deleting user...");
+               if (dwResult != RCC_SUCCESS)
+               {
+                  sprintf(szBuffer, "Cannot delete user record: %s", NXCGetErrorText(dwResult));
+                  MessageBox(szBuffer, "Error", MB_ICONSTOP | MB_OK);
+               }
+            }
+         }
+         else
+         {
+            MessageBox("Attempt to delete non-existing user record", "Internal Error", MB_ICONSTOP | MB_OK);
+            PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+         }
+      }
+   }
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CUserEditor::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(0);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }

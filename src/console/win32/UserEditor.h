@@ -51,6 +51,8 @@ protected:
 	afx_msg void OnUserCreateUser();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnUserProperties();
+	afx_msg void OnUserDelete();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
    afx_msg void OnUserDBChange(int iCode, NXC_USER *pUserInfo);
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);

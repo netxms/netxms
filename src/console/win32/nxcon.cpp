@@ -135,6 +135,10 @@ BOOL CConsoleApp::InitInstance()
 	if (!pFrame->LoadFrame(IDR_MAINFRAME))
 		return FALSE;
 
+   // Load context menus
+   if (!m_ctxMenu.LoadMenu(IDM_CONTEXT))
+      MessageBox(NULL, "FAILED", "", 0);
+
 	// Load shared MDI menus and accelerator table
 	HINSTANCE hInstance = AfxGetResourceHandle();
 
@@ -614,4 +618,14 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       if (wndPropSheet.DoModal() == IDOK)
          wndPropSheet.SaveObjectChanges();
    }
+}
+
+
+//
+// Get context menu
+//
+
+CMenu *CConsoleApp::GetContextMenu(int iIndex)
+{
+   return m_ctxMenu.GetSubMenu(iIndex);
 }

@@ -55,6 +55,7 @@
 #define IDD_NEW_USER                    168
 #define IDD_USER_PROPERTIES             169
 #define IDD_GROUP_PROPERTIES            170
+#define IDM_CONTEXT                     171
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -131,14 +132,15 @@
 #define ID_USER_PROPERTIES              32805
 #define ID_USER_CREATE_USER             32806
 #define ID_USER_CREATE_GROUP            32807
+#define ID_USER_RENAME                  32810
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        171
-#define _APS_NEXT_COMMAND_VALUE         32808
+#define _APS_NEXT_RESOURCE_VALUE        172
+#define _APS_NEXT_COMMAND_VALUE         32816
 #define _APS_NEXT_CONTROL_VALUE         1055
 #define _APS_NEXT_SYMED_VALUE           109
 #endif

@@ -200,6 +200,22 @@ BEGIN
     END
 END
 
+IDM_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "User"
+    BEGIN
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&User...",                    ID_USER_CREATE_USER
+            MENUITEM "Group...",                    ID_USER_CREATE_GROUP
+        END
+        MENUITEM "&Rename",                     ID_USER_RENAME
+        MENUITEM "&Delete",                     ID_USER_DELETE
+        MENUITEM "&Set password...",            ID_USER_SETPASSWORD
+        MENUITEM "&Properties",                 ID_USER_PROPERTIES
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -468,7 +484,7 @@ END
 IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 247
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
