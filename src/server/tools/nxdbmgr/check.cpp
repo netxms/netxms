@@ -32,6 +32,92 @@ static int m_iNumFixes = 0;
 
 
 //
+// Check node objects
+//
+
+static void CheckNodes(void)
+{
+   DB_RESULT hResult, hResult2;
+   DWORD i, dwNumObjects, dwId;
+   TCHAR szQuery[256];
+
+   _tprintf(_T("Checking node objects...\n"));
+   hResult = SQLSelect(_T("SELECT id,name,primary_ip FROM nodes WHERE is_deleted=0"));
+   if (hResult != NULL)
+   {
+      dwNumObjects = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumObjects; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         _sntprintf(szQuery, 256, _T("SELECT subnet_id FROM nsmap WHERE node_id=%ld"), dwId);
+         hResult2 = SQLSelect(szQuery);
+         if (hResult2 != NULL)
+         {
+            if ((DBGetNumRows(hResult2) == 0) && (DBGetFieldIPAddr(hResult, i, 2) != 0))
+            {
+               m_iNumErrors++;
+               _tprintf(_T("Unlinked node object %ld (\"%s\"). Delete? (Y/N) "),
+                        dwId, DBGetField(hResult, i, 1));
+               if (GetYesNo())
+               {
+                  _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%ld"), dwId);
+                  if (SQLQuery(szQuery))
+                     m_iNumFixes++;
+               }
+            }
+            DBFreeResult(hResult2);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
+// Check interface objects
+//
+
+static void CheckInterfaces(void)
+{
+   DB_RESULT hResult, hResult2;
+   DWORD i, dwNumObjects, dwId;
+   TCHAR szQuery[256];
+
+   _tprintf(_T("Checking interface objects...\n"));
+   hResult = SQLSelect(_T("SELECT id,name,node_id FROM interfaces WHERE is_deleted=0"));
+   if (hResult != NULL)
+   {
+      dwNumObjects = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumObjects; i++)
+      {
+         // Check if referred node exists
+         _sntprintf(szQuery, 256, _T("SELECT name FROM nodes WHERE id=%ld AND is_deleted=0"),
+                    DBGetFieldULong(hResult, i, 2));
+         hResult2 = SQLSelect(szQuery);
+         if (hResult2 != NULL)
+         {
+            if (DBGetNumRows(hResult2) == 0)
+            {
+               m_iNumErrors++;
+               dwId = DBGetFieldULong(hResult, i, 0);
+               _tprintf(_T("Unlinked interface object %ld (\"%s\"). Delete? (Y/N) "),
+                        dwId, DBGetField(hResult, i, 1));
+               if (GetYesNo())
+               {
+                  _sntprintf(szQuery, 256, _T("DELETE FROM interfaces WHERE id=%ld"), dwId);
+                  if (SQLQuery(szQuery))
+                     m_iNumFixes++;
+               }
+            }
+            DBFreeResult(hResult2);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
 // Check database for errors
 //
 
@@ -95,13 +181,10 @@ void CheckDatabase(BOOL bForce)
 
       if (bLocked)
       {
-         TCHAR szBuffer[16];
-
          _tprintf(_T("Database is locked by server %s [%s]\n"
-                     "Do you wish to force database unlock? (Y/N)\n"),
+                     "Do you wish to force database unlock? (Y/N) "),
                   szLockStatus, szLockInfo);
-         _fgetts(szBuffer, 16, stdin);
-         if ((szBuffer[0] == _T('y')) || (szBuffer[0] == _T('Y')))
+         if (GetYesNo())
          {
             if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
             {
@@ -113,6 +196,9 @@ void CheckDatabase(BOOL bForce)
 
       if (!bLocked)
       {
+         CheckNodes();
+         CheckInterfaces();
+
          if (m_iNumErrors == 0)
          {
             _tprintf(_T("Database doesn't contain any errors\n"));

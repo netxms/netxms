@@ -55,6 +55,7 @@ void UpgradeDatabase(void);
 DB_RESULT SQLSelect(TCHAR *pszQuery);
 BOOL SQLQuery(TCHAR *pszQuery);
 BOOL SQLBatch(TCHAR *pszBatch);
+BOOL GetYesNo(void);
 
 
 //

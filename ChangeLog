@@ -3,6 +3,7 @@
 *
 
 - Fixed bug which cause server to hang when deleting unreacheable node
+- Added basic checking of node and interface objects to nxdbmgr
 
 
 *

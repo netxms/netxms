@@ -178,18 +178,18 @@ BOOL Node::CreateFromDB(DWORD dwId)
    if (!m_bIsDeleted)
    {
       // Link node to subnets
-      sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%d", dwId);
+      sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%ld", dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult == NULL)
          return FALSE;     // Query failed
 
-      if (DBGetNumRows(hResult) == 0)
+      iNumRows = DBGetNumRows(hResult);
+      if (iNumRows == 0)
       {
          DBFreeResult(hResult);
          return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
       }
 
-      iNumRows = DBGetNumRows(hResult);
       for(i = 0; i < iNumRows; i++)
       {
          dwSubnetId = DBGetFieldULong(hResult, i, 0);

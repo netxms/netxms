@@ -22,6 +22,10 @@
 
 #include "nxdbmgr.h"
 
+#ifdef _WIN32
+#include <conio.h>
+#endif
+
 
 //
 // Global variables
@@ -54,6 +58,40 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "LogFile", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
+
+
+//
+// Get Yes or No answer from keyboard
+//
+
+BOOL GetYesNo(void)
+{
+#ifdef _WIN32
+   int ch;
+
+   while(1)
+   {
+      ch = getch();
+      if ((ch == 'y') || (ch == 'Y'))
+      {
+         printf("Y\n");
+         return TRUE;
+      }
+      if ((ch == 'n') || (ch == 'N'))
+      {
+         printf("N\n");
+         return FALSE;
+      }
+   }
+#else
+   TCHAR szBuffer[16];
+
+   fflush(stdout);
+   _fgetts(szBuffer, 16, stdin);
+   StrStrip(szBuffer);
+   return ((szBuffer[0] == 'y') || (szBuffer[0] == 'Y'));
+#endif
+}
 
 
 //
