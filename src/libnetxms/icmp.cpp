@@ -144,7 +144,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
       {
          struct timeval timeout;
          fd_set rdfs;
-         int iAddrLen;
+         socklen_t iAddrLen;
          struct sockaddr_in saSrc;
 
          // Wait for responce
@@ -180,7 +180,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                   if ((reply.m_icmpHdr.m_cType == 3) &&
                       (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreacheable"
                   {
-                     if (((IPHDR *)reply.m_icmpHdr.m_cData)->m_iaDst.S_un.S_addr == dwAddr)
+                     if (((IPHDR *)reply.m_icmpHdr.m_cData)->m_iaDst.s_addr == dwAddr)
                      {
                         dwResult = ICMP_UNREACHEABLE;
                         goto stop_ping;      // Host unreacheable, stop trying
