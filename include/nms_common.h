@@ -185,4 +185,13 @@ typedef struct tagICMPHDR
 # define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
+
+//
+// Define stricmp() for non-windows
+//
+
+#ifndef _WIN32
+#define stricmp strcasecmp
+#endif
+
 #endif   /* _nms_common_h_ */
