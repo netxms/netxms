@@ -86,7 +86,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    sprintf(szQuery, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
                     "is_router,snmp_version,discovery_flags,auth_method,secret,"
-                    "agent_port,status_poll_type,community,snmp_oid FROM nodes WHERE id=%d", dwId);
+                    "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -111,6 +111,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
       m_dwFlags |= NF_IS_BRIDGE;
    if (DBGetFieldLong(hResult, 0, 7))
       m_dwFlags |= NF_IS_ROUTER;
+   if (DBGetFieldLong(hResult, 0, 16))
+      m_dwFlags |= NF_IS_LOCAL_MGMT;
 
    m_iSNMPVersion = DBGetFieldLong(hResult, 0, 8);
    m_dwDiscoveryFlags = DBGetFieldULong(hResult, 0, 9);
@@ -192,20 +194,21 @@ BOOL Node::SaveToDB(void)
       sprintf(szQuery, "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
                        "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
                        "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
-                       "snmp_oid)"
-                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,'%s','%s')",
+                       "snmp_oid,is_local_mgmt)"
+                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,'%s','%s',%d)",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
-              m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId);
+              m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
+              m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0);
    else
       sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip=%d,"
                        "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
                        "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
-                       "auth_method=%d,secret='%s',snmp_oid='%s' WHERE id=%d",
+                       "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d WHERE id=%d",
               m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
@@ -213,7 +216,7 @@ BOOL Node::SaveToDB(void)
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
-              m_szObjectId, m_dwId);
+              m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Clear modifications flag and unlock object
@@ -259,12 +262,14 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
       m_dwFlags |= NF_IS_NATIVE_AGENT;
 
    // Get interface list
-   if ((m_dwFlags & NF_IS_SNMP) || (m_dwFlags & NF_IS_NATIVE_AGENT))
+   if ((m_dwFlags & NF_IS_SNMP) || (m_dwFlags & NF_IS_NATIVE_AGENT)  || (m_dwFlags & NF_IS_LOCAL_MGMT))
    {
       INTERFACE_LIST *pIfList = NULL;
       int i;
 
-      if (m_dwFlags & NF_IS_NATIVE_AGENT)    // Prefer native agent
+      if (m_dwFlags & NF_IS_LOCAL_MGMT)    // For local machine
+         pIfList = GetLocalInterfaceList();
+      else if (m_dwFlags & NF_IS_NATIVE_AGENT)    // For others prefer native agent
          pIfList = pAgentConn->GetInterfaceList();
       if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
          pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString);
@@ -315,4 +320,66 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    delete pAgentConn;
 
    return TRUE;
+}
+
+
+//
+// Get ARP cahe from node
+//
+
+ARP_CACHE *Node::GetArpCahe(void)
+{
+   ARP_CACHE *pArpCache = NULL;
+
+   if (m_dwFlags & NF_IS_LOCAL_MGMT)
+   {
+      pArpCache = GetLocalArpCache();
+   }
+   else if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   {
+      AgentConnection *pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      if (pAgentConn->Connect())
+      {
+         pArpCache = pAgentConn->GetArpCache();
+         pAgentConn->Disconnect();
+      }
+      delete pAgentConn;
+   }
+   else if (m_dwFlags & NF_IS_SNMP)
+   {
+      pArpCache = SnmpGetArpCache(m_dwIpAddr, m_szCommunityString);
+   }
+
+   return pArpCache;
+}
+
+
+//
+// Get list of interfaces from node
+//
+
+INTERFACE_LIST *Node::GetInterfaceList(void)
+{
+   INTERFACE_LIST *pIfList = NULL;
+
+   if (m_dwFlags & NF_IS_LOCAL_MGMT)
+   {
+      pIfList = GetLocalInterfaceList();
+   }
+   else if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   {
+      AgentConnection *pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      if (pAgentConn->Connect())
+      {
+         pIfList = pAgentConn->GetInterfaceList();
+         pAgentConn->Disconnect();
+      }
+      delete pAgentConn;
+   }
+   else if (m_dwFlags & NF_IS_SNMP)
+   {
+      pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString);
+   }
+
+   return pIfList;
 }

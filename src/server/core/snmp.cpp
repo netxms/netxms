@@ -352,3 +352,49 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
 
    return pIfList;
 }
+
+
+//
+// Handler for ARP enumeration
+//
+
+static void HandlerArp(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+{
+   oid oidName[MAX_OID_LEN];
+   BYTE bMac[64];
+
+   memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
+   oidName[pVar->name_length - 6] = 2;  // Retrieve MAC address for this IP
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, bMac))
+   {
+      ((ARP_CACHE *)pArg)->dwNumEntries++;
+      ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
+               sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = *pVar->val.integer;
+      memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
+   }
+}
+
+
+//
+// Get ARP cache via SNMP
+//
+
+ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, char *szCommunity)
+{
+   ARP_CACHE *pArpCache;
+
+   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+   if (pArpCache == NULL)
+      return NULL;
+
+   pArpCache->dwNumEntries = 0;
+   pArpCache->pEntries = NULL;
+
+   if (!SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.22.1.3", HandlerArp, pArpCache))
+   {
+      DestroyArpCache(pArpCache);
+      pArpCache = NULL;
+   }
+   return pArpCache;
+}

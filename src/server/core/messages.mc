@@ -188,4 +188,10 @@ Language=English
 Invalid HELLO message received from agent on host %1 (possibly due to incompatible protocol version)
 .
 
+MessageId=
+SymbolicName=MSG_GETIPADDRTABLE_FAILED
+Language=English
+Call to GetIpAddrTable() failed: %1
+.
+
 ;#endif

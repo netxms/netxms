@@ -101,32 +101,6 @@
 
 
 //
-// Interface information structure used by discovery functions
-//
-
-struct INTERFACE_INFO
-{
-   char szName[MAX_OBJECT_NAME];
-   DWORD dwIndex;
-   DWORD dwType;
-   DWORD dwIpAddr;
-   DWORD dwIpNetMask;
-};
-
-
-//
-// Interface list used by discovery functions
-//
-
-struct INTERFACE_LIST
-{
-   int iNumEntries;              // Number of entries in pInterfaces
-   int iEnumPos;                 // Used by index enumeration handler
-   INTERFACE_INFO *pInterfaces;  // Interface entries
-};
-
-
-//
 // Agent connection
 //
 
@@ -156,6 +130,7 @@ public:
    BOOL Connect(void);
    void Disconnect(void);
 
+   ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    DWORD Nop(void) { return ExecuteCommand("NOP"); }
    DWORD GetParameter(char *szParam, DWORD dwBufSize, char *szBuffer);
@@ -209,8 +184,13 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
 BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
                    void (* pHandler)(DWORD, char *, variable_list *, void *), void *pUserArg);
 
+INTERFACE_LIST *GetLocalInterfaceList(void);
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity);
 void DestroyInterfaceList(INTERFACE_LIST *pIfList);
+
+ARP_CACHE *GetLocalArpCache(void);
+ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, char *szCommunity);
+void DestroyArpCache(ARP_CACHE *pArpCache);
 
 #ifdef _WIN32
 

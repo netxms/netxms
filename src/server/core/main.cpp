@@ -161,9 +161,31 @@ void Main(void)
                             objTypes[g_pIndexById[i].pObject->Type()],
                             IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer));
                      if (g_pIndexById[i].pObject->Type() == OBJECT_NODE)
-                        printf("   OID='%s'\n", ((Node *)(g_pIndexById[i].pObject))->ObjectId());
+                        printf("   IsSNMP:%d IsAgent:%d IsLocal:%d OID='%s'\n",
+                               ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
+                               ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
+                               ((Node *)(g_pIndexById[i].pObject))->IsLocalManagenet(),
+                               ((Node *)(g_pIndexById[i].pObject))->ObjectId());
                   }
                   printf("*** Object dump complete ***\n");
+               }
+               break;
+            case 'a':
+               {
+                  char szBuffer[32];
+                  ARP_CACHE *arp;
+                  arp=SnmpGetArpCache(inet_addr("10.0.0.44"),"public");
+                  for(DWORD i=0;i<arp->dwNumEntries;i++)
+                     printf("%s %02X:%02X:%02X:%02X:%02X:%02X\n",
+                        IpToStr(arp->pEntries[i].dwIpAddr,szBuffer),
+                        arp->pEntries[i].bMacAddr[0],
+                        arp->pEntries[i].bMacAddr[1],
+                        arp->pEntries[i].bMacAddr[2],
+                        arp->pEntries[i].bMacAddr[3],
+                        arp->pEntries[i].bMacAddr[4],
+                        arp->pEntries[i].bMacAddr[5]);
+                  printf("Total %d entries\n",arp->dwNumEntries);
+                  DestroyArpCache(arp);
                }
                break;
             case 'i':
@@ -184,6 +206,26 @@ void Main(void)
                         iflist->pInterfaces[i].szName);
                   }
                   DestroyInterfaceList(iflist);
+                  ARP_CACHE *arp;
+                  arp=ac->GetArpCache();
+                  if (arp!=NULL)
+                  {
+                     for(DWORD i=0;i<arp->dwNumEntries;i++)
+                        printf("%s %02X:%02X:%02X:%02X:%02X:%02X\n",
+                           IpToStr(arp->pEntries[i].dwIpAddr,buffer),
+                           arp->pEntries[i].bMacAddr[0],
+                           arp->pEntries[i].bMacAddr[1],
+                           arp->pEntries[i].bMacAddr[2],
+                           arp->pEntries[i].bMacAddr[3],
+                           arp->pEntries[i].bMacAddr[4],
+                           arp->pEntries[i].bMacAddr[5]);
+                     printf("Total %d entries\n",arp->dwNumEntries);
+                     DestroyArpCache(arp);
+                  }
+                  else
+                  {
+                     printf("Unable to retrieve ARP cache from agent\n");
+                  }
                   ac->Disconnect();
                   delete ac;
                }

@@ -36,6 +36,54 @@
 
 
 //
+// Interface information structure used by discovery functions
+//
+
+struct INTERFACE_INFO
+{
+   char szName[MAX_OBJECT_NAME];
+   DWORD dwIndex;
+   DWORD dwType;
+   DWORD dwIpAddr;
+   DWORD dwIpNetMask;
+};
+
+
+//
+// Interface list used by discovery functions
+//
+
+struct INTERFACE_LIST
+{
+   int iNumEntries;              // Number of entries in pInterfaces
+   int iEnumPos;                 // Used by index enumeration handler
+   INTERFACE_INFO *pInterfaces;  // Interface entries
+};
+
+
+//
+// Single ARP cache entry
+//
+
+struct ARP_ENTRY
+{
+   DWORD dwIpAddr;
+   BYTE bMacAddr[6];
+};
+
+
+//
+// ARP cache structure used by discovery functions
+//
+
+struct ARP_CACHE
+{
+   DWORD dwNumEntries;
+   ARP_ENTRY *pEntries;
+};
+
+
+//
 // Node flags
 //
 
@@ -43,6 +91,7 @@
 #define NF_IS_NATIVE_AGENT 0x0002
 #define NF_IS_BRIDGE       0x0004
 #define NF_IS_ROUTER       0x0008
+#define NF_IS_LOCAL_MGMT   0x0010
 
 
 //
@@ -210,16 +259,20 @@ public:
    DWORD Flags(void) { return m_dwFlags; }
    DWORD DiscoveryFlags(void) { return m_dwDiscoveryFlags; }
 
-   BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP; }
-   BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT; }
-   BOOL IsBridge(void) { return m_dwFlags & NF_IS_BRIDGE; }
-   BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER; }
+   BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
+   BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
+   BOOL IsBridge(void) { return m_dwFlags & NF_IS_BRIDGE ? TRUE : FALSE; }
+   BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
+   BOOL IsLocalManagenet(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
    const char *ObjectId(void) { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
 
    BOOL NewNodePoll(DWORD dwNetMask);
+
+   ARP_CACHE *GetArpCahe(void);
+   INTERFACE_LIST *GetInterfaceList(void);
 };
 
 

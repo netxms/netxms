@@ -412,6 +412,15 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
          pBuf = pChar + 1;
       }
 
+      // Interface type
+      pChar = strchr(pBuf, ' ');
+      if (pChar != NULL)
+      {
+         *pChar = 0;
+         pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+         pBuf = pChar + 1;
+      }
+
       // Name
       strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
    }
@@ -451,4 +460,54 @@ DWORD AgentConnection::GetParameter(char *szParam, DWORD dwBufSize, char *szBuff
    DestroyResultData();
 
    return ERR_SUCCESS;
+}
+
+
+//
+// Get ARP cache
+//
+
+ARP_CACHE *AgentConnection::GetArpCache(void)
+{
+   ARP_CACHE *pArpCache;
+   char szByte[4], *pBuf;
+   DWORD i, j;
+
+   if (ExecuteCommand("ARP", TRUE, TRUE) != ERR_SUCCESS)
+      return NULL;
+
+   // Create empty structure
+   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+   pArpCache->dwNumEntries = m_dwNumDataLines;
+   pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
+   memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
+
+   szByte[2] = 0;
+
+   // Parse data lines
+   // Each line has form of XXXXXXXXXXXX a.b.c.d
+   // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
+   // and a.b.c.d is an IP address in decimal dotted notation
+   for(i = 0; i < m_dwNumDataLines; i++)
+   {
+      pBuf = m_ppDataLines[i];
+      if (strlen(pBuf) < 20)     // Invalid line
+         continue;
+
+      // MAC address
+      for(j = 0; j < 6; j++)
+      {
+         memcpy(szByte, pBuf, 2);
+         pArpCache->pEntries[i].bMacAddr[j] = (BYTE)strtol(szByte, NULL, 16);
+         pBuf+=2;
+      }
+
+      // IP address
+      while(*pBuf == ' ')
+         pBuf++;
+      pArpCache->pEntries[i].dwIpAddr = inet_addr(pBuf);
+   }
+
+   DestroyResultData();
+   return pArpCache;
 }

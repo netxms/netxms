@@ -273,3 +273,18 @@ void DestroyInterfaceList(INTERFACE_LIST *pIfList)
       free(pIfList);
    }
 }
+
+
+//
+// Destroy ARP cache created by discovery functions
+//
+
+void DestroyArpCache(ARP_CACHE *pArpCache)
+{
+   if (pArpCache != NULL)
+   {
+      if (pArpCache->pEntries != NULL)
+         free(pArpCache->pEntries);
+      free(pArpCache);
+   }
+}
