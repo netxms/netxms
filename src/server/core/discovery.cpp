@@ -50,29 +50,20 @@ void CheckForMgmtNode(void)
             {
                pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
                NetObjInsert(pNode, TRUE);
-               if (!pNode->NewNodePoll(0))
-               {
-                  ObjectsGlobalLock();
-                  NetObjDelete(pNode);
-                  ObjectsGlobalUnlock();
-                  delete pNode;     // Node poll failed, delete it
-               }
-               else
-               {
-                  g_dwMgmtNode = pNode->Id();   // Set local management node ID
-                  
-                  // Add default data collection items
-                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", 
-                                            DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
-                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                            "Server.AverageDCPollerQueueSize", 
-                                            DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                                            "Average length of data collection poller's request queue for last minute"));
-                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                            "Server.AverageDBWriterQueueSize", 
-                                            DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
-                                            "Average length of database writer's request queue for last minute"));
-               }
+               pNode->NewNodePoll(0);
+               g_dwMgmtNode = pNode->Id();   // Set local management node ID
+               
+               // Add default data collection items
+               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", 
+                                         DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                         "Server.AverageDCPollerQueueSize", 
+                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                         "Average length of data collection poller's request queue for last minute"));
+               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                         "Server.AverageDBWriterQueueSize", 
+                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                         "Average length of database writer's request queue for last minute"));
                break;
             }
       }

@@ -349,7 +349,7 @@ public:
                            DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL);
    void DeleteInterface(Interface *pInterface);
 
-   BOOL NewNodePoll(DWORD dwNetMask);
+   void NewNodePoll(DWORD dwNetMask);
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);

@@ -213,6 +213,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
+         case OBJECT_NETWORKSERVICE:
             break;
          case OBJECT_SUBNET:
             RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
@@ -258,6 +259,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
+         case OBJECT_NETWORKSERVICE:
             break;
          case OBJECT_SUBNET:
             RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);

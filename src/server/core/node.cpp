@@ -338,7 +338,7 @@ BOOL Node::DeleteFromDB(void)
 // and object for it is created
 //
 
-BOOL Node::NewNodePoll(DWORD dwNetMask)
+void Node::NewNodePoll(DWORD dwNetMask)
 {
    AgentConnection *pAgentConn;
 
@@ -421,8 +421,6 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    delete pAgentConn;
 
    PollerUnlock();
-
-   return TRUE;
 }
 
 
