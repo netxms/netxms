@@ -9,6 +9,7 @@ INSERT INTO config (name,value) VALUES ('StatusPollingInterval','30');
 INSERT INTO config (name,value) VALUES ('ConfigurationPollingInterval','3600');
 INSERT INTO config (name,value) VALUES ('ResolveNodeNames','0');
 INSERT INTO config (name,value) VALUES ('NumberOfEventProcessors','1');
+INSERT INTO config (name,value) VALUES ('ClientListenerPort','4701');
 
 
 --

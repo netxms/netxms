@@ -23,6 +23,14 @@
 #ifndef _nms_cscp_h_
 #define _nms_cscp_h_
 
+
+//
+// Constants
+//
+
+#define SERVER_LISTEN_PORT       4701
+
+
 //
 // Data field structure
 //
