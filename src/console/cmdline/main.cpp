@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
    NXCSetEventHandler(EventHandler);
    //NXCSetDebugCallback(DebugCallback);
 
-strcpy(szServer,"127.0.0.1");
+strcpy(szServer,"10.0.0.7");
 strcpy(szLogin,"admin");
 strcpy(szPassword,"netxms");
 

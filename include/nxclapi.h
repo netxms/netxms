@@ -76,6 +76,8 @@ typedef unsigned long HREQUEST;
 #define OBJECT_NODE        2
 #define OBJECT_INTERFACE   3
 #define OBJECT_NETWORK     4
+#define OBJECT_LOCATION    5
+#define OBJECT_ZONE        6
 
 
 //
