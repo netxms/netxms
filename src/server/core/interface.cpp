@@ -203,7 +203,7 @@ void Interface::StatusPoll(void)
       return;     // Interface has no IP address, we cannot check it
    }
 
-   m_iStatus = IcmpPing(m_dwIpAddr, 3, 1000) ? STATUS_NORMAL : STATUS_CRITICAL;
+   m_iStatus = IcmpPing(m_dwIpAddr, 3, 1500) ? STATUS_NORMAL : STATUS_CRITICAL;
    if (m_iStatus != iOldStatus)
    {
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,

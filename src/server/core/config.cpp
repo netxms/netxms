@@ -39,6 +39,7 @@ static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
                         "   --debug-dc        : Print data collection debug information to console.\n"
                         "   --debug-discovery : Print network discovery debug information to console.\n"
                         "   --debug-events    : Print events to console.\n"
+                        "   --debug-icmp      : Print ICMP status polls debug information.\n"
                         "\n"
                         "Valid commands are:\n"
                         "   check-config      : Check configuration file syntax\n"
@@ -50,8 +51,8 @@ static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
 #ifdef _WIN32
                         "   remove            : Remove Win32 service\n"
                         "   remove-events     : Remove Win32 event source\n"
-                        "   standalone        : Run in standalone mode (not as service)\n"
 #endif
+                        "   standalone        : Run in standalone mode (not as service)\n"
                         "   version           : Display version and exit\n"
                         "\n"
                         "NOTE: All debug options will work only in standalone mode.\n\n";
@@ -222,6 +223,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       {
          g_dwFlags |= AF_DEBUG_DC;
       }
+      else if (!strcmp(argv[i], "--debug-icmp"))
+      {
+         g_dwFlags |= AF_DEBUG_ICMP;
+      }
       else if (!strcmp(argv[i], "check-config"))
       {
          g_dwFlags |= AF_STANDALONE;
@@ -229,12 +234,12 @@ BOOL ParseCommandLine(int argc, char *argv[])
          LoadConfig();
          return FALSE;
       }
-#ifdef _WIN32
       else if (!strcmp(argv[i], "standalone"))  // Run in standalone mode
       {
          g_dwFlags |= AF_STANDALONE;
          return TRUE;
       }
+#ifdef _WIN32
       else if ((!strcmp(argv[i], "install"))||
                (!strcmp(argv[i], "install-events")))
       {

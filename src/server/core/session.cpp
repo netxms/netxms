@@ -251,7 +251,7 @@ void ClientSession::SendAllEvents(void)
 //   msg.SetCode(CMD_EVENT);
 
    // Retrieve events from database
-   hResult = DBSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog");
+   hResult = DBSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog ORDER BY timestamp");
    if (hResult != NULL)
    {
       // Send events, one per message
