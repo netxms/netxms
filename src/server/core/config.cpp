@@ -33,6 +33,8 @@ static char help_text[]="NMS Version " VERSION_STRING " Server\n"
                         "Valid options are:\n"
                         "   --config <file>  : Set non-default configuration file\n"
                         "                    : Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   --debug-cscp     : Print client-server communication protocol debug\n"
+                        "                    : information to console (only in standalone mode).\n"
                         "   --debug-events   : Print events to console (only in\n"
                         "                    : standalone mode).\n"
                         "\n"
@@ -193,6 +195,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-events"))
       {
          g_dwFlags |= AF_DEBUG_EVENTS;
+      }
+      else if (!strcmp(argv[i], "--debug-cscp"))
+      {
+         g_dwFlags |= AF_DEBUG_CSCP;
       }
       else if (!strcmp(argv[i], "check-config"))
       {

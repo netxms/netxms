@@ -51,6 +51,7 @@
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include <nms_cscp.h>
+#include <nms_util.h>
 #include "nms_objects.h"
 #include "messages.h"
 
@@ -87,6 +88,7 @@
 #define AF_STANDALONE      0x0001
 #define AF_USE_EVENT_LOG   0x0002
 #define AF_DEBUG_EVENTS    0x0004
+#define AF_DEBUG_CSCP      0x0008
 #define AF_SHUTDOWN        0x8000
 
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
@@ -185,16 +187,18 @@ class ClientSession
 private:
    SOCKET m_hSocket;
    Queue *m_pSendQueue;
+   Queue *m_pMessageQueue;
 
 public:
    ClientSession(SOCKET hSocket);
    ~ClientSession();
 
-   void PostMessage(CSCP_MESSAGE *pMsg);
+   void SendMessage(CSCP_MESSAGE *pMsg);
    void DispatchMessage(CSCP_MESSAGE *pMsg);
 
    void ReadThread(void);
    void WriteThread(void);
+   void ProcessingThread(void);
 };
 
 

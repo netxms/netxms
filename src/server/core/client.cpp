@@ -22,6 +22,8 @@
 
 #include "nms_core.h"
 
+#define IsDebugComm() ((g_dwFlags & AF_STANDALONE) && (g_dwFlags & AF_DEBUG_CSCP))
+
 
 //
 // Client session class constructor
@@ -30,6 +32,7 @@
 ClientSession::ClientSession(SOCKET hSocket)
 {
    m_pSendQueue = new Queue;
+   m_pMessageQueue = new Queue;
    m_hSocket = hSocket;
 }
 
@@ -41,6 +44,7 @@ ClientSession::ClientSession(SOCKET hSocket)
 ClientSession::~ClientSession()
 {
    delete m_pSendQueue;
+   delete m_pMessageQueue;
 }
 
 
@@ -48,7 +52,7 @@ ClientSession::~ClientSession()
 // Post message to send queue
 //
 
-void ClientSession::PostMessage(CSCP_MESSAGE *pMsg)
+void ClientSession::SendMessage(CSCP_MESSAGE *pMsg)
 {
    m_pSendQueue->Put(pMsg);
 }
@@ -60,27 +64,27 @@ void ClientSession::PostMessage(CSCP_MESSAGE *pMsg)
 
 void ClientSession::ReadThread(void)
 {
-   CSCP_MESSAGE *pMsg;
+   CSCP_MESSAGE *pRawMsg;
+   CSCPMessage *pMsg;
    int iErr;
 
-   pMsg = (CSCP_MESSAGE *)malloc(65536);
+   pRawMsg = (CSCP_MESSAGE *)malloc(65536);
    while(1)
    {
-      if ((iErr = recv(m_hSocket, (char *)pMsg, 65536, 0)) <= 0)
+      if ((iErr = recv(m_hSocket, (char *)pRawMsg, 65536, 0)) <= 0)
          break;
 
       // Check that actual received packet size is equal to encoded in packet
-      if (pMsg->wSize != iErr)
-         continue;   // Bad packet, wait for next
-
-      switch(pMsg->wCode)
+      if (ntohs(pRawMsg->wSize) != iErr)
       {
-         case CMD_LOGIN:
-
-            break;
-         default:    // Unknown message code, ignore it
-            break;
+         if (IsDebugComm())
+            printf("*CSCP* Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohs(pRawMsg->wSize));
+         continue;   // Bad packet, wait for next
       }
+
+      // Create message object from raw message
+      pMsg = new CSCPMessage(pRawMsg);
+      m_pMessageQueue->Put(pMsg);
    }
    if (iErr < 0)
       WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
@@ -109,6 +113,33 @@ void ClientSession::WriteThread(void)
 
 
 //
+// Message processing thread
+//
+
+void ClientSession::ProcessingThread(void)
+{
+   CSCPMessage *pMsg;
+
+   while(1)
+   {
+      pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
+
+      if (IsDebugComm())
+         printf("*CSCP* Received message with code %d\n", pMsg->GetCode());
+
+      switch(pMsg->GetCode())
+      {
+         case CMD_LOGIN:
+            break;
+         default:
+            break;
+      }
+      delete pMsg;
+   }
+}
+
+
+//
 // Client communication read thread
 //
 
@@ -125,6 +156,16 @@ static void ReadThread(void *pArg)
 static void WriteThread(void *pArg)
 {
    ((ClientSession *)pArg)->WriteThread();
+}
+
+
+//
+// Received message processing thread
+//
+
+static void ProcessingThread(void *pArg)
+{
+   ((ClientSession *)pArg)->ProcessingThread();
 }
 
 
@@ -197,6 +238,7 @@ void ClientListener(void *)
       pSession = new ClientSession(sockClient);
       ThreadCreate(ReadThread, 0, (void *)pSession);
       ThreadCreate(WriteThread, 0, (void *)pSession);
+      ThreadCreate(ProcessingThread, 0, (void *)pSession);
    }
 
    closesocket(sock);
