@@ -12,6 +12,7 @@
   user-defined data collection events and alarms
 - Client library do cleanup after NXCDisconnect()
 - User system rights now ORed with its group(s) system rights
+- Added database checking/upgrade utility (nxdbmgr)
 
 
 *
