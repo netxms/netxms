@@ -95,28 +95,48 @@ static void NetReceiver(void *pArg)
       }
 
       // Create message object from raw message
-      pMsg = new CSCPMessage(pRawMsg);
-      DebugPrintf("RECV_MSG: Code=%d ID=%d", pMsg->GetCode(), pMsg->GetId());
-
-      // Process message
-      switch(pMsg->GetCode())
+      if (IsBinaryMsg(pRawMsg))
       {
-         case CMD_KEEPALIVE:     // Keepalive message, ignore it
-            delete pMsg;
-            break;
-         case CMD_OBJECT:        // Object information
-         case CMD_OBJECT_LIST_END:
-            ProcessObjectUpdate(pMsg);
-            delete pMsg;
-            break;
-         case CMD_EVENT:         // Event information
-         case CMD_EVENT_LIST_END:
-            ProcessEvent(pMsg);
-            delete pMsg;
-            break;
-         default:
-            m_msgWaitQueue.Put(pMsg);
-            break;
+         // Convert numeric fields to host byte order
+         pRawMsg->wCode = ntohs(pRawMsg->wCode) & 0x0FFF;   // Clear flag bits from code
+         pRawMsg->wSize = ntohs(pRawMsg->wSize);
+         pRawMsg->dwId = ntohl(pRawMsg->dwId);
+
+         // Process message
+         switch(pRawMsg->wCode)
+         {
+            case CMD_EVENT:
+               ProcessEvent(NULL, pRawMsg);
+               delete pMsg;
+               break;
+            default:    // We ignore unknown raw messages
+               break;
+         }
+      }
+      else
+      {
+         pMsg = new CSCPMessage(pRawMsg);
+         DebugPrintf("RECV_MSG: Code=%d ID=%d", pMsg->GetCode(), pMsg->GetId());
+
+         // Process message
+         switch(pMsg->GetCode())
+         {
+            case CMD_KEEPALIVE:     // Keepalive message, ignore it
+               delete pMsg;
+               break;
+            case CMD_OBJECT:        // Object information
+            case CMD_OBJECT_LIST_END:
+               ProcessObjectUpdate(pMsg);
+               delete pMsg;
+               break;
+            case CMD_EVENT_LIST_END:
+               ProcessEvent(pMsg, NULL);
+               delete pMsg;
+               break;
+            default:
+               m_msgWaitQueue.Put(pMsg);
+               break;
+         }
       }
    }
 

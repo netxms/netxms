@@ -35,29 +35,34 @@ static CONDITION m_hCondSyncFinished;
 // Process events coming from server
 //
 
-void ProcessEvent(CSCPMessage *pMsg)
+void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 {
    NXC_EVENT *pEvent;
+   WORD wCode;
 
-   switch(pMsg->GetCode())
+   wCode = (pMsg != NULL) ? pMsg->GetCode() : pRawMsg->wCode;
+
+   switch(wCode)
    {
       case CMD_EVENT_LIST_END:
          if (g_dwState == STATE_SYNC_EVENTS)
             ConditionSet(m_hCondSyncFinished);
          break;
       case CMD_EVENT:
-         // Allocate new event structure and fill it with values from message
-         pEvent = (NXC_EVENT *)MemAlloc(sizeof(NXC_EVENT));
-/*
-         pEvent->dwEventId = pMsg->GetVariableLong("id");
-         pEvent->dwSeverity = pMsg->GetVariableLong("severity");
-         pEvent->dwSourceId = pMsg->GetVariableLong("source");
-         pEvent->dwTimeStamp = pMsg->GetVariableLong("timestamp");
-         pMsg->GetVariableStr("message", pEvent->szMessage, MAX_EVENT_MSG_LENGTH);
-*/
-         // Call client's callback to handle new record
-         // It's up to client to destroy allocated event structure
-         CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, pEvent);
+         if (pRawMsg != NULL)    // We should receive events as raw data
+         {
+            // Allocate new event structure and fill it with values from message
+            pEvent = (NXC_EVENT *)MemAlloc(sizeof(NXC_EVENT));
+            memcpy(pEvent, pRawMsg->df, sizeof(NXC_EVENT));
+            pEvent->dwEventId = ntohl(pEvent->dwEventId);
+            pEvent->dwSeverity = ntohl(pEvent->dwSeverity);
+            pEvent->dwSourceId = ntohl(pEvent->dwSourceId);
+            pEvent->dwTimeStamp = ntohl(pEvent->dwTimeStamp);
+
+            // Call client's callback to handle new record
+            // It's up to client to destroy allocated event structure
+            CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, pEvent);
+         }
          break;
       default:
          break;

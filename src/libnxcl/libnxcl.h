@@ -130,7 +130,7 @@ BOOL Connect(void);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void SyncObjects(void);
 void SyncEvents(void);
-void ProcessEvent(CSCPMessage *pMsg);
+void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 BOOL SendMsg(CSCPMessage *pMsg);
 void DebugPrintf(char *szFormat, ...);
 
