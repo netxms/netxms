@@ -75,6 +75,7 @@ char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
+char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
@@ -121,6 +122,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
+   { "PlatformSuffix", CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
    { "Servers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },

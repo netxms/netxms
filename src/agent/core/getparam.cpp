@@ -316,6 +316,16 @@ DWORD GetParameterValue(char *pszParam, char *pszValue)
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
+               // Special handling for System.PlatformName parameter
+               if (!stricmp(pszParam, "System.PlatformName"))
+               {
+                  if (g_szPlatformSuffix[0] != 0)
+                  {
+                     if (g_szPlatformSuffix[0] != '-')
+                        strcat(pszValue, "-");
+                     strcat(pszValue, g_szPlatformSuffix);
+                  }
+               }
                dwErrorCode = ERR_SUCCESS;
                m_dwProcessedRequests++;
                break;

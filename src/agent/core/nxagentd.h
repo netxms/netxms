@@ -81,6 +81,7 @@
 #define AGENT_EVENT_SOURCE    "NetXMS Win32 Agent"
 #endif
 
+#define MAX_PSUFFIX_LENGTH 32
 #define MAX_SERVERS        32
 
 #define AF_DAEMON                   0x0001
@@ -325,6 +326,7 @@ extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;
 extern time_t g_dwAgentStartTime;
+extern char g_szPlatformSuffix[];
 
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;
