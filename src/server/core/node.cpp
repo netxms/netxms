@@ -881,6 +881,7 @@ BOOL Node::DeleteItem(DWORD dwItemId)
          m_dwNumItems--;
          memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
          bResult = TRUE;
+         break;
       }
 
    Unlock();
@@ -904,6 +905,7 @@ BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg)
       {
          m_ppItems[i]->UpdateFromMessage(pMsg);
          bResult = TRUE;
+         break;
       }
 
    Unlock();
@@ -1019,4 +1021,27 @@ void Node::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    // Send end-of-list indicator
    msg.SetCode(CMD_NODE_DCI_LIST_END);
    pSession->SendMessage(&msg);
+}
+
+
+//
+// Get DCI item's type
+//
+
+int Node::GetItemType(DWORD dwItemId)
+{
+   DWORD i;
+   int iType = -1;
+
+   Lock();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_ppItems[i]->Id() == dwItemId)
+      {
+         iType = m_ppItems[i]->DataType();
+         break;
+      }
+
+   Unlock();
+   return iType;
 }

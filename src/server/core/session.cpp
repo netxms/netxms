@@ -1386,7 +1386,15 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
       {
          DB_ASYNC_RESULT hResult;
          DWORD dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
-         char szQuery[512];
+         DWORD dwRowSize, dwAllocatedRows = 100, dwNumRows = 0;
+         char szQuery[512], szCond[256];
+         int iPos = 0, iType;
+         DCI_DATA_HEADER *pData = NULL;
+
+         // Send CMD_REQUEST_COMPLETED message
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         SendMessage(&msg);
+         msg.DeleteAllVariables();
 
          // Get request parameters
          dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
@@ -1394,13 +1402,30 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
          dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
 
-         sprintf(szQuery, "SELECT timestamp,value FROM idata_%d WHERE item_id=%d ORDER BY timestamp DESC",
-                 dwObjectId, dwItemId);
+         if (dwTimeFrom != 0)
+         {
+            sprintf(szCond, " AND timestamp>=%d", dwTimeFrom);
+            iPos = strlen(szCond);
+         }
+         if (dwTimeTo != 0)
+         {
+            sprintf(&szCond[iPos], " AND timestamp<=%d", dwTimeTo);
+         }
+
+         sprintf(szQuery, "SELECT timestamp,value FROM idata_%d WHERE item_id=%d%s ORDER BY timestamp DESC",
+                 dwObjectId, dwItemId, szCond);
          hResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
+            // Calculate actual record size
+            iType = ((Node *)pObject)->GetItemType(dwItemId);
+
+            pData = (DCI_DATA_HEADER *)malloc(dwAllocatedRows * dwRowSize + sizeof(DCI_DATA_HEADER));
             while(DBFetch(hResult))
             {
+               dwNumRows++;
+               if ((dwMaxRows > 0) && (dwNumRows > dwMaxRows))
+                  break;
             }
             DBFreeAsyncResult(hResult);
          }

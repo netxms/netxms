@@ -329,6 +329,7 @@ public:
    BOOL AddItem(DCItem *pItem);
    BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg);
    BOOL DeleteItem(DWORD dwItemId);
+   int GetItemType(DWORD dwItemId);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
