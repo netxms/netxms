@@ -161,19 +161,23 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
    BOOL bStopProcessing = FALSE;
    DWORD i;
 
-   // Check if event match
-   if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Id())) &&
-       (MatchSeverity(pEvent->Severity())))
+   // Check disable flag
+   if (!(m_dwFlags & RF_DISABLED))
    {
-      // Event matched, perform actions
-      for(i = 0; i < m_dwNumActions; i++)
-         ExecuteAction(m_pdwActionList[i], pEvent);
+      // Check if event match
+      if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Id())) &&
+          (MatchSeverity(pEvent->Severity())))
+      {
+         // Event matched, perform actions
+         for(i = 0; i < m_dwNumActions; i++)
+            ExecuteAction(m_pdwActionList[i], pEvent);
 
-      // Generate alarm if requested
-      if (m_dwFlags & RF_GENERATE_ALARM)
-         GenerateAlarm(pEvent);
+         // Generate alarm if requested
+         if (m_dwFlags & RF_GENERATE_ALARM)
+            GenerateAlarm(pEvent);
 
-      bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
+         bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
+      }
    }
 
    return bStopProcessing;
