@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# netxmsd This script starts and stops the nxagentd daemon
+#
+# chkconfig: 2345 95 05
+#
+# description: nxagentd is a NetXMS agent process
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+# Source netxmsdd configuration.
+if [ -f /etc/sysconfig/netxmsd ] ; then
+        . /etc/sysconfig/nxagentd
+else
+        NXAGENTD_OPTIONS="-d"
+        NXAGENTD_CONFIG="/etc/nxagentd.conf"
+        NXAGENTD_PID_FILE="/var/run/nxagentd.pid"
+fi
+
+[ -f /usr/bin/nxagentd -o -f /usr/local/bin/nxagentd ] || exit 0
+PATH=$PATH:/usr/bin:/usr/local/bin
+
+# See how we were called.
+case "$1" in
+  start)
+	# Start daemon.
+	echo -n "Starting NetXMS Agent: "
+	daemon nxagentd $NXAGENTD_OPTIONS -c $NXAGENTD_CONFIG -p $NXAGENTD_PID_FILE
+	RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && touch /var/lock/subsys/nxagentd
+        ;;
+  stop)
+        # Stop daemons.
+        echo -n "Shutting down NetXMS Agent: "
+        kill `cat $NXAGENTD_PID_FILE 2>/dev/null` 2> /dev/null
+        RETVAL=$?
+        if [ $RETVAL = 0 ] ; then
+                success
+        else
+                failure
+        fi
+        echo
+        [ $RETVAL = 0 ] && rm -f /var/lock/subsys/nxagentd
+        ;;
+  restart)
+        $0 stop
+        $0 start
+        ;;
+  condrestart)
+       [ -e /var/lock/subsys/nxagentd ] && $0 restart
+       ;;
+  status)
+	status nxagentd
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart|status|condrestart}"
+	exit 1
+esac
+
+exit 0

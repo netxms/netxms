@@ -20,6 +20,7 @@ contrib/logo.jpg -text
 contrib/startup/Makefile.am -text
 contrib/startup/redhat/Makefile.am -text
 contrib/startup/redhat/netxmsd -text
+contrib/startup/redhat/nxagentd -text
 doc/Makefile.am -text
 doc/admin_guide.doc -text
 doc/internals.rtf -text
