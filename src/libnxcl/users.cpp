@@ -310,7 +310,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void)
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
 {
    CSCPMessage msg;
-   DWORD i, dwId, dwRetCode, dwRqId;
+   DWORD i, dwId, dwRqId;
 
    dwRqId = g_dwMsgId++;
 
@@ -338,8 +338,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
    SendMsg(&msg);
 
    // Wait for responce
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return WaitForRCC(dwRqId);
 }
 
 

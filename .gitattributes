@@ -263,6 +263,7 @@ src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text
 src/libnetxms/tools.cpp -text
 src/libnxcl/Makefile.am -text
+src/libnxcl/actions.cpp -text
 src/libnxcl/alarms.cpp -text
 src/libnxcl/comm.cpp -text
 src/libnxcl/datacoll.cpp -text

@@ -172,6 +172,9 @@ static void NetReceiver(void *pArg)
             case CMD_ALARM_UPDATE:
                ProcessAlarmUpdate(pMsg);
                break;
+            case CMD_ACTION_DB_UPDATE:
+               ProcessActionUpdate(pMsg);
+               break;
             case CMD_NOTIFY:
                CallEventHandler(NXC_EVENT_NOTIFICATION, 
                                 pMsg->GetVariableLong(VID_NOTIFICATION_CODE),

@@ -87,6 +87,7 @@ void ProcessAlarmUpdate(CSCPMessage *pMsg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
+void ProcessActionUpdate(CSCPMessage *pMsg);
 
 void ProcessUserDBRecord(CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);
