@@ -7,3 +7,4 @@ DELETE FROM Interfaces;
 DELETE FROM Subnets;
 DELETE FROM nsmap;
 DELETE FROM NewNodes;
+DELETE FROM EventLog;

@@ -11,6 +11,19 @@ CREATE TABLE Config
 
 
 --
+-- Users
+--
+
+CREATE TABLE Users
+(
+	id integer not null,
+	name varchar(64) not null,
+	password varchar(64),
+	PRIMARY KEY(id)
+);
+
+
+--
 -- Nodes to be added
 --
 
@@ -170,9 +183,4 @@ CREATE TABLE ACTIONS
 	command varchar(255),
 	PRIMARY KEY(id)
 );
-
-
---
--- Node templates
---
 	
