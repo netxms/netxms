@@ -84,14 +84,7 @@ inline void MutexUnlock(MUTEX mutex)
 
 inline CONDITION ConditionCreate(BOOL bBroadcast)
 {
-	if (bBroadcast == TRUE)
-	{
-	   return CreateEvent(NULL, TRUE, FALSE, NULL);
-	}
-	else
-	{
-   	return CreateEvent(NULL, FALSE, FALSE, NULL);
-	}
+   return CreateEvent(NULL, bBroadcast, FALSE, NULL);
 }
 
 inline void ConditionDestroy(CONDITION hCond)
