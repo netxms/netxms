@@ -1,6 +1,7 @@
 #!/bin/sh
 
-prefix=/opt/netxms
+#prefix=/opt/netxms
+prefix=/usr/local
 configureAdd=
 
 ##example #if [ `hostname --fqdn` = "host1.domain.tld" ]; then
@@ -16,6 +17,10 @@ configureAdd=
 case `uname -s` in
 	Linux)
 		pkill=killall
+		make=make
+		;;
+	SunOS)
+		pkill=pkill
 		make=make
 		;;
 	*BSD)
@@ -63,7 +68,7 @@ fi
 # ask nxagentd gently
 $pkill nxagentd 2>/dev/null
 # wait a few seconds and smash it down
-sleep 1 && $pkill -9 nxagentd 2>/dev/null
+sleep 15 && $pkill -9 nxagentd 2>/dev/null
 
 # now we can insall it...
 $make install >/dev/null 2>/dev/null
@@ -73,6 +78,7 @@ if [ $? != 0 ]; then
 fi
 
 # and restart
+sleep 10
 $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
 	echo nxagentd not started

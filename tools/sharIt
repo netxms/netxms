@@ -30,7 +30,8 @@ fi
 
 case `uname -s` in
 	Linux)
-		skip=`wc -l stub.sh|cut -d' ' -f1`
+		#skip=`wc -l stub.sh|cut -d' ' -f1`
+		skip=`cat stub.sh | wc -l | sed 's,^ *,,'`
 		;;
 	*BSD)
 		skip=`echo \`wc -l stub.sh|cut -b1-8\``
