@@ -158,7 +158,7 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
    if (!CalculateFileSHA1Hash(szFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
 
-   // Convert MD5 hash to text form
+   // Convert SHA1 hash to text form
    for(i = 0; i < SHA1_DIGEST_SIZE; i++)
       sprintf(&szHashText[i << 1], "%02x", hash[i]);
 
@@ -173,7 +173,20 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
 
 LONG H_CRC32(char *cmd, char *arg, char *value)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   char szFileName[MAX_PATH], szHashText[sizeof(DWORD) * 2 + 1];
+   DWORD dwCRC32;
+   DWORD i;
+
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (!CalculateFileCRC32(szFileName, &dwCRC32))
+      return SYSINFO_RC_UNSUPPORTED;
+
+	sprintf(szHashText, "%08x", dwCRC32);
+
+   ret_string(value, szHashText);
+   return SYSINFO_RC_SUCCESS;
 }
 
 

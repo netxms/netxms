@@ -259,6 +259,7 @@ void OnSignal(int iSignal)
 			ConditionSet(m_hCondShutdown);
 			break;
 		case SIGSEGV:
+			abort();
 			exit(5);
 			break;
 		default:
