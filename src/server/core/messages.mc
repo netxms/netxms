@@ -356,4 +356,16 @@ Language=English
 Inconsistent database: service root object has reference to non-existing child object %1
 .
 
+MessageId=
+SymbolicName=MSG_ERROR_READ_IMAGE_CATALOG
+Language=English
+Error reading image catalog from database
+.
+
+MessageId=
+SymbolicName=MSG_IMAGE_FILE_IO_ERROR
+Language=English
+I/O error reading image file %2 (image ID %1)
+.
+
 ;#endif

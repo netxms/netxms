@@ -175,6 +175,10 @@ SOURCE=.\id.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\image.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\interface.cpp
 # End Source File
 # Begin Source File
@@ -324,6 +328,10 @@ SOURCE=..\..\..\include\nxcscpapi.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxevent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nximage.h
 # End Source File
 # Begin Source File
 

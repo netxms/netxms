@@ -25,6 +25,7 @@
 #define _nxclapi_h_
 
 #include <nms_common.h>
+#include <nms_util.h>
 #include <nxevent.h>
 
 #ifdef _WIN32
@@ -345,6 +346,29 @@ typedef struct
    DWORD dwEventId;
    char szName[MAX_EVENT_NAME];
 } NXC_EVENT_NAME;
+
+
+//
+// Image information
+//
+
+typedef struct
+{
+   DWORD dwId;
+   char szName[MAX_OBJECT_NAME];
+   BYTE hash[MD5_DIGEST_SIZE];
+} NXC_IMAGE;
+
+
+//
+// Image list
+//
+
+typedef struct
+{
+   DWORD dwNumImages;
+   NXC_IMAGE *pImageList;
+} NXC_IMAGE_LIST;
 
 
 /********************************************************************

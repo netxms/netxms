@@ -83,7 +83,6 @@ IDI_USER                ICON    DISCARDABLE     "icons\\user.ico"
 IDI_EVERYONE            ICON    DISCARDABLE     "icons\\EARTH.ICO"
 IDI_PASSWORD            ICON    DISCARDABLE     "icons\\passwd.ico"
 IDI_GRAPH               ICON    DISCARDABLE     "icons\\graph.ico"
-IDI_NETWORK             ICON    DISCARDABLE     "icons\\network.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -543,7 +542,7 @@ IDD_REQUEST_PROCESSING DIALOG DISCARDABLE  0, 0, 230, 38
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDI_NETWORK,IDC_BITMAP,7,8,20,20
+    ICON            IDI_SETUP,IDC_BITMAP,7,8,20,20
     LTEXT           "Processing request...",IDC_INFO_TEXT,35,15,188,8
 END
 

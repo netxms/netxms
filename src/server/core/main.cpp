@@ -99,23 +99,32 @@ static BOOL CheckDataDir(void)
       return FALSE;
    }
 
-   // Create directory for mib files if it doesn't exist
-   strcpy(szBuffer, g_szDataDir);
-   strcat(szBuffer, DDIR_MIBS);
-
-	
 #ifdef _WIN32
 # define MKDIR(name) mkdir(name)
 #else
 # define MKDIR(name) mkdir(name, 0700)
 #endif
 
+   // Create directory for mib files if it doesn't exist
+   strcpy(szBuffer, g_szDataDir);
+   strcat(szBuffer, DDIR_MIBS);
    if (MKDIR(szBuffer) == -1)
       if (errno != EEXIST)
       {
          WriteLog(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
          return FALSE;
       }
+
+   // Create directory for image files if it doesn't exist
+   strcpy(szBuffer, g_szDataDir);
+   strcat(szBuffer, DDIR_IMAGES);
+   if (MKDIR(szBuffer) == -1)
+      if (errno != EEXIST)
+      {
+         WriteLog(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
+         return FALSE;
+      }
+
 #undef MKDIR
 
    return TRUE;
@@ -197,6 +206,9 @@ BOOL Initialize(void)
    // Check data directory
    if (!CheckDataDir())
       return FALSE;
+
+   // Update hashes for image files
+   UpdateImageHashes();
 
    // Create synchronization stuff
    m_hEventShutdown = ConditionCreate(TRUE);

@@ -222,6 +222,10 @@ typedef struct
 #define CMD_EVENT_NAME_LIST         0x0039
 #define CMD_BIND_OBJECT             0x003A
 #define CMD_UNBIND_OBJECT           0x003B
+#define CMD_GET_IMAGE_LIST          0x003C
+#define CMD_LOAD_IMAGE_FILE         0x003D
+#define CMD_IMAGE_LIST              0x003E
+#define CMD_IMAGE_FILE              0x003F
 
 
 //
@@ -307,6 +311,11 @@ typedef struct
 #define VID_EVENT_NAME_TABLE        ((DWORD)77)
 #define VID_PARENT_ID               ((DWORD)78)
 #define VID_CHILD_ID                ((DWORD)79)
+#define VID_IMAGE_ID                ((DWORD)80)
+#define VID_NUM_IMAGES              ((DWORD)81)
+#define VID_IMAGE_LIST              ((DWORD)82)
+#define VID_IMAGE_FILE_SIZE         ((DWORD)83)
+#define VID_IMAGE_FILE              ((DWORD)84)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

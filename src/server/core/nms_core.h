@@ -62,6 +62,7 @@
 #include <nms_util.h>
 #include <nxclapi.h>
 #include <nxcscpapi.h>
+#include <nximage.h>
 #include "nxqueue.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
@@ -82,6 +83,7 @@
 #define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
 
 #define DDIR_MIBS             "\\mibs"
+#define DDIR_IMAGES           "\\images"
 
 #else    /* _WIN32 */
 
@@ -91,6 +93,7 @@
 #define DEFAULT_DATA_DIR      "/var/netxms"
 
 #define DDIR_MIBS             "/mibs"
+#define DDIR_IMAGES           "/images"
 
 #endif   /* _WIN32 */
 
@@ -442,6 +445,10 @@ DWORD CreateUniqueId(int iGroup);
 void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 
 BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
+
+void UpdateImageHashes(void);
+void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId);
+void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId);
 
 #ifdef _WIN32
 

@@ -10,9 +10,10 @@
 #error Database type should be defined
 #endif
 
-// Event-related defines
+// Common constants
 #include <nxevent.h>
 #include <nms_locks.h>
+#include <nximage.h>
 
 // Define common macros for uncommon data types
 #ifdef DB_MSSQL
@@ -36,3 +37,4 @@
 #include "schema.in"
 #include "setup.in"
 #include "events.in"
+#include "images.in"
