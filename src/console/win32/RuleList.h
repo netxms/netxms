@@ -130,6 +130,7 @@ protected:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	//}}AFX_MSG
    afx_msg void OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
    afx_msg void OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult);

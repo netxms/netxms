@@ -83,6 +83,7 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_COMMAND(ID_POLICY_SAVE, OnPolicySave)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_SAVE, OnUpdatePolicySave)
 	//}}AFX_MSG_MAP
+	ON_NOTIFY(NM_DBLCLK, ID_RULE_LIST, OnRuleListDblClk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -963,4 +964,14 @@ void CEventPolicyEditor::OnPolicySave()
       SetTitle(&szBuffer[1]);
       OnUpdateFrameTitle(TRUE);
    }
+}
+
+
+//
+// Handler for double click inside rule list
+//
+
+void CEventPolicyEditor::OnRuleListDblClk(LPNMHDR pNMHDR, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_POLICY_EDIT, 0);
 }

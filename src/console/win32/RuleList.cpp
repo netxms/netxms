@@ -298,6 +298,7 @@ BEGIN_MESSAGE_MAP(CRuleList, CWnd)
 	ON_WM_HSCROLL()
 	ON_WM_MOUSEWHEEL()
 	ON_WM_RBUTTONDOWN()
+	ON_WM_LBUTTONDBLCLK()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(HDN_BEGINTRACK, ID_HEADER_CTRL, OnHeaderBeginTrack)
    ON_NOTIFY(HDN_TRACK, ID_HEADER_CTRL, OnHeaderTrack)
@@ -322,7 +323,7 @@ BOOL CRuleList::Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, UINT n
 BOOL CRuleList::PreCreateWindow(CREATESTRUCT& cs) 
 {
    if (cs.lpszClass == NULL)
-      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, 
                                          LoadCursor(NULL, IDC_ARROW), 0, NULL);
    cs.style |= WS_HSCROLL | WS_VSCROLL;
 	return CWnd::PreCreateWindow(cs);
@@ -1359,4 +1360,20 @@ void CRuleList::SetCellText(int iRow, int iColumn, char *pszText)
       UpdateScrollBars();
       InvalidateRect(NULL);
    }
+}
+
+
+//
+// WM_LBUTTONDBLCLK message handler
+//
+
+void CRuleList::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+   NMHDR nmhdr;
+
+   nmhdr.hwndFrom = m_hWnd;
+   nmhdr.idFrom = GetDlgCtrlID();
+   nmhdr.code = NM_DBLCLK;
+   GetParent()->SendMessage(WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&nmhdr);
+	CWnd::OnLButtonDblClk(nFlags, point);
 }

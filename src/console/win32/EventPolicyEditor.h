@@ -83,6 +83,7 @@ protected:
 	afx_msg void OnPolicySave();
 	afx_msg void OnUpdatePolicySave(CCmdUI* pCmdUI);
 	//}}AFX_MSG
+   afx_msg void OnRuleListDblClk(LPNMHDR pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iImageActionsBase;

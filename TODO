@@ -82,7 +82,6 @@ WINDOWS CONSOLE:
 - Play sound on new alarms
 - Add sorting to all list views
 - Add "Copy value to clipboard" to "Collected data" window
-- Event Processing Policy: Edit with doubleclick
 - Event Processing Policy: Disable record with doubleclick on leftmost
   field (number)
 
