@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "GraphFrame.h"
+#include "GraphPropDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,6 +33,7 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_SETFOCUS()
+	ON_COMMAND(ID_GRAPH_PROPERTIES, OnGraphProperties)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -152,4 +154,18 @@ BOOL CGraphFrame::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
                                          AfxGetApp()->LoadIcon(IDI_GRAPH));
 	return CMDIChildWnd::PreCreateWindow(cs);
+}
+
+
+//
+// WM_COMMAND::ID_GRAPH_PROPERTIES
+//
+
+void CGraphFrame::OnGraphProperties() 
+{
+   CGraphPropDlg dlg;
+
+   if (dlg.DoModal() == IDOK)
+   {
+   }
 }

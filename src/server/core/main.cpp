@@ -581,3 +581,17 @@ void NXCORE_EXPORTABLE Main(void)
 #endif
    }
 }
+
+
+//
+// DLL Entry point
+//
+
+#ifdef _WIN32
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   return TRUE;
+}
+
+#endif

@@ -27,7 +27,7 @@
 // Find container category by id
 //
 
-CONTAINER_CATEGORY *FindContainerCategory(DWORD dwId)
+CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId)
 {
    DWORD i;
 

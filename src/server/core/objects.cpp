@@ -330,7 +330,7 @@ void NetObjDelete(NetObj *pObject)
 // Find node by IP address
 //
 
-Node *FindNodeByIP(DWORD dwAddr)
+Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 {
    DWORD dwPos;
    Node *pNode;
@@ -350,7 +350,7 @@ Node *FindNodeByIP(DWORD dwAddr)
 // Find subnet by IP address
 //
 
-Subnet *FindSubnetByIP(DWORD dwAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr)
 {
    DWORD dwPos;
    Subnet *pSubnet;
@@ -370,7 +370,7 @@ Subnet *FindSubnetByIP(DWORD dwAddr)
 // Find subnet for given IP address
 //
 
-Subnet *FindSubnetForNode(DWORD dwNodeAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr)
 {
    DWORD i;
    Subnet *pSubnet = NULL;
@@ -395,7 +395,7 @@ Subnet *FindSubnetForNode(DWORD dwNodeAddr)
 // Find object by ID
 //
 
-NetObj *FindObjectById(DWORD dwId)
+NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 {
    DWORD dwPos;
    NetObj *pObject;

@@ -75,7 +75,7 @@ extern DWORD g_dwConfigurationPollingInterval;
 // Base class for network objects
 //
 
-class NetObj
+class NXCORE_EXPORTABLE NetObj
 {
 protected:
    DWORD m_dwId;
@@ -167,7 +167,7 @@ public:
 // Node template class
 //
 
-class Template : public NetObj
+class NXCORE_EXPORTABLE Template : public NetObj
 {
 protected:
    DWORD m_dwNumItems;     // Number of data collection items
@@ -218,9 +218,9 @@ public:
 // Interface class
 //
 
-class Node;
+class NXCORE_EXPORTABLE Node;
 
-class Interface : public NetObj
+class NXCORE_EXPORTABLE Interface : public NetObj
 {
 protected:
    DWORD m_dwIfIndex;
@@ -258,7 +258,7 @@ public:
 // Node
 //
 
-class Node : public Template
+class NXCORE_EXPORTABLE Node : public Template
 {
 protected:
    DWORD m_dwFlags;
@@ -374,7 +374,7 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
 // Subnet
 //
 
-class Subnet : public NetObj
+class NXCORE_EXPORTABLE Subnet : public NetObj
 {
 protected:
    DWORD m_dwIpNetMask;
@@ -401,7 +401,7 @@ public:
 // Universal root object
 //
 
-class UniversalRoot : public NetObj
+class NXCORE_EXPORTABLE UniversalRoot : public NetObj
 {
 public:
    UniversalRoot();
@@ -420,7 +420,7 @@ public:
 // Entire network
 //
 
-class Network : public NetObj
+class NXCORE_EXPORTABLE Network : public NetObj
 {
 public:
    Network();
@@ -438,7 +438,7 @@ public:
 // Service root
 //
 
-class ServiceRoot : public UniversalRoot
+class NXCORE_EXPORTABLE ServiceRoot : public UniversalRoot
 {
 public:
    ServiceRoot();
@@ -453,7 +453,7 @@ public:
 // Template root
 //
 
-class TemplateRoot : public UniversalRoot
+class NXCORE_EXPORTABLE TemplateRoot : public UniversalRoot
 {
 public:
    TemplateRoot();
@@ -469,7 +469,7 @@ public:
 // Generic container object
 //
 
-class Container : public NetObj
+class NXCORE_EXPORTABLE Container : public NetObj
 {
 private:
    DWORD *m_pdwChildIdList;
@@ -504,7 +504,7 @@ public:
 // Template group object
 //
 
-class TemplateGroup : public Container
+class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
    TemplateGroup() : Container() { }
@@ -551,12 +551,12 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
-NetObj *FindObjectById(DWORD dwId);
-Node *FindNodeByIP(DWORD dwAddr);
-Subnet *FindSubnetByIP(DWORD dwAddr);
-Subnet *FindSubnetForNode(DWORD dwNodeAddr);
-DWORD FindLocalMgmtNode(void);
-CONTAINER_CATEGORY *FindContainerCategory(DWORD dwId);
+NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
+Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
+DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);
+CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 
 BOOL LoadObjects(void);
 void DumpObjects(void);

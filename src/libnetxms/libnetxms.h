@@ -26,6 +26,5 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <nms_agent.h>
 
 #endif   /* _libnetxms_h_ */

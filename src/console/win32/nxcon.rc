@@ -362,6 +362,13 @@ BEGIN
         MENUITEM "&Edit...\tEnter",             ID_TRAP_EDIT
         MENUITEM "&Delete\tDel",                ID_TRAP_DELETE
     END
+    POPUP "Graph"
+    BEGIN
+        MENUITEM "&Autoscale\tAlt+A",           ID_GRAPH_AUTOSCALE
+        MENUITEM "&Freeze\tPause",              ID_GRAPH_FREEZE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...\tAlt+P",       ID_GRAPH_PROPERTIES
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -545,6 +552,13 @@ BEGIN
         MENUITEM "&Edit...",                    ID_TRAP_EDIT
         MENUITEM "&Delete",                     ID_TRAP_DELETE
     END
+    POPUP "Graph"
+    BEGIN
+        MENUITEM "&Autoscale",                  ID_GRAPH_AUTOSCALE
+        MENUITEM "&Freeze",                     ID_GRAPH_FREEZE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_GRAPH_PROPERTIES
+    END
 END
 
 
@@ -646,6 +660,13 @@ BEGIN
     "U",            ID_TRAP_MOVEUP,         VIRTKEY, CONTROL, NOINVERT
     VK_DELETE,      ID_TRAP_DELETE,         VIRTKEY, NOINVERT
     VK_RETURN,      ID_TRAP_EDIT,           VIRTKEY, NOINVERT
+END
+
+IDA_GRAPH ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, ALT, NOINVERT
+    "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, ALT, NOINVERT
+    VK_PAUSE,       ID_GRAPH_FREEZE,        VIRTKEY, NOINVERT
 END
 
 
@@ -1376,6 +1397,34 @@ BEGIN
     LTEXT           "Varbind OID",IDC_STATIC,7,37,40,8
 END
 
+IDD_GRAPH_PROPERTIES DIALOGEX 0, 0, 227, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Graph Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,170,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,24,50,14
+    GROUPBOX        "Options",IDC_STATIC,7,7,154,57
+    CONTROL         "Show &grid lines",IDC_CHECK_GRID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,18,63,10
+    CONTROL         "&Autoscale",IDC_CHECK_AUTOSCALE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,100,18,47,10
+    CONTROL         "&Refresh automatically",IDC_CHECK_REFRESH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,31,83,10
+    EDITTEXT        IDC_EDIT_REFRESH,67,43,30,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Refresh interval",IDC_STATIC_REFRESH,14,46,50,8
+    LTEXT           "seconds",IDC_STATIC_SECONDS,101,46,28,8
+    GROUPBOX        "Colors",IDC_STATIC,7,71,151,100
+    LTEXT           "Background",IDC_STATIC,14,83,40,8
+    LTEXT           "Axis lines",IDC_STATIC,13,94,30,8
+    LTEXT           "Grid lines",IDC_STATIC,13,106,30,8
+    LTEXT           "Text",IDC_STATIC,13,117,15,8
+    LTEXT           "Label background",IDC_STATIC,15,127,58,8
+    LTEXT           "Label text",IDC_STATIC,15,137,32,8
+    LTEXT           "",IDC_CB_BACKGROUND,59,83,19,10,SS_NOTIFY,
+                    WS_EX_CLIENTEDGE
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1706,6 +1755,14 @@ BEGIN
         RIGHTMARGIN, 266
         TOPMARGIN, 7
         BOTTOMMARGIN, 63
+    END
+
+    IDD_GRAPH_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -285,6 +285,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 12), "T&rap");
 
+   m_hGraphMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hGraphMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hGraphMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 13), "&Graph");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -296,6 +300,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hMapAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_NETMAP));
 	m_hActionEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ACTION_EDITOR));
 	m_hTrapEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_TRAP_EDITOR));
+	m_hGraphAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_GRAPH));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -345,6 +350,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hActionEditorAccel);
    SafeFreeResource(m_hTrapEditorMenu);
    SafeFreeResource(m_hTrapEditorAccel);
+   SafeFreeResource(m_hGraphMenu);
+   SafeFreeResource(m_hGraphAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -1071,7 +1078,7 @@ void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName
       strTitle += "]";
 
 	   // set the handles and redraw the frame and parent
-	   pWnd->SetHandles(m_hMDIMenu, m_hMDIAccel);
+	   pWnd->SetHandles(m_hGraphMenu, m_hGraphAccel);
 	   pWnd->SetTitle(strTitle);
 	   pWnd->InitialUpdateFrame(NULL, TRUE);
    }

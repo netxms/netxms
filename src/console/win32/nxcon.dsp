@@ -217,6 +217,10 @@ SOURCE=.\GraphFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\GraphPropDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\GroupPropDlg.cpp
 # End Source File
 # Begin Source File
@@ -491,6 +495,10 @@ SOURCE=.\Graph.h
 # Begin Source File
 
 SOURCE=.\GraphFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GraphPropDlg.h
 # End Source File
 # Begin Source File
 

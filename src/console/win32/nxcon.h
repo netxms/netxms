@@ -134,8 +134,10 @@ protected:
 	HACCEL m_hMapAccel;           // Accelerator for map view
 	HMENU m_hTrapEditorMenu;      // Menu for trap editor
 	HACCEL m_hTrapEditorAccel;    // Accelerator for trap editor
-	HMENU m_hActionEditorMenu;      // Menu for user editor
-	HACCEL m_hActionEditorAccel;    // Accelerator for user editor
+	HMENU m_hActionEditorMenu;    // Menu for user editor
+	HACCEL m_hActionEditorAccel;  // Accelerator for user editor
+	HMENU m_hGraphMenu;           // Menu for history and real-time graphs
+	HACCEL m_hGraphAccel;         // Accelerator for history and real-time graphs
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

@@ -135,6 +135,8 @@
 #define IDD_DATA_QUERY                  244
 #define IDD_EDIT_TRAP                   245
 #define IDD_EDIT_TRAP_ARG               246
+#define IDA_GRAPH                       247
+#define IDD_GRAPH_PROPERTIES            248
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -300,6 +302,12 @@
 #define IDC_STATIC_INSTANCE             1201
 #define IDC_SELECT_OID                  1202
 #define IDC_BUTTON_EDIT                 1203
+#define IDC_CHECK_AUTOSCALE             1205
+#define IDC_CHECK_REFRESH               1206
+#define IDC_EDIT_REFRESH                1207
+#define IDC_STATIC_REFRESH              1208
+#define IDC_STATIC_SECONDS              1209
+#define IDC_CB_BACKGROUND               1211
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -387,6 +395,9 @@
 #define ID_TRAP_DELETE                  32901
 #define ID_TRAP_MOVEUP                  32902
 #define ID_TRAP_MOVEDOWN                32903
+#define ID_GRAPH_AUTOSCALE              32904
+#define ID_GRAPH_PROPERTIES             32905
+#define ID_GRAPH_FREEZE                 32906
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -395,9 +406,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        247
-#define _APS_NEXT_COMMAND_VALUE         32904
-#define _APS_NEXT_CONTROL_VALUE         1204
+#define _APS_NEXT_RESOURCE_VALUE        249
+#define _APS_NEXT_COMMAND_VALUE         32907
+#define _APS_NEXT_CONTROL_VALUE         1212
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

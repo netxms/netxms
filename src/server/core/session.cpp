@@ -415,6 +415,7 @@ void ClientSession::ProcessingThread(void)
 {
    CSCPMessage *pMsg;
    char szBuffer[128];
+   DWORD i, dwCode;
 
    while(1)
    {
@@ -430,7 +431,8 @@ void ClientSession::ProcessingThread(void)
          continue;
       }
 
-      switch(pMsg->GetCode())
+      dwCode = pMsg->GetCode();
+      switch(dwCode)
       {
          case CMD_LOGIN:
             Login(pMsg);
@@ -614,6 +616,11 @@ void ClientSession::ProcessingThread(void)
             QueryParameter(pMsg);
             break;
          default:
+            // Pass message to loaded modules
+            for(i = 0; i < g_dwNumModules; i++)
+               if (g_pModuleList[i].pfCommandHandler(dwCode, pMsg, this))
+                  break;   // Message was processed by the module
+            if (i == g_dwNumModules)
             {
                CSCPMessage responce;
 

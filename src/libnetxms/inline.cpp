@@ -22,6 +22,7 @@
 
 #define LIBNETXMS_INLINE
 #include "libnetxms.h"
+#include <nms_agent.h>
 
 
 //
