@@ -61,6 +61,11 @@ typedef struct
          WORD wReserverd2;
          QWORD qwInt64;
       } int64;
+      struct
+      {
+         WORD wReserverd3;
+         double dFloat;
+      } fp;
       WORD wInt16;
    } data;
 } CSCP_DF;
@@ -109,6 +114,28 @@ typedef struct
    } value;
 } DCI_DATA_ROW;
 
+
+//
+// DCI threshold structure
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwEvent;
+   DWORD dwArg1;
+   DWORD dwArg2;
+   union
+   {
+      DWORD dwInt32;
+      INT64 qwInt64;
+      double dFloat;
+      char szString[MAX_DCI_STRING_VALUE];
+   } value;
+   WORD wFunction;
+   WORD wOperation;
+} DCI_THRESHOLD;
+
 #pragma pack()
 
 
@@ -121,6 +148,7 @@ typedef struct
 #define DT_INT64     2
 #define DT_INT16     3
 #define DT_BINARY    4
+#define DT_FLOAT     5
 
 
 //
@@ -243,6 +271,10 @@ typedef struct
 #define VID_TIME_FROM               ((DWORD)51)
 #define VID_TIME_TO                 ((DWORD)52)
 #define VID_DCI_DATA                ((DWORD)53)
+#define VID_NUM_THRESHOLDS          ((DWORD)54)
+#define VID_DCI_NUM_MAPS            ((DWORD)55)
+#define VID_DCI_MAP_IDS             ((DWORD)56)
+#define VID_DCI_MAP_INDEXES         ((DWORD)57)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -253,6 +285,10 @@ typedef struct
 // Variable range for user group members
 #define VID_GROUP_MEMBER_BASE       ((DWORD)0x00004000)
 #define VID_GROUP_MEMBER_LAST       ((DWORD)0x00004FFF)
+
+// Variable range for data collection thresholds
+#define VID_DCI_THRESHOLD_BASE      ((DWORD)0x00005000)
+#define VID_DCI_THRESHOLD_LAST      ((DWORD)0x00005FFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,

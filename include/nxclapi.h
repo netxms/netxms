@@ -399,6 +399,28 @@ typedef struct
 
 
 //
+// Data collection item threshold structure
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwEvent;
+   WORD wFunction;
+   WORD wOperation;
+   DWORD dwArg1;
+   DWORD dwArg2;
+   union
+   {
+      DWORD dwInt32;
+      INT64 qwInt64;
+      double dFloat;
+      char szString[MAX_STRING_VALUE];
+   } value;
+} NXC_DCI_THRESHOLD;
+
+
+//
 // Data collection item structure
 //
 
@@ -411,6 +433,8 @@ typedef struct
    BYTE iSource;
    BYTE iDataType;
    BYTE iStatus;
+   DWORD dwNumThresholds;
+   NXC_DCI_THRESHOLD *pThresholdList;
 } NXC_DCI;
 
 

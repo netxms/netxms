@@ -82,12 +82,14 @@ public:
    void SetVariable(DWORD dwVarId, WORD wValue) { Set(dwVarId, DT_INT16, &wValue); }
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, DT_INTEGER, &dwValue); }
    void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, DT_INT64, &qwValue); }
+   void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, DT_FLOAT, &dValue); }
    void SetVariable(DWORD dwVarId, char *szValue) { Set(dwVarId, DT_STRING, szValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, DT_BINARY, pValue, dwSize); }
 
    DWORD GetVariableLong(DWORD dwVarId);
    QWORD GetVariableInt64(DWORD dwVarId);
    WORD GetVariableShort(DWORD dwVarId);
+   double GetVariableDouble(DWORD dwVarId);
    char *GetVariableStr(DWORD dwVarId, char *szBuffer = NULL, DWORD dwBufSize = 0);
    DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);
 
