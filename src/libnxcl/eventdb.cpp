@@ -64,8 +64,8 @@ NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
    NXC_EVENT_TEMPLATE *pDst;
 
    pDst = (NXC_EVENT_TEMPLATE *)nx_memdup(pSrc, sizeof(NXC_EVENT_TEMPLATE));
-   pDst->pszDescription = strdup(pSrc->pszDescription);
-   pDst->pszMessage = strdup(pSrc->pszMessage);
+   pDst->pszDescription = _tcsdup(pSrc->pszDescription);
+   pDst->pszMessage = _tcsdup(pSrc->pszMessage);
    return pDst;
 }
 
@@ -248,26 +248,26 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWO
 //
 
 void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
-                                       DWORD dwSeverity, DWORD dwFlags, const char *pszName,
-                                       const char *pszMessage, const char *pszDescription)
+                                       DWORD dwSeverity, DWORD dwFlags, const TCHAR *pszName,
+                                       const TCHAR *pszMessage, const TCHAR *pszDescription)
 {
    if (dwMask & EM_SEVERITY)
       pEvent->dwSeverity = dwSeverity;
    if (dwMask & EM_FLAGS)
       pEvent->dwFlags = dwFlags & SERVER_FLAGS_BITS;
    if ((dwMask & EM_NAME) && (pszName != NULL))
-      strncpy(pEvent->szName, pszName, MAX_EVENT_NAME);
+      _tcsncpy(pEvent->szName, pszName, MAX_EVENT_NAME);
    if ((dwMask & EM_MESSAGE) && (pszMessage != NULL))
    {
       if (pEvent->pszMessage != NULL)
          free(pEvent->pszMessage);
-      pEvent->pszMessage = strdup(pszMessage);
+      pEvent->pszMessage = _tcsdup(pszMessage);
    }
    if ((dwMask & EM_DESCRIPTION) && (pszDescription != NULL))
    {
       if (pEvent->pszDescription != NULL)
          free(pEvent->pszDescription);
-      pEvent->pszDescription = strdup(pszDescription);
+      pEvent->pszDescription = _tcsdup(pszDescription);
    }
    pEvent->dwFlags |= EF_MODIFIED;
 }
@@ -328,14 +328,14 @@ NXC_EVENT_NAME LIBNXCL_EXPORTABLE *NXCGetEventNamesList(DWORD *pdwNumEvents)
 // Resolve event id to name
 //
 
-const char LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
 {
    DWORD i;
 
    for(i = 0; i < m_dwNumEvents; i++)
       if (m_pEventNamesList[i].dwEventId == dwId)
          return m_pEventNamesList[i].szName;
-   return "<unknown>";
+   return _T("<unknown>");
 }
 
 

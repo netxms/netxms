@@ -23,8 +23,8 @@
 
 #include "libnxcl.h"
 
-#ifdef _WIN32
-#include <io.h>
+#if defined(_WIN32) && !defined(UNDER_CE)
+# include <io.h>
 #endif
 
 
@@ -48,7 +48,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList)
    {
       *ppMibList = (NXC_MIB_LIST *)malloc(sizeof(NXC_MIB_LIST));
       (*ppMibList)->dwNumFiles = pResponce->GetVariableLong(VID_NUM_MIBS);
-      (*ppMibList)->ppszName = (char **)malloc(sizeof(char *) * (*ppMibList)->dwNumFiles);
+      (*ppMibList)->ppszName = (TCHAR **)malloc(sizeof(TCHAR *) * (*ppMibList)->dwNumFiles);
       (*ppMibList)->ppHash = (BYTE **)malloc(sizeof(BYTE *) * (*ppMibList)->dwNumFiles);
       for(i = 0, dwId1 = VID_MIB_NAME_BASE, dwId2 = VID_MIB_HASH_BASE; 
           i < (*ppMibList)->dwNumFiles; i++, dwId1++, dwId2++)
@@ -92,13 +92,13 @@ void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList)
 // Download MIB file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir)
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(TCHAR *pszName, TCHAR *pszDestDir)
 {
    DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
    CSCPMessage msg, *pResponce;
    BYTE *pBuffer;
-   char cLastChar, szFileName[MAX_PATH];
-   int fd;
+   TCHAR cLastChar, szFileName[MAX_PATH];
+   FILE *hFile;
 
    dwRqId = g_dwMsgId++;
 
@@ -118,18 +118,18 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir)
          if (pBuffer != NULL)
          {
             pResponce->GetVariableBinary(VID_MIB_FILE, pBuffer, dwFileSize);
-            cLastChar = pszDestDir[strlen(pszDestDir) - 1];
-            sprintf(szFileName, "%s%s%s", pszDestDir, 
-                    (cLastChar == '\\') || (cLastChar == '/') ? "" : "/", pszName);
-            fd = open(szFileName, O_CREAT | O_WRONLY | O_BINARY, 0644);
-            if (fd != -1)
+            cLastChar = pszDestDir[_tcslen(pszDestDir) - 1];
+            _stprintf(szFileName, _T("%s%s%s"), pszDestDir, 
+                    (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : _T("/"), pszName);
+			hFile = _tfopen(szFileName, _T("wb"));
+            if (hFile != NULL)
             {
                for(i = 0; i < dwFileSize; i += dwNumBytes)
                {
                   dwNumBytes = min(16384, dwFileSize - i);
-                  write(fd, &pBuffer[i], dwNumBytes);
+                  fwrite(&pBuffer[i], 1, dwNumBytes, hFile);
                }
-               close(fd);
+               fclose(hFile);
             }
             else
             {

@@ -50,7 +50,7 @@
 #define MAX_LOGIN_NAME     64
 #define MAX_PASSWORD_LEN   64
 
-#define VALIDATE_STRING(s) (((s) == NULL) ? "" : (s))
+#define VALIDATE_STRING(s) (((s) == NULL) ? _T("") : (s))
 
 
 //
@@ -106,7 +106,7 @@ void PrepareForSync(void);
 void CompleteSync(DWORD dwRetCode);
 
 void ChangeState(DWORD dwState);
-void DebugPrintf(char *szFormat, ...);
+void DebugPrintf(TCHAR *szFormat, ...);
 
 
 //

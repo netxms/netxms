@@ -23,15 +23,15 @@
 #include "libnetxms.h"
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
-#include <sys/time.h>
+# include <sys/time.h>
 #endif
 
 #ifdef _WIN32
-#ifndef __GNUC__
-#define EPOCHFILETIME (116444736000000000i64)
-#else
-#define EPOCHFILETIME (116444736000000000LL)
-#endif
+# ifndef __GNUC__
+#  define EPOCHFILETIME (116444736000000000i64)
+# else
+#  define EPOCHFILETIME (116444736000000000LL)
+# endif
 #endif
 
 

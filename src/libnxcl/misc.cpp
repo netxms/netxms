@@ -54,16 +54,16 @@ void ChangeState(DWORD dwState)
 // Print debug messages
 //
 
-void DebugPrintf(char *szFormat, ...)
+void DebugPrintf(TCHAR *szFormat, ...)
 {
    va_list args;
-   char szBuffer[4096];
+   TCHAR szBuffer[4096];
 
    if (g_pDebugCallBack == NULL)
       return;
 
    va_start(args, szFormat);
-   vsprintf(szBuffer, szFormat, args);
+   _vstprintf(szBuffer, szFormat, args);
    va_end(args);
    g_pDebugCallBack(szBuffer);
 }

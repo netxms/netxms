@@ -89,37 +89,37 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 // Ge text for error
 //
 
-const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 {
-   static char *pszErrorText[] =
+   static TCHAR *pszErrorText[] =
    {
-      "Request completed successfully",
-      "Component locked",
-      "Access denied",
-      "Invalid request",
-      "Request timed out",
-      "Request is out of state",
-      "Database failure",
-      "Invalid object ID",
-      "Object already exist",
-      "Communication failure",
-      "System failure",
-      "Invalid user ID",
-      "Invalid argument",
-      "Duplicate DCI",
-      "Invalid DCI ID",
-      "Out of memory",
-      "Input/Output error",
-      "Incompatible operation",
-      "Object creation failed",
-      "Loop in object relationship detected",
-      "Invalid object name",
-      "Invalid alarm ID",
-      "Invalid action ID",
-      "Operation in progress",
-      "Copy operation failed for one or more DCI(s)"
+      _T("Request completed successfully"),
+      _T("Component locked"),
+      _T("Access denied"),
+      _T("Invalid request"),
+      _T("Request timed out"),
+      _T("Request is out of state"),
+      _T("Database failure"),
+      _T("Invalid object ID"),
+      _T("Object already exist"),
+      _T("Communication failure"),
+      _T("System failure"),
+      _T("Invalid user ID"),
+      _T("Invalid argument"),
+      _T("Duplicate DCI"),
+      _T("Invalid DCI ID"),
+      _T("Out of memory"),
+      _T("Input/Output error"),
+      _T("Incompatible operation"),
+      _T("Object creation failed"),
+      _T("Loop in object relationship detected"),
+      _T("Invalid object name"),
+      _T("Invalid alarm ID"),
+      _T("Invalid action ID"),
+      _T("Operation in progress"),
+      _T("Copy operation failed for one or more DCI(s)")
    };
-   return ((dwError >= 0) && (dwError <= RCC_DCI_COPY_ERRORS)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_DCI_COPY_ERRORS)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 
@@ -127,7 +127,7 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 // DLL entry point
 //
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(UNDER_CE)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {

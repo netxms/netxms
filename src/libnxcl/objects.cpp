@@ -94,7 +94,7 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 
 static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
-   DebugPrintf("AddObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
+   DebugPrintf(_T("AddObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
    NXCLockObjectIndex();
    m_pIndexById = (INDEX *)realloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
@@ -112,7 +112,7 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 
 static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
-   DebugPrintf("ReplaceObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
+   DebugPrintf(_T("ReplaceObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
    if (pObject->iClass == OBJECT_CONTAINER)
       safe_free(pObject->container.pszDescription);
    safe_free(pObject->pdwChildList);
@@ -129,7 +129,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 
 static void DestroyObject(NXC_OBJECT *pObject)
 {
-   DebugPrintf("DestroyObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
+   DebugPrintf(_T("DestroyObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
    if (pObject->iClass == OBJECT_CONTAINER)
       safe_free(pObject->container.pszDescription);
    safe_free(pObject->pdwChildList);
@@ -234,7 +234,7 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          CompleteSync(RCC_SUCCESS);
          break;
       case CMD_OBJECT:
-         DebugPrintf("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d", pMsg->GetVariableLong(VID_OBJECT_ID),
+         DebugPrintf(_T("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d"), pMsg->GetVariableLong(VID_OBJECT_ID),
                      pMsg->GetVariableStr(VID_OBJECT_NAME), pMsg->GetVariableShort(VID_OBJECT_CLASS));
       
          // Create new object from message and add it to list
@@ -383,7 +383,7 @@ void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void)
 // Find object by name
 //
 
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName)
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName)
 {
    NXC_OBJECT *pObject = NULL;
    DWORD i;

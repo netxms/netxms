@@ -415,8 +415,8 @@ typedef struct
    DWORD dwTimeStamp;      // Timestamp in time() format
    DWORD dwSourceObject;   // Source object ID
    DWORD dwSourceEvent;    // Originating event ID
-   char szMessage[MAX_DB_STRING];
-   char szKey[MAX_DB_STRING];
+   TCHAR szMessage[MAX_DB_STRING];
+   TCHAR szKey[MAX_DB_STRING];
    WORD wSeverity;         // Alarm's severity
    WORD wIsAck;            // Non-zero if acknowleged
    DWORD dwAckByUser;      // Id of user who acknowleges this alarm (0 for system)
@@ -484,7 +484,7 @@ typedef struct
 //
 
 typedef void (* NXC_EVENT_HANDLER)(DWORD dwEvent, DWORD dwCode, void *pArg);
-typedef void (* NXC_DEBUG_CALLBACK)(char *pMsg);
+typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
 
 
 //
@@ -620,7 +620,7 @@ typedef struct
       DWORD dwInt32;
       INT64 qwInt64;
       double dFloat;
-      char szString[MAX_STRING_VALUE];
+      TCHAR szString[MAX_STRING_VALUE];
    } value;
 } NXC_DCI_THRESHOLD;
 
@@ -633,8 +633,8 @@ typedef struct
 {
    DWORD dwId;
    DWORD dwTemplateId;
-   char szName[MAX_ITEM_NAME];
-   char szDescription[MAX_DB_STRING];
+   TCHAR szName[MAX_ITEM_NAME];
+   TCHAR szDescription[MAX_DB_STRING];
    int iPollingInterval;
    int iRetentionTime;
    BYTE iSource;
@@ -643,7 +643,7 @@ typedef struct
    BYTE iDeltaCalculation;
    DWORD dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
-   char *pszFormula;
+   TCHAR *pszFormula;
 } NXC_DCI;
 
 
@@ -673,7 +673,7 @@ typedef struct
       DWORD dwInt32;
       INT64 qwInt64;
       double dFloat;
-      char szString[MAX_STRING_VALUE];
+      TCHAR szString[MAX_STRING_VALUE];
    } value;
 } NXC_DCI_ROW;
 
@@ -702,7 +702,7 @@ typedef struct
 typedef struct
 {
    DWORD dwNumFiles;
-   char **ppszName;
+   TCHAR **ppszName;
    BYTE **ppHash;
 } NXC_MIB_LIST;
 
@@ -721,10 +721,10 @@ typedef struct
    DWORD *pdwActionList;
    DWORD *pdwEventList;
    DWORD *pdwSourceList;
-   char *pszComment;
-   char szAlarmKey[MAX_DB_STRING];
-   char szAlarmAckKey[MAX_DB_STRING];
-   char szAlarmMessage[MAX_DB_STRING];
+   TCHAR *pszComment;
+   TCHAR szAlarmKey[MAX_DB_STRING];
+   TCHAR szAlarmAckKey[MAX_DB_STRING];
+   TCHAR szAlarmMessage[MAX_DB_STRING];
    WORD wAlarmSeverity;
 } NXC_EPP_RULE;
 
@@ -748,7 +748,7 @@ typedef struct
 {
    int iClass;
    DWORD dwParentId;
-   char *pszName;
+   TCHAR *pszName;
    union
    {
       struct
@@ -759,7 +759,7 @@ typedef struct
       struct
       {
          DWORD dwCategory;
-         char *pszDescription;
+         TCHAR *pszDescription;
       } container;
    } cs;
 } NXC_OBJECT_CREATE_INFO;
@@ -773,8 +773,8 @@ typedef struct
 {
    DWORD dwId;
    DWORD dwImageId;
-   char szName[MAX_OBJECT_NAME];
-   char *pszDescription;
+   TCHAR szName[MAX_OBJECT_NAME];
+   TCHAR *pszDescription;
 } NXC_CONTAINER_CATEGORY;
 
 
@@ -798,12 +798,12 @@ extern "C" {
 #endif
 
 DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void);
-const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
 void LIBNXCL_EXPORTABLE NXCShutdown(void);
 
-DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
+DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin, TCHAR *szPassword);
 void LIBNXCL_EXPORTABLE NXCDisconnect(void);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
@@ -811,7 +811,7 @@ HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId);
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName);
 void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(void);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(void);
@@ -835,11 +835,11 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
 void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
-                                       DWORD dwSeverity, DWORD dwFlags, const char *pszName,
-                                       const char *pszMessage, const char *pszDescription);
+                                       DWORD dwSeverity, DWORD dwFlags, const TCHAR *pszName,
+                                       const TCHAR *pszMessage, const TCHAR *pszDescription);
 DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void);
 NXC_EVENT_NAME LIBNXCL_EXPORTABLE *NXCGetEventNamesList(DWORD *pdwNumEvents);
-const char LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId);
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId);
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(DWORD dwId);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
@@ -847,10 +847,10 @@ NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
 DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
-DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwNewId);
+DWORD LIBNXCL_EXPORTABLE NXCCreateUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwNewId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo);
-DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword);
+DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, TCHAR *pszNewPassword);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList);
@@ -870,7 +870,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD 
 
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList);
 void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList);
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir);
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(TCHAR *pszName, TCHAR *pszDestDir);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(void);
@@ -878,8 +878,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir, WORD wFormat);
-DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir, WORD wFormat);
+DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, TCHAR *pszCacheDir, WORD wFormat);
+DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, TCHAR *pszCacheDir, WORD wFormat);
 void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
 DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize,
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId);
@@ -891,7 +891,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(DWORD dwAlarmId);
 DWORD LIBNXCL_EXPORTABLE NXCLoadActions(DWORD *pdwNumActions, NXC_ACTION **ppActionList);
 DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(void);
-DWORD LIBNXCL_EXPORTABLE NXCCreateAction(char *pszName, DWORD *pdwNewId);
+DWORD LIBNXCL_EXPORTABLE NXCCreateAction(TCHAR *pszName, DWORD *pdwNewId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_ACTION *pAction);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(DWORD dwActionId);
 

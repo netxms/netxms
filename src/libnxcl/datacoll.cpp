@@ -89,7 +89,7 @@ void ProcessDCI(CSCPMessage *pMsg)
                      m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
                      break;
                   case DCI_DT_STRING:
-                     strcpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+                     _tcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
                      break;
                   default:
                      break;
@@ -277,7 +277,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
             dct.value.dFloat = htond(pItem->pThresholdList[i].value.dFloat);
             break;
          case DCI_DT_STRING:
-            strcpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
+            _tcscpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
             break;
          default:
             break;
@@ -438,7 +438,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
                   pDst->value.dFloat = ntohd(pSrc->value.dFloat);
                   break;
                case DCI_DT_STRING:
-                  strcpy(pDst->value.szString, pSrc->value.szString);
+                  _tcscpy(pDst->value.szString, pSrc->value.szString);
                   break;
             }
 

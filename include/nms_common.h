@@ -23,7 +23,7 @@
 #ifndef _nms_common_h_
 #define _nms_common_h_
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(UNDER_CE)
 #ifdef _NETWARE
 // include config-netware.h here
 #else

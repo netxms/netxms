@@ -213,7 +213,7 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
 // Create new user or group on server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwNewId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwNewId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode, dwRqId;

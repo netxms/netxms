@@ -155,7 +155,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(void)
 // Create new action on server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateAction(char *pszName, DWORD *pdwNewId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateAction(TCHAR *pszName, DWORD *pdwNewId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode, dwRqId;

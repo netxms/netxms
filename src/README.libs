@@ -1,0 +1,6 @@
+build order:
+	libnetxms
+	libnxcscp
+	libnxcl
+
+WIN32_libs.sln (VC7) or PPC_libs.vcw (eVC4) can be used instead

@@ -64,6 +64,9 @@ sql/policy.in -text
 sql/schema.in -text
 sql/setup.in -text
 src/Makefile.am -text
+src/PPC_libs.vcw -text
+src/README.libs -text
+src/WIN32_libs.sln -text
 src/agent/Makefile.am -text
 src/agent/core/Makefile.am -text
 src/agent/core/Makefile.nw -text
@@ -310,6 +313,8 @@ src/libnxcl/image.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text
+src/libnxcl/libnxcl.vcp -text
+src/libnxcl/libnxcl.vcw -text
 src/libnxcl/main.cpp -text
 src/libnxcl/mib.cpp -text
 src/libnxcl/misc.cpp -text

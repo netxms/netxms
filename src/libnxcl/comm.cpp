@@ -58,9 +58,9 @@ BOOL SendMsg(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
    BOOL bResult;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
 
-   DebugPrintf("SendMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+   DebugPrintf(_T("SendMsg(\"%s\"), id:%ld)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    bResult = SendRawMsg(pRawMsg);
    free(pRawMsg);
@@ -79,7 +79,7 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
    CSCP_BUFFER *pMsgBuffer;
    int iErr;
    BOOL bMsgNotNeeded;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -98,7 +98,7 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
       // Check if we get too large message
       if (iErr == 1)
       {
-         DebugPrintf("Received too large message %s (%ld bytes)", 
+         DebugPrintf(_T("Received too large message %s (%ld bytes)"), 
                      CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
@@ -107,7 +107,7 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]", ntohl(pRawMsg->dwSize), iErr);
+         DebugPrintf(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), iErr);
          continue;   // Bad packet, wait for next
       }
 
@@ -121,7 +121,7 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
 
-         DebugPrintf("RecvRawMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
+         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%ld)"), CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
 
          // Process message
          switch(pRawMsg->wCode)
@@ -138,7 +138,7 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
       {
          pMsg = new CSCPMessage(pRawMsg);
          bMsgNotNeeded = TRUE;
-         DebugPrintf("RecvMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+         DebugPrintf(_T("RecvMsg(\"%s\", id:%ld)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
 
          // Process message
          switch(pMsg->GetCode())
@@ -191,14 +191,17 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
    }
 
    CompleteSync(RCC_COMM_FAILURE);    // Abort active sync operation
-   DebugPrintf("Network receiver thread stopped");
+   DebugPrintf(_T("Network receiver thread stopped"));
    ChangeState(STATE_DISCONNECTED);
    free(pRawMsg);
    free(pMsgBuffer);
 
    // Close socket
    shutdown(m_hSocket, SHUT_WR);
-   while(recv(m_hSocket, szBuffer, 128, 0) > 0);
+   {
+	   char cTmp;
+	   while(recv(m_hSocket, &cTmp, 1, 0) > 0);
+   }
    shutdown(m_hSocket, SHUT_RD);
    closesocket(m_hSocket);
    return THREAD_OK;
@@ -209,12 +212,23 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
 // Connect to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
+DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin, TCHAR *szPassword)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
    BYTE szPasswordHash[SHA1_DIGEST_SIZE];
    DWORD dwRetCode = RCC_COMM_FAILURE;
+   char *pServer;
+#ifdef UNICODE
+   char szMHost[64];
+
+
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+		szServer, -1, szMHost, sizeof(szMHost), NULL, NULL);
+	pServer = szMHost;
+#else
+	pServer = szServer;
+#endif
 
    if (g_dwState == STATE_DISCONNECTED)
    {
@@ -227,12 +241,14 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
       memset(&servAddr, 0, sizeof(struct sockaddr_in));
       servAddr.sin_family = AF_INET;
       servAddr.sin_port = htons((WORD)SERVER_LISTEN_PORT);
-      servAddr.sin_addr.s_addr = inet_addr(szServer);
+
+      servAddr.sin_addr.s_addr = inet_addr(pServer);
+
       if (servAddr.sin_addr.s_addr == INADDR_NONE)
       {
          struct hostent *hs;
 
-         hs = gethostbyname(szServer);
+         hs = gethostbyname(pServer);
          if (hs != NULL)
             memcpy(&servAddr.sin_addr, hs->h_addr, hs->h_length);
       }
@@ -252,7 +268,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
                msg.SetId(g_dwMsgId++);
                msg.SetCode(CMD_LOGIN);
                msg.SetVariable(VID_LOGIN_NAME, szLogin);
-               CalculateSHA1Hash((BYTE *)szPassword, strlen(szPassword), szPasswordHash);
+               CalculateSHA1Hash((BYTE *)szPassword, _tcslen(szPassword), szPasswordHash);
                msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
 
                if (SendMsg(&msg))
