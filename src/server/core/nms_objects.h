@@ -306,6 +306,8 @@ protected:
    int m_iSnmpAgentFails;
    int m_iNativeAgentFails;
    MUTEX m_hPollerMutex;
+   DWORD m_dwNumItems;     // Number of data collection items
+   DC_ITEM *m_pItems;      // Data collection items
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -350,6 +352,8 @@ public:
    void ConfigurationPoll(void);
 
    virtual void CalculateCompoundStatus(void);
+
+   void LoadItemsFromDB(void);
 };
 
 

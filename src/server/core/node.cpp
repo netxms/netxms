@@ -45,6 +45,8 @@ Node::Node()
    m_iSnmpAgentFails = 0;
    m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
+   m_dwNumItems = 0;
+   m_pItems = NULL;
 }
 
 
@@ -72,6 +74,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_iSnmpAgentFails = 0;
    m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
+   m_dwNumItems = 0;
+   m_pItems = NULL;
 }
 
 
@@ -82,6 +86,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
 Node::~Node()
 {
    MutexDestroy(m_hPollerMutex);
+   if (m_pItems != NULL)
+      free(m_pItems);
 }
 
 
@@ -175,6 +181,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    }
 
    DBFreeResult(hResult);
+   LoadItemsFromDB();
    return bResult;
 }
 
@@ -605,4 +612,47 @@ void Node::ConfigurationPoll(void)
    }
 
    PollerUnlock();
+}
+
+
+//
+// Load data collection items from database
+//
+
+void Node::LoadItemsFromDB(void)
+{
+   char szQuery[256];
+   DB_RESULT hResult;
+
+   if (m_pItems != NULL)
+   {
+      free(m_pItems);
+      m_pItems = NULL;
+   }
+   m_dwNumItems = NULL;
+
+   sprintf(szQuery, "SELECT id,name,source,datatype,polling_interval,retention_time FROM items WHERE node_id=%d", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+
+   if (hResult != 0)
+   {
+      int i, iRows;
+
+      iRows = DBGetNumRows(hResult);
+      if (iRows > 0)
+      {
+         m_dwNumItems = iRows;
+         m_pItems = (DC_ITEM *)malloc(sizeof(DC_ITEM) * iRows);
+         for(i = 0; i < iRows; i++)
+         {
+            m_pItems[i].dwId = DBGetFieldULong(hResult, i, 0);
+            strcpy(m_pItems[i].szName, DBGetField(hResult, i, 1));
+            m_pItems[i].iSource = (BYTE)DBGetFieldLong(hResult, i, 2);
+            m_pItems[i].iDataType = (BYTE)DBGetFieldLong(hResult, i, 3);
+            m_pItems[i].iPollingInterval = DBGetFieldLong(hResult, i, 4);
+            m_pItems[i].iRetentionTime = DBGetFieldLong(hResult, i, 5);
+         }
+      }
+      DBFreeResult(hResult);
+   }
 }
