@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.69 2005-02-19 14:37:35 victor Exp $
+# $Id: configure.ac,v 1.70 2005-02-21 17:44:08 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -395,6 +395,8 @@ AC_CONFIG_FILES([
 	src/console/win32/icons/Makefile
 	src/console/win32/res/Makefile
 	src/console/win32starter/Makefile
+	src/console/nxav/Makefile
+	src/console/cmdline/Makefile
 	src/nxevent/Makefile
 	src/nxreport/Makefile
 	src/server/Makefile
