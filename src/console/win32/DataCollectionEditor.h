@@ -33,6 +33,7 @@ public:
 
 // Implementation
 protected:
+	void ChangeItemsStatus(int iStatus);
 	void SelectListItem(int iItem);
 	void UpdateListItem(int iItem, NXC_DCI *pItem);
 	BOOL EditItem(NXC_DCI *pItem);
@@ -64,6 +65,10 @@ protected:
 	afx_msg void OnItemDuplicate();
 	afx_msg void OnUpdateItemCopy(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateItemDuplicate(CCmdUI* pCmdUI);
+	afx_msg void OnItemDisable();
+	afx_msg void OnItemActivate();
+	afx_msg void OnUpdateItemActivate(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateItemDisable(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()

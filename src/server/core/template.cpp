@@ -362,6 +362,7 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
          if (m_ppItems[j]->Id() == pdwItemList[i])
          {
             m_ppItems[j]->SetStatus(iStatus);
+            break;
          }
       }
       if (j == m_dwNumItems)

@@ -59,6 +59,10 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_COMMAND(ID_ITEM_DUPLICATE, OnItemDuplicate)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_COPY, OnUpdateItemCopy)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_DUPLICATE, OnUpdateItemDuplicate)
+	ON_COMMAND(ID_ITEM_DISABLE, OnItemDisable)
+	ON_COMMAND(ID_ITEM_ACTIVATE, OnItemActivate)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_ACTIVATE, OnUpdateItemActivate)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_DISABLE, OnUpdateItemDisable)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
@@ -408,6 +412,16 @@ void CDataCollectionEditor::OnUpdateItemDuplicate(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
+void CDataCollectionEditor::OnUpdateItemActivate(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+void CDataCollectionEditor::OnUpdateItemDisable(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
 void CDataCollectionEditor::OnUpdateFileExport(CCmdUI* pCmdUI) 
 {
    NXC_OBJECT *pObject;
@@ -552,7 +566,7 @@ BOOL CDataCollectionEditor::PreCreateWindow(CREATESTRUCT& cs)
 //
 
 static DWORD __cdecl CopyItems(DWORD dwSourceNode, DWORD dwNumObjects, DWORD *pdwObjectList,
-                       DWORD dwNumItems, DWORD *pdwItemList)
+                               DWORD dwNumItems, DWORD *pdwItemList)
 {
    DWORD i, dwResult;
 
@@ -687,4 +701,75 @@ void CDataCollectionEditor::OnViewRefresh()
    m_wndListCtrl.DeleteAllItems();
    for(i = 0; i < m_pItemList->dwNumItems; i++)
       AddListItem(&m_pItemList->pItems[i]);
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_DISABLE message handler
+//
+
+void CDataCollectionEditor::OnItemDisable() 
+{
+   ChangeItemsStatus(ITEM_STATUS_DISABLED);
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_ACTIVATE message handler
+//
+
+void CDataCollectionEditor::OnItemActivate() 
+{
+   ChangeItemsStatus(ITEM_STATUS_ACTIVE);
+}
+
+
+//
+// Change status for one or more items at once
+//
+
+void CDataCollectionEditor::ChangeItemsStatus(int iStatus)
+{
+   int iItem;
+   DWORD iPos, dwNumItems, *pdwItemList, dwResult;
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (dwNumItems > 0)
+   {
+      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+
+      // Build list of items to be copied
+      iPos = 0;
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pdwItemList[iPos++] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+
+      // Send request to server
+      dwResult = DoRequestArg4(NXCSetDCIStatus, (void *)m_pItemList->dwNodeId,
+                               (void *)dwNumItems, pdwItemList, (void *)iStatus,
+                               _T("Updating DCI status..."));
+      if (dwResult == RCC_SUCCESS)
+      {
+         DWORD dwIndex;
+
+         iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+         while(iItem != -1)
+         {
+            dwIndex = NXCItemIndex(m_pItemList, m_wndListCtrl.GetItemData(iItem));
+            m_pItemList->pItems[dwIndex].iStatus = iStatus;
+            UpdateListItem(iItem, &m_pItemList->pItems[dwIndex]);
+            iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+         }
+      }
+      else
+      {
+         theApp.ErrorBox(dwResult, _T("Error setting DCI status: %s"));
+         PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+      }
+
+      free(pdwItemList);
+   }
 }
