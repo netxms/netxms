@@ -31,6 +31,23 @@ AlarmManager g_alarmMgr;
 
 
 //
+// Fill CSCP message with alarm data
+//
+
+void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
+{
+   pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
+   pMsg->SetVariable(VID_EVENT_ID, pAlarm->dwSourceEvent);
+   pMsg->SetVariable(VID_OBJECT_ID, pAlarm->dwSourceObject);
+   pMsg->SetVariable(VID_TIMESTAMP, pAlarm->dwTimeStamp);
+   pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
+   pMsg->SetVariable(VID_ALARM_MESSAGE, pAlarm->szMessage);
+   pMsg->SetVariable(VID_IS_ACK, pAlarm->wIsAck);
+   pMsg->SetVariable(VID_SEVERITY, pAlarm->wSeverity);
+}
+
+
+//
 // Alarm manager constructor
 //
 
@@ -144,7 +161,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    DBQuery(g_hCoreDB, szQuery);
 
    // Notify connected clients about new alarm
-   NotifyClients((bIsAck ? NX_NOTIFY_NEW_ACK_ALARM : NX_NOTIFY_NEW_ALARM), alarm.dwAlarmId);
+   NotifyClients((bIsAck ? NX_NOTIFY_NEW_ACK_ALARM : NX_NOTIFY_NEW_ALARM), &alarm);
 }
 
 
@@ -160,7 +177,7 @@ void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, m_pAlarmList[i].dwAlarmId);
+         NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, &m_pAlarmList[i]);
          AckAlarmInDB(m_pAlarmList[i].dwAlarmId, dwUserId);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
@@ -182,7 +199,7 @@ void AlarmManager::AckByKey(char *pszKey)
    for(i = 0; i < m_dwNumAlarms; i++)
       if (!strcmp(pszKey, m_pAlarmList[i].szKey))
       {
-         NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, m_pAlarmList[i].dwAlarmId);
+         NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, &m_pAlarmList[i]);
          AckAlarmInDB(m_pAlarmList[i].dwAlarmId, 0);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
@@ -206,7 +223,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         NotifyClients(NX_NOTIFY_ALARM_DELETED, m_pAlarmList[i].dwAlarmId);
+         NotifyClients(NX_NOTIFY_ALARM_DELETED, &m_pAlarmList[i]);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          break;
@@ -239,8 +256,8 @@ void AlarmManager::AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId)
 
 void AlarmManager::SendAlarmNotification(ClientSession *pSession, void *pArg)
 {
-   pSession->Notify(((AlarmManager *)pArg)->m_dwNotifyCode,
-                    ((AlarmManager *)pArg)->m_dwNotifyAlarmId);
+   pSession->OnAlarmUpdate(((AlarmManager *)pArg)->m_dwNotifyCode,
+                           ((AlarmManager *)pArg)->m_pNotifyAlarmInfo);
 }
 
 
@@ -248,9 +265,58 @@ void AlarmManager::SendAlarmNotification(ClientSession *pSession, void *pArg)
 // Notify connected clients about changes
 //
 
-void AlarmManager::NotifyClients(DWORD dwCode, DWORD dwAlarmId)
+void AlarmManager::NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    m_dwNotifyCode = dwCode;
-   m_dwNotifyAlarmId = dwAlarmId;
+   m_pNotifyAlarmInfo = pAlarm;
    EnumerateClientSessions(SendAlarmNotification, this);
+}
+
+
+//
+// Send all alarms to client
+//
+
+void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession)
+{
+   DWORD i, dwUserId;
+   NetObj *pObject;
+   CSCPMessage msg;
+
+   dwUserId = pSession->GetUserId();
+
+   // Prepare message
+   msg.SetCode(CMD_ALARM_DATA);
+   msg.SetId(dwRqId);
+
+   if (bIncludeAck)
+   {
+      // Request for all alarms including acknowleged,
+      // so we have to load them from database
+   }
+   else
+   {
+      // Unacknowleged alarms can be sent directly from memory
+      Lock();
+
+      for(i = 0; i < m_dwNumAlarms; i++)
+      {
+         pObject = FindObjectById(m_pAlarmList[i].dwSourceObject);
+         if (pObject != NULL)
+         {
+            if (pObject->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
+            {
+               msg.SetVariable(VID_ALARM_ID, m_pAlarmList[i].dwAlarmId);
+               FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
+               pSession->SendMessage(&msg);
+               msg.DeleteAllVariables();
+            }
+         }
+      }
+
+      Unlock();
+   }
+
+   // Send end-of-list indicator
+   msg.SetVariable(VID_ALARM_ID, (DWORD)0);
 }

@@ -35,7 +35,7 @@ private:
    NXC_ALARM *m_pAlarmList;
    MUTEX m_mutex;
    DWORD m_dwNotifyCode;
-   DWORD m_dwNotifyAlarmId;
+   NXC_ALARM *m_pNotifyAlarmInfo;
 
    void Lock(void) { MutexLock(m_mutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutex); }
@@ -43,7 +43,7 @@ private:
    static void SendAlarmNotification(ClientSession *pSession, void *pArg);
 
    void AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId);
-   void NotifyClients(DWORD dwCode, DWORD dwAlarmId);
+   void NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
 
 public:
    AlarmManager();
@@ -54,7 +54,16 @@ public:
    void AckById(DWORD dwAlarmId, DWORD dwUserId);
    void AckByKey(char *pszKey);
    void DeleteAlarm(DWORD dwAlarmId);
+
+   void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);
 };
+
+
+//
+// Functions
+//
+
+void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
 
 
 //

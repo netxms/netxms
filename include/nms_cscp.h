@@ -232,6 +232,11 @@ typedef struct
 #define CMD_ACTION                  0x0043
 #define CMD_GET_DEFAULT_IMAGE_LIST  0x0044
 #define CMD_DEFAULT_IMAGE_LIST      0x0045
+#define CMD_GET_ALL_ALARMS          0x0046
+#define CMD_GET_ALARM               0x0047
+#define CMD_ACK_ALARM               0x0048
+#define CMD_ALARM_UPDATE            0x0049
+#define CMD_ALARM_DATA              0x004A
 
 
 //
@@ -330,6 +335,10 @@ typedef struct
 #define VID_CLASS_ID_LIST           ((DWORD)90)
 #define VID_IMAGE_FORMAT            ((DWORD)91)
 #define VID_NOTIFICATION_DATA       ((DWORD)92)
+#define VID_ALARM_ID                ((DWORD)93)
+#define VID_TIMESTAMP               ((DWORD)94)
+#define VID_ACK_BY_USER             ((DWORD)95)
+#define VID_IS_ACK                  ((DWORD)96)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

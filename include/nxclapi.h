@@ -259,8 +259,9 @@ typedef unsigned long HREQUEST;
 #define OBJECT_ACCESS_MODIFY        0x00000002
 #define OBJECT_ACCESS_CREATE        0x00000004
 #define OBJECT_ACCESS_DELETE        0x00000008
-#define OBJECT_ACCESS_MOVE          0x00000010
+#define OBJECT_ACCESS_READ_ALARMS   0x00000010
 #define OBJECT_ACCESS_CONTROL       0x00000020
+#define OBJECT_ACCESS_ACK_ALARMS    0x00000040
 
 
 //
@@ -786,6 +787,8 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir, WO
 void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
 DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize,
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId);
+
+DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms, NXC_ALARM *ppAlarmList);
 
 #ifdef __cplusplus
 }

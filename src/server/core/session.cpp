@@ -79,8 +79,9 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_mutexWriteThreadRunning = MutexCreate();
    m_mutexProcessingThreadRunning = MutexCreate();
    m_mutexUpdateThreadRunning = MutexCreate();
-   m_hMutexSendEvents = MutexCreate();
-   m_hMutexSendObjects = MutexCreate();
+   m_mutexSendEvents = MutexCreate();
+   m_mutexSendObjects = MutexCreate();
+   m_mutexSendAlarms = MutexCreate();
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
    strcpy(m_szUserName, "<not logged in>");
@@ -106,8 +107,9 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexWriteThreadRunning);
    MutexDestroy(m_mutexProcessingThreadRunning);
    MutexDestroy(m_mutexUpdateThreadRunning);
-   MutexDestroy(m_hMutexSendEvents);
-   MutexDestroy(m_hMutexSendObjects);
+   MutexDestroy(m_mutexSendEvents);
+   MutexDestroy(m_mutexSendObjects);
+   MutexDestroy(m_mutexSendAlarms);
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
@@ -255,20 +257,32 @@ void ClientSession::UpdateThread(void)
       switch(pUpdate->dwCategory)
       {
          case INFO_CAT_EVENT:
-            MutexLock(m_hMutexSendEvents, INFINITE);
+            MutexLock(m_mutexSendEvents, INFINITE);
             m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
-            MutexUnlock(m_hMutexSendEvents);
+            MutexUnlock(m_mutexSendEvents);
             free(pUpdate->pData);
             break;
          case INFO_CAT_OBJECT_CHANGE:
-            MutexLock(m_hMutexSendObjects, INFINITE);
-            msg.SetId(0);
+            MutexLock(m_mutexSendObjects, INFINITE);
             msg.SetCode(CMD_OBJECT_UPDATE);
+            msg.SetId(0);
             ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
             SendMessage(&msg);
-            MutexUnlock(m_hMutexSendObjects);
+            MutexUnlock(m_mutexSendObjects);
             msg.DeleteAllVariables();
             ((NetObj *)pUpdate->pData)->DecRefCount();
+            break;
+         case INFO_CAT_ALARM:
+            MutexLock(m_mutexSendAlarms, INFINITE);
+            msg.SetCode(CMD_ALARM_UPDATE);
+            msg.SetId(0);
+            msg.SetVariable(VID_NOTIFICATION_CODE, ((ALARM_UPDATE *)pUpdate->pData)->dwCode);
+            msg.SetVariable(VID_ALARM_ID, ((ALARM_UPDATE *)pUpdate->pData)->alarm.dwAlarmId);
+            if ((((ALARM_UPDATE *)pUpdate->pData)->dwCode == NX_NOTIFY_NEW_ALARM) ||
+                (((ALARM_UPDATE *)pUpdate->pData)->dwCode == NX_NOTIFY_NEW_ACK_ALARM))
+               FillAlarmInfoMessage(&msg, &((ALARM_UPDATE *)pUpdate->pData)->alarm);
+            MutexUnlock(m_mutexSendAlarms);
+            msg.DeleteAllVariables();
             break;
          default:
             break;
@@ -406,6 +420,13 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_GET_DEFAULT_IMAGE_LIST:
             SendDefaultImageList(this, pMsg->GetId());
+            break;
+         case CMD_GET_ALL_ALARMS:
+            SendAllAlarms(pMsg->GetId(), pMsg->GetVariableShort(VID_IS_ACK));
+            break;
+         case CMD_GET_ALARM:
+            break;
+         case CMD_ACK_ALARM:
             break;
          default:
             break;
@@ -576,7 +597,7 @@ void ClientSession::SendAllObjects(DWORD dwRqId)
    SendMessage(&msg);
    msg.DeleteAllVariables();
 
-   MutexLock(m_hMutexSendObjects, INFINITE);
+   MutexLock(m_mutexSendObjects, INFINITE);
 
    // Prepare message
    msg.SetCode(CMD_OBJECT);
@@ -596,7 +617,7 @@ void ClientSession::SendAllObjects(DWORD dwRqId)
    msg.SetCode(CMD_OBJECT_LIST_END);
    SendMessage(&msg);
 
-   MutexUnlock(m_hMutexSendObjects);
+   MutexUnlock(m_mutexSendObjects);
 }
 
 
@@ -617,7 +638,7 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
    SendMessage(&msg);
    msg.DeleteAllVariables();
 
-   MutexLock(m_hMutexSendEvents, INFINITE);
+   MutexLock(m_mutexSendEvents, INFINITE);
 
    // Retrieve events from database
    hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM event_log ORDER BY timestamp");
@@ -641,7 +662,7 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
    msg.SetCode(CMD_EVENT_LIST_END);
    SendMessage(&msg);
 
-   MutexUnlock(m_hMutexSendEvents);
+   MutexUnlock(m_mutexSendEvents);
 }
 
 
@@ -2106,4 +2127,42 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 
    // Send responce
    SendMessage(&msg);
+}
+
+
+//
+// Process changes in alarms
+//
+
+void ClientSession::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
+{
+   UPDATE_INFO *pUpdate;
+   NetObj *pObject;
+
+   if (m_iState == STATE_AUTHENTICATED)
+   {
+      pObject = FindObjectById(pAlarm->dwSourceObject);
+      if (pObject != NULL)
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+         {
+            pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+            pUpdate->dwCategory = INFO_CAT_ALARM;
+            pUpdate->pData = malloc(sizeof(ALARM_UPDATE));
+            ((ALARM_UPDATE *)pUpdate->pData)->dwCode = dwCode;
+            memcpy(&((ALARM_UPDATE *)pUpdate->pData)->alarm, pAlarm, sizeof(NXC_ALARM)); 
+            m_pUpdateQueue->Put(pUpdate);
+         }
+   }
+}
+
+
+//
+// Send all alarms to client
+//
+
+void ClientSession::SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck)
+{
+   MutexLock(m_mutexSendAlarms, INFINITE);
+   g_alarmMgr.SendAlarmsToClient(dwRqId, bIncludeAck, this);
+   MutexUnlock(m_mutexSendAlarms);
 }

@@ -101,6 +101,10 @@ PostBuild_Cmds=copy Debug\libnxcl.dll ..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\alarms.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File

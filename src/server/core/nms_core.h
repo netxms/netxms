@@ -183,6 +183,7 @@ typedef void * HSNMPSESSION;
 
 #define INFO_CAT_EVENT           1
 #define INFO_CAT_OBJECT_CHANGE   2
+#define INFO_CAT_ALARM           3
 
 
 //
@@ -206,6 +207,17 @@ typedef struct
 
 
 //
+// Alarm update structure
+//
+
+typedef struct
+{
+   DWORD dwCode;
+   NXC_ALARM alarm;
+} ALARM_UPDATE;
+
+
+//
 // Client session
 //
 
@@ -225,8 +237,9 @@ private:
    MUTEX m_mutexWriteThreadRunning;
    MUTEX m_mutexProcessingThreadRunning;
    MUTEX m_mutexUpdateThreadRunning;
-   MUTEX m_hMutexSendEvents;
-   MUTEX m_hMutexSendObjects;
+   MUTEX m_mutexSendEvents;
+   MUTEX m_mutexSendObjects;
+   MUTEX m_mutexSendAlarms;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
@@ -247,6 +260,7 @@ private:
    void SendAllEvents(DWORD dwRqId);
    void SendAllConfigVars(void);
    void SendUserDB(DWORD dwRqId);
+   void SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck);
    void CreateUser(CSCPMessage *pRequest);
    void UpdateUser(CSCPMessage *pRequest);
    void DeleteUser(CSCPMessage *pRequest);
@@ -287,6 +301,7 @@ public:
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
    int GetState(void) { return m_iState; }
    const char *GetUserName(void) { return m_szUserName; }
+   DWORD GetUserId(void) { return m_dwUserId; }
 
    void Kill(void);
    void Notify(DWORD dwCode, DWORD dwData = 0);
@@ -294,6 +309,7 @@ public:
    void OnNewEvent(Event *pEvent);
    void OnObjectChange(NetObj *pObject);
    void OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup);
+   void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
 };
 
 
