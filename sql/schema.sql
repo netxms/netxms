@@ -39,7 +39,12 @@ CREATE TABLE Nodes
 	is_bridge integer,
 	is_router integer,
 	snmp_version integer,
+	community varchar(32),
 	discovery_flags integer,
+	auth_method integer,
+	secret varchar(64),
+	agent_port integer,
+	status_poll_type integer,
 	PRIMARY KEY(id)
 );
 
@@ -64,7 +69,7 @@ CREATE TABLE Subnets
 -- Nodes' interfaces
 --
 
-create table Interfaces
+CREATE TABLE Interfaces
 (
 	id integer not null,
 	name varchar(64),
@@ -84,7 +89,7 @@ create table Interfaces
 -- Nodes to subnets mapping
 --
 
-create table NSMAP
+CREATE TABLE nsmap
 (
 	subnet_id integer not null,
 	node_id integer not null,
