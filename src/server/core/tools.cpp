@@ -401,3 +401,49 @@ DWORD GetLocalIpAddr(void)
    }
    return dwAddr;
 }
+
+
+//
+// Execute external command via shell
+//
+
+BOOL ExecCommand(char *pszCommand)
+{
+   char szShell[MAX_PATH];
+   BOOL bSuccess = TRUE;
+
+   ConfigReadStr("Shell", szShell, MAX_PATH, DEFAULT_SHELL);
+
+#ifdef _WIN32
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   char *pszCmdLine = (char *)malloc(strlen(pszCommand) + strlen(szShell) + 16);
+   sprintf(pszCmdLine, "%s /c \"%s\"", szShell, pszCommand);
+
+   // Fill in process startup info structure
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+   si.dwFlags = 0;
+
+   // Create new process
+   if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi))
+   {
+      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+      bSuccess = FALSE;
+   }
+   else
+   {
+      // Close all handles
+      CloseHandle(pi.hThread);
+      CloseHandle(pi.hProcess);
+   }
+
+   // Cleanup
+   free(pszCmdLine);
+#else
+   /* TODO: add UNIX code here */
+#endif
+
+   return bSuccess;
+}

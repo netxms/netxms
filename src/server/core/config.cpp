@@ -34,6 +34,7 @@ static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
                         "   --config <file>     : Set non-default configuration file\n"
                         "                       : Default is " DEFAULT_CONFIG_FILE "\n"
                         "   --debug-all         : Turn on all possible debug output\n"
+                        "   --debug-actions     : Print debug information for event actions.\n"
                         "   --debug-cscp        : Print client-server communication protocol debug\n"
                         "                       : information to console.\n"
                         "   --debug-dc          : Print data collection debug information to console.\n"
@@ -231,6 +232,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-housekeeper"))
       {
          g_dwFlags |= AF_DEBUG_HOUSEKEEPER;
+      }
+      else if (!strcmp(argv[i], "--debug-actions"))
+      {
+         g_dwFlags |= AF_DEBUG_ACTIONS;
       }
       else if (!strcmp(argv[i], "check-config"))
       {

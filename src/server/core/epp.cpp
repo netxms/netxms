@@ -55,6 +55,91 @@ EPRule::~EPRule()
 
 
 //
+// Check if source object's id match to the rule
+//
+
+BOOL EPRule::MatchSource(DWORD dwObjectId)
+{
+   DWORD i;
+   BOOL bMatch = FALSE;
+
+   if (m_dwNumSources == 0)   // No sources in list means "any"
+   {
+      bMatch = TRUE;
+   }
+   else
+   {
+      for(i = 0; i < m_dwNumSources; i++)
+         if (m_pSourceList[i] & GROUP_FLAG_BIT)
+         {
+            /* TODO: check group membership */
+         }
+         else
+         {
+            if (m_pSourceList[i] == dwObjectId)
+            {
+               bMatch = TRUE;
+               break;
+            }
+         }
+   }
+   return bMatch;
+}
+
+
+//
+// Check if event's id match to the rule
+//
+
+BOOL EPRule::MatchEvent(DWORD dwEventId)
+{
+   DWORD i;
+   BOOL bMatch = FALSE;
+
+   if (m_dwNumSources == 0)   // No sources in list means "any"
+   {
+      bMatch = TRUE;
+   }
+   else
+   {
+      for(i = 0; i < m_dwNumSources; i++)
+         if (m_pSourceList[i] & GROUP_FLAG_BIT)
+         {
+            /* TODO: check group membership */
+         }
+         else
+         {
+            if (m_pSourceList[i] == dwObjectId)
+            {
+               bMatch = TRUE;
+               break;
+            }
+         }
+   }
+   return bMatch;
+}
+
+
+//
+// Check if event match to rule and perform required actions if yes
+// Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
+//
+
+BOOL EPRule::ProcessEvent(Event *pEvent)
+{
+   BOOL bStopProcessing = FALSE;
+
+   // Check if event match
+   if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Id())) &&
+       (MatchSeverity(pEvent->Severity())))
+   {
+   }
+
+   return bStopProcessing;
+}
+
+
+//
 // Load rule from database
 //
 
@@ -173,4 +258,18 @@ BOOL EventPolicy::LoadFromDB(void)
    }
 
    return bSuccess;
+}
+
+
+//
+// Pass event through policy
+//
+
+void EventPolicy::ProcessEvent(Event *pEvent)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumRules; i++)
+      if (m_ppRuleList[i]->ProcessEvent(pEvent))
+         break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
 }

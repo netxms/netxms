@@ -72,6 +72,9 @@ void EventProcessor(void *arg)
                 pEvent->Flags(), pEvent->Severity(), pObject->Name(), pEvent->Message());
       }
 
+      // Pass event through event processing policy
+      g_pEventPolicy->ProcessEvent(pEvent);
+
       // Destroy event
       delete pEvent;
    }

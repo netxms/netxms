@@ -238,7 +238,7 @@ void ClientSession::ProcessingThread(void)
             {
                // Check if event configuration DB has been modified
                if (m_dwFlags & CSF_EVENT_DB_MODIFIED)
-
+                  ReloadEvents();
                UnlockComponent(CID_EVENT_DB);
                m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
             }

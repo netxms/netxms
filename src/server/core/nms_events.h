@@ -78,6 +78,8 @@ public:
    time_t TimeStamp(void) { return m_tTimeStamp; }
 
    void PrepareMessage(NXC_EVENT *pEventData);
+
+   char *ExpandText(char *szTemplate);
 };
 
 
@@ -85,9 +87,14 @@ public:
 // Event policy rule flags
 //
 
-#define RF_STOP_PROCESSING    0x01
-#define RF_NEGATED_SOURCE     0x02
-#define RF_NEGATED_EVENTS     0x04
+#define RF_STOP_PROCESSING    0x0001
+#define RF_NEGATED_SOURCE     0x0002
+#define RF_NEGATED_EVENTS     0x0004
+#define RF_SEVERITY_INFO      0x0100
+#define RF_SEVERITY_MINOR     0x0200
+#define RF_SEVERITY_WARNING   0x0400
+#define RF_SEVERITY_MAJOR     0x0800
+#define RF_SEVERITY_CRITICAL  0x1000
 
 
 //
@@ -118,6 +125,10 @@ private:
    DWORD *m_pdwActionList;
    char *m_pszComment;
 
+   BOOL MatchSource(DWORD dwObjectId);
+   BOOL MatchEvent(DWORD dwEventId);
+   BOOL MatchSeverity(DWORD dwSeverity);
+
 public:
    EPRule(DWORD dwId, char *szComment, DWORD dwFlags);
    ~EPRule();
@@ -125,6 +136,8 @@ public:
    DWORD Id(void) { return m_dwId; }
 
    BOOL LoadFromDB(void);
+
+   BOOL ProcessEvent(Event *pEvent);
 };
 
 
@@ -143,6 +156,7 @@ public:
    ~EventPolicy();
 
    BOOL LoadFromDB(void);
+   void ProcessEvent(Event *pEvent);
 };
 
 
@@ -152,6 +166,7 @@ public:
 
 BOOL InitEventSubsystem(void);
 BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...);
+void ReloadEvents(void);
 
 
 //
@@ -160,5 +175,7 @@ BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...);
 
 extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
+extern char *g_szStatusText[];
+extern char *g_szStatusTextSmall[];
 
 #endif   /* _nms_events_h_ */

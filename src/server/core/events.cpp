@@ -30,6 +30,8 @@
 
 Queue *g_pEventQueue = NULL;
 EventPolicy *g_pEventPolicy = NULL;
+char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED" };
+char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged" };
 
 
 //
@@ -141,20 +143,35 @@ Event::~Event()
 
 void Event::ExpandMessageText(char *szMessageTemplate)
 {
+   if (m_szMessageText != NULL)
+   {
+      free(m_szMessageText);
+      m_szMessageText = NULL;
+   }
+   m_szMessageText = ExpandText(szMessageTemplate);
+}
+
+
+//
+// Substitute % macros in given text with actual values
+//
+
+char *Event::ExpandText(char *szTemplate)
+{
    char *pCurr;
    DWORD dwPos, dwSize, dwParam;
    NetObj *pObject;
    struct tm *lt;
-   char szBuffer[4];
+   char *pText, szBuffer[4];
 
    pObject = FindObjectById(m_dwSource);
    if (pObject == NULL)    // Normally shouldn't happen
    {
       pObject = g_pEntireNet;
    }
-   dwSize = strlen(szMessageTemplate) + 1;
-   m_szMessageText = (char *)malloc(dwSize);
-   for(pCurr = szMessageTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   dwSize = strlen(szTemplate) + 1;
+   pText = (char *)malloc(dwSize);
+   for(pCurr = szTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
       switch(*pCurr)
       {
@@ -168,32 +185,65 @@ void Event::ExpandMessageText(char *szMessageTemplate)
             switch(*pCurr)
             {
                case '%':
-                  m_szMessageText[dwPos++] = '%';
+                  pText[dwPos++] = '%';
                   break;
                case 'n':   // Name of event source
                   dwSize += strlen(pObject->Name());
-                  m_szMessageText = (char *)realloc(m_szMessageText, dwSize);
-                  strcpy(&m_szMessageText[dwPos], pObject->Name());
+                  pText = (char *)realloc(pText, dwSize);
+                  strcpy(&pText[dwPos], pObject->Name());
                   dwPos += strlen(pObject->Name());
                   break;
                case 'a':   // IP address of event source
                   dwSize += 16;
-                  m_szMessageText = (char *)realloc(m_szMessageText, dwSize);
-                  IpToStr(pObject->IpAddr(), &m_szMessageText[dwPos]);
-                  dwPos = strlen(m_szMessageText);
+                  pText = (char *)realloc(pText, dwSize);
+                  IpToStr(pObject->IpAddr(), &pText[dwPos]);
+                  dwPos = strlen(pText);
                   break;
                case 'i':   // Source object identifier
                   dwSize += 10;
-                  m_szMessageText = (char *)realloc(m_szMessageText, dwSize);
-                  sprintf(&m_szMessageText[dwPos], "0x%08X", m_dwSource);
-                  dwPos = strlen(m_szMessageText);
+                  pText = (char *)realloc(pText, dwSize);
+                  sprintf(&pText[dwPos], "0x%08X", m_dwSource);
+                  dwPos = strlen(pText);
                   break;
-               case 't':
+               case 't':   // Event's timestamp
                   dwSize += 32;
-                  m_szMessageText = (char *)realloc(m_szMessageText, dwSize);
+                  pText = (char *)realloc(pText, dwSize);
                   lt = localtime(&m_tTimeStamp);
-                  strftime(&m_szMessageText[dwPos], 32, "%d-%b-%Y %H:%M:%S", lt);
-                  dwPos = strlen(m_szMessageText);
+                  strftime(&pText[dwPos], 32, "%d-%b-%Y %H:%M:%S", lt);
+                  dwPos = strlen(pText);
+                  break;
+               case 'c':   // Event code
+                  dwSize += 16;
+                  pText = (char *)realloc(pText, dwSize);
+                  sprintf(&pText[dwPos], "%lu", m_dwId);
+                  dwPos = strlen(pText);
+                  break;
+               case 's':   // Severity code
+                  dwSize += 3;
+                  pText = (char *)realloc(pText, dwSize);
+                  sprintf(&pText[dwPos], "%d", (int)m_dwSeverity);
+                  dwPos = strlen(pText);
+                  break;
+               case 'S':   // Severity text
+                  dwSize += strlen(g_szStatusTextSmall[m_dwSeverity]);
+                  pText = (char *)realloc(pText, dwSize);
+                  strcpy(&pText[dwPos], g_szStatusTextSmall[m_dwSeverity]);
+                  dwPos += strlen(g_szStatusTextSmall[m_dwSeverity]);
+                  break;
+               case 'v':   // NetXMS server version
+                  dwSize += strlen(NETXMS_VERSION_STRING);
+                  pText = (char *)realloc(pText, dwSize);
+                  strcpy(&pText[dwPos], NETXMS_VERSION_STRING);
+                  dwPos += strlen(NETXMS_VERSION_STRING);
+                  break;
+               case 'm':
+                  if (m_szMessageText != NULL)
+                  {
+                     dwSize += strlen(m_szMessageText);
+                     pText = (char *)realloc(pText, dwSize);
+                     strcpy(&pText[dwPos], m_szMessageText);
+                     dwPos += strlen(m_szMessageText);
+                  }
                   break;
                case '0':
                case '1':
@@ -221,8 +271,8 @@ void Event::ExpandMessageText(char *szMessageTemplate)
                   {
                      dwParam--;
                      dwSize += strlen(m_pszParameters[dwParam]);
-                     m_szMessageText = (char *)realloc(m_szMessageText, dwSize);
-                     strcpy(&m_szMessageText[dwPos], m_pszParameters[dwParam]);
+                     pText = (char *)realloc(pText, dwSize);
+                     strcpy(&pText[dwPos], m_pszParameters[dwParam]);
                      dwPos += strlen(m_pszParameters[dwParam]);
                   }
                   break;
@@ -237,14 +287,15 @@ void Event::ExpandMessageText(char *szMessageTemplate)
                pCurr--;
                break;   // Abnormal loop termination
             }
-            m_szMessageText[dwPos++] = *pCurr;
+            pText[dwPos++] = *pCurr;
             break;
          default:
-            m_szMessageText[dwPos++] = *pCurr;
+            pText[dwPos++] = *pCurr;
             break;
       }
    }
-   m_szMessageText[dwPos] = 0;
+   pText[dwPos] = 0;
+   return pText;
 }
 
 

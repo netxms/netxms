@@ -278,4 +278,10 @@ Language=English
 Error loading event actions configuration from database
 .
 
+MessageId=
+SymbolicName=MSG_CREATE_PROCESS_FAILED
+Language=English
+Unable to create process "%1": %2
+.
+
 ;#endif

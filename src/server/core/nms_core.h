@@ -66,10 +66,12 @@
 //
 
 #ifdef _WIN32
+#define DEFAULT_SHELL         "cmd.exe"
 #define DEFAULT_CONFIG_FILE   "C:\\NetXMS.conf"
 #define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
 #define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #else    /* _WIN32 */
+#define DEFAULT_SHELL         "/bin/sh"
 #define DEFAULT_CONFIG_FILE   "/etc/netxms.conf"
 #define DEFAULT_LOG_FILE      "/var/log/netxms.log"
 #define IsStandalone() (1)
@@ -80,7 +82,9 @@
 #define MAX_DB_NAME        32
 #define MAX_LINE_SIZE      4096
 
-#define UNLOCKED           0xFFFFFFFF
+#define UNLOCKED           ((DWORD)0xFFFFFFFF)
+
+#define GROUP_FLAG_BIT     ((DWORD)0x80000000)
 
 
 //
@@ -98,6 +102,7 @@
 #define AF_DEBUG_DC                       0x00000800
 #define AF_DEBUG_HOUSEKEEPER              0x00001000
 #define AF_DEBUG_LOCKS                    0x00002000
+#define AF_DEBUG_ACTIONS                  0x00004000
 #define AF_DEBUG_ALL                      0x0000FF00
 #define AF_SHUTDOWN                       0x80000000
 
@@ -349,6 +354,8 @@ DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize);
 
 void GetSysInfoStr(char *pszBuffer);
 DWORD GetLocalIpAddr(void);
+
+BOOL ExecCommand(char *pszCommand);
 
 #ifdef _WIN32
 

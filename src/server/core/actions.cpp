@@ -110,6 +110,19 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
    pAction = (NMS_ACTION *)bsearch((void *)dwActionId, m_pActionList, m_dwNumActions, sizeof(NMS_ACTION), CompareId);
    if (pAction != NULL)
    {
+      char *pszExpandedData;
+
+      pszExpandedData = pEvent->ExpandText(pAction->pszData);
+      switch(pAction->iType)
+      {
+         case ACTION_EXEC:
+            DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing command \"%s\"\n", pszExpandedData);
+            ExecCommand(pszExpandedData);
+            break;
+         default:
+            break;
+      }
+      free(pszExpandedData);
    }
    return bSuccess;
 }
