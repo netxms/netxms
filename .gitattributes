@@ -93,6 +93,7 @@ src/console/win32/UserSelectDlg.h -text
 src/console/win32/globals.cpp -text
 src/console/win32/globals.h -text
 src/console/win32/icons/Alarms.ICO -text
+src/console/win32/icons/EARTH.ICO -text
 src/console/win32/icons/RuleManager.ico -text
 src/console/win32/icons/board.ico -text
 src/console/win32/icons/event.ico -text
