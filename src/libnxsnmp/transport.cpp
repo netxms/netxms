@@ -178,7 +178,21 @@ int SNMP_Transport::Read(SNMP_PDU **ppData)
 // Send PDU to socket
 //
 
-int SNMP_Transport::Send(SNMP_PDU *pPDU)
+int SNMP_Transport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, int iAddrSize)
 {
-   return 0;
+   BYTE *pBuffer;
+   DWORD dwSize;
+   int nBytes = 0;
+
+   dwSize = pPDU->Encode(&pBuffer);
+   if (dwSize != 0)
+   {
+      if (pRcpt == NULL)
+         nBytes = send(m_hSocket, (char *)pBuffer, dwSize, 0);
+      else
+         nBytes = sendto(m_hSocket, (char *)pBuffer, dwSize, 0, pRcpt, iAddrSize);
+      free(pBuffer);
+   }
+
+   return nBytes;
 }

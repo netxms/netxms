@@ -38,6 +38,25 @@ SNMP_Variable::SNMP_Variable()
 
 
 //
+// Create variable of ASN_NULL type
+//
+
+SNMP_Variable::SNMP_Variable(TCHAR *pszName)
+{
+   DWORD dwLength, *pdwOid;
+
+   m_pValue = NULL;
+   m_dwType = ASN_NULL;
+   m_dwValueLength = 0;
+
+   pdwOid = (DWORD *)malloc(sizeof(DWORD) * 1024);
+   dwLength = SNMPParseOID(pszName, pdwOid, 1024);
+   m_pName = new SNMP_ObjectId(dwLength, pdwOid);
+   free(pdwOid);
+}
+
+
+//
 // SNMP_Variable destructor
 //
 
@@ -229,4 +248,28 @@ SNMP_ObjectId *SNMP_Variable::GetValueAsObjectId(void)
       oid = new SNMP_ObjectId(m_dwValueLength / sizeof(DWORD), (DWORD *)m_pValue);
    }
    return oid;
+}
+
+
+//
+// Encode variable using BER
+// Normally buffer provided should be at least m_dwValueLength+ (name_length * 4) + 12 bytes
+// Return value is number of bytes actually used in buffer
+//
+
+DWORD SNMP_Variable::Encode(BYTE *pBuffer, DWORD dwBufferSize)
+{
+   DWORD dwBytes, dwWorkBufSize;
+   BYTE *pWorkBuf;
+
+   dwWorkBufSize = m_dwValueLength + m_pName->Length() * 4 + 16;
+   pWorkBuf = (BYTE *)malloc(dwWorkBufSize);
+   dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pName->GetValue(), 
+                        m_pName->Length() * sizeof(DWORD), 
+                        pWorkBuf, dwWorkBufSize);
+   dwBytes += BER_Encode(m_dwType, m_pValue, m_dwValueLength, 
+                         pWorkBuf + dwBytes, dwWorkBufSize - dwBytes);
+   dwBytes = BER_Encode(ASN_SEQUENCE, pWorkBuf, dwBytes, pBuffer, dwBufferSize);
+   free(pWorkBuf);
+   return dwBytes;
 }

@@ -25,6 +25,28 @@
 
 
 //
+// PDU type to command translation
+//
+
+static struct
+{
+   DWORD dwType;
+   int iVersion;
+   DWORD dwCommand;
+} PDU_type_to_command[] = 
+{
+   { ASN_TRAP_V1_PDU, SNMP_VERSION_1, SNMP_TRAP },
+   { ASN_TRAP_V2_PDU, SNMP_VERSION_2C, SNMP_TRAP },
+   { ASN_TRAP_V1_PDU, SNMP_VERSION_1, SNMP_TRAP },
+   { ASN_GET_REQUEST_PDU, -1, SNMP_GET_REQUEST },
+   { ASN_GET_NEXT_REQUEST_PDU, -1, SNMP_GET_NEXT_REQUEST },
+   { ASN_SET_REQUEST_PDU, -1, SNMP_SET_REQUEST },
+   { ASN_GET_RESPONCE_PDU, -1, SNMP_GET_RESPONCE },
+   { 0, -1, 0 }
+};
+
+
+//
 // SNMP_PDU default constructor
 //
 
@@ -36,6 +58,27 @@ SNMP_PDU::SNMP_PDU()
    m_dwNumVariables = 0;
    m_ppVarList = NULL;
    m_pEnterprise = NULL;
+   m_dwErrorCode = 0;
+   m_dwErrorIndex = 0;
+   m_dwRqId = 0;
+}
+
+
+//
+// Create request PDU
+//
+
+SNMP_PDU::SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVersion)
+{
+   m_dwVersion = dwVersion;
+   m_dwCommand = dwCommand;
+   m_pszCommunity = strdup(CHECK_NULL(pszCommunity));
+   m_dwNumVariables = 0;
+   m_ppVarList = NULL;
+   m_pEnterprise = NULL;
+   m_dwErrorCode = 0;
+   m_dwErrorIndex = 0;
+   m_dwRqId = dwRqId;
 }
 
 
@@ -67,9 +110,7 @@ BOOL SNMP_PDU::ParseVariable(BYTE *pData, DWORD dwVarLength)
    pVar = new SNMP_Variable;
    if (pVar->Parse(pData, dwVarLength))
    {
-      m_ppVarList = (SNMP_Variable **)realloc(m_ppVarList, sizeof(SNMP_Variable *) * (m_dwNumVariables + 1));
-      m_ppVarList[m_dwNumVariables] = pVar;
-      m_dwNumVariables++;
+      BindVariable(pVar);
    }
    else
    {
@@ -370,4 +411,144 @@ BOOL SNMP_PDU::Parse(BYTE *pRawData, DWORD dwRawLength)
    }
 
    return bResult;
+}
+
+
+//
+// Create packet from PDU
+//
+
+DWORD SNMP_PDU::Encode(BYTE **ppBuffer)
+{
+   DWORD i, dwBufferSize, dwBytes, dwVarBindsSize, dwPDUType, dwPDUSize, dwPacketSize, dwValue;
+   BYTE *pbCurrPos, *pBlock, *pVarBinds, *pPacket;
+
+   // Estimate required buffer size and allocate it
+   for(dwBufferSize = 256, i = 0; i < m_dwNumVariables; i++)
+      dwBufferSize += m_ppVarList[i]->GetValueLength() + m_ppVarList[i]->GetName()->Length() * 4 + 16;
+   pBlock = (BYTE *)malloc(dwBufferSize);
+   pVarBinds = (BYTE *)malloc(dwBufferSize);
+   pPacket = (BYTE *)malloc(dwBufferSize);
+
+   // Encode variables
+   for(i = 0, dwVarBindsSize = 0, pbCurrPos = pVarBinds; i < m_dwNumVariables; i++)
+   {
+      dwBytes = m_ppVarList[i]->Encode(pbCurrPos, dwBufferSize - dwVarBindsSize);
+      pbCurrPos += dwBytes;
+      dwVarBindsSize += dwBytes;
+   }
+
+   // Determine PDU type
+   for(i = 0; PDU_type_to_command[i].dwType != 0; i++)
+      if (((m_dwVersion == (DWORD)PDU_type_to_command[i].iVersion) ||
+           (PDU_type_to_command[i].iVersion == -1)) &&
+          (PDU_type_to_command[i].dwCommand == m_dwCommand))
+      {
+         dwPDUType = PDU_type_to_command[i].dwType;
+         break;
+      }
+
+   // Encode PDU header
+   if (dwPDUType != 0)
+   {
+      pbCurrPos = pBlock;
+      dwPDUSize = 0;
+      switch(dwPDUType)
+      {
+         case ASN_TRAP_V1_PDU:
+            dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->GetValue(),
+                                 m_pEnterprise->Length() * sizeof(DWORD),
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+
+            dwBytes = BER_Encode(ASN_IP_ADDR, (BYTE *)&m_dwAgentAddr, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+
+            dwValue = (DWORD)m_iTrapType;
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&dwValue, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+
+            dwValue = (DWORD)m_iSpecificTrap;
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&dwValue, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwTimeStamp, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+            break;
+         default:
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwRqId, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwErrorCode, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+
+            dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwErrorIndex, sizeof(DWORD), 
+                                 pbCurrPos, dwBufferSize - dwPDUSize);
+            dwPDUSize += dwBytes;
+            pbCurrPos += dwBytes;
+            break;
+      }
+
+      // Encode varbinds into PDU
+      dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, 
+                           pbCurrPos, dwBufferSize - dwPDUSize);
+      dwPDUSize += dwBytes;
+
+      // Encode packet header
+      pbCurrPos = pPacket;
+      dwPacketSize = 0;
+
+      dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwVersion, sizeof(DWORD), 
+                           pbCurrPos, dwBufferSize);
+      dwPacketSize += dwBytes;
+      pbCurrPos += dwBytes;
+
+      dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)m_pszCommunity, strlen(m_pszCommunity),
+                           pbCurrPos, dwBufferSize - dwPacketSize);
+      dwPacketSize += dwBytes;
+      pbCurrPos += dwBytes;
+
+      // Encode PDU into packet
+      dwBytes = BER_Encode(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
+      dwPacketSize += dwBytes;
+
+      // And final step: allocate buffer for entire datagramm and wrap packet
+      // into SEQUENCE
+      *ppBuffer = (BYTE *)malloc(dwPacketSize + 6);
+      dwBytes = BER_Encode(ASN_SEQUENCE, pPacket, dwPacketSize, *ppBuffer, dwPacketSize + 6);
+   }
+   else
+   {
+      dwBytes = 0;   // Error
+   }
+
+   free(pPacket);
+   free(pBlock);
+   free(pVarBinds);
+   return dwBytes;
+}
+
+
+//
+// Bind variable to PDU
+//
+
+void SNMP_PDU::BindVariable(SNMP_Variable *pVar)
+{
+   m_ppVarList = (SNMP_Variable **)realloc(m_ppVarList, sizeof(SNMP_Variable *) * (m_dwNumVariables + 1));
+   m_ppVarList[m_dwNumVariables] = pVar;
+   m_dwNumVariables++;
 }

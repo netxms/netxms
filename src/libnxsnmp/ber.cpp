@@ -36,7 +36,7 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType,
    DWORD dwIdLength = 0;
 
    // We not handle identifiers with more than 5 bits because they are not used in SNMP
-   if ((*pbCurrPos & 0xE0) != 0x1F)
+   if ((*pbCurrPos & 0x1F) != 0x1F)
    {
       *pdwType = (DWORD)(*pbCurrPos);
       pbCurrPos++;
@@ -163,16 +163,145 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
 
 
 //
+// Encode content
+//
+
+static long EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *pResult)
+{
+   long nBytes = 0;
+   int i, iOidLength;
+
+   switch(dwType)
+   {
+      case ASN_NULL:
+         break;
+      case ASN_INTEGER:
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
+         *((DWORD *)pResult) = htonl(*((DWORD *)pData));
+         for(i = 0, nBytes = 4; (pResult[i] == 0) && (nBytes > 1); i++, nBytes--);
+         if (i > 0)
+            memmove(pResult, &pResult[i], nBytes);
+         break;
+      case ASN_OBJECT_ID:
+         iOidLength = dwDataLength / sizeof(DWORD);
+         if (iOidLength > 1)
+         {
+            BYTE *pbCurrPos = pResult;
+            DWORD j, dwValue, dwSize, *pdwCurrId = (DWORD *)pData;
+            static DWORD dwLengthMask[5] = { 0x0000007F, 0x00003FFF, 0x001FFFFF, 0x0FFFFFFF, 0xFFFFFFFF };
+
+            // First two ids encoded in one byte
+            *pbCurrPos = (BYTE)pdwCurrId[0] * 40 + (BYTE)pdwCurrId[1];
+            pbCurrPos++;
+            pdwCurrId += 2;
+            nBytes++;
+
+            // Encode other ids
+            for(i = 2; i < iOidLength; i++, pdwCurrId++)
+            {
+               dwValue = *pdwCurrId;
+
+               // Determine size of oid
+               for(dwSize = 0; (dwLengthMask[dwSize] & dwValue) != dwValue; dwSize++);
+               dwSize++;   // Size is at least one byte...
+
+               if (dwSize > 1)
+               {
+                  // Encode by 7 bits
+                  pbCurrPos += (dwSize - 1);
+                  *pbCurrPos-- = (BYTE)(dwValue & 0x7F);
+                  for(j = dwSize - 1; j > 0; j--)
+                  {
+                     dwValue >>= 7;
+                     *pbCurrPos-- = (BYTE)(dwValue & 0x7F) | 0x80;
+                  }
+                  pbCurrPos += (dwSize + 1);
+               }
+               else
+               {
+                  *pbCurrPos++ = (BYTE)(dwValue & 0x7F);
+               }
+               nBytes += dwSize;
+            }
+         }
+         break;
+      default:
+         memcpy(pResult, pData, dwDataLength);
+         nBytes = dwDataLength;
+         break;
+   }
+   return nBytes;
+}
+
+
+//
 // Encode identifier and content
 // Return value is size of encoded identifier and content in buffer
 // or 0 if there are not enough place in buffer or type is unknown
 //
 
-DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength, 
+DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength,
                  BYTE *pBuffer, DWORD dwBufferSize)
 {
    DWORD dwBytes = 0;
-   BYTE *pbCurrPos = pBuffer;
+   BYTE *pbCurrPos = pBuffer, *pEncodedData;
+   long nDataBytes;
 
+   if (dwBufferSize < 2)
+      return 0;
+
+   *pbCurrPos++ = (BYTE)dwType;
+   dwBytes++;
+
+   // Encode content
+   pEncodedData = (BYTE *)malloc(dwDataLength);
+   nDataBytes = EncodeContent(dwType, pData, dwDataLength, pEncodedData);
+
+   // Encode length
+   if (nDataBytes < 128)
+   {
+      *pbCurrPos++ = (BYTE)nDataBytes;
+      dwBytes++;
+   }
+   else
+   {
+      BYTE bLength[8];
+      long nHdrBytes;
+      int i;
+
+      *((DWORD *)bLength) = htonl((DWORD)nDataBytes);
+      for(i = 0, nHdrBytes = 4; (bLength[i] == 0) && (nHdrBytes > 1); i++, nHdrBytes--);
+      if (i > 0)
+         memmove(bLength, &bLength[i], nHdrBytes);
+
+      // Check for available buffer size
+      if (dwBufferSize < (DWORD)nHdrBytes + dwBytes + 1)
+      {
+         free(pEncodedData);
+         return 0;
+      }
+
+      // Write length field
+      *pbCurrPos++ = (BYTE)(0x80 | nHdrBytes);
+      memcpy(pbCurrPos, bLength, nHdrBytes);
+      pbCurrPos += nHdrBytes;
+      dwBytes += nHdrBytes + 1;
+   }
+
+   // Copy encoded data to buffer
+   if (dwBufferSize >= dwBytes + nDataBytes)
+   {
+      memcpy(pbCurrPos, pEncodedData, nDataBytes);
+      dwBytes += nDataBytes;
+   }
+   else
+   {
+      dwBytes = 0;   // Buffer is too small
+   }
+
+   free(pEncodedData);
    return dwBytes;
 }

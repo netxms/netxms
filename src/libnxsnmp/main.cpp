@@ -42,6 +42,38 @@ void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, 
 
 
 //
+// Parse OID in text into binary format
+// Will return 0 if OID is invalid or empty, and OID length (in DWORDs) on success
+// Buffer size should be given in number of DWORDs
+//
+
+DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize)
+{
+   TCHAR *pCurr = pszText, *pEnd, szNumber[32];
+   DWORD dwLength = 0;
+   int iNumLen;
+
+   if (*pCurr == 0)
+      return 0;
+
+   // Skip initial dot if persent
+   if (*pCurr == _T('.'))
+      pCurr++;
+
+   for(pEnd = pCurr; (*pEnd != 0) && (dwLength < dwBufferSize); pCurr = pEnd + 1)
+   {
+      for(iNumLen = 0, pEnd = pCurr; (*pEnd >= _T('0')) && (*pEnd <= _T('9')); pEnd++, iNumLen++);
+      if ((iNumLen > 15) || ((*pEnd != _T('.')) && (*pEnd != 0)))
+         return 0;   // Number is definitely too large or not a number
+      memcpy(szNumber, pCurr, sizeof(TCHAR) * iNumLen);
+      szNumber[iNumLen] = 0;
+      pdwBuffer[dwLength++] = _tcstoul(szNumber, NULL, 10);
+   }
+   return dwLength;
+}
+
+
+//
 // DLL entry point
 //
 

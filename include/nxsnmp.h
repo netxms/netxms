@@ -103,6 +103,7 @@ public:
    ~SNMP_ObjectId();
 
    DWORD Length(void) { return m_dwLength; }
+   const DWORD *GetValue(void) { return m_pdwValue; }
    const TCHAR *GetValueAsText(void) { return CHECK_NULL(m_pszTextValue); }
 };
 
@@ -121,9 +122,11 @@ private:
 
 public:
    SNMP_Variable();
+   SNMP_Variable(TCHAR *pszName);
    ~SNMP_Variable();
 
    BOOL Parse(BYTE *pData, DWORD dwVarLength);
+   DWORD Encode(BYTE *pBuffer, DWORD dwBufferSize);
 
    SNMP_ObjectId *GetName(void) { return m_pName; }
    DWORD GetType(void) { return m_dwType; }
@@ -165,9 +168,11 @@ private:
 
 public:
    SNMP_PDU();
+   SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_2C);
    ~SNMP_PDU();
 
    BOOL Parse(BYTE *pRawData, DWORD dwRawLength);
+   DWORD Encode(BYTE **ppBuffer);
 
    SNMP_ObjectId *GetTrapId(void) { return m_pEnterprise; }
    int GetTrapType(void) { return m_iTrapType; }
@@ -176,6 +181,8 @@ public:
    SNMP_Variable *GetVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
    const char *GetCommunity(void) { return m_pszCommunity; }
    DWORD GetVersion(void) { return m_dwVersion; }
+
+   void BindVariable(SNMP_Variable *pVar);
 };
 
 
@@ -202,7 +209,7 @@ public:
    ~SNMP_Transport();
 
    int Read(SNMP_PDU **ppData);
-   int Send(SNMP_PDU *pPDU);
+   int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, int iAddrLen = 0);
 };
 
 
@@ -211,6 +218,7 @@ public:
 //
 
 void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
+DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
 
 
 #endif
