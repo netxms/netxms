@@ -122,9 +122,15 @@ inline void RWLockUnlock(RWLOCK hLock)
 
 struct __rwlock_data
 {
-   MUTEX m_mutex;
-   CONDITION m_condRead;
-   CONDITION m_condWrite;
+#ifdef _WIN32
+   HANDLE m_mutex;
+   HANDLE m_condRead;
+   HANDLE m_condWrite;
+#else
+   pthread_mutex_t mutex;
+   pthread_cond_t m_condRead;
+   pthread_cond_t m_condWrite;
+#endif
    DWORD m_dwWaitReaders;
    DWORD m_dwWaitWriters;
    int m_iRefCount;  // -1 for write lock, otherwise number of read locks
