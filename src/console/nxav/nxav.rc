@@ -279,12 +279,12 @@ IDR_SND_ALARM           WAVE    DISCARDABLE     "res\\alarm.wav"
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAME           "nxav"
+    IDR_MAINFRAME           "NetXMS Alarm View"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "nxav"
+    AFX_IDS_APP_TITLE       "NetXMS Alarm View"
     AFX_IDS_IDLEMESSAGE     "Ready"
 END
 

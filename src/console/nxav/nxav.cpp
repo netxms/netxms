@@ -83,7 +83,11 @@ BOOL CAlarmViewApp::InitInstance()
 #endif
 
 	// Change the registry key under which our settings are stored.
-	SetRegistryKey(_T("NetXMS Alarm Viewer"));
+	SetRegistryKey(_T("NetXMS"));
+
+   // Load settings
+   strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
+   strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
@@ -104,6 +108,13 @@ BOOL CAlarmViewApp::InitInstance()
    _tcsncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
    _tcsncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
    _tcsncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
+
+   // Save last connection parameters
+   WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
+   WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
+   //WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
+
+   // Save last used credentials
 
    // Connect
    dwResult = DoLogin();

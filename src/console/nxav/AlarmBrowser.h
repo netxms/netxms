@@ -53,9 +53,9 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CAlarmBrowser)
-		// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -14,15 +14,15 @@ Class3=CMainFrame
 Class4=CAboutDlg
 
 ResourceCount=5
-Resource1=IDD_LOGIN
-Resource2=IDD_REQUEST_WAIT
+Resource1=IDD_REQUEST_WAIT
+Resource2=IDD_ABOUTBOX
 Class2=CChildView
 Class5=CAlarmList
 Class6=CInfoLine
 Class7=CRequestProcessingDlg
 Class8=CLoginDialog
-Resource3=IDR_MAINFRAME
-Resource4=IDD_ABOUTBOX
+Resource3=IDD_LOGIN
+Resource4=IDR_MAINFRAME
 Class9=CAlarmBrowser
 Class10=CFlatButton
 Resource5=IDM_CONTEXT
@@ -156,7 +156,7 @@ Type=0
 HeaderFile=AlarmBrowser.h
 ImplementationFile=AlarmBrowser.cpp
 BaseClass=CHtmlView
-Filter=C
+Filter=W
 VirtualFilter=7VWC
 
 [CLS:CFlatButton]

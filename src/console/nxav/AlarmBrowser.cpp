@@ -11,6 +11,33 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+//
+// Static data
+//
+
+static HHOOK m_hHook = NULL;
+
+
+//
+// Hook procedure for mouse events
+//
+
+static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+   if (nCode < 0)
+      return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+
+   if (wParam == WM_RBUTTONDOWN)
+   {
+      return 1;
+   }
+   else
+   {
+      return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+   }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmBrowser
 
@@ -21,10 +48,18 @@ CAlarmBrowser::CAlarmBrowser()
 	//{{AFX_DATA_INIT(CAlarmBrowser)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
+
+   if (m_hHook == NULL)
+      m_hHook = SetWindowsHookEx(WH_MOUSE, MouseHookProc, theApp.m_hInstance, GetCurrentThreadId());
 }
 
 CAlarmBrowser::~CAlarmBrowser()
 {
+   if (m_hHook != NULL)
+   {
+      UnhookWindowsHookEx(m_hHook);
+      m_hHook = NULL;
+   }
 }
 
 void CAlarmBrowser::DoDataExchange(CDataExchange* pDX)
@@ -38,7 +73,6 @@ void CAlarmBrowser::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CAlarmBrowser, CHtmlView)
 	//{{AFX_MSG_MAP(CAlarmBrowser)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -97,3 +131,4 @@ BOOL CAlarmBrowser::AcknowlegeAlarm(DWORD dwAlarmId)
    dwResult = DoRequestArg1(NXCAcknowlegeAlarm, (void *)dwAlarmId, _T("Acknowleging alarm..."));
    return (dwResult == RCC_SUCCESS);
 }
+
