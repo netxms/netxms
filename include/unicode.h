@@ -45,6 +45,7 @@
 #define _T(x)     x
 
 #define TCHAR     char
+#define WCHAR     unsigned short
 
 #define _tcscpy   strcpy
 #define _tcsncpy  strncpy
@@ -63,6 +64,11 @@
 #define _tcsdup   strdup
 #define _tcsupr   strupr
 #define _tcsspn   strspn
+
+#define CP_ACP             1
+#define MB_PRECOMPOSED     0x00000001
+#define WC_COMPOSITECHECK  0x00000002
+#define WC_DEFAULTCHAR     0x00000004
 
 #endif
 

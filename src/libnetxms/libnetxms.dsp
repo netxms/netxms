@@ -140,6 +140,10 @@ SOURCE=.\sha1.cpp
 
 SOURCE=.\tools.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\unicode.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

@@ -91,7 +91,7 @@ public:
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
    void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, CSCP_DT_INT64, &qwValue); }
    void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, CSCP_DT_FLOAT, &dValue); }
-   void SetVariable(DWORD dwVarId, char *szValue) { Set(dwVarId, CSCP_DT_STRING, szValue); }
+   void SetVariable(DWORD dwVarId, TCHAR *szValue) { Set(dwVarId, CSCP_DT_STRING, szValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
    void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
 
@@ -99,7 +99,7 @@ public:
    QWORD GetVariableInt64(DWORD dwVarId);
    WORD GetVariableShort(DWORD dwVarId);
    double GetVariableDouble(DWORD dwVarId);
-   char *GetVariableStr(DWORD dwVarId, char *szBuffer = NULL, DWORD dwBufSize = 0);
+   TCHAR *GetVariableStr(DWORD dwVarId, TCHAR *szBuffer = NULL, DWORD dwBufSize = 0);
    DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);
    DWORD GetVariableInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwBuffer);
 
@@ -176,7 +176,7 @@ int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
 CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
-char LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, char *pszBuffer);
+TCHAR LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
    
 #ifdef __cplusplus
 }

@@ -184,6 +184,16 @@ extern "C"
 #if !(HAVE_DAEMON)
    int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
 #endif
+
+#ifndef _WIN32
+   int LIBNETXMS_EXPORTABLE wcslen(WCHAR *pStr);
+   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR *pWideCharStr, 
+                                                int cchWideChar, char *pByteStr, int cchByteChar, 
+                                                char *pDefaultChar, BOOL *pbUsedDefChar);
+   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char *pByteStr, 
+                                                int cchByteChar, WCHAR *pWideCharStr, 
+                                                int cchWideChar);
+#endif
 }
 
 #endif   /* _nms_util_h_ */

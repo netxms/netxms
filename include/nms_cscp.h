@@ -50,7 +50,7 @@ typedef struct
       {
          WORD wReserved1;
          DWORD dwLen;
-         char szValue[1];
+         TCHAR szValue[1];
       } string;
       struct
       {
