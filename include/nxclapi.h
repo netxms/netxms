@@ -280,7 +280,7 @@ typedef void * NXC_SESSION;
 #define SYSTEM_ACCESS_DELETE_ALARMS       0x0100
 #define SYSTEM_ACCESS_MANAGE_PACKAGES     0x0200
 
-#define SYSTEM_ACCESS_FULL                0x01FF
+#define SYSTEM_ACCESS_FULL                0x03FF
 
 
 //

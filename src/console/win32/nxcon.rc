@@ -1945,7 +1945,6 @@ BEGIN
     IDR_ACTION_EDITOR       "\nAction Configuration\nAction Configuration"
     IDR_NODE_POLLER         "\nPoll Node\nPoll Node"
     IDR_TRAP_EDITOR         "\nSNMP Trap Configuration\nSNMP Trap Configuration"
-    IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -1957,6 +1956,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_GETFOLDERPATH_FAILED "Call to SHGetFolderPath() failed."
     IDS_WORKDIR_CREATION_FAILED "Failed to create working directory tree."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
 END
 
 #endif    // English (U.S.) resources

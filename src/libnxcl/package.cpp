@@ -104,7 +104,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
                pResponce->GetVariableStr(VID_PACKAGE_VERSION, 
                                          (*ppList)[*pdwNumPackages].szVersion, 
                                          MAX_AGENT_VERSION_LEN);
-               *pdwNumPackages++;
+               (*pdwNumPackages)++;
             }
             delete pResponce;
          }

@@ -57,7 +57,6 @@
 #define IDR_NODE_POLLER                 154
 #define IDR_TRAP_EDITOR                 155
 #define IDI_SORT_UP                     156
-#define IDR_PACKAGE_MGR                 156
 #define IDA_PACKAGE_MGR                 156
 #define IDI_SORT_DOWN                   157
 #define IDD_OBJECT_NODE_GENERAL         159
@@ -333,6 +332,7 @@
 #define IDC_CB_ITEM15                   1230
 #define IDC_CB_ITEM12                   1231
 #define IDC_CB_ITEM16                   1232
+#define IDR_PACKAGE_MGR                 8156
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
