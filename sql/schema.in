@@ -311,3 +311,18 @@ CREATE TABLE PolicyEventList
 	KEY(rule_id)
 #endif
 );
+
+
+/*
+** Deleted objects
+*/
+
+CREATE TABLE DeletedObjects
+(
+	object_id integer not null,
+	object_class integer,
+	name varchar(64),
+	ip_addr integer,
+	ip_netmask integer,
+	PRIMARY KEY(object_id)
+);
