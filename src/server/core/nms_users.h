@@ -25,47 +25,6 @@
 
 
 //
-// Constants
-//
-
-#define MAX_USER_NAME      64
-#define GROUP_FLAG         0x01000000
-
-
-//
-// Global rights
-//
-
-#define SYSTEM_ACCESS_MANAGE_USERS        0x0001
-#define SYSTEM_ACCESS_VIEW_CONFIG         0x0002
-#define SYSTEM_ACCESS_EDIT_CONFIG         0x0004
-#define SYSTEM_ACCESS_DROP_CONNECTIONS    0x0008
-#define SYSTEM_ACCESS_VIEW_EVENT_DB       0x0010
-#define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
-
-
-//
-// Object access rights
-//
-
-#define OBJECT_ACCESS_READ          0x00000001
-#define OBJECT_ACCESS_MODIFY        0x00000002
-#define OBJECT_ACCESS_CREATE        0x00000004
-#define OBJECT_ACCESS_DELETE        0x00000008
-#define OBJECT_ACCESS_MOVE          0x00000010
-
-
-//
-// User/group flags
-//
-
-#define UF_MODIFIED                 0x0001
-#define UF_DELETED                  0x0002
-#define UF_DISABLED                 0x0004
-#define UF_CHANGE_PASSWORD          0x0008
-
-
-//
 // User structure
 //
 
@@ -152,6 +111,8 @@ void DumpUsers(void);
 //
 
 extern NMS_USER *g_pUserList;
-
+extern DWORD g_dwNumUsers;
+extern NMS_USER_GROUP *g_pGroupList;
+extern DWORD g_dwNumGroups;
 
 #endif

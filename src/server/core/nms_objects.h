@@ -24,7 +24,6 @@
 #define _nms_objects_h_
 
 #include <nms_agent.h>
-#include <nxclapi.h>
 
 
 //

@@ -54,8 +54,9 @@
 #include <dbdrv.h>
 #include <nms_cscp.h>
 #include <nms_util.h>
-#include "nms_users.h"
+#include <nxclapi.h>
 #include "nms_dcoll.h"
+#include "nms_users.h"
 #include "nms_objects.h"
 #include "messages.h"
 #include "nms_locks.h"
@@ -267,6 +268,7 @@ private:
    void SendAllObjects(void);
    void SendAllEvents(void);
    void SendAllConfigVars(void);
+   void SendUserDB(DWORD dwRqId);
    void SetConfigVariable(CSCPMessage *pMsg);
    void SendEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pMsg);

@@ -258,6 +258,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_MODIFY_OBJECT:
             ModifyObject(pMsg);
             break;
+         case CMD_LOAD_USER_DB:
+            SendUserDB(pMsg->GetId());
+            break;
          default:
             break;
       }
@@ -656,5 +659,53 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
    }
 
    // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Send users database to client
+//
+
+void ClientSession::SendUserDB(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DWORD i, j, dwId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
+
+   // Send users
+   msg.SetCode(CMD_USER_DATA);
+   for(i = 0; i < g_dwNumUsers; i++)
+   {
+      msg.SetVariable(VID_USER_ID, g_pUserList[i].dwId);
+      msg.SetVariable(VID_USER_NAME, g_pUserList[i].szName);
+      msg.SetVariable(VID_USER_FLAGS, g_pUserList[i].wFlags);
+      msg.SetVariable(VID_USER_SYS_RIGHTS, g_pUserList[i].wSystemRights);
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+
+   // Send groups
+   msg.SetCode(CMD_GROUP_DATA);
+   for(i = 0; i < g_dwNumGroups; i++)
+   {
+      msg.SetVariable(VID_USER_ID, g_pGroupList[i].dwId);
+      msg.SetVariable(VID_USER_NAME, g_pGroupList[i].szName);
+      msg.SetVariable(VID_USER_FLAGS, g_pGroupList[i].wFlags);
+      msg.SetVariable(VID_USER_SYS_RIGHTS, g_pGroupList[i].wSystemRights);
+      msg.SetVariable(VID_NUM_MEMBERS, g_pGroupList[i].dwNumMembers);
+      for(j = 0, dwId = VID_GROUP_MEMBER_BASE; j < g_pGroupList[i].dwNumMembers; j++, dwId++)
+         msg.SetVariable(dwId, g_pGroupList[i].pMembers[j]);
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+
+   // Send end-of-database notification
+   msg.SetCode(CMD_USER_DB_EOF);
    SendMessage(&msg);
 }
