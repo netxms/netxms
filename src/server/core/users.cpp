@@ -63,7 +63,7 @@ BOOL LoadUsers(void)
 
    // Load users
    hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,access,flags,full_name,description FROM users ORDER BY id");
-   if (hResult == 0)
+   if (hResult == NULL)
       return FALSE;
 
    g_dwNumUsers = DBGetNumRows(hResult);
@@ -77,13 +77,35 @@ BOOL LoadUsers(void)
          WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
          CreateSHA1Hash("netxms", g_pUserList[i].szPassword);
       }
-      g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
+      if (g_pUserList[i].dwId == 0)
+         g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;    // Ignore database value for superuser
+      else
+         g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
       strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
       strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
    }
 
    DBFreeResult(hResult);
+
+   // Check if user with UID 0 was loaded
+   for(i = 0; i < g_dwNumUsers; i++)
+      if (g_pUserList[i].dwId == 0)
+         break;
+   // Create superuser account if it doesn't exist
+   if (i == g_dwNumUsers)
+   {
+      g_dwNumUsers++;
+      g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
+      g_pUserList[i].dwId = 0;
+      strcpy(g_pUserList[i].szName, "admin");
+      g_pUserList[i].wFlags = UF_MODIFIED | UF_CHANGE_PASSWORD;
+      g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;
+      g_pUserList[i].szFullName[0] = 0;
+      strcpy(g_pUserList[i].szDescription, "Built-in system administrator account");
+      CreateSHA1Hash("netxms", g_pUserList[i].szPassword);
+      WriteLog(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
+   }
 
    // Load groups
    hResult = DBSelect(g_hCoreDB, "SELECT id,name,access,flags,description FROM user_groups ORDER BY id");
@@ -104,6 +126,25 @@ BOOL LoadUsers(void)
    }
 
    DBFreeResult(hResult);
+
+   // Check if everyone group was loaded
+   for(i = 0; i < g_dwNumGroups; i++)
+      if (g_pGroupList[i].dwId == GROUP_EVERYONE)
+         break;
+   // Create everyone group if it doesn't exist
+   if (i == g_dwNumGroups)
+   {
+      g_dwNumGroups++;
+      g_pGroupList = (NMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NMS_USER_GROUP) * g_dwNumGroups);
+      g_pGroupList[i].dwId = GROUP_EVERYONE;
+      g_pGroupList[i].dwNumMembers = 0;
+      g_pGroupList[i].pMembers = NULL;
+      strcpy(g_pGroupList[i].szName, "Everyone");
+      g_pGroupList[i].wFlags = UF_MODIFIED;
+      g_pGroupList[i].wSystemRights = 0;
+      strcpy(g_pGroupList[i].szDescription, "Built-in everyone group");
+      WriteLog(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
+   }
 
    // Add users to groups
    hResult = DBSelect(g_hCoreDB, "SELECT user_id,group_id FROM user_group_members");
@@ -264,7 +305,7 @@ BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSy
    for(i = 0; i < g_dwNumUsers; i++)
       if (!strcmp(szName, g_pUserList[i].szName) &&
           !memcmp(szPassword, g_pUserList[i].szPassword, SHA_DIGEST_LENGTH) &&
-          !(g_pUserList[i].wFlags & UF_DELETED))
+          !(g_pUserList[i].wFlags & UF_DELETED) && !(g_pUserList[i].wFlags & UF_DISABLED))
       {
          *pdwId = g_pUserList[i].dwId;
          *pdwSystemRights = (DWORD)g_pUserList[i].wSystemRights;
@@ -540,7 +581,7 @@ DWORD ModifyUser(NMS_USER *pUserInfo)
          // Modify UF_DISABLED and UF_CHANGE_PASSWORD flags from pUserInfo
          // Ignore DISABLED flag for UID 0
          g_pUserList[i].wFlags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD);
-         if (g_pUserList[i].dwId != 0)
+         if (g_pUserList[i].dwId == 0)
             g_pUserList[i].wFlags |= pUserInfo->wFlags & UF_CHANGE_PASSWORD;
          else
             g_pUserList[i].wFlags |= pUserInfo->wFlags & (UF_DISABLED | UF_CHANGE_PASSWORD);
@@ -571,6 +612,26 @@ DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo)
    for(i = 0; i < g_dwNumGroups; i++)
       if (g_pGroupList[i].dwId == pGroupInfo->dwId)
       {
+         strcpy(g_pGroupList[i].szName, pGroupInfo->szName);
+         strcpy(g_pGroupList[i].szDescription, pGroupInfo->szDescription);
+         g_pGroupList[i].wSystemRights = pGroupInfo->wSystemRights;
+
+         // Ignore DISABLED flag for EVERYONE group
+         if (g_pGroupList[i].dwId != 0)
+         {
+            g_pGroupList[i].wFlags &= ~UF_DISABLED;
+            g_pGroupList[i].wFlags |= pGroupInfo->wFlags & UF_DISABLED;
+         }
+
+         // Modify members list
+         g_pGroupList[i].dwNumMembers = pGroupInfo->dwNumMembers;
+         g_pGroupList[i].pMembers = (DWORD *)realloc(g_pGroupList[i].pMembers, sizeof(DWORD) * g_pGroupList[i].dwNumMembers);
+         memcpy(g_pGroupList[i].pMembers, pGroupInfo->pMembers, sizeof(DWORD) * g_pGroupList[i].dwNumMembers);
+
+         // Mark group record as modified and notify clients
+         g_pGroupList[i].wFlags |= UF_MODIFIED;
+         SendUserDBUpdate(USER_DB_MODIFY, g_pGroupList[i].dwId, NULL, &g_pGroupList[i]);
+         dwResult = RCC_SUCCESS;
          break;
       }
 

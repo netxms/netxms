@@ -308,4 +308,16 @@ Language=English
 Call to if_nameindex() failed (%1)
 .
 
+MessageId=
+SymbolicName=MSG_SUPERUSER_CREATED
+Language=English
+Superuser account created because it was not presented in database
+.
+
+MessageId=
+SymbolicName=MSG_EVERYONE_GROUP_CREATED
+Language=English
+User group "Everyone" created because it was not presented in database
+.
+
 ;#endif

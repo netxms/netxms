@@ -24,6 +24,40 @@
 
 
 //
+// Fill CSCP message with user data
+//
+
+static void FillUserInfoMessage(CSCPMessage *pMsg, NMS_USER *pUser)
+{
+   pMsg->SetVariable(VID_USER_ID, pUser->dwId);
+   pMsg->SetVariable(VID_USER_NAME, pUser->szName);
+   pMsg->SetVariable(VID_USER_FLAGS, pUser->wFlags);
+   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pUser->wSystemRights);
+   pMsg->SetVariable(VID_USER_FULL_NAME, pUser->szFullName);
+   pMsg->SetVariable(VID_USER_DESCRIPTION, pUser->szDescription);
+}
+
+
+//
+// Fill CSCP message with user group data
+//
+
+static void FillGroupInfoMessage(CSCPMessage *pMsg, NMS_USER_GROUP *pGroup)
+{
+   DWORD i, dwId;
+
+   pMsg->SetVariable(VID_USER_ID, pGroup->dwId);
+   pMsg->SetVariable(VID_USER_NAME, pGroup->szName);
+   pMsg->SetVariable(VID_USER_FLAGS, pGroup->wFlags);
+   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pGroup->wSystemRights);
+   pMsg->SetVariable(VID_USER_DESCRIPTION, pGroup->szDescription);
+   pMsg->SetVariable(VID_NUM_MEMBERS, pGroup->dwNumMembers);
+   for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pGroup->dwNumMembers; i++, dwId++)
+      pMsg->SetVariable(dwId, pGroup->pMembers[i]);
+}
+
+
+//
 // Client session class constructor
 //
 
@@ -716,7 +750,7 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
 void ClientSession::SendUserDB(DWORD dwRqId)
 {
    CSCPMessage msg;
-   DWORD i, j, dwId;
+   DWORD i;
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -728,12 +762,7 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    msg.SetCode(CMD_USER_DATA);
    for(i = 0; i < g_dwNumUsers; i++)
    {
-      msg.SetVariable(VID_USER_ID, g_pUserList[i].dwId);
-      msg.SetVariable(VID_USER_NAME, g_pUserList[i].szName);
-      msg.SetVariable(VID_USER_FLAGS, g_pUserList[i].wFlags);
-      msg.SetVariable(VID_USER_SYS_RIGHTS, g_pUserList[i].wSystemRights);
-      msg.SetVariable(VID_USER_FULL_NAME, g_pUserList[i].szFullName);
-      msg.SetVariable(VID_USER_DESCRIPTION, g_pUserList[i].szDescription);
+      FillUserInfoMessage(&msg, &g_pUserList[i]);
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
@@ -742,14 +771,7 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    msg.SetCode(CMD_GROUP_DATA);
    for(i = 0; i < g_dwNumGroups; i++)
    {
-      msg.SetVariable(VID_USER_ID, g_pGroupList[i].dwId);
-      msg.SetVariable(VID_USER_NAME, g_pGroupList[i].szName);
-      msg.SetVariable(VID_USER_FLAGS, g_pGroupList[i].wFlags);
-      msg.SetVariable(VID_USER_SYS_RIGHTS, g_pGroupList[i].wSystemRights);
-      msg.SetVariable(VID_USER_DESCRIPTION, g_pGroupList[i].szDescription);
-      msg.SetVariable(VID_NUM_MEMBERS, g_pGroupList[i].dwNumMembers);
-      for(j = 0, dwId = VID_GROUP_MEMBER_BASE; j < g_pGroupList[i].dwNumMembers; j++, dwId++)
-         msg.SetVariable(dwId, g_pGroupList[i].pMembers[j]);
+      FillGroupInfoMessage(&msg, &g_pGroupList[i]);
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
@@ -833,9 +855,19 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
       if (dwUserId & GROUP_FLAG)
       {
          NMS_USER_GROUP group;
+         DWORD i, dwId;
 
          group.dwId = dwUserId;
+         pRequest->GetVariableStr(VID_USER_DESCRIPTION, group.szDescription, MAX_USER_DESCR);
+         pRequest->GetVariableStr(VID_USER_NAME, group.szName, MAX_USER_NAME);
+         group.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
+         group.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
+         group.dwNumMembers = pRequest->GetVariableLong(VID_NUM_MEMBERS);
+         group.pMembers = (DWORD *)malloc(sizeof(DWORD) * group.dwNumMembers);
+         for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < group.dwNumMembers; i++, dwId++)
+            group.pMembers[i] = pRequest->GetVariableLong(dwId);
          dwResult = ModifyGroup(&group);
+         safe_free(group.pMembers);
       }
       else
       {
@@ -981,21 +1013,24 @@ void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, N
       msg.SetCode(CMD_USER_DB_UPDATE);
       msg.SetId(0);
       msg.SetVariable(VID_UPDATE_TYPE, (WORD)iCode);
-      msg.SetVariable(VID_USER_ID, dwUserId);
 
       switch(iCode)
       {
          case USER_DB_CREATE:
+            msg.SetVariable(VID_USER_ID, dwUserId);
             if (dwUserId & GROUP_FLAG)
-            {
                msg.SetVariable(VID_USER_NAME, pGroup->szName);
-            }
             else
-            {
                msg.SetVariable(VID_USER_NAME, pUser->szName);
-            }
+            break;
+         case USER_DB_MODIFY:
+            if (dwUserId & GROUP_FLAG)
+               FillGroupInfoMessage(&msg, pGroup);
+            else
+               FillUserInfoMessage(&msg, pUser);
             break;
          default:
+            msg.SetVariable(VID_USER_ID, dwUserId);
             break;
       }
 
