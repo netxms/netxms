@@ -120,8 +120,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   _sntprintf(szQuery, 512, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
-                            "is_router,snmp_version,discovery_flags,auth_method,secret,"
+   _sntprintf(szQuery, 512, "SELECT name,status,primary_ip,is_snmp,is_agent,is_bridge,"
+                            "is_router,is_ospf,snmp_version,discovery_flags,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt,"
                             "image_id,is_deleted,description,node_type,agent_version,"
                             "platform_name,poller_node_id FROM nodes WHERE id=%d", dwId);
@@ -136,19 +136,21 @@ BOOL Node::CreateFromDB(DWORD dwId)
    }
 
    m_dwId = dwId;
-   strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
-   m_iStatus = DBGetFieldLong(hResult, 0, 2);
-   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 3);
+   strncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+   m_iStatus = DBGetFieldLong(hResult, 0, 1);
+   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
 
    // Flags
-   if (DBGetFieldLong(hResult, 0, 4))
+   if (DBGetFieldLong(hResult, 0, 3))
       m_dwFlags |= NF_IS_SNMP;
-   if (DBGetFieldLong(hResult, 0, 5))
+   if (DBGetFieldLong(hResult, 0, 4))
       m_dwFlags |= NF_IS_NATIVE_AGENT;
-   if (DBGetFieldLong(hResult, 0, 6))
+   if (DBGetFieldLong(hResult, 0, 5))
       m_dwFlags |= NF_IS_BRIDGE;
-   if (DBGetFieldLong(hResult, 0, 7))
+   if (DBGetFieldLong(hResult, 0, 6))
       m_dwFlags |= NF_IS_ROUTER;
+   if (DBGetFieldLong(hResult, 0, 7))
+      m_dwFlags |= NF_IS_OSPF;
    if (DBGetFieldLong(hResult, 0, 16))
       m_dwFlags |= NF_IS_LOCAL_MGMT;
 
@@ -263,9 +265,9 @@ BOOL Node::SaveToDB(void)
                "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
                "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
                "snmp_oid,is_local_mgmt,image_id,description,node_type,"
-               "agent_version,platform_name,poller_node_id)"
+               "agent_version,platform_name,poller_node_id,is_ospf)"
                " VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
-               "'%s','%s',%d,%ld,'%s',%ld,'%s','%s',%ld)",
+               "'%s','%s',%d,%ld,'%s',%ld,'%s','%s',%ld,%d)",
                m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
                IpToStr(m_dwIpAddr, szIpAddr),
                m_dwFlags & NF_IS_SNMP ? 1 : 0,
@@ -275,7 +277,8 @@ BOOL Node::SaveToDB(void)
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
                m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
                m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId,
-               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, m_dwPollerNode);
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, 
+               m_dwPollerNode, m_dwFlags & NF_IS_OSPF ? 1 : 0);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip='%s',"
@@ -283,7 +286,7 @@ BOOL Node::SaveToDB(void)
                "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
                "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,"
                "image_id=%ld,description='%s',node_type=%ld,agent_version='%s',"
-               "platform_name='%s',poller_node_id=%ld WHERE id=%ld",
+               "platform_name='%s',poller_node_id=%ld,is_ospf=%d WHERE id=%ld",
                m_szName, m_iStatus, m_bIsDeleted, 
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags & NF_IS_SNMP ? 1 : 0,
@@ -294,7 +297,7 @@ BOOL Node::SaveToDB(void)
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
                m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, 
                pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform,
-               m_dwPollerNode, m_dwId);
+               m_dwPollerNode, m_dwFlags & NF_IS_OSPF ? 1 : 0, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscDescr);
    free(pszEscVersion);
@@ -1343,38 +1346,17 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
                                 WORD wPort, WORD wProto, TCHAR *pszRequest,
                                 TCHAR *pszResponce)
 {
-   DWORD dwError;
+   DWORD dwError = ERR_NOT_CONNECTED;
    DWORD dwTries = 3;
+   AgentConnection conn(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 
-   AgentLock();
-
-   // Establish connection if needed
-   if (m_pAgentConnection == NULL)
-      if (!ConnectToAgent())
-      {
-         AgentUnlock();
-         return ERR_NOT_CONNECTED;
-      }
-
-   // Try to check service via agent
-   while(dwTries-- > 0)
+   // Establish connection with agent
+   if (conn.Connect())
    {
-      dwError = m_pAgentConnection->CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
-                           wPort, wProto, pszRequest, pszResponce);
-      if ((dwError == ERR_NOT_CONNECTED) ||
-          (dwError == ERR_CONNECTION_BROKEN))
-      {
-         if (!ConnectToAgent())
-            break;
-      }
-      else
-      {
-         if (dwError != ERR_REQUEST_TIMEOUT)
-            break;
-      }
+      dwError = conn.CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
+                                         wPort, wProto, pszRequest, pszResponce);
+      conn.Disconnect();
    }
-
-   AgentUnlock();
    return dwError;
 }
 

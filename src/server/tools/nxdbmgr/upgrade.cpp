@@ -82,7 +82,8 @@ static BOOL H_UpgradeFromV19(void)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes ADD poller_node_id integer\n"
-      "UPDATE nodes SET poller_node_id=0\n"
+      "ALTER TABLE nodes ADD is_ospf integer\n"
+      "UPDATE nodes SET poller_node_id=0,is_ospf=0\n"
       "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)"
          " VALUES (28,'SYS_NODE_DOWN',4,1,'Node down',"
 		   "'Generated when node is not responding to management server.#0D#0A"

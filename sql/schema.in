@@ -102,6 +102,7 @@ CREATE TABLE nodes
 	is_bridge integer,
 	is_router integer,
 	is_local_mgmt integer,
+	is_ospf integer,
 	snmp_version integer,
 	community varchar(32),
 	snmp_oid varchar(255),

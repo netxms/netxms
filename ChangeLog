@@ -12,6 +12,7 @@
 - Object status now recalculated after binding change
 - Implemented primary IP address selection for nodes
 - Added OSPF support detection
+- Fixed bug with StartupDelay parameter handling in core agent
 
 
 *
