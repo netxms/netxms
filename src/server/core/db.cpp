@@ -134,7 +134,7 @@ void DBDisconnect(DB_HANDLE hConn)
 
 BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
 {
-printf("%s\n",szQuery);
+//printf("%s\n",szQuery);
    return m_fpDrvQuery(hConn, szQuery);
 }
 
@@ -145,7 +145,7 @@ printf("%s\n",szQuery);
 
 DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
 {
-printf("%s\n",szQuery);
+//printf("%s\n",szQuery);
    return m_fpDrvSelect(hConn, szQuery);
 }
 

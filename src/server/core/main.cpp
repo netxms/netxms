@@ -166,6 +166,28 @@ void Main(void)
                   printf("*** Object dump complete ***\n");
                }
                break;
+            case 'i':
+               {
+                  char buffer[256],addr[32],mask[32];
+                  INTERFACE_LIST *iflist;
+                  AgentConnection *ac = new AgentConnection(inet_addr("127.0.0.1"));
+                  ac->Connect();
+                  ac->GetParameter("Agent.Version",255,buffer);
+                  printf("Agent version: %s\n",buffer);
+                  iflist = ac->GetInterfaceList();
+                  if (iflist != NULL)
+                  {
+                     for(int i=0;i<iflist->iNumEntries;i++)
+                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
+                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
+                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
+                        iflist->pInterfaces[i].szName);
+                  }
+                  DestroyInterfaceList(iflist);
+                  ac->Disconnect();
+                  delete ac;
+               }
+               break;
             default:
                break;
          }

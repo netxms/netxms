@@ -164,4 +164,28 @@ Language=English
 Unable to open SNMP session
 .
 
+MessageId=
+SymbolicName=MSG_SOCKET_FAILED
+Language=English
+Unable to create socket in function %1
+.
+
+MessageId=
+SymbolicName=MSG_AGENT_CONNECT_FAILED
+Language=English
+Unable to establish connection with agent on host %1
+.
+
+MessageId=
+SymbolicName=MSG_AGENT_COMM_FAILED
+Language=English
+Unable to communicate with agent on host %1 (possibly due to authentication failure)
+.
+
+MessageId=
+SymbolicName=MSG_AGENT_BAD_HELLO
+Language=English
+Invalid HELLO message received from agent on host %1 (possibly due to incompatible protocol version)
+.
+
 ;#endif

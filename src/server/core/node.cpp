@@ -246,33 +246,73 @@ BOOL Node::DeleteFromDB(void)
 
 BOOL Node::NewNodePoll(DWORD dwNetMask)
 {
+   Interface *pInterface;
+   Subnet *pSubnet;
+   AgentConnection *pAgentConn;
+
    // Determine node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId))
       m_dwFlags |= NF_IS_SNMP;
 
+   pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   if (pAgentConn->Connect())
+      m_dwFlags |= NF_IS_NATIVE_AGENT;
+
    // Get interface list
-   if (m_dwFlags & NF_IS_SNMP)
+   if ((m_dwFlags & NF_IS_SNMP) || (m_dwFlags & NF_IS_NATIVE_AGENT))
    {
-      INTERFACE_LIST *pIfList;
+      INTERFACE_LIST *pIfList = NULL;
       int i;
 
-      pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString);
-      for(i = 0; i < pIfList->iNumEntries; i++)
+      if (m_dwFlags & NF_IS_NATIVE_AGENT)    // Prefer native agent
+         pIfList = pAgentConn->GetInterfaceList();
+      if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
+         pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString);
+
+      if (pIfList != NULL)
       {
-         Interface *pInterface = new Interface(pIfList->pInterfaces[i].szName, 
-            pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr,
-            pIfList->pInterfaces[i].dwIpNetMask, pIfList->pInterfaces[i].dwType);
-         NetObjInsert(pInterface, TRUE);
-         AddInterface(pInterface);
+         for(i = 0; i < pIfList->iNumEntries; i++)
+         {
+            pInterface = new Interface(pIfList->pInterfaces[i].szName, 
+               pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr,
+               pIfList->pInterfaces[i].dwIpNetMask, pIfList->pInterfaces[i].dwType);
+            NetObjInsert(pInterface, TRUE);
+            AddInterface(pInterface);
+
+            // Bind node to appropriate subnet
+            pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
+            if (pSubnet == NULL)
+            {
+               // Create new subnet object
+               pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+               NetObjInsert(pSubnet, TRUE);
+            }
+            pSubnet->AddNode(this);
+         }
+         DestroyInterfaceList(pIfList);
       }
-      DestroyInterfaceList(pIfList);
    }
    else  // No SNMP, no native agent - create pseudo interface object
    {
-      Interface *pInterface = new Interface(m_dwIpAddr, dwNetMask);
+      pInterface = new Interface(m_dwIpAddr, dwNetMask);
       NetObjInsert(pInterface, TRUE);
       AddInterface(pInterface);
+
+      // Bind node to appropriate subnet
+      pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
+      if (pSubnet == NULL)
+      {
+         // Create new subnet object
+         pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+         NetObjInsert(pSubnet, TRUE);
+      }
+      pSubnet->AddNode(this);
    }
+
+   // Clean up agent connection
+   if (m_dwFlags & NF_IS_NATIVE_AGENT)
+      pAgentConn->Disconnect();
+   delete pAgentConn;
 
    return TRUE;
 }

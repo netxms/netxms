@@ -237,6 +237,18 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
 
 
 //
+// Handler for enumerating indexes
+//
+
+static void HandlerIndex(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+{
+   if (((INTERFACE_LIST *)pArg)->iEnumPos < ((INTERFACE_LIST *)pArg)->iNumEntries)
+      ((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iEnumPos].dwIndex = *pVar->val.integer;
+   ((INTERFACE_LIST *)pArg)->iEnumPos++;
+}
+
+
+//
 // Handler for enumerating IP addresses
 //
 
@@ -303,31 +315,40 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
    // Create empty list
    pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
    pIfList->iNumEntries = iNumIf;
+   pIfList->iEnumPos = 0;
    pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iNumIf);
    memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 
-   // Enumerate interfaces
-   for(i = 1; i <= iNumIf; i++)
-   {
-      // Interface index
-      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.1.%d", i);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i - 1].dwIndex))
-         continue;
+   // Gather interface indexes
+   SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.2.2.1.1", HandlerIndex, pIfList);
 
+   // Enumerate interfaces
+   for(i = 0; i < iNumIf; i++)
+   {
       // Interface name
-      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", i);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, pIfList->pInterfaces[i - 1].szName))
+      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, pIfList->pInterfaces[i].szName))
          continue;
 
       // Interface type
-      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", i);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i - 1].dwType))
+      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i].dwType))
          continue;
    }
 
    // Interface IP address'es and netmasks
    SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1", HandlerIpAddr, pIfList);
    SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.3", HandlerNetMask, pIfList);
+
+   // Delete loopback interface(s) from list
+   for(i = 0; i < pIfList->iNumEntries; i++)
+      if ((pIfList->pInterfaces[i].dwIpAddr & pIfList->pInterfaces[i].dwIpNetMask) == 0x0000007F)
+      {
+         pIfList->iNumEntries--;
+         memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
+                 sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
+         i--;
+      }
 
    return pIfList;
 }

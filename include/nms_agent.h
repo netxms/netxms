@@ -51,6 +51,9 @@
 #define ERR_INTERNAL_ERROR          500
 #define ERR_NOT_IMPLEMENTED         501
 #define ERR_OUT_OF_RESOURCES        503
+#define ERR_NOT_CONNECTED           900
+#define ERR_CONNECTION_BROKEN       901
+#define ERR_BAD_RESPONCE            902
 
 
 //

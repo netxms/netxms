@@ -174,6 +174,8 @@ public:
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
+
+   DWORD IpNetMask(void) { return m_dwIpNetMask; }
 };
 
 
