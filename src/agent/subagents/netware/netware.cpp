@@ -22,6 +22,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nms_threads.h>
 #include <netdb.h>
 #include <monitor.h>
 #include <nks/plat.h>
@@ -144,6 +145,17 @@ static LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 
 
 //
+// Platform name
+//
+
+static LONG H_PlatformName(char *pszParam, char *pArg, char *pValue)
+{
+   ret_string(pValue, "netware-i386");
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // ARP cache
 //
 
@@ -204,7 +216,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage(*)", H_CpuUsage, (char *)60 },
    { "System.CPU.Usage5(*)", H_CpuUsage, (char *)300 },
    { "System.CPU.Usage15(*)", H_CpuUsage, (char *)900 },
-   { "System.Hostname", H_HostName, NULL }
+   { "System.Hostname", H_HostName, NULL },
+   { "System.PlatformName", H_PlatformName, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -213,7 +226,10 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	"NETWARE", 0x01000000, NULL,
+	NETXMS_SUBAGENT_INFO_MAGIC,
+   "NETWARE", 
+   NETXMS_VERSION_STRING,
+   NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),

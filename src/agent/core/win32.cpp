@@ -302,16 +302,12 @@ LONG H_SystemUname(char *cmd, char *arg, char *value)
       case PROCESSOR_ARCHITECTURE_IA64:
          cpuType = "Intel IA-64";
          break;
-#ifdef PROCESSOR_ARCHITECTURE_IA32_ON_WIN64
       case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
          cpuType = "IA-32 on IA-64";
          break;
-#endif
-#ifdef PROCESSOR_ARCHITECTURE_AMD64
       case PROCESSOR_ARCHITECTURE_AMD64:
          cpuType = "AMD-64";
          break;
-#endif
       default:
          cpuType = "unknown";
          break;
@@ -462,4 +458,45 @@ LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    free(pdwProcList);
    return iResult;
+}
+
+
+//
+// Handler for System.PlatformName
+//
+
+LONG H_PlatformName(char *cmd, char *arg, char *value)
+{
+   SYSTEM_INFO sysInfo;
+
+   GetSystemInfo(&sysInfo);
+   switch(sysInfo.wProcessorArchitecture)
+   {
+      case PROCESSOR_ARCHITECTURE_INTEL:
+         strcpy(value, "windows-i386");
+         break;
+      case PROCESSOR_ARCHITECTURE_MIPS:
+         strcpy(value, "windows-mips");
+         break;
+      case PROCESSOR_ARCHITECTURE_ALPHA:
+         strcpy(value, "windows-alpha");
+         break;
+      case PROCESSOR_ARCHITECTURE_PPC:
+         strcpy(value, "windows-ppc");
+         break;
+      case PROCESSOR_ARCHITECTURE_IA64:
+         strcpy(value, "windows-ia64");
+         break;
+      case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+         strcpy(value, "windows-i386");
+         break;
+      case PROCESSOR_ARCHITECTURE_AMD64:
+         strcpy(value, "windows-amd64");
+         break;
+      default:
+         strcpy(value, "windows-unknown");
+         break;
+   }
+
+   return SYSINFO_RC_SUCCESS;
 }

@@ -54,6 +54,7 @@ LONG H_NetIPStats(char *cmd, char *arg, char *value);
 LONG H_NetInterfaceStats(char *cmd, char *arg, char *value);
 LONG H_ServiceState(char *cmd, char *arg, char *value);
 LONG H_CPUCount(char *cmd, char *arg, char *value);
+LONG H_PlatformName(char *cmd, char *arg, char *value);
 #endif
 
 
@@ -179,6 +180,7 @@ static AGENT_PARAM m_stdParams[] =
    { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE },
    { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL },
    { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED },
+   { "System.PlatformName", H_PlatformName, NULL },
    { "System.ProcessCount", H_ProcCount, NULL },
    { "System.ServiceState(*)", H_ServiceState, NULL },
    { "System.ThreadCount", H_ThreadCount, NULL },

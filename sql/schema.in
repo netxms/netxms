@@ -552,3 +552,17 @@ CREATE TABLE snmp_trap_pmap
 	description varchar(255),
 	PRIMARY KEY(trap_id,parameter)
 );
+
+
+/*
+** Agent packages
+*/
+
+CREATE TABLE agent_pkg
+(
+	pkg_id integer not null,
+	version varchar(31),
+	platform varchar(63),
+	pkg_file varchar(255),
+	PRIMARY KEY(pkg_id)	
+);
