@@ -27,7 +27,6 @@ GENERAL:
 
 SERVER:
 
-- Use separate AgentConnection for service status polling
 - Implement sending of all alarms from database
 - Implement normal mailer shutdown
 - Check if object indexes always locked when used
@@ -41,10 +40,7 @@ SERVER:
 - Housekeeping for DCI
 - Add logging API for database drivers
 - DCI transformation scripts (probably Perl?)
-- Add database unlocking after server crash into nxdbmgr
 - Event correlation
-- Internal parameters for service checks
-- "Proxy agent for service checks" attribure for node objects
 - Implement reconnect in all database drivers
 - Network service autodiscovery
 - New attribute: disable status/configuration poll
@@ -52,6 +48,7 @@ SERVER:
 - NxAdm -- status, stop server
 - NxDbMgr -- backup before db recover
 - Replace mutex with r/w lock for session list access
+- OSPF discovery
 
 
 CORE AGENT:
