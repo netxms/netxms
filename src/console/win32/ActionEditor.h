@@ -50,6 +50,7 @@ protected:
 	afx_msg void OnActionNew();
 	afx_msg void OnActionProperties();
 	//}}AFX_MSG
+	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	CImageList m_imageList;

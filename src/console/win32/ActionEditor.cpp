@@ -42,6 +42,7 @@ BEGIN_MESSAGE_MAP(CActionEditor, CMDIChildWnd)
 	ON_COMMAND(ID_ACTION_NEW, OnActionNew)
 	ON_COMMAND(ID_ACTION_PROPERTIES, OnActionProperties)
 	//}}AFX_MSG_MAP
+   ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDoubleClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -74,7 +75,8 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS, rect, this, IDC_LIST_VIEW);
-   m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | LVS_EX_FULLROWSELECT);
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT |
+                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Create image list
@@ -140,6 +142,16 @@ void CActionEditor::OnClose()
 {
    DoRequest(NXCUnlockActionDB, "Unlocking action configuration database...");
 	CMDIChildWnd::OnClose();
+}
+
+
+//
+// Handler for double-clicks in list view
+//
+
+void CActionEditor::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_ACTION_PROPERTIES, 0);
 }
 
 
