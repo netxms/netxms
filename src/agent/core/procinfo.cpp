@@ -178,7 +178,7 @@ LONG H_ProcInfo(char *cmd, char *arg, char *value)
    unsigned __int64 attrVal;
    DWORD *procList, dwSize;
    HMODULE *modList;
-   static char *typeList[]={ "min", "max", "avg", "sum" };
+   static char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
    // Check attribute
    attr = (int)arg;
