@@ -92,16 +92,22 @@ int SNMP_Transport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_
    {
       fd_set rdfs;
       struct timeval tv;
+#ifndef _WIN32
       int iErr;
-      DWORD dwTime;
+      QWORD qwTime;
 
       do
       {
+#endif
          FD_ZERO(&rdfs);
          FD_SET(m_hSocket, &rdfs);
          tv.tv_sec = dwTimeout / 1000;
          tv.tv_usec = (dwTimeout % 1000) * 1000;
-         dwTime = GetCurrentTimeMs();
+#ifdef _WIN32
+         if (select(m_hSocket + 1, &rdfs, NULL, NULL, &tv) <= 0)
+            return 0;
+#else
+         qwTime = GetCurrentTimeMs();
          if ((iErr = select(m_hSocket + 1, &rdfs, NULL, NULL, &tv)) <= 0)
          {
             if (((iErr == -1) && (errno != EINTR)) ||
@@ -110,9 +116,10 @@ int SNMP_Transport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_
                return 0;
             }
          }
-         dwTime = GetCurrentTimeMs() - dwTime;  // Elapsed time
-         dwTimeout -= min(dwTime, dwTimeout);
+         qwTime = GetCurrentTimeMs() - qwTime;  // Elapsed time
+         dwTimeout -= min(((DWORD)qwTime), dwTimeout);
       } while(iErr < 0);
+#endif
    }
    return recvfrom(m_hSocket, (char *)&m_pBuffer[m_dwBufferPos + m_dwBytesInBuffer],
                    m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer), 0,
