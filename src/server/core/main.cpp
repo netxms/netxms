@@ -35,6 +35,7 @@ void DiscoveryThread(void *arg);
 void Syncer(void *arg);
 void NodePoller(void *arg);
 void StatusPoller(void *arg);
+void ConfigurationPoller(void *arg);
 void EventProcessor(void *arg);
 
 
@@ -48,6 +49,7 @@ char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
+DWORD g_dwConfigurationPollingInterval;
 
 
 //
@@ -82,8 +84,9 @@ BOOL SleepAndCheckForShutdown(int iSeconds)
 
 static void LoadGlobalConfig()
 {
-   g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 3600);
+   g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 900);
    g_dwStatusPollingInterval = ConfigReadInt("StatusPollingInterval", 60);
+   g_dwConfigurationPollingInterval = ConfigReadInt("ConfigurationPollingInterval", 3600);
 }
 
 

@@ -45,3 +45,27 @@ void StatusPoller(void *arg)
       }
    }
 }
+
+
+//
+// Configuration poll thread
+//
+
+void ConfigurationPoller(void *arg)
+{
+   Node *pNode;
+
+   while(!ShutdownInProgress())
+   {
+      if (SleepAndCheckForShutdown(30))
+         break;      // Shutdown has arrived
+
+      // Walk through nodes and do configuration poll
+      for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
+      {
+         pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
+         if (pNode->ReadyForConfigurationPoll())
+            pNode->ConfigurationPoll();
+      }
+   }
+}

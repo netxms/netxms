@@ -41,6 +41,9 @@ Node::Node()
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
+   m_tLastConfigurationPoll = 0;
+   m_iSnmpAgentFails = 0;
+   m_iNativeAgentFails = 0;
 }
 
 
@@ -64,6 +67,9 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
+   m_tLastConfigurationPoll = 0;
+   m_iSnmpAgentFails = 0;
+   m_iNativeAgentFails = 0;
 }
 
 
@@ -472,4 +478,76 @@ void Node::StatusPoll(void)
          ((Interface *)m_pChildList[i])->StatusPoll();
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
+}
+
+
+//
+// Perform configuration poll on node
+//
+
+void Node::ConfigurationPoll(void)
+{
+   DWORD dwOldFlags = m_dwFlags;
+   AgentConnection *pAgentConn;
+   INTERFACE_LIST *pIfList;
+
+   // Check node's capabilities
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4))
+   {
+      m_dwFlags |= NF_IS_SNMP;
+      m_iSnmpAgentFails = 0;
+   }
+   else
+   {
+      if (m_iSnmpAgentFails == 0)
+         PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
+      m_iSnmpAgentFails++;
+   }
+
+   pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   if (pAgentConn->Connect())
+   {
+      m_dwFlags |= NF_IS_NATIVE_AGENT;
+      m_iNativeAgentFails = 0;
+   }
+   else
+   {
+      if (m_iNativeAgentFails == 0)
+         PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
+      m_iNativeAgentFails++;
+   }
+
+   // Generate event if node flags has been changed
+   if (dwOldFlags != m_dwFlags)
+      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
+
+   // Retrieve interface list
+   pIfList = GetInterfaceList();
+   if (pIfList != NULL)
+   {
+      DWORD i;
+
+      // Find non-existing interfaces
+      for(i = 0; i < m_dwChildCount; i++)
+         if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+         {
+            Interface *pInterface = (Interface *)m_pChildList[i];
+            int j;
+
+            for(j = 0; j < pIfList->iNumEntries; j++)
+               if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
+                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
+                   (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
+                  break;
+            if (j == pIfList->iNumEntries)
+            {
+               // No such interface in current configuration, delete it
+               PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
+                         pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
+               pInterface->Delete();
+               i = 0;   // Restart loop
+            }
+         }
+
+   }
 }

@@ -32,6 +32,7 @@
 
 extern DWORD g_dwDiscoveryPollingInterval;
 extern DWORD g_dwStatusPollingInterval;
+extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
@@ -267,6 +268,9 @@ protected:
    char m_szObjectId[MAX_OID_LEN * 4];
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
+   time_t m_tLastConfigurationPoll;
+   int m_iSnmpAgentFails;
+   int m_iNativeAgentFails;
 
 public:
    Node();
@@ -302,6 +306,8 @@ public:
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
    BOOL ReadyForStatusPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval ? TRUE : FALSE; }
    void StatusPoll(void);
+   BOOL ReadyForConfigurationPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval ? TRUE : FALSE; }
+   void ConfigurationPoll(void);
 
    virtual void CalculateCompoundStatus(void);
 };
