@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.66 2005-02-15 22:29:42 alk Exp $
+# $Id: configure.ac,v 1.67 2005-02-17 18:13:12 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -51,6 +51,11 @@ fi
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
+
+# --------------------------------------------------------------------------
+# check for system pthread.h
+
+AC_CHECK_HEADERS([/usr/include/pthread.h])
 
 # --------------------------------------------------------------------------
 # command line options
