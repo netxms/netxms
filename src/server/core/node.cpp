@@ -237,7 +237,7 @@ void Node::LoadItemsFromDB(void)
    DB_RESULT hResult;
 
    sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
-                    "status,delta_calculation,transformation,template_id "
+                    "status,delta_calculation,transformation,template_id,description "
                     "FROM items WHERE node_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 

@@ -32,6 +32,10 @@ public:
 
 // Implementation
 protected:
+	int m_iNumAlarms[5];
+	void UpdateStatusBar(void);
+	int m_iStatusBarHeight;
+	CStatusBarCtrl m_wndStatusBar;
 	int FindAlarmRecord(DWORD dwAlarmId);
 	CFont m_fontNormal;
 	void AddAlarm(NXC_ALARM *pAlarm);

@@ -41,6 +41,7 @@ DCItem::DCItem()
    m_iSource = DS_INTERNAL;
    m_iStatus = ITEM_STATUS_NOT_SUPPORTED;
    m_szName[0] = 0;
+   m_szDescription[0] = 0;
    m_tLastPoll = 0;
    m_pszFormula = strdup("");
    m_pNode = NULL;
@@ -54,13 +55,13 @@ DCItem::DCItem()
 // Constructor for creating DCItem from database
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
-// delta_calculation,transformation,template_id
+// delta_calculation,transformation,template_id,description
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Node *pNode)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
-   strcpy(m_szName, DBGetField(hResult, iRow, 1));
+   strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
    m_iSource = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_iDataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
@@ -69,6 +70,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Node *pNode)
    m_iDeltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
    m_pszFormula = strdup(DBGetField(hResult, iRow, 8));
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
+   strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
    m_iBusy = 0;
    m_tLastPoll = 0;
    m_dwNumThresholds = 0;
@@ -90,6 +92,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_dwId = dwId;
    m_dwTemplateId = 0;
    strncpy(m_szName, szName, MAX_ITEM_NAME);
+   strcpy(m_szDescription, m_szName);
    m_iSource = iSource;
    m_iDataType = iDataType;
    m_iPollingInterval = iPollingInterval;
@@ -165,7 +168,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(void)
 {
-   char *pszEscFormula, szQuery[1024];
+   char *pszEscFormula, *pszEscDescr, szQuery[1024];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
@@ -183,22 +186,26 @@ BOOL DCItem::SaveToDB(void)
 
    // Prepare and execute query
    pszEscFormula = EncodeSQLString(m_pszFormula);
+   pszEscDescr = EncodeSQLString(m_szDescription);
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation) VALUES (%ld,%ld,%ld,'%s','',%d,%d,%ld,%ld,%d,%d,'%s')",
+                       "transformation) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s')",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                       m_szName, m_iSource, m_iDataType, m_iPollingInterval,
+                       m_szName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%ld,template_id=%ld,name='%s',source=%d,"
                        "datatype=%d,polling_interval=%ld,retention_time=%ld,status=%d,"
-                       "delta_calculation=%d,transformation='%s' WHERE item_id=%ld",
+                       "delta_calculation=%d,transformation='%s',description='%s' "
+                       "WHERE item_id=%ld",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        m_szName, m_iSource, m_iDataType, m_iPollingInterval,
-                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula, m_dwId);
+                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
+                       pszEscDescr, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscFormula);
+   free(pszEscDescr);
 
    // Save thresholds
    if (bResult)
@@ -253,8 +260,8 @@ void DCItem::CheckThresholds(ItemValue &value)
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "sss", m_szName,
-                      m_ppThresholdList[i]->Value(), (const char *)value);
+            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssss", m_szName,
+                      m_szDescription, m_ppThresholdList[i]->Value(), (const char *)value);
             i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
@@ -282,6 +289,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    Lock();
    pMsg->SetVariable(VID_DCI_ID, m_dwId);
    pMsg->SetVariable(VID_NAME, m_szName);
+   pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
    pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
    pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
    pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
@@ -330,6 +338,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    Lock();
 
    pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
+   pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
    m_iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
    m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);

@@ -36,6 +36,7 @@ AlarmManager g_alarmMgr;
 
 void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
+   pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
    pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
    pMsg->SetVariable(VID_EVENT_ID, pAlarm->dwSourceEvent);
    pMsg->SetVariable(VID_OBJECT_ID, pAlarm->dwSourceObject);
@@ -306,7 +307,6 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
          {
             if (pObject->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
             {
-               msg.SetVariable(VID_ALARM_ID, m_pAlarmList[i].dwAlarmId);
                FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
                pSession->SendMessage(&msg);
                msg.DeleteAllVariables();

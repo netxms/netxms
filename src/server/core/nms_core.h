@@ -393,7 +393,7 @@ void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(void);
 
 void CheckForMgmtNode(void);
-NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags);
+NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszName);
 
 void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NotifyClient(ClientSession *pSession, void *pArg);

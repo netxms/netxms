@@ -18,6 +18,7 @@ static char THIS_FILE[] = __FILE__;
 CThresholdDlg::CThresholdDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CThresholdDlg::IDD, pParent)
 {
+   m_dwEventId = EVENT_THRESHOLD_REACHED;
 	//{{AFX_DATA_INIT(CThresholdDlg)
 	m_iFunction = -1;
 	m_strValue = _T("");
@@ -31,6 +32,7 @@ void CThresholdDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CThresholdDlg)
+	DDX_Control(pDX, IDC_EDIT_EVENT, m_wndEventName);
 	DDX_Control(pDX, IDC_STATIC_SAMPLES, m_wndStaticSamples);
 	DDX_Control(pDX, IDC_STATIC_FOR, m_wndStaticFor);
 	DDX_Control(pDX, IDC_EDIT_ARG1, m_wndEditArg1);
@@ -48,6 +50,7 @@ void CThresholdDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CThresholdDlg, CDialog)
 	//{{AFX_MSG_MAP(CThresholdDlg)
 	ON_CBN_SELCHANGE(IDC_COMBO_FUNCTION, OnSelchangeComboFunction)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT, OnButtonSelect)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -79,6 +82,8 @@ BOOL CThresholdDlg::OnInitDialog()
       m_wndStaticSamples.EnableWindow(FALSE);
       m_wndEditArg1.EnableWindow(FALSE);
    }
+
+   m_wndEventName.SetWindowText(NXCGetEventName(m_dwEventId));
 	
 	return TRUE;
 }
@@ -94,4 +99,20 @@ void CThresholdDlg::OnSelchangeComboFunction()
    m_wndStaticFor.EnableWindow(m_iFunction != F_LAST);
    m_wndStaticSamples.EnableWindow(m_iFunction != F_LAST);
    m_wndEditArg1.EnableWindow(m_iFunction != F_LAST);
+}
+
+
+//
+// "Select" button handler
+//
+
+void CThresholdDlg::OnButtonSelect() 
+{
+   CEventSelDlg dlg;
+
+   if (dlg.DoModal())
+   {
+      m_dwEventId = dlg.m_pdwEventList[0];
+      m_wndEventName.SetWindowText(NXCGetEventName(m_dwEventId));
+   }
 }

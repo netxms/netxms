@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,14 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 
-
-//
-// Version constants 
-//
-
-#define NETXMS_VERSION_MAJOR      1
-#define NETXMS_VERSION_MINOR      0
-#define NETXMS_VERSION_STRING     "1.0"
+#include <netxms-version.h>
 
 
 //

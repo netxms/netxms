@@ -80,17 +80,18 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
-                                  LVS_EX_FULLROWSELECT);
+                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
    m_wndListCtrl.InsertColumn(1, "Source", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(2, "Name", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(3, "Data type", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(4, "Polling Interval", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(5, "Retention Time", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(6, "Status", LVCFMT_LEFT, 90);
+   m_wndListCtrl.InsertColumn(2, "Description", LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(3, "Parameter", LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(4, "Data type", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(5, "Polling Interval", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(6, "Retention Time", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(7, "Status", LVCFMT_LEFT, 90);
 
    // Fill list view with data
    for(i = 0; i < m_pItemList->dwNumItems; i++)
@@ -169,13 +170,14 @@ void CDataCollectionEditor::UpdateListItem(int iItem, NXC_DCI *pItem)
    char szBuffer[32];
 
    m_wndListCtrl.SetItemText(iItem, 1, g_pszItemOrigin[pItem->iSource]);
-   m_wndListCtrl.SetItemText(iItem, 2, pItem->szName);
-   m_wndListCtrl.SetItemText(iItem, 3, g_pszItemDataType[pItem->iDataType]);
+   m_wndListCtrl.SetItemText(iItem, 2, pItem->szDescription);
+   m_wndListCtrl.SetItemText(iItem, 3, pItem->szName);
+   m_wndListCtrl.SetItemText(iItem, 4, g_pszItemDataType[pItem->iDataType]);
    sprintf(szBuffer, "%d sec", pItem->iPollingInterval);
-   m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
-   sprintf(szBuffer, "%d days", pItem->iRetentionTime);
    m_wndListCtrl.SetItemText(iItem, 5, szBuffer);
-   m_wndListCtrl.SetItemText(iItem, 6, g_pszItemStatus[pItem->iStatus]);
+   sprintf(szBuffer, "%d days", pItem->iRetentionTime);
+   m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
+   m_wndListCtrl.SetItemText(iItem, 7, g_pszItemStatus[pItem->iStatus]);
 }
 
 
@@ -297,6 +299,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_iRetentionTime = pItem->iRetentionTime;
    pgCollection.m_iStatus = pItem->iStatus;
    pgCollection.m_strName = pItem->szName;
+   pgCollection.m_strDescription = pItem->szDescription;
 
    // Setup "Transformation" page
    pgTransform.m_iDeltaProc = pItem->iDeltaCalculation;
@@ -319,6 +322,10 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       pItem->iRetentionTime = pgCollection.m_iRetentionTime;
       pItem->iStatus = pgCollection.m_iStatus;
       strcpy(pItem->szName, (LPCTSTR)pgCollection.m_strName);
+      strcpy(pItem->szDescription, (LPCTSTR)pgCollection.m_strDescription);
+      StrStrip(pItem->szDescription);
+      if (pItem->szDescription[0] == 0)
+         strcpy(pItem->szDescription, pItem->szName);
       pItem->iDeltaCalculation = pgTransform.m_iDeltaProc;
       safe_free(pItem->pszFormula);
       pItem->pszFormula = strdup((LPCTSTR)pgTransform.m_strFormula);

@@ -71,8 +71,8 @@ BOOL CDCIThresholdsPage::OnInitDialog()
 	
    // Setup list view
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, "Operation", LVCFMT_LEFT, rect.right - 80 - GetSystemMetrics(SM_CXVSCROLL));
-   m_wndListCtrl.InsertColumn(1, "Event", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(0, "Operation", LVCFMT_LEFT, rect.right - 150 - GetSystemMetrics(SM_CXVSCROLL));
+   m_wndListCtrl.InsertColumn(1, "Event", LVCFMT_LEFT, 150);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -145,8 +145,7 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
    // Event
-   sprintf(szBuffer, "%d", m_pItem->pThresholdList[dwIndex].dwEvent);
-   m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
+   m_wndListCtrl.SetItemText(iItem, 1, NXCGetEventName(m_pItem->pThresholdList[dwIndex].dwEvent));
 }
 
 
@@ -163,6 +162,7 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    dlg.m_iFunction = pThreshold->wFunction;
    dlg.m_iOperation = pThreshold->wOperation;
    dlg.m_dwArg1 = pThreshold->dwArg1;
+   dlg.m_dwEventId = pThreshold->dwEvent;
    switch(m_pItem->iDataType)
    {
       case DCI_DT_INTEGER:
@@ -186,6 +186,7 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->dwArg1 = dlg.m_dwArg1;
       pThreshold->wFunction = (WORD)dlg.m_iFunction;
       pThreshold->wOperation = (WORD)dlg.m_iOperation;
+      pThreshold->dwEvent = dlg.m_dwEventId;
       switch(m_pItem->iDataType)
       {
          case DCI_DT_INTEGER:

@@ -4,6 +4,14 @@
 ** ex: syntax=sql
 */
 
+#define THRESHOLD_EVENT_PARAMS \
+	'   1) Parameter name#0D#0A   2) Item description#0D#0A   3) Threshold value#0D#0A   4) Actual value'
+
+
+/*
+** System events
+*/
+
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_NODE_ADDED, 'SYS_NODE_ADDED',
@@ -172,21 +180,20 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REACHED, 'SYS_THRESHOLD_REACHED',
 		EVENT_SEVERITY_WARNING, 1,
-		'Threshold reached for parameter %1 (Threshold value: %2; Actual value: %3)',
+		'Threshold reached for data collection item #22%2#22 (Parameter: %1; Threshold value: %3; Actual value: %4)',
 		'Generated when threshold value reached for specific data collection item.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   1) Item name#0D#0A' CONCAT
-		'   2) Threshold value#0D#0A' CONCAT
-		'   3) Actual value'
+		THRESHOLD_EVENT_PARAMS
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REARMED, 'SYS_THRESHOLD_REARMED',
 		EVENT_SEVERITY_NORMAL, 0,
-		'Threshold rearmed for parameter %1',
+		'Threshold rearmed for data collection item %2 (Parameter: %1)',
 		'Generated when threshold check is rearmed for specific data collection item.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   1) Item name'
+		'   1) Parameter name#0D#0A' CONCAT
+		'   2) Item description'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
@@ -238,23 +245,19 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		4000, 'DC_HIGH_CPU_UTIL',
 		EVENT_SEVERITY_MINOR, 1,
-		'CPU utilization exceeds allowed maximum of %2 (Current: %3)',
+		'CPU utilization exceeds allowed maximum of %3 (Current: %4)',
 		'Custom data collection threshold event.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   1) Item name#0D#0A' CONCAT
-		'   2) Threshold value#0D#0A' CONCAT
-		'   3) Actual value'
+		THRESHOLD_EVENT_PARAMS
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		4001, 'DC_HIGH_PROCLOAD',
 		EVENT_SEVERITY_MINOR, 1,
-		'Processor load average exceeds allowed maximum of %2 (Current: %3)',
+		'Processor load average exceeds allowed maximum of %3 (Current: %4)',
 		'Custom data collection threshold event.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   1) Item name#0D#0A' CONCAT
-		'   2) Threshold value#0D#0A' CONCAT
-		'   3) Actual value'
+		THRESHOLD_EVENT_PARAMS
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
@@ -263,7 +266,5 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Host has been restarted within last 5 minutes',
 		'Custom data collection threshold event.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   1) Item name#0D#0A' CONCAT
-		'   2) Threshold value#0D#0A' CONCAT
-		'   3) Actual value'
+		THRESHOLD_EVENT_PARAMS
 	);

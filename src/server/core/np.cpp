@@ -28,7 +28,7 @@
 // Returns pointer to new node object on success or NULL on failure
 //
 
-NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
+NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszName)
 {
    Node *pNode;
    char szIpAddr1[32], szIpAddr2[32];
@@ -56,6 +56,8 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
       delete pNode;     // Node poll failed, delete it
       return NULL;
    }
+   if (pszName != NULL)
+      pNode->SetName(pszName);
 
    // DEBUG
    pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DCI_DT_INTEGER, 60, 30, pNode));
@@ -101,7 +103,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
             dwNetMask = DBGetFieldULong(hResult, i, 2);
             dwFlags = DBGetFieldULong(hResult, i, 3);
 
-            PollNewNode(dwIpAddr, dwNetMask, dwFlags);
+            PollNewNode(dwIpAddr, dwNetMask, dwFlags, NULL);
 
             // Delete processed node
             sprintf(szQuery, "DELETE FROM new_nodes WHERE id=%ld", dwId);

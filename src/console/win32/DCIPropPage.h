@@ -31,6 +31,7 @@ public:
 	int		m_iDataType;
 	int		m_iOrigin;
 	int		m_iStatus;
+	CString	m_strDescription;
 	//}}AFX_DATA
 
 

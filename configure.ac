@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.24 2004-09-22 06:27:26 victor Exp $
+# $Id: configure.ac,v 1.25 2004-09-22 17:38:01 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -325,9 +325,11 @@ AC_SUBST(SUBAGENT_DIRS)
 LIBNETXMS_LIBRARY_VERSION=0:1:0
 LIBNXCSCP_LIBRARY_VERSION=0:1:0
 LIBNXSRV_LIBRARY_VERSION=0:1:0
+DBDRV_LIBRARY_VERSION=0:1:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
 AC_SUBST(LIBNXCSCP_LIBRARY_VERSION)
 AC_SUBST(LIBNXSRV_LIBRARY_VERSION)
+AC_SUBST(DBDRV_LIBRARY_VERSION)
 
 # --------------------------------------------------------------------------
 

@@ -341,9 +341,7 @@ void ClientSession::UpdateThread(void)
             msg.SetCode(CMD_ALARM_UPDATE);
             msg.SetId(0);
             msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            msg.SetVariable(VID_ALARM_ID, ((NXC_ALARM *)pUpdate->pData)->dwAlarmId);
-            if (pUpdate->dwCode == NX_NOTIFY_NEW_ALARM)
-               FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
+            FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
             SendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
             msg.DeleteAllVariables();
@@ -2096,7 +2094,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      case OBJECT_NODE:
                         pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
                                               pRequest->GetVariableLong(VID_IP_NETMASK),
-                                              DF_DEFAULT);
+                                              DF_DEFAULT, szObjectName);
                         break;
                      case OBJECT_CONTAINER:
                         pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);

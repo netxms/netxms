@@ -66,9 +66,25 @@ BOOL CAlarmBrowser::PreCreateWindow(CREATESTRUCT& cs)
 int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   static int widths[6] = { 50, 100, 150, 200, 250, -1 };
+   static int icons[5] = { IDI_SEVERITY_NORMAL, IDI_SEVERITY_WARNING, IDI_SEVERITY_MINOR,
+                           IDI_SEVERITY_MAJOR, IDI_SEVERITY_CRITICAL };
+   int i;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
+
+   GetClientRect(&rect);
+
+   // Create status bar
+	m_wndStatusBar.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_STATUS_BAR);
+   m_wndStatusBar.SetParts(6, widths);
+   for(i = 0; i < 5; i++)
+      m_wndStatusBar.SetIcon(i, (HICON)LoadImage(theApp.m_hInstance, 
+                                                 MAKEINTRESOURCE(icons[i]),
+                                                 IMAGE_ICON, 16, 16, LR_SHARED));
+   m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
+   rect.bottom -= m_iStatusBarHeight;
 
    // Create font for elements
    m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
@@ -77,7 +93,6 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
 
    // Create list view control
-   GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
@@ -90,11 +105,11 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Severity", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(1, "Source", LVCFMT_LEFT, 140);
-   m_wndListCtrl.InsertColumn(2, "Message", LVCFMT_LEFT, 400);
-   m_wndListCtrl.InsertColumn(3, "Time Stamp", LVCFMT_LEFT, 135);
-   m_wndListCtrl.InsertColumn(4, "Ack", LVCFMT_CENTER, 30);
+   m_wndListCtrl.InsertColumn(0, _T("Severity"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(1, _T("Source"), LVCFMT_LEFT, 140);
+   m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 400);
+   m_wndListCtrl.InsertColumn(3, _T("Time Stamp"), LVCFMT_LEFT, 135);
+   m_wndListCtrl.InsertColumn(4, _T("Ack"), LVCFMT_CENTER, 30);
 	
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_ALARMS, this);
 
@@ -134,7 +149,8 @@ void CAlarmBrowser::OnSize(UINT nType, int cx, int cy)
 {
 	CMDIChildWnd::OnSize(nType, cx, cy);
 	
-   m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
+   m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
 }
 
 
@@ -149,16 +165,18 @@ void CAlarmBrowser::OnViewRefresh()
 
    m_wndListCtrl.DeleteAllItems();
    dwRetCode = DoRequestArg3(NXCLoadAllAlarms, (void *)m_bShowAllAlarms, &dwNumAlarms, 
-                             &pAlarmList, "Loading alarms...");
+                             &pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
+      memset(m_iNumAlarms, 0, sizeof(int) * 5);
       for(i = 0; i < dwNumAlarms; i++)
          AddAlarm(&pAlarmList[i]);
       safe_free(pAlarmList);
+      UpdateStatusBar();
    }
    else
    {
-      theApp.ErrorBox(dwRetCode, "Error loading alarm list: %s");
+      theApp.ErrorBox(dwRetCode, _T("Error loading alarm list: %s"));
    }
 }
 
@@ -171,7 +189,7 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
 {
    int iIdx;
    struct tm *ptm;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(pAlarm->dwSourceObject);
@@ -185,8 +203,9 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
       ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
       strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
       m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
-      m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? "X" : "");
+      m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
+   m_iNumAlarms[pAlarm->wSeverity]++;
 }
 
 
@@ -203,15 +222,26 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
    {
       case NX_NOTIFY_NEW_ALARM:
          if ((iItem == -1) && ((m_bShowAllAlarms) || (pAlarm->wIsAck == 0)))
+         {
             AddAlarm(pAlarm);
+            UpdateStatusBar();
+         }
          break;
       case NX_NOTIFY_ALARM_ACKNOWLEGED:
          if ((iItem != -1) && (!m_bShowAllAlarms))
+         {
             m_wndListCtrl.DeleteItem(iItem);
+            m_iNumAlarms[pAlarm->wSeverity]--;
+            UpdateStatusBar();
+         }
          break;
       case NX_NOTIFY_ALARM_DELETED:
          if (iItem != -1)
+         {
             m_wndListCtrl.DeleteItem(iItem);
+            m_iNumAlarms[pAlarm->wSeverity]--;
+            UpdateStatusBar();
+         }
          break;
       default:
          break;
@@ -275,4 +305,24 @@ void CAlarmBrowser::OnAlarmAcknowlege()
 void CAlarmBrowser::OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+
+//
+// Update status bar information
+//
+
+void CAlarmBrowser::UpdateStatusBar(void)
+{
+   int i, iSum;
+   TCHAR szBuffer[64];
+
+   for(i = 0, iSum = 0; i < 5; i++)
+   {
+      _stprintf(szBuffer, _T("%d"), m_iNumAlarms[i]);
+      m_wndStatusBar.SetText(szBuffer, i, 0);
+      iSum += m_iNumAlarms[i];
+   }
+   _stprintf(szBuffer, _T("Total: %d"), iSum);
+   m_wndStatusBar.SetText(szBuffer, 5, 0);
 }

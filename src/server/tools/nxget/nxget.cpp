@@ -36,7 +36,6 @@
 //
 
 #define MAX_LINE_SIZE      4096
-#define NXGET_VERSION      "2"
 
 #define CMD_GET            0
 #define CMD_LIST           1
@@ -192,7 +191,7 @@ int main(int argc, char *argv[])
             strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
          case 'v':   // Print version and exit
-            printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "." NXGET_VERSION "\n");
+            printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "\n");
             bStart = FALSE;
             break;
          case 'w':   // Command timeout

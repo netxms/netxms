@@ -26,6 +26,7 @@ CDCIPropPage::CDCIPropPage()
 	m_iDataType = -1;
 	m_iOrigin = -1;
 	m_iStatus = -1;
+	m_strDescription = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -47,6 +48,8 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_CBIndex(pDX, IDC_COMBO_DT, m_iDataType);
 	DDX_CBIndex(pDX, IDC_COMBO_ORIGIN, m_iOrigin);
 	DDX_Radio(pDX, IDC_RADIO_ACTIVE, m_iStatus);
+	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
+	DDV_MaxChars(pDX, m_strDescription, 255);
 	//}}AFX_DATA_MAP
 }
 

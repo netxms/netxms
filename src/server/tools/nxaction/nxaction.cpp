@@ -33,13 +33,6 @@
 
 
 //
-// Constants
-//
-
-#define NXACTION_VERSION   "0"
-
-
-//
 // Startup
 //
 
@@ -107,7 +100,7 @@ int main(int argc, char *argv[])
             strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
          case 'v':   // Print version and exit
-            printf("NetXMS ACTION command-line utility Version " NETXMS_VERSION_STRING "." NXACTION_VERSION "\n");
+            printf("NetXMS ACTION command-line utility Version " NETXMS_VERSION_STRING "\n");
             bStart = FALSE;
             break;
          case 'w':   // Command timeout

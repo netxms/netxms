@@ -61,6 +61,8 @@ void ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
             m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
+            pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription,
+                                 MAX_DB_STRING);
             m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
             m_pItemList->pItems[i].pThresholdList = 
                (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
@@ -248,6 +250,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
    msg.SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)pItem->iDeltaCalculation);
    msg.SetVariable(VID_DCI_STATUS, (WORD)pItem->iStatus);
    msg.SetVariable(VID_NAME, pItem->szName);
+   msg.SetVariable(VID_DESCRIPTION, pItem->szDescription);
    msg.SetVariable(VID_DCI_FORMULA, pItem->pszFormula);
    msg.SetVariable(VID_NUM_THRESHOLDS, pItem->dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < pItem->dwNumThresholds; i++, dwId++)

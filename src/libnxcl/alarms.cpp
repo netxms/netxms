@@ -52,8 +52,7 @@ void ProcessAlarmUpdate(CSCPMessage *pMsg)
 
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
-   if (dwCode == NX_NOTIFY_NEW_ALARM)
-      AlarmFromMsg(pMsg, &alarm);
+   AlarmFromMsg(pMsg, &alarm);
    CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
 

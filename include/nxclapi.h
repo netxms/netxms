@@ -383,10 +383,10 @@ typedef struct
    DWORD dwId;
    int iType;
    BOOL bIsDisabled;
-   char szName[MAX_OBJECT_NAME];
-   char szRcptAddr[MAX_RCPT_ADDR_LEN];
-   char szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
-   char *pszData;
+   TCHAR szName[MAX_OBJECT_NAME];
+   TCHAR szRcptAddr[MAX_RCPT_ADDR_LEN];
+   TCHAR szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
+   TCHAR *pszData;
 } NXC_ACTION;
 
 
@@ -418,7 +418,7 @@ typedef struct
    DWORD dwEventId;
    DWORD dwSourceId;
    DWORD dwSeverity;
-   char  szMessage[MAX_EVENT_MSG_LENGTH];
+   TCHAR  szMessage[MAX_EVENT_MSG_LENGTH];
 } NXC_EVENT;
 
 
@@ -430,7 +430,7 @@ typedef struct
 {
    DWORD dwEventId;
    DWORD dwSeverity;
-   char szName[MAX_EVENT_NAME];
+   TCHAR szName[MAX_EVENT_NAME];
 } NXC_EVENT_NAME;
 
 
@@ -441,7 +441,7 @@ typedef struct
 typedef struct
 {
    DWORD dwId;
-   char szName[MAX_OBJECT_NAME];
+   TCHAR szName[MAX_OBJECT_NAME];
    BYTE hash[MD5_DIGEST_SIZE];
 } NXC_IMAGE;
 
@@ -481,9 +481,9 @@ typedef struct
    DWORD dwCode;
    DWORD dwSeverity;
    DWORD dwFlags;
-   char szName[MAX_EVENT_NAME];
-   char *pszMessage;
-   char *pszDescription;
+   TCHAR szName[MAX_EVENT_NAME];
+   TCHAR *pszMessage;
+   TCHAR *pszDescription;
 } NXC_EVENT_TEMPLATE;
 
 
@@ -508,7 +508,7 @@ typedef struct
    int iClass;          // Object's class
    int iStatus;         // Object's status
    DWORD dwIpAddr;      // IP address
-   char szName[MAX_OBJECT_NAME];
+   TCHAR szName[MAX_OBJECT_NAME];
    DWORD dwNumParents;
    DWORD *pdwParentList;
    DWORD dwNumChilds;
@@ -530,9 +530,9 @@ typedef struct
       {
          DWORD dwFlags;
          DWORD dwDiscoveryFlags;
-         char szSharedSecret[MAX_SECRET_LENGTH];
-         char szCommunityString[MAX_COMMUNITY_LENGTH];
-         char szObjectId[MAX_OID_LENGTH];
+         TCHAR szSharedSecret[MAX_SECRET_LENGTH];
+         TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
+         TCHAR szObjectId[MAX_OID_LENGTH];
          WORD wAgentPort;     // Listening TCP port for native agent
          WORD wAuthMethod;    // Native agent's authentication method
       } node;
@@ -543,7 +543,7 @@ typedef struct
       struct
       {
          DWORD dwCategory;
-         char *pszDescription;
+         TCHAR *pszDescription;
       } container;
    };
 } NXC_OBJECT;
@@ -557,12 +557,12 @@ typedef struct
 {
    DWORD dwObjectId;
    DWORD dwFlags;
-   char *pszName;
+   TCHAR *pszName;
    int iAgentPort;
    int iAuthType;
-   char *pszSecret;
+   TCHAR *pszSecret;
    int iSnmpVersion;
-   char *pszCommunity;
+   TCHAR *pszCommunity;
    BOOL bInheritRights;
    DWORD dwImage;
    DWORD dwAclSize;
@@ -576,14 +576,14 @@ typedef struct
 
 typedef struct
 {
-   char szName[MAX_USER_NAME];
+   TCHAR szName[MAX_USER_NAME];
    DWORD dwId;
    WORD wFlags;
    WORD wSystemRights;
    DWORD dwNumMembers;     // Only for groups
    DWORD *pdwMemberList;   // Only for groups
-   char szFullName[MAX_USER_FULLNAME];    // Only for users
-   char szDescription[MAX_USER_DESCR];
+   TCHAR szFullName[MAX_USER_FULLNAME];    // Only for users
+   TCHAR szDescription[MAX_USER_DESCR];
 } NXC_USER;
 
 

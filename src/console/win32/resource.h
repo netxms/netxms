@@ -246,6 +246,8 @@
 #define IDC_IP_MASK                     1162
 #define IDC_COMBO_DELTA                 1163
 #define IDC_EDIT_FORMULA                1164
+#define IDC_BUTTON_CREATE               1166
+#define IDC_EDIT_EVENT                  1167
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -322,7 +324,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        223
 #define _APS_NEXT_COMMAND_VALUE         32876
-#define _APS_NEXT_CONTROL_VALUE         1165
+#define _APS_NEXT_CONTROL_VALUE         1169
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif
