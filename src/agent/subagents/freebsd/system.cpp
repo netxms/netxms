@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.3 2005-01-23 05:08:06 alk Exp $ */
+/* $Id: system.cpp,v 1.4 2005-01-23 05:14:49 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -233,13 +233,9 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	} \
 }
 
-	DOIT("hw.pagesize", nPageSize);
+	nPageSize = getpagesize();
 
-	if (nRet == SYSINFO_RC_SUCCESS)
-	{
-		nRet = SYSINFO_RC_ERROR;
-		DOIT("vm.stats.vm.v_page_count", nPageCount);
-	}
+	DOIT("vm.stats.vm.v_page_count", nPageCount);
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
@@ -349,6 +345,12 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/23 05:08:06  alk
++ System.CPU.Count
++ System.Memory.Physical.*
++ System.ProcessCount
++ System.ProcessList
+
 Revision 1.2  2005/01/17 23:25:47  alk
 Agent.SourcePackageSupport added
 
