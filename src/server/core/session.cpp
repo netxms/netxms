@@ -23,7 +23,9 @@
 #include "nms_core.h"
 
 #ifdef _WIN32
-#include <direct.h>
+# include <direct.h>
+#else
+# include <dirent.h>
 #endif
 
 
@@ -1639,7 +1641,11 @@ void ClientSession::SendMIBList(DWORD dwRqId)
    DWORD dwId1, dwId2, dwNumFiles;
    DIR *dir;
    int iBufPos;
+#ifdef _WIN32
    struct direct *dptr;
+#else
+   struct dirent *dptr;
+#endif
    char szBuffer[MAX_PATH];
    BYTE md5Hash[MD5_DIGEST_SIZE];
 

@@ -32,6 +32,7 @@ sql/Makefile.am -text
 sql/Makefile.w32 -text
 sql/clear.sql -text
 sql/dbinit.in -text
+sql/drop.sh -text
 sql/events.in -text
 sql/schema.in -text
 sql/setup.in -text

@@ -22,10 +22,10 @@
 
 #include "nms_core.h"
 
-#ifdef _WIN32
-#include <sys/stat.h>
-#include <io.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#ifdef _WIN32
+# include <io.h>
 #endif
 
 

@@ -29,8 +29,10 @@
 #endif
 
 #ifdef _WIN32
-#include <direct.h>
-#include <errno.h>
+# include <direct.h>
+# include <errno.h> 
+#else
+# include <sys/stat.h>
 #endif
 
 
@@ -100,12 +102,21 @@ static BOOL CheckDataDir(void)
    // Create directory for mib files if it doesn't exist
    strcpy(szBuffer, g_szDataDir);
    strcat(szBuffer, DDIR_MIBS);
-   if (mkdir(szBuffer) == -1)
+
+	
+#ifdef _WIN32
+# define MKDIR(name) mkdir(name)
+#else
+# define MKDIR(name) mkdir(name, 0700)
+#endif
+
+   if (MKDIR(szBuffer) == -1)
       if (errno != EEXIST)
       {
          WriteLog(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
          return FALSE;
       }
+#undef MKDIR
 
    return TRUE;
 }

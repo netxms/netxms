@@ -29,6 +29,10 @@
 
 #ifndef _WIN32
 
+#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
 #if HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -100,6 +104,10 @@
 #define GROUP_FLAG_BIT     ((DWORD)0x80000000)
 
 #define CHECK_NULL(x)      ((x) == NULL ? ((char *)"(null)") : (x))
+
+#ifndef O_BINARY
+# define O_BINARY 0
+#endif
 
 typedef void * HSNMPSESSION;
 

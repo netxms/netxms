@@ -25,9 +25,13 @@
 #include "md5.h"
 #include "sha1.h"
 
-#ifdef _WIN32
-#include <io.h>
 #include <fcntl.h>
+
+#ifdef _WIN32
+# include <io.h>
+#else
+# include <sys/types.h>
+# include <sys/stat.h>
 #endif
 
 
