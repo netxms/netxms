@@ -5,10 +5,16 @@
 /config.h
 /config.h.in
 /config.log
+/config.status
 /configure
+/libtool
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_pgsql.sql
+src/agent/core/messages.c
+src/agent/core/messages.h
 src/server/core/netxmsd
+src/server/include/messages.h
+src/server/libnxsrv/messages.c
 /stamp-h1
 /status

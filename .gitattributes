@@ -92,6 +92,7 @@ src/PPC_libs.vcw -text
 src/README.libs -text
 src/WIN32_libs.sln -text
 src/agent/Makefile.am -text
+src/agent/core/.cvsignore -text
 src/agent/core/Makefile.am -text
 src/agent/core/Makefile.nw -text
 src/agent/core/actions.cpp -text
@@ -552,6 +553,7 @@ src/server/dbdrv/pgsql/pgsql.cpp -text
 src/server/dbdrv/pgsql/pgsql.dsp -text
 src/server/dbdrv/pgsql/pgsql.dsw -text
 src/server/dbdrv/pgsql/pgsqldrv.h -text
+src/server/include/.cvsignore -text
 src/server/include/dbdrv.h -text
 src/server/include/local_admin.h -text
 src/server/include/nms_actions.h -text
@@ -566,6 +568,7 @@ src/server/include/nms_users.h -text
 src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text
 src/server/include/rwlock.h -text
+src/server/libnxsrv/.cvsignore -text
 src/server/libnxsrv/Makefile.am -text
 src/server/libnxsrv/agent.cpp -text
 src/server/libnxsrv/db.cpp -text
