@@ -572,6 +572,10 @@ src/server/tools/nxsnmpget/Makefile.am -text
 src/server/tools/nxsnmpget/nxsnmpget.cpp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsw -text
+src/server/tools/nxsnmpwalk/Makefile.am -text
+src/server/tools/nxsnmpwalk/nxsnmpwalk.cpp -text
+src/server/tools/nxsnmpwalk/nxsnmpwalk.dsp -text
+src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw -text
 tools/Makefile.am -text
 tools/mc.pl -text
 tools/nwmkimp.pl -text
