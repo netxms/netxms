@@ -1347,6 +1347,8 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                         }
                         msg.SetVariable(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
                         msg.SetVariable(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
+                        safe_free(pdwMapId);
+                        safe_free(pdwMapIndex);
                      }
                      else
                      {
