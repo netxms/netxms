@@ -149,6 +149,7 @@ protected:
 	afx_msg void OnObjectCreateTemplate();
 	afx_msg void OnObjectCreateTemplategroup();
 	afx_msg void OnObjectWakeup();
+	afx_msg void OnUpdateObjectWakeup(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
@@ -158,6 +159,7 @@ protected:
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL CurrObjectIsInterface(void);
 	BOOL CurrObjectIsNode(BOOL bIncludeTemplates = FALSE);
 	int m_iLastObjectImage;
 	void UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject);

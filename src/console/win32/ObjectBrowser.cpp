@@ -175,6 +175,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATE, OnObjectCreateTemplate)
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
 	ON_COMMAND(ID_OBJECT_WAKEUP, OnObjectWakeup)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_WAKEUP, OnUpdateObjectWakeup)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1184,6 +1185,11 @@ void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI)
    pCmdUI->Enable(CurrObjectIsNode(TRUE));
 }
 
+void CObjectBrowser::OnUpdateObjectWakeup(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(FALSE) || CurrObjectIsInterface());
+}
+
 void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_pCurrentObject != NULL);
@@ -1468,6 +1474,31 @@ BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
             ((m_pCurrentObject->iClass == OBJECT_NODE) || 
              (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
             (m_pCurrentObject->iClass == OBJECT_NODE)) &&
+                 (m_wndListCtrl.GetSelectedCount() == 1));
+      }
+   }
+}
+
+
+//
+// returns TRUE if currently selected object is interface
+//
+
+BOOL CObjectBrowser::CurrObjectIsInterface()
+{
+   if (m_pCurrentObject == NULL)
+   {
+      return FALSE;
+   }
+   else
+   {
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+      {
+         return m_pCurrentObject->iClass == OBJECT_INTERFACE;
+      }
+      else
+      {
+         return ((m_pCurrentObject->iClass == OBJECT_INTERFACE) &&
                  (m_wndListCtrl.GetSelectedCount() == 1));
       }
    }
