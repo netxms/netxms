@@ -12,6 +12,7 @@
   and System.Memory.Physical.* to Solaris subagent
 - Parameters System.Memory.Swap.* removed from Windows agent because they
   are meaningless under Windows
+- Added parameter Disk.Used(*) to NetWare subagent
 
 
 *
