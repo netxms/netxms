@@ -59,8 +59,13 @@ char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer)
    char *szBufPtr;
 
    szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
+#if WORDS_BIGENDIAN
+   sprintf(szBufPtr, "%ld.%ld.%ld.%ld", dwAddr >> 24, (dwAddr >> 16) & 255,
+           (dwAddr >> 8) & 255, dwAddr & 255);
+#else
    sprintf(szBufPtr, "%ld.%ld.%ld.%ld", dwAddr & 255, (dwAddr >> 8) & 255,
            (dwAddr >> 16) & 255, dwAddr >> 24);
+#endif
    return szBufPtr;
 }
 
