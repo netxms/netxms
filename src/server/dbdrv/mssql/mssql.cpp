@@ -58,12 +58,25 @@ extern "C" void EXPORT DrvUnload(void)
 extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
    LOGINREC *loginrec;
+   PDBPROCESS hConn;
 
    loginrec = dblogin();
    DBSETLUSER(loginrec, szLogin);
    DBSETLPWD(loginrec, szPassword);
    DBSETLAPP(loginrec, "NetXMS");
-   return (DB_HANDLE)dbopen(loginrec, szHost);
+   hConn = dbopen(loginrec, szHost);
+
+   if ((hConn != NULL) && (szDatabase != NULL))
+   {
+      // Change to specified database
+      if (dbuse(hConn, szDatabase) != SUCCEED)
+      {
+         dbclose(hConn);
+         hConn = NULL;
+      }
+   }
+
+   return (DB_HANDLE)hConn;
 }
 
 
