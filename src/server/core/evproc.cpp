@@ -24,6 +24,17 @@
 
 
 //
+// Handler for EnumerateSessions()
+//
+
+static void BroadcastEvent(ClientSession *pSession, void *pArg)
+{
+   if (pSession->GetState() == STATE_AUTHENTICATED)
+      pSession->OnNewEvent((Event *)pArg);
+}
+
+
+//
 // Event processing thread
 //
 
@@ -45,6 +56,9 @@ void EventProcessor(void *arg)
                  pEvent->SourceId(), pEvent->Severity(), pEvent->Message());
          DBQuery(g_hCoreDB, szQuery);
       }
+
+      // Send event to all connected clients
+      EnumerateClientSessions(BroadcastEvent, pEvent);
 
       // Write event information to screen if event debugging is on
       if (IsStandalone() && (g_dwFlags & AF_DEBUG_EVENTS))

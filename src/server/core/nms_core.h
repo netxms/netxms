@@ -119,6 +119,14 @@
 
 
 //
+// Information categories for UPDATE_INFO structure
+//
+
+#define INFO_CAT_EVENT        1
+#define INFO_CAT_OBJECT       2
+
+
+//
 // Event handling subsystem definitions
 //
 
@@ -163,6 +171,17 @@ public:
 
 
 //
+// Data update structure for client sessions
+//
+
+typedef struct
+{
+   DWORD dwCategory;    // Data category - event, network object, etc.
+   void *pData;         // Pointer to data block
+} UPDATE_INFO;
+
+
+//
 // Client session
 //
 
@@ -172,6 +191,7 @@ private:
    SOCKET m_hSocket;
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
+   Queue *m_pUpdateQueue;
    DWORD m_dwIndex;
    int m_iState;
    DWORD m_dwUserId;
@@ -179,6 +199,8 @@ private:
    CSCP_BUFFER *m_pMsgBuffer;
    CONDITION m_hCondWriteThreadStopped;
    CONDITION m_hCondProcessingThreadStopped;
+   CONDITION m_hCondUpdateThreadStopped;
+   MUTEX m_hMutexSendEvents;
 
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
@@ -196,11 +218,16 @@ public:
    void ReadThread(void);
    void WriteThread(void);
    void ProcessingThread(void);
+   void UpdateThread(void);
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   int GetState(void) { return m_iState; }
 
    void Kill(void);
+
+   void OnNewEvent(Event *pEvent);
+   void OnObjectChange(DWORD dwObjectId);
 };
 
 
@@ -278,6 +305,8 @@ void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(void);
 
 void CheckForMgmtNode(void);
+
+void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 
 #ifdef _WIN32
 

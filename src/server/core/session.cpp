@@ -31,12 +31,15 @@ ClientSession::ClientSession(SOCKET hSocket)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
+   m_pUpdateQueue = new Queue;
    m_hSocket = hSocket;
    m_dwIndex = INVALID_INDEX;
    m_iState = STATE_CONNECTED;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    m_hCondWriteThreadStopped = ConditionCreate();
    m_hCondProcessingThreadStopped = ConditionCreate();
+   m_hCondUpdateThreadStopped = ConditionCreate();
+   m_hMutexSendEvents = MutexCreate();
 }
 
 
@@ -50,10 +53,13 @@ ClientSession::~ClientSession()
    closesocket(m_hSocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
+   delete m_pUpdateQueue;
    if (m_pMsgBuffer != NULL)
       free(m_pMsgBuffer);
    ConditionDestroy(m_hCondWriteThreadStopped);
    ConditionDestroy(m_hCondProcessingThreadStopped);
+   ConditionDestroy(m_hCondUpdateThreadStopped);
+   MutexDestroy(m_hMutexSendEvents);
 }
 
 
@@ -257,6 +263,8 @@ void ClientSession::SendAllEvents(void)
    DB_ASYNC_RESULT hResult;
    NXC_EVENT event;
 
+   MutexLock(m_hMutexSendEvents, INFINITE);
+
    // Retrieve events from database
    hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog ORDER BY timestamp");
    if (hResult != NULL)
@@ -277,6 +285,8 @@ void ClientSession::SendAllEvents(void)
    // Send end of list notification
    msg.SetCode(CMD_EVENT_LIST_END);
    SendMessage(&msg);
+
+   MutexUnlock(m_hMutexSendEvents);
 }
 
 
@@ -336,4 +346,61 @@ void ClientSession::Kill(void)
    // We shutdown socket connection, which will cause
    // read thread to stop, and other threads will follow
    shutdown(m_hSocket, 2);
+}
+
+
+//
+// Handler for new events
+//
+
+void ClientSession::OnNewEvent(Event *pEvent)
+{
+   UPDATE_INFO *pUpdate;
+
+   pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+   pUpdate->dwCategory = INFO_CAT_EVENT;
+   pUpdate->pData = malloc(sizeof(NXC_EVENT));
+   pEvent->PrepareMessage((NXC_EVENT *)pUpdate->pData);
+   m_pUpdateQueue->Put(pUpdate);
+}
+
+
+//
+// Handler for object changes
+//
+
+void ClientSession::OnObjectChange(DWORD dwObjectId)
+{
+}
+
+
+//
+// Update processing thread
+//
+
+void ClientSession::UpdateThread(void)
+{
+   UPDATE_INFO *pUpdate;
+
+   while(1)
+   {
+      pUpdate = (UPDATE_INFO *)m_pUpdateQueue->GetOrBlock();
+      if (pUpdate == INVALID_POINTER_VALUE)    // Session termination indicator
+         break;
+
+      switch(pUpdate->dwCategory)
+      {
+         case INFO_CAT_EVENT:
+            MutexLock(m_hMutexSendEvents, INFINITE);
+            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+            MutexUnlock(m_hMutexSendEvents);
+            free(pUpdate->pData);
+            break;
+         default:
+            break;
+      }
+
+      free(pUpdate);
+   }
+   ConditionSet(m_hCondUpdateThreadStopped);
 }

@@ -247,6 +247,20 @@ void Event::ExpandMessageText(char *szMessageTemplate)
 
 
 //
+// Fill NXC_EVENT structure with event data
+//
+
+void Event::PrepareMessage(NXC_EVENT *pEventData)
+{
+   pEventData->dwTimeStamp = htonl(m_tTimeStamp);
+   pEventData->dwEventId = htonl(m_dwId);
+   pEventData->dwSeverity = htonl(m_dwSeverity);
+   pEventData->dwSourceId = htonl(m_dwSource);
+   strcpy(pEventData->szMessage, m_szMessageText);
+}
+
+
+//
 // Inilialize event handling subsystem
 //
 

@@ -35,6 +35,7 @@
 //
 
 static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
+static MUTEX m_hSessionListAccess;
 
 
 //
@@ -45,14 +46,17 @@ static BOOL RegisterSession(ClientSession *pSession)
 {
    DWORD i;
 
+   MutexLock(m_hSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
          pSession->SetIndex(i);
+         MutexUnlock(m_hSessionListAccess);
          return TRUE;
       }
 
+   MutexUnlock(m_hSessionListAccess);
    WriteLog(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;
 }
@@ -64,7 +68,9 @@ static BOOL RegisterSession(ClientSession *pSession)
 
 static void UnregisterSession(DWORD dwIndex)
 {
+   MutexLock(m_hSessionListAccess, INFINITE);
    m_pSessionList[dwIndex] = NULL;
+   MutexUnlock(m_hSessionListAccess);
 }
 
 
@@ -105,6 +111,16 @@ static void ProcessingThread(void *pArg)
 
 
 //
+// Information update processing thread
+//
+
+static void UpdateThread(void *pArg)
+{
+   ((ClientSession *)pArg)->UpdateThread();
+}
+
+
+//
 // Listener thread
 //
 
@@ -125,6 +141,9 @@ void ClientListener(void *)
       WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "ClientListener");
       return;
    }
+
+   // Create session list access mutex
+   m_hSessionListAccess = MutexCreate();
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
@@ -180,6 +199,7 @@ void ClientListener(void *)
          ThreadCreate(ReadThread, 0, (void *)pSession);
          ThreadCreate(WriteThread, 0, (void *)pSession);
          ThreadCreate(ProcessingThread, 0, (void *)pSession);
+         ThreadCreate(UpdateThread, 0, (void *)pSession);
       }
    }
 
@@ -198,4 +218,20 @@ void DumpSessions(void)
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
          printf("%d\n", i);
+}
+
+
+//
+// Enumerate active sessions
+//
+
+void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
+{
+   int i;
+
+   MutexLock(m_hSessionListAccess, INFINITE);
+   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] != NULL)
+         pHandler(m_pSessionList[i], pArg);
+   MutexUnlock(m_hSessionListAccess);
 }

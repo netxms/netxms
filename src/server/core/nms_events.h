@@ -110,6 +110,8 @@ public:
    DWORD SourceId(void) { return m_dwSource; }
    const char *Message(void) { return m_szMessageText; }
    time_t TimeStamp(void) { return m_tTimeStamp; }
+
+   void PrepareMessage(NXC_EVENT *pEventData);
 };
 
 
