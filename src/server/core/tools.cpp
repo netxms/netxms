@@ -40,6 +40,22 @@ void StrStrip(char *str)
 
 
 //
+// Convert IP address from binary form (network bytes order) to string
+//
+
+char *IpToStr(DWORD dwAddr, char *szBuffer)
+{
+   static char szInternalBuffer[32];
+   char *szBufPtr;
+
+   szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
+   sprintf(szBufPtr, "%d.%d.%d.%d", dwAddr & 255, (dwAddr >> 8) & 255,
+           (dwAddr >> 16) & 255, dwAddr >> 24);
+   return szBufPtr;
+}
+
+
+//
 // Get system error string by call to FormatMessage
 //
 

@@ -33,6 +33,7 @@
 void HouseKeeper(void *arg);
 void DiscoveryThread(void *arg);
 void Syncer(void *arg);
+void NodePoller(void *arg);
 
 
 //
@@ -83,6 +84,7 @@ BOOL Initialize(void)
    ThreadCreate(HouseKeeper, 0, NULL);
    ThreadCreate(DiscoveryThread, 0, NULL);
    ThreadCreate(Syncer, 0, NULL);
+   ThreadCreate(NodePoller, 0, NULL);
 
    return TRUE;
 }
@@ -98,6 +100,8 @@ void Shutdown(void)
 #ifdef _WIN32
    SetEvent(m_hEventShutdown);
 #endif
+   g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
+   ThreadSleep(15);     // Give other threads a chance to terminate in a safe way
    if (g_hCoreDB != 0)
       DBDisconnect(g_hCoreDB);
    CloseLog();

@@ -106,6 +106,10 @@ SOURCE=.\hk.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\interface.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\log.cpp
 # End Source File
 # Begin Source File
@@ -114,7 +118,19 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\netobj.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\np.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\objects.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\subnet.cpp
 # End Source File
 # Begin Source File
 

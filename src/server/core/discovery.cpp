@@ -31,6 +31,6 @@ void DiscoveryThread(void *arg)
 {
    while(1)
    {
-      Sleep(60000);
+      ThreadSleep(60);
    }
 }

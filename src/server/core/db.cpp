@@ -146,6 +146,38 @@ char *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
 
 
 //
+// Get field's value as unsigned long
+//
+
+DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
+{
+   long iVal;
+   DWORD dwVal;
+   char *szVal;
+
+   szVal = DBGetField(hResult, iRow, iColumn);
+   if (szVal == NULL)
+      return 0;
+   iVal = strtol(szVal, NULL, 10);
+   memcpy(&dwVal, &iVal, sizeof(long));   // To prevent possible conversion
+   return dwVal;
+}
+
+
+//
+// Get field's value as signed long
+//
+
+long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
+{
+   char *szVal;
+
+   szVal = DBGetField(hResult, iRow, iColumn);
+   return szVal == NULL ? 0 : strtol(szVal, NULL, 10);
+}
+
+
+//
 // Get number of rows in result
 //
 

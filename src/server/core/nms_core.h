@@ -72,6 +72,9 @@
 
 #define AF_STANDALONE      0x0001
 #define AF_USE_EVENT_LOG   0x0002
+#define AF_SHUTDOWN        0x8000
+
+#define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
 
 
 //
@@ -107,6 +110,7 @@ BOOL Initialize(void);
 void Main(void);
 
 void StrStrip(char *str);
+char *IpToStr(DWORD dwAddr, char *szBuffer);
 
 HMODULE DLOpen(char *szModule);
 void *DLGetSymbolAddr(HMODULE hModule, char *szSymbol);
@@ -118,6 +122,8 @@ void DBDisconnect(DB_HANDLE hConn);
 BOOL DBQuery(DB_HANDLE hConn, char *szQuery);
 DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery);
 char *DBGetField(DB_RESULT hResult, int iRow, int iColumn);
+long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
+DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
 int DBGetNumRows(DB_RESULT hResult);
 void DBFreeResult(DB_RESULT hResult);
 

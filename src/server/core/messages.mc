@@ -56,4 +56,28 @@ Language=English
 Unable to establish connection with database
 .
 
+MessageId=
+SymbolicName=MSG_NODE_EXIST
+Language=English
+Attempt to add existing node %1 to database
+.
+
+MessageId=
+SymbolicName=MSG_OBJECT_ID_EXIST
+Language=English
+Attempt to add node with non-unique ID %1 to database
+.
+
+MessageId=
+SymbolicName=MSG_OBJECT_ADDR_EXIST
+Language=English
+Attempt to add node with non-unique IP address %1 to database
+.
+
+MessageId=
+SymbolicName=MSG_BAD_NETOBJ_TYPE
+Language=English
+Internal error: invalid NetObj.Type() value %1
+.
+
 ;#endif

@@ -43,34 +43,18 @@ void Syncer(void *arg)
       ObjectsGlobalLock();
 
       // Delete objects marked for deletion
-      for(i = 0; i < g_dwNodeCount; i++)
-         if (g_pNodeList[i]->IsDeleted())
+      for(i = 0; i < g_dwIdIndexSize; i++)
+         if (g_pIndexById[i].pObject->IsDeleted())
          {
-            g_pNodeList[i]->DeleteFromDB();
-            delete g_pNodeList[i];
-            memmove(&g_pNodeList[i], &g_pNodeList[i + 1], sizeof(Node *) * (g_dwNodeCount - i - 1));
-            g_dwNodeCount--;
-            i--;
-         }
-      for(i = 0; i < g_dwSubnetCount; i++)
-         if (g_pSubnetList[i]->IsDeleted())
-         {
-            g_pSubnetList[i]->DeleteFromDB();
-            delete g_pSubnetList[i];
-            memmove(&g_pSubnetList[i], &g_pSubnetList[i + 1], sizeof(Subnet *) * (g_dwSubnetCount - i - 1));
-            g_dwSubnetCount--;
-            i--;
+            g_pIndexById[i].pObject->DeleteFromDB();
+            NetObjDelete(g_pIndexById[i].pObject);
+            i = 0xFFFFFFFF;   // Restart loop
          }
 
-      // Save subnets
-      for(i = 0; i < g_dwSubnetCount; i++)
-         if (g_pSubnetList[i]->IsModified())
-            g_pSubnetList[i]->SaveToDB();
-
-      // Save nodes
-      for(i = 0; i < g_dwNodeCount; i++)
-         if (g_pNodeList[i]->IsModified())
-            g_pNodeList[i]->SaveToDB();
+      // Save objects
+      for(i = 0; i < g_dwIdIndexSize; i++)
+         if (g_pIndexById[i].pObject->IsModified())
+            g_pIndexById[i].pObject->SaveToDB();
 
       ObjectsGlobalUnlock();
    }
