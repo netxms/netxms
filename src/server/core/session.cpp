@@ -247,7 +247,7 @@ void ClientSession::SendAllEvents(void)
    DB_RESULT hResult;
 
    // Prepare message
-   msg.SetCode(CMD_OBJECT);
+   msg.SetCode(CMD_EVENT);
 
    // Retrieve events from database
    hResult = DBSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog");
