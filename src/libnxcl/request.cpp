@@ -69,6 +69,9 @@ HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...)
          case NXC_OP_OPEN_EVENT_DB:
             hRequest = CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
             break;
+         case NXC_OP_LOAD_USER_DB:
+            hRequest = CreateRequest(RQ_LOAD_USER_DB, NULL, FALSE);
+            break;
          case NXC_OP_CLOSE_EVENT_DB:
             hRequest = CreateRequest(RQ_CLOSE_EVENT_DB, (void *)va_arg(args, BOOL), FALSE);
             break;
@@ -134,6 +137,9 @@ void RequestProcessor(void *pArg)
          case RQ_SET_EVENT_INFO:
             dwRetCode = SetEventInfo(pRequest->dwHandle, (NXC_EVENT_TEMPLATE *)pRequest->pArg, 
                                      pRequest->bDynamicArg);
+            break;
+         case RQ_LOAD_USER_DB:
+            dwRetCode = LoadUserDB(pRequest->dwHandle);
             break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, (void *)"Internal error");

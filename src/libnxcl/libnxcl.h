@@ -62,6 +62,7 @@
 #define RQ_CLOSE_EVENT_DB  5
 #define RQ_SET_EVENT_INFO  6
 #define RQ_MODIFY_OBJECT   7
+#define RQ_LOAD_USER_DB    8
 
 
 //
@@ -143,6 +144,9 @@ DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
+
+DWORD LoadUserDB(DWORD dwRqId);
+void ProcessUserDBRecord(CSCPMessage *pMsg);
 
 void SyncObjects(void);
 DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg);

@@ -130,6 +130,10 @@ SOURCE=.\objects.cpp
 
 SOURCE=.\request.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\users.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

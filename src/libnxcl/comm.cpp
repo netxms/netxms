@@ -74,11 +74,15 @@ static char *MessageCodeName(WORD wCode)
       "CMD_SET_EVENT_INFO",
       "CMD_EVENT_DB_RECORD",
       "CMD_EVENT_DB_EOF",
-      "CMD_REQUEST_COMPLETED"
+      "CMD_REQUEST_COMPLETED",
+      "CMD_LOAD_USER_DB",
+      "CMD_USER_DATA",
+      "CMD_GROUP_DATA",
+      "CMD_USER_DB_EOF"
    };
    static char szBuffer[32];
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_REQUEST_COMPLETED))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_USER_DB_EOF))
       return pszMsgNames[wCode - CMD_LOGIN];
    sprintf(szBuffer, "CMD_UNKNOWN(%d)", wCode);
    return szBuffer;
@@ -187,6 +191,11 @@ static void NetReceiver(void *pArg)
             case CMD_EVENT_DB_RECORD:
             case CMD_EVENT_DB_EOF:
                ProcessEventDBRecord(pMsg);
+               break;
+            case CMD_USER_DATA:
+            case CMD_GROUP_DATA:
+            case CMD_USER_DB_EOF:
+               ProcessUserDBRecord(pMsg);
                break;
             default:
                m_msgWaitQueue.Put(pMsg);
