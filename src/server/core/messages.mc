@@ -11,13 +11,13 @@ MessageIdTypedef=DWORD
 MessageId=1
 SymbolicName=MSG_SERVER_STARTED
 Language=English
-NMS Server started
+NetXMS Server started
 .
 
 MessageId=
 SymbolicName=MSG_SERVER_STOPPED
 Language=English
-NMS Server stopped
+NetXMS Server stopped
 .
 
 MessageId=

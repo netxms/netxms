@@ -174,20 +174,27 @@ void CheckForMgmtNode(void)
          }
       if (i == pIfList->iNumEntries)   // No such node
       {
-         pNode = new Node(pIfList->pInterfaces[0].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
-         NetObjInsert(pNode, TRUE);
-         if (!pNode->NewNodePoll(0))
-         {
-            ObjectsGlobalLock();
-            NetObjDelete(pNode);
-            ObjectsGlobalUnlock();
-            delete pNode;     // Node poll failed, delete it
-         }
-         else
-         {
-            /* DEBUG */
-            pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DTYPE_INTEGER, 60, 30, pNode));
-         }
+         // Find interface with IP address
+         for(i = 0; i < pIfList->iNumEntries; i++)
+            if (pIfList->pInterfaces[i].dwIpAddr != 0)
+            {
+               pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
+               NetObjInsert(pNode, TRUE);
+               if (!pNode->NewNodePoll(0))
+               {
+                  ObjectsGlobalLock();
+                  NetObjDelete(pNode);
+                  ObjectsGlobalUnlock();
+                  delete pNode;     // Node poll failed, delete it
+               }
+               else
+               {
+                  g_dwMgmtNode = pNode->Id();   // Set local management node ID
+                  /* DEBUG */
+                  pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DTYPE_INTEGER, 60, 30, pNode));
+               }
+               break;
+            }
       }
       DestroyInterfaceList(pIfList);
    }
