@@ -29,6 +29,7 @@
 
 LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
 
 
 //
@@ -52,7 +53,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "Net.InterfaceList", H_NetIfList, NULL }
+   { "Net.InterfaceList", H_NetIfList, NULL },
+   { "System.ProcessList", H_ProcessList, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =

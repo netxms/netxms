@@ -26,6 +26,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
+#include <sys/dir.h>
 
 
 //
@@ -35,6 +36,17 @@
 #define DISK_FREE		0
 #define DISK_USED		1
 #define DISK_TOTAL	2
+
+
+//
+// Process list entry structure
+//
+
+typedef struct t_ProcEnt
+{
+	unsigned int nPid;
+	char szProcName[128];
+} PROC_ENT;
 
 
 //
