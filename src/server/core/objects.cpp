@@ -78,6 +78,7 @@ void ObjectsInit(void)
    // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
+   DbgPrintf(AF_DEBUG_MISC, "Built-in objects created");
 }
 
 

@@ -470,6 +470,8 @@ CREATE TABLE thresholds
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_item_id ON thresholds(item_id);
+
 
 /*
 ** Alarms

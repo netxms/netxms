@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
    }
 
    // Connect to database
-   if (!DBInit(FALSE, FALSE))
+   if (!DBInit(FALSE, FALSE, FALSE))
    {
       _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), g_szDbDriver);
       return 3;

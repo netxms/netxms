@@ -41,6 +41,7 @@ char LIBNXSRV_EXPORTABLE g_szDbName[MAX_DB_NAME] = "netxms_db";
 
 static BOOL m_bWriteLog = FALSE;
 static BOOL m_bLogSQLErrors = FALSE;
+static BOOL m_bDumpSQL = FALSE;
 static HMODULE m_hDriver = NULL;
 static DB_HANDLE (* m_fpDrvConnect)(char *, char *, char *, char *) = NULL;
 static void (* m_fpDrvDisconnect)(DB_HANDLE) = NULL;
@@ -76,13 +77,14 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, char *pszSymbol)
 // Load and initialize database driver
 //
 
-BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors)
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL)
 {
    BOOL (* fpDrvInit)(char *);
    char szErrorText[256];
 
    m_bWriteLog = bWriteLog;
    m_bLogSQLErrors = bLogErrors && bWriteLog;
+   m_bDumpSQL = bDumpSQL;
 
    // Load driver's module
    m_hDriver = DLOpen(g_szDbDriver, szErrorText);
@@ -175,7 +177,8 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
    BOOL bResult;
 
    bResult = m_fpDrvQuery(hConn, szQuery);
-   //DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", bResult ? "Successful" : "Failed", szQuery);
+   if (m_bDumpSQL)
+      printf("%s sync query: \"%s\"\n", bResult ? "Successful" : "Failed", szQuery);
    if ((!bResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return bResult;
@@ -191,7 +194,8 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery)
    DB_RESULT hResult;
    
    hResult = m_fpDrvSelect(hConn, szQuery);
-   //DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
+   if (m_bDumpSQL)
+      printf("%s sync query: \"%s\"\n", (hResult != NULL) ? "Successful" : "Failed", szQuery);
    if ((!hResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
@@ -330,7 +334,8 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, char *szQuery
    DB_RESULT hResult;
    
    hResult = m_fpDrvAsyncSelect(hConn, szQuery);
-   //DbgPrintf(AF_DEBUG_SQL, "%s async query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
+   if (m_bDumpSQL)
+      printf("%s async query: \"%s\"\n", (hResult != NULL) ? "Successful" : "Failed", szQuery);
    if ((!hResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;

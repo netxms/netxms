@@ -207,7 +207,7 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
 void LIBNXSRV_EXPORTABLE CloseLog(void);
 void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...);
 
-BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors);
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL);
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
 void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
 BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery);

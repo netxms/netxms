@@ -94,6 +94,7 @@ static BOOL H_UpgradeFromV20(void)
       "ALTER TABLE nodes DROP COLUMN is_router\n"
       "ALTER TABLE nodes DROP COLUMN is_local_mgmt\n"
       "ALTER TABLE nodes DROP COLUMN is_ospf\n"
+      "CREATE INDEX idx_item_id ON thresholds(item_id)\n"
       "<END>";
    static DWORD m_dwFlag[] = { NF_IS_SNMP, NF_IS_NATIVE_AGENT, NF_IS_BRIDGE,
                                NF_IS_ROUTER, NF_IS_LOCAL_MGMT, NF_IS_OSPF };
