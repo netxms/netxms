@@ -808,6 +808,46 @@ void ClientSession::CreateUser(CSCPMessage *pRequest)
 
 void ClientSession::UpdateUser(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   {
+      // User database have to be locked before any
+      // changes to user database can be made
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      DWORD dwUserId;
+
+      dwUserId = pRequest->GetVariableLong(VID_USER_ID);
+      if (dwUserId & GROUP_FLAG)
+      {
+         NMS_USER_GROUP group;
+      }
+      else
+      {
+         NMS_USER user;
+
+         user.dwId = dwUserId;
+         pRequest->GetVariableStr(VID_USER_DESCRIPTION, user.szDescription, MAX_USER_DESCR);
+         pRequest->GetVariableStr(VID_USER_FULL_NAME, user.szFullName, MAX_USER_FULLNAME);
+         pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
+         user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
+      }
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 
@@ -824,34 +864,48 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Get Id of user to be deleted
-   dwUserId = pRequest->GetVariableLong(VID_USER_ID);
-
-   if (dwUserId != 0)
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
-      {
-         // Current user has no rights for user account management
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
-      else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
-      {
-         // User database have to be locked before any
-         // changes to user database can be made
-         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      }
-      else
-      {
-         DWORD dwResult;
-
-         dwResult = DeleteUserFromDB(dwUserId);
-         msg.SetVariable(VID_RCC, dwResult);
-      }
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   {
+      // User database have to be locked before any
+      // changes to user database can be made
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
    else
    {
-      // Nobody can delete system administrator account
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      // Get Id of user to be deleted
+      dwUserId = pRequest->GetVariableLong(VID_USER_ID);
+
+      if (dwUserId != 0)
+      {
+         if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+         {
+            // Current user has no rights for user account management
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+         else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+         {
+            // User database have to be locked before any
+            // changes to user database can be made
+            msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         }
+         else
+         {
+            DWORD dwResult;
+
+            dwResult = DeleteUserFromDB(dwUserId);
+            msg.SetVariable(VID_RCC, dwResult);
+         }
+      }
+      else
+      {
+         // Nobody can delete system administrator account
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
 
    // Send responce
