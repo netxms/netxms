@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.56 2005-01-17 21:52:09 alk Exp $
+# $Id: configure.ac,v 1.57 2005-01-18 18:40:17 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -415,6 +415,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winperf/Makefile
+	src/agent/subagents/portCheck/Makefile
 	tools/Makefile
 ])
 
