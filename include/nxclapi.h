@@ -89,6 +89,21 @@ typedef unsigned long HREQUEST;
 
 
 //
+// Object's status
+//
+
+#define STATUS_NORMAL      0
+#define STATUS_WARNING     1
+#define STATUS_MINOR       2
+#define STATUS_MAJOR       3
+#define STATUS_CRITICAL    4
+#define STATUS_UNKNOWN     5
+#define STATUS_UNMANAGED   6
+#define STATUS_DISABLED    7
+#define STATUS_TESTING     8
+
+
+//
 // Node flags
 //
 

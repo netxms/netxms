@@ -75,19 +75,19 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
-		EVENT_NODE_MINOR, 'NX_NODE_MINOR',
-		EVENT_SEVERITY_MINOR, 1,
-		'Node status changed to MINOR',
-		'Generated when node status changed to "Minor Problem" (informational).\n' CONCAT
+		EVENT_NODE_WARNING, 'NX_NODE_WARNING', 
+		EVENT_SEVERITY_WARNING, 1,
+		'Node status changed to WARNING',
+		'Generated when node status changed to "Warning".\n' CONCAT
 		'Parameters:\n' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
-		EVENT_NODE_WARNING, 'NX_NODE_WARNING', 
-		EVENT_SEVERITY_WARNING, 1,
-		'Node status changed to WARNING',
-		'Generated when node status changed to "Warning".\n' CONCAT
+		EVENT_NODE_MINOR, 'NX_NODE_MINOR',
+		EVENT_SEVERITY_MINOR, 1,
+		'Node status changed to MINOR',
+		'Generated when node status changed to "Minor Problem" (informational).\n' CONCAT
 		'Parameters:\n' CONCAT
 		'   1) Previous node status'
 	);

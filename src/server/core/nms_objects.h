@@ -53,19 +53,6 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
-// Object's status
-//
-
-#define STATUS_NORMAL      0
-#define STATUS_MINOR       1
-#define STATUS_WARNING     2
-#define STATUS_MAJOR       3
-#define STATUS_CRITICAL    4
-#define STATUS_UNKNOWN     5
-#define STATUS_UNMANAGED   6
-
-
-//
 // Discovery flags
 //
 
