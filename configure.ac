@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.46 2005-01-04 17:15:57 victor Exp $
+# $Id: configure.ac,v 1.47 2005-01-05 10:58:02 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -10,6 +10,7 @@ AM_INIT_AUTOMAKE
 
 # --------------------------------------------------------------------------
 # disable C++ exceptions
+CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
 LDFLAGS="-nodefaultlibs -lc $LDFLAGS"
 
@@ -411,4 +412,4 @@ AC_CONFIG_FILES([
 	tools/Makefile
 ])
 
-AC_OUTPUT
+AC_OUTPUT( , [ $PERL tools/patch_libtool.pl <libtool >libtool.new; mv libtool.new libtool; chmod 755 libtool ])
