@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	void UpdateParameterEntry(DWORD dwIndex);
 	void AddParameterEntry(DWORD dwIndex);
 
 	// Generated message map functions
@@ -47,6 +48,7 @@ protected:
 	virtual void OnOK();
 	afx_msg void OnSelectEvent();
 	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

@@ -56,6 +56,7 @@ BEGIN_MESSAGE_MAP(CTrapEditDlg, CDialog)
 	ON_BN_CLICKED(IDC_SELECT_TRAP, OnSelectTrap)
 	ON_BN_CLICKED(IDC_SELECT_EVENT, OnSelectEvent)
 	ON_BN_CLICKED(IDC_BUTTON_ADD, OnButtonAdd)
+	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -216,12 +217,36 @@ void CTrapEditDlg::OnButtonAdd()
 
 void CTrapEditDlg::AddParameterEntry(DWORD dwIndex)
 {
-   TCHAR szBuffer[1024];
+   TCHAR szBuffer[32];
    int iItem;
 
    _stprintf(szBuffer, _T("%d"), dwIndex + 2);
-   iItem = m_wndArgList.InsertItem(0x7FFFFFFF, szBuffer);
+   iItem = m_wndArgList.InsertItem(dwIndex, szBuffer);
+   if ((DWORD)iItem != dwIndex)
+      MessageBox(_T("Internal error: iItem != dwIndex"), _T("Error"), MB_OK | MB_ICONSTOP);
+   else
+      UpdateParameterEntry(dwIndex);
+}
+
+
+//
+// Update parameter mapping entry in list
+//
+
+void CTrapEditDlg::UpdateParameterEntry(DWORD dwIndex)
+{
+   TCHAR szBuffer[1024];
+
    SNMPConvertOIDToText(m_trap.pMaps[dwIndex].dwOidLen, m_trap.pMaps[dwIndex].pdwObjectId,
                         szBuffer, 1024);
-   m_wndArgList.SetItemText(iItem, 1, szBuffer);
+   m_wndArgList.SetItemText(dwIndex, 1, szBuffer);
+}
+
+
+//
+// Handler for "Delete" button
+//
+
+void CTrapEditDlg::OnButtonDelete() 
+{
 }

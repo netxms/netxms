@@ -53,6 +53,7 @@ protected:
 	afx_msg void OnTrapDelete();
 	afx_msg void OnTrapEdit();
 	//}}AFX_MSG
+   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	NXC_TRAP_CFG_ENTRY *m_pTrapList;

@@ -48,6 +48,7 @@ BEGIN_MESSAGE_MAP(CTrapEditor, CMDIChildWnd)
 	ON_COMMAND(ID_TRAP_DELETE, OnTrapDelete)
 	ON_COMMAND(ID_TRAP_EDIT, OnTrapEdit)
 	//}}AFX_MSG_MAP
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -389,4 +390,14 @@ void CTrapEditor::OnTrapEdit()
          }
       }
    }
+}
+
+
+//
+// Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
+//
+
+void CTrapEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_TRAP_EDIT, 0);
 }
