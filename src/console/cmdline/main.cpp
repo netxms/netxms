@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
    NXCSetEventHandler(EventHandler);
    //NXCSetDebugCallback(DebugCallback);
 
-strcpy(szServer,"eagle");
+strcpy(szServer,"127.0.0.1");
 strcpy(szLogin,"admin");
 strcpy(szPassword,"netxms");
 
@@ -166,7 +166,7 @@ strcpy(szPassword,"netxms");
    {
       printf("NXCGetEventDB() failed\n");
    }
-   NXCCloseEventDB();
+   NXCCloseEventDB(FALSE);
 
    while(1)
       Sleep(1000);
