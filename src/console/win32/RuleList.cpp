@@ -326,7 +326,7 @@ void CRuleList::OnPaint()
    rect.left = rcClient.left;
    rect.top = 0;
    rect.bottom++;
-   rect.right += 2;
+   rect.right = m_iTotalWidth + 2;
    dc.DrawEdge(&rect, EDGE_RAISED, BF_BOTTOMRIGHT);
 
    // Cleanup
