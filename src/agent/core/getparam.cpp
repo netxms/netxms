@@ -191,6 +191,7 @@ static AGENT_PARAM m_stdParams[] =
    { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests },
    { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests },
    { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections },
+   { "Agent.SourcePackageSupport", H_StringConstant, "0" },
    { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests },
    { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests },
    { "Agent.Uptime", H_AgentUptime, NULL },
