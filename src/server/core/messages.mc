@@ -224,4 +224,10 @@ Language=English
 Thread "%1" does not respond to watchdog thread
 .
 
+MessageId=
+SymbolicName=MSG_SESSION_CLOSED
+Language=English
+Client session closed due to communication error (%1)
+.
+
 ;#endif

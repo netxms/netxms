@@ -35,6 +35,7 @@
 #include <sys/select.h>
 
 #define closesocket(x) close(x)
+#define WSAGetLastError() (errno)
 
 #endif   /* _WIN32 */
 
@@ -49,6 +50,7 @@
 #include <nms_common.h>
 #include <nms_threads.h>
 #include <dbdrv.h>
+#include <nms_cscp.h>
 #include "nms_objects.h"
 #include "messages.h"
 
@@ -171,6 +173,28 @@ public:
    INTERFACE_LIST *GetInterfaceList(void);
    DWORD Nop(void) { return ExecuteCommand("NOP"); }
    DWORD GetParameter(char *szParam, DWORD dwBufSize, char *szBuffer);
+};
+
+
+//
+// Client session
+//
+
+class ClientSession
+{
+private:
+   SOCKET m_hSocket;
+   Queue *m_pSendQueue;
+
+public:
+   ClientSession(SOCKET hSocket);
+   ~ClientSession();
+
+   void PostMessage(CSCP_MESSAGE *pMsg);
+   void DispatchMessage(CSCP_MESSAGE *pMsg);
+
+   void ReadThread(void);
+   void WriteThread(void);
 };
 
 

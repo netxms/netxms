@@ -21,22 +21,110 @@
 **/
 
 #include "nms_core.h"
-#include <nms_cscp.h>
 
 
 //
-// Client communication thread
+// Client session class constructor
 //
 
-static void CommThread(void *pArg)
+ClientSession::ClientSession(SOCKET hSocket)
 {
-   SOCKET sock;
+   m_pSendQueue = new Queue;
+   m_hSocket = hSocket;
+}
 
-   sock = (SOCKET)pArg;
 
-   // Terminate session
-   shutdown(sock, 2);
-   closesocket(sock);
+//
+// Destructor
+//
+
+ClientSession::~ClientSession()
+{
+   delete m_pSendQueue;
+}
+
+
+//
+// Post message to send queue
+//
+
+void ClientSession::PostMessage(CSCP_MESSAGE *pMsg)
+{
+   m_pSendQueue->Put(pMsg);
+}
+
+
+//
+// ReadThread()
+//
+
+void ClientSession::ReadThread(void)
+{
+   CSCP_MESSAGE *pMsg;
+   int iErr;
+
+   pMsg = (CSCP_MESSAGE *)malloc(65536);
+   while(1)
+   {
+      if ((iErr = recv(m_hSocket, (char *)pMsg, 65536, 0)) <= 0)
+         break;
+
+      // Check that actual received packet size is equal to encoded in packet
+      if (pMsg->wSize != iErr)
+         continue;   // Bad packet, wait for next
+
+      switch(pMsg->wCode)
+      {
+         case CMD_LOGIN:
+
+            break;
+         default:    // Unknown message code, ignore it
+            break;
+      }
+   }
+   if (iErr < 0)
+      WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
+}
+
+
+//
+// WriteThread()
+//
+
+void ClientSession::WriteThread(void)
+{
+   CSCP_MESSAGE *pMsg;
+
+   while(1)
+   {
+      pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      if (send(m_hSocket, (const char *)pMsg, pMsg->wSize, 0) <= 0)
+      {
+         free(pMsg);
+         break;
+      }
+      free(pMsg);
+   }
+}
+
+
+//
+// Client communication read thread
+//
+
+static void ReadThread(void *pArg)
+{
+   ((ClientSession *)pArg)->ReadThread();
+}
+
+
+//
+// Client communication write thread
+//
+
+static void WriteThread(void *pArg)
+{
+   ((ClientSession *)pArg)->WriteThread();
 }
 
 
@@ -50,6 +138,7 @@ void ClientListener(void *)
    struct sockaddr_in servAddr;
    int iSize, errorCount = 0;
    WORD wListenPort;
+   ClientSession *pSession;
 
    // Read configuration
    wListenPort = (WORD)ConfigReadInt("ClientListenerPort", SERVER_LISTEN_PORT);
@@ -70,11 +159,7 @@ void ClientListener(void *)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-#ifdef _WIN32
       WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, "ClientListener", WSAGetLastError());
-#else
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, "ClientListener", errno);
-#endif
       exit(1);
    }
 
@@ -108,7 +193,10 @@ void ClientListener(void *)
 
       errorCount = 0;     // Reset consecutive errors counter
 
-      ThreadCreate(CommThread, 0, (void *)sockClient);
+      // Create new session structure and threads
+      pSession = new ClientSession(sockClient);
+      ThreadCreate(ReadThread, 0, (void *)pSession);
+      ThreadCreate(WriteThread, 0, (void *)pSession);
    }
 
    closesocket(sock);
