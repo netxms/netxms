@@ -199,24 +199,25 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    if (bNewObject)   // Assign unique ID to new object
       pObject->SetId(m_dwFreeObjectId++);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
-   switch(pObject->Type())
-   {
-      case OBJECT_GENERIC:
-      case OBJECT_NETWORK:
-         break;
-      case OBJECT_SUBNET:
-         AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
-         break;
-      case OBJECT_NODE:
-         AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
-         break;
-      case OBJECT_INTERFACE:
-         AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
-         break;
-      default:
-         WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
-         break;
-   }
+   if (pObject->IpAddr() != 0)
+      switch(pObject->Type())
+      {
+         case OBJECT_GENERIC:
+         case OBJECT_NETWORK:
+            break;
+         case OBJECT_SUBNET:
+            AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
+            break;
+         case OBJECT_NODE:
+            AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
+            break;
+         case OBJECT_INTERFACE:
+            AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
+            break;
+         default:
+            WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+            break;
+      }
    ObjectsGlobalUnlock();
 }
 
@@ -229,24 +230,25 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 void NetObjDelete(NetObj *pObject)
 {
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
-   switch(pObject->Type())
-   {
-      case OBJECT_GENERIC:
-      case OBJECT_NETWORK:
-         break;
-      case OBJECT_SUBNET:
-         DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
-         break;
-      case OBJECT_NODE:
-         DeleteObjectFromIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr());
-         break;
-      case OBJECT_INTERFACE:
-         DeleteObjectFromIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr());
-         break;
-      default:
-         WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
-         break;
-   }
+   if (pObject->IpAddr() != 0)
+      switch(pObject->Type())
+      {
+         case OBJECT_GENERIC:
+         case OBJECT_NETWORK:
+            break;
+         case OBJECT_SUBNET:
+            DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
+            break;
+         case OBJECT_NODE:
+            DeleteObjectFromIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr());
+            break;
+         case OBJECT_INTERFACE:
+            DeleteObjectFromIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr());
+            break;
+         default:
+            WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+            break;
+      }
 }
 
 
@@ -258,7 +260,7 @@ Node *FindNodeByIP(DWORD dwAddr)
 {
    DWORD dwPos;
 
-   if (g_pInterfaceIndexByAddr == NULL)
+   if ((g_pInterfaceIndexByAddr == NULL) || (dwAddr == 0))
       return NULL;
 
    dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
@@ -274,7 +276,7 @@ Subnet *FindSubnetByIP(DWORD dwAddr)
 {
    DWORD dwPos;
 
-   if (g_pSubnetIndexByAddr == NULL)
+   if ((g_pSubnetIndexByAddr == NULL) || (dwAddr == 0))
       return NULL;
 
    dwPos = SearchIndex(g_pSubnetIndexByAddr, g_dwSubnetAddrIndexSize, dwAddr);

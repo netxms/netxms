@@ -180,12 +180,13 @@ void DBUnloadDriver(void);
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary, 
-             size_t iOidLen, void *pValue);
+             size_t iOidLen, void *pValue, DWORD dwBufferSize);
 BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
                    void (* pHandler)(DWORD, char *, variable_list *, void *), void *pUserArg);
 
 INTERFACE_LIST *GetLocalInterfaceList(void);
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity);
+void CleanInterfaceList(INTERFACE_LIST *pIfList);
 void DestroyInterfaceList(INTERFACE_LIST *pIfList);
 
 ARP_CACHE *GetLocalArpCache(void);

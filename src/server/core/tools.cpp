@@ -261,6 +261,29 @@ wait_for_packet:
 
 
 //
+// Clean interface list from unneeded entries
+//
+
+void CleanInterfaceList(INTERFACE_LIST *pIfList)
+{
+   int i;
+
+   if (pIfList == NULL)
+      return;
+
+   // Delete loopback interface(s) from list
+   for(i = 0; i < pIfList->iNumEntries; i++)
+      if ((pIfList->pInterfaces[i].dwIpAddr & pIfList->pInterfaces[i].dwIpNetMask) == 0x0000007F)
+      {
+         pIfList->iNumEntries--;
+         memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
+                 sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
+         i--;
+      }
+}
+
+
+//
 // Destroy interface list created by discovery functions
 //
 

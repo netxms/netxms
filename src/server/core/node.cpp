@@ -39,6 +39,7 @@ Node::Node()
    m_iSNMPVersion = SNMP_VERSION_1;
    strcpy(m_szCommunityString, "public");
    m_szObjectId[0] = 0;
+   m_tLastDiscoveryPoll = 0;
 }
 
 
@@ -60,6 +61,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    strcpy(m_szCommunityString, "public");
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
    m_szObjectId[0] = 0;
+   m_tLastDiscoveryPoll = 0;
 }
 
 
@@ -254,7 +256,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    AgentConnection *pAgentConn;
 
    // Determine node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4))
       m_dwFlags |= NF_IS_SNMP;
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
@@ -285,14 +287,17 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
             AddInterface(pInterface);
 
             // Bind node to appropriate subnet
-            pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-            if (pSubnet == NULL)
+            if (pInterface->IpAddr() != 0)   // Do not link non-IP interfaces to 0.0.0.0 subnet
             {
-               // Create new subnet object
-               pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
-               NetObjInsert(pSubnet, TRUE);
+               pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
+               if (pSubnet == NULL)
+               {
+                  // Create new subnet object
+                  pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+                  NetObjInsert(pSubnet, TRUE);
+               }
+               pSubnet->AddNode(this);
             }
-            pSubnet->AddNode(this);
          }
          DestroyInterfaceList(pIfList);
       }
@@ -382,4 +387,27 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    }
 
    return pIfList;
+}
+
+
+//
+// Find interface by index and node IP
+// Returns pointer to interface object or NULL if appropriate interface couldn't be found
+//
+
+Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
+{
+   DWORD i;
+   Interface *pInterface;
+
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         pInterface = (Interface *)m_pChildList[i];
+         if (pInterface->IfIndex() == dwIndex)
+            if ((pInterface->IpAddr() & pInterface->IpNetMask()) ==
+                (dwHostAddr & pInterface->IpNetMask()))
+               return pInterface;
+      }
+   return NULL;
 }

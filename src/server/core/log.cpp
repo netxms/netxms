@@ -105,7 +105,7 @@ static void WriteLogToFile(char *szMessage)
 
    t = time(NULL);
    loc = localtime(&t);
-   strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S] ", loc);
+   strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
    fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
    if (IsStandalone())
       printf("%s %s", szBuffer, szMessage);

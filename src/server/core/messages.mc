@@ -194,4 +194,10 @@ Language=English
 Call to GetIpAddrTable() failed: %1
 .
 
+MessageId=
+SymbolicName=MSG_GETIPNETTABLE_FAILED
+Language=English
+Call to GetIpNetTable() failed: %1
+.
+
 ;#endif

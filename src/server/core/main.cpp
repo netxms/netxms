@@ -44,6 +44,7 @@ DWORD g_dwFlags = 0;
 char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 DB_HANDLE g_hCoreDB = 0;
+DWORD g_dwDiscoveryPollingInterval;
 
 
 //
@@ -53,6 +54,16 @@ DB_HANDLE g_hCoreDB = 0;
 #ifdef _WIN32
 HANDLE m_hEventShutdown = INVALID_HANDLE_VALUE;
 #endif
+
+
+//
+// Load global configuration parameters
+//
+
+void LoadGlobalConfig()
+{
+   g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 3600);
+}
 
 
 //
@@ -80,6 +91,9 @@ BOOL Initialize(void)
       WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
    }
+
+   // Load global configuration parameters
+   LoadGlobalConfig();
 
    // Create synchronization stuff
 #ifdef _WIN32
@@ -176,7 +190,8 @@ void Main(void)
                   ARP_CACHE *arp;
                   arp=SnmpGetArpCache(inet_addr("10.0.0.44"),"public");
                   for(DWORD i=0;i<arp->dwNumEntries;i++)
-                     printf("%s %02X:%02X:%02X:%02X:%02X:%02X\n",
+                     printf("%d %s %02X:%02X:%02X:%02X:%02X:%02X\n",
+                        arp->pEntries[i].dwIndex,
                         IpToStr(arp->pEntries[i].dwIpAddr,szBuffer),
                         arp->pEntries[i].bMacAddr[0],
                         arp->pEntries[i].bMacAddr[1],
@@ -186,6 +201,47 @@ void Main(void)
                         arp->pEntries[i].bMacAddr[5]);
                   printf("Total %d entries\n",arp->dwNumEntries);
                   DestroyArpCache(arp);
+               }
+               break;
+            case 's':
+               {
+                  INTERFACE_LIST *iflist;
+                  printf("*** 10.0.0.41 *** \n");
+                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.41"),"public");
+                  if (iflist != NULL)
+                  {
+                     char addr[32],mask[32];
+                     for(int i=0;i<iflist->iNumEntries;i++)
+                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
+                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
+                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
+                        iflist->pInterfaces[i].szName);
+                     DestroyInterfaceList(iflist);
+                  }
+                  printf("*** 10.0.0.77 *** \n");
+                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.77"),"public");
+                  if (iflist != NULL)
+                  {
+                     char addr[32],mask[32];
+                     for(int i=0;i<iflist->iNumEntries;i++)
+                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
+                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
+                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
+                        iflist->pInterfaces[i].szName);
+                     DestroyInterfaceList(iflist);
+                  }
+                  printf("*** 10.0.0.251 *** \n");
+                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.251"),"public");
+                  if (iflist != NULL)
+                  {
+                     char addr[32],mask[32];
+                     for(int i=0;i<iflist->iNumEntries;i++)
+                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
+                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
+                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
+                        iflist->pInterfaces[i].szName);
+                     DestroyInterfaceList(iflist);
+                  }
                }
                break;
             case 'i':
@@ -204,14 +260,15 @@ void Main(void)
                         IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
                         IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
                         iflist->pInterfaces[i].szName);
+                     DestroyInterfaceList(iflist);
                   }
-                  DestroyInterfaceList(iflist);
                   ARP_CACHE *arp;
                   arp=ac->GetArpCache();
                   if (arp!=NULL)
                   {
                      for(DWORD i=0;i<arp->dwNumEntries;i++)
-                        printf("%s %02X:%02X:%02X:%02X:%02X:%02X\n",
+                        printf("%d %s %02X:%02X:%02X:%02X:%02X:%02X\n",
+                           arp->pEntries[i].dwIndex,
                            IpToStr(arp->pEntries[i].dwIpAddr,buffer),
                            arp->pEntries[i].bMacAddr[0],
                            arp->pEntries[i].bMacAddr[1],

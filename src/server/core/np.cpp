@@ -31,6 +31,8 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 {
    Node *pNode;
 
+char buffer[32];
+printf("Analyzing new node %s\n",IpToStr(dwIpAddr,buffer));
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
@@ -44,11 +46,13 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    pNode = new Node(dwIpAddr, 0, dwFlags);
    if (!pNode->NewNodePoll(dwNetMask))
    {
+printf("New node %s cannot be added\n",pNode->Name());
       delete pNode;     // Node poll failed, delete it
    }
    else
    {
       NetObjInsert(pNode, TRUE);
+printf("New node %s added\n",pNode->Name());
    }
 }
 

@@ -427,15 +427,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 
    DestroyResultData();
 
-   // Delete loopback interface(s) from list
-   for(int j = 0; j < pIfList->iNumEntries; j++)
-      if ((pIfList->pInterfaces[j].dwIpAddr & pIfList->pInterfaces[j].dwIpNetMask) == 0x0000007F)
-      {
-         pIfList->iNumEntries--;
-         memmove(&pIfList->pInterfaces[j], &pIfList->pInterfaces[j + 1],
-                 sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - j));
-         j--;
-      }
+   CleanInterfaceList(pIfList);
 
    return pIfList;
 }
@@ -470,7 +462,7 @@ DWORD AgentConnection::GetParameter(char *szParam, DWORD dwBufSize, char *szBuff
 ARP_CACHE *AgentConnection::GetArpCache(void)
 {
    ARP_CACHE *pArpCache;
-   char szByte[4], *pBuf;
+   char szByte[4], *pBuf, *pChar;
    DWORD i, j;
 
    if (ExecuteCommand("ARP", TRUE, TRUE) != ERR_SUCCESS)
@@ -505,7 +497,14 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
       // IP address
       while(*pBuf == ' ')
          pBuf++;
+      pChar = strchr(pBuf, ' ');
+      if (pChar != NULL)
+         *pChar = 0;
       pArpCache->pEntries[i].dwIpAddr = inet_addr(pBuf);
+
+      // Interface index
+      if (pChar != NULL)
+         pArpCache->pEntries[i].dwIndex = strtoul(pChar + 1, NULL, 10);
    }
 
    DestroyResultData();

@@ -27,13 +27,16 @@
 // Convert OID to from binary to string representation
 //
 
-void OidToStr(oid *pOid, int iOidLen, char *szBuffer)
+void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize)
 {
    int i;
    char *pCurr;
 
+   szBuffer[0] = 0;
    for(i = 0, pCurr = szBuffer; i < iOidLen; i++)
    {
+      if (strlen(szBuffer) + 4 >= dwBufferSize)
+         break;   // String is too large
       sprintf(pCurr, ".%d", pOid[i]);
       while(*pCurr)
          pCurr++;
@@ -48,7 +51,7 @@ void OidToStr(oid *pOid, int iOidLen, char *szBuffer)
 //
 
 BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
-             size_t iOidLen, void *pValue)
+             size_t iOidLen, void *pValue, DWORD dwBufferSize)
 {
    struct snmp_session session, *sptr;
    struct snmp_pdu *pdu, *response;
@@ -107,11 +110,11 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
                *((long *)pValue) = *pVar->val.integer;
                break;
             case ASN_OCTET_STR:
-               memcpy(pValue, pVar->val.string, pVar->val_len);
-               ((char *)pValue)[pVar->val_len]=0;
+               memcpy(pValue, pVar->val.string, min(pVar->val_len, dwBufferSize - 1));
+               ((char *)pValue)[min(pVar->val_len, dwBufferSize - 1)] = 0;
                break;
             case ASN_OBJECT_ID:
-               OidToStr(pVar->val.objid, pVar->val_len / sizeof(oid), (char *)pValue);
+               OidToStr(pVar->val.objid, pVar->val_len / sizeof(oid), (char *)pValue, dwBufferSize);
                break;
             default:
                WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "d", pVar->type);
@@ -259,7 +262,7 @@ static void HandlerIpAddr(DWORD dwAddr, char *szCommunity, variable_list *pVar,v
 
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
    oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
-   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex))
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex, sizeof(DWORD)))
    {
       int i;
 
@@ -284,7 +287,7 @@ static void HandlerNetMask(DWORD dwAddr, char *szCommunity, variable_list *pVar,
 
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
    oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
-   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex))
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex, sizeof(DWORD)))
    {
       int i;
 
@@ -309,7 +312,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
    INTERFACE_LIST *pIfList = NULL;
 
    // Get number of interfaces
-   if (!SnmpGet(dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0, &iNumIf))
+   if (!SnmpGet(dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0, &iNumIf, sizeof(long)))
       return NULL;
 
    // Create empty list
@@ -327,12 +330,12 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
    {
       // Interface name
       sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, pIfList->pInterfaces[i].szName))
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME))
          continue;
 
       // Interface type
       sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i].dwType))
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i].dwType, sizeof(DWORD)))
          continue;
    }
 
@@ -340,15 +343,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
    SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1", HandlerIpAddr, pIfList);
    SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.3", HandlerNetMask, pIfList);
 
-   // Delete loopback interface(s) from list
-   for(i = 0; i < pIfList->iNumEntries; i++)
-      if ((pIfList->pInterfaces[i].dwIpAddr & pIfList->pInterfaces[i].dwIpNetMask) == 0x0000007F)
-      {
-         pIfList->iNumEntries--;
-         memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
-                 sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
-         i--;
-      }
+   CleanInterfaceList(pIfList);
 
    return pIfList;
 }
@@ -362,16 +357,22 @@ static void HandlerArp(DWORD dwAddr, char *szCommunity, variable_list *pVar,void
 {
    oid oidName[MAX_OID_LEN];
    BYTE bMac[64];
+   DWORD dwIndex = 0;
 
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
+
+   oidName[pVar->name_length - 6] = 1;  // Retrieve interface index
+   SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex, sizeof(DWORD));
+
    oidName[pVar->name_length - 6] = 2;  // Retrieve MAC address for this IP
-   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, bMac))
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, bMac, 64))
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = *pVar->val.integer;
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }
 }
 

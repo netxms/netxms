@@ -25,6 +25,14 @@
 
 #include <nms_agent.h>
 
+
+//
+// Global variables used by inline functions
+//
+
+extern DWORD g_dwDiscoveryPollingInterval;
+
+
 //
 // Constants
 //
@@ -67,6 +75,7 @@ struct INTERFACE_LIST
 
 struct ARP_ENTRY
 {
+   DWORD dwIndex;       // Interface index
    DWORD dwIpAddr;
    BYTE bMacAddr[6];
 };
@@ -225,6 +234,7 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
+   DWORD IfIndex(void) { return m_dwIfIndex; }
 };
 
 
@@ -244,6 +254,7 @@ protected:
    int m_iSNMPVersion;
    char m_szCommunityString[MAX_COMMUNITY_LENGTH];
    char m_szObjectId[MAX_OID_LEN * 4];
+   time_t m_tLastDiscoveryPoll;
 
 public:
    Node();
@@ -273,6 +284,10 @@ public:
 
    ARP_CACHE *GetArpCahe(void);
    INTERFACE_LIST *GetInterfaceList(void);
+   Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
+
+   BOOL ReadyForDiscoveryPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval ? TRUE : FALSE; }
+   void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
 };
 
 

@@ -37,6 +37,42 @@ ARP_CACHE *GetLocalArpCache(void)
 {
    ARP_CACHE *pArpCache = NULL;
 
+#ifdef _WIN32
+   MIB_IPNETTABLE *sysArpCache;
+   DWORD i, dwError, dwSize;
+
+   sysArpCache = (MIB_IPNETTABLE *)malloc(SIZEOF_IPNETTABLE(4096));
+   if (sysArpCache == NULL)
+      return NULL;
+
+   dwSize = SIZEOF_IPNETTABLE(4096);
+   dwError = GetIpNetTable(sysArpCache, &dwSize, FALSE);
+   if (dwError != NO_ERROR)
+   {
+      WriteLog(MSG_GETIPNETTABLE_FAILED, EVENTLOG_ERROR_TYPE, "e", NULL);
+      free(sysArpCache);
+      return NULL;
+   }
+
+   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+   pArpCache->dwNumEntries = 0;
+   pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * sysArpCache->dwNumEntries);
+
+   for(i = 0; i < sysArpCache->dwNumEntries; i++)
+      if ((sysArpCache->table[i].dwType == 3) ||
+          (sysArpCache->table[i].dwType == 4))  // Only static and dynamic entries
+      {
+         pArpCache->pEntries[pArpCache->dwNumEntries].dwIndex = sysArpCache->table[i].dwIndex;
+         pArpCache->pEntries[pArpCache->dwNumEntries].dwIpAddr = sysArpCache->table[i].dwAddr;
+         memcpy(pArpCache->pEntries[pArpCache->dwNumEntries].bMacAddr, sysArpCache->table[i].bPhysAddr, 6);
+         pArpCache->dwNumEntries++;
+      }
+
+   free(sysArpCache);
+#else
+   /* TODO: Add UNIX code here */
+#endif
+
    return pArpCache;
 }
 
@@ -111,6 +147,8 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
    /* TODO: Add UNIX code here */
 #endif
 
+   CleanInterfaceList(pIfList);
+
    return pIfList;
 }
 
@@ -153,13 +191,53 @@ static void CheckForMgmtNode(void)
 
 void DiscoveryThread(void *arg)
 {
-//   ARP_CACHE *pArpCache;
    DWORD dwNewNodeId = 1;
+   Node *pNode;
+
+   // Flush new nodes table
+   DBQuery(g_hCoreDB, "DELETE FROM newnodes");
 
    while(1)
    {
-      ThreadSleep(60);
+      ThreadSleep(30);
 
       CheckForMgmtNode();
+
+      // Walk through nodes and poll for ARP tables
+      for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
+      {
+         pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
+         if (pNode->ReadyForDiscoveryPoll())
+         {
+            ARP_CACHE *pArpCache;
+
+printf("Discovery poll on node %s\n",pNode->Name());
+            // Retrieve and analize node's ARP cache
+            pArpCache = pNode->GetArpCahe();
+            if (pArpCache != NULL)
+            {
+               for(DWORD j = 0; j < pArpCache->dwNumEntries; j++)
+               {
+                  if (FindNodeByIP(pArpCache->pEntries[j].dwIpAddr) == NULL)
+                  {
+                     Interface *pInterface = pNode->FindInterface(pArpCache->pEntries[j].dwIndex,
+                                                                  pArpCache->pEntries[j].dwIpAddr);
+                     if (pInterface != NULL)
+                     {
+                        char szQuery[256];
+
+                        sprintf(szQuery, "INSERT INTO newnodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,%d,%d)",
+                                dwNewNodeId++, pArpCache->pEntries[j].dwIpAddr,
+                                pInterface->IpNetMask(), DF_DEFAULT);
+                        DBQuery(g_hCoreDB, szQuery);
+                     }
+                  }
+               }
+               DestroyArpCache(pArpCache);
+            }
+
+            pNode->SetDiscoveryPollTimeStamp();
+         }
+      }
    }
 }
