@@ -29,6 +29,8 @@
 - Agent: Fixed bug in interface operational status detection under Windows
 - Added server version checking in client connection procedure. If versions
   mismatch, client will not connect to server.
+- Windows console: when searching object in object browser, '*' characters
+  assumed at the beginning and the end of search string
 
 
 *

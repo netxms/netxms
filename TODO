@@ -57,7 +57,6 @@ WINDOWS CONSOLE:
   selected parameter
 - Add parameter selection for native agents in DCI configuration dialog
 - Find good graph creation library
-- In object browser, automatically enclose search string in * when searching
 - Enlarge 16x16 status overlay icons
 - Add primary IP address selection 
 

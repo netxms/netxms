@@ -67,6 +67,7 @@ void CCreateObjectDlg::OnSelectParent()
    CObjectSelDlg dlg;
 
    dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
+   dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {
       m_pParentObject = NXCFindObjectById(dlg.m_pdwObjectList[0]);

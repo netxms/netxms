@@ -56,6 +56,7 @@ protected:
 	afx_msg void OnSelchangeComboAuth();
 	afx_msg void OnRadioVersion2c();
 	afx_msg void OnRadioVersion1();
+	afx_msg void OnSelectIp();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -27,6 +27,7 @@ class CObjectSelDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bSingleSelection;
 	DWORD m_dwAllowedClasses;
 	DWORD m_dwNumObjects;
 	DWORD *m_pdwObjectList;

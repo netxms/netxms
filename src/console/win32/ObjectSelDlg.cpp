@@ -24,6 +24,7 @@ CObjectSelDlg::CObjectSelDlg(CWnd* pParent /*=NULL*/)
    m_dwNumObjects = 0;
    m_pdwObjectList = NULL;
    m_dwAllowedClasses = 0xFFFF;  // Allow all classes by default
+   m_bSingleSelection = FALSE;
 }
 
 
@@ -79,6 +80,11 @@ BOOL CObjectSelDlg::OnInitDialog()
    m_wndListCtrl.InsertColumn(1, "Class", LVCFMT_LEFT, 
                               rect.right - 150 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+   if (m_bSingleSelection)
+   {
+      ::SetWindowLong(m_wndListCtrl.m_hWnd, GWL_STYLE, 
+         ::GetWindowLong(m_wndListCtrl.m_hWnd, GWL_STYLE) | LVS_SINGLESEL);
+   }
 
    // Fill in object list
    NXCLockObjectIndex();

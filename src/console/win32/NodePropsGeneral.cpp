@@ -75,6 +75,7 @@ BEGIN_MESSAGE_MAP(CNodePropsGeneral, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_COMBO_AUTH, OnSelchangeComboAuth)
 	ON_BN_CLICKED(IDC_RADIO_VERSION_2C, OnRadioVersion2c)
 	ON_BN_CLICKED(IDC_RADIO_VERSION1, OnRadioVersion1)
+	ON_BN_CLICKED(IDC_SELECT_IP, OnSelectIp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -171,4 +172,13 @@ void CNodePropsGeneral::OnOK()
          m_pUpdate->iAuthType = i;
          break;
       }
+}
+
+
+//
+// Select primary IP address for node
+//
+
+void CNodePropsGeneral::OnSelectIp() 
+{
 }

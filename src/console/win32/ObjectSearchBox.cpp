@@ -112,9 +112,11 @@ HBRUSH CObjectSearchBox::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void CObjectSearchBox::OnFindObject()
 {
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
-   m_wndEditBox.GetWindowText(szBuffer, 255);
+   szBuffer[0] = _T('*');
+   m_wndEditBox.GetWindowText(&szBuffer[1], 255);
+   _tcscat(szBuffer, _T("*"));
    GetParent()->SendMessage(WM_FIND_OBJECT, 0, (LPARAM)szBuffer);
 }
 
