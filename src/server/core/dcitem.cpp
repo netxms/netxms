@@ -537,3 +537,19 @@ void DCItem::Transform(ItemValue &value)
          break;
    }
 }
+
+
+//
+// Set new ID
+//
+
+void DCItem::SetId(DWORD dwNewId)
+{
+   DWORD i;
+
+   Lock();
+   m_dwId = dwNewId;
+   for(i = 0; i < m_dwNumThresholds; i++)
+      m_ppThresholdList[i]->BindToItem(m_dwId);
+   Unlock();
+}

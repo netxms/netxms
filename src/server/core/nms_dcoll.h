@@ -116,6 +116,8 @@ public:
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
    ~Threshold();
 
+   void BindToItem(DWORD dwItemId) { m_dwItemId = dwItemId; }
+
    DWORD Id(void) { return m_dwId; }
    DWORD EventCode(void) { return m_dwEventCode; }
    const char *Value(void) { return m_pszValueStr; }
@@ -196,7 +198,7 @@ public:
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
-   void SetId(DWORD dwNewId) { m_dwId = dwNewId; }
+   void SetId(DWORD dwNewId);
    void BindToNode(Template *pNode) { m_pNode = pNode; }
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
