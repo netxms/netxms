@@ -237,12 +237,15 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    switch(wParam)
    {
       case NX_NOTIFY_NEW_ALARM:
-         m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
-         memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
-         m_dwNumAlarms++;
-         SortAlarms();
-         if (g_dwFlags & AF_PLAY_SOUND)
-            PlaySound(MAKEINTRESOURCE(IDR_SND_ALARM), GetModuleHandle(NULL), SND_ASYNC | SND_NODEFAULT | SND_RESOURCE);
+         if (!pAlarm->wIsAck)
+         {
+            m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
+            memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
+            m_dwNumAlarms++;
+            SortAlarms();
+            if (g_dwFlags & AF_PLAY_SOUND)
+               PlaySound(MAKEINTRESOURCE(IDR_SND_ALARM), GetModuleHandle(NULL), SND_ASYNC | SND_NODEFAULT | SND_RESOURCE);
+         }
          break;
       case NX_NOTIFY_ALARM_DELETED:
       case NX_NOTIFY_ALARM_ACKNOWLEGED:
