@@ -39,6 +39,7 @@
 
 #define CMD_GET            0
 #define CMD_LIST           1
+#define CMD_CHECK_SERVICE  2
 
 
 //
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:bi:hlnp:qs:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:bi:hlnp:P:qr:R:s:S:t:vw:")) != -1)
    {
       switch(ch)
       {
@@ -127,12 +128,17 @@ int main(int argc, char *argv[])
                    "   -h           : Display help and exit.\n"
                    "   -i <seconds> : Get specified parameter(s) continously with given interval.\n"
                    "   -l           : Get list of values for enum parameter.\n"
-                   "   -n           : Show parameter's name in result\n"
+                   "   -n           : Show parameter's name in result.\n"
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
+                   "   -P <port>    : Specify network service port (to be used wth -S option).\n"
                    "   -q           : Quiet mode.\n"
+                   "   -r <string>  : Service check request string.\n"
+                   "   -R <string>  : Service check expected responce string.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
+                   "   -S <addr>    : Check state of network service at given address.\n"
+                   "   -t <type>    : Set type of service to be checked.\n"
                    "   -v           : Display version and exit.\n"
-                   "   -w <seconds> : Specify command timeout (default is 3 seconds)\n"
+                   "   -w <seconds> : Specify command timeout (default is 3 seconds).\n"
                    "\n", wPort);
             bStart = FALSE;
             break;
