@@ -391,6 +391,9 @@ BOOL LoadObjects(void)
    int i, iNumRows;
    DWORD dwId;
 
+   // Load "Entire Network" object properties
+   g_pEntireNet->LoadFromDB();
+
    // Load subnets
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets WHERE is_deleted=0");
    if (hResult != 0)

@@ -376,6 +376,7 @@ public:
    virtual BOOL SaveToDB(void);
 
    void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+   void LoadFromDB(void);
 };
 
 

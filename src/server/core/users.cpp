@@ -62,7 +62,7 @@ BOOL LoadUsers(void)
    DWORD i, iNumRows;
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,access FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,access,flags FROM users ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -78,13 +78,13 @@ BOOL LoadUsers(void)
          CreateSHA1Hash("netxms", g_pUserList[i].szPassword);
       }
       g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
-      g_pUserList[i].wFlags = 0;
+      g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
    }
 
    DBFreeResult(hResult);
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access FROM user_groups ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access,flags FROM user_groups ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -95,7 +95,9 @@ BOOL LoadUsers(void)
       g_pGroupList[i].dwId = DBGetFieldULong(hResult, i, 0);
       strncpy(g_pGroupList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
       g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
-      g_pGroupList[i].wFlags = 0;
+      g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
+      g_pGroupList[i].dwNumMembers = 0;
+      g_pGroupList[i].pMembers = NULL;
    }
 
    DBFreeResult(hResult);
@@ -280,7 +282,31 @@ void DeleteUserFromGroup(DWORD dwUserId, DWORD dwGroupId)
 
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 {
-   return FALSE;
+   BOOL bResult = FALSE;
+
+   if (dwGroupId == GROUP_EVERYONE)
+   {
+      bResult = TRUE;
+   }
+   else
+   {
+      DWORD i, j;
+
+      // Find group
+      for(i = 0; i < g_dwNumGroups; i++)
+         if (g_pGroupList[i].dwId == dwGroupId)
+         {
+            // Walk through group members
+            for(j = 0; j < g_pGroupList[i].dwNumMembers; j++)
+               if (g_pGroupList[i].pMembers[j] == dwUserId)
+               {
+                  bResult = TRUE;
+                  break;
+               }
+            break;
+         }
+   }
+   return bResult;
 }
 
 

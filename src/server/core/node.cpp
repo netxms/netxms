@@ -309,6 +309,9 @@ BOOL Node::SaveToDB(void)
          m_ppItems[i]->SaveToDB();
    }
 
+   // Save access list
+   SaveACLToDB();
+
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
    Unlock();

@@ -50,6 +50,25 @@ Network::~Network()
 
 BOOL Network::SaveToDB(void)
 {
-   m_bIsModified = FALSE;  // Nothing to save, just clear modification flag
+   Lock();
+
+   // Save access list
+   SaveACLToDB();
+
+   // Unlock object and clear modification flag
+   Unlock();
+   m_bIsModified = FALSE;
    return TRUE;
+}
+
+
+//
+// Load properties from database
+//
+
+void Network::LoadFromDB(void)
+{
+   Lock();
+   LoadACLFromDB();
+   Unlock();
 }

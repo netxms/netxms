@@ -84,6 +84,10 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    m_dwIpNetMask = DBGetFieldULong(hResult, 0, 4);
 
    DBFreeResult(hResult);
+
+   // Load access list
+   LoadACLFromDB();
+
    return TRUE;
 }
 
@@ -129,6 +133,9 @@ BOOL Subnet::SaveToDB(void)
       sprintf(szQuery, "INSERT INTO nsmap (subnet_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
       DBQuery(g_hCoreDB, szQuery);
    }
+
+   // Save access list
+   SaveACLToDB();
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

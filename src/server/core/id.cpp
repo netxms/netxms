@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   9
+#define NUMBER_OF_GROUPS   11
 
 
 //
@@ -36,10 +36,10 @@
 
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 2, 0x80000000, 10000, 1, 1, 1, 1, 0x80000000,
-                                                   1 };
+                                                   1, 1, 0x80000001 };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0x7FFFFFFF, 0xFFFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF,
-                                                0x7FFFFFFF };
+                                                0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE };
 static char *m_pszGroupNames[] =
 {
    "Network Objects",
@@ -50,7 +50,9 @@ static char *m_pszGroupNames[] =
    "Data Collection Template Items",
    "Actions",
    "Event Groups",
-   "Data Collection Thresholds"
+   "Data Collection Thresholds",
+   "Users",
+   "User Groups"
 };
 
 
@@ -166,7 +168,28 @@ BOOL InitIdTable(void)
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_THRESHOLD] = max(1, DBGetFieldULong(hResult, 0, 0) + 1);
+         m_dwFreeIdTable[IDG_THRESHOLD] = max(m_dwFreeIdTable[IDG_THRESHOLD], 
+                                              DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available user id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM users");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_USER] = max(m_dwFreeIdTable[IDG_USER], 
+                                         DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available user group id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM user_groups");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_USER_GROUP] = max(m_dwFreeIdTable[IDG_USER_GROUP], 
+                                               DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

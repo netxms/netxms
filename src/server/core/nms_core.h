@@ -112,6 +112,8 @@
 #define IDG_ACTION            6
 #define IDG_EVENT_GROUP       7
 #define IDG_THRESHOLD         8
+#define IDG_USER              9
+#define IDG_USER_GROUP        10
 
 
 //

@@ -123,6 +123,10 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    }
 
    DBFreeResult(hResult);
+
+   // Load access list
+   LoadACLFromDB();
+
    return bResult;
 }
 
@@ -166,6 +170,9 @@ BOOL Interface::SaveToDB(void)
       sprintf(szQuery, "UPDATE interfaces SET name='%s',status=%d,is_deleted=%d,ip_addr=%d,ip_netmask=%d,node_id=%d,if_type=%d,if_index=%d WHERE id=%d",
               m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId, m_dwIfType, m_dwIfIndex, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+
+   // Save access list
+   SaveACLToDB();
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
