@@ -53,56 +53,6 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
-// Interface information structure used by discovery functions
-//
-
-struct INTERFACE_INFO
-{
-   char szName[MAX_OBJECT_NAME];
-   DWORD dwIndex;
-   DWORD dwType;
-   DWORD dwIpAddr;
-   DWORD dwIpNetMask;
-   int iNumSecondary;      // Number of secondary IP's on this interface
-};
-
-
-//
-// Interface list used by discovery functions
-//
-
-struct INTERFACE_LIST
-{
-   int iNumEntries;              // Number of entries in pInterfaces
-   int iEnumPos;                 // Used by index enumeration handler
-   INTERFACE_INFO *pInterfaces;  // Interface entries
-};
-
-
-//
-// Single ARP cache entry
-//
-
-struct ARP_ENTRY
-{
-   DWORD dwIndex;       // Interface index
-   DWORD dwIpAddr;
-   BYTE bMacAddr[6];
-};
-
-
-//
-// ARP cache structure used by discovery functions
-//
-
-struct ARP_CACHE
-{
-   DWORD dwNumEntries;
-   ARP_ENTRY *pEntries;
-};
-
-
-//
 // Node flags
 //
 
@@ -142,6 +92,56 @@ struct ARP_CACHE
 #define POLL_ICMP_PING        0
 #define POLL_SNMP             1
 #define POLL_NATIVE_AGENT     2
+
+
+//
+// Single ARP cache entry
+//
+
+struct ARP_ENTRY
+{
+   DWORD dwIndex;       // Interface index
+   DWORD dwIpAddr;
+   BYTE bMacAddr[6];
+};
+
+
+//
+// ARP cache structure used by discovery functions and AgentConnection class
+//
+
+struct ARP_CACHE
+{
+   DWORD dwNumEntries;
+   ARP_ENTRY *pEntries;
+};
+
+
+//
+// Interface information structure used by discovery functions and AgentConnection class
+//
+
+struct INTERFACE_INFO
+{
+   char szName[MAX_OBJECT_NAME];
+   DWORD dwIndex;
+   DWORD dwType;
+   DWORD dwIpAddr;
+   DWORD dwIpNetMask;
+   int iNumSecondary;      // Number of secondary IP's on this interface
+};
+
+
+//
+// Interface list used by discovery functions and AgentConnection class
+//
+
+struct INTERFACE_LIST
+{
+   int iNumEntries;              // Number of entries in pInterfaces
+   int iEnumPos;                 // Used by index enumeration handler
+   INTERFACE_INFO *pInterfaces;  // Interface entries
+};
 
 
 //

@@ -23,22 +23,24 @@
 #ifndef _nms_util_h_
 #define _nms_util_h_
 
+#ifdef _WIN32
+#ifdef LIBNETXMS_EXPORTS
+#define LIBNETXMS_EXPORTABLE __declspec(dllexport)
+#else
+#define LIBNETXMS_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define LIBNETXMS_EXPORTABLE
+#endif
+
+
 #include <nms_common.h>
 #include <nms_cscp.h>
 #include <nms_threads.h>
+#include <time.h>
 
 #define INVALID_INDEX         0xFFFFFFFF
 #define CSCP_TEMP_BUF_SIZE    4096
-
-#ifdef _WIN32
-#ifdef LIBNMSUTIL_EXPORTS
-#define LIBNMSUTIL_EXPORTABLE __declspec(dllexport)
-#else
-#define LIBNMSUTIL_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNMSUTILS_EXPORTABLE
-#endif
 
 
 //
@@ -57,7 +59,7 @@ typedef struct
 // Class for holding CSCP messages
 //
 
-class LIBNMSUTIL_EXPORTABLE CSCPMessage
+class LIBNETXMS_EXPORTABLE CSCPMessage
 {
 private:
    WORD m_wCode;
@@ -104,7 +106,7 @@ public:
 // Queue class
 //
 
-class LIBNMSUTIL_EXPORTABLE Queue
+class LIBNETXMS_EXPORTABLE Queue
 {
 private:
    MUTEX m_hQueueAccess;
@@ -146,25 +148,30 @@ public:
 extern "C"
 {
 #ifdef _WIN32
-   QWORD LIBNMSUTIL_EXPORTABLE __bswap_64(QWORD qwVal);
+   QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
+#endif
+
+#ifndef _WIN32
+   void LIBNETXMS_EXPORTABLE strupr(char *in);
 #endif
    
-   int LIBNMSUTIL_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
-   CSCP_MESSAGE LIBNMSUTIL_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
+   int LIBNETXMS_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
+   CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
    
-   int LIBNMSUTIL_EXPORTABLE BitsInMask(DWORD dwMask);
-   char LIBNMSUTIL_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
+   int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
+   char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
 
-   void LIBNMSUTIL_EXPORTABLE *MemAlloc(DWORD dwSize);
-   void LIBNMSUTIL_EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
-   void LIBNMSUTIL_EXPORTABLE MemFree(void *pBlock);
+   void LIBNETXMS_EXPORTABLE *MemAlloc(DWORD dwSize);
+   void LIBNETXMS_EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
+   void LIBNETXMS_EXPORTABLE MemFree(void *pBlock);
 
-   void LIBNMSUTIL_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
-   char LIBNMSUTIL_EXPORTABLE *nx_strdup(const char *pSrc);
+   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
+   char LIBNETXMS_EXPORTABLE *nx_strdup(const char *pSrc);
 
-   void LIBNMSUTIL_EXPORTABLE CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
-
-   BOOL LIBNMSUTIL_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
+   void LIBNETXMS_EXPORTABLE StrStrip(char *pszStr);
+   BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
+   
+   DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
 }
 
 #endif   /* _nms_util_h_ */

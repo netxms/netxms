@@ -26,21 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <nms_common.h>
-
-
-//
-// Prefix for exportable functions
-//
-
-#ifdef _WIN32
-#ifdef LIBNXAGENT_EXPORTS
-#define LIBNXAGENT_EXPORTABLE __declspec(dllexport)
-#else
-#define LIBNXAGENT_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXAGENT_EXPORTABLE
-#endif
+#include <nms_util.h>
 
 
 //
@@ -111,7 +97,7 @@ typedef struct
 //
 
 #ifdef __cplusplus
-#ifndef LIBNXAGENT_INLINE
+#ifndef LIBNETXMS_INLINE
 
 inline void ret_string(char *rbuf, char *value)
 {
@@ -156,27 +142,25 @@ inline void ret_uint64(char *rbuf, QWORD value)
 #endif   /* LIBNXAGENT_INLINE */
 #else    /* __cplusplus */
 
-void LIBNXAGENT_EXPORTABLE ret_string(char *rbuf, char *value)
-void LIBNXAGENT_EXPORTABLE ret_int(char *rbuf, long value)
-void LIBNXAGENT_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
-void LIBNXAGENT_EXPORTABLE ret_double(char *rbuf, double value)
-void LIBNXAGENT_EXPORTABLE ret_int64(char *rbuf, INT64 value)
-void LIBNXAGENT_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
+void LIBNETXMS_EXPORTABLE ret_string(char *rbuf, char *value)
+void LIBNETXMS_EXPORTABLE ret_int(char *rbuf, long value)
+void LIBNETXMS_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
+void LIBNETXMS_EXPORTABLE ret_double(char *rbuf, double value)
+void LIBNETXMS_EXPORTABLE ret_int64(char *rbuf, INT64 value)
+void LIBNETXMS_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
 
 #endif   /* __cplusplus */
 
 
 //
-// Functions from libnxagent
+// Functions from libnetxms
 //
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void LIBNXAGENT_EXPORTABLE NxStrStrip(char *pszStr);
-BOOL LIBNXAGENT_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize);
-BOOL LIBNXAGENT_EXPORTABLE NxMatchString(char *pattern, char *string, BOOL matchCase);
+BOOL LIBNETXMS_EXPORTABLE GetParameterArg(char *param, int index, char *arg, int maxSize);
 
 #ifdef __cplusplus
 }

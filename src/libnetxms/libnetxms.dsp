@@ -101,6 +101,10 @@ SOURCE=.\cscp.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\hash.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\inline.cpp
 # End Source File
 # Begin Source File

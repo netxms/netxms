@@ -25,7 +25,6 @@
 #define _libnetxms_h_
 
 #include <stdio.h>
-#include <openssl/ssl.h>
 
 #ifdef _WIN32
 #include <windows.h>

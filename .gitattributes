@@ -73,6 +73,7 @@ src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
 src/libnetxms/Makefile -text
 src/libnetxms/cscp.cpp -text
+src/libnetxms/hash.cpp -text
 src/libnetxms/inline.cpp -text
 src/libnetxms/libnetxms.dsp -text
 src/libnetxms/libnetxms.dsw -text

@@ -49,22 +49,6 @@ struct ECHOREPLY
 
 
 //
-// Strip whitespaces and tabs off the string
-//
-
-void StrStrip(char *pStr)
-{
-   int i;
-
-   for(i = 0; (pStr[i] != 0) && ((pStr[i] == ' ') || (pStr[i] == '\t')); i++);
-   if (i > 0)
-      memmove(pStr, &pStr[i], strlen(&pStr[i]) + 1);
-   for(i = strlen(pStr) - 1; (i >= 0) && ((pStr[i] == ' ') || (pStr[i] == '\t')); i--);
-   pStr[i+1] = 0;
-}
-
-
-//
 // Get system error string by call to FormatMessage
 //
 
@@ -437,4 +421,18 @@ BOOL ExecCommand(char *pszCommand)
 #endif
 
    return bSuccess;
+}
+
+
+//
+// Generate SHA1 hash for text string
+//
+
+void CreateSHA1Hash(char *pszSource, BYTE *pBuffer)
+{
+   EVP_MD_CTX ctx;
+
+   EVP_MD_CTX_init(&ctx);
+   EVP_Digest(pszSource, (unsigned long)strlen(pszSource), pBuffer, NULL, EVP_sha1(), NULL);
+   EVP_MD_CTX_cleanup(&ctx);
 }

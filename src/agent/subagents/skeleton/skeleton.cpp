@@ -38,7 +38,7 @@ static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
 {
    char szArg[256];
 
-   NxGetParameterArg(pszParam, 1, szArg, 255);
+   GetParameterArg(pszParam, 1, szArg, 255);
    ret_string(pValue, szArg);
    return SYSINFO_RC_SUCCESS;
 }

@@ -148,6 +148,8 @@ HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
 void ChangeState(DWORD dwState);
 void DebugPrintf(char *szFormat, ...);
 
+void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
+
 
 //
 // Global variables

@@ -77,10 +77,10 @@
 #define IsStandalone() (1)
 #endif   /* _WIN32 */
 
-#define MAX_DB_LOGIN       64
-#define MAX_DB_PASSWORD    64
-#define MAX_DB_NAME        32
-#define MAX_LINE_SIZE      4096
+#define MAX_DB_LOGIN          64
+#define MAX_DB_PASSWORD       64
+#define MAX_DB_NAME           32
+#define MAX_LINE_SIZE         4096
 
 #define UNLOCKED           ((DWORD)0xFFFFFFFF)
 
@@ -312,8 +312,6 @@ void Main(void);
 
 BOOL SleepAndCheckForShutdown(int iSeconds);
 
-void StrStrip(char *str);
-
 void SaveObjects(void);
 
 HMODULE DLOpen(char *szModule);
@@ -378,6 +376,8 @@ BOOL ExecCommand(char *pszCommand);
 
 BOOL InitIdTable(void);
 DWORD CreateUniqueId(int iGroup);
+
+void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 
 #ifdef _WIN32
 

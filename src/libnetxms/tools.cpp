@@ -173,7 +173,7 @@ static BOOL MatchStringEngine(const char *pattern, const char *string)
    return *SPtr==0 ? TRUE : FALSE;
 }
 
-BOOL LIBNETXMS_EXPORTABLE NxMatchString(const char *pattern, const char *string, BOOL matchCase)
+BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase)
 {
    if (matchCase)
       return MatchStringEngine(pattern, string);
@@ -198,7 +198,7 @@ BOOL LIBNETXMS_EXPORTABLE NxMatchString(const char *pattern, const char *string,
 // Strip whitespaces and tabs off the string
 //
 
-void LIBNETXMS_EXPORTABLE NxStrStrip(char *str)
+void LIBNETXMS_EXPORTABLE StrStrip(char *str)
 {
    int i;
 
@@ -215,7 +215,7 @@ void LIBNETXMS_EXPORTABLE NxStrStrip(char *str)
 // Returns FALSE on processing error
 //
 
-BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize)
+BOOL LIBNETXMS_EXPORTABLE GetParameterArg(char *param, int index, char *arg, int maxSize)
 {
    char *ptr1, *ptr2;
    int state, currIndex, pos;
@@ -317,6 +317,6 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, i
    }
 
    if (bResult)
-      NxStrStrip(arg);
+      StrStrip(arg);
    return bResult;
 }
