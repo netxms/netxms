@@ -137,6 +137,7 @@ typedef void * HSNMPSESSION;
 #define IDG_USER_GROUP        10
 #define IDG_ALARM             11
 #define IDG_ALARM_NOTE        12
+#define IDG_IMAGE             13
 
 
 //

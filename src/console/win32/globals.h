@@ -76,6 +76,7 @@ extern CConsoleApp theApp;
 //
 
 #define WORKDIR_MIBCACHE   "\\MIBCache"
+#define WORKDIR_IMAGECACHE "\\ImageCache"
 
 
 //
@@ -156,5 +157,6 @@ extern char *g_pszThresholdFunctionLong[];
 extern CODE_TO_TEXT g_ctSnmpMibStatus[];
 extern CODE_TO_TEXT g_ctSnmpMibAccess[];
 extern CODE_TO_TEXT g_ctSnmpMibType[];
+extern NXC_IMAGE_LIST *g_pSrvImageList;
 
 #endif

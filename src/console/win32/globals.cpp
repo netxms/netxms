@@ -43,6 +43,13 @@ char g_szWorkDir[MAX_PATH] = "";
 
 
 //
+// Server image list
+//
+
+NXC_IMAGE_LIST *g_pSrvImageList = NULL;
+
+
+//
 // Global string constants
 //
 

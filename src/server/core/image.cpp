@@ -37,11 +37,7 @@ void UpdateImageHashes(void)
 
    strcpy(szPath, g_szDataDir);
    strcat(szPath, DDIR_IMAGES);
-#ifdef _WIN32
-   strcat(szPath, "\\");
-#else
-   strcat(szPath, "/");
-#endif
+   strcat(szPath, FS_PATH_SEPARATOR);
    iPathLen = strlen(szPath);
 
    hResult = DBSelect(g_hCoreDB, "SELECT image_id,file_name FROM images");
@@ -60,6 +56,7 @@ void UpdateImageHashes(void)
 
             sprintf(szQuery, "UPDATE images SET file_hash='%s' WHERE image_id=%ld",
                     szHashText, dwImageId);
+            DBQuery(g_hCoreDB, szQuery);
          }
          else
          {
@@ -105,7 +102,13 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId)
          strncpy(pImageList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
          strncpy(szHashText, DBGetField(hResult, i, 2), MD5_DIGEST_SIZE * 2 + 1);
          for(j = 0, k = 0; j < MD5_DIGEST_SIZE; j++)
-            pImageList[i].hash[j] = (hex2bin(szHashText[k++]) << 4) | hex2bin(szHashText[k++]);
+         {
+            char ch1, ch2;
+
+            ch1 = szHashText[k++];
+            ch2 = szHashText[k++];
+            pImageList[i].hash[j] = (hex2bin(ch1) << 4) | hex2bin(ch2);
+         }
       }
       msg.SetVariable(VID_IMAGE_LIST, (BYTE *)pImageList, sizeof(NXC_IMAGE) * dwNumImages);
       free(pImageList);

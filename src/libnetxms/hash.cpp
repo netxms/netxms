@@ -162,7 +162,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash)
    char szBuffer[FILE_BLOCK_SIZE];
    BOOL bSuccess = FALSE;
 
-   fd = open(pszFileName, O_RDONLY);
+   fd = open(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
    	md5_init(&state);

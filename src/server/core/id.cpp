@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   13
+#define NUMBER_OF_GROUPS   14
 
 
 //
@@ -36,11 +36,11 @@
 
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, 10000, 1, 1, 1, 1, 0x80000000,
-                                                   1, 1, 0x80000001, 1, 1 };
+                                                   1, 1, 0x80000001, 1, 1, 1000 };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE
+                                                0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static char *m_pszGroupNames[] =
 {
@@ -56,7 +56,8 @@ static char *m_pszGroupNames[] =
    "Users",
    "User Groups",
    "Alarms",
-   "Alarm Notes"
+   "Alarm Notes",
+   "Images"
 };
 
 
@@ -222,6 +223,16 @@ BOOL InitIdTable(void)
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_ALARM_NOTE] = max(m_dwFreeIdTable[IDG_ALARM_NOTE], 
                                                DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available image id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(image_id) FROM images");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_IMAGE] = max(m_dwFreeIdTable[IDG_IMAGE], 
+                                          DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

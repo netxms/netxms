@@ -132,6 +132,15 @@ BOOL CConsoleApp::SetupWorkDir()
          return FALSE;
       }
 
+   // Create image cache directory
+   strcpy(&g_szWorkDir[iLastChar], WORKDIR_IMAGECACHE);
+   if (!CreateDirectory(g_szWorkDir, NULL))
+      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         AfxMessageBox(IDS_WORKDIR_CREATION_FAILED, MB_OK | MB_ICONSTOP);
+         return FALSE;
+      }
+
    // Success
    g_szWorkDir[iLastChar] = 0;
    return TRUE;

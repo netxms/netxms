@@ -735,6 +735,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
 
+DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir);
+DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir);
+void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
+
 #ifdef __cplusplus
 }
 #endif

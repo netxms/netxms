@@ -50,6 +50,8 @@
 
 #ifdef _WIN32
 
+#define FS_PATH_SEPARATOR  "\\"
+
 #include <windows.h>
 #include <fcntl.h>
 
@@ -58,6 +60,8 @@ typedef __int64 INT64;
 typedef int socklen_t;
 
 #else    /* not _WIN32 */
+
+#define FS_PATH_SEPARATOR  "/"
 
 #include <config.h>
 

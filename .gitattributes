@@ -205,6 +205,7 @@ src/libnxcl/datacoll.cpp -text
 src/libnxcl/epp.cpp -text
 src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
+src/libnxcl/image.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text
