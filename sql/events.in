@@ -148,7 +148,7 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 		'   1) Interface index\n' CONCAT
 		'   2) Interface name\n' CONCAT
 		'   3) Interface IP address\n' CONCAT
-		'   4) Interface netmask\n'
+		'   4) Interface netmask'
 	);
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
