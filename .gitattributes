@@ -695,3 +695,5 @@ tools/Makefile.am -text
 tools/mc.pl -text
 tools/nwmkimp.pl -text
 tools/patch_libtool.pl -text
+tools/sharIt -text
+tools/stub.sh -text
