@@ -176,6 +176,7 @@ extern "C" {
 
 void LIBNXAGENT_EXPORTABLE NxStrStrip(char *pszStr);
 BOOL LIBNXAGENT_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize);
+BOOL LIBNXAGENT_EXPORTABLE NxMatchString(char *pattern, char *string, BOOL matchCase);
 
 #ifdef __cplusplus
 }
