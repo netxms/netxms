@@ -566,3 +566,55 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
+
+
+//
+// Apply template to node
+//
+
+BOOL Template::ApplyToNode(Node *pNode)
+{
+   DWORD i, *pdwItemList;
+   DCItem *pDstItem;
+   BOOL bErrors = FALSE;
+
+   // Link node to template
+   if (!IsChild(pNode->Id()))
+   {
+      AddChild(pNode);
+      pNode->AddParent(this);
+   }
+
+   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
+   DbgPrintf(AF_DEBUG_DC, "Apply %d items from template \"%s\" to node \"%s\"",
+             m_dwNumItems, m_szName, pNode->Name());
+
+   // Copy items
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      if (m_ppItems[i] != NULL)
+      {
+         pdwItemList[i] = m_ppItems[i]->Id();
+         pDstItem = new DCItem(m_ppItems[i]);
+         pDstItem->SetTemplateId(m_dwId, m_ppItems[i]->Id());
+         pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM), pNode);
+         if (!pNode->ApplyTemplateItem(pDstItem))
+         {
+            delete pDstItem;
+            bErrors = TRUE;
+         }
+      }
+      else
+      {
+         bErrors = TRUE;
+      }
+   }
+
+   // Clean items deleted from template
+   pNode->CleanDeletedTemplateItems(m_dwId, m_dwNumItems, pdwItemList);
+
+   // Cleanup
+   free(pdwItemList);
+
+   return bErrors;
+}

@@ -95,8 +95,6 @@ extern DWORD g_dwConfigurationPollingInterval;
 // Base class for network objects
 //
 
-class NXCORE_EXPORTABLE Node;
-
 class NXCORE_EXPORTABLE NetObj
 {
 protected:
@@ -270,6 +268,8 @@ public:
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
+
+   BOOL ApplyToNode(Node *pNode);
 };
 
 

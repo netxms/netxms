@@ -1,4 +1,14 @@
 *
+* 0.1.17
+*
+
+- Templates can be manually applied
+- Fixed issue #0000021 (agent crash on multiprocessor Solaris systems)
+- Fixed issue #0000022 (server can crash after unsuccessfull interface
+  configuration poll)
+
+
+*
 * 0.1.16
 *
 

@@ -4181,46 +4181,11 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
                // Attempt to lock destination's DCI list
                if (((Node *)pDestination)->LockDCIList(m_dwIndex))
                {
-                  DWORD i, dwNumItems, *pdwItemList;
-                  DCItem *pSrcItem, *pDstItem;
-                  int iErrors = 0;
+                  BOOL bErrors;
 
-                  dwNumItems = ((Template *)pSource)->GetItemCount();
-                  pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
-                  DbgPrintf(AF_DEBUG_DC, "Apply %d items from template \"%s\" to node \"%s\"",
-                            dwNumItems, pSource->Name(), pDestination->Name());
-
-                  // Copy items
-                  for(i = 0; i < dwNumItems; i++)
-                  {
-                     pSrcItem = ((Template *)pSource)->GetItemByIndex(i);
-                     pdwItemList[i] = pSrcItem->Id();
-                     if (pSrcItem != NULL)
-                     {
-                        pDstItem = new DCItem(pSrcItem);
-                        pDstItem->SetTemplateId(pSource->Id(), pSrcItem->Id());
-                        pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
-                                                (Template *)pDestination);
-                        if (!((Node *)pDestination)->ApplyTemplateItem(pDstItem))
-                        {
-                           delete pDstItem;
-                           iErrors++;
-                        }
-                     }
-                     else
-                     {
-                        iErrors++;
-                     }
-                  }
-
-                  // Clean items deleted from template
-                  ((Node *)pDestination)->CleanDeletedTemplateItems(pSource->Id(),
-                                                                    dwNumItems, pdwItemList);
-
-                  // Cleanup
-                  free(pdwItemList);
+                  bErrors = ((Template *)pSource)->ApplyToNode((Node *)pDestination);
                   ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
-                  msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
+                  msg.SetVariable(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
                }
                else  // Destination's DCI list already locked by someone else
                {

@@ -442,6 +442,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
    else
    {
       DestroyInterfaceList(pIfList);
+      pIfList = NULL;
    }
 
    return pIfList;
