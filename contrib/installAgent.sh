@@ -47,7 +47,7 @@ if [ $? != 0 ]; then
 fi
 
 # do configure
-./configure --prefix=$prefix --with-agent $configureAdd >/dev/null
+./configure --prefix=$prefix --with-agent $configureAdd 2>/dev/null >/dev/null
 if [ $? != 0 ]; then
 	echo configure failed, duh
 	exit 4

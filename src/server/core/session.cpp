@@ -417,7 +417,7 @@ void ClientSession::WriteThread(void)
          break;
 
       DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
-      if (send(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
+      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
       {
          safe_free(pMsg);
          closesocket(m_hSocket);

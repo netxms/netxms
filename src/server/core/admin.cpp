@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.6 2005-01-18 15:51:42 alk Exp $ */
+/* $Id: admin.cpp,v 1.7 2005-02-02 22:32:16 alk Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -33,12 +33,12 @@
 #define SEND_ERROR() \
    { \
       wCmd = LA_RESP_ERROR; \
-      send(sock, (char *)&wCmd, sizeof(WORD), 0); \
+      SendEx(sock, (char *)&wCmd, sizeof(WORD), 0); \
    }
 #define SEND_SUCCESS() \
    { \
       wCmd = LA_RESP_SUCCESS; \
-      send(sock, (char *)&wCmd, sizeof(WORD), 0); \
+      SendEx(sock, (char *)&wCmd, sizeof(WORD), 0); \
    }
 
 
@@ -74,10 +74,10 @@ static BOOL SendString(SOCKET sock, char *szString)
    WORD wLen;
 
    wLen = strlen(szString);
-   if (send(sock, (char *)&wLen, sizeof(WORD), 0) != 2)
+   if (SendEx(sock, (char *)&wLen, sizeof(WORD), 0) != 2)
       return FALSE;
 
-   return send(sock, szString, wLen, 0) == wLen;
+   return SendEx(sock, szString, wLen, 0) == wLen;
 }
 
 
@@ -150,7 +150,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
             break;
          case LA_CMD_GET_FLAGS:
             // Send value of application flags
-            send(sock, (char *)&g_dwFlags, sizeof(DWORD), 0);
+            SendEx(sock, (char *)&g_dwFlags, sizeof(DWORD), 0);
             break;
          case LA_CMD_SET_FLAGS:
             iError = recv(sock, (char *)&dwTemp, sizeof(DWORD), 0);
@@ -254,5 +254,8 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/18 15:51:42  alk
++ sockets reuse (*nix only)
+
 
 */

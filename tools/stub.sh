@@ -29,7 +29,13 @@ if [ "X"`head -n$skip $0 | tail -n +5 | $md5 | cut -b1-32 | tr A-Z a-z` != "X"$h
 	echo Script MD5 mismach
 	exit
 fi
-let "skip=skip+1" >/dev/null
+
+let "skip=skip+1" 2>/dev/null
+if [ $? != 0 ]; then
+	# real sh?
+	skip=`let "$skip+1"`
+fi
+
 if [ "X"`tail -n +$skip $0 | $md5 | cut -b1-32 | tr A-Z a-z` != "X"$hash2 ]; then
 	echo Payload MD5 mismach
 	exit

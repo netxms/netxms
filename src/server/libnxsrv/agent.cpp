@@ -555,7 +555,7 @@ BOOL AgentConnection::SendMessage(CSCPMessage *pMsg)
    BOOL bResult;
 
    pRawMsg = pMsg->CreateMessage();
-   bResult = (send(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+   bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
    free(pRawMsg);
    return bResult;
 }

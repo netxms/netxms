@@ -146,7 +146,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (!memcmp(szBuffer,"220",3))
                   {
                      iState = STATE_HELLO;
-                     send(hSocket, "HELO netxms\r\n", 13, 0);
+                     SendEx(hSocket, "HELO netxms\r\n", 13, 0);
                   }
                   else
                   {
@@ -159,7 +159,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   {
                      iState = STATE_FROM;
                      sprintf(szBuffer, "MAIL FROM: <%s>\r\n", m_szFromAddr);
-                     send(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                   }
                   else
                   {
@@ -172,7 +172,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   {
                      iState = STATE_RCPT;
                      sprintf(szBuffer, "RCPT TO: <%s>\r\n", pszRcpt);
-                     send(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                   }
                   else
                   {
@@ -184,7 +184,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (!memcmp(szBuffer,"250",3))
                   {
                      iState = STATE_DATA;
-                     send(hSocket, "DATA\r\n", 6, 0);
+                     SendEx(hSocket, "DATA\r\n", 6, 0);
                   }
                   else
                   {
@@ -199,15 +199,15 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 
                      // Mail header
                      sprintf(szBuffer, "From: NetXMS Server <%s>\r\n", m_szFromAddr);
-                     send(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
-                     send(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      sprintf(szBuffer, "Subject: <%s>\r\n", pszSubject);
-                     send(hSocket, szBuffer, strlen(szBuffer), 0);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
 
                      // Mail body
-                     send(hSocket, pszText, strlen(pszText), 0);
-                     send(hSocket, "\r\n.\r\n", 5, 0);
+                     SendEx(hSocket, pszText, strlen(pszText), 0);
+                     SendEx(hSocket, "\r\n.\r\n", 5, 0);
                   }
                   else
                   {
@@ -219,7 +219,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   if (!memcmp(szBuffer,"250",3))
                   {
                      iState = STATE_QUIT;
-                     send(hSocket, "QUIT\r\n", 6, 0);
+                     SendEx(hSocket, "QUIT\r\n", 6, 0);
                   }
                   else
                   {

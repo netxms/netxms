@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <nms_common.h>
+#include <nms_util.h>
 #include <local_admin.h>
 
 

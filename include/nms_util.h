@@ -170,6 +170,7 @@ typedef struct _dir_struc
 extern "C"
 {
 #endif
+	int SendEx(int, const void *, size_t, int);
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif

@@ -23,6 +23,9 @@
 
 #include "libnxcl.h"
 
+// for TCP_NODELAY
+//#include "netinet/tcp.h"
+
 
 //
 // Network receiver thread
@@ -208,6 +211,10 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
       // Create socket
       if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) != -1)
       {
+			// enable TCP_NODELAY
+			//int nVal = 1;
+			//setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, &nVal, sizeof(nVal));
+
          // Connect to target
          if (connect(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) == 0)
          {

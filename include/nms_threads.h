@@ -375,9 +375,17 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 			struct timeval now;
 			struct timespec timeout;
 
+			// FIXME there should be more accurate way
 			gettimeofday(&now, NULL);
 			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-			timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
+
+			timeout.tv_nsec = now.tv_usec * 1000;
+			timeout.tv_nsec += (dwTimeOut % 1000) * 1000;
+			if (timeout.tv_nsec >= 6000000)
+			{
+				timeout.tv_sec += timeout.tv_nsec / 6000000;
+				timeout.tv_nsec = timeout.tv_nsec % 6000000;
+			}
 			retcode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
 #endif
 		}

@@ -87,7 +87,7 @@ void Disconnect(void)
 
 BOOL SendCommand(WORD wCmd)
 {
-   return send(g_hSocket, (char *)&wCmd, sizeof(WORD), 0) == sizeof(WORD);
+   return SendEx(g_hSocket, (char *)&wCmd, sizeof(WORD), 0) == sizeof(WORD);
 }
 
 
@@ -112,10 +112,10 @@ BOOL SendString(char *szString)
    WORD wLen;
 
    wLen = strlen(szString);
-   if (send(g_hSocket, (char *)&wLen, sizeof(WORD), 0) != 2)
+   if (SendEx(g_hSocket, (char *)&wLen, sizeof(WORD), 0) != 2)
       return FALSE;
 
-   return send(g_hSocket, szString, wLen, 0) == wLen;
+   return SendEx(g_hSocket, szString, wLen, 0) == wLen;
 }
 
 
@@ -161,5 +161,5 @@ BOOL RecvDWord(DWORD *pBuffer)
 
 BOOL SendDWord(DWORD dwValue)
 {
-   return send(g_hSocket, (char *)&dwValue, sizeof(DWORD), 0) == sizeof(DWORD);
+   return SendEx(g_hSocket, (char *)&dwValue, sizeof(DWORD), 0) == sizeof(DWORD);
 }
