@@ -119,6 +119,7 @@ BOOL Connect(void);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void SyncObjects(void);
 BOOL SendMsg(CSCPMessage *pMsg);
+void DebugPrintf(char *szFormat, ...);
 
 
 //
@@ -126,6 +127,7 @@ BOOL SendMsg(CSCPMessage *pMsg);
 //
 
 extern NXC_EVENT_HANDLER g_pEventHandler;
+extern NXC_DEBUG_CALLBACK g_pDebugCallBack;
 extern DWORD g_dwState;
 extern Queue *g_pRequestQueue;
 

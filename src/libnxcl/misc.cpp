@@ -49,3 +49,24 @@ void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
    pRequest->bDynamicArg = bDynamicArg;
    g_pRequestQueue->Put(pRequest);
 }
+
+
+//
+// Print debug messages
+//
+
+void DebugPrintf(char *szFormat, ...)
+{
+   va_list args;
+   char *pBuffer;
+
+   if (g_pDebugCallBack == NULL)
+      return;
+
+   pBuffer = (char *)malloc(4096);
+   va_start(args, szFormat);
+   vsprintf(pBuffer, szFormat, args);
+   va_end(args);
+   g_pDebugCallBack(pBuffer);
+   free(pBuffer);
+}

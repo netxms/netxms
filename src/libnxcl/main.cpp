@@ -36,6 +36,7 @@ void RequestProcessor(void *pArg);
 //
 
 NXC_EVENT_HANDLER g_pEventHandler = NULL;
+NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 DWORD g_dwState = STATE_DISCONNECTED;
 Queue *g_pRequestQueue = NULL;
 
@@ -71,6 +72,16 @@ DWORD EXPORTABLE NXCGetVersion(void)
 void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler)
 {
    g_pEventHandler = pHandler;
+}
+
+
+//
+// Set callback for debug messages
+//
+
+void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
+{
+   g_pDebugCallBack = pFunc;
 }
 
 
