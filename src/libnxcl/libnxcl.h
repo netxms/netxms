@@ -36,6 +36,7 @@
 #include <nxclapi.h>
 #include <nms_util.h>
 #include <nms_threads.h>
+#include <nxcscpapi.h>
 #include <string.h>
 #include <openssl/ssl.h>
 
