@@ -53,6 +53,7 @@ public:
    void *Get(void);
    void *GetOrBlock(void);
    DWORD Size(void) { return m_dwNumElements; }
+   void Clear(void);
 };
 
 #endif    /* _nxqueue_h_ */

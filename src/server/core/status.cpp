@@ -32,7 +32,7 @@ void StatusPoller(void *arg)
    Node *pNode;
    DWORD dwWatchdogId;
 
-   dwWatchdogId = WatchdogAddThread("Status Poller", 15);
+   dwWatchdogId = WatchdogAddThread("Status Poller", 60);
 
    while(!ShutdownInProgress())
    {
@@ -63,7 +63,7 @@ void ConfigurationPoller(void *arg)
    Node *pNode;
    DWORD dwWatchdogId;
 
-   dwWatchdogId = WatchdogAddThread("Configuration Poller", 90);
+   dwWatchdogId = WatchdogAddThread("Configuration Poller", 120);
 
    while(!ShutdownInProgress())
    {

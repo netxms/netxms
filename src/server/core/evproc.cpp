@@ -81,4 +81,6 @@ void EventProcessor(void *arg)
       // Destroy event
       delete pEvent;
    }
+
+   DbgPrintf(AF_DEBUG_EVENTS, "Event processing thread #%d stopped\n", arg);
 }

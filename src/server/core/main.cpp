@@ -275,7 +275,7 @@ BOOL Initialize(void)
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
    for(i = 0; i < iNumThreads; i++)
-      ThreadCreate(EventProcessor, 0, NULL);
+      ThreadCreate(EventProcessor, 0, (void *)(i + 1));
 
    // Start database "lazy" write thread
    ThreadCreate(DBWriteThread, 0, NULL);
@@ -304,7 +304,7 @@ void NotifyClient(ClientSession *pSession, void *pArg)
 
 void Shutdown(void)
 {
-   DWORD i;
+   DWORD i, dwNumThreads;
 
    // Notify clients
    EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_SHUTDOWN);
@@ -313,9 +313,15 @@ void Shutdown(void)
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
    ConditionSet(m_hEventShutdown);
 
-   g_pEventQueue->Put(INVALID_POINTER_VALUE);   // Stop event processor
+   // Stop event processor(s)
+   g_pEventQueue->Clear();
+   dwNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
+   for(i = 0; i < dwNumThreads; i++)
+      g_pEventQueue->Put(INVALID_POINTER_VALUE);
+
    ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
    DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown\n");
+
    SaveObjects();
    DbgPrintf(AF_DEBUG_MISC, "All objects saved to database\n");
    SaveUsers();

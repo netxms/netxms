@@ -184,8 +184,11 @@ void ClientSession::ReadThread(void)
    free(pRawMsg);
 
    // Notify other threads to exit
+   m_pSendQueue->Clear();
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
+   m_pMessageQueue->Clear();
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   m_pUpdateQueue->Clear();
    m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
