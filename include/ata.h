@@ -167,4 +167,28 @@ typedef struct ata_smart_values
 #endif
 
 
+// Needed parts of the ATA DRIVE IDENTIFY Structure. Those labeled
+// word* are NOT used.
+#pragma pack(1)
+typedef struct ata_identify_device_data
+{
+  unsigned short words000_009[10];
+  unsigned char  serial_no[20];
+  unsigned short words020_022[3];
+  unsigned char  fw_rev[8];
+  unsigned char  model[40];
+  unsigned short words047_079[33];
+  unsigned short major_rev_num;
+  unsigned short minor_rev_num;
+  unsigned short command_set_1;
+  unsigned short command_set_2;
+  unsigned short command_set_extension;
+  unsigned short cfs_enable_1;
+  unsigned short word086;
+  unsigned short csf_default;
+  unsigned short words088_255[168];
+} ATA_IDENTIFY_DEVICE_DATA;
+#pragma pack()
+
+
 #endif

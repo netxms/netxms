@@ -78,6 +78,7 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
    SENDCMDINPARAMS rq;
    SENDCMDOUTPARAMS *pResult;
    DWORD dwBytes;
+   BOOL bSwapWords = FALSE;
 
    if (!NxGetParameterArg(pszParam, 1, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
@@ -114,6 +115,15 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
             rq.irDriveRegs.bFeaturesReg = ATA_SMART_STATUS;
             nCmd = SMART_SEND_DRIVE_COMMAND;
             break;
+         case 'M':   // Model
+         case 'N':   // Serial number
+            rq.irDriveRegs.bCommandReg = ATA_IDENTIFY_DEVICE;
+	         rq.irDriveRegs.bCylHighReg = 0;
+            rq.irDriveRegs.bCylLowReg = 0;
+            rq.irDriveRegs.bSectorCountReg = 1;
+            nCmd = SMART_RCV_DRIVE_DATA;
+            bSwapWords = TRUE;
+            break;
          default:
             nRet = SYSINFO_RC_UNSUPPORTED;
             break;
@@ -126,6 +136,13 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
                           pResult, sizeof(SENDCMDOUTPARAMS) - 1 + SMART_BUFFER_SIZE,
                           &dwBytes, NULL))
       {
+#if !(WORDS_BIGENDIAN)
+         if (bSwapWords)
+         {
+            for(DWORD i = 0; i < dwBytes - sizeof(SENDCMDOUTPARAMS) + 1; i += 2)
+               *((WORD *)&pResult->bBuffer[i]) = ntohs(*((WORD *)&pResult->bBuffer[i]));
+         }
+#endif
          switch(pszArg[0])
          {
             case 'A':   // Generic attribute
@@ -172,6 +189,18 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
                {
                   ret_int(pValue, 2);  // Status is UNKNOWN
                }
+               nRet = SYSINFO_RC_SUCCESS;
+               break;
+            case 'M':   // Model
+               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->model, 40);
+               pValue[40] = 0;
+               StrStrip(pValue);
+               nRet = SYSINFO_RC_SUCCESS;
+               break;
+            case 'N':   // Serial number
+               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20);
+               pValue[20] = 0;
+               StrStrip(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
             default:
