@@ -123,6 +123,9 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    }
 
 	SetSocketReuseFlag(hSocket);
+#ifndef _WIN32
+   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+#endif
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
@@ -162,6 +165,11 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          }
          ThreadSleepMs(500);
       }
+
+      // Socket should be closed on successful exec
+#ifndef _WIN32
+      fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+#endif
 
       iNumErrors = 0;     // Reset consecutive errors counter
       DebugPrintf("Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
