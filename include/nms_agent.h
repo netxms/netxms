@@ -128,7 +128,7 @@ typedef struct
 {
    DWORD dwMagic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR szName[MAX_SUBAGENT_NAME];
-   TCHAR szVersion[16];
+   TCHAR szVersion[32];
    void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
    BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
                             CSCPMessage *pResponce);
