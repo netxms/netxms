@@ -303,17 +303,18 @@ BOOL DCItem::SaveToDB(void)
 void DCItem::CheckThresholds(ItemValue &value)
 {
    DWORD i, iResult;
+   ItemValue checkValue;
 
    Lock();
    for(i = 0; i < m_dwNumThresholds; i++)
    {
-      iResult = m_ppThresholdList[i]->Check(value, m_ppValueCache);
+      iResult = m_ppThresholdList[i]->Check(value, m_ppValueCache, checkValue);
       switch(iResult)
       {
          case THRESHOLD_REACHED:
             PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssis", m_szName,
                       m_szDescription, m_ppThresholdList[i]->StringValue(), 
-                      (const char *)value, m_dwId, m_szInstance);
+                      (const char *)checkValue, m_dwId, m_szInstance);
             i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
@@ -622,9 +623,23 @@ void DCItem::UpdateCacheSize(void)
                {
                   m_ppValueCache[i] = new ItemValue(DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING));
                }
+               else
+               {
+                  m_ppValueCache[i] = new ItemValue(_T(""));   // Empty value
+               }
             }
 
+            // Fill up cache with empty values if we don't have enough values in database
+            for(; i < dwRequiredSize; i++)
+               m_ppValueCache[i] = new ItemValue(_T(""));
+
             DBFreeAsyncResult(hResult);
+         }
+         else
+         {
+            // Error reading data from database, fill cache with empty values
+            for(i = 0; i < dwRequiredSize; i++)
+               m_ppValueCache[i] = new ItemValue(_T(""));
          }
       }
       m_dwCacheSize = dwRequiredSize;

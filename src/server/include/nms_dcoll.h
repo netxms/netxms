@@ -102,6 +102,7 @@ private:
    BOOL m_bIsReached;
 
    const ItemValue& Value(void) { return m_value; }
+   void CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
 
 public:
    Threshold(DCItem *pRelatedItem);
@@ -117,7 +118,7 @@ public:
    BOOL IsReached(void) { return m_bIsReached; }
 
    BOOL SaveToDB(DWORD dwIndex);
-   int Check(ItemValue &value, ItemValue **ppPrevValues);
+   int Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
 
    void CreateMessage(DCI_THRESHOLD *pData);
    void UpdateFromMessage(DCI_THRESHOLD *pData);

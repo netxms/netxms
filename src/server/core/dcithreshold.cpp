@@ -146,11 +146,10 @@ BOOL Threshold::SaveToDB(DWORD dwIndex)
 //    NO_ACTION - when there are no changes in item's value match to threshold's condition
 //
 
-int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues)
+int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
 {
    BOOL bMatch = FALSE;
    int iResult;
-   ItemValue fvalue;    // Function value
 
    // Execute function on value
    switch(m_iFunction)
@@ -159,7 +158,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues)
          fvalue = value;
          break;
       case F_AVERAGE:      // Check average value for last n polls
-//         CalculateAverageValue(&fvalue, value, ppPrevValues);
+         CalculateAverageValue(&fvalue, value, ppPrevValues);
          break;
       case F_DEVIATION:    // Check deviation from the mean value
          /* TODO */
@@ -389,6 +388,51 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
          break;
       default:
          DbgPrintf(AF_DEBUG_DC, "WARNING: Invalid datatype %d in threshold object %d", m_iDataType, m_dwId);
+         break;
+   }
+}
+
+
+//
+// Calculate average value for parameter
+//
+
+#define CALC_AVG_VALUE(vtype) \
+{ \
+   vtype var; \
+   var = (vtype)lastValue; \
+   for(i = 1; i < m_iParam1; i++) \
+   { \
+      var += (vtype)(*ppPrevValues[i - 1]); \
+   } \
+   *pResult = var / (vtype)m_iParam1; \
+}
+
+void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+{
+   int i;
+
+   switch(m_iDataType)
+   {
+      case DCI_DT_INT:
+         CALC_AVG_VALUE(long);
+         break;
+      case DCI_DT_UINT:
+         CALC_AVG_VALUE(DWORD);
+         break;
+      case DCI_DT_INT64:
+         CALC_AVG_VALUE(INT64);
+         break;
+      case DCI_DT_UINT64:
+         CALC_AVG_VALUE(QWORD);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_AVG_VALUE(double);
+         break;
+      case DCI_DT_STRING:
+         *pResult = _T("");   // Average value for string is meaningless
+         break;
+      default:
          break;
    }
 }
