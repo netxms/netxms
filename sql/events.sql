@@ -138,3 +138,15 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 		'Parameters:\n'
 		'   No message-specific parameters'
 	);
+INSERT INTO events (id,severity,flags,message,description) VALUES
+	(
+		16, 0, 1,
+		'Interface %2 deleted (IP Addr: %3/%4, IfIndex: %1)',
+		'Generated when new interface object deleted from the database.\n'
+		'Please note that source of event is node, not an interface itself.\n'
+		'Parameters:\n'
+		'   1) Interface index'
+		'   2) Interface name\n'
+		'   3) Interface IP address\n'
+		'   4) Interface netmask\n'
+	);
