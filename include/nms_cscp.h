@@ -48,6 +48,7 @@ typedef struct
       } string;
       DWORD dwInteger;
       __int64 qwInt64;
+      WORD wInt16;
    } data;
 } CSCP_DF;
 
@@ -72,6 +73,7 @@ typedef struct
 #define DT_INTEGER   0
 #define DT_STRING    1
 #define DT_INT64     2
+#define DT_INT16     3
 
 
 //

@@ -61,12 +61,14 @@ public:
 
    BOOL IsVariableExist(char *szName) { return (FindVariable(szName) != INVALID_INDEX) ? TRUE : FALSE; }
 
+   void SetVariable(char *szName, WORD wValue) { Set(szName, DT_INT16, &wValue); }
    void SetVariable(char *szName, DWORD dwValue) { Set(szName, DT_INTEGER, &dwValue); }
    void SetVariable(char *szName, QWORD qwValue) { Set(szName, DT_INT64, &qwValue); }
    void SetVariable(char *szName, char *szValue) { Set(szName, DT_STRING, szValue); }
 
    DWORD GetVariableLong(char *szName);
    QWORD GetVariableInt64(char *szName);
+   WORD GetVariableShort(char *szName);
    char *GetVariableStr(char *szName);
 };
 
