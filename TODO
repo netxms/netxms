@@ -33,6 +33,7 @@ SERVER:
 - Add signal handlers for UNIX
 - Implement normal mailer shutdown
 - Implement locks table in memory
+- Check if object indexes always locked when used
 
 
 CORE AGENT:
