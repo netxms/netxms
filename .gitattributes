@@ -83,6 +83,7 @@ src/libnxcl/request.cpp -text
 src/server/core/NmsCore.dsp -text
 src/server/core/NmsCore.dsw -text
 src/server/core/acl.cpp -text
+src/server/core/actions.cpp -text
 src/server/core/admin.cpp -text
 src/server/core/agent.cpp -text
 src/server/core/client.cpp -text
@@ -105,6 +106,7 @@ src/server/core/log.cpp -text
 src/server/core/main.cpp -text
 src/server/core/messages.mc -text
 src/server/core/netobj.cpp -text
+src/server/core/nms_actions.h -text
 src/server/core/nms_core.h -text
 src/server/core/nms_dcoll.h -text
 src/server/core/nms_events.h -text

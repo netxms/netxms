@@ -95,6 +95,10 @@ SOURCE=.\acl.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\actions.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\admin.cpp
 # End Source File
 # Begin Source File
@@ -232,6 +236,10 @@ SOURCE=..\include\dbdrv.h
 # Begin Source File
 
 SOURCE=..\include\local_admin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nms_actions.h
 # End Source File
 # Begin Source File
 

@@ -272,4 +272,10 @@ Language=English
 Database is already locked by another NetXMS server instance (IP address: %1, machine info: %2)
 .
 
+MessageId=
+SymbolicName=MSG_ACTIONS_LOAD_FAILED
+Language=English
+Error loading event actions configuration from database
+.
+
 ;#endif

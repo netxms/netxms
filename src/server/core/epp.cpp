@@ -100,7 +100,7 @@ BOOL EPRule::LoadFromDB(void)
       bSuccess = FALSE;
    }
 
-   // Load rule's sources
+   // Load rule's actions
    sprintf(szQuery, "SELECT action_id FROM PolicyActionList WHERE rule_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)

@@ -147,6 +147,7 @@
 //
 
 #include "nms_events.h"
+#include "nms_actions.h"
 
 
 //
