@@ -54,15 +54,23 @@ static struct
    int iClass;
    int iNumSamples;
    int iDataType;
+   TCHAR *pszDescription;
+   int iDCIDataType;
 } m_counterList[] =
 {
-   { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0, 60, COUNTER_TYPE_FLOAT },
-   { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0, 300, COUNTER_TYPE_FLOAT },
-   { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0, 900, COUNTER_TYPE_FLOAT },
-   { _T("System.CPU.Usage"), _T("\\Processor(_Total)\\% Processor Time"), 0, 60, COUNTER_TYPE_INT32 },
-   { _T("System.CPU.Usage5"), _T("\\Processor(_Total)\\% Processor Time"), 0, 300, COUNTER_TYPE_INT32 },
-   { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0, 900, COUNTER_TYPE_INT32 },
-   { NULL, NULL, 0, 0, 0 }
+   { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0,
+     60, COUNTER_TYPE_FLOAT, _T("Average CPU load for last minute"), DCI_DT_FLOAT },
+   { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0,
+     300, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 5 minutes"), DCI_DT_FLOAT },
+   { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0,
+     900, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 15 minutes"), DCI_DT_FLOAT },
+   { _T("System.CPU.Usage"), _T("\\Processor(_Total)\\% Processor Time"), 0,
+     60, COUNTER_TYPE_INT32, _T("Average CPU utilization for last minute"), DCI_DT_INT },
+   { _T("System.CPU.Usage5"), _T("\\Processor(_Total)\\% Processor Time"), 0,
+     300, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 5 minutes"), DCI_DT_INT },
+   { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0,
+     900, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 15 minutes"), DCI_DT_INT },
+   { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 
 
@@ -293,10 +301,10 @@ static void OnUnload(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL },
-   { _T("PDH.Version"), H_PdhVersion, NULL },
-   { _T("System.ThreadCount"), H_CounterAlias, _T("(\\System\\Threads)") },
-   { _T("System.Uptime"), H_CounterAlias, _T("(\\System\\System Up Time)") }
+   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
+   { _T("PDH.Version"), H_PdhVersion, NULL, DCI_DT_UINT, _T("Version of PDH.DLL") },
+   { _T("System.ThreadCount"), H_CounterAlias, _T("(\\System\\Threads)"), DCI_DT_INT, _T("Total number of threads") },
+   { _T("System.Uptime"), H_CounterAlias, _T("(\\System\\System Up Time)"), DCI_DT_UINT, _T("System uptime") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -319,7 +327,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Add new parameter to list
 //
 
-BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *), TCHAR *pArg)
+BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *),
+                  TCHAR *pArg, int iDataType, TCHAR *pszDescription)
 {
    DWORD i;
 
@@ -339,6 +348,8 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *),
    _tcsncpy(m_info.pParamList[i].szName, pszName, MAX_PARAM_NAME);
    m_info.pParamList[i].fpHandler = fpHandler;
    m_info.pParamList[i].pArg = pArg;
+   m_info.pParamList[i].iDataType = iDataType;
+   _tcsncpy(m_info.pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
    
    return TRUE;
 }
@@ -358,7 +369,9 @@ static void AddPredefinedCounters(void)
       pCnt = AddCounter(m_counterList[i].pszCounterName, m_counterList[i].iClass,
                         m_counterList[i].iNumSamples, m_counterList[i].iDataType);
       if (pCnt != NULL)
-         AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData, (TCHAR *)pCnt);
+         AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData, 
+                      (TCHAR *)pCnt, m_counterList[i].iDCIDataType, 
+                      m_counterList[i].pszDescription);
    }
 }
 

@@ -40,6 +40,7 @@
 #define CMD_GET            0
 #define CMD_LIST           1
 #define CMD_CHECK_SERVICE  2
+#define CMD_GET_PARAMS     3
 
 
 //
@@ -123,6 +124,35 @@ static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServic
 
 
 //
+// List supported parameters
+//
+
+static int ListParameters(AgentConnection *pConn)
+{
+   DWORD i, dwNumParams, dwError;
+   NXC_AGENT_PARAM *pParamList;
+   static char *pszDataType[] = { "INT", "UINT", "INT64", "UINT64", "STRING", "FLOAT", "UNKNOWN" };
+
+   dwError = pConn->GetSupportedParameters(&dwNumParams, &pParamList);
+   if (dwError == ERR_SUCCESS)
+   {
+      for(i = 0; i < dwNumParams; i++)
+      {
+         printf("%s %s \"%s\"\n", pParamList[i].szName,
+            pszDataType[(pParamList[i].iDataType < 6) && (pParamList[i].iDataType >= 0) ? pParamList[i].iDataType : 6],
+            pParamList[i].szDescription);
+      }
+      safe_free(pParamList);
+   }
+   else
+   {
+      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+   }
+   return (dwError == ERR_SUCCESS) ? 0 : 1;
+}
+
+
+//
 // Startup
 //
 
@@ -138,7 +168,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:bi:hlnp:P:qr:R:s:S:t:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:bi:hIlnp:P:qr:R:s:S:t:vw:")) != -1)
    {
       switch(ch)
       {
@@ -150,6 +180,7 @@ int main(int argc, char *argv[])
                    "   -b           : Batch mode - get all parameters listed on command line.\n"
                    "   -h           : Display help and exit.\n"
                    "   -i <seconds> : Get specified parameter(s) continously with given interval.\n"
+                   "   -I           : Get list of supported parameters.\n"
                    "   -l           : Get list of values for enum parameter.\n"
                    "   -n           : Show parameter's name in result.\n"
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
@@ -195,6 +226,9 @@ int main(int argc, char *argv[])
             {
                iInterval = i;
             }
+            break;
+         case 'I':
+            iCommand = CMD_GET_PARAMS;
             break;
          case 'l':
             iCommand = CMD_LIST;
@@ -286,7 +320,7 @@ int main(int argc, char *argv[])
    // Check parameter correctness
    if (bStart)
    {
-      if (argc - optind < ((iCommand == CMD_CHECK_SERVICE) ? 1 : 2))
+      if (argc - optind < (((iCommand == CMD_CHECK_SERVICE) || (iCommand == CMD_GET_PARAMS)) ? 1 : 2))
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
          bStart = FALSE;
@@ -346,6 +380,9 @@ int main(int argc, char *argv[])
                      case CMD_CHECK_SERVICE:
                         iExitCode = CheckService(&conn, iServiceType, dwServiceAddr,
                                                  wServiceProto, wServicePort, szRequest, szResponce);
+                        break;
+                     case CMD_GET_PARAMS:
+                        iExitCode = ListParameters(&conn);
                         break;
                      default:
                         break;

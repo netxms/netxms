@@ -279,7 +279,8 @@ void DebugPrintf(char *pszFormat, ...);
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL InitParameterList(void);
-void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg);
+void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg,
+                  int iDataType, char *pszDescription);
 void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg);
 BOOL AddExternalParameter(char *pszCfgLine);
 DWORD GetParameterValue(char *pszParam, char *pszValue);

@@ -622,3 +622,21 @@ TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName)
       ptr--;
    return (ptr + 1);
 }
+
+
+//
+// Translate DCI data type from text form to code
+//
+
+int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText)
+{
+   static TCHAR *m_pszValidTypes[] = { _T("INT"), _T("UINT"), _T("INT64"),
+                                       _T("UINT64"), _T("STRING"),
+                                       _T("FLOAT"), NULL };
+   int i;
+
+   for(i = 0; m_pszValidTypes[i] != NULL; i++)
+      if (!_tcsicmp(pszText, m_pszValidTypes[i]))
+         return i;
+   return -1;     // Invalid data type
+}

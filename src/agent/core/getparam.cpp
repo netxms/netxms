@@ -143,7 +143,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 #ifdef _WIN32
    { "Disk.Free(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Free disk space on *" },
    { "Disk.Total(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Total disk space on *" },
-   { "Disk.Used(*)", H_DiskInfo, NULL, DCI_DT_INT64, "Used disk space on *" },
+   { "Disk.Used(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Used disk space on *" },
    { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS, DCI_DT_INT, "Administrative status of *" },
    { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN, DCI_DT_UINT, "" },
    { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_OUT, DCI_DT_UINT, "" },
@@ -252,7 +252,8 @@ BOOL InitParameterList(void)
 // Add parameter to list
 //
 
-void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char *pArg)
+void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char *pArg,
+                  int iDataType, char *pszDescription)
 {
    int i;
 
@@ -262,8 +263,10 @@ void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char 
          break;
    if (i < m_iNumParams)
    {
-      // Replace existing handler
+      // Replace existing handler and attributes
       m_pParamList[i].fpHandler = fpHandler;
+      m_pParamList[i].iDataType = iDataType;
+      strncpy(m_pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
@@ -283,7 +286,8 @@ void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char 
       strncpy(m_pParamList[m_iNumParams].szName, pszName, MAX_PARAM_NAME - 1);
       m_pParamList[m_iNumParams].fpHandler = fpHandler;
       m_pParamList[m_iNumParams].pArg = pArg;
-      m_pParamList[m_iNumParams].szDescription[0] = 0;
+      m_pParamList[m_iNumParams].iDataType = iDataType;
+      strncpy(m_pParamList[m_iNumParams].szDescription, pszDescription, MAX_DB_STRING);
       m_iNumParams++;
    }
 }
@@ -338,7 +342,7 @@ BOOL AddExternalParameter(char *pszCfgLine)
    if ((*pszCfgLine == 0) || (*pszCmdLine == 0))
       return FALSE;
 
-   AddParameter(pszCfgLine, H_ExternalParameter, strdup(pszCmdLine));
+   AddParameter(pszCfgLine, H_ExternalParameter, strdup(pszCmdLine), DCI_DT_STRING, "");
    return TRUE;
 }
 

@@ -95,7 +95,9 @@ BOOL LoadSubAgent(char *szModuleName)
                for(i = 0; i < pInfo->dwNumParameters; i++)
                   AddParameter(pInfo->pParamList[i].szName, 
                                pInfo->pParamList[i].fpHandler,
-                               pInfo->pParamList[i].pArg);
+                               pInfo->pParamList[i].pArg,
+                               pInfo->pParamList[i].iDataType,
+                               pInfo->pParamList[i].szDescription);
 
                // Add enums provided by this subagent to common list
                for(i = 0; i < pInfo->dwNumEnums; i++)

@@ -827,3 +827,57 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
 
    return dwResult;
 }
+
+
+//
+// Get list of supported parameters from subagent
+//
+
+DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
+{
+   DWORD i, dwId, dwRqId, dwResult;
+   CSCPMessage msg, *pResponce;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
+
+   *pdwNumParams = 0;
+   *ppParamList = NULL;
+
+   dwRqId = m_dwRequestId++;
+
+   msg.SetCode(CMD_GET_PARAMETER_LIST);
+   msg.SetId(dwRqId);
+
+   if (SendMessage(&msg))
+   {
+      // Wait up to 90 seconds for results
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (pResponce != NULL)
+      {
+         dwResult = pResponce->GetVariableLong(VID_RCC);
+         if (dwResult == ERR_SUCCESS)
+         {
+            *pdwNumParams = pResponce->GetVariableLong(VID_NUM_PARAMETERS);
+            *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * *pdwNumParams);
+            for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
+            {
+               pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
+               pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
+               (*ppParamList)[i].iDataType = (int)pResponce->GetVariableShort(dwId++);
+            }
+         }
+         delete pResponce;
+      }
+      else
+      {
+         dwResult = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwResult = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwResult;
+}

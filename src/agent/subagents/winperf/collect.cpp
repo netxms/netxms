@@ -125,7 +125,8 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
 
 //
 // Add custom counter from configuration file
-// Should be in form <parameter name>:<counter path>:<number of samples>:<class>
+// Should be in form 
+// <parameter name>:<counter path>:<number of samples>:<class>:<data type>:<description>
 // Class can be A (poll every second), B (poll every 5 seconds) or C (poll every 30 seconds)
 //
 
@@ -133,7 +134,8 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
 {
    TCHAR *ptr, *eptr, *pszCurrField;
    TCHAR szParamName[MAX_PARAM_NAME], szCounterPath[MAX_PATH];
-   int iState, iField, iNumSamples, iClass, iPos;
+   TCHAR szDescription[MAX_DB_STRING] = _T("");
+   int iState, iField, iNumSamples, iClass, iPos, iDataType = DCI_DT_INT;
    WINPERF_COUNTER *pCnt;
 
    // Parse line
@@ -172,6 +174,14 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
                         iClass = *pszCurrField - _T('A');
                         if ((iClass < 0) || (iClass > 2))
                            iState = 255;  // Error
+                        break;
+                     case 4:  // Data type
+                        iDataType = NxDCIDataTypeFromText(pszCurrField);
+                        if (iDataType == -1)    // Invalid data type specified
+                           iState = 255;
+                        break;
+                     case 5:  // Description
+                        _tcsncpy(szDescription, pszCurrField, MAX_DB_STRING);
                         break;
                      default:
                         iState = 255;  // Error
@@ -222,14 +232,15 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
    free(pszCurrField);
 
    // Add new counter if parsing was successful
-   if ((iState == -1) && (iField == 4))
+   if ((iState == -1) && (iField >= 4) && (iField <= 6))
    {
       pCnt = AddCounter(szCounterPath, iClass, iNumSamples, COUNTER_TYPE_AUTO);
       if (pCnt != NULL)
-         AddParameter(szParamName, H_CollectedCounterData, (TCHAR *)pCnt);
+         AddParameter(szParamName, H_CollectedCounterData, (TCHAR *)pCnt,
+                      iDataType, szDescription);
    }
 
-   return ((iState == -1) && (iField == 4));
+   return ((iState == -1) && (iField >= 4) && (iField <= 6));
 }
 
 

@@ -417,6 +417,18 @@ typedef void * NXC_SESSION;
 
 
 //
+// Agent's parameter information
+//
+
+typedef struct
+{
+   TCHAR szName[MAX_PARAM_NAME];
+   TCHAR szDescription[MAX_DB_STRING];
+   int iDataType;
+} NXC_AGENT_PARAM;
+
+
+//
 // Action structure
 //
 

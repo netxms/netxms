@@ -209,6 +209,7 @@ extern "C"
 
    DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection, 
                                            NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
+   int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText);
 
    HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText);
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
