@@ -21,6 +21,7 @@ EXTRA_DIST = \
 	CreateTemplateDlg.cpp CreateTemplateDlg.h \
 	CreateTGDlg.cpp CreateTGDlg.h \
 	DataCollectionEditor.cpp DataCollectionEditor.h \
+	DataQueryDlg.cpp DataQueryDlg.h \
 	DCIDataView.cpp DCIDataView.h \
 	DCIPropPage.cpp DCIPropPage.h \
 	DCIThresholdsPage.cpp DCIThresholdsPage.h \
