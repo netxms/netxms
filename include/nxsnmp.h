@@ -122,6 +122,18 @@ private:
 public:
    SNMP_Variable();
    ~SNMP_Variable();
+
+   BOOL Parse(BYTE *pData, DWORD dwVarLength);
+
+   SNMP_ObjectId *GetName(void) { return m_pName; }
+   DWORD GetType(void) { return m_dwType; }
+   DWORD GetValueLength(void) { return m_dwValueLength; }
+   const BYTE *GetValue(void) { return m_pValue; }
+
+   DWORD GetValueAsUInt(void);
+   long GetValueAsInt(void);
+   TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
+   SNMP_ObjectId *GetValueAsObjectId(void);
 };
 
 
@@ -141,7 +153,14 @@ private:
    int m_iTrapType;
    int m_iSpecificTrap;
    DWORD m_dwTimeStamp;
+   DWORD m_dwAgentAddr;
+   DWORD m_dwRqId;
+   DWORD m_dwErrorCode;
+   DWORD m_dwErrorIndex;
 
+   BOOL ParseVariable(BYTE *pData, DWORD dwVarLength);
+   BOOL ParseVarBinds(BYTE *pData, DWORD dwPDULength);
+   BOOL ParsePDU(BYTE *pData, DWORD dwPDULength);
    BOOL ParseTrapPDU(BYTE *pData, DWORD dwPDULength);
 
 public:
@@ -151,8 +170,10 @@ public:
    BOOL Parse(BYTE *pRawData, DWORD dwRawLength);
 
    SNMP_ObjectId *GetTrapId(void) { return m_pEnterprise; }
+   int GetTrapType(void) { return m_iTrapType; }
+   int GetSpecificTrapType(void) { return m_iSpecificTrap; }
    DWORD GetNumVariables(void) { return m_dwNumVariables; }
-   const SNMP_Variable *GetVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
+   SNMP_Variable *GetVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
    const char *GetCommunity(void) { return m_pszCommunity; }
    DWORD GetVersion(void) { return m_dwVersion; }
 };

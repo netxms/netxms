@@ -79,7 +79,15 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          {
             printf("SNMP: version=%d community='%s'\nOID: %s\n",
                pdu->GetVersion(),pdu->GetCommunity(),
-               pdu->GetTrapId()->GetValueAsText());
+               pdu->GetTrapId() ? pdu->GetTrapId()->GetValueAsText() : "null");
+            printf("     trap type = %d; spec type = %d\n",pdu->GetTrapType(),pdu->GetSpecificTrapType());
+            for(DWORD i = 0; i < pdu->GetNumVariables(); i++)
+            {
+               SNMP_Variable *var;
+
+               var = pdu->GetVariable(i);
+               printf("%d: %s %02X\n", i, var->GetName()->GetValueAsText(), var->GetType());
+            }
             delete pdu;
          }
          else

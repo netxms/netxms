@@ -28,22 +28,26 @@
 // Decode BER-encoded variable
 //
 
-BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD *pdwLength, BYTE **pData)
+BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, 
+                          DWORD *pdwLength, BYTE **pData, DWORD *pdwIdLength)
 {
    BOOL bResult = FALSE;
    BYTE *pbCurrPos = pRawData;
+   DWORD dwIdLength = 0;
 
    // We not handle identifiers with more than 5 bits because they are not used in SNMP
    if ((*pbCurrPos & 0xE0) != 0x1F)
    {
       *pdwType = (DWORD)(*pbCurrPos);
       pbCurrPos++;
+      dwIdLength++;
 
       // Get length
       if ((*pbCurrPos & 0x80) == 0)
       {
          *pdwLength = (DWORD)(*pbCurrPos);
          pbCurrPos++;
+         dwIdLength++;
          bResult = TRUE;
       }
       else
@@ -54,12 +58,14 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD
 
          iNumBytes = *pbCurrPos & 0x80;
          pbCurrPos++;
+         dwIdLength++;
          pbTemp = ((BYTE *)&dwLength) + (4 - iNumBytes);
          if ((iNumBytes >= 1) && (iNumBytes <= 4))
          {
             while(iNumBytes > 0)
             {
                *pbTemp++ = *pbCurrPos++;
+               dwIdLength++;
                iNumBytes--;
             }
             *pdwLength = ntohl(dwLength);
@@ -70,6 +76,7 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD
       // Set pointer to variable's data
       *pData = pbCurrPos;
    }
+   *pdwIdLength = dwIdLength;
    return bResult;
 }
 
@@ -85,8 +92,10 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
    switch(dwType)
    {
       case ASN_INTEGER:
+      case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
          if ((dwLength >= 1) && (dwLength <= 4))
          {
             DWORD dwValue = 0;

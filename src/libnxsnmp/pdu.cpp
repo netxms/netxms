@@ -56,18 +56,139 @@ SNMP_PDU::~SNMP_PDU()
 
 
 //
+// Parse single variable binding
+//
+
+BOOL SNMP_PDU::ParseVariable(BYTE *pData, DWORD dwVarLength)
+{
+   SNMP_Variable *pVar;
+   BOOL bResult = TRUE;
+
+   pVar = new SNMP_Variable;
+   if (pVar->Parse(pData, dwVarLength))
+   {
+      m_ppVarList = (SNMP_Variable **)realloc(m_ppVarList, sizeof(SNMP_Variable *) * (m_dwNumVariables + 1));
+      m_ppVarList[m_dwNumVariables] = pVar;
+      m_dwNumVariables++;
+   }
+   else
+   {
+      delete pVar;
+      bResult = FALSE;
+   }
+   return bResult;
+}
+
+
+//
+// Parse variable bindings
+//
+
+BOOL SNMP_PDU::ParseVarBinds(BYTE *pData, DWORD dwPDULength)
+{
+   BYTE *pbCurrPos;
+   DWORD dwType, dwLength, dwBindingLength, dwIdLength;
+
+   // Varbind section should be a SEQUENCE
+   if (!BER_DecodeIdentifier(pData, dwPDULength, &dwType, &dwBindingLength, &pbCurrPos, &dwIdLength))
+      return FALSE;
+   if (dwType != ASN_SEQUENCE)
+      return FALSE;
+
+   while(dwBindingLength > 0)
+   {
+      if (!BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+         return FALSE;
+      if (dwType != ASN_SEQUENCE)
+         return FALSE;  // Every binding is a sequence
+      if (dwLength > dwBindingLength)
+         return FALSE;     // Invalid length
+
+      if (!ParseVariable(pbCurrPos, dwLength))
+         return FALSE;
+      dwBindingLength -= dwLength + dwIdLength;
+      pbCurrPos += dwLength;
+   }
+
+   return TRUE;
+}
+
+
+//
+// Parse generic PDU
+//
+
+BOOL SNMP_PDU::ParsePDU(BYTE *pData, DWORD dwPDULength)
+{
+   DWORD dwType, dwLength ,dwIdLength;
+   BYTE *pbCurrPos = pData;
+   BOOL bResult = FALSE;
+
+   // Request ID
+   if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+   {
+      if ((dwType == ASN_INTEGER) &&
+          BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwRqId))
+      {
+         dwPDULength -= dwLength + dwIdLength;
+         pbCurrPos += dwLength;
+         bResult = TRUE;
+      }
+   }
+
+   // Error code
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      {
+         if ((dwType == ASN_INTEGER) &&
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwErrorCode))
+         {
+            dwPDULength -= dwLength + dwIdLength;
+            pbCurrPos += dwLength;
+            bResult = TRUE;
+         }
+      }
+   }
+
+   // Error index
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      {
+         if ((dwType == ASN_INTEGER) &&
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwErrorIndex))
+         {
+            dwPDULength -= dwLength + dwIdLength;
+            pbCurrPos += dwLength;
+            bResult = TRUE;
+         }
+      }
+   }
+
+   if (bResult)
+      bResult = ParseVarBinds(pbCurrPos, dwPDULength);
+
+   return bResult;
+}
+
+
+//
 // Parse TRAP PDU
 //
 
 BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
 {
-   DWORD dwType, dwLength;
+   DWORD dwType, dwLength, dwIdLength;
    BYTE *pbCurrPos = pData;
    SNMP_OID *oid;
+   DWORD dwBuffer;
    BOOL bResult = FALSE;
 
    // Enterprise ID
-   if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos))
+   if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
    {
       if (dwType == ASN_OBJECT_ID)
       {
@@ -76,7 +197,7 @@ BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
          if (BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)oid))
          {
             m_pEnterprise = new SNMP_ObjectId(oid->dwLength, oid->pdwValue);
-            dwPDULength -= dwLength;
+            dwPDULength -= dwLength + dwIdLength;
             pbCurrPos += dwLength;
 
             bResult = TRUE;
@@ -85,6 +206,75 @@ BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
          free(oid);
       }
    }
+
+   // Agent's address
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      {
+         if ((dwType == ASN_IP_ADDR) && (dwLength == 4) &&
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwAgentAddr))
+         {
+            dwPDULength -= dwLength + dwIdLength;
+            pbCurrPos += dwLength;
+            bResult = TRUE;
+         }
+      }
+   }
+
+   // Generic trap type
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      {
+         if ((dwType == ASN_INTEGER) &&
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&dwBuffer))
+         {
+            dwPDULength -= dwLength + dwIdLength;
+            pbCurrPos += dwLength;
+            m_iTrapType = (int)dwBuffer;
+            bResult = TRUE;
+         }
+      }
+   }
+
+   // Enterprise trap type
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      {
+         if ((dwType == ASN_INTEGER) &&
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&dwBuffer))
+         {
+            dwPDULength -= dwLength + dwIdLength;
+            pbCurrPos += dwLength;
+            m_iSpecificTrap = (int)dwBuffer;
+            bResult = TRUE;
+         }
+      }
+   }
+
+   // Timestamp
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      {
+         if ((dwType == ASN_TIMETICKS) &&
+             BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwTimeStamp))
+         {
+            dwPDULength -= dwLength + dwIdLength;
+            pbCurrPos += dwLength;
+            bResult = TRUE;
+         }
+      }
+   }
+
+   if (bResult)
+      bResult = ParseVarBinds(pbCurrPos, dwPDULength);
 
    return bResult;
 }
@@ -97,29 +287,29 @@ BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
 BOOL SNMP_PDU::Parse(BYTE *pRawData, DWORD dwRawLength)
 {
    BYTE *pbCurrPos;
-   DWORD dwType, dwLength, dwPacketLength;
+   DWORD dwType, dwLength, dwPacketLength, dwIdLength;
    BOOL bResult = FALSE;
 
    // Packet start
-   if (!BER_DecodeIdentifier(pRawData, dwRawLength, &dwType, &dwPacketLength, &pbCurrPos))
+   if (!BER_DecodeIdentifier(pRawData, dwRawLength, &dwType, &dwPacketLength, &pbCurrPos, &dwIdLength))
       return FALSE;
    if (dwType != ASN_SEQUENCE)
       return FALSE;   // Packet should start with SEQUENCE
 
    // Version
-   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos))
+   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
       return FALSE;
    if (dwType != ASN_INTEGER)
       return FALSE;   // Version field should be of integer type
    if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwVersion))
       return FALSE;   // Error parsing content of version field
    pbCurrPos += dwLength;
-   dwPacketLength -= dwLength;
+   dwPacketLength -= dwLength + dwIdLength;
    if ((m_dwVersion != SNMP_VERSION_1) && (m_dwVersion != SNMP_VERSION_2C))
       return FALSE;   // Unsupported SNMP version
 
    // Community string
-   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos))
+   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
       return FALSE;
    if (dwType != ASN_OCTET_STRING)
       return FALSE;   // Community field should be of string type
@@ -128,15 +318,49 @@ BOOL SNMP_PDU::Parse(BYTE *pRawData, DWORD dwRawLength)
       return FALSE;   // Error parsing content of version field
    m_pszCommunity[dwLength] = 0;
    pbCurrPos += dwLength;
-   dwPacketLength -= dwLength;
+   dwPacketLength -= dwLength + dwIdLength;
 
-   if (BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos))
+   if (BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
    {
       switch(dwType)
       {
          case ASN_TRAP_V1_PDU:
             m_dwCommand = SNMP_TRAP;
             bResult = ParseTrapPDU(pbCurrPos, dwLength);
+            break;
+         case ASN_TRAP_V2_PDU:
+            m_dwCommand = SNMP_TRAP;
+            bResult = ParsePDU(pbCurrPos, dwLength);
+            if (bResult)
+            {
+               bResult = FALSE;
+               if (m_dwNumVariables >= 2)
+               {
+                  if (m_ppVarList[1]->GetType() == ASN_OBJECT_ID)
+                  {
+                     m_pEnterprise = new SNMP_ObjectId(
+                        m_ppVarList[1]->GetValueLength() / sizeof(DWORD), 
+                        (DWORD *)m_ppVarList[1]->GetValue());
+                     bResult = TRUE;
+                  }
+               }
+            }
+            break;
+         case ASN_GET_REQUEST_PDU:
+            m_dwCommand = SNMP_GET_REQUEST;
+            bResult = ParsePDU(pbCurrPos, dwLength);
+            break;
+         case ASN_GET_NEXT_REQUEST_PDU:
+            m_dwCommand = SNMP_GET_NEXT_REQUEST;
+            bResult = ParsePDU(pbCurrPos, dwLength);
+            break;
+         case ASN_GET_RESPONCE_PDU:
+            m_dwCommand = SNMP_GET_RESPONCE;
+            bResult = ParsePDU(pbCurrPos, dwLength);
+            break;
+         case ASN_SET_REQUEST_PDU:
+            m_dwCommand = SNMP_SET_REQUEST;
+            bResult = ParsePDU(pbCurrPos, dwLength);
             break;
          default:
             break;
