@@ -44,6 +44,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
    strcpy(m_szUserName, "<not logged in>");
+   m_dwUserId = INVALID_INDEX;
 }
 
 
@@ -480,11 +481,14 @@ void ClientSession::OnNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
 
-   pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-   pUpdate->dwCategory = INFO_CAT_EVENT;
-   pUpdate->pData = malloc(sizeof(NXC_EVENT));
-   pEvent->PrepareMessage((NXC_EVENT *)pUpdate->pData);
-   m_pUpdateQueue->Put(pUpdate);
+   if (m_iState == STATE_AUTHENTICATED)
+   {
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_EVENT;
+      pUpdate->pData = malloc(sizeof(NXC_EVENT));
+      pEvent->PrepareMessage((NXC_EVENT *)pUpdate->pData);
+      m_pUpdateQueue->Put(pUpdate);
+   }
 }
 
 
@@ -496,14 +500,15 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 {
    UPDATE_INFO *pUpdate;
 
-   if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-   {
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
-      pUpdate->pData = pObject;
-      m_pUpdateQueue->Put(pUpdate);
-      pObject->IncRefCount();
-   }
+   if (m_iState == STATE_AUTHENTICATED)
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+         pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
+         pUpdate->pData = pObject;
+         m_pUpdateQueue->Put(pUpdate);
+         pObject->IncRefCount();
+      }
 }
 
 
@@ -761,14 +766,16 @@ void ClientSession::CreateUser(CSCPMessage *pRequest)
    }
    else
    {
-      DWORD dwResult;
+      DWORD dwResult, dwUserId;
       BOOL bIsGroup;
       char szUserName[MAX_USER_NAME];
 
       pRequest->GetVariableStr(VID_USER_NAME, szUserName, MAX_USER_NAME);
       bIsGroup = pRequest->GetVariableShort(VID_IS_GROUP);
-      dwResult = CreateNewUser(szUserName, bIsGroup);
+      dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
       msg.SetVariable(VID_RCC, dwResult);
+      if (dwResult == RCC_SUCCESS)
+         msg.SetVariable(VID_USER_ID, dwUserId);   // Send id of new user to client
    }
 
    // Send responce
@@ -879,4 +886,40 @@ void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
 
    // Send responce
    SendMessage(&msg);
+}
+
+
+//
+// Notify client on user database update
+//
+
+void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup)
+{
+   CSCPMessage msg;
+
+   if (m_iState == STATE_AUTHENTICATED)
+   {
+      msg.SetCode(CMD_USER_DB_UPDATE);
+      msg.SetId(0);
+      msg.SetVariable(VID_UPDATE_TYPE, (WORD)iCode);
+      msg.SetVariable(VID_USER_ID, dwUserId);
+
+      switch(iCode)
+      {
+         case USER_DB_CREATE:
+            if (dwUserId & GROUP_FLAG)
+            {
+               msg.SetVariable(VID_USER_NAME, pGroup->szName);
+            }
+            else
+            {
+               msg.SetVariable(VID_USER_NAME, pUser->szName);
+            }
+            break;
+         default:
+            break;
+      }
+
+      SendMessage(&msg);
+   }
 }

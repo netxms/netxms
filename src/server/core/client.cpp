@@ -242,3 +242,19 @@ void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pA
          pHandler(m_pSessionList[i], pArg);
    MutexUnlock(m_hSessionListAccess);
 }
+
+
+//
+// Send update notification to all clients
+//
+
+void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup)
+{
+   int i;
+
+   MutexLock(m_hSessionListAccess, INFINITE);
+   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] != NULL)
+         m_pSessionList[i]->OnUserDBUpdate(iCode, dwUserId, pUser, pGroup);
+   MutexUnlock(m_hSessionListAccess);
+}

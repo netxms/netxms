@@ -106,8 +106,9 @@ void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
 void DumpUsers(void);
-DWORD CreateNewUser(char *pszName, BOOL bIsGroup);
+DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD DeleteUserFromDB(DWORD dwId);
+void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pUserGroup);
 
 
 //

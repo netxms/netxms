@@ -432,6 +432,8 @@ DWORD DeleteUserFromDB(DWORD dwId)
       MutexUnlock(m_hMutexUserAccess);
    }
 
+   SendUserDBUpdate(USER_DB_DELETE, dwId, NULL, NULL);
+
    return RCC_SUCCESS;
 }
 
@@ -440,9 +442,10 @@ DWORD DeleteUserFromDB(DWORD dwId)
 // Create new user or group
 //
 
-DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
+DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
 {
    DWORD i, dwResult = RCC_SUCCESS;
+   DWORD dwNewId;
 
    if (bIsGroup)
    {
@@ -461,7 +464,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
       {
          g_dwNumGroups++;
          g_pGroupList = (NMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NMS_USER_GROUP) * g_dwNumGroups);
-         g_pGroupList[i].dwId = CreateUniqueId(IDG_USER_GROUP);
+         g_pGroupList[i].dwId = dwNewId = CreateUniqueId(IDG_USER_GROUP);
          g_pGroupList[i].dwNumMembers = 0;
          g_pGroupList[i].pMembers = NULL;
          strcpy(g_pGroupList[i].szName, pszName);
@@ -469,6 +472,9 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
          g_pGroupList[i].wSystemRights = 0;
          g_pGroupList[i].szDescription[0] = 0;
       }
+
+      if (dwResult == RCC_SUCCESS)
+         SendUserDBUpdate(USER_DB_CREATE, dwNewId, NULL, &g_pGroupList[i]);
 
       MutexUnlock(m_hMutexGroupAccess);
    }
@@ -489,7 +495,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
       {
          g_dwNumUsers++;
          g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
-         g_pUserList[i].dwId = CreateUniqueId(IDG_USER);
+         g_pUserList[i].dwId = dwNewId = CreateUniqueId(IDG_USER);
          strcpy(g_pUserList[i].szName, pszName);
          g_pUserList[i].wFlags = UF_MODIFIED;
          g_pUserList[i].wSystemRights = 0;
@@ -497,8 +503,13 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
          g_pUserList[i].szDescription[0] = 0;
       }
 
+      if (dwResult == RCC_SUCCESS)
+         SendUserDBUpdate(USER_DB_CREATE, dwNewId, &g_pUserList[i], NULL);
+
       MutexUnlock(m_hMutexUserAccess);
    }
+
+   *pdwId = dwNewId;
 
    return dwResult;
 }

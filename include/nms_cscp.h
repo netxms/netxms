@@ -139,6 +139,7 @@ typedef struct
 #define CMD_CREATE_USER             0x0024
 #define CMD_LOCK_USER_DB            0x0025
 #define CMD_UNLOCK_USER_DB          0x0026
+#define CMD_USER_DB_UPDATE          0x0027
 
 
 //
@@ -186,6 +187,7 @@ typedef struct
 #define VID_IS_GROUP                ((DWORD)39)
 #define VID_USER_FULL_NAME          ((DWORD)40)
 #define VID_USER_DESCRIPTION        ((DWORD)41)
+#define VID_UPDATE_TYPE             ((DWORD)42)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

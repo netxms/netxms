@@ -303,6 +303,7 @@ public:
 
    void OnNewEvent(Event *pEvent);
    void OnObjectChange(NetObj *pObject);
+   void OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup);
 };
 
 

@@ -228,6 +228,15 @@ typedef unsigned long HREQUEST;
 
 
 //
+// User database change notification types
+//
+
+#define USER_DB_CREATE              0
+#define USER_DB_DELETE              1
+#define USER_DB_MODIFY              2
+
+
+//
 // Custom data types
 //
 
