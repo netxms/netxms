@@ -60,6 +60,9 @@ void ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
             m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
+            m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+            m_pItemList->pItems[i].pThresholdList = 
+               (NXC_DCI_THRESHOLD *)MemAlloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
          }
          break;
       default:
@@ -133,7 +136,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
 
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
 {
-   DWORD dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;
+   DWORD i, dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;
    CSCPMessage msg;
 
    if (pItemList != NULL)
@@ -147,6 +150,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
 
       dwRetCode = WaitForRCC(dwRqId);
 
+      for(i = 0; i < pItemList->dwNumItems; i++)
+         MemFree(pItemList->pItems[i].pThresholdList);
       MemFree(pItemList->pItems);
       MemFree(pItemList);
    }
@@ -251,6 +256,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
          if (dwResult == RCC_SUCCESS)
          {
             // Item was successfully deleted on server, delete it from our list
+            MemFree(pItemList->pItems[i].pThresholdList);
             pItemList->dwNumItems--;
             memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1], 
                     sizeof(NXC_DCI) * (pItemList->dwNumItems - i));
