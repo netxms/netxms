@@ -26,7 +26,7 @@ $(EXEC): $(OBJECTS) $(DEF)
 	$(PRELINK) -o $(OBJTMP) $(OBJECTS) $(PLDFLAGS)
 	$(PERL) ../../tools/nwmkimp.pl $(OBJTMP) $(IMP)
 	$(LINK) $(LDFLAGS) -T $(DEF)
-	rm -f $(OBJTMP)
+	rm $(OBJTMP)
 
 clean:
-	rm -f *.o $(EXEC)
+	rm *.o $(EXEC)
