@@ -236,14 +236,14 @@ CREATE TABLE EventLog
 
 CREATE TABLE Actions
 (
-	id integer not null,
+	action_id integer not null,
 	action_type integer,
 	email_addr varchar(255),
 	email_subject varchar(255),
 	// Field "action_data" holds message text for e-mail actions or
 	// command line for external command execution actions
 	action_data TEXT,
-	PRIMARY KEY(id)
+	PRIMARY KEY(action_id)
 );
 
 
