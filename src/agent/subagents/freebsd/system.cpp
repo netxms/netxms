@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.4 2005-01-23 05:14:49 alk Exp $ */
+/* $Id: system.cpp,v 1.5 2005-01-23 05:36:11 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -29,6 +29,8 @@
 #include <sys/utsname.h>
 #include <sys/param.h>
 #include <sys/user.h>
+#include <fcntl.h>
+#include <kvm.h>
 
 #include "system.h"
 
@@ -207,6 +209,7 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
 	int nPageCount, nFreeCount;
+	int64_t nSwapTotal, nSwapUsed;
 	char *pTag;
 	int mib[4];
 	size_t nSize;
@@ -214,8 +217,11 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	char *pOid;
 	int nPageSize;
 	char szArg[16] = {0};
+	kvm_t *kd;
+	struct kvm_swap swap[16];
 
 	nPageCount = nFreeCount = 0;
+	nSwapTotal = nSwapUsed = 0;
 
    NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
@@ -235,6 +241,8 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 
 	nPageSize = getpagesize();
 
+	// Phisical memory
+
 	DOIT("vm.stats.vm.v_page_count", nPageCount);
 
 	if (nRet == SYSINFO_RC_SUCCESS)
@@ -244,6 +252,28 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	}
 
 #undef DOIT
+
+	// Swap
+
+	kd = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
+	if (kd != NULL)
+	{
+		i = kvm_getswapinfo(kd, swap, 16, 0);
+		while (i > 0)
+		{
+			i--;
+			nSwapTotal += swap[i].ksw_total;
+			nSwapUsed += swap[i].ksw_used;
+		}
+		kvm_close(kd);
+	}
+	else
+	{
+		if ((int)pArg != PHYSICAL_FREE &&
+				(int)pArg != PHYSICAL_TOTAL &&
+				(int)pArg != PHYSICAL_USED)
+		nRet = SYSINFO_RC_ERROR;
+	}
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
@@ -259,22 +289,25 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 			ret_uint64(pValue, ((int64_t)(nPageCount - nFreeCount)) * nPageSize);
 			break;
 		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, (nSwapTotal - nSwapUsed) * nPageSize);
 			break;
 		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, nSwapTotal * nPageSize);
 			break;
 		case SWAP_USED: // sw-used
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, nSwapUsed * nPageSize);
 			break;
 		case VIRTUAL_FREE: // vi-free
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, ((nSwapTotal - nSwapUsed) * nPageSize) +
+					(((int64_t)nFreeCount) * nPageSize));
 			break;
 		case VIRTUAL_TOTAL: // vi-total
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, (nSwapTotal * nPageSize) +
+					(((int64_t)nPageCount) * nPageSize));
 			break;
 		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, (nSwapUsed * nPageSize) +
+					(((int64_t)(nPageCount - nFreeCount)) * nPageSize));
 			break;
 		default: // error
 			nRet = SYSINFO_RC_ERROR;
@@ -345,6 +378,9 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/23 05:14:49  alk
+System's PageSize used instead of Hardware PageSize
+
 Revision 1.3  2005/01/23 05:08:06  alk
 + System.CPU.Count
 + System.Memory.Physical.*
