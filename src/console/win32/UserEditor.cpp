@@ -361,6 +361,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
+            dlg.m_bManageActions = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
+            dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -369,6 +371,8 @@ void CUserEditor::OnUserProperties()
                userInfo.wFlags = dlg.m_bDisabled ? UF_DISABLED : 0;
                userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_DROP_CONNECTIONS : 0) |
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
+                                        (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
+                                        (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
                                         (dlg.m_bEditConfig ? SYSTEM_ACCESS_EDIT_CONFIG : 0) |
                                         (dlg.m_bViewConfig ? SYSTEM_ACCESS_VIEW_CONFIG : 0) |
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
@@ -398,6 +402,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
+            dlg.m_bManageActions = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
+            dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -408,6 +414,8 @@ void CUserEditor::OnUserProperties()
                                  (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
                userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_DROP_CONNECTIONS : 0) |
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
+                                        (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
+                                        (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
                                         (dlg.m_bEditConfig ? SYSTEM_ACCESS_EDIT_CONFIG : 0) |
                                         (dlg.m_bViewConfig ? SYSTEM_ACCESS_VIEW_CONFIG : 0) |
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |

@@ -65,6 +65,8 @@ typedef unsigned long HREQUEST;
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
 #define OBJECT_STATUS_COUNT      9
+#define MAX_RCPT_ADDR_LEN        256
+#define MAX_EMAIL_SUBJECT_LEN    256
 
 
 //
@@ -247,8 +249,9 @@ typedef unsigned long HREQUEST;
 #define SYSTEM_ACCESS_VIEW_EVENT_DB       0x0010
 #define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
 #define SYSTEM_ACCESS_EPP                 0x0040
+#define SYSTEM_ACCESS_MANAGE_ACTIONS      0x0080
 
-#define SYSTEM_ACCESS_FULL                0x007F
+#define SYSTEM_ACCESS_FULL                0x00FF
 
 
 //
@@ -346,6 +349,28 @@ typedef unsigned long HREQUEST;
 #define RF_SEVERITY_CRITICAL  0x1000
 
 
+//
+// Action types
+//
+
+#define ACTION_EXEC           1
+#define ACTION_SEND_EMAIL     2
+#define ACTION_REMOTE         3
+#define ACTION_SEND_SMS       4
+
+
+//
+// Action structure
+//
+
+typedef struct
+{
+   DWORD dwId;
+   int iType;
+   char szRcptAddr[MAX_RCPT_ADDR_LEN];
+   char szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
+   char *pszData;
+} NXC_ACTION;
 //
 // Alarm structure
 //

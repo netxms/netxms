@@ -28,6 +28,8 @@ CGroupPropDlg::CGroupPropDlg(CWnd* pParent /*=NULL*/)
 	m_bViewEventDB = FALSE;
 	m_strDescription = _T("");
 	m_strName = _T("");
+	m_bManageActions = FALSE;
+	m_bManageEPP = FALSE;
 	//}}AFX_DATA_INIT
 
    m_pdwMembers = NULL;
@@ -54,6 +56,8 @@ void CGroupPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_VIEW_EVENTDB, m_bViewEventDB);
 	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_strName);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_ACTIONS, m_bManageActions);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_EPP, m_bManageEPP);
 	//}}AFX_DATA_MAP
 }
 

@@ -31,6 +31,8 @@ public:
 	CString	m_strDescription;
 	CString	m_strLogin;
 	CString	m_strFullName;
+	BOOL	m_bManageActions;
+	BOOL	m_bManageEPP;
 	//}}AFX_DATA
 
 

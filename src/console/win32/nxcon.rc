@@ -644,7 +644,7 @@ BEGIN
     LTEXT           "Login name",IDC_STATIC_HEADER,7,7,113,8
 END
 
-IDD_USER_PROPERTIES DIALOG DISCARDABLE  0, 0, 222, 183
+IDD_USER_PROPERTIES DIALOG DISCARDABLE  0, 0, 222, 189
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "User Properties"
 FONT 8, "MS Sans Serif"
@@ -663,25 +663,29 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,129,95,10
     CONTROL         "&Edit server configuration",IDC_CHECK_EDIT_CONFIG,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,140,92,10
+    CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,151,82,10
     CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,118,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,129,83,10
-    CONTROL         "Edit event &database",IDC_CHECK_EDIT_EVENTDB,"Button",
+    CONTROL         "Edi&t event database",IDC_CHECK_EDIT_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,140,79,10
-    DEFPUSHBUTTON   "OK",IDOK,110,162,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,165,162,50,14
+    CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,151,86,10
+    DEFPUSHBUTTON   "OK",IDOK,110,168,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,168,50,14
     LTEXT           "Login name:",IDC_STATIC,7,10,40,8
     LTEXT           "Full name:",IDC_STATIC,7,29,33,8
     LTEXT           "Description:",IDC_STATIC,7,48,38,8
     GROUPBOX        "Flags",IDC_STATIC,7,63,208,38
-    GROUPBOX        "System Rights",IDC_STATIC,7,106,208,49
+    GROUPBOX        "System Rights",IDC_STATIC,7,106,208,58
 END
 
-IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 247
+IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 258
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
@@ -693,25 +697,29 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,102,95,10
     CONTROL         "&Edit server configuration",IDC_CHECK_EDIT_CONFIG,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,113,92,10
+    CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,124,82,10
     CONTROL         "D&rop client connections",IDC_CHECK_DROP_CONN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,91,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,102,83,10
     CONTROL         "Edi&t event database",IDC_CHECK_EDIT_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,113,79,10
+    CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,124,67,10
     CONTROL         "List1",IDC_LIST_MEMBERS,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
                     LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,12,
-                    144,143,72,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,160,144,50,14
-    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,160,163,50,14
-    DEFPUSHBUTTON   "OK",IDOK,110,226,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,165,226,50,14
+                    155,143,72,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,160,155,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,160,174,50,14
+    DEFPUSHBUTTON   "OK",IDOK,110,237,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,237,50,14
     LTEXT           "Name:",IDC_STATIC,7,10,22,8
     LTEXT           "Description:",IDC_STATIC,7,30,38,8
-    GROUPBOX        "System Rights",IDC_STATIC,7,79,208,49
+    GROUPBOX        "System Rights",IDC_STATIC,7,79,208,61
     GROUPBOX        "Flags",IDC_STATIC,7,46,208,27
-    GROUPBOX        "Members",IDC_STATIC,7,134,208,86
+    GROUPBOX        "Members",IDC_STATIC,7,145,208,86
 END
 
 IDD_SET_PASSWORD DIALOGEX 0, 0, 251, 63
@@ -1072,7 +1080,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 215
         TOPMARGIN, 7
-        BOTTOMMARGIN, 176
+        BOTTOMMARGIN, 182
     END
 
     IDD_GROUP_PROPERTIES, DIALOG
@@ -1080,7 +1088,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 215
         TOPMARGIN, 7
-        BOTTOMMARGIN, 240
+        BOTTOMMARGIN, 251
     END
 
     IDD_SET_PASSWORD, DIALOG

@@ -33,6 +33,8 @@ public:
 	BOOL	m_bViewEventDB;
 	CString	m_strDescription;
 	CString	m_strName;
+	BOOL	m_bManageActions;
+	BOOL	m_bManageEPP;
 	//}}AFX_DATA
 
 

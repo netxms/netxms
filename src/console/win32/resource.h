@@ -212,6 +212,8 @@
 #define IDC_STATIC_SEVERITY             1138
 #define IDC_CHECK_VIEW_ALARMS           1139
 #define IDC_CHECK_ACK_ALARMS            1140
+#define IDC_CHECK_MANAGE_EPP            1141
+#define IDC_CHECK_MANAGE_ACTIONS        1142
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -283,7 +285,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        212
 #define _APS_NEXT_COMMAND_VALUE         32871
-#define _APS_NEXT_CONTROL_VALUE         1141
+#define _APS_NEXT_CONTROL_VALUE         1143
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

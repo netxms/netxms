@@ -28,7 +28,7 @@
 //
 
 static DWORD m_dwNumActions = 0;
-static NMS_ACTION *m_pActionList = NULL;
+static NXC_ACTION *m_pActionList = NULL;
 
 
 //
@@ -62,24 +62,27 @@ BOOL LoadActions(void)
    DWORD i;
    char *pStr;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT action_id,action_type,email_addr,email_subject,action_data FROM actions ORDER BY action_id");
+   hResult = DBSelect(g_hCoreDB, "SELECT action_id,action_type,rcpt_addr,email_subject,action_data FROM actions ORDER BY action_id");
    if (hResult != NULL)
    {
       DestroyActionList();
       m_dwNumActions = (DWORD)DBGetNumRows(hResult);
-      m_pActionList = (NMS_ACTION *)malloc(sizeof(NMS_ACTION) * m_dwNumActions);
+      m_pActionList = (NXC_ACTION *)malloc(sizeof(NXC_ACTION) * m_dwNumActions);
       for(i = 0; i < m_dwNumActions; i++)
       {
          m_pActionList[i].dwId = DBGetFieldULong(hResult, i, 0);
          m_pActionList[i].iType = DBGetFieldLong(hResult, i, 1);
          pStr = DBGetField(hResult, i, 2);
-         strcpy(m_pActionList[i].szEmailAddr, CHECK_NULL(pStr));
+         strcpy(m_pActionList[i].szRcptAddr, CHECK_NULL(pStr));
+         DecodeSQLString(m_pActionList[i].szRcptAddr);
          pStr = DBGetField(hResult, i, 3);
          strcpy(m_pActionList[i].szEmailSubject, CHECK_NULL(pStr));
+         DecodeSQLString(m_pActionList[i].szEmailSubject);
          pStr = DBGetField(hResult, i, 4);
          pStr = CHECK_NULL(pStr);
          m_pActionList[i].pszData = (char *)malloc(strlen(pStr) + 1);
          strcpy(m_pActionList[i].pszData, pStr);
+         DecodeSQLString(m_pActionList[i].pszData);
       }
       DBFreeResult(hResult);
       bResult = TRUE;
@@ -98,8 +101,8 @@ BOOL LoadActions(void)
 
 static int CompareId(const void *key, const void *elem)
 {
-   return (DWORD)key < ((NMS_ACTION *)elem)->dwId ? -1 : 
-            ((DWORD)key > ((NMS_ACTION *)elem)->dwId ? 1 : 0);
+   return (DWORD)key < ((NXC_ACTION *)elem)->dwId ? -1 : 
+            ((DWORD)key > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
 }
 
 
@@ -109,10 +112,11 @@ static int CompareId(const void *key, const void *elem)
 
 BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
 {
-   NMS_ACTION *pAction;
+   NXC_ACTION *pAction;
    BOOL bSuccess = FALSE;
 
-   pAction = (NMS_ACTION *)bsearch((void *)dwActionId, m_pActionList, m_dwNumActions, sizeof(NMS_ACTION), CompareId);
+   pAction = (NXC_ACTION *)bsearch((void *)dwActionId, m_pActionList, 
+                                   m_dwNumActions, sizeof(NXC_ACTION), CompareId);
    if (pAction != NULL)
    {
       char *pszExpandedData;
@@ -125,8 +129,16 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
             ExecCommand(pszExpandedData);
             break;
          case ACTION_SEND_EMAIL:
+            DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"\n", 
+                      pAction->szRcptAddr, pszExpandedData);
+            break;
+         case ACTION_SEND_SMS:
+            DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"\n", 
+                      pAction->szRcptAddr, pszExpandedData);
             break;
          case ACTION_REMOTE:
+            DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"\n", 
+                      pAction->szRcptAddr, pszExpandedData);
             break;
          default:
             break;

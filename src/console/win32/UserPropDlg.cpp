@@ -30,6 +30,8 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	m_strDescription = _T("");
 	m_strLogin = _T("");
 	m_strFullName = _T("");
+	m_bManageActions = FALSE;
+	m_bManageEPP = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -52,6 +54,8 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strLogin, 63);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_strFullName);
 	DDV_MaxChars(pDX, m_strFullName, 127);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_ACTIONS, m_bManageActions);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_EPP, m_bManageEPP);
 	//}}AFX_DATA_MAP
 }
 
@@ -78,6 +82,8 @@ BOOL CUserPropDlg::OnInitDialog()
       GetDlgItem(IDC_CHECK_EDIT_CONFIG)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_VIEW_EVENTDB)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_EDIT_EVENTDB)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_MANAGE_ACTIONS)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_MANAGE_EPP)->EnableWindow(FALSE);
    }
 
 	return TRUE;

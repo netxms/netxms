@@ -25,37 +25,6 @@
 
 
 //
-// Constants
-//
-
-#define MAX_EMAIL_ADDR_LEN       256
-#define MAX_EMAIL_SUBJECT_LEN    256
-
-
-//
-// Action types
-//
-
-#define ACTION_EXEC           1
-#define ACTION_SEND_EMAIL     2
-#define ACTION_REMOTE         3
-
-
-//
-// Action structure
-//
-
-struct NMS_ACTION
-{
-   DWORD dwId;
-   int iType;
-   char szEmailAddr[MAX_EMAIL_ADDR_LEN];
-   char szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
-   char *pszData;
-};
-
-
-//
 // Functions
 //
 
