@@ -117,8 +117,7 @@ TREE_ITEM *StrictTree::FindObjectInTree(DWORD dwObjId)
 //
 BOOL StrictTree::LoadTree()
 {
-  DWORD dwIdx;
-  int i;
+  DWORD i, dwIdx;
 
   if (m_dwTreeIndexSize != 1)
 	return FALSE;
@@ -141,7 +140,7 @@ BOOL StrictTree::LoadTree()
 //
 BOOL StrictTree::AddItem(NXC_OBJECT *pObject)
 {
-  int i,j;
+  DWORD i,j;
   TREE_ITEM *pParent,*pNew, **pChilds;
   BOOL bSucceeded = FALSE;
   TREE_INDEX_ITEM *pTmpIdx;

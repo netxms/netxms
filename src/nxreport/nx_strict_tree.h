@@ -29,7 +29,8 @@
 #include <nxclapi.h>
 
 
-typedef struct TREE_ITEM {
+struct TREE_ITEM
+{
 	TREE_ITEM 	*pParent;
 	TREE_ITEM	**pChildList;   // pointer to child items array 
 	DWORD		dwChildCount;  // size of child items array in elemtns.
@@ -38,10 +39,11 @@ typedef struct TREE_ITEM {
 };
 
 
-typedef struct {
+struct TREE_INDEX_ITEM
+{
 	DWORD		dwObjId;
 	TREE_ITEM	*pTreeItem;
-}  TREE_INDEX_ITEM;	
+};	
 
 
 class StrictTree
