@@ -98,7 +98,7 @@ const ItemValue& ItemValue::operator=(double dFloat)
    m_dFloat = dFloat;
    sprintf(m_szString, "%f", m_dFloat);
    m_iInt32 = (long)m_dFloat;
-   m_iInt64 = (UINT64)m_dFloat;
+   m_iInt64 = (INT64)m_dFloat;
    m_dwInt32 = (DWORD)m_dFloat;
    m_qwInt64 = (QWORD)m_dFloat;
    return *this;
@@ -109,7 +109,7 @@ const ItemValue& ItemValue::operator=(long iInt32)
    m_iInt32 = iInt32;
    sprintf(m_szString, "%ld", m_iInt32);
    m_dFloat = (double)m_iInt32;
-   m_iInt64 = (UINT64)m_iInt32;
+   m_iInt64 = (INT64)m_iInt32;
    m_dwInt32 = (DWORD)m_iInt32;
    m_qwInt64 = (QWORD)m_iInt32;
    return *this;
@@ -136,7 +136,7 @@ const ItemValue& ItemValue::operator=(DWORD dwInt32)
    sprintf(m_szString, "%lu", m_dwInt32);
    m_dFloat = (double)m_dwInt32;
    m_iInt32 = (long)m_dwInt32;
-   m_iInt64 = (UINT64)m_dwInt32;
+   m_iInt64 = (INT64)m_dwInt32;
    m_qwInt64 = (QWORD)m_dwInt32;
    return *this;
 }
@@ -151,6 +151,6 @@ const ItemValue& ItemValue::operator=(QWORD qwInt64)
 #endif
    m_dFloat = (double)((INT64)m_qwInt64);
    m_iInt32 = (long)m_qwInt64;
-   m_iInt64 = (UINT64)m_qwInt64;
+   m_iInt64 = (INT64)m_qwInt64;
    return *this;
 }

@@ -86,9 +86,9 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
    if (pAddr == NULL)
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #else    /* _WIN32 */
-   pAddr = dlsym(hModule, szSymbol);
+   pAddr = dlsym(hModule, pszSymbol);
    if (pAddr == NULL)
-      _tscncpy(pszErrorText, dlerror(), 255);
+      _tcsncpy(pszErrorText, dlerror(), 255);
 #endif
    return pAddr;
 }
