@@ -112,6 +112,7 @@ CREATE TABLE nodes
 	inherit_access_rights integer,
 	image_id integer,
 	description TEXT,
+	node_type integer,
 	PRIMARY KEY(id)
 );
 
@@ -513,5 +514,6 @@ CREATE TABLE oid_to_type
 	pair_id integer not null,
 	snmp_oid varchar(255) not null,
 	node_type integer not null,
+	node_flags integer not null,
 	PRIMARY KEY(pair_id)
 );

@@ -120,3 +120,11 @@ INSERT INTO container_categories (category,name,image_id,description)
    VALUES (2,'Location',0,'Geografic location');
 INSERT INTO container_categories (category,name,image_id,description)
    VALUES (3,'Service',0,'Logical service');
+
+
+/*
+** SNMP OID to node type mappings
+*/
+
+INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
+   VALUES (0,'.1.3.6.1.4.1.2272.*',NODE_TYPE_NORTEL_ACCELAR,0);

@@ -16,13 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netxmsdb.h
+** $module: nxnt.h
 **
 **/
 
-#ifndef _netxms_db_h
-#define _netxms_db_h
+#ifndef _nxnt_h
+#define _nxnt_h
 
-#define DB_FORMAT_VERSION	12
+#define NODE_TYPE_GENERIC           0
+#define NODE_TYPE_NORTEL_ACCELAR    1
 
 #endif
