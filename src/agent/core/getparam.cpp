@@ -156,7 +156,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_OUT, DCI_DT_UINT, "Number of output packets on interface {instance}" },
    { "Net.Interface.Speed(*)", H_NetInterfaceStats, (char *)NET_IF_SPEED, DCI_DT_UINT, "Speed of interface {instance}" },
    { "Net.IP.Forwarding", H_NetIPStats, (char *)NET_IP_FORWARDING, DCI_DT_INT, "IP forwarding status" },
-   { "PhysicalDisk.SmartAttr(*)", H_PhysicalDiskInfo, "A", DCI_DT_INT, "" },
+   { "PhysicalDisk.SmartAttr(*)", H_PhysicalDiskInfo, "A", DCI_DT_STRING, "" },
    { "PhysicalDisk.SmartStatus(*)", H_PhysicalDiskInfo, "S", DCI_DT_INT, "Status of hard disk {instance} reported by SMART" },
    { "PhysicalDisk.Temperature(*)", H_PhysicalDiskInfo, "T", DCI_DT_INT, "Temperature of hard disk {instance}" },
    { "Process.Count(*)", H_ProcCountSpecific, NULL, DCI_DT_UINT, "" },

@@ -3,7 +3,7 @@
 *
 
 - Fixed critical bug in upgrade script starter under UNIX
-- Added support of HDD temperature monitoring under Windows
+- Added support of HDD temperature monitoring under Windows and Linux
 
 
 *
