@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <stdarg.h>
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
 # include <sys/time.h>

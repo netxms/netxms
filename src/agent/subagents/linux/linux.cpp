@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.6 2004-08-26 23:51:26 alk Exp $ */
+/* $Id: linux.cpp,v 1.7 2004-10-06 13:23:32 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -338,8 +338,9 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
+   NETXMS_SUBAGENT_INFO_MAGIC,
 	"Linux",
-	0x01000000,
+	NETXMS_VERSION_STRING,
 	NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
@@ -362,6 +363,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2004/08/26 23:51:26  alk
+cosmetic changes
+
 Revision 1.5  2004/08/18 00:12:56  alk
 + System.CPU.Procload* added, SINGLE processor only.
 

@@ -60,10 +60,12 @@
 #define _tcsrchr  strrchr
 #define _tcscmp   strcmp
 #define _tcsicmp  stricmp
+#define _tcsncmp  strncmp
 #define _tprintf  printf
 #define _stprintf sprintf
 #define _sntprintf snprintf
 #define _vtprintf vprintf
+#define _vstprintf vsprintf
 #define _vsntprintf vsnprintf
 #define _tfopen   fopen
 #define _fgetts   fgets
