@@ -39,6 +39,7 @@ void CheckDatabase(BOOL bForce)
 {
    DB_RESULT hResult;
    long iVersion = 0;
+   BOOL bCompleted = FALSE;
 
    _tprintf(_T("Checking database...\n"));
 
@@ -64,19 +65,69 @@ void CheckDatabase(BOOL bForce)
    }
    else
    {
-      if (m_iNumErrors == 0)
+      TCHAR szLockInfo[MAX_DB_STRING];
+      BOOL bLocked;
+
+      // Check if database is locked
+      hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+      if (hResult != NULL)
       {
-         _tprintf(_T("Database doesn't contain any errors\n"));
+         if (DBGetNumRows(hResult) > 0)
+         {
+            _tcsncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+            bLocked = _tcscmp(szLockInfo, _T("UNLOCKED"));
+         }
+         DBFreeResult(hResult);
+
+         if (bLocked)
+         {
+            hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
+            if (hResult != NULL)
+            {
+               if (DBGetNumRows(hResult) > 0)
+               {
+                  _tcsncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+               }
+               DBFreeResult(hResult);
+            }
+         }
       }
-      else
+
+      if (bLocked)
       {
-         _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
-         if (m_iNumFixes == m_iNumErrors)
-            _tprintf(_T("All errors in database was fixed\n"));
+         TCHAR szBuffer[16];
+
+         _tprintf(_T("Database is locked. Lock information: \"%s\"\n"
+                     "Do you wish to force database unlock? (Y/N)\n"),
+                  szLockInfo);
+         _fgetts(szBuffer, 16, stdin);
+         if ((szBuffer[0] == _T('y')) || (szBuffer[0] == _T('Y')))
+         {
+            if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
+            {
+               bLocked = FALSE;
+               _tprintf(_T("Database lock removed\n"));
+            }
+         }
+      }
+
+      if (!bLocked)
+      {
+         if (m_iNumErrors == 0)
+         {
+            _tprintf(_T("Database doesn't contain any errors\n"));
+         }
          else
-            _tprintf(_T("Database still contain errors\n"));
+         {
+            _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
+            if (m_iNumFixes == m_iNumErrors)
+               _tprintf(_T("All errors in database was fixed\n"));
+            else
+               _tprintf(_T("Database still contain errors\n"));
+         }
+         bCompleted = TRUE;
       }
    }
 
-   _tprintf(_T("Database check completed\n"));
+   _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));
 }
