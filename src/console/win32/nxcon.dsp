@@ -125,6 +125,14 @@ SOURCE=.\ControlPanel.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateContainerDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateNodeDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\CreateObjectDlg.cpp
 # End Source File
 # Begin Source File
@@ -363,6 +371,14 @@ SOURCE=.\ConsolePropsGeneral.h
 # Begin Source File
 
 SOURCE=.\ControlPanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateContainerDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateNodeDlg.h
 # End Source File
 # Begin Source File
 

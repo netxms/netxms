@@ -1281,8 +1281,7 @@ void CObjectBrowser::OnObjectBind()
 
 void CObjectBrowser::OnObjectCreateContainer() 
 {
-   theApp.CreateObject(OBJECT_CONTAINER, 
-                       (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+   theApp.CreateContainer((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }
 
 
@@ -1292,6 +1291,5 @@ void CObjectBrowser::OnObjectCreateContainer()
 
 void CObjectBrowser::OnObjectCreateNode() 
 {
-   theApp.CreateObject(OBJECT_NODE, 
-                       (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+   theApp.CreateNode((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }

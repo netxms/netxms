@@ -96,6 +96,7 @@ public:
 
 // Implementation
 protected:
+	void CreateObject(NXC_OBJECT_CREATE_INFO *pInfo);
 	HMENU LoadAppMenu(HMENU hViewMenu);
 	BOOL SetupWorkDir(void);
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
@@ -165,7 +166,8 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
-	void CreateObject(int iClass, DWORD dwParent);
+	void CreateNode(DWORD dwParent);
+	void CreateContainer(DWORD dwParent);
    NXC_EPP *m_pEventPolicy;
 
 	void ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);

@@ -106,7 +106,8 @@
 #define IDD_NEW_ACTION                  217
 #define IDD_ACTION_PROPERTIES           218
 #define IDD_SELECT_ACTION               219
-#define IDD_CREATE_OBJECT               220
+#define IDD_CREATE_CONTAINER            220
+#define IDD_CREATE_NODE                 221
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -240,6 +241,8 @@
 #define IDC_STATIC_NAME                 1157
 #define IDC_STATIC_CATEGORY             1158
 #define IDC_SELECT_PARENT               1159
+#define IDC_IP_ADDR                     1161
+#define IDC_IP_MASK                     1162
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -314,9 +317,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        221
+#define _APS_NEXT_RESOURCE_VALUE        222
 #define _APS_NEXT_COMMAND_VALUE         32876
-#define _APS_NEXT_CONTROL_VALUE         1161
+#define _APS_NEXT_CONTROL_VALUE         1163
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

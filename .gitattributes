@@ -111,6 +111,12 @@ src/console/win32/ConsolePropsGeneral.cpp -text
 src/console/win32/ConsolePropsGeneral.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
+src/console/win32/CreateContainerDlg.cpp -text
+src/console/win32/CreateContainerDlg.h -text
+src/console/win32/CreateNodeDlg.cpp -text
+src/console/win32/CreateNodeDlg.h -text
+src/console/win32/CreateObjectDlg.cpp -text
+src/console/win32/CreateObjectDlg.h -text
 src/console/win32/DCIDataView.cpp -text
 src/console/win32/DCIDataView.h -text
 src/console/win32/DCIPropPage.cpp -text

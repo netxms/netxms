@@ -1,0 +1,100 @@
+// CreateObjectDlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "nxcon.h"
+#include "CreateObjectDlg.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CCreateObjectDlg dialog
+
+
+CCreateObjectDlg::CCreateObjectDlg(int iId, CWnd* pParent /*=NULL*/)
+	: CDialog(iId, pParent)
+{
+	//{{AFX_DATA_INIT(CCreateObjectDlg)
+	m_strObjectName = _T("");
+	//}}AFX_DATA_INIT
+}
+
+
+void CCreateObjectDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CCreateObjectDlg)
+	DDX_Control(pDX, IDC_STATIC_NAME, m_wndStaticName);
+	DDX_Control(pDX, IDC_STATIC_ID, m_wndStaticId);
+	DDX_Control(pDX, IDC_ICON_PARENT, m_wndParentIcon);
+	DDX_Text(pDX, IDC_EDIT_NAME, m_strObjectName);
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CCreateObjectDlg, CDialog)
+	//{{AFX_MSG_MAP(CCreateObjectDlg)
+	ON_BN_CLICKED(IDC_SELECT_PARENT, OnSelectParent)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CCreateObjectDlg message handlers
+
+
+//
+// WM_INITDIALOG message handler
+//
+
+BOOL CCreateObjectDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+   UpdateParentInfo();
+	return TRUE;
+}
+
+
+//
+// Handler for "Select..." button
+//
+
+void CCreateObjectDlg::OnSelectParent() 
+{
+   CObjectSelDlg dlg;
+
+   dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
+   if (dlg.DoModal() == IDOK)
+   {
+      m_pParentObject = NXCFindObjectById(dlg.m_pdwObjectList[0]);
+      UpdateParentInfo();
+   }
+}
+
+
+//
+// Update parent object's information
+//
+
+void CCreateObjectDlg::UpdateParentInfo()
+{
+   if (m_pParentObject != NULL)
+   {
+      char szBuffer[16];
+
+      m_wndStaticName.SetWindowText(m_pParentObject->szName);
+      sprintf(szBuffer, "ID: %d", m_pParentObject->dwId);
+      m_wndStaticId.SetWindowText(szBuffer);
+      m_wndParentIcon.SetIcon(
+         g_pObjectNormalImageList->ExtractIcon(
+            GetObjectImageIndex(m_pParentObject)));
+   }
+   else
+   {
+      m_wndStaticName.SetWindowText("");
+      m_wndStaticId.SetWindowText("<no parent>");
+   }
+}

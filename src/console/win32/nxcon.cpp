@@ -6,7 +6,8 @@
 
 #include "MainFrm.h"
 #include "LoginDialog.h"
-#include "CreateObjectDlg.h"
+#include "CreateContainerDlg.h"
+#include "CreateNodeDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -281,7 +282,7 @@ BOOL CConsoleApp::InitInstance()
 	   pFrame->ShowWindow(m_nCmdShow);
    }
 	pFrame->UpdateWindow();
-   //pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
+   pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
    pFrame->PostMessage(WM_COMMAND, ID_CONNECT_TO_SERVER, 0);
 
 	return TRUE;
@@ -1174,32 +1175,57 @@ HMENU CConsoleApp::LoadAppMenu(HMENU hViewMenu)
 // Create new object
 //
 
-void CConsoleApp::CreateObject(int iClass, DWORD dwParent)
+void CConsoleApp::CreateObject(NXC_OBJECT_CREATE_INFO *pInfo)
 {
-   CCreateObjectDlg dlg;
    DWORD dwResult, dwObjectId;
+
+   dwResult = DoRequestArg2(NXCCreateObject, pInfo, &dwObjectId, "Creating object...");
+   if (dwResult != RCC_SUCCESS)
+   {
+      ErrorBox(dwResult, "Error creating object: %s");
+   }
+}
+
+
+//
+// Create container object
+//
+
+void CConsoleApp::CreateContainer(DWORD dwParent)
+{
    NXC_OBJECT_CREATE_INFO ci;
+   CCreateContainerDlg dlg;
 
    dlg.m_pParentObject = NXCFindObjectById(dwParent);
    if (dlg.DoModal() == IDOK)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
-      ci.iClass = iClass;
+      ci.iClass = OBJECT_CONTAINER;
       ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
-      switch(iClass)
-      {
-         case OBJECT_NODE:
-            break;
-         case OBJECT_CONTAINER:
-            ci.cs.container.dwCategory = 1;
-            ci.cs.container.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
-            break;
-      }
+      ci.cs.container.dwCategory = 1;
+      ci.cs.container.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
+      CreateObject(&ci);
+   }
+}
 
-      dwResult = DoRequestArg2(NXCCreateObject, &ci, &dwObjectId, "Creating object...");
-      if (dwResult != RCC_SUCCESS)
-      {
-         ErrorBox(dwResult, "Error creating object: %s");
-      }
+
+//
+// Create node object
+//
+
+void CConsoleApp::CreateNode(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateNodeDlg dlg;
+
+   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_NODE;
+      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
+      ci.cs.node.dwNetMask = dlg.m_dwNetMask;
+      CreateObject(&ci);
    }
 }
