@@ -117,6 +117,7 @@ void ClientSession::ReadThread(void)
 
    // Notify other threads to exit
    m_pSendQueue->Put(NULL);
+   m_pMessageQueue->Put(NULL);
 }
 
 
@@ -242,29 +243,25 @@ void ClientSession::SendAllObjects(void)
 
 void ClientSession::SendAllEvents(void)
 {
-   DWORD i, dwNumRecords;
    CSCPMessage msg;
-   DB_RESULT hResult;
+   DB_ASYNC_RESULT hResult;
    NXC_EVENT event;
 
-   // Prepare message
-//   msg.SetCode(CMD_EVENT);
-
    // Retrieve events from database
-   hResult = DBSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog ORDER BY timestamp");
+   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog ORDER BY timestamp");
    if (hResult != NULL)
    {
       // Send events, one per message
-      dwNumRecords = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRecords; i++)
+      while(DBFetch(hResult))
       {
-         event.dwEventId = htonl(DBGetFieldULong(hResult, i, 0));
-         event.dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 1));
-         event.dwSourceId = htonl(DBGetFieldULong(hResult, i, 2));
-         event.dwSeverity = htonl(DBGetFieldULong(hResult, i, 3));
-         strncpy(event.szMessage, DBGetField(hResult, i, 4), MAX_EVENT_MSG_LENGTH);
+         event.dwEventId = htonl(DBGetFieldAsyncULong(hResult, 0));
+         event.dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 1));
+         event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 2));
+         event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 3));
+         DBGetFieldAsync(hResult, 4, event.szMessage, MAX_EVENT_MSG_LENGTH);
          m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), &event, NULL));
       }
+      DBFreeAsyncResult(hResult);
    }
 
    // Send end of list notification
@@ -309,6 +306,7 @@ void ClientSession::SendAllConfigVars(void)
             SendMessage(&msg);
             msg.DeleteAllVariables();
          }
+         DBFreeResult(hResult);
       }
 
       // Send end of list notification
@@ -316,4 +314,16 @@ void ClientSession::SendAllConfigVars(void)
       msg.SetVariable(VID_ERROR, (DWORD)0);
       SendMessage(&msg);
    }
+}
+
+
+//
+// Close session forcibly
+//
+
+void ClientSession::Kill(void)
+{
+   // We shutdown socket connection, which will cause
+   // read thread to stop, and other threads will follow
+   shutdown(m_hSocket, 2);
 }

@@ -197,6 +197,8 @@ public:
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+
+   void Kill(void);
 };
 
 
@@ -235,11 +237,17 @@ DB_HANDLE DBConnect(void);
 void DBDisconnect(DB_HANDLE hConn);
 BOOL DBQuery(DB_HANDLE hConn, char *szQuery);
 DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery);
+DB_ASYNC_RESULT DBAsyncSelect(DB_HANDLE hConn, char *szQuery);
+BOOL DBFetch(DB_ASYNC_RESULT hResult);
 char *DBGetField(DB_RESULT hResult, int iRow, int iColumn);
 long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
 DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
+char *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize);
+long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn);
+DWORD DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
 int DBGetNumRows(DB_RESULT hResult);
 void DBFreeResult(DB_RESULT hResult);
+void DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
 void DBUnloadDriver(void);
 
 void QueueSQLRequest(char *szQuery);
