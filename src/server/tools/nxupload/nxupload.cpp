@@ -111,7 +111,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE, bUpgrade = TRUE;
+   BOOL bStart = TRUE, bVerbose = TRUE, bUpgrade = FALSE;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
    WORD wPort = AGENT_LISTEN_PORT;
