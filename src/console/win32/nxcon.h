@@ -127,6 +127,8 @@ protected:
 	HACCEL m_hDCEditorAccel;      // Accelerator for data collection editor
 	HMENU m_hPolicyEditorMenu;    // Menu for event policy editor
 	HACCEL m_hPolicyEditorAccel;  // Accelerator for event policy editor
+	HMENU m_hMapMenu;             // Menu for map view
+	HACCEL m_hMapAccel;           // Accelerator for map view
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

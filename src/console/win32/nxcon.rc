@@ -92,6 +92,14 @@ IDI_DISABLED            ICON    DISCARDABLE     "icons\\disabled.ico"
 IDI_UNSUPPORTED         ICON    DISCARDABLE     "icons\\unsupported.ico"
 IDI_DATACOLLECT         ICON    DISCARDABLE     "icons\\datacoll.ico"
 IDI_DCT                 ICON    DISCARDABLE     "icons\\dctemplate.ico"
+IDI_OVL_STATUS_MINOR    ICON    DISCARDABLE     "icons\\ovl_status_minor.ico"
+IDI_OVL_STATUS_WARNING  ICON    DISCARDABLE     "icons\\ovl_status_warning.ico"
+IDI_OVL_STATUS_CRITICAL ICON    DISCARDABLE     "icons\\ovl_status_critical.ico"
+IDI_OVL_STATUS_MAJOR    ICON    DISCARDABLE     "icons\\ovl_status_major.ico"
+IDI_OVL_STATUS_UNKNOWN  ICON    DISCARDABLE     "icons\\ovl_status_unknown.ico"
+IDI_OVL_STATUS_UNMANAGED ICON    DISCARDABLE     "icons\\ovl_status_unmanaged.ico"
+IDI_OVL_STATUS_DISABLED ICON    DISCARDABLE     "icons\\ovl_status_disabled.ico"
+IDI_OVL_STATUS_TESTING  ICON    DISCARDABLE     "icons\\ovl_status_testing.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -181,7 +189,7 @@ BEGIN
         MENUITEM "&Details...\tEnter",          ID_EVENTS_DETAILS
         MENUITEM "&Go to source",               ID_EVENTS_GOTOSOURCE
     END
-    POPUP "&Object"
+    POPUP "&Object (browser)"
     BEGIN
         POPUP "&View"
         BEGIN
@@ -289,6 +297,39 @@ BEGIN
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
         MENUITEM "Data Collection &Templates",  ID_CONTROLPANEL_DCT
+    END
+    POPUP "&Object (map)"
+    BEGIN
+        MENUITEM "&Open",                       ID_OBJECT_OPEN
+        MENUITEM "Open parent\tBksp",           ID_OBJECT_OPENPARENT
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
+        MENUITEM SEPARATOR
+        POPUP "&Create..."
+        BEGIN
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
+
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
+
+        END
+        MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
+        MENUITEM "&Rename",                     ID_OBJECT_RENAME
+        MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Manage object(s)\tCtrl+M",   ID_OBJECT_MANAGE
+        MENUITEM "&Unmanage object(s)\tCtrl+U", ID_OBJECT_UNMANAGE
+        POPUP "P&oll"
+        BEGIN
+            MENUITEM "&Status\tCtrl+Alt+S",         ID_OBJECT_POLL_STATUS
+            MENUITEM "&Configuration\tCtrl+Alt+C",  ID_OBJECT_POLL_CONFIGURATION
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
 END
 
@@ -428,6 +469,37 @@ BEGIN
     BEGIN
         MENUITEM "&Restart",                    ID_POLL_RESTART
     END
+    POPUP "Object"
+    BEGIN
+        MENUITEM "&Open",                       ID_OBJECT_OPEN
+        MENUITEM "Open parent",                 ID_OBJECT_OPENPARENT
+        MENUITEM SEPARATOR
+        POPUP "&Create"
+        BEGIN
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
+
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
+
+        END
+        MENUITEM "&Bind...",                    ID_OBJECT_BIND
+        MENUITEM "&Rename",                     ID_OBJECT_RENAME
+        MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Manage",                     ID_OBJECT_MANAGE
+        MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
+        POPUP "P&oll"
+        BEGIN
+            MENUITEM "&Status",                     ID_OBJECT_POLL_STATUS
+            MENUITEM "&Configuration",              ID_OBJECT_POLL_CONFIGURATION
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
+    END
 END
 
 
@@ -500,6 +572,11 @@ IDA_ALARM_BROWSER ACCELERATORS DISCARDABLE
 BEGIN
     "A",            ID_ALARM_ACKNOWLEGE,    VIRTKEY, CONTROL, NOINVERT
     VK_DELETE,      ID_ALARM_DELETE,        VIRTKEY, NOINVERT
+END
+
+IDA_NETMAP ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_BACK,        ID_OBJECT_OPENPARENT,   VIRTKEY, NOINVERT
 END
 
 
@@ -1496,7 +1573,7 @@ BEGIN
     IDS_NXC_INIT_FAILED     "NetXMS client library initialization failed."
     IDR_CTRLPANEL           "\nControl Panel\nControl Panel"
     IDR_EVENTS              "\nEvent Browser\nEvent Browser"
-    IDS_MAPFRAME            "\nNetwork Map\nNetwork Map"
+    IDR_MAPFRAME            "\nNetwork Map\nNetwork Map"
     IDR_ALARMS              "\nAlarm Browser\nAlarm Browser"
 END
 

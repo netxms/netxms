@@ -118,6 +118,15 @@
 #define IDD_POLL_NODE                   228
 #define IDD_CREATE_TG                   229
 #define IDD_CREATE_TEMPLATE             230
+#define IDA_NETMAP                      231
+#define IDI_OVL_STATUS_MINOR            232
+#define IDI_OVL_STATUS_WARNING          233
+#define IDI_OVL_STATUS_CRITICAL         234
+#define IDI_OVL_STATUS_MAJOR            235
+#define IDI_OVL_STATUS_UNKNOWN          236
+#define IDI_OVL_STATUS_UNMANAGED        237
+#define IDI_OVL_STATUS_DISABLED         238
+#define IDI_OVL_STATUS_TESTING          239
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -334,6 +343,8 @@
 #define ID_ITEM_COPY                    32882
 #define ID_OBJECT_CREATE_TEMPLATEGROUP  32883
 #define ID_OBJECT_CREATE_TEMPLATE       32884
+#define ID_OBJECT_OPEN                  32885
+#define ID_OBJECT_OPENPARENT            32887
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -342,8 +353,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        231
-#define _APS_NEXT_COMMAND_VALUE         32885
+#define _APS_NEXT_RESOURCE_VALUE        240
+#define _APS_NEXT_COMMAND_VALUE         32889
 #define _APS_NEXT_CONTROL_VALUE         1173
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

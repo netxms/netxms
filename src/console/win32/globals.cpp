@@ -117,7 +117,7 @@ COLORREF g_statusColorTable[9] =
    RGB(248, 63, 1),     // Major
    RGB(200, 0, 0),      // Critical
    RGB(61, 12, 187),    // Unknown
-   RGB(255, 255, 130),  // Unmanaged
+   RGB(192, 192, 192),  // Unmanaged
    RGB(91, 0, 6),       // Disabled
    RGB(255, 135, 255)   // Testing
 };

@@ -23,9 +23,9 @@ CMapView::~CMapView()
 }
 
 
-BEGIN_MESSAGE_MAP(CMapView, CWnd)
+BEGIN_MESSAGE_MAP(CMapView, CListCtrl)
 	//{{AFX_MSG_MAP(CMapView)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -33,11 +33,45 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMapView message handlers
 
-BOOL CMapView::PreCreateWindow(CREATESTRUCT& cs) 
+
+
+void CMapView::OnPaint() 
 {
-   if (cs.lpszClass == NULL)
-      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
-                                         LoadCursor(NULL, IDC_ARROW),
-                                         CreateSolidBrush(RGB(255, 255, 255)), NULL);
-	return CWnd::PreCreateWindow(cs);
+   int i, iNumItems;
+   POINT pt;
+   RECT rect;
+   LVITEM item;
+   TCHAR szBuffer[256];
+   CFont *pFont;
+
+   // Setup DC
+	CPaintDC dc(this); // device context for painting
+   pFont = dc.SelectObject(GetFont());
+
+   iNumItems = GetItemCount();
+   for(i = 0; i < iNumItems; i++)
+   {
+      GetItemPosition(i, &pt);
+      
+      item.iItem = i;
+      item.iSubItem = 0;
+      item.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_TEXT | LVIF_STATE;
+      item.cchTextMax = 256;
+      item.pszText = szBuffer;
+      GetItem(&item);
+
+      // Draw icon
+      GetImageList(LVSIL_NORMAL)->Draw(&dc, item.iImage, pt, 
+             item.state & LVIS_SELECTED ? ILD_SELECTED : ILD_TRANSPARENT);
+      
+      // Draw text under icon
+      rect.left = pt.x - 16;
+      rect.right = pt.x + 48;
+      rect.top = pt.y + 32;
+      rect.bottom = rect.top + 32;
+      dc.DrawText(item.pszText, _tcslen(item.pszText), &rect, DT_CENTER | DT_WORDBREAK);
+   }
+
+   // Cleanup DC
+   dc.SelectObject(pFont);
 }

@@ -742,6 +742,38 @@ SOURCE=.\res\nxcon.rc2
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\ovl_status_critical.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_disabled.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_major.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_minor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_testing.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_unknown.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_unmanaged.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ovl_status_warning.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\passwd.ico
 # End Source File
 # Begin Source File

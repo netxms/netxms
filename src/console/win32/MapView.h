@@ -1,6 +1,7 @@
 #if !defined(AFX_MAPVIEW_H__9082BB7F_2C80_4E6E_9FDB_A4D4039C2CB1__INCLUDED_)
 #define AFX_MAPVIEW_H__9082BB7F_2C80_4E6E_9FDB_A4D4039C2CB1__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -10,7 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CMapView window
 
-class CMapView : public CWnd
+class CMapView : public CListCtrl
 {
 // Construction
 public:
@@ -26,7 +27,6 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMapView)
 	protected:
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -36,7 +36,7 @@ public:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CMapView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnPaint();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

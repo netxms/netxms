@@ -261,6 +261,14 @@ src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/log.ico -text
+src/console/win32/icons/ovl_status_critical.ico -text
+src/console/win32/icons/ovl_status_disabled.ico -text
+src/console/win32/icons/ovl_status_major.ico -text
+src/console/win32/icons/ovl_status_minor.ico -text
+src/console/win32/icons/ovl_status_testing.ico -text
+src/console/win32/icons/ovl_status_unknown.ico -text
+src/console/win32/icons/ovl_status_unmanaged.ico -text
+src/console/win32/icons/ovl_status_warning.ico -text
 src/console/win32/icons/passwd.ico -text
 src/console/win32/icons/question.ico -text
 src/console/win32/icons/rexec.ico -text
