@@ -62,6 +62,9 @@ static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                break;
          }
          break;
+      case NXC_EVENT_NEW_ELOG_RECORD:
+         printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
+         break;
       default:
          printf("Event %d [Code = %d, Arg = 0x%08X]\n", dwEvent, dwCode, pArg);
          break;
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
 
 strcpy(szServer,"eagle");
 strcpy(szLogin,"admin");
-szPassword[0]=0;
+strcpy(szPassword," ");
 
    printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
    NXCConnect(szServer, szLogin, szPassword);
@@ -126,6 +129,11 @@ szPassword[0]=0;
    printf("Objects synchronized.\n");
 
    NXCEnumerateObjects(PrintObject);
+
+   printf("Loading events...\n");
+   NXCSyncEvents();
+   ConditionWait(g_hCondOperationComplete, INFINITE);
+   printf("All events loaded.\n");
 
    return 0;
 }
