@@ -33,6 +33,7 @@
 #include "messages.h"
 
 #ifdef _WIN32
+#include <io.h>
 #include <psapi.h>
 #endif
 
@@ -57,14 +58,17 @@
 //
 
 #if defined(_WIN32)
-#define AGENT_DEFAULT_CONFIG  "C:\\nxagentd.conf"
-#define AGENT_DEFAULT_LOG     "C:\\nxagentd.log"
+#define AGENT_DEFAULT_CONFIG     "C:\\nxagentd.conf"
+#define AGENT_DEFAULT_LOG        "C:\\nxagentd.log"
+#define AGENT_DEFAULT_FILE_STORE "C:\\"
 #elif defined(_NETWARE)
-#define AGENT_DEFAULT_CONFIG  "SYS:ETC/nxagentd.conf"
-#define AGENT_DEFAULT_LOG     "SYS:ETC/nxagentd.log"
+#define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
+#define AGENT_DEFAULT_LOG        "SYS:ETC/nxagentd.log"
+#define AGENT_DEFAULT_FILE_STORE "SYS:\\"
 #else
-#define AGENT_DEFAULT_CONFIG  "/etc/nxagentd.conf"
-#define AGENT_DEFAULT_LOG     "/var/log/nxagentd"
+#define AGENT_DEFAULT_CONFIG     "/etc/nxagentd.conf"
+#define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
+#define AGENT_DEFAULT_FILE_STORE "/tmp"
 #endif
 
 
@@ -200,6 +204,17 @@ struct SUBAGENT
 
 
 //
+// Server information
+//
+
+struct SERVER_INFO
+{
+   DWORD dwIpAddr;
+   BOOL bInstallationServer;
+};
+
+
+//
 // Communication session
 //
 
@@ -215,11 +230,15 @@ private:
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    DWORD m_dwIndex;
    BOOL m_bIsAuthenticated;
+   BOOL m_bInstallationServer;
+   int m_hCurrFile;
+   DWORD m_dwFileRqId;
 
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
 
    void ReadThread(void);
    void WriteThread(void);
@@ -230,7 +249,7 @@ private:
    static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, DWORD dwHostAddr);
+   CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallServer);
    ~CommSession();
 
    void Run(void);
@@ -296,8 +315,9 @@ extern DWORD g_dwFlags;
 extern char g_szLogFile[];
 extern char g_szSharedSecret[];
 extern char g_szConfigFile[];
+extern char g_szFileStore[];
 extern WORD g_wListenPort;
-extern DWORD g_dwServerAddr[];
+extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;
 extern time_t g_dwAgentStartTime;
 

@@ -37,6 +37,7 @@ static struct
    { ERR_SUCCESS, _T("Success") },
    { ERR_UNKNOWN_COMMAND, _T("Unknown command") },
    { ERR_AUTH_REQUIRED, _T("Authentication required") },
+   { ERR_ACCESS_DENIED, _T("Access denied") },
    { ERR_UNKNOWN_PARAMETER, _T("Unknown parameter") },
    { ERR_REQUEST_TIMEOUT, _T("Request timeout") },
    { ERR_AUTH_FAILED, _T("Authentication failed") },
@@ -48,6 +49,8 @@ static struct
    { ERR_NOT_CONNECTED, _T("Not connected") },
    { ERR_CONNECTION_BROKEN, _T("Connection broken") },
    { ERR_BAD_RESPONCE, _T("Bad responce") },
+   { ERR_IO_FAILURE, _T("I/O failure") },
+   { ERR_RESOURCE_BUSY, _T("Resource busy") },
    { -1, NULL }
 };
 

@@ -75,6 +75,7 @@
 #define _tcsdup   strdup
 #define _tcsupr   strupr
 #define _tcsspn   strspn
+#define _topen    open
 
 #endif
 

@@ -72,8 +72,9 @@ DWORD g_dwFlags = 0;
 char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
+char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
 WORD g_wListenPort = AGENT_LISTEN_PORT;
-DWORD g_dwServerAddr[MAX_SERVERS];
+SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
 DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
 time_t g_dwAgentStartTime;
@@ -97,6 +98,7 @@ DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR,
 
 static char *m_pszActionList = NULL;
 static char *m_pszServerList = NULL;
+static char *m_pszInstallServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -112,6 +114,8 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
+   { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
+   { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszInstallServerList },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
@@ -276,19 +280,60 @@ BOOL Initialize(void)
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         g_dwServerAddr[g_dwServerCount] = inet_addr(pItem);
-         if ((g_dwServerAddr[g_dwServerCount] == INADDR_NONE) ||
-             (g_dwServerAddr[g_dwServerCount] == INADDR_ANY))
+         g_pServerList[g_dwServerCount].dwIpAddr = inet_addr(pItem);
+         if ((g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE) ||
+             (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_ANY))
          {
             if (!(g_dwFlags & AF_DAEMON))
                printf("Invalid server address '%s'\n", pItem);
          }
          else
          {
+            g_pServerList[g_dwServerCount].bInstallationServer = FALSE;
             g_dwServerCount++;
          }
       }
       free(m_pszServerList);
+   }
+
+   // Parse installation server list
+   if (m_pszInstallServerList != NULL)
+   {
+      DWORD i, dwAddr;
+
+      for(pItem = m_pszInstallServerList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, ',');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+
+         dwAddr = inet_addr(pItem);
+         if ((dwAddr == INADDR_NONE) ||
+             (dwAddr == INADDR_ANY))
+         {
+            if (!(g_dwFlags & AF_DAEMON))
+               printf("Invalid server address '%s'\n", pItem);
+         }
+         else
+         {
+            for(i = 0; i < g_dwServerCount; i++)
+               if (g_pServerList[i].dwIpAddr == dwAddr)
+                  break;
+
+            if (i == g_dwServerCount)
+            {
+               g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
+               g_pServerList[g_dwServerCount].bInstallationServer = TRUE;
+               g_dwServerCount++;
+            }
+            else
+            {
+               g_pServerList[i].bInstallationServer = TRUE;
+            }
+         }
+      }
+      free(m_pszInstallServerList);
    }
 
    // Load subagents

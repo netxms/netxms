@@ -47,6 +47,7 @@
 #define ERR_SUCCESS                 ((DWORD)0)
 #define ERR_UNKNOWN_COMMAND         ((DWORD)400)
 #define ERR_AUTH_REQUIRED           ((DWORD)401)
+#define ERR_ACCESS_DENIED           ((DWORD)403)
 #define ERR_UNKNOWN_PARAMETER       ((DWORD)404)
 #define ERR_REQUEST_TIMEOUT         ((DWORD)408)
 #define ERR_AUTH_FAILED             ((DWORD)440)
@@ -58,6 +59,8 @@
 #define ERR_NOT_CONNECTED           ((DWORD)900)
 #define ERR_CONNECTION_BROKEN       ((DWORD)901)
 #define ERR_BAD_RESPONCE            ((DWORD)902)
+#define ERR_IO_FAILURE              ((DWORD)903)
+#define ERR_RESOURCE_BUSY           ((DWORD)904)
 
 
 //

@@ -62,6 +62,7 @@ typedef void * NXC_SESSION;
 #define MAX_USER_DESCR           256
 #define MAX_ITEM_NAME            256
 #define MAX_STRING_VALUE         256
+#define MAX_AGENT_VERSION_LEN    64
 #define GROUP_FLAG               ((DWORD)0x80000000)
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
@@ -275,8 +276,9 @@ typedef void * NXC_SESSION;
 #define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
 #define SYSTEM_ACCESS_EPP                 0x0040
 #define SYSTEM_ACCESS_MANAGE_ACTIONS      0x0080
+#define SYSTEM_ACCESS_DELETE_ALARMS       0x0100
 
-#define SYSTEM_ACCESS_FULL                0x00FF
+#define SYSTEM_ACCESS_FULL                0x01FF
 
 
 //
@@ -583,6 +585,7 @@ typedef struct
          WORD wAgentPort;     // Listening TCP port for native agent
          WORD wAuthMethod;    // Native agent's authentication method
          TCHAR *pszDescription;
+         TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
          WORD wSNMPVersion;
       } node;
       struct
@@ -957,8 +960,6 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY 
 DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId);
-
-DWORD LIBNXCL_EXPORTABLE NXCAttachWebSession(NXC_SESSION hSession, QWORD qwSID);
 
 #ifdef __cplusplus
 }

@@ -80,7 +80,7 @@ THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
 // Client session class constructor
 //
 
-CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr)
+CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallationServer)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -91,6 +91,8 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_dwHostAddr = dwHostAddr;
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
+   m_bInstallationServer = bInstallationServer;
+   m_hCurrFile = -1;
 }
 
 
@@ -105,6 +107,8 @@ CommSession::~CommSession()
    delete m_pSendQueue;
    delete m_pMessageQueue;
    safe_free(m_pMsgBuffer);
+   if (m_hCurrFile != -1)
+      close(m_hCurrFile);
 }
 
 
@@ -129,7 +133,7 @@ void CommSession::ReadThread(void)
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
    int iErr;
-   char szBuffer[32];
+   char szBuffer[256];
    WORD wFlags;
 
    // Initialize raw message receiving function
@@ -159,8 +163,41 @@ void CommSession::ReadThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         DebugPrintf("Received raw message %s", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
+
          if (pRawMsg->wCode == CMD_FILE_DATA)
          {
+            if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
+            {
+               if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+               {
+                  if (wFlags & MF_EOF)
+                  {
+                     CSCPMessage msg;
+
+                     close(m_hCurrFile);
+                     m_hCurrFile = -1;
+                  
+                     msg.SetCode(CMD_REQUEST_COMPLETED);
+                     msg.SetId(pRawMsg->dwId);
+                     msg.SetVariable(VID_RCC, ERR_SUCCESS);
+                     SendMessage(&msg);
+                  }
+               }
+               else
+               {
+                  // I/O error
+                  CSCPMessage msg;
+
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+               
+                  msg.SetCode(CMD_REQUEST_COMPLETED);
+                  msg.SetId(pRawMsg->dwId);
+                  msg.SetVariable(VID_RCC, ERR_IO_FAILURE);
+                  SendMessage(&msg);
+               }
+            }
          }
       }
       else
@@ -256,6 +293,9 @@ void CommSession::ProcessingThread(void)
                break;
             case CMD_ACTION:
                Action(pMsg, &msg);
+               break;
+            case CMD_TRANSFER_FILE:
+               RecvFile(pMsg, &msg);
                break;
             default:
                msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
@@ -411,4 +451,60 @@ void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
    for(i = 0; i < args.dwNumStrings; i++)
       safe_free(args.ppStringList[i]);
    safe_free(args.ppStringList);
+}
+
+
+//
+// Prepare for receiving file
+//
+
+void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   int i;
+   size_t nLen;
+   TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
+
+   if (m_bInstallationServer)
+   {
+      szFileName[0] = 0;
+      pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
+      DebugPrintf("Preparing for receiving file \"%s\"", szFileName);
+      for(i = _tcslen(szFileName) - 1; 
+          (i >= 0) && (szFileName[i] != '\\') && (szFileName[i] != '/'); i--);
+
+      _tcscpy(szFullPath, g_szFileStore);
+      nLen = _tcslen(szFullPath);
+      if ((szFullPath[nLen - 1] != '\\') &&
+          (szFullPath[nLen - 1] != '/'))
+      {
+         _tcscat(szFullPath, FS_PATH_SEPARATOR);
+         nLen++;
+      }
+      _tcsncpy(&szFullPath[nLen], szFileName, MAX_PATH - nLen);
+
+      // Check if for some reason we have already opened file
+      if (m_hCurrFile != -1)
+      {
+         pMsg->SetVariable(VID_RCC, ERR_RESOURCE_BUSY);
+      }
+      else
+      {
+         DebugPrintf("Writing to local file \"%s\"", szFullPath);
+         m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
+         if (m_hCurrFile == -1)
+         {
+            DebugPrintf("Error opening file for writing: %s", strerror(errno));
+            pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
+         }
+         else
+         {
+            m_dwFileRqId = pRequest->GetId();
+            pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+         }
+      }
+   }
+   else
+   {
+      pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+   }
 }

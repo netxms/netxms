@@ -14,7 +14,6 @@ GENERAL:
 - Write README for NetWare
 - SMS-sender interface with drivers for cell-phones/SMPP
 - Add check for read/write locks support to configure script
-- Implement daemon() function for platforms without it
 - Allow converting counters to deltas in data collection
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes

@@ -157,6 +157,7 @@ typedef struct
 //
 
 #define MF_BINARY    0x0001
+#define MF_EOF       0x0002
 
 
 //
@@ -268,8 +269,7 @@ typedef struct
 #define CMD_GET_SERVER_INFO         0x0067
 #define CMD_SET_DCI_STATUS          0x0068
 #define CMD_FILE_DATA               0x0069
-#define CMD_WEBAPI_LOGIN            0x006A
-#define CMD_WEBAPI_ATTACH           0x006B
+#define CMD_TRANSFER_FILE           0x006A
 
 
 //
@@ -399,7 +399,8 @@ typedef struct
 #define VID_SERVER_VERSION          ((DWORD)121)
 #define VID_SUPPORTED_ENCRYPTION    ((DWORD)122)
 #define VID_EVENT_ID                ((DWORD)123)
-#define VID_WEBAPI_SID              ((DWORD)124)
+#define VID_AGENT_VERSION           ((DWORD)124)
+#define VID_FILE_NAME               ((DWORD)125)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

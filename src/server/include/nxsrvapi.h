@@ -182,6 +182,7 @@ public:
    DWORD GetList(TCHAR *pszParam);
    DWORD Nop(void);
    DWORD ExecAction(TCHAR *pszAction, int argc, TCHAR **argv);
+   DWORD UploadFile(TCHAR *pszFile);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

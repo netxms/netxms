@@ -695,3 +695,45 @@ DWORD AgentConnection::ExecAction(TCHAR *pszAction, int argc, TCHAR **argv)
    else
       return ERR_CONNECTION_BROKEN;
 }
+
+
+//
+// Upload file to agent
+//
+
+DWORD AgentConnection::UploadFile(TCHAR *pszFile)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg;
+   int i;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
+
+   dwRqId = m_dwRequestId++;
+
+   msg.SetCode(CMD_TRANSFER_FILE);
+   msg.SetId(dwRqId);
+   for(i = _tcslen(pszFile) - 1; 
+       (i >= 0) && (pszFile[i] != '\\') && (pszFile[i] != '/'); i--);
+   msg.SetVariable(VID_FILE_NAME, &pszFile[i + 1]);
+
+   if (SendMessage(&msg))
+   {
+      dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+   }
+   else
+   {
+      dwResult = ERR_CONNECTION_BROKEN;
+   }
+
+   if (dwResult == ERR_SUCCESS)
+   {
+      if (SendFileOverCSCP(m_hSocket, dwRqId, pszFile))
+         dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+      else
+         dwResult = ERR_IO_FAILURE;
+   }
+
+   return dwResult;
+}
