@@ -136,13 +136,17 @@ void ClientSession::ReadThread(void)
    NetObj *pObject;
 
    // Initialize raw message receiving function
-   RecvCSCPMessage(0, NULL, m_pMsgBuffer);
+   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(65536);
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, 65536)) <= 0)
          break;
+
+      // Check if message is too large
+      if (iErr == 1)
+         continue;
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
@@ -1449,7 +1453,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                switch(iType)
                {
                   case DTYPE_INTEGER:
-                     pCurr->value.iInteger = htonl(DBGetFieldAsyncULong(hResult, 0));
+                     pCurr->value.dwInteger = htonl(DBGetFieldAsyncULong(hResult, 0));
                      break;
                   case DTYPE_STRING:
                      DBGetFieldAsync(hResult, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
