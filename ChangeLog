@@ -2,6 +2,7 @@
 * 0.1.15
 *
 
+- DCI housekeeping implemented
 - Fixed server crash at forced poll time
 - Fixed critical bug in upgrade script starter under UNIX
 - Added support of HDD temperature monitoring under Windows and Linux
@@ -9,6 +10,8 @@
   PhysicalDisk.Firmware parameters under Windows
 - Added parameters System.CPU.Count, System.CPU.Usage*, System.KStat(*)
   and System.Memory.Physical.* to Solaris subagent
+- Parameters System.Memory.Swap.* removed from Windows agent because they
+  are meaningless under Windows
 
 
 *

@@ -1505,3 +1505,18 @@ DWORD Node::GetLastValues(CSCPMessage *pMsg)
    Unlock();
    return RCC_SUCCESS;
 }
+
+
+//
+// Clean expired DCI data
+//
+
+void Node::CleanDCIData(void)
+{
+   DWORD i;
+
+   Lock();
+   for(i = 0; i < m_dwNumItems; i++)
+      m_ppItems[i]->CleanData();
+   Unlock();
+}

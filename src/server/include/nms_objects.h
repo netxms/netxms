@@ -432,6 +432,7 @@ public:
    void QueueItemsForPolling(Queue *pPollerQueue);
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
    DWORD GetLastValues(CSCPMessage *pMsg);
+   void CleanDCIData(void);
 
    AgentConnection *CreateAgentConnection(void);
 

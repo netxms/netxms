@@ -729,3 +729,21 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
       pMsg->SetVariable(dwId++, (DWORD)0);
    }
 }
+
+
+//
+// Clean expired data
+//
+
+void DCItem::CleanData(void)
+{
+   TCHAR szQuery[256];
+   time_t now;
+
+   now = time(NULL);
+   Lock();
+   _sntprintf(szQuery, 256, _T("DELETE FROM idata_%ld WHERE (item_id=%ld) AND (idata_timestamp<%ld)"),
+              m_pNode->Id(), m_dwId, now - (DWORD)m_iRetentionTime * 86400);
+   Unlock();
+   QueueSQLRequest(szQuery);
+}

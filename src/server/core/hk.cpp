@@ -97,7 +97,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
    char szQuery[256];
-   DWORD dwEventLogRetentionTime, dwInterval;
+   DWORD i, dwEventLogRetentionTime, dwInterval;
 
    // Load configuration
    dwInterval = ConfigReadULong("HouseKeepingInterval", 3600);
@@ -123,6 +123,12 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
       // Remove deleted objects which are no longer referenced
       CleanDeletedObjects();
+
+      // Remove expired DCI data
+      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
+      for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+         ((Node *)g_pNodeIndexByAddr[i].pObject)->CleanDCIData();
+      RWLockUnlock(g_rwlockNodeIndex);
    }
    return THREAD_OK;
 }

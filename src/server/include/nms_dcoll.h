@@ -203,6 +203,8 @@ public:
 
    void CreateMessage(CSCPMessage *pMsg);
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
+
+   void CleanData(void);
 };
 
 

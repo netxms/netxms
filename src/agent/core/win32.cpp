@@ -150,15 +150,6 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value)
          case MEMINFO_VIRTUAL_USED:
             ret_uint64(value, mse.ullTotalPageFile - mse.ullAvailPageFile);
             break;
-         case MEMINFO_SWAP_FREE:
-            ret_uint64(value, mse.ullAvailPageFile - mse.ullAvailPhys);
-            break;
-         case MEMINFO_SWAP_TOTAL:
-            ret_uint64(value, mse.ullTotalPageFile - mse.ullTotalPhys);
-            break;
-         case MEMINFO_SWAP_USED:
-            ret_uint64(value, mse.ullTotalPageFile - mse.ullAvailPageFile - (mse.ullTotalPhys - mse.ullAvailPhys));
-            break;
          default:
             return SYSINFO_RC_UNSUPPORTED;
       }
@@ -187,15 +178,6 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value)
             break;
          case MEMINFO_VIRTUAL_USED:
             ret_uint(value, ms.dwTotalPageFile - ms.dwAvailPageFile);
-            break;
-         case MEMINFO_SWAP_FREE:
-            ret_uint(value, ms.dwAvailPageFile - ms.dwAvailPhys);
-            break;
-         case MEMINFO_SWAP_TOTAL:
-            ret_uint(value, ms.dwTotalPageFile - ms.dwTotalPhys);
-            break;
-         case MEMINFO_SWAP_USED:
-            ret_uint(value, ms.dwTotalPageFile - ms.dwAvailPageFile - (ms.dwTotalPhys - ms.dwAvailPhys));
             break;
          default:
             return SYSINFO_RC_UNSUPPORTED;
