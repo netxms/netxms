@@ -136,10 +136,10 @@ void ClientSession::WriteThread(void)
 
       if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
       {
-         LibUtilDestroyObject(pMsg);
+         MemFree(pMsg);
          break;
       }
-      LibUtilDestroyObject(pMsg);
+      MemFree(pMsg);
    }
 }
 
@@ -176,8 +176,8 @@ void ClientSession::ProcessingThread(void)
                if (AuthenticateUser(pszLogin, pszPassword, &m_dwUserId, &m_dwSystemAccess))
                   m_iState = STATE_AUTHENTICATED;
 
-               LibUtilDestroyObject(pszLogin);
-               LibUtilDestroyObject(pszPassword);
+               MemFree(pszLogin);
+               MemFree(pszPassword);
 
                // Send reply
                pReply = new CSCPMessage;
