@@ -381,3 +381,35 @@ char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer)
    *bptr=0;
    return ptr;
 }
+
+
+//
+// Get system error string by call to FormatMessage
+// (Windows only)
+//
+
+#ifdef _WIN32
+
+char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, int iBufSize)
+{
+   char *msgBuf;
+
+   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                     FORMAT_MESSAGE_FROM_SYSTEM | 
+                     FORMAT_MESSAGE_IGNORE_INSERTS,
+                     NULL, dwError,
+                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+                     (LPSTR)&msgBuf, 0, NULL) > 0)
+   {
+      msgBuf[strcspn(msgBuf, "\r\n")] = 0;
+      strncpy(pszBuffer, msgBuf, iBufSize);
+      LocalFree(msgBuf);
+   }
+   else
+   {
+      sprintf(pszBuffer, "MSG 0x%08X - Unable to find message text", dwError);
+   }
+   return pszBuffer;
+}
+
+#endif

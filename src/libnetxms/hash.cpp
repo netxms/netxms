@@ -182,3 +182,36 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash)
    }
    return bSuccess;
 }
+
+
+//
+// Calculate SHA1 hash for given file
+//
+
+BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(char *pszFileName, BYTE *pHash)
+{
+   int fd, iSize;
+   SHA1_CTX context;
+   char szBuffer[FILE_BLOCK_SIZE];
+   BOOL bSuccess = FALSE;
+
+   fd = open(pszFileName, O_RDONLY | O_BINARY);
+   if (fd != -1)
+   {
+      SHA1Init(&context);
+      while(1)
+      {
+         iSize = read(fd, szBuffer, FILE_BLOCK_SIZE);
+         if (iSize <= 0)
+            break;
+         SHA1Update(&context, (BYTE *)szBuffer, iSize);
+      }
+      close(fd);
+      if (iSize == 0)
+      {
+         SHA1Final(pHash, &context);
+         bSuccess = TRUE;
+      }
+   }
+   return bSuccess;
+}

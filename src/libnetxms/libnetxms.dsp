@@ -101,6 +101,10 @@ SOURCE=.\config.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\dload.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\getopt.c
 # End Source File
 # Begin Source File

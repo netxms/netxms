@@ -153,10 +153,19 @@ extern "C"
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, unsigned char *hash);
    void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, unsigned char *hash);
    BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash);
+   BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(char *pszFileName, BYTE *pHash);
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
 
    DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
+
+   HMODULE LIBNETXMS_EXPORTABLE DLOpen(char *szLibName, char *pszErrorText);
+   void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
+   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, char *szSymbol, char *pszErrorText);
+
+#ifdef _WIN32
+   char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
+#endif
 }
 
 #endif   /* _nms_util_h_ */

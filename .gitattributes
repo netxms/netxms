@@ -202,6 +202,7 @@ src/console/win32starter/nxcstart.rc -text
 src/console/win32starter/resource.h -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/config.cpp -text
+src/libnetxms/dload.cpp -text
 src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text
 src/libnetxms/icmp.cpp -text
