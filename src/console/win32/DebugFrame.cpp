@@ -129,5 +129,8 @@ void CDebugFrame::AddMessage(char *pszMsg)
    strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
    iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
    if (iIdx != -1)
+   {
       m_wndListCtrl.SetItemText(iIdx, 1, pszMsg);
+      m_wndListCtrl.EnsureVisible(iIdx, FALSE);
+   }
 }
