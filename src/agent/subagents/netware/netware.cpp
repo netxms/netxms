@@ -64,7 +64,10 @@ static LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
          ret_uint64(pValue, vi.BlockCount * vi.BlockSize);
          break;
       case 'F':   // Free space
-         ret_uint64(pValue, vi.BlockCount * vi.BlocksFree);
+         ret_uint64(pValue, vi.BlocksFree * vi.BlockSize);
+         break;
+      case 'U':   // Used space
+         ret_uint64(pValue, (vi.BlockCount - vi.BlocksFree) * vi.BlockSize);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
@@ -209,6 +212,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "Disk.Free(*)", H_DiskInfo, "F" },
    { "Disk.Total(*)", H_DiskInfo, "T" },
+   { "Disk.Used(*)", H_DiskInfo, "U" },
    { "System.CPU.Count", H_CpuCount, NULL },
    { "System.CPU.Usage", H_CpuUsage, (char *)60 },
    { "System.CPU.Usage5", H_CpuUsage, (char *)300 },

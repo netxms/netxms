@@ -121,6 +121,7 @@ typedef int socklen_t;
 #include <stdint.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <dirent.h>
 
 typedef int BOOL;
 typedef long int LONG;
@@ -154,7 +155,12 @@ typedef int SOCKET;
 
 #define WSAEINTR  EINTR
 
-#define SetSocketReuseFlag(sd)
+//#define SetSocketReuseFlag(sd)
+#define SetSocketReuseFlag(sd) { \
+	int nVal = 1; \
+	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
+			(socklen_t)sizeof(nVal)); \
+}
 
 #else    /* not _WIN32 and not _NETWARE */
 

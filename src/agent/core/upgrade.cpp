@@ -38,6 +38,10 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
    _sntprintf(szCmdLine, 1024, _T("%s /VERYSILENT"), pszPkgFile);
    return ExecuteCommand(szCmdLine, NULL);
 
+#elif defined(_NETWARE)
+
+   return ERR_NOT_IMPLEMENTED;
+
 #else
 
    chmod(pszPkgFile, 0700);   // Set execute permissions on package file

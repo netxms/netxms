@@ -18,8 +18,8 @@ EXIT _LibCPostlude
 # NLM header
 OUTPUT netxms.nlm
 TYPE 0
-VERSION 1,0,0
-COPYRIGHT "Copyright (c) 2004 NetXMS Team"
+VERSION 0,1,15
+COPYRIGHT "Copyright (c) 2004, 2005 NetXMS Team"
 DESCRIPTION "NetXMS Foundation Library"
 SCREENNAME "System Console"
 

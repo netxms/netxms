@@ -25,6 +25,7 @@ $(EXEC): $(OBJECTS) $(DEF)
 	$(PRELINK) -o $(OBJTMP) $(OBJECTS) $(PLDFLAGS)
 	$(LINK) $(LDFLAGS) -T $(DEF)
 	rm -f $(OBJTMP)
+	cp nxagentd.nlm ../../../netware/bin
 
 messages.c: messages.mc
 	$(PERL) ../../../tools/mc.pl $<

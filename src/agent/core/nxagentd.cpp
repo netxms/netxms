@@ -267,10 +267,12 @@ void OnSignal(int iSignal)
 		case SIGSEGV:
 			abort();
 			break;
+#ifndef _NETWARE
 		case SIGCHLD:
 			while (waitpid(-1, NULL, WNOHANG) > 0)
 				;
 			break;
+#endif
 		default:
 			break;
 	}
