@@ -48,7 +48,7 @@ if [ $? != 0 ]; then
 	exit;
 else
 	cd $temp
-	chmod +x ./$command
+	chmod +x ./$command || echo "Can't chmod $command" && exit
 	./$command
 fi
 
