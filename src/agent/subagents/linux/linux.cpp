@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.13 2005-01-24 19:46:50 alk Exp $ */
+/* $Id: linux.cpp,v 1.14 2005-02-21 20:16:05 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -36,11 +36,11 @@
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-			DCI_DT_UINT64,	"Free disk space on *" },
+			DCI_DT_UINT64,	"Free disk space on {instance}" },
    { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-			DCI_DT_UINT64,	"Total disk space on *" },
+			DCI_DT_UINT64,	"Total disk space on {instance}" },
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-			DCI_DT_UINT64,	"Used disk space on *" },
+			DCI_DT_UINT64,	"Used disk space on {instance}" },
 
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
@@ -48,16 +48,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_INT,		"IPv6 forwarding status" },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
-			DCI_DT_UINT,	"" },
+			DCI_DT_UINT,	"Number of {instance} processes" },
    { "System.ProcessCount",          H_ProcessCount,    (char *)1,
-			DCI_DT_UINT,	"" },
+			DCI_DT_UINT,	"Total number of processes" },
 
    { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last minute" },
    { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
    { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
 /*   { "System.CPU.Usage",             H_CpuUsage,        NULL,
 			DCI_DT_FLOAT,	"" },
    { "System.CPU.Usage5",            H_CpuUsage,        NULL,
@@ -65,7 +65,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage15",           H_CpuUsage,        NULL,
 			DCI_DT_FLOAT,	"" }, */
    { "System.Hostname",              H_Hostname,        NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_STRING,	"Host name" },
    { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
 			DCI_DT_UINT64,	"Free physical memory" },
    { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,
@@ -85,12 +85,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
 			DCI_DT_UINT64,	"Used virtual memory" },
    { "System.Uname",                 H_Uname,           NULL,
-			DCI_DT_STRING,	"" },
+			DCI_DT_STRING,	"System uname" },
    { "System.Uptime",                H_Uptime,          NULL,
 			DCI_DT_UINT,	"System uptime" },
 
    { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,
-			DCI_DT_INT,		""},
+			DCI_DT_INT,		"" },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -127,6 +127,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/01/24 19:46:50  alk
+SourcePackageSupport; return type/comment addded
+
 Revision 1.12  2005/01/24 19:40:31  alk
 return type/comments added for command list
 
