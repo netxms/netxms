@@ -35,6 +35,36 @@ static CONDITION m_hCondLoadFinished = NULL;
 
 
 //
+// Fill user record with data from message
+//
+
+static void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
+{
+   // Process common fields
+   pUser->dwId = pMsg->GetVariableLong(VID_USER_ID);
+   pMsg->GetVariableStr(VID_USER_NAME, pUser->szName, MAX_USER_NAME);
+   pUser->wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
+   pUser->wSystemRights = pMsg->GetVariableShort(VID_USER_SYS_RIGHTS);
+   pMsg->GetVariableStr(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
+
+   // Process group-specific fields
+   if (pUser->dwId & GROUP_FLAG)
+   {
+      DWORD i, dwId;
+
+      pUser->dwNumMembers = pMsg->GetVariableLong(VID_NUM_MEMBERS);
+      pUser->pdwMemberList = (DWORD *)MemReAlloc(pUser->pdwMemberList, sizeof(DWORD) * pUser->dwNumMembers);
+      for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUser->dwNumMembers; i++, dwId++)
+         pUser->pdwMemberList[i] = pMsg->GetVariableLong(dwId);
+   }
+   else     // User-specific data
+   {
+      pMsg->GetVariableStr(VID_USER_FULL_NAME, pUser->szFullName, MAX_USER_FULLNAME);
+   }
+}
+
+
+//
 // Process user database update
 //
 
@@ -65,6 +95,15 @@ void ProcessUserDBUpdate(CSCPMessage *pMsg)
          }
          break;
       case USER_DB_MODIFY:
+         if (pUser == NULL)
+         {
+            // No user with this id, create one
+            m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
+            memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
+            pUser = &m_pUserList[m_dwNumUsers];
+            m_dwNumUsers++;
+         }
+         UpdateUserFromMessage(pMsg, pUser);
          break;
       case USER_DB_DELETE:
          if (pUser != NULL)
@@ -95,29 +134,7 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
       case CMD_GROUP_DATA:
          m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
          memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
-
-         // Process common fields
-         m_pUserList[m_dwNumUsers].dwId = pMsg->GetVariableLong(VID_USER_ID);
-         pMsg->GetVariableStr(VID_USER_NAME, m_pUserList[m_dwNumUsers].szName, MAX_USER_NAME);
-         m_pUserList[m_dwNumUsers].wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
-         m_pUserList[m_dwNumUsers].wSystemRights = pMsg->GetVariableShort(VID_USER_SYS_RIGHTS);
-         pMsg->GetVariableStr(VID_USER_DESCRIPTION, m_pUserList[m_dwNumUsers].szDescription, MAX_USER_DESCR);
-
-         // Process group-specific fields
-         if (pMsg->GetCode() == CMD_GROUP_DATA)
-         {
-            DWORD i, dwId;
-
-            m_pUserList[m_dwNumUsers].dwNumMembers = pMsg->GetVariableLong(VID_NUM_MEMBERS);
-            m_pUserList[m_dwNumUsers].pdwMemberList = (DWORD *)MemAlloc(sizeof(DWORD) * m_pUserList[m_dwNumUsers].dwNumMembers);
-            for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < m_pUserList[m_dwNumUsers].dwNumMembers; i++, dwId++)
-               m_pUserList[m_dwNumUsers].pdwMemberList[i] = pMsg->GetVariableLong(dwId);
-         }
-         else     // User-specific data
-         {
-            pMsg->GetVariableStr(VID_USER_FULL_NAME, m_pUserList[m_dwNumUsers].szFullName, MAX_USER_FULLNAME);
-         }
-
+         UpdateUserFromMessage(pMsg, &m_pUserList[m_dwNumUsers]);
          m_dwNumUsers++;
          break;
       default:
@@ -329,4 +346,53 @@ DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void)
 DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void)
 {
    return LockUserDB(FALSE);
+}
+
+
+//
+// Modify user record
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD i, dwId, dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   // Fill in request
+   msg.SetCode(CMD_UPDATE_USER);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_USER_ID, pUserInfo->dwId);
+   msg.SetVariable(VID_USER_NAME, pUserInfo->szName);
+   msg.SetVariable(VID_USER_DESCRIPTION, pUserInfo->szDescription);
+   msg.SetVariable(VID_USER_FLAGS, pUserInfo->wFlags);
+   msg.SetVariable(VID_USER_SYS_RIGHTS, pUserInfo->wSystemRights);
+
+   // Group-specific fields
+   if (pUserInfo->dwId & GROUP_FLAG)
+   {
+      msg.SetVariable(VID_NUM_MEMBERS, pUserInfo->dwNumMembers);
+      for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUserInfo->dwNumMembers; i++, dwId++)
+         msg.SetVariable(dwId, pUserInfo->pdwMemberList[i]);
+   }
+   else     // User-specific fields
+   {
+      msg.SetVariable(VID_USER_FULL_NAME, pUserInfo->szFullName);
+   }
+
+   SendMsg(&msg);
+
+   // Wait for responce
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
 }
