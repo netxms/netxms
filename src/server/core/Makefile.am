@@ -5,4 +5,4 @@ netxmsd_SOURCES = acl.cpp actions.cpp admin.cpp agent.cpp client.cpp config.cpp 
 netxmsd_LDADD = @PTHREAD_LIBS@ ../../libnetxms/libnetxms.la -lsnmp -lssl
 
 messages.c: messages.mc
-	perl @top_builddir@/lib/mc.pl $<
+	$(PERL) @top_builddir@/tools/mc.pl $<

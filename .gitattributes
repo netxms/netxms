@@ -98,7 +98,6 @@ src/console/win32/res/login.bmp -text
 src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
-src/libnetxms/Makefile -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/cscp.cpp -text
 src/libnetxms/getopt.c -text
@@ -126,7 +125,6 @@ src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/request.cpp -text
 src/server/Makefile.am -text
-src/server/core/Makefile -text
 src/server/core/Makefile.am -text
 src/server/core/acl.cpp -text
 src/server/core/actions.cpp -text

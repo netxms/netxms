@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.1 2004-05-11 03:04:24 alk Exp $
+# $Id: configure.ac,v 1.2 2004-05-11 14:39:56 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -17,10 +17,12 @@ AC_PATH_PROG(PERL,perl,/usr/bin/env perl,$perl_possible_path)
 
 if test -d /usr/local/include; then
 	CFLAGS="$CFLAGS -I/usr/local/include"
+	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 fi
 
 if test -d /usr/kerberos/include; then
 	CFLAGS="$CFLAGS -I/usr/kerberos/include"
+	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
 fi
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
