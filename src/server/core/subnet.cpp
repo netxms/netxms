@@ -58,6 +58,37 @@ Subnet::~Subnet()
 
 
 //
+// Create object from database data
+//
+
+BOOL Subnet::CreateFromDB(DWORD dwId)
+{
+   char szQuery[256];
+   DB_RESULT hResult;
+
+   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask FROM subnets WHERE id=%d", dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == 0)
+      return FALSE;     // Query failed
+
+   if (DBGetNumRows(hResult) == 0)
+   {
+      DBFreeResult(hResult);
+      return FALSE;
+   }
+
+   m_dwId = dwId;
+   strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
+   m_iStatus = DBGetFieldLong(hResult, 0, 2);
+   m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
+   m_dwIpNetMask = DBGetFieldULong(hResult, 0, 4);
+
+   DBFreeResult(hResult);
+   return TRUE;
+}
+
+
+//
 // Save subnet object to database
 //
 

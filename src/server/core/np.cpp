@@ -51,6 +51,7 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    {
       pSubnet = new Subnet(dwSubnetAddr, dwNetMask);
       NetObjInsert(pSubnet);
+      g_pEntireNet->AddSubnet(pSubnet);
    }
 
    pInterface = new Interface(dwIpAddr, dwNetMask);
@@ -71,11 +72,14 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 void NodePoller(void *arg)
 {
    DB_RESULT hResult;
+   int iPollInterval;
+
+   // Read configuration
+   iPollInterval = ConfigReadInt("NewNodePollingInterval", 60);
 
    while(!ShutdownInProgress())
    {
-//      ThreadSleep(30);
-      ThreadSleep(5);
+      ThreadSleep(iPollInterval);
       if (ShutdownInProgress())
          break;
 

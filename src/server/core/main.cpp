@@ -83,8 +83,10 @@ BOOL Initialize(void)
    m_hEventShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
 #endif
 
-   // Initialize objects
+   // Initialize objects infrastructure and load objects from database
    ObjectsInit();
+   if (!LoadObjects())
+      return FALSE;
 
    // Start threads
    ThreadCreate(HouseKeeper, 0, NULL);

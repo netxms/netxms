@@ -12,6 +12,7 @@ src/server/core/core.rc -text
 src/server/core/db.cpp -text
 src/server/core/discovery.cpp -text
 src/server/core/dload.cpp -text
+src/server/core/entirenet.cpp -text
 src/server/core/hk.cpp -text
 src/server/core/interface.cpp -text
 src/server/core/log.cpp -text

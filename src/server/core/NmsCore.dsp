@@ -103,6 +103,10 @@ SOURCE=.\dload.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\entirenet.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\hk.cpp
 # End Source File
 # Begin Source File
@@ -156,6 +160,10 @@ SOURCE=.\winsrv.cpp
 # Begin Source File
 
 SOURCE=..\include\dbdrv.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nms_agent.h
 # End Source File
 # Begin Source File
 

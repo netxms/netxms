@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: syncer.cpp
+** $module: entirenet.cpp
 **
 **/
 
@@ -24,38 +24,32 @@
 
 
 //
-// Syncer thread
+// Network class default constructor
 //
 
-void Syncer(void *arg)
+Network::Network()
+        :NetObj()
 {
-   DWORD i;
-   int iSyncInterval;
+   m_dwId = 1;
+   strcpy(m_szName, "Entire Network");
+}
 
-   // Read configuration
-   iSyncInterval = ConfigReadInt("SyncInterval", 60);
 
-   // Main syncer loop
-   while(!ShutdownInProgress())
-   {
-      ThreadSleep(iSyncInterval);
+//
+// Network class destructor
+//
 
-      ObjectsGlobalLock();
+Network::~Network()
+{
+}
 
-      // Delete objects marked for deletion
-      for(i = 0; i < g_dwIdIndexSize; i++)
-         if (g_pIndexById[i].pObject->IsDeleted())
-         {
-            g_pIndexById[i].pObject->DeleteFromDB();
-            NetObjDelete(g_pIndexById[i].pObject);
-            i = 0xFFFFFFFF;   // Restart loop
-         }
 
-      // Save objects
-      for(i = 0; i < g_dwIdIndexSize; i++)
-         if (g_pIndexById[i].pObject->IsModified())
-            g_pIndexById[i].pObject->SaveToDB();
+//
+// Save object to database
+//
 
-      ObjectsGlobalUnlock();
-   }
+BOOL Network::SaveToDB(void)
+{
+   m_bIsModified = FALSE;  // Nothing to save, just clear modification flag
+   return TRUE;
 }

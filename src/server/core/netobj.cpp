@@ -57,6 +57,16 @@ NetObj::~NetObj()
 
 
 //
+// Create object from database data
+//
+
+BOOL NetObj::CreateFromDB(DWORD dwId)
+{
+   return FALSE;     // Abstract objects cannot be loaded from database
+}
+
+
+//
 // Save object to database
 //
 

@@ -35,6 +35,7 @@ INDEX *g_pNodeIndexByAddr = NULL;
 DWORD g_dwNodeAddrIndexSize = 0;
 INDEX *g_pInterfaceIndexByAddr = NULL;
 DWORD g_dwInterfaceAddrIndexSize = 0;
+Network *g_pEntireNet = NULL;
 
 
 //
@@ -42,7 +43,7 @@ DWORD g_dwInterfaceAddrIndexSize = 0;
 //
 
 static MUTEX m_hMutexObjectAccess;
-static DWORD dwFreeObjectId = 1;
+static DWORD dwFreeObjectId = 2;
 
 
 //
@@ -52,6 +53,10 @@ static DWORD dwFreeObjectId = 1;
 void ObjectsInit(void)
 {
    m_hMutexObjectAccess = MutexCreate();
+
+   // Create "Entire Network" object
+   g_pEntireNet = new Network;
+   NetObjInsert(g_pEntireNet);
 }
 
 
@@ -196,6 +201,7 @@ void NetObjInsert(NetObj *pObject)
    switch(pObject->Type())
    {
       case OBJECT_GENERIC:
+      case OBJECT_NETWORK:
          break;
       case OBJECT_SUBNET:
          AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
@@ -216,16 +222,16 @@ void NetObjInsert(NetObj *pObject)
 
 //
 // Delete object
+// This function should be called only by syncer thread when access to objects are locked
 //
 
 void NetObjDelete(NetObj *pObject)
 {
-   ObjectsGlobalLock();
-   pObject->Delete();
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
    switch(pObject->Type())
    {
       case OBJECT_GENERIC:
+      case OBJECT_NETWORK:
          break;
       case OBJECT_SUBNET:
          DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
@@ -240,7 +246,6 @@ void NetObjDelete(NetObj *pObject)
          WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
          break;
    }
-   ObjectsGlobalUnlock();
 }
 
 
@@ -273,4 +278,57 @@ Subnet *FindSubnetByIP(DWORD dwAddr)
 
    dwPos = SearchIndex(g_pSubnetIndexByAddr, g_dwSubnetAddrIndexSize, dwAddr);
    return (dwPos == INVALID_INDEX) ? NULL : (Subnet *)g_pSubnetIndexByAddr[dwPos].pObject;
+}
+
+
+//
+// Find object by ID
+//
+
+NetObj *FindObjectById(DWORD dwId)
+{
+   DWORD dwPos;
+
+   if (g_pIndexById == NULL)
+      return NULL;
+
+   dwPos = SearchIndex(g_pIndexById, g_dwIdIndexSize, dwId);
+   return (dwPos == INVALID_INDEX) ? NULL : g_pIndexById[dwPos].pObject;
+}
+
+
+//
+// Load objects from database at stratup
+//
+
+BOOL LoadObjects(void)
+{
+   DB_RESULT hResult;
+   int i, iNumRows;
+   DWORD dwId;
+
+   // Load subnets
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets WHERE is_deleted=0");
+   if (hResult != 0)
+   {
+      Subnet *pSubnet;
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pSubnet = new Subnet;
+         if (pSubnet->CreateFromDB(dwId))
+         {
+            g_pEntireNet->AddSubnet(pSubnet);
+            NetObjInsert(pSubnet);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pSubnet;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   return TRUE;
 }

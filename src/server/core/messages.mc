@@ -92,4 +92,34 @@ Language=English
 Attempt to add object with non-unique key %1 to index
 .
 
+MessageId=
+SymbolicName=MSG_SUBNET_LOAD_FAILED
+Language=English
+Failed to load subnet object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_NODE_LOAD_FAILED
+Language=English
+Failed to load node object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_INTERFACE_LOAD_FAILED
+Language=English
+Failed to load interface object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_SUBNET_ID
+Language=English
+Inconsistent database: node %1 linked to non-existing subnet %2
+.
+
+MessageId=
+SymbolicName=MSG_SUBNET_NOT_SUBNET
+Language=English
+Inconsistent database: node %1 linked to object %2 which is not a subnet
+.
+
 ;#endif

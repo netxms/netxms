@@ -23,13 +23,16 @@
 #ifndef _nms_objects_h_
 #define _nms_objects_h_
 
+#include <nms_agent.h>
+
 //
 // Constants
 //
 
-#define MAX_OBJECT_NAME    64
-#define MAX_INTERFACES     4096
-#define INVALID_INDEX      0xFFFFFFFF
+#define MAX_OBJECT_NAME       64
+#define MAX_INTERFACES        4096
+#define INVALID_INDEX         0xFFFFFFFF
+#define MAX_COMMUNITY_LENGTH  32
 
 
 //
@@ -65,6 +68,25 @@
 
 
 //
+// Status poll types
+//
+
+#define POLL_ICMP_PING        0
+#define POLL_SNMP             1
+#define POLL_NATIVE_AGENT     2
+
+
+//
+// Authentication method
+//
+
+#define AUTH_NONE          0
+#define AUTH_PLAINTEXT     1
+#define AUTH_MD5_HASH      2
+#define AUTH_SHA1_HASH     3
+
+
+//
 // Object types
 //
 
@@ -72,6 +94,7 @@
 #define OBJECT_SUBNET      1
 #define OBJECT_NODE        2
 #define OBJECT_INTERFACE   3
+#define OBJECT_NETWORK     4
 
 
 //
@@ -121,6 +144,7 @@ public:
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
 
    NetObj *GetParent(DWORD dwIndex = 0) { return dwIndex < m_dwParentCount ? m_pParentList[dwIndex] : NULL; }
 
@@ -148,6 +172,7 @@ public:
    virtual int Type(void) { return OBJECT_INTERFACE; }
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
 };
 
 
@@ -160,6 +185,12 @@ class Node : public NetObj
 protected:
    DWORD m_dwFlags;
    DWORD m_dwDiscoveryFlags;
+   WORD m_wAgentPort;
+   WORD m_wAuthMethod;
+   char m_szSharedSecret[MAX_SECRET_LENGTH];
+   int m_iStatusPollType;
+   int m_iSNMPVersion;
+   char m_szCommunityString[MAX_COMMUNITY_LENGTH];
 
 public:
    Node();
@@ -170,6 +201,7 @@ public:
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
 
    DWORD Flags(void) { return m_dwFlags; }
    DWORD DiscoveryFlags(void) { return m_dwDiscoveryFlags; }
@@ -201,8 +233,26 @@ public:
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
 
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
+};
+
+
+//
+// Entire network
+//
+
+class Network : public NetObj
+{
+public:
+   Network();
+   virtual ~Network();
+
+   virtual int Type(void) { return OBJECT_NETWORK; }
+   virtual BOOL SaveToDB(void);
+
+   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
 };
 
 
@@ -228,8 +278,11 @@ void ObjectsGlobalUnlock(void);
 void NetObjInsert(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
+NetObj *FindObjectById(DWORD dwId);
 Node *FindNodeByIP(DWORD dwAddr);
 Subnet *FindSubnetByIP(DWORD dwAddr);
+
+BOOL LoadObjects(void);
 
 
 //
@@ -244,6 +297,7 @@ extern INDEX *g_pNodeIndexByAddr;
 extern DWORD g_dwNodeAddrIndexSize;
 extern INDEX *g_pInterfaceIndexByAddr;
 extern DWORD g_dwInterfaceAddrIndexSize;
+extern Network *g_pEntireNet;
 
 
 #endif   /* _nms_objects_h_ */

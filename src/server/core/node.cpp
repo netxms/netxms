@@ -32,6 +32,12 @@ Node::Node()
 {
    m_dwFlags = 0;
    m_dwDiscoveryFlags = 0;
+   m_wAgentPort = AGENT_LISTEN_PORT;
+   m_wAuthMethod = AUTH_NONE;
+   m_szSharedSecret[0] = 0;
+   m_iStatusPollType = POLL_ICMP_PING;
+   m_iSNMPVersion = 1;
+   strcpy(m_szCommunityString, "public");
 }
 
 
@@ -45,6 +51,12 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
    m_dwDiscoveryFlags = dwDiscoveryFlags;
+   m_wAgentPort = AGENT_LISTEN_PORT;
+   m_wAuthMethod = AUTH_NONE;
+   m_szSharedSecret[0] = 0;
+   m_iStatusPollType = POLL_ICMP_PING;
+   m_iSNMPVersion = 1;
+   strcpy(m_szCommunityString, "public");
 }
 
 
@@ -54,6 +66,92 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
 
 Node::~Node()
 {
+}
+
+
+//
+// Create object from database data
+//
+
+BOOL Node::CreateFromDB(DWORD dwId)
+{
+   char szQuery[256];
+   DB_RESULT hResult;
+   int i, iNumRows;
+   DWORD dwSubnetId;
+   NetObj *pObject;
+
+   sprintf(szQuery, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
+                    "is_router,snmp_version,discovery_flags,auth_method,secret,"
+                    "agent_port,status_poll_type,community FROM nodes WHERE id=%d", dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == 0)
+      return FALSE;     // Query failed
+
+   if (DBGetNumRows(hResult) == 0)
+   {
+      DBFreeResult(hResult);
+      return FALSE;
+   }
+
+   m_dwId = dwId;
+   strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
+   m_iStatus = DBGetFieldLong(hResult, 0, 2);
+   m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
+
+   // Flags
+   if (DBGetFieldLong(hResult, 0, 4))
+      m_dwFlags |= NF_IS_SNMP;
+   if (DBGetFieldLong(hResult, 0, 5))
+      m_dwFlags |= NF_IS_NATIVE_AGENT;
+   if (DBGetFieldLong(hResult, 0, 6))
+      m_dwFlags |= NF_IS_BRIDGE;
+   if (DBGetFieldLong(hResult, 0, 7))
+      m_dwFlags |= NF_IS_ROUTER;
+
+   m_iSNMPVersion = DBGetFieldLong(hResult, 0, 8);
+   m_dwDiscoveryFlags = DBGetFieldULong(hResult, 0, 9);
+   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 10);
+   strncpy(m_szSharedSecret, DBGetField(hResult, 0, 11), MAX_SECRET_LENGTH);
+   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 12);
+   m_iStatusPollType = DBGetFieldLong(hResult, 0, 13);
+   strncpy(m_szCommunityString, DBGetField(hResult, 0, 14), MAX_COMMUNITY_LENGTH);
+
+   DBFreeResult(hResult);
+
+   // Link node to subnets
+   sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%d", dwId);
+   if (hResult == 0)
+      return FALSE;     // Query failed
+
+   if (DBGetNumRows(hResult) == 0)
+   {
+      DBFreeResult(hResult);
+      return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
+   }
+
+   iNumRows = DBGetNumRows(hResult);
+   for(i = 0; i < iNumRows; i++)
+   {
+      dwSubnetId = DBGetFieldULong(hResult, i, 0);
+      pObject = FindObjectById(dwSubnetId);
+      if (pObject == NULL)
+      {
+         WriteLog(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+      }
+      else if (pObject->Type() != OBJECT_SUBNET)
+      {
+         WriteLog(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+      }
+      else
+      {
+         pObject->AddChild(this);
+         AddParent(pObject);
+      }
+   }
+
+   DBFreeResult(hResult);
+   return TRUE;
 }
 
 
@@ -82,24 +180,29 @@ BOOL Node::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,is_snmp,is_agent,is_bridge,is_router,snmp_version,discovery_flags)"
-                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d)",
+      sprintf(szQuery, "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
+                       "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
+                       "discovery_flags,status_poll_type,agent_port,auth_method,secret)"
+                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,'%s')",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
-              0, m_dwDiscoveryFlags);
+              m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
+              m_wAgentPort,m_wAuthMethod,m_szSharedSecret);
    else
       sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip=%d,"
                        "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
-                       "discovery_flags=%d WHERE id=%d",
+                       "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
+                       "auth_method=%d,secret='%s' WHERE id=%d",
               m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
-              0, m_dwDiscoveryFlags, m_dwId);
+              m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
+              m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Clear modifications flag and unlock object
