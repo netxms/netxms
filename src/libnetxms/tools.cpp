@@ -640,3 +640,28 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText)
          return i;
    return -1;     // Invalid data type
 }
+
+
+//
+// Extended send() - send all data even if single call to send()
+// cannot handle them all
+//
+
+int LIBNETXMS_EXPORTABLE SendEx(int nSocket, const void *pBuff,
+		                          size_t nSize, int nFlags)
+{
+	int nLeft = nSize;
+	int nRet;
+
+	do
+	{
+		nRet = send(nSocket, ((char *)pBuff) + (nSize - nLeft), nLeft, nFlags);
+		if (nRet <= 0)
+		{
+			break;
+		}
+		nLeft -= nRet;
+	} while (nLeft > 0);
+
+	return nLeft == 0 ? nSize : nRet;
+}
