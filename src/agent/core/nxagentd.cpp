@@ -653,6 +653,7 @@ int main(int argc, char *argv[])
                   }   
 #endif
                   Main();
+						Shutdown();
                }
                else
                {
