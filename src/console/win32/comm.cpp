@@ -99,6 +99,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
+      theApp.GetMainWnd()->PostMessage(WM_STATE_CHANGE, TRUE, 0);
       NXCSetEventHandler(g_hSession, ClientEventHandler);
 
       SetInfoText(hWnd, "Loading container categories...");
@@ -187,6 +188,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
    {
+      theApp.GetMainWnd()->PostMessage(WM_STATE_CHANGE, FALSE, 0);
       NXCDisconnect(g_hSession);
       g_hSession = NULL;
    }

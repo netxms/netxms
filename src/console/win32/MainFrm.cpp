@@ -192,7 +192,7 @@ void CMainFrame::OnUpdateEventList(void)
 
 void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
 {
-   if (wParam == STATE_CONNECTED)
+   if (wParam)
    {
       m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, 
          (HICON)LoadImage(theApp.m_hInstance, MAKEINTRESOURCE(IDI_CONNECT), 
