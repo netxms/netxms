@@ -102,8 +102,8 @@ typedef struct
    DWORD dwTimeStamp;
    union
    {
-      long iInteger;
-      INT64 qInt64;
+      DWORD dwInteger;
+      QWORD qwInt64;
       double dFloat;
       char szString[MAX_DCI_STRING_VALUE];
    } value;

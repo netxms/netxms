@@ -103,7 +103,8 @@ public:
 extern "C" {
 #endif
 
-int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
+int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, 
+                                         CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize);
 CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
