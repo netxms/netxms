@@ -245,6 +245,7 @@ void ClientSession::SendAllEvents(void)
    DWORD i, dwNumRecords;
    CSCPMessage msg;
    DB_RESULT hResult;
+   NXC_EVENT event;
 
    // Prepare message
 //   msg.SetCode(CMD_EVENT);
@@ -254,17 +255,16 @@ void ClientSession::SendAllEvents(void)
    if (hResult != NULL)
    {
       // Send events, one per message
-/*      dwNumRecords = DBGetNumRows(hResult);
+      dwNumRecords = DBGetNumRows(hResult);
       for(i = 0; i < dwNumRecords; i++)
       {
-         msg.SetVariable(VID_EVENT_ID, DBGetFieldULong(hResult, i, 0));
-         msg.SetVariable("timestamp", DBGetFieldULong(hResult, i, 1));
-         msg.SetVariable("source", DBGetFieldULong(hResult, i, 2));
-         msg.SetVariable("severity", DBGetFieldULong(hResult, i, 3));
-         msg.SetVariable("message", DBGetField(hResult, i, 4));
-         SendMessage(&msg);
-         msg.DeleteAllVariables();
-      }*/
+         event.dwEventId = htonl(DBGetFieldULong(hResult, i, 0));
+         event.dwTimeStamp = htonl(DBGetFieldULong(hResult, i, 1));
+         event.dwSourceId = htonl(DBGetFieldULong(hResult, i, 2));
+         event.dwSeverity = htonl(DBGetFieldULong(hResult, i, 3));
+         strncpy(event.szMessage, DBGetField(hResult, i, 4), MAX_EVENT_MSG_LENGTH);
+         m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), &event, NULL));
+      }
    }
 
    // Send end of list notification

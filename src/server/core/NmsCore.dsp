@@ -265,6 +265,10 @@ SOURCE=.\nms_users.h
 
 SOURCE=..\..\..\include\nms_util.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxclapi.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
