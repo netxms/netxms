@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.7 2005-01-29 00:21:29 alk Exp $ */
+/* $Id: main.cpp,v 1.8 2005-02-08 18:32:56 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -41,7 +41,9 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 	{
 	case NETSRV_CUSTOM:
 		// unsupported for now
-		bHandled = FALSE;
+		nRet = CheckCustom(NULL, dwAddress, wPort, szRequest, szResponce);
+		pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
+		pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 		break;
 	case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL);
@@ -158,6 +160,19 @@ extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInf
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/01/29 00:21:29  alk
++ http checker
+
+request string: "HOST:URI"
+responce string: posix regex, e.g. '^HTTP/1.[01] 200 .*'
+
+requst sent to server:
+---
+GET URI HTTP/1.1\r\n
+Connection: close\r\n
+Host: HOST\r\n\r\n
+---
+
 Revision 1.6  2005/01/28 23:45:01  alk
 SMTP check added, requst string == rcpt to
 
