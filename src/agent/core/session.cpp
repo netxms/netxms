@@ -181,6 +181,9 @@ void CommSession::ProcessingThread(void)
             case CMD_GET_LIST:
                msg.SetVariable(VID_RCC, ERR_NOT_IMPLEMENTED);
                break;
+            case CMD_KEEPALIVE:
+               msg.SetVariable(VID_RCC, ERR_SUCCESS);
+               break;
             default:
                msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;

@@ -24,6 +24,7 @@
 #include <nms_agent.h>
 #include <nms_util.h>
 #include <nxclapi.h>
+#include <nxsrvapi.h>
 
 #ifndef _WIN32
 #include <netdb.h>
@@ -54,14 +55,10 @@
 static DWORD m_dwAddr;
 static int m_iAuthMethod = AUTH_NONE;
 static char m_szSecret[MAX_SECRET_LENGTH] = "";
-static SOCKET m_hSocket;
 static WORD m_wPort = AGENT_LISTEN_PORT;
-static DWORD m_dwNumDataLines = 0;
-static char **m_ppDataLines = NULL;
-static char m_szNetBuffer[MAX_LINE_SIZE * 2];
 static BOOL m_bVerbose = TRUE;
 static BOOL m_bTrace = FALSE;
-static DWORD m_dwTimeout = 3;
+static DWORD m_dwTimeout = 3000;
 
 
 //
@@ -73,329 +70,6 @@ static void Trace(int iDirection, char *pszLine)
    static char *pszDir[] = { "<<<", ">>>" };
    if (m_bTrace)
       printf("%s %s\n", pszDir[iDirection], pszLine);
-}
-
-
-//
-// Destroy command execuion results data
-//
-
-static void DestroyResultData(void)
-{
-   DWORD i;
-
-   if (m_ppDataLines != NULL)
-   {
-      for(i = 0; i < m_dwNumDataLines; i++)
-         if (m_ppDataLines[i] != NULL)
-            free(m_ppDataLines[i]);
-      free(m_ppDataLines);
-      m_ppDataLines = NULL;
-   }
-   m_dwNumDataLines = 0;
-}
-
-
-//
-// Add new line to result data
-//
-
-void AddDataLine(char *szLine)
-{
-   m_dwNumDataLines++;
-   m_ppDataLines = (char **)realloc(m_ppDataLines, sizeof(char *) * m_dwNumDataLines);
-   m_ppDataLines[m_dwNumDataLines - 1] = strdup(szLine);
-}
-
-
-//
-// Receive line from socket
-//
-
-int RecvLine(int iBufSize, char *szBuffer)
-{
-   char *pChar;
-	struct timeval timeout;
-	fd_set rdfs;
-   int iSize;
-
-   pChar = strchr(m_szNetBuffer, '\r');
-   if (pChar != NULL)    // Newline found in already received chunk
-   {
-      *pChar = 0;
-      pChar++;
-      if (*pChar == '\n')
-         pChar++;
-      strncpy(szBuffer, m_szNetBuffer, iBufSize);
-      memmove(m_szNetBuffer, pChar, strlen(pChar) + 1);
-      return strlen(szBuffer);
-   }
-
-   strncpy(szBuffer, m_szNetBuffer, iBufSize);
-   szBuffer[iBufSize - 1] = 0;
-
-   while(1)
-   {
-      // Wait for data
-      FD_ZERO(&rdfs);
-      FD_SET(m_hSocket, &rdfs);
-      timeout.tv_sec = m_dwTimeout;
-      timeout.tv_usec = 0;
-      if (select(m_hSocket + 1, &rdfs, NULL, NULL, &timeout) == 0)
-      {
-         return -65535;
-      }
-
-      // Receive data
-      iSize = recv(m_hSocket, m_szNetBuffer, 1023, 0);
-      if (iSize <= 0)
-         return iSize;
-      m_szNetBuffer[iSize] = 0;
-
-      pChar = strchr(m_szNetBuffer, '\r');
-      if (pChar != NULL)    // Newline found in this chunk
-      {
-         *pChar = 0;
-         pChar++;
-         if (*pChar == '\n')
-            pChar++;
-         if ((int)strlen(szBuffer) + (int)strlen(m_szNetBuffer) >= (iBufSize - 1))
-            break;      // Buffer is too small, stop receiving
-         strcat(szBuffer, m_szNetBuffer);
-         memmove(m_szNetBuffer, pChar, strlen(pChar) + 1);
-         break;
-      }
-
-      if ((int)strlen(szBuffer) + (int)strlen(m_szNetBuffer) >= (iBufSize - 1))
-         break;      // Buffer is too small, stop receiving
-      strcat(szBuffer, m_szNetBuffer);
-   }
-
-   return strlen(szBuffer);
-}
-
-
-//
-// Execute command
-// If pdwBufferSize and pszReplyBuffer is NULL, result will not be stored
-//
-
-DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData = FALSE)
-{
-   char szBuffer[MAX_LINE_SIZE];
-   int iError;
-	struct timeval timeout;
-	fd_set rdfs;
-
-   if (m_hSocket == -1)
-      return ERR_NOT_CONNECTED;
-
-   // Send command
-   Trace(TRACE_OUT, szCmd);
-   sprintf(szBuffer, "%s\r\n", szCmd);
-   iError = send(m_hSocket, szBuffer, strlen(szBuffer), 0);
-   if (iError != (int)strlen(szBuffer))
-   {
-      if (iError <= 0)     // Connection closed or broken
-      {
-         closesocket(m_hSocket);
-         m_hSocket = -1;
-      }
-      return ERR_CONNECTION_BROKEN;
-   }
-
-   // Wait for responce
-   FD_ZERO(&rdfs);
-   FD_SET(m_hSocket, &rdfs);
-   timeout.tv_sec = m_dwTimeout;
-   timeout.tv_usec = 0;
-   if (select(m_hSocket + 1, &rdfs, NULL, NULL, &timeout) == 0)
-   {
-      return ERR_REQUEST_TIMEOUT;
-   }
-
-   // Receive responce
-   iError = RecvLine(255, szBuffer);
-   if (iError <= 0)     // Connection closed or broken
-   {
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return ERR_CONNECTION_BROKEN;
-   }
-   Trace(TRACE_IN, szBuffer);
-
-   // Check for error
-   if (memcmp(szBuffer, "+OK", 3))
-   {
-      if (szBuffer[0] == '-')
-      {
-         char *pSep;
-
-         pSep = strchr(szBuffer, ' ');
-         if (pSep)
-            *pSep = 0;
-         pSep = strchr(szBuffer, '\r');
-         if (pSep)
-            *pSep = 0;
-         return strtoul(&szBuffer[1], NULL, 10);
-      }
-      else
-      {
-         return ERR_BAD_RESPONCE;
-      }
-   }
-
-   // Retrieve data if needed
-   if (bExpectData)
-   {
-      // Initialize result store
-      DestroyResultData();
-
-      iError = RecvLine(MAX_LINE_SIZE, szBuffer);
-      if (iError <= 0)
-         return ERR_CONNECTION_BROKEN;
-      Trace(TRACE_IN, szBuffer);
-
-      if (bMultiLineData)
-      {
-         while(strcmp(szBuffer, "."))
-         {
-            AddDataLine(szBuffer);
-            iError = RecvLine(MAX_LINE_SIZE, szBuffer);
-            if (iError <= 0)
-               return ERR_CONNECTION_BROKEN;
-            Trace(TRACE_IN, szBuffer);
-         }
-      }
-      else
-      {
-         AddDataLine(szBuffer);
-      }
-   }
-
-   return ERR_SUCCESS;
-}
-
-
-//
-// Get parameter value
-//
-
-DWORD GetParameter(const char *szParam, DWORD dwBufSize, char *szBuffer)
-{
-   char szRequest[256];
-   DWORD dwError;
-
-   sprintf(szRequest, "GET %s", szParam);
-   dwError = ExecuteCommand(szRequest, TRUE);
-   if (dwError == ERR_SUCCESS)
-   {
-      szBuffer[dwBufSize - 1] = 0;
-      strncpy(szBuffer, m_ppDataLines[0], dwBufSize - 1);
-      DestroyResultData();
-   }
-
-   return dwError;
-}
-
-
-//
-// Connect to agent
-//
-
-BOOL Connect(void)
-{
-   struct sockaddr_in sa;
-   char szBuffer[256], szSignature[32];
-   int iError;
-   BOOL bSuccess = FALSE;
-
-   // Initialize line receive buffer
-   m_szNetBuffer[0] = 0;
-
-   // Create socket
-   m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
-   if (m_hSocket == -1)
-   {
-      if (m_bVerbose)
-         printf("Unable to create socket\n");
-      goto connect_cleanup;
-   }
-
-   // Fill in address structure
-   memset(&sa, 0, sizeof(sa));
-   sa.sin_addr.s_addr = m_dwAddr;
-   sa.sin_family = AF_INET;
-   sa.sin_port = htons(m_wPort);
-
-   // Connect to server
-   if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
-   {
-      if (m_bVerbose)
-         printf("Unable to establish connection with the agent\n");
-      goto connect_cleanup;
-   }
-
-   // Retrieve agent hello
-   iError = RecvLine(255, szBuffer);
-   if (iError <= 0)
-   {
-      if (m_bVerbose)
-         printf("Communication failed\n");
-      goto connect_cleanup;
-   }
-   Trace(TRACE_IN, szBuffer);
-
-   sprintf(szSignature, "+%d NMS_Agent_09180431", AGENT_PROTOCOL_VERSION);
-   if (memcmp(szBuffer, szSignature, strlen(szSignature)))
-   {
-      if (m_bVerbose)
-         printf("Invalid HELLO packet received from agent\n");
-      goto connect_cleanup;
-   }
-
-   // Authenticate itself to agent
-   if (m_iAuthMethod != AUTH_NONE)
-   {
-   }
-
-   // Test connectivity
-   if (ExecuteCommand("NOP") != ERR_SUCCESS)
-   {
-      if (m_bVerbose)
-         printf("Communication with agent failed\n");
-      goto connect_cleanup;
-   }
-
-   bSuccess = TRUE;
-
-connect_cleanup:
-   if (!bSuccess)
-   {
-      if (m_hSocket != -1)
-      {
-         shutdown(m_hSocket, 2);
-         closesocket(m_hSocket);
-         m_hSocket = -1;
-      }
-   }
-   return bSuccess;
-}
-
-
-//
-// Disconnect from agent
-//
-
-void Disconnect(void)
-{
-   if (m_hSocket != -1)
-   {
-      ExecuteCommand("QUIT");
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-   }
 }
 
 
@@ -527,60 +201,16 @@ int main(int argc, char *argv[])
          }
          else
          {
-            // Connect to agent
-            if (Connect())
+            AgentConnection conn(m_dwAddr);
+
+            if (conn.Connect(m_bVerbose))
             {
-               switch(iCommand)
-               {
-                  case CMD_GET:
-                     dwError = GetParameter(argv[optind + 1], 1024, szBuffer);
-                     break;
-                  case CMD_LIST_ARP:
-                     dwError = ExecuteCommand("ARP", TRUE, TRUE);
-                     break;
-                  case CMD_LIST_IF:
-                     dwError = ExecuteCommand("IFLIST", TRUE, TRUE);
-                     break;
-                  case CMD_LIST_PARAMS:
-                     dwError = ExecuteCommand("LIST", TRUE, TRUE);
-                     break;
-                  case CMD_LIST_SUBAGENTS:
-                     dwError = ExecuteCommand("SALIST", TRUE, TRUE);
-                     break;
-                  default:
-                     break;
-               }
-               Disconnect();
+               dwError = conn.GetParameter(argv[optind + 1], 1024, szBuffer);
+               conn.Disconnect();
                if (dwError == ERR_SUCCESS)
-               {
-                  switch(iCommand)
-                  {
-                     case CMD_GET:
-                        puts(szBuffer);
-                        break;
-                     case CMD_LIST_ARP:
-                     case CMD_LIST_IF:
-                     case CMD_LIST_PARAMS:
-                     case CMD_LIST_SUBAGENTS:
-                        for(i = 0; i < (int)m_dwNumDataLines; i++)
-                           printf("%s\n", m_ppDataLines[i]);
-                        DestroyResultData();
-                        break;
-                     default:
-                        break;
-                  }
-                  iExitCode = 0;
-               }
+                  printf("%s\n", szBuffer);
                else
-               {
-                  if (m_bVerbose)
-                     printf("Error %lu\n", dwError);
-                  iExitCode = 1;
-               }
-            }
-            else
-            {
-               iExitCode = 2;
+                  printf("Error %d\n", dwError);
             }
          }
       }

@@ -38,6 +38,7 @@
 #define LIBNXCL_NO_DECLARATIONS 1
 #endif
 #include <nxclapi.h>
+#include <nxcscpapi.h>
 #include <nms_agent.h>
 
 
@@ -107,12 +108,18 @@ private:
    SOCKET m_hSocket;
    WORD m_wPort;
    DWORD m_dwNumDataLines;
+   DWORD m_dwRequestId;
+   DWORD m_dwCommandTimeout;
    char **m_ppDataLines;
+   MsgWaitQueue *m_pMsgWaitQueue;
 
    void ReceiverThread(void);
 
 protected:
    void DestroyResultData(void);
+   BOOL SendMessage(CSCPMessage *pMsg);
+   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
+   DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
 
    virtual void PrintMsg(char *pszFormat, ...);
 
@@ -126,7 +133,7 @@ public:
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
-   DWORD GetParameter(const char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetParameter(char *pszParam, DWORD dwBufSize, char *pszBuffer);
    DWORD Nop(void);
 };
 
