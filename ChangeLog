@@ -3,6 +3,7 @@
 *
 
 - Added parameter System.ServiceState(*) to core agent (Windows only)
+- Implemented user-defined counters in WinPerf subagent
 
 
 *
