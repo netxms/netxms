@@ -57,6 +57,7 @@ SERVER:
   very interesting effects with alarms autoacknowlegement
 - NxAdm -- status, stop server
 - NxDbMgr -- backup before db recover
+- Replace mutex with r/w lock for session list access
 
 
 CORE AGENT:
