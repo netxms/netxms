@@ -198,6 +198,7 @@ src/agent/subagents/portCheck/portcheck.dsp -text
 src/agent/subagents/portCheck/portcheck.dsw -text
 src/agent/subagents/portCheck/smtp.cpp -text
 src/agent/subagents/portCheck/ssh.cpp -text
+src/agent/subagents/python/main.cpp -text
 src/agent/subagents/skeleton/Makefile.am -text
 src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
