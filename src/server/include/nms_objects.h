@@ -127,6 +127,8 @@ protected:
 
    BOOL LoadACLFromDB(void);
    BOOL SaveACLToDB(void);
+   BOOL LoadCommonProperties(void);
+   BOOL SaveCommonProperties(void);
 
    void SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...);
 
@@ -186,6 +188,7 @@ public:
    // Debug methods
    const char *ParentList(char *szBuffer);
    const char *ChildList(char *szBuffer);
+   const char *TimeStampAsText(void) { return ctime((time_t *)&m_dwTimeStamp); }
 };
 
 
@@ -728,6 +731,7 @@ extern RWLOCK g_rwlockInterfaceIndex;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern char *g_szClassName[];
+extern BOOL g_bModificationsLocked;
 
 
 #endif   /* _nms_objects_h_ */

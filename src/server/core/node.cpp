@@ -122,11 +122,16 @@ BOOL Node::CreateFromDB(DWORD dwId)
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   _sntprintf(szQuery, 512, "SELECT name,status,primary_ip,node_flags,"
+   m_dwId = dwId;
+
+   if (!LoadCommonProperties())
+      return FALSE;
+
+   _sntprintf(szQuery, 512, "SELECT primary_ip,node_flags,"
                             "snmp_version,discovery_flags,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,"
-                            "image_id,is_deleted,description,node_type,agent_version,"
-                            "platform_name,poller_node_id FROM nodes WHERE id=%d", dwId);
+                            "description,node_type,agent_version,"
+                            "platform_name,poller_node_id FROM nodes WHERE id=%ld", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -137,29 +142,24 @@ BOOL Node::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   m_dwId = dwId;
-   strncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
-   m_iStatus = DBGetFieldLong(hResult, 0, 1);
-   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
-   m_dwFlags = DBGetFieldULong(hResult, 0, 3);
-   m_iSNMPVersion = DBGetFieldLong(hResult, 0, 4);
-   m_dwDiscoveryFlags = DBGetFieldULong(hResult, 0, 5);
-   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 6);
-   strncpy(m_szSharedSecret, DBGetField(hResult, 0, 7), MAX_SECRET_LENGTH);
-   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 8);
-   m_iStatusPollType = DBGetFieldLong(hResult, 0, 9);
-   strncpy(m_szCommunityString, DBGetField(hResult, 0, 10), MAX_COMMUNITY_LENGTH);
-   strncpy(m_szObjectId, DBGetField(hResult, 0, 11), MAX_OID_LEN * 4);
-   m_dwImageId = DBGetFieldULong(hResult, 0, 12);
-   m_bIsDeleted = DBGetFieldLong(hResult, 0, 13);
-   m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 14)));
+   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
+   m_dwFlags = DBGetFieldULong(hResult, 0, 1);
+   m_iSNMPVersion = DBGetFieldLong(hResult, 0, 2);
+   m_dwDiscoveryFlags = DBGetFieldULong(hResult, 0, 3);
+   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
+   strncpy(m_szSharedSecret, DBGetField(hResult, 0, 5), MAX_SECRET_LENGTH);
+   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
+   m_iStatusPollType = DBGetFieldLong(hResult, 0, 7);
+   strncpy(m_szCommunityString, DBGetField(hResult, 0, 8), MAX_COMMUNITY_LENGTH);
+   strncpy(m_szObjectId, DBGetField(hResult, 0, 9), MAX_OID_LEN * 4);
+   m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 10)));
    DecodeSQLString(m_pszDescription);
-   m_dwNodeType = DBGetFieldULong(hResult, 0, 15);
-   _tcsncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 16)), MAX_AGENT_VERSION_LEN);
+   m_dwNodeType = DBGetFieldULong(hResult, 0, 11);
+   _tcsncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 12)), MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
-   _tcsncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 17)), MAX_PLATFORM_NAME_LEN);
+   _tcsncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 13)), MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
-   m_dwPollerNode = DBGetFieldULong(hResult, 0, 18);
+   m_dwPollerNode = DBGetFieldULong(hResult, 0, 14);
 
    DBFreeResult(hResult);
 
@@ -233,6 +233,8 @@ BOOL Node::SaveToDB(void)
    // Lock object's access
    Lock();
 
+   SaveCommonProperties();
+
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM nodes WHERE id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -249,30 +251,27 @@ BOOL Node::SaveToDB(void)
    pszEscPlatform = EncodeSQLString(m_szPlatformName);
    if (bNewObject)
       snprintf(szQuery, 4096,
-               "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
+               "INSERT INTO nodes (id,primary_ip,"
                "node_flags,snmp_version,community,discovery_flags,status_poll_type,"
-               "agent_port,auth_method,secret,snmp_oid,image_id,"
+               "agent_port,auth_method,secret,snmp_oid,"
                "description,node_type,agent_version,platform_name,"
-               "poller_node_id) VALUES (%ld,'%s',%d,%d,'%s',%ld,%d,'%s',%ld,%d,%d,%d,"
-               "'%s','%s',%ld,'%s',%ld,'%s','%s',%ld)",
-               m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
-               IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
+               "poller_node_id) VALUES (%ld,'%s',%ld,%d,'%s',%ld,%d,%d,%d,"
+               "'%s','%s','%s',%ld,'%s','%s',%ld)",
+               m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_szObjectId,
-               m_dwImageId, pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, 
-               m_dwPollerNode);
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, m_dwPollerNode);
    else
       snprintf(szQuery, 4096,
-               "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip='%s',"
+               "UPDATE nodes SET primary_ip='%s',"
                "node_flags=%ld,snmp_version=%d,community='%s',discovery_flags=%d,"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
-               "snmp_oid='%s',image_id=%ld,description='%s',node_type=%ld,"
+               "snmp_oid='%s',description='%s',node_type=%ld,"
                "agent_version='%s',platform_name='%s',poller_node_id=%ld WHERE id=%ld",
-               m_szName, m_iStatus, m_bIsDeleted, 
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
-               m_szObjectId, m_dwImageId, pszEscDescr, m_dwNodeType, 
+               m_szObjectId, pszEscDescr, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscDescr);

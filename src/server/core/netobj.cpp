@@ -95,9 +95,78 @@ BOOL NetObj::DeleteFromDB(void)
    // Delete ACL
    sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
    QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM access_options WHERE object_id=%d", m_dwId);
+   sprintf(szQuery, "DELETE FROM object_properties WHERE object_id=%d", m_dwId);
    QueueSQLRequest(szQuery);
    return TRUE;
+}
+
+
+//
+// Load common object properties from database
+//
+
+BOOL NetObj::LoadCommonProperties(void)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bResult = FALSE;
+
+   // Load access options
+   _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,image_id,"
+                               "inherit_access_rights,last_modified "
+                               "FROM object_properties WHERE object_id=%ld"), m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         _tcsncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+         m_iStatus = DBGetFieldLong(hResult, 0, 1);
+         m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
+         m_dwImageId = DBGetFieldULong(hResult, 0, 3);
+         m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 4) ? TRUE : FALSE;
+         m_dwTimeStamp = DBGetFieldULong(hResult, 0, 5);
+         bResult = TRUE;
+      }
+      DBFreeResult(hResult);
+   }
+   return bResult;
+}
+
+
+//
+// Save common object properties to database
+//
+
+BOOL NetObj::SaveCommonProperties(void)
+{
+   TCHAR szQuery[512];
+   DB_RESULT hResult;
+   BOOL bResult = FALSE;
+
+   // Save access options
+   _sntprintf(szQuery, 512, _T("SELECT object_id FROM object_properties WHERE object_id=%ld"), m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         _sntprintf(szQuery, 512, 
+                    _T("UPDATE object_properties SET name='%s',status=%d,"
+                       "is_deleted=%d,image_id=%ld,inherit_access_rights=%d,"
+                       "last_modified WHERE object_id=%ld"),
+                    m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
+                    m_bInheritAccessRights, m_dwTimeStamp, m_dwId);
+      else
+         _sntprintf(szQuery, 512, 
+                    _T("INSERT INTO access_options (object_id,name,status,is_deleted,"
+                       "image_id,inherit_access_rights,last_modified) "
+                       "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld)"),
+                    m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
+                    m_bInheritAccessRights, m_dwTimeStamp);
+      DBFreeResult(hResult);
+      bResult = DBQuery(g_hCoreDB, szQuery);
+   }
+   return bResult;
 }
 
 
@@ -392,16 +461,6 @@ BOOL NetObj::LoadACLFromDB(void)
       bSuccess = TRUE;
    }
 
-   // Load access options
-   sprintf(szQuery, "SELECT inherit_rights FROM access_options WHERE object_id=%d", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 0) ? TRUE : FALSE;
-      DBFreeResult(hResult);
-   }
-
    return bSuccess;
 }
 
@@ -428,7 +487,6 @@ BOOL NetObj::SaveACLToDB(void)
 {
    char szQuery[256];
    BOOL bSuccess = FALSE;
-   DB_RESULT hResult;
 
    // Save access list
    sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
@@ -437,22 +495,6 @@ BOOL NetObj::SaveACLToDB(void)
       m_pAccessList->EnumerateElements(EnumerationHandler, (void *)m_dwId);
       bSuccess = TRUE;
    }
-
-   // Save access options
-   sprintf(szQuery, "SELECT inherit_rights FROM access_options WHERE object_id=%d", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         sprintf(szQuery, "UPDATE access_options SET inherit_rights=%d WHERE object_id=%d",
-                 m_bInheritAccessRights, m_dwId);
-      else
-         sprintf(szQuery, "INSERT INTO access_options (object_id,inherit_rights) VALUES (%d,%d)",
-                 m_dwId, m_bInheritAccessRights);
-      DBFreeResult(hResult);
-      DBQuery(g_hCoreDB, szQuery);
-   }
-
    return bSuccess;
 }
 
@@ -501,7 +543,11 @@ static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
 
 void NetObj::Modify(void)
 {
+   if (g_bModificationsLocked)
+      return;
+
    m_bIsModified = TRUE;
+   m_dwTimeStamp = time(NULL);
 
    // Send event to all connected clients
    EnumerateClientSessions(BroadcastObjectChange, this);

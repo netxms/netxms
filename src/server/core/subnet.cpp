@@ -66,7 +66,12 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    char szQuery[256];
    DB_RESULT hResult;
 
-   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,image_id,is_deleted FROM subnets WHERE id=%d", dwId);
+   m_dwId = dwId;
+
+   if (!LoadCommonProperties())
+      return FALSE;
+
+   sprintf(szQuery, "SELECT ip_addr,ip_netmask FROM subnets WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -77,13 +82,8 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   m_dwId = dwId;
-   strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
-   m_iStatus = DBGetFieldLong(hResult, 0, 2);
-   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 3);
-   m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 4);
-   m_dwImageId = DBGetFieldULong(hResult, 0, 5);
-   m_bIsDeleted = DBGetFieldLong(hResult, 0, 6);
+   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
+   m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
 
    DBFreeResult(hResult);
 
@@ -108,6 +108,8 @@ BOOL Subnet::SaveToDB(void)
    // Lock object's access
    Lock();
 
+   SaveCommonProperties();
+
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM subnets WHERE id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -120,15 +122,15 @@ BOOL Subnet::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO subnets (id,name,status,is_deleted,ip_addr,ip_netmask,image_id) "
-                       "VALUES (%ld,'%s',%d,%d,'%s','%s',%ld)",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
-              IpToStr(m_dwIpAddr, szIpAddr), IpToStr(m_dwIpNetMask, szNetMask), m_dwImageId);
+      sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask) "
+                       "VALUES (%ld,'%s','%s')",
+              m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
+              IpToStr(m_dwIpNetMask, szNetMask));
    else
-      sprintf(szQuery, "UPDATE subnets SET name='%s',status=%d,is_deleted=%d,ip_addr='%s',"
-                       "ip_netmask='%s',image_id=%ld WHERE id=%ld",
-              m_szName, m_iStatus, m_bIsDeleted, IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask), m_dwImageId, m_dwId);
+      sprintf(szQuery, "UPDATE subnets SET ip_addr='%s',"
+                       "ip_netmask='%s' WHERE id=%ld",
+              IpToStr(m_dwIpAddr, szIpAddr),
+              IpToStr(m_dwIpNetMask, szNetMask), m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update node to subnet mapping

@@ -39,33 +39,69 @@ static void CheckNodes(void)
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
-   TCHAR szQuery[256];
+   TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
+   BOOL bResult, bIsDeleted;
 
    _tprintf(_T("Checking node objects...\n"));
-   hResult = SQLSelect(_T("SELECT id,name,primary_ip FROM nodes WHERE is_deleted=0"));
+   hResult = SQLSelect(_T("SELECT id,primary_ip FROM nodes"));
    if (hResult != NULL)
    {
       dwNumObjects = DBGetNumRows(hResult);
       for(i = 0; i < dwNumObjects; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         _sntprintf(szQuery, 256, _T("SELECT subnet_id FROM nsmap WHERE node_id=%ld"), dwId);
+
+         // Check appropriate record in object_properties table
+         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%ld"), dwId);
          hResult2 = SQLSelect(szQuery);
          if (hResult2 != NULL)
          {
-            if ((DBGetNumRows(hResult2) == 0) && (DBGetFieldIPAddr(hResult, i, 2) != 0))
+            if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Unlinked node object %ld (\"%s\"). Delete? (Y/N) "),
-                        dwId, DBGetField(hResult, i, 1));
+               _tprintf(_T("Missing node object %ld properties. Create? (Y/N) "), dwId);
                if (GetYesNo())
                {
-                  _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%ld"), dwId);
+                  _sntprintf(szQuery, 256, 
+                             _T("INSERT INTO object_properties (object_id,name,"
+                                "status,is_deleted,image_id,inherit_access_rights,"
+                                "last_access) VALUES(%ld,'lost_node_%ld',5,0,0,1,0)"), dwId, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
             }
+            else
+            {
+               _tcsncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
+               bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
+            }
             DBFreeResult(hResult2);
+         }
+
+         if (!bIsDeleted)
+         {
+            _sntprintf(szQuery, 256, _T("SELECT subnet_id FROM nsmap WHERE node_id=%ld"), dwId);
+            hResult2 = SQLSelect(szQuery);
+            if (hResult2 != NULL)
+            {
+               if ((DBGetNumRows(hResult2) == 0) && (DBGetFieldIPAddr(hResult, i, 1) != 0))
+               {
+                  m_iNumErrors++;
+                  _tprintf(_T("Unlinked node object %ld (\"%s\"). Delete? (Y/N) "),
+                           dwId, szName);
+                  if (GetYesNo())
+                  {
+                     _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%ld"), dwId);
+                     bResult = SQLQuery(szQuery);
+                     _sntprintf(szQuery, 256, _T("DELETE FROM acl WHERE object_id=%ld"), dwId);
+                     bResult = bResult && SQLQuery(szQuery);
+                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%ld"), dwId);
+                     if (SQLQuery(szQuery) && bResult)
+                        m_iNumFixes++;
+                  }
+               }
+               DBFreeResult(hResult2);
+            }
          }
       }
       DBFreeResult(hResult);
@@ -84,12 +120,39 @@ static void CheckInterfaces(void)
    TCHAR szQuery[256];
 
    _tprintf(_T("Checking interface objects...\n"));
-   hResult = SQLSelect(_T("SELECT id,name,node_id FROM interfaces WHERE is_deleted=0"));
+   hResult = SQLSelect(_T("SELECT id,node_id FROM interfaces"));
    if (hResult != NULL)
    {
       dwNumObjects = DBGetNumRows(hResult);
       for(i = 0; i < dwNumObjects; i++)
       {
+         // Check appropriate record in object_properties table
+         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%ld"), dwId);
+         hResult2 = SQLSelect(szQuery);
+         if (hResult2 != NULL)
+         {
+            if (DBGetNumRows(hResult2) == 0)
+            {
+               m_iNumErrors++;
+               _tprintf(_T("Missing node object %ld properties. Create? (Y/N) "), dwId);
+               if (GetYesNo())
+               {
+                  _sntprintf(szQuery, 256, 
+                             _T("INSERT INTO object_properties (object_id,name,"
+                                "status,is_deleted,image_id,inherit_access_rights,"
+                                "last_access) VALUES(%ld,'lost_node_%ld',5,0,0,1,0)"), dwId, dwId);
+                  if (SQLQuery(szQuery))
+                     m_iNumFixes++;
+               }
+            }
+            else
+            {
+               _tcsncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
+               bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
+            }
+            DBFreeResult(hResult2);
+         }
+
          // Check if referred node exists
          _sntprintf(szQuery, 256, _T("SELECT name FROM nodes WHERE id=%ld AND is_deleted=0"),
                     DBGetFieldULong(hResult, i, 2));

@@ -88,7 +88,12 @@ BOOL Container::CreateFromDB(DWORD dwId)
    DB_RESULT hResult;
    DWORD i;
 
-   sprintf(szQuery, "SELECT id,name,status,category,description,image_id,is_deleted FROM containers WHERE id=%d", dwId);
+   m_dwId = dwId;
+
+   if (!LoadCommonProperties())
+      return FALSE;
+
+   sprintf(szQuery, "SELECT category,description FROM containers WHERE id=%ld", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -100,13 +105,8 @@ BOOL Container::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   m_dwId = dwId;
-   strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
-   m_iStatus = DBGetFieldLong(hResult, 0, 2);
-   m_dwCategory = DBGetFieldULong(hResult, 0, 3);
-   m_pszDescription = strdup(CHECK_NULL(DBGetField(hResult, 0, 4)));
-   m_dwImageId = DBGetFieldULong(hResult, 0, 5);
-   m_bIsDeleted = DBGetFieldLong(hResult, 0, 6);
+   m_dwCategory = DBGetFieldULong(hResult, 0, 0);
+   m_pszDescription = strdup(CHECK_NULL(DBGetField(hResult, 0, 1)));
 
    DBFreeResult(hResult);
 
@@ -149,6 +149,8 @@ BOOL Container::SaveToDB(void)
    // Lock object's access
    Lock();
 
+   SaveCommonProperties();
+
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM containers WHERE id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -161,15 +163,13 @@ BOOL Container::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO containers (id,name,status,is_deleted,category,"
-                       "description,image_id,object_class) VALUES (%ld,'%s',%d,%d,%ld,'%s',%ld,%d)",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwCategory,
-              CHECK_NULL(m_pszDescription), m_dwImageId, Type());
+      sprintf(szQuery, "INSERT INTO containers (id,category,"
+                       "description,object_class) VALUES (%ld,%ld,'%s',%d)",
+              m_dwId, m_dwCategory, CHECK_NULL(m_pszDescription), Type());
    else
-      sprintf(szQuery, "UPDATE containers SET name='%s',status=%d,is_deleted=%d,category=%ld,"
-                       "description='%s',image_id=%ld,object_class=%d WHERE id=%ld",
-              m_szName, m_iStatus, m_bIsDeleted, m_dwCategory, 
-              CHECK_NULL(m_pszDescription), m_dwImageId, Type(), m_dwId);
+      sprintf(szQuery, "UPDATE containers SET category=%ld,"
+                       "description='%s',object_class=%d WHERE id=%ld",
+              m_dwCategory, CHECK_NULL(m_pszDescription), Type(), m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update members list

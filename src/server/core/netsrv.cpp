@@ -83,6 +83,8 @@ BOOL NetworkService::SaveToDB(void)
 
    Lock();
 
+   SaveCommonProperties();
+
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM network_services WHERE id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -97,21 +99,21 @@ BOOL NetworkService::SaveToDB(void)
    pszEscRequest = EncodeSQLString(CHECK_NULL_EX(m_pszRequest));
    pszEscResponce = EncodeSQLString(CHECK_NULL_EX(m_pszResponce));
    if (bNewObject)
-      _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,name,status,is_deleted,"
-                                    "node_id,service_type,ip_bind_addr,ip_proto,ip_port,"
-                                    "check_request,check_responce,poller_node_id,image_id) VALUES "
-                                    "(%ld,'%s',%d,%d,%ld,%d,'%s',%d,%d,'%s','%s',%ld,%ld)"),
-                 m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_pHostNode->Id(), m_iServiceType,
+      _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
+                                    "service_type,ip_bind_addr,ip_proto,ip_port,"
+                                    "check_request,check_responce,poller_node_id) VALUES "
+                                    "(%ld,%ld,%d,'%s',%d,%d,'%s','%s',%ld)"),
+                 m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponce, m_dwPollerNode, m_dwImageId);
+                 pszEscResponce, m_dwPollerNode);
    else
-      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET name='%s',status=%d,"
-                                    "is_deleted=%d,node_id=%ld,service_type=%d,ip_bind_addr='%s',"
+      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%ld,"
+                                    "service_type=%d,ip_bind_addr='%s',"
                                     "ip_proto=%d,ip_port=%d,check_request='%s',"
-                                    "check_responce='%s',poller_node_id=%ld,image_id=%ld WHERE id=%ld"),
-                 m_szName, m_iStatus, m_bIsDeleted, m_pHostNode->Id(), m_iServiceType,
+                                    "check_responce='%s',poller_node_id=%ld WHERE id=%ld"),
+                 m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponce, m_dwPollerNode, m_dwImageId, m_dwId);
+                 pszEscResponce, m_dwPollerNode, m_dwId);
    free(pszEscRequest);
    free(pszEscResponce);
    DBQuery(g_hCoreDB, szQuery);
@@ -140,29 +142,28 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 
    m_dwId = dwId;
 
-   _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,node_id,service_type,"
+   if (!LoadCommonProperties())
+      return FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,"
                                "ip_bind_addr,ip_proto,ip_port,check_request,check_responce,"
-                               "poller_node_id,image_id FROM network_services WHERE id=%ld"), dwId);
+                               "poller_node_id FROM network_services WHERE id=%ld"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
 
    if (DBGetNumRows(hResult) != 0)
    {
-      strncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
-      m_iStatus = DBGetFieldLong(hResult, 0, 1);
-      m_bIsDeleted = DBGetFieldLong(hResult, 0, 2);
-      dwHostNodeId = DBGetFieldULong(hResult, 0, 3);
-      m_iServiceType = DBGetFieldLong(hResult, 0, 4);
-      m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 5);
-      m_wProto = (WORD)DBGetFieldULong(hResult, 0, 6);
-      m_wPort = (WORD)DBGetFieldULong(hResult, 0, 7);
-      m_pszRequest = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 8)));
+      dwHostNodeId = DBGetFieldULong(hResult, 0, 0);
+      m_iServiceType = DBGetFieldLong(hResult, 0, 1);
+      m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
+      m_wProto = (WORD)DBGetFieldULong(hResult, 0, 3);
+      m_wPort = (WORD)DBGetFieldULong(hResult, 0, 4);
+      m_pszRequest = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 5)));
       DecodeSQLString(m_pszRequest);
-      m_pszResponce = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 9)));
+      m_pszResponce = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 6)));
       DecodeSQLString(m_pszResponce);
-      m_dwPollerNode = DBGetFieldULong(hResult, 0, 10);
-      m_dwImageId = DBGetFieldULong(hResult, 0, 11);
+      m_dwPollerNode = DBGetFieldULong(hResult, 0, 7);
 
       // Link service to node
       if (!m_bIsDeleted)

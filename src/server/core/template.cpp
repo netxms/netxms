@@ -76,7 +76,12 @@ BOOL Template::CreateFromDB(DWORD dwId)
    NetObj *pObject;
    BOOL bResult = TRUE;
 
-   _stprintf(szQuery, _T("SELECT id,name,is_deleted,image_id,version,description FROM templates WHERE id=%d"), dwId);
+   m_dwId = dwId;
+
+   if (!LoadCommonProperties())
+      return FALSE;
+
+   _stprintf(szQuery, _T("SELECT version,description FROM templates WHERE id=%ld"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -88,12 +93,8 @@ BOOL Template::CreateFromDB(DWORD dwId)
       return FALSE;
    }
 
-   m_dwId = dwId;
-   strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
-   m_bIsDeleted = DBGetFieldLong(hResult, 0, 2);
-   m_dwImageId = DBGetFieldULong(hResult, 0, 3);
-   m_dwVersion = DBGetFieldULong(hResult, 0, 4);
-   pszStr = DBGetField(hResult, 0, 5);
+   m_dwVersion = DBGetFieldULong(hResult, 0, 0);
+   pszStr = DBGetField(hResult, 0, 1);
    m_pszDescription = _tcsdup(CHECK_NULL_EX(pszStr));
    DecodeSQLString(m_pszDescription);
 
@@ -157,6 +158,8 @@ BOOL Template::SaveToDB(void)
    // Lock object's access
    Lock();
 
+   SaveCommonProperties();
+
    // Check for object's existence in database
    _stprintf(szQuery, _T("SELECT id FROM templates WHERE id=%ld"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -170,13 +173,12 @@ BOOL Template::SaveToDB(void)
    // Form and execute INSERT or UPDATE query
    pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO templates (id,name,is_deleted,image_id,version,"
-                       "description) VALUES (%ld,'%s',%d,%ld,%ld,'%s')",
-              m_dwId, m_szName, m_bIsDeleted, m_dwImageId, m_dwVersion, pszEscDescr);
+      sprintf(szQuery, "INSERT INTO templates (id,version,"
+                       "description) VALUES (%ld,%ld,'%s')",
+              m_dwId, m_dwVersion, pszEscDescr);
    else
-      sprintf(szQuery, "UPDATE templates SET name='%s',is_deleted=%d,image_id=%ld,"
-                       "version=%ld,description='%s' WHERE id=%ld",
-              m_szName, m_bIsDeleted, m_dwImageId, m_dwVersion, pszEscDescr, m_dwId);
+      sprintf(szQuery, "UPDATE templates SET version=%ld,description='%s' WHERE id=%ld",
+              m_dwVersion, pszEscDescr, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
    free(pszEscDescr);
 

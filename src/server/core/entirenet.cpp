@@ -52,11 +52,7 @@ BOOL Network::SaveToDB(void)
 {
    Lock();
 
-   // Save name
-   ConfigWriteStr("TopologyRootObjectName", m_szName, TRUE);
-   ConfigWriteULong("TopologyRootImageId", m_dwImageId, TRUE);
-
-   // Save access list
+   SaveCommonProperties();
    SaveACLToDB();
 
    // Unlock object and clear modification flag
@@ -73,8 +69,7 @@ BOOL Network::SaveToDB(void)
 void Network::LoadFromDB(void)
 {
    Lock();
-   ConfigReadStr("TopologyRootObjectName", m_szName, MAX_OBJECT_NAME, "Entire Network");
-   m_dwImageId = ConfigReadULong("TopologyRootImageId", IMG_DEFAULT);
+   LoadCommonProperties();
    LoadACLFromDB();
    Unlock();
 }

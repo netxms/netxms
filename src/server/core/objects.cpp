@@ -27,6 +27,8 @@
 // Global data
 //
 
+BOOL g_bModificationsLocked = FALSE;
+
 Network *g_pEntireNet = NULL;
 ServiceRoot *g_pServiceRoot = NULL;
 TemplateRoot *g_pTemplateRoot = NULL;
@@ -409,6 +411,9 @@ BOOL LoadObjects(void)
    DWORD dwId;
    char szQuery[256];
 
+   // Prevent objects to change it's modification flag
+   g_bModificationsLocked = TRUE;
+
    // Load container categories
    DbgPrintf(AF_DEBUG_MISC, "Loading container categories...");
    hResult = DBSelect(g_hCoreDB, "SELECT category,name,image_id,description FROM container_categories");
@@ -622,6 +627,9 @@ BOOL LoadObjects(void)
    g_pServiceRoot->LinkChildObjects();
    g_pTemplateRoot->LinkChildObjects();
 
+   // Allow objects to change it's modification flag
+   g_bModificationsLocked = FALSE;
+
    // Recalculate status for built-in objects
    g_pEntireNet->CalculateCompoundStatus();
    g_pServiceRoot->CalculateCompoundStatus();
@@ -671,6 +679,7 @@ void DumpObjects(void)
       printf("   Parents: <%s>\n   Childs: <%s>\n", 
              g_pIndexById[i].pObject->ParentList(pBuffer),
              g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
+      printf("   Last change: %s\n", g_pIndexById[i].pObject->TimeStampAsText());
       switch(g_pIndexById[i].pObject->Type())
       {
          case OBJECT_NODE:

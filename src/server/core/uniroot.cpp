@@ -86,11 +86,7 @@ BOOL UniversalRoot::SaveToDB(void)
 
    Lock();
 
-   // Save name and image
-   sprintf(szQuery, "%sObjectName", g_szClassName[Type()]);
-   ConfigWriteStr(szQuery, m_szName, TRUE);
-   sprintf(szQuery, "%sImageId", g_szClassName[Type()]);
-   ConfigWriteULong(szQuery, m_dwImageId, TRUE);
+   SaveCommonProperties();
 
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
@@ -117,13 +113,8 @@ BOOL UniversalRoot::SaveToDB(void)
 
 void UniversalRoot::LoadFromDB(void)
 {
-   char szVarName[256];
-
    Lock();
-   sprintf(szVarName, "%sObjectName", g_szClassName[Type()]);
-   ConfigReadStr(szVarName, m_szName, MAX_OBJECT_NAME, DefaultName());
-   sprintf(szVarName, "%sImageId", g_szClassName[Type()]);
-   m_dwImageId = ConfigReadULong(szVarName, IMG_DEFAULT);
+   LoadCommonProperties();
    LoadACLFromDB();
    Unlock();
 }
