@@ -455,13 +455,13 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    }
    else if (m_dwFlags & NF_IS_NATIVE_AGENT)
    {
-      AgentConnection *pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-      if (pAgentConn->Connect())
+      AgentLock();
+      if (ConnectToAgent())
       {
-         pIfList = pAgentConn->GetInterfaceList();
-         pAgentConn->Disconnect();
+         CleanInterfaceList(pIfList);
+         pIfList = m_pAgentConnection->GetInterfaceList();
       }
-      delete pAgentConn;
+      AgentUnlock();
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {

@@ -110,6 +110,8 @@ private:
    DWORD m_dwCommandTimeout;
    char **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
+   BOOL m_bIsConnected;
+   MUTEX m_hMutex;
 
    void ReceiverThread(void);
    static void ReceiverThreadStarter(void *);
@@ -124,6 +126,9 @@ protected:
    virtual void PrintMsg(char *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
 
+   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_hMutex); }
+
 public:
    AgentConnection();
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, char *szSecret = NULL);
@@ -131,6 +136,7 @@ public:
 
    BOOL Connect(BOOL bVerbose = FALSE);
    void Disconnect(void);
+   BOOL IsConnected(void) { return m_bIsConnected; }
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);

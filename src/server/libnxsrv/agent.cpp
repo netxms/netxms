@@ -59,6 +59,8 @@ AgentConnection::AgentConnection()
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_dwRequestId = 1;
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
+   m_bIsConnected = FALSE;
+   m_hMutex = MutexCreate();
 }
 
 
@@ -82,6 +84,8 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, char
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_dwRequestId = 1;
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
+   m_bIsConnected = FALSE;
+   m_hMutex = MutexCreate();
 }
 
 
@@ -95,6 +99,7 @@ AgentConnection::~AgentConnection()
       closesocket(m_hSocket);
    DestroyResultData();
    delete m_pMsgWaitQueue;
+   MutexDestroy(m_hMutex);
 }
 
 
@@ -169,6 +174,9 @@ void AgentConnection::ReceiverThread(void)
       }
    }
 
+   // Close socket and mark connection as disconnected
+   Disconnect();
+
    MemFree(pRawMsg);
    MemFree(pMsgBuffer);
 }
@@ -184,6 +192,10 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    char szBuffer[256];
    BOOL bSuccess = FALSE;
    DWORD dwError;
+
+   // Check if already connected
+   if ((m_bIsConnected) || (m_hSocket != -1))
+      return FALSE;
 
    // Create socket
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -231,13 +243,16 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
 connect_cleanup:
    if (!bSuccess)
    {
+      Lock();
       if (m_hSocket != -1)
       {
          shutdown(m_hSocket, 2);
          closesocket(m_hSocket);
          m_hSocket = -1;
       }
+      Unlock();
    }
+   m_bIsConnected = bSuccess;
    return bSuccess;
 }
 
@@ -248,6 +263,7 @@ connect_cleanup:
 
 void AgentConnection::Disconnect(void)
 {
+   Lock();
    if (m_hSocket != -1)
    {
       shutdown(m_hSocket, 2);
@@ -255,6 +271,8 @@ void AgentConnection::Disconnect(void)
       m_hSocket = -1;
    }
    DestroyResultData();
+   m_bIsConnected = FALSE;
+   Unlock();
 }
 
 
@@ -284,7 +302,68 @@ void AgentConnection::DestroyResultData(void)
 
 INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 {
-   return NULL;
+   INTERFACE_LIST *pIfList = NULL;
+   DWORD i;
+   char *pChar, *pBuf;
+
+   if (GetList("InterfaceList") == ERR_SUCCESS)
+   {
+      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+      pIfList->iNumEntries = m_dwNumDataLines;
+      pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      for(i = 0; i < m_dwNumDataLines; i++)
+      {
+         pBuf = m_ppDataLines[i];
+
+         // Index
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
+         {
+            *pChar = 0;
+            pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+            pBuf = pChar + 1;
+         }
+
+         // Address and mask
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
+         {
+            char *pSlash;
+
+            *pChar = 0;
+            pSlash = strchr(pBuf, '/');
+            if (pSlash != NULL)
+            {
+               *pSlash = 0;
+               pSlash++;
+            }
+            else     // Just a paranoia protection, should'n happen if agent working correctly
+            {
+               pSlash = "24";
+            }
+            pIfList->pInterfaces[i].dwIpAddr = inet_addr(pBuf);
+            pIfList->pInterfaces[i].dwIpNetMask = htonl(~(0xFFFFFFFF >> strtoul(pSlash, NULL, 10)));
+            pBuf = pChar + 1;
+         }
+
+         // Interface type
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
+         {
+            *pChar = 0;
+            pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+            pBuf = pChar + 1;
+         }
+
+         // Name
+         strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+      }
+
+      DestroyResultData();
+   }
+
+   return pIfList;
 }
 
 
@@ -297,28 +376,35 @@ DWORD AgentConnection::GetParameter(char *pszParam, DWORD dwBufSize, char *pszBu
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode;
 
-   dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_GET_PARAMETER);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PARAMETER, pszParam);
-   if (SendMessage(&msg))
+   if (m_bIsConnected)
    {
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponce != NULL)
+      dwRqId = m_dwRequestId++;
+      msg.SetCode(CMD_GET_PARAMETER);
+      msg.SetId(dwRqId);
+      msg.SetVariable(VID_PARAMETER, pszParam);
+      if (SendMessage(&msg))
       {
-         dwRetCode = pResponce->GetVariableLong(VID_RCC);
-         if (dwRetCode == ERR_SUCCESS)
-            pResponce->GetVariableStr(VID_VALUE, pszBuffer, dwBufSize);
-         delete pResponce;
+         pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         if (pResponce != NULL)
+         {
+            dwRetCode = pResponce->GetVariableLong(VID_RCC);
+            if (dwRetCode == ERR_SUCCESS)
+               pResponce->GetVariableStr(VID_VALUE, pszBuffer, dwBufSize);
+            delete pResponce;
+         }
+         else
+         {
+            dwRetCode = ERR_REQUEST_TIMEOUT;
+         }
       }
       else
       {
-         dwRetCode = ERR_REQUEST_TIMEOUT;
+         dwRetCode = ERR_CONNECTION_BROKEN;
       }
    }
    else
    {
-      dwRetCode = ERR_CONNECTION_BROKEN;
+      dwRetCode = ERR_NOT_CONNECTED;
    }
 
    return dwRetCode;
@@ -331,7 +417,54 @@ DWORD AgentConnection::GetParameter(char *pszParam, DWORD dwBufSize, char *pszBu
 
 ARP_CACHE *AgentConnection::GetArpCache(void)
 {
-   return NULL;
+   ARP_CACHE *pArpCache = NULL;
+   char szByte[4], *pBuf, *pChar;
+   DWORD i, j;
+
+   if (GetList("ArpCache") == ERR_SUCCESS)
+   {
+      // Create empty structure
+      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+      pArpCache->dwNumEntries = m_dwNumDataLines;
+      pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
+      memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
+
+      szByte[2] = 0;
+
+      // Parse data lines
+      // Each line has form of XXXXXXXXXXXX a.b.c.d
+      // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
+      // and a.b.c.d is an IP address in decimal dotted notation
+      for(i = 0; i < m_dwNumDataLines; i++)
+      {
+         pBuf = m_ppDataLines[i];
+         if (strlen(pBuf) < 20)     // Invalid line
+            continue;
+
+         // MAC address
+         for(j = 0; j < 6; j++)
+         {
+            memcpy(szByte, pBuf, 2);
+            pArpCache->pEntries[i].bMacAddr[j] = (BYTE)strtol(szByte, NULL, 16);
+            pBuf+=2;
+         }
+
+         // IP address
+         while(*pBuf == ' ')
+            pBuf++;
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
+            *pChar = 0;
+         pArpCache->pEntries[i].dwIpAddr = inet_addr(pBuf);
+
+         // Interface index
+         if (pChar != NULL)
+            pArpCache->pEntries[i].dwIndex = strtoul(pChar + 1, NULL, 10);
+      }
+
+      DestroyResultData();
+   }
+   return pArpCache;
 }
 
 
@@ -343,6 +476,9 @@ DWORD AgentConnection::Nop(void)
 {
    CSCPMessage msg;
    DWORD dwRqId;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
 
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_KEEPALIVE);
@@ -412,34 +548,41 @@ DWORD AgentConnection::GetList(char *pszParam)
    CSCPMessage msg, *pResponce;
    DWORD i, dwRqId, dwRetCode;
 
-   DestroyResultData();
-   dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_GET_LIST);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PARAMETER, pszParam);
-   if (SendMessage(&msg))
+   if (m_bIsConnected)
    {
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponce != NULL)
+      DestroyResultData();
+      dwRqId = m_dwRequestId++;
+      msg.SetCode(CMD_GET_LIST);
+      msg.SetId(dwRqId);
+      msg.SetVariable(VID_PARAMETER, pszParam);
+      if (SendMessage(&msg))
       {
-         dwRetCode = pResponce->GetVariableLong(VID_RCC);
-         if (dwRetCode == ERR_SUCCESS)
+         pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         if (pResponce != NULL)
          {
-            m_dwNumDataLines = pResponce->GetVariableLong(VID_NUM_STRINGS);
-            m_ppDataLines = (char **)MemAlloc(sizeof(char *) * m_dwNumDataLines);
-            for(i = 0; i < m_dwNumDataLines; i++)
-               m_ppDataLines[i] = pResponce->GetVariableStr(VID_ENUM_VALUE_BASE + i);
+            dwRetCode = pResponce->GetVariableLong(VID_RCC);
+            if (dwRetCode == ERR_SUCCESS)
+            {
+               m_dwNumDataLines = pResponce->GetVariableLong(VID_NUM_STRINGS);
+               m_ppDataLines = (char **)MemAlloc(sizeof(char *) * m_dwNumDataLines);
+               for(i = 0; i < m_dwNumDataLines; i++)
+                  m_ppDataLines[i] = pResponce->GetVariableStr(VID_ENUM_VALUE_BASE + i);
+            }
+            delete pResponce;
          }
-         delete pResponce;
+         else
+         {
+            dwRetCode = ERR_REQUEST_TIMEOUT;
+         }
       }
       else
       {
-         dwRetCode = ERR_REQUEST_TIMEOUT;
+         dwRetCode = ERR_CONNECTION_BROKEN;
       }
    }
    else
    {
-      dwRetCode = ERR_CONNECTION_BROKEN;
+      dwRetCode = ERR_NOT_CONNECTED;
    }
 
    return dwRetCode;
@@ -455,6 +598,9 @@ DWORD AgentConnection::Authenticate(void)
    CSCPMessage msg;
    DWORD dwRqId;
    BYTE hash[32];
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
 
    if (m_iAuthMethod == AUTH_NONE)
       return ERR_SUCCESS;  // No authentication required
@@ -495,6 +641,9 @@ DWORD AgentConnection::ExecAction(char *pszAction, int argc, char **argv)
    CSCPMessage msg;
    DWORD dwRqId;
    int i;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
 
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_ACTION);
