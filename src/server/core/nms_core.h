@@ -271,6 +271,7 @@ private:
    void ModifyNodeDCI(CSCPMessage *pRequest);
    void CopyDCI(CSCPMessage *pRequest);
    void GetCollectedData(CSCPMessage *pRequest);
+   void ChangeDCIStatus(CSCPMessage *pRequest);
    void OpenEPP(DWORD dwRqId);
    void CloseEPP(DWORD dwRqId);
    void SaveEPP(CSCPMessage *pRequest);

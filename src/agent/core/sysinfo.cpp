@@ -106,8 +106,11 @@ LONG H_FileCount(char *pszCmd, char *pszArg, char *pValue)
          pFile = readdir(pDir);
          if (pFile == NULL)
             break;
-         if (MatchString(szPattern, pFile->d_name, FALSE))
-            nCount++;
+         if (strcmp(pFile->d_name, ".") && strcmp(pFile->d_name, ".."))
+         {
+            if (MatchString(szPattern, pFile->d_name, FALSE))
+               nCount++;
+         }
       }
       closedir(pDir);
       ret_int(pValue, nCount);

@@ -503,6 +503,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_NODE_DCI:
             ModifyNodeDCI(pMsg);
             break;
+         case CMD_SET_DCI_STATUS:
+            ChangeDCIStatus(pMsg);
+            break;
          case CMD_COPY_DCI:
             CopyDCI(pMsg);
             break;
@@ -1824,6 +1827,56 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                }
                if (bSuccess)
                   ((Template *)pObject)->SetDCIModificationFlag();
+            }
+            else  // User doesn't have MODIFY rights on object
+            {
+               msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+            }
+         }
+         else  // Nodes DCI list not locked by this session
+         {
+            msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Change status for one or more DCIs
+//
+
+void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_TEMPLATE))
+      {
+         if (((Template *)pObject)->IsLockedBySession(m_dwIndex))
+         {
+            if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+            {
             }
             else  // User doesn't have MODIFY rights on object
             {
