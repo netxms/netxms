@@ -43,6 +43,7 @@ NetObj::NetObj()
    m_pAccessList = new AccessList;
    m_bInheritAccessRights = TRUE;
    m_dwImageId = IMG_DEFAULT;    // Default image
+   m_pPollRequestor = NULL;
 }
 
 
@@ -636,4 +637,24 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
 
    Unlock();
    return bResult;
+}
+
+
+//
+// Send message to client, who requests poll, if any
+// This method is used by Node and Interface class objects
+//
+
+void NetObj::SendPollerMsg(TCHAR *pszFormat, ...)
+{
+   if (m_pPollRequestor != NULL)
+   {
+      va_list args;
+      TCHAR szBuffer[1024];
+
+      va_start(args, pszFormat);
+      _vsntprintf(szBuffer, 1024, pszFormat, args);
+      va_end(args);
+      m_pPollRequestor->SendPollerMsg(szBuffer);
+   }
 }

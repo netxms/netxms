@@ -24,6 +24,7 @@
 
 #include "stdafx.h"
 #include "nxcon.h"
+#include "PollNodeDlg.h"
 
 
 //
@@ -228,7 +229,7 @@ DWORD DoLogin(void)
 
 
 //
-// Login thread
+// Request processing thread
 //
 
 static DWORD WINAPI RequestThread(void *pArg)
@@ -386,4 +387,62 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    rqData.pArg6 = pArg6;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Callback function for node poller
+//
+
+static void PollerCallback(TCHAR *pszMsg, void *pArg)
+{
+   if (((RqData *)pArg)->hWnd != NULL)
+      PostMessage(((RqData *)pArg)->hWnd, WM_POLLER_MESSAGE, 0, (LPARAM)_tcsdup(pszMsg));
+}
+
+
+//
+// Poller thread
+//
+
+static DWORD WINAPI PollerThread(void *pArg)
+{
+   RqData *pData = (RqData *)pArg;
+   DWORD dwResult;
+
+   dwResult = NXCPollNode((DWORD)pData->pArg1, (int)pData->pArg2, PollerCallback, pArg);
+   if (pData->hWnd != NULL)
+      PostMessage(pData->hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
+   return dwResult;
+}
+
+
+//
+// Perform forced node poll
+//
+
+DWORD DoNodePoll(DWORD dwObjectId, int iPollType)
+{
+   HANDLE hThread;
+   DWORD dwThreadId, dwResult;
+   RqData data;
+
+   data.pArg1 = (void *)dwObjectId;
+   data.pArg2 = (void *)iPollType;
+   hThread = CreateThread(NULL, 0, PollerThread, &data, CREATE_SUSPENDED, &dwThreadId);
+   if (hThread != NULL)
+   {
+      CPollNodeDlg wndPollDlg;
+
+      wndPollDlg.m_phWnd = &data.hWnd;
+      wndPollDlg.m_hThread = hThread;
+      dwResult = (DWORD)wndPollDlg.DoModal();
+      CloseHandle(hThread);
+   }
+   else
+   {
+      dwResult = RCC_SYSTEM_FAILURE;
+   }
+
+   return dwResult;
 }

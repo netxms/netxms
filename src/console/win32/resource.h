@@ -112,6 +112,9 @@
 #define IDI_ACTIVE                      223
 #define IDI_DISABLED                    224
 #define IDI_UNSUPPORTED                 225
+#define IDI_DATACOLLECT                 226
+#define IDI_DCT                         227
+#define IDD_POLL_NODE                   228
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -251,6 +254,8 @@
 #define IDC_EDIT_FORMULA                1164
 #define IDC_BUTTON_CREATE               1166
 #define IDC_EDIT_EVENT                  1167
+#define IDC_POLL_PROGRESS               1169
+#define IDC_EDIT_MSG                    1170
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -319,6 +324,7 @@
 #define ID_ACTION_PROPERTIES            32875
 #define ID_OBJECT_POLL_STATUS           32876
 #define ID_OBJECT_POLL_CONFIGURATION    32877
+#define ID_CONTROLPANEL_DCT             32880
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -327,9 +333,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        226
-#define _APS_NEXT_COMMAND_VALUE         32880
-#define _APS_NEXT_CONTROL_VALUE         1169
+#define _APS_NEXT_RESOURCE_VALUE        229
+#define _APS_NEXT_COMMAND_VALUE         32881
+#define _APS_NEXT_CONTROL_VALUE         1172
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

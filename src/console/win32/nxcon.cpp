@@ -1243,3 +1243,17 @@ void CConsoleApp::DeleteNetXMSObject(NXC_OBJECT *pObject)
    if (dwResult != RCC_SUCCESS)
       ErrorBox(dwResult, "Unable to delete object: %s");
 }
+
+
+//
+// Perform forced poll on a node
+//
+
+void CConsoleApp::PollNode(DWORD dwObjectId, int iPollType)
+{
+   DWORD dwResult;
+
+   dwResult = DoNodePoll(dwObjectId, iPollType);
+   if (dwResult != RCC_SUCCESS)
+      ErrorBox(dwResult, _T("Error polling node: %s"));
+}

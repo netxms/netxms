@@ -86,6 +86,7 @@ protected:
    MUTEX m_hMutex;
    DWORD m_dwIpAddr;       // Every object should have an IP address
    DWORD m_dwImageId;      // Custom image id or 0 if object has default image
+   ClientSession *m_pPollRequestor;
 
    DWORD m_dwChildCount;   // Number of child objects
    NetObj **m_pChildList;  // Array of pointers to child objects
@@ -103,6 +104,8 @@ protected:
 
    BOOL LoadACLFromDB(void);
    BOOL SaveACLToDB(void);
+
+   void SendPollerMsg(TCHAR *pszFormat, ...);
 
 public:
    NetObj();
@@ -184,7 +187,7 @@ public:
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD IfIndex(void) { return m_dwIfIndex; }
 
-   void StatusPoll(void);
+   void StatusPoll(ClientSession *pSession);
    virtual void CreateMessage(CSCPMessage *pMsg);
 };
 
@@ -259,7 +262,7 @@ public:
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
-   void StatusPoll(void);
+   void StatusPoll(ClientSession *pSession);
    void ConfigurationPoll(void);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);

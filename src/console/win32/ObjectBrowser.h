@@ -141,6 +141,7 @@ protected:
 	afx_msg void OnObjectCreateNode();
 	afx_msg void OnObjectDelete();
 	afx_msg void OnUpdateObjectDelete(CCmdUI* pCmdUI);
+	afx_msg void OnObjectPollStatus();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);

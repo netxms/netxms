@@ -301,6 +301,10 @@ SOURCE=.\PasswordChangeDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\PollNodeDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RequestProcessingDlg.cpp
 # End Source File
 # Begin Source File
@@ -558,6 +562,10 @@ SOURCE=.\PasswordChangeDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\PollNodeDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\RequestProcessingDlg.h
 # End Source File
 # Begin Source File
@@ -639,6 +647,14 @@ SOURCE=.\res\bmp00001.bmp
 # Begin Source File
 
 SOURCE=.\icons\connect.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\datacoll.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\dctemplate.ico
 # End Source File
 # Begin Source File
 

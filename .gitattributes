@@ -231,6 +231,8 @@ src/console/win32/icons/ack.ico -text
 src/console/win32/icons/active.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/connect.ico -text
+src/console/win32/icons/datacoll.ico -text
+src/console/win32/icons/dctemplate.ico -text
 src/console/win32/icons/disabled.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/exec.ico -text

@@ -684,7 +684,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList)
 // Perform a forced node poll
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, void (* pfCallback)(TCHAR *))
+DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, 
+                                     void (* pfCallback)(TCHAR *, void *), void *pArg)
 {
    DWORD dwRetCode, dwRqId;
    CSCPMessage msg, *pResponce;
@@ -707,7 +708,7 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, void (* pf
          if ((dwRetCode == RCC_OPERATION_IN_PROGRESS) && (pfCallback != NULL))
          {
             pszMsg = pResponce->GetVariableStr(VID_POLLER_MESSAGE);
-            pfCallback(pszMsg);
+            pfCallback(pszMsg, pArg);
             free(pszMsg);
          }
          delete pResponce;

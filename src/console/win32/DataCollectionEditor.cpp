@@ -491,3 +491,16 @@ void CDataCollectionEditor::OnItemGraph()
       theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwItemId, szBuffer);
    }
 }
+
+
+//
+// Overriden PreCreateWindow()
+//
+
+BOOL CDataCollectionEditor::PreCreateWindow(CREATESTRUCT& cs) 
+{
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
+                                         AfxGetApp()->LoadIcon(IDI_DATACOLLECT));
+	return CMDIChildWnd::PreCreateWindow(cs);
+}

@@ -166,6 +166,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void PollNode(DWORD dwObjectId, int iPollType);
 	void DeleteNetXMSObject(NXC_OBJECT *pObject);
 	void CreateNode(DWORD dwParent);
 	void CreateContainer(DWORD dwParent);

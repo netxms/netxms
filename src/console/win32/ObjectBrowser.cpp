@@ -167,6 +167,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_NODE, OnObjectCreateNode)
 	ON_COMMAND(ID_OBJECT_DELETE, OnObjectDelete)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_DELETE, OnUpdateObjectDelete)
+	ON_COMMAND(ID_OBJECT_POLL_STATUS, OnObjectPollStatus)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1324,6 +1325,33 @@ void CObjectBrowser::OnObjectDelete()
       {
          pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
          theApp.DeleteNetXMSObject(pObject);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_POLL_STATUS message handler
+//
+
+void CObjectBrowser::OnObjectPollStatus() 
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      if (m_pCurrentObject != NULL)
+         theApp.PollNode(m_pCurrentObject->dwId, POLL_STATUS);
+   }
+   else
+   {
+      int iItem;
+      NXC_OBJECT *pObject;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         theApp.PollNode(pObject->dwId, POLL_STATUS);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
       }
    }

@@ -68,17 +68,19 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create an image list and assign it to list control
    m_pImageList = new CImageList;
    m_pImageList->Create(32, 32, ILC_COLOR8 | ILC_MASK, 8, 8);
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_RULEMGR));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LOG));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EXEC));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_DCT));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
-   AddItem("Event Processing Policy", 1, ID_CONTROLPANEL_EVENTPOLICY);
-   AddItem("Users", 0, ID_CONTROLPANEL_USERS);
+   AddItem("Event Processing Policy", 0, ID_CONTROLPANEL_EVENTPOLICY);
+   AddItem("Users", 1, ID_CONTROLPANEL_USERS);
    AddItem("Events", 2, ID_CONTROLPANEL_EVENTS);
    AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
+   AddItem("Data Collection Templates", 4, ID_CONTROLPANEL_DCT);
 
    theApp.OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;

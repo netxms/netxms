@@ -239,6 +239,7 @@ private:
    DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
    DWORD m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
+   DWORD m_dwPollRqId;        // Request ID for forced poll request
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -304,6 +305,7 @@ public:
    void Run(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void SendPollerMsg(TCHAR *pszMsg);
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
@@ -462,5 +464,7 @@ extern char g_szDbName[];
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
+
+extern char *g_pszStatusName[];
 
 #endif   /* _nms_core_h_ */

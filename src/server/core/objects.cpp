@@ -49,6 +49,9 @@ MUTEX g_hMutexInterfaceIndex;
 DWORD g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
+char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
+                            "Unknown", "Unmanaged", "Disabled", "Testing" };
+
 
 //
 // Initialize objects infrastructure
@@ -569,8 +572,6 @@ void DumpObjects(void)
    CONTAINER_CATEGORY *pCat;
    static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network",
                              "Container", "Zone" };
-   static char *statusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
-                                 "Unknown", "Unmanaged", "Disabled", "Testing" };
 
    pBuffer = (char *)malloc(128000);
    MutexLock(g_hMutexIdIndex, INFINITE);
@@ -581,7 +582,7 @@ void DumpObjects(void)
              g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
              objTypes[g_pIndexById[i].pObject->Type()],
              IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
-             statusName[g_pIndexById[i].pObject->Status()],
+             g_pszStatusName[g_pIndexById[i].pObject->Status()],
              g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
       printf("   Parents: <%s>\n   Childs: <%s>\n", 
              g_pIndexById[i].pObject->ParentList(pBuffer),

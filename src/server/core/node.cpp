@@ -602,17 +602,22 @@ void Node::CalculateCompoundStatus(void)
 // Perform status poll on node
 //
 
-void Node::StatusPoll(void)
+void Node::StatusPoll(ClientSession *pSession)
 {
    DWORD i;
 
    PollerLock();
+   m_pPollRequestor = pSession;
+   SendPollerMsg("Starting status poll for node %s\r\n", m_szName);
    for(i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_UNMANAGED))
-         ((Interface *)m_pChildList[i])->StatusPoll();
+         ((Interface *)m_pChildList[i])->StatusPoll(pSession);
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
+   SendPollerMsg("Finished status poll for node %s\r\n"
+                 "Node status after poll is %s\r\n", m_szName, g_pszStatusName[m_iStatus]);
+   m_pPollRequestor = NULL;
    PollerUnlock();
 }
 

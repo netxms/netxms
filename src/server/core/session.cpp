@@ -2598,4 +2598,67 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
 
 void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+   NetObj *pObject;
+   int iPollType;
+
+   // Prepare responce message
+   m_dwPollRqId = pRequest->GetId();
+   msg.SetCode(CMD_POLLING_INFO);
+   msg.SetId(m_dwPollRqId);
+
+   // Get polling type
+   iPollType = pRequest->GetVariableShort(VID_POLL_TYPE);
+
+   // Find object to be deleted
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      // We can do polls only for node objects
+      if ((pObject->Type() == OBJECT_NODE) &&
+          ((iPollType == POLL_STATUS) || (iPollType == POLL_CONFIGURATION)))
+      {
+         // Check access rights
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            ((Node *)pObject)->IncRefCount();
+
+            ((Node *)pObject)->StatusPoll(this);
+            
+            ((Node *)pObject)->DecRefCount();
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Send message fro poller to client
+//
+
+void ClientSession::SendPollerMsg(TCHAR *pszMsg)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_POLLING_INFO);
+   msg.SetId(m_dwPollRqId);
+   msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
+   msg.SetVariable(VID_POLLER_MESSAGE, pszMsg);
+   SendMessage(&msg);
 }
