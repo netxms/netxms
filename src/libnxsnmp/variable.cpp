@@ -180,7 +180,35 @@ long SNMP_Variable::GetValueAsInt(void)
 
 TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
 {
-   return NULL;
+   if ((pszBuffer == NULL) || (dwBufferSize == 0))
+      return NULL;
+
+   switch(m_dwType)
+   {
+      case ASN_INTEGER:
+         _sntprintf(pszBuffer, dwBufferSize, _T("%ld"), *((long *)m_pValue));
+         break;
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
+         _sntprintf(pszBuffer, dwBufferSize, _T("%lu"), *((DWORD *)m_pValue));
+         break;
+      case ASN_IP_ADDR:
+         if (dwBufferSize >= 16)
+            IpToStr(ntohl(*((DWORD *)m_pValue)), pszBuffer);
+         else
+            pszBuffer[0] = 0;
+         break;
+      case ASN_OBJECT_ID:
+         SNMPConvertOIDToText(m_dwValueLength / sizeof(DWORD), (DWORD *)m_pValue,
+                              pszBuffer, dwBufferSize);
+         break;
+      default:
+         pszBuffer[0] = 0;
+         break;
+   }
+   return pszBuffer;
 }
 
 

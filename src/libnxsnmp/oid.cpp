@@ -66,13 +66,6 @@ SNMP_ObjectId::~SNMP_ObjectId()
 
 void SNMP_ObjectId::ConvertToText(void)
 {
-   DWORD i, dwBufPos, dwNumChars;
-
    m_pszTextValue = (TCHAR *)realloc(m_pszTextValue, sizeof(TCHAR) * (m_dwLength * 6 + 1));
-   m_pszTextValue[0] = 0;
-   for(i = 0, dwBufPos = 0; i < m_dwLength; i++)
-   {
-      dwNumChars = _stprintf(&m_pszTextValue[dwBufPos], _T(".%d"), m_pdwValue[i]);
-      dwBufPos += dwNumChars;
-   }
+   SNMPConvertOIDToText(m_dwLength, m_pdwValue, m_pszTextValue, m_dwLength * 6 + 1);
 }

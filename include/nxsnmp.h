@@ -178,4 +178,12 @@ public:
    DWORD GetVersion(void) { return m_dwVersion; }
 };
 
+
+//
+// Functions
+//
+
+void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
+
+
 #endif

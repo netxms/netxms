@@ -84,9 +84,11 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
             for(DWORD i = 0; i < pdu->GetNumVariables(); i++)
             {
                SNMP_Variable *var;
+               TCHAR szBuffer[1024];
 
                var = pdu->GetVariable(i);
-               printf("%d: %s %02X\n", i, var->GetName()->GetValueAsText(), var->GetType());
+               printf("%d: %s [%02X] == '%s'\n", i, var->GetName()->GetValueAsText(),
+                  var->GetType(),var->GetValueAsString(szBuffer, 1024));
             }
             delete pdu;
          }

@@ -25,6 +25,23 @@
 
 
 //
+// Convert OID to text
+//
+
+void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize)
+{
+   DWORD i, dwBufPos, dwNumChars;
+
+   pszBuffer[0] = 0;
+   for(i = 0, dwBufPos = 0; (i < dwLength) && (dwBufPos < dwBufferSize); i++)
+   {
+      dwNumChars = _sntprintf(&pszBuffer[dwBufPos], dwBufferSize - dwBufPos, _T(".%d"), pdwValue[i]);
+      dwBufPos += dwNumChars;
+   }
+}
+
+
+//
 // DLL entry point
 //
 
