@@ -218,6 +218,12 @@ char *Event::ExpandText(char *szTemplate)
                   strftime(&pText[dwPos], 32, "%d-%b-%Y %H:%M:%S", lt);
                   dwPos = strlen(pText);
                   break;
+               case 'T':   // Event's timestamp as number of seconds since epoch
+                  dwSize += 16;
+                  pText = (char *)realloc(pText, dwSize);
+                  sprintf(&pText[dwPos], "%lu", m_tTimeStamp);
+                  dwPos = strlen(pText);
+                  break;
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
