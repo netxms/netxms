@@ -150,7 +150,7 @@ protected:
 	afx_msg void OnObjectCreateTemplategroup();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
+   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
