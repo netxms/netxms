@@ -605,6 +605,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
       case OBJECT_TEMPLATEGROUP:
          msg.SetVariable(VID_DESCRIPTION, pCreateInfo->cs.templateGroup.pszDescription);
          break;
+      case OBJECT_NETWORKSERVICE:
+         msg.SetVariable(VID_SERVICE_TYPE, (WORD)pCreateInfo->cs.netsrv.iServiceType);
+         msg.SetVariable(VID_IP_PROTO, pCreateInfo->cs.netsrv.wProto);
+         msg.SetVariable(VID_IP_PORT, pCreateInfo->cs.netsrv.wPort);
+         msg.SetVariable(VID_SERVICE_REQUEST, pCreateInfo->cs.netsrv.pszRequest);
+         msg.SetVariable(VID_SERVICE_RESPONCE, pCreateInfo->cs.netsrv.pszResponce);
+         break;
       default:
          break;
    }

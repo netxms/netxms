@@ -222,7 +222,10 @@ void NetObj::Delete(void)
 
    // Remove references to this object from parent objects
    for(i = 0; i < m_dwParentCount; i++)
+   {
       m_pParentList[i]->DeleteChild(this);
+      m_pParentList[i]->CalculateCompoundStatus();
+   }
    free(m_pParentList);
    m_pParentList = NULL;
    m_dwParentCount = 0;

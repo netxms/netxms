@@ -40,5 +40,6 @@
 #define IMG_TEMPLATE                9
 #define IMG_TEMPLATE_GROUP          10
 #define IMG_TEMPLATE_ROOT           11
+#define IMG_NETWORK_SERVICE         12
 
 #endif

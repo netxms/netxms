@@ -280,6 +280,9 @@ protected:
 
 public:
    NetworkService();
+   NetworkService(int iServiceType, WORD wProto, WORD wPort,
+                  TCHAR *pszRequest, TCHAR *pszResponce,
+                  Node *pHostNode = NULL, Node *pPollNode = NULL);
    virtual ~NetworkService();
 
    virtual int Type(void) { return OBJECT_NETWORKSERVICE; }

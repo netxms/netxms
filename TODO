@@ -28,7 +28,6 @@ GENERAL:
 
 SERVER:
 
-- Recalculate object status after binding change
 - Implement sending of all alarms from database
 - Implement normal mailer shutdown
 - Check if object indexes always locked when used

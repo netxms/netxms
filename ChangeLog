@@ -9,6 +9,7 @@
 - Fixed deadlock sometimes caused by retrieving DCI collected data
 - Added parameters System.Hostname, System.Uname and System.Uptime to
   Solaris subagent
+- Object status now recalculated after binding change
 
 
 *

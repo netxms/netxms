@@ -24,7 +24,7 @@
 
 
 //
-// Constructor
+// Default constructor
 //
 
 NetworkService::NetworkService()
@@ -37,6 +37,26 @@ NetworkService::NetworkService()
    m_wPort = 80;
    m_pszRequest = NULL;
    m_pszResponce = NULL;
+}
+
+
+//
+// Extended constructor
+// Note that pszRequest and pszResponce should be dynamically allocated
+// and they will be freed by object's destructor!!!
+//
+
+NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
+                               TCHAR *pszRequest, TCHAR *pszResponce,
+                               Node *pHostNode, Node *pPollNode)
+{
+   m_iServiceType = iServiceType;
+   m_pHostNode = pHostNode;
+   m_pPollNode = pPollNode;
+   m_wProto = wProto;
+   m_wPort = wPort;
+   m_pszRequest = pszRequest;
+   m_pszResponce = pszResponce;
 }
 
 

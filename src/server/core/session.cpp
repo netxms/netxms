@@ -2579,9 +2579,11 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject, *pParent;
-   int iClass;
-   char *pDescription, szObjectName[MAX_OBJECT_NAME];
+   int iClass, iServiceType;
+   TCHAR *pDescription, szObjectName[MAX_OBJECT_NAME];
+   TCHAR *pszRequest, *pszResponce;
    DWORD dwIpAddr;
+   WORD wIpProto, wIpPort;
    BOOL bParentAlwaysValid = FALSE;
 
    // Prepare responce message
@@ -2640,6 +2642,17 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      pObject->SetName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
+                  case OBJECT_NETWORKSERVICE:
+                     iServiceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
+                     wIpProto = pRequest->GetVariableShort(VID_IP_PROTO);
+                     wIpPort = pRequest->GetVariableShort(VID_IP_PORT);
+                     pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
+                     pszResponce = pRequest->GetVariableStr(VID_SERVICE_RESPONCE);
+                     pObject = new NetworkService(iServiceType, wIpProto, wIpPort, 
+                                                  pszRequest, pszResponce, (Node *)pParent);
+                     pObject->SetName(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+                     break;
                }
 
                // If creation was successful do binding
@@ -2649,6 +2662,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                   {
                      pParent->AddChild(pObject);
                      pObject->AddParent(pParent);
+                     pParent->CalculateCompoundStatus();
                   }
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   msg.SetVariable(VID_OBJECT_ID, pObject->Id());
@@ -2718,6 +2732,7 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                {
                   pParent->AddChild(pChild);
                   pChild->AddParent(pParent);
+                  pParent->CalculateCompoundStatus();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                }
                else

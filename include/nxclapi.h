@@ -868,6 +868,14 @@ typedef struct
       {
          TCHAR *pszDescription;
       } templateGroup;
+      struct
+      {
+         int iServiceType;
+         WORD wProto;
+         WORD wPort;
+         TCHAR *pszRequest;
+         TCHAR *pszResponce;
+      } netsrv;
    } cs;
 } NXC_OBJECT_CREATE_INFO;
 

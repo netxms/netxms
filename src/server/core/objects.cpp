@@ -677,6 +677,10 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_TEMPLATE))
             return TRUE;
          break;
+      case OBJECT_NODE:
+         if (iChildClass == OBJECT_NETWORKSERVICE)
+            return TRUE;
+         break;
       case -1:    // Creating object without parent
          if (iChildClass == OBJECT_NODE)
             return TRUE;   // OK only for nodes, because parent subnet will be created automatically
