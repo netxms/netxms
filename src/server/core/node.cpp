@@ -818,6 +818,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          {
             strcpy(m_szAgentVersion, szBuffer);
             bHasChanges = TRUE;
+            SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
          }
       }
 
@@ -827,6 +828,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          {
             strcpy(m_szPlatformName, szBuffer);
             bHasChanges = TRUE;
+            SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szAgentVersion);
          }
       }
 
@@ -963,6 +965,34 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
             ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
             CreateNewInterface(m_dwIpAddr, 0, szBuffer,
                                0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
+            bHasChanges = TRUE;
+         }
+      }
+      else
+      {
+         // Check if NF_BEHIND_NAT flag set incorrectly
+         if (m_dwFlags & NF_BEHIND_NAT)
+         {
+            Interface *pIfNat;
+
+            // Remove NAT interface
+            Lock();
+            for(i = 0, pIfNat = NULL; i < m_dwChildCount; i++)
+               if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+               {
+                  if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
+                  {
+                     pIfNat = (Interface *)m_pChildList[i];
+                     break;
+                  }
+               }
+            Unlock();
+
+            if (pIfNat != NULL)
+               DeleteInterface(pIfNat);
+
+            m_dwFlags &= ~NF_BEHIND_NAT;
+            bHasChanges = TRUE;
          }
       }
 
