@@ -66,15 +66,15 @@ int BitsInMask(DWORD dwMask)
 // Strip whitespaces and tabs off the string
 //
 
-void StrStrip(char *str)
+void StrStrip(char *pStr)
 {
    int i;
 
-   for(i=0;(str[i]!=0)&&((str[i]==' ')||(str[i]=='\t'));i++);
-   if (i>0)
-      memmove(str,&str[i],strlen(&str[i])+1);
-   for(i=strlen(str)-1;(i>=0)&&((str[i]==' ')||(str[i]=='\t'));i--);
-   str[i+1]=0;
+   for(i = 0; (pStr[i] != 0) && ((pStr[i] == ' ') || (pStr[i] == '\t')); i++);
+   if (i > 0)
+      memmove(pStr, &pStr[i], strlen(&pStr[i]) + 1);
+   for(i = strlen(pStr) - 1; (i >= 0) && ((pStr[i] == ' ') || (pStr[i] == '\t')); i--);
+   pStr[i+1] = 0;
 }
 
 
