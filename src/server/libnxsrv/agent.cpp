@@ -484,3 +484,28 @@ DWORD AgentConnection::Authenticate(void)
    else
       return ERR_CONNECTION_BROKEN;
 }
+
+
+//
+// Execute action on agent
+//
+
+DWORD AgentConnection::ExecAction(char *pszAction, int argc, char **argv)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+   int i;
+
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_ACTION);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_ACTION_NAME, pszAction);
+   msg.SetVariable(VID_NUM_ARGS, (DWORD)argc);
+   for(i = 0; i < argc; i++)
+      msg.SetVariable(VID_ACTION_ARG_BASE + i, argv[i]);
+
+   if (SendMessage(&msg))
+      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
+}

@@ -83,6 +83,7 @@ BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 // Static variables
 //
 
+static char m_szActionList[16384] = "";
 static char m_szServerList[16384] = "";
 static char m_szSubagentList[16384] = "";
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -94,6 +95,8 @@ static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
+   { "Action", CT_STRING_LIST, '\n', 0, 16384, 0, m_szActionList },
+   { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
@@ -245,6 +248,17 @@ BOOL Initialize(void)
          *pEnd = 0;
       StrStrip(pItem);
       LoadSubAgent(pItem);
+   }
+
+   // Parse action list
+   for(pItem = m_szActionList; *pItem != 0; pItem = pEnd + 1)
+   {
+      pEnd = strchr(pItem, '\n');
+      if (pEnd != NULL)
+         *pEnd = 0;
+      StrStrip(pItem);
+      if (!AddActionFromConfig(pItem))
+         WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
    }
 
    // Agent start time

@@ -220,7 +220,7 @@ DWORD GetLocalIpAddr(void)
 
 
 //
-// Execute external command via shell
+// Execute external command
 //
 
 BOOL ExecCommand(char *pszCommand)

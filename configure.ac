@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.18 2004-08-10 14:48:38 victor Exp $
+# $Id: configure.ac,v 1.19 2004-08-12 15:29:26 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -318,6 +318,7 @@ AC_CONFIG_FILES([
    src/server/core/Makefile
    src/server/tools/Makefile
    src/server/tools/nxget/Makefile
+   src/server/tools/nxaction/Makefile
    src/server/dbdrv/Makefile
    src/server/dbdrv/mysql/Makefile
    src/server/dbdrv/pgsql/Makefile

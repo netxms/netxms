@@ -92,7 +92,15 @@ PostBuild_Cmds=copy Debug\nxagentd.exe ..\..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\actions.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\comm.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\exec.cpp
 # End Source File
 # Begin Source File
 

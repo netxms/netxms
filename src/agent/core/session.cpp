@@ -184,6 +184,9 @@ void CommSession::ProcessingThread(void)
             case CMD_KEEPALIVE:
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
                break;
+            case CMD_ACTION:
+               Action(pMsg, &msg);
+               break;
             default:
                msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
@@ -311,4 +314,32 @@ void CommSession::GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    for(i = 0; i < value.dwNumStrings; i++)
       MemFree(value.ppStringList[i]);
    MemFree(value.ppStringList);
+}
+
+
+//
+// Perform action on request
+//
+
+void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   char szAction[MAX_PARAM_NAME];
+   NETXMS_VALUES_LIST args;
+   DWORD i, dwRetCode;
+
+   // Get action name and arguments
+   pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
+   args.dwNumStrings = pRequest->GetVariableLong(VID_NUM_ARGS);
+   args.ppStringList = (char **)MemAlloc(sizeof(char *) * args.dwNumStrings);
+   for(i = 0; i < args.dwNumStrings; i++)
+      args.ppStringList[i] = pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i);
+
+   // Execute action
+   dwRetCode = ExecAction(szAction, &args);
+   pMsg->SetVariable(VID_RCC, dwRetCode);
+
+   // Cleanup
+   for(i = 0; i < args.dwNumStrings; i++)
+      MemFree(args.ppStringList[i]);
+   MemFree(args.ppStringList);
 }

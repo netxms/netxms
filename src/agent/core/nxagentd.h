@@ -80,6 +80,7 @@
 #define AF_DEBUG                    0x0004
 #define AF_REQUIRE_AUTH             0x0008
 #define AF_LOG_UNRESOLVED_SYMBOLS   0x0010
+#define AF_ENABLE_ACTIONS           0x0020
 #define AF_SHUTDOWN                 0x1000
 
 
@@ -131,6 +132,26 @@
 
 
 //
+// Action types
+//
+
+#define ACTION_EXEC        1
+#define ACTION_SUBAGENT    2
+
+
+//
+// Action definition structure
+//
+
+typedef struct
+{
+   char szName[MAX_PARAM_NAME];
+   int iType;
+   char *pszCmdLine;
+} ACTION;
+
+
+//
 // Parameter definition structure
 //
 
@@ -174,6 +195,7 @@ private:
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
 
 public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -212,6 +234,12 @@ DWORD GetParameterValue(char *pszParam, char *pszValue);
 DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
 
 BOOL LoadSubAgent(char *szModuleName);
+
+BOOL AddAction(char *pszName, int iType, char *pszCmdLine);
+BOOL AddActionFromConfig(char *pszLine);
+DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
+
+DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
 
 #ifdef _WIN32
 

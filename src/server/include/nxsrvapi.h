@@ -137,6 +137,7 @@ public:
    DWORD GetParameter(char *pszParam, DWORD dwBufSize, char *pszBuffer);
    DWORD GetList(char *pszParam);
    DWORD Nop(void);
+   DWORD ExecAction(char *pszAction, int argc, char **argv);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const char *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : "(error)"; }

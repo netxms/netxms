@@ -50,7 +50,9 @@ sql/setup.in -text
 src/Makefile.am -text
 src/agent/Makefile.am -text
 src/agent/core/Makefile.am -text
+src/agent/core/actions.cpp -text
 src/agent/core/comm.cpp -text
+src/agent/core/exec.cpp -text
 src/agent/core/getparam.cpp -text
 src/agent/core/log.cpp -text
 src/agent/core/messages.mc -text
@@ -319,6 +321,10 @@ src/server/libnxsrv/libnxsrv.dsw -text
 src/server/libnxsrv/libnxsrv.h -text
 src/server/libnxsrv/main.cpp -text
 src/server/tools/Makefile.am -text
+src/server/tools/nxaction/Makefile.am -text
+src/server/tools/nxaction/nxaction.cpp -text
+src/server/tools/nxaction/nxaction.dsp -text
+src/server/tools/nxaction/nxaction.dsw -text
 src/server/tools/nxadm/comm.cpp -text
 src/server/tools/nxadm/nxadm.cpp -text
 src/server/tools/nxadm/nxadm.dsp -text

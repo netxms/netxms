@@ -230,6 +230,7 @@ typedef struct
 #define CMD_GET_PARAMETER           0x0041
 #define CMD_GET_LIST                0x0042
 #define CMD_TRAP                    0x0043
+#define CMD_ACTION                  0x0044
 
 
 //
@@ -322,6 +323,8 @@ typedef struct
 #define VID_IMAGE_FILE              ((DWORD)84)
 #define VID_PARAMETER               ((DWORD)85)
 #define VID_NUM_STRINGS             ((DWORD)86)
+#define VID_ACTION_NAME             ((DWORD)87)
+#define VID_NUM_ARGS                ((DWORD)88)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -355,6 +358,9 @@ typedef struct
 
 // Base value for agent's enum values
 #define VID_ENUM_VALUE_BASE         ((DWORD)0x10000000)
+
+// Base value for agent's action arguments
+#define VID_ACTION_ARG_BASE         ((DWORD)0x10000000)
 
 
 //

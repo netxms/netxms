@@ -34,6 +34,7 @@ LONG H_FileSize(char *cmd, char *arg, char *value);
 LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 
 #ifdef _WIN32
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
@@ -186,6 +187,7 @@ static AGENT_PARAM m_stdParams[] =
 
 static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 {
+   { "Actions", H_ActionList, NULL },
 #ifdef _WIN32
    { "ArpCache", H_ArpCache, NULL },
    { "InterfaceList", H_InterfaceList, NULL },

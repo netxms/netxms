@@ -128,4 +128,16 @@ Language=English
 Unable to get handle to "%1"
 .
 
+MessageId=
+SymbolicName=MSG_ADD_ACTION_FAILED
+Language=English
+Unable to add action "%1"
+.
+
+MessageId=
+SymbolicName=MSG_CREATE_PROCESS_FAILED
+Language=English
+Unable to create process "%1": %2
+.
+
 ;#endif
