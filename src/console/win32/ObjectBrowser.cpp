@@ -20,6 +20,43 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
+// Compare two items in object tree hash for qsort()
+//
+
+static int CompareTreeHashItems(const void *p1, const void *p2)
+{
+   return ((OBJ_TREE_HASH *)p1)->dwObjectId < ((OBJ_TREE_HASH *)p2)->dwObjectId ? -1 :
+            (((OBJ_TREE_HASH *)p1)->dwObjectId > ((OBJ_TREE_HASH *)p2)->dwObjectId ? 1 : 0);
+}
+
+
+//
+// Compare two list view items
+//
+
+static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   NXC_OBJECT *pObject1, *pObject2;
+   CObjectBrowser *pBrowser = (CObjectBrowser *)lParamSort;
+   int iResult;
+
+   pObject1 = pBrowser->GetObjectFromListItem(lParam1);
+   pObject2 = pBrowser->GetObjectFromListItem(lParam2);
+
+   switch(pBrowser->GetSortMode())
+   {
+      case OBJECT_SORT_BY_ID:
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+
+   return iResult;
+}
+
+
+//
 // CObjectBrowser implementation
 //
 
@@ -31,6 +68,7 @@ CObjectBrowser::CObjectBrowser()
    m_dwTreeHashSize = 0;
    m_pTreeHash = NULL;
    m_dwFlags = SHOW_OBJECT_PREVIEW | FOLLOW_OBJECT_UPDATES;
+   m_dwSortMode = OBJECT_SORT_BY_ID;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -49,6 +87,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_GETMINMAXINFO()
 	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
+	ON_COMMAND(ID_OBJECT_VIEW_VIEWASLIST, OnObjectViewViewaslist)
+	ON_COMMAND(ID_OBJECT_VIEW_VIEWASTREE, OnObjectViewViewastree)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
@@ -102,10 +142,13 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
    m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 100);
    m_wndListCtrl.InsertColumn(2, "Class", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(3, "IP Address", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(4, "IP Netmask", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(5, "IFIndex", LVCFMT_LEFT, 50);
-   m_wndListCtrl.InsertColumn(6, "IFType", LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(3, "Status", LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(4, "IP Address", LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(5, "IP Netmask", LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(6, "IFIndex", LVCFMT_LEFT, 50);
+   m_wndListCtrl.InsertColumn(7, "IFType", LVCFMT_LEFT, 120);
+   m_wndListCtrl.InsertColumn(8, "Caps", LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(9, "Object ID", LVCFMT_LEFT, 150);
 
    // Create image list
    m_pImageList = new CImageList;
@@ -141,10 +184,13 @@ void CObjectBrowser::OnSize(UINT nType, int cx, int cy)
       m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, cy, SWP_NOZORDER);
       m_wndTreeCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, cx - PREVIEW_PANE_WIDTH, 
                                  cy, SWP_NOZORDER);
+      m_wndListCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, cx - PREVIEW_PANE_WIDTH, 
+                                 cy, SWP_NOZORDER);
    }
    else
    {
       m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+      m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
    }
 }
 
@@ -157,18 +203,10 @@ void CObjectBrowser::OnSetFocus(CWnd* pOldWnd)
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
 	
-   m_wndTreeCtrl.SetFocus();	
-}
-
-
-//
-// Compare two items in object tree hash for qsort()
-//
-
-static int CompareTreeHashItems(const void *p1, const void *p2)
-{
-   return ((OBJ_TREE_HASH *)p1)->dwObjectId < ((OBJ_TREE_HASH *)p2)->dwObjectId ? -1 :
-            (((OBJ_TREE_HASH *)p1)->dwObjectId > ((OBJ_TREE_HASH *)p2)->dwObjectId ? 1 : 0);
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+      m_wndTreeCtrl.SetFocus();	
+   else
+      m_wndListCtrl.SetFocus();
 }
 
 
@@ -198,6 +236,7 @@ void CObjectBrowser::OnViewRefresh()
    for(i = 0; i < dwNumObjects; i++)
       AddObjectToList(pIndex[i].pObject);
    NXCUnlockObjectIndex();
+   m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
 }
 
 
@@ -247,6 +286,11 @@ BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs)
                                          AfxGetApp()->LoadIcon(IDI_TREE));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
+
+
+//
+// WM_NOTIFY::NM_RCLICK message handler
+//
 
 void CObjectBrowser::OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult) 
 {
@@ -301,8 +345,11 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 {
    NXC_OBJECT *pObject;
 
-   pObject = NXCFindObjectById(lpnmt->itemNew.lParam);
-   m_wndPreviewPane.SetCurrentObject(pObject);
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      pObject = NXCFindObjectById(lpnmt->itemNew.lParam);
+      m_wndPreviewPane.SetCurrentObject(pObject);
+   }
 }
 
 
@@ -554,5 +601,85 @@ restart_parent_check:;
 
 void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
 {
+   int iItem, iPos;
+   char szBuffer[64];
+   static int iImageCode[] = { -1, 3, 2, 1, 0 };
 
+   sprintf(szBuffer, "%ld", pObject->dwId);
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, iImageCode[pObject->iClass]);
+   if (iItem != -1)
+   {
+      m_wndListCtrl.SetItemData(iItem, pObject->dwId);
+
+      m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
+      m_wndListCtrl.SetItemText(iItem, 2, g_szObjectClass[pObject->iClass]);
+      m_wndListCtrl.SetItemText(iItem, 3, g_szStatusTextSmall[pObject->iStatus]);
+      m_wndListCtrl.SetItemText(iItem, 4, IpToStr(pObject->dwIpAddr, szBuffer));
+
+      // Class-specific fields
+      switch(pObject->iClass)
+      {
+         case OBJECT_SUBNET:
+            m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->subnet.dwIpNetMask, szBuffer));
+            break;
+         case OBJECT_INTERFACE:
+            sprintf(szBuffer, "%d", pObject->iface.dwIfIndex);
+            m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
+            m_wndListCtrl.SetItemText(iItem, 7, pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
+                                        "Unknown" : g_szInterfaceTypes[pObject->iface.dwIfType]);
+            break;
+         case OBJECT_NODE:
+            // Create node capabilities string
+            iPos = 0;
+            if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
+               szBuffer[iPos++] = 'A';
+            if (pObject->node.dwFlags & NF_IS_SNMP)
+               szBuffer[iPos++] = 'S';
+            if (pObject->node.dwFlags & NF_IS_LOCAL_MGMT)
+               szBuffer[iPos++] = 'M';
+            szBuffer[iPos] = 0;
+            m_wndListCtrl.SetItemText(iItem, 8, szBuffer);
+            m_wndListCtrl.SetItemText(iItem, 9, pObject->node.szObjectId);
+            break;
+         default:
+            break;
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_VIEW_VIEWASLIST message handler
+//
+
+void CObjectBrowser::OnObjectViewViewaslist() 
+{
+   m_dwFlags &= ~VIEW_OBJECTS_AS_TREE;
+   m_wndListCtrl.ShowWindow(SW_SHOW);
+   m_wndTreeCtrl.ShowWindow(SW_HIDE);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_VIEW_VIEWASTREE message handler
+//
+
+void CObjectBrowser::OnObjectViewViewastree() 
+{
+   m_dwFlags |= VIEW_OBJECTS_AS_TREE;
+   m_wndTreeCtrl.ShowWindow(SW_SHOW);
+   m_wndListCtrl.ShowWindow(SW_HIDE);
+}
+
+
+//
+// Get pointer to object related to specific list view item
+//
+
+NXC_OBJECT * CObjectBrowser::GetObjectFromListItem(int iItem)
+{
+   DWORD dwId;
+
+   dwId = m_wndListCtrl.GetItemData(iItem);
+   return NXCFindObjectById(dwId);
 }

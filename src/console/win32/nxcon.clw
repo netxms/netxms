@@ -15,26 +15,26 @@ Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=23
+ResourceCount=22
 Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
-Resource2=IDD_EDIT_EVENT
-Resource3=IDD_LOGIN
-Resource4=IDA_MDI_DEFAULT
+Resource2=IDD_ABOUTBOX
+Resource3=IDA_OBJECT_BROWSER
+Resource4=IDD_OBJECT_PROPERTIES
 Resource5=IDA_MDI_DEFAULT (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_OBJECT_PROPERTIES
+Resource6=IDD_LOGIN
 Class11=CProgressDialog
 Resource7=IDD_LOGIN (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDD_ABOUTBOX
+Resource8=IDA_MDI_DEFAULT
 Class13=CObjectPropDlg
 Resource9=IDM_VIEW_SPECIFIC
-Resource10=IDR_MAINFRAME
-Resource11=IDA_OBJECT_BROWSER
+Resource10=IDD_EDIT_EVENT (English (U.S.))
+Resource11=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,7 +42,7 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDA_OBJECT_BROWSER (English (U.K.))
+Resource17=IDR_MAINFRAME
 Class16=CDebugFrame
 Resource18=IDD_PROGRESS
 Resource19=IDR_MAINFRAME (English (U.S.))
@@ -50,10 +50,9 @@ Resource20=IDD_PROGRESS (English (U.S.))
 Class17=CObjectPreview
 Resource21=IDD_ABOUTBOX (English (U.S.))
 Class18=CToolBox
-Resource22=IDD_OBJECT_PROPERTIES (English (U.S.))
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
-Resource23=IDD_EDIT_EVENT (English (U.S.))
+Resource22=IDD_EDIT_EVENT
 
 [CLS:CConsoleApp]
 Type=0
@@ -542,9 +541,11 @@ VirtualFilter=WC
 Type=1
 Class=?
 Command1=ID_OBJECT_FIND
-Command2=ID_OBJECT_VIEW_SHOWPREVIEWPANE
-Command3=ID_VIEW_REFRESH
-CommandCount=3
+Command2=ID_OBJECT_VIEW_VIEWASLIST
+Command3=ID_OBJECT_VIEW_SHOWPREVIEWPANE
+Command4=ID_OBJECT_VIEW_VIEWASTREE
+Command5=ID_VIEW_REFRESH
+CommandCount=5
 
 [CLS:CToolBox]
 Type=0
@@ -553,14 +554,6 @@ ImplementationFile=ToolBox.cpp
 BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
-
-[ACL:IDA_OBJECT_BROWSER (English (U.K.))]
-Type=1
-Class=?
-Command1=ID_OBJECT_FIND
-Command2=ID_OBJECT_VIEW_SHOWPREVIEWPANE
-Command3=ID_VIEW_REFRESH
-CommandCount=3
 
 [CLS:CObjectInfoBox]
 Type=0

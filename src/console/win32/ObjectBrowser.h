@@ -16,6 +16,22 @@
 
 
 //
+// Sorting modes
+//
+
+#define OBJECT_SORT_BY_ID        1
+#define OBJECT_SORT_BY_NAME      2
+#define OBJECT_SORT_BY_CLASS     3
+#define OBJECT_SORT_BY_STATUS    4
+#define OBJECT_SORT_BY_IP        5
+#define OBJECT_SORT_BY_MASK      6
+#define OBJECT_SORT_BY_IFINDEX   7
+#define OBJECT_SORT_BY_IFTYPE    8
+#define OBJECT_SORT_BY_CAPS      9
+#define OBJECT_SORT_BY_OID       10
+
+
+//
 // Hash for tree items
 //
 
@@ -52,6 +68,7 @@ public:
 
 // Operations
 public:
+	NXC_OBJECT * GetObjectFromListItem(int iItem);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -86,9 +103,12 @@ protected:
 	afx_msg void OnObjectViewShowpreviewpane();
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnObjectViewViewaslist();
+	afx_msg void OnObjectViewViewastree();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	DWORD m_dwSortMode;
 	void UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject);
 	CImageList *m_pImageList;
 	void AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hRoot);

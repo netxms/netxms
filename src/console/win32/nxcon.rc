@@ -213,6 +213,15 @@ BEGIN
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
 END
 
+IDA_OBJECT_BROWSER ACCELERATORS DISCARDABLE 
+BEGIN
+    "F",            ID_OBJECT_FIND,         VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_OBJECT_VIEW_VIEWASLIST, VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_OBJECT_VIEW_SHOWPREVIEWPANE, VIRTKEY, ALT, NOINVERT
+    "T",            ID_OBJECT_VIEW_VIEWASTREE, VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -499,31 +508,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDA_OBJECT_BROWSER ACCELERATORS DISCARDABLE 
-BEGIN
-    "F",            ID_OBJECT_FIND,         VIRTKEY, CONTROL, NOINVERT
-    "P",            ID_OBJECT_VIEW_SHOWPREVIEWPANE, VIRTKEY, ALT, NOINVERT
-    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
-END
-
-#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
