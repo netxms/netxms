@@ -219,8 +219,6 @@ void Main(void);
 BOOL SleepAndCheckForShutdown(int iSeconds);
 
 void StrStrip(char *str);
-char *IpToStr(DWORD dwAddr, char *szBuffer);
-int BitsInMask(DWORD dwMask);
 
 void SaveObjects(void);
 

@@ -136,6 +136,8 @@ extern "C"
    void EXPORTABLE LibUtilDestroyObject(void *pObject);
    QWORD EXPORTABLE __bswap_64(QWORD qwVal);
    int EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
+   int EXPORTABLE BitsInMask(DWORD dwMask);
+   char EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
 }
 
 #endif   /* _nms_util_h_ */

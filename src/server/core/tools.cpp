@@ -49,20 +49,6 @@ struct ECHOREPLY
 
 
 //
-// Calculate number of bits in netmask
-//
-
-int BitsInMask(DWORD dwMask)
-{
-   int bits;
-   DWORD dwTemp;
-
-   for(bits = 0, dwTemp = ntohl(dwMask); dwTemp != 0; bits++, dwTemp <<= 1);
-   return bits;
-}
-
-
-//
 // Strip whitespaces and tabs off the string
 //
 
@@ -75,22 +61,6 @@ void StrStrip(char *pStr)
       memmove(pStr, &pStr[i], strlen(&pStr[i]) + 1);
    for(i = strlen(pStr) - 1; (i >= 0) && ((pStr[i] == ' ') || (pStr[i] == '\t')); i--);
    pStr[i+1] = 0;
-}
-
-
-//
-// Convert IP address from binary form (network bytes order) to string
-//
-
-char *IpToStr(DWORD dwAddr, char *szBuffer)
-{
-   static char szInternalBuffer[32];
-   char *szBufPtr;
-
-   szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
-   sprintf(szBufPtr, "%d.%d.%d.%d", dwAddr & 255, (dwAddr >> 8) & 255,
-           (dwAddr >> 16) & 255, dwAddr >> 24);
-   return szBufPtr;
 }
 
 
