@@ -63,6 +63,16 @@ inline void SetInfoText(HWND hWnd, char *pszText)
 
 
 //
+// Event handler for client library
+//
+
+static void __EventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   theApp.EventHandler(dwEvent, dwCode, pArg);
+}
+
+
+//
 // Login thread
 //
 
@@ -71,18 +81,20 @@ static DWORD WINAPI LoginThread(void *pArg)
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
    DWORD dwResult;
 
-   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword);
+   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession);
 
    // Synchronize objects
    if (dwResult == RCC_SUCCESS)
    {
+      NXCSetEventHandler(g_hSession, __EventHandler);
+
       SetInfoText(hWnd, "Synchronizing objects...");
-      dwResult = NXCSyncObjects();
+      dwResult = NXCSyncObjects(g_hSession);
    }
 
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
-      NXCDisconnect();
+      NXCDisconnect(g_hSession);
 
    PostMessage(hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;

@@ -14,4 +14,12 @@
 
 void CommandLoop(void);
 
+
+//
+// Global variables
+//
+
+extern NXC_SESSION g_hSession;
+
+
 #endif

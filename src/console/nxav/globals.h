@@ -61,6 +61,7 @@ void CreateMonitorList(void);
 // Variables
 //
 
+extern NXC_SESSION g_hSession;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];

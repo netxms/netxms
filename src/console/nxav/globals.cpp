@@ -26,6 +26,13 @@
 
 
 //
+// Session handle
+//
+
+NXC_SESSION g_hSession = NULL;
+
+
+//
 // Login parameters
 //
 

@@ -48,7 +48,7 @@ static BOOL ProcessCommand(char *pszCmdLine, DWORD *pdwResult)
 {
    if (pszCmdLine[0] == 'a')
    {
-      *pdwResult = NXCAttachWebSession(22);
+      *pdwResult = NXCAttachWebSession(g_hSession, 22);
    }
    else
    {
@@ -69,11 +69,11 @@ void CommandLoop(void)
 
    // Load oblects from server
    printf("Loading objects...\n");
-   dwResult = NXCSyncObjects();
+   dwResult = NXCSyncObjects(g_hSession);
    if (dwResult == RCC_SUCCESS)
    {
       printf("Loading user database...\n");
-      dwResult = NXCLoadUserDB();
+      dwResult = NXCLoadUserDB(g_hSession);
    }
 
    while(1)

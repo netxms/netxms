@@ -141,7 +141,7 @@ void CMainFrame::OnViewRefresh()
    m_pAlarmList = NULL;
    m_dwNumAlarms = 0;
    memset(m_iNumAlarms, 0, sizeof(int) * 5);
-   dwRetCode = DoRequestArg3(NXCLoadAllAlarms, (void *)FALSE, &m_dwNumAlarms, 
+   dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)FALSE, &m_dwNumAlarms, 
                              &m_pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
@@ -170,7 +170,7 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine)
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
-   pObject = NXCFindObjectById(pAlarm->dwSourceObject);
+   pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
    ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
    strftime(szBuffer, 64, "%d-%b-%Y<br>%H:%M:%S", ptm);
    fprintf(m_pHtmlFile, "<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>"

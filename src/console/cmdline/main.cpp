@@ -30,7 +30,7 @@
 // Global variables
 //
 
-DWORD g_dwState = STATE_DISCONNECTED;
+NXC_SESSION g_hSession = NULL;
 
 
 //
@@ -47,13 +47,10 @@ static void DebugCallback(char *pMsg)
 // Event handler
 //
 
-static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+static void EventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
 {
    switch(dwEvent)
    {
-      case NXC_EVENT_STATE_CHANGED:
-         g_dwState = dwCode;
-         break;
       case NXC_EVENT_NEW_ELOG_RECORD:
          printf("EVENT: %s\n", ((NXC_EVENT *)pArg)->szMessage);
          free(pArg);
@@ -160,22 +157,22 @@ int main(int argc, char *argv[])
       gets(szPassword);
    }
 
-   NXCSetEventHandler(EventHandler);
    if (bDebug)
       NXCSetDebugCallback(DebugCallback);
 
    printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
-   dwResult = NXCConnect(szServer, szLogin, szPassword);
+   dwResult = NXCConnect(szServer, szLogin, szPassword, &g_hSession);
    if (dwResult != RCC_SUCCESS)
    {
       printf("Unable to connect to server: %s\n", NXCGetErrorText(dwResult));
    }
    else
    {
+      NXCSetEventHandler(g_hSession, EventHandler);
       printf("Connection established.\n");
 
       CommandLoop();
-      NXCDisconnect();
+      NXCDisconnect(g_hSession);
    }
 
    return 0;

@@ -128,7 +128,8 @@ BOOL CAlarmBrowser::AcknowlegeAlarm(DWORD dwAlarmId)
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg1(NXCAcknowlegeAlarm, (void *)dwAlarmId, _T("Acknowleging alarm..."));
+   dwResult = DoRequestArg2(NXCAcknowlegeAlarm, g_hSession,
+                            (void *)dwAlarmId, _T("Acknowleging alarm..."));
    return (dwResult == RCC_SUCCESS);
 }
 

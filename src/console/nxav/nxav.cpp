@@ -14,16 +14,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-//
-// Event handler for client library
-//
-
-static void __EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
-{
-   theApp.EventHandler(dwEvent, dwCode, pArg);
-}
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmViewApp
 
@@ -71,7 +61,6 @@ BOOL CAlarmViewApp::InitInstance()
 		AfxMessageBox(IDS_NXC_INIT_FAILED, MB_OK | MB_ICONSTOP);
 		return FALSE;
    }
-   NXCSetEventHandler(__EventHandler);
 
    if (!InitWorkDir())
       return FALSE;
