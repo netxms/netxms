@@ -108,6 +108,10 @@ SOURCE=.\DataCollectionEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DCIPropDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
@@ -250,6 +254,10 @@ SOURCE=.\ControlPanel.h
 # Begin Source File
 
 SOURCE=.\DataCollectionEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DCIPropDlg.h
 # End Source File
 # Begin Source File
 

@@ -92,3 +92,13 @@ COLORREF g_statusColorTable[7] =
    RGB(61, 12, 187),    // Unknown
    RGB(255, 255, 130)   // Unmanaged
 };
+
+
+//
+// Data collection item texts
+//
+
+char *g_pszItemOrigin[] = { "Internal", "Agent", "SNMP" };
+char *g_pszItemOriginLong[] = { "Internal", "NetXMS Agent", "SNMP Agent" };
+char *g_pszItemDataType[] = { "Integer", "Int64", "String", "Float" };
+char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };

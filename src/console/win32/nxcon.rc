@@ -204,6 +204,15 @@ BEGIN
         MENUITEM "&Set password...",            ID_USER_SETPASSWORD
         MENUITEM "&Properties...\tAlt+Enter",   ID_USER_PROPERTIES
     END
+    POPUP "Item"
+    BEGIN
+        MENUITEM "&New...\tIns",                ID_ITEM_NEW
+        MENUITEM "&Edit...\tAlt+Enter",         ID_ITEM_EDIT
+        MENUITEM "&Delete\tDel",                ID_ITEM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Activate\tAlt+A",            ID_ITEM_ACTIVATE
+        MENUITEM "D&isable\tAlt+D",             ID_ITEM_DISABLE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -232,6 +241,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
+    END
+    POPUP "Item"
+    BEGIN
+        MENUITEM "&New...",                     ID_ITEM_NEW
+        MENUITEM "&Edit...",                    ID_ITEM_EDIT
+        MENUITEM "&Delete",                     ID_ITEM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Activate",                   ID_ITEM_ACTIVATE
+        MENUITEM "D&isable",                    ID_ITEM_DISABLE
     END
 END
 
@@ -546,6 +564,40 @@ BEGIN
     ICON            IDI_PASSWORD,IDC_STATIC,7,7,20,20
 END
 
+IDD_DCI_PROPERTIES DIALOG DISCARDABLE  0, 0, 228, 156
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data Collection Item"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,28,148,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "S&elect...",IDC_BUTTON_SELECT,165,28,50,14
+    COMBOBOX        IDC_COMBO_ORIGIN,13,57,95,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_DT,120,57,95,90,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    EDITTEXT        IDC_EDIT_INTERVAL,63,89,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_RETENTION,63,108,40,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "&Active",IDC_RADIO_ACTIVE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,156,91,36,10
+    CONTROL         "&Disabled",IDC_RADIO_DISABLED,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,156,102,50,10
+    CONTROL         "N&ot supported",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,156,113,59,10
+    DEFPUSHBUTTON   "OK",IDOK,116,135,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,171,135,50,14
+    GROUPBOX        "Data",IDC_STATIC,7,7,214,70
+    GROUPBOX        "Polling",IDC_STATIC,7,79,140,49
+    LTEXT           "Interval:",IDC_STATIC,12,92,26,8
+    LTEXT           "Retention time:",IDC_STATIC,12,111,48,8
+    LTEXT           "seconds",IDC_STATIC,107,92,28,8
+    LTEXT           "days",IDC_STATIC,107,111,16,8
+    GROUPBOX        "Status",IDC_STATIC,151,79,70,49
+    LTEXT           "Data Type",IDC_STATIC,120,47,34,8
+    LTEXT           "Origin",IDC_STATIC,13,47,19,8
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -700,6 +752,14 @@ BEGIN
         RIGHTMARGIN, 244
         TOPMARGIN, 7
         BOTTOMMARGIN, 56
+    END
+
+    IDD_DCI_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 221
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
     END
 END
 #endif    // APSTUDIO_INVOKED

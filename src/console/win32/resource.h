@@ -61,6 +61,7 @@
 #define IDM_CONTEXT                     171
 #define IDD_SET_PASSWORD                172
 #define IDI_PASSWORD                    173
+#define IDD_DCI_PROPERTIES              174
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -112,6 +113,14 @@
 #define IDC_BUTTON_DELETE               1054
 #define IDC_EDIT_PASSWD1                1055
 #define IDC_EDIT_PASSWD2                1056
+#define IDC_BUTTON_SELECT               1062
+#define IDC_EDIT_INTERVAL               1064
+#define IDC_EDIT_RETENTION              1065
+#define IDC_RADIO_ACTIVE                1066
+#define IDC_RADIO_DISABLED              1067
+#define IDC_RADIO6                      1068
+#define IDC_COMBO_DT                    1069
+#define IDC_COMBO_ORIGIN                1070
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -144,15 +153,20 @@
 #define ID_VIEW_NETWORKSUMMARY          32821
 #define ID_OBJECT_MANAGE                32822
 #define ID_OBJECT_UNMANAGE              32823
+#define ID_ITEM_NEW                     32826
+#define ID_ITEM_DELETE                  32827
+#define ID_ITEM_EDIT                    32828
+#define ID_ITEM_ACTIVATE                32829
+#define ID_ITEM_DISABLE                 32830
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        174
-#define _APS_NEXT_COMMAND_VALUE         32826
-#define _APS_NEXT_CONTROL_VALUE         1057
+#define _APS_NEXT_RESOURCE_VALUE        175
+#define _APS_NEXT_COMMAND_VALUE         32836
+#define _APS_NEXT_CONTROL_VALUE         1071
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

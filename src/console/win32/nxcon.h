@@ -98,6 +98,8 @@ protected:
 	HACCEL m_hObjectBrowserAccel; // Accelerator for object browser
 	HMENU m_hUserEditorMenu;      // Menu for user editor
 	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
+	HMENU m_hDCEditorMenu;        // Menu for data collection editor
+	HACCEL m_hDCEditorAccel;      // Accelerator for data collection editor
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

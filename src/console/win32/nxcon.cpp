@@ -162,10 +162,15 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hUserEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hUserEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
 
+   m_hDCEditorMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hDCEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hDCEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjectBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_BROWSER));
 	m_hUserEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hDCEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 
    // Load configuration from registry
    dwBytes = sizeof(WINDOWPLACEMENT);
@@ -204,6 +209,10 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hMDIAccel);
    SafeFreeResource(m_hEventBrowserMenu);
    SafeFreeResource(m_hEventBrowserAccel);
+   SafeFreeResource(m_hUserEditorMenu);
+   SafeFreeResource(m_hUserEditorAccel);
+   SafeFreeResource(m_hDCEditorMenu);
+   SafeFreeResource(m_hDCEditorAccel);
 
 	return CWinApp::ExitInstance();
 }
@@ -703,7 +712,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
             strTitle += "]";
 
 	         // set the handles and redraw the frame and parent
-	         pWnd->SetHandles(m_hMDIMenu, m_hMDIAccel);
+	         pWnd->SetHandles(m_hDCEditorMenu, m_hDCEditorAccel);
 	         pWnd->SetTitle(strTitle);
 	         pWnd->InitialUpdateFrame(NULL, TRUE);
          }

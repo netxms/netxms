@@ -7,6 +7,9 @@
 // DataCollectionEditor.h : header file
 //
 
+#include "DCIPropDlg.h"
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CDataCollectionEditor frame
 
@@ -31,6 +34,9 @@ public:
 
 // Implementation
 protected:
+	void UpdateListItem(int iItem, NXC_DCI *pItem);
+	BOOL EditItem(DWORD dwIndex);
+	void AddListItem(DWORD dwIndex, NXC_DCI *pItem);
 	NXC_DCI_LIST * m_pItemList;
 	CListCtrl m_wndListCtrl;
 
@@ -40,6 +46,9 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnClose();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnItemNew();
+	afx_msg void OnItemEdit();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

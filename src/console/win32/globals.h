@@ -86,5 +86,9 @@ extern char *g_szStatusTextSmall[];
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];
+extern char *g_pszItemOrigin[];
+extern char *g_pszItemOriginLong[];
+extern char *g_pszItemDataType[];
+extern char *g_pszItemStatus[];
 
 #endif
