@@ -1,4 +1,11 @@
 *
+* 0.1.14
+*
+
+- Parameters System.Memory.* behaves correctly under Windows
+
+
+*
 * 0.1.13
 *
 
