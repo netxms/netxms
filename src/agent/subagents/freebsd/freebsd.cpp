@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.2 2005-01-17 23:25:47 alk Exp $ */
+/* $Id: freebsd.cpp,v 1.3 2005-01-23 05:08:06 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -41,6 +41,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { "Process.Count(*)",             H_ProcessCount,    NULL },
 
+   { "System.CPU.Count",             H_CpuCount,        NULL },
    { "System.CPU.LoadAvg",           H_CpuLoad,         NULL },
    { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL },
    { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL },
@@ -59,6 +60,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED },
    { "System.Uname",                 H_Uname,           NULL },
    { "System.Uptime",                H_Uptime,          NULL },
+   { "System.ProcessCount(*)",       H_ProcessCount,    NULL },
 
    { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL },
 };
@@ -97,6 +99,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/17 23:25:47  alk
+Agent.SourcePackageSupport added
+
 Revision 1.1  2005/01/17 17:14:32  alk
 freebsd agent, incomplete (but working)
 

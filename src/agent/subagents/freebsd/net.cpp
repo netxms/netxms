@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.1 2005-01-17 17:14:32 alk Exp $ */
+/* $Id: net.cpp,v 1.2 2005-01-23 05:08:06 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -46,9 +46,8 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 	int nVer = (int)pArg;
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[4];
-	size_t nSize = sizeof(mib);
+	size_t nSize = sizeof(mib), nValSize;
 	int nVal;
-	size_t nValSize;
 
 	if (nVer == 6)
 	{
@@ -230,6 +229,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/01/17 17:14:32  alk
+freebsd agent, incomplete (but working)
+
 Revision 1.4  2005/01/05 12:21:24  victor
 - Added wrappers for new and delete from gcc2 libraries
 - sys/stat.h and fcntl.h included in nms_common.h

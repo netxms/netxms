@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.2 2005-01-17 23:25:48 alk Exp $ */
+/* $Id: system.h,v 1.3 2005-01-23 05:08:06 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -41,6 +41,7 @@ LONG H_Uptime(char *, char *, char *);
 LONG H_Uname(char *, char *, char *);
 LONG H_Hostname(char *, char *, char *);
 LONG H_Hostname(char *, char *, char *);
+LONG H_CpuCount(char *, char *, char *);
 LONG H_CpuLoad(char *, char *, char *);
 LONG H_CpuUsage(char *, char *, char *);
 LONG H_ProcessCount(char *, char *, char *);
@@ -53,6 +54,9 @@ LONG H_SourcePkgSupport(char *, char *, char *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/17 23:25:48  alk
+Agent.SourcePackageSupport added
+
 Revision 1.1  2005/01/17 17:14:32  alk
 freebsd agent, incomplete (but working)
 
