@@ -25,6 +25,8 @@
 
 #ifdef _WIN32
 
+#include <windows.h>
+
 typedef unsigned __int64 QWORD;
 
 #ifdef _USRDLL
