@@ -27,8 +27,6 @@
 // Constants
 //
 
-#define CFG_BUFFER_SIZE    256000
-
 #define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
 
 
@@ -369,9 +367,10 @@ static void AddPredefinedCounters(void)
 // Configuration file template
 //
 
+static TCHAR *m_pszCounterList = NULL;
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
-   { _T("Counter"), CT_STRING_LIST, _T('\n'), 0, CFG_BUFFER_SIZE, 0, NULL },
+   { _T("Counter"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszCounterList },
    { _T("EnableDefaultCounters"), CT_BOOLEAN, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -391,24 +390,26 @@ extern "C" BOOL __declspec(dllexport) __cdecl
    m_info.pParamList = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
 
    // Load configuration
-   cfgTemplate[0].pBuffer = malloc(CFG_BUFFER_SIZE);
-   *((TCHAR *)cfgTemplate[0].pBuffer) = 0;
    dwResult = NxLoadConfig(pszConfigFile, _T("WinPerf"), cfgTemplate, FALSE);
    if (dwResult == NXCFG_ERR_OK)
    {
       TCHAR *pItem, *pEnd;
 
       // Parse counter list
-      for(pItem = (TCHAR *)cfgTemplate[0].pBuffer; *pItem != 0; pItem = pEnd + 1)
+      if (m_pszCounterList != NULL)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
-            *pEnd = 0;
-         StrStrip(pItem);
-         if (!AddCounterFromConfig(pItem))
-            NxWriteAgentLog(EVENTLOG_WARNING_TYPE, 
-                            _T("Unable to add counter from configuration file. "
-                               "Original configuration record: %s",), pItem);
+         for(pItem = m_pszCounterList; *pItem != 0; pItem = pEnd + 1)
+         {
+            pEnd = _tcschr(pItem, _T('\n'));
+            if (pEnd != NULL)
+               *pEnd = 0;
+            StrStrip(pItem);
+            if (!AddCounterFromConfig(pItem))
+               NxWriteAgentLog(EVENTLOG_WARNING_TYPE, 
+                               _T("Unable to add counter from configuration file. "
+                                  "Original configuration record: %s",), pItem);
+         }
+         free(m_pszCounterList);
       }
 
       if (m_dwFlags & WPF_ENABLE_DEFAULT_COUNTERS)
@@ -419,7 +420,10 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 
       StartCollectorThreads();
    }
-   free(cfgTemplate[0].pBuffer);
+   else
+   {
+      safe_free(m_pszCounterList);
+   }
    *ppInfo = &m_info;
    return dwResult == NXCFG_ERR_OK;
 }

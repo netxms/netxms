@@ -95,9 +95,10 @@ DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR,
 // Static variables
 //
 
-static char m_szActionList[16384] = "";
-static char m_szServerList[16384] = "";
-static char m_szSubagentList[16384] = "";
+static char *m_pszActionList = NULL;
+static char *m_pszServerList = NULL;
+static char *m_pszSubagentList = NULL;
+static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 static DWORD m_dwStartupDelay = 0;
 
@@ -108,16 +109,17 @@ static DWORD m_dwStartupDelay = 0;
 
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
-   { "Action", CT_STRING_LIST, '\n', 0, 16384, 0, m_szActionList },
+   { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
+   { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
-   { "Servers", CT_STRING_LIST, ',', 0, 16384, 0, m_szServerList },
+   { "Servers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
    { "StartupDelay", CT_LONG, 0, 0, 0, 0, &m_dwStartupDelay },
-   { "SubAgent", CT_STRING_LIST, '\n', 0, 16384, 0, m_szSubagentList },
+   { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
    { "Timeout", CT_LONG, 0, 0, 0, 0, &g_dwTimeOut },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -266,44 +268,56 @@ BOOL Initialize(void)
 #endif
 
    // Parse server list
-   for(pItem = m_szServerList; *pItem != 0; pItem = pEnd + 1)
+   if (m_pszServerList != NULL)
    {
-      pEnd = strchr(pItem, ',');
-      if (pEnd != NULL)
-         *pEnd = 0;
-      StrStrip(pItem);
-      g_dwServerAddr[g_dwServerCount] = inet_addr(pItem);
-      if ((g_dwServerAddr[g_dwServerCount] == INADDR_NONE) ||
-          (g_dwServerAddr[g_dwServerCount] == INADDR_ANY))
+      for(pItem = m_pszServerList; *pItem != 0; pItem = pEnd + 1)
       {
-         if (!(g_dwFlags & AF_DAEMON))
-            printf("Invalid server address '%s'\n", pItem);
+         pEnd = strchr(pItem, ',');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         g_dwServerAddr[g_dwServerCount] = inet_addr(pItem);
+         if ((g_dwServerAddr[g_dwServerCount] == INADDR_NONE) ||
+             (g_dwServerAddr[g_dwServerCount] == INADDR_ANY))
+         {
+            if (!(g_dwFlags & AF_DAEMON))
+               printf("Invalid server address '%s'\n", pItem);
+         }
+         else
+         {
+            g_dwServerCount++;
+         }
       }
-      else
-      {
-         g_dwServerCount++;
-      }
+      free(m_pszServerList);
    }
 
    // Load subagents
-   for(pItem = m_szSubagentList; *pItem != 0; pItem = pEnd + 1)
+   if (m_pszSubagentList != NULL)
    {
-      pEnd = strchr(pItem, '\n');
-      if (pEnd != NULL)
-         *pEnd = 0;
-      StrStrip(pItem);
-      LoadSubAgent(pItem);
+      for(pItem = m_pszSubagentList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         LoadSubAgent(pItem);
+      }
+      free(m_pszSubagentList);
    }
 
    // Parse action list
-   for(pItem = m_szActionList; *pItem != 0; pItem = pEnd + 1)
+   if (m_pszActionList != NULL)
    {
-      pEnd = strchr(pItem, '\n');
-      if (pEnd != NULL)
-         *pEnd = 0;
-      StrStrip(pItem);
-      if (!AddActionFromConfig(pItem))
-         WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      for(pItem = m_pszActionList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddActionFromConfig(pItem))
+            WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszActionList);
    }
 
    // Agent start time

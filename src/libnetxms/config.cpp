@@ -33,7 +33,7 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
 {
    FILE *cfg;
    TCHAR *ptr, *eptr, szBuffer[4096];
-   int i, iSourceLine = 0, iErrors = 0;
+   int i, iSourceLine = 0, iErrors = 0, iLength;
    BOOL bActiveSection = (pszSection[0] == 0);
 
    cfg = _tfopen(pszFileName, _T("r"));
@@ -131,14 +131,18 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
                      _tcsncpy((TCHAR *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
                      break;
                   case CT_STRING_LIST:
-                     if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
+                     iLength = _tcslen(ptr) + 2;
+                     if (pTemplateList[i].dwBufferPos + iLength >= pTemplateList[i].dwBufferSize)
                      {
-                        _tcsncpy((TCHAR *)pTemplateList[i].pBuffer + pTemplateList[i].dwBufferPos, 
-                                ptr, pTemplateList[i].dwBufferSize - pTemplateList[i].dwBufferPos - 1);
-                        pTemplateList[i].dwBufferPos += _tcslen(ptr);
-                        if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
-                           ((TCHAR *)pTemplateList[i].pBuffer)[pTemplateList[i].dwBufferPos++] = pTemplateList[i].cSeparator;
+                        pTemplateList[i].dwBufferSize += max(1024, iLength);
+                        *((TCHAR **)pTemplateList[i].pBuffer) = 
+                           (TCHAR *)realloc(*((TCHAR **)pTemplateList[i].pBuffer), pTemplateList[i].dwBufferSize);
                      }
+
+                     _tcscpy((*((TCHAR **)pTemplateList[i].pBuffer)) + pTemplateList[i].dwBufferPos, ptr);
+                     pTemplateList[i].dwBufferPos += iLength - 1;
+                     (*((TCHAR **)pTemplateList[i].pBuffer))[pTemplateList[i].dwBufferPos - 1] = pTemplateList[i].cSeparator;
+                     (*((TCHAR **)pTemplateList[i].pBuffer))[pTemplateList[i].dwBufferPos] = 0;
                      break;
                   case CT_IGNORE:
                      break;
