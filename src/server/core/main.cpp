@@ -239,6 +239,7 @@ void Shutdown(void)
    g_pEventQueue->Put(INVALID_POINTER_VALUE);   // Stop event processor
    ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
    SaveObjects();
+   SaveUsers();
    StopDBWriter();
 
    // Remove database lock

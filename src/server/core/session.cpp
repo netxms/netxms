@@ -261,6 +261,21 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOAD_USER_DB:
             SendUserDB(pMsg->GetId());
             break;
+         case CMD_CREATE_USER:
+            CreateUser(pMsg);
+            break;
+         case CMD_UPDATE_USER:
+            UpdateUser(pMsg);
+            break;
+         case CMD_DELETE_USER:
+            DeleteUser(pMsg);
+            break;
+         case CMD_LOCK_USER_DB:
+            LockUserDB(pMsg->GetId(), TRUE);
+            break;
+         case CMD_UNLOCK_USER_DB:
+            LockUserDB(pMsg->GetId(), FALSE);
+            break;
          default:
             break;
       }
@@ -631,7 +646,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
 void ClientSession::ModifyObject(CSCPMessage *pRequest)
 {
-   DWORD dwObjectId, dwResult;
+   DWORD dwObjectId, dwResult = RCC_SUCCESS;
    NetObj *pObject;
    CSCPMessage msg;
 
@@ -645,7 +660,15 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         dwResult = pObject->ModifyFromMessage(pRequest);
+         // If user attempts to change object's ACL, check
+         // if he has OBJECT_ACCESS_CONTROL permission
+         if (pRequest->IsVariableExist(VID_ACL_SIZE))
+            if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+               dwResult = RCC_ACCESS_DENIED;
+
+         // If allowed, change object and set completion code
+         if (dwResult != RCC_ACCESS_DENIED)
+            dwResult = pObject->ModifyFromMessage(pRequest);
          msg.SetVariable(VID_RCC, dwResult);
       }
       else
@@ -707,5 +730,151 @@ void ClientSession::SendUserDB(DWORD dwRqId)
 
    // Send end-of-database notification
    msg.SetCode(CMD_USER_DB_EOF);
+   SendMessage(&msg);
+}
+
+
+//
+// Create new user
+//
+
+void ClientSession::CreateUser(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   {
+      // User database have to be locked before any
+      // changes to user database can be made
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      DWORD dwResult;
+      BOOL bIsGroup;
+      char szUserName[MAX_USER_NAME];
+
+      pRequest->GetVariableStr(VID_USER_NAME, szUserName, MAX_USER_NAME);
+      bIsGroup = pRequest->GetVariableShort(VID_IS_GROUP);
+      dwResult = CreateNewUser(szUserName, bIsGroup);
+      msg.SetVariable(VID_RCC, dwResult);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Update existing user's data
+//
+
+void ClientSession::UpdateUser(CSCPMessage *pRequest)
+{
+}
+
+
+//
+// Delete user
+//
+
+void ClientSession::DeleteUser(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwUserId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get Id of user to be deleted
+   dwUserId = pRequest->GetVariableLong(VID_USER_ID);
+
+   if (dwUserId != 0)
+   {
+      if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+      {
+         // Current user has no rights for user account management
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+      else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+      {
+         // User database have to be locked before any
+         // changes to user database can be made
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+      else
+      {
+         DWORD dwResult;
+
+         dwResult = DeleteUserFromDB(dwUserId);
+         msg.SetVariable(VID_RCC, dwResult);
+      }
+   }
+   else
+   {
+      // Nobody can delete system administrator account
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Lock/unlock user database
+//
+
+void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
+{
+   CSCPMessage msg;
+   char szBuffer[256];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
+   {
+      if (bLock)
+      {
+         if (!LockComponent(CID_USER_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+         {
+            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+            msg.SetVariable(VID_LOCKED_BY, szBuffer);
+         }
+         else
+         {
+            m_dwFlags |= CSF_USER_DB_LOCKED;
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+      }
+      else
+      {
+         if (m_dwFlags & CSF_USER_DB_LOCKED)
+         {
+            UnlockComponent(CID_USER_DB);
+            m_dwFlags &= ~CSF_USER_DB_LOCKED;
+         }
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+   }
+   else
+   {
+      // Current user has no rights for user account management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
    SendMessage(&msg);
 }

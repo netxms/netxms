@@ -29,7 +29,7 @@
 
 #define CID_NETXMS_INSTANCE   0
 #define CID_EPP               1
-#define CID_USER_MGMT         2
+#define CID_USER_DB           2
 #define CID_EVENT_DB          3
 
 #endif

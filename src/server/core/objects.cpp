@@ -472,3 +472,21 @@ BOOL LoadObjects(void)
 
    return TRUE;
 }
+
+
+//
+// Delete user or group from all objects' ACLs
+//
+
+void DeleteUserFromAllObjects(DWORD dwUserId)
+{
+   DWORD i;
+
+   ObjectsGlobalLock();
+
+   // Walk through all objects
+   for(i = 0; i < g_dwIdIndexSize; i++)
+      g_pIndexById[i].pObject->DropUserAccess(dwUserId);
+
+   ObjectsGlobalUnlock();
+}

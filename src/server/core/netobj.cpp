@@ -501,3 +501,14 @@ BOOL NetObj::CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights)
    DWORD dwRights = GetUserRights(dwUserId);
    return (dwRights & dwRequiredRights) == dwRequiredRights;
 }
+
+
+//
+// Drop all user privileges on current object
+//
+
+void NetObj::DropUserAccess(DWORD dwUserId)
+{
+   if (m_pAccessList->DeleteElement(dwUserId))
+      Modify();
+}

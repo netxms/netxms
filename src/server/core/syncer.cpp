@@ -75,6 +75,7 @@ void Syncer(void *arg)
       if (SleepAndCheckForShutdown(iSyncInterval))
          break;   // Shutdown time has arrived
       SaveObjects();
+      SaveUsers();
    }
    DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread terminated\n");
 }

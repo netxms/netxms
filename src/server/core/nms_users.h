@@ -84,7 +84,7 @@ public:
 
    BOOL GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights);
    void AddElement(DWORD dwUserId, DWORD dwAccessRights);
-   void DeleteElement(DWORD dwUserId);
+   BOOL DeleteElement(DWORD dwUserId);
    void DeleteAll(void);
 
    void EnumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg);
@@ -100,10 +100,11 @@ public:
 BOOL LoadUsers(void);
 void SaveUsers(void);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
-void DeleteUserFromGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
 void DumpUsers(void);
+DWORD CreateNewUser(char *pszName, BOOL bIsGroup);
+DWORD DeleteUserFromDB(DWORD dwId);
 
 
 //

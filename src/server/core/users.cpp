@@ -264,6 +264,35 @@ BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSy
 
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId)
 {
+   DWORD i;
+
+   MutexLock(m_hMutexGroupAccess, INFINITE);
+
+   // Find group
+   for(i = 0; i < g_dwNumGroups; i++)
+      if (g_pGroupList[i].dwId == dwGroupId)
+         break;
+
+   if (i != g_dwNumGroups)
+   {
+      DWORD j;
+
+      // Check if user already in group
+      for(j = 0; j < g_pGroupList[i].dwNumMembers; j++)
+         if (g_pGroupList[i].pMembers[j] == dwUserId)
+            break;
+
+      // If not in group, add it
+      if (j == g_pGroupList[i].dwNumMembers)
+      {
+         g_pGroupList[i].dwNumMembers++;
+         g_pGroupList[i].pMembers = (DWORD *)realloc(g_pGroupList[i].pMembers,
+                                         sizeof(DWORD) * g_pGroupList[i].dwNumMembers);
+         g_pGroupList[i].pMembers[j] = dwUserId;
+      }
+   }
+
+   MutexUnlock(m_hMutexGroupAccess);
 }
 
 
@@ -271,8 +300,16 @@ void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId)
 // Delete user from group
 //
 
-void DeleteUserFromGroup(DWORD dwUserId, DWORD dwGroupId)
+static void DeleteUserFromGroup(NMS_USER_GROUP *pGroup, DWORD dwUserId)
 {
+   DWORD i;
+
+   for(i = 0; i < pGroup->dwNumMembers; i++)
+      if (pGroup->pMembers[i] == dwUserId)
+      {
+         pGroup->dwNumMembers--;
+         memmove(&pGroup->pMembers[i], &pGroup->pMembers[i + 1], sizeof(DWORD) * (pGroup->dwNumMembers - i));
+      }
 }
 
 
@@ -284,6 +321,7 @@ BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 {
    BOOL bResult = FALSE;
 
+   MutexLock(m_hMutexGroupAccess, INFINITE);
    if (dwGroupId == GROUP_EVERYONE)
    {
       bResult = TRUE;
@@ -306,6 +344,7 @@ BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
             break;
          }
    }
+   MutexUnlock(m_hMutexGroupAccess);
    return bResult;
 }
 
@@ -323,4 +362,122 @@ void DumpUsers(void)
    for(i = 0; i < g_dwNumUsers; i++)
       printf("%-20s 0x%08X\n", g_pUserList[i].szName, g_pUserList[i].wSystemRights);
    printf("\n");
+}
+
+
+//
+// Delete user or group
+// Will return RCC code
+//
+
+DWORD DeleteUserFromDB(DWORD dwId)
+{
+   DWORD i, j;
+
+   DeleteUserFromAllObjects(dwId);
+
+   if (dwId & GROUP_FLAG)
+   {
+      MutexLock(m_hMutexGroupAccess, INFINITE);
+
+      // Find group
+      for(i = 0; i < g_dwNumGroups; i++)
+         if (g_pGroupList[i].dwId == dwId)
+         {
+            g_pGroupList[i].dwNumMembers = 0;
+            safe_free(g_pGroupList[i].pMembers);
+            g_pGroupList[i].pMembers = NULL;
+            g_pGroupList[i].wFlags |= UF_DELETED;
+            break;
+         }
+
+      MutexUnlock(m_hMutexGroupAccess);
+   }
+   else
+   {
+      MutexLock(m_hMutexUserAccess, INFINITE);
+      
+      // Find user
+      for(i = 0; i < g_dwNumUsers; i++)
+         if (g_pUserList[i].dwId == dwId)
+         {
+            g_pUserList[i].wFlags |= UF_DELETED;
+            
+            // Delete this user from all groups
+            MutexLock(m_hMutexGroupAccess, INFINITE);
+            for(j = 0; j < g_dwNumGroups; j++)
+               DeleteUserFromGroup(&g_pGroupList[i], dwId);
+            MutexUnlock(m_hMutexGroupAccess);
+            break;
+         }
+
+      MutexUnlock(m_hMutexUserAccess);
+   }
+
+   return RCC_SUCCESS;
+}
+
+
+//
+// Create new user or group
+//
+
+DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   if (bIsGroup)
+   {
+      MutexLock(m_hMutexGroupAccess, INFINITE);
+
+      // Check for duplicate name
+      for(i = 0; i < g_dwNumGroups; i++)
+         if (!stricmp(g_pGroupList[i].szName, pszName))
+         {
+            dwResult = RCC_ALREADY_EXIST;
+            break;
+         }
+
+      // If not exist, create it
+      if (i == g_dwNumGroups)
+      {
+         g_dwNumGroups++;
+         g_pGroupList = (NMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NMS_USER_GROUP) * g_dwNumGroups);
+         g_pGroupList[i].dwId = CreateUniqueId(IDG_USER_GROUP);
+         g_pGroupList[i].dwNumMembers = 0;
+         g_pGroupList[i].pMembers = NULL;
+         strcpy(g_pGroupList[i].szName, pszName);
+         g_pGroupList[i].wFlags = UF_MODIFIED;
+         g_pGroupList[i].wSystemRights = 0;
+      }
+
+      MutexUnlock(m_hMutexGroupAccess);
+   }
+   else
+   {
+      MutexLock(m_hMutexUserAccess, INFINITE);
+
+      // Check for duplicate name
+      for(i = 0; i < g_dwNumUsers; i++)
+         if (!stricmp(g_pUserList[i].szName, pszName))
+         {
+            dwResult = RCC_ALREADY_EXIST;
+            break;
+         }
+
+      // If not exist, create it
+      if (i == g_dwNumUsers)
+      {
+         g_dwNumUsers++;
+         g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
+         g_pUserList[i].dwId = CreateUniqueId(IDG_USER);
+         strcpy(g_pGroupList[i].szName, pszName);
+         g_pUserList[i].wFlags = UF_MODIFIED;
+         g_pUserList[i].wSystemRights = 0;
+      }
+
+      MutexUnlock(m_hMutexUserAccess);
+   }
+
+   return dwResult;
 }

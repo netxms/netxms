@@ -77,9 +77,10 @@ void AccessList::AddElement(DWORD dwUserId, DWORD dwAccessRights)
 // Delete element from list
 //
 
-void AccessList::DeleteElement(DWORD dwUserId)
+BOOL AccessList::DeleteElement(DWORD dwUserId)
 {
    DWORD i;
+   BOOL bDeleted = FALSE;
 
    Lock();
    for(i = 0; i < m_dwNumElements; i++)
@@ -87,9 +88,11 @@ void AccessList::DeleteElement(DWORD dwUserId)
       {
          m_dwNumElements--;
          memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(ACL_ELEMENT) * (m_dwNumElements - i));
+         bDeleted = TRUE;
          break;
       }
    Unlock();
+   return bDeleted;
 }
 
 

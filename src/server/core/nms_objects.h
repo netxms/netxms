@@ -208,6 +208,7 @@ public:
 
    DWORD GetUserRights(DWORD dwUserId);
    BOOL CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
+   void DropUserAccess(DWORD dwUserId);
 
    // Debug methods
    const char *ParentList(char *szBuffer);
@@ -409,6 +410,8 @@ Subnet *FindSubnetByIP(DWORD dwAddr);
 DWORD FindLocalMgmtNode(void);
 
 BOOL LoadObjects(void);
+
+void DeleteUserFromAllObjects(DWORD dwUserId);
 
 
 //

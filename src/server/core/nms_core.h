@@ -169,6 +169,7 @@
 #define CSF_EVENT_DB_LOCKED      ((DWORD)0x0001)
 #define CSF_EPP_LOCKED           ((DWORD)0x0002)
 #define CSF_EVENT_DB_MODIFIED    ((DWORD)0x0004)
+#define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
 
 
 //
@@ -271,6 +272,10 @@ private:
    void SendAllEvents(void);
    void SendAllConfigVars(void);
    void SendUserDB(DWORD dwRqId);
+   void CreateUser(CSCPMessage *pMsg);
+   void UpdateUser(CSCPMessage *pMsg);
+   void DeleteUser(CSCPMessage *pMsg);
+   void LockUserDB(DWORD dwRqId, BOOL bLock);
    void SetConfigVariable(CSCPMessage *pMsg);
    void SendEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pMsg);
