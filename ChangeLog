@@ -6,6 +6,9 @@
 - Fixed issue #0000021 (agent crash on multiprocessor Solaris systems)
 - Fixed issue #0000022 (server can crash after unsuccessfull interface
   configuration poll)
+- Fixed bug in filling DCI cache with values from database
+- Server now can save and restore last DCI poll time and raw value
+  across restarts
 
 
 *
