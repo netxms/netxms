@@ -2,25 +2,25 @@
 
 [General Info]
 Version=1
-LastClass=CUserPropDlg
+LastClass=CPasswordChangeDlg
 LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=33
+ClassCount=34
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=41
-Resource1=IDD_NEW_USER (English (U.S.))
+ResourceCount=42
+Resource1=IDD_EDIT_EVENT (English (U.S.))
 Resource2=IDD_SELECT_USER
-Resource3=IDD_OBJECT_SECURITY (English (U.S.))
+Resource3=IDD_LOGIN (English (U.S.))
 Resource4=IDD_USER_PROPERTIES
-Resource5=IDD_OBJECT_NODE_GENERAL (English (U.S.))
+Resource5=IDD_OBJECT_SECURITY (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -28,13 +28,13 @@ Class8=CMapFrame
 Class10=CLoginDialog
 Resource6=IDM_CONTEXT
 Class11=CProgressDialog
-Resource7=IDA_OBJECT_BROWSER (English (U.S.))
+Resource7=IDR_MAINFRAME (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDD_PROGRESS
+Resource8=IDD_SET_PASSWORD (English (U.S.))
 Class13=CObjectPropDlg
 Resource9=IDD_OBJECT_CAPS
-Resource10=IDD_PROGRESS (English (U.S.))
-Resource11=IDD_EDIT_EVENT (English (U.S.))
+Resource10=IDD_USER_PROPERTIES (English (U.S.))
+Resource11=IDD_GROUP_PROPERTIES (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,9 +42,9 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDD_USER_PROPERTIES (English (U.S.))
+Resource17=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDD_OBJECT_CAPS (English (U.S.))
+Resource18=IDA_MDI_DEFAULT (English (U.S.))
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource20=IDA_OBJECT_BROWSER
 Class17=CObjectPreview
@@ -62,29 +62,31 @@ Class25=CObjectPropSheet
 Resource24=IDD_OBJECT_SECURITY
 Class26=CRequestProcessingDlg
 Resource25=IDM_VIEW_SPECIFIC
-Resource26=IDD_SELECT_USER (English (U.S.))
+Resource26=IDD_PROGRESS (English (U.S.))
 Resource27=IDD_ABOUTBOX
-Resource28=IDD_REQUEST_PROCESSING (English (U.S.))
+Resource28=IDA_OBJECT_BROWSER (English (U.S.))
 Class27=CObjectPropsGeneral
-Resource29=IDA_MDI_DEFAULT (English (U.S.))
+Resource29=IDD_OBJECT_GENERAL (English (U.S.))
 Class28=CObjectPropsSecurity
-Resource30=IDD_LOGIN (English (U.S.))
-Resource31=IDD_GROUP_PROPERTIES (English (U.S.))
+Resource30=IDD_NEW_USER (English (U.S.))
+Resource31=IDD_REQUEST_PROCESSING (English (U.S.))
 Resource32=IDD_EDIT_EVENT
 Class29=CUserSelectDlg
 Resource33=IDD_OBJECT_GENERAL
 Class30=CUserEditor
-Resource34=IDD_OBJECT_GENERAL (English (U.S.))
+Resource34=IDD_ABOUTBOX (English (U.S.))
 Class31=CNewUserDlg
 Resource35=IDD_OBJECT_NODE_GENERAL
-Resource36=IDR_MAINFRAME (English (U.S.))
+Resource36=IDM_CONTEXT (English (U.S.))
 Class32=CUserPropDlg
-Resource37=IDD_ABOUTBOX (English (U.S.))
+Resource37=IDD_SELECT_USER (English (U.S.))
 Resource38=IDD_LOGIN
 Class33=CGroupPropDlg
 Resource39=IDR_MAINFRAME
 Resource40=IDD_REQUEST_PROCESSING
 Resource41=IDD_GROUP_PROPERTIES
+Resource42=IDD_OBJECT_CAPS (English (U.S.))
+Class34=CPasswordChangeDlg
 
 [CLS:CConsoleApp]
 Type=0
@@ -241,13 +243,6 @@ BaseClass=CDialog
 Filter=D
 LastObject=CLoginDialog
 VirtualFilter=dWC
-
-[DLG:IDD_PROGRESS]
-Type=1
-Class=CProgressDialog
-ControlCount=2
-Control1=IDC_STATIC_TITLE,button,1342177287
-Control2=IDC_STATIC_TEXT,static,1342308865
 
 [CLS:CProgressDialog]
 Type=0
@@ -983,7 +978,7 @@ LastObject=CGroupPropDlg
 
 [DLG:IDD_GROUP_PROPERTIES (English (U.S.))]
 Type=1
-Class=?
+Class=CGroupPropDlg
 ControlCount=19
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_EDIT_DESCRIPTION,edit,1350631552
@@ -1015,4 +1010,36 @@ Command4=ID_USER_DELETE
 Command5=ID_USER_SETPASSWORD
 Command6=ID_USER_PROPERTIES
 CommandCount=6
+
+[MNU:IDM_CONTEXT (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_USER_CREATE_USER
+Command2=ID_USER_CREATE_GROUP
+Command3=ID_USER_RENAME
+Command4=ID_USER_DELETE
+Command5=ID_USER_SETPASSWORD
+Command6=ID_USER_PROPERTIES
+CommandCount=6
+
+[DLG:IDD_SET_PASSWORD (English (U.S.))]
+Type=1
+Class=CPasswordChangeDlg
+ControlCount=7
+Control1=IDC_EDIT_PASSWD1,edit,1342242976
+Control2=IDC_EDIT_PASSWD2,edit,1342242976
+Control3=IDOK,button,1342242817
+Control4=IDCANCEL,button,1342242816
+Control5=IDC_STATIC,static,1342308352
+Control6=IDC_STATIC,static,1342308352
+Control7=IDC_STATIC,static,1342177283
+
+[CLS:CPasswordChangeDlg]
+Type=0
+HeaderFile=PasswordChangeDlg.h
+ImplementationFile=PasswordChangeDlg.cpp
+BaseClass=CDialog
+Filter=D
+VirtualFilter=dWC
+LastObject=CPasswordChangeDlg
 

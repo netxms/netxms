@@ -223,6 +223,23 @@ DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText)
 
 
 //
+// Perform request with 2 parameters
+//
+
+DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 2;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
 // Perform request with 3 parameter
 //
 

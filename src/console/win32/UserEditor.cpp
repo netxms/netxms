@@ -18,6 +18,7 @@ IMPLEMENT_DYNCREATE(CUserEditor, CMDIChildWnd)
 
 CUserEditor::CUserEditor()
 {
+   m_dwCurrentUser = INVALID_UID;
 }
 
 CUserEditor::~CUserEditor()
@@ -38,9 +39,14 @@ BEGIN_MESSAGE_MAP(CUserEditor, CMDIChildWnd)
 	ON_COMMAND(ID_USER_PROPERTIES, OnUserProperties)
 	ON_COMMAND(ID_USER_DELETE, OnUserDelete)
 	ON_WM_CONTEXTMENU()
+	ON_UPDATE_COMMAND_UI(ID_USER_PROPERTIES, OnUpdateUserProperties)
+	ON_UPDATE_COMMAND_UI(ID_USER_DELETE, OnUpdateUserDelete)
+	ON_COMMAND(ID_USER_SETPASSWORD, OnUserSetpassword)
+	ON_UPDATE_COMMAND_UI(ID_USER_SETPASSWORD, OnUpdateUserSetpassword)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -504,4 +510,93 @@ void CUserEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 
    pMenu = theApp.GetContextMenu(0);
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// WM_NOTIFY::LVN_ITEMACTIVATE message handler
+//
+
+void CUserEditor::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   if (pNMHDR->iItem != -1)
+      if (pNMHDR->uChanged & LVIF_STATE)
+      {
+         if (pNMHDR->uNewState & LVIS_FOCUSED)
+         {
+            m_dwCurrentUser = m_wndListCtrl.GetItemData(pNMHDR->iItem);
+         }
+         else
+         {
+            m_dwCurrentUser = INVALID_UID;
+         }
+      }
+}
+
+
+//
+// WM_COMMAND::ID_USER_SETPASSWORD message handler
+//
+
+void CUserEditor::OnUserSetpassword() 
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+   if (iItem != -1)
+   {
+      DWORD dwId;
+      NXC_USER *pUser;
+
+      dwId = m_wndListCtrl.GetItemData(iItem);
+
+      pUser = NXCFindUserById(dwId);
+      if (pUser != NULL)
+      {
+         CPasswordChangeDlg dlg;
+
+         if (dlg.DoModal() == IDOK)
+         {
+            DWORD dwResult;
+
+            dwResult = DoRequestArg2(NXCSetPassword, (void *)dwId, dlg.m_szPassword, "Changing password...");
+            if (dwResult != RCC_SUCCESS)
+            {
+               char szBuffer[256];
+
+               sprintf(szBuffer, "Cannot change password: %s", NXCGetErrorText(dwResult));
+               MessageBox(szBuffer, "Error", MB_ICONSTOP | MB_OK);
+            }
+            else
+            {
+               MessageBox("Password was successfully changed", "Information", MB_ICONINFORMATION | MB_OK);
+            }
+         }
+      }
+      else
+      {
+         MessageBox("Attempt to modify non-existing user record", "Internal Error", MB_ICONSTOP | MB_OK);
+         PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+      }
+   }
+}
+
+
+//
+// UPDATE_COMMAND_UI handlers
+//
+
+void CUserEditor::OnUpdateUserProperties(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_dwCurrentUser != INVALID_UID);
+}
+
+void CUserEditor::OnUpdateUserDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_dwCurrentUser != INVALID_UID);
+}
+
+void CUserEditor::OnUpdateUserSetpassword(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable((m_dwCurrentUser != INVALID_UID) && (!(m_dwCurrentUser & GROUP_FLAG)));
 }

@@ -86,8 +86,8 @@ src/console/win32/ObjectPropsSecurity.cpp -text
 src/console/win32/ObjectPropsSecurity.h -text
 src/console/win32/ObjectSearchBox.cpp -text
 src/console/win32/ObjectSearchBox.h -text
-src/console/win32/ProgressDialog.cpp -text
-src/console/win32/ProgressDialog.h -text
+src/console/win32/PasswordChangeDlg.cpp -text
+src/console/win32/PasswordChangeDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
 src/console/win32/RequestProcessingDlg.h -text
 src/console/win32/StdAfx.cpp -text
@@ -111,6 +111,7 @@ src/console/win32/icons/event.ico -text
 src/console/win32/icons/icon1.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/node.ico -text
+src/console/win32/icons/passwd.ico -text
 src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text

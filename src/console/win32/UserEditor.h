@@ -10,6 +10,7 @@
 #include "NewUserDlg.h"
 #include "UserPropDlg.h"
 #include "GroupPropDlg.h"
+#include "PasswordChangeDlg.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -37,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwCurrentUser;
 	CListCtrl m_wndListCtrl;
 	virtual ~CUserEditor();
 
@@ -53,9 +55,14 @@ protected:
 	afx_msg void OnUserProperties();
 	afx_msg void OnUserDelete();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnUpdateUserProperties(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateUserDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUserSetpassword();
+	afx_msg void OnUpdateUserSetpassword(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnUserDBChange(int iCode, NXC_USER *pUserInfo);
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	int AddListItem(NXC_USER *pUser);

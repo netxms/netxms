@@ -196,7 +196,7 @@ SOURCE=.\ObjectSearchBox.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ProgressDialog.cpp
+SOURCE=.\PasswordChangeDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -333,7 +333,7 @@ SOURCE=.\ObjectSearchBox.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ProgressDialog.h
+SOURCE=.\PasswordChangeDlg.h
 # End Source File
 # Begin Source File
 
@@ -406,6 +406,10 @@ SOURCE=.\res\nxcon.ico
 # Begin Source File
 
 SOURCE=.\res\nxcon.rc2
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\passwd.ico
 # End Source File
 # Begin Source File
 

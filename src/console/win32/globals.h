@@ -63,6 +63,7 @@ extern CConsoleApp theApp;
 DWORD DoLogin(void);
 DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText);
 DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText);
+DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText);
 DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText);
 
 
