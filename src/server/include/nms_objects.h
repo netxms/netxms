@@ -380,8 +380,6 @@ protected:
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;
-   int m_iSnmpAgentFails;
-   int m_iNativeAgentFails;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    AgentConnection *m_pAgentConnection;

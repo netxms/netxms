@@ -148,7 +148,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHEABLE', 
-		EVENT_SEVERITY_WARNING, 0,
+		EVENT_SEVERITY_WARNING, 1,
 		'SNMP agent is not responding',
 		'Generated when node#27s SNMP agent is not responding.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
@@ -157,7 +157,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_AGENT_FAIL, 'SYS_AGENT_UNREACHEABLE',
-		EVENT_SEVERITY_WARNING, 0,
+		EVENT_SEVERITY_WARNING, 1,
 		'Native agent is not responding',
 		'Generated when node#27s native agent is not responding.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
@@ -320,6 +320,24 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Generated when server is unable to send SMS.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
 		'   1) Phone number'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_OK, 'SYS_SNMP_OK',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Connectivity with SNMP agent restored',
+		'Generated when connectivity with node#27s SNMP agent restored.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_AGENT_OK, 'SYS_AGENT_OK',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Connectivity with native agent restored',
+		'Generated when connectivity with node#27s native agent restored.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
 	);
 
 

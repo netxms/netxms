@@ -44,8 +44,6 @@ Node::Node()
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
    m_tLastConfigurationPoll = 0;
-   m_iSnmpAgentFails = 0;
-   m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_pAgentConnection = NULL;
@@ -81,8 +79,6 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
    m_tLastConfigurationPoll = 0;
-   m_iSnmpAgentFails = 0;
-   m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_pAgentConnection = NULL;
@@ -682,6 +678,62 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
    Lock();
 
+   // Check SNMP agent connectivity
+   if (m_dwFlags & NF_IS_SNMP)
+   {
+      TCHAR szBuffer[256];
+
+      SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
+      if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+                  szBuffer, 256, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      {
+         if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
+         {
+            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+            PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
+            SendPollerMsg(dwRqId, "Connectivity with SNMP agent restored\r\n");
+         }
+      }
+      else
+      {
+         if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))
+         {
+            m_dwDynamicFlags |= NDF_SNMP_UNREACHEABLE;
+            PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
+            SendPollerMsg(dwRqId, "SNMP agent unreacheable\r\n");
+         }
+      }
+   }
+
+   // Check native agent connectivity
+   if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   {
+      AgentConnection *pAgentConn;
+
+      SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
+      pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      if (pAgentConn->Connect())
+      {
+         if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
+         {
+            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+            PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
+            SendPollerMsg(dwRqId, "Connectivity with NetXMS agent restored\r\n");
+         }
+         pAgentConn->Disconnect();
+      }
+      else
+      {
+         if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))
+         {
+            m_dwDynamicFlags |= NDF_AGENT_UNREACHEABLE;
+            PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
+            SendPollerMsg(dwRqId, "NetXMS agent unreacheable\r\n");
+         }
+      }
+      delete pAgentConn;
+   }
+
    // Find service poller node object
    if (m_dwPollerNode != 0)
    {
@@ -764,254 +816,245 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    SendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
    DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
-   // Check node's capabilities
-   SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+   // Check if node is marked as unreacheable
+   if (m_dwDynamicFlags & NDF_UNREACHEABLE)
    {
-      DWORD dwNodeFlags, dwNodeType;
-
-      if (strcmp(m_szObjectId, szBuffer))
-      {
-         strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
-         bHasChanges = TRUE;
-      }
-
-      m_dwFlags |= NF_IS_SNMP;
-      m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
-      m_iSnmpAgentFails = 0;
-      SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
-
-      // Check node type
-      dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
-      if (m_dwNodeType != dwNodeType)
-      {
-         m_dwFlags |= dwNodeFlags;
-         m_dwNodeType = dwNodeType;
-         SendPollerMsg(dwRqId, _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
-         bHasChanges = TRUE;
-      }
-
-      CheckOSPFSupport();
+      SendPollerMsg(dwRqId, _T("Node is marked as unreacheable, configuration poll aborted\r\n"));
+      DbgPrintf(AF_DEBUG_DISCOVERY, "Node is marked as unreacheable, configuration poll aborted");
    }
    else
    {
-      if (m_dwFlags & NF_IS_SNMP)
+      // Check node's capabilities
+      SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
+      if (!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)))
       {
-         if (m_iSnmpAgentFails == 0)
-            PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
-         m_iSnmpAgentFails++;
-         m_dwDynamicFlags |= NDF_SNMP_UNREACHEABLE;
-      }
-      SendPollerMsg(dwRqId, _T("   SNMP agent is not responding\r\n"));
-   }
-
-   pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-   if (pAgentConn->Connect())
-   {
-      m_dwFlags |= NF_IS_NATIVE_AGENT;
-      m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
-      m_iNativeAgentFails = 0;
-      
-      Lock();
-      
-      if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
-      {
-         if (strcmp(m_szAgentVersion, szBuffer))
+         if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+                     szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
-            strcpy(m_szAgentVersion, szBuffer);
-            bHasChanges = TRUE;
-            SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
-         }
-      }
+            DWORD dwNodeFlags, dwNodeType;
 
-      if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
-      {
-         if (strcmp(m_szPlatformName, szBuffer))
-         {
-            strcpy(m_szPlatformName, szBuffer);
-            bHasChanges = TRUE;
-            SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szAgentVersion);
-         }
-      }
-
-      safe_free(m_pParamList);
-      pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
-
-      Unlock();
-      pAgentConn->Disconnect();
-      SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
-   }
-   else
-   {
-      if (m_dwFlags & NF_IS_NATIVE_AGENT)
-      {
-         if (m_iNativeAgentFails == 0)
-            PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
-         m_iNativeAgentFails++;
-         m_dwDynamicFlags |= NDF_AGENT_UNREACHEABLE;
-      }
-      SendPollerMsg(dwRqId, _T("   NetXMS native agent is not responding\r\n"));
-   }
-   delete pAgentConn;
-
-   // Generate event if node flags has been changed
-   if (dwOldFlags != m_dwFlags)
-   {
-      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
-      bHasChanges = TRUE;
-   }
-
-   // Retrieve interface list
-   SendPollerMsg(dwRqId, _T("Capability check finished\r\n"
-                            "Checking interface configuration...\r\n"));
-   pIfList = GetInterfaceList();
-   if (pIfList != NULL)
-   {
-      DWORD i;
-      int j;
-
-      // Find non-existing interfaces
-      for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
-         {
-            Interface *pInterface = (Interface *)m_pChildList[i];
-
-            if (pInterface->IfType() != IFTYPE_NETXMS_NAT_ADAPTER)
+            if (strcmp(m_szObjectId, szBuffer))
             {
-               for(j = 0; j < pIfList->iNumEntries; j++)
-                  if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
-                      (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
-                      (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
-                     break;
-               if (j == pIfList->iNumEntries)
+               strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+               bHasChanges = TRUE;
+            }
+
+            m_dwFlags |= NF_IS_SNMP;
+            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+            SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
+
+            // Check node type
+            dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
+            if (m_dwNodeType != dwNodeType)
+            {
+               m_dwFlags |= dwNodeFlags;
+               m_dwNodeType = dwNodeType;
+               SendPollerMsg(dwRqId, _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
+               bHasChanges = TRUE;
+            }
+
+            CheckOSPFSupport();
+         }
+      }
+
+      if (!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)))
+      {
+         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+         if (pAgentConn->Connect())
+         {
+            m_dwFlags |= NF_IS_NATIVE_AGENT;
+            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+      
+            Lock();
+      
+            if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+            {
+               if (strcmp(m_szAgentVersion, szBuffer))
                {
-                  // No such interface in current configuration, delete it
-                  SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
-                                pInterface->Name());
-                  PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
-                            pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
-                  DeleteInterface(pInterface);
-                  i = 0xFFFFFFFF;   // Restart loop
+                  strcpy(m_szAgentVersion, szBuffer);
                   bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
                }
             }
-         }
 
-      // Add new interfaces and check configuration of existing
-      for(j = 0; j < pIfList->iNumEntries; j++)
+            if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
+            {
+               if (strcmp(m_szPlatformName, szBuffer))
+               {
+                  strcpy(m_szPlatformName, szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
+               }
+            }
+
+            safe_free(m_pParamList);
+            pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
+
+            Unlock();
+            pAgentConn->Disconnect();
+            SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
+         }
+         delete pAgentConn;
+      }
+
+      // Generate event if node flags has been changed
+      if (dwOldFlags != m_dwFlags)
       {
+         PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
+         bHasChanges = TRUE;
+      }
+
+      // Retrieve interface list
+      SendPollerMsg(dwRqId, _T("Capability check finished\r\n"
+                               "Checking interface configuration...\r\n"));
+      pIfList = GetInterfaceList();
+      if (pIfList != NULL)
+      {
+         DWORD i;
+         int j;
+
+         // Find non-existing interfaces
          for(i = 0; i < m_dwChildCount; i++)
             if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
             {
                Interface *pInterface = (Interface *)m_pChildList[i];
 
-               if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
-                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
-                   (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
+               if (pInterface->IfType() != IFTYPE_NETXMS_NAT_ADAPTER)
                {
-                  // Existing interface, check configuration
-                  if (memcmp(pIfList->pInterfaces[j].bMacAddr, pInterface->MacAddr(), MAC_ADDR_LENGTH))
+                  for(j = 0; j < pIfList->iNumEntries; j++)
+                     if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
+                         (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
+                         (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
+                        break;
+                  if (j == pIfList->iNumEntries)
                   {
-                     char szOldMac[16], szNewMac[16];
-
-                     BinToStr((BYTE *)pInterface->MacAddr(), MAC_ADDR_LENGTH, szOldMac);
-                     BinToStr(pIfList->pInterfaces[j].bMacAddr, MAC_ADDR_LENGTH, szNewMac);
-                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
-                               pInterface->Id(), pInterface->IfIndex(),
-                               pInterface->Name(), szOldMac, szNewMac);
-                     pInterface->SetMacAddr(pIfList->pInterfaces[j].bMacAddr);
+                     // No such interface in current configuration, delete it
+                     SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
+                                   pInterface->Name());
+                     PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
+                               pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
+                     DeleteInterface(pInterface);
+                     i = 0xFFFFFFFF;   // Restart loop
+                     bHasChanges = TRUE;
                   }
-                  break;
                }
             }
-         if (i == m_dwChildCount)
+
+         // Add new interfaces and check configuration of existing
+         for(j = 0; j < pIfList->iNumEntries; j++)
          {
-            // New interface
-            SendPollerMsg(dwRqId, _T("   Found new interface \"%s\"\r\n"), 
-                          pIfList->pInterfaces[j].szName);
-            CreateNewInterface(pIfList->pInterfaces[j].dwIpAddr, 
-                               pIfList->pInterfaces[j].dwIpNetMask,
-                               pIfList->pInterfaces[j].szName,
-                               pIfList->pInterfaces[j].dwIndex,
-                               pIfList->pInterfaces[j].dwType,
-                               pIfList->pInterfaces[j].bMacAddr);
-            bHasChanges = TRUE;
-         }
-      }
-
-      // Check if address we are using to communicate with node
-      // is configured on one of node's interfaces
-      for(i = 0; i < (DWORD)pIfList->iNumEntries; i++)
-         if (pIfList->pInterfaces[i].dwIpAddr == m_dwIpAddr)
-            break;
-
-      if (i == (DWORD)pIfList->iNumEntries)
-      {
-         // Node is behind NAT
-         m_dwFlags |= NF_BEHIND_NAT;
-
-         // Check if we already have NAT interface
-         Lock();
-         for(i = 0; i < m_dwChildCount; i++)
-            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
-            {
-               if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
-                  break;
-            }
-         Unlock();
-
-         if (i == m_dwChildCount)
-         {
-            char szBuffer[MAX_OBJECT_NAME];
-
-            // Create pseudo interface for NAT
-            ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
-            CreateNewInterface(m_dwIpAddr, 0, szBuffer,
-                               0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
-            bHasChanges = TRUE;
-         }
-      }
-      else
-      {
-         // Check if NF_BEHIND_NAT flag set incorrectly
-         if (m_dwFlags & NF_BEHIND_NAT)
-         {
-            Interface *pIfNat;
-
-            // Remove NAT interface
-            Lock();
-            for(i = 0, pIfNat = NULL; i < m_dwChildCount; i++)
+            for(i = 0; i < m_dwChildCount; i++)
                if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
                {
-                  if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
+                  Interface *pInterface = (Interface *)m_pChildList[i];
+
+                  if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
+                      (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
+                      (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
                   {
-                     pIfNat = (Interface *)m_pChildList[i];
+                     // Existing interface, check configuration
+                     if (memcmp(pIfList->pInterfaces[j].bMacAddr, pInterface->MacAddr(), MAC_ADDR_LENGTH))
+                     {
+                        char szOldMac[16], szNewMac[16];
+
+                        BinToStr((BYTE *)pInterface->MacAddr(), MAC_ADDR_LENGTH, szOldMac);
+                        BinToStr(pIfList->pInterfaces[j].bMacAddr, MAC_ADDR_LENGTH, szNewMac);
+                        PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
+                                  pInterface->Id(), pInterface->IfIndex(),
+                                  pInterface->Name(), szOldMac, szNewMac);
+                        pInterface->SetMacAddr(pIfList->pInterfaces[j].bMacAddr);
+                     }
                      break;
                   }
                }
+            if (i == m_dwChildCount)
+            {
+               // New interface
+               SendPollerMsg(dwRqId, _T("   Found new interface \"%s\"\r\n"), 
+                             pIfList->pInterfaces[j].szName);
+               CreateNewInterface(pIfList->pInterfaces[j].dwIpAddr, 
+                                  pIfList->pInterfaces[j].dwIpNetMask,
+                                  pIfList->pInterfaces[j].szName,
+                                  pIfList->pInterfaces[j].dwIndex,
+                                  pIfList->pInterfaces[j].dwType,
+                                  pIfList->pInterfaces[j].bMacAddr);
+               bHasChanges = TRUE;
+            }
+         }
+
+         // Check if address we are using to communicate with node
+         // is configured on one of node's interfaces
+         for(i = 0; i < (DWORD)pIfList->iNumEntries; i++)
+            if (pIfList->pInterfaces[i].dwIpAddr == m_dwIpAddr)
+               break;
+
+         if (i == (DWORD)pIfList->iNumEntries)
+         {
+            // Node is behind NAT
+            m_dwFlags |= NF_BEHIND_NAT;
+
+            // Check if we already have NAT interface
+            Lock();
+            for(i = 0; i < m_dwChildCount; i++)
+               if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+               {
+                  if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
+                     break;
+               }
             Unlock();
 
-            if (pIfNat != NULL)
-               DeleteInterface(pIfNat);
+            if (i == m_dwChildCount)
+            {
+               char szBuffer[MAX_OBJECT_NAME];
 
-            m_dwFlags &= ~NF_BEHIND_NAT;
-            bHasChanges = TRUE;
+               // Create pseudo interface for NAT
+               ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
+               CreateNewInterface(m_dwIpAddr, 0, szBuffer,
+                                  0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
+               bHasChanges = TRUE;
+            }
          }
+         else
+         {
+            // Check if NF_BEHIND_NAT flag set incorrectly
+            if (m_dwFlags & NF_BEHIND_NAT)
+            {
+               Interface *pIfNat;
+
+               // Remove NAT interface
+               Lock();
+               for(i = 0, pIfNat = NULL; i < m_dwChildCount; i++)
+                  if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+                  {
+                     if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
+                     {
+                        pIfNat = (Interface *)m_pChildList[i];
+                        break;
+                     }
+                  }
+               Unlock();
+
+               if (pIfNat != NULL)
+                  DeleteInterface(pIfNat);
+
+               m_dwFlags &= ~NF_BEHIND_NAT;
+               bHasChanges = TRUE;
+            }
+         }
+
+         DestroyInterfaceList(pIfList);
+      }
+      else
+      {
+         SendPollerMsg(dwRqId, _T("   Unable to get interface list from node\r\n"));
       }
 
-      DestroyInterfaceList(pIfList);
+      m_tLastConfigurationPoll = time(NULL);
+      SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"
+                               "Finished configuration poll for node %s\r\n"
+                               "Node configuration was%schanged after poll\r\n"),
+                    m_szName, bHasChanges ? _T(" ") : _T(" not "));
    }
-   else
-   {
-      SendPollerMsg(dwRqId, _T("   Unable to get interface list from node\r\n"));
-   }
-
-   m_tLastConfigurationPoll = time(NULL);
-   SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"
-                            "Finished configuration poll for node %s\r\n"
-                            "Node configuration was%schanged after poll\r\n"),
-                 m_szName, bHasChanges ? _T(" ") : _T(" not "));
 
    // Finish configuration poll
    if (dwRqId == 0)
@@ -1056,8 +1099,16 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
 {
    DWORD dwResult;
 
-   dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
-                      szBuffer, dwBufSize, FALSE, TRUE);
+   if ((m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+   {
+      dwResult = SNMP_ERR_COMM;
+   }
+   else
+   {
+      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
+                         szBuffer, dwBufSize, FALSE, TRUE);
+   }
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -1071,6 +1122,10 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
 {
    DWORD dwError, dwResult = DCE_COMM_ERROR;
    DWORD dwTries = 5;
+
+   if ((m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+      return DCE_COMM_ERROR;
 
    AgentLock();
 
@@ -1499,15 +1554,20 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
                                 TCHAR *pszResponce)
 {
    DWORD dwError = ERR_NOT_CONNECTED;
-   DWORD dwTries = 3;
-   AgentConnection conn(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 
-   // Establish connection with agent
-   if (conn.Connect())
+   if ((m_dwFlags & NF_IS_NATIVE_AGENT) &&
+       (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)) &&
+       (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
    {
-      dwError = conn.CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
-                                         wPort, wProto, pszRequest, pszResponce);
-      conn.Disconnect();
+      AgentConnection conn(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+
+      // Establish connection with agent
+      if (conn.Connect())
+      {
+         dwError = conn.CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
+                                            wPort, wProto, pszRequest, pszResponce);
+         conn.Disconnect();
+      }
    }
    return dwError;
 }
@@ -1562,7 +1622,9 @@ AgentConnection *Node::CreateAgentConnection(void)
 {
    AgentConnection *pConn;
 
-   if (!(m_dwFlags & NF_IS_NATIVE_AGENT))
+   if ((!(m_dwFlags & NF_IS_NATIVE_AGENT)) ||
+       (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHEABLE))
       return NULL;
 
    pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);

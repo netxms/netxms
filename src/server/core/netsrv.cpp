@@ -393,7 +393,8 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
    if (m_iStatus != iOldStatus)
    {
       SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_pszStatusName[m_iStatus]);
-      PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : EVENT_SERVICE_DOWN,
+      PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
+                (m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
                 m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
       Modify();
    }

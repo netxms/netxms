@@ -85,6 +85,8 @@
 #define EVENT_NODE_DOWN          28
 #define EVENT_NODE_UP            29
 #define EVENT_SMS_FAILURE        30
+#define EVENT_SNMP_OK            31
+#define EVENT_AGENT_OK           32
 
 #define EVENT_SNMP_UNMATCHED_TRAP   500
 #define EVENT_SNMP_COLD_START       501

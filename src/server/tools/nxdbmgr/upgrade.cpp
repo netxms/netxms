@@ -174,6 +174,14 @@ static BOOL H_UpgradeFromV26(void)
       "DELETE FROM config WHERE var_name='ServiceRootImageId'\n"
       "DELETE FROM config WHERE var_name='TemplateRootObjectName'\n"
       "DELETE FROM config WHERE var_name='TemplateRootImageId'\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (31,'SYS_SNMP_OK',0,1,'Connectivity with SNMP agent restored',"
+		   "'Generated when connectivity with node#27s SNMP agent restored.#0D#0A"
+		   "Parameters:#0D#0A   No message-specific parameters')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+		   "VALUES (32,'SYS_AGENT_OK',0,1,'Connectivity with native agent restored',"
+		   "'Generated when connectivity with node#27s native agent restored.#0D#0A"
+		   "Parameters:#0D#0A   No message-specific parameters')\n"
       "<END>";
 
    if (!CreateTable(_T("CREATE TABLE object_properties ("
