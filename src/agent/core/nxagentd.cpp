@@ -71,6 +71,13 @@ DWORD g_dwServerCount = 0;
 DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
 time_t g_dwAgentStartTime;
 
+#ifdef _WIN32
+DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
+BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
+BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
+BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
+#endif   /* _WIN32 */
+
 
 //
 // Static variables
@@ -89,6 +96,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 {
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
    { "Servers", CT_STRING_LIST, ',', 0, 16384, 0, m_szServerList },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
@@ -120,6 +128,66 @@ static char m_szHelpText[] =
    "\n";
 
 
+#ifdef _WIN32
+
+//
+// Get proc address and write log file
+//
+
+static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
+{
+   FARPROC ptr;
+
+   ptr = GetProcAddress(hModule, procName);
+   if ((ptr == NULL) && (g_dwFlags & AF_LOG_UNRESOLVED_SYMBOLS))
+      WriteLog(MSG_NO_FUNCTION, EVENTLOG_WARNING_TYPE, "s", procName);
+   return ptr;
+}
+
+
+//
+// Import symbols
+//
+
+static void ImportSymbols(void)
+{
+   HMODULE hModule;
+
+   hModule = GetModuleHandle("USER32.DLL");
+   if (hModule != NULL)
+   {
+      imp_GetGuiResources = (DWORD (__stdcall *)(HANDLE, DWORD))GetProcAddressAndLog(hModule,"GetGuiResources");
+   }
+   else
+   {
+      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "USER32.DLL");
+   }
+
+   hModule = GetModuleHandle("KERNEL32.DLL");
+   if (hModule != NULL)
+   {
+      imp_GetProcessIoCounters = (BOOL (__stdcall *)(HANDLE, PIO_COUNTERS))GetProcAddressAndLog(hModule,"GetProcessIoCounters");
+      imp_GlobalMemoryStatusEx = (BOOL (__stdcall *)(LPMEMORYSTATUSEX))GetProcAddressAndLog(hModule,"GlobalMemoryStatusEx");
+   }
+   else
+   {
+      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "KERNEL32.DLL");
+   }
+
+   hModule = GetModuleHandle("PSAPI.DLL");
+   if (hModule != NULL)
+   {
+      imp_GetPerformanceInfo = (BOOL (__stdcall *)(PPERFORMANCE_INFORMATION, DWORD))GetProcAddressAndLog(hModule,"GetPerformanceInfo");
+   }
+   else
+   {
+      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "PSAPI.DLL");
+   }
+}
+
+#endif   /* _WIN32 */
+
+
 //
 // Initialization routine
 //
@@ -143,6 +211,11 @@ BOOL Initialize(void)
    // Initialize built-in parameters
    if (!InitParameterList())
       return FALSE;
+
+#ifdef _WIN32
+   // Dynamically import functions that may not be presented in all Windows versions
+   ImportSymbols();
+#endif
 
    // Parse server list
    for(pItem = m_szServerList; *pItem != 0; pItem = pEnd + 1)

@@ -31,6 +31,10 @@
 #include <nxqueue.h>
 #include "messages.h"
 
+#ifdef _WIN32
+#include <psapi.h>
+#endif
+
 #define LIBNXCL_NO_DECLARATIONS
 #include <nxclapi.h>
 
@@ -71,11 +75,59 @@
 
 #define MAX_SERVERS        32
 
-#define AF_DAEMON          0x0001
-#define AF_USE_SYSLOG      0x0002
-#define AF_DEBUG           0x0004
-#define AF_REQUIRE_AUTH    0x0008
-#define AF_SHUTDOWN        0x1000
+#define AF_DAEMON                   0x0001
+#define AF_USE_SYSLOG               0x0002
+#define AF_DEBUG                    0x0004
+#define AF_REQUIRE_AUTH             0x0008
+#define AF_LOG_UNRESOLVED_SYMBOLS   0x0010
+#define AF_SHUTDOWN                 0x1000
+
+
+#ifdef _WIN32
+
+#define MAX_PROCESSES      4096
+#define MAX_MODULES        512
+
+
+//
+// Attributes for H_ProcInfo
+//
+
+#define PROCINFO_GDI_OBJ         1
+#define PROCINFO_IO_OTHER_B      2
+#define PROCINFO_IO_OTHER_OP     3
+#define PROCINFO_IO_READ_B       4
+#define PROCINFO_IO_READ_OP      5
+#define PROCINFO_IO_WRITE_B      6
+#define PROCINFO_IO_WRITE_OP     7
+#define PROCINFO_KTIME           8
+#define PROCINFO_PF              9
+#define PROCINFO_USER_OBJ        10
+#define PROCINFO_UTIME           11
+#define PROCINFO_VMSIZE          12
+#define PROCINFO_WKSET           13
+
+#define INFOTYPE_MIN             0
+#define INFOTYPE_MAX             1
+#define INFOTYPE_AVG             2
+#define INFOTYPE_SUM             3
+
+
+//
+// Request types for H_MemoryInfo
+//
+
+#define MEMINFO_PHYSICAL_FREE    1
+#define MEMINFO_PHYSICAL_TOTAL   2
+#define MEMINFO_PHYSICAL_USED    3
+#define MEMINFO_SWAP_FREE        4
+#define MEMINFO_SWAP_TOTAL       5
+#define MEMINFO_SWAP_USED        6
+#define MEMINFO_VIRTUAL_FREE     7
+#define MEMINFO_VIRTUAL_TOTAL    8
+#define MEMINFO_VIRTUAL_USED     9
+
+#endif   /* _WIN32 */
 
 
 //
@@ -190,5 +242,12 @@ extern time_t g_dwAgentStartTime;
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;
 extern DWORD g_dwRejectedConnections;
+
+#ifdef _WIN32
+extern DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
+extern BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
+extern BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
+extern BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
+#endif   /* _WIN32 */
 
 #endif   /* _nxagentd_h_ */

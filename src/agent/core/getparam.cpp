@@ -33,11 +33,19 @@ LONG H_CRC32(char *cmd, char *arg, char *value);
 LONG H_FileSize(char *cmd, char *arg, char *value);
 LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
-
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+
 #ifdef _WIN32
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ProcCount(char *cmd, char *arg, char *value);
+LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
+LONG H_ProcInfo(char *cmd, char *arg, char *value);
+LONG H_DiskInfo(char *cmd, char *arg, char *value);
+LONG H_MemoryInfo(char *cmd, char *arg, char *value);
+LONG H_HostName(char *cmd, char *arg, char *value);
+LONG H_SystemUname(char *cmd, char *arg, char *value);
+LONG H_ThreadCount(char *cmd, char *arg, char *value);
 #endif
 
 
@@ -123,6 +131,38 @@ static LONG H_EnumList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
 static AGENT_PARAM m_stdParams[] =
 {
+#ifdef _WIN32
+   { "Disk.Free(*)", H_DiskInfo, NULL },
+   { "Disk.Total(*)", H_DiskInfo, NULL },
+   { "Disk.Used(*)", H_DiskInfo, NULL },
+   { "Process.Count(*)", H_ProcCountSpecific, NULL },
+   { "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ },
+   { "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B },
+   { "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP },
+   { "Process.IO.ReadB(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_B },
+   { "Process.IO.ReadOp(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_OP },
+   { "Process.IO.WriteB(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_B },
+   { "Process.IO.WriteOp(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_OP },
+   { "Process.KernelTime(*)", H_ProcInfo, (char *)PROCINFO_KTIME },
+   { "Process.PageFaults(*)", H_ProcInfo, (char *)PROCINFO_PF },
+   { "Process.UserObj(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ },
+   { "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME },
+   { "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE },
+   { "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET },
+   { "System.Hostname", H_HostName, NULL },
+   { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE },
+   { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL },
+   { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED },
+   { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE },
+   { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL },
+   { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED },
+   { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE },
+   { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL },
+   { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED },
+   { "System.ProcessCount", H_ProcCount, NULL },
+   { "System.ThreadCount", H_ThreadCount, NULL },
+   { "System.Uname", H_SystemUname, NULL },
+#endif
    { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections },
    { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors },
    { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures },

@@ -104,4 +104,28 @@ Language=English
 Authentication failed for peer %1, method: %2
 .
 
+MessageId=
+SymbolicName=MSG_UNEXPECTED_ATTRIBUTE
+Language=English
+Internal error: unexpected process attribute code %1 in GetProcessAttribute()
+.
+
+MessageId=
+SymbolicName=MSG_UNEXPECTED_TYPE
+Language=English
+Internal error: unexpected type code %1 in GetProcessAttribute()
+.
+
+MessageId=
+SymbolicName=MSG_NO_FUNCTION
+Language=English
+Unable to resolve symbol "%1"
+.
+
+MessageId=
+SymbolicName=MSG_NO_DLL
+Language=English
+Unable to get handle to "%1"
+.
+
 ;#endif
