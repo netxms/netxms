@@ -64,7 +64,7 @@ static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          }
          break;
       case NXC_EVENT_NEW_ELOG_RECORD:
-//         printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
+         printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
          MemFree(pArg);
          break;
       default:
@@ -139,6 +139,12 @@ strcpy(szPassword," ");
    ConditionWait(g_hCondOperationComplete, INFINITE);
    t = time(0);
    printf("%s All events loaded.\n", ctime(&t));
+
+   NXCSetDebugCallback(DebugCallback);
+   printf("Debug mode activated\n");
+
+   while(1)
+      Sleep(1000);
 
    return 0;
 }
