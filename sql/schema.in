@@ -2,7 +2,7 @@
 ** System configuration table
 */
 
-CREATE TABLE Config
+CREATE TABLE config
 (
 	name varchar(64) not null,
 	value varchar(255),
@@ -15,7 +15,7 @@ CREATE TABLE Config
 ** or subsystems
 */
 
-CREATE TABLE Locks
+CREATE TABLE locks
 (
 	component_id integer not null,
 	component_name varchar(64),
@@ -29,7 +29,7 @@ CREATE TABLE Locks
 ** Users
 */
 
-CREATE TABLE Users
+CREATE TABLE users
 (
 	id integer not null,
 	name varchar(64) not null,
@@ -43,7 +43,7 @@ CREATE TABLE Users
 ** User groups
 */
 
-CREATE TABLE UserGroups
+CREATE TABLE user_groups
 (
 	id integer not null,
 	name varchar(64) not null,
@@ -56,7 +56,7 @@ CREATE TABLE UserGroups
 ** Users to groups mapping
 */
 
-CREATE TABLE UserGroupMembers
+CREATE TABLE user_group_members
 (
 	group_id integer not null,
 	user_id integer not null,
@@ -70,7 +70,7 @@ CREATE TABLE UserGroupMembers
 ** Nodes to be added
 */
 
-CREATE TABLE NewNodes
+CREATE TABLE new_nodes
 (
 	id integer not null,
 	ip_addr integer not null,
@@ -83,7 +83,7 @@ CREATE TABLE NewNodes
 ** Nodes information
 */
 
-CREATE TABLE Nodes
+CREATE TABLE nodes
 (
 	id integer not null,
 	name varchar(64),
@@ -112,7 +112,7 @@ CREATE TABLE Nodes
 ** Subnets
 */
 
-CREATE TABLE Subnets
+CREATE TABLE subnets
 (
 	id integer not null,
 	name varchar(64),
@@ -128,7 +128,7 @@ CREATE TABLE Subnets
 ** Nodes' interfaces
 */
 
-CREATE TABLE Interfaces
+CREATE TABLE interfaces
 (
 	id integer not null,
 	name varchar(64),
@@ -164,7 +164,7 @@ CREATE TABLE nsmap
 ** Objects' ACLs
 */
 
-CREATE TABLE ACL
+CREATE TABLE acl
 (
 	object_id integer not null,
 	user_id integer not null,
@@ -179,7 +179,7 @@ CREATE TABLE ACL
 ** Data collection items
 */
 
-CREATE TABLE Items
+CREATE TABLE items
 (
 	item_id integer not null,
 	node_id integer not null,
@@ -201,7 +201,7 @@ CREATE TABLE Items
 ** Events configuration
 */
 
-CREATE TABLE Events
+CREATE TABLE events
 (
 	event_id integer not null,
 	name varchar(64) not null,	// Short event name
@@ -217,7 +217,7 @@ CREATE TABLE Events
 ** Event log
 */
 
-CREATE TABLE EventLog
+CREATE TABLE event_log
 (
 	event_id integer,
 	timestamp integer,
@@ -235,7 +235,7 @@ CREATE TABLE EventLog
 ** Actions on events
 */
 
-CREATE TABLE Actions
+CREATE TABLE actions
 (
 	action_id integer not null,
 	action_type integer,
@@ -252,7 +252,7 @@ CREATE TABLE Actions
 ** Node groups
 */
 
-CREATE TABLE NodeGroups
+CREATE TABLE node_groups
 (
 	id integer not null,
 	name varchar(64),
@@ -265,7 +265,7 @@ CREATE TABLE NodeGroups
 ** Event groups
 */
 
-CREATE TABLE EventGroups
+CREATE TABLE event_groups
 (
 	id integer not null,
 	name varchar(64),
@@ -278,7 +278,7 @@ CREATE TABLE EventGroups
 ** Node group members
 */
 
-CREATE TABLE NodeGroupMembers
+CREATE TABLE node_group_members
 (
 	group_id integer not null,
 	node_id integer not null,
@@ -290,7 +290,7 @@ CREATE TABLE NodeGroupMembers
 ** Event group members
 */
 
-CREATE TABLE EventGroupMembers
+CREATE TABLE event_group_members
 (
 	group_id integer not null,
 	event_id integer not null,
@@ -302,7 +302,7 @@ CREATE TABLE EventGroupMembers
 ** Event processing policy
 */
 
-CREATE TABLE EventPolicy
+CREATE TABLE event_policy
 (
 	id integer not null,	// Rule number
 	flags integer not null,
@@ -310,21 +310,21 @@ CREATE TABLE EventPolicy
 	PRIMARY KEY(id)
 );
 
-CREATE TABLE PolicySourceList
+CREATE TABLE policy_source_list
 (
 	rule_id integer not null,
 	object_id integer not null,
 	PRIMARY KEY(rule_id,object_id)
 );
 
-CREATE TABLE PolicyEventList
+CREATE TABLE policy_event_list
 (
 	rule_id integer not null,
 	event_id integer not null,
 	PRIMARY KEY(rule_id,event_id)
 );
 
-CREATE TABLE PolicyActionList
+CREATE TABLE policy_action_list
 (
 	rule_id integer not null,
 	action_id integer not null,
@@ -336,7 +336,7 @@ CREATE TABLE PolicyActionList
 ** Deleted objects
 */
 
-CREATE TABLE DeletedObjects
+CREATE TABLE deleted_objects
 (
 	object_id integer not null,
 	object_class integer,
@@ -351,7 +351,7 @@ CREATE TABLE DeletedObjects
 ** Threshold checking rules
 */
 
-CREATE TABLE Thresholds
+CREATE TABLE thresholds
 (
 	threshold_id integer not null,
 	item_id integer not null,
@@ -370,7 +370,7 @@ CREATE TABLE Thresholds
 ** Data collection templates
 */
 
-CREATE TABLE DCT
+CREATE TABLE dct
 (
 	template_id integer not null,
 	name varchar(255),
@@ -382,7 +382,7 @@ CREATE TABLE DCT
 ** Items in data collection templates
 */
 
-CREATE TABLE DCTItems
+CREATE TABLE dct_items
 (
 	template_id integer not null,
 	item_id integer not null,
@@ -400,7 +400,7 @@ CREATE TABLE DCTItems
 ** Mapping hosts to templates
 */
 
-CREATE TABLE DCTHostMap
+CREATE TABLE dct_host_map
 (
 	template_id integer not null,
 	node_id integer not null,

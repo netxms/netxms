@@ -28,6 +28,7 @@ m4/Makefile.am -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text
+sql/Makefile.w32 -text
 sql/clear.sql -text
 sql/dbinit.in -text
 sql/events.in -text
