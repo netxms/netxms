@@ -157,9 +157,14 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hObjectBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hObjectBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
 
+   m_hUserEditorMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hUserEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hUserEditorMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjectBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_BROWSER));
+	m_hUserEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 
    // Load configuration from registry
    dwBytes = sizeof(WINDOWPLACEMENT);
@@ -538,7 +543,7 @@ void CConsoleApp::OnControlpanelUsers()
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CUserEditor), IDR_USER_EDITOR, m_hMDIMenu, m_hMDIAccel);
+		      RUNTIME_CLASS(CUserEditor), IDR_USER_EDITOR, m_hUserEditorMenu, m_hUserEditorAccel);
       }
       else
       {

@@ -140,6 +140,10 @@ SOURCE=.\MapView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NewUserDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NodePropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -254,6 +258,10 @@ SOURCE=.\MapFrame.h
 # Begin Source File
 
 SOURCE=.\MapView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NewUserDlg.h
 # End Source File
 # Begin Source File
 

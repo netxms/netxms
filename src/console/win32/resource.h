@@ -52,6 +52,7 @@
 #define IDI_USER                        165
 #define IDI_EVERYONE                    166
 #define IDD_SELECT_USER                 167
+#define IDD_NEW_USER                    168
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -88,6 +89,8 @@
 #define IDC_ADD_USER                    1033
 #define IDC_DELETE_USER                 1034
 #define IDC_CHECK_ACCESS                1035
+#define IDC_CHECK_PROPERTIES            1037
+#define IDC_STATIC_HEADER               1038
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -110,15 +113,20 @@
 #define ID_OBJECT_PROPERTIES            32799
 #define ID_OBJECT_FIND                  32800
 #define ID_OBJECT_VIEW_SELECTION        32801
+#define ID_USER_DELETE                  32803
+#define ID_USER_SETPASSWORD             32804
+#define ID_USER_PROPERTIES              32805
+#define ID_USER_CREATE_USER             32806
+#define ID_USER_CREATE_GROUP            32807
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        168
-#define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_COMMAND_VALUE         32808
+#define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

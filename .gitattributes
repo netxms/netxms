@@ -62,6 +62,8 @@ src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
 src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
+src/console/win32/NewUserDlg.cpp -text
+src/console/win32/NewUserDlg.h -text
 src/console/win32/NodePropsGeneral.cpp -text
 src/console/win32/NodePropsGeneral.h -text
 src/console/win32/ObjectBrowser.cpp -text

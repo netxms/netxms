@@ -7,6 +7,9 @@
 // UserEditor.h : header file
 //
 
+#include "NewUserDlg.h"
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CUserEditor frame
 
@@ -21,10 +24,13 @@ public:
 
 // Operations
 public:
+	void CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bShowProp);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CUserEditor)
+	protected:
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -37,6 +43,10 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnViewRefresh();
+	afx_msg void OnUserCreateGroup();
+	afx_msg void OnUserCreateUser();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

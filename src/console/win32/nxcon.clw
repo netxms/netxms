@@ -2,25 +2,25 @@
 
 [General Info]
 Version=1
-LastClass=CUserEditor
-LastTemplate=CMDIChildWnd
+LastClass=CNewUserDlg
+LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=30
+ClassCount=31
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=34
-Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
+ResourceCount=35
+Resource1=IDD_PROGRESS (English (U.S.))
 Resource2=IDA_MDI_DEFAULT
-Resource3=IDD_OBJECT_GENERAL (English (U.S.))
+Resource3=IDD_ABOUTBOX (English (U.S.))
 Resource4=IDM_VIEW_SPECIFIC
-Resource5=IDD_OBJECT_NODE_GENERAL (English (U.S.))
+Resource5=IDD_SELECT_USER (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -28,13 +28,13 @@ Class8=CMapFrame
 Class10=CLoginDialog
 Resource6=IDD_OBJECT_SECURITY
 Class11=CProgressDialog
-Resource7=IDD_ABOUTBOX (English (U.S.))
+Resource7=IDD_OBJECT_CAPS (English (U.S.))
 Class12=CObjectBrowser
 Resource8=IDD_OBJECT_NODE_GENERAL
 Class13=CObjectPropDlg
 Resource9=IDD_OBJECT_GENERAL
-Resource10=IDD_PROGRESS (English (U.S.))
-Resource11=IDD_EDIT_EVENT (English (U.S.))
+Resource10=IDD_OBJECT_GENERAL (English (U.S.))
+Resource11=IDD_OBJECT_SECURITY (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,13 +42,13 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDA_MDI_DEFAULT (English (U.S.))
+Resource17=IDD_EDIT_EVENT (English (U.S.))
 Class16=CDebugFrame
 Resource18=IDD_REQUEST_PROCESSING
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource20=IDD_EDIT_EVENT
 Class17=CObjectPreview
-Resource21=IDA_OBJECT_BROWSER (English (U.S.))
+Resource21=IDM_VIEW_SPECIFIC (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
@@ -62,19 +62,21 @@ Class25=CObjectPropSheet
 Resource24=IDR_MAINFRAME
 Class26=CRequestProcessingDlg
 Resource25=IDD_ABOUTBOX
-Resource26=IDD_OBJECT_SECURITY (English (U.S.))
-Resource27=IDD_OBJECT_CAPS (English (U.S.))
-Resource28=IDD_REQUEST_PROCESSING (English (U.S.))
+Resource26=IDD_LOGIN (English (U.S.))
+Resource27=IDR_MAINFRAME (English (U.S.))
+Resource28=IDA_MDI_DEFAULT (English (U.S.))
 Class27=CObjectPropsGeneral
-Resource29=IDR_MAINFRAME (English (U.S.))
+Resource29=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Class28=CObjectPropsSecurity
-Resource30=IDD_LOGIN (English (U.S.))
+Resource30=IDD_REQUEST_PROCESSING (English (U.S.))
 Resource31=IDD_LOGIN
 Resource32=IDD_OBJECT_CAPS
 Class29=CUserSelectDlg
 Resource33=IDD_SELECT_USER
 Class30=CUserEditor
-Resource34=IDD_SELECT_USER (English (U.S.))
+Resource34=IDA_OBJECT_BROWSER (English (U.S.))
+Class31=CNewUserDlg
+Resource35=IDD_NEW_USER (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -521,7 +523,12 @@ Command10=ID_OBJECT_FIND
 Command11=ID_OBJECT_RENAME
 Command12=ID_OBJECT_DELETE
 Command13=ID_OBJECT_PROPERTIES
-CommandCount=13
+Command14=ID_USER_CREATE_USER
+Command15=ID_USER_CREATE_GROUP
+Command16=ID_USER_DELETE
+Command17=ID_USER_SETPASSWORD
+Command18=ID_USER_PROPERTIES
+CommandCount=18
 
 [ACL:IDA_MDI_DEFAULT (English (U.S.))]
 Type=1
@@ -841,4 +848,24 @@ ImplementationFile=UserEditor.cpp
 BaseClass=CMDIChildWnd
 Filter=M
 VirtualFilter=mfWC
+LastObject=CUserEditor
+
+[DLG:IDD_NEW_USER (English (U.S.))]
+Type=1
+Class=CNewUserDlg
+ControlCount=5
+Control1=IDC_EDIT_NAME,edit,1350631552
+Control2=IDC_CHECK_PROPERTIES,button,1342242819
+Control3=IDOK,button,1342242817
+Control4=IDCANCEL,button,1342242816
+Control5=IDC_STATIC_HEADER,static,1342308352
+
+[CLS:CNewUserDlg]
+Type=0
+HeaderFile=NewUserDlg.h
+ImplementationFile=NewUserDlg.cpp
+BaseClass=CDialog
+Filter=D
+LastObject=CNewUserDlg
+VirtualFilter=dWC
 

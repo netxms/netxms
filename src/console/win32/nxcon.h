@@ -95,6 +95,8 @@ protected:
 	HACCEL m_hEventBrowserAccel;  // Accelerator for event browser
 	HMENU m_hObjectBrowserMenu;   // Menu for object browser
 	HACCEL m_hObjectBrowserAccel; // Accelerator for object browser
+	HMENU m_hUserEditorMenu;      // Menu for user editor
+	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
 	
 public:
 	void RegisterRequest(HREQUEST hRequest, CWnd *pWnd);
