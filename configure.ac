@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.3 2004-05-11 22:14:55 alk Exp $
+# $Id: configure.ac,v 1.4 2004-05-12 09:23:21 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -271,6 +271,7 @@ AC_CONFIG_FILES([
    include/Makefile
    src/Makefile
    src/libnetxms/Makefile
+   src/libnxcl/Makefile
    src/server/Makefile
    src/server/core/Makefile
    src/server/dbdrv/Makefile

@@ -110,7 +110,7 @@ src/libnetxms/main.cpp -text
 src/libnetxms/queue.cpp -text
 src/libnetxms/shvar.cpp -text
 src/libnetxms/tools.cpp -text
-src/libnxcl/Makefile -text
+src/libnxcl/Makefile.am -text
 src/libnxcl/comm.cpp -text
 src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
