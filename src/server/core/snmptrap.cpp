@@ -239,7 +239,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
    SOCKET hSocket;
    struct sockaddr_in addr;
-   int iAddrLen, iBytes;
+   int iBytes;
+   socklen_t nAddrLen;
    SNMP_Transport *pTransport;
    SNMP_PDU *pdu;
 
@@ -270,8 +271,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Wait for packets
    while(!ShutdownInProgress())
    {
-      iAddrLen = sizeof(struct sockaddr_in);
-      iBytes = pTransport->Read(&pdu, 2000, (struct sockaddr *)&addr, &iAddrLen);
+      nAddrLen = sizeof(struct sockaddr_in);
+      iBytes = pTransport->Read(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen);
       if ((iBytes > 0) && (pdu != NULL))
       {
          if (pdu->GetCommand() == SNMP_TRAP)

@@ -23,6 +23,9 @@
 #ifndef _nxsnmp_h_
 #define _nxsnmp_h_
 
+#include <nms_common.h>
+#include <nms_threads.h>
+
 #ifdef _WIN32
 #ifdef LIBNXSNMP_EXPORTS
 #define LIBNXSNMP_EXPORTABLE __declspec(dllexport)
@@ -76,7 +79,7 @@
 // PDU types
 //
 
-#define SNMP_INVALID_PDU         -1
+#define SNMP_INVALID_PDU         255
 #define SNMP_GET_REQUEST         0
 #define SNMP_GET_NEXT_REQUEST    1
 #define SNMP_GET_RESPONCE        2
@@ -240,7 +243,7 @@ private:
    BYTE *m_pBuffer;
 
    DWORD PreParsePDU(void);
-   int RecvData(DWORD dwTimeout, struct sockaddr *pSender, int *piAddrSize);
+   int RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
    void ClearBuffer(void);
 
 public:
@@ -249,8 +252,8 @@ public:
    ~SNMP_Transport();
 
    int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
-            struct sockaddr *pSender = NULL, int *piAddrSize = NULL);
-   int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, int iAddrLen = 0);
+            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
+   int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0);
    DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponce, 
                    DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
 

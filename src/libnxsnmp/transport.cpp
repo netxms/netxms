@@ -86,11 +86,11 @@ void SNMP_Transport::ClearBuffer(void)
 // Receive data from socket
 //
 
-int SNMP_Transport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, int *piAddrSize)
+int SNMP_Transport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    if (dwTimeout != INFINITE)
    {
-      struct fd_set rdfs;
+      fd_set rdfs;
       struct timeval tv;
 
       FD_ZERO(&rdfs);
@@ -130,7 +130,7 @@ DWORD SNMP_Transport::PreParsePDU(void)
 //
 
 int SNMP_Transport::Read(SNMP_PDU **ppData, DWORD dwTimeout, 
-                         struct sockaddr *pSender, int *piAddrSize)
+                         struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    int iBytes;
    DWORD dwPDULength;
@@ -192,7 +192,7 @@ int SNMP_Transport::Read(SNMP_PDU **ppData, DWORD dwTimeout,
 // Send PDU to socket
 //
 
-int SNMP_Transport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, int iAddrSize)
+int SNMP_Transport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, socklen_t iAddrSize)
 {
    BYTE *pBuffer;
    DWORD dwSize;
