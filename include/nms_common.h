@@ -180,6 +180,8 @@ typedef int SOCKET;
 #include <netdb.h>
 #endif
 
+#include <dirent.h>
+
 typedef int BOOL;
 typedef long int LONG;
 typedef unsigned long DWORD;

@@ -55,7 +55,7 @@ static int ProcFilter(const struct dirent *pEnt)
 // Read process list from /proc filesystem
 //
 
-int ProcRead(PROC_ENT **pEnt, char *szPatern)
+static int ProcRead(PROC_ENT **pEnt, char *szPatern)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
@@ -71,6 +71,8 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 	}
 
 	nFound = -1;
+	if (pEnt != NULL)
+		*pEnt = NULL;
 
 	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
 	if (nCount >= 0)
@@ -102,7 +104,7 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 			int hFile;
 
 			snprintf(szFileName, sizeof(szFileName),
-					"/proc/%s/psinfo", pNameList[nCount]->d_name);
+					   "/proc/%s/psinfo", pNameList[nCount]->d_name);
 			hFile = open(szFileName, O_RDONLY);
 			if (hFile != NULL)
 			{
@@ -112,13 +114,13 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 				{
 					if (strstr(psi.pr_fname, pPatern) != NULL)
 					{
-						nFound++;
 						if (pEnt != NULL)
 						{
-							(*pEnt)[nFound].nPid = atou(pNameList[nCount]->d_name);
-							strncpy((*pEnt)[nFound].szProcName, pProcName,
+							(*pEnt)[nFound].nPid = strtoul(pNameList[nCount]->d_name, NULL, 10);
+							strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
 									  sizeof((*pEnt)[nFound].szProcName));
 						}
+						nFound++;
 					}
 				}
 				close(hFile);
@@ -139,6 +141,47 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
+	PROC_ENT *pList;
+	int i, nProc;
+	char szBuffer[256];
+
+	nProc = ProcRead(&pList, "");
+	if (nProc != -1)
+	{
+		for(i = 0; i < nProc; i++)
+		{
+			snprintf(szBuffer, sizeof(szBuffer), "%d %s", pList[i].nPid,
+						pList[i].szProcName);
+			NxAddResultString(pValue, szBuffer);
+		}
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
+	safe_free(pList);
+
+	return nRet;
+}
+
+
+//
+// Handler for Process.Count(*) parameter
+//
+
+LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+   char szArg[128] = "";
+	int nCount;
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	nCount = ProcRead(NULL, szArg);
+	if (nCount >= 0)
+	{
+		ret_int(pValue, nCount);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
 
 	return nRet;
 }

@@ -26,7 +26,8 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
-#include <sys/dir.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 //
