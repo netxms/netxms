@@ -218,10 +218,10 @@ int SNMP_Transport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, socklen_t iAddr
 // IP address will be used
 //
 
-BOOL SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
+DWORD SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
 {
    struct sockaddr_in addr;
-   BOOL bResult = FALSE;
+   DWORD dwResult;
 
    // Fill in remote address structure
    memset(&addr, 0, sizeof(struct sockaddr_in));
@@ -258,17 +258,26 @@ BOOL SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WO
          // Pseudo-connect socket
          if (connect(m_hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == 0)
          {
-            bResult = TRUE;
+            dwResult = SNMP_ERR_SUCCESS;
          }
          else
          {
             closesocket(m_hSocket);
             m_hSocket = -1;
+            dwResult = SNMP_ERR_SOCKET;
          }
       }
+      else
+      {
+         dwResult = SNMP_ERR_SOCKET;
+      }
+   }
+   else
+   {
+      dwResult = SNMP_ERR_HOSTNAME;
    }
 
-   return bResult;
+   return dwResult;
 }
 
 

@@ -89,6 +89,32 @@ BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
 
 
 //
+// Get text for libnxsnmp error code
+//
+
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
+{
+   static TCHAR *pszErrorText[] =
+   {
+      _T("Operation completed successfully"),
+      _T("Request timed out"),
+      _T("Invalid parameters passed to function"),
+      _T("Unable to create socket"),
+      _T("Communication error"),
+      _T("Rrror parsing PDU"),
+      _T("No such object"),
+      _T("Invalid hostname or IP address"),
+      _T("OID is incorrect"),
+      _T("Agent error"),
+      _T("Unknown variable data type")
+   };
+
+   return ((dwError >= SNMP_ERR_SUCCESS) && (dwError <= SNMP_ERR_BAD_TYPE)) ?
+      pszErrorText[dwError] : _T("Unknown error");
+}
+
+
+//
 // DLL entry point
 //
 
