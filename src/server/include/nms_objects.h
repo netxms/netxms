@@ -256,13 +256,15 @@ public:
    int VersionMinor(void) { return m_dwVersion & 0xFFFF; }
    const TCHAR *Description(void) { return CHECK_NULL(m_pszDescription); }
 
-   BOOL AddItem(DCItem *pItem);
+   DWORD GetItemCount(void) { return m_dwNumItems; }
+   BOOL AddItem(DCItem *pItem, BOOL bLocked = FALSE);
    BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                    DWORD **ppdwMapIndex, DWORD **ppdwMapId);
    BOOL DeleteItem(DWORD dwItemId);
    BOOL SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int GetItemType(DWORD dwItemId);
    const DCItem *GetItemById(DWORD dwItemId);
+   const DCItem *GetItemByIndex(DWORD dwIndex);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
@@ -446,6 +448,7 @@ public:
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
    DWORD GetLastValues(CSCPMessage *pMsg);
    void CleanDCIData(void);
+   BOOL ApplyTemplateItem(DCItem *pItem);
 
    AgentConnection *CreateAgentConnection(void);
 

@@ -1604,3 +1604,44 @@ void Node::CleanDCIData(void)
       m_ppItems[i]->CleanData();
    Unlock();
 }
+
+
+//
+// Apply DCI from template
+// pItem passed to this method should be new DCI copied from template's DCI
+// with unique ID and correct template id and template item id.
+//
+
+BOOL Node::ApplyTemplateItem(DCItem *pItem)
+{
+   BOOL bResult = TRUE;
+   DWORD i;
+   int iStatus;
+
+   Lock();
+
+   // Check if that template item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if ((m_ppItems[i]->TemplateId() == pItem->TemplateId()) &&
+          (m_ppItems[i]->TemplateItemId() == pItem->TemplateItemId()))
+         break;   // Item with specified id already exist
+
+   if (i == m_dwNumItems)
+   {
+      // New item from template, just add it
+      bResult = AddItem(pItem, TRUE);
+   }
+   else
+   {
+      // Replace existing item
+      iStatus = m_ppItems[i]->Status();
+      m_ppItems[i]->PrepareForDeletion();
+      pItem->PrepareForReplacement(m_ppItems[i], iStatus);
+      delete m_ppItems[i];
+      m_ppItems[i] = pItem;
+      Modify();
+   }
+
+   Unlock();
+   return bResult;
+}

@@ -238,8 +238,8 @@ void Template::LoadItemsFromDB(void)
    DB_RESULT hResult;
 
    sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
-                    "status,delta_calculation,transformation,template_id,description,instance "
-                    "FROM items WHERE node_id=%d", m_dwId);
+                    "status,delta_calculation,transformation,template_id,description,"
+                    "instance,template_item_id FROM items WHERE node_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)
@@ -263,12 +263,14 @@ void Template::LoadItemsFromDB(void)
 // Add item to node
 //
 
-BOOL Template::AddItem(DCItem *pItem)
+BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
 {
    DWORD i;
    BOOL bResult = FALSE;
 
-   Lock();
+   if (!bLocked)
+      Lock();
+
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == pItem->Id())
@@ -286,7 +288,8 @@ BOOL Template::AddItem(DCItem *pItem)
       bResult = TRUE;
    }
 
-   Unlock();
+   if (!bLocked)
+      Unlock();
    return bResult;
 }
 
@@ -486,6 +489,24 @@ const DCItem *Template::GetItemById(DWORD dwItemId)
          pItem = m_ppItems[i];
          break;
       }
+
+   Unlock();
+   return pItem;
+}
+
+
+//
+// Get item by it's index
+//
+
+const DCItem *Template::GetItemByIndex(DWORD dwIndex)
+{
+   DCItem *pItem = NULL;
+
+   Lock();
+
+   if (dwIndex < m_dwNumItems)
+      pItem = m_ppItems[dwIndex];
 
    Unlock();
    return pItem;

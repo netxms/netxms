@@ -316,6 +316,7 @@ private:
    void CloseNodeDCIList(CSCPMessage *pRequest);
    void ModifyNodeDCI(CSCPMessage *pRequest);
    void CopyDCI(CSCPMessage *pRequest);
+   void ApplyTemplate(CSCPMessage *pRequest);
    void GetCollectedData(CSCPMessage *pRequest);
    void ChangeDCIStatus(CSCPMessage *pRequest);
    void SendLastValues(CSCPMessage *pRequest);

@@ -302,6 +302,7 @@ CREATE TABLE items
 	item_id integer not null,
 	node_id integer not null,	
 	template_id integer not null,
+	template_item_id integer not null,
 	name varchar(255) not null,
 	description varchar(255),
 	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP

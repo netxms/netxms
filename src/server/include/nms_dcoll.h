@@ -150,6 +150,7 @@ private:
    BYTE m_iStatus;            // Item status: active, disabled or not supported
    BYTE m_iBusy;              // 1 when item is queued for polling, 0 if not
    DWORD m_dwTemplateId;      // Related template's id
+   DWORD m_dwTemplateItemId;  // Related template item's id
    DWORD m_dwNumThresholds;
    Threshold **m_ppThresholdList;
    Template *m_pNode;             // Pointer to node or template object this item related to
@@ -176,6 +177,7 @@ public:
           char *pszDescription = NULL);
    ~DCItem();
 
+   void PrepareForReplacement(DCItem *pItem, int iStatus);
    void PrepareForDeletion(void);
 
    BOOL SaveToDB(void);
@@ -185,8 +187,11 @@ public:
    DWORD Id(void) { return m_dwId; }
    int DataSource(void) { return m_iSource; }
    int DataType(void) { return m_iDataType; }
+   int Status(void) { return m_iStatus; }
    const char *Name(void) { return m_szName; }
    Template *RelatedNode(void) { return m_pNode; }
+   DWORD TemplateId(void) { return m_dwTemplateId; }
+   DWORD TemplateItemId(void) { return m_dwTemplateItemId; }
 
    BOOL ReadyForPolling(time_t currTime) 
    {
@@ -203,6 +208,7 @@ public:
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
    void ChangeBinding(DWORD dwNewId, Template *pNode);
+   void SetTemplateId(DWORD dwId) { m_dwTemplateId = dwId; }
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
 

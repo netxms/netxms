@@ -75,6 +75,29 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V22 to V23
+//
+
+static BOOL H_UpgradeFromV22(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE items ADD template_item_id integer not null\n"
+      "UPDATE items SET template_item_id=0\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='23' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V21 to V22
 //
 
@@ -671,6 +694,7 @@ static struct
    { 19, H_UpgradeFromV19 },
    { 20, H_UpgradeFromV20 },
    { 21, H_UpgradeFromV21 },
+   { 22, H_UpgradeFromV22 },
    { 0, NULL }
 };
 

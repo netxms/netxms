@@ -31,6 +31,7 @@ DCItem::DCItem()
 {
    m_dwId = 0;
    m_dwTemplateId = 0;
+   m_dwTemplateItemId = 0;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_iBusy = 0;
@@ -62,6 +63,7 @@ DCItem::DCItem(const DCItem *pSrc)
 
    m_dwId = pSrc->m_dwId;
    m_dwTemplateId = pSrc->m_dwTemplateId;
+   m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
    m_iBusy = 0;
    m_iDataType = pSrc->m_iDataType;
    m_iPollingInterval = pSrc->m_iPollingInterval;
@@ -94,7 +96,8 @@ DCItem::DCItem(const DCItem *pSrc)
 // Constructor for creating DCItem from database
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
-// delta_calculation,transformation,template_id,description,instance
+// delta_calculation,transformation,template_id,description,instance,
+// template_item_id
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -114,6 +117,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    DecodeSQLString(m_szDescription);
    strncpy(m_szInstance, DBGetField(hResult, iRow, 11), MAX_DB_STRING);
    DecodeSQLString(m_szInstance);
+   m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_iBusy = 0;
    m_tLastPoll = 0;
    m_dwNumThresholds = 0;
@@ -135,6 +139,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
 {
    m_dwId = dwId;
    m_dwTemplateId = 0;
+   m_dwTemplateItemId = 0;
    strncpy(m_szName, szName, MAX_ITEM_NAME);
    if (pszDescription != NULL)
       strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
@@ -258,19 +263,21 @@ BOOL DCItem::SaveToDB(void)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation,instance) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s','%s')",
+                       "transformation,instance,template_item_id) VALUES (%ld,%ld,%ld,'%s',"
+                       "'%s',%d,%d,%ld,%ld,%d,%d,'%s','%s',%ld)",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
-                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula, pszEscInstance);
+                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
+                       pszEscFormula, pszEscInstance, m_dwTemplateItemId);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%ld,template_id=%ld,name='%s',source=%d,"
                        "datatype=%d,polling_interval=%ld,retention_time=%ld,status=%d,"
                        "delta_calculation=%d,transformation='%s',description='%s',"
-                       "instance='%s' WHERE item_id=%ld",
+                       "instance='%s',template_item_id=%ld WHERE item_id=%ld",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
-                       pszEscDescr, pszEscInstance, m_dwId);
+                       pszEscDescr, pszEscInstance, m_dwTemplateItemId, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscName);
    free(pszEscFormula);
@@ -805,4 +812,21 @@ void DCItem::PrepareForDeletion(void)
    }
 
    Unlock();
+}
+
+
+//
+// Prepare item for replacing an old one
+//
+
+void DCItem::PrepareForReplacement(DCItem *pItem, int iStatus)
+{
+   m_tLastPoll = pItem->m_tLastPoll;
+   m_dwId = pItem->m_dwId;
+   ClearCache();
+   m_dwCacheSize = pItem->m_dwCacheSize;
+   m_ppValueCache = pItem->m_ppValueCache;
+   pItem->m_ppValueCache = NULL;
+   pItem->m_dwCacheSize = 0;
+   m_iStatus = iStatus;
 }

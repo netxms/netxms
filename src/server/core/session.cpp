@@ -611,6 +611,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_COPY_DCI:
             CopyDCI(pMsg);
             break;
+         case CMD_APPLY_TEMPLATE:
+            ApplyTemplate(pMsg);
+            break;
          case CMD_GET_DCI_DATA:
             GetCollectedData(pMsg);
             break;
@@ -4130,4 +4133,98 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
    // Allow deployment thread to run
    if (bSuccess)
       MutexUnlock(hMutex);
+}
+
+
+//
+// Apply data collection template to node
+//
+
+void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pSource, *pDestination;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get source and destination
+   pSource = FindObjectById(pRequest->GetVariableLong(VID_SOURCE_OBJECT_ID));
+   pDestination = FindObjectById(pRequest->GetVariableLong(VID_DESTINATION_OBJECT_ID));
+   if ((pSource != NULL) && (pDestination != NULL))
+   {
+      // Check object types
+      if ((pSource->Type() == OBJECT_TEMPLATE) && 
+          (pDestination->Type() == OBJECT_NODE))
+      {
+         if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
+         {
+            // Check access rights
+            if ((pSource->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+                (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+            {
+               // Attempt to lock destination's DCI list
+               if (((Template *)pDestination)->LockDCIList(m_dwIndex))
+               {
+                  DWORD i, dwNumItems;
+                  const DCItem *pSrcItem;
+                  DCItem *pDstItem;
+                  int iErrors = 0;
+
+                  dwNumItems = ((Template *)pSource)->GetItemCount();
+
+                  // Copy items
+                  for(i = 0; i < dwNumItems; i++)
+                  {
+                     pSrcItem = ((Template *)pSource)->GetItemByIndex(i);
+                     if (pSrcItem != NULL)
+                     {
+                        pDstItem = new DCItem(pSrcItem);
+                        pDstItem->SetTemplateId(pSource->Id());
+                        pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
+                                                (Template *)pDestination);
+                        if (!((Node *)pDestination)->ApplyTemplateItem(pDstItem))
+                        {
+                           delete pDstItem;
+                           iErrors++;
+                        }
+                     }
+                     else
+                     {
+                        iErrors++;
+                     }
+                  }
+
+                  // Cleanup
+                  ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
+                  msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
+               }
+               else  // Destination's DCI list already locked by someone else
+               {
+                  msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+               }
+            }
+            else  // User doesn't have enough rights on object(s)
+            {
+               msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+            }
+         }
+         else  // Source node DCI list not locked by this session
+         {
+            msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         }
+      }
+      else     // Object(s) is not a node
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else  // No object(s) with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }

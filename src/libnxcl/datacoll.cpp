@@ -561,3 +561,24 @@ DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
    }
    return dwResult;
 }
+
+
+//
+// Apply template to node
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCApplyTemplate(NXC_SESSION hSession, DWORD dwTemplateId, DWORD dwNodeId)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_APPLY_TEMPLATE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_SOURCE_OBJECT_ID, dwTemplateId);
+   msg.SetVariable(VID_DESTINATION_OBJECT_ID, dwNodeId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
