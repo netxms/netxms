@@ -36,6 +36,7 @@ sql/events.in -text
 sql/schema.in -text
 sql/setup.in -text
 src/Makefile.am -text
+src/agent/Makefile.am -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text

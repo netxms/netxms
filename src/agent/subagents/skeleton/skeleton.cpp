@@ -20,8 +20,15 @@
 **
 **/
 
-#include <windows.h>
+//#include <windows.h>
+#include <nms_common.h>
 #include <nms_agent.h>
+
+#ifdef _WIN32
+#define EXPORTABLE __declspec(dllexport) __cdecl
+#else
+#define EXPORTABLE
+#endif
 
 
 //
@@ -60,7 +67,7 @@ static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters };
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL __declspec(dllexport) __cdecl NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+extern "C" BOOL EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 {
    *ppInfo = &m_info;
    return TRUE;

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.12 2004-06-01 21:34:57 alk Exp $
+# $Id: configure.ac,v 1.13 2004-06-03 09:52:13 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -148,6 +148,7 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h])
 AC_CHECK_HEADERS([openssl/ssl.h])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])
+AC_CHECK_HEADERS([sys/mman.h])
 
 if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then
 	AC_MSG_ERROR(OpenSSL headers not found.)
@@ -166,6 +167,7 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
 AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
+AC_CHECK_TYPES([off_t])
 
 # --------------------------------------------------------------------------
 # C/CPP caps
@@ -203,7 +205,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex daemon])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex daemon mmap])
 
 
 # sockets/resolver (probably for solaris)
@@ -315,6 +317,8 @@ AC_CONFIG_FILES([
    src/server/dbdrv/Makefile
    src/server/dbdrv/mysql/Makefile
    src/server/dbdrv/pgsql/Makefile
+   src/agent/Makefile
+   src/agent/unix/Makefile
 ])
 
 AC_OUTPUT
