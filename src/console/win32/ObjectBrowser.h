@@ -94,6 +94,7 @@ public:
 
 // Implementation
 protected:
+	NXC_OBJECT * m_pCurrentObject;
 	DWORD GetSelectedObject(void);
 	void ClearListSelection(void);
 	void AddObjectToList(NXC_OBJECT *pObject);
@@ -126,6 +127,9 @@ protected:
 	afx_msg void OnUpdateObjectViewViewastree(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateObjectViewSelection(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateObjectProperties(CCmdUI* pCmdUI);
+	afx_msg void OnObjectDatacollection();
+	afx_msg void OnUpdateObjectDatacollection(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);

@@ -126,6 +126,7 @@ CObjectBrowser::CObjectBrowser()
    m_pTreeHash = NULL;
    m_dwFlags = SHOW_OBJECT_PREVIEW;
    m_dwSortMode = OBJECT_SORT_BY_NAME;
+   m_pCurrentObject = NULL;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -153,6 +154,9 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_VIEWASTREE, OnUpdateObjectViewViewastree)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_SELECTION, OnUpdateObjectViewSelection)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnUpdateObjectViewShowpreviewpane)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_PROPERTIES, OnUpdateObjectProperties)
+	ON_COMMAND(ID_OBJECT_DATACOLLECTION, OnObjectDatacollection)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_DATACOLLECTION, OnUpdateObjectDatacollection)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -415,10 +419,8 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 {
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
    {
-      NXC_OBJECT *pObject;
-
-      pObject = NXCFindObjectById(lpnmt->itemNew.lParam);
-      m_wndPreviewPane.SetCurrentObject(pObject);
+      m_pCurrentObject = NXCFindObjectById(lpnmt->itemNew.lParam);
+      m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
    }
 }
 
@@ -775,13 +777,18 @@ void CObjectBrowser::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
 {
    if (!(m_dwFlags & VIEW_OBJECTS_AS_TREE))
    {
-      NXC_OBJECT *pObject;
-
       if (pNMHDR->iItem != -1)
-         if ((pNMHDR->uChanged & LVIF_STATE) && (pNMHDR->uNewState & LVIS_FOCUSED))
+         if (pNMHDR->uChanged & LVIF_STATE)
          {
-            pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(pNMHDR->iItem);
-            m_wndPreviewPane.SetCurrentObject(pObject);
+            if (pNMHDR->uNewState & LVIS_FOCUSED)
+            {
+               m_pCurrentObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(pNMHDR->iItem);
+            }
+            else
+            {
+               m_pCurrentObject = NULL;
+            }
+            m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
          }
    }   
    *pResult = 0;
@@ -874,7 +881,38 @@ void CObjectBrowser::ClearListSelection()
 
 void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
-   theApp.DebugPrintf("Menu at %d %d", point.x, point.y);
+   CMenu *pMenu;
+   CPoint pt;
+
+   pt = point;
+   pWnd->ScreenToClient(&pt);
+
+   if (pWnd->GetDlgCtrlID() == IDC_LIST_VIEW)
+   {
+      int iItem;
+      UINT uFlags;
+
+      iItem = m_wndListCtrl.HitTest(pt, &uFlags);
+      if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+      {
+         pMenu = theApp.GetContextMenu(1);
+         pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+      }
+   }
+   else if (pWnd->GetDlgCtrlID() == IDC_TREE_VIEW)
+   {
+      HTREEITEM hItem;
+      UINT uFlags;
+
+      hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
+      if ((hItem != NULL) && (uFlags & TVHT_ONITEM))
+      {
+         m_wndTreeCtrl.Select(hItem, TVGN_CARET);
+
+         pMenu = theApp.GetContextMenu(1);
+         pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+      }
+   }
 }
 
 
@@ -1081,6 +1119,19 @@ void CObjectBrowser::OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI)
    pCmdUI->SetCheck(m_dwFlags & SHOW_OBJECT_PREVIEW);
 }
 
+void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
+{
+   if (m_pCurrentObject == NULL)
+      pCmdUI->Enable(FALSE);
+   else
+      pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_NODE);
+}
+
 
 //
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
@@ -1089,4 +1140,15 @@ void CObjectBrowser::OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI)
 void CObjectBrowser::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_OBJECT_PROPERTIES, 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_DATACOLLECTION message handler
+//
+
+void CObjectBrowser::OnObjectDatacollection() 
+{
+	// TODO: Add your command handler code here
+	
 }

@@ -137,6 +137,7 @@
 #define ID_USER_CREATE_USER             32806
 #define ID_USER_CREATE_GROUP            32807
 #define ID_USER_RENAME                  32810
+#define ID_OBJECT_DATACOLLECTION        32819
 
 // Next default values for new objects
 // 
@@ -144,7 +145,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        174
-#define _APS_NEXT_COMMAND_VALUE         32816
+#define _APS_NEXT_COMMAND_VALUE         32820
 #define _APS_NEXT_CONTROL_VALUE         1057
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
