@@ -92,59 +92,27 @@ void ObjectsGlobalUnlock(void)
 
 
 //
+// Function to compare two indexes
+//
+
+static int IndexCompare(const void *pArg1, const void *pArg2)
+{
+   return (((INDEX *)pArg1)->dwKey < ((INDEX *)pArg2)->dwKey) ? -1 :
+            ((((INDEX *)pArg1)->dwKey > ((INDEX *)pArg2)->dwKey) ? 1 : 0);
+}
+
+
+//
 // Add new object to index
 //
 
 static void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, NetObj *pObject)
 {
-   DWORD dwFirst, dwLast, dwPos;
-   INDEX *pIndex = *ppIndex;
-
-   if (pIndex == NULL)
-   {
-      dwPos = 0;
-   }
-   else
-   {
-      dwFirst = 0;
-      dwLast = *pdwIndexSize - 1;
-
-      if (dwKey < pIndex[0].dwKey)
-         dwPos = 0;
-      else if (dwKey > pIndex[dwLast].dwKey)
-         dwPos = dwLast + 1;
-      else
-         while(dwFirst < dwLast)
-         {
-            dwPos = (dwFirst + dwLast) / 2;
-            if (dwPos == 0)
-               dwPos++;
-            if ((pIndex[dwPos - 1].dwKey < dwKey) && (pIndex[dwPos].dwKey > dwKey))
-               break;
-            if ((pIndex[dwPos].dwKey < dwKey) && (pIndex[dwPos + 1].dwKey > dwKey))
-            {
-               dwPos++;
-               break;
-            }
-            if (dwKey < pIndex[dwPos].dwKey)
-               dwLast = dwPos;
-            else if (dwKey > pIndex[dwPos].dwKey)
-               dwFirst = dwPos;
-            else
-            {
-               WriteLog(MSG_DUPLICATE_KEY, EVENTLOG_ERROR_TYPE, "x", dwKey);
-               return;
-            }
-         }
-   }
-
+   *ppIndex = (INDEX *)realloc(*ppIndex, sizeof(INDEX) * ((*pdwIndexSize) + 1));
+   (*ppIndex)[*pdwIndexSize].dwKey = dwKey;
+   (*ppIndex)[*pdwIndexSize].pObject = pObject;
    (*pdwIndexSize)++;
-   *ppIndex = (INDEX *)realloc(*ppIndex, sizeof(INDEX) * (*pdwIndexSize));
-   pIndex = *ppIndex;
-   if (dwPos < (*pdwIndexSize - 1))
-      memmove(&pIndex[dwPos + 1], &pIndex[dwPos], sizeof(INDEX) * (*pdwIndexSize - dwPos - 1));
-   pIndex[dwPos].dwKey = dwKey;
-   pIndex[dwPos].pObject = pObject;
+   qsort(*ppIndex, *pdwIndexSize, sizeof(INDEX), IndexCompare);
 }
 
 
