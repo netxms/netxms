@@ -477,8 +477,10 @@ CREATE TABLE images
 (
 	image_id integer not null,
 	name varchar(64),
-	file_name varchar(255),
-	file_hash varchar(32),
+	file_name_png varchar(255),
+	file_hash_png varchar(32),
+	file_name_ico varchar(255),
+	file_hash_ico varchar(32),
 	PRIMARY KEY(image_id)
 );
 
