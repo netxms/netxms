@@ -2,8 +2,8 @@ OBJ = mysql.o
 #DST=libnetxms.a
 DST = mysql.ddr
 
-CFLAGS = -I../../include -I../../../../include -Wall
-LFLAGS = -shared -lmysql
+CFLAGS = -I../../include -I../../../../include -I/usr/include/mysql -Wall
+LFLAGS = -shared -L/usr/lib/mysql -lmysqlclient
 
 all: $(DST)
 

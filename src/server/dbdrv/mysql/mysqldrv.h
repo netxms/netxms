@@ -27,6 +27,7 @@
 #include <windows.h>
 #define EXPORT __declspec(dllexport)
 #else
+#include <string.h>
 #define EXPORT
 #endif   /* _WIN32 */
 
