@@ -284,3 +284,67 @@ BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault)
    DBFreeResult(hResult);
    return bSuccess;
 }
+
+
+//
+// Read integer value from configuration table
+//
+
+int ConfigReadInt(char *szVar, int iDefault)
+{
+   char szBuffer[64];
+
+   if (ConfigReadStr(szVar, szBuffer, 64, ""))
+      return strtol(szBuffer, NULL, 0);
+   else
+      return iDefault;
+}
+
+
+//
+// Write string value to configuration table
+//
+
+BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
+{
+   DB_RESULT hResult;
+   char szQuery[1024];
+   BOOL bVarExist = FALSE;
+
+   if (strlen(szVar) > 127)
+      return FALSE;
+
+   // Check for variable existence
+   sprintf(szQuery, "SELECT value FROM config WHERE name='%s'", szVar);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bVarExist = TRUE;
+      DBFreeResult(hResult);
+   }
+
+   // Don't create non-existing variable if creation flag not set
+   if (!bCreate && !bVarExist)
+      return FALSE;
+
+   // Create or update variable value
+   if (bVarExist)
+      sprintf(szQuery, "UPDATE config SET value='%s' WHERE name='%s'", szValue, szVar);
+   else
+      sprintf(szQuery, "INSERT INTO config (name,value) VALUES ('%s','%s')", szVar, szValue);
+   return DBQuery(g_hCoreDB, szQuery);
+}
+
+
+//
+// Write integer value to configuration table
+//
+
+BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
+{
+   char szBuffer[64];
+
+   sprintf(szBuffer, "%ld", iValue);
+   return ConfigWriteStr(szVar, szBuffer, bCreate);
+}

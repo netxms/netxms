@@ -90,6 +90,11 @@
 // Functions
 //
 
+BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault);
+int ConfigReadInt(char *szVar, int iDefault);
+BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
+BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
+
 void InitLog(void);
 void CloseLog(void);
 void WriteLog(DWORD msg, WORD wType, char *format, ...);
