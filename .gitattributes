@@ -192,8 +192,6 @@ src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
 src/console/win32/PasswordChangeDlg.cpp -text
 src/console/win32/PasswordChangeDlg.h -text
-src/console/win32/PollNodeDlg.cpp -text
-src/console/win32/PollNodeDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
 src/console/win32/RequestProcessingDlg.h -text
 src/console/win32/RuleAlarmDlg.cpp -text

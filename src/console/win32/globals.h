@@ -91,6 +91,24 @@ extern CConsoleApp theApp;
 
 
 //
+// Request parameters structure
+//
+
+struct RqData
+{
+   HWND hWnd;
+   DWORD (* pFunc)(...);
+   DWORD dwNumParams;
+   void *pArg1;
+   void *pArg2;
+   void *pArg3;
+   void *pArg4;
+   void *pArg5;
+   void *pArg6;
+};
+
+
+//
 // Code translation structure
 //
 
@@ -124,7 +142,7 @@ DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText);
 DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText);
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, char *pszInfoText);
-DWORD DoNodePoll(DWORD dwObjectId, int iPollType);
+DWORD WINAPI PollerThread(void *pArg);
 
 
 //
