@@ -678,3 +678,46 @@ void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList)
    safe_free(pList->pElements);
    free(pList);
 }
+
+
+//
+// Perform a forced node poll
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, void (* pfCallback)(TCHAR *))
+{
+   DWORD dwRetCode, dwRqId;
+   CSCPMessage msg, *pResponce;
+   TCHAR *pszMsg;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_POLL_NODE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.SetVariable(VID_POLL_TYPE, (WORD)iPollType);
+   SendMsg(&msg);
+
+   do
+   {
+      pResponce = WaitForMessage(CMD_POLLING_INFO, dwRqId, 10000);
+      if (pResponce != NULL)
+      {
+         dwRetCode = pResponce->GetVariableLong(VID_RCC);
+         if ((dwRetCode == RCC_OPERATION_IN_PROGRESS) && (pfCallback != NULL))
+         {
+            pszMsg = pResponce->GetVariableStr(VID_POLLER_MESSAGE);
+            pfCallback(pszMsg);
+            free(pszMsg);
+         }
+         delete pResponce;
+      }
+      else
+      {
+         dwRetCode = RCC_TIMEOUT;
+      }
+   }
+   while(dwRetCode == RCC_OPERATION_IN_PROGRESS);
+
+   return dwRetCode;
+}

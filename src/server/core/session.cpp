@@ -529,6 +529,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_OBJECT:
             DeleteObject(pMsg);
             break;
+         case CMD_POLL_NODE:
+            ForcedNodePoll(pMsg);
+            break;
          default:
             break;
       }
@@ -2586,4 +2589,13 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
    // Send end-of-list indicator
    msg.SetVariable(VID_CATEGORY_ID, (DWORD)0);
    SendMessage(&msg);
+}
+
+
+//
+// Perform a forced node poll
+//
+
+void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
+{
 }

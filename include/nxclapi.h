@@ -89,6 +89,14 @@ typedef unsigned long HREQUEST;
 
 
 //
+// Forced poll types
+//
+
+#define POLL_STATUS           1
+#define POLL_CONFIGURATION    2
+
+
+//
 // Object types
 //
 
@@ -214,6 +222,7 @@ typedef unsigned long HREQUEST;
 #define RCC_INVALID_OBJECT_NAME     ((DWORD)20)
 #define RCC_INVALID_ALARM_ID        ((DWORD)21)
 #define RCC_INVALID_ACTION_ID       ((DWORD)22)
+#define RCC_OPERATION_IN_PROGRESS   ((DWORD)23)
 
 
 //
@@ -808,6 +817,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DW
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(DWORD dwObject);
+DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, void (* pCallback)(TCHAR *));
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);

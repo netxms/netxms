@@ -295,6 +295,7 @@ private:
    void LockActionDB(DWORD dwRqId, BOOL bLock);
    void SendAllActions(DWORD dwRqId);
    void SendContainerCategories(DWORD dwRqId);
+   void ForcedNodePoll(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
