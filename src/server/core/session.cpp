@@ -152,6 +152,7 @@ THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
       ((POLLER_START_DATA *)pArg)->pNode,
       ((POLLER_START_DATA *)pArg)->iPollType,
       ((POLLER_START_DATA *)pArg)->dwRqId);
+   ((POLLER_START_DATA *)pArg)->pSession->DecRefCount();
    free(pArg);
    return THREAD_OK;
 }
@@ -187,6 +188,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_ppEPPRuleList = NULL;
    m_hCurrFile = -1;
    m_dwFileRqId = 0;
+   m_dwRefCount = 0;
 }
 
 
@@ -395,6 +397,16 @@ void ClientSession::ReadThread(void)
       if (pObject != NULL)
          if (pObject->Type() == OBJECT_NODE)
             ((Node *)pObject)->UnlockDCIList(m_dwIndex);
+   }
+
+   // Waiting while reference count becomes 0
+   if (m_dwRefCount > 0)
+   {
+      DebugPrintf("Waiting for pending requests...\n");
+      do
+      {
+         ThreadSleep(1);
+      } while(m_dwRefCount > 0);
    }
 
    DebugPrintf("Session closed\n");
@@ -3295,6 +3307,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             ((Node *)pObject)->IncRefCount();
+            m_dwRefCount++;
 
             pData->pNode = (Node *)pObject;
             ThreadCreate(PollerThreadStarter, 0, pData);
@@ -4095,6 +4108,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          _tcscpy(pInfo->szPlatform, szPlatform);
          _tcscpy(pInfo->szVersion, szVersion);
 
+         m_dwRefCount++;
          ThreadCreate(DeploymentManager, 0, pInfo);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }

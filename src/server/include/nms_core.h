@@ -269,6 +269,7 @@ private:
    DWORD m_dwUploadCommand;
    DWORD m_dwUploadData;
    TCHAR m_szCurrFileName[MAX_PATH];
+   DWORD m_dwRefCount;
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -352,6 +353,9 @@ private:
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
    ~ClientSession();
+
+   void IncRefCount(void) { m_dwRefCount++; }
+   void DecRefCount(void) { if (m_dwRefCount > 0) m_dwRefCount--; }
 
    void Run(void);
 

@@ -316,7 +316,10 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 
    // Sanity check
    if (pStartup->dwNumNodes == 0)
+   {
+      pStartup->pSession->DecRefCount();
       return THREAD_OK;
+   }
 
    // Read number of upgrade threads
    dwNumThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
@@ -351,6 +354,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    // Send final notification to client
    msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
    pStartup->pSession->SendMessage(&msg);
+   pStartup->pSession->DecRefCount();
 
    // Cleanup
    MutexDestroy(pStartup->mutex);
