@@ -49,6 +49,7 @@ Node::Node()
    m_hAgentAccessMutex = MutexCreate();
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
+   m_szPlatformName[0] = 0;
 }
 
 
@@ -80,6 +81,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_hAgentAccessMutex = MutexCreate();
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
+   m_szPlatformName[0] = 0;
 }
 
 
@@ -363,6 +365,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    {
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
+      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, m_szPlatformName);
    }
 
    // Get interface list
@@ -719,6 +722,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       m_iNativeAgentFails = 0;
       pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
+      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, m_szPlatformName);
       pAgentConn->Disconnect();
       SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
    }
@@ -1045,6 +1049,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_NODE_TYPE, m_dwNodeType);
    pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_iSNMPVersion);
    pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
+   pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
 }
 
 

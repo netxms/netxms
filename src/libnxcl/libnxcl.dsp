@@ -145,6 +145,10 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\package.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\session.cpp
 # End Source File
 # Begin Source File

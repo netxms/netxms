@@ -272,6 +272,7 @@ protected:
    char m_szCommunityString[MAX_COMMUNITY_LENGTH];
    char m_szObjectId[MAX_OID_LEN * 4];
    char m_szAgentVersion[MAX_AGENT_VERSION_LEN];
+   char m_szPlatformName[MAX_PLATFORM_NAME_LEN];
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 NetXMS Team
+** Copyright (C) 2003, 2004, 2005 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -134,6 +134,16 @@ static BOOL CheckDataDir(void)
    // Create directory for image files if it doesn't exist
    strcpy(szBuffer, g_szDataDir);
    strcat(szBuffer, DDIR_IMAGES);
+   if (MKDIR(szBuffer) == -1)
+      if (errno != EEXIST)
+      {
+         WriteLog(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
+         return FALSE;
+      }
+
+   // Create directory for package files if it doesn't exist
+   strcpy(szBuffer, g_szDataDir);
+   strcat(szBuffer, DDIR_PACKAGES);
    if (MKDIR(szBuffer) == -1)
       if (errno != EEXIST)
       {

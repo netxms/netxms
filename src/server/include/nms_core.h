@@ -94,6 +94,7 @@
 
 #define DDIR_MIBS             "\\mibs"
 #define DDIR_IMAGES           "\\images"
+#define DDIR_PACKAGES         "\\packages"
 
 #else    /* _WIN32 */
 
@@ -319,6 +320,7 @@ private:
    void EditTrap(int iOperation, CSCPMessage *pRequest);
    void LockTrapCfg(DWORD dwRqId, BOOL bLock);
    void SendAllTraps(DWORD dwRqId);
+   void SendAllPackages(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@ typedef void * NXC_SESSION;
 #define MAX_ITEM_NAME            256
 #define MAX_STRING_VALUE         256
 #define MAX_AGENT_VERSION_LEN    64
+#define MAX_PLATFORM_NAME_LEN    64
 #define GROUP_FLAG               ((DWORD)0x80000000)
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
@@ -277,6 +278,7 @@ typedef void * NXC_SESSION;
 #define SYSTEM_ACCESS_EPP                 0x0040
 #define SYSTEM_ACCESS_MANAGE_ACTIONS      0x0080
 #define SYSTEM_ACCESS_DELETE_ALARMS       0x0100
+#define SYSTEM_ACCESS_MANAGE_PACKAGES     0x0200
 
 #define SYSTEM_ACCESS_FULL                0x01FF
 
@@ -520,6 +522,19 @@ typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
 
 
 //
+// Agent package information
+//
+
+typedef struct
+{
+   DWORD dwId;
+   TCHAR szVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
+   TCHAR szFileName[MAX_DB_STRING];
+} NXC_PACKAGE_INFO;
+
+
+//
 // Event configuration structure
 //
 
@@ -586,6 +601,7 @@ typedef struct
          WORD wAuthMethod;    // Native agent's authentication method
          TCHAR *pszDescription;
          TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
+         TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
          WORD wSNMPVersion;
       } node;
       struct
@@ -960,6 +976,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY 
 DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
+                                           NXC_PACKAGE_INFO **ppList);
 
 #ifdef __cplusplus
 }

@@ -271,6 +271,10 @@ typedef struct
 #define CMD_FILE_DATA               0x0069
 #define CMD_TRANSFER_FILE           0x006A
 #define CMD_UPGRADE_AGENT           0x006B
+#define CMD_GET_PACKAGE_LIST        0x006C
+#define CMD_PACKAGE_INFO            0x006D
+#define CMD_REMOVE_PACKAGE          0x006E
+#define CMD_INSTALL_PACKAGE         0x006F
 
 
 //
@@ -402,6 +406,9 @@ typedef struct
 #define VID_EVENT_ID                ((DWORD)123)
 #define VID_AGENT_VERSION           ((DWORD)124)
 #define VID_FILE_NAME               ((DWORD)125)
+#define VID_PACKAGE_ID              ((DWORD)126)
+#define VID_PACKAGE_VERSION         ((DWORD)127)
+#define VID_PLATFORM_NAME           ((DWORD)128)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
