@@ -162,8 +162,6 @@ src/agent/subagents/freebsd/disk.h -text
 src/agent/subagents/freebsd/freebsd.cpp -text
 src/agent/subagents/freebsd/net.cpp -text
 src/agent/subagents/freebsd/net.h -text
-src/agent/subagents/freebsd/proc.cpp -text
-src/agent/subagents/freebsd/proc.h -text
 src/agent/subagents/freebsd/system.cpp -text
 src/agent/subagents/freebsd/system.h -text
 src/agent/subagents/linux/Makefile.am -text

@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.5 2005-01-23 05:36:11 alk Exp $ */
+/* $Id: system.cpp,v 1.6 2005-01-24 19:51:16 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -182,7 +182,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 						nCount = 0;
 						for (i = 0; i < (nSize / sizeof(struct kinfo_proc)); i++)
 						{
-							if (szArg[0] == 0 ||
+							if (szArg != 0 ||
 									strcasecmp(pKInfo[i].kp_proc.p_comm, szArg) == 0)
 							{
 								nCount++;
@@ -378,6 +378,12 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/01/23 05:36:11  alk
++ System.Memory.Swap.*
++ System.Memory.Virtual.*
+
+NB! r/o access to /dev/mem required! (e.g. chgrp kmem ; chmod g+s)
+
 Revision 1.4  2005/01/23 05:14:49  alk
 System's PageSize used instead of Hardware PageSize
 
