@@ -312,7 +312,7 @@ static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *
                // This interface entry already filled, so we have additional IP addresses
                // on a single interface
                ((INTERFACE_LIST *)pArg)->iNumEntries++;
-               ((INTERFACE_LIST *)pArg)->pInterfaces = (INTERFACE_INFO *)realloc(((INTERFACE_LIST *)pArg)->pInterfaces,
+               ((INTERFACE_LIST *)pArg)->pInterfaces = (INTERFACE_INFO *)MemReAlloc(((INTERFACE_LIST *)pArg)->pInterfaces,
                      sizeof(INTERFACE_INFO) * ((INTERFACE_LIST *)pArg)->iNumEntries);
                memcpy(&(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1]), 
                       &(((INTERFACE_LIST *)pArg)->pInterfaces[i]), sizeof(INTERFACE_INFO));

@@ -368,4 +368,10 @@ Language=English
 I/O error reading image file %2 (image ID %1)
 .
 
+MessageId=
+SymbolicName=MSG_WRONG_DB_VERSION
+Language=English
+Your database has format version %1, but server is compiled for version %2
+.
+
 ;#endif

@@ -329,6 +329,24 @@ typedef unsigned long HREQUEST;
 
 
 //
+// Alarm structure
+//
+
+typedef struct
+{
+   DWORD dwAlarmId;        // Unique alarm ID
+   DWORD dwTimeStamp;      // Timestamp in time() format
+   DWORD dwSourceObject;   // Source object ID
+   DWORD dwSourceEvent;    // Originating event ID
+   char szMessage[MAX_DB_STRING];
+   char szKey[MAX_DB_STRING];
+   WORD wSeverity;         // Alarm's severity
+   WORD wIsAck;            // Non-zero if acknowleged
+   DWORD dwAckByUser;      // Id of user who acknowleges this alarm (0 for system)
+} NXC_ALARM;
+
+
+//
 // Event log record structure
 //
 

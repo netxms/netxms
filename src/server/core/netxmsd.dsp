@@ -103,6 +103,10 @@ SOURCE=.\admin.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\alarm.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\client.cpp
 # End Source File
 # Begin Source File
@@ -264,6 +268,10 @@ SOURCE=.\nms_actions.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nms_agent.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nms_alarm.h
 # End Source File
 # Begin Source File
 

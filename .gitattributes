@@ -281,6 +281,7 @@ src/server/core/Makefile.am -text
 src/server/core/acl.cpp -text
 src/server/core/actions.cpp -text
 src/server/core/admin.cpp -text
+src/server/core/alarm.cpp -text
 src/server/core/client.cpp -text
 src/server/core/config.cpp -text
 src/server/core/container.cpp -text
@@ -309,6 +310,7 @@ src/server/core/netobj.cpp -text
 src/server/core/netxmsd.dsp -text
 src/server/core/netxmsd.dsw -text
 src/server/core/nms_actions.h -text
+src/server/core/nms_alarm.h -text
 src/server/core/nms_core.h -text
 src/server/core/nms_dcoll.h -text
 src/server/core/nms_events.h -text

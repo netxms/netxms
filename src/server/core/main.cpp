@@ -21,6 +21,7 @@
 **/
 
 #include "nms_core.h"
+#include <netxmsdb.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H
 #include <readline/readline.h>
@@ -158,7 +159,7 @@ static void LoadGlobalConfig()
 
 BOOL Initialize(void)
 {
-   int i, iNumThreads;
+   int i, iNumThreads, iDBVersion;
    DWORD dwAddr;
    char szInfo[256];
 
@@ -186,6 +187,14 @@ BOOL Initialize(void)
       return FALSE;
    }
 
+   // Check database version
+   iDBVersion = ConfigReadInt("DBFormatVersion", 0);
+   if (iDBVersion != DB_FORMAT_VERSION)
+   {
+      WriteLog(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", iDBVersion, DB_FORMAT_VERSION);
+      return FALSE;
+   }
+
    // Initialize locks
    if (!InitLocks(&dwAddr, szInfo))
    {
@@ -195,6 +204,7 @@ BOOL Initialize(void)
          WriteLog(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "as", dwAddr, szInfo);
       return FALSE;
    }
+   g_dwFlags |= AF_DB_LOCKED;
 
    // Load global configuration parameters
    LoadGlobalConfig();
@@ -231,6 +241,10 @@ BOOL Initialize(void)
 
    // Initialize event handling subsystem
    if (!InitEventSubsystem())
+      return FALSE;
+
+   // Initialize alarms
+   if (!g_alarmMgr.Init())
       return FALSE;
 
    // Initialize data collection subsystem
@@ -506,7 +520,7 @@ int main(int argc, char *argv[])
          printf("NMS Core initialization failed\n");
 
          // Remove database lock
-         if (g_hCoreDB != NULL)
+         if (g_dwFlags & AF_DB_LOCKED)
          {
             DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
             DBDisconnect(g_hCoreDB);
@@ -542,7 +556,7 @@ int main(int argc, char *argv[])
    if (!Initialize())
    {
       // Remove database lock
-      if (g_hCoreDB != NULL)
+      if (g_dwFlags & AF_DB_LOCKED)
       {
          DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
          DBDisconnect(g_hCoreDB);

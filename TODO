@@ -20,6 +20,9 @@ SERVER:
 
 - Recalculate object status after binding change
 - Change object index lock type from mutex to read/write lock
+- Add internal stats collection:
+	1. Average data collector queue length
+	2. Average database writer queue length
 
 
 CORE AGENT:
@@ -31,3 +34,5 @@ CORE AGENT:
 WINDOWS CONSOLE:
 
 - Add custom background erasing code in policy editor for smooth painting
+- Add support for "View -> Refresh" in data collection configurator
+  (or, even better, automatic update)

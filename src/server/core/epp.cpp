@@ -231,6 +231,13 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 
 void EPRule::GenerateAlarm(Event *pEvent)
 {
+   char *pszAckKey;
+
+   pszAckKey = pEvent->ExpandText(m_szAlarmAckKey);
+   if (pszAckKey[0] != 0)
+      g_alarmMgr.AckByKey(pszAckKey);
+   free(pszAckKey);
+   g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, pEvent);
 }
 
 
