@@ -15,6 +15,7 @@ contrib/dct/generic_object.dct -text
 contrib/logo.jpg -text
 doc/Makefile.am -text
 doc/internals.rtf -text
+doc/libnxcl-pg.doc -text
 images/generic_printer.png -text
 images/interface.png -text
 images/network.png -text
