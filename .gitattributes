@@ -35,6 +35,7 @@ images/subnet.ico -text
 images/subnet.png -text
 include/Makefile.am -text
 include/getopt.h -text
+include/netxmsdb.h -text
 include/nms_agent.h -text
 include/nms_common.h -text
 include/nms_cscp.h -text

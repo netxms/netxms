@@ -334,7 +334,6 @@ CREATE TABLE event_policy
 	alarm_severity integer,
 	alarm_key varchar(255),	    // Alarm key (used for auto acknowlegment)
 	alarm_ack_key varchar(255), // Acknowlege all alarms with given key
-	alarm_ack_flag integer,	    // 1 if alarm will be acknowleged at creation time
 	PRIMARY KEY(rule_id)
 );
 

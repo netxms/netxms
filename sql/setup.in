@@ -4,6 +4,7 @@
 ** ex: syntax=sql
 */
 
+INSERT INTO config (name,value) VALUES ('DBFormatVersion',DB_FORMAT_VERSION);
 INSERT INTO config (name,value) VALUES ('SyncInterval','60');
 INSERT INTO config (name,value) VALUES ('NewNodePollingInterval','60');
 INSERT INTO config (name,value) VALUES ('DiscoveryPollingInterval','900');

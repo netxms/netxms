@@ -9,8 +9,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_ADDED, 'NX_NODE_ADDED',
 		EVENT_SEVERITY_INFO, 1,
 		'Node added',
-		'Generated when new node object added to the database.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when new node object added to the database.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -18,8 +18,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_SUBNET_ADDED, 'NX_SUBNET_ADDED',
 		EVENT_SEVERITY_INFO, 0,
 		'Subnet added',
-		'Generated when new subnet object added to the database.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when new subnet object added to the database.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -27,13 +27,13 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_INTERFACE_ADDED, 'NX_IF_ADDED',
 		EVENT_SEVERITY_INFO, 1,
 		'Interface "%2" added (IP Addr: %3/%4, IfIndex: %5)',
-		'Generated when new interface object added to the database.\n' CONCAT
-		'Please note that source of event is node, not an interface itself.\n' CONCAT
-		'Parameters:\n' CONCAT
-		'   1) Interface object ID\n' CONCAT
-		'   2) Interface name\n' CONCAT
-		'   3) Interface IP address\n' CONCAT
-		'   4) Interface netmask\n' CONCAT
+		'Generated when new interface object added to the database.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
 		'   5) Interface index'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -41,13 +41,13 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_INTERFACE_UP, 'NX_IF_UP',
 		EVENT_SEVERITY_INFO, 1,
 		'Interface "%2" changed state to UP (IP Addr: %3/%4, IfIndex: %5)',
-		'Generated when interface goes up.\n' CONCAT
-		'Please note that source of event is node, not an interface itself.\n' CONCAT
-		'Parameters:\n' CONCAT
-		'   1) Interface object ID\n' CONCAT
-		'   2) Interface name\n' CONCAT
-		'   3) Interface IP address\n' CONCAT
-		'   4) Interface netmask\n' CONCAT
+		'Generated when interface goes up.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
 		'   5) Interface index'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -55,13 +55,13 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_INTERFACE_DOWN, 'NX_IF_DOWN',
 		EVENT_SEVERITY_WARNING, 1,
 		'Interface "%2" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
-		'Generated when interface goes down.\n' CONCAT
-		'Please note that source of event is node, not an interface itself.\n' CONCAT
-		'Parameters:\n' CONCAT
-		'   1) Interface object ID\n' CONCAT
-		'   2) Interface name\n' CONCAT
-		'   3) Interface IP address\n' CONCAT
-		'   4) Interface netmask\n' CONCAT
+		'Generated when interface goes down.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
 		'   5) Interface index'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -69,8 +69,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_NORMAL, 'NX_NODE_NORMAL',
 		EVENT_SEVERITY_INFO, 1,
 		'Node status changed to NORMAL',
-		'Generated when node status changed to normal.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to normal.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -78,8 +78,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_WARNING, 'NX_NODE_WARNING', 
 		EVENT_SEVERITY_WARNING, 1,
 		'Node status changed to WARNING',
-		'Generated when node status changed to "Warning".\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to "Warning".#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -87,8 +87,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_MINOR, 'NX_NODE_MINOR',
 		EVENT_SEVERITY_MINOR, 1,
 		'Node status changed to MINOR',
-		'Generated when node status changed to "Minor Problem" (informational).\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to "Minor Problem" (informational).#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -96,8 +96,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_MAJOR, 'NX_NODE_MAJOR', 
 		EVENT_SEVERITY_MAJOR, 1,
 		'Node status changed to MAJOR',
-		'Generated when node status changed to "Major Problem".\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to "Major Problem".#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -105,8 +105,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_CRITICAL, 'NX_NODE_CRITICAL', 
 		EVENT_SEVERITY_CRITICAL, 1,
 		'Node status changed to CRITICAL',
-		'Generated when node status changed to critical.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to critical.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -114,8 +114,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_UNKNOWN, 'NX_NODE_UNKNOWN',
 		EVENT_SEVERITY_INFO, 1,
 		'Node status changed to UNKNOWN',
-		'Generated when node status changed to unknown.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to unknown.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -123,8 +123,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_UNMANAGED, 'NX_NODE_UNMANAGED',
 		EVENT_SEVERITY_INFO, 1,
 		'Node status changed to UNMANAGED',
-		'Generated when node status changed to unmanaged.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node status changed to unmanaged.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Previous node status'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -132,9 +132,9 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_NODE_FLAGS_CHANGED, 'NX_NODE_CAP_CHANGED',
 		EVENT_SEVERITY_INFO, 0,
 		'Node capabilities changed (Old: %1; New: %2)',
-		'Generated when node capabilities changed.\n' CONCAT
-		'Parameters:\n' CONCAT
-		'   1) Old capabilities' CONCAT
+		'Generated when node capabilities changed.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Old capabilities#0D#0A' CONCAT
 		'   2) New capabilities'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -142,8 +142,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_SNMP_FAIL, 'NX_SNMP_UNREACHEABLE', 
 		EVENT_SEVERITY_INFO, 0,
 		'SNMP agent is not responding',
-		'Generated when node''s SNMP agent is not responding.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node#27s SNMP agent is not responding.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -151,8 +151,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_AGENT_FAIL, 'NX_AGENT_UNREACHEABLE',
 		EVENT_SEVERITY_INFO, 0,
 		'Native agent is not responding',
-		'Generated when node''s native agent is not responding.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when node#27s native agent is not responding.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -160,12 +160,12 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_INTERFACE_DELETED, 'NX_IF_DELETED',
 		EVENT_SEVERITY_INFO, 1,
 		'Interface "%2" deleted (IP Addr: %3/%4, IfIndex: %1)',
-		'Generated when interface object deleted from the database.\n' CONCAT
-		'Please note that source of event is node, not an interface itself.\n' CONCAT
-		'Parameters:\n' CONCAT
-		'   1) Interface index\n' CONCAT
-		'   2) Interface name\n' CONCAT
-		'   3) Interface IP address\n' CONCAT
+		'Generated when interface object deleted from the database.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface index#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
 		'   4) Interface netmask'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -173,10 +173,10 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_THRESHOLD_REACHED, 'NX_THRESHOLD_REACHED',
 		EVENT_SEVERITY_WARNING, 1,
 		'Threshold reached for parameter %1 (Threshold value: %2; Actual value: %3)',
-		'Generated when threshold value reached for specific data collection item.\n' CONCAT
-		'Parameters:\n' CONCAT
-		'   1) Item name\n' CONCAT
-		'   2) Threshold value\n' CONCAT
+		'Generated when threshold value reached for specific data collection item.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Item name#0D#0A' CONCAT
+		'   2) Threshold value#0D#0A' CONCAT
 		'   3) Actual value'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -184,8 +184,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_THRESHOLD_REARMED, 'NX_THRESHOLD_REARMED',
 		EVENT_SEVERITY_INFO, 0,
 		'Threshold rearmed for parameter %1',
-		'Generated when threshold check is rearmed for specific data collection item.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when threshold check is rearmed for specific data collection item.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Item name'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -193,8 +193,8 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_SUBNET_DELETED, 'NX_SUBNET_DELETED',
 		EVENT_SEVERITY_INFO, 0,
 		'Subnet deleted',
-		'Generated when subnet object deleted from the database.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when subnet object deleted from the database.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
@@ -202,7 +202,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		EVENT_THREAD_HANGS, 'NX_SYS_THREAD_HANG', 
 		EVENT_SEVERITY_CRITICAL, 1,
 		'Thread "%1" is not responding',
-		'Generated when one of the system threads hangs or stops unexpectedly.\n' CONCAT
-		'Parameters:\n' CONCAT
+		'Generated when one of the system threads hangs or stops unexpectedly.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
 		'   1) Thread name'
 	);

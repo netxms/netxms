@@ -14,6 +14,7 @@
 #include <nxevent.h>
 #include <nms_locks.h>
 #include <nximage.h>
+#include <netxmsdb.h>
 
 // Define common macros for uncommon data types
 #ifdef DB_MSSQL
