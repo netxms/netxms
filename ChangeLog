@@ -13,6 +13,8 @@
 - Implemented primary IP address selection for nodes
 - Added OSPF support detection
 - Fixed bug with StartupDelay parameter handling in core agent
+- Fixed communication problems on FreeBSD
+- Bug #0000003 fixed
 
 
 *

@@ -55,9 +55,12 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    m_pszComment = strdup(DBGetField(hResult, iRow, 2));
    DecodeSQLString(m_pszComment);
    strcpy(m_szAlarmMessage, DBGetField(hResult, iRow, 3));
+   DecodeSQLString(m_szAlarmMessage);
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
    strcpy(m_szAlarmKey, DBGetField(hResult, iRow, 5));
+   DecodeSQLString(m_szAlarmKey);
    strcpy(m_szAlarmAckKey, DBGetField(hResult, iRow, 6));
+   DecodeSQLString(m_szAlarmAckKey);
 }
 
 
@@ -327,17 +330,23 @@ BOOL EPRule::LoadFromDB(void)
 
 void EPRule::SaveToDB(void)
 {
-   char *pszComment, szQuery[4096];
+   char *pszComment, *pszEscKey, *pszEscAck, *pszEscMessage, szQuery[4096];
    DWORD i;
 
    // General attributes
    pszComment = EncodeSQLString(m_pszComment);
+   pszEscKey = EncodeSQLString(m_szAlarmKey);
+   pszEscAck = EncodeSQLString(m_szAlarmAckKey);
+   pszEscMessage = EncodeSQLString(m_szAlarmMessage);
    sprintf(szQuery, "INSERT INTO event_policy (rule_id,flags,comments,alarm_message,"
                     "alarm_severity,alarm_key,alarm_ack_key) "
                     "VALUES (%ld,%ld,'%s','%s',%d,'%s','%s')",
-           m_dwId, m_dwFlags, pszComment, m_szAlarmMessage, m_iAlarmSeverity,
-           m_szAlarmKey, m_szAlarmAckKey);
+           m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
+           pszEscKey, pszEscAck);
    free(pszComment);
+   free(pszEscMessage);
+   free(pszEscKey);
+   free(pszEscAck);
    DBQuery(g_hCoreDB, szQuery);
 
    // Actions

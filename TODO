@@ -4,7 +4,6 @@
 
 GENERAL:
 
-- Fix bugs in ConditionWait()
 - Finish Linux subagent
 - Finish FreeBSD subagent
 - Finish Solaris subagent

@@ -279,26 +279,35 @@ char NXCORE_EXPORTABLE *EncodeSQLString(const char *pszIn)
    char *pszOut;
    int iPosIn, iPosOut, iStrSize;
 
-   // Allocate destination buffer
-   iStrSize = strlen(pszIn) + 1;
-   for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
-      if (strchr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
-         iStrSize += 2;
-   pszOut = (char *)malloc(iStrSize);
+   if (*pszIn != 0)
+   {
+      // Allocate destination buffer
+      iStrSize = strlen(pszIn) + 1;
+      for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
+         if (strchr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
+            iStrSize += 2;
+      pszOut = (char *)malloc(iStrSize);
 
-   // TRanslate string
-   for(iPosIn = 0, iPosOut = 0; pszIn[iPosIn] != 0; iPosIn++)
-      if (strchr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
-      {
-         pszOut[iPosOut++] = '#';
-         pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] >> 4);
-         pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] & 0x0F);
-      }
-      else
-      {
-         pszOut[iPosOut++] = pszIn[iPosIn];
-      }
-   pszOut[iPosOut] = 0;
+      // Translate string
+      for(iPosIn = 0, iPosOut = 0; pszIn[iPosIn] != 0; iPosIn++)
+         if (strchr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
+         {
+            pszOut[iPosOut++] = '#';
+            pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] >> 4);
+            pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] & 0x0F);
+         }
+         else
+         {
+            pszOut[iPosOut++] = pszIn[iPosIn];
+         }
+      pszOut[iPosOut] = 0;
+   }
+   else
+   {
+      // Encode empty strings as #00
+      pszOut = (char *)malloc(4);
+      strcpy(pszOut, "#00");
+   }
    return pszOut;
 }
 
