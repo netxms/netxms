@@ -313,3 +313,39 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		4005, 'DC_MAILBOX_TOO_LARGE',
+		EVENT_SEVERITY_WARNING, 1,
+		'Mailbox "%6" exceeds size limit (allowed size: %3; actual size: %4)',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		4006, 'DC_AGENT_VERSION_CHANGE',
+		EVENT_SEVERITY_INFO, 1,
+		'NetXMS agent version was changed from %3 to %4',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		4007, 'DC_HOSTNAME_CHANGE',
+		EVENT_SEVERITY_WARNING, 1,
+		'Host name was changed from %3 to %4',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		4008, 'DC_FILE_CHANGE',
+		EVENT_SEVERITY_WARNING, 1,
+		'File #22%6#22 was changed',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
