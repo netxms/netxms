@@ -32,15 +32,16 @@
 #define IDS_NXC_INIT_FAILED             130
 #define IDI_SETUP                       131
 #define IDI_USERS                       132
-#define IDI_USER_GROUP                  132
 #define IDR_CTRLPANEL                   133
 #define IDI_RULEMGR                     134
 #define IDI_EVENT                       135
+#define IDI_USER_GROUP                  136
 #define IDR_EVENTS                      137
 #define IDR_MAPFRAME                    138
 #define IDS_MAPFRAME                    138
 #define IDI_NETMAP                      139
 #define IDD_LOGIN                       140
+#define IDR_ALARMS                      141
 #define IDB_LOGIN                       142
 #define IDD_PROGRESS                    143
 #define IDR_OBJECTS                     144
@@ -267,6 +268,7 @@
 #define ID_OBJECT_BIND                  32857
 #define ID_OBJECT_CREATE_NODE           32860
 #define ID_OBJECT_CREATE_CONTAINER      32861
+#define ID_VIEW_ALARMS                  32864
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -276,7 +278,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        210
-#define _APS_NEXT_COMMAND_VALUE         32864
+#define _APS_NEXT_COMMAND_VALUE         32865
 #define _APS_NEXT_CONTROL_VALUE         1141
 #define _APS_NEXT_SYMED_VALUE           119
 #endif

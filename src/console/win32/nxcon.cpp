@@ -59,6 +59,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_NETWORKSUMMARY, OnViewNetworksummary)
 	ON_COMMAND(ID_TOOLS_MIBBROWSER, OnToolsMibbrowser)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTPOLICY, OnControlpanelEventpolicy)
+	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -70,6 +71,7 @@ END_MESSAGE_MAP()
 CConsoleApp::CConsoleApp()
 {
    m_bCtrlPanelActive = FALSE;
+   m_bAlarmBrowserActive = FALSE;
    m_bEventBrowserActive = FALSE;
    m_bEventEditorActive = FALSE;
    m_bUserEditorActive = FALSE;
@@ -372,6 +374,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bCtrlPanelActive = TRUE;
          m_pwndCtrlPanel = pWnd;
          break;
+      case IDR_ALARMS:
+         m_bAlarmBrowserActive = TRUE;
+         m_pwndAlarmBrowser = (CAlarmBrowser *)pWnd;
+         break;
       case IDR_EVENTS:
          m_bEventBrowserActive = TRUE;
          m_pwndEventBrowser = (CEventBrowser *)pWnd;
@@ -429,6 +435,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
    {
       case IDR_CTRLPANEL:
          m_bCtrlPanelActive = FALSE;
+         break;
+      case IDR_ALARMS:
+         m_bAlarmBrowserActive = FALSE;
          break;
       case IDR_EVENTS:
          m_bEventBrowserActive = FALSE;
@@ -1012,4 +1021,21 @@ void CConsoleApp::OnControlpanelEventpolicy()
          ErrorBox(dwResult, "Unable to load event processing policy:\n%s");
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_ALARMS message handler
+//
+
+void CConsoleApp::OnViewAlarms() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bAlarmBrowserActive)
+      m_pwndAlarmBrowser->BringWindowToTop();
+   else
+	   pFrame->CreateNewChild(
+		   RUNTIME_CLASS(CAlarmBrowser), IDR_ALARMS, m_hMDIMenu, m_hMDIAccel);
 }

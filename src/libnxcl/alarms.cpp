@@ -32,7 +32,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms,
                                           NXC_ALARM **ppAlarmList)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRqId, dwRetCode, dwNumAlarms = 0, dwAlarmId = 0;
+   DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
    NXC_ALARM *pList = NULL;
 
    dwRqId = g_dwMsgId++;

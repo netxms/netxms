@@ -47,6 +47,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "GraphFrame.h"
 #include "MIBBrowserDlg.h"
 #include "EventPolicyEditor.h"
+#include "AlarmBrowser.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -97,6 +98,7 @@ protected:
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
+	CAlarmBrowser *m_pwndAlarmBrowser;
 	CEventBrowser *m_pwndEventBrowser;
    CEventEditor *m_pwndEventEditor;
    CUserEditor *m_pwndUserEditor;
@@ -137,9 +139,11 @@ public:
 	afx_msg void OnViewNetworksummary();
 	afx_msg void OnToolsMibbrowser();
 	afx_msg void OnControlpanelEventpolicy();
+	afx_msg void OnViewAlarms();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL m_bAlarmBrowserActive;
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bUserEditorActive;
