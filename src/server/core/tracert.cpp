@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: correlate.cpp
+** $module: tracert.cpp
 **
 **/
 
@@ -24,36 +24,9 @@
 
 
 //
-// Correlate SYS_SERVICE_DOWN event to possible SYS_NODE_DOWN
+// Trace route between two nodes
 //
 
-static void C_SysServiceDown(Event *pEvent)
+BOOL TraceRoute(Node *pSrc, Node *pDest, NetObj **ppTrace)
 {
-   NetObj *pObject;
-
-   pObject = FindObjectById(pEvent->SourceId());
-   if ((pObject != NULL) && (pObject->Type() == OBJECT_NODE))
-   {
-      if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHEABLE)
-      {
-         pEvent->SetRootId(((Node *)pObject)->LastEventId(LAST_EVENT_NODE_DOWN));
-      }
-   }
-}
-
-
-//
-// Correlate event
-//
-
-void CorrelateEvent(Event *pEvent)
-{
-   switch(pEvent->Code())
-   {
-      case EVENT_SERVICE_DOWN:
-         C_SysServiceDown(pEvent);
-         break;
-      default:
-         break;
-   }
 }

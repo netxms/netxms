@@ -54,6 +54,15 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
+// Last events
+//
+
+#define MAX_LAST_EVENTS       8
+
+#define LAST_EVENT_NODE_DOWN  0
+
+
+//
 // Discovery flags
 //
 
@@ -68,6 +77,7 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 #define NDF_QUEUED_FOR_STATUS_POLL     0x0001
 #define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
+#define NDF_UNREACHEABLE               0x0004
 
 
 //
@@ -367,6 +377,7 @@ protected:
    MUTEX m_hAgentAccessMutex;
    AgentConnection *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
+   QWORD m_qwLastEvents[MAX_LAST_EVENTS];
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -445,6 +456,8 @@ public:
    void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponce = NULL);
+
+   QWORD LastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
 };
 
 

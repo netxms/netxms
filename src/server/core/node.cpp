@@ -54,6 +54,7 @@ Node::Node()
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
+   memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
 }
 
 
@@ -90,6 +91,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
+   memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
 }
 
 

@@ -639,6 +639,7 @@ src/server/core/subnet.cpp -text
 src/server/core/syncer.cpp -text
 src/server/core/template.cpp -text
 src/server/core/tools.cpp -text
+src/server/core/tracert.cpp -text
 src/server/core/uniroot.cpp -text
 src/server/core/users.cpp -text
 src/server/core/watchdog.cpp -text

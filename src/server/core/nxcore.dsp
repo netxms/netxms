@@ -282,6 +282,10 @@ SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\tracert.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\uniroot.cpp
 # End Source File
 # Begin Source File
