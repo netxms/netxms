@@ -71,6 +71,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Node *pNode)
    m_pszFormula = strdup(DBGetField(hResult, iRow, 8));
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
+   DecodeSQLString(m_szDescription);
    m_iBusy = 0;
    m_tLastPoll = 0;
    m_dwNumThresholds = 0;
