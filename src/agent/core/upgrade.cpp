@@ -51,6 +51,7 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
    return ExecuteCommand(szCmdLine, NULL);
 
 #else
+   chmod(pszPkgFile, 0700);   // Set execute permissions on package file
    return ExecuteCommand(pszPkgFile, NULL);
 
    //return ERR_NOT_IMPLEMENTED;
