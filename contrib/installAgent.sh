@@ -1,7 +1,9 @@
 #!/bin/sh
 
-#prefix=/opt/netxms
-prefix=/usr/local
+prefix=/opt/netxms
+config=/etc/nxagentd.conf
+log=/tmp/nxagentup.log
+#prefix=/usr/local
 configureAdd=
 
 ##example #if [ `hostname --fqdn` = "host1.domain.tld" ]; then
@@ -13,6 +15,14 @@ configureAdd=
 #
 # Main code
 #
+
+# process args
+while [ "x"$1 != "x" ]; do
+	name=`echo -n $1|cut -d= -f1`
+	val=`echo -n $1|cut -d= -f2`
+	eval $name=$val
+	shift
+done
 
 make=`which gmake`
 [ "x"$make = "x" ] && make=make
@@ -83,7 +93,7 @@ if [ $? != 0 ]; then
 fi
 
 # and restart
-$prefix/bin/nxagentd -d >/dev/null 2>/dev/null
+$prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
 	echo nxagentd not started
 	exit 5
