@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.10 2004-05-28 15:15:48 victor Exp $
+# $Id: configure.ac,v 1.11 2004-05-31 06:46:28 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -293,6 +293,7 @@ AC_SUBST(PTHREAD_LIBS)
 LIBNETXMS_LIBRARY_VERSION=0:1:0
 LIBNXCSCP_LIBRARY_VERSION=0:1:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
+AC_SUBST(LIBNXCSCP_LIBRARY_VERSION)
 
 # --------------------------------------------------------------------------
 
@@ -305,6 +306,7 @@ AC_CONFIG_FILES([
    include/Makefile
    src/Makefile
    src/libnetxms/Makefile
+   src/libnxcscp/Makefile
    src/libnxcl/Makefile
    src/server/Makefile
    src/server/core/Makefile
