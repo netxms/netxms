@@ -350,4 +350,10 @@ Language=English
 Inconsistent database: container object %1 has reference to non-existing child object %2
 .
 
+MessageId=
+SymbolicName=MSG_SRVROOT_INVALID_CHILD_ID
+Language=English
+Inconsistent database: service root object has reference to non-existing child object %1
+.
+
 ;#endif

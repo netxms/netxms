@@ -27,6 +27,9 @@
 // Global data
 //
 
+Network *g_pEntireNet = NULL;
+ServiceRoot *g_pServiceRoot = NULL;
+
 DWORD g_dwMgmtNode = 0;
 INDEX *g_pIndexById = NULL;
 DWORD g_dwIdIndexSize = 0;
@@ -36,7 +39,6 @@ INDEX *g_pNodeIndexByAddr = NULL;
 DWORD g_dwNodeAddrIndexSize = 0;
 INDEX *g_pInterfaceIndexByAddr = NULL;
 DWORD g_dwInterfaceAddrIndexSize = 0;
-Network *g_pEntireNet = NULL;
 
 MUTEX g_hMutexObjectAccess;
 MUTEX g_hMutexIdIndex;
@@ -63,6 +65,10 @@ void ObjectsInit(void)
    // Create "Entire Network" object
    g_pEntireNet = new Network;
    NetObjInsert(g_pEntireNet, FALSE);
+
+   // Create "Service Root" object
+   g_pServiceRoot = new ServiceRoot;
+   NetObjInsert(g_pServiceRoot, FALSE);
 }
 
 
@@ -194,6 +200,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_GENERIC:
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:
+         case OBJECT_SERVICEROOT:
             break;
          case OBJECT_SUBNET:
             MutexLock(g_hMutexSubnetIndex, INFINITE);
@@ -237,6 +244,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          case OBJECT_GENERIC:
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:
+         case OBJECT_SERVICEROOT:
             break;
          case OBJECT_SUBNET:
             MutexLock(g_hMutexSubnetIndex, INFINITE);
@@ -411,8 +419,9 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
-   // Load "Entire Network" object properties
+   // Load built-in object properties
    g_pEntireNet->LoadFromDB();
+   g_pServiceRoot->LoadFromDB();
 
    // Load subnets
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets WHERE is_deleted=0");
@@ -516,8 +525,12 @@ BOOL LoadObjects(void)
       if (g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER)
          ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
-   // Recalculate status for "Entire Net" object
+   // Link childs to "All services" object
+   g_pServiceRoot->LinkChildObjects();
+
+   // Recalculate status for "Entire Net" and "All Services" objects
    g_pEntireNet->CalculateCompoundStatus();
+   g_pServiceRoot->CalculateCompoundStatus();
 
    return TRUE;
 }

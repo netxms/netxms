@@ -408,6 +408,25 @@ public:
 
 
 //
+// Service root
+//
+
+class ServiceRoot : public NetObj
+{
+public:
+   ServiceRoot();
+   virtual ~ServiceRoot();
+
+   virtual int Type(void) { return OBJECT_SERVICEROOT; }
+   virtual BOOL SaveToDB(void);
+   void LoadFromDB(void);
+   void LinkChildObjects(void);
+
+   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+};
+
+
+//
 // Generic container object
 //
 
@@ -492,6 +511,9 @@ void DeleteUserFromAllObjects(DWORD dwUserId);
 // Global variables
 //
 
+extern Network *g_pEntireNet;
+extern ServiceRoot *g_pServiceRoot;
+
 extern DWORD g_dwMgmtNode;
 extern INDEX *g_pIndexById;
 extern DWORD g_dwIdIndexSize;
@@ -501,7 +523,6 @@ extern INDEX *g_pNodeIndexByAddr;
 extern DWORD g_dwNodeAddrIndexSize;
 extern INDEX *g_pInterfaceIndexByAddr;
 extern DWORD g_dwInterfaceAddrIndexSize;
-extern Network *g_pEntireNet;
 extern MUTEX g_hMutexIdIndex;
 extern MUTEX g_hMutexNodeIndex;
 extern MUTEX g_hMutexSubnetIndex;
