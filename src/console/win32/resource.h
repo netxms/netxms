@@ -25,8 +25,6 @@
 #define IDR_DCI_HISTORY_GRAPH           113
 #define ID_RULE_LIST                    114
 #define ID_HEADER_CTRL                  115
-#define ID_VSCROLL                      116
-#define ID_HSCROLL                      117
 #define ID_SIZEBOX                      118
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129

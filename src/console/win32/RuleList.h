@@ -102,24 +102,28 @@ public:
 
 	// Generated message map functions
 protected:
-	void AlignScrollBars(int cx, int cy);
-	BOOL UpdateScrollBars(void);
-	CScrollBar m_wndSizeBox;
-	CScrollBar m_wndHScroll;
-	CScrollBar m_wndVScroll;
+	void OnScroll(void);
+	int CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos);
+	void UpdateScrollBars(void);
 	CRuleHeader m_wndHeader;
 	//{{AFX_MSG(CRuleList)
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	//}}AFX_MSG
    afx_msg void OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
    afx_msg void OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
    afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
-	BOOL m_bHScroll;
+	int m_iYOrg;
+	int m_iXOrg;
+	int m_iEdgeCX;
+   int m_iEdgeCY;
 	BOOL m_bVScroll;
 	COLORREF m_rgbTextColor;
 	COLORREF m_rgbTitleTextColor;

@@ -21,7 +21,7 @@ static char THIS_FILE[] = __FILE__;
 #define CELL_TEXT_Y_MARGIN    5
 #define CELL_TEXT_Y_SPACING   0
 #define CELL_TEXT_X_MARGIN    8
-
+#define SCROLL_STEP           5
 
 /////////////////////////////////////////////////////////////////////////////
 // Supplementary classes
@@ -123,8 +123,11 @@ CRuleList::CRuleList()
    m_iTotalWidth = 0;
    m_iTotalHeight = 0;
 
-   m_bHScroll = FALSE;
-   m_bVScroll = FALSE;
+   m_iEdgeCX = GetSystemMetrics(SM_CXEDGE);
+   m_iEdgeCY = GetSystemMetrics(SM_CYEDGE);
+
+   m_iXOrg = 0;
+   m_iYOrg = 0;
 
    // Default colors
    m_rgbActiveBkColor = RGB(255, 255, 255);
@@ -147,6 +150,9 @@ BEGIN_MESSAGE_MAP(CRuleList, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_WM_LBUTTONDOWN()
+	ON_WM_VSCROLL()
+	ON_WM_HSCROLL()
+	ON_WM_MOUSEWHEEL()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(HDN_BEGINTRACK, ID_HEADER_CTRL, OnHeaderBeginTrack)
    ON_NOTIFY(HDN_TRACK, ID_HEADER_CTRL, OnHeaderTrack)
@@ -174,6 +180,7 @@ BOOL CRuleList::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          LoadCursor(NULL, IDC_ARROW),
                                          CreateSolidBrush(RGB(255, 255, 255)), NULL);
+   cs.style |= WS_HSCROLL | WS_VSCROLL;
 	return CWnd::PreCreateWindow(cs);
 }
 
@@ -205,17 +212,9 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndHeader.SetColors(m_rgbTitleTextColor, m_rgbTitleBkColor);
    m_wndHeader.Create(WS_CHILD | WS_VISIBLE | CCS_NODIVIDER | HDS_HORZ, rect, this, ID_HEADER_CTRL);
 
-   // Create scroll bars
-   GetClientRect(&rect);
-   rect.right -= GetSystemMetrics(SM_CXVSCROLL);
-   m_wndHScroll.Create(SBS_HORZ | SBS_BOTTOMALIGN | WS_CHILD, rect, this, ID_HSCROLL);
-
-   GetClientRect(&rect);
-   rect.bottom -= GetSystemMetrics(SM_CYHSCROLL);
-   m_wndVScroll.Create(SBS_VERT | SBS_RIGHTALIGN | WS_CHILD, rect, this, ID_VSCROLL);
-	
-   GetClientRect(&rect);
-   m_wndSizeBox.Create(SBS_SIZEBOX | SBS_SIZEBOXBOTTOMRIGHTALIGN | WS_CHILD, rect, this, ID_SIZEBOX);
+   // Disable scroll bars
+   SetScrollRange(SB_HORZ, 0, 0);
+   SetScrollRange(SB_VERT, 0, 0);
 
    return 0;
 }
@@ -240,6 +239,7 @@ void CRuleList::OnPaint()
    brNormal.CreateSolidBrush(m_rgbNormalBkColor);
 
    // Setup DC
+   dc.SetWindowOrg(m_iXOrg, m_iYOrg);
    pOldFont = dc.SelectObject(&m_fontNormal);
    pOldBrush = dc.GetCurrentBrush();
 	
@@ -332,13 +332,7 @@ int CRuleList::InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD 
       m_ppRowList[i]->InsertCell(iNewCol);
    
    RecalcWidth();
-   if (UpdateScrollBars())
-   {
-      RECT rect;
-
-      GetClientRect(&rect);
-      AlignScrollBars(rect.right, rect.bottom);
-   }
+   UpdateScrollBars();
    m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
    return iNewCol;
 }
@@ -365,13 +359,7 @@ int CRuleList::InsertRow(int iInsertBefore)
    m_ppRowList[iNewRow] = new RL_Row(m_iNumColumns);
 
    RecalcHeight();
-   if (UpdateScrollBars())
-   {
-      RECT rect;
-
-      GetClientRect(&rect);
-      AlignScrollBars(rect.right, rect.bottom);
-   }
+   UpdateScrollBars();
 
    return iNewRow;
 }
@@ -391,13 +379,7 @@ int CRuleList::AddItem(int iRow, int iColumn, char *pszText, HICON hIcon)
    iPos = m_ppRowList[iRow]->m_ppCellList[iColumn]->AddLine(pszText, hIcon);
    m_ppRowList[iRow]->RecalcHeight(m_iTextHeight);
    RecalcHeight();
-   if (UpdateScrollBars())
-   {
-      RECT rect;
-
-      GetClientRect(&rect);
-      AlignScrollBars(rect.right, rect.bottom);
-   }
+   UpdateScrollBars();
    InvalidateRect(NULL);
    return iPos;
 }
@@ -475,13 +457,7 @@ void CRuleList::OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 {
    RecalcWidth();
    m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
-   if (UpdateScrollBars())
-   {
-      RECT rect;
-
-      GetClientRect(&rect);
-      AlignScrollBars(rect.right, rect.bottom);
-   }
+   UpdateScrollBars();
    InvalidateRect(NULL);
 }
 
@@ -595,7 +571,6 @@ void CRuleList::OnSize(UINT nType, int cx, int cy)
 	CWnd::OnSize(nType, cx, cy);
 
    UpdateScrollBars();
-   AlignScrollBars(cx, cy);
 }
 
 
@@ -603,80 +578,189 @@ void CRuleList::OnSize(UINT nType, int cx, int cy)
 // Update scroll bars state and position
 //
 
-BOOL CRuleList::UpdateScrollBars(void)
+void CRuleList::UpdateScrollBars(void)
 {
    RECT rect;
-   BOOL bChanged = FALSE;
+   SCROLLINFO si;
+   int iCX, iCY;
+   BOOL bUpdateWindow = FALSE;
 
    GetClientRect(&rect);
+   si.cbSize = sizeof(SCROLLINFO);
+   si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+   si.nMin = 0;
 
-   // Check if we need vertical scroll bar
-   if ((rect.bottom < m_iTotalHeight + RULE_HEADER_HEIGHT + 
-        (m_bHScroll ? GetSystemMetrics(SM_CYHSCROLL) : 0)) && (!m_bVScroll))
-   {
-      m_wndVScroll.ShowScrollBar(TRUE);
-      m_bVScroll = TRUE;
-      if (m_bHScroll)
-         m_wndSizeBox.ShowScrollBar(TRUE);
-      bChanged = TRUE;
-   }
-   else if ((rect.bottom >= m_iTotalHeight + RULE_HEADER_HEIGHT) && (m_bVScroll))
-   {
-      m_wndVScroll.ShowScrollBar(FALSE);
-      m_bVScroll = FALSE;
-      m_wndSizeBox.ShowScrollBar(FALSE);
-      bChanged = TRUE;
-   }
+   iCX = m_iTotalWidth + m_iEdgeCX;
+   iCY = m_iTotalHeight + RULE_HEADER_HEIGHT + m_iEdgeCY;
 
-   // Check if we need horizontal scroll bar
-   if ((rect.right < m_iTotalWidth + 
-        (m_bVScroll ? GetSystemMetrics(SM_CXVSCROLL) : 0)) && (!m_bHScroll))
+   // Set scroll bars ranges
+   si.nMax = (rect.right < iCX) ? iCX : 0;
+   si.nPage = rect.right;
+   if (si.nMax == 0)
    {
-      m_wndHScroll.ShowScrollBar(TRUE);
-      m_bHScroll = TRUE;
-      if (m_bVScroll)
-         m_wndSizeBox.ShowScrollBar(TRUE);
-      bChanged = TRUE;
+      if (m_iXOrg > 0)
+      {
+         m_iXOrg = 0;
+         bUpdateWindow = TRUE;
+      }
    }
-   else if ((rect.right >= m_iTotalWidth) && (m_bHScroll))
+   else
    {
-      m_wndHScroll.ShowScrollBar(FALSE);
-      m_bHScroll = FALSE;
-      m_wndSizeBox.ShowScrollBar(FALSE);
-      bChanged = TRUE;
+      if (m_iXOrg > (int)(si.nMax - si.nPage))
+      {
+         m_iXOrg = si.nMax - si.nPage;
+         bUpdateWindow = TRUE;
+      }
    }
+   si.nPos = m_iXOrg;
+   SetScrollInfo(SB_HORZ, &si);
 
-   return bChanged;
+   si.nMax = (rect.bottom < iCY) ? iCY : 0;
+   si.nPage = rect.bottom;
+   if (si.nMax == 0)
+   {
+      if (m_iYOrg > 0)
+      {
+         m_iYOrg = 0;
+         bUpdateWindow = TRUE;
+      }
+   }
+   else
+   {
+      if (m_iYOrg > (int)(si.nMax - si.nPage))
+      {
+         m_iYOrg = si.nMax - si.nPage;
+         bUpdateWindow = TRUE;
+      }
+   }
+   si.nPos = m_iYOrg;
+   SetScrollInfo(SB_VERT, &si);
+
+   if (bUpdateWindow)
+      OnScroll();
 }
 
 
 //
-// Align scroll bars
+// WM_VSCROLL message handler
 //
 
-void CRuleList::AlignScrollBars(int cx, int cy)
+void CRuleList::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
-   CSize cs;
+   int iNewPos;
 
-   if (m_bVScroll)
-   {
-      cs = GetWindowSize(&m_wndVScroll);
-      m_wndVScroll.SetWindowPos(NULL, cx - cs.cx + 1, 0, cs.cx, 
-                                m_bHScroll ? (cy - GetSystemMetrics(SM_CYHSCROLL)) : cy, 
-                                SWP_NOZORDER);
-   }
+   // Calculate new position
+   iNewPos = CalculateNewScrollPos(SB_VERT, nSBCode, nPos);
 
-   if (m_bHScroll)
+   // Update Y origin
+   if (iNewPos != -1)
    {
-      cs = GetWindowSize(&m_wndHScroll);
-      m_wndHScroll.SetWindowPos(NULL, 0, cy - cs.cy + 1, 
-                                m_bVScroll ? (cx - GetSystemMetrics(SM_CXVSCROLL)) : cx,
-                                cs.cy, SWP_NOZORDER);
+      SetScrollPos(SB_VERT, iNewPos);
+      m_iYOrg = iNewPos;
+      OnScroll();
    }
+}
 
-   if (m_bVScroll && m_bHScroll)
+
+//
+// WM_HSCROLL message handler
+//
+
+void CRuleList::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+{
+   int iNewPos;
+
+   // Calculate new position
+   iNewPos = CalculateNewScrollPos(SB_HORZ, nSBCode, nPos);
+
+   // Update X origin
+   if (iNewPos != -1)
    {
-      cs = GetWindowSize(&m_wndSizeBox);
-      m_wndSizeBox.SetWindowPos(NULL, cx - cs.cx, cy - cs.cy, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+      SetScrollPos(SB_HORZ, iNewPos);
+      m_iXOrg = iNewPos;
+      OnScroll();
    }
+}
+
+
+//
+// Calculate new scroll bar position
+//
+
+int CRuleList::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
+{
+   int iNewPos;
+   RECT rect;
+
+   GetClientRect(&rect);
+   switch(nSBCode)
+   {
+      case SB_THUMBPOSITION:
+         iNewPos = nPos;
+         break;
+      case SB_TOP:
+         iNewPos = 0;
+         break;
+      case SB_BOTTOM:
+         iNewPos = (nScrollBar == SB_HORZ) ? m_iTotalWidth + m_iEdgeCX - rect.right :
+                        m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom;
+         break;
+      case SB_PAGEUP:
+         iNewPos = (nScrollBar == SB_HORZ) ? m_iXOrg - rect.right : m_iYOrg - rect.bottom;
+         if (iNewPos < 0)
+            iNewPos = 0;
+         break;
+      case SB_PAGEDOWN:
+         iNewPos = (nScrollBar == SB_HORZ) ? 
+               min(m_iXOrg + rect.right, m_iTotalWidth + m_iEdgeCX - rect.right) :
+               min(m_iYOrg + rect.bottom, m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom);
+         break;
+      case SB_LINEUP:
+         if (nScrollBar == SB_HORZ)
+            iNewPos = (m_iXOrg > SCROLL_STEP) ? m_iXOrg - SCROLL_STEP : 0;
+         else
+            iNewPos = (m_iYOrg > SCROLL_STEP) ? m_iYOrg - SCROLL_STEP : 0;
+         break;
+      case SB_LINEDOWN:
+         if (nScrollBar == SB_HORZ)
+            iNewPos = (m_iXOrg + SCROLL_STEP < m_iTotalWidth + m_iEdgeCX - rect.right) ? 
+               (m_iXOrg + SCROLL_STEP) : (m_iTotalWidth + m_iEdgeCX - rect.right);
+         else
+            iNewPos = (m_iYOrg + SCROLL_STEP < m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom) ? 
+               (m_iYOrg + SCROLL_STEP) : (m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom);
+         break;
+      default:
+         iNewPos = -1;  // Ignore other codes
+   }
+   return iNewPos;
+}
+
+
+//
+// Update window on scroll
+//
+
+void CRuleList::OnScroll()
+{
+   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, -m_iYOrg, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+   InvalidateRect(NULL, FALSE);
+}
+
+
+//
+// WM_MOUSEWHEEL message handler
+//
+
+BOOL CRuleList::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+   SCROLLINFO si;
+
+   theApp.DebugPrintf("WM_MOUSEWHEEL");
+   si.cbSize = sizeof(SCROLLINFO);
+   GetScrollInfo(SB_VERT, &si);
+   if (si.nMax > 0)  // Vertical scroll bar enabled, do scroll
+   {
+      theApp.DebugPrintf("zDelta=%d", zDelta);
+   }
+   return 0;
 }
