@@ -55,6 +55,7 @@
 #define IDR_ACTION_EDITOR               153
 #define IDA_OBJECT_BROWSER              154
 #define IDR_NODE_POLLER                 154
+#define IDR_TRAP_EDITOR                 155
 #define IDI_SORT_UP                     156
 #define IDI_SORT_DOWN                   157
 #define IDD_OBJECT_NODE_GENERAL         159
@@ -128,6 +129,7 @@
 #define IDI_OVL_STATUS_DISABLED         238
 #define IDI_OVL_STATUS_TESTING          239
 #define IDA_EVENT_EDITOR                240
+#define IDI_TRAP                        241
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -276,6 +278,7 @@
 #define IDC_EDIT_INSTANCE               1175
 #define IDC_RADIO_VERSION1              1176
 #define IDC_RADIO_VERSION_2C            1177
+#define IDC_VERSION                     1178
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -356,6 +359,7 @@
 #define ID_EVENT_NEW                    32894
 #define ID_EVENT_EDIT                   32895
 #define ID_EVENT_DELETE                 32896
+#define ID_CONTROLPANEL_SNMPTRAPS       32897
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -364,9 +368,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        241
-#define _APS_NEXT_COMMAND_VALUE         32897
-#define _APS_NEXT_CONTROL_VALUE         1178
+#define _APS_NEXT_RESOURCE_VALUE        242
+#define _APS_NEXT_COMMAND_VALUE         32898
+#define _APS_NEXT_CONTROL_VALUE         1179
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

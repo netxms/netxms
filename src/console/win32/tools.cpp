@@ -25,6 +25,12 @@
 #include "stdafx.h"
 #include "nxcon.h"
 
+#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
+#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
+#include <net-snmp/net-snmp-config.h>
+#include <net-snmp/mib_api.h>
+#include <net-snmp/config_api.h>
+
 
 //
 // Format time stamp

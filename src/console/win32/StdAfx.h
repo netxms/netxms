@@ -24,12 +24,6 @@
 #include <winsock2.h>
 #include <afxsock.h>		// MFC socket extensions
 
-#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
-#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/mib_api.h>
-#include <net-snmp/config_api.h>
-
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "NodePropsGeneral.h"
+#include <nxsnmp.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -160,7 +161,7 @@ void CNodePropsGeneral::OnOK()
    m_pUpdate->iAgentPort = m_iAgentPort;
    m_pUpdate->pszCommunity = (char *)((LPCTSTR)m_strCommunity);
    m_pUpdate->pszSecret = (char *)((LPCTSTR)m_strSecret);
-   m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2c;
+   m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
 
    // Authentication type
    m_wndAuthList.GetWindowText(szBuffer, 255);

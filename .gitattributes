@@ -312,6 +312,8 @@ src/console/win32/ThresholdDlg.cpp -text
 src/console/win32/ThresholdDlg.h -text
 src/console/win32/ToolBox.cpp -text
 src/console/win32/ToolBox.h -text
+src/console/win32/TrapEditor.cpp -text
+src/console/win32/TrapEditor.h -text
 src/console/win32/UserEditor.cpp -text
 src/console/win32/UserEditor.h -text
 src/console/win32/UserPropDlg.cpp -text
@@ -356,6 +358,7 @@ src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
+src/console/win32/icons/trap.ico -text
 src/console/win32/icons/tree.ico -text
 src/console/win32/icons/unsupported.ico -text
 src/console/win32/icons/user.ico -text

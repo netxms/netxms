@@ -45,11 +45,11 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "DataCollectionEditor.h"
 #include "DCIDataView.h"
 #include "GraphFrame.h"
-#include "MIBBrowserDlg.h"
 #include "EventPolicyEditor.h"
 #include "AlarmBrowser.h"
 #include "ConsolePropsGeneral.h"
 #include "ActionEditor.h"
+#include "TrapEditor.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -103,6 +103,7 @@ protected:
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
    CActionEditor *m_pwndActionEditor;
+   CTrapEditor *m_pwndTrapEditor;
 	CAlarmBrowser *m_pwndAlarmBrowser;
 	CEventBrowser *m_pwndEventBrowser;
    CEventEditor *m_pwndEventEditor;
@@ -154,10 +155,12 @@ public:
 	afx_msg void OnFileSettings();
 	afx_msg void OnControlpanelActions();
 	afx_msg void OnToolsAddnode();
+	afx_msg void OnControlpanelSnmptraps();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
 	BOOL m_bActionEditorActive;
+	BOOL m_bTrapEditorActive;
 	BOOL m_bAlarmBrowserActive;
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;

@@ -13,6 +13,14 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
+// Externals
+//
+
+void BuildOIDString(struct tree *pNode, char *pszBuffer);
+char *BuildSymbolicOIDString(struct tree *pNode);
+
+
+//
 // Control id's in expandable area
 //
 

@@ -11,6 +11,7 @@
 #include "CreateTemplateDlg.h"
 #include "CreateTGDlg.h"
 #include "NodePoller.h"
+#include "MIBBrowserDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -68,6 +69,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_FILE_SETTINGS, OnFileSettings)
 	ON_COMMAND(ID_CONTROLPANEL_ACTIONS, OnControlpanelActions)
 	ON_COMMAND(ID_TOOLS_ADDNODE, OnToolsAddnode)
+	ON_COMMAND(ID_CONTROLPANEL_SNMPTRAPS, OnControlpanelSnmptraps)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -79,6 +81,7 @@ END_MESSAGE_MAP()
 CConsoleApp::CConsoleApp()
 {
    m_bActionEditorActive = FALSE;
+   m_bTrapEditorActive = FALSE;
    m_bCtrlPanelActive = FALSE;
    m_bAlarmBrowserActive = FALSE;
    m_bEventBrowserActive = FALSE;
@@ -344,6 +347,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAboutDlg)
 	enum { IDD = IDD_ABOUTBOX };
+	CStatic	m_wndVersion;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -355,7 +359,7 @@ public:
 // Implementation
 protected:
 	//{{AFX_MSG(CAboutDlg)
-		// No message handlers
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -370,14 +374,22 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CAboutDlg)
+	DDX_Control(pDX, IDC_VERSION, m_wndVersion);
 	//}}AFX_DATA_MAP
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 	//{{AFX_MSG_MAP(CAboutDlg)
-		// No message handlers
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+BOOL CAboutDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	
+   m_wndVersion.SetWindowText(_T("NetXMS Console Version ") NETXMS_VERSION_STRING);
+	return TRUE;
+}
 
 // App command to run the dialog
 void CConsoleApp::OnAppAbout()
@@ -436,6 +448,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
       case IDR_ACTION_EDITOR:
          m_bActionEditorActive = TRUE;
          m_pwndActionEditor = (CActionEditor *)pWnd;
+         break;
+      case IDR_TRAP_EDITOR:
+         m_bTrapEditorActive = TRUE;
+         m_pwndTrapEditor = (CTrapEditor *)pWnd;
          break;
       case IDR_USER_EDITOR:
          m_bUserEditorActive = TRUE;
@@ -497,6 +513,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_ACTION_EDITOR:
          m_bActionEditorActive = FALSE;
+         break;
+      case IDR_TRAP_EDITOR:
+         m_bTrapEditorActive = FALSE;
          break;
       case IDR_USER_EDITOR:
          m_bUserEditorActive = FALSE;
@@ -1161,6 +1180,37 @@ void CConsoleApp::OnControlpanelActions()
       else
       {
          ErrorBox(dwResult, "Unable to lock action configuration database:\n%s");
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_SNMPTRAPS message handler
+//
+
+void CConsoleApp::OnControlpanelSnmptraps() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bTrapEditorActive)
+   {
+      m_pwndTrapEditor->BringWindowToTop();
+   }
+   else
+   {
+      DWORD dwResult;
+
+      dwResult = DoRequest(NXCLockTrapCfg, "Locking SNMP trap configuration database...");
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(
+		      RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR, m_hMDIMenu, m_hMDIAccel);
+      }
+      else
+      {
+         ErrorBox(dwResult, "Unable to lock SNMP trap configuration database:\n%s");
       }
    }
 }

@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnxcl.lib libnetxms.lib libsnmp.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release"
+# ADD LINK32 libnxcl.lib libnetxms.lib libsnmp.lib libnxsnmp.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -84,7 +84,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnxcl.lib libnetxms.lib libsnmp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug"
+# ADD LINK32 libnxcl.lib libnetxms.lib libsnmp.lib libnxsnmp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
@@ -351,6 +351,10 @@ SOURCE=.\ToolBox.cpp
 # Begin Source File
 
 SOURCE=.\tools.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TrapEditor.cpp
 # End Source File
 # Begin Source File
 
@@ -622,6 +626,10 @@ SOURCE=.\ToolBox.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\TrapEditor.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\UserEditor.h
 # End Source File
 # Begin Source File
@@ -835,6 +843,10 @@ SOURCE=.\icons\sortdown.ico
 # Begin Source File
 
 SOURCE=.\res\Toolbar.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\trap.ico
 # End Source File
 # Begin Source File
 

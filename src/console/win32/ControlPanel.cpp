@@ -72,6 +72,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LOG));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EXEC));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_TRAP));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -79,6 +80,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("Users", 1, ID_CONTROLPANEL_USERS);
    AddItem("Events", 2, ID_CONTROLPANEL_EVENTS);
    AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
+   AddItem("SNMP Traps", 4, ID_CONTROLPANEL_SNMPTRAPS);
 
    theApp.OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;

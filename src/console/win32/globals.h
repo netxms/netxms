@@ -184,8 +184,6 @@ char *TranslateUNIXText(const char *pszText);
 
 BOOL CreateMIBTree(void);
 void DestroyMIBTree(void);
-void BuildOIDString(struct tree *pNode, char *pszBuffer);
-char *BuildSymbolicOIDString(struct tree *pNode);
 
 
 //

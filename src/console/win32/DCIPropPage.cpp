@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "DCIPropPage.h"
+#include "MIBBrowserDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
