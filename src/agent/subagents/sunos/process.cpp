@@ -25,6 +25,16 @@
 
 
 //
+// Constants
+//
+
+#define INFOTYPE_MIN             0
+#define INFOTYPE_MAX             1
+#define INFOTYPE_AVG             2
+#define INFOTYPE_SUM             3
+
+
+//
 // Filter function for scandir() in ProcRead()
 //
 
@@ -99,7 +109,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 			snprintf(szFileName, sizeof(szFileName),
 					   "/proc/%s/psinfo", pNameList[nCount]->d_name);
 			hFile = open(szFileName, O_RDONLY);
-			if (hFile != NULL)
+			if (hFile != -1)
 			{
 				psinfo_t psi;
 
@@ -201,20 +211,166 @@ LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue)
 
 
 //
+// Read process information file from /proc file system
+//
+
+static BOOL ReadProcFile(pid_t nPid, char *pszFile, void *pData, size_t nDataLen)
+{
+	char szFileName[256];
+	int hFile;
+	BOOL bResult = FALSE;
+
+	snprintf(szFileName, sizeof(szFileName), "/proc/%d/%s", nPid, pszFile);
+	hFile = open(szFileName, O_RDONLY);
+	if (hFile != -1)
+	{
+		psinfo_t psi;
+
+		if (read(hFile, pData, nDataLen) == nDataLen)
+		{
+			bResult = TRUE;
+		}
+		close(hFile);
+	}
+	return bResult;
+}
+
+
+//
+// Get specific process attribute
+//
+
+static QWORD GetProcessAttribute(pid_t nPid, int nAttr, int nType,
+											int nCount, QWORD *pqwValue)
+{
+	QWORD qwValue;  
+	char szFileName[MAX_PATH];
+	prusage_t usage;
+	pstatus_t status;
+	BOOL bResult = TRUE;
+
+	// Get value for current process instance
+	switch(nAttr)
+	{
+		case PROCINFO_VMSIZE:
+			break;
+		case PROCINFO_WKSET:
+			break;
+		case PROCINFO_PF:
+			if (ReadProcFile(nPid, "usage", &usage, sizeof(prusage_t)))
+			{
+				qwValue = usage.pr_minf + usage.pr_majf;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
+			break;
+		case PROCINFO_KTIME:
+			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
+			{
+				qwValue = status.pr_stime.tv_sec * 1000 + 
+							 status.pr_stime.tv_nsec / 1000000;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
+			break;
+		case PROCINFO_UTIME:
+			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
+			{
+				qwValue = status.pr_utime.tv_sec * 1000 + 
+							 status.pr_utime.tv_nsec / 1000000;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
+			break;
+		case PROCINFO_IO_READ_B:
+			break;
+		case PROCINFO_IO_READ_OP:
+			break;
+		case PROCINFO_IO_WRITE_B:
+			break;
+		case PROCINFO_IO_WRITE_OP:
+			break;
+		default:
+			bResult = FALSE;
+			break;
+	}
+
+	// Recalculate final value according to selected type
+	if (nCount == 0)     // First instance
+	{
+		*pqwValue = qwValue;
+	}
+	else
+	{
+		switch(nType)
+		{
+			case INFOTYPE_MIN:
+				*pqwValue = min(*pqwValue, qwValue);
+				break;
+			case INFOTYPE_MAX:
+				*pqwValue = max(*pqwValue, qwValue);
+				break;
+			case INFOTYPE_AVG:
+				*pqwValue = (*pqwValue * nCount + qwValue) / (nCount + 1);
+				break;
+			case INFOTYPE_SUM:
+				*pqwValue = *pqwValue + qwValue;
+				break;
+			default:
+				bResult = FALSE;
+				break;
+		}
+	}
+	return bResult;
+}
+
+
+//
 // Handler for Process.XXX parameters
 //
 
 LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
 {
    int nRet = SYSINFO_RC_ERROR;
-   char szArg[128] = "";
-	int nCount;
+   char szBuffer[256] = "";
+	int i, nCount, nType;
+	PROC_ENT *pList;
+	QWORD qwValue;
+	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-	nCount = ProcRead(NULL, szArg);
-	if (nCount >= 0)
+   // Get parameter type arguments
+	NxGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
+	if (szBuffer[0] == 0)     // Omited type
 	{
-		nRet = SYSINFO_RC_SUCCESS;
+		nType = INFOTYPE_SUM;
+	}
+	else
+	{
+		for(nType = 0; pszTypeList[nType] != NULL; nType++)
+			if (!stricmp(pszTypeList[nType], szBuffer))
+				break;
+		if (pszTypeList[nType] == NULL)
+			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
+	}
+
+	NxGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
+	nCount = ProcRead(&pList, szBuffer);
+	if (nCount > 0)
+	{
+		for(i = 0, qwValue = 0; i < nCount; i++)
+			if (!GetProcessAttribute(pList[i].nPid, (int)pArg, nType, i, &qwValue))
+				break;
+		if (i == nCount)
+		{
+      	ret_uint64(pValue, qwValue);
+			nRet = SYSINFO_RC_SUCCESS;
+		}
 	}
 
 	return nRet;

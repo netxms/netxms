@@ -36,6 +36,17 @@ LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue);
 
 
 //
+// Detect support for source packages
+//
+
+LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
+{
+	ret_int(pValue, 1);
+	return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // Called by master agent at unload
 //
 
@@ -50,10 +61,14 @@ static void UnloadHandler(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { "Agent.SourcePackageSupport", H_SourcePkg, NULL },
    { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE },
    { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL },
    { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED },
    { "Process.Count(*)", H_ProcessCount, NULL },
+   { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME },
+   { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF },
+   { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME },
    { "System.ProcessCount", H_SysProcCount, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
