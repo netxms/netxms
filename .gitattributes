@@ -35,6 +35,7 @@ contrib/mibs/NET-SNMP-MONITOR-MIB.txt -text
 contrib/mibs/NET-SNMP-SYSTEM-MIB.txt -text
 contrib/mibs/NET-SNMP-TC.txt -text
 contrib/mibs/NETWORK-SERVICES-MIB.txt -text
+contrib/mibs/OSPF-MIB.txt -text
 contrib/mibs/RAPID-CITY.txt -text
 contrib/mibs/RFC-1215.txt -text
 contrib/mibs/RFC1155-SMI.txt -text
