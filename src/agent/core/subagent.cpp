@@ -174,3 +174,21 @@ LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
    }
    return SYSINFO_RC_SUCCESS;
 }
+
+
+//
+// Process unknown command by subagents
+//
+
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponce)
+{
+   BOOL bResult = FALSE;
+   DWORD i;
+
+   for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
+   {
+      if (m_pSubAgentList[i].pInfo->pCommandHandler != NULL)
+         bResult = m_pSubAgentList[i].pInfo->pCommandHandler(dwCommand, pRequest, pResponce);
+   }
+   return bResult;
+}

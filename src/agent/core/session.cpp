@@ -258,26 +258,29 @@ void CommSession::ProcessingThread(void)
    CSCPMessage *pMsg;
    char szBuffer[128];
    CSCPMessage msg;
+   DWORD dwCommand;
 
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-      DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+
+      dwCommand = pMsg->GetCode();
+      DebugPrintf("Received message %s", CSCPMessageCodeName((WORD)dwCommand, szBuffer));
 
       // Prepare responce message
       msg.SetCode(CMD_REQUEST_COMPLETED);
       msg.SetId(pMsg->GetId());
 
       // Check if authentication required
-      if ((!m_bIsAuthenticated) && (pMsg->GetCode() != CMD_AUTHENTICATE))
+      if ((!m_bIsAuthenticated) && (dwCommand != CMD_AUTHENTICATE))
       {
          msg.SetVariable(VID_RCC, ERR_AUTH_REQUIRED);
       }
       else
       {
-         switch(pMsg->GetCode())
+         switch(dwCommand)
          {
             case CMD_AUTHENTICATE:
                Authenticate(pMsg, &msg);
@@ -301,7 +304,9 @@ void CommSession::ProcessingThread(void)
                msg.SetVariable(VID_RCC, Upgrade(pMsg));
                break;
             default:
-               msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
+               // Attempt to process unknown command by subagents
+               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))
+                  msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
       }

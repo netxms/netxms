@@ -299,6 +299,7 @@ DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
 
 BOOL LoadSubAgent(char *szModuleName);
 void UnloadAllSubAgents(void);
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponce);
 
 BOOL AddAction(char *pszName, int iType, char *pszCmdLine);
 BOOL AddActionFromConfig(char *pszLine);
