@@ -37,6 +37,7 @@ void NodePoller(void *arg);
 void StatusPoller(void *arg);
 void ConfigurationPoller(void *arg);
 void EventProcessor(void *arg);
+void WatchdogThread(void *arg);
 
 
 //
@@ -136,7 +137,11 @@ BOOL Initialize(void)
    if (!LoadObjects())
       return FALSE;
 
+   // Initialize watchdog
+   WatchdogInit();
+
    // Start threads
+   ThreadCreate(WatchdogThread, 0, NULL);
    ThreadCreate(HouseKeeper, 0, NULL);
    ThreadCreate(DiscoveryThread, 0, NULL);
    ThreadCreate(Syncer, 0, NULL);
@@ -201,6 +206,10 @@ void Main(void)
 #ifdef _DEBUG
          switch(ch)
          {
+            case 't':   // Thread status
+            case 'T':
+               WatchdogPrintStatus();
+               break;
             case 'd':   // Dump objects
             case 'D':
                {

@@ -543,6 +543,7 @@ void Node::ConfigurationPoll(void)
    {
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       m_iNativeAgentFails = 0;
+      pAgentConn->Disconnect();
    }
    else
    {
@@ -553,6 +554,7 @@ void Node::ConfigurationPoll(void)
          m_iNativeAgentFails++;
       }
    }
+   delete pAgentConn;
 
    // Generate event if node flags has been changed
    if (dwOldFlags != m_dwFlags)

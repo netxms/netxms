@@ -59,14 +59,17 @@ void NodePoller(void *arg)
 {
    DB_RESULT hResult;
    int iPollInterval;
+   DWORD dwWatchdogId;
 
-   // Read configuration
+   // Read configuration and initialize
    iPollInterval = ConfigReadInt("NewNodePollingInterval", 60);
+   dwWatchdogId = WatchdogAddThread("Node Poller");
 
    while(!ShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(iPollInterval))
          break;      // Shutdown has arrived
+      WatchdogNotify(dwWatchdogId);
 
       hResult = DBSelect(g_hCoreDB, "SELECT id,ip_addr,ip_netmask,discovery_flags FROM NewNodes");
       if (hResult != 0)

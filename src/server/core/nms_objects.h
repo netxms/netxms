@@ -423,6 +423,7 @@ void NetObjDelete(NetObj *pObject);
 NetObj *FindObjectById(DWORD dwId);
 Node *FindNodeByIP(DWORD dwAddr);
 Subnet *FindSubnetByIP(DWORD dwAddr);
+DWORD FindLocalMgmtNode(void);
 
 BOOL LoadObjects(void);
 

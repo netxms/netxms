@@ -235,6 +235,11 @@ ARP_CACHE *GetLocalArpCache(void);
 ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, char *szCommunity);
 void DestroyArpCache(ARP_CACHE *pArpCache);
 
+void WatchdogInit(void);
+DWORD WatchdogAddThread(char *szName);
+void WatchdogNotify(DWORD dwId);
+void WatchdogPrintStatus(void);
+
 #ifdef _WIN32
 
 void InitService(void);

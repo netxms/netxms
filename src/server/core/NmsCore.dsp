@@ -175,6 +175,10 @@ SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\watchdog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\winsrv.cpp
 # End Source File
 # End Group

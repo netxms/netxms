@@ -189,8 +189,10 @@ static void CheckForMgmtNode(void)
 
 void DiscoveryThread(void *arg)
 {
-   DWORD dwNewNodeId = 1;
+   DWORD dwNewNodeId = 1, dwWatchdogId;
    Node *pNode;
+
+   dwWatchdogId = WatchdogAddThread("Network Discovery Thread");
 
    // Flush new nodes table
    DBQuery(g_hCoreDB, "DELETE FROM newnodes");
@@ -199,6 +201,7 @@ void DiscoveryThread(void *arg)
    {
       if (SleepAndCheckForShutdown(30))
          break;      // Shutdown has arrived
+      WatchdogNotify(dwWatchdogId);
 
       CheckForMgmtNode();
 

@@ -64,6 +64,7 @@
 #define EVENT_SNMP_FAIL          14
 #define EVENT_AGENT_FAIL         15
 #define EVENT_INTERFACE_DELETED  16
+#define EVENT_THREAD_HANGS       1001
 
 
 //

@@ -30,11 +30,15 @@
 void StatusPoller(void *arg)
 {
    Node *pNode;
+   DWORD dwWatchdogId;
+
+   dwWatchdogId = WatchdogAddThread("Status Poller");
 
    while(!ShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived
+      WatchdogNotify(dwWatchdogId);
 
       // Walk through nodes and do status poll
       for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
@@ -54,11 +58,15 @@ void StatusPoller(void *arg)
 void ConfigurationPoller(void *arg)
 {
    Node *pNode;
+   DWORD dwWatchdogId;
+
+   dwWatchdogId = WatchdogAddThread("Configuration Poller");
 
    while(!ShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(30))
          break;      // Shutdown has arrived
+      WatchdogNotify(dwWatchdogId);
 
       // Walk through nodes and do configuration poll
       for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)

@@ -233,6 +233,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 
 void NetObjDelete(NetObj *pObject)
 {
+   ObjectsGlobalLock();
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
    if (pObject->IpAddr() != 0)
       switch(pObject->Type())
@@ -253,6 +254,7 @@ void NetObjDelete(NetObj *pObject)
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
             break;
       }
+   ObjectsGlobalUnlock();
 }
 
 
@@ -301,6 +303,24 @@ NetObj *FindObjectById(DWORD dwId)
 
    dwPos = SearchIndex(g_pIndexById, g_dwIdIndexSize, dwId);
    return (dwPos == INVALID_INDEX) ? NULL : g_pIndexById[dwPos].pObject;
+}
+
+
+//
+// Find local management node ID
+//
+
+DWORD FindLocalMgmtNode(void)
+{
+   DWORD i;
+
+   if (g_pNodeIndexByAddr == NULL)
+      return 0;
+
+   for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+      if (((Node *)g_pNodeIndexByAddr[i].pObject)->Flags() & NF_IS_LOCAL_MGMT)
+         return g_pNodeIndexByAddr[i].pObject->Id();
+   return 0;
 }
 
 

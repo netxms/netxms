@@ -200,4 +200,10 @@ Language=English
 Unable to load events from database
 .
 
+MessageId=
+SymbolicName=MSG_THREAD_HANGS
+Language=English
+Thread "%1" does not respond to watchdog thread
+.
+
 ;#endif
