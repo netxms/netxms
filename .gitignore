@@ -13,8 +13,17 @@ sql/dbinit_mysql.sql
 sql/dbinit_pgsql.sql
 src/agent/core/messages.c
 src/agent/core/messages.h
+src/agent/core/nxagentd
 src/server/core/netxmsd
 src/server/include/messages.h
 src/server/libnxsrv/messages.c
+src/server/netxmsd/netxmsd
+src/server/tools/nxaction/nxaction
+src/server/tools/nxadm/nxadm
+src/server/tools/nxdbmgr/nxdbmgr
+src/server/tools/nxget/nxget
+src/server/tools/nxsnmpget/nxsnmpget
+src/server/tools/nxsnmpwalk/nxsnmpwalk
+src/server/tools/nxupload/nxupload
 /stamp-h1
 /status
