@@ -610,6 +610,7 @@ void Node::ConfigurationPoll(void)
    DWORD dwOldFlags = m_dwFlags;
    AgentConnection *pAgentConn;
    INTERFACE_LIST *pIfList;
+   BOOL bHasChanges = FALSE;
 
    PollerLock();
 
@@ -650,7 +651,10 @@ void Node::ConfigurationPoll(void)
 
    // Generate event if node flags has been changed
    if (dwOldFlags != m_dwFlags)
+   {
       PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
+      bHasChanges = TRUE;
+   }
 
    // Retrieve interface list
    pIfList = GetInterfaceList();
@@ -677,6 +681,7 @@ void Node::ConfigurationPoll(void)
                          pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
                DeleteInterface(pInterface);
                i = 0;   // Restart loop
+               bHasChanges = TRUE;
             }
          }
 
@@ -701,11 +706,19 @@ void Node::ConfigurationPoll(void)
                                pIfList->pInterfaces[j].szName,
                                pIfList->pInterfaces[j].dwIndex,
                                pIfList->pInterfaces[j].dwType);
+            bHasChanges = TRUE;
          }
       }
    }
 
    PollerUnlock();
+
+   if (bHasChanges)
+   {
+      Lock();
+      Modify();
+      Unlock();
+   }
 }
 
 

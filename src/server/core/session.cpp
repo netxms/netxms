@@ -145,9 +145,9 @@ void ClientSession::ReadThread(void)
          break;
 
       // Check that actual received packet size is equal to encoded in packet
-      if (ntohs(pRawMsg->wSize) != iErr)
+      if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohs(pRawMsg->wSize));
+         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -194,8 +194,8 @@ void ClientSession::WriteThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode) & 0x0FFF, szBuffer));
-      if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
+      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
+      if (send(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
       {
          MemFree(pMsg);
          break;
@@ -1372,6 +1372,8 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    CSCPMessage msg;
    DWORD dwObjectId;
    NetObj *pObject;
+   BOOL bSuccess = FALSE;
+   static DWORD m_dwRowSize[] = { 8, 12, 260, 12 };
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1386,15 +1388,15 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
       {
          DB_ASYNC_RESULT hResult;
          DWORD dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
-         DWORD dwRowSize, dwAllocatedRows = 100, dwNumRows = 0;
+         DWORD dwAllocatedRows = 100, dwNumRows = 0;
          char szQuery[512], szCond[256];
          int iPos = 0, iType;
          DCI_DATA_HEADER *pData = NULL;
+         DCI_DATA_ROW *pCurr;
 
          // Send CMD_REQUEST_COMPLETED message
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          SendMessage(&msg);
-         msg.DeleteAllVariables();
 
          // Get request parameters
          dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
@@ -1417,17 +1419,53 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          hResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
-            // Calculate actual record size
+            // Get item's data type to determine actual row size
             iType = ((Node *)pObject)->GetItemType(dwItemId);
 
-            pData = (DCI_DATA_HEADER *)malloc(dwAllocatedRows * dwRowSize + sizeof(DCI_DATA_HEADER));
+            // Allocate initial memory block and prepare data header
+            pData = (DCI_DATA_HEADER *)malloc(dwAllocatedRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
+            pData->dwDataType = htonl((DWORD)iType);
+            pData->dwItemId = htonl(dwItemId);
+
+            // Fill memory block with records
+            pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
             while(DBFetch(hResult))
             {
-               dwNumRows++;
-               if ((dwMaxRows > 0) && (dwNumRows > dwMaxRows))
+               if ((dwMaxRows > 0) && (dwNumRows >= dwMaxRows))
                   break;
+
+               // Extend buffer if we are at the end
+               if (dwNumRows == dwAllocatedRows)
+               {
+                  dwAllocatedRows += 50;
+                  pData = (DCI_DATA_HEADER *)realloc(pData, 
+                     dwAllocatedRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
+                  pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER) + m_dwRowSize[iType] * dwNumRows);
+               }
+
+               dwNumRows++;
+
+               pCurr->dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 0));
+               switch(iType)
+               {
+                  case DTYPE_INTEGER:
+                     pCurr->value.iInteger = htonl(DBGetFieldAsyncULong(hResult, 0));
+                     break;
+                  case DTYPE_STRING:
+                     DBGetFieldAsync(hResult, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+                     break;
+               }
+               pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);
             }
             DBFreeAsyncResult(hResult);
+
+            // Prepare and send raw message with fetched data
+            m_pSendQueue->Put(
+               CreateRawCSCPMessage(CMD_DCI_DATA, pRequest->GetId(), 
+                                    dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER),
+                                    pData, NULL));
+            free(pData);
+            bSuccess = TRUE;
          }
       }
       else
@@ -1441,5 +1479,6 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    }
 
    // Send responce
-   SendMessage(&msg);
+   if (!bSuccess)
+      SendMessage(&msg);
 }
