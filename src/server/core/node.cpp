@@ -328,7 +328,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
 
    // Determine node's capabilities
    if (SnmpGet(SNMP_VERSION_2C, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags;
 
@@ -339,7 +339,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    else
    {
       if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-                  m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
+                  m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          DWORD dwNodeFlags;
 
@@ -674,7 +674,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
    if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags, dwNodeType;
 
@@ -854,8 +854,12 @@ BOOL Node::ConnectToAgent(void)
 
 DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
-   return SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
-                  szBuffer, dwBufSize, FALSE, TRUE) ? DCE_SUCCESS : DCE_COMM_ERROR;
+   DWORD dwResult;
+
+   dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
+                      szBuffer, dwBufSize, FALSE, TRUE);
+   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
+      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
 
 
@@ -936,6 +940,55 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    }
 
    return dwError;
+}
+
+
+//
+// Get item's value for client
+//
+
+DWORD Node::GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize)
+{
+   DWORD dwResult = 0, dwRetCode;
+
+   // Get data from node
+   switch(iOrigin)
+   {
+      case DS_INTERNAL:
+         dwRetCode = GetInternalItem(pszParam, dwBufSize, pszBuffer);
+         break;
+      case DS_NATIVE_AGENT:
+         dwRetCode = GetItemFromAgent(pszParam, dwBufSize, pszBuffer);
+         break;
+      case DS_SNMP_AGENT:
+         dwRetCode = GetItemFromSNMP(pszParam, dwBufSize, pszBuffer);
+         break;
+      default:
+         dwResult = RCC_INVALID_ARGUMENT;
+         break;
+   }
+
+   // Translate return code to RCC
+   if (dwResult != RCC_INVALID_ARGUMENT)
+   {
+      switch(dwRetCode)
+      {
+         case DCE_SUCCESS:
+            dwResult = RCC_SUCCESS;
+            break;
+         case DCE_COMM_ERROR:
+            dwResult = RCC_COMM_FAILURE;
+            break;
+         case DCE_NOT_SUPPORTED:
+            dwResult = RCC_DCI_NOT_SUPPORTED;
+            break;
+         default:
+            dwResult = RCC_SYSTEM_FAILURE;
+            break;
+      }
+   }
+
+   return dwResult;
 }
 
 
@@ -1036,4 +1089,63 @@ DWORD Node::WakeUp(void)
 
    Unlock();
    return dwResult;
+}
+
+
+//
+// Get status of interface with given index from SNMP agent
+//
+
+int Node::GetInterfaceStatusFromSNMP(DWORD dwIndex)
+{
+   return SnmpGetInterfaceStatus(m_dwIpAddr, m_iSNMPVersion, m_szCommunityString, dwIndex);
+}
+
+
+//
+// Get status of interface with given index from native agent
+//
+
+int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
+{
+   char szParam[128], szBuffer[32];
+   DWORD dwAdminStatus, dwLinkState;
+   int iStatus;
+
+   // Get administrative status
+   sprintf(szParam, "Net.Interface.AdminStatus(%lu)", dwIndex);
+   if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+   {
+      dwAdminStatus = strtoul(szBuffer, NULL, 0);
+
+      switch(dwAdminStatus)
+      {
+         case 3:
+            iStatus = STATUS_TESTING;
+            break;
+         case 2:
+            iStatus = STATUS_DISABLED;
+            break;
+         case 1:     // Interface administratively up, check link state
+            sprintf(szParam, "Net.Interface.Link(%lu)", dwIndex);
+            if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
+            {
+               dwLinkState = strtoul(szBuffer, NULL, 0);
+               iStatus = (dwLinkState == 0) ? STATUS_CRITICAL : STATUS_NORMAL;
+            }
+            else
+            {
+               iStatus = STATUS_UNKNOWN;
+            }
+         default:
+            iStatus = STATUS_UNKNOWN;
+            break;
+      }
+   }
+   else
+   {
+      iStatus = STATUS_UNKNOWN;
+   }
+
+   return iStatus;
 }

@@ -217,6 +217,8 @@ public:
 // Interface class
 //
 
+class Node;
+
 class Interface : public NetObj
 {
 protected:
@@ -235,6 +237,8 @@ public:
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
+
+   Node *GetParentNode(void);
 
    void SetMacAddr(BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
 
@@ -313,6 +317,8 @@ public:
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
+   int GetInterfaceStatusFromSNMP(DWORD dwIndex);
+   int GetInterfaceStatusFromAgent(DWORD dwIndex);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
    void StatusPoll(ClientSession *pSession, DWORD dwRqId);
@@ -328,6 +334,7 @@ public:
    DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
    void QueueItemsForPolling(Queue *pPollerQueue);
+   DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);

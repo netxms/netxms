@@ -229,24 +229,59 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 {
    int iOldStatus = m_iStatus;
    DWORD dwPingStatus;
+   BOOL bNeedPoll = TRUE;
+   Node *pNode;
 
    m_pPollRequestor = pSession;
-   if (m_dwIpAddr == 0)
+   pNode = GetParentNode();
+   if (pNode == NULL)
    {
       m_iStatus = STATUS_UNKNOWN;
-      return;     // Interface has no IP address, we cannot check it
+      return;     // Cannot find parent node, which is VERY strange
    }
 
    SendPollerMsg(dwRqId, "   Starting status poll on interface %s\r\n"
-                         "   Current interface status is %s\r\n",
+                         "      Current interface status is %s\r\n",
                  m_szName, g_pszStatusName[m_iStatus]);
-   dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL);
-   if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
-      WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
-   m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+
+   // Poll interface using different methods
+   if (pNode->Flags() & NF_IS_NATIVE_AGENT)
+   {
+      SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
+      m_iStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
+      if (m_iStatus != STATUS_UNKNOWN)
+         bNeedPoll = FALSE;
+   }
+   
+   if ((pNode->Flags() & NF_IS_SNMP) && bNeedPoll)
+   {
+      SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
+      m_iStatus = pNode->GetInterfaceStatusFromSNMP(m_dwIfIndex);
+      if (m_iStatus != STATUS_UNKNOWN)
+         bNeedPoll = FALSE;
+   }
+   
+   if (bNeedPoll)
+   {
+      // Use ICMP ping as a last option
+      if (m_dwIpAddr != 0)
+      {
+         SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
+         dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL);
+         if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+            WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+         m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+      }
+      else
+      {
+         // Interface doesn't have an IP address, so we can't ping it
+         m_iStatus = STATUS_UNKNOWN;
+      }
+   }
+
    if (m_iStatus != iOldStatus)
    {
-      SendPollerMsg(dwRqId, "   Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
+      SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
                 GetParent()->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
                 m_dwIfIndex);
@@ -287,4 +322,25 @@ DWORD Interface::WakeUp(void)
          dwResult = RCC_COMM_FAILURE;
    }
    return dwResult;
+}
+
+
+//
+// Get interface's parent node
+//
+
+Node *Interface::GetParentNode(void)
+{
+   DWORD i;
+   Node *pNode = NULL;
+
+   Lock();
+   for(i = 0; i < m_dwParentCount; i++)
+      if (m_pParentList[i]->Type() == OBJECT_NODE)
+      {
+         pNode = (Node *)m_pParentList[i];
+         break;
+      }
+   Unlock();
+   return pNode;
 }

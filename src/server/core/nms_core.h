@@ -289,6 +289,7 @@ private:
    void ForcedNodePoll(CSCPMessage *pRequest);
    void OnTrap(CSCPMessage *pRequest);
    void OnWakeUpNode(CSCPMessage *pRequest);
+   void QueryParameter(CSCPMessage *pRequest);
    void CreateTrap(CSCPMessage *pRequest);
    void UpdateTrap(CSCPMessage *pRequest);
    void DeleteTrap(CSCPMessage *pRequest);
@@ -348,12 +349,12 @@ void StartDBWriter(void);
 void StopDBWriter(void);
 
 void SnmpInit(void);
-BOOL SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szOidStr,
-             const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
-             DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
-BOOL SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szRootOid,
-                   void (* pHandler)(DWORD, DWORD, const char *, SNMP_Variable *, void *), 
-                   void *pUserArg, BOOL bVerbose);
+DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szOidStr,
+              const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
+              DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
+DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szRootOid,
+                    void (* pHandler)(DWORD, DWORD, const char *, SNMP_Variable *, void *), 
+                    void *pUserArg, BOOL bVerbose);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
@@ -365,6 +366,7 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, const char *szCommunit
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, DWORD dwNodeType);
 INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
+int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity, DWORD dwIfIndex);
 
 void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval);

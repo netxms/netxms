@@ -326,6 +326,7 @@ void ClientSession::WriteThread(void)
       if (send(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
       {
          safe_free(pMsg);
+         closesocket(m_hSocket);
          break;
       }
       safe_free(pMsg);
@@ -594,6 +595,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_LOAD_TRAP_CFG:
             SendAllTraps(pMsg->GetId());
+            break;
+         case CMD_QUERY_PARAMETER:
+            QueryParameter(pMsg);
             break;
          default:
             {
@@ -1245,6 +1249,7 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    }
 
    // Send end-of-database notification
+printf("sending user list end\n");
    msg.SetCode(CMD_USER_DB_EOF);
    SendMessage(&msg);
 }
@@ -3077,6 +3082,57 @@ void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
             else
                dwResult = ((Interface *)pObject)->WakeUp();
             msg.SetVariable(VID_RCC, dwResult);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Query specific parameter from node
+//
+
+void ClientSession::QueryParameter(CSCPMessage *pRequest)
+{
+   NetObj *pObject;
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Find node object
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            DWORD dwResult;
+            TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
+
+            pRequest->GetVariableStr(VID_NAME, szName, MAX_PARAM_NAME);
+            dwResult = ((Node *)pObject)->GetItemForClient(pRequest->GetVariableShort(VID_DCI_SOURCE_TYPE),
+                                                           szName, szBuffer, 256);
+            msg.SetVariable(VID_RCC, dwResult);
+            if (dwResult == RCC_SUCCESS)
+               msg.SetVariable(VID_VALUE, szBuffer);
          }
          else
          {
