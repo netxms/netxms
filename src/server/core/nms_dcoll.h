@@ -195,6 +195,7 @@ public:
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
    void SetId(DWORD dwNewId) { m_dwId = dwNewId; }
+   void BindToNode(Template *pNode) { m_pNode = pNode; }
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
 
