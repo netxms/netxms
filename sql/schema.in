@@ -164,7 +164,7 @@ CREATE TABLE nsmap
 ** Objects' ACLs
 */
 
-CREATE TABLE acl
+CREATE TABLE ACL
 (
 	object_id integer not null,
 	user_id integer not null,
@@ -181,15 +181,16 @@ CREATE TABLE acl
 
 CREATE TABLE Items
 (
-	id integer not null,
+	item_id integer not null,
 	node_id integer not null,
-	name varchar(255),
+	name varchar(255) not null,
 	description varchar(255),
 	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP
 	datatype integer,
 	polling_interval integer,
 	retention_time integer,
-	PRIMARY KEY(id),
+	status integer,			// ACTIVE, DISABLED or NOT_SUPPORTED
+	PRIMARY KEY(item_id),
 #ifdef DB_MYSQL
 	KEY(node_id)
 #endif
@@ -356,7 +357,52 @@ CREATE TABLE Thresholds
 	item_id integer not null,
 	fire_value varchar(255),
 	rearm_value varchar(255),
-	check_function varchar(255),
+	check_function integer,
+	check_operation integer,
+	parameter_1 integer,
+	parameter_2 integer,
 	event_code integer,
 	PRIMARY KEY(threshold_id)
+);
+
+
+/*
+** Data collection templates
+*/
+
+CREATE TABLE DCT
+(
+	template_id integer not null,
+	name varchar(255),
+	PRIMARY KEY(template_id)
+);
+
+
+/*
+** Items in data collection templates
+*/
+
+CREATE TABLE DCTItems
+(
+	template_id integer not null,
+	item_id integer not null,
+	name varchar(255),
+	description varchar(255),
+	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP
+	datatype integer,
+	polling_interval integer,
+	retention_time integer,
+	PRIMARY KEY(template_id,item_id)
+);
+
+
+/*
+** Mapping hosts to templates
+*/
+
+CREATE TABLE DCTHostMap
+(
+	template_id integer not null,
+	node_id integer not null,
+	PRIMARY KEY(template_id,node_id)
 );
