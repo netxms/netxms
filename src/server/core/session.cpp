@@ -404,3 +404,17 @@ void ClientSession::UpdateThread(void)
    }
    ConditionSet(m_hCondUpdateThreadStopped);
 }
+
+
+//
+// Send notification message to server
+//
+
+void ClientSession::Notify(DWORD dwCode)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_NOTIFY);
+   msg.SetVariable(VID_NOTIFICATION_CODE, dwCode);
+   SendMessage(&msg);
+}

@@ -91,6 +91,7 @@
 #define AF_DEBUG_CSCP                     0x00000200
 #define AF_DEBUG_DISCOVERY                0x00000400
 #define AF_DEBUG_DC                       0x00000800
+#define AF_DEBUG_HOUSEKEEPER              0x00001000
 #define AF_DEBUG_ALL                      0x0000FF00
 #define AF_SHUTDOWN                       0x80000000
 
@@ -225,6 +226,7 @@ public:
    int GetState(void) { return m_iState; }
 
    void Kill(void);
+   void Notify(DWORD dwCode);
 
    void OnNewEvent(Event *pEvent);
    void OnObjectChange(DWORD dwObjectId);
@@ -280,6 +282,7 @@ void DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
 void DBUnloadDriver(void);
 
 void QueueSQLRequest(char *szQuery);
+void StopDBWriter(void);
 
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 

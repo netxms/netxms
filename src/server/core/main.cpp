@@ -197,11 +197,24 @@ BOOL Initialize(void)
 
 
 //
+// Handler for client notification
+//
+
+static void NotifyClient(ClientSession *pSession, void *pArg)
+{
+   pSession->Notify(NX_NOTIFY_SHUTDOWN);
+}
+
+
+//
 // Server shutdown
 //
 
 void Shutdown(void)
 {
+   // Notify clients
+   EnumerateClientSessions(NotifyClient, NULL);
+
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 #ifdef _WIN32
    SetEvent(m_hEventShutdown);
@@ -211,6 +224,7 @@ void Shutdown(void)
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
    ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
    SaveObjects();
+   StopDBWriter();
    if (g_hCoreDB != 0)
       DBDisconnect(g_hCoreDB);
    DBUnloadDriver();

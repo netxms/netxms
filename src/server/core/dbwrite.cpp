@@ -31,6 +31,13 @@ Queue *g_pLazyRequestQueue = NULL;
 
 
 //
+// Static data
+//
+
+static CONDITION m_hCondWriteThreadFinished = NULL;
+
+
+//
 // Put SQL request into queue for later execution
 //
 
@@ -48,13 +55,27 @@ void DBWriteThread(void *pArg)
 {
    char *pQuery;
 
-   while(!ShutdownInProgress())
+   m_hCondWriteThreadFinished = ConditionCreate();
+   while(1)
    {
       pQuery = (char *)g_pLazyRequestQueue->GetOrBlock();
-      if (pQuery != NULL)
-      {
-         DBQuery(g_hCoreDB, pQuery);
-         free(pQuery);
-      }
+      if (pQuery == INVALID_POINTER_VALUE)   // End-of-job indicator
+         break;
+
+      DBQuery(g_hCoreDB, pQuery);
+      free(pQuery);
    }
+   ConditionSet(m_hCondWriteThreadFinished);
+}
+
+
+//
+// Stop writer thread and wait while all queries will be executed
+//
+
+void StopDBWriter(void)
+{
+   g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
+   if (m_hCondWriteThreadFinished != NULL)
+      ConditionWait(m_hCondWriteThreadFinished, INFINITE);
 }

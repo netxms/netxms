@@ -24,6 +24,47 @@
 
 
 //
+// Remove deleted objects which are no longer referenced
+//
+
+static void CleanDeletedObjects(void)
+{
+   DB_RESULT hResult;
+
+   hResult = DBSelect(g_hCoreDB, "SELECT object_id FROM DeletedObjects");
+   if (hResult != NULL)
+   {
+      DB_ASYNC_RESULT hAsyncResult;
+      char szQuery[256];
+      int i, iNumRows;
+      DWORD dwObjectId;
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwObjectId = DBGetFieldULong(hResult, i, 0);
+
+         // Check if there are references to this object in event log
+         sprintf(szQuery, "SELECT source FROM EventLog WHERE source=%ld", dwObjectId);
+         hAsyncResult = DBAsyncSelect(g_hCoreDB, szQuery);
+         if (hAsyncResult != NULL)
+         {
+            if (!DBFetch(hAsyncResult))
+            {
+               // No records with that source ID, so we can purge this object
+               sprintf(szQuery, "DELETE FROM DeletedObjects WHERE object_id=%ld", dwObjectId);
+               DBQuery(g_hCoreDB, szQuery);
+               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Deleted object with id %ld was purged\n", dwObjectId);
+            }
+            DBFreeAsyncResult(hAsyncResult);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
 // Housekeeper thread
 //
 
@@ -36,5 +77,7 @@ void HouseKeeper(void *pArg)
       currTime = time(NULL);
       if (SleepAndCheckForShutdown(3600 - (currTime % 3600)))
          break;      // Shutdown has arrived
+
+      CleanDeletedObjects();
    }
 }
