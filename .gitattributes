@@ -85,6 +85,8 @@ src/console/win32/icons/icon1.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/node.ico -text
 src/console/win32/icons/setup.ico -text
+src/console/win32/icons/sort_up.ico -text
+src/console/win32/icons/sortdown.ico -text
 src/console/win32/icons/tree.ico -text
 src/console/win32/icons/user.ico -text
 src/console/win32/icons/users.ico -text
