@@ -3997,7 +3997,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          pInfo->mutex = hMutex;
          pInfo->dwRqId = pRequest->GetId();
 
-         ThreadCreate(DeploymentThread, 0, pInfo);
+         ThreadCreate(DeploymentManager, 0, pInfo);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else

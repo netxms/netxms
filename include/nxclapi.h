@@ -419,6 +419,17 @@ typedef void * NXC_SESSION;
 
 
 //
+// Deployment manager status codes
+//
+
+#define DEPLOYMENT_STATUS_PENDING      0
+#define DEPLOYMENT_STATUS_TRANSFER     1
+#define DEPLOYMENT_STATUS_INSTALLATION 2
+#define DEPLOYMENT_STATUS_COMPLETED    3
+#define DEPLOYMENT_STATUS_FAILED       4
+
+
+//
 // Agent's parameter information
 //
 

@@ -34,6 +34,7 @@ typedef struct
    Node **ppNodeList;
    ClientSession *pSession;
    DWORD dwRqId;
+   Queue *pQueue;  // Used internally by deployment manager
 } DT_STARTUP_INFO;
 
 
@@ -45,7 +46,7 @@ BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
 BOOL IsPackageFileExist(TCHAR *pszFileName);
 BOOL IsValidPackageId(DWORD dwPkgId);
 DWORD UninstallPackage(DWORD dwPkgId);
-THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg);
+THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg);
 
 
 #endif   /* _nms_pkg_h_ */

@@ -138,30 +138,102 @@ DWORD UninstallPackage(DWORD dwPkgId)
 
 
 //
+// Package deployment worker thread
+//
+
+static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
+{
+   DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
+   Node *pNode;
+   CSCPMessage msg;
+   BOOL bSuccess = TRUE;
+   //AgentConnection *pAgentConn;
+
+   // Prepare notification message
+   msg.SetCode(CMD_INSTALLER_INFO);
+   msg.SetId(pStartup->dwRqId);
+
+   while(1)
+   {
+      // Get node object for upgrade
+      pNode = (Node *)pStartup->pQueue->Get();
+      if (pNode == NULL)
+         break;   // Queue is empty, exit
+
+      // Create agent connection
+
+      // Change deployment status to "File Transfer"
+      msg.SetVariable(VID_OBJECT_ID, pNode->Id());
+      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
+      pStartup->pSession->SendMessage(&msg);
+
+      // Finish node processing
+      msg.SetVariable(VID_OBJECT_ID, pNode->Id());
+      msg.SetVariable(VID_DEPLOYMENT_STATUS, 
+         bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
+      pStartup->pSession->SendMessage(&msg);
+      pNode->DecRefCount();
+   }
+   return THREAD_OK;
+}
+
+
+//
 // Package deployment thread
 //
 
-THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
+THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 {
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
    DWORD i, dwNumThreads;
+   CSCPMessage msg;
+   Queue *pQueue;
+   THREAD *pThreadList;
 
    // Wait for parent initialization completion
    MutexLock(pStartup->mutex, INFINITE);
    MutexUnlock(pStartup->mutex);
 
+   // Sanity check
+   if (pStartup->dwNumNodes == 0)
+      return THREAD_OK;
+
    // Read number of upgrade threads
    dwNumThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
+   if (dwNumThreads > pStartup->dwNumNodes)
+      dwNumThreads = pStartup->dwNumNodes;
 
-   // Send initial status for each node
+   // Create processing queue
+   pQueue = new Queue;
+   pStartup->pQueue = pQueue;
+
+   // Send initial status for each node and queue them for deployment
+   msg.SetCode(CMD_INSTALLER_INFO);
+   msg.SetId(pStartup->dwRqId);
    for(i = 0; i < pStartup->dwNumNodes; i++)
    {
+      pQueue->Put(pStartup->ppNodeList[i]);
+      msg.SetVariable(VID_OBJECT_ID, pStartup->ppNodeList[i]->Id());
+      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
+      pStartup->pSession->SendMessage(&msg);
+      msg.DeleteAllVariables();
    }
+
+   // Start worker threads
+   pThreadList = (THREAD *)malloc(sizeof(THREAD) * dwNumThreads);
+   for(i = 0; i < dwNumThreads; i++)
+      pThreadList[i] = ThreadCreateEx(DeploymentThread, 0, pStartup);
+
+   // Wait for all worker threads termination
+   for(i = 0; i < dwNumThreads; i++)
+      ThreadJoin(pThreadList[i]);
 
    // Cleanup
    MutexDestroy(pStartup->mutex);
    safe_free(pStartup->ppNodeList);
    free(pStartup);
+   free(pThreadList);
+   delete pQueue;
 
    return THREAD_OK;
 }
