@@ -114,7 +114,8 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
    DWORD dwResult = ICMP_TIMEOUT;
    ECHOREQUEST request;
    ECHOREPLY reply;
-   DWORD dwTimeLeft, dwStartTime, dwElapsedTime;
+   DWORD dwTimeLeft, dwElapsedTime;
+   INT64 qwStartTime;
 
    // Create raw socket
    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -154,10 +155,10 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
 	         FD_SET(sock, &rdfs);
 	         timeout.tv_sec = dwTimeLeft / 1000;
 	         timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
-            dwStartTime = GetTickCount();
+            qwStartTime = GetCurrentTimeMs();
 	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) != 0)
             {
-               dwElapsedTime = GetTickCount() - dwStartTime;
+               dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
 
                // Receive reply

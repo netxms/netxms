@@ -22,6 +22,14 @@
 
 #include "libnetxms.h"
 
+#ifdef _WIN32
+#ifndef __GNUC__
+#define EPOCHFILETIME (116444736000000000i64)
+#else
+#define EPOCHFILETIME (116444736000000000LL)
+#endif
+#endif
+
 
 //
 // Calculate number of bits in netmask
@@ -319,4 +327,34 @@ BOOL LIBNETXMS_EXPORTABLE GetParameterArg(char *param, int index, char *arg, int
    if (bResult)
       StrStrip(arg);
    return bResult;
+}
+
+
+//
+// Get current time in milliseconds
+// Based on timeval.h by Wu Yongwei
+//
+
+INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void)
+{
+#ifdef _WIN32
+   FILETIME ft;
+   LARGE_INTEGER li;
+   __int64 t;
+
+   GetSystemTimeAsFileTime(&ft);
+   li.LowPart  = ft.dwLowDateTime;
+   li.HighPart = ft.dwHighDateTime;
+   t = li.QuadPart;       // In 100-nanosecond intervals
+   t -= EPOCHFILETIME;    // Offset to the Epoch time
+   t /= 10000;            // Convert to milliseconds
+#else
+   struct timeval tv;
+   INT64 t;
+
+   gettimeofday(&tv, NULL);
+   t = (INT64)tv.tv_sec * 1000 + (INT64)(tv.tv_usec / 10000);
+#endif
+
+   return t;
 }
