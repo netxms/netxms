@@ -53,15 +53,32 @@ DWORD g_dwDiscoveryPollingInterval;
 //
 
 #ifdef _WIN32
-HANDLE m_hEventShutdown = INVALID_HANDLE_VALUE;
+static HANDLE m_hEventShutdown = INVALID_HANDLE_VALUE;
+#else    /* _WIN32 */
+static pthread_cond_t m_hCondShutdown;
 #endif
+
+
+//
+// Sleep for specified number of seconds or until system shutdown arrives
+// Function will return TRUE if shutdown event occurs
+//
+
+BOOL SleepAndCheckForShutdown(int iSeconds)
+{
+#ifdef _WIN32
+   return WaitForSingleObject(m_hEventShutdown, iSeconds * 1000) == WAIT_OBJECT_0;
+#else    /* _WIN32 */
+   /* TODO: Implement UNIX code */
+#endif
+}
 
 
 //
 // Load global configuration parameters
 //
 
-void LoadGlobalConfig()
+static void LoadGlobalConfig()
 {
    g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 3600);
 }
@@ -100,6 +117,8 @@ BOOL Initialize(void)
    // Create synchronization stuff
 #ifdef _WIN32
    m_hEventShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
+#else
+   pthread_cond_init(&m_hCondShutdown, NULL);
 #endif
 
    // Initialize event handling subsystem
@@ -135,9 +154,12 @@ void Shutdown(void)
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 #ifdef _WIN32
    SetEvent(m_hEventShutdown);
+#else    /* _WIN32 */
+   pthread_cond_broadcast(&m_hCondShutdown);
 #endif
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
-   ThreadSleep(15);     // Give other threads a chance to terminate in a safe way
+   ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
+   SaveObjects();
    if (g_hCoreDB != 0)
       DBDisconnect(g_hCoreDB);
    DBUnloadDriver();
@@ -171,9 +193,6 @@ void Main(void)
 #ifdef _DEBUG
          switch(ch)
          {
-            case 'x':
-               PostEvent(10,6,NULL);
-               break;
             case 'd':   // Dump objects
             case 'D':
                {

@@ -66,9 +66,8 @@ void NodePoller(void *arg)
 
    while(!ShutdownInProgress())
    {
-      ThreadSleep(iPollInterval);
-      if (ShutdownInProgress())
-         break;
+      if (SleepAndCheckForShutdown(iPollInterval))
+         break;      // Shutdown has arrived
 
       hResult = DBSelect(g_hCoreDB, "SELECT id,ip_addr,ip_netmask,discovery_flags FROM NewNodes");
       if (hResult != 0)

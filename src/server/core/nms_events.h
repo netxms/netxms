@@ -51,6 +51,15 @@
 #define EVENT_NODE_ADDED         1
 #define EVENT_SUBNET_ADDED       2
 #define EVENT_INTERFACE_ADDED    3
+#define EVENT_INTERFACE_UP       4
+#define EVENT_INTERFACE_DOWN     5
+#define EVENT_NODE_NORMAL        6
+#define EVENT_NODE_INFO          7
+#define EVENT_NODE_WARNING       8
+#define EVENT_NODE_ERROR         9
+#define EVENT_NODE_CRITICAL      10
+#define EVENT_NODE_UNKNOWN       11
+#define EVENT_NODE_UNMANAGED     12
 
 
 //

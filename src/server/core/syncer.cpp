@@ -24,12 +24,39 @@
 
 
 //
+// Save objects to database
+//
+
+void SaveObjects(void)
+{
+   DWORD i;
+
+   ObjectsGlobalLock();
+
+   // Delete objects marked for deletion
+   for(i = 0; i < g_dwIdIndexSize; i++)
+      if (g_pIndexById[i].pObject->IsDeleted())
+      {
+         g_pIndexById[i].pObject->DeleteFromDB();
+         NetObjDelete(g_pIndexById[i].pObject);
+         i = 0xFFFFFFFF;   // Restart loop
+      }
+
+   // Save objects
+   for(i = 0; i < g_dwIdIndexSize; i++)
+      if (g_pIndexById[i].pObject->IsModified())
+         g_pIndexById[i].pObject->SaveToDB();
+
+   ObjectsGlobalUnlock();
+}
+
+
+//
 // Syncer thread
 //
 
 void Syncer(void *arg)
 {
-   DWORD i;
    int iSyncInterval;
 
    // Read configuration
@@ -38,24 +65,8 @@ void Syncer(void *arg)
    // Main syncer loop
    while(!ShutdownInProgress())
    {
-      ThreadSleep(iSyncInterval);
-
-      ObjectsGlobalLock();
-
-      // Delete objects marked for deletion
-      for(i = 0; i < g_dwIdIndexSize; i++)
-         if (g_pIndexById[i].pObject->IsDeleted())
-         {
-            g_pIndexById[i].pObject->DeleteFromDB();
-            NetObjDelete(g_pIndexById[i].pObject);
-            i = 0xFFFFFFFF;   // Restart loop
-         }
-
-      // Save objects
-      for(i = 0; i < g_dwIdIndexSize; i++)
-         if (g_pIndexById[i].pObject->IsModified())
-            g_pIndexById[i].pObject->SaveToDB();
-
-      ObjectsGlobalUnlock();
+      if (SleepAndCheckForShutdown(iSyncInterval))
+         break;   // Shutdown time has arrived
+      SaveObjects();
    }
 }

@@ -31,9 +31,10 @@ void HouseKeeper(void *arg)
 {
    time_t currTime;
 
-   while(1)
+   while(!ShutdownInProgress())
    {
       currTime = time(NULL);
-      Sleep((3600 - (currTime % 3600)) * 1000);
+      if (SleepAndCheckForShutdown(3600 - (currTime % 3600)))
+         break;      // Shutdown has arrived
    }
 }

@@ -193,9 +193,13 @@ void Shutdown(void);
 BOOL Initialize(void);
 void Main(void);
 
+BOOL SleepAndCheckForShutdown(int iSeconds);
+
 void StrStrip(char *str);
 char *IpToStr(DWORD dwAddr, char *szBuffer);
 int BitsInMask(DWORD dwMask);
+
+void SaveObjects(void);
 
 HMODULE DLOpen(char *szModule);
 void *DLGetSymbolAddr(HMODULE hModule, char *szSymbol);

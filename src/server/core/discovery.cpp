@@ -195,9 +195,10 @@ void DiscoveryThread(void *arg)
    // Flush new nodes table
    DBQuery(g_hCoreDB, "DELETE FROM newnodes");
 
-   while(1)
+   while(!ShutdownInProgress())
    {
-      ThreadSleep(30);
+      if (SleepAndCheckForShutdown(30))
+         break;      // Shutdown has arrived
 
 printf("* Discovery thread wake up\n");
       CheckForMgmtNode();
@@ -242,4 +243,5 @@ printf("Discovery poll on node %s\n",pNode->Name());
       }
 printf("* Discovery thread goes to sleep\n");
    }
+printf("* Discovery thread terminated\n");
 }
