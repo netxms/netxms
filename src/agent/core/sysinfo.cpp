@@ -56,7 +56,7 @@ LONG H_FileSize(char *cmd, char *arg, char *value)
    struct stat fileInfo;
 #endif
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
 #ifdef _WIN32
@@ -78,6 +78,47 @@ LONG H_FileSize(char *cmd, char *arg, char *value)
 
 
 //
+// Handler for File.Count(*) parameter
+//
+
+LONG H_FileCount(char *pszCmd, char *pszArg, char *pValue)
+{
+   char szDirName[MAX_PATH], szPattern[MAX_PATH];
+   DIR *pDir;
+   struct dirent *pFile;
+   LONG nResult = SYSINFO_RC_ERROR, nCount = 0;
+
+   if (!NxGetParameterArg(pszCmd, 1, szDirName, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (!NxGetParameterArg(pszCmd, 2, szPattern, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // If pattern is omited use asterisk
+   if (szPattern[0] == 0)
+      strcpy(szPattern, "*");
+
+   pDir = opendir(szDirName);
+   if (pDir != NULL)
+   {
+      while(1)
+      {
+         pFile = readdir(pDir);
+         if (pFile == NULL)
+            break;
+         if (MatchString(szPattern, pFile->d_name, FALSE))
+            nCount++;
+      }
+      closedir(pDir);
+      ret_int(pValue, nCount);
+      nResult = SYSINFO_RC_SUCCESS;
+   }
+
+   return nResult;
+}
+
+
+//
 // Calculate MD5 hash for file
 //
 
@@ -87,7 +128,7 @@ LONG H_MD5Hash(char *cmd, char *arg, char *value)
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD i;
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileMD5Hash(szFileName, hash))
@@ -112,7 +153,7 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
    BYTE hash[SHA1_DIGEST_SIZE];
    DWORD i;
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileSHA1Hash(szFileName, hash))

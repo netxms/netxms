@@ -31,6 +31,7 @@ LONG H_AgentStats(char *cmd, char *arg, char *value);
 LONG H_AgentUptime(char *cmd, char *arg, char *value);
 LONG H_CRC32(char *cmd, char *arg, char *value);
 LONG H_FileSize(char *cmd, char *arg, char *value);
+LONG H_FileCount(char *pszCmd, char *pszArg, char *pValue);
 LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
@@ -193,6 +194,7 @@ static AGENT_PARAM m_stdParams[] =
    { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests },
    { "Agent.Uptime", H_AgentUptime, NULL },
    { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING },
+   { "File.Count(*)", H_FileCount, NULL },
    { "File.Hash.CRC32(*)", H_CRC32, NULL },
    { "File.Hash.MD5(*)", H_MD5Hash, NULL },
    { "File.Hash.SHA1(*)", H_SHA1Hash, NULL },
