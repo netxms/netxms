@@ -476,3 +476,60 @@ NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, DWORD dwRow)
 
    return (NXC_DCI_ROW *)(((char *)(pData->pRows)) + dwRow * pData->wRowSize);
 }
+
+
+//
+// Add threshold to item
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOLD *pThreshold)
+{
+   DWORD dwIndex;
+
+   dwIndex = pItem->dwNumThresholds++;
+   pItem->pThresholdList = (NXC_DCI_THRESHOLD *)MemReAlloc(pItem->pThresholdList,
+                                    sizeof(NXC_DCI_THRESHOLD) * pItem->dwNumThresholds);
+   memcpy(&pItem->pThresholdList[dwIndex], pThreshold, sizeof(NXC_DCI_THRESHOLD));
+   return dwIndex;
+}
+
+
+//
+// Delete threshold from item
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCDeleteThresholdFromItem(NXC_DCI *pItem, DWORD dwIndex)
+{
+   BOOL bResult = FALSE;
+
+   if (pItem->dwNumThresholds > dwIndex)
+   {
+      pItem->dwNumThresholds--;
+      memmove(&pItem->pThresholdList[dwIndex], &pItem->pThresholdList[dwIndex + 1],
+              sizeof(NXC_DCI_THRESHOLD) * (pItem->dwNumThresholds - dwIndex));
+      bResult = TRUE;
+   }
+   return bResult;
+}
+
+
+//
+// Swap two threshold items
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD dwIndex2)
+{
+   BOOL bResult = FALSE;
+   NXC_DCI_THRESHOLD dct;
+
+   if ((pItem->dwNumThresholds > dwIndex1) &&
+       (pItem->dwNumThresholds > dwIndex2) &&
+       (dwIndex1 != dwIndex2))
+   {
+      memcpy(&dct, &pItem->pThresholdList[dwIndex1], sizeof(NXC_DCI_THRESHOLD));
+      memcpy(&pItem->pThresholdList[dwIndex1], &pItem->pThresholdList[dwIndex2], sizeof(NXC_DCI_THRESHOLD));
+      memcpy(&pItem->pThresholdList[dwIndex2], &dct, sizeof(NXC_DCI_THRESHOLD));
+      bResult = TRUE;
+   }
+   return bResult;
+}
