@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.68 2005-02-17 20:46:05 victor Exp $
+# $Id: configure.ac,v 1.69 2005-02-19 14:37:35 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -184,6 +184,8 @@ AC_SUBST(SUBAGENT_DIRS)
 
 #AC_CHECK_LIB([socket], [socket])
 #AC_CHECK_LIB([nsl], [gethostbyname])
+
+AC_CHECK_LIB([gcc], [__muldi3])
 
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
