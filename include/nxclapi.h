@@ -149,6 +149,7 @@ typedef unsigned long HREQUEST;
 #define RCC_INVALID_OBJECT_ID       ((DWORD)7)
 #define RCC_ALREADY_EXIST           ((DWORD)8)
 #define RCC_COMM_FAILURE            ((DWORD)9)
+#define RCC_SYSTEM_FAILURE          ((DWORD)10)
 
 
 //
@@ -396,6 +397,8 @@ void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
 NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
+DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
 
 #ifdef __cplusplus
 }

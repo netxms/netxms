@@ -23,6 +23,7 @@ include/nms_cscp.h -text
 include/nms_threads.h -text
 include/nms_util.h -text
 include/nxclapi.h -text
+include/nxcscpapi.h -text
 include/nxevent.h -text
 m4/Makefile.am -text
 /reconf -text
