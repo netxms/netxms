@@ -178,8 +178,8 @@ void CAlarmBrowser::OnViewRefresh()
    NXC_ALARM *pAlarmList;
 
    m_wndListCtrl.DeleteAllItems();
-   dwRetCode = DoRequestArg3(NXCLoadAllAlarms, (void *)m_bShowAllAlarms, &dwNumAlarms, 
-                             &pAlarmList, _T("Loading alarms..."));
+   dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)m_bShowAllAlarms, 
+                             &dwNumAlarms, &pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
       memset(m_iNumAlarms, 0, sizeof(int) * 5);
@@ -206,7 +206,7 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
-   pObject = NXCFindObjectById(pAlarm->dwSourceObject);
+   pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
    iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, g_szStatusTextSmall[pAlarm->wSeverity],
                                    pAlarm->wSeverity);
    if (iIdx != -1)
@@ -311,7 +311,8 @@ void CAlarmBrowser::OnAlarmAcknowlege()
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    while(iItem != -1)
    {
-      DoRequestArg1(NXCAcknowlegeAlarm, (void *)m_wndListCtrl.GetItemData(iItem), "Acknowleging alarm...");
+      DoRequestArg2(NXCAcknowlegeAlarm, g_hSession, 
+                    (void *)m_wndListCtrl.GetItemData(iItem), _T("Acknowleging alarm..."));
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 }

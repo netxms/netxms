@@ -354,15 +354,15 @@ void CObjectBrowser::OnViewRefresh()
    m_wndTreeCtrl.DeleteAllItems();
    m_dwTreeHashSize = 0;
 
-   pObject = NXCGetTopologyRootObject();
+   pObject = NXCGetTopologyRootObject(g_hSession);
    if (pObject != NULL)
       AddObjectToTree(pObject, TVI_ROOT);
 
-   pObject = NXCGetServiceRootObject();
+   pObject = NXCGetServiceRootObject(g_hSession);
    if (pObject != NULL)
       AddObjectToTree(pObject, TVI_ROOT);
    
-   pObject = NXCGetTemplateRootObject();
+   pObject = NXCGetTemplateRootObject(g_hSession);
    if (pObject != NULL)
       AddObjectToTree(pObject, TVI_ROOT);
    
@@ -370,12 +370,12 @@ void CObjectBrowser::OnViewRefresh()
 
    // Populate object's list
    m_wndListCtrl.DeleteAllItems();
-   NXCLockObjectIndex();
-   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
+   NXCLockObjectIndex(g_hSession);
+   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
       if (!pIndex[i].pObject->bIsDeleted)
          AddObjectToList(pIndex[i].pObject);
-   NXCUnlockObjectIndex();
+   NXCUnlockObjectIndex(g_hSession);
    m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
 }
 
@@ -407,7 +407,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    // Add object's childs
    for(i = 0; i < pObject->dwNumChilds; i++)
    {
-      NXC_OBJECT *pChildObject = NXCFindObjectById(pObject->pdwChildList[i]);
+      NXC_OBJECT *pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
       if (pChildObject != NULL)
          AddObjectToTree(pChildObject, hItem);
    }
@@ -480,7 +480,7 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
    {
-      m_pCurrentObject = NXCFindObjectById(lpnmt->itemNew.lParam);
+      m_pCurrentObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
       m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
    }
    *pResult = 0;
@@ -799,7 +799,7 @@ void CObjectBrowser::OnObjectViewViewastree()
 
    // Display currenly selected item in preview pane
    hItem = m_wndTreeCtrl.GetSelectedItem();
-   m_pCurrentObject = (hItem == NULL) ? NULL : NXCFindObjectById(m_wndTreeCtrl.GetItemData(hItem));
+   m_pCurrentObject = (hItem == NULL) ? NULL : NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
    m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
 }
 
@@ -879,7 +879,7 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
    {
       NXC_OBJECT *pObject;
 
-      pObject = NXCFindObjectByName((char *)lParam);
+      pObject = NXCFindObjectByName(g_hSession, (char *)lParam);
       if (pObject != NULL)
       {
          // Object found, select it in the current view
@@ -1340,7 +1340,7 @@ void CObjectBrowser::OnObjectBind()
    {
       for(i = 0; i < dlg.m_dwNumObjects; i++)
       {
-         dwResult = DoRequestArg2(NXCBindObject, (void *)m_pCurrentObject->dwId,
+         dwResult = DoRequestArg3(NXCBindObject, g_hSession, (void *)m_pCurrentObject->dwId,
                                   (void *)dlg.m_pdwObjectList[i], "Binding objects...");
          if (dwResult != RCC_SUCCESS)
          {
@@ -1603,7 +1603,7 @@ static void GetComparableObjectName(DWORD dwObjectId, TCHAR *pszName)
 {
    NXC_OBJECT *pObject;
 
-   pObject = NXCFindObjectById(dwObjectId);
+   pObject = NXCFindObjectById(g_hSession, dwObjectId);
    if (pObject != NULL)
    {
       // If object has an IP address as name, we sort as numbers

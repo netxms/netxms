@@ -373,7 +373,7 @@ void CMIBBrowserDlg::OnButtonGet()
       dlg.m_dwAllowedClasses = SCL_NODE;
       if (dlg.DoModal() == IDOK)
       {
-         m_pNode = NXCFindObjectById(dlg.m_pdwObjectList[0]);
+         m_pNode = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[0]);
          if (m_pNode != NULL)
          {
             CString strTitle;

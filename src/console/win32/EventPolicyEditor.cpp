@@ -189,10 +189,11 @@ void CEventPolicyEditor::OnClose()
 
       if (iAnswer == IDYES)
       {
-         dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
+         dwResult = DoRequestArg2(NXCSaveEventPolicy, g_hSession, 
+                                  m_pEventPolicy, _T("Saving event processing policy..."));
          if (dwResult != RCC_SUCCESS)
          {
-            theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
+            theApp.ErrorBox(dwResult, _T("Error saving event processing policy: %s"));
             iAnswer = IDCANCEL;  // Will not close window if there are errors
          }
       }
@@ -200,7 +201,8 @@ void CEventPolicyEditor::OnClose()
 
    if (iAnswer != IDCANCEL)
    {
-	   dwResult = DoRequest(NXCCloseEventPolicy, _T("Unlocking event processing policy..."));
+	   dwResult = DoRequestArg1(NXCCloseEventPolicy, g_hSession, 
+                               _T("Unlocking event processing policy..."));
       if (dwResult != RCC_SUCCESS)
          theApp.ErrorBox(dwResult, _T("Error unlocking event processing policy: %s"));
 	   CMDIChildWnd::OnClose();
@@ -331,7 +333,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
 
       for(i = 0; i < m_pEventPolicy->pRuleList[iRow].dwNumSources; i++)
       {
-         pObject = NXCFindObjectById(m_pEventPolicy->pRuleList[iRow].pdwSourceList[i]);
+         pObject = NXCFindObjectById(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwSourceList[i]);
          if (pObject != NULL)
             m_wndRuleList.AddItem(iRow, COL_SOURCE, pObject->szName, 
                                   GetObjectImageIndex(pObject));
@@ -348,8 +350,8 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    {
       for(i = 0; i < m_pEventPolicy->pRuleList[iRow].dwNumEvents; i++)
          m_wndRuleList.AddItem(iRow, COL_EVENT, 
-                               (char *)NXCGetEventName(m_pEventPolicy->pRuleList[iRow].pdwEventList[i]),
-                               m_iImageSeverityBase + NXCGetEventSeverity(m_pEventPolicy->pRuleList[iRow].pdwEventList[i]));
+             (char *)NXCGetEventName(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]),
+             m_iImageSeverityBase + NXCGetEventSeverity(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]));
    }
 
    // Severity
@@ -942,7 +944,7 @@ void CEventPolicyEditor::OnPolicySave()
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
+   dwResult = DoRequestArg2(NXCSaveEventPolicy, g_hSession, m_pEventPolicy, "Saving event processing policy...");
    if (dwResult != RCC_SUCCESS)
    {
       theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");

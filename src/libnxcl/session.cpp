@@ -31,6 +31,7 @@
 NXCL_Session::NXCL_Session()
 {
    m_dwFlags = 0;
+   m_dwMsgId = 0;
    m_pEventHandler = NULL;
    m_dwState = STATE_DISCONNECTED;
    m_dwCommandTimeout = 10000;    // Default timeout is 10 seconds
@@ -41,9 +42,9 @@ NXCL_Session::NXCL_Session()
    m_hSocket = -1;
    m_pItemList = NULL;
 
-   NXC_EVENT_TEMPLATE **m_ppEventTemplates = NULL;
-   DWORD m_dwNumTemplates = 0;
-   MUTEX m_mutexEventAccess = MutexCreate();
+   m_ppEventTemplates = NULL;
+   m_dwNumTemplates = 0;
+   m_mutexEventAccess = MutexCreate();
 
    m_dwNumUsers = 0;
    m_pUserList = NULL;
@@ -397,8 +398,7 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
 DWORD NXCL_Session::LoadEventDB(void)
 {
    CSCPMessage msg;
-   DWORD dwRetCode;
-   DWORD dwRqId;
+   DWORD dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
    PrepareForSync();
@@ -469,14 +469,16 @@ void NXCL_Session::DeleteEDBRecord(DWORD dwEventCode)
 // Add template to list
 //
 
-void NXCL_Session::AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
+void NXCL_Session::AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate, BOOL bLock)
 {
-   MutexLock(m_mutexEventAccess, INFINITE);
+   if (bLock)
+      MutexLock(m_mutexEventAccess, INFINITE);
    m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)realloc(m_ppEventTemplates, 
       sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates + 1));
    m_ppEventTemplates[m_dwNumTemplates] = pEventTemplate;
    m_dwNumTemplates++;
-   MutexUnlock(m_mutexEventAccess);
+   if (bLock)
+      MutexUnlock(m_mutexEventAccess);
 }
 
 

@@ -140,9 +140,10 @@ void CDataCollectionEditor::OnClose()
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg1(NXCCloseNodeDCIList, m_pItemList, "Unlocking node's data collection information...");
+   dwResult = DoRequestArg2(NXCCloseNodeDCIList, g_hSession, m_pItemList,
+                            _T("Unlocking node's data collection information..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, "Unable to close data collection configuration:\n%s");
+      theApp.ErrorBox(dwResult, _T("Unable to close data collection configuration:\n%s"));
 	
 	CMDIChildWnd::OnClose();
 }
@@ -232,16 +233,16 @@ void CDataCollectionEditor::OnItemNew()
 
    if (EditItem(&item))
    {
-      dwResult = DoRequestArg2(NXCCreateNewDCI, m_pItemList, &dwItemId, 
-                               "Creating new data collection item...");
+      dwResult = DoRequestArg3(NXCCreateNewDCI, g_hSession, m_pItemList, &dwItemId, 
+                               _T("Creating new data collection item..."));
       if (dwResult == RCC_SUCCESS)
       {
          dwIndex = NXCItemIndex(m_pItemList, dwItemId);
          item.dwId = dwItemId;
          if (dwIndex != INVALID_INDEX)
          {
-            dwResult = DoRequestArg2(NXCUpdateDCI, (void *)m_pItemList->dwNodeId, &item,
-                                     "Updating data collection item...");
+            dwResult = DoRequestArg3(NXCUpdateDCI, g_hSession, (void *)m_pItemList->dwNodeId,
+                                     &item, _T("Updating data collection item..."));
             if (dwResult == RCC_SUCCESS)
             {
                memcpy(&m_pItemList->pItems[dwIndex], &item, sizeof(NXC_DCI));
@@ -250,13 +251,13 @@ void CDataCollectionEditor::OnItemNew()
             }
             else
             {
-               theApp.ErrorBox(dwResult, "Unable to update data collection item: %s");
+               theApp.ErrorBox(dwResult, _T("Unable to update data collection item: %s"));
             }
          }
       }
       else
       {
-         theApp.ErrorBox(dwResult, "Unable to create new data collection item: %s");
+         theApp.ErrorBox(dwResult, _T("Unable to create new data collection item: %s"));
       }
    }
 }
@@ -285,8 +286,8 @@ void CDataCollectionEditor::OnItemEdit()
                            sizeof(NXC_DCI_THRESHOLD) * item.dwNumThresholds);
          if (EditItem(&item))
          {
-            dwResult = DoRequestArg2(NXCUpdateDCI, (void *)m_pItemList->dwNodeId, &item,
-                                     "Updating data collection item...");
+            dwResult = DoRequestArg3(NXCUpdateDCI, g_hSession, (void *)m_pItemList->dwNodeId,
+                                     &item, _T("Updating data collection item..."));
             if (dwResult == RCC_SUCCESS)
             {
                free(m_pItemList->pItems[dwIndex].pThresholdList);
@@ -328,7 +329,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_iStatus = pItem->iStatus;
    pgCollection.m_strName = pItem->szName;
    pgCollection.m_strDescription = pItem->szDescription;
-   pgCollection.m_pNode = NXCFindObjectById(m_pItemList->dwNodeId);
+   pgCollection.m_pNode = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
 
    // Setup "Transformation" page
    pgTransform.m_iDeltaProc = pItem->iDeltaCalculation;
@@ -426,7 +427,7 @@ void CDataCollectionEditor::OnUpdateFileExport(CCmdUI* pCmdUI)
 {
    NXC_OBJECT *pObject;
 
-   pObject = NXCFindObjectById(m_pItemList->dwNodeId);
+   pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
    if (pObject != NULL)
       pCmdUI->Enable(pObject->iClass == OBJECT_TEMPLATE);
    else
@@ -476,11 +477,11 @@ void CDataCollectionEditor::OnItemDelete()
    while(iItem != -1)
    {
       dwItemId = m_wndListCtrl.GetItemData(iItem);
-      dwResult = DoRequestArg2(NXCDeleteDCI, m_pItemList, (void *)dwItemId,
-                               "Deleting data collection item...");
+      dwResult = DoRequestArg3(NXCDeleteDCI, g_hSession, m_pItemList, (void *)dwItemId,
+                               _T("Deleting data collection item..."));
       if (dwResult != RCC_SUCCESS)
       {
-         theApp.ErrorBox(dwResult, "Unable to delete data collection item: %s");
+         theApp.ErrorBox(dwResult, _T("Unable to delete data collection item: %s"));
          break;
       }
       m_wndListCtrl.DeleteItem(iItem);
@@ -515,7 +516,7 @@ void CDataCollectionEditor::OnItemShowdata()
    {
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
-      pObject = NXCFindObjectById(m_pItemList->dwNodeId);
+      pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
       sprintf(szBuffer, "%s - %s", pObject->szName, 
               m_pItemList->pItems[dwIndex].szDescription);
       theApp.ShowDCIData(m_pItemList->dwNodeId, dwItemId, szBuffer);
@@ -540,7 +541,7 @@ void CDataCollectionEditor::OnItemGraph()
    {
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
-      pObject = NXCFindObjectById(m_pItemList->dwNodeId);
+      pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
       sprintf(szBuffer, "%s - %s", pObject->szName, 
               m_pItemList->pItems[dwIndex].szDescription);
       theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwItemId, szBuffer);
@@ -572,7 +573,7 @@ static DWORD __cdecl CopyItems(DWORD dwSourceNode, DWORD dwNumObjects, DWORD *pd
 
    for(i = 0; i < dwNumObjects; i++)
    {
-      dwResult = NXCCopyDCI(dwSourceNode, pdwObjectList[i], dwNumItems, pdwItemList);
+      dwResult = NXCCopyDCI(g_hSession, dwSourceNode, pdwObjectList[i], dwNumItems, pdwItemList);
       if (dwResult != RCC_SUCCESS)
          break;
    }
@@ -646,9 +647,9 @@ void CDataCollectionEditor::OnItemDuplicate()
       }
 
       // Perform request(s) to server
-      dwResult = DoRequestArg4(NXCCopyDCI, (void *)m_pItemList->dwNodeId, 
-               (void *)m_pItemList->dwNodeId, (void *)dwNumItems, 
-               pdwItemList, "Copying items...");
+      dwResult = DoRequestArg5(NXCCopyDCI, g_hSession, (void *)m_pItemList->dwNodeId, 
+                               (void *)m_pItemList->dwNodeId, (void *)dwNumItems, 
+                               pdwItemList, _T("Copying items..."));
       if (dwResult != RCC_SUCCESS)
          theApp.ErrorBox(dwResult, "Error copying items: %s");
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -688,11 +689,12 @@ void CDataCollectionEditor::OnViewRefresh()
    dwObjectId = m_pItemList->dwNodeId;
 
    // Re-open node's DCI list
-   dwResult = DoRequestArg1(NXCCloseNodeDCIList, m_pItemList, "Unlocking node's data collection information...");
+   dwResult = DoRequestArg2(NXCCloseNodeDCIList, g_hSession, m_pItemList,
+                            _T("Unlocking node's data collection information..."));
    if (dwResult != RCC_SUCCESS)
       theApp.ErrorBox(dwResult, "Unable to close data collection configuration:\n%s");
 
-   dwResult = DoRequestArg2(NXCOpenNodeDCIList, (void *)dwObjectId, 
+   dwResult = DoRequestArg3(NXCOpenNodeDCIList, g_hSession, (void *)dwObjectId, 
                             &m_pItemList, "Loading node's data collection information...");
    if (dwResult != RCC_SUCCESS)
       theApp.ErrorBox(dwResult, "Unable to load data collection information for node:\n%s");
@@ -748,7 +750,7 @@ void CDataCollectionEditor::ChangeItemsStatus(int iStatus)
       }
 
       // Send request to server
-      dwResult = DoRequestArg4(NXCSetDCIStatus, (void *)m_pItemList->dwNodeId,
+      dwResult = DoRequestArg5(NXCSetDCIStatus, g_hSession, (void *)m_pItemList->dwNodeId,
                                (void *)dwNumItems, pdwItemList, (void *)iStatus,
                                _T("Updating DCI status..."));
       if (dwResult == RCC_SUCCESS)

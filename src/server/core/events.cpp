@@ -326,7 +326,14 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
    pEventData->dwEventCode = htonl(m_dwCode);
    pEventData->dwSeverity = htonl(m_dwSeverity);
    pEventData->dwSourceId = htonl(m_dwSource);
-   strcpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText));
+
+#ifdef UNICODE
+   _tcsncpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText), MAX_EVENT_MSG_LENGTH);
+#else
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL(m_pszMessageText), -1, 
+                       (WCHAR *)pEventData->szMessage, MAX_EVENT_MSG_LENGTH);
+#endif
+   SwapWideString((WCHAR *)pEventData->szMessage);
 }
 
 

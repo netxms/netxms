@@ -130,13 +130,13 @@ void CDCIDataView::OnViewRefresh()
    NXC_DCI_DATA *pData;
 
    m_wndListCtrl.DeleteAllItems();
-   dwResult = DoRequestArg6(NXCGetDCIData, (void *)m_dwNodeId, (void *)m_dwItemId,
-                            (void *)1000, 0, 0, &pData, "Loading item data...");
+   dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_dwNodeId, (void *)m_dwItemId,
+                            (void *)1000, 0, 0, &pData, _T("Loading item data..."));
    if (dwResult == RCC_SUCCESS)
    {
       DWORD i;
       NXC_DCI_ROW *pRow;
-      char szBuffer[256];
+      TCHAR szBuffer[256];
 
       for(i = 0, pRow = pData->pRows; i < pData->dwNumRows; i++)
       {
@@ -182,10 +182,10 @@ void CDCIDataView::OnViewRefresh()
    }
    else
    {
-      theApp.ErrorBox(dwResult, "Unable to retrieve colected data: %s");
+      theApp.ErrorBox(dwResult, _T("Unable to retrieve colected data: %s"));
       iItem = m_wndListCtrl.InsertItem(0, "");
       if (iItem != -1)
-         m_wndListCtrl.SetItemText(iItem, 1, "ERROR LOADING DATA FROM SERVER");
+         m_wndListCtrl.SetItemText(iItem, 1, _T("ERROR LOADING DATA FROM SERVER"));
    }
 }
 

@@ -1063,6 +1063,9 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
    CSCPMessage msg;
    DB_ASYNC_RESULT hResult;
    NXC_EVENT event;
+#ifndef UNICODE
+   char szBuffer[MAX_EVENT_MSG_LENGTH];
+#endif
 
    // Send confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1087,8 +1090,16 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
          event.dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 2));
          event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 3));
          event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 4));
+#ifdef UNICODE
          DBGetFieldAsync(hResult, 5, event.szMessage, MAX_EVENT_MSG_LENGTH);
          DecodeSQLString(event.szMessage);
+#else
+         DBGetFieldAsync(hResult, 5, szBuffer, MAX_EVENT_MSG_LENGTH);
+         DecodeSQLString(szBuffer);
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBuffer, -1, 
+                             (WCHAR *)event.szMessage, MAX_EVENT_MSG_LENGTH);
+#endif
+         SwapWideString((WCHAR *)event.szMessage);
          m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, sizeof(NXC_EVENT), &event, NULL));
       }
       DBFreeAsyncResult(hResult);

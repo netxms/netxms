@@ -199,6 +199,10 @@ SOURCE=..\..\include\nxcscpapi.h
 
 SOURCE=..\..\include\nxevent.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\include\unicode.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

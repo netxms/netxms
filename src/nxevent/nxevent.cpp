@@ -55,6 +55,7 @@ static void DebugCallback(char *pMsg)
 static void SendEvent(int iNumArgs, TCHAR **pArgList)
 {
    DWORD dwResult;
+   NXC_SESSION hSession;
 
    if (!NXCInitialize())
    {
@@ -64,19 +65,19 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList)
    {
       if (m_bDebug)
          NXCSetDebugCallback(DebugCallback);
-      NXCSetCommandTimeout(m_dwTimeOut * 1000);
 
-      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword);
+      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &hSession);
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
       }
       else
       {
-         dwResult = NXCSendEvent(m_dwEventCode, m_dwObjectId, iNumArgs, pArgList);
+         NXCSetCommandTimeout(hSession, m_dwTimeOut * 1000);
+         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, pArgList);
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
-         NXCDisconnect();
+         NXCDisconnect(hSession);
       }
    }
 }

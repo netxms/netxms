@@ -69,9 +69,9 @@ void CDataQueryDlg::OnButtonRestart()
    DWORD dwResult;
    TCHAR szBuffer[1024];
 
-   dwResult = DoRequestArg5(NXCQueryParameter, (void *)m_dwObjectId, (void *)m_iOrigin,
-                            (void *)((LPCTSTR)m_strParameter), szBuffer, 
-                            (void *)1024, _T("Querying agent..."));
+   dwResult = DoRequestArg6(NXCQueryParameter, g_hSession, (void *)m_dwObjectId,
+                            (void *)m_iOrigin, (void *)((LPCTSTR)m_strParameter),
+                            szBuffer, (void *)1024, _T("Querying agent..."));
    if (dwResult == RCC_SUCCESS)
    {
       m_wndEditValue.SetWindowText(szBuffer);

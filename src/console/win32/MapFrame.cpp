@@ -132,15 +132,15 @@ void CMapFrame::OnViewRefresh()
    m_wndMapView.DeleteAllItems();
    if (m_pRootObject == NULL)
    {
-      pObject = NXCGetTopologyRootObject();
+      pObject = NXCGetTopologyRootObject(g_hSession);
       if (pObject != NULL)
          AddObjectToView(pObject);
 
-      pObject = NXCGetServiceRootObject();
+      pObject = NXCGetServiceRootObject(g_hSession);
       if (pObject != NULL)
          AddObjectToView(pObject);
    
-      pObject = NXCGetTemplateRootObject();
+      pObject = NXCGetTemplateRootObject(g_hSession);
       if (pObject != NULL)
          AddObjectToView(pObject);
 
@@ -151,7 +151,7 @@ void CMapFrame::OnViewRefresh()
    {
       for(i = 0; i < m_pRootObject->dwNumChilds; i++)
       {
-         pObject = NXCFindObjectById(m_pRootObject->pdwChildList[i]);
+         pObject = NXCFindObjectById(g_hSession, m_pRootObject->pdwChildList[i]);
          if (pObject != NULL)
             if (!pObject->bIsDeleted)
                AddObjectToView(pObject);
@@ -232,7 +232,7 @@ void CMapFrame::OnObjectOpenparent()
       {
          if (m_pRootObject->dwNumParents > 0)
          {
-            m_pRootObject = NXCFindObjectById(m_pRootObject->pdwParentList[0]);
+            m_pRootObject = NXCFindObjectById(g_hSession, m_pRootObject->pdwParentList[0]);
          }
          else
          {

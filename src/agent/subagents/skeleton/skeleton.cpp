@@ -91,7 +91,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SKELETON"), _T("1.0"), UnloadHandler,
+	_T("SKELETON"), _T("1.0"), UnloadHandler, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),

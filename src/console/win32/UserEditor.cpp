@@ -69,7 +69,7 @@ BOOL CUserEditor::PreCreateWindow(CREATESTRUCT& cs)
 
 void CUserEditor::OnClose() 
 {
-   DoRequest(NXCUnlockUserDB, "Unlocking user database...");
+   DoRequestArg1(NXCUnlockUserDB, g_hSession, "Unlocking user database...");
 	CMDIChildWnd::OnClose();
 }
 
@@ -178,7 +178,7 @@ void CUserEditor::OnViewRefresh()
    m_wndListCtrl.DeleteAllItems();
    
    // Fill in list view
-   if (NXCGetUserDB(&pUserList, &dwNumUsers))
+   if (NXCGetUserDB(g_hSession, &pUserList, &dwNumUsers))
    {
       for(i = 0; i < dwNumUsers; i++)
          if (!(pUserList[i].wFlags & UF_DELETED))
@@ -228,8 +228,8 @@ void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bSho
    DWORD dwResult, dwNewId;
 
    // Send request to server
-   dwResult = DoRequestArg3(NXCCreateUser, (void *)pszName, (void *)bIsGroup, &dwNewId,
-                            bIsGroup ? "Creating new group..." : "Creating new user...");
+   dwResult = DoRequestArg4(NXCCreateUser, g_hSession, (void *)pszName, (void *)bIsGroup, 
+                            &dwNewId, bIsGroup ? "Creating new group..." : "Creating new user...");
    if (dwResult == RCC_SUCCESS)
    {
       int iItem, iOldItem;
@@ -340,7 +340,7 @@ void CUserEditor::OnUserProperties()
       NXC_USER *pUser;
 
       dwId = m_wndListCtrl.GetItemData(iItem);
-      pUser = NXCFindUserById(dwId);
+      pUser = NXCFindUserById(g_hSession, dwId);
       if (pUser != NULL)
       {
          NXC_USER userInfo;
@@ -429,7 +429,7 @@ void CUserEditor::OnUserProperties()
          {
             DWORD dwResult;
 
-            dwResult = DoRequestArg1(NXCModifyUser, &userInfo, "Updating user database...");
+            dwResult = DoRequestArg2(NXCModifyUser, g_hSession, &userInfo, "Updating user database...");
             if (dwResult != RCC_SUCCESS)
                theApp.ErrorBox(dwResult, "Cannot modify user record: %s");
 
@@ -474,7 +474,7 @@ void CUserEditor::OnUserDelete()
       {
          NXC_USER *pUser;
 
-         pUser = NXCFindUserById(dwId);
+         pUser = NXCFindUserById(g_hSession, dwId);
          if (pUser != NULL)
          {
             char szBuffer[256];
@@ -485,7 +485,7 @@ void CUserEditor::OnUserDelete()
             {
                DWORD dwResult;
 
-               dwResult = DoRequestArg1(NXCDeleteUser, (void *)dwId, "Deleting user...");
+               dwResult = DoRequestArg2(NXCDeleteUser, g_hSession, (void *)dwId, "Deleting user...");
                if (dwResult != RCC_SUCCESS)
                   theApp.ErrorBox(dwResult, "Cannot delete user record: %s");
             }
@@ -550,7 +550,7 @@ void CUserEditor::OnUserSetpassword()
 
       dwId = m_wndListCtrl.GetItemData(iItem);
 
-      pUser = NXCFindUserById(dwId);
+      pUser = NXCFindUserById(g_hSession, dwId);
       if (pUser != NULL)
       {
          CPasswordChangeDlg dlg;
@@ -559,7 +559,7 @@ void CUserEditor::OnUserSetpassword()
          {
             DWORD dwResult;
 
-            dwResult = DoRequestArg2(NXCSetPassword, (void *)dwId, dlg.m_szPassword, "Changing password...");
+            dwResult = DoRequestArg3(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword, "Changing password...");
             if (dwResult != RCC_SUCCESS)
                theApp.ErrorBox(dwResult, "Cannot change password: %s");
             else

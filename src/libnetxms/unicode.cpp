@@ -95,7 +95,7 @@ DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr)
 {
    char szBuffer[256];
 
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszAddr, -1, szBuffer, 256, NULL, NULL);
    return inet_addr(szBuffer);
 }

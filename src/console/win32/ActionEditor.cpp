@@ -140,7 +140,7 @@ void CActionEditor::OnSize(UINT nType, int cx, int cy)
 
 void CActionEditor::OnClose() 
 {
-   DoRequest(NXCUnlockActionDB, "Unlocking action configuration database...");
+   DoRequestArg1(NXCUnlockActionDB, g_hSession, "Unlocking action configuration database...");
 	CMDIChildWnd::OnClose();
 }
 
@@ -254,7 +254,7 @@ void CActionEditor::OnActionNew()
 
    if (dlg.DoModal() == IDOK)
    {
-      dwResult = DoRequestArg2(NXCCreateAction, (void *)((LPCTSTR)dlg.m_strName), 
+      dwResult = DoRequestArg3(NXCCreateAction, g_hSession, (void *)((LPCTSTR)dlg.m_strName), 
                                &dwActionId, "Creating new action...");
       if (dwResult == RCC_SUCCESS)
       {
@@ -332,7 +332,7 @@ void CActionEditor::OnActionProperties()
                strncpy(action.szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
                strncpy(action.szRcptAddr, (LPCTSTR)dlg.m_strRcpt, MAX_RCPT_ADDR_LEN);
 
-               dwResult = DoRequestArg1(NXCModifyAction, &action, "Updating action configuration...");
+               dwResult = DoRequestArg2(NXCModifyAction, g_hSession, &action, "Updating action configuration...");
                if (dwResult == RCC_SUCCESS)
                {
                   ReplaceItem(iItem, &action);

@@ -45,7 +45,7 @@ NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
 
 void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pEventTemplate)
 {
-   ((NXCL_Session *)hSession)->AddEventTemplate(pEventTemplate);
+   ((NXCL_Session *)hSession)->AddEventTemplate(pEventTemplate, TRUE);
 }
 
 
@@ -81,7 +81,7 @@ void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
          pEventTemplate->pszMessage = pMsg->GetVariableStr(VID_MESSAGE, NULL, 0);
          pEventTemplate->pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION, NULL, 0);
-         pSession->AddEventTemplate(pEventTemplate);
+         pSession->AddEventTemplate(pEventTemplate, FALSE);
       }
       else
       {

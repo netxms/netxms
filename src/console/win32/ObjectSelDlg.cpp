@@ -87,8 +87,8 @@ BOOL CObjectSelDlg::OnInitDialog()
    }
 
    // Fill in object list
-   NXCLockObjectIndex();
-   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
+   NXCLockObjectIndex(g_hSession);
+   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
       if (dwClassMask[pIndex[i].pObject->iClass] & m_dwAllowedClasses)
       {
@@ -97,7 +97,7 @@ BOOL CObjectSelDlg::OnInitDialog()
          m_wndListCtrl.SetItemText(iItem, 1, g_szObjectClass[pIndex[i].pObject->iClass]);
          m_wndListCtrl.SetItemData(iItem, pIndex[i].pObject->dwId);
       }
-   NXCUnlockObjectIndex();
+   NXCUnlockObjectIndex(g_hSession);
 
 	return TRUE;
 }

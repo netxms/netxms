@@ -172,8 +172,9 @@ void CGraphFrame::OnViewRefresh()
 
    for(i = 0; i < m_dwNumItems; i++)
    {
-      dwResult = DoRequestArg6(NXCGetDCIData, (void *)m_pdwNodeId[i], (void *)m_pdwItemId[i],
-                               0, (void *)m_dwTimeFrom, (void *)m_dwTimeTo, &pData, "Loading item data...");
+      dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_pdwNodeId[i], 
+                               (void *)m_pdwItemId[i], 0, (void *)m_dwTimeFrom,
+                               (void *)m_dwTimeTo, &pData, "Loading item data...");
       if (dwResult == RCC_SUCCESS)
       {
          m_wndGraph.SetData(i, pData);

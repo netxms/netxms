@@ -34,6 +34,13 @@
 
 
 //
+// Session handle
+//
+
+NXC_SESSION g_hSession = NULL;
+
+
+//
 // Connection parameters
 //
 

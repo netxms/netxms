@@ -157,15 +157,15 @@ void CNodeSummary::UpdateStatus()
    
    memset(m_dwNodeStats, 0, sizeof(DWORD) * OBJECT_STATUS_COUNT);
    m_dwTotalNodes = 0;
-   NXCLockObjectIndex();
-   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
+   NXCLockObjectIndex(g_hSession);
+   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
       if (pIndex[i].pObject->iClass == OBJECT_NODE)
       {
          m_dwNodeStats[pIndex[i].pObject->iStatus]++;
          m_dwTotalNodes++;
       }
-   NXCUnlockObjectIndex();
+   NXCUnlockObjectIndex(g_hSession);
 }
 
 

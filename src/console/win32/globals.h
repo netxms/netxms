@@ -105,6 +105,7 @@ struct RqData
    void *pArg4;
    void *pArg5;
    void *pArg6;
+   void *pArg7;
 };
 
 
@@ -145,6 +146,8 @@ DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
                     void *pArg5, char *pszInfoText);
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, char *pszInfoText);
+DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, void *pArg6, void *pArg7, char *pszInfoText);
 DWORD WINAPI PollerThread(void *pArg);
 
 
@@ -199,6 +202,7 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction);
 // Variables
 //
 
+extern NXC_SESSION g_hSession;
 extern DWORD g_dwOptions;
 extern char g_szServer[];
 extern char g_szLogin[];

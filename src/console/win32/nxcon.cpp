@@ -28,16 +28,6 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
-// Wrapper for client library event handler
-//
-
-static void ClientEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
-{
-   theApp.EventHandler(dwEvent, dwCode, pArg);
-}
-
-
-//
 // Wrapper for client library debug callback
 //
 
@@ -187,7 +177,6 @@ BOOL CConsoleApp::InitInstance()
 		AfxMessageBox(IDS_NXC_INIT_FAILED, MB_OK | MB_ICONSTOP);
 		return FALSE;
    }
-   NXCSetEventHandler(ClientEventHandler);
 
 	AfxEnableControlContainer();
 
@@ -314,7 +303,7 @@ BOOL CConsoleApp::InitInstance()
 	   pFrame->ShowWindow(m_nCmdShow);
    }
 	pFrame->UpdateWindow();
-   //pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
+   pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
    pFrame->PostMessage(WM_COMMAND, ID_CONNECT_TO_SERVER, 0);
 
 	return TRUE;
@@ -326,7 +315,7 @@ BOOL CConsoleApp::InitInstance()
 int CConsoleApp::ExitInstance() 
 {
    NXCSetDebugCallback(NULL);
-   NXCDisconnect();
+   NXCDisconnect(g_hSession);
    NXCShutdown();
    NXCDestroyCCList(g_pCCList);
 
@@ -664,10 +653,6 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
    switch(dwEvent)
    {
-      case NXC_EVENT_STATE_CHANGED:
-         m_dwClientState = dwCode;
-         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_STATE_CHANGE, dwCode, (LPARAM)pArg);
-         break;
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_bEventBrowserActive)
             m_pwndEventBrowser->AddEvent((NXC_EVENT *)pArg);
@@ -725,7 +710,7 @@ void CConsoleApp::OnControlpanelEvents()
    {
       DWORD dwResult;
 
-      dwResult = DoRequest(NXCLockEventDB, "Locking event configuration database...");
+      dwResult = DoRequestArg1(NXCLockEventDB, g_hSession, "Locking event configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -754,7 +739,7 @@ void CConsoleApp::OnControlpanelUsers()
    {
       DWORD dwResult;
 
-      dwResult = DoRequest(NXCLockUserDB, "Locking user database...");
+      dwResult = DoRequestArg1(NXCLockUserDB, g_hSession, "Locking user database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -820,7 +805,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    NXC_OBJECT *pObject;
    char szBuffer[32];
 
-   pObject = NXCFindObjectById(dwObjectId);
+   pObject = NXCFindObjectById(g_hSession, dwObjectId);
    if (pObject != NULL)
    {
       // Create "General" tab
@@ -894,7 +879,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
    pWnd = (CDataCollectionEditor *)FindOpenDCEditor(pObject->dwId);
    if (pWnd == NULL)
    {
-      dwResult = DoRequestArg2(NXCOpenNodeDCIList, (void *)pObject->dwId, 
+      dwResult = DoRequestArg3(NXCOpenNodeDCIList, g_hSession, (void *)pObject->dwId, 
                                &pItemList, "Loading node's data collection information...");
       if (dwResult == RCC_SUCCESS)
       {
@@ -965,7 +950,7 @@ void CConsoleApp::SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged)
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg2(NXCSetObjectMgmtStatus, (void *)pObject->dwId, 
+   dwResult = DoRequestArg3(NXCSetObjectMgmtStatus, g_hSession, (void *)pObject->dwId, 
                             (void *)bIsManaged, "Changing object status...");
    if (dwResult != RCC_SUCCESS)
    {
@@ -1117,7 +1102,7 @@ void CConsoleApp::OnControlpanelEventpolicy()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCOpenEventPolicy, &m_pEventPolicy, "Loading event processing policy...");
+      dwResult = DoRequestArg2(NXCOpenEventPolicy, g_hSession, &m_pEventPolicy, "Loading event processing policy...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -1194,7 +1179,7 @@ void CConsoleApp::OnControlpanelActions()
    {
       DWORD dwResult;
 
-      dwResult = DoRequest(NXCLockActionDB, "Locking action configuration database...");
+      dwResult = DoRequestArg1(NXCLockActionDB, g_hSession, "Locking action configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -1225,7 +1210,7 @@ void CConsoleApp::OnControlpanelSnmptraps()
    {
       DWORD dwResult;
 
-      dwResult = DoRequest(NXCLockTrapCfg, "Locking SNMP trap configuration database...");
+      dwResult = DoRequestArg1(NXCLockTrapCfg, g_hSession, "Locking SNMP trap configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -1267,7 +1252,7 @@ void CConsoleApp::CreateObject(NXC_OBJECT_CREATE_INFO *pInfo)
 {
    DWORD dwResult, dwObjectId;
 
-   dwResult = DoRequestArg2(NXCCreateObject, pInfo, &dwObjectId, "Creating object...");
+   dwResult = DoRequestArg3(NXCCreateObject, g_hSession, pInfo, &dwObjectId, "Creating object...");
    if (dwResult != RCC_SUCCESS)
    {
       ErrorBox(dwResult, "Error creating object: %s");
@@ -1284,7 +1269,7 @@ void CConsoleApp::CreateContainer(DWORD dwParent)
    NXC_OBJECT_CREATE_INFO ci;
    CCreateContainerDlg dlg;
 
-   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
           (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
@@ -1310,7 +1295,7 @@ void CConsoleApp::CreateNode(DWORD dwParent)
    NXC_OBJECT_CREATE_INFO ci;
    CCreateNodeDlg dlg;
 
-   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
           (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
@@ -1336,7 +1321,7 @@ void CConsoleApp::CreateTemplate(DWORD dwParent)
    NXC_OBJECT_CREATE_INFO ci;
    CCreateTemplateDlg dlg;
 
-   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_TEMPLATEGROUP) &&
           (dlg.m_pParentObject->iClass != OBJECT_TEMPLATEROOT))
@@ -1360,7 +1345,7 @@ void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
    NXC_OBJECT_CREATE_INFO ci;
    CCreateTGDlg dlg;
 
-   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_TEMPLATEGROUP) &&
           (dlg.m_pParentObject->iClass != OBJECT_TEMPLATEROOT))
@@ -1384,7 +1369,7 @@ void CConsoleApp::DeleteNetXMSObject(NXC_OBJECT *pObject)
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg1(NXCDeleteObject, (void *)pObject->dwId, "Deleting object...");
+   dwResult = DoRequestArg2(NXCDeleteObject, g_hSession, (void *)pObject->dwId, "Deleting object...");
    if (dwResult != RCC_SUCCESS)
       ErrorBox(dwResult, "Unable to delete object: %s");
 }
@@ -1428,7 +1413,7 @@ void CConsoleApp::WakeUpNode(DWORD dwObjectId)
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg1(NXCWakeUpNode, (void *)dwObjectId, _T("Sending Wake-On-LAN magic packet to node..."));
+   dwResult = DoRequestArg2(NXCWakeUpNode, g_hSession, (void *)dwObjectId, _T("Sending Wake-On-LAN magic packet to node..."));
    if (dwResult != RCC_SUCCESS)
       ErrorBox(dwResult, _T("Unable to send WOL magic packet: %s"));
    else

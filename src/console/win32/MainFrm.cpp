@@ -182,7 +182,7 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnUpdateEventList(void) 
 {
-   DoRequest(NXCLoadEventDB, "Reloading event information...");
+   DoRequestArg1(NXCLoadEventDB, g_hSession, "Reloading event information...");
 }
 
 

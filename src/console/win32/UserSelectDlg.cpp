@@ -75,7 +75,7 @@ BOOL CUserSelectDlg::OnInitDialog()
    m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
 
    // Fill in list view
-   if (NXCGetUserDB(&pUserList, &dwNumUsers))
+   if (NXCGetUserDB(g_hSession, &pUserList, &dwNumUsers))
    {
       for(i = 0; i < dwNumUsers; i++)
          if (!(pUserList[i].wFlags & UF_DELETED))

@@ -69,9 +69,19 @@ static DWORD CheckMIBFile(char *pszName, BYTE *pHash)
    {
       strcpy(szFileName, g_szWorkDir);
       strcat(szFileName, WORKDIR_MIBCACHE);
-      dwResult = NXCDownloadMIBFile(pszName, szFileName);
+      dwResult = NXCDownloadMIBFile(g_hSession, pszName, szFileName);
    }
    return dwResult;
+}
+
+
+//
+// Wrapper for client library event handler
+//
+
+static void ClientEventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   theApp.EventHandler(dwEvent, dwCode, pArg);
 }
 
 
@@ -84,32 +94,34 @@ static DWORD WINAPI LoginThread(void *pArg)
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
    DWORD dwResult;
 
-   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword);
+   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession);
 
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
+      NXCSetEventHandler(g_hSession, ClientEventHandler);
+
       SetInfoText(hWnd, "Loading container categories...");
-      dwResult = NXCLoadCCList(&g_pCCList);
+      dwResult = NXCLoadCCList(g_hSession, &g_pCCList);
    }
 
    // Synchronize objects
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Synchronizing objects...");
-      dwResult = NXCSyncObjects();
+      dwResult = NXCSyncObjects(g_hSession);
    }
 
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Loading user database...");
-      dwResult = NXCLoadUserDB();
+      dwResult = NXCLoadUserDB(g_hSession);
    }
 
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Loading action configuration...");
-      dwResult = NXCLoadActions(&g_dwNumActions, &g_pActionList);
+      dwResult = NXCLoadActions(g_hSession, &g_dwNumActions, &g_pActionList);
       if (dwResult == RCC_ACCESS_DENIED)
          dwResult = RCC_SUCCESS;    // User may not have rights to see actions, it's ok here
    }
@@ -120,7 +132,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       DWORD i;
 
       SetInfoText(hWnd, "Loading and initializing MIB files...");
-      dwResult = NXCGetMIBList(&pMibList);
+      dwResult = NXCGetMIBList(g_hSession, &pMibList);
       if (dwResult == RCC_SUCCESS)
       {
          for(i = 0; i < pMibList->dwNumFiles; i++)
@@ -135,7 +147,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Loading event information...");
-      dwResult = NXCLoadEventDB();
+      dwResult = NXCLoadEventDB(g_hSession);
    }
 
    // Synchronize images
@@ -146,7 +158,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       SetInfoText(hWnd, "Synchronizing images...");
       strcpy(szCacheDir, g_szWorkDir);
       strcat(szCacheDir, WORKDIR_IMAGECACHE);
-      dwResult = NXCSyncImages(&g_pSrvImageList, szCacheDir, IMAGE_FORMAT_ICO);
+      dwResult = NXCSyncImages(g_hSession, &g_pSrvImageList, szCacheDir, IMAGE_FORMAT_ICO);
       if (dwResult == RCC_SUCCESS)
          CreateObjectImageList();
    }
@@ -157,7 +169,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       DWORD i, *pdwClassId, *pdwImageId;
 
       SetInfoText(hWnd, "Loading default image list...");
-      dwResult = NXCLoadDefaultImageList(&g_dwDefImgListSize, &pdwClassId, &pdwImageId);
+      dwResult = NXCLoadDefaultImageList(g_hSession, &g_dwDefImgListSize, &pdwClassId, &pdwImageId);
       if (dwResult == RCC_SUCCESS)
       {
          g_pDefImgList = (DEF_IMG *)realloc(g_pDefImgList, sizeof(DEF_IMG) * g_dwDefImgListSize);
@@ -174,7 +186,7 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
-      NXCDisconnect();
+      NXCDisconnect(g_hSession);
 
    PostMessage(hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;
@@ -244,6 +256,11 @@ static DWORD WINAPI RequestThread(void *pArg)
       case 6:
          dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
                                  pData->pArg4, pData->pArg5, pData->pArg6);
+         break;
+      case 7:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+                                 pData->pArg4, pData->pArg5, pData->pArg6,
+                                 pData->pArg7);
          break;
    }
    if (pData->hWnd != NULL)
@@ -423,6 +440,29 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 
 
 //
+// Perform request with 7 parameter
+//
+
+DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, void *pArg6, void *pArg7, char *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 7;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pArg3 = pArg3;
+   rqData.pArg4 = pArg4;
+   rqData.pArg5 = pArg5;
+   rqData.pArg6 = pArg6;
+   rqData.pArg7 = pArg7;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
 // Callback function for node poller
 //
 
@@ -442,9 +482,8 @@ DWORD WINAPI PollerThread(void *pArg)
    RqData *pData = (RqData *)pArg;
    DWORD dwResult;
 
-theApp.DebugPrintf("Starting poll...");
-   dwResult = NXCPollNode((DWORD)pData->pArg1, (int)pData->pArg2, PollerCallback, pArg);
-theApp.DebugPrintf("poll complete: %d", dwResult);
+   dwResult = NXCPollNode(g_hSession, (DWORD)pData->pArg1, (int)pData->pArg2, 
+                          PollerCallback, pArg);
    if (pData->hWnd != NULL)
       PostMessage(pData->hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;

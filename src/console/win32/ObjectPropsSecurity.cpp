@@ -107,7 +107,7 @@ BOOL CObjectPropsSecurity::OnInitDialog()
    // Populate user list with current ACL data
    for(i = 0; i < m_dwAclSize; i++)
    {
-      pUser = NXCFindUserById(m_pAccessList[i].dwUserId);
+      pUser = NXCFindUserById(g_hSession, m_pAccessList[i].dwUserId);
       if (pUser != NULL)
       {
          iItem = m_wndUserList.InsertItem(0x7FFFFFFF, pUser->szName,
@@ -188,7 +188,7 @@ void CObjectPropsSecurity::OnAddUser()
          m_dwAclSize++;
 
          // Add new line to user list
-         pUser = NXCFindUserById(wndSelectDlg.m_dwUserId);
+         pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_dwUserId);
          if (pUser != NULL)
          {
             iItem = m_wndUserList.InsertItem(0x7FFFFFFF, pUser->szName,
@@ -231,7 +231,7 @@ void CObjectPropsSecurity::OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResul
    if (pNMListView->iItem != -1)
       if ((pNMListView->uChanged & LVIF_STATE) && (pNMListView->uNewState & LVIS_FOCUSED))
       {
-         pUser = NXCFindUserById(m_wndUserList.GetItemData(pNMListView->iItem));
+         pUser = NXCFindUserById(g_hSession, m_wndUserList.GetItemData(pNMListView->iItem));
          if (pUser != NULL)   // It should't be NULL
          {
             // Find user in ACL

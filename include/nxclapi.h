@@ -443,7 +443,11 @@ typedef struct
    DWORD dwEventCode;
    DWORD dwSourceId;
    DWORD dwSeverity;
-   TCHAR  szMessage[MAX_EVENT_MSG_LENGTH];
+#ifdef UNICODE
+   WCHAR szMessage[MAX_EVENT_MSG_LENGTH];
+#else
+   char szMessage[MAX_EVENT_MSG_LENGTH * sizeof(WCHAR)];
+#endif
 } NXC_EVENT;
 
 
@@ -871,7 +875,7 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, DWORD dwObjectId, int
 DWORD LIBNXCL_EXPORTABLE NXCWakeUpNode(NXC_SESSION hSession, DWORD dwObjectId);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);
-void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_SESSION hSession, NXC_CC_LIST *pList);
+void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession);

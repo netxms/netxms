@@ -65,6 +65,19 @@ double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
 
 
 //
+// Swap bytes in wide string
+//
+
+void LIBNETXMS_EXPORTABLE __bswap_wstr(WCHAR *pStr)
+{
+   WCHAR *pch;
+
+   for(pch = pStr; *pch != 0; pch++)
+      *pch = htons(*pch);
+}
+
+
+//
 // strupr() implementation for non-windows platforms
 //
 

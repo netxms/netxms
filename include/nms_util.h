@@ -152,16 +152,18 @@ typedef struct _dir_struc
 //
 
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define htonq(x) __bswap_64(x)
-#define ntohq(x) __bswap_64(x)
-#define htond(x) __bswap_double(x)
-#define ntohd(x) __bswap_double(x)
-#else
+#if WORDS_BIGENDIAN
 #define htonq(x) (x)
 #define ntohq(x) (x)
 #define htond(x) (x)
 #define ntohd(x) (x)
+#define SwapWideString(x)
+#else
+#define htonq(x) __bswap_64(x)
+#define ntohq(x) __bswap_64(x)
+#define htond(x) __bswap_double(x)
+#define ntohd(x) __bswap_double(x)
+#define SwapWideString(x)  __bswap_wstr(x)
 #endif
 
 #ifdef __cplusplus
@@ -172,6 +174,7 @@ extern "C"
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
    double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
+   void LIBNETXMS_EXPORTABLE __bswap_wstr(WCHAR *pStr);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
    void LIBNETXMS_EXPORTABLE strupr(TCHAR *in);

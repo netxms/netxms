@@ -32,6 +32,9 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
 {
    NXC_EVENT *pEvent;
    WORD wCode;
+#ifdef UNICODE
+   WCHAR *pSrc, *pDst;
+#endif
 
    wCode = (pMsg != NULL) ? pMsg->GetCode() : pRawMsg->wCode;
 
@@ -45,12 +48,29 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
          {
             // Allocate new event structure and fill it with values from message
             pEvent = (NXC_EVENT *)malloc(sizeof(NXC_EVENT));
-            memcpy(pEvent, pRawMsg->df, sizeof(NXC_EVENT));
-            pEvent->dwEventCode = ntohl(pEvent->dwEventCode);
-            pEvent->qwEventId = ntohq(pEvent->qwEventId);
-            pEvent->dwSeverity = ntohl(pEvent->dwSeverity);
-            pEvent->dwSourceId = ntohl(pEvent->dwSourceId);
-            pEvent->dwTimeStamp = ntohl(pEvent->dwTimeStamp);
+            pEvent->dwEventCode = ntohl(((NXC_EVENT *)pRawMsg->df)->dwEventCode);
+            pEvent->qwEventId = ntohq(((NXC_EVENT *)pRawMsg->df)->qwEventId);
+            pEvent->dwSeverity = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSeverity);
+            pEvent->dwSourceId = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSourceId);
+            pEvent->dwTimeStamp = ntohl(((NXC_EVENT *)pRawMsg->df)->dwTimeStamp);
+
+            // Convert bytes in message characters to host byte order
+            // and than to single-byte if we building non-unicode library
+#ifdef UNICODE
+#if WORDS_BIGENDIAN
+            memcpy(pEvent->szMessage, ((NXC_EVENT *)pRawMsg->df)->szMessage,
+                   MAX_EVENT_MSG_LENGTH * sizeof(WCHAR));
+#else
+            for(pSrc = ((NXC_EVENT *)pRawMsg->df)->szMessage, 
+                pDst = pEvent->szMessage; *pSrc != 0; pSrc++, pDst++)
+               *pDst = ntohs(*pSrc);
+#endif
+#else
+            SwapWideString((WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage);
+            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                                (WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage, -1,
+                                pEvent->szMessage, MAX_EVENT_MSG_LENGTH, NULL, NULL);
+#endif
 
             // Call client's callback to handle new record
             // It's up to client to destroy allocated event structure

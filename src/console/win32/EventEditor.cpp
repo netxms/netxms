@@ -80,7 +80,7 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Load event templates
-   NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
+   NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
       _stprintf(szBuffer, _T("%ld"), m_ppEventTemplates[i]->dwCode);
@@ -180,7 +180,8 @@ BOOL CEventEditor::EditEvent(int iItem)
          evt.pszMessage = _tcsdup((LPCTSTR)dlgEditEvent.m_strMessage);
          _tcsncpy(evt.szName, (LPCTSTR)dlgEditEvent.m_strName, MAX_EVENT_NAME);
 
-         dwResult = DoRequestArg1(NXCSetEventInfo, &evt, _T("Updating event configuration database..."));
+         dwResult = DoRequestArg2(NXCSetEventInfo, g_hSession, 
+                                  &evt, _T("Updating event configuration database..."));
          if (dwResult == RCC_SUCCESS)
          {
             // Record was successfully updated on server, update local copy
@@ -221,7 +222,7 @@ void CEventEditor::OnClose()
 {
    DWORD dwResult;
 
-   dwResult = DoRequest(NXCUnlockEventDB, _T("Unlocking event configuration database..."));
+   dwResult = DoRequestArg1(NXCUnlockEventDB, g_hSession, _T("Unlocking event configuration database..."));
    if (dwResult != RCC_SUCCESS)
       theApp.ErrorBox(dwResult, _T("Unable to unlock event configuration database: %s"));
 	CMDIChildWnd::OnClose();
@@ -297,7 +298,8 @@ void CEventEditor::OnEventNew()
    TCHAR szBuffer[32];
    int iItem;
 
-   dwResult = DoRequestArg1(NXCGenerateEventCode, &dwNewCode, _T("Generating code for new event..."));
+   dwResult = DoRequestArg2(NXCGenerateEventCode, g_hSession, &dwNewCode,
+                            _T("Generating code for new event..."));
    if (dwResult == RCC_SUCCESS)
    {
       // Create new item in list view
@@ -309,17 +311,17 @@ void CEventEditor::OnEventNew()
       pData = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));
       memset(pData, 0, sizeof(NXC_EVENT_TEMPLATE));
       pData->dwCode = dwNewCode;
-      NXCAddEventTemplate(pData);
+      NXCAddEventTemplate(g_hSession, pData);
 
       // Pointers inside client library can change after adding new template, so we reget it
-      NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
+      NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
 
       // Edit new event
       if (!EditEvent(iItem))
       {
          m_wndListCtrl.DeleteItem(iItem);
-         NXCDeleteEDBRecord(dwNewCode);
-         NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
+         NXCDeleteEDBRecord(g_hSession, dwNewCode);
+         NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
       }
    }
    else

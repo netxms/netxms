@@ -90,7 +90,7 @@ BOOL CEventSelDlg::OnInitDialog()
    }
 	
    // Fill in event list
-   NXCGetEventDB(&pList, &dwListSize);
+   NXCGetEventDB(g_hSession, &pList, &dwListSize);
    if (pList != NULL)
    {
       for(i = 0; i < dwListSize; i++)
@@ -158,7 +158,8 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 
    if ((lParamSort & 0xFFFF) == 0)
       return (lParam1 < lParam2) ? -iSortDir : ((lParam1 == lParam2) ? 0 : iSortDir);
-   return _tcsicmp(NXCGetEventName(lParam1), NXCGetEventName(lParam2)) * iSortDir;
+   return _tcsicmp(NXCGetEventName(g_hSession, lParam1), 
+                   NXCGetEventName(g_hSession, lParam2)) * iSortDir;
 }
 
 

@@ -153,7 +153,7 @@ void CTrapEditor::OnSize(UINT nType, int cx, int cy)
 
 void CTrapEditor::OnClose() 
 {
-   DoRequest(NXCUnlockTrapCfg, "Unlocking SNMP trap configuration database...");
+   DoRequestArg1(NXCUnlockTrapCfg, g_hSession, "Unlocking SNMP trap configuration database...");
 	CMDIChildWnd::OnClose();
 }
 
@@ -169,7 +169,8 @@ void CTrapEditor::OnViewRefresh()
    if (m_pTrapList != NULL)
       NXCDestroyTrapList(m_dwNumTraps, m_pTrapList);
    m_wndListCtrl.DeleteAllItems();
-   dwResult = DoRequestArg2(NXCLoadTrapCfg, &m_dwNumTraps, &m_pTrapList, _T("Loading SNMP trap configuration..."));
+   dwResult = DoRequestArg3(NXCLoadTrapCfg, g_hSession, &m_dwNumTraps, 
+                            &m_pTrapList, _T("Loading SNMP trap configuration..."));
    if (dwResult == RCC_SUCCESS)
    {
       for(i = 0; i < m_dwNumTraps; i++)
@@ -214,11 +215,11 @@ void CTrapEditor::UpdateItem(int iItem, DWORD dwIndex)
    SNMPConvertOIDToText(m_pTrapList[dwIndex].dwOidLen, m_pTrapList[dwIndex].pdwObjectId,
                         szBuffer, 1024);
    m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
-   m_wndListCtrl.SetItemText(iItem, 2, NXCGetEventName(m_pTrapList[dwIndex].dwEventCode));
+   m_wndListCtrl.SetItemText(iItem, 2, NXCGetEventName(g_hSession, m_pTrapList[dwIndex].dwEventCode));
    m_wndListCtrl.SetItemText(iItem, 3, m_pTrapList[dwIndex].szDescription);
    
    m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, 
-                         NXCGetEventSeverity(m_pTrapList[dwIndex].dwEventCode),
+                         NXCGetEventSeverity(g_hSession, m_pTrapList[dwIndex].dwEventCode),
                          0, 0, 0);
 }
 
@@ -259,7 +260,7 @@ void CTrapEditor::OnTrapNew()
 {
    DWORD dwResult, dwTrapId;
 
-   dwResult = DoRequestArg1(NXCCreateTrap, &dwTrapId, _T("Creating trap configuration record..."));
+   dwResult = DoRequestArg2(NXCCreateTrap, g_hSession, &dwTrapId, _T("Creating trap configuration record..."));
    if (dwResult == RCC_SUCCESS)
    {
       m_pTrapList = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapList, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
@@ -290,7 +291,7 @@ static DWORD DeleteTraps(DWORD dwNumTraps, DWORD *pdwDeleteList, CListCtrl *pLis
    lvfi.flags = LVFI_PARAM;
    for(i = 0; i < dwNumTraps; i++)
    {
-      dwResult = NXCDeleteTrap(pdwDeleteList[i]);
+      dwResult = NXCDeleteTrap(g_hSession, pdwDeleteList[i]);
       if (dwResult == RCC_SUCCESS)
       {
          lvfi.lParam = pdwDeleteList[i];
@@ -376,7 +377,8 @@ void CTrapEditor::OnTrapEdit()
             if (dlg.DoModal() == IDOK)
             {
                // Update record on server
-               dwResult = DoRequestArg1(NXCModifyTrap, &dlg.m_trap, _T("Updating trap configuration..."));
+               dwResult = DoRequestArg2(NXCModifyTrap, g_hSession,
+                                        &dlg.m_trap, _T("Updating trap configuration..."));
                if (dwResult == RCC_SUCCESS)
                {
                   // Clean existing configuration record
@@ -462,8 +464,8 @@ static int CALLBACK TrapCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
             iResult = COMPARE_NUMBERS(pTrap1->dwOidLen, pTrap2->dwOidLen);
          break;
       case 2:     // Event
-         NXCGetEventNameEx(pTrap1->dwEventCode, szEvent1, MAX_EVENT_NAME);
-         NXCGetEventNameEx(pTrap2->dwEventCode, szEvent2, MAX_EVENT_NAME);
+         NXCGetEventNameEx(g_hSession, pTrap1->dwEventCode, szEvent1, MAX_EVENT_NAME);
+         NXCGetEventNameEx(g_hSession, pTrap2->dwEventCode, szEvent2, MAX_EVENT_NAME);
          iResult = _tcsicmp(szEvent1, szEvent2);
          break;
       case 3:     // Description

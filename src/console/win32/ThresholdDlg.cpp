@@ -83,7 +83,7 @@ BOOL CThresholdDlg::OnInitDialog()
       m_wndEditArg1.EnableWindow(FALSE);
    }
 
-   m_wndEventName.SetWindowText(NXCGetEventName(m_dwEventId));
+   m_wndEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwEventId));
 	
 	return TRUE;
 }
@@ -114,6 +114,6 @@ void CThresholdDlg::OnButtonSelect()
    if (dlg.DoModal() == IDOK)
    {
       m_dwEventId = dlg.m_pdwEventList[0];
-      m_wndEventName.SetWindowText(NXCGetEventName(m_dwEventId));
+      m_wndEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwEventId));
    }
 }

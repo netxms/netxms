@@ -139,7 +139,7 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
       NXC_OBJECT *pObject;
 
       m_wndListCtrl.SetItemText(iIdx, 1, g_szStatusTextSmall[pEvent->dwSeverity]);
-      pObject = NXCFindObjectById(pEvent->dwSourceId);
+      pObject = NXCFindObjectById(g_hSession, pEvent->dwSourceId);
       m_wndListCtrl.SetItemText(iIdx, 2, pObject ? pObject->szName : "<unknown>");
       m_wndListCtrl.SetItemText(iIdx, 3, pEvent->szMessage);
 
@@ -166,6 +166,6 @@ void CEventBrowser::EnableDisplay(BOOL bEnable)
 void CEventBrowser::OnViewRefresh() 
 {
    EnableDisplay(FALSE);
-   DoRequest(NXCSyncEvents, "Loading events...");
+   DoRequestArg1(NXCSyncEvents, g_hSession, "Loading events...");
    EnableDisplay(TRUE);
 }

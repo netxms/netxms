@@ -156,7 +156,8 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
    // Event
-   m_wndListCtrl.SetItemText(iItem, 1, NXCGetEventName(m_pItem->pThresholdList[dwIndex].dwEvent));
+   m_wndListCtrl.SetItemText(iItem, 1, 
+      NXCGetEventName(g_hSession, m_pItem->pThresholdList[dwIndex].dwEvent));
 }
 
 

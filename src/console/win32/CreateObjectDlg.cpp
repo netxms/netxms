@@ -70,7 +70,7 @@ void CCreateObjectDlg::OnSelectParent()
    dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {
-      m_pParentObject = NXCFindObjectById(dlg.m_pdwObjectList[0]);
+      m_pParentObject = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[0]);
       UpdateParentInfo();
    }
 }

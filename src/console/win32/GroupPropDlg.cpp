@@ -119,7 +119,7 @@ BOOL CGroupPropDlg::OnInitDialog()
    // Fill in list control
    for(i = 0; i < m_dwNumMembers; i++)
    {
-      pUser = NXCFindUserById(m_pdwMembers[i]);
+      pUser = NXCFindUserById(g_hSession, m_pdwMembers[i]);
       if (pUser != NULL)
       {
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
@@ -171,7 +171,7 @@ void CGroupPropDlg::OnButtonAdd()
          m_pdwMembers[i] = wndSelectDlg.m_dwUserId;
 
          // Add new line to user list
-         pUser = NXCFindUserById(wndSelectDlg.m_dwUserId);
+         pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_dwUserId);
          if (pUser != NULL)
          {
             iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,

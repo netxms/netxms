@@ -139,7 +139,7 @@ public:
    DWORD OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 
    DWORD LoadEventDB(void);
-   void AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate);
+   void AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate, BOOL bLock);
    void DeleteEDBRecord(DWORD dwEventCode);
    BOOL GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
    const TCHAR *GetEventName(DWORD dwId);
