@@ -139,6 +139,43 @@ static BOOL H_UpgradeFromV20(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
+   _tprintf("Create indexes on existing IDATA tables? (Y/N) ");
+   if (GetYesNo())
+   {
+      hResult = SQLSelect(_T("SELECT id FROM nodes WHERE is_deleted=0"));
+      if (hResult != NULL)
+      {
+         iNumRows = DBGetNumRows(hResult);
+         for(i = 0; i < iNumRows; i++)
+         {
+            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"),
+                       DBGetFieldULong(hResult, i, 0));
+            if (!SQLQuery(szQuery))
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         if (!g_bIgnoreErrors)
+            return FALSE;
+      }
+   }
+
+   if (!CreateConfigParam(_T("NumberOfStatusPollers"), _T("10"), 0, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   if (!CreateConfigParam(_T("NumberOfConfigurationPollers"), _T("4"), 0, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   if (!CreateConfigParam(_T("IDataIndexCreationCommand"), _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"), 0, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
    if (!SQLQuery(_T("UPDATE config SET var_value='21' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
