@@ -45,6 +45,8 @@ void EventProcessor(void *arg)
    while(!ShutdownInProgress())
    {
       pEvent = (Event *)g_pEventQueue->GetOrBlock();
+      if (pEvent == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
 
       // Write event to log if required
       if (pEvent->Flags() & EF_LOG)

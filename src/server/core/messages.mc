@@ -254,4 +254,22 @@ Language=English
 Invalid password hash for user %1: password reset to default
 .
 
+MessageId=
+SymbolicName=MSG_EPP_LOAD_FAILED
+Language=English
+Error loading event processing policy from database
+.
+
+MessageId=
+SymbolicName=MSG_INIT_LOCKS_FAILED
+Language=English
+Error initializing component locks table
+.
+
+MessageId=
+SymbolicName=MSG_DB_LOCKED
+Language=English
+Database is already locked by another NetXMS server instance (IP address: %1, machine info: %2)
+.
+
 ;#endif

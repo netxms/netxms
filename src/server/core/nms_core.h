@@ -79,6 +79,8 @@
 #define MAX_DB_NAME        32
 #define MAX_LINE_SIZE      4096
 
+#define UNLOCKED           0xFFFFFFFF
+
 
 //
 // Application flags
@@ -127,6 +129,15 @@
 
 #define INFO_CAT_EVENT        1
 #define INFO_CAT_OBJECT       2
+
+
+//
+// Component identifiers used for locking
+//
+
+#define CID_NETXMS_INSTANCE   0
+#define CID_EPP               1
+#define CID_USER_MGMT         2
 
 
 //
@@ -250,6 +261,10 @@ void InitLog(void);
 void CloseLog(void);
 void WriteLog(DWORD msg, WORD wType, char *format, ...);
 
+BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo);
+void UnlockComponent(DWORD dwId);
+
 BOOL ParseCommandLine(int argc, char *argv[]);
 BOOL LoadConfig(void);
 
@@ -317,6 +332,9 @@ void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pA
 
 void BinToStr(BYTE *pData, DWORD dwSize, char *pStr);
 DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize);
+
+void GetSysInfoStr(char *pszBuffer);
+DWORD GetLocalIpAddr(void);
 
 #ifdef _WIN32
 

@@ -139,6 +139,10 @@ SOURCE=.\entirenet.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\epp.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\events.cpp
 # End Source File
 # Begin Source File
@@ -152,6 +156,10 @@ SOURCE=.\hk.cpp
 # Begin Source File
 
 SOURCE=.\interface.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\locks.cpp
 # End Source File
 # Begin Source File
 

@@ -66,10 +66,6 @@ BOOL LoadUsers(void)
    {
       m_pUserList[i].dwId = DBGetFieldULong(hResult, i, 0);
       strncpy(m_pUserList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
-printf("%s %d %d\n",DBGetField(hResult, i, 2),StrToBin(DBGetField(hResult, i, 2), m_pUserList[i].szPassword, SHA_DIGEST_LENGTH),SHA_DIGEST_LENGTH);
-char buf[256];
-BinToStr(m_pUserList[i].szPassword,SHA_DIGEST_LENGTH,buf);
-printf("recover: %s\n",buf);
       if (StrToBin(DBGetField(hResult, i, 2), m_pUserList[i].szPassword, SHA_DIGEST_LENGTH) != SHA_DIGEST_LENGTH)
       {
          WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", m_pUserList[i].szName);

@@ -29,6 +29,7 @@
 //
 
 Queue *g_pEventQueue = NULL;
+EventPolicy *g_pEventPolicy = NULL;
 
 
 //
@@ -268,31 +269,41 @@ BOOL InitEventSubsystem(void)
 {
    DB_RESULT hResult;
    DWORD i;
+   BOOL bSuccess = FALSE;
 
    // Create event queue
    g_pEventQueue = new Queue;
 
    // Load events from database
    hResult = DBSelect(g_hCoreDB, "SELECT id,severity,flags,message,description FROM events ORDER BY id");
-   if (hResult == 0)
+   if (hResult != NULL)
+   {
+      m_dwNumTemplates = DBGetNumRows(hResult);
+      m_pEventTemplates = (EVENT_TEMPLATE *)malloc(sizeof(EVENT_TEMPLATE) * m_dwNumTemplates);
+      for(i = 0; i < m_dwNumTemplates; i++)
+      {
+         m_pEventTemplates[i].dwId = DBGetFieldULong(hResult, i, 0);
+         m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
+         m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
+         m_pEventTemplates[i].szMessageTemplate = strdup(DBGetField(hResult, i, 3));
+         m_pEventTemplates[i].szDescription = strdup(DBGetField(hResult, i, 4));
+      }
+
+      DBFreeResult(hResult);
+
+      // Create and initialize event processing policy
+      g_pEventPolicy = new EventPolicy;
+      if (g_pEventPolicy->LoadFromDB())
+         bSuccess = TRUE;
+      else
+         WriteLog(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+   }
+   else
    {
       WriteLog(MSG_EVENT_LOAD_ERROR, EVENTLOG_ERROR_TYPE, NULL);
-      return FALSE;
    }
 
-   m_dwNumTemplates = DBGetNumRows(hResult);
-   m_pEventTemplates = (EVENT_TEMPLATE *)malloc(sizeof(EVENT_TEMPLATE) * m_dwNumTemplates);
-   for(i = 0; i < m_dwNumTemplates; i++)
-   {
-      m_pEventTemplates[i].dwId = DBGetFieldULong(hResult, i, 0);
-      m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
-      m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
-      m_pEventTemplates[i].szMessageTemplate = strdup(DBGetField(hResult, i, 3));
-      m_pEventTemplates[i].szDescription = strdup(DBGetField(hResult, i, 4));
-   }
-
-   DBFreeResult(hResult);
-   return TRUE;
+   return bSuccess;
 }
 
 

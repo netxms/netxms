@@ -116,6 +116,71 @@ public:
 
 
 //
+// Event policy rule flags
+//
+
+#define RF_STOP_PROCESSING    0x01
+#define RF_NEGATED_SOURCE     0x02
+#define RF_NEGATED_EVENTS     0x04
+
+
+//
+// Event source structure
+//
+
+typedef struct
+{
+   int iType;
+   DWORD dwObjectId;
+} EVENT_SOURCE;
+
+
+//
+// Event policy rule
+//
+
+class EPRule
+{
+private:
+   DWORD m_dwId;
+   DWORD m_dwFlags;
+   DWORD m_dwNumSources;
+   EVENT_SOURCE *m_pSourceList;
+   DWORD m_dwNumEvents;
+   DWORD *m_pdwEventList;
+   DWORD m_dwNumActions;
+   DWORD *m_pdwActionList;
+   char *m_pszComment;
+
+public:
+   EPRule(DWORD dwId, char *szComment, DWORD dwFlags);
+   ~EPRule();
+
+   DWORD Id(void) { return m_dwId; }
+
+   BOOL LoadFromDB(void);
+};
+
+
+//
+// Event policy
+//
+
+class EventPolicy
+{
+private:
+   DWORD m_dwNumRules;
+   EPRule **m_ppRuleList;
+
+public:
+   EventPolicy();
+   ~EventPolicy();
+
+   BOOL LoadFromDB(void);
+};
+
+
+//
 // Functions
 //
 
@@ -128,5 +193,6 @@ BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...);
 //
 
 extern Queue *g_pEventQueue;
+extern EventPolicy *g_pEventPolicy;
 
 #endif   /* _nms_events_h_ */

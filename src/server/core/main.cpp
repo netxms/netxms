@@ -108,6 +108,8 @@ static void LoadGlobalConfig()
 BOOL Initialize(void)
 {
    int i, iNumThreads;
+   DWORD dwAddr;
+   char szInfo[256];
 
    InitLog();
 
@@ -136,6 +138,16 @@ BOOL Initialize(void)
       return FALSE;
    }
 
+   // Initialize locks
+   if (!InitLocks(&dwAddr, szInfo))
+   {
+      if (dwAddr == UNLOCKED)    // Some SQL problems
+         WriteLog(MSG_INIT_LOCKS_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      else     // Database already locked by another server instance
+         WriteLog(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "as", dwAddr, szInfo);
+      return FALSE;
+   }
+
    // Load global configuration parameters
    LoadGlobalConfig();
 
@@ -153,13 +165,13 @@ BOOL Initialize(void)
       return FALSE;
    }
 
-   // Initialize event handling subsystem
-   if (!InitEventSubsystem())
-      return FALSE;
-
    // Initialize objects infrastructure and load objects from database
    ObjectsInit();
    if (!LoadObjects())
+      return FALSE;
+
+   // Initialize event handling subsystem
+   if (!InitEventSubsystem())
       return FALSE;
 
    // Initialize data collection subsystem
@@ -220,18 +232,26 @@ void Shutdown(void)
    EnumerateClientSessions(NotifyClient, NULL);
 
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
+   g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
 #ifdef _WIN32
    SetEvent(m_hEventShutdown);
 #else    /* _WIN32 */
    pthread_cond_broadcast(&m_hCondShutdown);
 #endif
-   g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
+
+   g_pEventQueue->Put(INVALID_POINTER_VALUE);   // Stop event processor
    ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
    SaveObjects();
    StopDBWriter();
+
+   // Remove database lock
+   DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+
+   // Disconnect from database and unload driver
    if (g_hCoreDB != 0)
       DBDisconnect(g_hCoreDB);
    DBUnloadDriver();
+
    CloseLog();
 }
 

@@ -334,3 +334,70 @@ DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize)
    }
    return i;
 }
+
+
+//
+// Get system information string
+//
+
+void GetSysInfoStr(char *pszBuffer)
+{
+#ifdef _WIN32
+   DWORD dwSize;
+   char computerName[MAX_COMPUTERNAME_LENGTH + 1], osVersion[256];
+   SYSTEM_INFO sysInfo;
+   OSVERSIONINFO versionInfo;
+
+   dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+   GetComputerName(computerName, &dwSize);
+
+   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   GetVersionEx(&versionInfo);
+   GetSystemInfo(&sysInfo);
+
+   switch(versionInfo.dwPlatformId)
+   {
+      case VER_PLATFORM_WIN32_WINDOWS:
+         sprintf(osVersion,"Windows %s-%s",versionInfo.dwMinorVersion == 0 ? "95" :
+            (versionInfo.dwMinorVersion == 10 ? "98" :
+               (versionInfo.dwMinorVersion == 90 ? "Me" : "Unknown")),versionInfo.szCSDVersion);
+         break;
+      case VER_PLATFORM_WIN32_NT:
+         if (versionInfo.dwMajorVersion != 5)
+            sprintf(osVersion,"Windows NT %d.%d %s",versionInfo.dwMajorVersion,
+                    versionInfo.dwMinorVersion,versionInfo.szCSDVersion);
+         else      // Windows 2000, Windows XP or Windows Server 2003
+            sprintf(osVersion,"Windows %s%s%s",versionInfo.dwMinorVersion == 0 ? "2000" : 
+                    (versionInfo.dwMinorVersion == 1 ? "XP" : "Server 2003"),
+                       versionInfo.szCSDVersion[0] == 0 ? "" : " ", versionInfo.szCSDVersion);
+         break;
+      default:
+         strcpy(osVersion,"Windows [Unknown Version]");
+         break;
+   }
+
+   sprintf(pszBuffer, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
+#else
+   /* TODO: add UNIX code here */
+#endif
+}
+
+
+//
+// Get IP address for local machine
+//
+
+DWORD GetLocalIpAddr(void)
+{
+   INTERFACE_LIST *pIfList;
+   DWORD dwAddr = 0;
+
+   pIfList = GetLocalInterfaceList();
+   if (pIfList != NULL)
+   {
+      if (pIfList->iNumEntries > 0)
+         dwAddr = pIfList->pInterfaces[0].dwIpAddr;
+      DestroyInterfaceList(pIfList);
+   }
+   return dwAddr;
+}

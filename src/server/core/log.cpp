@@ -124,6 +124,7 @@ static void WriteLogToFile(char *szMessage)
 //             d - Decimal integer
 //             x - Hex integer
 //             e - System error code (will appear in log as textual description)
+//             a - IP address in network byte order
 //
 
 void WriteLog(DWORD msg, WORD wType, char *format, ...)
@@ -153,6 +154,10 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
             case 'x':
                strings[numStrings] = (char *)malloc(16);
                sprintf(strings[numStrings], "0x%08X", va_arg(args, DWORD));
+               break;
+            case 'a':
+               strings[numStrings] = (char *)malloc(20);
+               IpToStr(va_arg(args, DWORD), strings[numStrings]);
                break;
             case 'e':
                error = va_arg(args, DWORD);
