@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.3 2005-02-14 17:03:37 alk Exp $ */
+/* $Id: net.cpp,v 1.4 2005-03-10 12:23:56 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -40,6 +40,20 @@
 #include <arpa/inet.h>
 #include <net/ethernet.h>
 
+typedef struct t_Addr
+{
+	struct in_addr ip;
+	int mask;
+} ADDR;
+
+typedef struct t_IfList
+{
+	char *name;
+	struct ether_addr *mac;
+	ADDR *addr;
+	int addrCount;
+	int index;
+} IFLIST;
 
 LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 {
@@ -145,12 +159,12 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
-
 	if (getifaddrs(&pIfAddr) == 0)
 	{
-		char *pIp, *pMac, *pName = NULL;
+		char *pName = NULL;
 		int nIndex, nMask, i;
-		unsigned long nDiv = 0x80000000;
+		int nIfCount = 0;
+		IFLIST *pList = NULL;
 
 		nRet = SYSINFO_RC_SUCCESS;
 
@@ -159,50 +173,114 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 		{
 			if (pName != pNext->ifa_name)
 			{
-				if (pName != NULL)
-				{
-					char szOut[1024];
+				IFLIST *pTmp;
 
-					snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-							nIndex,
-							pIp,
-							nMask,
-							IFTYPE_OTHER,
-							pMac,
-							pName);
-					NxAddResultString(pValue, szOut);
+				nIfCount++;
+				pTmp = (IFLIST *)realloc(pList, nIfCount * sizeof(IFLIST));
+				if (pTmp == NULL)
+				{
+					// out of memoty
+					nIfCount--;
+					nRet = SYSINFO_RC_ERROR;
+					break;
 				}
+				pList = pTmp;
+
+				memset(&(pList[nIfCount-1]), 0, sizeof(IFLIST));
+				pList[nIfCount-1].name = pNext->ifa_name;
 				pName = pNext->ifa_name;
-				pIp = "0.0.0.0";
-				nMask = 0;
-				pMac = "00:00:00:00:00:00";
-				nIndex = 0;
-				nDiv = 0x80000000;
 			}
 
 			switch (pNext->ifa_addr->sa_family)
 			{
 			case AF_INET:
-				pIp = inet_ntoa(((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr);
-				nMask = BitsInMask(htonl(
-							((struct sockaddr_in *)
-								(pNext->ifa_netmask))->sin_addr.s_addr
-							)
-						);
+				{
+					ADDR *pTmp;
+					pList[nIfCount-1].addrCount++;
+					pTmp = (ADDR *)realloc(pList[nIfCount-1].addr,
+							pList[nIfCount-1].addrCount);
+					if (pTmp == NULL)
+					{
+						pList[nIfCount-1].addrCount--;
+						nRet = SYSINFO_RC_ERROR;
+						break;
+					}
+					pList[nIfCount-1].addr = pTmp;
+					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].ip =
+						((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr;
+					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask = 
+						BitsInMask(htonl(((struct sockaddr_in *)
+										(pNext->ifa_netmask))->sin_addr.s_addr));
+				}
 				break;
 			case AF_LINK:
 				{
 					struct sockaddr_dl *pSdl;
 
 					pSdl = (struct sockaddr_dl *)pNext->ifa_addr;
-					pMac = ether_ntoa((struct ether_addr *)LLADDR(pSdl));
-					nIndex = pSdl->sdl_index;
+					pList[nIfCount-1].mac = (struct ether_addr *)LLADDR(pSdl);
+					pList[nIfCount-1].index = pSdl->sdl_index;
 				}
+				break;
+			}
+
+			if (nRet == SYSINFO_RC_ERROR)
+			{
 				break;
 			}
 			pNext = pNext->ifa_next;
 		}
-		
+
+		if (nRet == SYSINFO_RC_SUCCESS)
+		{
+			for (i = 0; i < nIfCount; i++)
+			{
+				int j;
+				char szOut[1024];
+
+				for (j = 0; j < pList[i].addrCount; j++)
+				{
+					if (j > 0)
+					{
+						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s:%d",
+								pList[i].index,
+								inet_ntoa(pList[i].addr[j].ip),
+								pList[i].addr[j].mask,
+								IFTYPE_OTHER,
+								ether_ntoa(pList[i].mac),
+								pList[i].name,
+								j - 1);
+					}
+					else
+					{
+						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
+								pList[i].index,
+								inet_ntoa(pList[i].addr[j].ip),
+								pList[i].addr[j].mask,
+								IFTYPE_OTHER,
+								ether_ntoa(pList[i].mac),
+								pList[i].name);
+					}
+					NxAddResultString(pValue, szOut);
+				}
+			}
+		}
+
+		for (i = 0; i < nIfCount; i++)
+		{
+			if (pList[i].addr != NULL)
+			{
+				free(pList[i].addr);
+				pList[i].addr = NULL;
+				pList[i].addrCount = 0;
+			}
+		}
+		if (pList != NULL)
+		{
+			free(pList);
+			pList = NULL;
+		}
+
 		freeifaddrs(pIfAddr);
 	}
 	else
@@ -216,6 +294,11 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/02/14 17:03:37  alk
+issue #9
+
+mask calculation chaged to BitsInMask()
+
 Revision 1.2  2005/01/23 05:08:06  alk
 + System.CPU.Count
 + System.Memory.Physical.*
