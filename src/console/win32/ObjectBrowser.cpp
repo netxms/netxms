@@ -145,12 +145,13 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
 	ON_COMMAND(ID_OBJECT_VIEW_VIEWASLIST, OnObjectViewViewaslist)
 	ON_COMMAND(ID_OBJECT_VIEW_VIEWASTREE, OnObjectViewViewastree)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
-	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(WM_FIND_OBJECT, OnFindObject)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -188,7 +189,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
       rect.left = PREVIEW_PANE_WIDTH;
       rect.right -= PREVIEW_PANE_WIDTH;
    }
-   m_wndTreeCtrl.Create(WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
+   m_wndTreeCtrl.Create(WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
                         rect, this, IDC_TREE_VIEW);
 
    // Create list view control
@@ -353,16 +354,6 @@ BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
                                          AfxGetApp()->LoadIcon(IDI_TREE));
 	return CMDIChildWnd::PreCreateWindow(cs);
-}
-
-
-//
-// WM_NOTIFY::NM_RCLICK message handler
-//
-
-void CObjectBrowser::OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult) 
-{
-	*pResult = 0;
 }
 
 
@@ -816,4 +807,94 @@ void CObjectBrowser::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
          }
    }   
    *pResult = 0;
+}
+
+
+//
+// WM_FIND_OBJECT message handler
+//
+
+void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
+{
+   if (*((char *)lParam) != 0)
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = NXCFindObjectByName((char *)lParam);
+      if (pObject != NULL)
+      {
+         // Object found, select it in the current view
+         if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+         {
+            DWORD dwIndex;
+
+            dwIndex = FindObjectInTree(pObject->dwId);
+            if (dwIndex != INVALID_INDEX)
+               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
+            else
+               MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
+                          "Find", MB_OK | MB_ICONEXCLAMATION);
+            m_wndTreeCtrl.SetFocus();
+         }
+         else
+         {
+            LVFINDINFO lvfi;
+            int iItem, iOldItem;
+
+            lvfi.flags = LVFI_PARAM;
+            lvfi.lParam = (LPARAM)pObject;
+            iItem = m_wndListCtrl.FindItem(&lvfi);
+            if (iItem != -1)
+            {
+               ClearListSelection();
+               iOldItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+               if (iOldItem != -1)
+                  m_wndListCtrl.SetItemState(iOldItem, 0, LVIS_FOCUSED);
+               m_wndListCtrl.EnsureVisible(iItem, FALSE);
+               m_wndListCtrl.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
+                                          LVIS_SELECTED | LVIS_FOCUSED);
+            }
+            else
+            {
+               MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
+                          "Find", MB_OK | MB_ICONEXCLAMATION);
+            }
+            m_wndListCtrl.SetFocus();
+         }
+      }
+      else
+      {
+         char szBuffer[384];
+
+         sprintf(szBuffer, "Matching object for pattern \"%s\" not found", lParam);
+         MessageBox(szBuffer, "Find", MB_OK | MB_ICONSTOP);
+      }
+   }
+}
+
+
+//
+// Clear selection from list control
+//
+
+void CObjectBrowser::ClearListSelection()
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   while(iItem != -1)
+   {
+      m_wndListCtrl.SetItemState(iItem, 0, LVIS_SELECTED);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   theApp.DebugPrintf("Menu at %d %d", point.x, point.y);
 }

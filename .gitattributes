@@ -45,6 +45,8 @@ src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
 src/console/win32/DebugFrame.cpp -text
 src/console/win32/DebugFrame.h -text
+src/console/win32/EditBox.cpp -text
+src/console/win32/EditBox.h -text
 src/console/win32/EditEventDlg.cpp -text
 src/console/win32/EditEventDlg.h -text
 src/console/win32/EventBrowser.cpp -text

@@ -37,6 +37,7 @@ BEGIN_MESSAGE_MAP(CObjectPreview, CWnd)
 	ON_WM_CREATE()
 	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_FIND_OBJECT, OnFindObject)
 END_MESSAGE_MAP()
 
 
@@ -121,4 +122,14 @@ void CObjectPreview::Refresh()
 {
    m_wndObjectPreview.Invalidate();
    m_wndObjectPreview.UpdateWindow();
+}
+
+
+//
+// WM_FIND_OBJECT message handler
+//
+
+void CObjectPreview::OnFindObject(WPARAM wParam, LPARAM lParam)
+{
+   GetParent()->SendMessage(WM_FIND_OBJECT, wParam, lParam);
 }

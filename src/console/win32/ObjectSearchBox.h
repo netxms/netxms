@@ -8,6 +8,7 @@
 //
 
 #include "ToolBox.h"
+#include "EditBox.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -38,13 +39,14 @@ public:
 protected:
 	CFont m_fontNormal;
 	CButton m_wndButton;
-	CEdit m_wndEditBox;
+	CEditBox m_wndEditBox;
 	CStatic m_wndStatic;
 	//{{AFX_MSG(CObjectSearchBox)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
-	afx_msg void OnFindObject();
 	//}}AFX_MSG
+	afx_msg void OnFindObject();
+   afx_msg void OnEditBoxEvent(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -50,6 +50,8 @@ extern CConsoleApp theApp;
 #define WM_REQUEST_COMPLETED     (WM_USER + 1)
 #define WM_CLOSE_STATUS_DLG      (WM_USER + 2)
 #define WM_OBJECT_CHANGE         (WM_USER + 3)
+#define WM_FIND_OBJECT           (WM_USER + 4)
+#define WM_EDITBOX_EVENT         (WM_USER + 5)
 
 
 //

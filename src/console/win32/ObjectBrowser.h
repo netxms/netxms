@@ -94,6 +94,7 @@ public:
 
 // Implementation
 protected:
+	void ClearListSelection(void);
 	void AddObjectToList(NXC_OBJECT *pObject);
 	CListCtrl m_wndListCtrl;
 	void DeleteObjectTreeItem(HTREEITEM hItem);
@@ -113,16 +114,17 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
-	afx_msg void OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	afx_msg void OnObjectViewShowpreviewpane();
-   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
-   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnObjectViewViewaslist();
 	afx_msg void OnObjectViewViewastree();
-	afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT* pResult);
-   afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
+   afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
+   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	DWORD m_dwSortMode;

@@ -104,6 +104,10 @@ SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditBox.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EditEventDlg.cpp
 # End Source File
 # Begin Source File
@@ -186,6 +190,10 @@ SOURCE=.\ControlPanel.h
 # Begin Source File
 
 SOURCE=.\DebugFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditBox.h
 # End Source File
 # Begin Source File
 

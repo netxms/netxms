@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CObjectSearchBox, CToolBox)
 	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
 	ON_COMMAND(ID_FIND_OBJECT, OnFindObject)
+   ON_MESSAGE(WM_EDITBOX_EVENT, OnEditBoxEvent)
 END_MESSAGE_MAP()
 
 
@@ -111,5 +112,19 @@ HBRUSH CObjectSearchBox::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void CObjectSearchBox::OnFindObject()
 {
-   MessageBox("FIND");
+   char szBuffer[256];
+
+   m_wndEditBox.GetWindowText(szBuffer, 255);
+   GetParent()->SendMessage(WM_FIND_OBJECT, 0, (LPARAM)szBuffer);
+}
+
+
+//
+// WM_EDITBOX_EVENT message handler
+//
+
+void CObjectSearchBox::OnEditBoxEvent(WPARAM wParam, LPARAM lParam)
+{
+   if ((wParam == IDC_EDIT_SEARCH_STRING) && (lParam == EDITBOX_ENTER_PRESSED))
+      PostMessage(WM_COMMAND, ID_FIND_OBJECT, 0);
 }

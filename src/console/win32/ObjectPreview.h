@@ -52,6 +52,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnPaint();
 	//}}AFX_MSG
+   afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

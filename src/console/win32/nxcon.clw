@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CObjectSearchBox
-LastTemplate=generic CWnd
+LastClass=CEditBox
+LastTemplate=CEdit
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=20
+ClassCount=21
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -20,7 +20,7 @@ Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
 Resource2=IDR_MAINFRAME
 Resource3=IDD_OBJECT_PROPERTIES
 Resource4=IDD_ABOUTBOX
-Resource5=IDD_ABOUTBOX (English (U.S.))
+Resource5=IDD_PROGRESS (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -28,13 +28,13 @@ Class8=CMapFrame
 Class10=CLoginDialog
 Resource6=IDA_MDI_DEFAULT
 Class11=CProgressDialog
-Resource7=IDD_OBJECT_PROPERTIES (English (U.S.))
+Resource7=IDA_MDI_DEFAULT (English (U.S.))
 Class12=CObjectBrowser
 Resource8=IDD_PROGRESS
 Class13=CObjectPropDlg
 Resource9=IDM_VIEW_SPECIFIC
-Resource10=IDA_OBJECT_BROWSER (English (U.S.))
-Resource11=IDA_MDI_DEFAULT (English (U.S.))
+Resource10=IDD_LOGIN (English (U.S.))
+Resource11=IDD_ABOUTBOX (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,18 +42,19 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDD_EDIT_EVENT (English (U.S.))
+Resource17=IDA_OBJECT_BROWSER (English (U.S.))
 Class16=CDebugFrame
 Resource18=IDA_OBJECT_BROWSER
-Resource19=IDD_LOGIN (English (U.S.))
-Resource20=IDR_MAINFRAME (English (U.S.))
+Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
+Resource20=IDD_EDIT_EVENT
 Class17=CObjectPreview
-Resource21=IDD_PROGRESS (English (U.S.))
+Resource21=IDR_MAINFRAME (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
 Resource22=IDD_LOGIN
-Resource23=IDD_EDIT_EVENT
+Class21=CEditBox
+Resource23=IDD_EDIT_EVENT (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -579,4 +580,12 @@ Command3=ID_OBJECT_VIEW_SHOWPREVIEWPANE
 Command4=ID_OBJECT_VIEW_VIEWASTREE
 Command5=ID_VIEW_REFRESH
 CommandCount=5
+
+[CLS:CEditBox]
+Type=0
+HeaderFile=EditBox.h
+ImplementationFile=EditBox.cpp
+BaseClass=CEdit
+Filter=W
+VirtualFilter=WC
 
