@@ -42,6 +42,7 @@ NetObj::NetObj()
    m_pParentList = NULL;
    m_pAccessList = new AccessList;
    m_bInheritAccessRights = TRUE;
+   m_dwImage = 0;    // Default image
 }
 
 
@@ -437,6 +438,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pChildList[i]->Id());
    pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
+   pMsg->SetVariable(VID_IMAGE_ID, m_dwImage);
    m_pAccessList->CreateMessage(pMsg);
 }
 

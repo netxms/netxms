@@ -392,6 +392,7 @@ BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
 void UpdateImageHashes(void);
 void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId);
 void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId);
+void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId);
 
 #ifdef _WIN32
 

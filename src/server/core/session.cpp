@@ -338,6 +338,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOAD_IMAGE_FILE:
             SendImageFile(this, pMsg->GetId(), pMsg->GetVariableLong(VID_IMAGE_ID));
             break;
+         case CMD_GET_DEFAULT_IMAGE_LIST:
+            SendDefaultImageList(this, pMsg->GetId());
+            break;
          default:
             break;
       }

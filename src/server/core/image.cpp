@@ -73,6 +73,52 @@ void UpdateImageHashes(void)
 
 
 //
+// Send default images to client
+//
+
+void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD i, dwListSize, *pdwClassId, *pdwImageId;
+
+   // Prepare message
+   msg.SetId(dwRqId);
+   msg.SetCode(CMD_DEFAULT_IMAGE_LIST);
+
+   // Load default image list from database
+   hResult = DBSelect(g_hCoreDB, "SELECT object_class,image_id FROM default_images");
+   if (hResult != NULL)
+   {
+      dwListSize = DBGetNumRows(hResult);
+      msg.SetVariable(VID_NUM_IMAGES, dwListSize);
+      
+      pdwClassId = (DWORD *)malloc(sizeof(DWORD) * dwListSize);
+      pdwImageId = (DWORD *)malloc(sizeof(DWORD) * dwListSize);
+      for(i = 0; i < dwListSize; i++)
+      {
+         pdwClassId[i] = DBGetFieldULong(hResult, i, 0);
+         pdwImageId[i] = DBGetFieldULong(hResult, i, 1);
+      }
+      msg.SetVariableToInt32Array(VID_CLASS_ID_LIST, dwListSize, pdwClassId);
+      msg.SetVariableToInt32Array(VID_IMAGE_ID_LIST, dwListSize, pdwImageId);
+      free(pdwClassId);
+      free(pdwImageId);
+
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
+
+   // Send responce
+   pSession->SendMessage(&msg);
+}
+
+
+//
 // Send current image catalogue to client
 //
 

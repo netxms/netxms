@@ -618,6 +618,7 @@ void Node::ConfigurationPoll(void)
    BOOL bHasChanges = FALSE;
 
    PollerLock();
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)\n", m_szName, m_dwId);
 
    // Check node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
@@ -716,6 +717,7 @@ void Node::ConfigurationPoll(void)
       }
    }
 
+   m_tLastConfigurationPoll = time(NULL);
    PollerUnlock();
 
    if (bHasChanges)
