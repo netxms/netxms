@@ -43,6 +43,7 @@ static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFF
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE
                                               };
+static QWORD m_qwFreeEventId = 1;
 static char *m_pszGroupNames[] =
 {
    "Network Objects",
@@ -130,8 +131,8 @@ BOOL InitIdTable(void)
       DBFreeResult(hResult);
    }
 
-   // Get first available event id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(event_id) FROM events");
+   // Get first available event code
+   hResult = DBSelect(g_hCoreDB, "SELECT max(event_code) FROM event_cfg");
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -235,6 +236,15 @@ BOOL InitIdTable(void)
       DBFreeResult(hResult);
    }
 
+   // Get first available event identifier
+   hResult = DBSelect(g_hCoreDB, "SELECT max(event_id) FROM event_log");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_qwFreeEventId = max(m_qwFreeEventId, DBGetFieldUInt64(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
    return TRUE;
 }
 
@@ -260,4 +270,19 @@ DWORD CreateUniqueId(int iGroup)
    }
    MutexUnlock(m_mutexTableAccess);
    return dwId;
+}
+
+
+//
+// Create unique ID for event log record
+//
+
+QWORD CreateUniqueEventId(void)
+{
+   QWORD qwId;
+
+   MutexLock(m_mutexTableAccess, INFINITE);
+   qwId = m_qwFreeEventId++;
+   MutexUnlock(m_mutexTableAccess);
+   return qwId;
 }

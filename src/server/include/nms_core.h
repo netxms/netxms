@@ -398,6 +398,7 @@ BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
 
 BOOL InitIdTable(void);
 DWORD CreateUniqueId(int iGroup);
+QWORD CreateUniqueEventId(void);
 
 BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
 

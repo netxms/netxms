@@ -39,7 +39,7 @@
 
 struct EVENT_TEMPLATE
 {
-   DWORD dwId;
+   DWORD dwCode;
    DWORD dwSeverity;
    DWORD dwFlags;
    char *szMessageTemplate;
@@ -54,7 +54,8 @@ struct EVENT_TEMPLATE
 class Event
 {
 private:
-   DWORD m_dwId;
+   QWORD m_qwId;
+   DWORD m_dwCode;
    DWORD m_dwSeverity;
    DWORD m_dwFlags;
    DWORD m_dwSource;
@@ -70,7 +71,8 @@ public:
    Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_list args);
    ~Event();
 
-   DWORD Id(void) { return m_dwId; }
+   QWORD Id(void) { return m_qwId; }
+   DWORD Code(void) { return m_dwCode; }
    DWORD Severity(void) { return m_dwSeverity; }
    DWORD Flags(void) { return m_dwFlags; }
    DWORD SourceId(void) { return m_dwSource; }
@@ -106,7 +108,7 @@ private:
    char m_szAlarmAckKey[MAX_DB_STRING];
 
    BOOL MatchSource(DWORD dwObjectId);
-   BOOL MatchEvent(DWORD dwEventId);
+   BOOL MatchEvent(DWORD dwEventCode);
    BOOL MatchSeverity(DWORD dwSeverity);
 
    void GenerateAlarm(Event *pEvent);
@@ -161,7 +163,7 @@ public:
 
 BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
-BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...);
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...);
 void ReloadEvents(void);
 
 

@@ -150,7 +150,7 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
 // Check if event's id match to the rule
 //
 
-BOOL EPRule::MatchEvent(DWORD dwEventId)
+BOOL EPRule::MatchEvent(DWORD dwEventCode)
 {
    DWORD i;
    BOOL bMatch = FALSE;
@@ -168,7 +168,7 @@ BOOL EPRule::MatchEvent(DWORD dwEventId)
          }
          else
          {
-            if (m_pdwEventList[i] == dwEventId)
+            if (m_pdwEventList[i] == dwEventCode)
             {
                bMatch = TRUE;
                break;
@@ -206,7 +206,7 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
    if (!(m_dwFlags & RF_DISABLED))
    {
       // Check if event match
-      if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Id())) &&
+      if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Code())) &&
           (MatchSeverity(pEvent->Severity())))
       {
          // Event matched, perform actions
@@ -286,7 +286,7 @@ BOOL EPRule::LoadFromDB(void)
    }
 
    // Load rule's events
-   sprintf(szQuery, "SELECT event_id FROM policy_event_list WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT event_code FROM policy_event_list WHERE rule_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -351,7 +351,7 @@ void EPRule::SaveToDB(void)
    // Events
    for(i = 0; i < m_dwNumEvents; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_event_list (rule_id,event_id) VALUES (%ld,%ld)",
+      sprintf(szQuery, "INSERT INTO policy_event_list (rule_id,event_code) VALUES (%ld,%ld)",
               m_dwId, m_pdwEventList[i]);
       DBQuery(g_hCoreDB, szQuery);
    }

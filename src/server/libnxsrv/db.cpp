@@ -231,7 +231,7 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColu
 // Get field's value as unsigned 64-bit int
 //
 
-QWORD LIBNXSRV_EXPORTABLE DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn)
+QWORD LIBNXSRV_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iColumn)
 {
    INT64 iVal;
    QWORD qwVal;
@@ -263,7 +263,7 @@ long LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn
 // Get field's value as signed 64-bit int
 //
 
-INT64 LIBNXSRV_EXPORTABLE DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn)
+INT64 LIBNXSRV_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColumn)
 {
    char *szVal;
 
@@ -376,7 +376,7 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iCol
 // Get field's value as unsigned 64-bit int from asynchronous SELECT result
 //
 
-QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn)
+QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn)
 {
    INT64 iVal;
    QWORD qwVal;
@@ -406,7 +406,7 @@ long LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 // Get field's value as signed 64-bit int from asynchronous SELECT result
 //
 
-INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn)
+INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn)
 {
    char szBuffer[64];
    

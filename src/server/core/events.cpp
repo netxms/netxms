@@ -49,7 +49,8 @@ static RWLOCK m_rwlockTemplateAccess;
 
 Event::Event()
 {
-   m_dwId = 0;
+   m_qwId = 0;
+   m_dwCode = 0;
    m_dwSeverity = 0;
    m_dwSource = 0;
    m_dwFlags = 0;
@@ -67,7 +68,8 @@ Event::Event()
 Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_list args)
 {
    m_tTimeStamp = time(NULL);
-   m_dwId = pTemplate->dwId;
+   m_qwId = CreateUniqueEventId();
+   m_dwCode = pTemplate->dwCode;
    m_dwSeverity = pTemplate->dwSeverity;
    m_dwFlags = pTemplate->dwFlags;
    m_dwSource = dwSourceId;
@@ -217,7 +219,7 @@ char *Event::ExpandText(char *szTemplate)
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
-                  sprintf(&pText[dwPos], "%lu", m_dwId);
+                  sprintf(&pText[dwPos], "%lu", m_dwCode);
                   dwPos = strlen(pText);
                   break;
                case 's':   // Severity code
@@ -319,8 +321,9 @@ char *Event::ExpandText(char *szTemplate)
 
 void Event::PrepareMessage(NXC_EVENT *pEventData)
 {
+   pEventData->qwEventId = htonq(m_qwId);
    pEventData->dwTimeStamp = htonl(m_tTimeStamp);
-   pEventData->dwEventId = htonl(m_dwId);
+   pEventData->dwEventCode = htonl(m_dwCode);
    pEventData->dwSeverity = htonl(m_dwSeverity);
    pEventData->dwSourceId = htonl(m_dwSource);
    strcpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText));
@@ -328,7 +331,7 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
 
 
 //
-// Load events from database
+// Load event configuration from database
 //
 
 static BOOL LoadEvents(void)
@@ -337,14 +340,14 @@ static BOOL LoadEvents(void)
    DWORD i;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT event_id,severity,flags,message,description FROM events ORDER BY event_id");
+   hResult = DBSelect(g_hCoreDB, "SELECT event_code,severity,flags,message,description FROM event_cfg ORDER BY event_code");
    if (hResult != NULL)
    {
       m_dwNumTemplates = DBGetNumRows(hResult);
       m_pEventTemplates = (EVENT_TEMPLATE *)malloc(sizeof(EVENT_TEMPLATE) * m_dwNumTemplates);
       for(i = 0; i < m_dwNumTemplates; i++)
       {
-         m_pEventTemplates[i].dwId = DBGetFieldULong(hResult, i, 0);
+         m_pEventTemplates[i].dwCode = DBGetFieldULong(hResult, i, 0);
          m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
          m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
          m_pEventTemplates[i].szMessageTemplate = strdup(DBGetField(hResult, i, 3));
@@ -432,28 +435,28 @@ void ReloadEvents(void)
 // Returns INULL if key not found or pointer to appropriate template
 //
 
-static EVENT_TEMPLATE *FindEventTemplate(DWORD dwId)
+static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 {
    DWORD dwFirst, dwLast, dwMid;
 
    dwFirst = 0;
    dwLast = m_dwNumTemplates - 1;
 
-   if ((dwId < m_pEventTemplates[0].dwId) || (dwId > m_pEventTemplates[dwLast].dwId))
+   if ((dwCode < m_pEventTemplates[0].dwCode) || (dwCode > m_pEventTemplates[dwLast].dwCode))
       return NULL;
 
    while(dwFirst < dwLast)
    {
       dwMid = (dwFirst + dwLast) / 2;
-      if (dwId == m_pEventTemplates[dwMid].dwId)
+      if (dwCode == m_pEventTemplates[dwMid].dwCode)
          return &m_pEventTemplates[dwMid];
-      if (dwId < m_pEventTemplates[dwMid].dwId)
+      if (dwCode < m_pEventTemplates[dwMid].dwCode)
          dwLast = dwMid - 1;
       else
          dwFirst = dwMid + 1;
    }
 
-   if (dwId == m_pEventTemplates[dwLast].dwId)
+   if (dwCode == m_pEventTemplates[dwLast].dwCode)
       return &m_pEventTemplates[dwLast];
 
    return NULL;
@@ -463,9 +466,9 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwId)
 //
 // Post event to the queue.
 // Arguments:
-// dwEventId  - Event ID
-// dwSourceId - Event source object ID
-// szFormat   - Parameter format string, each parameter represented by one character.
+// dwEventCode - Event code
+// dwSourceId  - Event source object ID
+// szFormat    - Parameter format string, each parameter represented by one character.
 //    The following format characters can be used:
 //        s - String
 //        d - Decimal integer
@@ -474,7 +477,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwId)
 //        i - Object ID
 //
 
-BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...)
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
@@ -486,7 +489,7 @@ BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...)
    // Find event template
    if (m_dwNumTemplates > 0)    // Is there any templates?
    {
-      pEventTemplate = FindEventTemplate(dwEventId);
+      pEventTemplate = FindEventTemplate(dwEventCode);
       if (pEventTemplate != NULL)
       {
          // Template found, create new event

@@ -432,8 +432,9 @@ typedef struct
 
 typedef struct
 {
+   QWORD qwEventId;
    DWORD dwTimeStamp;
-   DWORD dwEventId;
+   DWORD dwEventCode;
    DWORD dwSourceId;
    DWORD dwSeverity;
    TCHAR  szMessage[MAX_EVENT_MSG_LENGTH];

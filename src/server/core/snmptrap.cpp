@@ -51,7 +51,7 @@ static BOOL LoadTrapCfg(void)
    DWORD i, j, pdwBuffer[MAX_OID_LEN];
 
    // Load traps
-   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_id,description FROM snmp_trap_cfg");
+   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_code,description FROM snmp_trap_cfg");
    if (hResult != NULL)
    {
       m_dwNumTraps = DBGetNumRows(hResult);
@@ -409,7 +409,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 
    MutexUnlock(m_mutexTrapCfgAccess);
 
-   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,description) ")
+   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description) ")
                       _T("VALUES (%ld,'',%d,'')"), *pdwTrapId, EVENT_SNMP_UNMATCHED_TRAP);
    if (!DBQuery(g_hCoreDB, szQuery))
       dwResult = RCC_DB_FAILURE;
@@ -464,7 +464,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          // Update database
          pszEscDescr = EncodeSQLString(m_pTrapCfg[i].szDescription);
          SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
-         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_id=%ld,description='%s' WHERE trap_id=%ld"),
+         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%ld,description='%s' WHERE trap_id=%ld"),
                     szOID, m_pTrapCfg[i].dwEventId, pszEscDescr, m_pTrapCfg[i].dwId);
          free(pszEscDescr);
          bSuccess = DBQuery(g_hCoreDB, szQuery);

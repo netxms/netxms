@@ -22,17 +22,20 @@
 #if defined(DB_MSSQL)
 
 #define DB_SYNTAX	'MSSQL'
-#define DT_TEXT		text
+#define SQL_TEXT	text
+#define SQL_INT64	bigint
 
 #elif defined(DB_POSTGRESQL)
 
 #define DB_SYNTAX	'PGSQL'
-#define DT_TEXT		varchar // change it to oid?
+#define SQL_TEXT	varchar // change it to oid?
+#define SQL_INT64	bigint
 
 #else
 
 #define DB_SYNTAX	'MYSQL'
-#define DT_TEXT		blob
+#define SQL_TEXT	blob
+#define SQL_INT64	bigint
 
 #endif
 

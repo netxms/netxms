@@ -54,9 +54,14 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          char *pszMsg, szQuery[1024];
 
          pszMsg = EncodeSQLString(pEvent->Message());
-         sprintf(szQuery, "INSERT INTO event_log (event_id,event_timestamp,"
+         sprintf(szQuery, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
                           "event_source,event_severity,event_message) "
-                          "VALUES (%d,%d,%d,%d,'%s')", pEvent->Id(), pEvent->TimeStamp(),
+#ifdef _WIN32
+                          "VALUES (%I64d,%d,%d,%d,%d,'%s')", 
+#else
+                          "VALUES (%lld,%d,%d,%d,%d,'%s')", 
+#endif
+                 pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
                  pEvent->SourceId(), pEvent->Severity(), pszMsg);
          free(pszMsg);
          DBQuery(g_hCoreDB, szQuery);
@@ -71,7 +76,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->SourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-         printf("EVENT %d (F:0x%04X S:%d) FROM %s: %s\n", pEvent->Id(), 
+         printf("EVENT %d (F:0x%04X S:%d) FROM %s: %s\n", pEvent->Code(), 
                 pEvent->Flags(), pEvent->Severity(), pObject->Name(), pEvent->Message());
       }
 

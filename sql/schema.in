@@ -283,14 +283,14 @@ CREATE TABLE items
 ** Events configuration
 */
 
-CREATE TABLE events
+CREATE TABLE event_cfg
 (
 	event_code integer not null,
-	name varchar(63) not null,	// Short event name
+	event_name varchar(63) not null,	// Short event name
 	severity integer,
 	flags integer,
 	message varchar(255),		// Message template
-	description DT_TEXT,
+	description SQL_TEXT,
 	PRIMARY KEY(event_code)
 );
 
@@ -301,13 +301,14 @@ CREATE TABLE events
 
 CREATE TABLE event_log
 (
-	event_id bigint,
-	event_code integer,
+	event_id SQL_INT64 not null,
+	event_code integer not null,
 	event_timestamp integer,
 	event_source integer,			// Source object ID
 	event_severity integer,
 	event_message varchar(255),
-	correlated_to bigint default 0,
+	root_event_id SQL_INT64 default 0,	
+		/* Non-zero if current event correlates to some other event */
 	PRIMARY KEY(event_id)
 );
 
@@ -355,8 +356,8 @@ CREATE TABLE event_groups
 CREATE TABLE event_group_members
 (
 	group_id integer not null,
-	event_id integer not null,
-	PRIMARY KEY(group_id,event_id)
+	event_code integer not null,
+	PRIMARY KEY(group_id,event_code)
 );
 
 
@@ -386,8 +387,8 @@ CREATE TABLE policy_source_list
 CREATE TABLE policy_event_list
 (
 	rule_id integer not null,
-	event_id integer not null,
-	PRIMARY KEY(rule_id,event_id)
+	event_code integer not null,
+	PRIMARY KEY(rule_id,event_code)
 );
 
 CREATE TABLE policy_action_list
@@ -442,7 +443,8 @@ CREATE TABLE alarms
 	alarm_id integer not null,	// Unique alarm identifier
 	alarm_timestamp integer,
 	source_object_id integer,
-	source_event_id integer,
+	source_event_code integer,
+	source_event_id SQL_INT64,
 	message varchar(255),
 	severity integer,
 	alarm_key varchar(255),	// Alarm key (used for auto acknowlegment)
@@ -461,7 +463,7 @@ CREATE TABLE alarm_notes
 	note_id integer not null,
 	alarm_id integer not null,
 	alarm_note_timestamp integer,
-	note_text DT_TEXT,
+	note_text SQL_TEXT,
 	PRIMARY KEY(note_id)
 );
 
@@ -516,7 +518,7 @@ CREATE TABLE snmp_trap_cfg
 (
 	trap_id integer not null,
 	snmp_oid varchar(255) not null,
-	event_id integer not null,
+	event_code integer not null,
 	description varchar(255),
 	PRIMARY KEY(trap_id)
 );

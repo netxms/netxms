@@ -722,7 +722,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       msg.SetCode(CMD_EVENT_DB_RECORD);
       msg.SetId(dwRqId);
 
-      hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,name,severity,flags,message,description FROM events");
+      hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_code,name,severity,flags,message,description FROM event_cfg");
       if (hResult != NULL)
       {
          while(DBFetch(hResult))
@@ -848,7 +848,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
          // Check if event with specific id exists
          dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
-         sprintf(szQuery, "SELECT event_id FROM events WHERE event_id=%ld", dwEventId);
+         sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%ld", dwEventId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -875,13 +875,13 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
                if (bEventExist)
                {
-                  sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
+                  sprintf(szQuery, "UPDATE event_cfg SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_code=%ld",
                           szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
                           pszEscMsg, pszEscDescr, dwEventId);
                }
                else
                {
-                  sprintf(szQuery, "INSERT INTO events (event_id,name,severity,flags,"
+                  sprintf(szQuery, "INSERT INTO event_cfg (event_code,name,severity,flags,"
                                    "message,description) VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
                           dwEventId, szName, pRequest->GetVariableLong(VID_SEVERITY),
                           pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
@@ -948,7 +948,7 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
       {
          TCHAR szQuery[256];
 
-         _stprintf(szQuery, _T("DELETE FROM events WHERE event_id=%ld"), dwEventId);
+         _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%ld"), dwEventId);
          if (DBQuery(g_hCoreDB, szQuery))
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -1065,7 +1065,7 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
    MutexLock(m_mutexSendEvents, INFINITE);
 
    // Retrieve events from database
-   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,event_timestamp,event_source,"
+   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,event_code,event_timestamp,event_source,"
                                       "event_severity,event_message FROM event_log "
                                       "ORDER BY event_timestamp");
    if (hResult != NULL)
@@ -1073,11 +1073,12 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
       // Send events, one per message
       while(DBFetch(hResult))
       {
-         event.dwEventId = htonl(DBGetFieldAsyncULong(hResult, 0));
-         event.dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 1));
-         event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 2));
-         event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 3));
-         DBGetFieldAsync(hResult, 4, event.szMessage, MAX_EVENT_MSG_LENGTH);
+         event.qwEventId = htonq(DBGetFieldAsyncUInt64(hResult, 0));
+         event.dwEventCode = htonl(DBGetFieldAsyncULong(hResult, 1));
+         event.dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 2));
+         event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 3));
+         event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 4));
+         DBGetFieldAsync(hResult, 5, event.szMessage, MAX_EVENT_MSG_LENGTH);
          DecodeSQLString(event.szMessage);
          m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, sizeof(NXC_EVENT), &event, NULL));
       }
@@ -2107,7 +2108,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                      break;
                   case DCI_DT_INT64:
                   case DCI_DT_UINT64:
-                     pCurr->value.qwInt64 = htonq(DBGetFieldAsyncUQuad(hResult, 1));
+                     pCurr->value.qwInt64 = htonq(DBGetFieldAsyncUInt64(hResult, 1));
                      break;
                   case DCI_DT_FLOAT:
                      pCurr->value.dFloat = htond(DBGetFieldAsyncDouble(hResult, 1));
