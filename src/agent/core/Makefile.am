@@ -15,4 +15,4 @@ nxagentd_LDADD = @PTHREAD_LIBS@ ../../libnetxms/libnetxms.la ../../libnxcscp/lib
 messages.c: messages.h
 
 messages.h: messages.mc
-	$(PERL) @top_builddir@/tools/mc.pl $<
+	$(PERL) @top_builddir@/tools/mc.pl messages.mc

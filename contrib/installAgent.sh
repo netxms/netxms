@@ -50,10 +50,17 @@ if [ $? != 0 ]; then
 	exit 3
 fi
 
+# ask nxagentd gently
+$pkill nxagentd 2>/dev/null
+# wait a few seconds and smash it down
+sleep 15 && $pkill -9 nxagentd 2>/dev/null
+
 # do configure
 ./configure --prefix=$prefix --with-agent $configureAdd 2>/dev/null >/dev/null
 if [ $? != 0 ]; then
 	echo configure failed, duh
+   # Try to restart existing agent
+   $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
 	exit 4
 fi
 
@@ -61,23 +68,21 @@ fi
 $make >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
 	echo build failed, duh
+   # Try to restart existing agent
+   $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
 	exit 4
 fi
 
-# ask nxagentd gently
-$pkill nxagentd 2>/dev/null
-# wait a few seconds and smash it down
-sleep 15 && $pkill -9 nxagentd 2>/dev/null
-
-# now we can insall it...
+# now we can install it...
 $make install >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
 	echo install failed
+   # Try to restart existing agent
+   $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
 	exit 5
 fi
 
 # and restart
-sleep 10
 $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
 	echo nxagentd not started
