@@ -416,4 +416,16 @@ Language=English
 Inconsistent database: template object %1 has reference to child object %2 which is not a node object
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_TRAP_OID
+Language=English
+Invalid trap enterprise ID %1 in trap configuration table
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_TRAP_ARG_OID
+Language=English
+Invalid trap parameter OID %1 for trap %2 in trap configuration table
+.
+
 ;#endif

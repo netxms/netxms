@@ -42,6 +42,17 @@
 
 
 //
+// OID comparision results
+//
+
+#define OID_ERROR          -1
+#define OID_EQUAL          0
+#define OID_NOT_EQUAL      1
+#define OID_SHORTER        2
+#define OID_LONGER         3
+
+
+//
 // libnxsnmp error codes
 //
 
@@ -124,6 +135,10 @@ public:
    DWORD Length(void) { return m_dwLength; }
    const DWORD *GetValue(void) { return m_pdwValue; }
    const TCHAR *GetValueAsText(void) { return CHECK_NULL(m_pszTextValue); }
+   void SetValue(DWORD *pdwValue, DWORD dwLength);
+
+   int Compare(TCHAR *pszOid);
+   int Compare(DWORD *pdwOid, DWORD dwLen);
 };
 
 
@@ -185,6 +200,7 @@ private:
    BOOL ParseVarBinds(BYTE *pData, DWORD dwPDULength);
    BOOL ParsePDU(BYTE *pData, DWORD dwPDULength);
    BOOL ParseTrapPDU(BYTE *pData, DWORD dwPDULength);
+   BOOL ParseTrap2PDU(BYTE *pData, DWORD dwPDULength);
 
 public:
    SNMP_PDU();

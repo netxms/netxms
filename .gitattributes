@@ -80,6 +80,7 @@ sql/images.in -text
 sql/policy.in -text
 sql/schema.in -text
 sql/setup.in -text
+sql/traps.in -text
 sql/upgrade/00100011.nxdb -text
 sql/upgrade/00110012.nxdb -text
 sql/upgrade/00120013.nxdb -text

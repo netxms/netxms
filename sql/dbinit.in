@@ -49,3 +49,4 @@
 #include "events.in"
 #include "images.in"
 #include "policy.in"
+#include "traps.in"

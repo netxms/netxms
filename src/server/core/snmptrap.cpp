@@ -31,6 +31,157 @@
 
 
 //
+// Trap parameter mapping entry
+//
+
+struct TRAP_PARAMETER_MAP
+{
+   DWORD *pdwObjectId;     // Trap OID
+   DWORD dwOidLen;         // Trap OID length
+};
+
+
+//
+// Trap configuration entry
+//
+
+struct TRAP_CFG_ENTRY
+{
+   DWORD dwId;             // Entry ID
+   DWORD *pdwObjectId;     // Trap OID
+   DWORD dwOidLen;         // Trap OID length
+   DWORD dwEventId;        // Event ID
+   DWORD dwNumMaps;        // Number of parameter mappings
+   TRAP_PARAMETER_MAP *pMaps;
+};
+
+
+//
+// Static data
+//
+
+static MUTEX m_mutexTrapCfgAccess = NULL;
+static TRAP_CFG_ENTRY *m_pTrapCfg = NULL;
+static DWORD m_dwNumTraps = 0;
+
+
+//
+// Load trap configuration from database
+//
+
+static BOOL LoadTrapCfg(void)
+{
+   DB_RESULT hResult;
+   BOOL bResult = TRUE;
+   TCHAR szQuery[256];
+   DWORD i, j, pdwBuffer[MAX_OID_LEN];
+
+   // Load traps
+   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_id FROM snmp_trap_cfg ORDER BY sequence");
+   if (hResult != NULL)
+   {
+      m_dwNumTraps = DBGetNumRows(hResult);
+      m_pTrapCfg = (TRAP_CFG_ENTRY *)malloc(sizeof(TRAP_CFG_ENTRY) * m_dwNumTraps);
+      memset(m_pTrapCfg, 0, sizeof(TRAP_CFG_ENTRY) * m_dwNumTraps);
+      for(i = 0; i < m_dwNumTraps; i++)
+      {
+         m_pTrapCfg[i].dwId = DBGetFieldULong(hResult, i, 0);
+         m_pTrapCfg[i].dwOidLen = SNMPParseOID(DBGetField(hResult, i, 1), pdwBuffer, MAX_OID_LEN);
+         if (m_pTrapCfg[i].dwOidLen > 0)
+         {
+            m_pTrapCfg[i].pdwObjectId = (DWORD *)nx_memdup(pdwBuffer, m_pTrapCfg[i].dwOidLen * sizeof(DWORD));
+         }
+         else
+         {
+            WriteLog(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, "s", DBGetField(hResult, i, 1));
+            bResult = FALSE;
+         }
+         m_pTrapCfg[i].dwEventId = DBGetFieldULong(hResult, i, 2);
+      }
+      DBFreeResult(hResult);
+
+      // Load parameter mappings
+      for(i = 0; i < m_dwNumTraps; i++)
+      {
+         sprintf(szQuery, "SELECT snmp_oid FROM snmp_trap_pmap "
+                          "WHERE trap_id=%ld ORDER BY parameter", m_pTrapCfg[i].dwId);
+         hResult = DBSelect(g_hCoreDB, szQuery);
+         if (hResult != NULL)
+         {
+            m_pTrapCfg[i].dwNumMaps = DBGetNumRows(hResult);
+            m_pTrapCfg[i].pMaps = (TRAP_PARAMETER_MAP *)malloc(sizeof(TRAP_PARAMETER_MAP) * m_pTrapCfg[i].dwNumMaps);
+            for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+            {
+               m_pTrapCfg[i].pMaps[j].dwOidLen = SNMPParseOID(DBGetField(hResult, j, 0), pdwBuffer, MAX_OID_LEN);
+               if (m_pTrapCfg[i].pMaps[j].dwOidLen > 0)
+               {
+                  m_pTrapCfg[i].pMaps[j].pdwObjectId = 
+                     (DWORD *)nx_memdup(pdwBuffer, m_pTrapCfg[i].pMaps[j].dwOidLen * sizeof(DWORD));
+               }
+               else
+               {
+                  WriteLog(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", 
+                           DBGetField(hResult, j, 0), m_pTrapCfg[i].dwId);
+                  bResult = FALSE;
+               }
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = FALSE;
+         }
+      }
+   }
+   else
+   {
+      bResult = FALSE;
+   }
+   return bResult;
+}
+
+
+//
+// Generate event for matched trap
+//
+
+static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
+{
+   TCHAR *pszArgList[32], szBuffer[256];
+   TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
+   DWORD i, j;
+
+   for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
+   {
+      for(j = 0; j < pdu->GetNumVariables(); j++)
+         if (pdu->GetVariable(j)->GetName()->Compare(m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
+                     m_pTrapCfg[dwIndex].pMaps[i].dwOidLen) == OID_EQUAL)
+         {
+            pszArgList[i] = _tcsdup(pdu->GetVariable(j)->GetValueAsString(szBuffer, 256));
+            break;
+         }
+      if (j == pdu->GetNumVariables())
+         pszArgList[i] = _tcsdup(_T("<null>"));
+   }
+
+   szFormat[m_pTrapCfg[dwIndex].dwNumMaps] = 0;
+   PostEvent(m_pTrapCfg[dwIndex].dwEventId, dwObjectId, 
+             (m_pTrapCfg[dwIndex].dwNumMaps > 0) ? szFormat : NULL,
+             pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
+             pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
+             pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
+             pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
+             pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
+             pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
+             pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
+             pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
+
+   for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
+      free(pszArgList[i]);
+}
+
+
+//
 // Process trap
 //
 
@@ -40,31 +191,48 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    TCHAR *pszTrapArgs, szBuffer[512];
    SNMP_Variable *pVar;
    Node *pNode;
+   int iResult;
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
-   DbgPrintf(AF_DEBUG_SNMP, "Received SNMP trap %s from %s\n", 
+   DbgPrintf(AF_DEBUG_SNMP, "Received SNMP trap %s from %s", 
              pdu->GetTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
 
    // Match IP address to object
    pNode = FindNodeByIP(dwOriginAddr);
    if (pNode != NULL)
    {
-      // Build trap's parameters string
-      dwBufSize = pdu->GetNumVariables() * 4096;
-      pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
-      for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+      // Find if we have this trap in our list
+      for(i = 0; i < m_dwNumTraps; i++)
       {
-         pVar = pdu->GetVariable(i);
-         dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                (i == 0) ? _T("") : _T("; "),
-                                pVar->GetName()->GetValueAsText(), 
-                                pVar->GetValueAsString(szBuffer, 512));
+         iResult = pdu->GetTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
+         if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
+            break;   // Find the match
       }
 
-      // Generate default event for unmatched traps
-      PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
-                pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
-      free(pszTrapArgs);
+      if (i < m_dwNumTraps)
+      {
+         GenerateTrapEvent(pNode->Id(), i, pdu);
+      }
+      else     // Process unmatched traps
+      {
+         // Build trap's parameters string
+         dwBufSize = pdu->GetNumVariables() * 4096;
+         pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
+         pszTrapArgs[0] = 0;
+         for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+         {
+            pVar = pdu->GetVariable(i);
+            dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
+                                   (i == 0) ? _T("") : _T("; "),
+                                   pVar->GetName()->GetValueAsText(), 
+                                   pVar->GetValueAsString(szBuffer, 512));
+         }
+
+         // Generate default event for unmatched traps
+         PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
+                   pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
+         free(pszTrapArgs);
+      }
    }
 }
 
@@ -80,6 +248,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    int iAddrLen, iBytes;
    SNMP_Transport *pTransport;
    SNMP_PDU *pdu;
+
+   LoadTrapCfg();
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)

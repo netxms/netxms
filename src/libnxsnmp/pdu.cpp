@@ -221,7 +221,7 @@ BOOL SNMP_PDU::ParsePDU(BYTE *pData, DWORD dwPDULength)
 
 
 //
-// Parse TRAP PDU
+// Parse version 1 TRAP PDU
 //
 
 BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
@@ -321,6 +321,66 @@ BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
    if (bResult)
       bResult = ParseVarBinds(pbCurrPos, dwPDULength);
 
+   if (bResult && (m_iTrapType < 6))
+   {
+      static DWORD pdwStdOid[6][10] =
+      {
+         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 1 },   // cold start
+         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 2 },   // warm start
+         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 3 },   // link down
+         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 4 },   // link up
+         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 5 },   // authentication failure
+         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 6 }    // EGP neighbor loss (obsolete)
+      };
+
+      // For standard trap types, create standard V2 Enterprise ID
+      m_pEnterprise->SetValue(pdwStdOid[m_iTrapType], 10);
+   }
+
+   return bResult;
+}
+
+
+//
+// Parse version 2 TRAP PDU
+//
+
+BOOL SNMP_PDU::ParseTrap2PDU(BYTE *pData, DWORD dwPDULength)
+{
+   BOOL bResult;
+   static DWORD pdwStdTrapPrefix[9] = { 1, 3, 6, 1, 6, 3, 1, 1, 5 };
+
+   bResult = ParsePDU(pData, dwPDULength);
+   if (bResult)
+   {
+      bResult = FALSE;
+      if (m_dwNumVariables >= 2)
+      {
+         if (m_ppVarList[1]->GetType() == ASN_OBJECT_ID)
+         {
+            m_pEnterprise = new SNMP_ObjectId(
+               m_ppVarList[1]->GetValueLength() / sizeof(DWORD), 
+               (DWORD *)m_ppVarList[1]->GetValue());
+            bResult = TRUE;
+         }
+      }
+
+      // Set V1 trap type and specific trap type fields
+      if (bResult)
+      {
+         if ((m_pEnterprise->Compare(pdwStdTrapPrefix, 9) == OID_SHORTER) &&
+             (m_pEnterprise->Length() == 10))
+         {
+            m_iTrapType = m_pEnterprise->GetValue()[9];
+            m_iSpecificTrap = 0;
+         }
+         else
+         {
+            m_iTrapType = 6;
+            m_iSpecificTrap = m_pEnterprise->GetValue()[m_pEnterprise->Length() - 1];
+         }
+      }
+   }
    return bResult;
 }
 
@@ -375,23 +435,7 @@ BOOL SNMP_PDU::Parse(BYTE *pRawData, DWORD dwRawLength)
             break;
          case ASN_TRAP_V2_PDU:
             m_dwCommand = SNMP_TRAP;
-            m_iTrapType = 6;
-            m_iSpecificTrap = 0;
-            bResult = ParsePDU(pbCurrPos, dwLength);
-            if (bResult)
-            {
-               bResult = FALSE;
-               if (m_dwNumVariables >= 2)
-               {
-                  if (m_ppVarList[1]->GetType() == ASN_OBJECT_ID)
-                  {
-                     m_pEnterprise = new SNMP_ObjectId(
-                        m_ppVarList[1]->GetValueLength() / sizeof(DWORD), 
-                        (DWORD *)m_ppVarList[1]->GetValue());
-                     bResult = TRUE;
-                  }
-               }
-            }
+            bResult = ParseTrap2PDU(pbCurrPos, dwLength);
             break;
          case ASN_GET_REQUEST_PDU:
             m_dwCommand = SNMP_GET_REQUEST;

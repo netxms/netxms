@@ -3007,7 +3007,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
                               pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
                               pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
                               pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-                              pszArgList[30], pszArgList[31], pszArgList[32], pszArgList[33]);
+                              pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
          
          // Cleanup
          for(i = 0; i < iNumArgs; i++)

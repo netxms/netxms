@@ -277,6 +277,60 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   1) SNMP trap OID#0D#0A' CONCAT
 		'   2) Trap parameters'
 	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_COLD_START, 'SNMP_COLD_START',
+		EVENT_SEVERITY_NORMAL, 1,
+		'System was cold-started',
+		'Generated when system receives a coldStart SNMP trap#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_WARM_START, 'SNMP_WARM_START',
+		EVENT_SEVERITY_NORMAL, 1,
+		'System was warm-started',
+		'Generated when system receives a warmStart SNMP trap#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_LINK_DOWN, 'SNMP_LINK_DOWN',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Link is down',
+		'Generated when system receives a linkDown SNMP trap#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_LINK_UP, 'SNMP_LINK_UP',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Link is up',
+		'Generated when system receives a linkUp SNMP trap#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_AUTH_FAILURE, 'SNMP_AUTH_FAILURE',
+		EVENT_SEVERITY_WARNING, 1,
+		'SNMP authentication failure',
+		'Generated when system receives an authenticationFailure SNMP trap#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_EGP_NL, 'SNMP_EGP_NEIGHBOR_LOSS',
+		EVENT_SEVERITY_WARNING, 1,
+		'EGP neighbor loss',
+		'Generated when system receives an egpNeighborLoss SNMP trap#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
 
 
 /*

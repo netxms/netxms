@@ -81,5 +81,11 @@
 #define EVENT_INCORRECT_NETMASK  24
 
 #define EVENT_SNMP_UNMATCHED_TRAP   500
+#define EVENT_SNMP_COLD_START       501
+#define EVENT_SNMP_WARM_START       502
+#define EVENT_SNMP_LINK_DOWN        503
+#define EVENT_SNMP_LINK_UP          504
+#define EVENT_SNMP_AUTH_FAILURE     505
+#define EVENT_SNMP_EGP_NL           506
 
 #endif

@@ -69,3 +69,48 @@ void SNMP_ObjectId::ConvertToText(void)
    m_pszTextValue = (TCHAR *)realloc(m_pszTextValue, sizeof(TCHAR) * (m_dwLength * 6 + 1));
    SNMPConvertOIDToText(m_dwLength, m_pdwValue, m_pszTextValue, m_dwLength * 6 + 1);
 }
+
+
+//
+// Compare OID with another
+//
+
+int SNMP_ObjectId::Compare(TCHAR *pszOid)
+{
+   DWORD dwBuffer[MAX_OID_LEN], dwLength;
+
+   dwLength = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
+   if (dwLength == 0)
+      return OID_ERROR;
+   return Compare(dwBuffer, dwLength);
+}
+
+
+//
+// Compare OID to another
+//
+
+int SNMP_ObjectId::Compare(DWORD *pdwOid, DWORD dwLen)
+{
+   if ((pdwOid == NULL) || (dwLen == 0) || (m_pdwValue == NULL))
+      return OID_ERROR;
+
+   if (memcmp(m_pdwValue, pdwOid, min(dwLen, m_dwLength) * sizeof(DWORD)))
+      return OID_NOT_EQUAL;
+
+   return (dwLen == m_dwLength) ? OID_EQUAL : 
+            ((dwLen < m_dwLength) ? OID_SHORTER : OID_LONGER);
+}
+
+
+//
+// Set new value
+//
+
+void SNMP_ObjectId::SetValue(DWORD *pdwValue, DWORD dwLength)
+{
+   safe_free(m_pdwValue);
+   m_dwLength = dwLength;
+   m_pdwValue = (DWORD *)nx_memdup(pdwValue, sizeof(DWORD) * dwLength);
+   ConvertToText();
+}
