@@ -158,32 +158,19 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
 
 #else
 
-   struct ifconf ifc;
+   struct if_nameindex *ifni;
    struct ifreq ifrq;
    int i, iSock, iCount;
    BOOL bIoFailed = FALSE;
 
-   iSock = socket(AF_INET, SOCK_DGRAM, 0);
-   if (iSock != -1)
+   ifni = if_nameindex();
+   if (ifni != NULL)
    {
-      ifc.ifc_buf = NULL;
-      iCount = 10;
-      do
+      iSock = socket(AF_INET, SOCK_DGRAM, 0);
+      if (iSock != -1)
       {
-         iCount += 10;
-         ifc.ifc_len = sizeof(struct ifreq) * iCount;
-         ifc.ifc_buf = (char *)realloc(ifc.ifc_buf, ifc.ifc_len);
-         if (ioctl(iSock, SIOCGIFCONF, &ifc) < 0)
-         {
-            WriteLog(MSG_IOCTL_FAILED, EVENTLOG_ERROR_TYPE, "se", "SIOCGIFCONF", errno);
-            bIoFailed = TRUE;
-            break;
-         }
-      } while(ifc.ifc_len == sizeof(struct ifreq) * iCount);
-
-      if (!bIoFailed)
-      {
-         iCount = ifc.ifc_len / sizeof(struct ifreq);
+         // Count interfaces
+         for(iCount = 0; ifni[iCount].if_index != 0; iCount++);
 
          // Allocate and initialize interface list structure
          pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
@@ -193,10 +180,9 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
 
          for(i = 0; i < iCount; i++)
          {
-            strcpy(ifrq.ifr_name, ifc.ifc_req[i].ifr_name);
-
             // Interface name
-            strcpy(pIfList->pInterfaces[i].szName, ifc.ifc_req[i].ifr_name);
+            strcpy(pIfList->pInterfaces[i].szName, ifni[i].if_name);
+            strcpy(ifrq.ifr_name, ifni[i].if_name);
 
             // IP address
             if (ioctl(iSock, SIOCGIFADDR, &ifrq) == 0)
@@ -244,12 +230,15 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
             }
 
             // Interface index
-            pIfList->pInterfaces[i].dwIndex = i + 1;
+            pIfList->pInterfaces[i].dwIndex = ifni[i].if_index;
          }
+         close(iSock);
       }
-
-      close(iSock);
-      free(ifc.ifc_buf);
+      if_freenameindex(ifni);
+   }
+   else
+   {
+      WriteLog(MSG_IFNAMEINDEX_FAILED, EVENTLOG_ERROR_TYPE, "e", errno);
    }
 
 #endif

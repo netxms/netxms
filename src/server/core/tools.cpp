@@ -175,12 +175,20 @@ DWORD GetLocalIpAddr(void)
 {
    INTERFACE_LIST *pIfList;
    DWORD dwAddr = 0;
+   int i;
 
    pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
-      if (pIfList->iNumEntries > 0)
-         dwAddr = pIfList->pInterfaces[0].dwIpAddr;
+      CleanInterfaceList(pIfList);
+      
+      // Find first interface with IP address
+      for(i = 0; i < pIfList->iNumEntries; i++)
+         if (pIfList->pInterfaces[i].dwIpAddr != 0)
+         {
+            dwAddr = pIfList->pInterfaces[i].dwIpAddr;
+            break;
+         }
       DestroyInterfaceList(pIfList);
    }
    return dwAddr;
