@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.4 2005-01-24 19:51:16 alk Exp $ */
+/* $Id: freebsd.cpp,v 1.5 2005-03-10 19:04:07 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -46,6 +46,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
 			DCI_DT_INT,		"IPv6 forwarding status" },
+   { "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,
+			DCI_DT_INT,		"Administrative status of *" },
+   { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,
+			DCI_DT_INT,		"Physical link status of *" },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
 			DCI_DT_UINT,	"" },
@@ -127,6 +131,10 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/24 19:51:16  alk
+reurn types/comments added
+Process.Count(*)/System.ProcessCount fixed
+
 Revision 1.3  2005/01/23 05:08:06  alk
 + System.CPU.Count
 + System.Memory.Physical.*

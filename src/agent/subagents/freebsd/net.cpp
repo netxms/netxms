@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.4 2005-03-10 12:23:56 alk Exp $ */
+/* $Id: net.cpp,v 1.5 2005-03-10 19:04:07 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -30,12 +30,13 @@
 #include <sys/sysctl.h>
 #include <sys/sockio.h>
 #include <net/if.h>
+#include <net/if_media.h>
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #include <net/route.h>
 #include <net/iso88025.h>
-#include <netinet/in.h>
 #include <netinet/if_ether.h>
+#include <netinet/in.h>
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <net/ethernet.h>
@@ -80,6 +81,116 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 		{
 			ret_int(pValue, nVal);
 			nRet = SYSINFO_RC_SUCCESS;
+		}
+	}
+
+	return nRet;
+}
+
+LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_SUCCESS;
+	char szArg[512];
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	if (szArg[0] != 0)
+	{
+		if (szArg[0] >= '0' && szArg[0] <= '9')
+		{
+			// index
+			if (if_indextoname(atoi(szArg), szArg) != szArg)
+			{
+				// not found
+				nRet = SYSINFO_RC_ERROR;
+			}
+		}
+
+		if (nRet == SYSINFO_RC_SUCCESS)
+		{
+			int nSocket;
+
+			nRet = SYSINFO_RC_ERROR;
+
+			nSocket = socket(AF_INET, SOCK_DGRAM, 0);
+			if (nSocket > 0)
+			{
+				struct ifreq ifr;
+				int flags;
+
+				memset(&ifr, 0, sizeof(ifr));
+				strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
+				if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
+				{
+					flags = (ifr.ifr_flags & 0xffff) | (ifr.ifr_flagshigh << 16);
+					if ((flags & IFF_UP) == IFF_UP)
+					{
+						// enabled
+						ret_int(pValue, 1);
+						nRet = SYSINFO_RC_SUCCESS;
+					}
+					else
+					{
+						ret_int(pValue, 0);
+						nRet = SYSINFO_RC_SUCCESS;
+					}
+				}
+				close(nSocket);
+			}
+		}
+	}
+
+	return nRet;
+}
+
+LONG H_NetIfLink(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_SUCCESS;
+	char szArg[512];
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	if (szArg[0] != 0)
+	{
+		if (szArg[0] >= '0' && szArg[0] <= '9')
+		{
+			// index
+			if (if_indextoname(atoi(szArg), szArg) != szArg)
+			{
+				// not found
+				nRet = SYSINFO_RC_ERROR;
+			}
+		}
+
+		if (nRet == SYSINFO_RC_SUCCESS)
+		{
+			int nSocket;
+
+			nRet = SYSINFO_RC_ERROR;
+
+			nSocket = socket(AF_INET, SOCK_DGRAM, 0);
+			if (nSocket > 0)
+			{
+				struct ifmediareq ifmr;
+
+				memset(&ifmr, 0, sizeof(ifmr));
+				strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
+				{
+					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
+							(ifmr.ifm_status & IFM_ACTIVE) == IFM_ACTIVE)
+					{
+						ret_int(pValue, 1);
+						nRet = SYSINFO_RC_SUCCESS;
+					}
+					else
+					{
+						ret_int(pValue, 0);
+						nRet = SYSINFO_RC_SUCCESS;
+					}
+				}
+				close(nSocket);
+			}
 		}
 	}
 
@@ -294,6 +405,11 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/03/10 12:23:56  alk
+issue #18
+alias handling on inet interfaces
+status: fixed
+
 Revision 1.3  2005/02/14 17:03:37  alk
 issue #9
 
