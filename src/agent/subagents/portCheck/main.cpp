@@ -1,10 +1,15 @@
-/* $Id: main.cpp,v 1.3 2005-01-28 02:50:32 alk Exp $ */
+/* $Id: main.cpp,v 1.4 2005-01-28 12:56:46 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nxclapi.h>
 #include <nxcscpapi.h>
 
+#ifdef _WIN32
+#define PORTCHECK_EXPORTABLE __declspec(dllexport) __cdecl
+#else
+#define PORTCHECK_EXPORTABLE
+#endif
 
 #include "main.h"
 #include "net.h"
@@ -17,7 +22,7 @@
 BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponce)
 {
 	BOOL bHandled = TRUE;
-	WORD wType, wPort, wIpProto;
+	WORD wType, wPort;
 	DWORD dwAddress;
 	char szRequest[1024 * 10];
 	char szResponce[1024 * 10];
@@ -89,10 +94,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "ServiceCheck.SSH(*)",          H_CheckSSH,        NULL },
 };
 
-static NETXMS_SUBAGENT_ENUM m_enums[] =
+/*static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    //{ "Net.ArpCache",                 H_NetArpCache,     NULL },
-};
+};*/
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
@@ -103,15 +108,15 @@ static NETXMS_SUBAGENT_INFO m_info =
 	&CommandHandler,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	NULL //m_enums
 };
 
 //
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 {
    *ppInfo = &m_info;
 
@@ -122,6 +127,12 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/28 02:50:32  alk
+added support for CMD_CHECK_NETWORK_SERVICE
+suported:
+	ssh: host/port req.
+	pop3: host/port/request string req. request string format: "login:password"
+
 Revision 1.2  2005/01/19 13:42:47  alk
 + ServiceCheck.SSH(host[, port]) Added
 
