@@ -334,6 +334,12 @@ BEGIN
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
+    POPUP "Event"
+    BEGIN
+        MENUITEM "&New...\tCtrl+N",             ID_EVENT_NEW
+        MENUITEM "&Edit...\tEnter",             ID_EVENT_EDIT
+        MENUITEM "&Delete\tDel",                ID_EVENT_DELETE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -505,6 +511,12 @@ BEGIN
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
+    POPUP "Event"
+    BEGIN
+        MENUITEM "&New...",                     ID_EVENT_NEW
+        MENUITEM "&Edit...",                    ID_EVENT_EDIT
+        MENUITEM "&Delete",                     ID_EVENT_DELETE
+    END
 END
 
 
@@ -582,6 +594,13 @@ END
 IDA_NETMAP ACCELERATORS DISCARDABLE 
 BEGIN
     VK_BACK,        ID_OBJECT_OPENPARENT,   VIRTKEY, NOINVERT
+END
+
+IDA_EVENT_EDITOR ACCELERATORS DISCARDABLE 
+BEGIN
+    "N",            ID_EVENT_NEW,           VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EVENT_DELETE,        VIRTKEY, NOINVERT
+    VK_RETURN,      ID_EVENT_EDIT,          VIRTKEY, NOINVERT
 END
 
 

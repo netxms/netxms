@@ -1,4 +1,12 @@
 *
+* 0.1.8
+*
+
+- Added support for System.CPU.Count and System.ProcessList parameters
+  under Windows
+
+
+*
 * 0.1.7
 *
 

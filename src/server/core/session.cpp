@@ -834,7 +834,7 @@ void ClientSession::SendAllConfigVars(void)
       msg.SetCode(CMD_CONFIG_VARIABLE);
 
       // Retrieve configuration variables from database
-      hResult = DBSelect(g_hCoreDB, "SELECT var_name,var_value FROM config");
+      hResult = DBSelect(g_hCoreDB, "SELECT var_name,var_value FROM config WHERE is_visible=1");
       if (hResult != NULL)
       {
          // Send events, one per message

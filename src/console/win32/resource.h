@@ -127,6 +127,7 @@
 #define IDI_OVL_STATUS_UNMANAGED        237
 #define IDI_OVL_STATUS_DISABLED         238
 #define IDI_OVL_STATUS_TESTING          239
+#define IDA_EVENT_EDITOR                240
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -350,6 +351,9 @@
 #define ID_OBJECT_OPENPARENT            32887
 #define ID_ITEM_DUPLICATE               32889
 #define ID_OBJECT_WAKEUP                32891
+#define ID_EVENT_NEW                    32894
+#define ID_EVENT_EDIT                   32895
+#define ID_EVENT_DELETE                 32896
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -358,8 +362,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        240
-#define _APS_NEXT_COMMAND_VALUE         32894
+#define _APS_NEXT_RESOURCE_VALUE        241
+#define _APS_NEXT_COMMAND_VALUE         32897
 #define _APS_NEXT_CONTROL_VALUE         1176
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

@@ -121,6 +121,8 @@ protected:
 	HACCEL m_hEventBrowserAccel;  // Accelerator for event browser
 	HMENU m_hObjectBrowserMenu;   // Menu for object browser
 	HACCEL m_hObjectBrowserAccel; // Accelerator for object browser
+	HMENU m_hEventEditorMenu;     // Menu for event editor
+	HACCEL m_hEventEditorAccel;   // Accelerator for event editor
 	HMENU m_hUserEditorMenu;      // Menu for user editor
 	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
 	HMENU m_hDCEditorMenu;        // Menu for data collection editor

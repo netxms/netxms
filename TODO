@@ -42,6 +42,11 @@ CORE AGENT:
 - Add signal handlers for UNIX
 
 
+LINUX AGENT:
+
+- Return correct interface type in Net.InterfaceList
+
+
 WINDOWS CONSOLE:
 
 - Add custom background erasing code in policy editor for smooth painting
