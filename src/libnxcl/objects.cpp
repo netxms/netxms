@@ -114,10 +114,9 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
    DebugPrintf("ReplaceObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
-   if (pObject->pdwChildList != NULL)
-      MemFree(pObject->pdwChildList);
-   if (pObject->pdwParentList != NULL)
-      MemFree(pObject->pdwParentList);
+   MemFree(pObject->pdwChildList);
+   MemFree(pObject->pdwParentList);
+   MemFree(pObject->pAccessList);
    memcpy(pObject, pNewObject, sizeof(NXC_OBJECT));
    MemFree(pNewObject);
 }
@@ -130,10 +129,9 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 static void DestroyObject(NXC_OBJECT *pObject)
 {
    DebugPrintf("DestroyObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
-   if (pObject->pdwChildList != NULL)
-      MemFree(pObject->pdwChildList);
-   if (pObject->pdwParentList != NULL)
-      MemFree(pObject->pdwParentList);
+   MemFree(pObject->pdwChildList);
+   MemFree(pObject->pdwParentList);
+   MemFree(pObject->pAccessList);
    MemFree(pObject);
 }
 
@@ -145,7 +143,7 @@ static void DestroyObject(NXC_OBJECT *pObject)
 static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject;
-   DWORD i, dwId;
+   DWORD i, dwId1, dwId2;
 
    // Allocate memory for new object structure
    pObject = (NXC_OBJECT *)MemAlloc(sizeof(NXC_OBJECT));
@@ -162,14 +160,25 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
    pObject->pdwParentList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumParents);
-   for(i = 0, dwId = VID_PARENT_ID_BASE; i < pObject->dwNumParents; i++, dwId++)
-      pObject->pdwParentList[i] = pMsg->GetVariableLong(dwId);
+   for(i = 0, dwId1 = VID_PARENT_ID_BASE; i < pObject->dwNumParents; i++, dwId1++)
+      pObject->pdwParentList[i] = pMsg->GetVariableLong(dwId1);
 
    // Childs
    pObject->dwNumChilds = pMsg->GetVariableLong(VID_CHILD_CNT);
    pObject->pdwChildList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumChilds);
-   for(i = 0, dwId = VID_CHILD_ID_BASE; i < pObject->dwNumChilds; i++, dwId++)
-      pObject->pdwChildList[i] = pMsg->GetVariableLong(dwId);
+   for(i = 0, dwId1 = VID_CHILD_ID_BASE; i < pObject->dwNumChilds; i++, dwId1++)
+      pObject->pdwChildList[i] = pMsg->GetVariableLong(dwId1);
+
+   // Access control
+   pObject->bInheritRights = pMsg->GetVariableShort(VID_INHERIT_RIGHTS);
+   pObject->dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
+   pObject->pAccessList = (NXC_ACL_ENTRY *)MemAlloc(sizeof(NXC_ACL_ENTRY) * pObject->dwAclSize);
+   for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE; 
+       i < pObject->dwAclSize; i++, dwId1++, dwId2++)
+   {
+      pObject->pAccessList[i].dwUserId = pMsg->GetVariableLong(dwId1);
+      pObject->pAccessList[i].dwAccessRights = pMsg->GetVariableLong(dwId2);
+   }
 
    // Class-specific attributes
    switch(pObject->iClass)
@@ -374,4 +383,88 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName)
          NXCUnlockObjectIndex();
       }
    return pObject;
+}
+
+
+//
+// Duplicate object update information from NXCModifyObject()
+//
+
+NXC_OBJECT_UPDATE *DuplicateObjectUpdate(NXC_OBJECT_UPDATE *pSrc)
+{
+   NXC_OBJECT_UPDATE *pDest;
+
+   pDest = (NXC_OBJECT_UPDATE *)nx_memdup(pSrc, sizeof(NXC_OBJECT_UPDATE));
+   pDest->pszCommunity = (pSrc->dwFlags & OBJ_UPDATE_SNMP_COMMUNITY) ? nx_strdup(pSrc->pszCommunity) : NULL;
+   pDest->pszName = (pSrc->dwFlags & OBJ_UPDATE_NAME) ? nx_strdup(pSrc->pszName) : NULL;
+   pDest->pszSecret = (pSrc->dwFlags & OBJ_UPDATE_AGENT_SECRET) ? nx_strdup(pSrc->pszSecret) : NULL;
+   pDest->pAccessList = (pSrc->dwFlags & OBJ_UPDATE_ACL) ? 
+      (NXC_ACL_ENTRY *)nx_memdup(pSrc->pAccessList, sizeof(NXC_ACL_ENTRY) * pSrc->dwAclSize) : NULL;
+   return pDest;
+}
+
+
+//
+// Modify object
+//
+
+DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode;
+
+   // Build request message
+   msg.SetCode(CMD_MODIFY_OBJECT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, pUpdate->dwObjectId);
+   if (pUpdate->dwFlags & OBJ_UPDATE_NAME)
+      msg.SetVariable(VID_OBJECT_NAME, pUpdate->pszName);
+   if (pUpdate->dwFlags & OBJ_UPDATE_AGENT_PORT)
+      msg.SetVariable(VID_AGENT_PORT, (WORD)pUpdate->iAgentPort);
+   if (pUpdate->dwFlags & OBJ_UPDATE_AGENT_AUTH)
+      msg.SetVariable(VID_AUTH_METHOD, (WORD)pUpdate->iAuthType);
+   if (pUpdate->dwFlags & OBJ_UPDATE_AGENT_SECRET)
+      msg.SetVariable(VID_SHARED_SECRET, pUpdate->pszSecret);
+   if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_COMMUNITY)
+      msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
+   if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
+   {
+      DWORD i, dwId1, dwId2;
+
+      msg.SetVariable(VID_ACL_SIZE, pUpdate->dwAclSize);
+      msg.SetVariable(VID_INHERIT_RIGHTS, (WORD)pUpdate->bInheritRights);
+      for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;
+          i < pUpdate->dwAclSize; i++, dwId1++, dwId2++)
+      {
+         msg.SetVariable(dwId1, pUpdate->pAccessList[i].dwUserId);
+         msg.SetVariable(dwId2, pUpdate->pAccessList[i].dwAccessRights);
+      }
+   }
+
+   // Send request
+   SendMsg(&msg);
+
+   // Wait for reply
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   // Free dynamic string because request processor will only destroy
+   // memory block at pArg
+   if (bDynamicArg)
+   {
+      MemFree(pUpdate->pszCommunity);
+      MemFree(pUpdate->pszName);
+      MemFree(pUpdate->pszSecret);
+      MemFree(pUpdate->pAccessList);
+   }
+
+   return dwRetCode;
 }

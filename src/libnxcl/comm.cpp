@@ -53,7 +53,7 @@ static char *MessageCodeName(WORD wCode)
       "CMD_GET_OBJECTS",
       "CMD_OBJECT",
       "CMD_DELETE_OBJECT",
-      "CMD_UPDATE_OBJECT",
+      "CMD_MODIFY_OBJECT",
       "CMD_OBJECT_LIST_END",
       "CMD_OBJECT_UPDATE",
       "CMD_GET_EVENTS",

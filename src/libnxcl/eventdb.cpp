@@ -178,6 +178,8 @@ DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
          {
             m_ppEventTemplates[i]->dwFlags &= ~EF_MODIFIED;
             dwRetCode = SetEventInfo(g_dwRequestId++, m_ppEventTemplates[i], FALSE);
+            // Restore modified flag
+            m_ppEventTemplates[i]->dwFlags |= EF_MODIFIED;
             if (dwRetCode != RCC_SUCCESS)
                break;
          }
@@ -191,9 +193,14 @@ DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
       SendMsg(&msg);
       pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
       if (pResponce != NULL)
+      {
          dwRetCode = pResponce->GetVariableLong(VID_RCC);
+         delete pResponce;
+      }
       else
+      {
          dwRetCode = RCC_TIMEOUT;
+      }
 
       m_bEventDBOpened = FALSE;
       DestroyEventDB();
@@ -226,9 +233,14 @@ DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg)
    // Wait for reply
    pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
    if (pResponce != NULL)
+   {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
    else
+   {
       dwRetCode = RCC_TIMEOUT;
+   }
 
    // Free dynamic string because request processor will only destroy
    // memory block at pArg

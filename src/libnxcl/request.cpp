@@ -76,6 +76,10 @@ HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...)
             hRequest = CreateRequest(RQ_SET_EVENT_INFO, 
                                      DuplicateEventTemplate(va_arg(args, NXC_EVENT_TEMPLATE *)), TRUE);
             break;
+         case NXC_OP_MODIFY_OBJECT:
+            hRequest = CreateRequest(RQ_MODIFY_OBJECT, 
+                                     DuplicateObjectUpdate(va_arg(args, NXC_OBJECT_UPDATE *)), TRUE);
+            break;
          default:
             hRequest = INVALID_REQUEST_HANDLE;
             break;
@@ -113,6 +117,10 @@ void RequestProcessor(void *pArg)
             break;
          case RQ_SYNC_OBJECTS:
             SyncObjects();
+            break;
+         case RQ_MODIFY_OBJECT:
+            dwRetCode = ModifyObject(pRequest->dwHandle, (NXC_OBJECT_UPDATE *)pRequest->pArg,
+                                     pRequest->bDynamicArg);
             break;
          case RQ_SYNC_EVENTS:
             SyncEvents();

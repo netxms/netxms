@@ -89,6 +89,27 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 
 
 //
+// Ge text for error
+//
+
+const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
+{
+   static char *pszErrorText[] =
+   {
+      "Request completed successfully",
+      "Component locked",
+      "Access denied",
+      "Invalid request",
+      "Request timed out",
+      "Request is out of state",
+      "Database failure",
+      "Invalid object ID"
+   };
+   return ((dwError >= 0) && (dwError <= 7)) ? pszErrorText[dwError] : "Unknown error code";
+}
+
+
+//
 // DLL entry point
 //
 

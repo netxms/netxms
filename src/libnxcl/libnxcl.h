@@ -61,6 +61,7 @@
 #define RQ_OPEN_EVENT_DB   4
 #define RQ_CLOSE_EVENT_DB  5
 #define RQ_SET_EVENT_INFO  6
+#define RQ_MODIFY_OBJECT   7
 
 
 //
@@ -135,7 +136,6 @@ public:
 void ObjectsInit(void);
 
 BOOL Connect(void);
-void SyncObjects(void);
 void SyncEvents(void);
 DWORD OpenEventDB(DWORD dwRqId);
 DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges);
@@ -144,7 +144,11 @@ void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
 
+void SyncObjects(void);
+DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg);
+
 NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc);
+NXC_OBJECT_UPDATE *DuplicateObjectUpdate(NXC_OBJECT_UPDATE *pSrc);
 
 BOOL SendMsg(CSCPMessage *pMsg);
 CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
