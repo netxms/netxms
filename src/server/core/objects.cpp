@@ -490,3 +490,50 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
 
    ObjectsGlobalUnlock();
 }
+
+
+//
+// Dump objects to console in standalone mode
+//
+
+void DumpObjects(void)
+{
+   DWORD i;
+   char *pBuffer;
+   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network",
+                             "Location", "Zone" };
+   static char *statusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
+                                 "Unknown", "Unmanaged", "Disabled", "Testing" };
+
+   pBuffer = (char *)malloc(128000);
+   MutexLock(g_hMutexIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      printf("Object ID %d \"%s\"\n"
+             "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d\n",
+             g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
+             objTypes[g_pIndexById[i].pObject->Type()],
+             IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
+             statusName[g_pIndexById[i].pObject->Status()],
+             g_pIndexById[i].pObject->IsModified());
+      printf("   Parents: <%s>\n   Childs: <%s>\n", 
+             g_pIndexById[i].pObject->ParentList(pBuffer),
+             g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
+      switch(g_pIndexById[i].pObject->Type())
+      {
+         case OBJECT_NODE:
+            printf("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
+                   ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
+                   ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
+                   ((Node *)(g_pIndexById[i].pObject))->IsLocalManagenet(),
+                   ((Node *)(g_pIndexById[i].pObject))->ObjectId());
+            break;
+         case OBJECT_SUBNET:
+            printf("   Network mask: %s\n", 
+                   IpToStr(((Subnet *)g_pIndexById[i].pObject)->IpNetMask(), pBuffer));
+            break;
+      }
+   }
+   MutexUnlock(g_hMutexIdIndex);
+   free(pBuffer);
+}

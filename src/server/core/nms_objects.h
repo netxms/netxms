@@ -434,6 +434,7 @@ Subnet *FindSubnetByIP(DWORD dwAddr);
 DWORD FindLocalMgmtNode(void);
 
 BOOL LoadObjects(void);
+void DumpObjects(void);
 
 void DeleteUserFromAllObjects(DWORD dwUserId);
 

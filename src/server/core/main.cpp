@@ -351,6 +351,7 @@ static BOOL ProcessCommand(char *pszCmdLine)
 
       if (IsCommand("OBJECTS", szBuffer, 1))
       {
+         DumpObjects();
       }
       else if (IsCommand("SESSIONS", szBuffer, 1))
       {
