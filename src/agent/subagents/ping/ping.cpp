@@ -86,7 +86,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("PING"), _T(NETXMS_VERSION_STRING), UnloadHandler,
+	_T("PING"), _T(NETXMS_VERSION_STRING),
+   UnloadHandler, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),

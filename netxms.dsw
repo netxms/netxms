@@ -117,7 +117,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "netxmsd"=.\src\server\core\netxmsd.dsp - Package Owner=<4>
+Project: "netxmsd"=.\src\server\netxmsd\netxmsd.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -132,10 +132,10 @@ Package=<4>
     Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libnxsrv
+    Project_Dep_Name libnxsnmp
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libnxsnmp
+    Project_Dep_Name nxcore
     End Project Dependency
 }}}
 
@@ -243,6 +243,30 @@ Package=<4>
 
 ###############################################################################
 
+Project: "nxcore"=.\src\server\core\nxcore.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsnmp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "nxdbmgr"=.\src\server\tools\nxdbmgr\nxdbmgr.dsp - Package Owner=<4>
 
 Package=<5>
@@ -334,6 +358,48 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxupload"=.\src\server\tools\nxupload\nxupload.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxweb"=.\src\www\iis\nxweb.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
     End Project Dependency
 }}}
 

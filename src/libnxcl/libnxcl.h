@@ -86,6 +86,7 @@ private:
    MsgWaitQueue m_msgWaitQueue;
    DWORD m_dwReceiverBufferSize;
    NXC_DCI_LIST *m_pItemList;
+   THREAD m_hRecvThread;
 
    NXC_EVENT_TEMPLATE **m_ppEventTemplates;
    DWORD m_dwNumTemplates;
@@ -124,6 +125,8 @@ public:
 
    void Attach(SOCKET hSocket) { m_hSocket = hSocket; }
    void Disconnect(void);
+
+   void SetRecvThread(THREAD hThread) { m_hRecvThread = hThread; }
 
    BOOL SendMsg(CSCPMessage *pMsg);
    CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);

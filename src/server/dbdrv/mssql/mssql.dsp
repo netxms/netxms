@@ -116,6 +116,10 @@ SOURCE=..\..\include\dbdrv.h
 
 SOURCE=.\mssqldrv.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\include\nms_threads.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

@@ -38,6 +38,24 @@
 #include <sqlfront.h>
 #include <sqldb.h>
 
+#define MAX_CONN_STRING    128
+
+
+//
+// Connection handle structure
+//
+
+typedef struct
+{
+   PDBPROCESS hProcess;
+   MUTEX mutexQueryLock;
+   BOOL bProcessDead;
+   char szHost[MAX_CONN_STRING];
+   char szLogin[MAX_CONN_STRING];
+   char szPassword[MAX_CONN_STRING];
+   char szDatabase[MAX_CONN_STRING];
+} MSDB_CONN;
+
 
 //
 // Query results structure
@@ -57,7 +75,7 @@ typedef struct
 
 typedef struct
 {
-   PDBPROCESS hProcess;
+   MSDB_CONN *pConnection;
    BOOL bNoMoreRows;
    int iNumCols;
    int *piColTypes;

@@ -1,4 +1,18 @@
 *
+* 0.1.9
+*
+
+- Added support for server modules
+- Initial version of web interface created (for Microsoft IIS)
+- Microsoft SQL driver improved
+- Added file upload to agents (as preparation for centralized agent update)
+- Client library redesigned to support multiple connections within
+  one process
+- Windows console: added automatic refresh in graphs
+- Very basic Solaris subagent added
+
+
+*
 * 0.1.8
 *
 

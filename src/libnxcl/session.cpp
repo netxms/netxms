@@ -49,6 +49,8 @@ NXCL_Session::NXCL_Session()
    m_dwNumUsers = 0;
    m_pUserList = NULL;
 
+   m_hRecvThread = INVALID_THREAD_HANDLE;
+
 #ifdef _WIN32
    m_condSyncOp = CreateEvent(NULL, FALSE, FALSE, NULL);
 #else
@@ -65,6 +67,11 @@ NXCL_Session::NXCL_Session()
 NXCL_Session::~NXCL_Session()
 {
    Disconnect();
+
+   // Wait for receiver thread termination
+   if (m_hRecvThread != INVALID_THREAD_HANDLE)
+      ThreadJoin(m_hRecvThread);
+
    MutexDestroy(m_mutexIndexAccess);
 
    MutexLock(m_mutexEventAccess, INFINITE);

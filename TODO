@@ -61,6 +61,7 @@ WINDOWS CONSOLE:
 - Enlarge 16x16 status overlay icons
 - Add primary IP address selection 
 - Add real-time graphs
+- Fix problem with header colors in event policy editor
 
 
 SUBAGENTS:

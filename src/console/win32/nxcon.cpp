@@ -303,7 +303,7 @@ BOOL CConsoleApp::InitInstance()
 	   pFrame->ShowWindow(m_nCmdShow);
    }
 	pFrame->UpdateWindow();
-   pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
+   //pFrame->PostMessage(WM_COMMAND, ID_VIEW_DEBUG, 0);
    pFrame->PostMessage(WM_COMMAND, ID_CONNECT_TO_SERVER, 0);
 
 	return TRUE;

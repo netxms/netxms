@@ -186,7 +186,10 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
+   {
       NXCDisconnect(g_hSession);
+      g_hSession = NULL;
+   }
 
    PostMessage(hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;

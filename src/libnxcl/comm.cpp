@@ -175,6 +175,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
    BYTE szPasswordHash[SHA1_DIGEST_SIZE];
    DWORD dwRetCode = RCC_COMM_FAILURE;
    SOCKET hSocket;
+   THREAD hThread;
    char *pServer;
 #ifdef UNICODE
    char szMHost[64];
@@ -215,7 +216,9 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
             // Create new session and start receiver thread
             pSession = new NXCL_Session;
             pSession->Attach(hSocket);
-            ThreadCreate((THREAD_RESULT (THREAD_CALL *)(void *))NetReceiver, 0, pSession);
+            hThread = ThreadCreateEx((THREAD_RESULT (THREAD_CALL *)(void *))NetReceiver, 0, pSession);
+            if (hThread != INVALID_THREAD_HANDLE)
+               pSession->SetRecvThread(hThread);
 
             // Query server information
             msg.SetId(pSession->CreateRqId());
@@ -283,16 +286,17 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
             else
             {
                delete pSession;
-               shutdown(hSocket, SHUT_RDWR);
             }
          }
-
-         if (dwRetCode != RCC_SUCCESS)
+         else  // connect() failed
          {
             closesocket(hSocket);
          }
       }
    }
+
+   if (dwRetCode != RCC_SUCCESS)
+      *phSession = NULL;
 
    return dwRetCode;
 }
@@ -304,6 +308,9 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession)
 {
-   ((NXCL_Session *)hSession)->Disconnect();
-   delete ((NXCL_Session *)hSession);
+   if (hSession != NULL)
+   {
+//      ((NXCL_Session *)hSession)->Disconnect();
+      delete ((NXCL_Session *)hSession);
+   }
 }

@@ -24,10 +24,61 @@
 
 
 //
-// Static data
+// DB library error handler
 //
 
-static MUTEX m_hQueryLock;
+static int ErrorHandler(PDBPROCESS hProcess, int severity, int dberr,
+                        int oserr, const char *dberrstr, const char *oserrstr)
+{
+   MSDB_CONN *pConn;
+
+   pConn = (MSDB_CONN *)dbgetuserdata(hProcess);
+   if (pConn != NULL)
+   {
+      if (dbdead(hProcess))
+         pConn->bProcessDead = TRUE;
+   }
+   return INT_CANCEL;
+}
+
+
+//
+// Re-establish connection to server
+//
+
+static BOOL Reconnect(MSDB_CONN *pConn)
+{
+   LOGINREC *loginrec;
+   PDBPROCESS hProcess;
+   BOOL bResult = FALSE;
+
+   loginrec = dblogin();
+   DBSETLUSER(loginrec, pConn->szLogin);
+   DBSETLPWD(loginrec, pConn->szPassword);
+   DBSETLAPP(loginrec, "NetXMS");
+   hProcess = dbopen(loginrec, pConn->szHost);
+
+   if ((hProcess != NULL) && (pConn->szDatabase[0] != 0))
+   {
+      dbsetuserdata(hProcess, NULL);
+      if (dbuse(hProcess, pConn->szDatabase) != SUCCEED)
+      {
+         dbclose(hProcess);
+         hProcess = NULL;
+      }
+   }
+
+   if (hProcess != NULL)
+   {
+      dbclose(pConn->hProcess);
+      pConn->hProcess = hProcess;
+      pConn->bProcessDead = FALSE;
+      dbsetuserdata(hProcess, pConn);
+      bResult = TRUE;
+   }
+
+   return bResult;
+}
 
 
 //
@@ -36,8 +87,14 @@ static MUTEX m_hQueryLock;
 
 extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 {
-   m_hQueryLock = MutexCreate();
-   return dbinit() != NULL;
+   BOOL bResult = FALSE;
+
+   if (dbinit() != NULL)
+   {
+      dberrhandle(ErrorHandler);
+      bResult = TRUE;
+   }
+   return bResult;
 }
 
 
@@ -47,7 +104,6 @@ extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 
 extern "C" void EXPORT DrvUnload(void)
 {
-   MutexDestroy(m_hQueryLock);
 }
 
 
@@ -58,25 +114,45 @@ extern "C" void EXPORT DrvUnload(void)
 extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
    LOGINREC *loginrec;
-   PDBPROCESS hConn;
+   MSDB_CONN *pConn = NULL;
+   PDBPROCESS hProcess;
 
    loginrec = dblogin();
    DBSETLUSER(loginrec, szLogin);
    DBSETLPWD(loginrec, szPassword);
    DBSETLAPP(loginrec, "NetXMS");
-   hConn = dbopen(loginrec, szHost);
+   hProcess = dbopen(loginrec, szHost);
 
-   if ((hConn != NULL) && (szDatabase != NULL))
+   if (hProcess != NULL)
    {
+      dbsetuserdata(hProcess, NULL);
+
       // Change to specified database
-      if (dbuse(hConn, szDatabase) != SUCCEED)
+      if (szDatabase != NULL)
       {
-         dbclose(hConn);
-         hConn = NULL;
+         if (dbuse(hProcess, szDatabase) != SUCCEED)
+         {
+            dbclose(hProcess);
+            hProcess = NULL;
+         }
+      }
+      
+      if (hProcess != NULL)
+      {
+         pConn = (MSDB_CONN *)malloc(sizeof(MSDB_CONN));
+         pConn->hProcess = hProcess;
+         pConn->mutexQueryLock = MutexCreate();
+         pConn->bProcessDead = FALSE;
+         strncpy(pConn->szHost, szHost, MAX_CONN_STRING);
+         strncpy(pConn->szLogin, szLogin, MAX_CONN_STRING);
+         strncpy(pConn->szPassword, szPassword, MAX_CONN_STRING);
+         strncpy(pConn->szDatabase, CHECK_NULL_EX(szDatabase), MAX_CONN_STRING);
+
+         dbsetuserdata(hProcess, pConn);
       }
    }
 
-   return (DB_HANDLE)hConn;
+   return (DB_HANDLE)pConn;
 }
 
 
@@ -86,7 +162,12 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 
 extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 {
-   dbclose((PDBPROCESS)hConn);
+   if (hConn != NULL)
+   {
+      dbclose(((MSDB_CONN *)hConn)->hProcess);
+      MutexDestroy(((MSDB_CONN *)hConn)->mutexQueryLock);
+      free(hConn);
+   }
 }
 
 
@@ -97,15 +178,28 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 {
    BOOL bResult;
+   int nTries;
 
-   MutexLock(m_hQueryLock, INFINITE);
-   dbcmd((PDBPROCESS)hConn, szQuery);
-   bResult = (dbsqlexec((PDBPROCESS)hConn) == SUCCEED);
+   MutexLock(((MSDB_CONN *)hConn)->mutexQueryLock, INFINITE);
+   
+   dbcmd(((MSDB_CONN *)hConn)->hProcess, szQuery);
+   for(nTries = 0; nTries < 3; nTries++)
+   {
+      if (dbsqlexec(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      {
+         bResult = TRUE;
+         break;
+      }
+      if (((MSDB_CONN *)hConn)->bProcessDead)
+         if (!Reconnect((MSDB_CONN *)hConn))
+            break;
+   }
+
    // Process query results if any
    if (bResult)
-      if (dbresults((PDBPROCESS)hConn) == SUCCEED)
-         while(dbnextrow((PDBPROCESS)hConn) != NO_MORE_ROWS);
-   MutexUnlock(m_hQueryLock);
+      if (dbresults(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+         while(dbnextrow(((MSDB_CONN *)hConn)->hProcess) != NO_MORE_ROWS);
+   MutexUnlock(((MSDB_CONN *)hConn)->mutexQueryLock);
    return bResult;
 }
 
@@ -117,36 +211,56 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
 {
    MSDB_QUERY_RESULT *pResult = NULL;
-   int i, iCurrPos, iLen, *piColTypes;
+   int i, iCurrPos, iLen, *piColTypes, nTries;
    void *pData;
+   BOOL bResult = FALSE;
 
-   MutexLock(m_hQueryLock, INFINITE);
-   dbcmd((PDBPROCESS)hConn, szQuery);
-   if (dbsqlexec((PDBPROCESS)hConn) == SUCCEED)
+   MutexLock(((MSDB_CONN *)hConn)->mutexQueryLock, INFINITE);
+
+   dbcmd(((MSDB_CONN *)hConn)->hProcess, szQuery);
+   for(nTries = 0; nTries < 3; nTries++)
+   {
+      if (dbsqlexec(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      {
+         bResult = TRUE;
+         break;
+      }
+      if (((MSDB_CONN *)hConn)->bProcessDead)
+      {
+         if (!Reconnect((MSDB_CONN *)hConn))
+            break;
+      }
+      else
+      {
+         break;   // Not a communication problem
+      }
+   }
+
+   if (bResult)
    {
       // Process query results
-      if (dbresults((PDBPROCESS)hConn) == SUCCEED)
+      if (dbresults(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
       {
          pResult = (MSDB_QUERY_RESULT *)malloc(sizeof(MSDB_QUERY_RESULT));
          pResult->iNumRows = 0;
-         pResult->iNumCols = dbnumcols((PDBPROCESS)hConn);
+         pResult->iNumCols = dbnumcols(((MSDB_CONN *)hConn)->hProcess);
          pResult->pValues = NULL;
 
          // Determine column types
          piColTypes = (int *)malloc(pResult->iNumCols * sizeof(int));
          for(i = 0; i < pResult->iNumCols; i++)
-            piColTypes[i] = dbcoltype((PDBPROCESS)hConn, i + 1);
+            piColTypes[i] = dbcoltype(((MSDB_CONN *)hConn)->hProcess, i + 1);
 
          // Retrieve data
          iCurrPos = 0;
-         while(dbnextrow((PDBPROCESS)hConn) != NO_MORE_ROWS)
+         while(dbnextrow(((MSDB_CONN *)hConn)->hProcess) != NO_MORE_ROWS)
          {
             pResult->iNumRows++;
             pResult->pValues = (char **)realloc(pResult->pValues, 
                                                 sizeof(char *) * pResult->iNumRows * pResult->iNumCols);
             for(i = 1; i <= pResult->iNumCols; i++, iCurrPos++)
             {
-               pData = (void *)dbdata((PDBPROCESS)hConn, i);
+               pData = (void *)dbdata(((MSDB_CONN *)hConn)->hProcess, i);
                if (pData != NULL)
                {
                   switch(piColTypes[i - 1])
@@ -154,7 +268,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
                      case SQLCHAR:
                      case SQLTEXT:
                      case SQLBINARY:
-                        iLen = dbdatlen((PDBPROCESS)hConn, i);
+                        iLen = dbdatlen(((MSDB_CONN *)hConn)->hProcess, i);
                         pResult->pValues[iCurrPos] = (char *)malloc(iLen + 1);
                         if (iLen > 0)
                            memcpy(pResult->pValues[iCurrPos], (char *)pData, iLen);
@@ -196,7 +310,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
          }
       }
    }
-   MutexUnlock(m_hQueryLock);
+   MutexUnlock(((MSDB_CONN *)hConn)->mutexQueryLock);
    return (DB_RESULT)pResult;
 }
 
@@ -251,29 +365,49 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
-   int i;
+   int i, nTries;
+   BOOL bResult = FALSE;
 
-   MutexLock(m_hQueryLock, INFINITE);
-   dbcmd((PDBPROCESS)hConn, szQuery);
-   if (dbsqlexec((PDBPROCESS)hConn) == SUCCEED)
+   MutexLock(((MSDB_CONN *)hConn)->mutexQueryLock, INFINITE);
+   
+   dbcmd(((MSDB_CONN *)hConn)->hProcess, szQuery);
+   for(nTries = 0; nTries < 3; nTries++)
+   {
+      if (dbsqlexec(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      {
+         bResult = TRUE;
+         break;
+      }
+      if (((MSDB_CONN *)hConn)->bProcessDead)
+      {
+         if (!Reconnect((MSDB_CONN *)hConn))
+            break;
+      }
+      else
+      {
+         break;   // Not a communication problem
+      }
+   }
+
+   if (bResult)
    {
       // Prepare query results for processing
-      if (dbresults((PDBPROCESS)hConn) == SUCCEED)
+      if (dbresults(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
       {
          // Fill in result information structure
          pResult = (MSDB_ASYNC_QUERY_RESULT *)malloc(sizeof(MSDB_ASYNC_QUERY_RESULT));
-         pResult->hProcess = (PDBPROCESS)hConn;
+         pResult->pConnection = (MSDB_CONN *)hConn;
          pResult->bNoMoreRows = FALSE;
-         pResult->iNumCols = dbnumcols((PDBPROCESS)hConn);
+         pResult->iNumCols = dbnumcols(((MSDB_CONN *)hConn)->hProcess);
          pResult->piColTypes = (int *)malloc(sizeof(int) * pResult->iNumCols);
 
          // Determine column types
          for(i = 0; i < pResult->iNumCols; i++)
-            pResult->piColTypes[i] = dbcoltype((PDBPROCESS)hConn, i + 1);
+            pResult->piColTypes[i] = dbcoltype(((MSDB_CONN *)hConn)->hProcess, i + 1);
       }
    }
    if (pResult == NULL)
-      MutexUnlock(m_hQueryLock);
+      MutexUnlock(((MSDB_CONN *)hConn)->mutexQueryLock);
    return pResult;
 }
 
@@ -293,11 +427,11 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
    else
    {
       // Try to fetch next row from server
-      if (dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess) == NO_MORE_ROWS)
+      if (dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess) == NO_MORE_ROWS)
       {
          ((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows = TRUE;
          bResult = FALSE;
-         MutexUnlock(m_hQueryLock);
+         MutexUnlock(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->mutexQueryLock);
       }
    }
    return bResult;
@@ -322,7 +456,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, c
       return NULL;
 
    // Now get column data
-   pData = (void *)dbdata(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess, iColumn + 1);
+   pData = (void *)dbdata(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess, iColumn + 1);
    if (pData != NULL)
    {
       switch(((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes[iColumn])
@@ -330,7 +464,8 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, c
          case SQLCHAR:
          case SQLTEXT:
          case SQLBINARY:
-            iLen = min(dbdatlen(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess, iColumn + 1), iBufSize - 1);
+            iLen = min(dbdatlen(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess,
+                                iColumn + 1), iBufSize - 1);
             if (iLen > 0)
                memcpy(pBuffer, (char *)pData, iLen);
             pBuffer[iLen] = 0;
@@ -376,10 +511,10 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
       if (!((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows)
       {
          // Fetch remaining rows
-         while(dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess) != NO_MORE_ROWS);
+         while(dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess) != NO_MORE_ROWS);
 
          // Now we are ready for next query, so unlock query mutex
-         MutexUnlock(m_hQueryLock);
+         MutexUnlock(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->mutexQueryLock);
       }
 
       // Free allocated memory
