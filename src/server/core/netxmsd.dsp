@@ -364,6 +364,10 @@ SOURCE=..\..\..\include\nxqueue.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxsnmp.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\nxsrvapi.h
 # End Source File
 # Begin Source File

@@ -74,15 +74,13 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       if (iBytes > 0)
       {
          printf("SNMP: %d bytes packet received\n", iBytes);
-         pdu = SNMPParsePDU(packet, iBytes);
-         if (pdu != NULL)
+         pdu = new SNMP_PDU;
+         if (pdu->Parse(packet, iBytes))
          {
-            TCHAR szBuffer[1024];
-
             printf("SNMP: version=%d community='%s'\nOID: %s\n",
-               pdu->iVersion,pdu->pszCommunity,
-               SNMPConvertOIDToStr(pdu->pEnterprise, szBuffer));
-            SNMPDestroyPDU(pdu);
+               pdu->GetVersion(),pdu->GetCommunity(),
+               pdu->GetTrapId()->GetValueAsText());
+            delete pdu;
          }
          else
          {

@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** $module: variable.cpp
 **
 **/
 
@@ -25,16 +25,24 @@
 
 
 //
-// DLL entry point
+// SNMP_Variable default constructor
 //
 
-#ifdef _WIN32
-
-#ifndef UNDER_CE // FIXME
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+SNMP_Variable::SNMP_Variable()
 {
-   return TRUE;
+   m_pName = NULL;
+   m_pValue = NULL;
+   m_dwType = ASN_NULL;
+   m_dwValueLength = 0;
 }
-#endif // UNDER_CE
 
-#endif   /* _WIN32 */
+
+//
+// SNMP_Variable destructor
+//
+
+SNMP_Variable::~SNMP_Variable()
+{
+   delete m_pName;
+   safe_free(m_pValue);
+}

@@ -61,6 +61,7 @@ include/nxevent.h -text
 include/nximage.h -text
 include/nxnt.h -text
 include/nxqueue.h -text
+include/nxsnmp.h -text
 include/unicode.h -text
 m4/Makefile.am -text
 netware/Makefile.am -text
@@ -428,7 +429,9 @@ src/libnxsnmp/libnxsnmp.dsp -text
 src/libnxsnmp/libnxsnmp.dsw -text
 src/libnxsnmp/libnxsnmp.h -text
 src/libnxsnmp/main.cpp -text
-src/libnxsnmp/parse.cpp -text
+src/libnxsnmp/oid.cpp -text
+src/libnxsnmp/pdu.cpp -text
+src/libnxsnmp/variable.cpp -text
 src/nxevent/Makefile.am -text
 src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text

@@ -28,7 +28,7 @@
 // Decode BER-encoded variable
 //
 
-BOOL DecodeBER(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD *pdwLength, BYTE **pData)
+BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD *pdwLength, BYTE **pData)
 {
    BOOL bResult = FALSE;
    BYTE *pbCurrPos = pRawData;
@@ -78,7 +78,7 @@ BOOL DecodeBER(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD *pdwLength
 // Decode content of specified types
 //
 
-BOOL DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
+BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
 {
    BOOL bResult = TRUE;
 
@@ -111,7 +111,6 @@ BOOL DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
          {
             SNMP_OID *oid;
             DWORD dwValue;
-            int iShift;
 
             oid = (SNMP_OID *)pBuffer;
             oid->pdwValue = (DWORD *)malloc(sizeof(DWORD) * (dwLength + 1));
@@ -127,13 +126,11 @@ BOOL DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
             while(dwLength > 0)
             {
                dwValue = 0;
-               iShift = 0;
 
                // Loop through octets with 8th bit set to 1
                while((*pData & 0x80) && (dwLength > 0))
                {
-                  dwValue = (dwValue << iShift) | (*pData & 0x80);
-                  iShift += 7;
+                  dwValue = (dwValue << 7) | (*pData & 0x7F);
                   pData++;
                   dwLength--;
                }
@@ -141,7 +138,7 @@ BOOL DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
                // Last octet in element
                if (dwLength > 0)
                {
-                  oid->pdwValue[oid->dwLength++] = (dwValue << iShift) | *pData;
+                  oid->pdwValue[oid->dwLength++] = (dwValue << 7) | *pData;
                   pData++;
                   dwLength--;
                }

@@ -30,10 +30,21 @@
 
 
 //
+// Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type
+//
+
+typedef struct
+{
+   DWORD dwLength;
+   DWORD *pdwValue;
+} SNMP_OID;
+
+
+//
 // Functions
 //
 
-BOOL DecodeBER(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD *pdwLength, BYTE **pData);
-BOOL DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer);
+BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, DWORD *pdwLength, BYTE **pData);
+BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer);
 
 #endif   /* _libnxsnmp_h_ */
