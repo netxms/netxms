@@ -232,6 +232,152 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 
 
 //
+// Perform asynchronous SELECT query
+//
+
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
+{
+   MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
+   int i;
+
+   MutexLock(m_hQueryLock, INFINITE);
+   dbcmd((PDBPROCESS)hConn, szQuery);
+   if (dbsqlexec((PDBPROCESS)hConn) == SUCCEED)
+   {
+      // Prepare query results for processing
+      if (dbresults((PDBPROCESS)hConn) == SUCCEED)
+      {
+         // Fill in result information structure
+         pResult = (MSDB_ASYNC_QUERY_RESULT *)malloc(sizeof(MSDB_ASYNC_QUERY_RESULT));
+         pResult->hProcess = (PDBPROCESS)hConn;
+         pResult->bNoMoreRows = FALSE;
+         pResult->iNumCols = dbnumcols((PDBPROCESS)hConn);
+         pResult->piColTypes = (int *)malloc(sizeof(int) * pResult->iNumCols);
+
+         // Determine column types
+         for(i = 0; i < pResult->iNumCols; i++)
+            pResult->piColTypes[i] = dbcoltype((PDBPROCESS)hConn, i + 1);
+      }
+   }
+   if (pResult == NULL)
+      MutexUnlock(m_hQueryLock);
+   return pResult;
+}
+
+
+//
+// Fetch next result line from asynchronous SELECT results
+//
+
+extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+{
+   BOOL bResult = TRUE;
+   
+   if (hResult == NULL)
+   {
+      bResult = FALSE;
+   }
+   else
+   {
+      // Try to fetch next row from server
+      if (dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess) == NO_MORE_ROWS)
+      {
+         ((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows = TRUE;
+         bResult = FALSE;
+         MutexUnlock(m_hQueryLock);
+      }
+   }
+   return bResult;
+}
+
+
+//
+// Get field from current row in async query result
+//
+
+extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+{
+   void *pData;
+   int iLen;
+
+   // Check if we have valid result handle
+   if (hResult == NULL)
+      return NULL;
+
+   // Check if there are valid fetched row
+   if (((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows)
+      return NULL;
+
+   // Now get column data
+   pData = (void *)dbdata(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess, iColumn + 1);
+   if (pData != NULL)
+   {
+      switch(((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes[iColumn])
+      {
+         case SQLCHAR:
+         case SQLTEXT:
+         case SQLBINARY:
+            iLen = min(dbdatlen(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess, iColumn + 1), iBufSize - 1);
+            if (iLen > 0)
+               memcpy(pBuffer, (char *)pData, iLen);
+            pBuffer[iLen] = 0;
+            break;
+         case SQLINT1:
+            sprintf(pBuffer, "%d", *((char *)pData));
+            break;
+         case SQLINT2:
+            sprintf(pBuffer, "%d", *((short *)pData));
+            break;
+         case SQLINT4:
+            sprintf(pBuffer, "%ld", *((long *)pData));
+            break;
+         case SQLFLT4:
+            sprintf(pBuffer, "%f", *((float *)pData));
+            break;
+         case SQLFLT8:
+            sprintf(pBuffer, "%f", *((double *)pData));
+            break;
+         default:    // Unknown data type
+            pBuffer[0] = 0;
+            break;
+      }
+   }
+   else
+   {
+      pBuffer[0] = 0;
+   }
+   
+   return pBuffer;
+}
+
+
+//
+// Destroy result of async query
+//
+
+extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+{
+   if (hResult != NULL)
+   {
+      // Check if all result rows fetchef
+      if (!((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows)
+      {
+         // Fetch remaining rows
+         while(dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->hProcess) != NO_MORE_ROWS);
+
+         // Now we are ready for next query, so unlock query mutex
+         MutexUnlock(m_hQueryLock);
+      }
+
+      // Free allocated memory
+      if (((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes != NULL)
+         free(((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes);
+      free(hResult);
+   }
+}
+
+
+//
 // DLL Entry point
 //
 

@@ -30,7 +30,8 @@
 // Datatypes
 //
 
-#define DB_HANDLE unsigned long
-#define DB_RESULT unsigned long
+typedef void * DB_HANDLE;
+typedef void * DB_RESULT;
+typedef void * DB_ASYNC_RESULT;
 
 #endif   /* _dbdrv_h_ */

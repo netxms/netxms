@@ -49,4 +49,17 @@ typedef struct
    char **pValues;
 } MSDB_QUERY_RESULT;
 
+
+//
+// Asynchronous query results structure
+//
+
+typedef struct
+{
+   PDBPROCESS hProcess;
+   BOOL bNoMoreRows;
+   int iNumCols;
+   int *piColTypes;
+} MSDB_ASYNC_QUERY_RESULT;
+
 #endif   /* _mssqldrv_h_ */

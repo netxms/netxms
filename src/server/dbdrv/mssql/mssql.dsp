@@ -100,6 +100,10 @@ SOURCE=.\mssql.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\..\include\dbdrv.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\mssqldrv.h
 # End Source File
 # End Group
