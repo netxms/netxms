@@ -27,6 +27,8 @@
 // Constants
 //
 
+#define MAX_CPU_COUNT                  64
+
 #define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
 
 
@@ -42,6 +44,10 @@ HANDLE g_hCondShutdown = NULL;
 //
 
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
+static DWORD m_dwNumCPU = 1;
+static WINPERF_COUNTER *m_pProcessorCounters[MAX_CPU_COUNT];
+static WINPERF_COUNTER *m_pProcessorCounters5[MAX_CPU_COUNT];
+static WINPERF_COUNTER *m_pProcessorCounters15[MAX_CPU_COUNT];
 
 
 //
@@ -86,6 +92,51 @@ static LONG H_PdhVersion(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       return SYSINFO_RC_ERROR;
    ret_uint(pValue, dwVersion);
    return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Value of CPU utilization counter
+//
+
+static LONG H_CPUUsage(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+{
+   LONG nProcessor, nRet = SYSINFO_RC_SUCCESS;
+   TCHAR *pEnd, szBuffer[16];
+   
+   if (!NxGetParameterArg(pszParam, 1, szBuffer, 16))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   nProcessor = _tcstol(szBuffer, &pEnd, 0);
+   if ((*pEnd != 0) || (nProcessor < 0) || (nProcessor >= (LONG)m_dwNumCPU))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   switch(pArg[0])
+   {
+      case _T('1'):  // System.CPU.Usage(*)
+         if (m_pProcessorCounters[nProcessor] != NULL)
+            ret_int(pValue, m_pProcessorCounters[nProcessor]->value.iLong);
+         else
+            nRet = SYSINFO_RC_ERROR;
+         break;
+      case _T('2'):  // System.CPU.Usage5(*)
+         if (m_pProcessorCounters5[nProcessor] != NULL)
+            ret_int(pValue, m_pProcessorCounters5[nProcessor]->value.iLong);
+         else
+            nRet = SYSINFO_RC_ERROR;
+         break;
+      case _T('3'):  // System.CPU.Usage15(*)
+         if (m_pProcessorCounters15[nProcessor] != NULL)
+            ret_int(pValue, m_pProcessorCounters15[nProcessor]->value.iLong);
+         else
+            nRet = SYSINFO_RC_ERROR;
+         break;
+      default:
+         nRet = SYSINFO_RC_UNSUPPORTED;
+         break;
+   }
+
+   return nRet;
 }
 
 
@@ -303,6 +354,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
    { _T("PDH.Version"), H_PdhVersion, NULL, DCI_DT_UINT, _T("Version of PDH.DLL") },
+   { _T("System.CPU.Usage(*)"), H_CPUUsage, "1", DCI_DT_INT, "Average CPU {instance} utilization for last minute" },
+   { _T("System.CPU.Usage5(*)"), H_CPUUsage, "2", DCI_DT_INT, "Average CPU {instance} utilization for last 5 minutes" },
+   { _T("System.CPU.Usage15(*)"), H_CPUUsage, "3", DCI_DT_INT, "Average CPU {instance} utilization for last 15 minutes" },
    { _T("System.ThreadCount"), H_CounterAlias, _T("(\\System\\Threads)"), DCI_DT_INT, _T("Total number of threads") },
    { _T("System.Uptime"), H_CounterAlias, _T("(\\System\\System Up Time)"), DCI_DT_UINT, _T("System uptime") }
 };
@@ -361,8 +415,10 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *),
 
 static void AddPredefinedCounters(void)
 {
-   int i;
+   DWORD i;
    WINPERF_COUNTER *pCnt;
+   SYSTEM_INFO sysInfo;
+   TCHAR szBuffer[MAX_PATH];
 
    for(i = 0; m_counterList[i].pszParamName != NULL; i++)
    {
@@ -372,6 +428,17 @@ static void AddPredefinedCounters(void)
          AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData, 
                       (TCHAR *)pCnt, m_counterList[i].iDCIDataType, 
                       m_counterList[i].pszDescription);
+   }
+
+   // Add CPU utilization counters
+   GetSystemInfo(&sysInfo);
+   m_dwNumCPU = sysInfo.dwNumberOfProcessors;
+   for(i = 0; i < m_dwNumCPU; i++)
+   {
+      _sntprintf(szBuffer, MAX_PATH, _T("\\Processor(%d)\\%% Processor Time"), i);
+      m_pProcessorCounters[i] = AddCounter(szBuffer, 0, 60, COUNTER_TYPE_INT32);
+      m_pProcessorCounters5[i] = AddCounter(szBuffer, 0, 300, COUNTER_TYPE_INT32);
+      m_pProcessorCounters15[i] = AddCounter(szBuffer, 0, 900, COUNTER_TYPE_INT32);
    }
 }
 
