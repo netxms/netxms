@@ -24,6 +24,7 @@
 #ifndef _globals_h_
 #define _globals_h_
 
+
 //
 // Custom windows messages
 //
@@ -31,6 +32,13 @@
 #define WM_REQUEST_COMPLETED     (WM_USER + 1)
 #define WM_SET_INFO_TEXT         (WM_USER + 2)
 #define WM_ALARM_UPDATE          (WM_USER + 3)
+
+
+//
+// Application flags
+//
+
+#define AF_PLAY_SOUND            0x0001
 
 
 //
@@ -60,6 +68,7 @@ extern TCHAR *g_szStatusTextSmall[];
 extern TCHAR g_szWorkDir[];
 extern COLORREF g_rgbInfoLineButtons;
 extern COLORREF g_rgbInfoLineBackground;
+extern DWORD g_dwFlags;
 
 
 #endif

@@ -180,6 +180,7 @@ src/console/nxav/res/SeverityMinor.ico -text
 src/console/nxav/res/SeverityNormal.ico -text
 src/console/nxav/res/SeverityWarning.ico -text
 src/console/nxav/res/ack.png -text
+src/console/nxav/res/alarm.wav -text svneol=unset#unset
 src/console/nxav/res/background.jpg -text
 src/console/nxav/res/critical.ico -text
 src/console/nxav/res/login.bmp -text

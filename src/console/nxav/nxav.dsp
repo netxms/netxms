@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
+# ADD LINK32 libnetxms.lib libnxcl.lib winmm.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
 
 !ELSEIF  "$(CFG)" == "nxav - Win32 Debug"
 
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
+# ADD LINK32 libnetxms.lib libnxcl.lib winmm.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -272,6 +272,10 @@ SOURCE=.\res\warning.ico
 # Begin Source File
 
 SOURCE=.\res\ack.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\alarm.wav
 # End Source File
 # Begin Source File
 

@@ -55,3 +55,10 @@ TCHAR g_szWorkDir[MAX_PATH];
 
 COLORREF g_rgbInfoLineButtons = RGB(130, 70, 210);
 COLORREF g_rgbInfoLineBackground = RGB(255, 255, 255);
+
+
+//
+// UI settings
+//
+
+DWORD g_dwFlags = AF_PLAY_SOUND;

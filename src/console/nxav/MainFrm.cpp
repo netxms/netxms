@@ -241,6 +241,8 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
          m_dwNumAlarms++;
          SortAlarms();
+         if (g_dwFlags & AF_PLAY_SOUND)
+            PlaySound(MAKEINTRESOURCE(IDR_SND_ALARM), GetModuleHandle(NULL), SND_ASYNC | SND_NODEFAULT | SND_RESOURCE);
          break;
       case NX_NOTIFY_ALARM_DELETED:
       case NX_NOTIFY_ALARM_ACKNOWLEGED:

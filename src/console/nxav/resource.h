@@ -27,6 +27,7 @@
 #define IDF_MINOR                       145
 #define IDF_NORMAL                      146
 #define IDF_ACK                         147
+#define IDR_SND_ALARM                   149
 #define IDC_INFO_TEXT                   1000
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -44,7 +45,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        149
+#define _APS_NEXT_RESOURCE_VALUE        150
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           105
