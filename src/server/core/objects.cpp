@@ -291,17 +291,17 @@ void NetObjDelete(NetObj *pObject)
 {
    char szQuery[256];
 
-   // Delete object from index by ID
-   MutexLock(g_hMutexIdIndex, INFINITE);
-   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
-   MutexUnlock(g_hMutexIdIndex);
-
    // Write object to deleted objects table
    sprintf(szQuery, "INSERT INTO DeletedObjects (object_id,object_class,name,ip_addr,ip_netmask) VALUES (%ld,%ld,'%s',%ld,%ld)",
            pObject->Id(), pObject->Type(), pObject->Name(), pObject->IpAddr(),
            GetObjectNetmask(pObject));
-   QueueSQLRequest(szQuery);
-                  
+   DBQuery(g_hCoreDB, szQuery);
+
+   // Delete object from index by ID
+   MutexLock(g_hMutexIdIndex, INFINITE);
+   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
+   MutexUnlock(g_hMutexIdIndex);
+            
    delete pObject;
 }
 
