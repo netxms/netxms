@@ -22,6 +22,10 @@
 
 #include "nms_core.h"
 
+#ifdef _WIN32
+#include <direct.h>
+#endif
+
 
 //
 // Fill CSCP message with user data
@@ -309,6 +313,24 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_GET_DCI_DATA:
             GetCollectedData(pMsg);
+            break;
+         case CMD_OPEN_EPP:
+            OpenEPP(pMsg->GetId());
+            break;
+         case CMD_CLOSE_EPP:
+            CloseEPP(pMsg->GetId());
+            break;
+         case CMD_SAVE_EPP:
+            SaveEPP(pMsg);
+            break;
+         case CMD_INSTALL_EPP:
+            InstallEPP(pMsg->GetId());
+            break;
+         case CMD_GET_MIB_LIST:
+            SendMIBList(pMsg->GetId());
+            break;
+         case CMD_GET_MIB:
+            SendMIB(pMsg);
             break;
          default:
             break;
@@ -1510,4 +1532,196 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    // Send responce
    if (!bSuccess)
       SendMessage(&msg);
+}
+
+
+//
+// Open event processing policy
+//
+
+void ClientSession::OpenEPP(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   char szBuffer[256];
+   BOOL bSuccess = FALSE;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
+   {
+      if (!LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szBuffer))
+      {
+         msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+         msg.SetVariable(VID_LOCKED_BY, szBuffer);
+      }
+      else
+      {
+         m_dwFlags |= CSF_EPP_LOCKED;
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_NUM_RULES, g_pEventPolicy->NumRules());
+         bSuccess = TRUE;
+      }
+   }
+   else
+   {
+      // Current user has no rights for event policy management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+
+   // Send policy to client
+   if (bSuccess)
+      g_pEventPolicy->SendToClient(this, dwRqId);
+}
+
+
+//
+// Close event processing policy
+//
+
+void ClientSession::CloseEPP(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
+   {
+      if (m_dwFlags & CSF_EPP_LOCKED)
+      {
+         UnlockComponent(CID_EPP);
+         m_dwFlags &= ~CSF_EPP_LOCKED;
+      }
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      // Current user has no rights for event policy management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Save event processing policy
+//
+
+void ClientSession::SaveEPP(CSCPMessage *pMsg)
+{
+}
+
+
+//
+// Install event processing policy
+//
+
+void ClientSession::InstallEPP(DWORD dwRqId)
+{
+}
+
+
+//
+// Send list of available MIB files to client
+//
+
+void ClientSession::SendMIBList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DWORD dwId1, dwId2, dwNumFiles;
+   DIR *dir;
+   int iBufPos;
+   struct direct *dptr;
+   char szBuffer[MAX_PATH];
+   BYTE md5Hash[MD5_DIGEST_SIZE];
+
+   // Prepare responce message
+   msg.SetCode(CMD_MIB_LIST);
+   msg.SetId(dwRqId);
+
+   // Read directory
+   dwNumFiles = 0;
+   strcpy(szBuffer, g_szDataDir);
+   strcat(szBuffer, DDIR_MIBS);
+   dir = opendir(szBuffer);
+   if (dir != NULL)
+   {
+#ifdef _WIN32
+      strcat(szBuffer, "\\");
+#else
+      strcat(szBuffer, "/");
+#endif
+      iBufPos = strlen(szBuffer);
+      dwId1 = VID_MIB_NAME_BASE;
+      dwId2 = VID_MIB_HASH_BASE;
+      while((dptr = readdir(dir)) != NULL)
+      {
+         strcpy(&szBuffer[iBufPos], dptr->d_name);
+         if (CalculateFileMD5Hash(szBuffer, md5Hash))
+         {
+            msg.SetVariable(dwId1++, dptr->d_name);
+            msg.SetVariable(dwId2++, md5Hash, MD5_DIGEST_SIZE);
+            dwNumFiles++;
+         }
+      }
+      closedir(dir);
+   }
+
+   msg.SetVariable(VID_NUM_MIBS, dwNumFiles);
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Send requested MIB file to client
+//
+
+void ClientSession::SendMIB(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   BYTE *pFile;
+   DWORD dwFileSize;
+   char szBuffer[MAX_PATH], szMIB[MAX_PATH];
+
+   // Prepare responce message
+   msg.SetCode(CMD_MIB);
+   msg.SetId(pRequest->GetId());
+
+   // Get name of the requested file
+   pRequest->GetVariableStr(VID_MIB_NAME, szMIB, MAX_PATH);
+
+   // Load file into memory
+   strcpy(szBuffer, g_szDataDir);
+   strcat(szBuffer, DDIR_MIBS);
+#ifdef _WIN32
+   strcat(szBuffer, "\\");
+#else
+   strcat(szBuffer, "/");
+#endif
+   strcat(szBuffer, szMIB);
+   pFile = LoadFile(szBuffer, &dwFileSize);
+   if (pFile != NULL)
+   {
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      msg.SetVariable(VID_MIB_FILE_SIZE, dwFileSize);
+      msg.SetVariable(VID_MIB_FILE, pFile, dwFileSize);
+      free(pFile);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_SYSTEM_FAILURE);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }

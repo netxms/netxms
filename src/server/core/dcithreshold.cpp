@@ -103,7 +103,7 @@ void Threshold::CreateId(void)
 // Save threshold to database
 //
 
-BOOL Threshold::SaveToDB(void)
+BOOL Threshold::SaveToDB(DWORD dwIndex)
 {
    char szQuery[512];
    DB_RESULT hResult;
@@ -122,14 +122,16 @@ BOOL Threshold::SaveToDB(void)
    // Prepare and execute query
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,"
-                       "check_function,check_operation,parameter_1,parameter_2,event_code) "
-                       "VALUES (%ld,%ld,'%s','',%d,%d,%ld,%ld,%ld)", m_dwId, m_dwItemId,
-              m_pszValueStr, m_iFunction, m_iOperation, m_iParam1, m_iParam2, m_dwEventCode);
+                       "check_function,check_operation,parameter_1,parameter_2,event_code,"
+                       "sequence_number) VALUES (%ld,%ld,'%s','',%d,%d,%ld,%ld,%ld,%ld)", 
+              m_dwId, m_dwItemId, m_pszValueStr, m_iFunction, m_iOperation, m_iParam1,
+              m_iParam2, m_dwEventCode, dwIndex);
    else
       sprintf(szQuery, "UPDATE thresholds SET item_id=%ld,fire_value='%s',check_function=%d,"
-                       "check_operation=%d,parameter_1=%ld,parameter_2=%ld,event_code=%ld "
-                       "WHERE threshold_id=%ld", m_dwItemId, m_pszValueStr, m_iFunction, 
-              m_iOperation, m_iParam1, m_iParam2, m_dwEventCode, m_dwId);
+                       "check_operation=%d,parameter_1=%ld,parameter_2=%ld,event_code=%ld,"
+                       "sequence_number=%ld WHERE threshold_id=%ld", m_dwItemId, 
+              m_pszValueStr, m_iFunction, m_iOperation, m_iParam1, m_iParam2, m_dwEventCode, 
+              dwIndex, m_dwId);
    return DBQuery(g_hCoreDB, szQuery);
 }
 
@@ -344,19 +346,25 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
    m_iOperation = (BYTE)ntohs(pData->wOperation);
    m_iParam1 = ntohl(pData->dwArg1);
    m_iParam2 = ntohl(pData->dwArg2);
+   safe_free(m_pszValueStr);
    switch(m_iDataType)
    {
       case DT_INTEGER:
          m_value.iInteger = ntohl(pData->value.dwInt32);
+         m_pszValueStr = (char *)malloc(32);
+         sprintf(m_pszValueStr, "%ld", m_value.iInteger);
          break;
       case DT_INT64:
          m_value.qwInt64 = ntohq(pData->value.qwInt64);
+         m_pszValueStr = (char *)malloc(32);
+         sprintf(m_pszValueStr, "%64I", m_value.qwInt64);
          break;
       case DT_FLOAT:
          m_value.dFloat = ntohd(pData->value.dFloat);
+         m_pszValueStr = (char *)malloc(32);
+         sprintf(m_pszValueStr, "%f", m_value.dFloat);
          break;
       case DT_STRING:
-         safe_free(m_pszValueStr);
          m_pszValueStr = strdup(pData->value.szString);
          break;
       default:

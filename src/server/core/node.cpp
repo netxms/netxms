@@ -919,6 +919,7 @@ BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps,
       {
          m_ppItems[i]->UpdateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
          bResult = TRUE;
+         m_bIsModified = TRUE;
          break;
       }
 

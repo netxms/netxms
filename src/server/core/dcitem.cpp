@@ -120,7 +120,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
    sprintf(szQuery, "SELECT threshold_id,fire_value,rearm_value,check_function,"
                     "check_operation,parameter_1,parameter_2,event_code FROM thresholds "
-                    "WHERE item_id=%ld", m_dwId);
+                    "WHERE item_id=%ld ORDER BY sequence_number", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -186,7 +186,31 @@ BOOL DCItem::SaveToDB(void)
       DWORD i;
 
       for(i = 0; i < m_dwNumThresholds; i++)
-         m_ppThresholdList[i]->SaveToDB();
+         m_ppThresholdList[i]->SaveToDB(i);
+   }
+
+   // Delete non-existing thresholds
+   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%ld", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      int i, iNumRows;
+      DWORD j, dwId;
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         for(j = 0; j < m_dwNumThresholds; j++)
+            if (m_ppThresholdList[j]->Id() == dwId)
+               break;
+         if (j == m_dwNumThresholds)
+         {
+            sprintf(szQuery, "DELETE FROM thresholds WHERE threshold_id=%ld", dwId);
+            DBQuery(g_hCoreDB, szQuery);
+         }
+      }
+      DBFreeResult(hResult);
    }
 
    Unlock();
@@ -211,9 +235,14 @@ void DCItem::CheckThresholds(const char *pszLastValue)
          case THRESHOLD_REACHED:
             PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "sss", m_szName,
                       m_ppThresholdList[i]->Value(), pszLastValue);
+            i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
             PostEvent(EVENT_THRESHOLD_REARMED, m_pNode->Id(), "s", m_szName);
+            break;
+         case NO_ACTION:
+            if (m_ppThresholdList[i]->IsReached())
+               i = m_dwNumThresholds;  // Threshold condition still true, stop processing
             break;
       }
    }
@@ -274,6 +303,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 {
    DWORD i, j, dwNum, dwId;
    DCI_THRESHOLD *pNewThresholds;
+   Threshold **ppNewList;
 
    Lock();
 
@@ -298,7 +328,8 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
       pNewThresholds[i].dwId = ntohl(pNewThresholds[i].dwId);
    }
    
-   // Check if some thresholds was deleted
+   // Check if some thresholds was deleted, and reposition others if needed
+   ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
    for(i = 0; i < m_dwNumThresholds; i++)
    {
       for(j = 0; j < dwNum; j++)
@@ -312,34 +343,30 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
          memmove(&m_ppThresholdList[i], &m_ppThresholdList[i + 1], sizeof(Threshold *) * (m_dwNumThresholds - i));
          i--;
       }
+      else
+      {
+         // Move existing thresholds to appropriate positions in new list
+         ppNewList[j] = m_ppThresholdList[i];
+      }
    }
+   safe_free(m_ppThresholdList);
+   m_ppThresholdList = ppNewList;
+   m_dwNumThresholds = dwNum;
 
    // Add or update thresholds
    for(i = 0; i < dwNum; i++)
    {
       if (pNewThresholds[i].dwId == 0)    // New threshold?
       {
-         j = m_dwNumThresholds;
-         m_dwNumThresholds++;
-         m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
-         m_ppThresholdList[j] = new Threshold(this);
-         m_ppThresholdList[j]->CreateId();
+         m_ppThresholdList[i] = new Threshold(this);
+         m_ppThresholdList[i]->CreateId();
 
          // Add index -> id mapping
          (*ppdwMapIndex)[*pdwNumMaps] = i;
-         (*ppdwMapId)[*pdwNumMaps] = m_ppThresholdList[j]->Id();
-         *pdwNumMaps++;
+         (*ppdwMapId)[*pdwNumMaps] = m_ppThresholdList[i]->Id();
+         (*pdwNumMaps)++;
       }
-      else
-      {
-         for(j = 0; j < m_dwNumThresholds; j++)
-            if (m_ppThresholdList[j]->Id() == pNewThresholds[i].dwId)
-               break;
-      }
-
-      // j is an index of threshold object to be updated
-      if (j < m_dwNumThresholds)
-         m_ppThresholdList[j]->UpdateFromMessage(&pNewThresholds[i]);
+      m_ppThresholdList[i]->UpdateFromMessage(&pNewThresholds[i]);
    }
       
    safe_free(pNewThresholds);

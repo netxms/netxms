@@ -91,6 +91,13 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    // Actual initialization
    if (!Initialize())
    {
+      // Remove database lock
+      if (g_hCoreDB != NULL)
+      {
+         DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+         DBDisconnect(g_hCoreDB);
+      }
+
       // Now service is stopped
       status.dwCurrentState=SERVICE_STOPPED;
       status.dwWaitHint=0;

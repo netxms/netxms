@@ -90,6 +90,8 @@ public:
 #define RF_STOP_PROCESSING    0x0001
 #define RF_NEGATED_SOURCE     0x0002
 #define RF_NEGATED_EVENTS     0x0004
+#define RF_GENERATE_ALARM     0x0008
+#define RF_ALARM_IS_ACK       0x0010
 #define RF_SEVERITY_INFO      0x0100
 #define RF_SEVERITY_MINOR     0x0200
 #define RF_SEVERITY_WARNING   0x0400
@@ -125,19 +127,26 @@ private:
    DWORD *m_pdwActionList;
    char *m_pszComment;
 
+   char m_szAlarmMessage[MAX_DB_STRING];
+   int m_iAlarmSeverity;
+   char m_szAlarmKey[MAX_DB_STRING];
+   char m_szAlarmAckKey[MAX_DB_STRING];
+
    BOOL MatchSource(DWORD dwObjectId);
    BOOL MatchEvent(DWORD dwEventId);
    BOOL MatchSeverity(DWORD dwSeverity);
 
+   void GenerateAlarm(Event *pEvent);
+
 public:
-   EPRule(DWORD dwId, char *szComment, DWORD dwFlags);
+   EPRule(DWORD dwId);
+   EPRule(DB_RESULT hResult, int iRow);
    ~EPRule();
 
    DWORD Id(void) { return m_dwId; }
-
    BOOL LoadFromDB(void);
-
    BOOL ProcessEvent(Event *pEvent);
+   void CreateMessage(CSCPMessage *pMsg);
 };
 
 
@@ -155,8 +164,10 @@ public:
    EventPolicy();
    ~EventPolicy();
 
+   DWORD NumRules(void) { return m_dwNumRules; }
    BOOL LoadFromDB(void);
    void ProcessEvent(Event *pEvent);
+   void SendToClient(ClientSession *pSession, DWORD dwRqId);
 };
 
 

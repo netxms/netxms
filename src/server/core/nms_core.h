@@ -71,13 +71,23 @@
 //
 
 #ifdef _WIN32
+
 #define DEFAULT_SHELL         "cmd.exe"
 #define DEFAULT_CONFIG_FILE   "C:\\NetXMS.conf"
 #define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
+#define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
+
+#define DDIR_MIBS             "\\mibs"
+
 #else    /* _WIN32 */
+
 #define DEFAULT_SHELL         "/bin/sh"
 #define DEFAULT_CONFIG_FILE   "/etc/netxms.conf"
 #define DEFAULT_LOG_FILE      "/var/log/netxms.log"
+#define DEFAULT_DATA_DIR      "/var/netxms"
+
+#define DDIR_MIBS             "/mibs"
+
 #endif   /* _WIN32 */
 
 #define MAX_DB_LOGIN          64
@@ -120,6 +130,8 @@ typedef void * HSNMPSESSION;
 #define IDG_THRESHOLD         8
 #define IDG_USER              9
 #define IDG_USER_GROUP        10
+#define IDG_ALARM             11
+#define IDG_ALARM_NOTE        12
 
 
 //
@@ -295,6 +307,12 @@ private:
    void CloseNodeDCIList(CSCPMessage *pRequest);
    void ModifyNodeDCI(CSCPMessage *pRequest);
    void GetCollectedData(CSCPMessage *pRequest);
+   void OpenEPP(DWORD dwRqId);
+   void CloseEPP(DWORD dwRqId);
+   void SaveEPP(CSCPMessage *pRequest);
+   void InstallEPP(DWORD dwRqId);
+   void SendMIBList(DWORD dwRqId);
+   void SendMIB(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -414,6 +432,8 @@ DWORD CreateUniqueId(int iGroup);
 
 void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 
+BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
+
 #ifdef _WIN32
 
 void InitService(void);
@@ -440,6 +460,7 @@ void DumpSessions(void);
 extern DWORD g_dwFlags;
 extern char g_szConfigFile[];
 extern char g_szLogFile[];
+extern char g_szDataDir[];
 
 extern char g_szDbDriver[];
 extern char g_szDbDriver[];

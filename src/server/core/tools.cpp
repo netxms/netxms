@@ -22,6 +22,12 @@
 
 #include "nms_core.h"
 
+#ifdef _WIN32
+#include <sys/stat.h>
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 
 //
 // Get system error string by call to FormatMessage
@@ -243,4 +249,33 @@ void CreateSHA1Hash(char *pszSource, BYTE *pBuffer)
    EVP_MD_CTX_init(&ctx);
    EVP_Digest(pszSource, (unsigned long)strlen(pszSource), pBuffer, NULL, EVP_sha1(), NULL);
    EVP_MD_CTX_cleanup(&ctx);
+}
+
+
+//
+// Load file into memory
+//
+
+BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
+{
+   int fd;
+   BYTE *pBuffer = NULL;
+   struct stat fs;
+
+   fd = open(pszFileName, O_RDONLY);
+   if (fd != -1)
+   {
+      if (fstat(fd, &fs) != -1)
+      {
+         pBuffer = (BYTE *)malloc(fs.st_size + 1);
+         *pdwFileSize = fs.st_size;
+         if (read(fd, pBuffer, fs.st_size) != fs.st_size)
+         {
+            free(pBuffer);
+            pBuffer = NULL;
+         }
+      }
+      close(fd);
+   }
+   return pBuffer;
 }

@@ -24,20 +24,38 @@
 
 
 //
-// Event policy rule constructor
+// Default event policy rule constructor
 //
 
-EPRule::EPRule(DWORD dwId, char *szComment, DWORD dwFlags)
+EPRule::EPRule(DWORD dwId)
 {
    m_dwId = dwId;
-   m_dwFlags = dwFlags;
+   m_dwFlags = 0;
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
    m_dwNumEvents = 0;
    m_pdwEventList = NULL;
    m_dwNumActions = 0;
    m_pdwActionList = NULL;
-   m_pszComment = strdup(szComment);
+   m_pszComment = NULL;
+}
+
+
+//
+// Construct event policy rule from database record
+// Assuming the following field order:
+// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key
+//
+
+EPRule::EPRule(DB_RESULT hResult, int iRow)
+{
+   m_dwId = DBGetFieldULong(hResult, iRow, 0);
+   m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
+   m_pszComment = strdup(DBGetField(hResult, iRow, 2));
+   strcpy(m_szAlarmMessage, DBGetField(hResult, iRow, 3));
+   m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
+   strcpy(m_szAlarmKey, DBGetField(hResult, iRow, 5));
+   strcpy(m_szAlarmAckKey, DBGetField(hResult, iRow, 6));
 }
 
 
@@ -126,8 +144,8 @@ BOOL EPRule::MatchEvent(DWORD dwEventId)
 
 BOOL EPRule::MatchSeverity(DWORD dwSeverity)
 {
-   static DWORD dwSeverityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_MINOR,
-                                     RF_SEVERITY_WARNING, RF_SEVERITY_MAJOR,
+   static DWORD dwSeverityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_WARNING,
+                                     RF_SEVERITY_MINOR, RF_SEVERITY_MAJOR,
                                      RF_SEVERITY_CRITICAL };
    return dwSeverityFlag[dwSeverity] & m_dwFlags;
 }
@@ -151,10 +169,23 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
       for(i = 0; i < m_dwNumActions; i++)
          ExecuteAction(m_pdwActionList[i], pEvent);
 
+      // Generate alarm if requested
+      if (m_dwFlags & RF_GENERATE_ALARM)
+         GenerateAlarm(pEvent);
+
       bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
    }
 
    return bStopProcessing;
+}
+
+
+//
+// Generate alarm from event
+//
+
+void EPRule::GenerateAlarm(Event *pEvent)
+{
 }
 
 
@@ -222,6 +253,28 @@ BOOL EPRule::LoadFromDB(void)
 
 
 //
+// Create CSCP message with rule's data
+//
+
+void EPRule::CreateMessage(CSCPMessage *pMsg)
+{
+   pMsg->SetVariable(VID_FLAGS, m_dwFlags);
+   pMsg->SetVariable(VID_RULE_ID, m_dwId);
+   pMsg->SetVariable(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
+   pMsg->SetVariable(VID_ALARM_KEY, m_szAlarmKey);
+   pMsg->SetVariable(VID_ALARM_ACK_KEY, m_szAlarmAckKey);
+   pMsg->SetVariable(VID_ALARM_MESSAGE, m_szAlarmMessage);
+   pMsg->SetVariable(VID_COMMENT, m_pszComment);
+   pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
+   pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+   pMsg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);
+   pMsg->SetVariableToInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+   pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
+   pMsg->SetVariableToInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+}
+
+
+//
 // Event processing policy constructor
 //
 
@@ -255,7 +308,9 @@ BOOL EventPolicy::LoadFromDB(void)
    DB_RESULT hResult;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT id,flags,comments FROM event_policy ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT rule_id,flags,comments,alarm_message,"
+                                 "alarm_severity,alarm_key,alarm_ack_key "
+                                 "FROM event_policy ORDER BY rule_id");
    if (hResult != NULL)
    {
       DWORD i;
@@ -265,9 +320,7 @@ BOOL EventPolicy::LoadFromDB(void)
       m_ppRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRules);
       for(i = 0; i < m_dwNumRules; i++)
       {
-         m_ppRuleList[i] = new EPRule(DBGetFieldULong(hResult, i, 0), 
-                                      DBGetField(hResult, i, 2),
-                                      DBGetFieldULong(hResult, i, 1));
+         m_ppRuleList[i] = new EPRule(hResult, i);
          bSuccess = bSuccess && m_ppRuleList[i]->LoadFromDB();
       }
       DBFreeResult(hResult);
@@ -288,4 +341,24 @@ void EventPolicy::ProcessEvent(Event *pEvent)
    for(i = 0; i < m_dwNumRules; i++)
       if (m_ppRuleList[i]->ProcessEvent(pEvent))
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
+}
+
+
+//
+// Send event policy to client
+//
+
+void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
+{
+   DWORD i;
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_EPP_RECORD);
+   msg.SetId(dwRqId);
+   for(i = 0; i < m_dwNumRules; i++)
+   {
+      m_ppRuleList[i]->CreateMessage(&msg);
+      pSession->SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
 }

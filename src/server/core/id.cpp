@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   11
+#define NUMBER_OF_GROUPS   13
 
 
 //
@@ -36,10 +36,12 @@
 
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 2, 0x80000000, 10000, 1, 1, 1, 1, 0x80000000,
-                                                   1, 1, 0x80000001 };
+                                                   1, 1, 0x80000001, 1, 1 };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0x7FFFFFFF, 0xFFFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF,
-                                                0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE };
+                                                0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
+                                                0xFFFFFFFE
+                                              };
 static char *m_pszGroupNames[] =
 {
    "Network Objects",
@@ -52,7 +54,9 @@ static char *m_pszGroupNames[] =
    "Event Groups",
    "Data Collection Thresholds",
    "Users",
-   "User Groups"
+   "User Groups",
+   "Alarms",
+   "Alarm Notes"
 };
 
 
@@ -189,6 +193,26 @@ BOOL InitIdTable(void)
    {
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_USER_GROUP] = max(m_dwFreeIdTable[IDG_USER_GROUP], 
+                                               DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available alarm id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(alarm_id) FROM alarms");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_ALARM] = max(m_dwFreeIdTable[IDG_ALARM], 
+                                          DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available alarm note id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(note_id) FROM alarm_notes");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_ALARM_NOTE] = max(m_dwFreeIdTable[IDG_ALARM_NOTE], 
                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }

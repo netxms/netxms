@@ -320,4 +320,15 @@ Language=English
 User group "Everyone" created because it was not presented in database
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_DATA_DIR
+Language=English
+Data directory "%1" does not exist or is inaccessible
+.
+
+MessageId=
+SymbolicName=MSG_ERROR_CREATING_DATA_DIR
+Language=English
+Error creating data directory "%1"
+.
 ;#endif

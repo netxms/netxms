@@ -28,6 +28,11 @@
 #define USE_READLINE 1
 #endif
 
+#ifdef _WIN32
+#include <direct.h>
+#include <errno.h>
+#endif
+
 
 //
 // Thread functions
@@ -57,6 +62,7 @@ DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
+char g_szDataDir[MAX_PATH];
 
 
 //
@@ -78,6 +84,34 @@ BOOL SleepAndCheckForShutdown(int iSeconds)
 
 
 //
+// Check data directory for existence
+//
+
+static BOOL CheckDataDir(void)
+{
+   char szBuffer[MAX_PATH];
+
+   if (chdir(g_szDataDir) == -1)
+   {
+      WriteLog(MSG_INVALID_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", g_szDataDir);
+      return FALSE;
+   }
+
+   // Create directory for mib files if it doesn't exist
+   strcpy(szBuffer, g_szDataDir);
+   strcat(szBuffer, DDIR_MIBS);
+   if (mkdir(szBuffer) == -1)
+      if (errno != EEXIST)
+      {
+         WriteLog(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
+         return FALSE;
+      }
+
+   return TRUE;
+}
+
+
+//
 // Load global configuration parameters
 //
 
@@ -94,6 +128,7 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
    if (ConfigReadInt("EnableSNMPTraps", 1))
       g_dwFlags |= AF_ENABLE_SNMP_TRAPD;
+   ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
 }
 
 
@@ -147,6 +182,10 @@ BOOL Initialize(void)
 
    // Load global configuration parameters
    LoadGlobalConfig();
+
+   // Check data directory
+   if (!CheckDataDir())
+      return FALSE;
 
    // Create synchronization stuff
    m_hEventShutdown = ConditionCreate(TRUE);
@@ -441,6 +480,13 @@ int main(int argc, char *argv[])
       if (!Initialize())
       {
          printf("NMS Core initialization failed\n");
+
+         // Remove database lock
+         if (g_hCoreDB != NULL)
+         {
+            DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+            DBDisconnect(g_hCoreDB);
+         }
          return 3;
       }
       Main();
@@ -470,7 +516,15 @@ int main(int argc, char *argv[])
 #endif
    }
    if (!Initialize())
+   {
+      // Remove database lock
+      if (g_hCoreDB != NULL)
+      {
+         DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+         DBDisconnect(g_hCoreDB);
+      }
       return 3;
+   }
    Main();
 #endif   /* _WIN32 */
    return 0;

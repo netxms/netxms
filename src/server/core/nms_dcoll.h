@@ -78,7 +78,7 @@ public:
    const char *Value(void) { return m_pszValueStr; }
    BOOL IsReached(void) { return m_bIsReached; }
 
-   BOOL SaveToDB(void);
+   BOOL SaveToDB(DWORD dwIndex);
    int Check(const char *pszValue);
 
    void CreateMessage(DCI_THRESHOLD *pData);
