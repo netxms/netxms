@@ -377,10 +377,24 @@ BOOL InitEventSubsystem(void)
       {
          bSuccess = FALSE;
          WriteLog(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+         delete g_pEventPolicy;
       }
    }
 
    return bSuccess;
+}
+
+
+//
+// Shutdown event subsystem
+//
+
+void ShutdownEventSubsystem(void)
+{
+   delete g_pEventQueue;
+   delete g_pEventPolicy;
+   safe_free(m_pEventTemplates);
+   MutexDestroy(m_mutexTemplateAccess);
 }
 
 

@@ -160,6 +160,7 @@ public:
 //
 
 BOOL InitEventSubsystem(void);
+void ShutdownEventSubsystem(void);
 BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...);
 void ReloadEvents(void);
 

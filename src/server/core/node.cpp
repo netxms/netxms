@@ -717,6 +717,8 @@ void Node::ConfigurationPoll(void)
             bHasChanges = TRUE;
          }
       }
+
+      DestroyInterfaceList(pIfList);
    }
 
    m_tLastConfigurationPoll = time(NULL);

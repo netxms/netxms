@@ -304,6 +304,8 @@ void NotifyClient(ClientSession *pSession, void *pArg)
 
 void Shutdown(void)
 {
+   DWORD i;
+
    // Notify clients
    EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_SHUTDOWN);
 
@@ -330,6 +332,11 @@ void Shutdown(void)
    DBUnloadDriver();
 
    CleanupActions();
+   ShutdownEventSubsystem();
+
+   // Delete all objects
+   for(i = 0; i < g_dwIdIndexSize; i++)
+      delete g_pIndexById[i].pObject;
 
    CloseLog();
 }

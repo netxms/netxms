@@ -93,6 +93,8 @@ static void DataCollector(void *pArg)
          DbgPrintf(AF_DEBUG_DC, "*** DataCollector: Attempt to collect information for non-existing node.\n");
       }
    }
+
+   free(pBuffer);
    DbgPrintf(AF_DEBUG_DC, "Data collector thread terminated\n");
 }
 
