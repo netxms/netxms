@@ -85,6 +85,28 @@ void MsgWaitQueue::Put(CSCPMessage *pMsg)
    Lock();
    m_pElements = (WAIT_QUEUE_ELEMENT *)MemReAlloc(m_pElements, 
                               sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
+   m_pElements[m_dwNumElements].wCode = pMsg->GetCode();
+   m_pElements[m_dwNumElements].wIsBinary = 0;
+   m_pElements[m_dwNumElements].dwId = pMsg->GetId();
+   m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
+   m_pElements[m_dwNumElements].pMsg = pMsg;
+   m_dwNumElements++;
+   Unlock();
+}
+
+
+//
+// Put raw message into queue
+//
+
+void MsgWaitQueue::Put(CSCP_MESSAGE *pMsg)
+{
+   Lock();
+   m_pElements = (WAIT_QUEUE_ELEMENT *)MemReAlloc(m_pElements, 
+                              sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
+   m_pElements[m_dwNumElements].wCode = ntohs(pMsg->wCode);
+   m_pElements[m_dwNumElements].wIsBinary = 1;
+   m_pElements[m_dwNumElements].dwId = ntohl(pMsg->dwId);
    m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
    m_pElements[m_dwNumElements].pMsg = pMsg;
    m_dwNumElements++;
@@ -98,7 +120,7 @@ void MsgWaitQueue::Put(CSCPMessage *pMsg)
 // NULL on timeout or error
 //
 
-CSCPMessage *MsgWaitQueue::WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut)
+void *MsgWaitQueue::WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut)
 {
    DWORD i, dwSleepTime;
 
@@ -106,10 +128,11 @@ CSCPMessage *MsgWaitQueue::WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTime
    {
       Lock();
       for(i = 0; i < m_dwNumElements; i++)
-         if ((m_pElements[i].pMsg->GetId() == dwId) &&
-             (m_pElements[i].pMsg->GetCode() == dwCode))
+         if ((m_pElements[i].dwId == dwId) &&
+             (m_pElements[i].wCode == wCode) &&
+             (m_pElements[i].wIsBinary == wIsBinary))
          {
-            CSCPMessage *pMsg;
+            void *pMsg;
 
             pMsg = m_pElements[i].pMsg;
             m_dwNumElements--;
@@ -145,8 +168,11 @@ void MsgWaitQueue::HousekeeperThread(void)
       for(i = 0; i < m_dwNumElements; i++)
          if (m_pElements[i].dwTTL <= TTL_CHECK_INTERVAL)
          {
-            DebugPrintf("Message with id %d deleted from wait queue", m_pElements[i].pMsg->GetId());
-            delete m_pElements[i].pMsg;
+            DebugPrintf("Message with id %d deleted from wait queue", m_pElements[i].dwId);
+            if (m_pElements[i].wIsBinary)
+               MemFree(m_pElements[i].pMsg);
+            else
+               delete m_pElements[i].pMsg;
             m_dwNumElements--;
             memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));
             i--;

@@ -45,7 +45,7 @@ static MsgWaitQueue m_msgWaitQueue;
 
 static BOOL SendRawMsg(CSCP_MESSAGE *pMsg)
 {
-   return send(m_hSocket, (char *)pMsg, ntohs(pMsg->wSize), 0) == (int)ntohs(pMsg->wSize);
+   return send(m_hSocket, (char *)pMsg, ntohl(pMsg->dwSize), 0) == (int)ntohl(pMsg->dwSize);
 }
 
 
@@ -95,9 +95,9 @@ static void NetReceiver(void *pArg)
          break;
 
       // Check that actual received packet size is equal to encoded in packet
-      if (ntohs(pRawMsg->wSize) != iErr)
+      if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("RecvMsg: Bad packet length [wSize=%d ActualSize=%d]", ntohs(pRawMsg->wSize), iErr);
+         DebugPrintf("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]", ntohl(pRawMsg->dwSize), iErr);
          continue;   // Bad packet, wait for next
       }
 
@@ -105,9 +105,11 @@ static void NetReceiver(void *pArg)
       if (IsBinaryMsg(pRawMsg))
       {
          // Convert numeric fields to host byte order
-         pRawMsg->wCode = ntohs(pRawMsg->wCode) & 0x0FFF;   // Clear flag bits from code
-         pRawMsg->wSize = ntohs(pRawMsg->wSize);
+         pRawMsg->wCode = ntohs(pRawMsg->wCode);
+         pRawMsg->wFlags = ntohs(pRawMsg->wFlags);
+         pRawMsg->dwSize = ntohl(pRawMsg->dwSize);
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
+         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
 
          DebugPrintf("RecvRawMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
 
@@ -117,7 +119,8 @@ static void NetReceiver(void *pArg)
             case CMD_EVENT:
                ProcessEvent(NULL, pRawMsg);
                break;
-            default:    // We ignore unknown raw messages
+            default:    // Put unknown raw messages into the wait queue
+               //m_msgWaitQueue.Put(pMsg);
                break;
          }
       }
@@ -280,9 +283,19 @@ void LIBNXCL_EXPORTABLE NXCDisconnect(void)
 // Wait for specific message
 //
 
-CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut)
+CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
 {
-   return m_msgWaitQueue.WaitForMessage(dwCode, dwId, dwTimeOut);
+   return m_msgWaitQueue.WaitForMessage(wCode, dwId, dwTimeOut);
+}
+
+
+//
+// Wait for specific raw message
+//
+
+CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+{
+   return m_msgWaitQueue.WaitForRawMessage(wCode, dwId, dwTimeOut);
 }
 
 

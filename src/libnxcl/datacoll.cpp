@@ -274,3 +274,45 @@ DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId)
          return i;
    return INVALID_INDEX;
 }
+
+
+//
+// Retrieve collected data from server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwMaxRows,
+                                       DWORD dwTimeFrom, DWORD dwTimeTo, NXC_DCI_DATA **ppData)
+{
+   CSCPMessage msg;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_GET_DCI_DATA);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_ID, dwItemId);
+   msg.SetVariable(VID_MAX_ROWS, dwMaxRows);
+   msg.SetVariable(VID_TIME_FROM, dwTimeFrom);
+   msg.SetVariable(VID_TIME_TO, dwTimeTo);
+   SendMsg(&msg);
+
+   dwResult = WaitForRCC(dwRqId);
+   if (dwResult == RCC_SUCCESS)
+   {
+      CSCP_MESSAGE *pRawMsg;
+
+      // We wait a long time because data message can be quite large
+      pRawMsg = WaitForRawMessage(CMD_DCI_DATA, dwRqId, 30000);
+      if (pRawMsg != NULL)
+      {
+         MemFree(pRawMsg);
+      }
+      else
+      {
+         dwResult = RCC_TIMEOUT;
+      }
+   }
+
+   return dwResult;
+}

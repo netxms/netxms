@@ -82,8 +82,11 @@ typedef struct
 
 typedef struct
 {
-   CSCPMessage *pMsg;
-   DWORD dwTTL;
+   WORD wCode;       // Message code
+   WORD wIsBinary;   // 1 for binary (raw) messages
+   DWORD dwId;       // Message ID
+   DWORD dwTTL;      // Message time-to-live in milliseconds
+   void *pMsg;       // Pointer to message, either to CSCPMessage object or raw message
 } WAIT_QUEUE_ELEMENT;
 
 
@@ -104,13 +107,22 @@ private:
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
    void HousekeeperThread(void);
+   void *WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
 
 public:
    MsgWaitQueue();
    ~MsgWaitQueue();
 
    void Put(CSCPMessage *pMsg);
-   CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
+   void Put(CSCP_MESSAGE *pMsg);
+   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+   {
+      return (CSCPMessage *)WaitForMessageInternal(0, wCode, dwId, dwTimeOut);
+   }
+   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+   {
+      return (CSCP_MESSAGE *)WaitForMessageInternal(1, wCode, dwId, dwTimeOut);
+   }
    
    void Clear(void);
    void SetHoldTime(DWORD dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
@@ -133,7 +145,8 @@ void ProcessUserDBUpdate(CSCPMessage *pMsg);
 void ProcessDCI(CSCPMessage *pMsg);
 
 BOOL SendMsg(CSCPMessage *pMsg);
-CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
+CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut);
+CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut);
 DWORD WaitForRCC(DWORD dwRqId);
 
 void ChangeState(DWORD dwState);
