@@ -230,14 +230,14 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
 // Find image's index in list by image id
 //
 
-DWORD ImageIdToIndex(DWORD dwImageId)
+int ImageIdToIndex(DWORD dwImageId)
 {
    DWORD i;
 
    for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
       if (g_pSrvImageList->pImageList[i].dwId == dwImageId)
          return i;
-   return 0;
+   return -1;
 }
 
 
@@ -289,7 +289,7 @@ void CreateObjectImageList(void)
 // Get image index for given object
 //
 
-DWORD GetObjectImageIndex(NXC_OBJECT *pObject)
+int GetObjectImageIndex(NXC_OBJECT *pObject)
 {
    DWORD i;
 
@@ -300,7 +300,26 @@ DWORD GetObjectImageIndex(NXC_OBJECT *pObject)
    // Find default image for class
    for(i = 0; i < g_dwDefImgListSize; i++)
       if (g_pDefImgList[i].dwObjectClass == (DWORD)pObject->iClass)
-         return g_pDefImgList[i].dwImageIndex;
+         return g_pDefImgList[i].iImageIndex;
    
-   return 0;
+   return -1;
+}
+
+
+//
+// Create image list with event severity icons
+//
+
+CImageList *CreateEventImageList(void)
+{
+   CImageList *pImageList;
+
+   pImageList = new CImageList;
+   pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
+   pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
+   pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
+   pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
+   pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   return pImageList;
 }

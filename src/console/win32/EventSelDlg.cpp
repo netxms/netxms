@@ -18,11 +18,17 @@ static char THIS_FILE[] = __FILE__;
 CEventSelDlg::CEventSelDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CEventSelDlg::IDD, pParent)
 {
+   m_pImageList = NULL;
+
 	//{{AFX_DATA_INIT(CEventSelDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 }
 
+CEventSelDlg::~CEventSelDlg()
+{
+   delete m_pImageList;
+}
 
 void CEventSelDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -56,6 +62,10 @@ BOOL CEventSelDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 	
+   // Create image list
+   m_pImageList = CreateEventImageList();
+   m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
+
    // Setup list control
    //m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
    m_wndListCtrl.GetClientRect(&rect);

@@ -98,7 +98,7 @@ struct DEF_IMG
 {
    DWORD dwObjectClass;
    DWORD dwImageId;
-   DWORD dwImageIndex;
+   int iImageIndex;
 };
 
 
@@ -124,12 +124,14 @@ void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
 
 
 //
-// Image functions
+// Image and image list functions
 //
 
 void CreateObjectImageList(void);
-DWORD ImageIdToIndex(DWORD dwImageId);
-DWORD GetObjectImageIndex(NXC_OBJECT *pObject);
+int ImageIdToIndex(DWORD dwImageId);
+int GetObjectImageIndex(NXC_OBJECT *pObject);
+CImageList *CreateEventImageList(void);
+void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
 
 
 //
@@ -141,7 +143,6 @@ CSize GetWindowSize(CWnd *pWnd);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText = "Unknown");
 char *TranslateUNIXText(const char *pszText);
-void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
 
 
 //

@@ -17,6 +17,7 @@ public:
 	DWORD *m_pdwEventList;
 	DWORD m_dwNumEvents;
 	CEventSelDlg(CWnd* pParent = NULL);   // standard constructor
+   virtual ~CEventSelDlg();
 
 // Dialog Data
 	//{{AFX_DATA(CEventSelDlg)
@@ -34,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	CImageList *m_pImageList;
 
 	// Generated message map functions
 	//{{AFX_MSG(CEventSelDlg)

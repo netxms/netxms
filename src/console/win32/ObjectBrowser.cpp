@@ -337,11 +337,12 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    DWORD i;
    HTREEITEM hItem;
    char szBuffer[512];
-   static int iImageCode[] = { -1, 3, 2, 1, 0, -1, -1, 0 };
+   int iImage;
 
    // Add object record with class-dependent text
    CreateTreeItemText(pObject, szBuffer);
-   hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImageCode[pObject->iClass], iImageCode[pObject->iClass], hParent);
+   iImage = GetObjectImageIndex(pObject);
+   hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImage, iImage, hParent);
    m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
 
    // Add to hash
@@ -686,10 +687,9 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
 {
    int iItem;
    char szBuffer[16];
-   static int iImageCode[] = { -1, 3, 2, 1, 0, -1, -1, 0 };
 
    sprintf(szBuffer, "%ld", pObject->dwId);
-   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, iImageCode[pObject->iClass]);
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, GetObjectImageIndex(pObject));
    if (iItem != -1)
    {
       m_wndListCtrl.SetItemData(iItem, (LPARAM)pObject);

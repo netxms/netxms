@@ -69,13 +69,7 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Create image list
-   m_pImageList = new CImageList;
-   m_pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   m_pImageList = CreateEventImageList();
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
