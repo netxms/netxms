@@ -1,0 +1,62 @@
+// MainFrm.h : interface of the CMainFrame class
+//
+/////////////////////////////////////////////////////////////////////////////
+
+#if !defined(AFX_MAINFRM_H__8840A3A5_A463_43B9_8540_F0C3A797AB06__INCLUDED_)
+#define AFX_MAINFRM_H__8840A3A5_A463_43B9_8540_F0C3A797AB06__INCLUDED_
+
+#include "InfoLine.h"	// Added by ClassView
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+
+class CMainFrame : public CFrameWnd
+{
+	
+public:
+	CMainFrame();
+protected: 
+	DECLARE_DYNAMIC(CMainFrame)
+
+// Attributes
+public:
+
+// Operations
+public:
+
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CMainFrame)
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	//}}AFX_VIRTUAL
+
+// Implementation
+public:
+	virtual ~CMainFrame();
+#ifdef _DEBUG
+	virtual void AssertValid() const;
+	virtual void Dump(CDumpContext& dc) const;
+#endif
+
+// Generated message map functions
+protected:
+	CHtmlView *m_pwndAlarmView;
+	void AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine);
+	CInfoLine m_wndInfoLine;
+	//{{AFX_MSG(CMainFrame)
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSetFocus(CWnd *pOldWnd);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnViewRefresh();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+private:
+	FILE *m_pHtmlFile;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_MAINFRM_H__8840A3A5_A463_43B9_8540_F0C3A797AB06__INCLUDED_)
