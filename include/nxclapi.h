@@ -92,6 +92,7 @@
 
 #define NXC_OP_SYNC_OBJECTS   1
 #define NXC_OP_SYNC_EVENTS    2
+#define NXC_OP_OPEN_EVENT_DB  3
 
 
 //
@@ -195,6 +196,7 @@ NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
 
 #define NXCSyncObjects() NXCRequest(NXC_OP_SYNC_OBJECTS)
 #define NXCSyncEvents() NXCRequest(NXC_OP_SYNC_EVENTS)
+#define NXCOpenEventDB() NXCRequest(NXC_OP_OPEN_EVENT_DB)
 
 
 #endif   /* _nxclapi_h_ */

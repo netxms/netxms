@@ -9,6 +9,7 @@ include/nms_cscp.h -text
 include/nms_threads.h -text
 include/nms_util.h -text
 include/nxclapi.h -text
+include/nxevent.h -text
 sql/Makefile -text
 sql/clear.sql -text
 sql/dbinit.in -text

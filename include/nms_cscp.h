@@ -119,6 +119,16 @@ typedef struct
 #define CMD_CONFIG_VARLIST_END      0x0010
 #define CMD_DELETE_CONFIG_VARIABLE  0x0011
 #define CMD_NOTIFY                  0x0012
+#define CMD_OPEN_EPP                0x0013
+#define CMD_CLOSE_EPP               0x0014
+#define CMD_INSTALL_EPP             0x0015
+#define CMD_SAVE_EPP                0x0016
+#define CMD_EPP_RECORD              0x0017
+#define CMD_OPEN_EVENT_DB           0x0018
+#define CMD_CLOSE_EVENT_DB          0x0019
+#define CMD_SET_EVENT_INFO          0x001A
+#define CMD_EVENT_DB_RECORD         0x001B
+#define CMD_EVENT_DB_EOF            0x001C
 
 
 //
@@ -148,6 +158,12 @@ typedef struct
 #define VID_VALUE                   21
 #define VID_ERROR                   22
 #define VID_NOTIFICATION_CODE       23
+#define VID_EVENT_ID                24
+#define VID_SEVERITY                25
+#define VID_MESSAGE                 26
+#define VID_DESCRIPTION             27
+#define VID_RCC                     28    /* RCC == Request Completion Code */
+#define VID_LOCKED_BY               29
 
 
 // Object information can contain variable number of parent objects' ids.
@@ -155,6 +171,15 @@ typedef struct
 // we reserver a 4000 ids for this variables.
 #define VID_PARENT_ID_BASE          4000
 #define VID_PARENT_ID_LAST          7999
+
+
+//
+// Request completion codes
+//
+
+#define RCC_SUCCESS                 ((WORD)0)
+#define RCC_COMPONENT_LOCKED        ((WORD)1)
+#define RCC_ACCESS_DENIED           ((WORD)2)
 
 
 //
