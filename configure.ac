@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.55 2005-01-17 18:20:51 alk Exp $
+# $Id: configure.ac,v 1.56 2005-01-17 21:52:09 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -420,8 +420,10 @@ AC_CONFIG_FILES([
 
 AC_OUTPUT
 
+echo "Updating libtool-1"
+sed 's/-lc_r/-lc_rXXX/' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 if test ! "x$BUILD_SERVER" = "xyes" ; then
-   echo "Updating libtool"
+   echo "Updating libtool-2"
    $PERL tools/patch_libtool.pl <libtool >libtool.new
    mv libtool.new libtool
    chmod 755 libtool
