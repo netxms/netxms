@@ -71,6 +71,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 DWORD g_dwFlags = 0;
 char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
+char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 DWORD g_dwServerAddr[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
@@ -217,6 +218,16 @@ static void ImportSymbols(void)
 
 
 //
+// This function writes message from subagent to agent's log
+//
+
+static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
+{
+   WriteLog(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
+}
+
+
+//
 // Initialization routine
 //
 
@@ -235,6 +246,9 @@ BOOL Initialize(void)
       return FALSE;
    }
 #endif
+
+   // Initialize logger for subagents
+   InitSubAgentsLogger(WriteSubAgentMsg);
 
    // Initialize built-in parameters
    if (!InitParameterList())
@@ -359,7 +373,6 @@ void Main(void)
 int main(int argc, char *argv[])
 {
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
-   char szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
@@ -385,7 +398,7 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_DEBUG;
             break;
          case 'c':   // Configuration file
-            strncpy(szConfigFile, optarg, MAX_PATH - 1);
+            strncpy(g_szConfigFile, optarg, MAX_PATH - 1);
             break;
          case 'C':   // Configuration check only
             iAction = ACTION_CHECK_CONFIG;
@@ -421,7 +434,7 @@ int main(int argc, char *argv[])
    switch(iAction)
    {
       case ACTION_RUN_AGENT:
-         if (NxLoadConfig(szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
+         if (NxLoadConfig(g_szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
             if ((!stricmp(g_szLogFile, "{syslog}")) || 
                 (!stricmp(g_szLogFile, "{eventlog}")))
@@ -479,7 +492,7 @@ int main(int argc, char *argv[])
          }
          break;
       case ACTION_CHECK_CONFIG:
-         if (NxLoadConfig(szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
+         if (NxLoadConfig(g_szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
          {
             ConsolePrintf("Configuration file check failed\n");
             iExitCode = 2;
@@ -488,7 +501,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
          GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
-         InstallService(szModuleName, szConfigFile);
+         InstallService(szModuleName, g_szConfigFile);
          break;
       case ACTION_REMOVE_SERVICE:
          RemoveService();

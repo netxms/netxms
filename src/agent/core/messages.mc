@@ -140,4 +140,10 @@ Language=English
 Unable to create process "%1": %2
 .
 
+MessageId=
+SymbolicName=MSG_SUBAGENT_MSG
+Language=English
+%1
+.
+
 ;#endif

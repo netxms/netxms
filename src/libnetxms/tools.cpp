@@ -36,6 +36,13 @@
 
 
 //
+// Static data
+//
+
+static void (* m_pLogFunction)(int, TCHAR *);
+
+
+//
 // Calculate number of bits in netmask
 //
 
@@ -457,4 +464,33 @@ DWORD LIBNETXMS_EXPORTABLE StrToBin(char *pStr, BYTE *pData, DWORD dwSize)
       pCurr++;
    }
    return i;
+}
+
+
+//
+// Initialize loggin for subagents
+//
+
+void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *))
+{
+   m_pLogFunction = pFunc;
+}
+
+
+//
+// Write message to agent's log
+//
+
+void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...)
+{
+   TCHAR szBuffer[4096];
+   va_list args;
+
+   if (m_pLogFunction != NULL)
+   {
+      va_start(args, pszFormat);
+      _vsntprintf(szBuffer, 4096, pszFormat, args);
+      va_end(args);
+      m_pLogFunction(iLevel, szBuffer);
+   }
 }

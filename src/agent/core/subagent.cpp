@@ -48,7 +48,7 @@ BOOL LoadSubAgent(char *szModuleName)
    hModule = DLOpen(szModuleName, szErrorText);
    if (hModule != NULL)
    {
-      BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **);
+      BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *pszConfigFile);
 
       // Under NetWare, we have slightly different subagent
       // initialization procedure. Because normally two NLMs
@@ -67,16 +67,16 @@ BOOL LoadSubAgent(char *szModuleName)
          *pExt = 0;
       strupr(szFileName);
       sprintf(szEntryPoint, "NxSubAgentInit_%s", szFileName);
-      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
+      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
 #else
-      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **))DLGetSymbolAddr(hModule, "NxSubAgentInit", szErrorText);
+      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, "NxSubAgentInit", szErrorText);
 #endif
 
       if (SubAgentInit != NULL)
       {
          NETXMS_SUBAGENT_INFO *pInfo;
 
-         if (SubAgentInit(&pInfo))
+         if (SubAgentInit(&pInfo, g_szConfigFile))
          {
             DWORD i;
 

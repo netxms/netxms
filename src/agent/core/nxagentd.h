@@ -294,6 +294,7 @@ char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
 extern DWORD g_dwFlags;
 extern char g_szLogFile[];
 extern char g_szSharedSecret[];
+extern char g_szConfigFile[];
 extern WORD g_wListenPort;
 extern DWORD g_dwServerAddr[];
 extern DWORD g_dwServerCount;
