@@ -84,15 +84,16 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
 
 //
 // Load user database
+// This function is NOT REENTRANT
 //
 
-DWORD LoadUserDB(DWORD dwRqId)
+DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRetCode;
+   DWORD dwRetCode, dwRqId;
 
-   ChangeState(STATE_LOAD_USER_DB);
    m_hCondLoadFinished = ConditionCreate(FALSE);
+   dwRqId = g_dwMsgId++;
 
    msg.SetCode(CMD_LOAD_USER_DB);
    msg.SetId(dwRqId);
@@ -111,19 +112,27 @@ DWORD LoadUserDB(DWORD dwRqId)
 
    if (dwRetCode == RCC_SUCCESS)
    {
+      ChangeState(STATE_LOAD_USER_DB);
+
       // Wait for object list end or for disconnection
       while(g_dwState != STATE_DISCONNECTED)
       {
          if (ConditionWait(m_hCondLoadFinished, 500))
             break;
       }
-      m_bUserDBLoaded = TRUE;
+
+      if (g_dwState != STATE_DISCONNECTED)
+      {
+         ChangeState(STATE_IDLE);
+         m_bUserDBLoaded = TRUE;
+      }
+      else
+      {
+         dwRetCode = RCC_COMM_FAILURE;
+      }
    }
 
    ConditionDestroy(m_hCondLoadFinished);
-   if (g_dwState != STATE_DISCONNECTED)
-      ChangeState(STATE_IDLE);
-
    return dwRetCode;
 }
 

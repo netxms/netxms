@@ -117,10 +117,13 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
 // Open event configuration database
 //
 
-DWORD OpenEventDB(DWORD dwRqId)
+DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode;
+   DWORD dwRqId;
+
+   dwRqId = g_dwMsgId++;
 
    ChangeState(STATE_LOAD_EVENT_DB);
    m_hCondLoadFinished = ConditionCreate(FALSE);
@@ -160,64 +163,16 @@ DWORD OpenEventDB(DWORD dwRqId)
 
 
 //
-// Close event configuration database
-//
-
-DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
-{
-   CSCPMessage msg, *pResponce;
-   DWORD dwRetCode = RCC_SUCCESS;
-
-   // Go through event templates and save modified events
-   if (bSaveChanges)
-   {
-      DWORD i;
-
-      for(i = 0; i < m_dwNumTemplates; i++)
-         if (m_ppEventTemplates[i]->dwFlags & EF_MODIFIED)
-         {
-            m_ppEventTemplates[i]->dwFlags &= ~EF_MODIFIED;
-            dwRetCode = SetEventInfo(g_dwRequestId++, m_ppEventTemplates[i], FALSE);
-            // Restore modified flag
-            m_ppEventTemplates[i]->dwFlags |= EF_MODIFIED;
-            if (dwRetCode != RCC_SUCCESS)
-               break;
-         }
-   }
-
-   // Close database
-   if (dwRetCode == RCC_SUCCESS)
-   {
-      msg.SetCode(CMD_CLOSE_EVENT_DB);
-      msg.SetId(dwRqId);
-      SendMsg(&msg);
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-      if (pResponce != NULL)
-      {
-         dwRetCode = pResponce->GetVariableLong(VID_RCC);
-         delete pResponce;
-      }
-      else
-      {
-         dwRetCode = RCC_TIMEOUT;
-      }
-
-      m_bEventDBOpened = FALSE;
-      DestroyEventDB();
-   }
-
-   return dwRetCode;
-}
-
-
-//
 // Set event information
 //
 
-DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg)
+static DWORD SetEventInfo(NXC_EVENT_TEMPLATE *pArg)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode = RCC_SUCCESS;
+   DWORD dwRqId;
+
+   dwRqId = g_dwMsgId++;
 
    // Prepare message
    msg.SetCode(CMD_SET_EVENT_INFO);
@@ -242,12 +197,59 @@ DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg)
       dwRetCode = RCC_TIMEOUT;
    }
 
-   // Free dynamic string because request processor will only destroy
-   // memory block at pArg
-   if (bDynamicArg)
+   return dwRetCode;
+}
+
+
+//
+// Close event configuration database
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode = RCC_SUCCESS;
+   DWORD dwRqId;
+
+   // Go through event templates and save modified events
+   if (bSaveChanges)
    {
-      MemFree(pArg->pszDescription);
-      MemFree(pArg->pszMessage);
+      DWORD i;
+
+      for(i = 0; i < m_dwNumTemplates; i++)
+         if (m_ppEventTemplates[i]->dwFlags & EF_MODIFIED)
+         {
+            m_ppEventTemplates[i]->dwFlags &= ~EF_MODIFIED;
+            dwRetCode = SetEventInfo(m_ppEventTemplates[i]);
+            if (dwRetCode != RCC_SUCCESS)
+            {
+               // Restore modified flag
+               m_ppEventTemplates[i]->dwFlags |= EF_MODIFIED;
+               break;
+            }
+         }
+   }
+
+   // Close database
+   if (dwRetCode == RCC_SUCCESS)
+   {
+      dwRqId = g_dwMsgId++;
+      msg.SetCode(CMD_CLOSE_EVENT_DB);
+      msg.SetId(dwRqId);
+      SendMsg(&msg);
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+      if (pResponce != NULL)
+      {
+         dwRetCode = pResponce->GetVariableLong(VID_RCC);
+         delete pResponce;
+      }
+      else
+      {
+         dwRetCode = RCC_TIMEOUT;
+      }
+
+      m_bEventDBOpened = FALSE;
+      DestroyEventDB();
    }
 
    return dwRetCode;

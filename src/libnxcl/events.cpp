@@ -72,27 +72,50 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 
 //
 // Synchronize event log
+// This function is NOT REENTRANT
 //
 
-void SyncEvents(void)
+DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
 {
-   CSCPMessage msg;
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode, dwRqId;
 
-   ChangeState(STATE_SYNC_EVENTS);
+   dwRqId = g_dwMsgId++;
+
    m_hCondSyncFinished = ConditionCreate(FALSE);
 
    msg.SetCode(CMD_GET_EVENTS);
-   msg.SetId(0);
+   msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   // Wait for object list end or for disconnection
-   while(g_dwState != STATE_DISCONNECTED)
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
    {
-      if (ConditionWait(m_hCondSyncFinished, 500))
-         break;
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   if (dwRetCode == RCC_SUCCESS)
+   {
+      ChangeState(STATE_SYNC_EVENTS);
+
+      // Wait for object list end or for disconnection
+      while(g_dwState != STATE_DISCONNECTED)
+      {
+         if (ConditionWait(m_hCondSyncFinished, 500))
+            break;
+      }
+
+      if (g_dwState != STATE_DISCONNECTED)
+         ChangeState(STATE_IDLE);
+      else
+         dwRetCode = RCC_COMM_FAILURE;
    }
 
    ConditionDestroy(m_hCondSyncFinished);
-   if (g_dwState != STATE_DISCONNECTED)
-      ChangeState(STATE_IDLE);
+   return dwRetCode;
 }

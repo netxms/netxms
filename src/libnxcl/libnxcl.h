@@ -45,29 +45,11 @@
 // Constants
 //
 
-#define LIBNXCL_VERSION    0
+#define LIBNXCL_VERSION    1
 
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64
 #define MAX_PASSWORD_LEN   64
-
-
-//
-// Request codes
-//
-
-#define RQ_CONNECT            1
-#define RQ_SYNC_OBJECTS       2
-#define RQ_SYNC_EVENTS        3
-#define RQ_OPEN_EVENT_DB      4
-#define RQ_CLOSE_EVENT_DB     5
-#define RQ_SET_EVENT_INFO     6
-#define RQ_MODIFY_OBJECT      7
-#define RQ_LOAD_USER_DB       8
-#define RQ_CREATE_USER        9
-#define RQ_CREATE_USER_GROUP  10
-#define RQ_DELETE_USER        11
-#define RQ_LOCK_USER_DB       12
 
 
 //
@@ -141,31 +123,15 @@ public:
 
 void ObjectsInit(void);
 
-BOOL Connect(void);
-void SyncEvents(void);
-DWORD OpenEventDB(DWORD dwRqId);
-DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges);
-DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
 
-DWORD LoadUserDB(DWORD dwRqId);
-DWORD LockUserDB(DWORD dwRqId, BOOL bLock);
 void ProcessUserDBRecord(CSCPMessage *pMsg);
-DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup);
-DWORD DeleteUser(DWORD dwRqId, DWORD dwId);
-
-void SyncObjects(void);
-DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg);
-
-NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc);
-NXC_OBJECT_UPDATE *DuplicateObjectUpdate(NXC_OBJECT_UPDATE *pSrc);
 
 BOOL SendMsg(CSCPMessage *pMsg);
 CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
 
-HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
 void ChangeState(DWORD dwState);
 void DebugPrintf(char *szFormat, ...);
 
@@ -179,8 +145,7 @@ void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 extern NXC_EVENT_HANDLER g_pEventHandler;
 extern NXC_DEBUG_CALLBACK g_pDebugCallBack;
 extern DWORD g_dwState;
-extern DWORD g_dwRequestId;
-extern Queue *g_pRequestQueue;
+extern DWORD g_dwMsgId;
 
 
 //

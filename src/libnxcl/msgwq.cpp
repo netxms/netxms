@@ -145,6 +145,7 @@ void MsgWaitQueue::HousekeeperThread(void)
       for(i = 0; i < m_dwNumElements; i++)
          if (m_pElements[i].dwTTL <= TTL_CHECK_INTERVAL)
          {
+            DebugPrintf("Message with id %d deleted from wait queue", m_pElements[i].pMsg->GetId());
             delete m_pElements[i].pMsg;
             m_dwNumElements--;
             memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));

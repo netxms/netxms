@@ -255,29 +255,55 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
 
 //
 // Synchronize objects with the server
+// This function is NOT REENTRANT
 //
 
-void SyncObjects(void)
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
 {
-   CSCPMessage msg;
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode, dwRqId;
 
-   ChangeState(STATE_SYNC_OBJECTS);
+   dwRqId = g_dwMsgId++;
    m_hCondSyncFinished = ConditionCreate(FALSE);
 
-   msg.SetCode(CMD_GET_OBJECTS);
-   msg.SetId(0);
+   msg.SetCode(CMD_GET_EVENTS);
+   msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   // Wait for object list end or for disconnection
-   while(g_dwState != STATE_DISCONNECTED)
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
    {
-      if (ConditionWait(m_hCondSyncFinished, 500))
-         break;
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   if (dwRetCode == RCC_SUCCESS)
+   {
+      ChangeState(STATE_SYNC_OBJECTS);
+
+      msg.SetCode(CMD_GET_OBJECTS);
+      msg.SetId(0);
+      SendMsg(&msg);
+
+      // Wait for object list end or for disconnection
+      while(g_dwState != STATE_DISCONNECTED)
+      {
+         if (ConditionWait(m_hCondSyncFinished, 500))
+            break;
+      }
+
+      if (g_dwState != STATE_DISCONNECTED)
+         ChangeState(STATE_IDLE);
+      else
+         dwRetCode = RCC_COMM_FAILURE;
    }
 
    ConditionDestroy(m_hCondSyncFinished);
-   if (g_dwState != STATE_DISCONNECTED)
-      ChangeState(STATE_IDLE);
+   return dwRetCode;
 }
 
 
@@ -387,31 +413,15 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName)
 
 
 //
-// Duplicate object update information from NXCModifyObject()
-//
-
-NXC_OBJECT_UPDATE *DuplicateObjectUpdate(NXC_OBJECT_UPDATE *pSrc)
-{
-   NXC_OBJECT_UPDATE *pDest;
-
-   pDest = (NXC_OBJECT_UPDATE *)nx_memdup(pSrc, sizeof(NXC_OBJECT_UPDATE));
-   pDest->pszCommunity = (pSrc->dwFlags & OBJ_UPDATE_SNMP_COMMUNITY) ? nx_strdup(pSrc->pszCommunity) : NULL;
-   pDest->pszName = (pSrc->dwFlags & OBJ_UPDATE_NAME) ? nx_strdup(pSrc->pszName) : NULL;
-   pDest->pszSecret = (pSrc->dwFlags & OBJ_UPDATE_AGENT_SECRET) ? nx_strdup(pSrc->pszSecret) : NULL;
-   pDest->pAccessList = (pSrc->dwFlags & OBJ_UPDATE_ACL) ? 
-      (NXC_ACL_ENTRY *)nx_memdup(pSrc->pAccessList, sizeof(NXC_ACL_ENTRY) * pSrc->dwAclSize) : NULL;
-   return pDest;
-}
-
-
-//
 // Modify object
 //
 
-DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg)
+DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRetCode;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
 
    // Build request message
    msg.SetCode(CMD_MODIFY_OBJECT);
@@ -454,16 +464,6 @@ DWORD ModifyObject(DWORD dwRqId, NXC_OBJECT_UPDATE *pUpdate, BOOL bDynamicArg)
    else
    {
       dwRetCode = RCC_TIMEOUT;
-   }
-
-   // Free dynamic string because request processor will only destroy
-   // memory block at pArg
-   if (bDynamicArg)
-   {
-      MemFree(pUpdate->pszCommunity);
-      MemFree(pUpdate->pszName);
-      MemFree(pUpdate->pszSecret);
-      MemFree(pUpdate->pAccessList);
    }
 
    return dwRetCode;

@@ -108,10 +108,6 @@ SOURCE=.\events.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\inline.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -125,10 +121,6 @@ SOURCE=.\msgwq.cpp
 # Begin Source File
 
 SOURCE=.\objects.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\request.cpp
 # End Source File
 # Begin Source File
 
@@ -161,6 +153,10 @@ SOURCE=..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=..\..\include\nxclapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxcscpapi.h
 # End Source File
 # Begin Source File
 

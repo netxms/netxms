@@ -25,73 +25,18 @@
 
 
 //
+// Unique message ID
+//
+
+DWORD g_dwMsgId;
+
+
+//
 // Static data
 //
 
 static SOCKET m_hSocket = -1;
-static DWORD m_dwMsgId;
-static char m_szServer[MAX_SERVER_NAME];
-static char m_szLogin[MAX_LOGIN_NAME];
-static BYTE m_szPassword[SHA_DIGEST_LENGTH];
 static MsgWaitQueue m_msgWaitQueue;
-
-
-//
-// Get symbolic name for message code
-// This function is intended to be used from receiver thread only,
-// so we don't care about reentrancy
-//
-
-static char *MessageCodeName(WORD wCode)
-{
-   static char *pszMsgNames[] =
-   {
-      "CMD_LOGIN",
-      "CMD_LOGIN_RESP",
-      "CMD_KEEPALIVE",
-      "CMD_EVENT",
-      "CMD_GET_OBJECTS",
-      "CMD_OBJECT",
-      "CMD_DELETE_OBJECT",
-      "CMD_MODIFY_OBJECT",
-      "CMD_OBJECT_LIST_END",
-      "CMD_OBJECT_UPDATE",
-      "CMD_GET_EVENTS",
-      "CMD_EVENT_LIST_END",
-      "CMD_GET_CONFIG_VARLIST",
-      "CMD_SET_CONFIG_VARIABLE",
-      "CMD_CONFIG_VARIABLE",
-      "CMD_CONFIG_VARLIST_END",
-      "CMD_DELETE_CONFIG_VARIABLE",
-      "CMD_NOTIFY",
-      "CMD_OPEN_EPP",
-      "CMD_CLOSE_EPP",
-      "CMD_INSTALL_EPP",
-      "CMD_SAVE_EPP",
-      "CMD_EPP_RECORD",
-      "CMD_OPEN_EVENT_DB",
-      "CMD_CLOSE_EVENT_DB",
-      "CMD_SET_EVENT_INFO",
-      "CMD_EVENT_DB_RECORD",
-      "CMD_EVENT_DB_EOF",
-      "CMD_REQUEST_COMPLETED",
-      "CMD_LOAD_USER_DB",
-      "CMD_USER_DATA",
-      "CMD_GROUP_DATA",
-      "CMD_USER_DB_EOF",
-      "CMD_UPDATE_USER",
-      "CMD_DELETE_USER",
-      "CMD_CREATE_USER",
-      "CMD_LOCK_USER_DB",
-      "CMD_UNLOCK_USER_DB"
-   };
-   static char szBuffer[32];
-
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UNLOCK_USER_DB))
-      return pszMsgNames[wCode - CMD_LOGIN];
-   sprintf(szBuffer, "CMD_UNKNOWN(%d)", wCode);
-   return szBuffer;
-}
 
 
 //
@@ -112,8 +57,9 @@ BOOL SendMsg(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
    BOOL bResult;
+   char szBuffer[128];
 
-   DebugPrintf("SendMsg(\"%s\", id:%ld)", MessageCodeName(pMsg->GetCode()), pMsg->GetId());
+   DebugPrintf("SendMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    bResult = SendRawMsg(pRawMsg);
    MemFree(pRawMsg);
@@ -132,6 +78,7 @@ static void NetReceiver(void *pArg)
    CSCP_BUFFER *pMsgBuffer;
    int iErr;
    BOOL bMsgNotNeeded;
+   char szBuffer[128];
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
@@ -162,7 +109,7 @@ static void NetReceiver(void *pArg)
          pRawMsg->wSize = ntohs(pRawMsg->wSize);
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
 
-         DebugPrintf("RecvRawMsg(\"%s\", id:%ld)", MessageCodeName(pRawMsg->wCode), pRawMsg->dwId);
+         DebugPrintf("RecvRawMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
 
          // Process message
          switch(pRawMsg->wCode)
@@ -178,7 +125,7 @@ static void NetReceiver(void *pArg)
       {
          pMsg = new CSCPMessage(pRawMsg);
          bMsgNotNeeded = TRUE;
-         DebugPrintf("RecvMsg(\"%s\", id:%ld)", MessageCodeName(pMsg->GetCode()), pMsg->GetId());
+         DebugPrintf("RecvMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
 
          // Process message
          switch(pMsg->GetCode())
@@ -222,109 +169,73 @@ static void NetReceiver(void *pArg)
 // Connect to server
 //
 
-BOOL Connect(void)
+BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
-   BOOL bSuccess;
+   BOOL bSuccess = FALSE;
+   BYTE szPasswordHash[SHA_DIGEST_LENGTH];
 
-   ChangeState(STATE_CONNECTING);
-
-   // Reset unique message ID
-   m_dwMsgId = 1;
-
-   // Prepare address structure
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = inet_addr(m_szServer);
-   if (servAddr.sin_addr.s_addr == INADDR_NONE)
+   if (g_dwState == STATE_DISCONNECTED)
    {
-      struct hostent *hs;
+      ChangeState(STATE_CONNECTING);
 
-      hs = gethostbyname(m_szServer);
-      if (hs == NULL)
+      // Reset unique message ID
+      g_dwMsgId = 1;
+
+      // Prepare address structure
+      memset(&servAddr, 0, sizeof(struct sockaddr_in));
+      servAddr.sin_family = AF_INET;
+      servAddr.sin_port = htons((WORD)SERVER_LISTEN_PORT);
+      servAddr.sin_addr.s_addr = inet_addr(szServer);
+      if (servAddr.sin_addr.s_addr == INADDR_NONE)
       {
-         return FALSE;  // Unable to resolve host name
+         struct hostent *hs;
+
+         hs = gethostbyname(szServer);
+         if (hs != NULL)
+            memcpy(&servAddr.sin_addr, hs->h_addr, hs->h_length);
       }
-      else
+
+      if (servAddr.sin_addr.s_addr != INADDR_NONE)
       {
-         memcpy(&servAddr.sin_addr, hs->h_addr, hs->h_length);
-      }
-   }
-   servAddr.sin_port = htons((WORD)SERVER_LISTEN_PORT);
-
-   // Create socket
-   if ((m_hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-   {
-      return FALSE;
-   }
-
-   // Connect to target
-   if (connect(m_hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-   {
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
-   }
-
-   // Start receiver thread
-   ThreadCreate(NetReceiver, 0, NULL);
+         // Create socket
+         if ((m_hSocket = socket(AF_INET, SOCK_STREAM, 0)) != -1)
+         {
+            // Connect to target
+            if (connect(m_hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) == 0)
+            {
+               // Start receiver thread
+               ThreadCreate(NetReceiver, 0, NULL);
    
-   // Prepare login message
-   msg.SetId(m_dwMsgId++);
-   msg.SetCode(CMD_LOGIN);
-   msg.SetVariable(VID_LOGIN_NAME, m_szLogin);
-   msg.SetVariable(VID_PASSWORD, m_szPassword, SHA_DIGEST_LENGTH);
+               // Prepare login message
+               msg.SetId(g_dwMsgId++);
+               msg.SetCode(CMD_LOGIN);
+               msg.SetVariable(VID_LOGIN_NAME, szLogin);
+               CreateSHA1Hash(szPassword, szPasswordHash);
+               msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA_DIGEST_LENGTH);
 
-   if (!SendMsg(&msg))
-   {
-      // Message send failed, drop connection
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
+               if (SendMsg(&msg))
+               {
+                  // Receive responce message
+                  pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), 2000);
+                  if (pResp != NULL)   // Connection is broken or timed out
+                  {
+                     bSuccess = pResp->GetVariableLong(VID_LOGIN_RESULT);
+                     delete pResp;
+                  }
+               }
+
+               shutdown(m_hSocket, 2);
+            }
+            closesocket(m_hSocket);
+            m_hSocket = -1;
+         }
+      }
+      CallEventHandler(NXC_EVENT_LOGIN_RESULT, bSuccess, NULL);
    }
 
-   // Receive responce message
-   pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), 2000);
-   if (pResp == NULL)   // Connection is broken or timed out
-   {
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
-   }
-
-   bSuccess = pResp->GetVariableLong(VID_LOGIN_RESULT);
-   delete pResp;
-
-   CallEventHandler(NXC_EVENT_LOGIN_RESULT, bSuccess, NULL);
-   if (!bSuccess)
-   {
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-   }
    return bSuccess;
-}
-
-
-//
-// Initiate connection to server
-//
-
-BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
-{
-   if (g_dwState != STATE_DISCONNECTED)
-      return FALSE;
-
-   strcpy(m_szServer, szServer);
-   strcpy(m_szLogin, szLogin);
-   CreateSHA1Hash(szPassword, m_szPassword);
-
-   CreateRequest(RQ_CONNECT, NULL, FALSE);
-
-   return TRUE;
 }
 
 

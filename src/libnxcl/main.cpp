@@ -25,21 +25,12 @@
 
 
 //
-// Externals
-//
-
-void RequestProcessor(void *pArg);
-
-
-//
 // Global variables
 //
 
 NXC_EVENT_HANDLER g_pEventHandler = NULL;
 NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 DWORD g_dwState = STATE_DISCONNECTED;
-Queue *g_pRequestQueue = NULL;
-DWORD g_dwRequestId;
 
 
 //
@@ -49,11 +40,6 @@ DWORD g_dwRequestId;
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
    ObjectsInit();
-   g_dwRequestId = 1;
-   g_pRequestQueue = new Queue;
-   if (g_pRequestQueue == NULL)
-      return FALSE;
-   ThreadCreate(RequestProcessor, 0, NULL);
    return TRUE;
 }
 
@@ -104,9 +90,10 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Request is out of state",
       "Database failure",
       "Invalid object ID",
-      "Object already exist"
+      "Object already exist",
+      "Communication failure"
    };
-   return ((dwError >= 0) && (dwError <= 8)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_COMM_FAILURE)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 
