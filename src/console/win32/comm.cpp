@@ -140,6 +140,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = NXCLoadEventNames();
    }
 
+   // Synchronize images
    if (dwResult == RCC_SUCCESS)
    {
       char szCacheDir[MAX_PATH];
@@ -150,6 +151,27 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = NXCSyncImages(&g_pSrvImageList, szCacheDir);
       if (dwResult == RCC_SUCCESS)
          CreateObjectImageList();
+   }
+
+   // Load default image list
+   if (dwResult == RCC_SUCCESS)
+   {
+      DWORD i, *pdwClassId, *pdwImageId;
+
+      SetInfoText(hWnd, "Loading default image list...");
+      dwResult = NXCLoadDefaultImageList(&g_dwDefImgListSize, &pdwClassId, &pdwImageId);
+      if (dwResult == RCC_SUCCESS)
+      {
+         g_pDefImgList = (DEF_IMG *)realloc(g_pDefImgList, sizeof(DEF_IMG) * g_dwDefImgListSize);
+         for(i = 0; i < g_dwDefImgListSize; i++)
+         {
+            g_pDefImgList[i].dwObjectClass = pdwClassId[i];
+            g_pDefImgList[i].dwImageId = pdwImageId[i];
+            g_pDefImgList[i].dwImageIndex = ImageIdToIndex(pdwImageId[i]);
+         }
+         MemFree(pdwClassId);
+         MemFree(pdwImageId);
+      }
    }
 
    // Disconnect if some of post-login operations was failed

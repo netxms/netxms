@@ -67,10 +67,13 @@ void CObjectInfoBox::OnPaint()
       RECT rect;
       int cy, step, w;
       char szBuffer[64], szTemp[32];
+      DWORD dwImageIndex;
 
       // Draw icon and objet's name right to it
       dc.FillSolidRect(X_MARGIN - 1, Y_MARGIN - 1, 34, 34, g_statusColorTable[m_pCurrObject->iStatus]);
-      dc.DrawIcon(X_MARGIN, Y_MARGIN, m_hIconList[m_pCurrObject->iClass]);
+      //dc.DrawIcon(X_MARGIN, Y_MARGIN, m_hIconList[m_pCurrObject->iClass]);
+      dwImageIndex = GetObjectImageIndex(m_pCurrObject);
+      g_pObjectNormalImageList->Draw(&dc, dwImageIndex, CPoint(X_MARGIN, Y_MARGIN), ILD_TRANSPARENT);
       dc.SelectObject(m_fontNormal);
       dc.SetBkColor(RGB(255, 255, 255));
       GetClientRect(&rect);

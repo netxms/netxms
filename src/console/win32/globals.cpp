@@ -183,3 +183,11 @@ CODE_TO_TEXT g_ctSnmpMibType[] =
    { TYPE_MODCOMP, "MODCOMP" },
    { 0, NULL }    // End of list
 };
+
+
+//
+// Default object image list
+//
+
+DWORD g_dwDefImgListSize = 0;
+DEF_IMG *g_pDefImgList = NULL;

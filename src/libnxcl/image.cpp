@@ -187,7 +187,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList)
 // Load default image list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize, DWORD *pdwClassId, DWORD *pdwImageId)
+DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize, 
+                                                 DWORD **ppdwClassId, DWORD **ppdwImageId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode, dwRqId;
@@ -205,10 +206,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize, DWORD *pdwC
       if (dwRetCode == RCC_SUCCESS)
       {
          *pdwListSize = pResponce->GetVariableLong(VID_NUM_IMAGES);
-         pdwClassId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
-         pdwImageId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
-         pResponce->GetVariableInt32Array(VID_CLASS_ID_LIST, *pdwListSize, pdwClassId);
-         pResponce->GetVariableInt32Array(VID_IMAGE_ID_LIST, *pdwListSize, pdwImageId);
+         *ppdwClassId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
+         *ppdwImageId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
+         pResponce->GetVariableInt32Array(VID_CLASS_ID_LIST, *pdwListSize, *ppdwClassId);
+         pResponce->GetVariableInt32Array(VID_IMAGE_ID_LIST, *pdwListSize, *ppdwImageId);
       }
       delete pResponce;
    }

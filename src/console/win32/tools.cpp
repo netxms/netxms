@@ -292,5 +292,16 @@ void CreateObjectImageList(void)
 
 DWORD GetObjectImageIndex(NXC_OBJECT *pObject)
 {
+   DWORD i;
+
+   // Check if object has custom image
+   if (pObject->dwImage != IMG_DEFAULT)
+      return ImageIdToIndex(pObject->dwImage);
+
+   // Find default image for class
+   for(i = 0; i < g_dwDefImgListSize; i++)
+      if (g_pDefImgList[i].dwObjectClass == (DWORD)pObject->iClass)
+         return g_pDefImgList[i].dwImageIndex;
+   
    return 0;
 }

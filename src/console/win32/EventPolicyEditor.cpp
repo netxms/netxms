@@ -192,14 +192,14 @@ void CEventPolicyEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 
    switch(m_wndRuleList.GetCurrentColumn())
    {
-      case 1:     // Source
-      case 2:     // Event
-      case 5:     // Action
+      case COL_SOURCE:
+      case COL_EVENT:
+      case COL_ACTION:
          iMenu = 4;
          break;
-      case 3:     // Severity
-      case 4:     // Alarm
-      case 6:     // Comment
+      case COL_SEVERITY:
+      case COL_ALARM:
+      case COL_COMMENT:
          iMenu = 5;
          break;
       default:

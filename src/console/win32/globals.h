@@ -91,6 +91,18 @@ struct CODE_TO_TEXT
 
 
 //
+// Default image table
+//
+
+struct DEF_IMG
+{
+   DWORD dwObjectClass;
+   DWORD dwImageId;
+   DWORD dwImageIndex;
+};
+
+
+//
 // Communication functions
 //
 
@@ -170,5 +182,7 @@ extern CODE_TO_TEXT g_ctSnmpMibType[];
 extern NXC_IMAGE_LIST *g_pSrvImageList;
 extern CImageList *g_pObjectSmallImageList;
 extern CImageList *g_pObjectNormalImageList;
+extern DWORD g_dwDefImgListSize;
+extern DEF_IMG *g_pDefImgList;
 
 #endif
