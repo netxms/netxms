@@ -32,6 +32,7 @@ src/server/core/objects.cpp -text
 src/server/core/queue.cpp -text
 src/server/core/resource.h -text
 src/server/core/snmp.cpp -text
+src/server/core/status.cpp -text
 src/server/core/subnet.cpp -text
 src/server/core/syncer.cpp -text
 src/server/core/tools.cpp -text
