@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.64 2005-02-08 21:49:32 victor Exp $
+# $Id: configure.ac,v 1.65 2005-02-15 11:37:28 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -137,7 +137,7 @@ AC_ARG_WITH(server,
 AC_ARG_WITH(client,
 [AS_HELP_STRING(--with-client,build client library and tools)],
 [
-	MODULES="$MODULES libnxcl nxevent console"
+	MODULES="$MODULES libnxcl nxevent nxreport console"
 	BUILD_CLIENT="yes"
 ])
 
@@ -389,6 +389,7 @@ AC_CONFIG_FILES([
 	src/console/win32/res/Makefile
 	src/console/win32starter/Makefile
 	src/nxevent/Makefile
+	src/nxreport/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
 	src/server/netxmsd/Makefile
