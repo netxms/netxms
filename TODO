@@ -26,3 +26,8 @@ CORE AGENT:
 
 - Check shutdown procedure on different platforms
 - Add signal handlers for UNIX
+
+
+WINDOWS CONSOLE:
+
+- Add custom background erasing code in policy editor for smooth painting
