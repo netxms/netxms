@@ -31,6 +31,7 @@ public:
 
 // Implementation
 protected:
+	CFont m_fontNormal;
 	void AddAlarm(NXC_ALARM *pAlarm);
 	BOOL m_bShowAllAlarms;
 	CImageList *m_pImageList;

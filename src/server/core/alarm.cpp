@@ -161,7 +161,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    DBQuery(g_hCoreDB, szQuery);
 
    // Notify connected clients about new alarm
-   NotifyClients((bIsAck ? NX_NOTIFY_NEW_ACK_ALARM : NX_NOTIFY_NEW_ALARM), &alarm);
+   NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
 }
 
 

@@ -67,6 +67,12 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
+   // Create font for elements
+   m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                          0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, ID_LIST_VIEW);
@@ -74,16 +80,18 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
+   m_wndListCtrl.SetFont(&m_fontNormal, FALSE);
+
    // Create image list
    m_pImageList = CreateEventImageList();
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Source", LVCFMT_LEFT, 140);
-   m_wndListCtrl.InsertColumn(1, "Severity", LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(0, "Severity", LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(1, "Source", LVCFMT_LEFT, 140);
    m_wndListCtrl.InsertColumn(2, "Message", LVCFMT_LEFT, 400);
    m_wndListCtrl.InsertColumn(3, "Time Stamp", LVCFMT_LEFT, 135);
-   m_wndListCtrl.InsertColumn(4, "Ack", LVCFMT_LEFT, 30);
+   m_wndListCtrl.InsertColumn(4, "Ack", LVCFMT_CENTER, 30);
 	
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_ALARMS, this);
 
@@ -164,10 +172,12 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(pAlarm->dwSourceObject);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, pObject->szName, pAlarm->wSeverity);
+   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, g_szStatusTextSmall[pAlarm->wSeverity],
+                                   pAlarm->wSeverity);
    if (iIdx != -1)
    {
-      m_wndListCtrl.SetItemText(iIdx, 1, g_szStatusTextSmall[pAlarm->wSeverity]);
+      m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
+      m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
       ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
       strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);

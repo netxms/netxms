@@ -278,8 +278,7 @@ void ClientSession::UpdateThread(void)
             msg.SetId(0);
             msg.SetVariable(VID_NOTIFICATION_CODE, ((ALARM_UPDATE *)pUpdate->pData)->dwCode);
             msg.SetVariable(VID_ALARM_ID, ((ALARM_UPDATE *)pUpdate->pData)->alarm.dwAlarmId);
-            if ((((ALARM_UPDATE *)pUpdate->pData)->dwCode == NX_NOTIFY_NEW_ALARM) ||
-                (((ALARM_UPDATE *)pUpdate->pData)->dwCode == NX_NOTIFY_NEW_ACK_ALARM))
+            if (((ALARM_UPDATE *)pUpdate->pData)->dwCode == NX_NOTIFY_NEW_ALARM)
                FillAlarmInfoMessage(&msg, &((ALARM_UPDATE *)pUpdate->pData)->alarm);
             MutexUnlock(m_mutexSendAlarms);
             msg.DeleteAllVariables();

@@ -25,6 +25,40 @@
 
 
 //
+// Fill alarm record from message
+//
+
+static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
+{
+   pAlarm->dwAckByUser = pMsg->GetVariableLong(VID_ACK_BY_USER);
+   pAlarm->dwSourceEvent = pMsg->GetVariableLong(VID_EVENT_ID);
+   pAlarm->dwSourceObject = pMsg->GetVariableLong(VID_OBJECT_ID);
+   pAlarm->dwTimeStamp = pMsg->GetVariableLong(VID_TIMESTAMP);
+   pMsg->GetVariableStr(VID_ALARM_KEY, pAlarm->szKey, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_DB_STRING);
+   pAlarm->wIsAck = pMsg->GetVariableShort(VID_IS_ACK);
+   pAlarm->wSeverity = pMsg->GetVariableShort(VID_SEVERITY);
+}
+
+
+//
+// Process CMD_ALARM_UPDATE message
+//
+
+void ProcessAlarmUpdate(CSCPMessage *pMsg)
+{
+   NXC_ALARM alarm;
+   DWORD dwCode;
+
+   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
+   alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
+   if (dwCode == NX_NOTIFY_NEW_ALARM)
+      AlarmFromMsg(pMsg, &alarm);
+   CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
+}
+
+
+//
 // Load all alarms from server
 //
 
@@ -52,14 +86,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms,
          {
             pList = (NXC_ALARM *)MemReAlloc(pList, sizeof(NXC_ALARM) * (dwNumAlarms + 1));
             pList[dwNumAlarms].dwAlarmId = dwAlarmId;
-            pList[dwNumAlarms].dwAckByUser = pResponce->GetVariableLong(VID_ACK_BY_USER);
-            pList[dwNumAlarms].dwSourceEvent = pResponce->GetVariableLong(VID_EVENT_ID);
-            pList[dwNumAlarms].dwSourceObject = pResponce->GetVariableLong(VID_OBJECT_ID);
-            pList[dwNumAlarms].dwTimeStamp = pResponce->GetVariableLong(VID_TIMESTAMP);
-            pResponce->GetVariableStr(VID_ALARM_KEY, pList[dwNumAlarms].szKey, MAX_DB_STRING);
-            pResponce->GetVariableStr(VID_ALARM_MESSAGE, pList[dwNumAlarms].szMessage, MAX_DB_STRING);
-            pList[dwNumAlarms].wIsAck = pResponce->GetVariableShort(VID_IS_ACK);
-            pList[dwNumAlarms].wSeverity = pResponce->GetVariableShort(VID_SEVERITY);
+            AlarmFromMsg(pResponce, &pList[dwNumAlarms]);
             dwNumAlarms++;
          }
          delete pResponce;

@@ -83,6 +83,7 @@ typedef struct
 
 void ObjectsInit(void);
 
+void ProcessAlarmUpdate(CSCPMessage *pMsg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);

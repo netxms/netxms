@@ -178,8 +178,7 @@ typedef unsigned long HREQUEST;
 #define NX_NOTIFY_EVENTDB_CHANGED   2
 #define NX_NOTIFY_ALARM_DELETED     3
 #define NX_NOTIFY_NEW_ALARM         4
-#define NX_NOTIFY_NEW_ACK_ALARM     5
-#define NX_NOTIFY_ALARM_ACKNOWLEGED 6
+#define NX_NOTIFY_ALARM_ACKNOWLEGED 5
 
 
 //
