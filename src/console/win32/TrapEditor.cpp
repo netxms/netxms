@@ -321,7 +321,7 @@ void CTrapEditor::OnTrapEdit()
 {
    CTrapEditDlg dlg;
    int iItem;
-   DWORD i, dwIndex, dwTrapId;
+   DWORD i, dwIndex, dwTrapId, dwResult;
 
    if (m_wndListCtrl.GetSelectedCount() == 1)
    {
@@ -352,19 +352,30 @@ void CTrapEditor::OnTrapEdit()
             // Run dialog and update record list on success
             if (dlg.DoModal() == IDOK)
             {
-               // Clean existing configuration record
-               for(i = 0; i < m_pTrapList[dwIndex].dwNumMaps; i++)
-                  safe_free(m_pTrapList[dwIndex].pMaps[i].pdwObjectId);
-               safe_free(m_pTrapList[dwIndex].pMaps);
-               safe_free(m_pTrapList[dwIndex].pdwObjectId);
+               // Update record on server
+               dwResult = DoRequestArg1(NXCModifyTrap, &dlg.m_trap, _T("Updating trap configuration..."));
+               if (dwResult == RCC_SUCCESS)
+               {
+                  // Clean existing configuration record
+                  for(i = 0; i < m_pTrapList[dwIndex].dwNumMaps; i++)
+                     safe_free(m_pTrapList[dwIndex].pMaps[i].pdwObjectId);
+                  safe_free(m_pTrapList[dwIndex].pMaps);
+                  safe_free(m_pTrapList[dwIndex].pdwObjectId);
 
-               // Copy updated record over existing
-               memcpy(&m_pTrapList[dwIndex], &dlg.m_trap, sizeof(NXC_TRAP_CFG_ENTRY));
+                  // Copy updated record over existing
+                  memcpy(&m_pTrapList[dwIndex], &dlg.m_trap, sizeof(NXC_TRAP_CFG_ENTRY));
 
-               // Prevent memory blocks from freeing by dialog destructor
-               dlg.m_trap.pdwObjectId = NULL;
-               dlg.m_trap.dwNumMaps = 0;
-               dlg.m_trap.pMaps = NULL;
+                  // Prevent memory blocks from freeing by dialog destructor
+                  dlg.m_trap.pdwObjectId = NULL;
+                  dlg.m_trap.dwNumMaps = 0;
+                  dlg.m_trap.pMaps = NULL;
+
+                  UpdateItem(iItem, dwIndex);
+               }
+               else
+               {
+                  theApp.ErrorBox(dwResult, _T("Error updating trap configuration:\n%s"));
+               }
             }
          }
       }

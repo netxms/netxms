@@ -44,6 +44,7 @@ CMIBBrowserDlg::CMIBBrowserDlg(CWnd* pParent /*=NULL*/)
    m_bIsExpanded = FALSE;
    m_bDisableOIDUpdate = FALSE;
    m_pNode = NULL;
+   m_bUseInstance = TRUE;
 }
 
 
@@ -129,6 +130,18 @@ BOOL CMIBBrowserDlg::OnInitDialog()
       strTitle += m_pNode->szName;
       strTitle += ")";
       SetWindowText(strTitle);
+   }
+
+   // Disable "instance" field if it's not needed
+   if (!m_bUseInstance)
+   {
+      CWnd *pWnd;
+
+      m_wndEditInstance.EnableWindow(FALSE);
+      m_wndEditInstance.SetWindowText(_T(""));
+      pWnd = GetDlgItem(IDC_STATIC_INSTANCE);
+      if (pWnd != NULL)
+         pWnd->EnableWindow(FALSE);
    }
 
 	return TRUE;

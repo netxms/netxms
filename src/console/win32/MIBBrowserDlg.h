@@ -21,6 +21,7 @@ class CMIBBrowserDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bUseInstance;
 	NXC_OBJECT *m_pNode;
 	CMIBBrowserDlg(CWnd* pParent = NULL);   // standard constructor
 

@@ -406,6 +406,8 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 {
    DWORD i, j, dwId1, dwId2, dwId3, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
+   TCHAR szQuery[1024], szOID[1024], *pszEscDescr;
+   BOOL bSuccess;
 
    dwTrapId = pMsg->GetVariableLong(VID_TRAP_ID);
 
@@ -433,12 +435,44 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
              j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
          {
             m_pTrapCfg[i].pMaps[j].dwOidLen = pMsg->GetVariableLong(dwId1);
+            m_pTrapCfg[i].pMaps[j].pdwObjectId = 
+               (DWORD *)malloc(sizeof(DWORD) * m_pTrapCfg[i].pMaps[j].dwOidLen);
             pMsg->GetVariableInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, 
                                         m_pTrapCfg[i].pMaps[j].pdwObjectId);
             pMsg->GetVariableStr(dwId3, m_pTrapCfg[i].pMaps[j].szDescription, MAX_DB_STRING);
          }
 
-         dwResult = RCC_SUCCESS;
+         // Update database
+         pszEscDescr = EncodeSQLString(m_pTrapCfg[i].szDescription);
+         SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
+         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_id=%ld,description='%s' WHERE trap_id=%ld"),
+                    szOID, m_pTrapCfg[i].dwEventId, pszEscDescr, m_pTrapCfg[i].dwId);
+         free(pszEscDescr);
+         bSuccess = DBQuery(g_hCoreDB, szQuery);
+         if (bSuccess)
+         {
+            _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%ld"), m_pTrapCfg[i].dwId);
+            bSuccess = DBQuery(g_hCoreDB, szQuery);
+            if (bSuccess)
+            {
+               for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+               {
+                  SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
+                                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
+                                       szOID, 1024);
+                  pszEscDescr = EncodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
+                  _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
+                                            _T("snmp_oid,description) VALUES (%ld,%ld,'%s','%s')"),
+                             m_pTrapCfg[i].dwId, j + 1, szOID, pszEscDescr);
+                  free(pszEscDescr);
+                  bSuccess = DBQuery(g_hCoreDB, szQuery);
+                  if (!bSuccess)
+                     break;
+               }
+            }
+         }
+
+         dwResult = bSuccess ? RCC_SUCCESS : RCC_DB_FAILURE;
          break;
       }
    }

@@ -296,6 +296,7 @@
 #define IDC_SELECT_EVENT                1195
 #define IDC_BUTTON_UP                   1198
 #define IDC_BUTTON_DOWN                 1199
+#define IDC_STATIC_INSTANCE             1201
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -393,7 +394,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        246
 #define _APS_NEXT_COMMAND_VALUE         32904
-#define _APS_NEXT_CONTROL_VALUE         1201
+#define _APS_NEXT_CONTROL_VALUE         1202
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

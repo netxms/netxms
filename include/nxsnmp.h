@@ -37,6 +37,18 @@
 #endif
 
 
+/***************************************************************
+ Following part of the file may conflict with net-snmp includes,
+ so it can be excluded by defining NXSNMP_WITH_NET_SNMP
+****************************************************************/
+
+#ifdef NXSNMP_WITH_NET_SNMP
+
+#define SNMP_VERSION_2C    1
+
+#else
+
+
 //
 // Various constants
 //
@@ -122,6 +134,9 @@
 #define ASN_GET_BULK_REQUEST_PDU    0xA5
 #define ASN_INFORM_REQUEST_PDU      0xA6
 #define ASN_TRAP_V2_PDU             0xA7
+
+
+#endif      /* NXSNMP_WITH_NET_SNMP */
 
 
 //

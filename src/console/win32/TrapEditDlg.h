@@ -43,6 +43,8 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CTrapEditDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnSelectTrap();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
