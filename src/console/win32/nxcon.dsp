@@ -144,6 +144,14 @@ SOURCE=.\globals.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Graph.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\GraphFrame.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\GroupPropDlg.cpp
 # End Source File
 # Begin Source File
@@ -297,6 +305,14 @@ SOURCE=.\globals.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Graph.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GraphFrame.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\GroupPropDlg.h
 # End Source File
 # Begin Source File
@@ -430,6 +446,10 @@ SOURCE=.\icons\EARTH.ICO
 # Begin Source File
 
 SOURCE=.\icons\event.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\graph.ico
 # End Source File
 # Begin Source File
 

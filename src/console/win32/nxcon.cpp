@@ -69,7 +69,6 @@ CConsoleApp::CConsoleApp()
    m_bNetSummaryActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
-   m_bCtrlPressed = FALSE;
 }
 
 
@@ -851,40 +850,43 @@ void CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
 
 
 //
-// Intercept messages before they are dispatched
+// Show graph for collected data
 //
 
-BOOL CConsoleApp::PreTranslateMessage(MSG* pMsg) 
+void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
 {
-   BOOL bProcessed = FALSE;
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CCreateContext context;
+   CGraphFrame *pWnd;
+   DWORD dwCurrTime;
 
-   switch(pMsg->message)
+   pWnd = new CGraphFrame;
+   pWnd->AddItem(dwNodeId, dwItemId);
+   dwCurrTime = time(NULL);
+   pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
+
+   // load the frame
+	context.m_pCurrentFrame = pFrame;
+
+	if (pWnd->LoadFrame(IDR_DCI_HISTORY_GRAPH, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
    {
-      case WM_KEYDOWN:
-         switch(pMsg->wParam)
-         {
-            case VK_CONTROL:
-               m_bCtrlPressed = TRUE;
-               break;
-            case VK_TAB:
-               if (m_bCtrlPressed)
-               {
-                  m_pMainWnd->MessageBox("Ctrl+TAB");
-                  bProcessed = TRUE;
-               }
-               break;
-         }
-         break;
-      case WM_KEYUP:
-         switch(pMsg->wParam)
-         {
-            case VK_CONTROL:
-               m_bCtrlPressed = FALSE;
-               break;
-         }
-         break;
-      default:
-         break;
+	   CString strFullString, strTitle;
+
+	   if (strFullString.LoadString(IDR_DCI_HISTORY_GRAPH))
+		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
+
+      // add item name to title
+      strTitle += " - [";
+      strTitle += pszItemName;
+      strTitle += "]";
+
+	   // set the handles and redraw the frame and parent
+	   pWnd->SetHandles(m_hMDIMenu, m_hMDIAccel);
+	   pWnd->SetTitle(strTitle);
+	   pWnd->InitialUpdateFrame(NULL, TRUE);
    }
-   return bProcessed ? TRUE : CWinApp::PreTranslateMessage(pMsg);
+   else
+	{
+		delete pWnd;
+	}
 }

@@ -20,6 +20,8 @@
 #define ID_INDICATOR_NUM_ROWS           109
 #define ID_INDICATOR_CURR_ROW           110
 #define IDC_STATUS_BAR                  111
+#define IDC_GRAPH                       112
+#define IDR_DCI_HISTORY_GRAPH           113
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -66,6 +68,7 @@
 #define IDD_SET_PASSWORD                172
 #define IDI_PASSWORD                    173
 #define IDD_DCI_PROPERTIES              174
+#define IDI_GRAPH                       176
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -170,9 +173,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        175
+#define _APS_NEXT_RESOURCE_VALUE        177
 #define _APS_NEXT_COMMAND_VALUE         32840
-#define _APS_NEXT_CONTROL_VALUE         1071
-#define _APS_NEXT_SYMED_VALUE           112
+#define _APS_NEXT_CONTROL_VALUE         1072
+#define _APS_NEXT_SYMED_VALUE           114
 #endif
 #endif

@@ -43,9 +43,19 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "NetSummaryFrame.h"
 #include "DataCollectionEditor.h"
 #include "DCIDataView.h"
+#include "GraphFrame.h"
 
 
 #define MAX_DC_EDITORS     1024
+
+
+//
+// Key states
+//
+
+#define KS_SHIFT_PRESSED   0x0001
+#define KS_ALT_PRESSED     0x0002
+#define KS_CTRL_PRESSED    0x0004
 
 
 //
@@ -76,7 +86,6 @@ public:
 	public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -122,7 +131,6 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
-	BOOL m_bCtrlPressed;
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bUserEditorActive;
@@ -134,6 +142,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
 	void ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
 	void ErrorBox(DWORD dwError, char *pszMessage = NULL, char *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);

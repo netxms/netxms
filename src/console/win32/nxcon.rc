@@ -82,6 +82,7 @@ IDI_SORT_DOWN           ICON    DISCARDABLE     "icons\\sortdown.ico"
 IDI_USER                ICON    DISCARDABLE     "icons\\user.ico"
 IDI_EVERYONE            ICON    DISCARDABLE     "icons\\EARTH.ICO"
 IDI_PASSWORD            ICON    DISCARDABLE     "icons\\passwd.ico"
+IDI_GRAPH               ICON    DISCARDABLE     "icons\\graph.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -883,6 +884,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDR_OBJECTS             "\nObject Browser\nObject Browser"
     IDR_DEBUG_WINDOW        "\nDebug Log\nDebug Log"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDR_DCI_HISTORY_GRAPH   "\nHistory Graph\nHistory Graph"
 END
 
 #endif    // English (U.S.) resources

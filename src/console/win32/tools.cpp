@@ -30,12 +30,13 @@
 // Format time stamp
 //
 
-char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer)
+char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer, int iType)
 {
    struct tm *pTime;
+   static char *pFormat[] = { "%d-%b-%Y %H:%M:%S", "%H:%M:%S" };
 
    pTime = localtime((const time_t *)&dwTimeStamp);
-   strftime(pszBuffer, 32, "%d-%b-%Y %H:%M:%S", pTime);
+   strftime(pszBuffer, 32, pFormat[iType], pTime);
    return pszBuffer;
 }
 

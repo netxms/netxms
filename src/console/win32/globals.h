@@ -57,6 +57,14 @@ extern CConsoleApp theApp;
 
 
 //
+// Timestamp formats
+//
+
+#define TS_LONG_DATE_TIME  0
+#define TS_LONG_TIME       1
+
+
+//
 // Functions
 //
 
@@ -80,7 +88,7 @@ void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLO
 // Utility functions
 //
 
-char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer);
+char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
 
 

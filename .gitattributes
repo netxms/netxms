@@ -63,6 +63,10 @@ src/console/win32/EventBrowser.cpp -text
 src/console/win32/EventBrowser.h -text
 src/console/win32/EventEditor.cpp -text
 src/console/win32/EventEditor.h -text
+src/console/win32/Graph.cpp -text
+src/console/win32/Graph.h -text
+src/console/win32/GraphFrame.cpp -text
+src/console/win32/GraphFrame.h -text
 src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
 src/console/win32/LoginDialog.cpp -text
@@ -120,6 +124,7 @@ src/console/win32/icons/EARTH.ICO -text
 src/console/win32/icons/RuleManager.ico -text
 src/console/win32/icons/board.ico -text
 src/console/win32/icons/event.ico -text
+src/console/win32/icons/graph.ico -text
 src/console/win32/icons/icon1.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/node.ico -text

@@ -47,6 +47,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_DELETE, OnUpdateItemDelete)
 	ON_COMMAND(ID_ITEM_SHOWDATA, OnItemShowdata)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_SHOWDATA, OnUpdateItemShowdata)
+	ON_COMMAND(ID_ITEM_GRAPH, OnItemGraph)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_GRAPH, OnUpdateItemGraph)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
@@ -332,6 +334,11 @@ void CDataCollectionEditor::OnUpdateItemShowdata(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
+void CDataCollectionEditor::OnUpdateItemGraph(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
 
 //
 // Clear list view selection and select specified item
@@ -420,5 +427,30 @@ void CDataCollectionEditor::OnItemShowdata()
               m_pItemList->pItems[dwIndex].szName);
       theApp.ShowDCIData(m_pItemList->dwNodeId, dwItemId, szBuffer);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_GRAPH message handler
+//
+
+void CDataCollectionEditor::OnItemGraph() 
+{
+   int iItem;
+   DWORD dwItemId, dwIndex;
+   char szBuffer[384];
+   NXC_OBJECT *pObject;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+   if (iItem != -1)
+   {
+      dwItemId = m_wndListCtrl.GetItemData(iItem);
+      dwIndex = NXCItemIndex(m_pItemList, dwItemId);
+      pObject = NXCFindObjectById(m_pItemList->dwNodeId);
+      sprintf(szBuffer, "%s - %s:%s", pObject->szName, 
+              g_pszItemOrigin[m_pItemList->pItems[dwIndex].iSource],
+              m_pItemList->pItems[dwIndex].szName);
+      theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwItemId, szBuffer);
    }
 }

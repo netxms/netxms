@@ -140,7 +140,7 @@ void CDCIDataView::OnViewRefresh()
 
       for(i = 0, pRow = pData->pRows; i < pData->dwNumRows; i++)
       {
-         FormatTimeStamp(pRow->dwTimeStamp, szBuffer);
+         FormatTimeStamp(pRow->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME);
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
          if (iItem != -1)
          {
