@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.29 2004-10-13 10:24:37 victor Exp $
+# $Id: configure.ac,v 1.30 2004-10-15 19:32:50 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -25,10 +25,10 @@ if test -d /usr/kerberos/include; then
 	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
 fi
 
-if test -d /usr/local/ssl/include; then
-	CFLAGS="$CFLAGS -I/usr/local/ssl/include"
-	CPPFLAGS="$CPPFLAGS -I/usr/local/ssl/include"
-fi
+#if test -d /usr/local/ssl/include; then
+#	CFLAGS="$CFLAGS -I/usr/local/ssl/include"
+#	CPPFLAGS="$CPPFLAGS -I/usr/local/ssl/include"
+#fi
 
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
@@ -108,22 +108,18 @@ AC_ARG_WITH(pgsql,
 	AC_MSG_RESULT(yes)
 fi ])
 
-AC_SUBST(DB_DRIVERS)
-
-
-
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
 	MODULES="$MODULES server"
 ])
-AC_SUBST(MODULES)
 
 
 SUBAGENT_DIRS=""
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
+	MODULES="$MODULES agent"
 	case `uname -s` in
 		Linux)
 			SUBAGENT_DIRS="linux"
@@ -139,6 +135,16 @@ AC_ARG_WITH(agent,
 			;;
 	esac
 ])
+
+AC_ARG_WITH(dist,
+[AS_HELP_STRING(--with-dist,for maintainers only)],
+	DB_DRIVERS="mysql pgsql odbc mssql"
+	MODULES="server agent"
+	SUBAGENT_DIRS="linux freebsd sunos"
+)
+
+AC_SUBST(DB_DRIVERS)
+AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
 
 
@@ -158,8 +164,8 @@ AC_PROG_LIBTOOL
 #AC_CHECK_LIB([socket], [socket])
 #AC_CHECK_LIB([nsl], [gethostbyname])
 
-AC_CHECK_LIB(crypto, DH_new)
-AC_CHECK_LIB(ssl, SSL_accept)
+#AC_CHECK_LIB(crypto, DH_new)
+#AC_CHECK_LIB(ssl, SSL_accept)
 AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
 AC_CHECK_LIB(readline, readline)
 AC_CHECK_LIB(socket, if_nameindex)
@@ -174,15 +180,15 @@ AC_CHECK_HEADERS([sys/int_types.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h])
-AC_CHECK_HEADERS([openssl/ssl.h])
+#AC_CHECK_HEADERS([openssl/ssl.h])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])
 AC_CHECK_HEADERS([sys/mman.h])
 AC_CHECK_HEADERS([sys/utsname.h])
 
-if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then
-	AC_MSG_ERROR(OpenSSL headers not found.)
-fi
+#if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then
+#	AC_MSG_ERROR(OpenSSL headers not found.)
+#fi
 
 # --------------------------------------------------------------------------
 # types
@@ -348,30 +354,52 @@ AC_SUBST(DBDRV_LIBRARY_VERSION)
 # --------------------------------------------------------------------------
 
 AC_CONFIG_FILES([
-   Makefile
    README
-   doc/Makefile
-   m4/Makefile
-   sql/Makefile
-   include/Makefile
-   src/Makefile
-   src/libnetxms/Makefile
-   src/libnxcscp/Makefile
-   src/libnxcl/Makefile
-   src/server/Makefile
-   src/server/libnxsrv/Makefile
-   src/server/core/Makefile
-   src/server/tools/Makefile
-   src/server/tools/nxget/Makefile
-   src/server/tools/nxaction/Makefile
-   src/server/dbdrv/Makefile
-   src/server/dbdrv/mysql/Makefile
-   src/server/dbdrv/pgsql/Makefile
-   src/agent/Makefile
-   src/agent/core/Makefile
-   src/agent/subagents/Makefile
-   src/agent/subagents/skeleton/Makefile
-   src/agent/subagents/linux/Makefile
+	Makefile
+	contrib/Makefile
+	contrib/config/Makefile
+	contrib/dct/Makefile
+	contrib/startup/Makefile
+	contrib/startup/redhat/Makefile
+	doc/Makefile
+	images/Makefile
+	include/Makefile
+	m4/Makefile
+	netware/Makefile
+	sql/Makefile
+	sql/upgrade/Makefile
+	src/Makefile
+	src/libnetxms/Makefile
+	src/libnxcscp/Makefile
+	src/libnxcl/Makefile
+	src/console/Makefile
+	src/console/win32/Makefile
+	src/console/win32/icons/Makefile
+	src/console/win32/res/Makefile
+	src/console/win32starter/Makefile
+	src/nxevent/Makefile
+	src/server/Makefile
+	src/server/core/Makefile
+	src/server/dbdrv/Makefile
+	src/server/dbdrv/odbc/Makefile
+	src/server/dbdrv/mssql/Makefile
+	src/server/dbdrv/mysql/Makefile
+	src/server/dbdrv/pgsql/Makefile
+	src/server/tools/Makefile
+	src/server/tools/nxget/Makefile
+	src/server/tools/nxaction/Makefile
+	src/server/tools/nxadm/Makefile
+	src/server/libnxsrv/Makefile
+	src/agent/Makefile
+	src/agent/core/Makefile
+	src/agent/subagents/Makefile
+	src/agent/subagents/linux/Makefile
+	src/agent/subagents/sunos/Makefile
+	src/agent/subagents/skeleton/Makefile
+	src/agent/subagents/freebsd/Makefile
+	src/agent/subagents/netware/Makefile
+	src/agent/subagents/winperf/Makefile
+	tools/Makefile
 ])
 
 AC_OUTPUT

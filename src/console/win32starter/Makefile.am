@@ -8,6 +8,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = libnetxms libnxcscp libnxcl console nxevent
-SUBDIRS += @MODULES@
-EXTRA_DIST = PPC_libs.vcw WIN32_libs.sln
+EXTRA_DIST = \
+	nxcstart.dsp nxcstart.dsw \
+	nxcstart.cpp nxcstart.rc resource.h

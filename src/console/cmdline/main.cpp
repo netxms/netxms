@@ -23,6 +23,8 @@
 
 #include "nxcmd.h"
 
+#include <string.h>
+
 
 //
 // Global variables

@@ -12,14 +12,19 @@
 /THANKS -text
 /TODO -text
 /configure.ac -text
+contrib/Makefile.am -text
+contrib/dct/Makefile.am -text
 contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text
 contrib/logo.jpg -text
+contrib/startup/Makefile.am -text
+contrib/startup/redhat/Makefile.am -text
 contrib/startup/redhat/netxmsd -text
 doc/Makefile.am -text
 doc/admin_guide.doc -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
+images/Makefile.am -text
 images/generic_printer.ico -text
 images/generic_printer.png -text
 images/interface.ico -text
@@ -57,6 +62,7 @@ include/nxnt.h -text
 include/nxqueue.h -text
 include/unicode.h -text
 m4/Makefile.am -text
+netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
 /reconf -text
@@ -73,6 +79,7 @@ sql/setup.in -text
 sql/upgrade/00100011.nxdb -text
 sql/upgrade/00110012.nxdb -text
 sql/upgrade/00120013.nxdb -text
+sql/upgrade/Makefile.am -text
 sql/upgrade/common.nxdb -text
 src/Makefile.am -text
 src/PPC_libs.vcw -text
@@ -103,8 +110,10 @@ src/agent/core/sysinfo.cpp -text
 src/agent/core/tools.cpp -text
 src/agent/core/win32.cpp -text
 src/agent/subagents/Makefile.am -text
+src/agent/subagents/freebsd/Makefile.am -text
 src/agent/subagents/linux/Makefile.am -text
 src/agent/subagents/linux/linux.cpp -text
+src/agent/subagents/netware/Makefile.am -text
 src/agent/subagents/netware/Makefile.nw -text
 src/agent/subagents/netware/netware.cpp -text
 src/agent/subagents/netware/netware.def -text
@@ -113,12 +122,16 @@ src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
+src/agent/subagents/sunos/Makefile.am -text
+src/agent/subagents/winperf/Makefile.am -text
 src/agent/subagents/winperf/collect.cpp -text
 src/agent/subagents/winperf/tools.cpp -text
 src/agent/subagents/winperf/winperf.cpp -text
 src/agent/subagents/winperf/winperf.dsp -text
 src/agent/subagents/winperf/winperf.dsw -text
 src/agent/subagents/winperf/winperf.h -text
+src/console/Makefile.am -text
+src/console/cmdline/Makefile.am -text
 src/console/cmdline/cmdline.cpp -text
 src/console/cmdline/main.cpp -text
 src/console/cmdline/nxcmd.dsp -text
@@ -182,6 +195,7 @@ src/console/win32/MIBBrowserDlg.cpp -text
 src/console/win32/MIBBrowserDlg.h -text
 src/console/win32/MainFrm.cpp -text
 src/console/win32/MainFrm.h -text
+src/console/win32/Makefile.am -text
 src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
 src/console/win32/MapView.cpp -text
@@ -249,6 +263,7 @@ src/console/win32/draw.cpp -text
 src/console/win32/globals.cpp -text
 src/console/win32/globals.h -text
 src/console/win32/icons/EARTH.ICO -text
+src/console/win32/icons/Makefile.am -text
 src/console/win32/icons/RuleManager.ico -text
 src/console/win32/icons/SeverityCritical.ico -text
 src/console/win32/icons/SeverityMajor.ico -text
@@ -291,6 +306,7 @@ src/console/win32/nxcon.dsp -text
 src/console/win32/nxcon.dsw -text
 src/console/win32/nxcon.h -text
 src/console/win32/nxcon.rc -text
+src/console/win32/res/Makefile.am -text
 src/console/win32/res/Toolbar.bmp -text
 src/console/win32/res/any.bmp -text
 src/console/win32/res/down_arrow.bmp -text
@@ -301,6 +317,7 @@ src/console/win32/res/nxcon.rc2 -text
 src/console/win32/res/up_arrow.bmp -text
 src/console/win32/resource.h -text
 src/console/win32/tools.cpp -text
+src/console/win32starter/Makefile.am -text
 src/console/win32starter/nxcstart.cpp -text
 src/console/win32starter/nxcstart.dsp -text
 src/console/win32starter/nxcstart.dsw -text
@@ -349,6 +366,7 @@ src/libnxcl/mib.cpp -text
 src/libnxcl/misc.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/users.cpp -text
+src/nxevent/Makefile.am -text
 src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
@@ -415,6 +433,7 @@ src/server/core/users.cpp -text
 src/server/core/watchdog.cpp -text
 src/server/core/winsrv.cpp -text
 src/server/dbdrv/Makefile.am -text
+src/server/dbdrv/mssql/Makefile.am -text
 src/server/dbdrv/mssql/mssql.cpp -text
 src/server/dbdrv/mssql/mssql.dsp -text
 src/server/dbdrv/mssql/mssql.dsw -text
@@ -450,6 +469,7 @@ src/server/tools/nxaction/Makefile.am -text
 src/server/tools/nxaction/nxaction.cpp -text
 src/server/tools/nxaction/nxaction.dsp -text
 src/server/tools/nxaction/nxaction.dsw -text
+src/server/tools/nxadm/Makefile.am -text
 src/server/tools/nxadm/comm.cpp -text
 src/server/tools/nxadm/nxadm.cpp -text
 src/server/tools/nxadm/nxadm.dsp -text

@@ -2,6 +2,8 @@
 # Makefile for SQL scripts
 #
 
+SUBDIRS=upgrade
+
 sqldir=$(pkgdatadir)/sql
 
 sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql
@@ -26,4 +28,7 @@ dbinit_mssql.sql: $(SOURCE) $(HEADER_FILES)
 clean:
 	rm -f dbinit_*.sql
 
-EXTRA_DIST = $(sql_SCRIPTS)
+EXTRA_DIST = \
+	$(sql_SCRIPTS) \
+	dbinit.in events.in images.in \
+	policy.in schema.in setup.in

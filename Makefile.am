@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = reconf configure include
-SUBDIRS = m4 src doc sql
+SUBDIRS = m4 contrib src doc sql images tools netware

@@ -22,6 +22,7 @@
 **/
 
 #include "nxcmd.h"
+#include <string.h>
 
 
 //
