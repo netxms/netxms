@@ -348,3 +348,30 @@ void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void)
 {
    MutexUnlock(m_mutexIndexAccess);
 }
+
+
+//
+// Find object by name
+//
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName)
+{
+   NXC_OBJECT *pObject = NULL;
+   DWORD i;
+
+   if (pszName != NULL)
+      if (*pszName != 0)
+      {
+         NXCLockObjectIndex();
+
+         for(i = 0; i < m_dwNumObjects; i++)
+            if (MatchString(pszName, m_pIndexById[i].pObject->szName, FALSE))
+            {
+               pObject = m_pIndexById[i].pObject;
+               break;
+            }
+
+         NXCUnlockObjectIndex();
+      }
+   return pObject;
+}
