@@ -453,9 +453,8 @@ void CDataCollectionEditor::OnItemShowdata()
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
       pObject = NXCFindObjectById(m_pItemList->dwNodeId);
-      sprintf(szBuffer, "%s - %s:%s", pObject->szName, 
-              g_pszItemOrigin[m_pItemList->pItems[dwIndex].iSource],
-              m_pItemList->pItems[dwIndex].szName);
+      sprintf(szBuffer, "%s - %s", pObject->szName, 
+              m_pItemList->pItems[dwIndex].szDescription);
       theApp.ShowDCIData(m_pItemList->dwNodeId, dwItemId, szBuffer);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
@@ -479,9 +478,8 @@ void CDataCollectionEditor::OnItemGraph()
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
       pObject = NXCFindObjectById(m_pItemList->dwNodeId);
-      sprintf(szBuffer, "%s - %s:%s", pObject->szName, 
-              g_pszItemOrigin[m_pItemList->pItems[dwIndex].iSource],
-              m_pItemList->pItems[dwIndex].szName);
+      sprintf(szBuffer, "%s - %s", pObject->szName, 
+              m_pItemList->pItems[dwIndex].szDescription);
       theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwItemId, szBuffer);
    }
 }

@@ -30,6 +30,11 @@ CGraph::CGraph()
    m_bAutoScale = TRUE;
    m_bShowGrid = TRUE;
    m_dwNumItems = 0;
+   /*m_rgbBkColor = RGB(200,200,200);
+   m_rgbGridColor = RGB(64, 64, 64);
+   m_rgbAxisColor = RGB(0, 0, 0);
+   m_rgbTextColor = RGB(0, 0, 0);
+   m_rgbLineColors[0] = RGB(0, 127, 0);*/
    m_rgbBkColor = RGB(0,0,0);
    m_rgbGridColor = RGB(64, 64, 64);
    m_rgbAxisColor = RGB(127, 127, 127);
@@ -103,6 +108,7 @@ void CGraph::OnPaint()
    CBitmap *pOldBitmap;
    CPen pen, *pOldPen;
    CFont font, *pOldFont;
+   CBrush brush;
    RECT rect;
    CSize textSize;
    DWORD i, dwTimeStamp;
@@ -117,6 +123,10 @@ void CGraph::OnPaint()
    bitmap.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
    pOldBitmap = dc.SelectObject(&bitmap);
    dc.SetBkColor(m_rgbBkColor);
+
+   // Fill background
+   brush.CreateSolidBrush(m_rgbBkColor);
+   dc.FillRect(&rect, &brush);
 
    // Setup text parameters
    font.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
@@ -292,7 +302,7 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor)
    if (pData->dwNumRows < 2)
       return;  // Nothing to draw
 
-   pen.CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
+   pen.CreatePen(PS_SOLID, 2, rgbColor);
    pOldPen = dc.SelectObject(&pen);
 
    // Calculate scale factor for values

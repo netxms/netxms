@@ -205,8 +205,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Manage object(s)\tCtrl+M",   ID_OBJECT_MANAGE
         MENUITEM "&Unmanage object(s)\tCtrl+U", ID_OBJECT_UNMANAGE
+        POPUP "P&oll"
+        BEGIN
+            MENUITEM "&Status\tCtrl+Alt+S",         ID_OBJECT_POLL_STATUS
+            MENUITEM "&Configuration\tCtrl+Alt+C",  ID_OBJECT_POLL_CONFIGURATION
+
+        END
         MENUITEM SEPARATOR
-        MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
     POPUP "&User"
@@ -305,8 +311,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Manage",                     ID_OBJECT_MANAGE
         MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
+        POPUP "P&oll"
+        BEGIN
+            MENUITEM "&Status",                     ID_OBJECT_POLL_STATUS
+            MENUITEM "&Configuration",              ID_OBJECT_POLL_CONFIGURATION
+
+        END
         MENUITEM SEPARATOR
-        MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
     POPUP "Item"
@@ -438,10 +450,13 @@ END
 IDA_OBJECT_BROWSER ACCELERATORS DISCARDABLE 
 BEGIN
     "B",            ID_OBJECT_BIND,         VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_OBJECT_POLL_CONFIGURATION, VIRTKEY, CONTROL, ALT, 
+                                                    NOINVERT
     "F",            ID_OBJECT_FIND,         VIRTKEY, CONTROL, NOINVERT
     "F",            ID_OBJECT_VIEW_SELECTION, VIRTKEY, ALT, NOINVERT
     "L",            ID_OBJECT_VIEW_VIEWASLIST, VIRTKEY, CONTROL, NOINVERT
     "P",            ID_OBJECT_VIEW_SHOWPREVIEWPANE, VIRTKEY, ALT, NOINVERT
+    "S",            ID_OBJECT_POLL_STATUS,  VIRTKEY, CONTROL, ALT, NOINVERT
     "T",            ID_OBJECT_VIEW_VIEWASTREE, VIRTKEY, CONTROL, NOINVERT
 END
 
