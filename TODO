@@ -17,6 +17,9 @@ GENERAL:
 - SMS-sender interface with drivers for cell-phones/SMPP
 - Add check for read/write locks support to configure script
 - Implement daemon() function for platforms without it
+- Add new data types for data collection: unsigned integer 32 bits
+  and unsigned integer 64 bits
+- Allow converting counters to deltas in data collection
 
 
 SERVER:
@@ -42,6 +45,9 @@ WINDOWS CONSOLE:
 - Add support for "View -> Refresh" in data collection configurator
   (or, even better, automatic update)
 - Add status bar to alarm browser
+- Automatically select data type in DCI configuration dialog based on
+  selected parameter
+- Add parameter selection for native agents in DCI configuration dialog
 
 
 SUBAGENTS:
