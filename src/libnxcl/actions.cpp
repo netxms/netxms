@@ -72,28 +72,32 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(DWORD *pdwNumActions, NXC_ACTION **ppAct
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   do
+   dwRetCode = WaitForRCC(dwRqId);
+   if (dwRetCode == RCC_SUCCESS)
    {
-      pResponce = WaitForMessage(CMD_ACTION_DATA, dwRqId, g_dwCommandTimeout);
-      if (pResponce != NULL)
+      do
       {
-         dwActionId = pResponce->GetVariableLong(VID_ACTION_ID);
-         if (dwActionId != 0)  // 0 is end of list indicator
+         pResponce = WaitForMessage(CMD_ACTION_DATA, dwRqId, g_dwCommandTimeout);
+         if (pResponce != NULL)
          {
-            pList = (NXC_ACTION *)realloc(pList, sizeof(NXC_ACTION) * (dwNumActions + 1));
-            pList[dwNumActions].dwId = dwActionId;
-            ActionFromMsg(pResponce, &pList[dwNumActions]);
-            dwNumActions++;
+            dwActionId = pResponce->GetVariableLong(VID_ACTION_ID);
+            if (dwActionId != 0)  // 0 is end of list indicator
+            {
+               pList = (NXC_ACTION *)realloc(pList, sizeof(NXC_ACTION) * (dwNumActions + 1));
+               pList[dwNumActions].dwId = dwActionId;
+               ActionFromMsg(pResponce, &pList[dwNumActions]);
+               dwNumActions++;
+            }
+            delete pResponce;
          }
-         delete pResponce;
+         else
+         {
+            dwRetCode = RCC_TIMEOUT;
+            dwActionId = 0;
+         }
       }
-      else
-      {
-         dwRetCode = RCC_TIMEOUT;
-         dwActionId = 0;
-      }
+      while(dwActionId != 0);
    }
-   while(dwActionId != 0);
 
    // Destroy results on failure or save on success
    if (dwRetCode == RCC_SUCCESS)

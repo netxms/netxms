@@ -19,6 +19,7 @@ IMPLEMENT_DYNCREATE(CDCIThresholdsPage, CPropertyPage)
 CDCIThresholdsPage::CDCIThresholdsPage() : CPropertyPage(CDCIThresholdsPage::IDD)
 {
 	//{{AFX_DATA_INIT(CDCIThresholdsPage)
+	m_strInstance = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -35,6 +36,8 @@ void CDCIThresholdsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON_MOVEDOWN, m_wndButtonDown);
 	DDX_Control(pDX, IDC_BUTTON_MOVEUP, m_wndButtonUp);
 	DDX_Control(pDX, IDC_LIST_THRESHOLDS, m_wndListCtrl);
+	DDX_Text(pDX, IDC_EDIT_INSTANCE, m_strInstance);
+	DDV_MaxChars(pDX, m_strInstance, 255);
 	//}}AFX_DATA_MAP
 }
 
@@ -68,7 +71,9 @@ BOOL CDCIThresholdsPage::OnInitDialog()
    // Setup buttons
    m_wndButtonUp.SetBitmap(CreateMappedBitmap(theApp.m_hInstance, IDB_UP_ARROW, 0, NULL, 0));
    m_wndButtonDown.SetBitmap(CreateMappedBitmap(theApp.m_hInstance, IDB_DOWN_ARROW, 0, NULL, 0));
-	
+   m_wndButtonModify.EnableWindow(FALSE);
+   m_wndButtonDelete.EnableWindow(FALSE);
+   
    // Setup list view
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, "Operation", LVCFMT_LEFT, rect.right - 150 - GetSystemMetrics(SM_CXVSCROLL));

@@ -298,7 +298,7 @@ void SaveUsers(void)
 
 BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights)
 {
-   DWORD i;
+   DWORD i, j;
    BOOL bResult = FALSE;
 
    MutexLock(m_hMutexUserAccess, INFINITE);
@@ -311,6 +311,13 @@ BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSy
          *pdwId = g_pUserList[i].dwId;
          *pdwSystemRights = (DWORD)g_pUserList[i].wSystemRights;
          bResult = TRUE;
+         
+         // Collect system rights from groups this user belongs to
+         MutexLock(m_hMutexGroupAccess, INFINITE);
+         for(j = 0; j < g_dwNumGroups; j++)
+            if (CheckUserMembership(g_pUserList[i].dwId, g_pGroupList[j].dwId))
+               *pdwSystemRights |= (DWORD)g_pGroupList[j].wSystemRights;
+         MutexUnlock(m_hMutexGroupAccess);
          break;
       }
    }

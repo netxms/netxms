@@ -249,6 +249,7 @@ BEGIN
         MENUITEM "&Edit...\tAlt+Enter",         ID_ITEM_EDIT
         MENUITEM "&Delete\tDel",                ID_ITEM_DELETE
         MENUITEM "&Copy to other node(s)...\tCtrl+C", ID_ITEM_COPY
+        MENUITEM "D&uplicate",                  ID_ITEM_DUPLICATE
         MENUITEM SEPARATOR
         MENUITEM "&Activate\tAlt+A",            ID_ITEM_ACTIVATE
         MENUITEM "D&isable\tAlt+D",             ID_ITEM_DISABLE
@@ -383,6 +384,7 @@ BEGIN
         MENUITEM "&Edit...",                    ID_ITEM_EDIT
         MENUITEM "&Delete",                     ID_ITEM_DELETE
         MENUITEM "&Copy to other node(s)...",   ID_ITEM_COPY
+        MENUITEM "D&uplicate",                  ID_ITEM_DUPLICATE
         MENUITEM SEPARATOR
         MENUITEM "&Activate",                   ID_ITEM_ACTIVATE
         MENUITEM "D&isable",                    ID_ITEM_DISABLE
@@ -904,16 +906,19 @@ END
 IDD_DCI_THRESHOLDS DIALOGEX 0, 0, 228, 170
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Thresholds"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
+    EDITTEXT        IDC_EDIT_INSTANCE,7,16,214,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_LIST_THRESHOLDS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,7,
-                    193,135,WS_EX_CLIENTEDGE
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,47,
+                    193,96,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&U",IDC_BUTTON_MOVEUP,205,46,16,16,BS_BITMAP
+    PUSHBUTTON      "D",IDC_BUTTON_MOVEDOWN,205,66,16,16,BS_BITMAP
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,59,149,50,14
     PUSHBUTTON      "&Modify...",IDC_BUTTON_MODIFY,115,149,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,171,149,50,14
-    PUSHBUTTON      "&U",IDC_BUTTON_MOVEUP,205,7,16,16,BS_BITMAP
-    PUSHBUTTON      "D",IDC_BUTTON_MOVEDOWN,205,27,16,16,BS_BITMAP
+    LTEXT           "Instance",IDC_STATIC,7,7,28,8
+    LTEXT           "Threshold list",IDC_STATIC,7,37,42,8
 END
 
 IDD_THRESHOLD DIALOG DISCARDABLE  0, 0, 211, 169

@@ -60,6 +60,10 @@ protected:
 	afx_msg void OnItemCopy();
 	afx_msg void OnFileExport();
 	afx_msg void OnUpdateFileExport(CCmdUI* pCmdUI);
+	afx_msg void OnViewRefresh();
+	afx_msg void OnItemDuplicate();
+	afx_msg void OnUpdateItemCopy(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateItemDuplicate(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()

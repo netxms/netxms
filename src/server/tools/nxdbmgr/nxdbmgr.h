@@ -36,6 +36,7 @@
 void CheckDatabase(BOOL bForce);
 void UpgradeDatabase(void);
 BOOL SQLQuery(TCHAR *pszQuery);
+BOOL SQLBatch(TCHAR *pszBatch);
 
 
 //

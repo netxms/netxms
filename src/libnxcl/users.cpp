@@ -154,6 +154,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
    dwRqId = g_dwMsgId++;
    PrepareForSync();
 
+   safe_free(m_pUserList);
+   m_pUserList = NULL;
+   m_dwNumUsers = 0;
+
    msg.SetCode(CMD_LOAD_USER_DB);
    msg.SetId(dwRqId);
    SendMsg(&msg);

@@ -5,6 +5,13 @@
 - Added parameter System.ServiceState(*) to core agent (Windows only)
 - Implemented user-defined counters in WinPerf subagent
 - Added support for macros in e-mail subject
+- Added support for data collection item duplication within same node
+- Now possible to copy DCIs to many nodes at once
+- Fixed memory management bugs in Windows console DCI editor
+- Added "instance" field to DCI which can be used as information text in
+  user-defined data collection events and alarms
+- Client library do cleanup after NXCDisconnect()
+- User system rights now ORed with its group(s) system rights
 
 
 *

@@ -110,6 +110,8 @@ static DWORD WINAPI LoginThread(void *pArg)
    {
       SetInfoText(hWnd, "Loading action configuration...");
       dwResult = NXCLoadActions(&g_dwNumActions, &g_pActionList);
+      if (dwResult == RCC_ACCESS_DENIED)
+         dwResult = RCC_SUCCESS;    // User may not have rights to see actions, it's ok here
    }
 
    if (dwResult == RCC_SUCCESS)
@@ -234,6 +236,10 @@ static DWORD WINAPI RequestThread(void *pArg)
          break;
       case 4:
          dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, pData->pArg4);
+         break;
+      case 5:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+                                 pData->pArg4, pData->pArg5);
          break;
       case 6:
          dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
@@ -368,6 +374,27 @@ DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3,
    rqData.pArg2 = pArg2;
    rqData.pArg3 = pArg3;
    rqData.pArg4 = pArg4;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Perform request with 5 parameter
+//
+
+DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, char *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 5;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pArg3 = pArg3;
+   rqData.pArg4 = pArg4;
+   rqData.pArg5 = pArg5;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
 }

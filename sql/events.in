@@ -308,7 +308,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		4004, 'DC_SERVICE_NOT_RUNNING',
 		EVENT_SEVERITY_MAJOR, 1,
-		'Service "%5" is not running',
+		'Service "%6" is not running',
 		'Custom data collection threshold event.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS

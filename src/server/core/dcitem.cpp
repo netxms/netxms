@@ -238,7 +238,7 @@ BOOL DCItem::SaveToDB(void)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation,instance) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s')",
+                       "transformation,instance) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s','%s')",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        m_szName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula, pszEscInstance);

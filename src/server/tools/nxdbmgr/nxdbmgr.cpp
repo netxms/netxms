@@ -74,6 +74,42 @@ BOOL SQLQuery(TCHAR *pszQuery)
 
 
 //
+// Execute SQL batch
+//
+
+BOOL SQLBatch(TCHAR *pszBatch)
+{
+   TCHAR *pszQuery, *ptr;
+
+   pszQuery = pszBatch;
+   while(1)
+   {
+      ptr = _tcschr(pszQuery, _T('\n'));
+      if (ptr != NULL)
+         *ptr = 0;
+      if (!_tcscmp(pszQuery, _T("<END>")))
+         break;
+      if (!DBQuery(g_hCoreDB, pszQuery))
+      {
+#ifdef _WIN32
+         _tprintf(_T("SQL query failed:\n"));
+         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
+         _tprintf(_T("%s\n"), pszQuery);
+         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+#else
+         _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
+#endif
+         if (!g_bIgnoreErrors)
+            return FALSE;
+      }
+      ptr++;
+      pszQuery = ptr;
+   }
+   return TRUE;
+}
+
+
+//
 // Startup
 //
 

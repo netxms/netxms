@@ -322,6 +322,9 @@ void LIBNXCL_EXPORTABLE NXCDisconnect(void)
 
    // Clear message wait queue
    m_msgWaitQueue.Clear();
+
+   // Cleanup
+   DestroyAllObjects();
 }
 
 

@@ -82,6 +82,7 @@ typedef struct
 //
 
 void ObjectsInit(void);
+void DestroyAllObjects(void);
 
 void ProcessAlarmUpdate(CSCPMessage *pMsg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);

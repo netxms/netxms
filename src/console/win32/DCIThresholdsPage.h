@@ -30,6 +30,7 @@ public:
 	CButton	m_wndButtonDown;
 	CButton	m_wndButtonUp;
 	CListCtrl	m_wndListCtrl;
+	CString	m_strInstance;
 	//}}AFX_DATA
 
 
