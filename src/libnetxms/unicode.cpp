@@ -30,6 +30,8 @@
 // Calculate length of wide character string
 //
 
+#if !(HAVE_WCSLEN)
+
 int LIBNETXMS_EXPORTABLE wcslen(WCHAR *pStr)
 {
    int iLen = 0;
@@ -39,6 +41,8 @@ int LIBNETXMS_EXPORTABLE wcslen(WCHAR *pStr)
       iLen++;
    return iLen;
 }
+
+#endif
 
 
 //

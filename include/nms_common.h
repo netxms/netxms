@@ -31,7 +31,7 @@
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
 #ifdef _NETWARE
-// include config-netware.h here
+#include <config-netware.h>
 #else
 #include <config.h>
 #endif
@@ -122,6 +122,7 @@ typedef int socklen_t;
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
+#include <wchar.h>
 
 typedef int BOOL;
 typedef long int LONG;
