@@ -42,6 +42,10 @@ void DestroyObject(NXC_OBJECT *pObject)
       case OBJECT_TEMPLATE:
          safe_free(pObject->dct.pszDescription);
          break;
+      case OBJECT_NETWORKSERVICE:
+         safe_free(pObject->netsrv.pszRequest);
+         safe_free(pObject->netsrv.pszResponce);
+         break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -123,8 +127,22 @@ void NXCL_Session::AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
    DebugPrintf(_T("ReplaceObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
-   if (pObject->iClass == OBJECT_CONTAINER)
-      safe_free(pObject->container.pszDescription);
+   switch(pObject->iClass)
+   {
+      case OBJECT_CONTAINER:
+         safe_free(pObject->container.pszDescription);
+         break;
+      case OBJECT_NODE:
+         safe_free(pObject->node.pszDescription);
+         break;
+      case OBJECT_TEMPLATE:
+         safe_free(pObject->dct.pszDescription);
+         break;
+      case OBJECT_NETWORKSERVICE:
+         safe_free(pObject->netsrv.pszRequest);
+         safe_free(pObject->netsrv.pszResponce);
+         break;
+   }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
@@ -211,6 +229,14 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
       case OBJECT_TEMPLATE:
          pObject->dct.dwVersion = pMsg->GetVariableLong(VID_TEMPLATE_VERSION);
          pObject->dct.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
+         break;
+      case OBJECT_NETWORKSERVICE:
+         pObject->netsrv.iServiceType = (int)pMsg->GetVariableShort(VID_SERVICE_TYPE);
+         pObject->netsrv.wProto = pMsg->GetVariableShort(VID_IP_PROTO);
+         pObject->netsrv.wPort = pMsg->GetVariableShort(VID_IP_PORT);
+         pObject->netsrv.dwPollerNode = pMsg->GetVariableShort(VID_POLLER_NODE_ID);
+         pObject->netsrv.pszRequest = pMsg->GetVariableStr(VID_SERVICE_REQUEST);
+         pObject->netsrv.pszResponce = pMsg->GetVariableStr(VID_SERVICE_RESPONCE);
          break;
       default:
          break;
@@ -489,6 +515,16 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
    if (pUpdate->dwFlags & OBJ_UPDATE_DESCRIPTION)
       msg.SetVariable(VID_DESCRIPTION, pUpdate->pszDescription);
+   if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_REQUEST)
+      msg.SetVariable(VID_SERVICE_REQUEST, pUpdate->pszRequest);
+   if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_RESPONCE)
+      msg.SetVariable(VID_SERVICE_RESPONCE, pUpdate->pszResponce);
+   if (pUpdate->dwFlags & OBJ_UPDATE_IP_PROTO)
+      msg.SetVariable(VID_IP_PROTO, pUpdate->wProto);
+   if (pUpdate->dwFlags & OBJ_UPDATE_IP_PORT)
+      msg.SetVariable(VID_IP_PORT, pUpdate->wPort);
+   if (pUpdate->dwFlags & OBJ_UPDATE_SERVICE_TYPE)
+      msg.SetVariable(VID_SERVICE_TYPE, (WORD)pUpdate->iServiceType);
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
    {
       DWORD i, dwId1, dwId2;

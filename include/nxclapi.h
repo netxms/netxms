@@ -281,7 +281,15 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_ACL              ((DWORD)0x0040)
 #define OBJ_UPDATE_IMAGE            ((DWORD)0x0080)
 #define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x0100)
-#define OBJ_UPDATE_ALL              ((DWORD)0x01FF)
+#define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x0200)
+#define OBJ_UPDATE_IP_PROTO         ((DWORD)0x0400)
+#define OBJ_UPDATE_IP_PORT          ((DWORD)0x0800)
+#define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x1000)
+#define OBJ_UPDATE_CHECK_RESPONCE   ((DWORD)0x2000)
+#define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x4000)
+
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x01FF)
+#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x7EC1)
 
 
 //
@@ -639,6 +647,15 @@ typedef struct
          DWORD dwVersion;
          TCHAR *pszDescription;
       } dct;
+      struct
+      {
+         int iServiceType;
+         WORD wProto;
+         WORD wPort;
+         DWORD dwPollerNode;
+         TCHAR *pszRequest;
+         TCHAR *pszResponce;
+      } netsrv;
    };
 } NXC_OBJECT;
 
@@ -662,6 +679,12 @@ typedef struct
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
    WORD wSNMPVersion;
+   int iServiceType;
+   WORD wProto;
+   WORD wPort;
+   DWORD dwPollerNode;
+   TCHAR *pszRequest;
+   TCHAR *pszResponce;
 } NXC_OBJECT_UPDATE;
 
 
