@@ -17,11 +17,17 @@ contrib/logo.jpg -text
 doc/Makefile.am -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
+images/generic_printer.ico -text
 images/generic_printer.png -text
+images/interface.ico -text
 images/interface.png -text
+images/network.ico -text
 images/network.png -text
+images/node.ico -text
 images/node.png -text
+images/node_group.ico -text
 images/node_group.png -text
+images/service.ico -text
 images/service.png -text
 include/Makefile.am -text
 include/getopt.h -text
