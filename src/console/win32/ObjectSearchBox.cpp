@@ -37,6 +37,7 @@ BEGIN_MESSAGE_MAP(CObjectSearchBox, CToolBox)
 	ON_WM_CREATE()
 	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
+	ON_COMMAND(ID_FIND_OBJECT, OnFindObject)
 END_MESSAGE_MAP()
 
 
@@ -101,4 +102,14 @@ HBRUSH CObjectSearchBox::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
    }
 	
 	return hbr;
+}
+
+
+//
+// WM_COMMAND::ID_FIND_OBJECT
+//
+
+void CObjectSearchBox::OnFindObject()
+{
+   MessageBox("FIND");
 }

@@ -121,6 +121,7 @@ protected:
 	afx_msg void OnObjectViewViewaslist();
 	afx_msg void OnObjectViewViewastree();
 	afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT* pResult);
+   afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

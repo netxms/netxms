@@ -149,6 +149,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
 
@@ -413,10 +414,10 @@ void CObjectBrowser::OnObjectViewShowpreviewpane()
 
 void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 {
-   NXC_OBJECT *pObject;
-
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
    {
+      NXC_OBJECT *pObject;
+
       pObject = NXCFindObjectById(lpnmt->itemNew.lParam);
       m_wndPreviewPane.SetCurrentObject(pObject);
    }
@@ -725,9 +726,16 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
 
 void CObjectBrowser::OnObjectViewViewaslist() 
 {
+   int iItem;
+
    m_dwFlags &= ~VIEW_OBJECTS_AS_TREE;
    m_wndListCtrl.ShowWindow(SW_SHOW);
    m_wndTreeCtrl.ShowWindow(SW_HIDE);
+
+   // Display currenly selected item in preview pane
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+   m_wndPreviewPane.SetCurrentObject(iItem == -1 ? NULL :
+                                       (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem));
 }
 
 
@@ -737,9 +745,17 @@ void CObjectBrowser::OnObjectViewViewaslist()
 
 void CObjectBrowser::OnObjectViewViewastree() 
 {
+   HTREEITEM hItem;
+   NXC_OBJECT *pObject;
+
    m_dwFlags |= VIEW_OBJECTS_AS_TREE;
    m_wndTreeCtrl.ShowWindow(SW_SHOW);
    m_wndListCtrl.ShowWindow(SW_HIDE);
+
+   // Display currenly selected item in preview pane
+   hItem = m_wndTreeCtrl.GetSelectedItem();
+   pObject = (hItem == NULL) ? NULL : NXCFindObjectById(m_wndTreeCtrl.GetItemData(hItem));
+   m_wndPreviewPane.SetCurrentObject(pObject);
 }
 
 
@@ -778,5 +794,26 @@ void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult
    lvCol.iImage = (SortDir(m_dwSortMode) == SORT_ASCENDING) ? 4 : 5;
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
+   *pResult = 0;
+}
+
+
+//
+// WM_NOTIFY::LVN_ITEMACTIVATE message handler
+//
+
+void CObjectBrowser::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   if (!(m_dwFlags & VIEW_OBJECTS_AS_TREE))
+   {
+      NXC_OBJECT *pObject;
+
+      if (pNMHDR->iItem != -1)
+         if ((pNMHDR->uChanged & LVIF_STATE) && (pNMHDR->uNewState & LVIS_FOCUSED))
+         {
+            pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(pNMHDR->iItem);
+            m_wndPreviewPane.SetCurrentObject(pObject);
+         }
+   }   
    *pResult = 0;
 }
