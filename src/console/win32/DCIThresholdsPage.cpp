@@ -210,10 +210,10 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
             pThreshold->value.dwInt32 = strtoul((LPCTSTR)dlg.m_strValue, NULL, 0);
             break;
          case DCI_DT_INT64:
-            /* TODO: add conversion for 64 bit integers */
+            pThreshold->value.qwInt64 = strtoll((LPCTSTR)dlg.m_strValue, NULL, 0);
             break;
          case DCI_DT_UINT64:
-            /* TODO: add conversion for 64 bit integers */
+            pThreshold->value.qwInt64 = strtoull((LPCTSTR)dlg.m_strValue, NULL, 0);
             break;
          case DCI_DT_FLOAT:
             pThreshold->value.dFloat = strtod((LPCTSTR)dlg.m_strValue, NULL);

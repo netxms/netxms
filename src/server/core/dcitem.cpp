@@ -302,12 +302,14 @@ void DCItem::CheckThresholds(ItemValue &value)
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssss", m_szName,
-                      m_szDescription, m_ppThresholdList[i]->Value(), (const char *)value);
+            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssi", m_szName,
+                      m_szDescription, m_ppThresholdList[i]->Value(), 
+                      (const char *)value, m_dwId);
             i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
-            PostEvent(EVENT_THRESHOLD_REARMED, m_pNode->Id(), "s", m_szName);
+            PostEvent(EVENT_THRESHOLD_REARMED, m_pNode->Id(), "ssi", m_szName, 
+                      m_szDescription, m_dwId);
             break;
          case NO_ACTION:
             if (m_ppThresholdList[i]->IsReached())

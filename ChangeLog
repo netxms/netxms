@@ -4,6 +4,7 @@
 
 - Added parameter System.ServiceState(*) to core agent (Windows only)
 - Implemented user-defined counters in WinPerf subagent
+- Added support for macros in e-mail subject
 
 
 *
