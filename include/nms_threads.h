@@ -205,7 +205,7 @@ inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 					ret = TRUE;
 					break;
 				}
-				ThreadSleep(50);
+				ThreadSleepMs(50);
 			}
 		}
 	}
@@ -248,7 +248,7 @@ inline void ConditionSet(CONDITION cond)
 	if (cond != NULL)
 	{
 		pthread_mutex_lock(&cond->mutex);
-		if (cond->broadcast == TRUE)
+		if (cond->broadcast)
 		{
 			pthread_cond_broadcast(&cond->cond);
 		}
