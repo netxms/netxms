@@ -117,6 +117,7 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
             break;
          case 'M':   // Model
          case 'N':   // Serial number
+         case 'F':   // Firmware
             rq.irDriveRegs.bCommandReg = ATA_IDENTIFY_DEVICE;
 	         rq.irDriveRegs.bCylHighReg = 0;
             rq.irDriveRegs.bCylLowReg = 0;
@@ -200,6 +201,12 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
             case 'N':   // Serial number
                memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20);
                pValue[20] = 0;
+               StrStrip(pValue);
+               nRet = SYSINFO_RC_SUCCESS;
+               break;
+            case 'F':   // Firmware
+               memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);
+               pValue[8] = 0;
                StrStrip(pValue);
                nRet = SYSINFO_RC_SUCCESS;
                break;
