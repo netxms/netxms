@@ -77,3 +77,13 @@ int CObjectPreview::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	return 0;
 }
+
+
+//
+// Called when object selection changes
+//
+
+void CObjectPreview::SetCurrentObject(NXC_OBJECT *pObject)
+{
+   m_wndObjectPreview.SetCurrentObject(pObject);
+}

@@ -22,6 +22,7 @@ public:
 	CString	m_szStatusText;
 	//}}AFX_DATA
 
+   void Terminate(int iCode) { PostMessage(WM_CLOSE_STATUS_DLG, 0, iCode); }
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -32,6 +33,7 @@ public:
 
 // Implementation
 protected:
+	afx_msg LRESULT OnCloseStatusDlg(WPARAM wParam, LPARAM lParam);
 
 	// Generated message map functions
 	//{{AFX_MSG(CProgressDialog)

@@ -44,6 +44,8 @@ src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
 src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
+src/console/win32/ObjectInfoBox.cpp -text
+src/console/win32/ObjectInfoBox.h -text
 src/console/win32/ObjectPreview.cpp -text
 src/console/win32/ObjectPreview.h -text
 src/console/win32/ObjectPropDlg.cpp -text

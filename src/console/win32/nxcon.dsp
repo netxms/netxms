@@ -148,6 +148,10 @@ SOURCE=.\ObjectBrowser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectInfoBox.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPreview.cpp
 # End Source File
 # Begin Source File
@@ -226,6 +230,10 @@ SOURCE=.\nxcon.h
 # Begin Source File
 
 SOURCE=.\ObjectBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectInfoBox.h
 # End Source File
 # Begin Source File
 

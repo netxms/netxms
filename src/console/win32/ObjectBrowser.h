@@ -47,6 +47,7 @@ protected:
 	afx_msg void OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	afx_msg void OnObjectViewShowpreviewpane();
+   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

@@ -16,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define TOOLBOX_TITLE_COLOR      RGB(0, 0, 50)
+#define TOOLBOX_TITLE_COLOR      RGB(120, 145, 225)
 
 
 //
@@ -37,6 +37,8 @@ BEGIN_MESSAGE_MAP(CToolBox, CWnd)
 	//{{AFX_MSG_MAP(CToolBox)
 	ON_WM_NCCALCSIZE()
 	ON_WM_NCPAINT()
+	ON_WM_CREATE()
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -56,7 +58,7 @@ BOOL CToolBox::PreCreateWindow(CREATESTRUCT& cs)
 BOOL CToolBox::Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
 {
    strncpy(m_szTitle, lpszWindowName, MAX_TOOLBOX_TITLE - 1);
-	return CWnd::Create(NULL, lpszWindowName, dwStyle | WS_CAPTION | WS_BORDER, rect, pParentWnd, nID, pContext);
+	return CWnd::Create(NULL, lpszWindowName, dwStyle, rect, pParentWnd, nID, pContext);
 }
 
 
@@ -66,7 +68,17 @@ BOOL CToolBox::Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, C
 
 void CToolBox::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp) 
 {
-	CWnd::OnNcCalcSize(bCalcValidRects, lpncsp);
+   if (bCalcValidRects)
+   {
+	   CWnd::OnNcCalcSize(bCalcValidRects, lpncsp);
+   }
+   else
+   {
+      lpncsp->rgrc[0].left++;
+      lpncsp->rgrc[0].right--;
+      lpncsp->rgrc[0].top += 21;
+      lpncsp->rgrc[0].bottom--;
+   }
 }
 
 
@@ -77,7 +89,6 @@ void CToolBox::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp)
 void CToolBox::OnNcPaint() 
 {
    CDC *dc;
-   CFont font;
    RECT rect;
 
    // Calculate coordinates of lower right window corner
@@ -90,10 +101,42 @@ void CToolBox::OnNcPaint()
    dc->Draw3dRect(0, 0, rect.right, rect.bottom, TOOLBOX_TITLE_COLOR, TOOLBOX_TITLE_COLOR);
 
    // Draw title
+   dc->SelectObject(&m_fontTitle);
    dc->FillSolidRect(1, 1, rect.right - 2, 20, TOOLBOX_TITLE_COLOR);
    dc->SetTextColor(RGB(255, 255, 255));
    dc->SetBkColor(TOOLBOX_TITLE_COLOR);
    dc->TextOut(5, 3, m_szTitle, strlen(m_szTitle));
 
+   // Cleanup
    ReleaseDC(dc);
+}
+
+
+//
+// WM_CREATE message handler
+//
+
+int CToolBox::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+{
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+   m_fontTitle.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                          VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+	
+	return 0;
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CToolBox::OnDestroy() 
+{
+	CWnd::OnDestroy();
+	
+	m_fontTitle.DeleteObject();
 }

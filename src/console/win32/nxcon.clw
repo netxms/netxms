@@ -2,35 +2,35 @@
 
 [General Info]
 Version=1
-LastClass=CToolBox
+LastClass=CObjectInfoBox
 LastTemplate=generic CWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=18
+ClassCount=19
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=22
+ResourceCount=23
 Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
 Resource2=IDR_MAINFRAME (English (U.S.))
-Resource3=IDD_OBJECT_PROPERTIES
-Resource4=IDD_ABOUTBOX
+Resource3=IDD_LOGIN
+Resource4=IDA_MDI_DEFAULT
 Resource5=IDA_OBJECT_BROWSER
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDA_MDI_DEFAULT
+Resource6=IDD_OBJECT_PROPERTIES
 Class11=CProgressDialog
 Resource7=IDD_PROGRESS (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDD_PROGRESS
+Resource8=IDD_ABOUTBOX
 Class13=CObjectPropDlg
 Resource9=IDM_VIEW_SPECIFIC
 Resource10=IDR_MAINFRAME
@@ -42,15 +42,17 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDD_LOGIN
+Resource17=IDA_OBJECT_BROWSER (English (U.K.))
 Class16=CDebugFrame
-Resource18=IDD_EDIT_EVENT
+Resource18=IDD_PROGRESS
 Resource19=IDA_MDI_DEFAULT (English (U.S.))
 Resource20=IDD_OBJECT_PROPERTIES (English (U.S.))
 Class17=CObjectPreview
 Resource21=IDD_LOGIN (English (U.S.))
 Class18=CToolBox
 Resource22=IDD_EDIT_EVENT (English (U.S.))
+Class19=CObjectInfoBox
+Resource23=IDD_EDIT_EVENT
 
 [CLS:CConsoleApp]
 Type=0
@@ -100,20 +102,24 @@ Control4=IDOK,button,1342373889
 [MNU:IDR_MAINFRAME]
 Type=1
 Class=CMainFrame
-Command1=ID_FILE_NEW
-Command2=ID_APP_EXIT
-Command3=ID_VIEW_MAP
-Command4=ID_VIEW_OBJECTBROWSER
-Command5=ID_VIEW_EVENTS
-Command6=ID_VIEW_CONTROLPANEL
-Command7=ID_VIEW_DEBUG
-Command8=ID_VIEW_TOOLBAR
-Command9=ID_VIEW_STATUS_BAR
-Command10=ID_VIEW_REFRESH
-Command11=ID_CONTROLPANEL_EVENTS
-Command12=ID_CONTROLPANEL_USERS
-Command13=ID_APP_ABOUT
-CommandCount=13
+Command1=ID_FILE_SETTINGS
+Command2=ID_FILE_EXPORT
+Command3=ID_FILE_PAGESETUP
+Command4=ID_FILE_PRINT
+Command5=ID_APP_EXIT
+Command6=ID_VIEW_MAP
+Command7=ID_VIEW_OBJECTBROWSER
+Command8=ID_VIEW_EPP
+Command9=ID_VIEW_EVENTS
+Command10=ID_VIEW_CONTROLPANEL
+Command11=ID_VIEW_DEBUG
+Command12=ID_VIEW_TOOLBAR
+Command13=ID_VIEW_STATUS_BAR
+Command14=ID_VIEW_REFRESH
+Command15=ID_CONTROLPANEL_EVENTS
+Command16=ID_CONTROLPANEL_USERS
+Command17=ID_APP_ABOUT
+CommandCount=17
 
 [TB:IDR_MAINFRAME]
 Type=1
@@ -135,15 +141,16 @@ Command3=ID_EDIT_PASTE
 Command4=ID_EDIT_UNDO
 Command5=ID_EDIT_CUT
 Command6=ID_VIEW_MAP
-Command7=ID_NEXT_PANE
-Command8=ID_PREV_PANE
-Command9=ID_VIEW_EVENTS
-Command10=ID_VIEW_CONTROLPANEL
-Command11=ID_EDIT_COPY
-Command12=ID_EDIT_PASTE
-Command13=ID_EDIT_CUT
-Command14=ID_EDIT_UNDO
-CommandCount=14
+Command7=ID_VIEW_OBJECTBROWSER
+Command8=ID_NEXT_PANE
+Command9=ID_PREV_PANE
+Command10=ID_VIEW_EVENTS
+Command11=ID_VIEW_CONTROLPANEL
+Command12=ID_EDIT_COPY
+Command13=ID_EDIT_PASTE
+Command14=ID_EDIT_CUT
+Command15=ID_EDIT_UNDO
+CommandCount=15
 
 [CLS:CControlPanel]
 Type=0
@@ -458,7 +465,14 @@ Command2=ID_WINDOW_TILE_VERT
 Command3=ID_WINDOW_ARRANGE
 Command4=ID_EVENTS_DETAILS
 Command5=ID_EVENTS_GOTOSOURCE
-CommandCount=5
+Command6=ID_OBJECT_VIEW_SHOWPREVIEWPANE
+Command7=ID_OBJECT_VIEW_VIEWASTREE
+Command8=ID_OBJECT_VIEW_VIEWASLIST
+Command9=ID_OBJECT_FIND
+Command10=ID_OBJECT_RENAME
+Command11=ID_OBJECT_DELETE
+Command12=ID_OBJECT_PROPERTIES
+CommandCount=12
 
 [ACL:IDA_MDI_DEFAULT]
 Type=1
@@ -538,4 +552,19 @@ ImplementationFile=ToolBox.cpp
 BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
+
+[ACL:IDA_OBJECT_BROWSER (English (U.K.))]
+Type=1
+Class=?
+Command1=ID_OBJECT_FIND
+Command2=ID_OBJECT_VIEW_SHOWPREVIEWPANE
+Command3=ID_VIEW_REFRESH
+CommandCount=3
+
+[CLS:CObjectInfoBox]
+Type=0
+HeaderFile=ObjectInfoBox.h
+ImplementationFile=ObjectInfoBox.cpp
+BaseClass=CToolBox
+Filter=W
 

@@ -1,55 +1,51 @@
-#if !defined(AFX_OBJECTPREVIEW_H__CEB3DD79_8E97_45C7_A986_7C29D0B2F506__INCLUDED_)
-#define AFX_OBJECTPREVIEW_H__CEB3DD79_8E97_45C7_A986_7C29D0B2F506__INCLUDED_
+#if !defined(AFX_OBJECTINFOBOX_H__F4B7071C_AA6F_4CDF_A528_0E3AE5B66E02__INCLUDED_)
+#define AFX_OBJECTINFOBOX_H__F4B7071C_AA6F_4CDF_A528_0E3AE5B66E02__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// ObjectPreview.h : header file
+// ObjectInfoBox.h : header file
 //
 
 #include "ToolBox.h"
-#include "ObjectInfoBox.h"
-
 
 /////////////////////////////////////////////////////////////////////////////
-// CObjectPreview window
+// CObjectInfoBox window
 
-class CObjectPreview : public CWnd
+class CObjectInfoBox : public CToolBox
 {
 // Construction
 public:
-	CObjectPreview();
+	CObjectInfoBox();
 
 // Attributes
 public:
-
-protected:
-   CObjectInfoBox m_wndObjectPreview;
 
 // Operations
 public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CObjectPreview)
-	public:
-	protected:
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	//{{AFX_VIRTUAL(CObjectInfoBox)
 	//}}AFX_VIRTUAL
 
 // Implementation
 public:
 	void SetCurrentObject(NXC_OBJECT *pObject);
-	virtual ~CObjectPreview();
-
-   virtual BOOL Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext = NULL);
+	virtual ~CObjectInfoBox();
 
 	// Generated message map functions
 protected:
-	//{{AFX_MSG(CObjectPreview)
+	CFont m_fontNormal;
+	CFont m_fontBold;
+	//{{AFX_MSG(CObjectInfoBox)
+	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+	NXC_OBJECT *m_pCurrObject;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -57,4 +53,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_OBJECTPREVIEW_H__CEB3DD79_8E97_45C7_A986_7C29D0B2F506__INCLUDED_)
+#endif // !defined(AFX_OBJECTINFOBOX_H__F4B7071C_AA6F_4CDF_A528_0E3AE5B66E02__INCLUDED_)

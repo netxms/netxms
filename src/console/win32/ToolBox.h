@@ -40,10 +40,13 @@ public:
 
    // Generated message map functions
 protected:
+	CFont m_fontTitle;
 	char m_szTitle[MAX_TOOLBOX_TITLE];
 	//{{AFX_MSG(CToolBox)
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
 	afx_msg void OnNcPaint();
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

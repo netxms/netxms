@@ -433,7 +433,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case STATE_IDLE:
                if (bNowConnecting)
                {
-                  m_dlgProgress.EndDialog(IDOK);
+                  m_dlgProgress.Terminate(IDOK);
                   bNowConnecting = FALSE;
                }
                if ((m_bEventBrowserActive) && (m_dwClientState == STATE_SYNC_EVENTS))
@@ -442,7 +442,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case STATE_DISCONNECTED:
                if (bNowConnecting)
                {
-                  m_dlgProgress.EndDialog(IDCANCEL);
+                  m_dlgProgress.Terminate(IDCANCEL);
                   bNowConnecting = FALSE;
                }
                break;

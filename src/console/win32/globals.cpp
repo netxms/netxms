@@ -41,6 +41,7 @@ char g_szPassword[MAX_PASSWORD_LEN] = "";
 
 char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED" };
 char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged" };
+char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", "Location", "Zone" };
 
 
 //
@@ -48,3 +49,19 @@ char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical
 //
 
 DWORD g_dwFlags = AF_SHOW_OBJECT_PREVIEW;
+
+
+//
+// Status color table
+//
+
+COLORREF g_statusColorTable[7] =
+{
+   RGB(0, 127, 0),      // Normal
+   RGB(255, 255, 0),    // Minor
+   RGB(249, 131, 0),    // Warning
+   RGB(248, 63, 1),     // Major
+   RGB(200, 0, 0),      // Critical
+   RGB(61, 12, 187),    // Unknown
+   RGB(255, 255, 130)   // Unmanaged
+};

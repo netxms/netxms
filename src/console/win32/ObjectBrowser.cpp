@@ -46,6 +46,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
 	ON_WM_GETMINMAXINFO()
 	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
+   ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -164,6 +165,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
          break;
    }
    hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImageCode[pObject->iClass], iImageCode[pObject->iClass], hParent);
+   m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
 
    // Add object's childs
    for(i = 0; i < pObject->dwNumChilds; i++)
@@ -224,4 +226,17 @@ void CObjectBrowser::OnObjectViewShowpreviewpane()
       m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, rect.bottom, SWP_NOZORDER);
       m_wndPreviewPane.ShowWindow(SW_SHOW);
    }
+}
+
+
+//
+// WM_NOTIFY::TVN_SELCHANGED message handler
+//
+
+void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
+{
+   NXC_OBJECT *pObject;
+
+   pObject = NXCFindObjectById(lpnmt->itemNew.lParam);
+   m_wndPreviewPane.SetCurrentObject(pObject);
 }

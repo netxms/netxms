@@ -47,6 +47,7 @@ extern CConsoleApp theApp;
 //
 
 #define WM_REQUEST_COMPLETED     (WM_USER + 1)
+#define WM_CLOSE_STATUS_DLG      (WM_USER + 2)
 
 
 //
@@ -66,5 +67,7 @@ extern char g_szPassword[];
 extern char *g_szStatusText[];
 extern char *g_szStatusTextSmall[];
 extern DWORD g_dwFlags;
+extern COLORREF g_statusColorTable[];
+extern char *g_szObjectClass[];
 
 #endif

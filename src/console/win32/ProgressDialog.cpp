@@ -36,9 +36,20 @@ void CProgressDialog::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CProgressDialog, CDialog)
 	//{{AFX_MSG_MAP(CProgressDialog)
-		// NOTE: the ClassWizard will add message map macros here
+   ON_MESSAGE(WM_CLOSE_STATUS_DLG, OnCloseStatusDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CProgressDialog message handlers
+
+
+//
+// WM_CLOSE_STATUS_DLG message handler
+//
+
+LRESULT CProgressDialog::OnCloseStatusDlg(WPARAM wParam, LPARAM lParam)
+{
+   EndDialog(lParam);
+   return 0;
+}
