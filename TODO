@@ -81,6 +81,11 @@ WINDOWS CONSOLE:
 - Add "Copy value to clipboard" to "Collected data" window
 - Event Processing Policy: Disable record with doubleclick on leftmost
   field (number)
+- Add ability to open graph from "Last values" view
+- Modify threshold by double click in DCI configuration dialog
+- Implement drag-and-drop editing in policy editor
+- Add auto-refresh to "Last values" view
+- Add agent configuration editor
 
 
 SUBAGENTS:
