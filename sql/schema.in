@@ -35,6 +35,7 @@ CREATE TABLE users
 	name varchar(64) not null,
 	password varchar(48),
 	access integer,
+	flags integer,
 	PRIMARY KEY(id)
 );
 
@@ -48,6 +49,7 @@ CREATE TABLE user_groups
 	id integer not null,
 	name varchar(64) not null,
 	access integer,
+	flags integer,
 	PRIMARY KEY(id)
 );
 
@@ -60,9 +62,7 @@ CREATE TABLE user_group_members
 (
 	group_id integer not null,
 	user_id integer not null,
-#ifdef DB_MYSQL
-	KEY(group_id)
-#endif
+	PRIMARY KEY(group_id,user_id)
 );
 
 
