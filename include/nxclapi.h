@@ -438,7 +438,7 @@ typedef struct
    union
    {
       DWORD dwInt32;
-      QWORD qwInt64;
+      INT64 qwInt64;
       double dFloat;
       char szString[MAX_STRING_VALUE];
    } value;
