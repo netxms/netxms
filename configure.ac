@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.51 2005-01-10 12:04:39 victor Exp $
+# $Id: configure.ac,v 1.52 2005-01-17 17:05:24 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -17,6 +17,7 @@ AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_INSTALL
 
+AC_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
@@ -416,4 +417,11 @@ AC_CONFIG_FILES([
 	tools/Makefile
 ])
 
-AC_OUTPUT( , [ $PERL tools/patch_libtool.pl <libtool >libtool.new; mv libtool.new libtool; chmod 755 libtool ])
+AC_OUTPUT
+
+if test ! "x$BUILD_SERVER" = "xyes" ; then
+   echo "Updating libtool"
+   $PERL tools/patch_libtool.pl <libtool >libtool.new
+   mv libtool.new libtool
+   chmod 755 libtool
+fi
