@@ -38,6 +38,7 @@ CREATE TABLE Nodes
 	is_agent integer,
 	is_bridge integer,
 	is_router integer,
+	is_local_mgmt integer,
 	snmp_version integer,
 	community varchar(32),
 	snmp_oid varchar(255),
