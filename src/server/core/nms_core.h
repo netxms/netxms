@@ -164,7 +164,7 @@ public:
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, char *szSecret = NULL);
    ~AgentConnection();
 
-   BOOL Connect(void);
+   BOOL Connect(BOOL bVerbose = FALSE);
    void Disconnect(void);
 
    ARP_CACHE *GetArpCache(void);
@@ -221,9 +221,10 @@ void DBUnloadDriver(void);
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary, 
-             size_t iOidLen, void *pValue, DWORD dwBufferSize);
+             size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose);
 BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
-                   void (* pHandler)(DWORD, char *, variable_list *, void *), void *pUserArg);
+                   void (* pHandler)(DWORD, char *, variable_list *, void *), 
+                   void *pUserArg, BOOL bVerbose);
 
 INTERFACE_LIST *GetLocalInterfaceList(void);
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity);

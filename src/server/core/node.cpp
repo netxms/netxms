@@ -265,7 +265,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    AgentConnection *pAgentConn;
 
    // Determine node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE))
       m_dwFlags |= NF_IS_SNMP;
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
@@ -516,16 +516,19 @@ void Node::ConfigurationPoll(void)
    PollerLock();
 
    // Check node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE))
    {
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
    }
    else
    {
-      if (m_iSnmpAgentFails == 0)
-         PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
-      m_iSnmpAgentFails++;
+      if (m_dwFlags & NF_IS_SNMP)
+      {
+         if (m_iSnmpAgentFails == 0)
+            PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
+         m_iSnmpAgentFails++;
+      }
    }
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
@@ -536,9 +539,12 @@ void Node::ConfigurationPoll(void)
    }
    else
    {
-      if (m_iNativeAgentFails == 0)
-         PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
-      m_iNativeAgentFails++;
+      if (m_dwFlags & NF_IS_NATIVE_AGENT)
+      {
+         if (m_iNativeAgentFails == 0)
+            PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
+         m_iNativeAgentFails++;
+      }
    }
 
    // Generate event if node flags has been changed

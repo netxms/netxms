@@ -76,7 +76,7 @@ AgentConnection::~AgentConnection()
 // Connect to agent
 //
 
-BOOL AgentConnection::Connect(void)
+BOOL AgentConnection::Connect(BOOL bVerbose)
 {
    struct sockaddr_in sa;
    char szBuffer[256], szSignature[32];
@@ -102,7 +102,8 @@ BOOL AgentConnection::Connect(void)
    // Connect to server
    if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
-      WriteLog(MSG_AGENT_CONNECT_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
+      if (bVerbose)
+         WriteLog(MSG_AGENT_CONNECT_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
       closesocket(m_hSocket);
       m_hSocket = -1;
       return FALSE;
@@ -112,7 +113,8 @@ BOOL AgentConnection::Connect(void)
    iError = RecvLine(255, szBuffer);
    if (iError <= 0)
    {
-      WriteLog(MSG_AGENT_CONNECT_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
+      if (bVerbose)
+         WriteLog(MSG_AGENT_CONNECT_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
       shutdown(m_hSocket, 2);
       closesocket(m_hSocket);
       m_hSocket = -1;
