@@ -28,8 +28,9 @@
 // Functions
 //
 
-BOOL LoadActions(void);
+BOOL InitActions(void);
+void CleanupActions(void);
 BOOL ExecuteAction(DWORD dwActionId, Event *pEvent);
-void DestroyActionList(void);
+DWORD CreateNewAction(char *pszName, DWORD *pdwId);
 
 #endif   /* _nms_actions_ */

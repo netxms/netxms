@@ -181,6 +181,9 @@ typedef unsigned long HREQUEST;
 #define NX_NOTIFY_ALARM_DELETED     3
 #define NX_NOTIFY_NEW_ALARM         4
 #define NX_NOTIFY_ALARM_ACKNOWLEGED 5
+#define NX_NOTIFY_ACTION_CREATED    6
+#define NX_NOTIFY_ACTION_MODIFIED   7
+#define NX_NOTIFY_ACTION_DELETED    8
 
 
 //
@@ -367,6 +370,7 @@ typedef struct
 {
    DWORD dwId;
    int iType;
+   BOOL bIsDisabled;
    char szName[MAX_OBJECT_NAME];
    char szRcptAddr[MAX_RCPT_ADDR_LEN];
    char szEmailSubject[MAX_EMAIL_SUBJECT_LEN];

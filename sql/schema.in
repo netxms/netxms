@@ -288,6 +288,7 @@ CREATE TABLE actions
 	action_id integer not null,
 	action_name varchar(63) not null,
 	action_type integer not null,
+	is_disabled integer,
 	// Field "rcpt_addr" holds e-mail address for e-mail actions,
 	// phone number for sms actions, and remote host address for
 	// remote execution actions

@@ -82,6 +82,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_mutexSendEvents = MutexCreate();
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
+   m_mutexSendActions = MutexCreate();
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
    strcpy(m_szUserName, "<not logged in>");
@@ -110,6 +111,7 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendEvents);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
+   MutexDestroy(m_mutexSendActions);
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
@@ -276,13 +278,27 @@ void ClientSession::UpdateThread(void)
             MutexLock(m_mutexSendAlarms, INFINITE);
             msg.SetCode(CMD_ALARM_UPDATE);
             msg.SetId(0);
-            msg.SetVariable(VID_NOTIFICATION_CODE, ((ALARM_UPDATE *)pUpdate->pData)->dwCode);
-            msg.SetVariable(VID_ALARM_ID, ((ALARM_UPDATE *)pUpdate->pData)->alarm.dwAlarmId);
-            if (((ALARM_UPDATE *)pUpdate->pData)->dwCode == NX_NOTIFY_NEW_ALARM)
-               FillAlarmInfoMessage(&msg, &((ALARM_UPDATE *)pUpdate->pData)->alarm);
+            msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
+            msg.SetVariable(VID_ALARM_ID, ((NXC_ALARM *)pUpdate->pData)->dwAlarmId);
+            if (pUpdate->dwCode == NX_NOTIFY_NEW_ALARM)
+               FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
             SendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
             msg.DeleteAllVariables();
+            free(pUpdate->pData);
+            break;
+         case INFO_CAT_ACTION:
+            MutexLock(m_mutexSendActions, INFINITE);
+            msg.SetCode(CMD_ACTION_DB_UPDATE);
+            msg.SetId(0);
+            msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
+            msg.SetVariable(VID_ACTION_ID, ((NXC_ACTION *)pUpdate->pData)->dwId);
+//            if (pUpdate->dwCode != NX_NOTIFY_ACTION_DELETED)
+//               FillActionInfoMessage(&msg, (NXC_ACTION *)pUpdate->pData);
+            SendMessage(&msg);
+            MutexUnlock(m_mutexSendActions);
+            msg.DeleteAllVariables();
+            free(pUpdate->pData);
             break;
          default:
             break;
@@ -430,6 +446,21 @@ void ClientSession::ProcessingThread(void)
             AcknowlegeAlarm(pMsg);
             break;
          case CMD_DELETE_ALARM:
+            break;
+         case CMD_LOCK_ACTION_DB:
+            LockActionDB(pMsg->GetId(), TRUE);
+            break;
+         case CMD_UNLOCK_ACTION_DB:
+            LockActionDB(pMsg->GetId(), FALSE);
+            break;
+         case CMD_CREATE_ACTION:
+            CreateAction(pMsg);
+            break;
+         case CMD_MODIFY_ACTION:
+            UpdateAction(pMsg);
+            break;
+         case CMD_DELETE_ACTION:
+            DeleteAction(pMsg);
             break;
          default:
             break;
@@ -1105,24 +1136,10 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
 
       if (dwUserId != 0)
       {
-         if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
-         {
-            // Current user has no rights for user account management
-            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-         }
-         else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
-         {
-            // User database have to be locked before any
-            // changes to user database can be made
-            msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-         }
-         else
-         {
-            DWORD dwResult;
+         DWORD dwResult;
 
-            dwResult = DeleteUserFromDB(dwUserId);
-            msg.SetVariable(VID_RCC, dwResult);
-         }
+         dwResult = DeleteUserFromDB(dwUserId);
+         msg.SetVariable(VID_RCC, dwResult);
       }
       else
       {
@@ -2150,9 +2167,8 @@ void ClientSession::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
          {
             pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
-            pUpdate->pData = malloc(sizeof(ALARM_UPDATE));
-            ((ALARM_UPDATE *)pUpdate->pData)->dwCode = dwCode;
-            memcpy(&((ALARM_UPDATE *)pUpdate->pData)->alarm, pAlarm, sizeof(NXC_ALARM)); 
+            pUpdate->dwCode = dwCode;
+            pUpdate->pData = nx_memdup(pAlarm, sizeof(NXC_ALARM));
             m_pUpdateQueue->Put(pUpdate);
          }
    }
@@ -2210,4 +2226,201 @@ void ClientSession::AcknowlegeAlarm(CSCPMessage *pRequest)
 
    // Send responce
    SendMessage(&msg);
+}
+
+
+//
+// Lock/unlock action configuration database
+//
+
+void ClientSession::LockActionDB(DWORD dwRqId, BOOL bLock)
+{
+   CSCPMessage msg;
+   char szBuffer[256];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
+   {
+      if (bLock)
+      {
+         if (!LockComponent(CID_ACTION_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+         {
+            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+            msg.SetVariable(VID_LOCKED_BY, szBuffer);
+         }
+         else
+         {
+            m_dwFlags |= CSF_ACTION_DB_LOCKED;
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+      }
+      else
+      {
+         if (m_dwFlags & CSF_ACTION_DB_LOCKED)
+         {
+            UnlockComponent(CID_ACTION_DB);
+            m_dwFlags &= ~CSF_ACTION_DB_LOCKED;
+         }
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+   }
+   else
+   {
+      // Current user has no rights for action management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Create new action
+//
+
+void ClientSession::CreateAction(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_ACTION_DB_LOCKED))
+   {
+      // Action database have to be locked before any
+      // changes can be made
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      DWORD dwResult, dwActionId;
+      char szActionName[MAX_USER_NAME];
+
+      pRequest->GetVariableStr(VID_ACTION_NAME, szActionName, MAX_OBJECT_NAME);
+      if (IsValidObjectName(szActionName))
+      {
+         dwResult = CreateNewAction(szActionName, &dwActionId);
+         msg.SetVariable(VID_RCC, dwResult);
+         if (dwResult == RCC_SUCCESS)
+            msg.SetVariable(VID_ACTION_ID, dwActionId);   // Send id of new action to client
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+      }
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Update existing action's data
+//
+
+void ClientSession::UpdateAction(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_ACTION_DB_LOCKED))
+   {
+      // Action database have to be locked before any
+      // changes can be made
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      DWORD dwActionId, dwResult = 0;
+
+      dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
+/*         user.dwId = dwUserId;
+         pRequest->GetVariableStr(VID_USER_DESCRIPTION, user.szDescription, MAX_USER_DESCR);
+         pRequest->GetVariableStr(VID_USER_FULL_NAME, user.szFullName, MAX_USER_FULLNAME);
+         pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
+         user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
+         user.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
+         dwResult = ModifyUser(&user);*/
+      msg.SetVariable(VID_RCC, dwResult);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Delete action
+//
+
+void ClientSession::DeleteAction(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwActionId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_ACTION_DB_LOCKED))
+   {
+      // Action database have to be locked before any
+      // changes can be made
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      // Get Id of action to be deleted
+      dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
+
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Process changes in actions
+//
+
+void ClientSession::OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
+{
+   UPDATE_INFO *pUpdate;
+
+   if (m_iState == STATE_AUTHENTICATED)
+   {
+      if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
+      {
+         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+         pUpdate->dwCategory = INFO_CAT_ACTION;
+         pUpdate->dwCode = dwCode;
+         pUpdate->pData = nx_memdup(pAction, sizeof(NXC_ACTION));
+         m_pUpdateQueue->Put(pUpdate);
+      }
+   }
 }

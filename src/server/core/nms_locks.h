@@ -32,6 +32,7 @@
 #define CID_EPP               1
 #define CID_USER_DB           2
 #define CID_EVENT_DB          3
+#define CID_ACTION_DB         4
 
 
 //

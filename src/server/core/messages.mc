@@ -374,4 +374,10 @@ Language=English
 Your database has format version %1, but server is compiled for version %2
 .
 
+MessageId=
+SymbolicName=MSG_ACTION_INIT_ERROR
+Language=English
+Unable to initialize actions
+.
+
 ;#endif

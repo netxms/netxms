@@ -235,9 +235,12 @@ BOOL Initialize(void)
    if (!LoadObjects())
       return FALSE;
 
-   // Load event actions
-   if (!LoadActions())
+   // Initialize and load event actions
+   if (!InitActions())
+   {
+      WriteLog(MSG_ACTION_INIT_ERROR, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
+   }
 
    // Initialize event handling subsystem
    if (!InitEventSubsystem())
@@ -326,7 +329,7 @@ void Shutdown(void)
       DBDisconnect(g_hCoreDB);
    DBUnloadDriver();
 
-   DestroyActionList();
+   CleanupActions();
 
    CloseLog();
 }

@@ -238,6 +238,13 @@ typedef struct
 #define CMD_ALARM_UPDATE            0x0049
 #define CMD_ALARM_DATA              0x004A
 #define CMD_DELETE_ALARM            0x004B
+#define CMD_LOCK_ACTION_DB          0x004C
+#define CMD_UNLOCK_ACTION_DB        0x004D
+#define CMD_LOAD_ACTIONS            0x004E
+#define CMD_ACTION_DB_UPDATE        0x004F
+#define CMD_MODIFY_ACTION           0x0050
+#define CMD_CREATE_ACTION           0x0051
+#define CMD_DELETE_ACTION           0x0052
 
 
 //
@@ -340,6 +347,7 @@ typedef struct
 #define VID_TIMESTAMP               ((DWORD)94)
 #define VID_ACK_BY_USER             ((DWORD)95)
 #define VID_IS_ACK                  ((DWORD)96)
+#define VID_ACTION_ID               ((DWORD)97)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -508,7 +508,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pGroupList[i].dwId = dwNewId = CreateUniqueId(IDG_USER_GROUP);
          g_pGroupList[i].dwNumMembers = 0;
          g_pGroupList[i].pMembers = NULL;
-         strcpy(g_pGroupList[i].szName, pszName);
+         strncpy(g_pGroupList[i].szName, pszName, MAX_USER_NAME);
          g_pGroupList[i].wFlags = UF_MODIFIED;
          g_pGroupList[i].wSystemRights = 0;
          g_pGroupList[i].szDescription[0] = 0;
@@ -537,7 +537,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_dwNumUsers++;
          g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
          g_pUserList[i].dwId = dwNewId = CreateUniqueId(IDG_USER);
-         strcpy(g_pUserList[i].szName, pszName);
+         strncpy(g_pUserList[i].szName, pszName, MAX_USER_NAME);
          g_pUserList[i].wFlags = UF_MODIFIED;
          g_pUserList[i].wSystemRights = 0;
          g_pUserList[i].szFullName[0] = 0;

@@ -175,6 +175,7 @@ typedef void * HSNMPSESSION;
 #define CSF_EVENT_DB_MODIFIED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
+#define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
 
 
 //
@@ -184,6 +185,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_EVENT           1
 #define INFO_CAT_OBJECT_CHANGE   2
 #define INFO_CAT_ALARM           3
+#define INFO_CAT_ACTION          4
 
 
 //
@@ -202,19 +204,9 @@ typedef void * HSNMPSESSION;
 typedef struct
 {
    DWORD dwCategory;    // Data category - event, network object, etc.
+   DWORD dwCode;        // Data-specific update code
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
-
-
-//
-// Alarm update structure
-//
-
-typedef struct
-{
-   DWORD dwCode;
-   NXC_ALARM alarm;
-} ALARM_UPDATE;
 
 
 //
@@ -240,6 +232,7 @@ private:
    MUTEX m_mutexSendEvents;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
+   MUTEX m_mutexSendActions;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
@@ -286,6 +279,10 @@ private:
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void AcknowlegeAlarm(CSCPMessage *pRequest);
+   void CreateAction(CSCPMessage *pRequest);
+   void UpdateAction(CSCPMessage *pRequest);
+   void DeleteAction(CSCPMessage *pRequest);
+   void LockActionDB(DWORD dwRqId, BOOL bLock);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -311,6 +308,7 @@ public:
    void OnObjectChange(NetObj *pObject);
    void OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
+   void OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
 };
 
 

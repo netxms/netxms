@@ -60,6 +60,8 @@ INSERT INTO locks (component_id,component_name,lock_status,owner_info)
    VALUES (CID_USER_DB,'User Database',-1,'');
 INSERT INTO locks (component_id,component_name,lock_status,owner_info)
    VALUES (CID_EVENT_DB,'Event Configuration Database',-1,'');
+INSERT INTO locks (component_id,component_name,lock_status,owner_info)
+   VALUES (CID_ACTION_DB,'Action Configuration Database',-1,'');
 
 
 /*
