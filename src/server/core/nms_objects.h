@@ -40,6 +40,7 @@ extern DWORD g_dwConfigurationPollingInterval;
 //
 
 #define MAX_OBJECT_NAME       64
+#define MAX_ITEM_NAME         256
 #define MAX_INTERFACES        4096
 #define INVALID_INDEX         0xFFFFFFFF
 #define MAX_COMMUNITY_LENGTH  32
@@ -93,6 +94,39 @@ struct ARP_CACHE
    DWORD dwNumEntries;
    ARP_ENTRY *pEntries;
 };
+
+
+//
+// Data collection item structure
+//
+
+struct DC_ITEM
+{
+   DWORD dwId;
+   char szName[MAX_ITEM_NAME];
+   int iPollingInterval;   // Polling interval in seconds
+   int iRetentionTime;     // Retention time in seconds
+   BYTE iSource;           // SNMP or native agent?
+   BYTE iDataType;
+};
+
+
+//
+// Data types
+//
+
+#define DTYPE_INTEGER   0
+#define DTYPE_INT64     1
+#define DTYPE_STRING    2
+#define DTYPE_FLOAT     3
+
+
+//
+// Data sources
+//
+
+#define DS_SNMP_AGENT      1
+#define DS_NATIVE_AGENT    2
 
 
 //

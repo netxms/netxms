@@ -116,15 +116,18 @@ CREATE TABLE nsmap
 -- Data collection items
 --
 
-create table ITEMS
+CREATE TABLE Items
 (
 	id integer not null,
-	node_id integer,
+	node_id integer not null,
 	name varchar(255),
 	description varchar(255),
+	source integer,			-- 0 for SNMP or 1 for native agent
 	datatype integer,
 	polling_interval integer,
-	retention_time integer
+	retention_time integer,
+	PRIMARY KEY(id),
+	KEY(node_id)
 );
 
 
