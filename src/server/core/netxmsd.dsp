@@ -139,6 +139,10 @@ SOURCE=.\dcithreshold.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\dcivalue.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\debug.cpp
 # End Source File
 # Begin Source File

@@ -66,7 +66,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    char szQuery[256];
    DB_RESULT hResult;
 
-   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,image_id FROM subnets WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,image_id,is_deleted FROM subnets WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -83,6 +83,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
    m_dwIpNetMask = DBGetFieldULong(hResult, 0, 4);
    m_dwImageId = DBGetFieldULong(hResult, 0, 5);
+   m_bIsDeleted = DBGetFieldLong(hResult, 0, 6);
 
    DBFreeResult(hResult);
 

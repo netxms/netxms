@@ -43,6 +43,44 @@
 
 
 //
+// DCI value
+//
+
+class ItemValue
+{
+private:
+   double m_dFloat;
+   long m_iInt32;
+   INT64 m_iInt64;
+   DWORD m_dwInt32;
+   QWORD m_qwInt64;
+   char m_szString[MAX_DB_STRING];
+
+public:
+   ItemValue();
+   ItemValue(const char *pszValue);
+   ItemValue(const ItemValue *pValue);
+   ~ItemValue();
+
+   const char *String(void) { return m_szString; }
+
+   operator double() { return m_dFloat; }
+   operator DWORD() { return m_dwInt32; }
+   operator QWORD() { return m_qwInt64; }
+   operator long() { return m_iInt32; }
+   operator INT64() { return m_iInt64; }
+   operator const char*() const { return m_szString; }
+
+   const ItemValue& operator=(ItemValue &src);
+   const ItemValue& operator=(double dFloat);
+   const ItemValue& operator=(long iInt32);
+   const ItemValue& operator=(INT64 iInt64);
+   const ItemValue& operator=(DWORD dwInt32);
+   const ItemValue& operator=(QWORD qwInt64);
+};
+
+
+//
 // Threshold definition class
 //
 
@@ -79,7 +117,7 @@ public:
    BOOL IsReached(void) { return m_bIsReached; }
 
    BOOL SaveToDB(DWORD dwIndex);
-   int Check(const char *pszValue);
+   int Check(ItemValue &value);
 
    void CreateMessage(DCI_THRESHOLD *pData);
    void UpdateFromMessage(DCI_THRESHOLD *pData);
@@ -99,20 +137,29 @@ class DCItem
 private:
    DWORD m_dwId;
    char m_szName[MAX_ITEM_NAME];
-   time_t m_tLastPoll;       // Last poll time
-   int m_iPollingInterval;   // Polling interval in seconds
-   int m_iRetentionTime;     // Retention time in seconds
-   BYTE m_iSource;           // SNMP or native agent?
+   time_t m_tLastPoll;        // Last poll time
+   int m_iPollingInterval;    // Polling interval in seconds
+   int m_iRetentionTime;      // Retention time in seconds
+   BYTE m_iDeltaCalculation;  // Delta calculation method
+   BYTE m_iSource;            // SNMP or native agent?
    BYTE m_iDataType;
-   BYTE m_iStatus;           // Item status: active, disabled or not supported
-   BYTE m_iBusy;             // 1 when item is queued for polling, 0 if not
+   BYTE m_iStatus;            // Item status: active, disabled or not supported
+   BYTE m_iBusy;              // 1 when item is queued for polling, 0 if not
+   DWORD m_dwTemplateId;      // Related template's id
    DWORD m_dwNumThresholds;
    Threshold **m_ppThresholdList;
    Node *m_pNode;             // Pointer to node object this item related to
+   char *m_pszFormula;        // Transformation formula
    MUTEX m_hMutex;
+   DWORD m_dwCacheSize;       // Number of items in cache
+   ItemValue **m_ppValueCache;
+   ItemValue m_prevRawValue;  // Previous raw value (used for delta calculation)
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
+
+   void Transform(ItemValue &value);
+   void CheckThresholds(ItemValue &value);
 
 public:
    DCItem();
@@ -141,7 +188,7 @@ public:
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
 
-   void CheckThresholds(const char *pszLastValue);
+   void NewValue(DWORD dwTimeStamp, const char *pszValue);
 
    void CreateMessage(CSCPMessage *pMsg);
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);

@@ -321,6 +321,16 @@ typedef unsigned long HREQUEST;
 
 
 //
+// Delta calculation methods for DCIs
+//
+
+#define DCM_ORIGINAL_VALUE       0
+#define DCM_SIMPLE               1
+#define DCM_AVERAGE_PER_SECOND   2
+#define DCM_AVERAGE_PER_MINUTE   3
+
+
+//
 // Threshold functions and operations
 //
 
@@ -378,6 +388,8 @@ typedef struct
    char szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
    char *pszData;
 } NXC_ACTION;
+
+
 //
 // Alarm structure
 //
@@ -604,14 +616,18 @@ typedef struct
 typedef struct
 {
    DWORD dwId;
+   DWORD dwTemplateId;
    char szName[MAX_ITEM_NAME];
+   char szDescription[MAX_DB_STRING];
    int iPollingInterval;
    int iRetentionTime;
    BYTE iSource;
    BYTE iDataType;
    BYTE iStatus;
+   BYTE iDeltaCalculation;
    DWORD dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
+   char *pszFormula;
 } NXC_DCI;
 
 

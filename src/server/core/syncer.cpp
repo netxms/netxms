@@ -38,6 +38,8 @@ void SaveObjects(void)
       if (g_pIndexById[i].pObject->IsDeleted())
          if (g_pIndexById[i].pObject->RefCount() == 0)
          {
+            DbgPrintf(AF_DEBUG_HOUSEKEEPER, "* Syncer * Object %d \"%s\" deleted\n",
+                      g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->Name());
             g_pIndexById[i].pObject->DeleteFromDB();
             NetObjDelete(g_pIndexById[i].pObject);
             i = 0xFFFFFFFF;   // Restart loop

@@ -126,11 +126,12 @@ BOOL Node::CreateFromDB(DWORD dwId)
    int i, iNumRows;
    DWORD dwSubnetId;
    NetObj *pObject;
+   BOOL bResult = FALSE;
 
    sprintf(szQuery, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
                     "is_router,snmp_version,discovery_flags,auth_method,secret,"
                     "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt,"
-                    "image_id FROM nodes WHERE id=%d", dwId);
+                    "image_id,is_deleted FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -167,53 +168,60 @@ BOOL Node::CreateFromDB(DWORD dwId)
    strncpy(m_szCommunityString, DBGetField(hResult, 0, 14), MAX_COMMUNITY_LENGTH);
    strncpy(m_szObjectId, DBGetField(hResult, 0, 15), MAX_OID_LEN * 4);
    m_dwImageId = DBGetFieldULong(hResult, 0, 17);
+   m_bIsDeleted = DBGetFieldLong(hResult, 0, 18);
 
    DBFreeResult(hResult);
 
-   // Link node to subnets
-   sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%d", dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult == 0)
-      return FALSE;     // Query failed
-
-   if (DBGetNumRows(hResult) == 0)
+   if (!m_bIsDeleted)
    {
+      // Link node to subnets
+      sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%d", dwId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult == NULL)
+         return FALSE;     // Query failed
+
+      if (DBGetNumRows(hResult) == 0)
+      {
+         DBFreeResult(hResult);
+         return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
+      }
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwSubnetId = DBGetFieldULong(hResult, i, 0);
+         pObject = FindObjectById(dwSubnetId);
+         if (pObject == NULL)
+         {
+            WriteLog(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+            break;
+         }
+         else if (pObject->Type() != OBJECT_SUBNET)
+         {
+            WriteLog(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+            break;
+         }
+         else
+         {
+            pObject->AddChild(this);
+            AddParent(pObject);
+            bResult = TRUE;
+         }
+      }
+
       DBFreeResult(hResult);
-      return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
-   }
+      LoadItemsFromDB();
+      LoadACLFromDB();
 
-   BOOL bResult = FALSE;
-   iNumRows = DBGetNumRows(hResult);
-   for(i = 0; i < iNumRows; i++)
+      // Walk through all items in the node and load appropriate thresholds
+      for(i = 0; i < (int)m_dwNumItems; i++)
+         if (!m_ppItems[i]->LoadThresholdsFromDB())
+            bResult = FALSE;
+   }
+   else
    {
-      dwSubnetId = DBGetFieldULong(hResult, i, 0);
-      pObject = FindObjectById(dwSubnetId);
-      if (pObject == NULL)
-      {
-         WriteLog(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-         break;
-      }
-      else if (pObject->Type() != OBJECT_SUBNET)
-      {
-         WriteLog(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-         break;
-      }
-      else
-      {
-         pObject->AddChild(this);
-         AddParent(pObject);
-         bResult = TRUE;
-      }
+      bResult = TRUE;
    }
-
-   DBFreeResult(hResult);
-   LoadItemsFromDB();
-   LoadACLFromDB();
-
-   // Walk through all items in the node and load appropriate thresholds
-   for(i = 0; i < (int)m_dwNumItems; i++)
-      if (!m_ppItems[i]->LoadThresholdsFromDB())
-         bResult = FALSE;
 
    return bResult;
 }
@@ -229,7 +237,8 @@ void Node::LoadItemsFromDB(void)
    DB_RESULT hResult;
 
    sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
-                    "status FROM items WHERE node_id=%d", m_dwId);
+                    "status,delta_calculation,transformation,template_id "
+                    "FROM items WHERE node_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)

@@ -194,7 +194,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    MutexLock(g_hMutexIdIndex, INFINITE);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
    MutexUnlock(g_hMutexIdIndex);
-   if (pObject->IpAddr() != 0)
+   if ((pObject->IpAddr() != 0) && (!pObject->IsDeleted()))
+   {
       switch(pObject->Type())
       {
          case OBJECT_GENERIC:
@@ -225,6 +226,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
             break;
       }
+   }
    ObjectsGlobalUnlock();
 }
 
@@ -425,7 +427,7 @@ BOOL LoadObjects(void)
    g_pServiceRoot->LoadFromDB();
 
    // Load subnets
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets WHERE is_deleted=0");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
    if (hResult != 0)
    {
       Subnet *pSubnet;
@@ -437,7 +439,8 @@ BOOL LoadObjects(void)
          pSubnet = new Subnet;
          if (pSubnet->CreateFromDB(dwId))
          {
-            g_pEntireNet->AddSubnet(pSubnet);
+            if (!pSubnet->IsDeleted())
+               g_pEntireNet->AddSubnet(pSubnet);
             NetObjInsert(pSubnet, FALSE);  // Insert into indexes
          }
          else     // Object load failed
@@ -450,7 +453,7 @@ BOOL LoadObjects(void)
    }
 
    // Load nodes
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM nodes WHERE is_deleted=0");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM nodes");
    if (hResult != 0)
    {
       Node *pNode;
@@ -474,7 +477,7 @@ BOOL LoadObjects(void)
    }
 
    // Load interfaces
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM interfaces WHERE is_deleted=0");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM interfaces");
    if (hResult != 0)
    {
       Interface *pInterface;
@@ -498,7 +501,7 @@ BOOL LoadObjects(void)
    }
 
    // Load container objects
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM containers WHERE is_deleted=0");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM containers");
    if (hResult != 0)
    {
       Container *pContainer;
@@ -574,12 +577,12 @@ void DumpObjects(void)
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
       printf("Object ID %d \"%s\"\n"
-             "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d\n",
+             "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n",
              g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
              objTypes[g_pIndexById[i].pObject->Type()],
              IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
              statusName[g_pIndexById[i].pObject->Status()],
-             g_pIndexById[i].pObject->IsModified());
+             g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
       printf("   Parents: <%s>\n   Childs: <%s>\n", 
              g_pIndexById[i].pObject->ParentList(pBuffer),
              g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));

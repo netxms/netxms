@@ -87,10 +87,10 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id,image_id"
-                    " FROM interfaces WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id,"
+                    "image_id,is_deleted FROM interfaces WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult == 0)
+   if (hResult == NULL)
       return FALSE;     // Query failed
 
    if (DBGetNumRows(hResult) != 0)
@@ -104,21 +104,29 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 6);
       dwNodeId = DBGetFieldULong(hResult, 0, 7);
       m_dwImageId = DBGetFieldULong(hResult, 0, 8);
+      m_bIsDeleted = DBGetFieldLong(hResult, 0, 9);
 
       // Link interface to node
-      pObject = FindObjectById(dwNodeId);
-      if (pObject == NULL)
+      if (!m_bIsDeleted)
       {
-         WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
-      }
-      else if (pObject->Type() != OBJECT_NODE)
-      {
-         WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+         pObject = FindObjectById(dwNodeId);
+         if (pObject == NULL)
+         {
+            WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+         }
+         else if (pObject->Type() != OBJECT_NODE)
+         {
+            WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+         }
+         else
+         {
+            pObject->AddChild(this);
+            AddParent(pObject);
+            bResult = TRUE;
+         }
       }
       else
       {
-         pObject->AddChild(this);
-         AddParent(pObject);
          bResult = TRUE;
       }
    }

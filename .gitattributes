@@ -53,7 +53,6 @@ netware/bin/.keep -text
 sql/.cvsignore -text
 sql/Makefile.am -text
 sql/Makefile.w32 -text
-sql/clear.sql -text
 sql/dbinit.in -text
 sql/drop.sh -text
 sql/events.in -text
@@ -316,6 +315,7 @@ src/server/core/db.cpp -text
 src/server/core/dbwrite.cpp -text
 src/server/core/dcitem.cpp -text
 src/server/core/dcithreshold.cpp -text
+src/server/core/dcivalue.cpp -text
 src/server/core/debug.cpp -text
 src/server/core/discovery.cpp -text
 src/server/core/email.cpp -text

@@ -88,7 +88,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    DB_RESULT hResult;
    DWORD i;
 
-   sprintf(szQuery, "SELECT id,name,status,category,description,image_id FROM containers WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT id,name,status,category,description,image_id,is_deleted FROM containers WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -106,6 +106,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    m_dwCategory = DBGetFieldULong(hResult, 0, 3);
    m_pszDescription = strdup(CHECK_NULL(DBGetField(hResult, 0, 4)));
    m_dwImageId = DBGetFieldULong(hResult, 0, 5);
+   m_bIsDeleted = DBGetFieldLong(hResult, 0, 6);
 
    DBFreeResult(hResult);
 
@@ -113,18 +114,21 @@ BOOL Container::CreateFromDB(DWORD dwId)
    LoadACLFromDB();
 
    // Load child list for later linkage
-   sprintf(szQuery, "SELECT object_id FROM container_members WHERE container_id=%d", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
+   if (!m_bIsDeleted)
    {
-      m_dwChildIdListSize = DBGetNumRows(hResult);
-      if (m_dwChildIdListSize > 0)
+      sprintf(szQuery, "SELECT object_id FROM container_members WHERE container_id=%d", m_dwId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
       {
-         m_pdwChildIdList = (DWORD *)malloc(sizeof(DWORD) * m_dwChildIdListSize);
-         for(i = 0; i < m_dwChildIdListSize; i++)
-            m_pdwChildIdList[i] = DBGetFieldULong(hResult, i, 0);
+         m_dwChildIdListSize = DBGetNumRows(hResult);
+         if (m_dwChildIdListSize > 0)
+         {
+            m_pdwChildIdList = (DWORD *)malloc(sizeof(DWORD) * m_dwChildIdListSize);
+            for(i = 0; i < m_dwChildIdListSize; i++)
+               m_pdwChildIdList[i] = DBGetFieldULong(hResult, i, 0);
+         }
+         DBFreeResult(hResult);
       }
-      DBFreeResult(hResult);
    }
 
    return TRUE;

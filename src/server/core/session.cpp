@@ -862,8 +862,8 @@ void ClientSession::OnObjectChange(NetObj *pObject)
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
          pUpdate->pData = pObject;
-         m_pUpdateQueue->Put(pUpdate);
          pObject->IncRefCount();
+         m_pUpdateQueue->Put(pUpdate);
       }
 }
 

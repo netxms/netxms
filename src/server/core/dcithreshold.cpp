@@ -144,7 +144,7 @@ BOOL Threshold::SaveToDB(DWORD dwIndex)
 //    NO_ACTION - when there are no changes in item's value match to threshold's condition
 //
 
-int Threshold::Check(const char *pszValue)
+int Threshold::Check(ItemValue &value)
 {
    BOOL bMatch = FALSE;
    int iResult;
@@ -163,16 +163,16 @@ int Threshold::Check(const char *pszValue)
          switch(m_iDataType)
          {
             case DCI_DT_INTEGER:
-               fvalue.iInteger = strtol(pszValue, NULL, 0);
+               fvalue.iInteger = (long)value;
                break;
             case DCI_DT_INT64:
-               /* TODO: add 64-bit conversion code */
+               fvalue.qwInt64 = (INT64)value;
                break;
             case DCI_DT_FLOAT:
-               fvalue.dFloat = strtod(pszValue, NULL);
+               fvalue.dFloat = (double)value;
                break;
             case DCI_DT_STRING:
-               fvalue.pszStr = pszValue;
+               fvalue.pszStr = (const char *)value;
                break;
             default:
                WriteLog(MSG_INVALID_DTYPE, EVENTLOG_ERROR_TYPE, "ds", m_iDataType, "Threshold::Check()");

@@ -4,25 +4,44 @@
 ** ex: syntax=sql
 */
 
-INSERT INTO config (var_name,var_value) VALUES ('DBFormatVersion',DB_FORMAT_VERSION);
-INSERT INTO config (var_name,var_value) VALUES ('SyncInterval','60');
-INSERT INTO config (var_name,var_value) VALUES ('NewNodePollingInterval','60');
-INSERT INTO config (var_name,var_value) VALUES ('DiscoveryPollingInterval','900');
-INSERT INTO config (var_name,var_value) VALUES ('StatusPollingInterval','30');
-INSERT INTO config (var_name,var_value) VALUES ('ConfigurationPollingInterval','3600');
-INSERT INTO config (var_name,var_value) VALUES ('ResolveNodeNames','0');
-INSERT INTO config (var_name,var_value) VALUES ('NumberOfEventProcessors','1');
-INSERT INTO config (var_name,var_value) VALUES ('ClientListenerPort','4701');
-INSERT INTO config (var_name,var_value) VALUES ('NumberOfDataCollectors','10');
-INSERT INTO config (var_name,var_value) VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer,idata_value varchar(255))');
-INSERT INTO config (var_name,var_value) VALUES ('RunNetworkDiscovery','1');
-INSERT INTO config (var_name,var_value) VALUES ('EnableAdminInterface','1');
-INSERT INTO config (var_name,var_value) VALUES ('EnableAccessControl','1');
-INSERT INTO config (var_name,var_value) VALUES ('EnableEventsAccessControl','0');
-INSERT INTO config (var_name,var_value) VALUES ('EventLogRetentionTime','5184000'); // Default retention time is 60 days == 5184000 seconds
-INSERT INTO config (var_name,var_value) VALUES ('HouseKeepingInterval','3600');
-INSERT INTO config (var_name,var_value) VALUES ('DeleteEmptySubnets','1');
-INSERT INTO config (var_name,var_value) VALUES ('EnableSNMPTraps','1');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DBFormatVersion',DB_FORMAT_VERSION,0,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('SyncInterval','60',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('NewNodePollingInterval','60',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DiscoveryPollingInterval','900',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusPollingInterval','30',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ConfigurationPollingInterval','3600',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ResolveNodeNames','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('NumberOfEventProcessors','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ClientListenerPort','4701',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('NumberOfDataCollectors','10',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer,idata_value varchar(255))',0,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('RunNetworkDiscovery','0',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('EnableAdminInterface','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('EnableAccessControl','1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('EnableEventsAccessControl','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('EventLogRetentionTime','5184000',1,0); // Default retention time is 60 days == 5184000 seconds
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('HouseKeepingInterval','3600',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DeleteEmptySubnets','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('EnableSNMPTraps','1',1,1);
 
 
 /*

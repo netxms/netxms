@@ -7,6 +7,8 @@ CREATE TABLE config
 (
 	var_name varchar(63) not null,
 	var_value varchar(255),
+	is_visible integer,
+	need_server_restart integer,
 	PRIMARY KEY(var_name)
 );
 
@@ -232,12 +234,20 @@ CREATE TABLE access_options
 
 /*
 ** Data collection items
+**
+** If node_id != 0, it's an item bound to node,	and template_id points to 
+** the template used for creating this item. In this case, template_id = 0
+** means that item was created manually.
+** If node_id = 0, it's a template item, and template_id points to a template
+** this item belongs to.
+** If both node_id and template_id is 0, it's an error.
 */
 
 CREATE TABLE items
 (
 	item_id integer not null,
-	node_id integer not null,
+	node_id integer not null,	
+	template_id integer not null,
 	name varchar(255) not null,
 	description varchar(255),
 	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP
@@ -245,6 +255,8 @@ CREATE TABLE items
 	polling_interval integer,
 	retention_time integer,
 	status integer,			// ACTIVE, DISABLED or NOT_SUPPORTED
+	delta_calculation integer,
+	transformation TEXT,		// Transformation formula
 	PRIMARY KEY(item_id)
 );
 
@@ -409,24 +421,6 @@ CREATE TABLE dct
 	template_id integer not null,
 	name varchar(255),
 	PRIMARY KEY(template_id)
-);
-
-
-/*
-** Items in data collection templates
-*/
-
-CREATE TABLE dct_items
-(
-	template_id integer not null,
-	item_id integer not null,
-	name varchar(255),
-	description varchar(255),
-	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP
-	datatype integer,
-	polling_interval integer,
-	retention_time integer,
-	PRIMARY KEY(template_id,item_id)
 );
 
 

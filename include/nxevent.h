@@ -44,7 +44,7 @@
 // Event severity codes
 //
 
-#define EVENT_SEVERITY_INFO      0
+#define EVENT_SEVERITY_NORMAL    0
 #define EVENT_SEVERITY_WARNING   1
 #define EVENT_SEVERITY_MINOR     2
 #define EVENT_SEVERITY_MAJOR     3

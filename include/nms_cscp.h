@@ -361,6 +361,8 @@ typedef struct
 #define VID_RCPT_ADDR               ((DWORD)102)
 #define VID_CATEGORY_NAME           ((DWORD)103)
 #define VID_CATEGORY_ID             ((DWORD)104)
+#define VID_DCI_DELTA_CALCULATION   ((DWORD)105)
+#define VID_DCI_FORMULA             ((DWORD)106)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -40,7 +40,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    Node *pNode;
    DWORD dwError;
    time_t currTime;
-   char *pBuffer, szQuery[MAX_LINE_SIZE + 128];
+   char *pBuffer;
 
    pBuffer = (char *)malloc(MAX_LINE_SIZE);
 
@@ -67,15 +67,11 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          currTime = time(NULL);
          pItem->SetLastPollTime(currTime);
 
-         // Store received value into database or handle error
+         // Transform and store received value into database or handle error
          switch(dwError)
          {
             case DCE_SUCCESS:
-               sprintf(szQuery, "INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)"
-                                " VALUES (%d,%d,'%s')", pNode->Id(), pItem->Id(), 
-                       currTime, pBuffer);
-               QueueSQLRequest(szQuery);
-               pItem->CheckThresholds(pBuffer);
+               pItem->NewValue(currTime, pBuffer);
                break;
             case DCE_COMM_ERROR:
                break;
