@@ -18,7 +18,7 @@ CREATE TABLE Users
 (
 	id integer not null,
 	name varchar(64) not null,
-	password varchar(64),
+	password varchar(48),
 	access integer,
 	PRIMARY KEY(id)
 );
