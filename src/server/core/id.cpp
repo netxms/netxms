@@ -35,9 +35,9 @@
 //
 
 static MUTEX m_mutexTableAccess;
-static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 2, 0x80000000, 10000, 1, 1, 1, 1, 0x80000000,
+static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, 10000, 1, 1, 1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1 };
-static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0x7FFFFFFF, 0xFFFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 
+static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE
@@ -45,7 +45,7 @@ static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0x7FFFFFFF, 0xFFFFFFFF, 0x7FFFFF
 static char *m_pszGroupNames[] =
 {
    "Network Objects",
-   "Node Groups",
+   "Container Categories",
    "User-defined Events",
    "Data Collection Items",
    "Data Collection Templates",
@@ -95,6 +95,14 @@ BOOL InitIdTable(void)
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM containers");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_NETWORK_OBJECT] = max(m_dwFreeIdTable[IDG_NETWORK_OBJECT],
+                                                   DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
    hResult = DBSelect(g_hCoreDB, "SELECT max(object_id) FROM deleted_objects");
    if (hResult != NULL)
    {
@@ -104,12 +112,12 @@ BOOL InitIdTable(void)
       DBFreeResult(hResult);
    }
 
-   // Get first available network object group id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM node_groups");
+   // Get first available container category id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(category) FROM container_categories");
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_NETOBJ_GROUP] = max(0x80000000, DBGetFieldULong(hResult, 0, 0) + 1);
+         m_dwFreeIdTable[IDG_CONTAINER_CAT] = max(1, DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

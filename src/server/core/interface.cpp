@@ -189,10 +189,15 @@ BOOL Interface::SaveToDB(void)
 BOOL Interface::DeleteFromDB(void)
 {
    char szQuery[128];
+   BOOL bSuccess;
 
-   sprintf(szQuery, "DELETE FROM interfaces WHERE id=%ld", m_dwId);
-   QueueSQLRequest(szQuery);
-   return TRUE;
+   bSuccess = NetObj::DeleteFromDB();
+   if (bSuccess)
+   {
+      sprintf(szQuery, "DELETE FROM interfaces WHERE id=%ld", m_dwId);
+      QueueSQLRequest(szQuery);
+   }
+   return bSuccess;
 }
 
 

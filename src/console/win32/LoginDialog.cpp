@@ -42,9 +42,25 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CLoginDialog, CDialog)
 	//{{AFX_MSG_MAP(CLoginDialog)
-		// NOTE: the ClassWizard will add message map macros here
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CLoginDialog message handlers
+
+
+//
+// WM_INITDIALOG message handler
+//
+
+BOOL CLoginDialog::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	
+   if (m_szLogin.IsEmpty() || m_szServer.IsEmpty())
+		return TRUE;
+
+   // Server and login already entered, change focus to password field
+   ::SetFocus(::GetDlgItem(m_hWnd, IDC_EDIT_PASSWORD));
+   return FALSE;
+}

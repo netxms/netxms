@@ -175,3 +175,22 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
 {
    return RCC_SYSTEM_FAILURE;
 }
+
+
+//
+// Delete rule from policy
+//
+
+void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule)
+{
+   if (dwRule < pEventPolicy->dwNumRules)
+   {
+      MemFree(pEventPolicy->pRuleList[dwRule].pdwActionList);
+      MemFree(pEventPolicy->pRuleList[dwRule].pdwEventList);
+      MemFree(pEventPolicy->pRuleList[dwRule].pdwSourceList);
+      MemFree(pEventPolicy->pRuleList[dwRule].pszComment);
+      pEventPolicy->dwNumRules--;
+      memmove(&pEventPolicy->pRuleList[dwRule], &pEventPolicy->pRuleList[dwRule + 1],
+              sizeof(NXC_EPP_RULE) * (pEventPolicy->dwNumRules - dwRule));
+   }
+}

@@ -240,6 +240,10 @@ SOURCE=.\ObjectSearchBox.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PasswordChangeDlg.cpp
 # End Source File
 # Begin Source File
@@ -433,6 +437,10 @@ SOURCE=.\ObjectSearchBox.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectSelDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PasswordChangeDlg.h
 # End Source File
 # Begin Source File
@@ -549,6 +557,14 @@ SOURCE=.\res\psym_minor.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\psym_node.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\psym_subnet.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\RuleManager.ico
 # End Source File
 # Begin Source File
@@ -588,9 +604,5 @@ SOURCE=.\icons\user.ico
 SOURCE=.\icons\users.ico
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\ReadMe.txt
-# End Source File
 # End Target
 # End Project

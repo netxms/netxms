@@ -115,6 +115,8 @@ protected:
 	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
 	HMENU m_hDCEditorMenu;        // Menu for data collection editor
 	HACCEL m_hDCEditorAccel;      // Accelerator for data collection editor
+	HMENU m_hPolicyEditorMenu;    // Menu for event policy editor
+	HACCEL m_hPolicyEditorAccel;  // Accelerator for event policy editor
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

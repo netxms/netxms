@@ -105,6 +105,12 @@ Failed to load interface object with id %1 from database
 .
 
 MessageId=
+SymbolicName=MSG_CONTAINER_LOAD_FAILED
+Language=English
+Failed to load container object with id %1 from database
+.
+
+MessageId=
 SymbolicName=MSG_INVALID_SUBNET_ID
 Language=English
 Inconsistent database: node %1 linked to non-existing subnet %2
@@ -331,4 +337,17 @@ SymbolicName=MSG_ERROR_CREATING_DATA_DIR
 Language=English
 Error creating data directory "%1"
 .
+
+MessageId=
+SymbolicName=MSG_INVALID_EPP_OBJECT
+Language=English
+Invalid object identifier %1 in event processing policy
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_CONTAINER_MEMBER
+Language=English
+Inconsistent database: container object %1 has reference to non-existing child object %2
+.
+
 ;#endif

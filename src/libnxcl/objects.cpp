@@ -114,6 +114,8 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
    DebugPrintf("ReplaceObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
+   if (pObject->iClass == OBJECT_CONTAINER)
+      MemFree(pObject->container.pszDescription);
    MemFree(pObject->pdwChildList);
    MemFree(pObject->pdwParentList);
    MemFree(pObject->pAccessList);
@@ -129,6 +131,8 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 static void DestroyObject(NXC_OBJECT *pObject)
 {
    DebugPrintf("DestroyObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
+   if (pObject->iClass == OBJECT_CONTAINER)
+      MemFree(pObject->container.pszDescription);
    MemFree(pObject->pdwChildList);
    MemFree(pObject->pdwParentList);
    MemFree(pObject->pAccessList);
@@ -199,6 +203,10 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
+         break;
+      case OBJECT_CONTAINER:
+         pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
+         pObject->container.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          break;
       default:
          break;
@@ -464,6 +472,32 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
    msg.SetVariable(VID_MGMT_STATUS, (WORD)bIsManaged);
+
+   // Send request
+   SendMsg(&msg);
+
+   // Wait for reply
+   dwRetCode = WaitForRCC(dwRqId);
+   return dwRetCode;
+}
+
+
+//
+// Create new container object
+//
+
+DWORD LIBNXCL_EXPORTABLE CreateObject(int iClass, DWORD dwParentObject)
+{
+   CSCPMessage msg;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   // Build request message
+   msg.SetCode(CMD_CREATE_OBJECT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_PARENT_OBJECT_ID, dwParentObject);
+   msg.SetVariable(VID_OBJECT_CLASS, (WORD)iClass);
 
    // Send request
    SendMsg(&msg);

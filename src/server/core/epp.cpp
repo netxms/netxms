@@ -79,6 +79,7 @@ EPRule::~EPRule()
 BOOL EPRule::MatchSource(DWORD dwObjectId)
 {
    DWORD i;
+   NetObj *pObject;
    BOOL bMatch = FALSE;
 
    if (m_dwNumSources == 0)   // No sources in list means "any"
@@ -88,16 +89,25 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
    else
    {
       for(i = 0; i < m_dwNumSources; i++)
-         if (m_pdwSourceList[i] & GROUP_FLAG_BIT)
+         if (m_pdwSourceList[i] == dwObjectId)
          {
-           /* TODO: check group membership */
+            bMatch = TRUE;
+            break;
          }
          else
          {
-            if (m_pdwSourceList[i] == dwObjectId)
+            pObject = FindObjectById(m_pdwSourceList[i]);
+            if (pObject != NULL)
             {
-               bMatch = TRUE;
-               break;
+               if (pObject->IsChild(dwObjectId))
+               {
+                  bMatch = TRUE;
+                  break;
+               }
+            }
+            else
+            {
+               WriteLog(MSG_INVALID_EPP_OBJECT, EVENTLOG_ERROR_TYPE, "d", m_pdwSourceList[i]);
             }
          }
    }

@@ -173,6 +173,8 @@ public:
    void IncRefCount(void) { m_dwRefCount++; }
    void DecRefCount(void) { if (m_dwRefCount > 0) m_dwRefCount--; }
 
+   BOOL IsChild(DWORD dwObjectId);
+
    void AddChild(NetObj *pObject);     // Add reference to child object
    void AddParent(NetObj *pObject);    // Add reference to parent object
 
@@ -406,6 +408,40 @@ public:
 
 
 //
+// Generic container object
+//
+
+class Container : public NetObj
+{
+private:
+   DWORD *m_pdwChildIdList;
+   DWORD m_dwChildIdListSize;
+
+protected:
+   DWORD m_dwCategory;
+   char *m_pszDescription;
+
+public:
+   Container();
+   virtual ~Container();
+
+   virtual int Type(void) { return OBJECT_CONTAINER; }
+  
+   virtual BOOL SaveToDB(void);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+
+   DWORD Category(void) { return m_dwCategory; }
+   const char *Description(void) { return CHECK_NULL(m_pszDescription); }
+
+   void LinkChildObjects(void);
+   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+};
+
+
+//
 // Object index structure
 //
 
@@ -413,6 +449,18 @@ struct INDEX
 {
    DWORD dwKey;
    NetObj *pObject;
+};
+
+
+//
+// Container category information
+//
+
+struct CONTAINER_CATEGORY
+{
+   DWORD dwCatId;
+   char szName[MAX_OBJECT_NAME];
+   char *pszDescription;
 };
 
 
@@ -432,6 +480,7 @@ NetObj *FindObjectById(DWORD dwId);
 Node *FindNodeByIP(DWORD dwAddr);
 Subnet *FindSubnetByIP(DWORD dwAddr);
 DWORD FindLocalMgmtNode(void);
+CONTAINER_CATEGORY *FindContainerCategory(DWORD dwId);
 
 BOOL LoadObjects(void);
 void DumpObjects(void);
@@ -458,6 +507,8 @@ extern MUTEX g_hMutexNodeIndex;
 extern MUTEX g_hMutexSubnetIndex;
 extern MUTEX g_hMutexInterfaceIndex;
 extern MUTEX g_hMutexObjectAccess;
+extern DWORD g_dwNumCategories;
+extern CONTAINER_CATEGORY *g_pContainerCatList;
 
 
 #endif   /* _nms_objects_h_ */

@@ -86,7 +86,14 @@ BOOL NetObj::SaveToDB(void)
 
 BOOL NetObj::DeleteFromDB(void)
 {
-   return FALSE;     // Abstract objects cannot be deleted from database
+   char szQuery[256];
+
+   // Delete ACL
+   sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
+   QueueSQLRequest(szQuery);
+   sprintf(szQuery, "DELETE FROM access_options WHERE object_id=%d", m_dwId);
+   QueueSQLRequest(szQuery);
+   return TRUE;
 }
 
 
@@ -329,6 +336,7 @@ BOOL NetObj::LoadACLFromDB(void)
    DB_RESULT hResult;
    BOOL bSuccess = FALSE;
 
+   // Load access list
    sprintf(szQuery, "SELECT user_id,access_rights FROM acl WHERE object_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -341,6 +349,16 @@ BOOL NetObj::LoadACLFromDB(void)
                                    DBGetFieldULong(hResult, i, 1));
       DBFreeResult(hResult);
       bSuccess = TRUE;
+   }
+
+   // Load access options
+   sprintf(szQuery, "SELECT inherit_rights FROM access_options WHERE object_id=%d", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 0) ? TRUE : FALSE;
+      DBFreeResult(hResult);
    }
 
    return bSuccess;
@@ -369,12 +387,29 @@ BOOL NetObj::SaveACLToDB(void)
 {
    char szQuery[256];
    BOOL bSuccess = FALSE;
+   DB_RESULT hResult;
 
+   // Save access list
    sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
    if (DBQuery(g_hCoreDB, szQuery))
    {
       m_pAccessList->EnumerateElements(EnumerationHandler, (void *)m_dwId);
       bSuccess = TRUE;
+   }
+
+   // Save access options
+   sprintf(szQuery, "SELECT inherit_rights FROM access_options WHERE object_id=%d", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         sprintf(szQuery, "UPDATE access_options SET inherit_rights=%d WHERE object_id=%d",
+                 m_bInheritAccessRights, m_dwId);
+      else
+         sprintf(szQuery, "INSERT INTO access_options (object_id,inherit_rights) VALUES (%d,%d)",
+                 m_dwId, m_bInheritAccessRights);
+      DBFreeResult(hResult);
+      DBQuery(g_hCoreDB, szQuery);
    }
 
    return bSuccess;
@@ -553,4 +588,36 @@ void NetObj::SetMgmtStatus(BOOL bIsManaged)
 
    Modify();
    Unlock();
+}
+
+
+//
+// Check if given object is an our child (possibly indirect, i.e child of child)
+//
+
+BOOL NetObj::IsChild(DWORD dwObjectId)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   Lock();
+
+   // First, walk through our own child list
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Id() == dwObjectId)
+      {
+         bResult = TRUE;
+         break;
+      }
+
+   // If given object is not in child list, check if it is indirect child
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->IsChild(dwObjectId))
+      {
+         bResult = TRUE;
+         break;
+      }
+
+   Unlock();
+   return bResult;
 }

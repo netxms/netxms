@@ -18,6 +18,7 @@
 
 #define CF_CENTER          0x0001
 #define CF_TITLE_COLOR     0x0002
+#define CF_NON_SELECTABLE  0x0004
 
 
 //
@@ -38,7 +39,9 @@ public:
    int m_iNumLines;
    char **m_pszTextList;
    int *m_piImageList;
+   BYTE *m_pSelectFlags;
    BOOL m_bHasImages;
+   BOOL m_bSelectable;
 
    RL_Cell();
    ~RL_Cell();
@@ -46,6 +49,9 @@ public:
    void Recalc(void);
    int AddLine(char *pszText, int iImage = -1);
    BOOL ReplaceLine(int iLine, char *pszText, int iImage = -1);
+   BOOL DeleteLine(int iLine);
+   void Clear(void);
+   void ClearSelection(void);
 };
 
 class RL_Row
@@ -95,7 +101,6 @@ public:
 // Implementation
 public:
 	void ClearSelection(BOOL bRedraw = TRUE);
-	int RowFromPoint(int x, int y);
 	COLORREF m_rgbActiveBkColor;
 	int AddItem(int iRow, int iColumn, char *pszText, int iImage = -1);
 	int InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD dwFlags = 0);
@@ -105,6 +110,9 @@ public:
 
 	// Generated message map functions
 protected:
+	void InvalidateRow(int iRow);
+	void InvalidateList(void);
+	void OnMouseButtonDown(UINT nFlags, CPoint point);
 	void OnScroll(void);
 	int CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos);
 	void UpdateScrollBars(void);
@@ -124,6 +132,9 @@ protected:
    afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	int m_iMouseWheelDelta;
+	COLORREF m_rgbSelectedBkColor;
+	COLORREF m_rgbSelectedTextColor;
 	COLORREF m_rgbDisabledBkColor;
 	COLORREF m_rgbCrossColor;
 	int m_iCurrItem;
@@ -154,14 +165,22 @@ private:
    RL_Row **m_ppRowList;
 
 public:
+	BOOL DeleteRow(int iRow);
+	BOOL EnableCellSelection(int iRow, int iCell, BOOL bEnable);
+	void DeleteItem(int iRow, int iCell, int iItem);
+	int RowFromPoint(int x, int y, int *piRowStart = NULL);
+	int ColumnFromPoint(int x, int y, int *piColStart = NULL);
+	int ItemFromPoint(int x, int y);
+	void ClearCell(int iRow, int iCell);
+	int GetNumItems(int iRow, int iCell);
 	void EnableRow(int iRow, BOOL bEnable = TRUE);
 	int GetNextRow(int iStartAfter, DWORD dwFlags);
-	int ColumnFromPoint(int x, int y);
 	void ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int iImage = -1);
 	void SetImageList(CImageList *pImageList) { m_pImageList = pImageList; }
    int GetNumRows(void) { return m_iNumRows; }
    int GetCurrentRow(void) { return m_iCurrRow; }
    int GetCurrentColumn(void) { return m_iCurrColumn; }
+   int GetCurrentItem(void) { return m_iCurrItem; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -103,8 +103,6 @@
 
 #define GROUP_FLAG_BIT     ((DWORD)0x80000000)
 
-#define CHECK_NULL(x)      ((x) == NULL ? ((char *)"(null)") : (x))
-
 typedef void * HSNMPSESSION;
 
 
@@ -124,7 +122,7 @@ typedef void * HSNMPSESSION;
 //
 
 #define IDG_NETWORK_OBJECT    0
-#define IDG_NETOBJ_GROUP      1
+#define IDG_CONTAINER_CAT     1
 #define IDG_EVENT             2
 #define IDG_ITEM              3
 #define IDG_DCT               4
@@ -318,6 +316,7 @@ private:
    void InstallEPP(DWORD dwRqId);
    void SendMIBList(DWORD dwRqId);
    void SendMIB(CSCPMessage *pRequest);
+   void CreateObject(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

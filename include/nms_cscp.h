@@ -217,6 +217,7 @@ typedef struct
 #define CMD_GET_MIB                 0x0034
 #define CMD_MIB_LIST                0x0035
 #define CMD_MIB                     0x0036
+#define CMD_CREATE_OBJECT           0x0037
 
 
 //
@@ -297,6 +298,9 @@ typedef struct
 #define VID_RULE_EVENTS             ((DWORD)72)
 #define VID_RULE_ACTIONS            ((DWORD)73)
 #define VID_NUM_RULES               ((DWORD)74)
+#define VID_CATEGORY                ((DWORD)75)
+#define VID_PARENT_OBJECT_ID        ((DWORD)76)
+#define VID_UPDATED_CHILD_LIST      ((DWORD)77)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -44,6 +44,13 @@ extern CConsoleApp theApp;
 
 
 //
+// Transparent color for images in rule list
+//
+
+#define PSYM_MASK_COLOR       RGB(255, 255, 255)
+
+
+//
 // Custom windows messages
 //
 
@@ -96,7 +103,7 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 
 
 //
-// Window and drawing functions
+// Drawing functions
 //
 
 void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors);
@@ -112,6 +119,7 @@ CSize GetWindowSize(CWnd *pWnd);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText = "Unknown");
 char *TranslateUNIXText(const char *pszText);
+void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
 
 
 //

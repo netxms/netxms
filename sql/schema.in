@@ -148,6 +148,22 @@ CREATE TABLE interfaces
 
 
 /*
+** Container objects
+*/
+
+CREATE TABLE containers
+(
+	id integer not null,
+	name varchar(64),
+	status integer,
+	is_deleted integer not null,
+	category integer,
+	description TEXT,
+	PRIMARY KEY(id)
+);
+
+
+/*
 ** Nodes to subnets mapping
 */
 
@@ -156,6 +172,32 @@ CREATE TABLE nsmap
 	subnet_id integer not null,
 	node_id integer not null,
 	PRIMARY KEY(subnet_id,node_id)
+);
+
+
+/*
+** Container members
+*/
+
+CREATE TABLE container_members
+(
+	container_id integer not null,
+	object_id integer not null,
+	PRIMARY KEY(container_id,object_id)
+);
+
+
+/*
+** Container categories
+*/
+
+CREATE TABLE container_categories
+(
+	category integer not null,
+	name varchar(64),
+	image_id integer not null,
+	description TEXT,
+	PRIMARY KEY(category)
 );
 
 
@@ -169,6 +211,18 @@ CREATE TABLE acl
 	user_id integer not null,
 	access_rights integer not null,
 	PRIMARY KEY(object_id,user_id)
+);
+
+
+/*
+** Objects' access options
+*/
+
+CREATE TABLE access_options
+(
+	object_id integer not null,
+	inherit_rights integer not null,
+	PRIMARY KEY(object_id)
 );
 
 
@@ -239,19 +293,6 @@ CREATE TABLE actions
 
 
 /*
-** Node groups
-*/
-
-CREATE TABLE node_groups
-(
-	id integer not null,
-	name varchar(64),
-	description varchar(255),
-	PRIMARY KEY(id)
-);
-
-
-/*
 ** Event groups
 */
 
@@ -261,18 +302,6 @@ CREATE TABLE event_groups
 	name varchar(64),
 	description varchar(255),
 	PRIMARY KEY(id)
-);
-
-
-/*
-** Node group members
-*/
-
-CREATE TABLE node_group_members
-(
-	group_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(group_id,node_id)
 );
 
 

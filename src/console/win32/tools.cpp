@@ -211,3 +211,16 @@ char *TranslateUNIXText(const char *pszText)
    *dptr = 0;
    return pDst;
 }
+
+
+//
+// Load bitmap into image list
+//
+
+void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor)
+{
+   CBitmap bmp;
+
+   bmp.LoadBitmap(nIDResource);
+   pImageList->Add(&bmp, rgbMaskColor);
+}

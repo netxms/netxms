@@ -84,7 +84,7 @@ typedef unsigned long HREQUEST;
 #define OBJECT_NODE        2
 #define OBJECT_INTERFACE   3
 #define OBJECT_NETWORK     4
-#define OBJECT_LOCATION    5
+#define OBJECT_CONTAINER   5
 #define OBJECT_ZONE        6
 
 
@@ -412,6 +412,11 @@ typedef struct
       {
          DWORD dwIpNetMask;
       } subnet;
+      struct
+      {
+         DWORD dwCategory;
+         char *pszDescription;
+      } container;
    };
 } NXC_OBJECT;
 
@@ -655,6 +660,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(void);
 DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
+void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
 
 #ifdef __cplusplus
 }

@@ -8,6 +8,9 @@
 // EventPolicyEditor.h : header file
 //
 
+#include "ObjectSelDlg.h"
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CEventPolicyEditor frame
 
@@ -32,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	void AddSource(void);
 	void EnableSelectedRows(BOOL bEnable);
 	void UpdateRow(int iRow);
 	void InsertNewRule(int iInsertBefore);
@@ -58,6 +62,11 @@ protected:
 	afx_msg void OnPolicyDisablerule();
 	afx_msg void OnPolicyEnablerule();
 	afx_msg void OnUpdatePolicyEnablerule(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyAdd();
+	afx_msg void OnUpdatePolicyAdd(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyDelete();
+	afx_msg void OnUpdatePolicyDelete(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyDeleterule();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

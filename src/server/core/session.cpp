@@ -334,6 +334,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_MIB:
             SendMIB(pMsg);
             break;
+         case CMD_CREATE_OBJECT:
+            CreateObject(pMsg);
+            break;
          default:
             break;
       }
@@ -1730,4 +1733,13 @@ void ClientSession::SendMIB(CSCPMessage *pRequest)
 
    // Send responce
    SendMessage(&msg);
+}
+
+
+//
+// Create new object
+//
+
+void ClientSession::CreateObject(CSCPMessage *pRequest)
+{
 }

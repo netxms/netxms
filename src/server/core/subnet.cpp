@@ -1,6 +1,6 @@
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -152,12 +152,17 @@ BOOL Subnet::SaveToDB(void)
 BOOL Subnet::DeleteFromDB(void)
 {
    char szQuery[256];
+   BOOL bSuccess;
 
-   sprintf(szQuery, "DELETE FROM subnets WHERE id=%ld", m_dwId);
-   QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%ld", m_dwId);
-   QueueSQLRequest(szQuery);
-   return TRUE;
+   bSuccess = NetObj::DeleteFromDB();
+   if (bSuccess)
+   {
+      sprintf(szQuery, "DELETE FROM subnets WHERE id=%ld", m_dwId);
+      QueueSQLRequest(szQuery);
+      sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%ld", m_dwId);
+      QueueSQLRequest(szQuery);
+   }
+   return bSuccess;
 }
 
 

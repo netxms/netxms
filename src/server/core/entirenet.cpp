@@ -52,6 +52,9 @@ BOOL Network::SaveToDB(void)
 {
    Lock();
 
+   // Save name
+   ConfigWriteStr("TopologyRootObjectName", m_szName, TRUE);
+
    // Save access list
    SaveACLToDB();
 
@@ -69,6 +72,7 @@ BOOL Network::SaveToDB(void)
 void Network::LoadFromDB(void)
 {
    Lock();
+   ConfigReadStr("TopologyRootObjectName", m_szName, MAX_OBJECT_NAME, "Entire Network");
    LoadACLFromDB();
    Unlock();
 }

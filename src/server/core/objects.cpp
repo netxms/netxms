@@ -44,6 +44,9 @@ MUTEX g_hMutexNodeIndex;
 MUTEX g_hMutexSubnetIndex;
 MUTEX g_hMutexInterfaceIndex;
 
+DWORD g_dwNumCategories = 0;
+CONTAINER_CATEGORY *g_pContainerCatList = NULL;
+
 
 //
 // Initialize objects infrastructure
@@ -190,6 +193,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
       {
          case OBJECT_GENERIC:
          case OBJECT_NETWORK:
+         case OBJECT_CONTAINER:
             break;
          case OBJECT_SUBNET:
             MutexLock(g_hMutexSubnetIndex, INFINITE);
@@ -232,6 +236,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       {
          case OBJECT_GENERIC:
          case OBJECT_NETWORK:
+         case OBJECT_CONTAINER:
             break;
          case OBJECT_SUBNET:
             MutexLock(g_hMutexSubnetIndex, INFINITE);
@@ -388,8 +393,23 @@ DWORD FindLocalMgmtNode(void)
 BOOL LoadObjects(void)
 {
    DB_RESULT hResult;
-   int i, iNumRows;
+   DWORD i, dwNumRows;
    DWORD dwId;
+
+   // Load container categories
+   hResult = DBSelect(g_hCoreDB, "SELECT category,name,image_id,description FROM container_categories");
+   if (hResult != NULL)
+   {
+      g_dwNumCategories = DBGetNumRows(hResult);
+      g_pContainerCatList = (CONTAINER_CATEGORY *)malloc(sizeof(CONTAINER_CATEGORY) * g_dwNumCategories);
+      for(i = 0; i < (int)g_dwNumCategories; i++)
+      {
+         g_pContainerCatList[i].dwCatId = DBGetFieldULong(hResult, i, 0);
+         strncpy(g_pContainerCatList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         g_pContainerCatList[i].pszDescription = strdup(DBGetField(hResult, i, 3));
+      }
+      DBFreeResult(hResult);
+   }
 
    // Load "Entire Network" object properties
    g_pEntireNet->LoadFromDB();
@@ -400,8 +420,8 @@ BOOL LoadObjects(void)
    {
       Subnet *pSubnet;
 
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pSubnet = new Subnet;
@@ -425,8 +445,8 @@ BOOL LoadObjects(void)
    {
       Node *pNode;
 
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pNode = new Node;
@@ -449,8 +469,8 @@ BOOL LoadObjects(void)
    {
       Interface *pInterface;
 
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pInterface = new Interface;
@@ -466,6 +486,35 @@ BOOL LoadObjects(void)
       }
       DBFreeResult(hResult);
    }
+
+   // Load container objects
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM containers WHERE is_deleted=0");
+   if (hResult != 0)
+   {
+      Container *pContainer;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pContainer = new Container;
+         if (pContainer->CreateFromDB(dwId))
+         {
+            NetObjInsert(pContainer, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pContainer;
+            WriteLog(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Link childs to container objects
+   for(i = 0; i < g_dwIdIndexSize; i++)
+      if (g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER)
+         ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
    // Recalculate status for "Entire Net" object
    g_pEntireNet->CalculateCompoundStatus();
@@ -500,8 +549,9 @@ void DumpObjects(void)
 {
    DWORD i;
    char *pBuffer;
+   CONTAINER_CATEGORY *pCat;
    static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network",
-                             "Location", "Zone" };
+                             "Container", "Zone" };
    static char *statusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
                                  "Unknown", "Unmanaged", "Disabled", "Testing" };
 
@@ -531,6 +581,11 @@ void DumpObjects(void)
          case OBJECT_SUBNET:
             printf("   Network mask: %s\n", 
                    IpToStr(((Subnet *)g_pIndexById[i].pObject)->IpNetMask(), pBuffer));
+            break;
+         case OBJECT_CONTAINER:
+            pCat = FindContainerCategory(((Container *)g_pIndexById[i].pObject)->Category());
+            printf("   Category: %s\n   Description: %s\n", pCat ? pCat->szName : "<unknown>",
+                   ((Container *)g_pIndexById[i].pObject)->Description());
             break;
       }
    }

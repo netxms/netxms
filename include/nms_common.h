@@ -223,6 +223,13 @@ typedef struct tagICMPHDR
 
 
 //
+// Check if given string is NULL and always return valid pointer
+//
+
+#define CHECK_NULL(x)      ((x) == NULL ? ((char *)"(null)") : (x))
+
+
+//
 // Free memory block if it isn't NULL
 //
 
@@ -267,7 +274,7 @@ typedef struct tagICMPHDR
 
 
 //
-// Increment pointer to given number of bytes
+// Increment pointer for given number of bytes
 //
 
 #define inc_ptr(ptr, step, ptype) ptr = (ptype *)(((char *)ptr) + step)

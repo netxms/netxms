@@ -95,6 +95,8 @@ IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 IDB_PSYM_ANY            BITMAP  DISCARDABLE     "res\\psym_any.bmp"
 IDB_PSYM_MINOR          BITMAP  DISCARDABLE     "res\\psym_minor.bmp"
+IDB_PSYM_NODE           BITMAP  DISCARDABLE     "res\\psym_node.bmp"
+IDB_PSYM_SUBNET         BITMAP  DISCARDABLE     "res\\psym_subnet.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -226,6 +228,30 @@ BEGIN
         MENUITEM "&Show data\tCtrl+S",          ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
     END
+    POPUP "Policy"
+    BEGIN
+        MENUITEM "&Add...\tIns",                ID_POLICY_ADD
+        MENUITEM "&Delete\tDel",                ID_POLICY_DELETE
+        MENUITEM "&Edit...\tAlt+E",             ID_POLICY_EDIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Negate cell\tCtrl+N",        ID_POLICY_NEGATECELL
+        MENUITEM SEPARATOR
+        POPUP "&Insert rule"
+        BEGIN
+            MENUITEM "&Above\tCtrl+Alt+A",          ID_POLICY_INSERTRULE_ABOVE
+
+            MENUITEM "&Below\tCtrl+Alt+B",          ID_POLICY_INSERTRULE_BELOW
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Top\tCtrl+Alt+T",            ID_POLICY_INSERTRULE_TOP
+            MENUITEM "B&ottom\tCtrl+Alt+E",         ID_POLICY_INSERTRULE_BOTTOM
+
+        END
+        MENUITEM "&Delete rule",                ID_POLICY_DELETERULE
+        MENUITEM SEPARATOR
+        MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
+        MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -267,12 +293,50 @@ BEGIN
         MENUITEM "&Show data",                  ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
     END
-    POPUP "Policy"
+    POPUP "Policy (rule)"
+    BEGIN
+        POPUP "&Insert rule"
+        BEGIN
+            MENUITEM "&Above",                      ID_POLICY_INSERTRULE_ABOVE
+
+            MENUITEM "&Below",                      ID_POLICY_INSERTRULE_BELOW
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Top",                        ID_POLICY_INSERTRULE_TOP
+            MENUITEM "&Bottom",                     ID_POLICY_INSERTRULE_BOTTOM
+
+        END
+        MENUITEM "&Delete rule",                ID_POLICY_DELETERULE
+        MENUITEM SEPARATOR
+        MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
+        MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
+    END
+    POPUP "Policy (cell type 1)"
     BEGIN
         MENUITEM "&Add...",                     ID_POLICY_ADD
         MENUITEM "&Delete",                     ID_POLICY_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Negate cell",                ID_POLICY_NEGATECELL
+        MENUITEM SEPARATOR
+        POPUP "&Insert rule"
+        BEGIN
+            MENUITEM "&Above",                      ID_POLICY_INSERTRULE_ABOVE
+
+            MENUITEM "&Below",                      ID_POLICY_INSERTRULE_BELOW
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Top",                        ID_POLICY_INSERTRULE_TOP
+            MENUITEM "&Bottom",                     ID_POLICY_INSERTRULE_BOTTOM
+
+        END
+        MENUITEM "&Delete rule",                ID_POLICY_DELETERULE
+        MENUITEM SEPARATOR
+        MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
+        MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
+    END
+    POPUP "Policy (cell type 2)"
+    BEGIN
+        MENUITEM "&Edit...",                    ID_POLICY_EDIT
         MENUITEM SEPARATOR
         POPUP "&Insert rule"
         BEGIN
@@ -302,7 +366,6 @@ IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE
 BEGIN
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "M",            ID_TOOLS_MIBBROWSER,    VIRTKEY, ALT, NOINVERT
-    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
@@ -310,6 +373,7 @@ BEGIN
     VK_F2,          ID_VIEW_MAP,            VIRTKEY, NOINVERT
     VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
     VK_F4,          ID_CONTROLPANEL_EVENTPOLICY, VIRTKEY, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_F7,          ID_VIEW_NETWORKSUMMARY, VIRTKEY, NOINVERT
@@ -333,7 +397,22 @@ BEGIN
     "L",            ID_OBJECT_VIEW_VIEWASLIST, VIRTKEY, CONTROL, NOINVERT
     "P",            ID_OBJECT_VIEW_SHOWPREVIEWPANE, VIRTKEY, ALT, NOINVERT
     "T",            ID_OBJECT_VIEW_VIEWASTREE, VIRTKEY, CONTROL, NOINVERT
-    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+END
+
+IDA_EPP ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_POLICY_INSERTRULE_ABOVE, VIRTKEY, CONTROL, ALT, 
+                                                    NOINVERT
+    "B",            ID_POLICY_INSERTRULE_BELOW, VIRTKEY, CONTROL, ALT, 
+                                                    NOINVERT
+    "E",            ID_POLICY_EDIT,         VIRTKEY, ALT, NOINVERT
+    "E",            ID_POLICY_INSERTRULE_BOTTOM, VIRTKEY, CONTROL, ALT, 
+                                                    NOINVERT
+    "N",            ID_POLICY_NEGATECELL,   VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_POLICY_INSERTRULE_TOP, VIRTKEY, CONTROL, ALT, 
+                                                    NOINVERT
+    VK_DELETE,      ID_POLICY_DELETE,       VIRTKEY, NOINVERT
+    VK_INSERT,      ID_POLICY_ADD,          VIRTKEY, NOINVERT
 END
 
 
@@ -706,6 +785,18 @@ BEGIN
     LTEXT           "Access",IDC_STATIC_ACCESS,185,203,24,8
 END
 
+IDD_SELECT_OBJECT DIALOGEX 0, 0, 231, 146
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Object"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,174,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,174,24,50,14
+    CONTROL         "List1",IDC_LIST_OBJECTS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | 
+                    WS_TABSTOP,7,7,160,132,WS_EX_CLIENTEDGE
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -892,6 +983,14 @@ BEGIN
         RIGHTMARGIN, 322
         TOPMARGIN, 7
         BOTTOMMARGIN, 315
+    END
+
+    IDD_SELECT_OBJECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 224
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 139
     END
 END
 #endif    // APSTUDIO_INVOKED

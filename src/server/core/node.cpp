@@ -329,14 +329,19 @@ BOOL Node::SaveToDB(void)
 BOOL Node::DeleteFromDB(void)
 {
    char szQuery[256];
+   BOOL bSuccess;
 
-   sprintf(szQuery, "DELETE FROM nodes WHERE id=%ld", m_dwId);
-   QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DELETE FROM nsmap WHERE node_id=%ld", m_dwId);
-   QueueSQLRequest(szQuery);
-   sprintf(szQuery, "DROP TABLE idata_%ld", m_dwId);
-   QueueSQLRequest(szQuery);
-   return TRUE;
+   bSuccess = NetObj::DeleteFromDB();
+   if (bSuccess)
+   {
+      sprintf(szQuery, "DELETE FROM nodes WHERE id=%ld", m_dwId);
+      QueueSQLRequest(szQuery);
+      sprintf(szQuery, "DELETE FROM nsmap WHERE node_id=%ld", m_dwId);
+      QueueSQLRequest(szQuery);
+      sprintf(szQuery, "DROP TABLE idata_%ld", m_dwId);
+      QueueSQLRequest(szQuery);
+   }
+   return bSuccess;
 }
 
 

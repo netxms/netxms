@@ -108,6 +108,8 @@ src/console/win32/ObjectPropsSecurity.cpp -text
 src/console/win32/ObjectPropsSecurity.h -text
 src/console/win32/ObjectSearchBox.cpp -text
 src/console/win32/ObjectSearchBox.h -text
+src/console/win32/ObjectSelDlg.cpp -text
+src/console/win32/ObjectSelDlg.h -text
 src/console/win32/PasswordChangeDlg.cpp -text
 src/console/win32/PasswordChangeDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
@@ -161,6 +163,8 @@ src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text
 src/console/win32/res/psym_any.bmp -text
 src/console/win32/res/psym_minor.bmp -text
+src/console/win32/res/psym_node.bmp -text
+src/console/win32/res/psym_subnet.bmp -text
 src/console/win32/res/up_arrow.bmp -text
 src/console/win32/resource.h -text
 src/console/win32/tools.cpp -text
@@ -207,6 +211,7 @@ src/server/core/admin.cpp -text
 src/server/core/agent.cpp -text
 src/server/core/client.cpp -text
 src/server/core/config.cpp -text
+src/server/core/container.cpp -text
 src/server/core/core.rc -text
 src/server/core/datacoll.cpp -text
 src/server/core/db.cpp -text

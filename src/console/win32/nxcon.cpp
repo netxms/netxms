@@ -220,11 +220,16 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
 
+   m_hPolicyEditorMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 5), "&Policy");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjectBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_BROWSER));
 	m_hUserEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hDCEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hPolicyEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_EPP));
 
    // Load configuration from registry
    dwBytes = sizeof(WINDOWPLACEMENT);
@@ -986,7 +991,7 @@ void CConsoleApp::OnControlpanelEventpolicy()
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CEventPolicyEditor), IDR_EPP_EDITOR, m_hMDIMenu, m_hMDIAccel);
+		      RUNTIME_CLASS(CEventPolicyEditor), IDR_EPP_EDITOR, m_hPolicyEditorMenu, m_hPolicyEditorAccel);
       }
       else
       {
