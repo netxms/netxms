@@ -749,6 +749,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    DWORD dwOldFlags = m_dwFlags;
    AgentConnection *pAgentConn;
    INTERFACE_LIST *pIfList;
+   char szBuffer[4096];
    BOOL bHasChanges = FALSE;
 
    PollerLock();
@@ -759,9 +760,15 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
    if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+               m_szObjectId, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags, dwNodeType;
+
+      if (strcmp(m_szObjectId, szBuffer))
+      {
+         strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+         bHasChanges = TRUE;
+      }
 
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
@@ -774,6 +781,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          m_dwFlags |= dwNodeFlags;
          m_dwNodeType = dwNodeType;
          SendPollerMsg(dwRqId, _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
+         bHasChanges = TRUE;
       }
 
       CheckOSPFSupport();
@@ -796,8 +804,20 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
       m_iNativeAgentFails = 0;
       
       Lock();
-      pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
-      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, m_szPlatformName);
+      
+      pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer);
+      if (strcmp(m_szAgentVersion, szBuffer))
+      {
+         strcpy(m_szAgentVersion, szBuffer);
+         bHasChanges = TRUE;
+      }
+
+      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer);
+      if (strcmp(m_szAgentVersion, szBuffer))
+      {
+         strcpy(m_szPlatformName, szBuffer);
+         bHasChanges = TRUE;
+      }
 
       safe_free(m_pParamList);
       pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
