@@ -416,7 +416,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
          sprintf(m_pszValueStr, "%lu", m_value.dwUInt);
          break;
       case DCI_DT_INT64:
-         m_value.iInt64 = (UINT64)ntohq(pData->value.qwInt64);
+         m_value.iInt64 = (INT64)ntohq(pData->value.qwInt64);
          m_pszValueStr = (char *)malloc(32);
 #ifdef _WIN32
          sprintf(m_pszValueStr, "%I64d", m_value.iInt64);
@@ -425,7 +425,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 #endif
          break;
       case DCI_DT_UINT64:
-         m_value.iInt64 = (UINT64)ntohq(pData->value.qwInt64);
+         m_value.iInt64 = (QWORD)ntohq(pData->value.qwInt64);
          m_pszValueStr = (char *)malloc(32);
 #ifdef _WIN32
          sprintf(m_pszValueStr, "%I64u", m_value.qwUInt64);

@@ -67,6 +67,7 @@ void InitLog(void)
       loc = localtime(&t);
       strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
       fprintf(m_hLogFile, "**************************************************************\r\n[%s] Log file opened\r\n", szTimeBuf);
+      fflush(m_hLogFile);
 
       m_mutexLogAccess = MutexCreate();
 #ifdef _WIN32
@@ -116,6 +117,7 @@ static void WriteLogToFile(char *szMessage)
    loc = localtime(&t);
    strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
    fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
+   fflush(m_hLogFile);
    if (IsStandalone())
       printf("%s %s", szBuffer, szMessage);
 

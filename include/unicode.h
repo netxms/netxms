@@ -40,41 +40,13 @@
 
 #include <tchar.h>
 
-#else    /* _WIN32 */
+#else    /* not _WIN32 */
 
-#if HAVE_WCHAR_H
-#include <wchar.h>
-#endif
-
-#if HAVE_WCHAR_T
-#define WCHAR     wchar_t
-#else
 #define WCHAR     unsigned short
-#endif
 
 #ifdef UNICODE
 
-#define _T(x)     L##x
-#define TCHAR     char
-
-#define _tcscpy   wcscpy
-#define _tcsncpy  wcsncpy
-#define _tcslen   wcslen
-#define _tcschr   wcschr
-#define _tcsrchr  wcsrchr
-#define _tcscmp   wcscmp
-#define _tcsicmp  wcsicmp
-#define _tprintf  wprintf
-#define _stprintf swprintf
-#define _vtprintf vwprintf
-#define _tfopen   fopen
-#define _fgetts   fgetws
-#define _tcstol   wcstol
-#define _tcstoul  wcstoul
-#define _tcstod   wcstod
-#define _tcsdup   wcsdup
-#define _tcsupr   wcsupr
-#define _tcsspn   wcsspn
+#error UNICODE is not supported on non-Windows platforms
 
 #else
 
@@ -90,7 +62,9 @@
 #define _tcsicmp  stricmp
 #define _tprintf  printf
 #define _stprintf sprintf
+#define _sntprintf snprintf
 #define _vtprintf vprintf
+#define _vsntprintf vsnprintf
 #define _tfopen   fopen
 #define _fgetts   fgets
 #define _tcstol   strtol
