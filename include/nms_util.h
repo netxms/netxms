@@ -134,7 +134,9 @@ public:
 extern "C"
 {
    QWORD EXPORTABLE __bswap_64(QWORD qwVal);
+   
    int EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
+   CSCP_MESSAGE EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
    
    int EXPORTABLE BitsInMask(DWORD dwMask);
    char EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
