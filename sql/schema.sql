@@ -132,19 +132,6 @@ CREATE TABLE Items
 
 
 --
--- Collected data
---
-
-create table IDATA
-(
-	item_id integer not null,
-	timestamp integer,
-	val_integer integer,
-	val_string varchar(255)
-);
-
-
---
 -- Events configuration
 --
 

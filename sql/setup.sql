@@ -10,6 +10,8 @@ INSERT INTO config (name,value) VALUES ('ConfigurationPollingInterval','3600');
 INSERT INTO config (name,value) VALUES ('ResolveNodeNames','0');
 INSERT INTO config (name,value) VALUES ('NumberOfEventProcessors','1');
 INSERT INTO config (name,value) VALUES ('ClientListenerPort','4701');
+INSERT INTO config (name,value) VALUES ('NumberOfDataCollectors','10');
+INSERT INTO config (name,value) VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,timestamp integer,value varchar(255))');
 
 
 --
