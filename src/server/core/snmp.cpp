@@ -87,6 +87,7 @@ DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags)
          return m_pOidTable[i].dwNodeType;
       }
 
+   *pdwFlags = 0;
    return NODE_TYPE_GENERIC;
 }
 

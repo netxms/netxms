@@ -351,7 +351,10 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
       if (m_dwFlags & NF_IS_LOCAL_MGMT)    // For local machine
          pIfList = GetLocalInterfaceList();
       else if (m_dwFlags & NF_IS_NATIVE_AGENT)    // For others prefer native agent
+      {
          pIfList = pAgentConn->GetInterfaceList();
+         CleanInterfaceList(pIfList);
+      }
       if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
          pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString, m_dwNodeType);
 
@@ -433,8 +436,8 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
       AgentLock();
       if (ConnectToAgent())
       {
-         CleanInterfaceList(pIfList);
          pIfList = m_pAgentConnection->GetInterfaceList();
+         CleanInterfaceList(pIfList);
       }
       AgentUnlock();
    }
