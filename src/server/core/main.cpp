@@ -470,8 +470,18 @@ static BOOL ProcessCommand(char *pszCmdLine)
 void OnSignal(int iSignal)
 {
    WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
-   if (!IsStandalone())
-      ConditionSet(m_hEventShutdown);
+   switch(iSignal)
+   {
+      case SIGTERM:
+         if (!IsStandalone())
+            ConditionSet(m_hEventShutdown);
+         break;
+      case SIGSEGV:
+         exit(5);
+         break;
+      default:
+         break;
+   }
 }
 
 #endif
