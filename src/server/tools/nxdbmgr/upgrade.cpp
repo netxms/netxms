@@ -24,6 +24,25 @@
 
 
 //
+// Create table
+//
+
+static BOOL CreateTable(TCHAR *pszQuery)
+{
+   TCHAR *pszBuffer;
+   BOOL bResult;
+
+   pszBuffer = (TCHAR *)malloc(_tcslen(pszQuery) * sizeof(TCHAR) + 256);
+   _tcscpy(pszBuffer, pszQuery);
+   if (g_iSyntax == DB_SYNTAX_MYSQL)
+      _tcscat(pszBuffer, _T(" type=InnoDB"));
+   bResult = SQLQuery(pszBuffer);
+   free(pszBuffer);
+   return bResult;
+}
+
+
+//
 // Create configuration parameter if it doesn't exist
 //
 
@@ -62,10 +81,21 @@ static BOOL H_UpgradeFromV18(void)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes ADD platform_name varchar(63)\n"
-      "UPADTE nodes SET platform_name=''\n"
+      "UPDATE nodes SET platform_name=''\n"
       "<END>";
 
    if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE agent_pkg ("
+	                       "pkg_id integer not null,"
+	                       "pkg_name varchar(63),"
+	                       "version varchar(31),"
+	                       "platform varchar(63),"
+	                       "pkg_file varchar(255),"
+	                       "description varchar(255),"
+	                       "PRIMARY KEY(pkg_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -398,6 +428,7 @@ static struct
    { 15, H_UpgradeFromV15 },
    { 16, H_UpgradeFromV16 },
    { 17, H_UpgradeFromV17 },
+   { 18, H_UpgradeFromV18 },
    { 0, NULL }
 };
 
