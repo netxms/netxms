@@ -42,8 +42,6 @@ IMPLEMENT_DYNCREATE(CEventPolicyEditor, CMDIChildWnd)
 CEventPolicyEditor::CEventPolicyEditor()
 {
    m_pEventPolicy = theApp.m_pEventPolicy;
-   m_iCurrRow = -1;
-   m_iCurrCol = -1;
 }
 
 CEventPolicyEditor::~CEventPolicyEditor()
@@ -65,6 +63,12 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_COMMAND(ID_POLICY_INSERTRULE_BELOW, OnPolicyInsertruleBelow)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_INSERTRULE_BELOW, OnUpdatePolicyInsertruleBelow)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_INSERTRULE_ABOVE, OnUpdatePolicyInsertruleAbove)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_NEGATECELL, OnUpdatePolicyNegatecell)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_DISABLERULE, OnUpdatePolicyDisablerule)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_DELETERULE, OnUpdatePolicyDeleterule)
+	ON_COMMAND(ID_POLICY_DISABLERULE, OnPolicyDisablerule)
+	ON_COMMAND(ID_POLICY_ENABLERULE, OnPolicyEnablerule)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_ENABLERULE, OnUpdatePolicyEnablerule)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -169,8 +173,6 @@ void CEventPolicyEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 {
    CMenu *pMenu;
 
-   m_iCurrRow = m_wndRuleList.RowFromPoint(point.x, point.y);
-   m_iCurrCol = m_wndRuleList.ColumnFromPoint(point.x, point.y);
    pMenu = theApp.GetContextMenu(3);
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }
@@ -293,7 +295,7 @@ void CEventPolicyEditor::OnPolicyInsertruleBottom()
 
 void CEventPolicyEditor::OnPolicyInsertruleAbove() 
 {
-   InsertNewRule(m_iCurrRow);
+   InsertNewRule(m_wndRuleList.GetCurrentRow());
 }
 
 
@@ -303,7 +305,48 @@ void CEventPolicyEditor::OnPolicyInsertruleAbove()
 
 void CEventPolicyEditor::OnPolicyInsertruleBelow() 
 {
-   InsertNewRule(m_iCurrRow + 1);
+   InsertNewRule(m_wndRuleList.GetCurrentRow() + 1);
+}
+
+
+//
+// Enable or disable selected rows
+//
+
+void CEventPolicyEditor::EnableSelectedRows(BOOL bEnable)
+{
+   int iRow;
+
+   iRow = m_wndRuleList.GetNextRow(-1, RLF_SELECTED);
+   while(iRow != -1)
+   {
+      if (bEnable)
+         m_pEventPolicy->pRuleList[iRow].dwFlags &= ~RF_DISABLED;
+      else
+         m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_DISABLED;
+      m_wndRuleList.EnableRow(iRow, bEnable);
+      iRow = m_wndRuleList.GetNextRow(iRow, RLF_SELECTED);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_POLICY_DISABLERULE message handler
+//
+
+void CEventPolicyEditor::OnPolicyDisablerule() 
+{
+   EnableSelectedRows(FALSE);
+}
+
+
+//
+// WM_COMMAND::ID_POLICY_ENABLERULE message handler
+//
+
+void CEventPolicyEditor::OnPolicyEnablerule() 
+{
+   EnableSelectedRows(TRUE);
 }
 
 
@@ -313,10 +356,34 @@ void CEventPolicyEditor::OnPolicyInsertruleBelow()
 
 void CEventPolicyEditor::OnUpdatePolicyInsertruleBelow(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable((m_iCurrRow != -1) && (m_iCurrCol != -1));
+   pCmdUI->Enable(m_wndRuleList.GetCurrentRow() != -1);
 }
 
 void CEventPolicyEditor::OnUpdatePolicyInsertruleAbove(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable((m_iCurrRow != -1) && (m_iCurrCol != -1));
+   pCmdUI->Enable(m_wndRuleList.GetCurrentRow() != -1);
+}
+
+void CEventPolicyEditor::OnUpdatePolicyNegatecell(CCmdUI* pCmdUI) 
+{
+   int iColumn;
+
+   // Negation available only for source, event and severity columns
+   iColumn = m_wndRuleList.GetCurrentColumn();
+   pCmdUI->Enable((iColumn >= 1) && (iColumn <= 3));
+}
+
+void CEventPolicyEditor::OnUpdatePolicyDisablerule(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndRuleList.GetCurrentRow() != -1);
+}
+
+void CEventPolicyEditor::OnUpdatePolicyDeleterule(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndRuleList.GetCurrentRow() != -1);
+}
+
+void CEventPolicyEditor::OnUpdatePolicyEnablerule(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndRuleList.GetCurrentRow() != -1);
 }

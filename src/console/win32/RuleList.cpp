@@ -159,12 +159,18 @@ CRuleList::CRuleList()
    m_iXOrg = 0;
    m_iYOrg = 0;
 
+   m_iCurrRow = -1;
+   m_iCurrColumn = -1;
+   m_iCurrItem = -1;
+
    // Default colors
    m_rgbActiveBkColor = RGB(255, 255, 255);
    m_rgbNormalBkColor = RGB(206, 206, 206);
    m_rgbTextColor = RGB(0, 0, 0);
    m_rgbTitleBkColor = RGB(0, 115, 230);
    m_rgbTitleTextColor = RGB(255, 255, 255);
+   m_rgbCrossColor = RGB(255, 0, 0);
+   m_rgbDisabledBkColor = RGB(90, 120, 90);
 }
 
 CRuleList::~CRuleList()
@@ -261,14 +267,17 @@ void CRuleList::OnPaint()
    RECT rect, rcClient, rcText;
    int i, j, iLine;
    CFont *pOldFont;
-   CBrush brTitle, brActive, brNormal, *pOldBrush;
+   CBrush brTitle, brActive, brNormal, brDisabled, *pOldBrush;
+   CPen pen, *pOldPen;
 
 	CPaintDC dc(this); // device context for painting
 
-   // Create brushes
+   // Create brushes and pens
    brTitle.CreateSolidBrush(m_rgbTitleBkColor);
    brActive.CreateSolidBrush(m_rgbActiveBkColor);
    brNormal.CreateSolidBrush(m_rgbNormalBkColor);
+   brDisabled.CreateSolidBrush(m_rgbDisabledBkColor);
+   pen.CreatePen(PS_SOLID, 2, m_rgbCrossColor);
 
    // Setup DC
    dc.SetWindowOrg(m_iXOrg, m_iYOrg);
@@ -290,7 +299,9 @@ void CRuleList::OnPaint()
          rect.left = rect.right;
          rect.right += m_pColList[j].m_iWidth;
          dc.SelectObject((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? &brTitle : 
-                           ((m_ppRowList[i]->m_dwFlags & RLF_SELECTED) ? &brActive : &brNormal));
+                           ((m_ppRowList[i]->m_dwFlags & RLF_SELECTED) ? &brActive : 
+                              ((m_ppRowList[i]->m_dwFlags & RLF_DISABLED) ? &brDisabled : 
+                                 &brNormal)));
          dc.Rectangle(&rect);
          dc.Draw3dRect(&rect, RGB(128, 128, 128), RGB(255, 255, 255));
 
@@ -302,9 +313,12 @@ void CRuleList::OnPaint()
          if (m_ppRowList[i]->m_ppCellList[j]->m_bHasImages)
             rcText.left += ITEM_IMAGE_SIZE;
          rcText.right -= CELL_TEXT_X_MARGIN;
-         dc.SetTextColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleTextColor : m_rgbTextColor);
+         dc.SetTextColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleTextColor : 
+                           m_rgbTextColor);
          dc.SetBkColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleBkColor :
-                         ((m_ppRowList[i]->m_dwFlags & RLF_SELECTED) ? m_rgbActiveBkColor : m_rgbNormalBkColor));
+                         ((m_ppRowList[i]->m_dwFlags & RLF_SELECTED) ? m_rgbActiveBkColor : 
+                            ((m_ppRowList[i]->m_dwFlags & RLF_DISABLED) ? m_rgbDisabledBkColor : 
+                               m_rgbNormalBkColor)));
 
          // Walk through cell's items
          for(iLine = 0; iLine < m_ppRowList[i]->m_ppCellList[j]->m_iNumLines; iLine++)
@@ -318,6 +332,17 @@ void CRuleList::OnPaint()
                                     (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
             rcText.top = rcText.bottom + CELL_TEXT_Y_SPACING;
             rcText.bottom = rcText.top + m_iTextHeight;
+         }
+
+         if ((m_ppRowList[i]->m_dwFlags & RLF_DISABLED) && 
+             (m_pColList[j].m_dwFlags & CF_TITLE_COLOR))
+         {
+            pOldPen = dc.SelectObject(&pen);
+            dc.MoveTo(rect.left + 2, rect.top + 2);
+            dc.LineTo(rect.right - 2, rect.bottom - 2);
+            dc.MoveTo(rect.right - 2, rect.top + 2);
+            dc.LineTo(rect.left + 2, rect.bottom - 2);
+            dc.SelectObject(pOldPen);
          }
       }
    }
@@ -810,16 +835,15 @@ BOOL CRuleList::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 void CRuleList::OnRButtonDown(UINT nFlags, CPoint point) 
 {
-   int iRow;
-
-   iRow = RowFromPoint(point.x, point.y);
-   if (iRow != -1)
+   m_iCurrRow = RowFromPoint(point.x, point.y);
+   m_iCurrColumn = ColumnFromPoint(point.x, point.y);
+   if (m_iCurrRow != -1)
    {
-      if (!(m_ppRowList[iRow]->m_dwFlags & RLF_SELECTED))
+      if (!(m_ppRowList[m_iCurrRow]->m_dwFlags & RLF_SELECTED))
       {
          // Right click on non-selected row
          ClearSelection(FALSE);
-         m_ppRowList[iRow]->m_dwFlags |= RLF_SELECTED;
+         m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
          InvalidateRect(NULL, FALSE);
       }
    }
@@ -833,14 +857,13 @@ void CRuleList::OnRButtonDown(UINT nFlags, CPoint point)
 
 void CRuleList::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-   int iRow;
-
-   iRow = RowFromPoint(point.x, point.y);
-   if (iRow != -1)
+   m_iCurrRow = RowFromPoint(point.x, point.y);
+   m_iCurrColumn = -1;
+   if (m_iCurrRow != -1)
    {
       if (nFlags & MK_CONTROL)
       {
-         m_ppRowList[iRow]->m_dwFlags |= RLF_SELECTED;
+         m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
       }
       else if (nFlags & MK_SHIFT)
       {
@@ -848,7 +871,7 @@ void CRuleList::OnLButtonDown(UINT nFlags, CPoint point)
       else
       {
          ClearSelection(FALSE);
-         m_ppRowList[iRow]->m_dwFlags |= RLF_SELECTED;
+         m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
       }
       InvalidateRect(NULL, FALSE);
    }
@@ -856,4 +879,34 @@ void CRuleList::OnLButtonDown(UINT nFlags, CPoint point)
    {
       ClearSelection();
    }
+}
+
+
+//
+// Get next row with matched flags
+//
+
+int CRuleList::GetNextRow(int iStartAfter, DWORD dwFlags)
+{
+   int i;
+
+   for(i = iStartAfter + 1; i < m_iNumRows; i++)
+      if ((m_ppRowList[i]->m_dwFlags & dwFlags) == dwFlags)
+         return i;
+   return -1;
+}
+
+
+//
+// Enable or disable row
+//
+
+void CRuleList::EnableRow(int iRow, BOOL bEnable)
+{
+   if ((iRow >= 0) && (iRow < m_iNumRows))
+      if (bEnable)
+         m_ppRowList[iRow]->m_dwFlags &= ~RLF_DISABLED;
+      else
+         m_ppRowList[iRow]->m_dwFlags |= RLF_DISABLED;
+   InvalidateRect(NULL, FALSE);
 }

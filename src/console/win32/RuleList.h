@@ -124,6 +124,11 @@ protected:
    afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	COLORREF m_rgbDisabledBkColor;
+	COLORREF m_rgbCrossColor;
+	int m_iCurrItem;
+	int m_iCurrColumn;
+	int m_iCurrRow;
 	CImageList *m_pImageList;
 	int m_iYOrg;
 	int m_iXOrg;
@@ -149,10 +154,14 @@ private:
    RL_Row **m_ppRowList;
 
 public:
+	void EnableRow(int iRow, BOOL bEnable = TRUE);
+	int GetNextRow(int iStartAfter, DWORD dwFlags);
 	int ColumnFromPoint(int x, int y);
 	void ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int iImage = -1);
 	void SetImageList(CImageList *pImageList) { m_pImageList = pImageList; }
    int GetNumRows(void) { return m_iNumRows; }
+   int GetCurrentRow(void) { return m_iCurrRow; }
+   int GetCurrentColumn(void) { return m_iCurrColumn; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

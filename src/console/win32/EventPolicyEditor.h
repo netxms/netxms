@@ -32,6 +32,7 @@ public:
 
 // Implementation
 protected:
+	void EnableSelectedRows(BOOL bEnable);
 	void UpdateRow(int iRow);
 	void InsertNewRule(int iInsertBefore);
 	CRuleList m_wndRuleList;
@@ -51,11 +52,15 @@ protected:
 	afx_msg void OnPolicyInsertruleBelow();
 	afx_msg void OnUpdatePolicyInsertruleBelow(CCmdUI* pCmdUI);
 	afx_msg void OnUpdatePolicyInsertruleAbove(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePolicyNegatecell(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePolicyDisablerule(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePolicyDeleterule(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyDisablerule();
+	afx_msg void OnPolicyEnablerule();
+	afx_msg void OnUpdatePolicyEnablerule(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
-	int m_iCurrCol;
-	int m_iCurrRow;
 	NXC_EPP *m_pEventPolicy;
 };
 

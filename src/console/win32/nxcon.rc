@@ -94,6 +94,7 @@ IDB_LOGIN               BITMAP  DISCARDABLE     "res\\login.bmp"
 IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 IDB_PSYM_ANY            BITMAP  DISCARDABLE     "res\\psym_any.bmp"
+IDB_PSYM_MINOR          BITMAP  DISCARDABLE     "res\\psym_minor.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -268,6 +269,11 @@ BEGIN
     END
     POPUP "Policy"
     BEGIN
+        MENUITEM "&Add...",                     ID_POLICY_ADD
+        MENUITEM "&Delete",                     ID_POLICY_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Negate cell",                ID_POLICY_NEGATECELL
+        MENUITEM SEPARATOR
         POPUP "&Insert rule"
         BEGIN
             MENUITEM "&Above",                      ID_POLICY_INSERTRULE_ABOVE
@@ -279,11 +285,10 @@ BEGIN
             MENUITEM "&Bottom",                     ID_POLICY_INSERTRULE_BOTTOM
 
         END
+        MENUITEM "&Delete rule",                ID_POLICY_DELETERULE
         MENUITEM SEPARATOR
-        MENUITEM "&Add...",                     ID_POLICY_ADD
-        MENUITEM "&Delete",                     ID_POLICY_DELETE
-        MENUITEM SEPARATOR
-        MENUITEM "&Negate cell",                ID_POLICY_NEGATECELL
+        MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
+        MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
     END
 END
 
