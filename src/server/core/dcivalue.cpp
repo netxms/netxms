@@ -35,6 +35,7 @@ ItemValue::ItemValue()
    m_dwInt32 = 0;
    m_qwInt64 = 0;
    m_dFloat = 0;
+   m_dwTimeStamp = time(NULL);
 }
 
 
@@ -42,7 +43,7 @@ ItemValue::ItemValue()
 // Construct value object from string value
 //
 
-ItemValue::ItemValue(const TCHAR *pszValue)
+ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
 {
    strncpy(m_szString, pszValue, MAX_DB_STRING);
    m_iInt32 = strtol(m_szString, NULL, 0);
@@ -50,6 +51,11 @@ ItemValue::ItemValue(const TCHAR *pszValue)
    m_dwInt32 = strtoul(m_szString, NULL, 0);
    m_qwInt64 = strtoull(m_szString, NULL, 0);
    m_dFloat = strtod(m_szString, NULL);
+
+   if (dwTimeStamp == 0)
+      m_dwTimeStamp = time(NULL);
+   else
+      m_dwTimeStamp = dwTimeStamp;
 }
 
 
@@ -65,6 +71,7 @@ ItemValue::ItemValue(const ItemValue *pValue)
    m_dwInt32 = pValue->m_dwInt32;
    m_qwInt64 = pValue->m_qwInt64;
    m_dFloat = pValue->m_dFloat;
+   m_dwTimeStamp = pValue->m_dwTimeStamp;
 }
 
 

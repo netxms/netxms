@@ -75,6 +75,62 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V23 to V24
+//
+
+static BOOL H_UpgradeFromV23(void)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   int i, iNumRows;
+
+   if (!CreateTable(_T("CREATE TABLE raw_dci_values ("
+                       "	item_id integer not null,"
+	                    "   raw_value varchar(255),"
+	                    "   last_poll_time integer,"
+	                    "   PRIMARY KEY(item_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("CREATE INDEX idx_item_id ON raw_dci_values(item_id)")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+
+   // Create empty records in raw_dci_values for all existing DCIs
+   hResult = SQLSelect(_T("SELECT item_id FROM items"));
+   if (hResult != NULL)
+   {
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         _stprintf(szQuery, _T("INSERT INTO raw_dci_values (item_id,"
+                               "raw_value,last_poll_time) VALUES (%ld,'#00',1)"),
+                   DBGetFieldULong(hResult, i, 0));
+         if (!SQLQuery(szQuery))
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='24' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V22 to V23
 //
 
@@ -695,6 +751,7 @@ static struct
    { 20, H_UpgradeFromV20 },
    { 21, H_UpgradeFromV21 },
    { 22, H_UpgradeFromV22 },
+   { 23, H_UpgradeFromV23 },
    { 0, NULL }
 };
 

@@ -55,12 +55,16 @@ private:
    DWORD m_dwInt32;
    QWORD m_qwInt64;
    TCHAR m_szString[MAX_DB_STRING];
+   DWORD m_dwTimeStamp;
 
 public:
    ItemValue();
-   ItemValue(const TCHAR *pszValue);
+   ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp);
    ItemValue(const ItemValue *pValue);
    ~ItemValue();
+
+   void SetTimeStamp(DWORD dwTime) { m_dwTimeStamp = dwTime; }
+   DWORD GetTimeStamp(void) { return m_dwTimeStamp; }
 
    const TCHAR *String(void) { return m_szString; }
 
@@ -159,6 +163,7 @@ private:
    DWORD m_dwCacheSize;       // Number of items in cache
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;  // Previous raw value (used for delta calculation)
+   time_t m_tPrevValueTimeStamp;
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }

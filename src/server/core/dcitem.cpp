@@ -50,6 +50,7 @@ DCItem::DCItem()
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
+   m_tPrevValueTimeStamp = 0;
 }
 
 
@@ -80,6 +81,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
+   m_tPrevValueTimeStamp = 0;
 
    // Copy thresholds
    m_dwNumThresholds = pSrc->m_dwNumThresholds;
@@ -102,6 +104,9 @@ DCItem::DCItem(const DCItem *pSrc)
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 {
+   char szQuery[256];
+   DB_RESULT hRawResult;
+
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
    DecodeSQLString(m_szName);
@@ -127,6 +132,21 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
+   m_tPrevValueTimeStamp = 0;
+
+   // Load last raw value from database
+   sprintf(szQuery, "SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%ld", m_dwId);
+   hRawResult = DBSelect(g_hCoreDB, szQuery);
+   if (hRawResult != NULL)
+   {
+      if (DBGetNumRows(hRawResult) > 0)
+      {
+         m_prevRawValue = DBGetField(hRawResult, 0, 0);
+         m_tPrevValueTimeStamp = DBGetFieldULong(hRawResult, 0, 1);
+         m_tLastPoll = m_tPrevValueTimeStamp;
+      }
+      DBFreeResult(hRawResult);
+   }
 }
 
 
@@ -162,6 +182,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
+   m_tPrevValueTimeStamp = 0;
 
    UpdateCacheSize();
 }
@@ -264,8 +285,9 @@ BOOL DCItem::SaveToDB(void)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation,instance,template_item_id) VALUES (%ld,%ld,%ld,'%s',"
-                       "'%s',%d,%d,%ld,%ld,%d,%d,'%s','%s',%ld)",
+                       "transformation,instance,template_item_id)"
+                       " VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,"
+                       "%d,'%s','%s',%ld)",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
@@ -314,6 +336,25 @@ BOOL DCItem::SaveToDB(void)
             sprintf(szQuery, "DELETE FROM thresholds WHERE threshold_id=%ld", dwId);
             DBQuery(g_hCoreDB, szQuery);
          }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Create record in raw_dci_values if needed
+   sprintf(szQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%ld", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      if (DBGetNumRows(hResult) == 0)
+      {
+         char *pszEscValue;
+
+         pszEscValue = EncodeSQLString(m_prevRawValue.String());
+         sprintf(szQuery, "INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time)"
+                          " VALUES (%ld,'%s',%ld)",
+                 m_dwId, pszEscValue, m_tPrevValueTimeStamp);
+         free(pszEscValue);
+         DBQuery(g_hCoreDB, szQuery);
       }
       DBFreeResult(hResult);
    }
@@ -496,7 +537,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 
 void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 {
-   char szQuery[MAX_LINE_SIZE + 128];
+   char *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
 
    Lock();
@@ -509,18 +550,27 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
       return;
    }
 
+   // Save raw value into database
+   pszEscValue = EncodeSQLString(pszOriginalValue);
+   sprintf(szQuery, "UPDATE raw_dci_values SET raw_value='%s',last_poll_time=%ld WHERE item_id=%ld",
+           pszEscValue, dwTimeStamp, m_dwId);
+   free(pszEscValue);
+   QueueSQLRequest(szQuery);
+
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(pszOriginalValue);
-   if (m_tLastPoll == 0)
+   pValue = new ItemValue(pszOriginalValue, dwTimeStamp);
+   if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
-   Transform(*pValue, (long)(dwTimeStamp - m_tLastPoll));
+   Transform(*pValue, (long)(dwTimeStamp - m_tPrevValueTimeStamp));
    m_prevRawValue = rawValue;
+   m_tPrevValueTimeStamp = dwTimeStamp;
 
    // Save transformed value to database
+   pszEscValue = EncodeSQLString(pValue->String());
    sprintf(szQuery, "INSERT INTO idata_%ld (item_id,idata_timestamp,idata_value)"
-                    " VALUES (%ld,%ld,'%s')", m_pNode->Id(), m_dwId, dwTimeStamp, 
-           pValue->String());
+                    " VALUES (%ld,%ld,'%s')", m_pNode->Id(), m_dwId, dwTimeStamp, pszEscValue);
+   free(pszEscValue);
    QueueSQLRequest(szQuery);
 
    // Check thresholds and add value to cache
@@ -695,18 +745,18 @@ void DCItem::UpdateCacheSize(void)
          switch(g_dwDBSyntax)
          {
             case DB_SYNTAX_MSSQL:
-               sprintf(szBuffer, "SELECT TOP %ld idata_value FROM idata_%ld "
+               sprintf(szBuffer, "SELECT TOP %ld idata_value,idata_timestamp FROM idata_%ld "
                                  "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
-                       m_dwCacheSize, m_pNode->Id(), m_dwId);
+                       dwRequiredSize, m_pNode->Id(), m_dwId);
                break;
             case DB_SYNTAX_MYSQL:
             case DB_SYNTAX_PGSQL:
-               sprintf(szBuffer, "SELECT idata_value FROM idata_%ld "
+               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
                                  "WHERE item_id=%ld ORDER BY idata_timestamp DESC LIMIT %ld",
-                       m_pNode->Id(), m_dwId, m_dwCacheSize);
+                       m_pNode->Id(), m_dwId, dwRequiredSize);
                break;
             default:
-               sprintf(szBuffer, "SELECT idata_value FROM idata_%ld "
+               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
                                  "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
                        m_pNode->Id(), m_dwId);
                break;
@@ -724,17 +774,20 @@ void DCItem::UpdateCacheSize(void)
                bHasData = DBFetch(hResult);
                if (bHasData)
                {
-                  m_ppValueCache[i] = new ItemValue(DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING));
+                  DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
+                  DecodeSQLString(szBuffer);
+                  m_ppValueCache[i] = 
+                     new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
                }
                else
                {
-                  m_ppValueCache[i] = new ItemValue(_T(""));   // Empty value
+                  m_ppValueCache[i] = new ItemValue(_T(""), 1);   // Empty value
                }
             }
 
             // Fill up cache with empty values if we don't have enough values in database
             for(; i < dwRequiredSize; i++)
-               m_ppValueCache[i] = new ItemValue(_T(""));
+               m_ppValueCache[i] = new ItemValue(_T(""), 1);
 
             DBFreeAsyncResult(hResult);
          }
@@ -742,7 +795,7 @@ void DCItem::UpdateCacheSize(void)
          {
             // Error reading data from database, fill cache with empty values
             for(i = m_dwCacheSize; i < dwRequiredSize; i++)
-               m_ppValueCache[i] = new ItemValue(_T(""));
+               m_ppValueCache[i] = new ItemValue(_T(""), 1);
          }
       }
       m_dwCacheSize = dwRequiredSize;
@@ -763,7 +816,7 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
    {
       pMsg->SetVariable(dwId++, (WORD)m_iDataType);
       pMsg->SetVariable(dwId++, (TCHAR *)m_ppValueCache[0]->String());
-      pMsg->SetVariable(dwId++, (DWORD)m_tLastPoll);
+      pMsg->SetVariable(dwId++, m_ppValueCache[0]->GetTimeStamp());
    }
    else
    {
@@ -829,5 +882,7 @@ void DCItem::PrepareForReplacement(DCItem *pItem, int iStatus)
    m_ppValueCache = pItem->m_ppValueCache;
    pItem->m_ppValueCache = NULL;
    pItem->m_dwCacheSize = 0;
+   m_prevRawValue = pItem->m_prevRawValue;
+   m_tPrevValueTimeStamp = pItem->m_tPrevValueTimeStamp;
    m_iStatus = iStatus;
 }

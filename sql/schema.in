@@ -318,6 +318,21 @@ CREATE TABLE items
 
 
 /*
+** Latest raw values for all data collection items
+*/
+
+CREATE TABLE raw_dci_values
+(
+	item_id integer not null,
+	raw_value varchar(255),
+	last_poll_time integer,
+	PRIMARY KEY(item_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_item_id ON raw_dci_values(item_id);
+
+
+/*
 ** Events configuration
 */
 

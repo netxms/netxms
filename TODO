@@ -12,7 +12,6 @@ GENERAL:
 - Cross-platform pinger subagent
 - Write README for NetWare
 - Add check for read/write locks support to configure script
-- Allow converting counters to deltas in data collection
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
 - Optimize WaitForMessage method in message waiting queue class
@@ -30,8 +29,6 @@ SERVER:
 - Remove system-dependent code for getting interface list and ARP cache
   from management server. Server should rely on SNMP or native agent for
   this functionality.
-- Check what happens if DCI copied while being polled
-- On startup, server must read last poll time from database for each DCI
 - Optimize SNMP subsystem
 - Add special handling for HP iLO boards
 - Housekeeping for DCI

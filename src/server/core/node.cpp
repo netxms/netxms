@@ -1102,6 +1102,8 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
 
 end_loop:
    AgentUnlock();
+   DbgPrintf(AF_DEBUG_DC, "Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d",
+             m_szName, szParam, dwError, dwResult);
    return dwResult;
 }
 

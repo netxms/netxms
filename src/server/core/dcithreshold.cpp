@@ -401,16 +401,20 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 { \
    vtype var; \
    var = (vtype)lastValue; \
-   for(i = 1; i < m_iParam1; i++) \
+   for(i = 1, nValueCount = 1; i < m_iParam1; i++) \
    { \
-      var += (vtype)(*ppPrevValues[i - 1]); \
+      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      { \
+         var += (vtype)(*ppPrevValues[i - 1]); \
+         nValueCount++; \
+      } \
    } \
-   *pResult = var / (vtype)m_iParam1; \
+   *pResult = var / (vtype)nValueCount; \
 }
 
 void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
-   int i;
+   int i, nValueCount;
 
    switch(m_iDataType)
    {
