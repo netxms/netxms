@@ -392,9 +392,12 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
    pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
+   pMsg->SetVariable(VID_CHILD_CNT, m_dwChildCount);
    pMsg->SetVariable(VID_IS_DELETED, (WORD)m_bIsDeleted);
    for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pParentList[i]->Id());
+   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
+      pMsg->SetVariable(dwId, m_pChildList[i]->Id());
 }
 
 
