@@ -16,7 +16,9 @@ src/server/core/main.cpp -text
 src/server/core/messages.mc -text
 src/server/core/nms_core.h -text
 src/server/core/nms_objects.h -text
+src/server/core/objects.cpp -text
 src/server/core/resource.h -text
+src/server/core/syncer.cpp -text
 src/server/core/tools.cpp -text
 src/server/core/winsrv.cpp -text
 src/server/dbdrv/mysql/mysql.cpp -text
