@@ -135,7 +135,9 @@ public:
 
 extern "C"
 {
+#ifdef _WIN32
    QWORD EXPORTABLE __bswap_64(QWORD qwVal);
+#endif
    
    int EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
    CSCP_MESSAGE EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);

@@ -110,11 +110,15 @@ inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 // Related datatypes and constants
 //
 
-typedef MUTEX * pthread_mutex_t;
-#define THREAD HANDLE
+typedef pthread_t THREAD;
+typedef pthread_mutex_t * MUTEX;
+typedef pthread_cond_t * CONDITION;
 
 #define INVALID_MUTEX_HANDLE  NULL
 
+#ifndef INFINITE
+# define INFINITE 0
+#endif
 
 //
 // Inline functions
@@ -130,6 +134,22 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
    usleep(dwMilliseconds * 1000);   // Convert to microseconds
 }
 
+inline THREAD ThreadCreate(void * (*start_address )(void *), int stack_size, void *args)
+{
+	THREAD id;
+
+	if (pthread_create(&id, NULL, start_address, args) == 0) {
+		return id;
+	} else {
+		return 0;
+	}
+}
+
+inline void ThreadExit(void)
+{
+   pthread_kill(pthread_self(), 15); // 9?
+}
+
 inline MUTEX MutexCreate(void)
 {
    MUTEX mutex;
@@ -142,8 +162,7 @@ inline MUTEX MutexCreate(void)
 
 inline void MutexDestroy(MUTEX mutex)
 {
-   if (mutex != NULL)
-   {
+   if (mutex != NULL) {
       pthread_mutex_destroy(mutex);
       free(mutex);
    }
@@ -151,12 +170,68 @@ inline void MutexDestroy(MUTEX mutex)
 
 inline void MutexLock(MUTEX mutex, DWORD dwTimeOut)
 {
+   if (mutex != NULL) {
+      pthread_mutex_lock(mutex);
+	}
 }
 
 inline void MutexUnlock(MUTEX mutex)
 {
-   if (mutex != NULL)
+   if (mutex != NULL) {
       pthread_mutex_unlock(mutex);
+	}
+}
+
+inline CONDITION ConditionCreate(void)
+{
+	CONDITION cond;
+
+	abort(); // trap
+
+   cond = (CONDITION)malloc(sizeof(pthread_cond_t));
+   if (cond != NULL) {
+      pthread_cond_init(cond, NULL);
+	}
+   return cond;
+}
+
+inline void ConditionDestroy(CONDITION hCond)
+{
+	abort(); // trap
+
+	if (hCond != NULL) {
+		pthread_cond_destroy(hCond);
+		free(hCond);
+	}
+}
+
+inline void ConditionSet(CONDITION hCond)
+{
+	abort(); // trap
+}
+
+inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
+{
+	abort(); // trap
+
+	if (hCond != NULL) {
+/*		struct timeval now;
+		struct timespec timeout;
+		
+		pthread_mutex_lock(&hMutex);
+		gettimeofday(&now);
+		timeout.tv_sec = now.tv_sec + dwTimeOut; // TODO: dwTimeOut - in seconds?
+		timeout.tv_nsec = now.tv_usec * 1000;
+		retcode = 0;
+		while (retcode != ETIMEDOUT) {
+			retcode = pthread_cond_timedwait(hCond, &hMutex, &timeout);
+		}
+		pthread_mutex_unlock(&hMutex);*/
+
+		return FALSE;
+	} else {
+		return FALSE;
+	}
 }
 
 #endif   /* _WIN32 */

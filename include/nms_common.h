@@ -62,6 +62,10 @@ typedef unsigned __int64 QWORD;
 
 #else
 
+
+#include <sys/types.h>
+#include <netinet/in.h>
+
 typedef int BOOL;
 typedef long int LONG;
 typedef unsigned long DWORD;
@@ -69,17 +73,21 @@ typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
 typedef void * HMODULE;
+typedef int64_t __int64;
+typedef int64_t INT64;
+typedef u_int64_t QWORD;
+
 
 #define TRUE   1
 #define FALSE  0
 
 #define EXPORTABLE
 
-#include <netinet/in.h>
-
 #ifndef MAX_PATH
 #define MAX_PATH 256
 #endif
+
+typedef int SOCKET;
 
 #endif
 
@@ -178,5 +186,10 @@ typedef struct tagICMPHDR
 #define hex2bin(x) ((((x) >= '0') && ((x) <= '9')) ? ((x) - '0') : \
                     (((toupper(x) >= 'A') && (toupper(x) <= 'F')) ? (toupper(x) - 'A' + 10) : 0))
 
+
+// choice minimal value
+#ifndef min
+# define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
 #endif   /* _nms_common_h_ */
