@@ -10,6 +10,7 @@
 
 #!/bin/sh
 rm -f config.cache &&
+[ ! -f config/ltmain.sh ] && libtoolize
 echo "- aclocal." &&
 aclocal-1.7 -I m4 &&
 echo "- autoconf." &&
