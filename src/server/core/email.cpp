@@ -202,7 +202,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
-                     sprintf(szBuffer, "Subject: <%s>\r\n", pszSubject);
+                     sprintf(szBuffer, "Subject: <%s>\r\n\r\n", pszSubject);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
 
                      // Mail body
