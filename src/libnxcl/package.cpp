@@ -95,6 +95,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
             {
                *ppList = (NXC_PACKAGE_INFO *)realloc(*ppList, sizeof(NXC_PACKAGE_INFO) * (*pdwNumPackages + 1));
                (*ppList)[*pdwNumPackages].dwId = dwPkgId;
+               pResponce->GetVariableStr(VID_PACKAGE_NAME, 
+                                         (*ppList)[*pdwNumPackages].szName, 
+                                         MAX_PACKAGE_NAME);
                pResponce->GetVariableStr(VID_FILE_NAME, 
                                          (*ppList)[*pdwNumPackages].szFileName, 
                                          MAX_DB_STRING);
@@ -104,6 +107,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
                pResponce->GetVariableStr(VID_PACKAGE_VERSION, 
                                          (*ppList)[*pdwNumPackages].szVersion, 
                                          MAX_AGENT_VERSION_LEN);
+               pResponce->GetVariableStr(VID_DESCRIPTION, 
+                                         (*ppList)[*pdwNumPackages].szDescription, 
+                                         MAX_DB_STRING);
                (*pdwNumPackages)++;
             }
             delete pResponce;
@@ -147,9 +153,52 @@ DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId)
 // Install package to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, TCHAR *pszPkgFile, DWORD *pdwPkgId)
+DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
+                                           TCHAR *pszFullPkgPath)
 {
-   return 0;
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_INSTALL_PACKAGE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_PACKAGE_NAME, pInfo->szName);
+   msg.SetVariable(VID_DESCRIPTION, pInfo->szDescription);
+   msg.SetVariable(VID_FILE_NAME, pInfo->szFileName);
+   msg.SetVariable(VID_PLATFORM_NAME, pInfo->szPlatform);
+   msg.SetVariable(VID_PACKAGE_VERSION, pInfo->szVersion);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponce != NULL)
+   {
+      dwResult = pResponce->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         // Get id assigned to installed package and
+         // update provided package information structure
+         pInfo->dwId = pResponce->GetVariableLong(VID_PACKAGE_ID);
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+
+   // If everything is OK, send package file to server
+   if (dwResult == RCC_SUCCESS)
+   {
+      dwResult = ((NXCL_Session *)hSession)->SendFile(dwRqId, pszFullPkgPath);
+      if (dwResult == RCC_SUCCESS)
+      {
+         // Wait for final confirmation
+         dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+      }
+   }
+
+   return dwResult;
 }
 
 
@@ -184,6 +233,7 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 
          if (!_tcscmp(szTag, _T("NAME")))
          {
+            _tcsncpy(pInfo->szName, ptr, MAX_PACKAGE_NAME_LEN);
          }
          else if (!_tcscmp(szTag, _T("PLATFORM")))
          {
@@ -195,9 +245,11 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
          }
          else if (!_tcscmp(szTag, _T("DESCRIPTION")))
          {
+            _tcsncpy(pInfo->szDescription, ptr, MAX_DB_STRING);
          }
          else if (!_tcscmp(szTag, _T("FILE")))
          {
+            _tcsncpy(pInfo->szFileName, GetCleanFileName(ptr), MAX_DB_STRING);
          }
          else
          {

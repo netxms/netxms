@@ -80,6 +80,7 @@
 #include "nms_objects.h"
 #include "messages.h"
 #include "nms_locks.h"
+#include "nms_pkg.h"
 
 
 //
@@ -132,6 +133,7 @@ typedef void * HSNMPSESSION;
 #define IDG_USER_GROUP        10
 #define IDG_ALARM             11
 #define IDG_ALARM_NOTE        12
+#define IDG_PACKAGE           13
 
 
 //
@@ -245,12 +247,17 @@ private:
    MUTEX m_mutexSendActions;
    MUTEX m_mutexPollerInit;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
-   char m_szUserName[256];    // String in form login_name@host
+   TCHAR m_szUserName[256];   // String in form login_name@host
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
    DWORD *m_pOpenDCIList;     // List of nodes with DCI lists open
    DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
    DWORD m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
+   int m_hCurrFile;
+   DWORD m_dwFileRqId;
+   DWORD m_dwUploadCommand;
+   DWORD m_dwUploadData;
+   TCHAR m_szCurrFileName[MAX_PATH];
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -270,6 +277,7 @@ private:
          ((dwRequiredAccess & m_dwSystemAccess) ? TRUE : FALSE);
    }
 
+   void OnFileUpload(BOOL bSuccess);
    void DebugPrintf(char *szFormat, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
@@ -324,6 +332,7 @@ private:
    void SendAllTraps(DWORD dwRqId);
    void LockPackageDB(DWORD dwRqId, BOOL bLock);
    void SendAllPackages(DWORD dwRqId);
+   void InstallPackage(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

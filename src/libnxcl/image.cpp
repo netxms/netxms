@@ -23,10 +23,6 @@
 
 #include "libnxcl.h"
 
-#if defined(_WIN32) && !defined(UNDER_CE)
-#include <io.h>
-#endif
-
 
 //
 // Download image file from server

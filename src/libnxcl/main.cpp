@@ -150,9 +150,12 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Invalid trap configuration record ID"),
       _T("Requested data collection item is not supported by agent"),
       _T("Client and server versions mismatch"),
-      _T("Error parsing package information file")
+      _T("Error parsing package information file"),
+      _T("Package with specified properties already installed on server"),
+      _T("Package file already exist on server"),
+      _T("Server resource busy")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NPI_PARSE_ERROR)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_RESOURCE_BUSY)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

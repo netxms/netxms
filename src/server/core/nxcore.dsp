@@ -230,6 +230,10 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\package.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\rootobj.cpp
 # End Source File
 # Begin Source File
@@ -339,6 +343,10 @@ SOURCE=..\include\nms_locks.h
 # Begin Source File
 
 SOURCE=..\include\nms_objects.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\nms_pkg.h
 # End Source File
 # Begin Source File
 

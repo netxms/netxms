@@ -607,3 +607,18 @@ QWORD LIBNETXMS_EXPORTABLE FileSize(TCHAR *pszFileName)
    return (QWORD)fileInfo.st_size;
 #endif
 }
+
+
+//
+// Get pointer to clean file name (without path specification)
+//
+
+TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName)
+{
+   TCHAR *ptr;
+
+   ptr = pszFileName + _tcslen(pszFileName);
+   while((ptr >= pszFileName) && (*ptr != _T('/')) && (*ptr != _T('\\')) && (*ptr != _T(':')))
+      ptr--;
+   return (ptr + 1);
+}

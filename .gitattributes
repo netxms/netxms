@@ -306,6 +306,8 @@ src/console/win32/ObjectSearchBox.cpp -text
 src/console/win32/ObjectSearchBox.h -text
 src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
+src/console/win32/PackageMgr.cpp -text
+src/console/win32/PackageMgr.h -text
 src/console/win32/PasswordChangeDlg.cpp -text
 src/console/win32/PasswordChangeDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
@@ -507,6 +509,7 @@ src/server/core/nxcore.dsp -text
 src/server/core/nxcore.dsw -text
 src/server/core/nxcore.h -text
 src/server/core/objects.cpp -text
+src/server/core/package.cpp -text
 src/server/core/rootobj.cpp -text
 src/server/core/session.cpp -text
 src/server/core/snmp.cpp -text
@@ -549,6 +552,7 @@ src/server/include/nms_dcoll.h -text
 src/server/include/nms_events.h -text
 src/server/include/nms_locks.h -text
 src/server/include/nms_objects.h -text
+src/server/include/nms_pkg.h -text
 src/server/include/nms_users.h -text
 src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text

@@ -22,6 +22,7 @@ GENERAL:
   event configuration to allow sending of new events
 - View and update agent's configuration from server
 - Add diff() method for DCI thresholds
+- Planned outages (maintenance schedule)
 
 
 SERVER:
@@ -42,6 +43,7 @@ SERVER:
 - Multiple status pollers
 - Housekeeping for DCI
 - Add logging API for database drivers
+- DCI transformation scripts (probably Perl?)
 
 
 CORE AGENT:
@@ -65,9 +67,16 @@ WINDOWS CONSOLE:
 - Add primary IP address selection 
 - Add real-time graphs
 - Fix problem with header colors in event policy editor
+- Play sound on new alarms
+- Add sorting to all list views
 
 
 SUBAGENTS:
 
 - libperl-driven subagent, allow to run perl scripts w/o forking/executing
 - bandwidth meter; data in/out for last N seconds
+
+
+CLIENT LIBRARY:
+
+- Add locks to functions which calls PrepareForSync()/WaitForSync()

@@ -64,6 +64,7 @@ typedef void * NXC_SESSION;
 #define MAX_STRING_VALUE         256
 #define MAX_AGENT_VERSION_LEN    64
 #define MAX_PLATFORM_NAME_LEN    64
+#define MAX_PACKAGE_NAME_LEN     64
 #define GROUP_FLAG               ((DWORD)0x80000000)
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
@@ -236,6 +237,9 @@ typedef void * NXC_SESSION;
 #define RCC_DCI_NOT_SUPPORTED       ((DWORD)30)
 #define RCC_VERSION_MISMATCH        ((DWORD)31)
 #define RCC_NPI_PARSE_ERROR         ((DWORD)32)
+#define RCC_DUPLICATE_PACKAGE       ((DWORD)33)
+#define RCC_PACKAGE_FILE_EXIST      ((DWORD)34)
+#define RCC_RESOURCE_BUSY           ((DWORD)35)
 
 
 //
@@ -529,9 +533,11 @@ typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
 typedef struct
 {
    DWORD dwId;
+   TCHAR szName[MAX_PACKAGE_NAME_LEN];
    TCHAR szVersion[MAX_AGENT_VERSION_LEN];
    TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
    TCHAR szFileName[MAX_DB_STRING];
+   TCHAR szDescription[MAX_DB_STRING];
 } NXC_PACKAGE_INFO;
 
 
@@ -982,8 +988,8 @@ DWORD LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
                                            NXC_PACKAGE_INFO **ppList);
-DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, TCHAR *pszPkgFile, 
-                                           DWORD *pdwPkgId);
+DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
+                                           TCHAR *pszFullPkgPath);
 DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId);
 DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *pInfo);
 

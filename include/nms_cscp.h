@@ -277,6 +277,7 @@ typedef struct
 #define CMD_INSTALL_PACKAGE         0x006F
 #define CMD_LOCK_PACKAGE_DB         0x0070
 #define CMD_UNLOCK_PACKAGE_DB       0x0071
+#define CMD_ABORT_FILE_TRANSFER     0x0072
 
 
 //
@@ -411,6 +412,7 @@ typedef struct
 #define VID_PACKAGE_ID              ((DWORD)126)
 #define VID_PACKAGE_VERSION         ((DWORD)127)
 #define VID_PLATFORM_NAME           ((DWORD)128)
+#define VID_PACKAGE_NAME            ((DWORD)129)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   13
+#define NUMBER_OF_GROUPS   14
 
 
 //
@@ -37,11 +37,11 @@
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1000, 1, 0x80000000,
-                                                   1, 1, 0x80000001, 1, 1 };
+                                                   1, 1, 0x80000001, 1, 1, 1 };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE
+                                                0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
 static char *m_pszGroupNames[] =
@@ -58,7 +58,8 @@ static char *m_pszGroupNames[] =
    "Users",
    "User Groups",
    "Alarms",
-   "Alarm Notes"
+   "Alarm Notes",
+   "Packages"
 };
 
 
@@ -242,6 +243,16 @@ BOOL InitIdTable(void)
    {
       if (DBGetNumRows(hResult) > 0)
          m_qwFreeEventId = max(m_qwFreeEventId, DBGetFieldUInt64(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available package id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(pkg_id) FROM agent_pkg");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_PACKAGE] = max(m_dwFreeIdTable[IDG_PACKAGE], 
+                                            DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

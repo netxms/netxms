@@ -553,6 +553,8 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
                break;
          }
          break;
+      case DCM_AVERAGE_PER_MINUTE:
+         nElapsedTime /= 60;  // Convert to minutes
       case DCM_AVERAGE_PER_SECOND:
          // Check elapsed time to prevent divide-by-zero exception
          if (nElapsedTime == 0)
@@ -576,17 +578,15 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
                value = ((double)value - (double)m_prevRawValue) / (double)nElapsedTime;
                break;
             case DCI_DT_STRING:
-               // I don't see any meaning in "average delta per second" for string
+               // I don't see any meaning in "average delta per second (minute)" for string
                // values, so result will be 0 if there are no difference between
-               // two values, and 1 otherwise
+               // current and previous values, and 1 otherwise
                value = (long)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
                break;
          }
-         break;
-      case DCM_AVERAGE_PER_MINUTE:
          break;
       default:    // Default is no transformation
          break;

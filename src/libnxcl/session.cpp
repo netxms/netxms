@@ -748,3 +748,13 @@ DWORD NXCL_Session::LoadUserDB(void)
 
    return dwRetCode;
 }
+
+
+//
+// Send file to server
+//
+
+DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
+{
+   return SendFileOverCSCP(m_hSocket, dwRqId, pszFileName) ? RCC_SUCCESS : RCC_IO_ERROR;
+}

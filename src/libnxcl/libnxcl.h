@@ -133,6 +133,7 @@ public:
    CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
    DWORD WaitForRCC(DWORD dwRqId);
    DWORD CreateRqId(void) { return m_dwMsgId++; }
+   DWORD SendFile(DWORD dwRqId, TCHAR *pszFileName);
 
    void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 

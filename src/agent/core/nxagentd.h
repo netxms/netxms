@@ -33,7 +33,6 @@
 #include "messages.h"
 
 #ifdef _WIN32
-#include <io.h>
 #include <psapi.h>
 #endif
 

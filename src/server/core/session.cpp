@@ -35,6 +35,8 @@
 #define TRAP_UPDATE     2
 #define TRAP_DELETE     3
 
+#define RAW_MSG_SIZE    262144
+
 
 //
 // Externals
@@ -183,6 +185,8 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
    m_ppEPPRuleList = NULL;
+   m_hCurrFile = -1;
+   m_dwFileRqId = 0;
 }
 
 
@@ -255,22 +259,29 @@ void ClientSession::ReadThread(void)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
+   TCHAR szBuffer[256];
    int iErr;
    DWORD i;
    NetObj *pObject;
+   WORD wFlags;
 
    // Initialize raw message receiving function
    RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0);
 
-   pRawMsg = (CSCP_MESSAGE *)malloc(65536);
+   pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, 65536)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE)) <= 0)
          break;
 
       // Check if message is too large
       if (iErr == 1)
+      {
+         DebugPrintf("Received message %s is too large (%d bytes)\n",
+                     CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
+                     ntohl(pRawMsg->dwSize));
          continue;
+      }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
@@ -279,9 +290,77 @@ void ClientSession::ReadThread(void)
          continue;   // Bad packet, wait for next
       }
 
-      // Create message object from raw message
-      pMsg = new CSCPMessage(pRawMsg);
-      m_pMessageQueue->Put(pMsg);
+      // Special handling for raw messages
+      wFlags = ntohs(pRawMsg->wFlags);
+      if (wFlags & MF_BINARY)
+      {
+         // Convert message header to host format
+         pRawMsg->dwId = ntohl(pRawMsg->dwId);
+         pRawMsg->wCode = ntohs(pRawMsg->wCode);
+         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         DebugPrintf("Received raw message %s\n", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
+
+         if ((pRawMsg->wCode == CMD_FILE_DATA) || 
+             (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
+         {
+            if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
+            {
+               if (pRawMsg->wCode == CMD_FILE_DATA)
+               {
+                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  {
+                     if (wFlags & MF_EOF)
+                     {
+                        CSCPMessage msg;
+
+                        close(m_hCurrFile);
+                        m_hCurrFile = -1;
+                  
+                        msg.SetCode(CMD_REQUEST_COMPLETED);
+                        msg.SetId(pRawMsg->dwId);
+                        msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                        SendMessage(&msg);
+
+                        OnFileUpload(TRUE);
+                     }
+                  }
+                  else
+                  {
+                     // I/O error
+                     CSCPMessage msg;
+
+                     close(m_hCurrFile);
+                     m_hCurrFile = -1;
+               
+                     msg.SetCode(CMD_REQUEST_COMPLETED);
+                     msg.SetId(pRawMsg->dwId);
+                     msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+                     SendMessage(&msg);
+
+                     OnFileUpload(FALSE);
+                  }
+               }
+               else
+               {
+                  // Abort current file transfer because of client's problem
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+               
+                  OnFileUpload(FALSE);
+               }
+            }
+            else
+            {
+               DebugPrintf("Out of state message (ID: %d)\n", pRawMsg->dwId);
+            }
+         }
+      }
+      else
+      {
+         // Create message object from raw message
+         pMsg = new CSCPMessage(pRawMsg);
+         m_pMessageQueue->Put(pMsg);
+      }
    }
    if (iErr < 0)
       WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
@@ -299,6 +378,14 @@ void ClientSession::ReadThread(void)
    ThreadJoin(m_hWriteThread);
    ThreadJoin(m_hProcessingThread);
    ThreadJoin(m_hUpdateThread);
+
+   // Abort current file upload operation, if any
+   if (m_hCurrFile != -1)
+   {
+      close(m_hCurrFile);
+      m_hCurrFile = -1;
+      OnFileUpload(FALSE);
+   }
 
    // Remove all locks created by this session
    RemoveAllSessionLocks(m_dwIndex);
@@ -626,6 +713,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_PACKAGE_LIST:
             SendAllPackages(pMsg->GetId());
             break;
+         case CMD_INSTALL_PACKAGE:
+            InstallPackage(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -645,6 +735,34 @@ void ClientSession::ProcessingThread(void)
       delete pMsg;
       m_iState = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    }
+}
+
+
+//
+// Process received file
+//
+
+void ClientSession::OnFileUpload(BOOL bSuccess)
+{
+   // Do processing specific to command initiated file upload
+   switch(m_dwUploadCommand)
+   {
+      case CMD_INSTALL_PACKAGE:
+         if (!bSuccess)
+         {
+            TCHAR szQuery[256];
+
+            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%ld"), m_dwUploadData);
+            DBQuery(g_hCoreDB, szQuery);
+         }
+         break;
+      default:
+         break;
+   }
+
+   // Remove received file in case of failure
+   if (!bSuccess)
+      _tunlink(m_szCurrFileName);
 }
 
 
@@ -3532,7 +3650,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
    {
       if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
       {
-         hResult = DBAsyncSelect(g_hCoreDB, "SELECT pkg_id,version,platform,pkg_file FROM agent_pkg");
+         hResult = DBAsyncSelect(g_hCoreDB, "SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg");
          if (hResult != NULL)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -3548,6 +3666,10 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
                msg.SetVariable(VID_PACKAGE_VERSION, DBGetFieldAsync(hResult, 1, szBuffer, MAX_DB_STRING));
                msg.SetVariable(VID_PLATFORM_NAME, DBGetFieldAsync(hResult, 2, szBuffer, MAX_DB_STRING));
                msg.SetVariable(VID_FILE_NAME, DBGetFieldAsync(hResult, 3, szBuffer, MAX_DB_STRING));
+               msg.SetVariable(VID_PACKAGE_NAME, DBGetFieldAsync(hResult, 4, szBuffer, MAX_DB_STRING));
+               DBGetFieldAsync(hResult, 5, szBuffer, MAX_DB_STRING);
+               DecodeSQLString(szBuffer);
+               msg.SetVariable(VID_DESCRIPTION, szBuffer);
                SendMessage(&msg);
                msg.DeleteAllVariables();
             }
@@ -3576,4 +3698,111 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
    // Send responce
    if (!bSuccess)
       SendMessage(&msg);
+}
+
+
+//
+// Install package to server
+//
+
+void ClientSession::InstallPackage(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
+   TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN], *pszCleanFileName, *pszEscDescr;
+   TCHAR szQuery[2048];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   {
+      if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
+      {
+         pRequest->GetVariableStr(VID_PACKAGE_NAME, szPkgName, MAX_PACKAGE_NAME_LEN);
+         pRequest->GetVariableStr(VID_DESCRIPTION, szDescription, MAX_DB_STRING);
+         pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_DB_STRING);
+         pRequest->GetVariableStr(VID_PACKAGE_VERSION, szPkgVersion, MAX_AGENT_VERSION_LEN);
+         pRequest->GetVariableStr(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
+
+         // Remove possible path specification from file name
+         pszCleanFileName = GetCleanFileName(szFileName);
+
+         if (IsValidObjectName(pszCleanFileName) && 
+             IsValidObjectName(szPkgName) &&
+             IsValidObjectName(szPkgVersion) &&
+             IsValidObjectName(szPlatform))
+         {
+            // Check if same package already exist
+            if (!IsPackageInstalled(szPkgName, szPkgVersion, szPlatform))
+            {
+               // Check for duplicate file name
+               if (!IsPackageFileExist(pszCleanFileName))
+               {
+                  // Prepare for file receive
+                  if (m_hCurrFile == -1)
+                  {
+                     _tcscpy(m_szCurrFileName, g_szDataDir);
+                     _tcscat(m_szCurrFileName, DDIR_PACKAGES);
+                     _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
+                     _tcscat(m_szCurrFileName, pszCleanFileName);
+                     m_hCurrFile = _topen(m_szCurrFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+                     if (m_hCurrFile != -1)
+                     {
+                        m_dwFileRqId = pRequest->GetId();
+                        m_dwUploadCommand = CMD_INSTALL_PACKAGE;
+                        m_dwUploadData = CreateUniqueId(IDG_PACKAGE);
+                        msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                        msg.SetVariable(VID_PACKAGE_ID, m_dwUploadData);
+
+                        // Create record in database
+                        pszEscDescr = EncodeSQLString(szDescription);
+                        _sntprintf(szQuery, 2048, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,"
+                                                     "version,description,platform,pkg_file) "
+                                                     "VALUES (%ld,'%s','%s','%s','%s','%s')"),
+                                   m_dwUploadData, szPkgName, szPkgVersion, pszEscDescr,
+                                   szPlatform, pszCleanFileName);
+                        free(pszEscDescr);
+                        DBQuery(g_hCoreDB, szQuery);
+                     }
+                     else
+                     {
+                        msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+                     }
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, RCC_RESOURCE_BUSY);
+                  }
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_PACKAGE_FILE_EXIST);
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DUPLICATE_PACKAGE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
+      // Current user has no rights for package management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
