@@ -303,6 +303,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_NODE_DCI:
             ModifyNodeDCI(pMsg);
             break;
+         case CMD_GET_DCI_DATA:
+            GetCollectedData(pMsg);
+            break;
          default:
             break;
       }
@@ -393,18 +396,21 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       msg.SetId(dwRqId);
 
       hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,name,severity,flags,message,description FROM events");
-      while(DBFetch(hResult))
+      if (hResult != NULL)
       {
-         msg.SetVariable(VID_EVENT_ID, DBGetFieldAsyncULong(hResult, 0));
-         msg.SetVariable(VID_NAME, DBGetFieldAsync(hResult, 1, szBuffer, 1024));
-         msg.SetVariable(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
-         msg.SetVariable(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
-         msg.SetVariable(VID_MESSAGE, DBGetFieldAsync(hResult, 4, szBuffer, 1024));
-         msg.SetVariable(VID_DESCRIPTION, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
-         SendMessage(&msg);
-         msg.DeleteAllVariables();
+         while(DBFetch(hResult))
+         {
+            msg.SetVariable(VID_EVENT_ID, DBGetFieldAsyncULong(hResult, 0));
+            msg.SetVariable(VID_NAME, DBGetFieldAsync(hResult, 1, szBuffer, 1024));
+            msg.SetVariable(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
+            msg.SetVariable(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
+            msg.SetVariable(VID_MESSAGE, DBGetFieldAsync(hResult, 4, szBuffer, 1024));
+            msg.SetVariable(VID_DESCRIPTION, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
+            SendMessage(&msg);
+            msg.DeleteAllVariables();
+         }
+         DBFreeAsyncResult(hResult);
       }
-      DBFreeAsyncResult(hResult);
 
       // Send end-of-list indicator
       msg.SetCode(CMD_EVENT_DB_EOF);
@@ -1345,6 +1351,63 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
       else     // Object is not a node
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Get collected data
+//
+
+void ClientSession::GetCollectedData(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwObjectId;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         DB_ASYNC_RESULT hResult;
+         DWORD dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
+         char szQuery[512];
+
+         // Get request parameters
+         dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
+         dwMaxRows = pRequest->GetVariableLong(VID_MAX_ROWS);
+         dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
+         dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
+
+         sprintf(szQuery, "SELECT timestamp,value FROM idata_%d WHERE item_id=%d ORDER BY timestamp DESC",
+                 dwObjectId, dwItemId);
+         hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+         if (hResult != NULL)
+         {
+            while(DBFetch(hResult))
+            {
+            }
+            DBFreeAsyncResult(hResult);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID

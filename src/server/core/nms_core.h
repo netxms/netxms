@@ -292,6 +292,7 @@ private:
    void OpenNodeDCIList(CSCPMessage *pRequest);
    void CloseNodeDCIList(CSCPMessage *pRequest);
    void ModifyNodeDCI(CSCPMessage *pRequest);
+   void GetCollectedData(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
