@@ -55,7 +55,6 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
          status.dwWaitHint=4000;
          SetServiceStatus(serviceHandle,&status);
 
-//         WriteLog(MSG_SERVICE_STOPPED,EVENTLOG_INFORMATION_TYPE,NULL);
          Shutdown();
 
          status.dwCurrentState=SERVICE_STOPPED;

@@ -94,6 +94,18 @@ SOURCE=.\db.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\discovery.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\dload.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\hk.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\log.cpp
 # End Source File
 # Begin Source File
@@ -114,11 +126,19 @@ SOURCE=.\winsrv.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\include\dbdrv.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nms_common.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\nms_core.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nms_objects.h
 # End Source File
 # Begin Source File
 
@@ -128,6 +148,63 @@ SOURCE=..\include\nms_threads.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\core.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\MSG00001.bin
+# End Source File
+# End Group
+# Begin Group "Message files"
+
+# PROP Default_Filter ".mc"
+# Begin Source File
+
+SOURCE=.\messages.mc
+
+!IF  "$(CFG)" == "NmsCore - Win32 Release"
+
+# Begin Custom Build - Running Message Compiler on $(InputPath)
+ProjDir=.
+InputPath=.\messages.mc
+InputName=messages
+
+BuildCmds= \
+	mc -s -U -h $(ProjDir) -r $(ProjDir) $(InputName) \
+	del $(ProjDir)\$(InputName).rc \
+	
+
+"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "NmsCore - Win32 Debug"
+
+# Begin Custom Build - Running Message Compiler on $(InputPath)
+ProjDir=.
+InputPath=.\messages.mc
+InputName=messages
+
+BuildCmds= \
+	mc -s -U -h $(ProjDir) -r $(ProjDir) $(InputName) \
+	del $(ProjDir)\$(InputName).rc \
+	
+
+"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Group
 # End Target
 # End Project

@@ -21,6 +21,17 @@
 **/
 
 #include "nms_core.h"
+#ifdef _WIN32
+#include <conio.h>
+#endif   /* _WIN32 */
+
+
+//
+// Thread functions
+//
+
+void HouseKeeper(void *arg);
+void DiscoveryThread(void *arg);
 
 
 //
@@ -30,6 +41,16 @@
 DWORD g_dwFlags = 0;
 char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+DB_HANDLE g_hCoreDB = 0;
+
+
+//
+// Static data
+//
+
+#ifdef _WIN32
+HANDLE m_hEventShutdown = INVALID_HANDLE_VALUE;
+#endif
 
 
 //
@@ -39,6 +60,24 @@ char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 BOOL Initialize(void)
 {
    InitLog();
+   if (!DBInit())
+      return FALSE;
+
+   g_hCoreDB = DBConnect();
+   if (g_hCoreDB == 0)
+   {
+      WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+      return FALSE;
+   }
+
+   // Create synchronization stuff
+#ifdef _WIN32
+   m_hEventShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
+#endif
+
+   // Start threads
+   ThreadCreate(HouseKeeper, 0, NULL);
+   ThreadCreate(DiscoveryThread, 0, NULL);
 
    return TRUE;
 }
@@ -50,6 +89,12 @@ BOOL Initialize(void)
 
 void Shutdown(void)
 {
+   WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
+#ifdef _WIN32
+   SetEvent(m_hEventShutdown);
+#endif
+   if (g_hCoreDB != 0)
+      DBDisconnect(g_hCoreDB);
    CloseLog();
 }
 
@@ -60,6 +105,33 @@ void Shutdown(void)
 
 void Main(void)
 {
+   WriteLog(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+
+#ifdef _WIN32
+   if (IsStandalone())
+   {
+      int ch;
+
+      printf("\n*** NMS Server operational. Press ESC to terminate. ***\n");
+      while(1)
+      {
+         ch = getch();
+         if (ch == 0)
+            ch = -getch();
+
+         if (ch == 27)
+            break;
+      }
+
+      Shutdown();
+   }
+   else
+   {
+      WaitForSingleObject(m_hEventShutdown, INFINITE);
+   }
+#else    /* _WIN32 */
+   /* TODO: insert UNIX main thread code here */
+#endif
 }
 
 
@@ -74,6 +146,10 @@ int main(int argc, char *argv[])
 
    if (!LoadConfig())
       return 1;
+
+#ifndef _WIN32
+   /* TODO: insert fork() here */
+#endif   /* ! _WIN32 */
 
    if (!IsStandalone())
    {

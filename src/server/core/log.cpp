@@ -213,8 +213,9 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
    }
 #else  /* _WIN32 */
 
+   /* TODO: add event logging under UNIX */
 
-#endif /* _WIN3 */
+#endif /* _WIN32 */
 
    while(--numStrings >= 0)
       free(strings[numStrings]);

@@ -29,6 +29,7 @@
 #include <windows.h>
 #else    /* _WIN32 */
 #include <unistd.h>
+#include <dlfcn.h>
 #endif   /* _WIN32 */
 
 #include <time.h>
@@ -36,6 +37,9 @@
 #include <string.h>
 #include <nms_common.h>
 #include <nms_threads.h>
+#include <dbdrv.h>
+#include "nms_objects.h"
+#include "messages.h"
 
 
 //
@@ -56,6 +60,10 @@
 #define DEFAULT_LOG_FILE      "/var/log/nms.log"
 #define IsStandalone() (1)
 #endif   /* _WIN32 */
+
+#define MAX_DB_LOGIN       64
+#define MAX_DB_PASSWORD    64
+#define MAX_DB_NAME        32
 
 
 //
@@ -82,6 +90,10 @@
 // Functions
 //
 
+void InitLog(void);
+void CloseLog(void);
+void WriteLog(DWORD msg, WORD wType, char *format, ...);
+
 BOOL ParseCommandLine(int argc, char *argv[]);
 BOOL LoadConfig(void);
 
@@ -90,6 +102,19 @@ BOOL Initialize(void);
 void Main(void);
 
 void StrStrip(char *str);
+
+HMODULE DLOpen(char *szModule);
+void *DLGetSymbolAddr(HMODULE hModule, char *szSymbol);
+void DLClose(HMODULE hModule);
+
+BOOL DBInit(void);
+DB_HANDLE DBConnect(void);
+void DBDisconnect(DB_HANDLE hConn);
+BOOL DBQuery(DB_HANDLE hConn, char *szQuery);
+DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery);
+char *DBGetField(DB_RESULT hResult, int iRow, int iColumn);
+int DBGetNumRows(DB_RESULT hResult);
+void DBFreeResult(DB_RESULT hResult);
 
 #ifdef _WIN32
 
@@ -113,6 +138,15 @@ char *GetSystemErrorText(DWORD error);
 extern DWORD g_dwFlags;
 extern char g_szConfigFile[];
 extern char g_szLogFile[];
+
 extern char g_szDbDriver[];
+extern char g_szDbDriver[];
+extern char g_szDbDrvParams[];
+extern char g_szDbServer[];
+extern char g_szDbLogin[];
+extern char g_szDbPassword[];
+extern char g_szDbName[];
+
+extern DB_HANDLE g_hCoreDB;
 
 #endif   /* _nms_core_h_ */

@@ -253,3 +253,34 @@ BOOL ParseCommandLine(int argc, char *argv[])
 
    return TRUE;
 }
+
+
+//
+// Read string value from configuration table
+//
+
+BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault)
+{
+   DB_RESULT hResult;
+   char szQuery[256];
+   BOOL bSuccess = FALSE;
+
+   strncpy(szBuffer, szDefault, iBufSize - 1);
+   szBuffer[iBufSize - 1] = 0;
+   if (strlen(szVar) > 127)
+      return FALSE;
+
+   sprintf(szQuery, "SELECT value FROM config WHERE name='%s'", szVar);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == 0)
+      return FALSE;
+
+   if (DBGetNumRows(hResult) > 0)
+   {
+      strncpy(szBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      bSuccess = TRUE;
+   }
+
+   DBFreeResult(hResult);
+   return bSuccess;
+}
