@@ -51,8 +51,9 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
    return ExecuteCommand(szCmdLine, NULL);
 
 #else
+   return ExecuteCommand(pszPkgFile, NULL);
 
-   return ERR_NOT_IMPLEMENTED;
+   //return ERR_NOT_IMPLEMENTED;
 
 #endif
 }
