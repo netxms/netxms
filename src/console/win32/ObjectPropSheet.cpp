@@ -5,6 +5,10 @@
 #include "nxcon.h"
 #include "ObjectPropSheet.h"
 
+#ifndef IDAPPLY
+#define IDAPPLY 12321
+#endif
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -19,11 +23,15 @@ IMPLEMENT_DYNAMIC(CObjectPropSheet, CPropertySheet)
 CObjectPropSheet::CObjectPropSheet(UINT nIDCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(nIDCaption, pParentWnd, iSelectPage)
 {
+   memset(&m_update, 0, sizeof(NXC_OBJECT_UPDATE));
+   m_psh.dwFlags |= PSH_NOAPPLYNOW;
 }
 
 CObjectPropSheet::CObjectPropSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
+   memset(&m_update, 0, sizeof(NXC_OBJECT_UPDATE));
+   m_psh.dwFlags |= PSH_NOAPPLYNOW;
 }
 
 CObjectPropSheet::~CObjectPropSheet()
@@ -39,3 +47,27 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CObjectPropSheet message handlers
+
+
+//
+// Save changes to object
+//
+
+void CObjectPropSheet::SaveObjectChanges()
+{
+   DWORD dwResult;
+
+   if (m_update.dwFlags != 0)
+   {
+      theApp.DebugPrintf("Saving changes for object %d (Flags: 0x%04X)", 
+                         m_update.dwObjectId, m_update.dwFlags);
+      dwResult = theApp.WaitForRequest(NXCModifyObject(&m_update));
+      if (dwResult != RCC_SUCCESS)
+      {
+         char szBuffer[256];
+
+         sprintf(szBuffer, "Error updating object: %s", NXCGetErrorText(dwResult));
+         MessageBox(szBuffer, "Error", MB_OK | MB_ICONSTOP);
+      }
+   }
+}

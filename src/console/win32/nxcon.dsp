@@ -180,6 +180,10 @@ SOURCE=.\ProgressDialog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RequestProcessingDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -282,6 +286,10 @@ SOURCE=.\ObjectSearchBox.h
 # Begin Source File
 
 SOURCE=.\ProgressDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RequestProcessingDlg.h
 # End Source File
 # Begin Source File
 

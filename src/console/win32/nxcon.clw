@@ -2,37 +2,37 @@
 
 [General Info]
 Version=1
-LastClass=CObjectPropSheet
-LastTemplate=CPropertySheet
+LastClass=CRequestProcessingDlg
+LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=25
+ClassCount=26
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=24
+ResourceCount=25
 Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
-Resource2=IDD_ABOUTBOX
+Resource2=IDD_OBJECT_NODE_GENERAL
 Resource3=IDD_EDIT_EVENT (English (U.S.))
-Resource4=IDA_MDI_DEFAULT
+Resource4=IDM_VIEW_SPECIFIC
 Resource5=IDD_PROGRESS (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_LOGIN
+Resource6=IDD_PROGRESS
 Class11=CProgressDialog
 Resource7=IDA_MDI_DEFAULT (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDD_EDIT_EVENT
+Resource8=IDA_MDI_DEFAULT
 Class13=CObjectPropDlg
-Resource9=IDM_VIEW_SPECIFIC
+Resource9=IDD_LOGIN
 Resource10=IDD_LOGIN (English (U.S.))
 Resource11=IDD_ABOUTBOX (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
@@ -44,22 +44,24 @@ Class14=CEventEditor
 Class15=CEditEventDlg
 Resource17=IDA_OBJECT_BROWSER (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDR_MAINFRAME
+Resource18=IDD_ABOUTBOX
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
-Resource20=IDD_OBJECT_NODE_GENERAL
+Resource20=IDA_OBJECT_BROWSER
 Class17=CObjectPreview
 Resource21=IDR_MAINFRAME (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
-Resource22=IDA_OBJECT_BROWSER
+Resource22=IDD_OBJECT_CAPS
 Class21=CEditBox
 Class22=COPGeneral
 Class23=CNodePropsGeneral
-Resource23=IDD_PROGRESS
+Resource23=IDR_MAINFRAME
 Class24=CObjectPropCaps
 Class25=CObjectPropSheet
-Resource24=IDD_OBJECT_CAPS
+Resource24=IDD_EDIT_EVENT
+Class26=CRequestProcessingDlg
+Resource25=IDD_REQUEST_PROCESSING
 
 [CLS:CConsoleApp]
 Type=0
@@ -467,13 +469,14 @@ Command3=ID_WINDOW_ARRANGE
 Command4=ID_EVENTS_DETAILS
 Command5=ID_EVENTS_GOTOSOURCE
 Command6=ID_OBJECT_VIEW_SHOWPREVIEWPANE
-Command7=ID_OBJECT_VIEW_VIEWASTREE
-Command8=ID_OBJECT_VIEW_VIEWASLIST
-Command9=ID_OBJECT_FIND
-Command10=ID_OBJECT_RENAME
-Command11=ID_OBJECT_DELETE
-Command12=ID_OBJECT_PROPERTIES
-CommandCount=12
+Command7=ID_OBJECT_VIEW_SELECTION
+Command8=ID_OBJECT_VIEW_VIEWASTREE
+Command9=ID_OBJECT_VIEW_VIEWASLIST
+Command10=ID_OBJECT_FIND
+Command11=ID_OBJECT_RENAME
+Command12=ID_OBJECT_DELETE
+Command13=ID_OBJECT_PROPERTIES
+CommandCount=13
 
 [ACL:IDA_MDI_DEFAULT]
 Type=1
@@ -542,11 +545,12 @@ VirtualFilter=WC
 Type=1
 Class=?
 Command1=ID_OBJECT_FIND
-Command2=ID_OBJECT_VIEW_VIEWASLIST
-Command3=ID_OBJECT_VIEW_SHOWPREVIEWPANE
-Command4=ID_OBJECT_VIEW_VIEWASTREE
-Command5=ID_VIEW_REFRESH
-CommandCount=5
+Command2=ID_OBJECT_VIEW_SELECTION
+Command3=ID_OBJECT_VIEW_VIEWASLIST
+Command4=ID_OBJECT_VIEW_SHOWPREVIEWPANE
+Command5=ID_OBJECT_VIEW_VIEWASTREE
+Command6=ID_VIEW_REFRESH
+CommandCount=6
 
 [CLS:CToolBox]
 Type=0
@@ -606,24 +610,24 @@ Control1=IDC_STATIC,static,1342308352
 Control2=IDC_EDIT_ID,edit,1350633600
 Control3=IDC_STATIC,static,1342308352
 Control4=IDC_STATIC,static,1342308352
-Control5=IDC_EDIT_PRIMARY_IP,edit,1350633600
-Control6=IDC_SELECT_IP,button,1342242816
-Control7=IDC_EDIT_NAME,edit,1350631552
-Control8=IDC_STATIC,button,1342177287
-Control9=IDC_STATIC,button,1342177287
+Control5=IDC_EDIT_NAME,edit,1350631552
+Control6=IDC_EDIT_PRIMARY_IP,edit,1350633600
+Control7=IDC_SELECT_IP,button,1342242816
+Control8=IDC_STATIC,static,1342308352
+Control9=IDC_EDIT_OID,edit,1350633600
 Control10=IDC_STATIC,static,1342308352
 Control11=IDC_COMBO_AUTH,combobox,1344340227
-Control12=IDC_STATIC,button,1342177287
-Control13=IDC_STATIC,static,1342308352
+Control12=IDC_STATIC,static,1342308352
+Control13=IDC_EDIT_SECRET,edit,1350631552
 Control14=IDC_STATIC,static,1342308352
-Control15=IDC_STATIC,static,1342308352
-Control16=IDC_EDIT_SECRET,edit,1350631552
-Control17=IDC_EDIT_PORT,edit,1350639744
-Control18=IDC_EDIT_OID,edit,1350633600
-Control19=IDC_STATIC,static,1342308352
-Control20=IDC_COMBO_SNMP_VERSION,combobox,1344340227
-Control21=IDC_STATIC,static,1342308352
-Control22=IDC_EDIT_COMMUNITY,edit,1350631552
+Control15=IDC_EDIT_PORT,edit,1350639744
+Control16=IDC_STATIC,static,1342308352
+Control17=IDC_COMBO_SNMP_VERSION,combobox,1344340227
+Control18=IDC_STATIC,static,1342308352
+Control19=IDC_EDIT_COMMUNITY,edit,1350631552
+Control20=IDC_STATIC,button,1342177287
+Control21=IDC_STATIC,button,1342177287
+Control22=IDC_STATIC,button,1342177287
 
 [CLS:CNodePropsGeneral]
 Type=0
@@ -654,4 +658,22 @@ HeaderFile=ObjectPropSheet.h
 ImplementationFile=ObjectPropSheet.cpp
 BaseClass=CPropertySheet
 Filter=W
+LastObject=CObjectPropSheet
+VirtualFilter=hWC
+
+[DLG:IDD_REQUEST_PROCESSING]
+Type=1
+Class=CRequestProcessingDlg
+ControlCount=2
+Control1=IDC_STATIC,static,1342177283
+Control2=IDC_INFO_TEXT,static,1342308352
+
+[CLS:CRequestProcessingDlg]
+Type=0
+HeaderFile=RequestProcessingDlg.h
+ImplementationFile=RequestProcessingDlg.cpp
+BaseClass=CDialog
+Filter=D
+VirtualFilter=dWC
+LastObject=CRequestProcessingDlg
 

@@ -78,6 +78,8 @@ src/console/win32/ObjectSearchBox.cpp -text
 src/console/win32/ObjectSearchBox.h -text
 src/console/win32/ProgressDialog.cpp -text
 src/console/win32/ProgressDialog.h -text
+src/console/win32/RequestProcessingDlg.cpp -text
+src/console/win32/RequestProcessingDlg.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/ToolBox.cpp -text

@@ -29,11 +29,11 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bModified;
 	void EditEvent(int iItem);
 	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
 	DWORD m_dwNumTemplates;
 	NXC_EVENT_TEMPLATE ** m_ppEventTemplates;
-	afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
 	CListCtrl m_wndListCtrl;
 	virtual ~CEventEditor();
 
@@ -43,6 +43,7 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnClose();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

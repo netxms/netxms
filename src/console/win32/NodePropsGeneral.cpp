@@ -72,6 +72,7 @@ BEGIN_MESSAGE_MAP(CNodePropsGeneral, CPropertyPage)
 	ON_EN_CHANGE(IDC_EDIT_SECRET, OnChangeEditSecret)
 	ON_EN_CHANGE(IDC_EDIT_PORT, OnChangeEditPort)
 	ON_EN_CHANGE(IDC_EDIT_COMMUNITY, OnChangeEditCommunity)
+	ON_CBN_SELCHANGE(IDC_COMBO_AUTH, OnSelchangeComboAuth)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -83,6 +84,8 @@ BOOL CNodePropsGeneral::OnInitDialog()
    int i;
 
 	CPropertyPage::OnInitDialog();
+
+   m_pUpdate = ((CObjectPropSheet *)GetParent())->GetUpdateStruct();
 	
    // Initialize dropdown lists
    for(i = 0; i < 4; i++)
@@ -102,20 +105,59 @@ BOOL CNodePropsGeneral::OnInitDialog()
 
 void CNodePropsGeneral::OnChangeEditName() 
 {
+   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
 void CNodePropsGeneral::OnChangeEditSecret() 
 {
+   m_pUpdate->dwFlags |= OBJ_UPDATE_AGENT_SECRET;
    SetModified();
 }
 
 void CNodePropsGeneral::OnChangeEditPort() 
 {
+   m_pUpdate->dwFlags |= OBJ_UPDATE_AGENT_PORT;
    SetModified();
 }
 
 void CNodePropsGeneral::OnChangeEditCommunity() 
 {
+   m_pUpdate->dwFlags |= OBJ_UPDATE_SNMP_COMMUNITY;
    SetModified();
+}
+
+void CNodePropsGeneral::OnSelchangeComboAuth() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_AGENT_AUTH;
+   SetModified();
+}
+
+
+//
+// Handler for PSN_OK message
+//
+
+void CNodePropsGeneral::OnOK() 
+{
+   char szBuffer[256];
+   int i;
+
+	CPropertyPage::OnOK();
+
+   // Set fields in update structure
+   m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
+   m_pUpdate->iAgentPort = m_iAgentPort;
+   m_pUpdate->iSnmpVersion = m_iSnmpVersion;
+   m_pUpdate->pszCommunity = (char *)((LPCTSTR)m_strCommunity);
+   m_pUpdate->pszSecret = (char *)((LPCTSTR)m_strSecret);
+
+   // Authentication type
+   m_wndAuthList.GetWindowText(szBuffer, 255);
+   for(i = 0; i < 4; i++)
+      if (!strcmp(szBuffer, m_pszAuthStrings[i]))
+      {
+         m_pUpdate->iAuthType = i;
+         break;
+      }
 }

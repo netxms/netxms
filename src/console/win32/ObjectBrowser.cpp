@@ -1,3 +1,4 @@
+//
 // ObjectBrowser.cpp : implementation file
 //
 
@@ -123,7 +124,7 @@ CObjectBrowser::CObjectBrowser()
    m_pImageList = NULL;
    m_dwTreeHashSize = 0;
    m_pTreeHash = NULL;
-   m_dwFlags = SHOW_OBJECT_PREVIEW | FOLLOW_OBJECT_UPDATES;
+   m_dwFlags = SHOW_OBJECT_PREVIEW;
    m_dwSortMode = OBJECT_SORT_BY_NAME;
 }
 
@@ -147,10 +148,16 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_VIEW_VIEWASTREE, OnObjectViewViewastree)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_OBJECT_PROPERTIES, OnObjectProperties)
+	ON_COMMAND(ID_OBJECT_VIEW_SELECTION, OnObjectViewSelection)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_VIEWASLIST, OnUpdateObjectViewViewaslist)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_VIEWASTREE, OnUpdateObjectViewViewastree)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_SELECTION, OnUpdateObjectViewSelection)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnUpdateObjectViewShowpreviewpane)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_FIND_OBJECT, OnFindObject)
 END_MESSAGE_MAP()
@@ -424,6 +431,7 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
    UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
+   UpdateObjectList((NXC_OBJECT *)lParam);
 }
 
 
@@ -641,18 +649,21 @@ restart_parent_check:;
          }
       }
 
-      if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
       {
-         dwIndex = FindObjectInTree(dwObjectId);
-         if (dwIndex != INVALID_INDEX)    // Shouldn't happen
-            m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
-      }
-      else
-      {
-         // Check if current item has been changed
-         hItem = m_wndTreeCtrl.GetSelectedItem();
-         if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
-            m_wndPreviewPane.Refresh();
+         if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
+         {
+            dwIndex = FindObjectInTree(dwObjectId);
+            if (dwIndex != INVALID_INDEX)    // Shouldn't happen
+               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
+         }
+         else
+         {
+            // Check if current item has been changed
+            hItem = m_wndTreeCtrl.GetSelectedItem();
+            if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
+               m_wndPreviewPane.Refresh();
+         }
       }
    }
 }
@@ -664,8 +675,8 @@ restart_parent_check:;
 
 void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
 {
-   int iItem, iPos;
-   char szBuffer[64];
+   int iItem;
+   char szBuffer[16];
    static int iImageCode[] = { -1, 3, 2, 1, 0 };
 
    sprintf(szBuffer, "%ld", pObject->dwId);
@@ -673,41 +684,7 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
    if (iItem != -1)
    {
       m_wndListCtrl.SetItemData(iItem, (LPARAM)pObject);
-
-      m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
-      m_wndListCtrl.SetItemText(iItem, 2, g_szObjectClass[pObject->iClass]);
-      m_wndListCtrl.SetItemText(iItem, 3, g_szStatusTextSmall[pObject->iStatus]);
-      m_wndListCtrl.SetItemText(iItem, 4, IpToStr(pObject->dwIpAddr, szBuffer));
-
-      // Class-specific fields
-      switch(pObject->iClass)
-      {
-         case OBJECT_SUBNET:
-            m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->subnet.dwIpNetMask, szBuffer));
-            break;
-         case OBJECT_INTERFACE:
-            m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->iface.dwIpNetMask, szBuffer));
-            sprintf(szBuffer, "%d", pObject->iface.dwIfIndex);
-            m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
-            m_wndListCtrl.SetItemText(iItem, 7, pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
-                                        "Unknown" : g_szInterfaceTypes[pObject->iface.dwIfType]);
-            break;
-         case OBJECT_NODE:
-            // Create node capabilities string
-            iPos = 0;
-            if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
-               szBuffer[iPos++] = 'A';
-            if (pObject->node.dwFlags & NF_IS_SNMP)
-               szBuffer[iPos++] = 'S';
-            if (pObject->node.dwFlags & NF_IS_LOCAL_MGMT)
-               szBuffer[iPos++] = 'M';
-            szBuffer[iPos] = 0;
-            m_wndListCtrl.SetItemText(iItem, 8, szBuffer);
-            m_wndListCtrl.SetItemText(iItem, 9, pObject->node.szObjectId);
-            break;
-         default:
-            break;
-      }
+      UpdateObjectListEntry(iItem, pObject);
    }
 }
 
@@ -946,4 +923,167 @@ DWORD CObjectBrowser::GetSelectedObject()
       }
    }
    return dwId;
+}
+
+
+//
+// Update object list with new object information
+//
+
+void CObjectBrowser::UpdateObjectList(NXC_OBJECT *pObject)
+{
+   LVFINDINFO lvfi;
+   int iItem;
+
+   // Find object in list
+   lvfi.flags = LVFI_PARAM;
+   lvfi.lParam = (LPARAM)pObject;
+   iItem = m_wndListCtrl.FindItem(&lvfi);
+
+   if (pObject->bIsDeleted)
+   {
+      if (iItem != -1)
+         m_wndListCtrl.DeleteItem(iItem);
+   }
+   else
+   {
+      if (iItem != -1)
+      {
+         UpdateObjectListEntry(iItem, pObject);
+      }
+      else
+      {
+         AddObjectToList(pObject);
+      }
+      m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
+
+      if (!(m_dwFlags & VIEW_OBJECTS_AS_TREE))
+      {
+         if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
+         {
+            lvfi.flags = LVFI_PARAM;
+            lvfi.lParam = (LPARAM)pObject;
+            iItem = m_wndListCtrl.FindItem(&lvfi);
+            if (iItem != -1)    // Shouldn't happen
+            {
+               int iOldItem;
+
+               ClearListSelection();
+               iOldItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+               if (iOldItem != -1)
+                  m_wndListCtrl.SetItemState(iOldItem, 0, LVIS_FOCUSED);
+               m_wndListCtrl.EnsureVisible(iItem, FALSE);
+               m_wndListCtrl.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
+                                          LVIS_SELECTED | LVIS_FOCUSED);
+            }
+         }
+         else
+         {
+            int iCurrItem;
+
+            lvfi.flags = LVFI_PARAM;
+            lvfi.lParam = (LPARAM)pObject;
+            iItem = m_wndListCtrl.FindItem(&lvfi);
+
+            // Check if current item has been changed
+            iCurrItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+            if (iItem == iCurrItem)
+               m_wndPreviewPane.Refresh();
+         }
+      }
+   }
+}
+
+
+//
+// Replace specific list control item with new object's data
+//
+
+void CObjectBrowser::UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject)
+{
+   char szBuffer[64];
+   int iPos;
+
+   m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
+   m_wndListCtrl.SetItemText(iItem, 2, g_szObjectClass[pObject->iClass]);
+   m_wndListCtrl.SetItemText(iItem, 3, g_szStatusTextSmall[pObject->iStatus]);
+   m_wndListCtrl.SetItemText(iItem, 4, IpToStr(pObject->dwIpAddr, szBuffer));
+
+   // Class-specific fields
+   switch(pObject->iClass)
+   {
+      case OBJECT_SUBNET:
+         m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->subnet.dwIpNetMask, szBuffer));
+         break;
+      case OBJECT_INTERFACE:
+         m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->iface.dwIpNetMask, szBuffer));
+         sprintf(szBuffer, "%d", pObject->iface.dwIfIndex);
+         m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
+         m_wndListCtrl.SetItemText(iItem, 7, pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
+                                     "Unknown" : g_szInterfaceTypes[pObject->iface.dwIfType]);
+         break;
+      case OBJECT_NODE:
+         // Create node capabilities string
+         iPos = 0;
+         if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
+            szBuffer[iPos++] = 'A';
+         if (pObject->node.dwFlags & NF_IS_SNMP)
+            szBuffer[iPos++] = 'S';
+         if (pObject->node.dwFlags & NF_IS_LOCAL_MGMT)
+            szBuffer[iPos++] = 'M';
+         szBuffer[iPos] = 0;
+         m_wndListCtrl.SetItemText(iItem, 8, szBuffer);
+         m_wndListCtrl.SetItemText(iItem, 9, pObject->node.szObjectId);
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// Change "selection follow changes" mode
+//
+
+void CObjectBrowser::OnObjectViewSelection() 
+{
+   if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
+      m_dwFlags &= ~FOLLOW_OBJECT_UPDATES;
+   else
+      m_dwFlags |= FOLLOW_OBJECT_UPDATES;
+}
+
+
+//
+// ON_COMMAND_UPDATE_UI handlers
+//
+
+void CObjectBrowser::OnUpdateObjectViewViewaslist(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetRadio(!(m_dwFlags & VIEW_OBJECTS_AS_TREE));
+}
+
+void CObjectBrowser::OnUpdateObjectViewViewastree(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetRadio(m_dwFlags & VIEW_OBJECTS_AS_TREE);
+}
+
+void CObjectBrowser::OnUpdateObjectViewSelection(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_dwFlags & FOLLOW_OBJECT_UPDATES);
+}
+
+void CObjectBrowser::OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_dwFlags & SHOW_OBJECT_PREVIEW);
+}
+
+
+//
+// Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
+//
+
+void CObjectBrowser::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_OBJECT_PROPERTIES, 0);
 }

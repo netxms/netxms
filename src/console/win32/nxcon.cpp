@@ -490,7 +490,7 @@ void CConsoleApp::OnControlpanelEvents()
       m_pwndEventEditor->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CEventEditor), IDR_OBJECTS, m_hMDIMenu, m_hMDIAccel);	
+		   RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR, m_hMDIMenu, m_hMDIAccel);	
 }
 
 
@@ -500,10 +500,12 @@ void CConsoleApp::OnControlpanelEvents()
 
 void CConsoleApp::RegisterRequest(HREQUEST hRequest, CWnd *pWnd)
 {
+   MutexLock(m_mutexRqWaitList, INFINITE);
    m_pRqWaitList = (RQ_WAIT_INFO *)MemReAlloc(m_pRqWaitList, sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize + 1));
    m_pRqWaitList[m_dwRqWaitListSize].hRequest = hRequest;
    m_pRqWaitList[m_dwRqWaitListSize].pWnd = pWnd;
    m_dwRqWaitListSize++;
+   MutexUnlock(m_mutexRqWaitList);
 }
 
 
@@ -515,6 +517,7 @@ void CConsoleApp::OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode)
 {
    DWORD i;
 
+   MutexLock(m_mutexRqWaitList, INFINITE);
    for(i = 0; i < m_dwRqWaitListSize; i++)
       if (m_pRqWaitList[i].hRequest == hRequest)
       {
@@ -523,6 +526,7 @@ void CConsoleApp::OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode)
          memmove(&m_pRqWaitList[i], &m_pRqWaitList[i + 1], sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize - i));
          i--;
       }
+   MutexUnlock(m_mutexRqWaitList);
 }
 
 
@@ -589,6 +593,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
             wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
             wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
+            wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
             wndPropSheet.AddPage(&wndNodeGeneral);
             break;
          default:
@@ -603,6 +608,27 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
          wndPropSheet.AddPage(&wndObjectCaps);
       }
 
-      wndPropSheet.DoModal();
+      // Create "Security" tab
+
+      wndPropSheet.SetObject(pObject);
+      if (wndPropSheet.DoModal() == IDOK)
+         wndPropSheet.SaveObjectChanges();
    }
+}
+
+
+//
+// Wait for specific request
+//
+
+DWORD CConsoleApp::WaitForRequest(HREQUEST hRequest, char *pszMessage)
+{
+   CRequestProcessingDlg wndWaitDlg;
+
+   wndWaitDlg.m_hRequest = hRequest;
+   if (pszMessage != NULL)
+      wndWaitDlg.m_strInfoText = pszMessage;
+   else
+      wndWaitDlg.m_strInfoText = "Processing request...";
+   return (DWORD)wndWaitDlg.DoModal();
 }

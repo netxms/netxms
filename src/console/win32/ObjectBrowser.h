@@ -121,14 +121,22 @@ protected:
 	afx_msg void OnObjectViewViewastree();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnObjectProperties();
+	afx_msg void OnObjectViewSelection();
+	afx_msg void OnUpdateObjectViewViewaslist(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateObjectViewViewastree(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateObjectViewSelection(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	void UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject);
+	void UpdateObjectList(NXC_OBJECT *pObject);
 	DWORD m_dwSortMode;
 	void UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject);
 	CImageList *m_pImageList;

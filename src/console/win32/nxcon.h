@@ -37,6 +37,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "NodePropsGeneral.h"
 #include "ObjectPropCaps.h"
 #include "ObjectPropSheet.h"
+#include "RequestProcessingDlg.h"
 
 
 //
@@ -118,6 +119,7 @@ private:
 
    // Inline functions
 public:
+	DWORD WaitForRequest(HREQUEST hRequest, char *pszMessage = NULL);
 	void ObjectProperties(DWORD dwObjectId);
 	void DebugPrintf(char *szFormat, ...);
    void DebugCallback(char *pszMsg)

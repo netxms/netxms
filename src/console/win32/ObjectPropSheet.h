@@ -1,6 +1,7 @@
 #if !defined(AFX_OBJECTPROPSHEET_H__10D443C2_A463_468B_9974_FF168FB42918__INCLUDED_)
 #define AFX_OBJECTPROPSHEET_H__10D443C2_A463_468B_9974_FF168FB42918__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -28,18 +29,25 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CObjectPropSheet)
+	protected:
 	//}}AFX_VIRTUAL
 
 // Implementation
 public:
 	virtual ~CObjectPropSheet();
 
+   NXC_OBJECT_UPDATE *GetUpdateStruct(void) { return &m_update; }
+   void SetObject(NXC_OBJECT *pObject) { if (pObject != NULL) m_update.dwObjectId = pObject->dwId; }
+	void SaveObjectChanges(void);
+
 	// Generated message map functions
 protected:
+	NXC_OBJECT_UPDATE m_update;
 	//{{AFX_MSG(CObjectPropSheet)
 		// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
 };
 
 /////////////////////////////////////////////////////////////////////////////

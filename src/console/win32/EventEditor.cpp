@@ -19,6 +19,7 @@ IMPLEMENT_DYNCREATE(CEventEditor, CMDIChildWnd)
 
 CEventEditor::CEventEditor()
 {
+   m_bModified = FALSE;
 }
 
 CEventEditor::~CEventEditor()
@@ -31,9 +32,9 @@ BEGIN_MESSAGE_MAP(CEventEditor, CMDIChildWnd)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
-   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
-   ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDoubleClick)
 	ON_WM_SETFOCUS()
+   ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDoubleClick)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -44,7 +45,8 @@ END_MESSAGE_MAP()
 int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   HREQUEST hRequest;
+   DWORD dwResult;
+   char szBuffer[256];
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -64,37 +66,12 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(4, "Message", LVCFMT_LEFT, 150);
    m_wndListCtrl.InsertColumn(5, "Description", LVCFMT_LEFT, 300);
 	
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENT_EDITOR, this);
+   theApp.OnViewCreate(IDR_EVENT_EDITOR, this);
 
-   hRequest = NXCOpenEventDB();
-   if (hRequest != INVALID_REQUEST_HANDLE)
-      ((CConsoleApp *)AfxGetApp())->RegisterRequest(hRequest, this);
-	return 0;
-}
-
-
-//
-// WM_DESTROY message handler
-//
-
-void CEventEditor::OnDestroy() 
-{
-   NXCCloseEventDB(TRUE);
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_EVENT_EDITOR, this);
-	CMDIChildWnd::OnDestroy();
-}
-
-
-//
-// WM_REQUEST_COMPLETED message handler
-//
-
-LRESULT CEventEditor::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
-{
-   if (lParam == RCC_SUCCESS)
+   dwResult = theApp.WaitForRequest(NXCOpenEventDB(), "Opening event configuration database...");
+   if (dwResult == RCC_SUCCESS)
    {
       DWORD i;
-      char szBuffer[64];
 
       NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
       for(i = 0; i < m_dwNumTemplates; i++)
@@ -113,10 +90,26 @@ LRESULT CEventEditor::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      MessageBox("Unable to open event configuration database", "Error", MB_ICONSTOP);
-      DestroyWindow();
+      sprintf(szBuffer, "Unable to open event configuration database:\n%s", NXCGetErrorText(dwResult));
+      theApp.GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+
+      // For unknown reason MFC crashes if this function just returns -1,
+      // so we just post WM_CLOSE to itself
+      PostMessage(WM_CLOSE, 0, 0);
    }
+
    return 0;
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CEventEditor::OnDestroy() 
+{
+   theApp.OnViewDestroy(IDR_EVENT_EDITOR, this);
+	CMDIChildWnd::OnDestroy();
 }
 
 
@@ -170,6 +163,7 @@ void CEventEditor::EditEvent(int iItem)
       NXCModifyEventTemplate(m_ppEventTemplates[iIdx], EM_ALL, dlgEditEvent.m_dwSeverity,
          dwFlags, (LPCTSTR)dlgEditEvent.m_strName, (LPCTSTR)dlgEditEvent.m_strMessage,
          (LPCTSTR)dlgEditEvent.m_strDescription);
+      m_bModified = TRUE;
    }
 }
 
@@ -182,4 +176,52 @@ void CEventEditor::OnSetFocus(CWnd* pOldWnd)
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
    m_wndListCtrl.SetFocus();
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CEventEditor::OnClose() 
+{
+   static char szClosingMessage[] = "Closing event configuration database...";
+   int iAction;
+   DWORD dwResult;
+
+   if (m_bModified)
+   {
+      iAction = MessageBox("Event configuration database has been modified. "
+                           "Do you wish to save it?", "Event Editor", 
+                           MB_YESNOCANCEL | MB_ICONQUESTION);
+      switch(iAction)
+      {
+         case IDYES:
+            dwResult = theApp.WaitForRequest(NXCCloseEventDB(TRUE), szClosingMessage);
+            if (dwResult == RCC_SUCCESS)
+            {
+         	   CMDIChildWnd::OnClose();
+            }
+            else
+            {
+               char szBuffer[256];
+
+               sprintf(szBuffer, "Error closing event configuration database:\n%s",
+                       NXCGetErrorText(dwResult));
+               MessageBox(szBuffer, "Event Editor", MB_OK | MB_ICONSTOP);
+            }
+            break;
+         case IDNO:
+            theApp.WaitForRequest(NXCCloseEventDB(FALSE), szClosingMessage);
+      	   CMDIChildWnd::OnClose();
+            break;
+         case IDCANCEL:
+            break;
+      }
+   }
+   else
+   {
+      theApp.WaitForRequest(NXCCloseEventDB(FALSE), szClosingMessage);
+	   CMDIChildWnd::OnClose();
+   }
 }

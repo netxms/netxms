@@ -40,6 +40,7 @@ public:
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CNodePropsGeneral)
 	public:
+	virtual void OnOK();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -53,9 +54,12 @@ protected:
 	afx_msg void OnChangeEditSecret();
 	afx_msg void OnChangeEditPort();
 	afx_msg void OnChangeEditCommunity();
+	afx_msg void OnSelchangeComboAuth();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
+private:
+	NXC_OBJECT_UPDATE * m_pUpdate;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -7,8 +7,8 @@
 #define ID_LIST_VIEW                    102
 #define ID_CONNECT_TO_SERVER            103
 #define IDP_SOCKETS_INIT_FAILED         104
-#define IDR_EVENT_EDITOR                104
 #define IDC_PREVIEW_PANE                105
+#define IDR_EVENT_EDITOR                105
 #define IDC_TOOLBOX_OBJECT_DETAILS      106
 #define IDC_EDIT_SEARCH_STRING          107
 #define ID_FIND_OBJECT                  108
@@ -44,6 +44,7 @@
 #define IDI_SORT_DOWN                   157
 #define IDD_OBJECT_NODE_GENERAL         159
 #define IDD_OBJECT_CAPS                 160
+#define IDD_REQUEST_PROCESSING          162
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -67,6 +68,7 @@
 #define IDC_EDIT_COMMUNITY              1023
 #define IDC_LIST1                       1024
 #define IDC_LIST_CAPS                   1024
+#define IDC_INFO_TEXT                   1025
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -88,15 +90,16 @@
 #define ID_OBJECT_DELETE                32798
 #define ID_OBJECT_PROPERTIES            32799
 #define ID_OBJECT_FIND                  32800
+#define ID_OBJECT_VIEW_SELECTION        32801
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        161
-#define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1025
+#define _APS_NEXT_RESOURCE_VALUE        163
+#define _APS_NEXT_COMMAND_VALUE         32802
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif
