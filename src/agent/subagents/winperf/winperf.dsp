@@ -113,6 +113,10 @@ SOURCE=..\..\..\..\include\nms_agent.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\winperf.h
 # End Source File
 # End Group

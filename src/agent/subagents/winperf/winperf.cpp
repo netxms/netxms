@@ -24,10 +24,32 @@
 
 
 //
-// CPU utilization
+// Constants
 //
 
-static LONG H_PdhCounterValue(char *pszParam, char *pArg, char *pValue)
+#define CFG_BUFFER_SIZE    256000
+
+
+//
+// Value of given performance counter
+//
+
+static LONG H_PdhVersion(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+{
+   DWORD dwVersion;
+
+   if (PdhGetDllVersion(&dwVersion) != ERROR_SUCCESS)
+      return SYSINFO_RC_ERROR;
+   ret_uint(pValue, dwVersion);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Value of given performance counter
+//
+
+static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;
@@ -118,7 +140,7 @@ static LONG H_PdhCounterValue(char *pszParam, char *pArg, char *pValue)
 // List of available performance objects
 //
 
-static LONG H_PdhObjects(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_PdhObjects(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
    TCHAR *pszObject, *pszObjList, szHostName[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -151,7 +173,7 @@ static LONG H_PdhObjects(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 // List of available performance items for given object
 //
 
-static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_PdhObjectItems(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
    TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -199,7 +221,8 @@ static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pVa
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL }
+   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL },
+   { _T("PDH.Version"), H_PdhVersion, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -219,14 +242,34 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 
 //
+// Configuration file template
+//
+
+static NX_CFG_TEMPLATE cfgTemplate[] =
+{
+   { "Counter", CT_STRING_LIST, ',', 0, CFG_BUFFER_SIZE, 0, NULL },
+   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+
+//
 // Entry point for NetXMS agent
 //
 
 extern "C" BOOL __declspec(dllexport) __cdecl 
    NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
+   DWORD dwResult;
+
+   // Load configuration
+   cfgTemplate[0].pBuffer = malloc(CFG_BUFFER_SIZE);
+   dwResult = NxLoadConfig(pszConfigFile, _T("WinPerf"), cfgTemplate, FALSE);
+   if (dwResult == NXCFG_ERR_OK)
+   {
+   }
+   free(cfgTemplate[0].pBuffer);
    *ppInfo = &m_info;
-   return TRUE;
+   return dwResult == NXCFG_ERR_OK;
 }
 
 
