@@ -57,6 +57,17 @@
 
 
 //
+// Index structure
+//
+
+typedef struct
+{
+   DWORD dwKey;
+   NXC_OBJECT *pObject;
+} INDEX;
+
+
+//
 // Request structure
 //
 
