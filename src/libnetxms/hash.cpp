@@ -217,7 +217,6 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
 BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(TCHAR *pszFileName, DWORD *pResult)
 {
 	int iSize;
-	md5_state_t state;
 	unsigned char szBuffer[FILE_BLOCK_SIZE];
 	BOOL bSuccess = FALSE;
 	FILE *fileHandle;

@@ -174,7 +174,7 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
 LONG H_CRC32(char *cmd, char *arg, char *value)
 {
    char szFileName[MAX_PATH];
-   DWORD i, dwCRC32;
+   DWORD dwCRC32;
 
    if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
