@@ -167,11 +167,10 @@ static void SaveActionToDB(NXC_ACTION *pAction)
               (pAction->pszData == NULL ? "" : pAction->pszData), pAction->dwId);
    else
       sprintf(szQuery, "INSERT INTO actions (action_id,action_name,action_type,"
-                       "is_disabled,rcpt_addr,email_subject,action_data VALUES"
+                       "is_disabled,rcpt_addr,email_subject,action_data) VALUES"
                        " (%ld,'%s',%d,%d,'%s','%s','%s')",
               pAction->dwId,pAction->szName, pAction->iType, pAction->bIsDisabled,
-              pAction->szRcptAddr, pAction->szEmailSubject,
-              (pAction->pszData == NULL ? "" : pAction->pszData));
+              pAction->szRcptAddr, pAction->szEmailSubject, CHECK_NULL_EX(pAction->pszData));
    DBQuery(g_hCoreDB, szQuery);
 }
 
@@ -222,7 +221,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
       {
          char *pszExpandedData;
 
-         pszExpandedData = pEvent->ExpandText(pAction->pszData);
+         pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData));
          switch(pAction->iType)
          {
             case ACTION_EXEC:
@@ -373,7 +372,7 @@ void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
 {
    pMsg->SetVariable(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);
    pMsg->SetVariable(VID_ACTION_TYPE, (WORD)pAction->iType);
-   pMsg->SetVariable(VID_ACTION_DATA, pAction->pszData);
+   pMsg->SetVariable(VID_ACTION_DATA, CHECK_NULL_EX(pAction->pszData));
    pMsg->SetVariable(VID_EMAIL_SUBJECT, pAction->szEmailSubject);
    pMsg->SetVariable(VID_ACTION_NAME, pAction->szName);
    pMsg->SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
@@ -399,6 +398,7 @@ void SendActionsToClient(ClientSession *pSession, DWORD dwRqId)
    {
       msg.SetVariable(VID_ACTION_ID, m_pActionList[i].dwId);
       FillActionInfoMessage(&msg, &m_pActionList[i]);
+      pSession->SendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
