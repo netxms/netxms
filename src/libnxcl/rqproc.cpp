@@ -49,6 +49,9 @@ void RequestProcessor(void *pArg)
          case RQ_SYNC_EVENTS:
             SyncEvents();
             break;
+         case RQ_OPEN_EVENT_DB:
+            OpenEventDB();
+            break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
             break;

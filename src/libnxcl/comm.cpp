@@ -32,7 +32,7 @@ static SOCKET m_hSocket = -1;
 static DWORD m_dwMsgId;
 static char m_szServer[MAX_SERVER_NAME];
 static char m_szLogin[MAX_LOGIN_NAME];
-static char m_szPassword[MAX_PASSWORD_LEN];
+static BYTE m_szPassword[SHA_DIGEST_LENGTH];
 static MsgWaitQueue m_msgWaitQueue;
 
 
@@ -132,6 +132,10 @@ static void NetReceiver(void *pArg)
                ProcessEvent(pMsg, NULL);
                delete pMsg;
                break;
+            case CMD_EVENT_DB_RECORD:
+            case CMD_EVENT_DB_EOF:
+               ProcessEventDBRecord(pMsg);
+               break;
             default:
                m_msgWaitQueue.Put(pMsg);
                break;
@@ -201,7 +205,7 @@ BOOL Connect(void)
    msg.SetId(m_dwMsgId++);
    msg.SetCode(CMD_LOGIN);
    msg.SetVariable(VID_LOGIN_NAME, m_szLogin);
-   msg.SetVariable(VID_PASSWORD, m_szPassword);
+   msg.SetVariable(VID_PASSWORD, m_szPassword, SHA_DIGEST_LENGTH);
 
    if (!SendMsg(&msg))
    {
@@ -247,7 +251,7 @@ BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
 
    strcpy(m_szServer, szServer);
    strcpy(m_szLogin, szLogin);
-   strcpy(m_szPassword, szPassword);
+   CreateSHA1Hash(szPassword, m_szPassword);
 
    CreateRequest(RQ_CONNECT, NULL, FALSE);
 

@@ -36,6 +36,7 @@
 #include <nxclapi.h>
 #include <nms_util.h>
 #include <nms_threads.h>
+#include <openssl/ssl.h>
 
 
 //
@@ -54,6 +55,7 @@
 #define RQ_CONNECT         1
 #define RQ_SYNC_OBJECTS    2
 #define RQ_SYNC_EVENTS     3
+#define RQ_OPEN_EVENT_DB   4
 
 
 //
