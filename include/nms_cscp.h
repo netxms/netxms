@@ -130,6 +130,10 @@ typedef struct
 #define CMD_EVENT_DB_RECORD         0x001B
 #define CMD_EVENT_DB_EOF            0x001C
 #define CMD_REQUEST_COMPLETED       0x001D
+#define CMD_LOAD_USER_DB            0x001E
+#define CMD_USER_DATA               0x001F
+#define CMD_GROUP_DATA              0x0020
+#define CMD_USER_DB_EOF             0x0021
 
 
 //
@@ -169,12 +173,21 @@ typedef struct
 #define VID_CHILD_CNT               ((DWORD)31)
 #define VID_ACL_SIZE                ((DWORD)32)
 #define VID_INHERIT_RIGHTS          ((DWORD)33)
+#define VID_USER_NAME               ((DWORD)34)
+#define VID_USER_ID                 ((DWORD)35)
+#define VID_USER_SYS_RIGHTS         ((DWORD)36)
+#define VID_USER_FLAGS              ((DWORD)37)
+#define VID_NUM_MEMBERS             ((DWORD)38)    /* Number of members in users group */
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
 #define VID_ACL_USER_LAST           ((DWORD)0x00001FFF)
 #define VID_ACL_RIGHTS_BASE         ((DWORD)0x00002000)
 #define VID_ACL_RIGHTS_LAST         ((DWORD)0x00002FFF)
+
+// Variable range for user group members
+#define VID_GROUP_MEMBER_BASE       ((DWORD)0x00004000)
+#define VID_GROUP_MEMBER_LAST       ((DWORD)0x00004FFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,

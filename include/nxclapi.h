@@ -55,6 +55,8 @@ typedef unsigned long HREQUEST;
 #define MAX_EVENT_MSG_LENGTH     256
 #define MAX_EVENT_NAME           64
 #define INVALID_REQUEST_HANDLE   ((HREQUEST)0xFFFFFFFF)
+#define MAX_USER_NAME            64
+#define GROUP_FLAG               0x01000000
 
 
 //
@@ -121,6 +123,7 @@ typedef unsigned long HREQUEST;
 #define STATE_SYNC_EVENTS     4
 #define STATE_LOAD_EVENT_DB   5
 #define STATE_LOAD_EPP        6
+#define STATE_LOAD_USER_DB    7
 
 
 //
@@ -133,6 +136,7 @@ typedef unsigned long HREQUEST;
 #define NXC_OP_CLOSE_EVENT_DB    4
 #define NXC_OP_SET_EVENT_INFO    5
 #define NXC_OP_MODIFY_OBJECT     6
+#define NXC_OP_LOAD_USER_DB      7
 
 
 //
@@ -180,6 +184,39 @@ typedef unsigned long HREQUEST;
 #define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x20)
 #define OBJ_UPDATE_ACL              ((DWORD)0x40)
 #define OBJ_UPDATE_ALL              ((DWORD)0x7F)
+
+
+//
+// Global user rights
+//
+
+#define SYSTEM_ACCESS_MANAGE_USERS        0x0001
+#define SYSTEM_ACCESS_VIEW_CONFIG         0x0002
+#define SYSTEM_ACCESS_EDIT_CONFIG         0x0004
+#define SYSTEM_ACCESS_DROP_CONNECTIONS    0x0008
+#define SYSTEM_ACCESS_VIEW_EVENT_DB       0x0010
+#define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
+
+
+//
+// Object access rights
+//
+
+#define OBJECT_ACCESS_READ          0x00000001
+#define OBJECT_ACCESS_MODIFY        0x00000002
+#define OBJECT_ACCESS_CREATE        0x00000004
+#define OBJECT_ACCESS_DELETE        0x00000008
+#define OBJECT_ACCESS_MOVE          0x00000010
+
+
+//
+// User/group flags
+//
+
+#define UF_MODIFIED                 0x0001
+#define UF_DELETED                  0x0002
+#define UF_DISABLED                 0x0004
+#define UF_CHANGE_PASSWORD          0x0008
 
 
 //
@@ -303,6 +340,21 @@ typedef struct
 
 
 //
+// NetXMS user information structure
+//
+
+typedef struct
+{
+   char szName[MAX_USER_NAME];
+   DWORD dwId;
+   WORD wFlags;
+   WORD wSystemRights;
+   DWORD dwNumMembers;     // Only for groups
+   DWORD *pdwMemberList;   // Only for groups
+} NXC_USER;
+
+
+//
 // Functions
 //
 
@@ -333,6 +385,8 @@ void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD
                                        DWORD dwSeverity, DWORD dwFlags, const char *pszName,
                                        const char *pszMessage, const char *pszDescription);
 
+NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);
+
 #ifdef __cplusplus
 }
 #endif
@@ -350,6 +404,7 @@ inline DWORD NXCSyncEvents(void) { return NXCRequest(NXC_OP_SYNC_EVENTS); }
 inline DWORD NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
 inline DWORD NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
 inline DWORD NXCModifyObject(NXC_OBJECT_UPDATE *pData) { return NXCRequest(NXC_OP_MODIFY_OBJECT, pData); }
+inline DWORD NXCLoadUserDB(void) { return NXCRequest(NXC_OP_LOAD_USER_DB); }
 #endif   /* __libnxcl_inline_c__ */
 
 #else    /* __cplusplus */
@@ -359,6 +414,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
+DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
 
 #endif   /* __cplusplus */
 
