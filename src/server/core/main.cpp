@@ -312,6 +312,9 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    if (ConfigReadInt("EnableAdminInterface", 1))
       ThreadCreate(LocalAdminListener, 0, NULL);
 
+   // Load modules
+   LoadNetXMSModules();
+
    DbgPrintf(AF_DEBUG_MISC, "Server initialization completed");
    return TRUE;
 }

@@ -74,6 +74,7 @@
 #include <nximage.h>
 #include <nxqueue.h>
 #include <nxsnmp.h>
+#include <nxmodule.h>
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nms_objects.h"

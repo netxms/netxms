@@ -488,6 +488,7 @@ src/server/core/image.cpp -text
 src/server/core/interface.cpp -text
 src/server/core/locks.cpp -text
 src/server/core/main.cpp -text
+src/server/core/modules.cpp -text
 src/server/core/netinfo.cpp -text
 src/server/core/netobj.cpp -text
 src/server/core/node.cpp -text
@@ -540,6 +541,7 @@ src/server/include/nms_events.h -text
 src/server/include/nms_locks.h -text
 src/server/include/nms_objects.h -text
 src/server/include/nms_users.h -text
+src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text
 src/server/include/rwlock.h -text
 src/server/libnxsrv/Makefile.am -text

@@ -202,6 +202,10 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\modules.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\netinfo.cpp
 # End Source File
 # Begin Source File
@@ -367,6 +371,10 @@ SOURCE=..\..\..\include\nxevent.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nximage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\nxmodule.h
 # End Source File
 # Begin Source File
 

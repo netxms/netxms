@@ -428,4 +428,28 @@ Language=English
 Invalid trap parameter OID %1 for trap %2 in trap configuration table
 .
 
+MessageId=
+SymbolicName=MSG_MODULE_BAD_MAGIC
+Language=English
+Module "%1" has invalid magic number - probably it was compiled for different NetXMS server version
+.
+
+MessageId=
+SymbolicName=MSG_MODULE_LOADED
+Language=English
+Server module "%1" loaded successfully
+.
+
+MessageId=
+SymbolicName=MSG_NO_MODULE_ENTRY_POINT
+Language=English
+Unable to find entry point in server module "%1"
+.
+
+MessageId=
+SymbolicName=MSG_MODULE_INIT_FAILED
+Language=English
+Initialization of server module "%1" failed
+.
+
 ;#endif
