@@ -166,6 +166,10 @@ extern "C"
 #ifdef _WIN32
    char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
 #endif
+
+#if !(HAVE_DAEMON)
+   int daemon(int nochdir, int noclose);
+#endif
 }
 
 #endif   /* _nms_util_h_ */

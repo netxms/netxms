@@ -274,6 +274,13 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 
 		if (dwTimeOut != INFINITE)
 		{
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+			struct timespec timeout;
+
+			timeout.tv_sec = dwTimeOut / 1000;
+			timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
+			retcode = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
+#else
 			struct timeval now;
 			struct timespec timeout;
 
@@ -281,6 +288,7 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
 			timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
 			retcode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
+#endif
 		}
 		else
 		{

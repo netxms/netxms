@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.19 2004-08-12 15:29:26 victor Exp $
+# $Id: configure.ac,v 1.20 2004-08-17 09:09:10 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -204,7 +204,8 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex daemon mmap])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul])
+AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r])
 
 
 # sockets/resolver (probably for solaris)
@@ -260,6 +261,9 @@ if test "x$PTHREAD_LIBS" = xerror; then
 	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
 fi
 AC_SUBST(PTHREAD_LIBS)
+
+# Extensions to posix threads
+AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
 # --------------------------------------------------------------------------
 

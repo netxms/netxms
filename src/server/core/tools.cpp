@@ -180,7 +180,11 @@ void GetSysInfoStr(char *pszBuffer)
 	else
 	{
 		// size=512 was taken from locks.cpp
+#if HAVE_STRERROR_R
 		strerror_r(errno, pszBuffer, 512);
+#else
+		strncpy(pszBuffer, strerror(errno), 512);
+#endif
 	}
 # else
    printf("GetSysInfoStr: code not implemented\n");

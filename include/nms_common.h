@@ -238,6 +238,15 @@ typedef struct tagICMPHDR
 
 
 //
+// INADDR_NONE can be undefined on some systems
+//
+
+#ifndef INADDR_NONE
+#define INADDR_NONE	(0xFFFFFFFF)
+#endif
+
+
+//
 // Check if IP address is a broadcast
 //
 
