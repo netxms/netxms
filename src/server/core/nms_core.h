@@ -60,7 +60,7 @@
 #include <dbdrv.h>
 #include <nms_cscp.h>
 #include <nms_util.h>
-#include <nxclapi.h>
+#include <nxsrvapi.h>
 #include <nxcscpapi.h>
 #include <nximage.h>
 #include <nxqueue.h>
@@ -211,43 +211,6 @@ typedef void * HSNMPSESSION;
 
 #include "nms_events.h"
 #include "nms_actions.h"
-
-
-//
-// Agent connection
-//
-
-class AgentConnection
-{
-private:
-   DWORD m_dwAddr;
-   int m_iAuthMethod;
-   char m_szSecret[MAX_SECRET_LENGTH];
-   time_t m_tLastCommandTime;
-   SOCKET m_hSocket;
-   WORD m_wPort;
-   DWORD m_dwNumDataLines;
-   char **m_ppDataLines;
-   char m_szNetBuffer[MAX_LINE_SIZE * 2];
-
-   int RecvLine(int iBufSize, char *szBuffer);
-   DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData = FALSE);
-   void AddDataLine(char *szLine);
-   void DestroyResultData(void);
-
-public:
-   AgentConnection();
-   AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, char *szSecret = NULL);
-   ~AgentConnection();
-
-   BOOL Connect(BOOL bVerbose = FALSE);
-   void Disconnect(void);
-
-   ARP_CACHE *GetArpCache(void);
-   INTERFACE_LIST *GetInterfaceList(void);
-   DWORD Nop(void) { return ExecuteCommand("NOP"); }
-   DWORD GetParameter(const char *szParam, DWORD dwBufSize, char *szBuffer);
-};
 
 
 //
@@ -409,13 +372,11 @@ BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
 void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize);
 
 ARP_CACHE *GetLocalArpCache(void);
-void DestroyArpCache(ARP_CACHE *pArpCache);
 ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
 
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity);
 INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
-void DestroyInterfaceList(INTERFACE_LIST *pIfList);
 
 void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName);

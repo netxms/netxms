@@ -114,9 +114,9 @@ ARP_CACHE *GetLocalArpCache(void)
       return NULL;
    }
 
-   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+   pArpCache = (ARP_CACHE *)MemAlloc(sizeof(ARP_CACHE));
    pArpCache->dwNumEntries = 0;
-   pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * sysArpCache->dwNumEntries);
+   pArpCache->pEntries = (ARP_ENTRY *)MemAlloc(sizeof(ARP_ENTRY) * sysArpCache->dwNumEntries);
 
    for(i = 0; i < sysArpCache->dwNumEntries; i++)
       if ((sysArpCache->table[i].dwType == 3) ||
@@ -138,7 +138,7 @@ ARP_CACHE *GetLocalArpCache(void)
    fp = fopen("/proc/net/arp", "r");
    if (fp != NULL)
    {
-      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+      pArpCache = (ARP_CACHE *)MemAlloc(sizeof(ARP_CACHE));
       pArpCache->dwNumEntries = 0;
       pArpCache->pEntries = NULL;
 
@@ -165,7 +165,7 @@ ARP_CACHE *GetLocalArpCache(void)
 
          // Create new entry in ARP_CACHE structure
          i = pArpCache->dwNumEntries++;
-         pArpCache->pEntries = (ARP_ENTRY *)realloc(pArpCache->pEntries,
+         pArpCache->pEntries = (ARP_ENTRY *)MemReAlloc(pArpCache->pEntries,
                                  sizeof(ARP_ENTRY) * pArpCache->dwNumEntries);
          pArpCache->pEntries[i].dwIndex = InterfaceIndexFromName(szIfName);
          pArpCache->pEntries[i].dwIpAddr = inet_addr(szIpAddr);
@@ -207,9 +207,9 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
    }
 
    // Allocate and initialize interface list structure
-   pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+   pIfList = (INTERFACE_LIST *)MemAlloc(sizeof(INTERFACE_LIST));
    pIfList->iNumEntries = ifTable->dwNumEntries;
-   pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * ifTable->dwNumEntries);
+   pIfList->pInterfaces = (INTERFACE_INFO *)MemAlloc(sizeof(INTERFACE_INFO) * ifTable->dwNumEntries);
    memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * ifTable->dwNumEntries);
 
    // Fill in our interface list
@@ -253,9 +253,9 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
          for(iCount = 0; ifni[iCount].if_index != 0; iCount++);
 
          // Allocate and initialize interface list structure
-         pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+         pIfList = (INTERFACE_LIST *)MemAlloc(sizeof(INTERFACE_LIST));
          pIfList->iNumEntries = iCount;
-         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iCount);
+         pIfList->pInterfaces = (INTERFACE_INFO *)MemAlloc(sizeof(INTERFACE_INFO) * iCount);
          memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * iCount);
 
          for(i = 0; i < iCount; i++)
@@ -330,34 +330,4 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
    CleanInterfaceList(pIfList);
 
    return pIfList;
-}
-
-
-//
-// Destroy interface list created by discovery functions
-//
-
-void DestroyInterfaceList(INTERFACE_LIST *pIfList)
-{
-   if (pIfList != NULL)
-   {
-      if (pIfList->pInterfaces != NULL)
-         free(pIfList->pInterfaces);
-      free(pIfList);
-   }
-}
-
-
-//
-// Destroy ARP cache created by discovery functions
-//
-
-void DestroyArpCache(ARP_CACHE *pArpCache)
-{
-   if (pArpCache != NULL)
-   {
-      if (pArpCache->pEntries != NULL)
-         free(pArpCache->pEntries);
-      free(pArpCache);
-   }
 }

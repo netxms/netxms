@@ -349,10 +349,10 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
       return NULL;
 
    // Create empty list
-   pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+   pIfList = (INTERFACE_LIST *)MemAlloc(sizeof(INTERFACE_LIST));
    pIfList->iNumEntries = iNumIf;
    pIfList->iEnumPos = 0;
-   pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iNumIf);
+   pIfList->pInterfaces = (INTERFACE_INFO *)MemAlloc(sizeof(INTERFACE_INFO) * iNumIf);
    memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 
    // Gather interface indexes
@@ -406,7 +406,7 @@ static void HandlerArp(DWORD dwAddr, const char *szCommunity, variable_list *pVa
                64, FALSE, FALSE))
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
-      ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
+      ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)MemReAlloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = *pVar->val.integer;
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
@@ -423,7 +423,7 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity)
 {
    ARP_CACHE *pArpCache;
 
-   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+   pArpCache = (ARP_CACHE *)MemAlloc(sizeof(ARP_CACHE));
    if (pArpCache == NULL)
       return NULL;
 
