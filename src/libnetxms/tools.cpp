@@ -438,10 +438,20 @@ char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, in
 
 #if !(HAVE_DAEMON) && !defined(_NETWARE)
 
-int daemon(int nochdir, int noclose)
+int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 {
    return 0;
 }
 
 #endif
 
+
+//
+// Check if given name is a valid object name
+//
+
+BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(char *pszName)
+{
+   static char szValidCharacters[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./";
+   return (pszName[0] != 0) && (strspn(pszName, szValidCharacters) == strlen(pszName));
+}

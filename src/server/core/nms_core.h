@@ -389,7 +389,6 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat);
 void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD wFormat);
 void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId);
 
-BOOL IsValidObjectName(char *pszName);
 char *EncodeSQLString(const char *pszIn);
 void DecodeSQLString(char *pszStr);
 

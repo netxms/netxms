@@ -300,17 +300,6 @@ BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
 
 
 //
-// Check if given name is a valid object name
-//
-
-BOOL IsValidObjectName(char *pszName)
-{
-   static char szValidCharacters[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./";
-   return (pszName[0] != 0) && (strspn(pszName, szValidCharacters) == strlen(pszName));
-}
-
-
-//
 // Characters to be escaped before writing to SQL
 //
 

@@ -148,6 +148,7 @@ extern "C"
    void LIBNETXMS_EXPORTABLE StrStrip(char *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
    char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer);
+   BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(char *pszName);
    
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, unsigned char *hash);
@@ -168,7 +169,7 @@ extern "C"
 #endif
 
 #if !(HAVE_DAEMON)
-   int daemon(int nochdir, int noclose);
+   int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
 #endif
 }
 
