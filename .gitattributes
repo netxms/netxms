@@ -16,6 +16,9 @@ sql/dbinit.in -text
 sql/events.in -text
 sql/schema.in -text
 sql/setup.in -text
+src/agent/subagents/skeleton/skeleton.cpp -text
+src/agent/subagents/skeleton/skeleton.dsp -text
+src/agent/subagents/skeleton/skeleton.dsw -text
 src/console/cmdline/main.cpp -text
 src/console/cmdline/nxcmd.dsp -text
 src/console/cmdline/nxcmd.dsw -text

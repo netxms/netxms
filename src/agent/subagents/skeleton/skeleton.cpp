@@ -1,0 +1,81 @@
+/* 
+** Skeleton NetXMS subagent
+** Copyright (C) 2004 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** $module: skeleton.cpp
+**
+**/
+
+#include <windows.h>
+#include <nms_agent.h>
+
+
+//
+// Hanlder functions
+//
+
+static LONG H_Version(char *pszParam, char *pArg, char *pValue)
+{
+   ret_uint(pValue, 0x01000000);
+   return SYSINFO_RC_SUCCESS;
+}
+
+static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
+{
+   char szArg[256];
+
+   NxGetParameterArg(pszParam, 1, szArg, 255);
+   ret_string(pValue, szArg);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Subagent information
+//
+
+static NETXMS_SUBAGENT_PARAM m_parameters[] =
+{
+   { "Skeleton.Version", H_Version, NULL },
+   { "Skeleton.Echo(*)", H_Echo, NULL }
+};
+static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters };
+
+
+//
+// Entry point for NetXMS agent
+//
+
+extern "C" BOOL __declspec(dllexport) __cdecl NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+{
+   *ppInfo = &m_info;
+   return TRUE;
+}
+
+
+//
+// DLL entry point
+//
+
+#ifdef _WIN32
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   return TRUE;
+}
+
+#endif
