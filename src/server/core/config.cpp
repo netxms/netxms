@@ -40,6 +40,7 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   --debug-dc          : Print data collection debug information to console.\n"
                         "   --debug-discovery   : Print network discovery debug information to console.\n"
                         "   --debug-events      : Print events to console.\n"
+                        "   --debug-init        : Print debug information for server initialization code.\n"
                         "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
                         "   --debug-locks       : Print debug information about component locking.\n"
                         "\n"
@@ -224,6 +225,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-dc"))
       {
          g_dwFlags |= AF_DEBUG_DC;
+      }
+      else if (!strcmp(argv[i], "--debug-init"))
+      {
+         g_dwFlags |= AF_DEBUG_INIT;
       }
       else if (!strcmp(argv[i], "--debug-locks"))
       {
