@@ -52,6 +52,8 @@
 //
 
 #define RQ_CONNECT         1
+#define RQ_SYNC_OBJECTS    2
+#define RQ_SYNC_EVENTS     3
 
 
 //
@@ -114,6 +116,9 @@ public:
 void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
 void ChangeState(DWORD dwState);
 BOOL Connect(void);
+void ProcessObjectUpdate(CSCPMessage *pMsg);
+void SyncObjects(void);
+BOOL SendMsg(CSCPMessage *pMsg);
 
 
 //

@@ -43,6 +43,9 @@ void RequestProcessor(void *pArg)
             else
                ChangeState(STATE_DISCONNECTED);
             break;
+         case RQ_SYNC_OBJECTS:
+            SyncObjects();
+            break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
             break;

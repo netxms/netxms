@@ -112,6 +112,14 @@ SOURCE=.\msgwq.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\objects.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\request.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\rqproc.cpp
 # End Source File
 # End Group

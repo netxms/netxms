@@ -42,7 +42,7 @@ MsgWaitQueue::MsgWaitQueue()
    m_pElements = NULL;
    m_hMutex = MutexCreate();
    m_hStopCondition = ConditionCreate();
-   MWQThreadStarter(this);
+   ThreadCreate(MWQThreadStarter, 0, this);
 }
 
 
@@ -88,7 +88,44 @@ void MsgWaitQueue::Put(CSCPMessage *pMsg)
                               sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
    m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
    m_pElements[m_dwNumElements].pMsg = pMsg;
+   m_dwNumElements++;
    Unlock();
+}
+
+
+//
+// Wait for message with specific code and ID
+// Function return pointer to the message on success or
+// NULL on timeout or error
+//
+
+CSCPMessage *MsgWaitQueue::WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut)
+{
+   DWORD i, dwSleepTime;
+
+   do
+   {
+      Lock();
+      for(i = 0; i < m_dwNumElements; i++)
+         if ((m_pElements[i].pMsg->GetId() == dwId) &&
+             (m_pElements[i].pMsg->GetCode() == dwCode))
+         {
+            CSCPMessage *pMsg;
+
+            pMsg = m_pElements[i].pMsg;
+            m_dwNumElements--;
+            memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));
+            Unlock();
+            return pMsg;
+         }
+      Unlock();
+
+      dwSleepTime = min(200, dwTimeOut);
+      ThreadSleepMs(dwSleepTime);
+      dwTimeOut -= dwSleepTime;
+   } while(dwTimeOut > 0);
+
+   return NULL;
 }
 
 
