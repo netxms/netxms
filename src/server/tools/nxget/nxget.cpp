@@ -35,7 +35,7 @@
 //
 
 #define MAX_LINE_SIZE      4096
-#define NXGET_VERSION      "1"
+#define NXGET_VERSION      "2"
 
 #define TRACE_IN           0
 #define TRACE_OUT          1
