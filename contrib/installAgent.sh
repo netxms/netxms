@@ -14,22 +14,21 @@ configureAdd=
 # Main code
 #
 
+make=`which gmake`
+[ "x"$make = "x" ] && make=make
+
 case `uname -s` in
 	Linux)
 		pkill=killall
-		make=make
 		;;
 	SunOS)
 		pkill=pkill
-		make=make
 		;;
 	*BSD)
 		pkill=killall
-		make=gmake
 		;;
 	*)
 		pkill=pkill
-		make=gmake
 		;;
 esac
 
