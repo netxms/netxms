@@ -133,6 +133,7 @@ long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
 DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
 int DBGetNumRows(DB_RESULT hResult);
 void DBFreeResult(DB_RESULT hResult);
+void DBUnloadDriver(void);
 
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 

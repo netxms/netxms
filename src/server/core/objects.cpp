@@ -43,7 +43,7 @@ Network *g_pEntireNet = NULL;
 //
 
 static MUTEX m_hMutexObjectAccess;
-static DWORD dwFreeObjectId = 2;
+static DWORD m_dwFreeObjectId = 2;
 
 
 //
@@ -56,7 +56,7 @@ void ObjectsInit(void)
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
-   NetObjInsert(g_pEntireNet);
+   NetObjInsert(g_pEntireNet, FALSE);
 }
 
 
@@ -193,10 +193,11 @@ static void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dw
 // Insert new object into network
 //
 
-void NetObjInsert(NetObj *pObject)
+void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 {
    ObjectsGlobalLock();
-   pObject->SetId(dwFreeObjectId++);
+   if (bNewObject)   // Assign unique ID to new object
+      pObject->SetId(m_dwFreeObjectId++);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
    switch(pObject->Type())
    {
@@ -321,14 +322,67 @@ BOOL LoadObjects(void)
          if (pSubnet->CreateFromDB(dwId))
          {
             g_pEntireNet->AddSubnet(pSubnet);
-            NetObjInsert(pSubnet);  // Insert into indexes
+            NetObjInsert(pSubnet, FALSE);  // Insert into indexes
          }
          else     // Object load failed
          {
             delete pSubnet;
+            WriteLog(MSG_SUBNET_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
    }
+
+   // Load nodes
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM nodes WHERE is_deleted=0");
+   if (hResult != 0)
+   {
+      Node *pNode;
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pNode = new Node;
+         if (pNode->CreateFromDB(dwId))
+         {
+            NetObjInsert(pNode, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pNode;
+            WriteLog(MSG_NODE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load interfaces
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM interfaces WHERE is_deleted=0");
+   if (hResult != 0)
+   {
+      Interface *pInterface;
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pInterface = new Interface;
+         if (pInterface->CreateFromDB(dwId))
+         {
+            NetObjInsert(pInterface, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pInterface;
+            WriteLog(MSG_INTERFACE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Set first available node ID
+   m_dwFreeObjectId = g_pIndexById[g_dwIdIndexSize - 1].dwKey + 1;
+
    return TRUE;
 }

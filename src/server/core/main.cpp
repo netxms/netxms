@@ -112,6 +112,7 @@ void Shutdown(void)
    ThreadSleep(15);     // Give other threads a chance to terminate in a safe way
    if (g_hCoreDB != 0)
       DBDisconnect(g_hCoreDB);
+   DBUnloadDriver();
    CloseLog();
 }
 
@@ -138,6 +139,32 @@ void Main(void)
 
          if (ch == 27)
             break;
+
+#ifdef _DEBUG
+         switch(ch)
+         {
+            case 'd':   // Dump objects
+            case 'D':
+               {
+                  DWORD i;
+                  char szBuffer[32];
+                  static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
+
+                  for(i = 0; i < g_dwIdIndexSize; i++)
+                  {
+                     printf("Object ID %d\n"
+                            "   Name='%s' Type=%s Addr=%s\n",
+                            g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
+                            objTypes[g_pIndexById[i].pObject->Type()],
+                            IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer));
+                  }
+                  printf("*** Object dump complete ***\n");
+               }
+               break;
+            default:
+               break;
+         }
+#endif
       }
 
       Shutdown();

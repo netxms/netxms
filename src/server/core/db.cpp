@@ -47,6 +47,7 @@ static DB_RESULT (* m_fpDrvSelect)(DB_HANDLE, char *) = NULL;
 static char* (* m_fpDrvGetField)(DB_RESULT, int, int) = NULL;
 static int (* m_fpDrvGetNumRows)(DB_RESULT) = NULL;
 static void (* m_fpDrvFreeResult)(DB_RESULT) = NULL;
+static void (* m_fpDrvUnload)(void) = NULL;
 
 
 //
@@ -71,9 +72,11 @@ BOOL DBInit(void)
    m_fpDrvGetField = (char* (*)(DB_RESULT, int, int))DLGetSymbolAddr(m_hDriver, "DrvGetField");
    m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddr(m_hDriver, "DrvGetNumRows");
    m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddr(m_hDriver, "DrvFreeResult");
+   m_fpDrvUnload = (void (*)(void))DLGetSymbolAddr(m_hDriver, "DrvUnload");
    if ((fpDrvInit == NULL) || (m_fpDrvConnect == NULL) || (m_fpDrvDisconnect == NULL) ||
        (m_fpDrvQuery == NULL) || (m_fpDrvSelect == NULL) || (m_fpDrvGetField == NULL) ||
-       (m_fpDrvGetNumRows == NULL) || (m_fpDrvFreeResult == NULL))
+       (m_fpDrvGetNumRows == NULL) || (m_fpDrvFreeResult == NULL) || 
+       (m_fpDrvUnload == NULL))
    {
       WriteLog(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
       return FALSE;
@@ -95,12 +98,23 @@ BOOL DBInit(void)
 
 
 //
+// Notify driver of unload
+//
+
+void DBUnloadDriver(void)
+{
+   m_fpDrvUnload();
+   DLClose(m_hDriver);
+}
+
+
+//
 // Connect to database
 //
 
 DB_HANDLE DBConnect(void)
 {
-   return m_fpDrvConnect != NULL ? m_fpDrvConnect(g_szDbServer, g_szDbLogin, g_szDbPassword, g_szDbName) : 0;
+   return m_fpDrvConnect(g_szDbServer, g_szDbLogin, g_szDbPassword, g_szDbName);
 }
 
 
@@ -110,8 +124,7 @@ DB_HANDLE DBConnect(void)
 
 void DBDisconnect(DB_HANDLE hConn)
 {
-   if (m_fpDrvDisconnect != NULL)
-      m_fpDrvDisconnect(hConn);
+   m_fpDrvDisconnect(hConn);
 }
 
 
@@ -121,7 +134,8 @@ void DBDisconnect(DB_HANDLE hConn)
 
 BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
 {
-   return m_fpDrvQuery != NULL ? m_fpDrvQuery(hConn, szQuery) : FALSE;
+printf("%s\n",szQuery);
+   return m_fpDrvQuery(hConn, szQuery);
 }
 
 
@@ -131,7 +145,8 @@ BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
 
 DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
 {
-   return m_fpDrvSelect != NULL ? m_fpDrvSelect(hConn, szQuery) : 0;
+printf("%s\n",szQuery);
+   return m_fpDrvSelect(hConn, szQuery);
 }
 
 
@@ -141,7 +156,7 @@ DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
 
 char *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
 {
-   return m_fpDrvGetField != NULL ? m_fpDrvGetField(hResult, iRow, iColumn) : NULL;
+   return m_fpDrvGetField(hResult, iRow, iColumn);
 }
 
 
@@ -183,7 +198,7 @@ long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 
 int DBGetNumRows(DB_RESULT hResult)
 {
-   return m_fpDrvGetNumRows != NULL ? m_fpDrvGetNumRows(hResult) : 0;
+   return m_fpDrvGetNumRows(hResult);
 }
 
 
@@ -193,6 +208,5 @@ int DBGetNumRows(DB_RESULT hResult)
 
 void DBFreeResult(DB_RESULT hResult)
 {
-   if (m_fpDrvFreeResult != NULL)
-      m_fpDrvFreeResult(hResult);
+   m_fpDrvFreeResult(hResult);
 }

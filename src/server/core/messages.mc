@@ -122,4 +122,16 @@ Language=English
 Inconsistent database: node %1 linked to object %2 which is not a subnet
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_NODE_ID
+Language=English
+Inconsistent database: interface %1 linked to non-existing node %2
+.
+
+MessageId=
+SymbolicName=MSG_NODE_NOT_NODE
+Language=English
+Inconsistent database: interface %1 linked to object %2 which is not a node
+.
+
 ;#endif

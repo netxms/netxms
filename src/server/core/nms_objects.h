@@ -129,6 +129,7 @@ public:
    
    DWORD IpAddr(void) { return m_dwIpAddr; }
    DWORD Id(void) { return m_dwId; }
+   const char *Name(void) { return m_szName; }
 
    BOOL IsModified(void) { return m_bIsModified; }
    BOOL IsDeleted(void) { return m_bIsDeleted; }
@@ -275,7 +276,7 @@ void ObjectsInit(void);
 void ObjectsGlobalLock(void);
 void ObjectsGlobalUnlock(void);
 
-void NetObjInsert(NetObj *pObject);
+void NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDelete(NetObj *pObject);
 
 NetObj *FindObjectById(DWORD dwId);

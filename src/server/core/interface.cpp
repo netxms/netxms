@@ -76,6 +76,58 @@ Interface::~Interface()
 
 
 //
+// Create object from database data
+//
+
+BOOL Interface::CreateFromDB(DWORD dwId)
+{
+   char szQuery[256];
+   DB_RESULT hResult;
+   DWORD dwNodeId;
+   NetObj *pObject;
+   BOOL bResult = FALSE;
+
+   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id"
+                    " FROM interfaces WHERE id=%d", dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == 0)
+      return FALSE;     // Query failed
+
+   if (DBGetNumRows(hResult) != 0)
+   {
+      m_dwId = dwId;
+      strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
+      m_iStatus = DBGetFieldLong(hResult, 0, 2);
+      m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
+      m_dwIpNetMask = DBGetFieldULong(hResult, 0, 4);
+      m_dwIfType = DBGetFieldULong(hResult, 0, 5);
+      m_dwIfIndex = DBGetFieldULong(hResult, 0, 6);
+      dwNodeId = DBGetFieldULong(hResult, 0, 7);
+
+      // Link interface to node
+      pObject = FindObjectById(dwNodeId);
+      if (pObject == NULL)
+      {
+         WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+      }
+      else if (pObject->Type() != OBJECT_NODE)
+      {
+         WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+      }
+      else
+      {
+         pObject->AddChild(this);
+         AddParent(pObject);
+         bResult = TRUE;
+      }
+   }
+
+   DBFreeResult(hResult);
+   return bResult;
+}
+
+
+//
 // Save interface object to database
 //
 

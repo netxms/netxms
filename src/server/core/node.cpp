@@ -57,6 +57,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_iStatusPollType = POLL_ICMP_PING;
    m_iSNMPVersion = 1;
    strcpy(m_szCommunityString, "public");
+   IpToStr(dwAddr, m_szName);    // Make default name from IP address
 }
 
 
@@ -121,6 +122,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    // Link node to subnets
    sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%d", dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
 
@@ -130,6 +132,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
       return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
    }
 
+   BOOL bResult = FALSE;
    iNumRows = DBGetNumRows(hResult);
    for(i = 0; i < iNumRows; i++)
    {
@@ -138,20 +141,23 @@ BOOL Node::CreateFromDB(DWORD dwId)
       if (pObject == NULL)
       {
          WriteLog(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         break;
       }
       else if (pObject->Type() != OBJECT_SUBNET)
       {
          WriteLog(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         break;
       }
       else
       {
          pObject->AddChild(this);
          AddParent(pObject);
+         bResult = TRUE;
       }
    }
 
    DBFreeResult(hResult);
-   return TRUE;
+   return bResult;
 }
 
 

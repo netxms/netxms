@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: discovery.cpp
+** $module: np.cpp
 **
 **/
 
@@ -32,7 +32,7 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    Node *pNode;
    Interface *pInterface;
    Subnet *pSubnet;
-   DWORD dwSubnetAddr;
+   DWORD dwSubnetAddr, dwNodeFlags = 0;
 
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
@@ -50,15 +50,15 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    if (pSubnet == NULL)
    {
       pSubnet = new Subnet(dwSubnetAddr, dwNetMask);
-      NetObjInsert(pSubnet);
+      NetObjInsert(pSubnet, TRUE);
       g_pEntireNet->AddSubnet(pSubnet);
    }
 
    pInterface = new Interface(dwIpAddr, dwNetMask);
-   NetObjInsert(pInterface);
-   pNode = new Node(dwIpAddr, dwFlags, 0);
+   NetObjInsert(pInterface, TRUE);
+   pNode = new Node(dwIpAddr, 0, dwFlags);
    pNode->AddInterface(pInterface);
-   NetObjInsert(pNode);
+   NetObjInsert(pNode, TRUE);
 
    // Link node to subnet
    pSubnet->AddNode(pNode);
