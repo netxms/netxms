@@ -54,12 +54,12 @@ typedef unsigned long HREQUEST;
 #define MAX_OID_LENGTH           1024
 #define MAX_EVENT_MSG_LENGTH     256
 #define MAX_EVENT_NAME           64
-#define INVALID_REQUEST_HANDLE   ((HREQUEST)0xFFFFFFFF)
 #define MAX_USER_NAME            64
 #define MAX_USER_FULLNAME        128
 #define MAX_USER_DESCR           256
-#define GROUP_FLAG               0x80000000
-#define GROUP_EVERYONE           0x80000000
+#define GROUP_FLAG               ((DWORD)0x80000000)
+#define GROUP_EVERYONE           ((DWORD)0x80000000)
+#define INVALID_UID              ((DWORD)0xFFFFFFFF)
 
 
 //
@@ -214,6 +214,7 @@ typedef unsigned long HREQUEST;
 #define UF_DELETED                  0x0002
 #define UF_DISABLED                 0x0004
 #define UF_CHANGE_PASSWORD          0x0008
+#define UF_CANNOT_CHANGE_PASSWORD   0x0010
 
 
 //
@@ -406,6 +407,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwNewId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo);
+DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword);
 
 #ifdef __cplusplus
 }

@@ -396,3 +396,37 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
    }
    return dwRetCode;
 }
+
+
+//
+// Set password for user
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode, dwRqId;
+   BYTE hash[SHA_DIGEST_LENGTH];
+
+   dwRqId = g_dwMsgId++;
+
+   CreateSHA1Hash(pszNewPassword, hash);
+
+   msg.SetCode(CMD_SET_PASSWORD);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_USER_ID, dwUserId);
+   msg.SetVariable(VID_PASSWORD, hash, SHA_DIGEST_LENGTH);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
