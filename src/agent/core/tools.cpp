@@ -53,7 +53,7 @@ void DebugPrintf(char *pszFormat, ...)
       char szBuffer[1024];
 
       va_start(args, pszFormat);
-      vsnprintf(szBuffer, 1024, pszFormat, args);
+      _vsntprintf(szBuffer, 1024, pszFormat, args);
       va_end(args);
       
       WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);

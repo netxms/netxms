@@ -112,7 +112,7 @@ LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumActions; i++)
    {
-      snprintf(szBuffer, 1024, "%s %d \"%s\"", m_pActionList[i].szName, m_pActionList[i].iType,
+      _sntprintf(szBuffer, 1024, "%s %d \"%s\"", m_pActionList[i].szName, m_pActionList[i].iType,
                m_pActionList[i].pszCmdLine);
       NxAddResultString(value, szBuffer);
    }

@@ -157,7 +157,7 @@ LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
-      snprintf(szBuffer, MAX_PATH + 32, "%s 0x%08X %s", m_pSubAgentList[i].pInfo->szName,
+      _sntprintf(szBuffer, MAX_PATH + 32, "%s 0x%08X %s", m_pSubAgentList[i].pInfo->szName,
                m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
       NxAddResultString(value, szBuffer);
    }
