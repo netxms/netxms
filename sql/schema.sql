@@ -186,4 +186,82 @@ CREATE TABLE ACTIONS
 	command varchar(255),
 	PRIMARY KEY(id)
 );
-	
+
+
+--
+-- Node groups
+--
+
+CREATE TABLE NodeGroups
+(
+	id integer not null,
+	name varchar(255),
+	PRIMARY KEY(id)
+);
+
+
+--
+-- Event groups
+--
+
+CREATE TABLE EventGroups
+(
+	id integer not null,
+	name varchar(255),
+	PRIMARY KEY(id)
+);
+
+
+--
+-- Node group members
+--
+
+CREATE TABLE NodeGroupMembers
+(
+	group_id integer not null,
+	node_id integer not null,
+	KEY(group_id),
+	KEY(node_id)
+);
+
+
+--
+-- Event group members
+--
+
+CREATE TABLE EventGroupMembers
+(
+	group_id integer not null,
+	event_id integer not null,
+	KEY(group_id),
+	KEY(event_id)
+);
+
+
+--
+-- Event processing policy
+--
+
+CREATE TABLE EventPolicy
+(
+	id integer not null,	-- Rule number
+	comments varchar(255),
+	PRIMARY KEY(id)
+);
+
+CREATE TABLE PolicySourceList
+(
+	rule_id integer not null,
+	source_type integer not null,
+	object_id integer not null,
+	KEY(rule_id)
+);
+
+CREATE TABLE PolicyEventList
+(
+	rule_id integer not null,
+	is_group integer not null,
+	event_id integer not null,
+	KEY(rule_id)
+);
+
