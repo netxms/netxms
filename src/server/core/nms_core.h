@@ -47,6 +47,8 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
+#include <openssl/ssl.h>
+
 #include <nms_common.h>
 #include <nms_threads.h>
 #include <dbdrv.h>
@@ -239,8 +241,10 @@ public:
 
 BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault);
 int ConfigReadInt(char *szVar, int iDefault);
+DWORD ConfigReadULong(char *szVar, DWORD dwDefault);
 BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
 BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
+BOOL ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate);
 
 void InitLog(void);
 void CloseLog(void);
@@ -310,6 +314,8 @@ void WatchdogPrintStatus(void);
 void CheckForMgmtNode(void);
 
 void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
+
+void CreateSHA1Hash(char *pszSource, char *pBuffer);
 
 #ifdef _WIN32
 

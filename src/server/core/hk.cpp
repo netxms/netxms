@@ -54,7 +54,7 @@ static void CleanDeletedObjects(void)
                // No records with that source ID, so we can purge this object
                sprintf(szQuery, "DELETE FROM DeletedObjects WHERE object_id=%ld", dwObjectId);
                DBQuery(g_hCoreDB, szQuery);
-               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Deleted object with id %ld was purged\n", dwObjectId);
+               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %ld was purged\n", dwObjectId);
             }
             DBFreeAsyncResult(hAsyncResult);
          }
@@ -71,13 +71,28 @@ static void CleanDeletedObjects(void)
 void HouseKeeper(void *pArg)
 {
    time_t currTime;
+   char szQuery[256];
+   DWORD dwEventLogRetentionTime, dwInterval;
 
+   // Load configuration
+   dwInterval = ConfigReadULong("HouseKeepingInterval", 3600);
+   dwEventLogRetentionTime = ConfigReadULong("EventLogRetentionTime", 5184000);
+
+   // Housekeeping loop
    while(!ShutdownInProgress())
    {
       currTime = time(NULL);
-      if (SleepAndCheckForShutdown(3600 - (currTime % 3600)))
+      if (SleepAndCheckForShutdown(dwInterval - (currTime % dwInterval)))
          break;      // Shutdown has arrived
 
+      // Remove outdated event log records
+      if (dwEventLogRetentionTime > 0)
+      {
+         sprintf(szQuery, "DELETE FROM EventLog WHERE timestamp<%ld", currTime - dwEventLogRetentionTime);
+         DBQuery(g_hCoreDB, szQuery);
+      }
+
+      // Remove deleted objects which are no longer referenced
       CleanDeletedObjects();
    }
 }

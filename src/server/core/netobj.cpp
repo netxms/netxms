@@ -214,6 +214,7 @@ void NetObj::Delete(void)
    for(i = 0; i < m_dwParentCount; i++)
       m_pParentList[i]->DeleteChild(this);
    free(m_pParentList);
+   m_pParentList = NULL;
    m_dwParentCount = 0;
 
    // Delete references to this object from child objects
@@ -224,6 +225,7 @@ void NetObj::Delete(void)
          m_pChildList[i]->Delete();
    }
    free(m_pChildList);
+   m_pChildList = NULL;
    m_dwChildCount = 0;
 
    NetObjDeleteFromIndexes(this);

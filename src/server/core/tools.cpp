@@ -295,3 +295,28 @@ void DestroyArpCache(ARP_CACHE *pArpCache)
       free(pArpCache);
    }
 }
+
+
+//
+// Generate SHA1 hash for text string
+//
+
+void CreateSHA1Hash(char *pszSource, char *pBuffer)
+{
+   EVP_MD_CTX ctx;
+	BYTE md[SHA_DIGEST_LENGTH];
+   int i;
+   char *pCurr;
+
+   EVP_MD_CTX_init(&ctx);
+	EVP_Digest(pszSource, (unsigned long)strlen(pszSource), md, NULL, EVP_sha1(), NULL);
+	EVP_MD_CTX_cleanup(&ctx);
+   for(i = 0, pCurr = pBuffer; i < SHA_DIGEST_LENGTH; i++)
+   {
+      *pCurr = bin2hex(md[i] >> 4);
+      pCurr++;
+      *pCurr = bin2hex(md[i] & 15);
+      pCurr++;
+   }
+   *pCurr = 0;
+}

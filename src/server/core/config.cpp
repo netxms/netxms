@@ -31,28 +31,29 @@ static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
                         "Copyright (c) 2003 SecurityProjects.org\n\n"
                         "Usage: nms_core [<options>] <command>\n\n"
                         "Valid options are:\n"
-                        "   --config <file>   : Set non-default configuration file\n"
-                        "                     : Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   --debug-all       : Turn on all possible debug output\n"
-                        "   --debug-cscp      : Print client-server communication protocol debug\n"
-                        "                     : information to console.\n"
-                        "   --debug-dc        : Print data collection debug information to console.\n"
-                        "   --debug-discovery : Print network discovery debug information to console.\n"
-                        "   --debug-events    : Print events to console.\n"
+                        "   --config <file>     : Set non-default configuration file\n"
+                        "                       : Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   --debug-all         : Turn on all possible debug output\n"
+                        "   --debug-cscp        : Print client-server communication protocol debug\n"
+                        "                       : information to console.\n"
+                        "   --debug-dc          : Print data collection debug information to console.\n"
+                        "   --debug-discovery   : Print network discovery debug information to console.\n"
+                        "   --debug-events      : Print events to console.\n"
+                        "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
                         "\n"
                         "Valid commands are:\n"
-                        "   check-config      : Check configuration file syntax\n"
+                        "   check-config        : Check configuration file syntax\n"
 #ifdef _WIN32
-                        "   install           : Install Win32 service\n"
-                        "   install-events    : Install Win32 event source\n"
+                        "   install             : Install Win32 service\n"
+                        "   install-events      : Install Win32 event source\n"
 #endif
-                        "   help              : Display help and exit\n"
+                        "   help                : Display help and exit\n"
 #ifdef _WIN32
-                        "   remove            : Remove Win32 service\n"
-                        "   remove-events     : Remove Win32 event source\n"
+                        "   remove              : Remove Win32 service\n"
+                        "   remove-events       : Remove Win32 event source\n"
 #endif
-                        "   standalone        : Run in standalone mode (not as service)\n"
-                        "   version           : Display version and exit\n"
+                        "   standalone          : Run in standalone mode (not as service)\n"
+                        "   version             : Display version and exit\n"
                         "\n"
                         "NOTE: All debug options will work only in standalone mode.\n\n";
 
@@ -222,6 +223,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       {
          g_dwFlags |= AF_DEBUG_DC;
       }
+      else if (!strcmp(argv[i], "--debug-housekeeper"))
+      {
+         g_dwFlags |= AF_DEBUG_HOUSEKEEPER;
+      }
       else if (!strcmp(argv[i], "check-config"))
       {
          g_dwFlags |= AF_STANDALONE;
@@ -336,6 +341,21 @@ int ConfigReadInt(char *szVar, int iDefault)
 
 
 //
+// Read unsigned long value from configuration table
+//
+
+DWORD ConfigReadULong(char *szVar, DWORD dwDefault)
+{
+   char szBuffer[64];
+
+   if (ConfigReadStr(szVar, szBuffer, 64, ""))
+      return strtoul(szBuffer, NULL, 0);
+   else
+      return dwDefault;
+}
+
+
+//
 // Write string value to configuration table
 //
 
@@ -380,5 +400,18 @@ BOOL ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
    char szBuffer[64];
 
    sprintf(szBuffer, "%ld", iValue);
+   return ConfigWriteStr(szVar, szBuffer, bCreate);
+}
+
+
+//
+// Write unsigned long value to configuration table
+//
+
+BOOL ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate)
+{
+   char szBuffer[64];
+
+   sprintf(szBuffer, "%lu", dwValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate);
 }
