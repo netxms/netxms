@@ -6,7 +6,7 @@
 include ../../netware/Makefile.inc
 
 OBJECTS  = c_lgcc3.o config.o dload.o hash.o icmp.o inline.o main.o md5.o \
-           sha1.o tools.o unicode.o
+           sha1.o strtoll.o strtoull.o tools.o unicode.o
 EXEC     = netxms.nlm
 DEF      = netxms.def
 OBJTMP   = netxms_r.o
@@ -27,6 +27,7 @@ $(EXEC): $(OBJECTS) $(DEF)
 	$(PERL) ../../tools/nwmkimp.pl $(OBJTMP) $(IMP)
 	$(LINK) $(LDFLAGS) -T $(DEF)
 	rm -f $(OBJTMP)
+	cp netxms.nlm ../../netware/bin
 
 clean:
 	rm -f *.o $(EXEC)
