@@ -125,6 +125,7 @@ static void NetReceiver(void *pArg)
             case CMD_KEEPALIVE:     // Keepalive message, ignore it
                break;
             case CMD_OBJECT:        // Object information
+            case CMD_OBJECT_UPDATE:
             case CMD_OBJECT_LIST_END:
                ProcessObjectUpdate(pMsg);
                break;
