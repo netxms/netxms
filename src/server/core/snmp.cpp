@@ -377,6 +377,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
    long i, iNumIf;
    char szOid[128], szBuffer[256];
    INTERFACE_LIST *pIfList = NULL;
+   BOOL bSuccess = FALSE;
 
    // Get number of interfaces
    if (SnmpGet(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
@@ -391,42 +392,57 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
    memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 
    // Gather interface indexes
-   SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.2.2.1.1", HandlerIndex, pIfList, FALSE);
-
-   // Enumerate interfaces
-   for(i = 0; i < iNumIf; i++)
+   if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.2.2.1.1",
+                     HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
-      // Interface name
-      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
-      if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
-                   pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME,
-                   FALSE, FALSE) != SNMP_ERR_SUCCESS)
-         continue;
+      // Enumerate interfaces
+      for(i = 0; i < iNumIf; i++)
+      {
+         // Interface name
+         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
+         if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
+                      pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME,
+                      FALSE, FALSE) != SNMP_ERR_SUCCESS)
+            break;
 
-      // Interface type
-      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
-      if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
-                   &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
-                   FALSE, FALSE) != SNMP_ERR_SUCCESS)
-         continue;
+         // Interface type
+         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
+         if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
+                      &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
+                      FALSE, FALSE) != SNMP_ERR_SUCCESS)
+            break;
 
-      // MAC address
-      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.6.%d", pIfList->pInterfaces[i].dwIndex);
-      memset(szBuffer, 0, MAC_ADDR_LENGTH);
-      if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
-                   szBuffer, 256, FALSE, TRUE) != SNMP_ERR_SUCCESS)
-         continue;
-      memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+         // MAC address
+         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.6.%d", pIfList->pInterfaces[i].dwIndex);
+         memset(szBuffer, 0, MAC_ADDR_LENGTH);
+         if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
+                      szBuffer, 256, FALSE, TRUE) != SNMP_ERR_SUCCESS)
+            break;
+         memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+      }
+
+      if (i == iNumIf)
+      {
+         // Interface IP address'es and netmasks
+         if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1",
+                           HandlerIpAddr, pIfList, FALSE) == SNMP_ERR_SUCCESS)
+         {
+            // Handle special cases
+            if (dwNodeType == NODE_TYPE_NORTEL_ACCELAR)
+               GetAccelarVLANIfList(dwVersion, dwAddr, szCommunity, pIfList);
+            bSuccess = TRUE;
+         }
+      }
    }
 
-   // Interface IP address'es and netmasks
-   SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1", HandlerIpAddr, pIfList, FALSE);
-
-   // Handle special cases
-   if (dwNodeType == NODE_TYPE_NORTEL_ACCELAR)
-      GetAccelarVLANIfList(dwVersion, dwAddr, szCommunity, pIfList);
-
-   CleanInterfaceList(pIfList);
+   if (bSuccess)
+   {
+      CleanInterfaceList(pIfList);
+   }
+   else
+   {
+      DestroyInterfaceList(pIfList);
+   }
 
    return pIfList;
 }
