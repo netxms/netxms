@@ -75,9 +75,12 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-/* #define SHA1HANDSOFF  */
+#define SHA1HANDSOFF
 
+#ifndef _WIN32
 #include <config.h>
+#endif
+
 #include "sha1.h"
 
 /* #include <process.h> */	/* prototype for exit() - JHB */
@@ -115,7 +118,7 @@ typedef union {
 } CHAR64LONG16;
 CHAR64LONG16* block;
 #ifdef SHA1HANDSOFF
-static unsigned char workspace[64];
+   unsigned char workspace[64];
     block = (CHAR64LONG16*)workspace;
     memcpy(block, buffer, 64);
 #else
