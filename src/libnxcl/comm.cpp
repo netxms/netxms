@@ -107,7 +107,6 @@ static void NetReceiver(void *pArg)
          {
             case CMD_EVENT:
                ProcessEvent(NULL, pRawMsg);
-               delete pMsg;
                break;
             default:    // We ignore unknown raw messages
                break;

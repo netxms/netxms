@@ -22,6 +22,7 @@
 **/
 
 #include "nxcmd.h"
+#include <time.h>
 
 
 //
@@ -63,7 +64,8 @@ static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          }
          break;
       case NXC_EVENT_NEW_ELOG_RECORD:
-         printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
+//         printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
+         MemFree(pArg);
          break;
       default:
          printf("Event %d [Code = %d, Arg = 0x%08X]\n", dwEvent, dwCode, pArg);
@@ -94,11 +96,6 @@ int main(int argc, char *argv[])
    DWORD dwVersion;
    char szServer[256], szLogin[256], szPassword[256];
 
-QWORD x = 111, y;
-y = htonq(x);
-printf("%016I64X %016I64X %016I64X\n", x, y, ntohq(y));
-exit(1);
-
 #ifdef _WIN32
    WSADATA wsaData;
 
@@ -112,7 +109,7 @@ exit(1);
           (dwVersion >> 16) & 255, dwVersion & 0xFFFF);
    NXCInitialize();
    NXCSetEventHandler(EventHandler);
-   NXCSetDebugCallback(DebugCallback);
+   //NXCSetDebugCallback(DebugCallback);
 
 strcpy(szServer,"eagle");
 strcpy(szLogin,"admin");
@@ -134,12 +131,14 @@ strcpy(szPassword," ");
    ConditionWait(g_hCondOperationComplete, INFINITE);
    printf("Objects synchronized.\n");
 
-   NXCEnumerateObjects(PrintObject);
+   //NXCEnumerateObjects(PrintObject);
 
-   printf("Loading events...\n");
+   time_t t = time(0);
+   printf("%s Loading events...\n", ctime(&t));
    NXCSyncEvents();
    ConditionWait(g_hCondOperationComplete, INFINITE);
-   printf("All events loaded.\n");
+   t = time(0);
+   printf("%s All events loaded.\n", ctime(&t));
 
    return 0;
 }
