@@ -79,7 +79,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	if( !CFrameWnd::PreCreateWindow(cs) )
 		return FALSE;
 
-   cs.style = WS_POPUP | WS_MAXIMIZE;
+   cs.style = WS_POPUP;
 	cs.dwExStyle &= ~WS_EX_CLIENTEDGE;
 	cs.lpszClass = AfxRegisterWndClass(0);
 	return TRUE;

@@ -27,6 +27,14 @@
 
 
 //
+// Global data
+//
+
+MONITORINFOEX *g_pMonitorList = NULL;
+DWORD g_dwNumMonitors = 0;
+
+
+//
 // Create file from resource
 //
 
@@ -65,4 +73,30 @@ BOOL FileFromResource(UINT nResId, TCHAR *pszFileName)
    }
 
    return bResult;
+}
+
+
+//
+// Callback function for EnumDisplayMonitors()
+//
+
+static BOOL CALLBACK MonitorEnumCallback(HMONITOR hMonitor, HDC hdcMonitor,
+                                         LPRECT lprcMonitor, LPARAM dwData)
+{
+   g_pMonitorList = (MONITORINFOEX *)realloc(g_pMonitorList, sizeof(MONITORINFOEX) * (g_dwNumMonitors + 1));
+   g_pMonitorList[g_dwNumMonitors].cbSize = sizeof(MONITORINFOEX);
+   GetMonitorInfo(hMonitor, &g_pMonitorList[g_dwNumMonitors]);
+   g_dwNumMonitors++;
+   return TRUE;
+}
+
+
+//
+// Create list of available monitors
+//
+
+void CreateMonitorList(void)
+{
+   g_dwNumMonitors = 0;
+   EnumDisplayMonitors(NULL, NULL, MonitorEnumCallback, 0);
 }

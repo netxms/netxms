@@ -54,6 +54,7 @@ DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, char *pszInfoText);
 BOOL FileFromResource(UINT nResId, TCHAR *pszFileName);
+void CreateMonitorList(void);
 
 
 //
@@ -69,6 +70,8 @@ extern TCHAR g_szWorkDir[];
 extern COLORREF g_rgbInfoLineButtons;
 extern COLORREF g_rgbInfoLineBackground;
 extern DWORD g_dwFlags;
+extern MONITORINFOEX *g_pMonitorList;
+extern DWORD g_dwNumMonitors;
 
 
 #endif
