@@ -372,6 +372,7 @@ void Main(void)
 
 int main(int argc, char *argv[])
 {
+printf("sizeof=%d\n", sizeof(CSCP_DF));exit(1);
    if (!ParseCommandLine(argc, argv))
       return 1;
 

@@ -35,6 +35,8 @@
 // Data field structure
 //
 
+#pragma pack(1)
+
 typedef struct
 {
    DWORD dwVarId;       // Variable identifier
@@ -73,6 +75,8 @@ typedef struct
    DWORD dwId;    // Unique message identifier
    CSCP_DF df[1]; // Data fields
 } CSCP_MESSAGE;
+
+#pragma pack()
 
 
 //
