@@ -75,36 +75,6 @@
 
 
 //
-// Queue class
-//
-
-class LIBNETXMS_EXPORTABLE Queue
-{
-private:
-   MUTEX m_hQueueAccess;
-   CONDITION m_hConditionNotEmpty;
-   void **m_pElements;
-   DWORD m_dwNumElements;
-   DWORD m_dwBufferSize;
-   DWORD m_dwFirst;
-   DWORD m_dwLast;
-   DWORD m_dwBufferIncrement;
-
-   void Lock(void) { MutexLock(m_hQueueAccess, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_hQueueAccess); }
-
-public:
-   Queue(DWORD dwInitialSize = 256, DWORD dwBufferIncrement = 32);
-   ~Queue();
-
-   void Put(void *pObject);
-   void *Get(void);
-   void *GetOrBlock(void);
-   DWORD Size(void) { return m_dwNumElements; }
-};
-
-
-//
 // Functions
 //
 

@@ -207,6 +207,10 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\queue.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
@@ -312,6 +316,10 @@ SOURCE=..\..\..\include\nxcscpapi.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxevent.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxqueue.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

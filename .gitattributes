@@ -143,7 +143,6 @@ src/libnetxms/libnetxms.dsp -text
 src/libnetxms/libnetxms.dsw -text
 src/libnetxms/libnetxms.h -text
 src/libnetxms/main.cpp -text
-src/libnetxms/queue.cpp -text
 src/libnetxms/tools.cpp -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/comm.cpp -text
