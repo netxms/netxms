@@ -12,7 +12,7 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 	);
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
-		2, 0, 1,
+		2, 0, 0,
 		'Subnet added',
 		'Generated when new subnet object added to the database.\n'
 		'Parameters:\n'
@@ -21,7 +21,7 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		3, 0, 1,
-		'Interface %2 added (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" added (IP Addr: %3/%4, IfIndex: %5)',
 		'Generated when new interface object added to the database.\n'
 		'Please note that source of event is node, not an interface itself.\n'
 		'Parameters:\n'
@@ -34,7 +34,7 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		4, 0, 1,
-		'Interface %2 changed state to UP (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" changed state to UP (IP Addr: %3/%4, IfIndex: %5)',
 		'Generated when interface goes up.\n'
 		'Please note that source of event is node, not an interface itself.\n'
 		'Parameters:\n'
@@ -47,7 +47,7 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		5, 2, 1,
-		'Interface %2 changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
+		'Interface "%2" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
 		'Generated when interface goes down.\n'
 		'Please note that source of event is node, not an interface itself.\n'
 		'Parameters:\n'
@@ -141,12 +141,20 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		16, 0, 1,
-		'Interface %2 deleted (IP Addr: %3/%4, IfIndex: %1)',
+		'Interface "%2" deleted (IP Addr: %3/%4, IfIndex: %1)',
 		'Generated when new interface object deleted from the database.\n'
 		'Please note that source of event is node, not an interface itself.\n'
 		'Parameters:\n'
-		'   1) Interface index'
+		'   1) Interface index\n'
 		'   2) Interface name\n'
 		'   3) Interface IP address\n'
 		'   4) Interface netmask\n'
+	);
+INSERT INTO events (id,severity,flags,message,description) VALUES
+	(
+		1001, 4, 1,
+		'Thread "%1" is not responding',
+		'Generated when one of the system threads hangs or stops unexpectedly.\n'
+		'Parameters:\n'
+		'   1) Thread name'
 	);
