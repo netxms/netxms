@@ -78,11 +78,16 @@ static char *MessageCodeName(WORD wCode)
       "CMD_LOAD_USER_DB",
       "CMD_USER_DATA",
       "CMD_GROUP_DATA",
-      "CMD_USER_DB_EOF"
+      "CMD_USER_DB_EOF",
+      "CMD_UPDATE_USER",
+      "CMD_DELETE_USER",
+      "CMD_CREATE_USER",
+      "CMD_LOCK_USER_DB",
+      "CMD_UNLOCK_USER_DB"
    };
    static char szBuffer[32];
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_USER_DB_EOF))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UNLOCK_USER_DB))
       return pszMsgNames[wCode - CMD_LOGIN];
    sprintf(szBuffer, "CMD_UNKNOWN(%d)", wCode);
    return szBuffer;

@@ -65,10 +65,6 @@ ClientSession::~ClientSession()
    ConditionDestroy(m_hCondUpdateThreadStopped);
    MutexDestroy(m_hMutexSendEvents);
    MutexDestroy(m_hMutexSendObjects);
-
-   // Unlock locked components
-   if (m_dwFlags & CSF_EVENT_DB_LOCKED)
-      UnlockComponent(CID_EVENT_DB);
 }
 
 
@@ -141,6 +137,9 @@ void ClientSession::ReadThread(void)
    // Wait for other threads to finish
    ConditionWait(m_hCondWriteThreadStopped, INFINITE);
    ConditionWait(m_hCondProcessingThreadStopped, INFINITE);
+
+   // Remove all locks created by this session
+   RemoveAllSessionLocks(m_dwIndex);
 }
 
 
@@ -709,6 +708,8 @@ void ClientSession::SendUserDB(DWORD dwRqId)
       msg.SetVariable(VID_USER_NAME, g_pUserList[i].szName);
       msg.SetVariable(VID_USER_FLAGS, g_pUserList[i].wFlags);
       msg.SetVariable(VID_USER_SYS_RIGHTS, g_pUserList[i].wSystemRights);
+      msg.SetVariable(VID_USER_FULL_NAME, g_pUserList[i].szFullName);
+      msg.SetVariable(VID_USER_DESCRIPTION, g_pUserList[i].szDescription);
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
@@ -721,6 +722,7 @@ void ClientSession::SendUserDB(DWORD dwRqId)
       msg.SetVariable(VID_USER_NAME, g_pGroupList[i].szName);
       msg.SetVariable(VID_USER_FLAGS, g_pGroupList[i].wFlags);
       msg.SetVariable(VID_USER_SYS_RIGHTS, g_pGroupList[i].wSystemRights);
+      msg.SetVariable(VID_USER_DESCRIPTION, g_pGroupList[i].szDescription);
       msg.SetVariable(VID_NUM_MEMBERS, g_pGroupList[i].dwNumMembers);
       for(j = 0, dwId = VID_GROUP_MEMBER_BASE; j < g_pGroupList[i].dwNumMembers; j++, dwId++)
          msg.SetVariable(dwId, g_pGroupList[i].pMembers[j]);

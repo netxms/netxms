@@ -184,6 +184,8 @@ typedef struct
 #define VID_USER_FLAGS              ((DWORD)37)
 #define VID_NUM_MEMBERS             ((DWORD)38)    /* Number of members in users group */
 #define VID_IS_GROUP                ((DWORD)39)
+#define VID_USER_FULL_NAME          ((DWORD)40)
+#define VID_USER_DESCRIPTION        ((DWORD)41)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

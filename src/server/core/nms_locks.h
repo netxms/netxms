@@ -23,6 +23,7 @@
 #ifndef _nms_locks_h_
 #define _nms_locks_h_
 
+
 //
 // Component identifiers used for locking
 //
@@ -31,5 +32,19 @@
 #define CID_EPP               1
 #define CID_USER_DB           2
 #define CID_EVENT_DB          3
+
+
+//
+// Functions
+//
+
+#ifndef _NETXMS_DB_SCHEMA_
+
+BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
+void UnlockComponent(DWORD dwId);
+void RemoveAllSessionLocks(DWORD dwSessionId);
+
+#endif
 
 #endif

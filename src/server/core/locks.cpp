@@ -152,3 +152,20 @@ void UnlockComponent(DWORD dwId)
    MutexUnlock(m_hMutexLockerAccess);
    DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component %d unlocked\n", dwId);
 }
+
+
+//
+// Unlock all locks for specific session
+//
+
+void RemoveAllSessionLocks(DWORD dwSessionId)
+{
+   char szQuery[256];
+
+   MutexLock(m_hMutexLockerAccess, INFINITE);
+   sprintf(szQuery, "UPDATE locks SET lock_status=-1,owner_info='' "
+                    "WHERE (component_id <> 0) AND (lock_status = %d)", dwSessionId);
+   DBQuery(g_hCoreDB, szQuery);
+   MutexUnlock(m_hMutexLockerAccess);
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* All locks for session %d removed\n", dwSessionId);
+}

@@ -321,10 +321,6 @@ void InitLog(void);
 void CloseLog(void);
 void WriteLog(DWORD msg, WORD wType, char *format, ...);
 
-BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
-void UnlockComponent(DWORD dwId);
-
 BOOL ParseCommandLine(int argc, char *argv[]);
 BOOL LoadConfig(void);
 

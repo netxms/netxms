@@ -49,12 +49,14 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
       case CMD_USER_DATA:
       case CMD_GROUP_DATA:
          m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
+         memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
 
          // Process common fields
          m_pUserList[m_dwNumUsers].dwId = pMsg->GetVariableLong(VID_USER_ID);
          pMsg->GetVariableStr(VID_USER_NAME, m_pUserList[m_dwNumUsers].szName, MAX_USER_NAME);
          m_pUserList[m_dwNumUsers].wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
          m_pUserList[m_dwNumUsers].wSystemRights = pMsg->GetVariableShort(VID_USER_SYS_RIGHTS);
+         pMsg->GetVariableStr(VID_USER_DESCRIPTION, m_pUserList[m_dwNumUsers].szDescription, MAX_USER_DESCR);
 
          // Process group-specific fields
          if (pMsg->GetCode() == CMD_GROUP_DATA)
@@ -65,6 +67,10 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
             m_pUserList[m_dwNumUsers].pdwMemberList = (DWORD *)MemAlloc(sizeof(DWORD) * m_pUserList[m_dwNumUsers].dwNumMembers);
             for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < m_pUserList[m_dwNumUsers].dwNumMembers; i++, dwId++)
                m_pUserList[m_dwNumUsers].pdwMemberList[i] = pMsg->GetVariableLong(dwId);
+         }
+         else     // User-specific data
+         {
+            pMsg->GetVariableStr(VID_USER_FULL_NAME, m_pUserList[m_dwNumUsers].szFullName, MAX_USER_FULLNAME);
          }
 
          m_dwNumUsers++;
@@ -169,7 +175,7 @@ DWORD CreateUser(DWORD dwRqId, char *pszName, BOOL bIsGroup)
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode;
 
-   msg.SetCode(CMD_DELETE_USER);
+   msg.SetCode(CMD_CREATE_USER);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_USER_NAME, pszName);
    msg.SetVariable(VID_IS_GROUP, (WORD)bIsGroup);

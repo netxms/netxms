@@ -35,6 +35,8 @@ typedef struct
    BYTE szPassword[SHA_DIGEST_LENGTH];
    WORD wSystemRights;      // System-wide user's rights
    WORD wFlags;
+   char szFullName[MAX_USER_FULLNAME];
+   char szDescription[MAX_USER_DESCR];
 } NMS_USER;
 
 
@@ -50,6 +52,7 @@ typedef struct
    WORD wFlags;
    DWORD dwNumMembers;
    DWORD *pMembers;
+   char szDescription[MAX_USER_DESCR];
 } NMS_USER_GROUP;
 
 

@@ -62,7 +62,7 @@ BOOL LoadUsers(void)
    DWORD i, iNumRows;
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,access,flags FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,access,flags,full_name,description FROM users ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -79,12 +79,14 @@ BOOL LoadUsers(void)
       }
       g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
+      strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
+      strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
    }
 
    DBFreeResult(hResult);
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access,flags FROM user_groups ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access,flags,description FROM user_groups ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -96,6 +98,7 @@ BOOL LoadUsers(void)
       strncpy(g_pGroupList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
       g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
       g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
+      strncpy(g_pGroupList[i].szDescription, DBGetField(hResult, i, 4), MAX_USER_DESCR);
       g_pGroupList[i].dwNumMembers = 0;
       g_pGroupList[i].pMembers = NULL;
    }
@@ -144,6 +147,9 @@ void SaveUsers(void)
          DB_RESULT hResult;
          BOOL bUserExists = FALSE;
 
+         // Clear modification flag
+         g_pUserList[i].wFlags &= ~UF_MODIFIED;
+
          // Check if user record exists in database
          sprintf(szQuery, "SELECT name FROM users WHERE id=%d", g_pUserList[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
@@ -157,13 +163,17 @@ void SaveUsers(void)
          // Create or update record in database
          BinToStr(g_pUserList[i].szPassword, SHA_DIGEST_LENGTH, szPassword);
          if (bUserExists)
-            sprintf(szQuery, "UPDATE users SET name='%s',password='%s',access=%d WHERE id=%d",
-                    g_pUserList[i].szName, szPassword, 
-                    g_pUserList[i].wSystemRights, g_pUserList[i].dwId);
+            sprintf(szQuery, "UPDATE users SET name='%s',password='%s',access=%d,flags=%d,"
+                             "full_name='%s',description='%s' WHERE id=%d",
+                    g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
+                    g_pUserList[i].wFlags, g_pUserList[i].szFullName,
+                    g_pUserList[i].szDescription, g_pUserList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO users (id,name,password,access) VALUES (%d,'%s','%s',%d)",
-                    g_pUserList[i].dwId, g_pUserList[i].szName, 
-                    szPassword, g_pUserList[i].wSystemRights);
+            sprintf(szQuery, "INSERT INTO users (id,name,password,access,flags,full_name,description) "
+                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s')",
+                    g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
+                    g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
+                    g_pUserList[i].szFullName, g_pUserList[i].szDescription);
          DBQuery(g_hCoreDB, szQuery);
       }
    }
@@ -193,6 +203,9 @@ void SaveUsers(void)
          DB_RESULT hResult;
          BOOL bGroupExists = FALSE;
 
+         // Clear modification flag
+         g_pGroupList[i].wFlags &= ~UF_MODIFIED;
+
          // Check if group record exists in database
          sprintf(szQuery, "SELECT name FROM user_groups WHERE id=%d", g_pGroupList[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
@@ -205,11 +218,16 @@ void SaveUsers(void)
 
          // Create or update record in database
          if (bGroupExists)
-            sprintf(szQuery, "UPDATE user_groups SET name='%s',access=%d WHERE id=%d",
-                    g_pGroupList[i].szName, g_pGroupList[i].wSystemRights, g_pGroupList[i].dwId);
+            sprintf(szQuery, "UPDATE user_groups SET name='%s',access=%d,flags=%d,"
+                             "description='%s' WHERE id=%d",
+                    g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
+                    g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
+                    g_pGroupList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO user_groups (id,name,access) VALUES (%d,'%s',%d)",
-                    g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights);
+            sprintf(szQuery, "INSERT INTO user_groups (id,name,access,flags,description) "
+                             "VALUES (%d,'%s',%d,%d,'%s')",
+                    g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
+                    g_pGroupList[i].wFlags, g_pGroupList[i].szDescription);
          DBQuery(g_hCoreDB, szQuery);
 
          if (bGroupExists)
@@ -449,6 +467,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
          strcpy(g_pGroupList[i].szName, pszName);
          g_pGroupList[i].wFlags = UF_MODIFIED;
          g_pGroupList[i].wSystemRights = 0;
+         g_pGroupList[i].szDescription[0] = 0;
       }
 
       MutexUnlock(m_hMutexGroupAccess);
@@ -471,9 +490,11 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup)
          g_dwNumUsers++;
          g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
          g_pUserList[i].dwId = CreateUniqueId(IDG_USER);
-         strcpy(g_pGroupList[i].szName, pszName);
+         strcpy(g_pUserList[i].szName, pszName);
          g_pUserList[i].wFlags = UF_MODIFIED;
          g_pUserList[i].wSystemRights = 0;
+         g_pUserList[i].szFullName[0] = 0;
+         g_pUserList[i].szDescription[0] = 0;
       }
 
       MutexUnlock(m_hMutexUserAccess);

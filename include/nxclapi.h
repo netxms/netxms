@@ -56,6 +56,8 @@ typedef unsigned long HREQUEST;
 #define MAX_EVENT_NAME           64
 #define INVALID_REQUEST_HANDLE   ((HREQUEST)0xFFFFFFFF)
 #define MAX_USER_NAME            64
+#define MAX_USER_FULLNAME        128
+#define MAX_USER_DESCR           256
 #define GROUP_FLAG               0x80000000
 #define GROUP_EVERYONE           0x80000000
 
@@ -357,6 +359,8 @@ typedef struct
    WORD wSystemRights;
    DWORD dwNumMembers;     // Only for groups
    DWORD *pdwMemberList;   // Only for groups
+   char szFullName[MAX_USER_FULLNAME];    // Only for users
+   char szDescription[MAX_USER_DESCR];
 } NXC_USER;
 
 
