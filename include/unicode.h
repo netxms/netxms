@@ -56,6 +56,7 @@
 #define _tcsicmp  stricmp
 #define _tprintf  printf
 #define _stprintf sprintf
+#define _vtprintf vprintf
 #define _tfopen   fopen
 #define _fgetts   fgets
 #define _tcstol   strtol
