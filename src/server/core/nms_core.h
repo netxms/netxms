@@ -41,6 +41,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
@@ -49,7 +50,6 @@
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include "nms_objects.h"
-#include "nms_events.h"
 #include "messages.h"
 
 
@@ -109,6 +109,7 @@ class Queue
 {
 private:
    MUTEX m_hQueueAccess;
+   CONDITION m_hConditionNotEmpty;
    void **m_pElements;
    DWORD m_dwNumElements;
    DWORD m_dwBufferSize;
@@ -124,7 +125,15 @@ public:
 
    void Put(void *pObject);
    void *Get(void);
+   void *GetOrBlock(void);
 };
+
+
+//
+// Event handling subsystem definitions
+//
+
+#include "nms_events.h"
 
 
 //

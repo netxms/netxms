@@ -30,6 +30,7 @@
 Queue::Queue()
 {
    m_hQueueAccess = MutexCreate();
+   m_hConditionNotEmpty = ConditionCreate();
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;
@@ -45,6 +46,7 @@ Queue::Queue()
 Queue::~Queue()
 {
    MutexDestroy(m_hQueueAccess);
+   ConditionDestroy(m_hConditionNotEmpty);
    if (m_pElements != NULL)
       free(m_pElements);
 }
@@ -67,6 +69,7 @@ void Queue::Put(void *pElement)
    if (m_dwLast == m_dwBufferSize)
       m_dwLast = 0;
    m_dwNumElements++;
+   ConditionSet(m_hConditionNotEmpty);
    Unlock();
 }
 
@@ -88,5 +91,25 @@ void *Queue::Get(void)
       m_dwNumElements--;
    }
    Unlock();
+   return pElement;
+}
+
+
+//
+// Get object from queue or block if queue if empty
+//
+
+void *Queue::GetOrBlock(void)
+{
+   void *pElement;
+
+   pElement = Get();
+   if (pElement != NULL)
+      return pElement;
+   do
+   {
+      ConditionWait(m_hConditionNotEmpty, INFINITE);
+      pElement = Get();
+   } while(pElement == NULL);
    return pElement;
 }

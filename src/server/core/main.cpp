@@ -34,6 +34,7 @@ void HouseKeeper(void *arg);
 void DiscoveryThread(void *arg);
 void Syncer(void *arg);
 void NodePoller(void *arg);
+void EventProcessor(void *arg);
 
 
 //
@@ -72,6 +73,7 @@ void LoadGlobalConfig()
 
 BOOL Initialize(void)
 {
+   int i, iNumThreads;
    InitLog();
 
 #ifdef _WIN32
@@ -100,6 +102,10 @@ BOOL Initialize(void)
    m_hEventShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
 #endif
 
+   // Initialize event handling subsystem
+   if (!InitEventSubsystem())
+      return FALSE;
+
    // Initialize objects infrastructure and load objects from database
    ObjectsInit();
    if (!LoadObjects())
@@ -110,6 +116,11 @@ BOOL Initialize(void)
    ThreadCreate(DiscoveryThread, 0, NULL);
    ThreadCreate(Syncer, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
+   
+   // Start event processors
+   iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
+   for(i = 0; i < iNumThreads; i++)
+      ThreadCreate(EventProcessor, 0, NULL);
 
    return TRUE;
 }
@@ -160,6 +171,9 @@ void Main(void)
 #ifdef _DEBUG
          switch(ch)
          {
+            case 'x':
+               PostEvent(10,6,NULL);
+               break;
             case 'd':   // Dump objects
             case 'D':
                {

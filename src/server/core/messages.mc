@@ -194,4 +194,10 @@ Language=English
 Call to GetIpNetTable() failed: %1
 .
 
+MessageId=
+SymbolicName=MSG_EVENT_LOAD_ERROR
+Language=English
+Unable to load events from database
+.
+
 ;#endif

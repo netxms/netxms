@@ -111,6 +111,14 @@ SOURCE=.\entirenet.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\events.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\evproc.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\hk.cpp
 # End Source File
 # Begin Source File

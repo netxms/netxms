@@ -41,17 +41,13 @@ printf("Node %s already exist in database\n", IpToStr(dwIpAddr,buffer));
       return;
    }
 
-printf("Creating new node object\n");
    pNode = new Node(dwIpAddr, 0, dwFlags);
+   NetObjInsert(pNode, TRUE);
    if (!pNode->NewNodePoll(dwNetMask))
    {
 printf("New node %s cannot be added\n",pNode->Name());
+      NetObjDelete(pNode);
       delete pNode;     // Node poll failed, delete it
-   }
-   else
-   {
-      NetObjInsert(pNode, TRUE);
-printf("New node %s added\n",pNode->Name());
    }
 }
 

@@ -171,13 +171,11 @@ static void CheckForMgmtNode(void)
       if (i == pIfList->iNumEntries)   // No such node
       {
          Node *pNode = new Node(pIfList->pInterfaces[0].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
+         NetObjInsert(pNode, TRUE);
          if (!pNode->NewNodePoll(0))
          {
+            NetObjDelete(pNode);
             delete pNode;     // Node poll failed, delete it
-         }
-         else
-         {
-            NetObjInsert(pNode, TRUE);
          }
       }
       DestroyInterfaceList(pIfList);

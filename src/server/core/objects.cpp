@@ -207,9 +207,13 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
          case OBJECT_SUBNET:
             AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
+            if (bNewObject)
+               PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
             break;
          case OBJECT_NODE:
             AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
+            if (bNewObject)
+               PostEvent(EVENT_NODE_ADDED, pObject->Id(), NULL);
             break;
          case OBJECT_INTERFACE:
             AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);

@@ -25,17 +25,92 @@
 
 
 //
-// Event structure
+// Constants
 //
 
-struct EVENT
+#define FIRST_USER_EVENT_ID      100000
+
+#define EVENT_SEVERITY_INFO      0
+#define EVENT_SEVERITY_WARNING   1
+#define EVENT_SEVERITY_MAJOR     2
+#define EVENT_SEVERITY_HIGH      3
+#define EVENT_SEVERITY_CRITICAL  4
+
+
+//
+// Event flags
+//
+
+#define EF_LOG                   0x0001
+
+
+//
+// System-defined events
+//
+
+#define EVENT_NODE_ADDED         1
+#define EVENT_SUBNET_ADDED       2
+#define EVENT_INTERFACE_ADDED    3
+
+
+//
+// Event template
+//
+
+struct EVENT_TEMPLATE
 {
    DWORD dwId;
    DWORD dwSeverity;
-   DWORD dwSource;
-   char *szMessageText;
-   DWORD dwNumParameters;
-   char *szParameters[1];
+   DWORD dwFlags;
+   char *szMessageTemplate;
+   char *szDescription;
 };
+
+
+//
+// Event
+//
+
+class Event
+{
+private:
+   DWORD m_dwId;
+   DWORD m_dwSeverity;
+   DWORD m_dwFlags;
+   DWORD m_dwSource;
+   char *m_szMessageText;
+   DWORD m_dwNumParameters;
+   char **m_pszParameters;
+   time_t m_tTimeStamp;
+
+   void ExpandMessageText(char *szMessageTemplate);
+
+public:
+   Event();
+   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_list args);
+   ~Event();
+
+   DWORD Id(void) { return m_dwId; }
+   DWORD Severity(void) { return m_dwSeverity; }
+   DWORD Flags(void) { return m_dwFlags; }
+   DWORD SourceId(void) { return m_dwSource; }
+   const char *Message(void) { return m_szMessageText; }
+   time_t TimeStamp(void) { return m_tTimeStamp; }
+};
+
+
+//
+// Functions
+//
+
+BOOL InitEventSubsystem(void);
+BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...);
+
+
+//
+// Global variables
+//
+
+extern Queue *g_pEventQueue;
 
 #endif   /* _nms_events_h_ */

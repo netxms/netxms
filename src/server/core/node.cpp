@@ -285,6 +285,9 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
                pIfList->pInterfaces[i].dwIpNetMask, pIfList->pInterfaces[i].dwType);
             NetObjInsert(pInterface, TRUE);
             AddInterface(pInterface);
+            PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+                      pInterface->Name(), pInterface->IpAddr(),
+                      pInterface->IpNetMask(), pInterface->IfIndex());
 
             // Bind node to appropriate subnet
             if (pInterface->IpAddr() != 0)   // Do not link non-IP interfaces to 0.0.0.0 subnet
@@ -307,6 +310,8 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
          pInterface = new Interface(m_dwIpAddr, dwNetMask);
          NetObjInsert(pInterface, TRUE);
          AddInterface(pInterface);
+         PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+                   pInterface->Name(), m_dwIpAddr, dwNetMask, pInterface->IfIndex());
 
          // Bind node to appropriate subnet
          pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
@@ -324,6 +329,8 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
       pInterface = new Interface(m_dwIpAddr, dwNetMask);
       NetObjInsert(pInterface, TRUE);
       AddInterface(pInterface);
+      PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+                pInterface->Name(), m_dwIpAddr, dwNetMask, pInterface->IfIndex());
 
       // Bind node to appropriate subnet
       pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
