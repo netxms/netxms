@@ -345,12 +345,14 @@ src/server/dbdrv/pgsql/pgsqldrv.h -text
 src/server/include/dbdrv.h -text
 src/server/include/local_admin.h -text
 src/server/include/nxsrvapi.h -text
+src/server/include/rwlock.h -text
 src/server/libnxsrv/Makefile.am -text
 src/server/libnxsrv/agent.cpp -text
 src/server/libnxsrv/libnxsrv.dsp -text
 src/server/libnxsrv/libnxsrv.dsw -text
 src/server/libnxsrv/libnxsrv.h -text
 src/server/libnxsrv/main.cpp -text
+src/server/libnxsrv/rwlock.cpp -text
 src/server/tools/Makefile.am -text
 src/server/tools/nxaction/Makefile.am -text
 src/server/tools/nxaction/nxaction.cpp -text

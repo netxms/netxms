@@ -103,6 +103,10 @@ SOURCE=.\agent.cpp
 
 SOURCE=.\main.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\rwlock.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -142,6 +146,10 @@ SOURCE=..\..\..\include\nxcscpapi.h
 # Begin Source File
 
 SOURCE=..\include\nxsrvapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\rwlock.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

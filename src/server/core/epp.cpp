@@ -296,6 +296,7 @@ EventPolicy::EventPolicy()
 {
    m_dwNumRules = 0;
    m_ppRuleList = NULL;
+   m_rwlock = RWLockCreate();
 }
 
 
@@ -310,6 +311,7 @@ EventPolicy::~EventPolicy()
    for(i = 0; i < m_dwNumRules; i++)
       safe_free(m_ppRuleList[i]);
    safe_free(m_ppRuleList);
+   RWLockDestroy(m_rwlock);
 }
 
 

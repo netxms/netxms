@@ -40,6 +40,7 @@
 #include <nxclapi.h>
 #include <nxcscpapi.h>
 #include <nms_agent.h>
+#include <rwlock.h>
 
 
 //

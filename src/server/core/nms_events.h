@@ -132,6 +132,10 @@ class EventPolicy
 private:
    DWORD m_dwNumRules;
    EPRule **m_ppRuleList;
+   RWLOCK m_rwlock;
+
+   void Lock(BOOL bWrite = FALSE);
+   void Unlock(void) { RWLockUnlock(m_rwlock); }
 
 public:
    EventPolicy();
@@ -142,6 +146,14 @@ public:
    void ProcessEvent(Event *pEvent);
    void SendToClient(ClientSession *pSession, DWORD dwRqId);
 };
+
+inline void EventPolicy::Lock(BOOL bWrite)
+{
+   if (bWrite)
+      RWLockWriteLock(m_rwlock, INFINITE);
+   else
+      RWLockReadLock(m_rwlock, INFINITE);
+}
 
 
 //
