@@ -99,7 +99,7 @@ static BOOL H_UpgradeFromV20(void)
                                NF_IS_ROUTER, NF_IS_LOCAL_MGMT, NF_IS_OSPF };
    DB_RESULT hResult;
    int i, j, iNumRows;
-   DWORD dwFlags;
+   DWORD dwFlags, dwNodeId;
    TCHAR szQuery[256];
 
    if (!SQLBatch(m_szBatch))
@@ -148,8 +148,9 @@ static BOOL H_UpgradeFromV20(void)
          iNumRows = DBGetNumRows(hResult);
          for(i = 0; i < iNumRows; i++)
          {
-            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"),
-                       DBGetFieldULong(hResult, i, 0));
+            dwNodeId = DBGetFieldULong(hResult, i, 0);
+            _tprintf(_T("Creating indexes for table \"idata_%ld\"...\n"), dwNodeId);
+            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"), dwNodeId);
             if (!SQLQuery(szQuery))
                if (!g_bIgnoreErrors)
                {
