@@ -77,7 +77,15 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "Skeleton.Enum", H_Enum, NULL }
 };
-static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters, 1, m_enums };
+
+static NETXMS_SUBAGENT_INFO m_info =
+{
+	0x01000000,
+	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	m_parameters,
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	m_enums
+};
 
 
 //
