@@ -60,6 +60,8 @@ WINDOWS CONSOLE:
 - Find good graph creation library
 - Enlarge 16x16 status overlay icons
 - Add primary IP address selection 
+- Add autorefresh to history graphs
+- Add real-time graphs
 
 
 SUBAGENTS:
