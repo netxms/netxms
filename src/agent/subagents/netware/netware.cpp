@@ -157,7 +157,7 @@ static LONG H_ArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 // Collector thread
 //
 
-static void CollectorThread(void *pArg)
+static THREAD_RESULT THREAD_CALL CollectorThread(void *pArg)
 {
    struct cpu_info ci;
    int iSeq, iCpu, iNumCpu;
@@ -185,6 +185,7 @@ static void CollectorThread(void *pArg)
       if (m_iCpuHPos == CPU_HISTORY_SIZE)
          m_iCpuHPos = 0;
    }
+   return THREAD_OK;
 }
 
 
