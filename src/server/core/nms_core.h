@@ -44,6 +44,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
@@ -338,8 +340,6 @@ void DBUnloadDriver(void);
 
 void QueueSQLRequest(char *szQuery);
 void StopDBWriter(void);
-
-BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 void SnmpInit(void);
 BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const oid *oidBinary, 

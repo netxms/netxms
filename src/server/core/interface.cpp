@@ -196,6 +196,7 @@ BOOL Interface::DeleteFromDB(void)
 void Interface::StatusPoll(void)
 {
    int iOldStatus = m_iStatus;
+   DWORD dwPingStatus;
 
    if (m_dwIpAddr == 0)
    {
@@ -203,7 +204,10 @@ void Interface::StatusPoll(void)
       return;     // Interface has no IP address, we cannot check it
    }
 
-   m_iStatus = IcmpPing(m_dwIpAddr, 3, 1500) ? STATUS_NORMAL : STATUS_CRITICAL;
+   dwPingStatus = IcmpPing(m_dwIpAddr, 3, 1500);
+   if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+      WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+   m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
    if (m_iStatus != iOldStatus)
    {
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,

@@ -109,6 +109,10 @@ SOURCE=.\hash.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\icmp.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\inline.cpp
 # End Source File
 # Begin Source File

@@ -44,6 +44,16 @@
 
 
 //
+// Return codes for IcmpPing()
+//
+
+#define ICMP_SUCCESS          0
+#define ICMP_UNREACHEABLE     1
+#define ICMP_TIMEOUT          2
+#define ICMP_RAW_SOCK_FAILED  3
+
+
+//
 // getopt() prototype if needed
 //
 
@@ -181,6 +191,8 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
    
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
+
+   DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
 }
 
 #endif   /* _nms_util_h_ */
