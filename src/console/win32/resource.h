@@ -4,6 +4,8 @@
 //
 #define IDD_ABOUTBOX                    100
 #define ID_INDICATOR_STATE              101
+#define ID_LIST_VIEW                    102
+#define ID_CONNECT_TO_SERVER            103
 #define IDP_SOCKETS_INIT_FAILED         104
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
@@ -49,6 +51,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        151
 #define _APS_NEXT_COMMAND_VALUE         32784
 #define _APS_NEXT_CONTROL_VALUE         1007
-#define _APS_NEXT_SYMED_VALUE           102
+#define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

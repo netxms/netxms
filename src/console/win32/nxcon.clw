@@ -15,7 +15,7 @@ Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=10
+ResourceCount=20
 Resource1=IDR_MAPFRAME
 Resource2=IDR_MAINFRAME
 Resource3=IDR_CTRLPANEL
@@ -34,6 +34,16 @@ Resource8=IDD_PROGRESS
 Class13=CObjectPropDlg
 Resource9=IDD_OBJECT_PROPERTIES
 Resource10=IDD_DUMMY
+Resource11=IDD_OBJECT_PROPERTIES (English (U.S.))
+Resource12=IDR_MAPFRAME (English (U.S.))
+Resource13=IDR_OBJECTS (English (U.S.))
+Resource14=IDR_CTRLPANEL (English (U.S.))
+Resource15=IDR_EVENTS (English (U.S.))
+Resource16=IDR_MAINFRAME (English (U.S.))
+Resource17=IDD_ABOUTBOX (English (U.S.))
+Resource18=IDD_LOGIN (English (U.S.))
+Resource19=IDD_PROGRESS (English (U.S.))
+Resource20=IDD_DUMMY (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -296,6 +306,169 @@ VirtualFilter=dWC
 LastObject=CObjectPropDlg
 
 [DLG:IDD_DUMMY]
+Type=1
+Class=?
+ControlCount=3
+Control1=IDOK,button,1342242817
+Control2=IDCANCEL,button,1342242816
+Control3=IDC_TREE_VIEW,SysTreeView32,1350631424
+
+[TB:IDR_MAINFRAME (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_FILE_NEW
+Command2=ID_EDIT_CUT
+Command3=ID_EDIT_COPY
+Command4=ID_EDIT_PASTE
+Command5=ID_FILE_PRINT
+Command6=ID_APP_ABOUT
+CommandCount=6
+
+[MNU:IDR_MAINFRAME (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_FILE_NEW
+Command2=ID_APP_EXIT
+Command3=ID_VIEW_MAP
+Command4=ID_VIEW_OBJECTBROWSER
+Command5=ID_VIEW_EVENTS
+Command6=ID_VIEW_CONTROLPANEL
+Command7=ID_VIEW_TOOLBAR
+Command8=ID_VIEW_STATUS_BAR
+Command9=ID_VIEW_REFRESH
+Command10=ID_APP_ABOUT
+CommandCount=10
+
+[MNU:IDR_CTRLPANEL (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_FILE_NEW
+Command2=ID_FILE_CLOSE
+Command3=ID_APP_EXIT
+Command4=ID_VIEW_MAP
+Command5=ID_VIEW_OBJECTBROWSER
+Command6=ID_VIEW_EVENTS
+Command7=ID_VIEW_CONTROLPANEL
+Command8=ID_VIEW_TOOLBAR
+Command9=ID_VIEW_STATUS_BAR
+Command10=ID_WINDOW_CASCADE
+Command11=ID_WINDOW_TILE_HORZ
+Command12=ID_WINDOW_ARRANGE
+Command13=ID_APP_ABOUT
+CommandCount=13
+
+[MNU:IDR_EVENTS (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_FILE_NEW
+Command2=ID_FILE_CLOSE
+Command3=ID_APP_EXIT
+Command4=ID_VIEW_MAP
+Command5=ID_VIEW_OBJECTBROWSER
+Command6=ID_VIEW_EVENTS
+Command7=ID_VIEW_CONTROLPANEL
+Command8=ID_VIEW_TOOLBAR
+Command9=ID_VIEW_STATUS_BAR
+Command10=ID_WINDOW_CASCADE
+Command11=ID_WINDOW_TILE_HORZ
+Command12=ID_WINDOW_ARRANGE
+Command13=ID_APP_ABOUT
+CommandCount=13
+
+[MNU:IDR_MAPFRAME (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_FILE_NEW
+Command2=ID_FILE_CLOSE
+Command3=ID_APP_EXIT
+Command4=ID_VIEW_MAP
+Command5=ID_VIEW_OBJECTBROWSER
+Command6=ID_VIEW_EVENTS
+Command7=ID_VIEW_CONTROLPANEL
+Command8=ID_VIEW_TOOLBAR
+Command9=ID_VIEW_STATUS_BAR
+Command10=ID_WINDOW_CASCADE
+Command11=ID_WINDOW_TILE_HORZ
+Command12=ID_WINDOW_ARRANGE
+Command13=ID_APP_ABOUT
+CommandCount=13
+
+[MNU:IDR_OBJECTS (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_FILE_NEW
+Command2=ID_FILE_CLOSE
+Command3=ID_APP_EXIT
+Command4=ID_VIEW_MAP
+Command5=ID_VIEW_OBJECTBROWSER
+Command6=ID_VIEW_EVENTS
+Command7=ID_VIEW_CONTROLPANEL
+Command8=ID_VIEW_TOOLBAR
+Command9=ID_VIEW_STATUS_BAR
+Command10=ID_WINDOW_CASCADE
+Command11=ID_WINDOW_TILE_HORZ
+Command12=ID_WINDOW_ARRANGE
+Command13=ID_APP_ABOUT
+CommandCount=13
+
+[ACL:IDR_MAINFRAME (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_EDIT_COPY
+Command2=ID_FILE_NEW
+Command3=ID_EDIT_PASTE
+Command4=ID_EDIT_UNDO
+Command5=ID_EDIT_CUT
+Command6=ID_VIEW_MAP
+Command7=ID_NEXT_PANE
+Command8=ID_PREV_PANE
+Command9=ID_VIEW_EVENTS
+Command10=ID_VIEW_CONTROLPANEL
+Command11=ID_EDIT_COPY
+Command12=ID_EDIT_PASTE
+Command13=ID_EDIT_CUT
+Command14=ID_EDIT_UNDO
+CommandCount=14
+
+[DLG:IDD_ABOUTBOX (English (U.S.))]
+Type=1
+Class=?
+ControlCount=4
+Control1=IDC_STATIC,static,1342177283
+Control2=IDC_STATIC,static,1342308480
+Control3=IDC_STATIC,static,1342308352
+Control4=IDOK,button,1342373889
+
+[DLG:IDD_LOGIN (English (U.S.))]
+Type=1
+Class=?
+ControlCount=11
+Control1=IDC_EDIT_SERVER,edit,1350631552
+Control2=IDC_EDIT_LOGIN,edit,1350631552
+Control3=IDC_EDIT_PASSWORD,edit,1350631584
+Control4=IDOK,button,1342242817
+Control5=IDCANCEL,button,1342242816
+Control6=IDC_STATIC,static,1342177294
+Control7=IDC_STATIC,static,1342308352
+Control8=IDC_STATIC,static,1342177296
+Control9=IDC_STATIC,static,1342308352
+Control10=IDC_STATIC,static,1342308352
+Control11=IDC_STATIC,static,1342308352
+
+[DLG:IDD_PROGRESS (English (U.S.))]
+Type=1
+Class=?
+ControlCount=2
+Control1=IDC_STATIC_TITLE,button,1342177287
+Control2=IDC_STATIC_TEXT,static,1342308865
+
+[DLG:IDD_OBJECT_PROPERTIES (English (U.S.))]
+Type=1
+Class=?
+ControlCount=1
+Control1=IDC_LIST_VIEW,SysListView32,1342275613
+
+[DLG:IDD_DUMMY (English (U.S.))]
 Type=1
 Class=?
 ControlCount=3

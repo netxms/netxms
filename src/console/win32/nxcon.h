@@ -26,7 +26,6 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include <nxclapi.h>
 #include <nms_util.h>
 #include "resource.h"      // Main symbols
-#include "id.h"            // Manually defined control identifiers
 #include "globals.h"       // Global symbols
 #include "ControlPanel.h"
 #include "EventBrowser.h"
