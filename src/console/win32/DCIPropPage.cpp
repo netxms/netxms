@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "nxcon.h"
-#include "DCIPropDlg.h"
+#include "DCIPropPage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -12,13 +12,14 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// CDCIPropDlg dialog
+// CDCIPropPage dialog
 
+IMPLEMENT_DYNCREATE(CDCIPropPage, CPropertyPage)
 
-CDCIPropDlg::CDCIPropDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CDCIPropDlg::IDD, pParent)
+CDCIPropPage::CDCIPropPage()
+	: CPropertyPage(CDCIPropPage::IDD)
 {
-	//{{AFX_DATA_INIT(CDCIPropDlg)
+	//{{AFX_DATA_INIT(CDCIPropPage)
 	m_iPollingInterval = 0;
 	m_iRetentionTime = 0;
 	m_strName = _T("");
@@ -29,10 +30,10 @@ CDCIPropDlg::CDCIPropDlg(CWnd* pParent /*=NULL*/)
 }
 
 
-void CDCIPropDlg::DoDataExchange(CDataExchange* pDX)
+void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CDCIPropDlg)
+	CPropertyPage::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CDCIPropPage)
 	DDX_Control(pDX, IDC_COMBO_ORIGIN, m_wndOriginList);
 	DDX_Control(pDX, IDC_COMBO_DT, m_wndTypeList);
 	DDX_Control(pDX, IDC_BUTTON_SELECT, m_wndSelectButton);
@@ -49,24 +50,24 @@ void CDCIPropDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CDCIPropDlg, CDialog)
-	//{{AFX_MSG_MAP(CDCIPropDlg)
+BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
+	//{{AFX_MSG_MAP(CDCIPropPage)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CDCIPropDlg message handlers
+// CDCIPropPage message handlers
 
 
 //
 // WM_INITDIALOG message handler
 //
 
-BOOL CDCIPropDlg::OnInitDialog() 
+BOOL CDCIPropPage::OnInitDialog() 
 {
    DWORD i;
 
-	CDialog::OnInitDialog();
+	CPropertyPage::OnInitDialog();
 
    // Add origins
    for(i = 0; i < 3; i++)

@@ -1,24 +1,26 @@
-#if !defined(AFX_DCIPROPDLG_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_)
-#define AFX_DCIPROPDLG_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_
+#if !defined(AFX_DCIPROPPAGE_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_)
+#define AFX_DCIPROPPAGE_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// DCIPropDlg.h : header file
+// DCIPropPage.h : header file
 //
 
 /////////////////////////////////////////////////////////////////////////////
 // CDCIPropDlg dialog
 
-class CDCIPropDlg : public CDialog
+class CDCIPropPage : public CPropertyPage
 {
+	DECLARE_DYNCREATE(CDCIPropPage)
+
 // Construction
 public:
-	CDCIPropDlg(CWnd* pParent = NULL);   // standard constructor
+	CDCIPropPage();   // standard constructor
 
 // Dialog Data
-	//{{AFX_DATA(CDCIPropDlg)
-	enum { IDD = IDD_DCI_PROPERTIES };
+	//{{AFX_DATA(CDCIPropPage)
+	enum { IDD = IDD_DCI_COLLECTION };
 	CComboBox	m_wndOriginList;
 	CComboBox	m_wndTypeList;
 	CButton	m_wndSelectButton;
@@ -33,7 +35,7 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CDCIPropDlg)
+	//{{AFX_VIRTUAL(CDCIPropPage)
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -42,7 +44,7 @@ public:
 protected:
 
 	// Generated message map functions
-	//{{AFX_MSG(CDCIPropDlg)
+	//{{AFX_MSG(CDCIPropPage)
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
@@ -51,4 +53,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_DCIPROPDLG_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_)
+#endif // !defined(AFX_DCIPROPPAGE_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_)

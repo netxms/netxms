@@ -112,7 +112,11 @@ SOURCE=.\DCIDataView.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\DCIPropDlg.cpp
+SOURCE=.\DCIPropPage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DCIThresholdsPage.cpp
 # End Source File
 # Begin Source File
 
@@ -277,7 +281,11 @@ SOURCE=.\DCIDataView.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\DCIPropDlg.h
+SOURCE=.\DCIPropPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DCIThresholdsPage.h
 # End Source File
 # Begin Source File
 

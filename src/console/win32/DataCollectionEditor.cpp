@@ -280,24 +280,36 @@ void CDataCollectionEditor::OnItemEdit()
 //
 
 BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
-{
-   CDCIPropDlg dlg;
+{   
    BOOL bSuccess = FALSE;
+   CPropertySheet dlg;
+   CDCIPropPage pgCollection;
+   CDCIThresholdsPage pgThresholds;
 
-   dlg.m_iDataType = pItem->iDataType;
-   dlg.m_iOrigin = pItem->iSource;
-   dlg.m_iPollingInterval = pItem->iPollingInterval;
-   dlg.m_iRetentionTime = pItem->iRetentionTime;
-   dlg.m_iStatus = pItem->iStatus;
-   dlg.m_strName = pItem->szName;
+   // Setup "Collection" page
+   pgCollection.m_iDataType = pItem->iDataType;
+   pgCollection.m_iOrigin = pItem->iSource;
+   pgCollection.m_iPollingInterval = pItem->iPollingInterval;
+   pgCollection.m_iRetentionTime = pItem->iRetentionTime;
+   pgCollection.m_iStatus = pItem->iStatus;
+   pgCollection.m_strName = pItem->szName;
+
+   // Setup "Thresholds" page
+   pgThresholds.m_pItem = pItem;
+
+   // Setup property sheet and run
+   dlg.SetTitle("Data Collection Item");
+   dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
+   dlg.AddPage(&pgCollection);
+   dlg.AddPage(&pgThresholds);
    if (dlg.DoModal() == IDOK)
    {
-      pItem->iDataType = dlg.m_iDataType;
-      pItem->iSource = dlg.m_iOrigin;
-      pItem->iPollingInterval = dlg.m_iPollingInterval;
-      pItem->iRetentionTime = dlg.m_iRetentionTime;
-      pItem->iStatus = dlg.m_iStatus;
-      strcpy(pItem->szName, (LPCTSTR)dlg.m_strName);
+      pItem->iDataType = pgCollection.m_iDataType;
+      pItem->iSource = pgCollection.m_iOrigin;
+      pItem->iPollingInterval = pgCollection.m_iPollingInterval;
+      pItem->iRetentionTime = pgCollection.m_iRetentionTime;
+      pItem->iStatus = pgCollection.m_iStatus;
+      strcpy(pItem->szName, (LPCTSTR)pgCollection.m_strName);
       bSuccess = TRUE;
    }
    return bSuccess;
