@@ -113,3 +113,28 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 		'Parameters:\n'
 		'   1) Previous node status'
 	);
+INSERT INTO events (id,severity,flags,message,description) VALUES
+	(
+		13, 0, 0,
+		'Node capabilities changed (Old: %1; New: %2)',
+		'Generated when node capabilities changed.\n'
+		'Parameters:\n'
+		'   1) Old capabilities'
+		'   2) New capabilities'
+	);
+INSERT INTO events (id,severity,flags,message,description) VALUES
+	(
+		14, 0, 0,
+		'SNMP agent is not responding',
+		'Generated when node''s SNMP agent is not responding.\n'
+		'Parameters:\n'
+		'   No message-specific parameters'
+	);
+INSERT INTO events (id,severity,flags,message,description) VALUES
+	(
+		15, 0, 0,
+		'Native agent is not responding',
+		'Generated when node''s native agent is not responding.\n'
+		'Parameters:\n'
+		'   No message-specific parameters'
+	);
