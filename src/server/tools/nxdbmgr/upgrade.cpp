@@ -68,7 +68,7 @@ static BOOL H_UpgradeFromV14(void)
    if (!SQLBatch(m_szBatch))
       if (!g_bIgnoreErrors)
          return FALSE;
-   if (!SQLQuery(_T("UPDATE CONFIG SET var_value='15' WHERE var_name='DBFormatVersion'")))
+   if (!SQLQuery(_T("UPDATE config SET var_value='15' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
    return TRUE;
