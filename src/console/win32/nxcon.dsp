@@ -199,6 +199,10 @@ SOURCE=.\StdAfx.cpp
 
 SOURCE=.\ToolBox.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\UserSelectDlg.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -319,6 +323,10 @@ SOURCE=.\StdAfx.h
 
 SOURCE=.\ToolBox.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\UserSelectDlg.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
@@ -330,6 +338,10 @@ SOURCE=.\icons\Alarms.ICO
 # Begin Source File
 
 SOURCE=.\icons\board.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\EARTH.ICO
 # End Source File
 # Begin Source File
 
@@ -386,6 +398,10 @@ SOURCE=.\res\Toolbar.bmp
 # Begin Source File
 
 SOURCE=.\icons\tree.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\user.ico
 # End Source File
 # Begin Source File
 

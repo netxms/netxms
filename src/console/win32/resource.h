@@ -18,6 +18,7 @@
 #define IDS_NXC_INIT_FAILED             130
 #define IDI_SETUP                       131
 #define IDI_USERS                       132
+#define IDI_USER_GROUP                  132
 #define IDR_CTRLPANEL                   133
 #define IDI_RULEMGR                     134
 #define IDI_EVENT                       135
@@ -47,6 +48,9 @@
 #define IDD_REQUEST_PROCESSING          162
 #define IDD_OBJECT_GENERAL              163
 #define IDD_OBJECT_SECURITY             164
+#define IDI_USER                        165
+#define IDI_EVERYONE                    166
+#define IDD_SELECT_USER                 167
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -76,6 +80,7 @@
 #define IDC_CHECK_READ                  1027
 #define IDC_CHECK_MODIFY                1028
 #define IDC_CHECK_WRITE                 1029
+#define IDC_CHECK_CREATE                1029
 #define IDC_CHECK_DELETE                1030
 #define IDC_CHECK_MOVE                  1031
 #define IDC_CHECK_INHERIT_RIGHTS        1032
@@ -109,7 +114,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        165
+#define _APS_NEXT_RESOURCE_VALUE        168
 #define _APS_NEXT_COMMAND_VALUE         32802
 #define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           109

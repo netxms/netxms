@@ -69,7 +69,7 @@ END
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\nxcon.ico"
 IDI_ALARM               ICON    DISCARDABLE     "icons\\Alarms.ICO"
 IDI_SETUP               ICON    DISCARDABLE     "icons\\setup.ico"
-IDI_USERS               ICON    DISCARDABLE     "icons\\users.ico"
+IDI_USER_GROUP          ICON    DISCARDABLE     "icons\\users.ico"
 IDI_RULEMGR             ICON    DISCARDABLE     "icons\\RuleManager.ico"
 IDI_EVENT               ICON    DISCARDABLE     "icons\\event.ico"
 IDI_NETMAP              ICON    DISCARDABLE     "icons\\NetMap.ICO"
@@ -79,6 +79,8 @@ IDI_SUBNET              ICON    DISCARDABLE     "icons\\icon1.ico"
 IDI_TREE                ICON    DISCARDABLE     "icons\\tree.ico"
 IDI_SORT_UP             ICON    DISCARDABLE     "icons\\sort_up.ico"
 IDI_SORT_DOWN           ICON    DISCARDABLE     "icons\\sortdown.ico"
+IDI_USER                ICON    DISCARDABLE     "icons\\user.ico"
+IDI_EVERYONE            ICON    DISCARDABLE     "icons\\EARTH.ICO"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -373,7 +375,7 @@ BEGIN
                     WS_TABSTOP,196,21,33,10
     CONTROL         "&Modify",IDC_CHECK_MODIFY,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,196,34,37,10
-    CONTROL         "&Create child objects",IDC_CHECK_WRITE,"Button",
+    CONTROL         "&Create child objects",IDC_CHECK_CREATE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,196,47,78,10
     CONTROL         "&Delete",IDC_CHECK_DELETE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,196,60,37,10
@@ -387,6 +389,20 @@ BEGIN
     GROUPBOX        "Access Rights",IDC_STATIC,188,7,97,83
     GROUPBOX        "Users and Groups",IDC_STATIC,7,7,173,137
     GROUPBOX        "Actions",IDC_STATIC,188,94,97,50
+END
+
+IDD_SELECT_USER DIALOGEX 0, 0, 160, 127
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select User"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_USERS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,7,17,
+                    146,83,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,47,106,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,103,106,50,14
+    LTEXT           "Users and user groups list",IDC_STATIC,7,7,82,8
 END
 
 
@@ -511,6 +527,14 @@ BEGIN
         RIGHTMARGIN, 285
         TOPMARGIN, 7
         BOTTOMMARGIN, 163
+    END
+
+    IDD_SELECT_USER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 153
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
     END
 END
 #endif    // APSTUDIO_INVOKED

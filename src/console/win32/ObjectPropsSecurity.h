@@ -7,6 +7,9 @@
 // ObjectPropsSecurity.h : header file
 //
 
+#include "UserSelectDlg.h"
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CObjectPropsSecurity dialog
 
@@ -23,6 +26,11 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CObjectPropsSecurity)
 	enum { IDD = IDD_OBJECT_SECURITY };
+	CButton	m_wndCheckCreate;
+	CButton	m_wndCheckRead;
+	CButton	m_wndCheckMove;
+	CButton	m_wndCheckModify;
+	CButton	m_wndCheckDelete;
 	CListCtrl	m_wndUserList;
 	BOOL	m_bInheritRights;
 	//}}AFX_DATA
@@ -42,6 +50,8 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CObjectPropsSecurity)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnAddUser();
+	afx_msg void OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
