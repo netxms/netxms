@@ -206,9 +206,11 @@ src/console/win32/icons/SeverityMinor.ico -text
 src/console/win32/icons/SeverityNormal.ico -text
 src/console/win32/icons/SeverityWarning.ico -text
 src/console/win32/icons/alarm.ico -text
+src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/passwd.ico -text
+src/console/win32/icons/question.ico -text
 src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
