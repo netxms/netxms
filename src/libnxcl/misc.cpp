@@ -22,6 +22,7 @@
 **/
 
 #include "libnxcl.h"
+#include <stdarg.h>
 
 
 //
