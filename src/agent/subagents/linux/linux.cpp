@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.4 2004-08-17 23:19:20 alk Exp $ */
+/* $Id: linux.cpp,v 1.5 2004-08-18 00:12:56 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -153,19 +153,80 @@ static LONG H_DiskUsed(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+static LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	struct statvfs s;
+   char szArg[128] = {0};
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	return nRet;
+}
+
+static LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	struct statvfs s;
+   char szArg[128] = {0};
+	FILE *hFile;
+
+	// get processor
+   //NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	hFile = fopen("/proc/loadavg", "r");
+	if (hFile != NULL)
+	{
+		char szTmp[64];
+
+		if (fgets(szTmp, sizeof(szTmp), hFile) != NULL)
+		{
+			double dLoad1, dLoad5, dLoad15;
+
+			setlocale(LC_NUMERIC, "C");
+			if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
+			{
+				switch (pszParam[19])
+				{
+				case '1': // 15 min
+					ret_double(pValue, dLoad15);
+					break;
+				case '5': // 5 min
+					ret_double(pValue, dLoad5);
+					break;
+				default: // 1 min
+					ret_double(pValue, dLoad1);
+					break;
+				}
+				nRet = SYSINFO_RC_SUCCESS;
+			}
+			setlocale(LC_NUMERIC, "");
+		}
+
+		fclose(hFile);
+	}
+	
+
+	return nRet;
+}
+
 //
 // Subagent information
 //
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "System.Uptime",    H_Uptime,      NULL },
-   { "System.Uname",     H_Uname,       NULL },
-   { "System.Hostname",  H_Hostname,    NULL },
+   { "System.Uptime",         H_Uptime,          NULL },
+   { "System.Uname",          H_Uname,           NULL },
+   { "System.Hostname",       H_Hostname,        NULL },
 
-   { "Disk.Free(*)",     H_DiskFree,    NULL },
-   { "Disk.Total(*)",    H_DiskTotal,   NULL },
-   { "Disk.Used(*)",     H_DiskUsed,    NULL },
+   { "Disk.Free(*)",          H_DiskFree,        NULL },
+   { "Disk.Total(*)",         H_DiskTotal,       NULL },
+   { "Disk.Used(*)",          H_DiskUsed,        NULL },
+
+   { "Process.Count(*)",      H_ProcessCount,    NULL },
+
+   { "System.CPU.Procload*",   H_CpuLoad,        NULL },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -196,6 +257,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2004/08/17 23:19:20  alk
++ Disk.* implemented
+
 Revision 1.3  2004/08/17 15:17:32  alk
 + linux agent: system.uptime, system.uname, system.hostname
 ! skeleton: amount of _PARM & _ENUM filled with sizeof()
