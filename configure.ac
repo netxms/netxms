@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.27 2004-10-05 15:57:13 victor Exp $
+# $Id: configure.ac,v 1.28 2004-10-12 11:49:27 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -109,6 +109,37 @@ AC_ARG_WITH(pgsql,
 fi ])
 
 AC_SUBST(DB_DRIVERS)
+
+
+
+AC_ARG_WITH(server,
+[AS_HELP_STRING(--with-server,build server)],
+[
+	MODULES="$MODULES server"
+])
+AC_SUBST(MODULES)
+
+
+SUBAGENT_DIRS=""
+AC_ARG_WITH(agent,
+[AS_HELP_STRING(--with-agent,build agent)],
+[
+	case `uname -s` in
+		Linux)
+			SUBAGENT_DIRS="linux"
+			;;
+		FreeBSD)
+			SUBAGENT_DIRS="freebsd"
+			;;
+		SunOS)
+			SUBAGENT_DIRS="sunos"
+			;;
+		*)
+			# unknown
+			;;
+	esac
+])
+AC_SUBST(SUBAGENT_DIRS)
 
 
 # --------------------------------------------------------------------------
@@ -272,24 +303,6 @@ AC_SUBST(PTHREAD_LIBS)
 
 # Extensions to posix threads
 AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
-
-# --------------------------------------------------------------------------
-# OS type
-case `uname -s` in
-	Linux)
-		SUBAGENT_DIRS="linux"
-		;;
-	FreeBSD)
-		SUBAGENT_DIRS="freebsd"
-		;;
-	SunOS)
-		SUBAGENT_DIRS="sunos"
-		;;
-	*)
-		# unknown
-		;;
-esac
-AC_SUBST(SUBAGENT_DIRS)
 
 # --------------------------------------------------------------------------
 
