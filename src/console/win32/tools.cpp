@@ -284,3 +284,13 @@ void CreateObjectImageList(void)
          ImageList_AddMasked(g_pObjectNormalImageList->m_hImageList, hBitmap, rgbMaskColor);
    }
 }
+
+
+//
+// Get image index for given object
+//
+
+DWORD GetObjectImageIndex(NXC_OBJECT *pObject)
+{
+   return 0;
+}
