@@ -159,6 +159,7 @@ static void NetReceiver(void *pArg)
       }
    }
 
+   DebugPrintf("Network receiver thread stopped");
    ChangeState(STATE_DISCONNECTED);
    MemFree(pRawMsg);
    MemFree(pMsgBuffer);
@@ -169,12 +170,12 @@ static void NetReceiver(void *pArg)
 // Connect to server
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
+DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
-   BOOL bSuccess = FALSE;
    BYTE szPasswordHash[SHA_DIGEST_LENGTH];
+   DWORD dwRetCode = RCC_COMM_FAILURE;
 
    if (g_dwState == STATE_DISCONNECTED)
    {
@@ -219,23 +220,37 @@ BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPasswo
                {
                   // Receive responce message
                   pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), 2000);
-                  if (pResp != NULL)   // Connection is broken or timed out
+                  if (pResp != NULL)
                   {
-                     bSuccess = pResp->GetVariableLong(VID_LOGIN_RESULT);
+                     dwRetCode = pResp->GetVariableLong(VID_RCC);
                      delete pResp;
+                  }
+                  else
+                  {
+                     // Connection is broken or timed out
+                     dwRetCode = RCC_TIMEOUT;
                   }
                }
 
-               shutdown(m_hSocket, 2);
+               if (dwRetCode != RCC_SUCCESS)
+                  shutdown(m_hSocket, 2);
             }
-            closesocket(m_hSocket);
-            m_hSocket = -1;
+
+            if (dwRetCode != RCC_SUCCESS)
+            {
+               closesocket(m_hSocket);
+               m_hSocket = -1;
+            }
          }
       }
-      CallEventHandler(NXC_EVENT_LOGIN_RESULT, bSuccess, NULL);
+      CallEventHandler(NXC_EVENT_LOGIN_RESULT, dwRetCode, NULL);
+   }
+   else
+   {
+      dwRetCode = RCC_OUT_OF_STATE_REQUEST;
    }
 
-   return bSuccess;
+   return dwRetCode;
 }
 
 

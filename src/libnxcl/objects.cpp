@@ -266,7 +266,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
    dwRqId = g_dwMsgId++;
    m_hCondSyncFinished = ConditionCreate(FALSE);
 
-   msg.SetCode(CMD_GET_EVENTS);
+   msg.SetCode(CMD_GET_OBJECTS);
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
@@ -284,10 +284,6 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
    if (dwRetCode == RCC_SUCCESS)
    {
       ChangeState(STATE_SYNC_OBJECTS);
-
-      msg.SetCode(CMD_GET_OBJECTS);
-      msg.SetId(0);
-      SendMsg(&msg);
 
       // Wait for object list end or for disconnection
       while(g_dwState != STATE_DISCONNECTED)
