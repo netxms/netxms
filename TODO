@@ -2,4 +2,11 @@ Current ToDo List:
 
 - Fix bugs in ConditionWait()
 - Add read/write locking implementation
-- Remove dependencies on OpenSSL
+- Finish Linux subagent
+- FreeBSD subagent
+- Solaris subagent
+- AIX subagent
+- HP-UX subagent
+- Performance subagent for Windows (winperf)
+- Cross-platform pinger subagent
+- Change configure script to allow select components to build
