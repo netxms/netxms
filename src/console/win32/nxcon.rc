@@ -1638,6 +1638,26 @@ BEGIN
                     IDC_STATIC,126,17,153,25
 END
 
+IDD_OBJECT_RELATIONS DIALOGEX 0, 0, 292, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Relations"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_PARENTS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | 
+                    LVS_NOCOLUMNHEADER | WS_TABSTOP,7,16,134,128,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "List1",IDC_LIST_CHILDS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | 
+                    LVS_NOCOLUMNHEADER | WS_TABSTOP,151,16,134,128,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Unbind from &parent",IDC_BUTTON_UNBIND_PARENT,7,149,81,
+                    14
+    PUSHBUTTON      "Unbind &child",IDC_BUTTON_UNBIND_CHILD,151,149,81,14
+    LTEXT           "Parent objects",IDC_STATIC,7,7,46,8
+    LTEXT           "Child objects",IDC_STATIC,151,7,41,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2019,6 +2039,14 @@ BEGIN
     END
 
     IDD_OBJECT_NODE_POLL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_OBJECT_RELATIONS, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 285

@@ -389,6 +389,8 @@ src/console/win32/ObjectPropsGeneral.cpp -text
 src/console/win32/ObjectPropsGeneral.h -text
 src/console/win32/ObjectPropsPresentation.cpp -text
 src/console/win32/ObjectPropsPresentation.h -text
+src/console/win32/ObjectPropsRelations.cpp -text
+src/console/win32/ObjectPropsRelations.h -text
 src/console/win32/ObjectPropsSecurity.cpp -text
 src/console/win32/ObjectPropsSecurity.h -text
 src/console/win32/ObjectSearchBox.cpp -text

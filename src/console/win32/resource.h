@@ -151,6 +151,7 @@
 #define IDI_NACK                        259
 #define IDI_RUNNING                     260
 #define IDI_PENDING                     261
+#define IDD_OBJECT_RELATIONS            262
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -187,7 +188,9 @@
 #define IDC_LIST_ARGS                   1024
 #define IDC_LIST_PARAMETERS             1024
 #define IDC_LIST_PARAMS                 1024
+#define IDC_LIST_PARENTS                1024
 #define IDC_INFO_TEXT                   1025
+#define IDC_LIST_CHILDS                 1025
 #define IDC_EDIT_CLASS                  1026
 #define IDC_CHECK_READ                  1027
 #define IDC_CHECK_MODIFY                1028
@@ -361,6 +364,8 @@
 #define IDC_CB_ITEM16                   1232
 #define IDC_EDIT_POLLER                 1232
 #define IDC_EDIT_IPADDR                 1233
+#define IDC_BUTTON_UNBIND_PARENT        1236
+#define IDC_BUTTON_UNBIND_CHILD         1237
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -468,9 +473,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        262
+#define _APS_NEXT_RESOURCE_VALUE        263
 #define _APS_NEXT_COMMAND_VALUE         32916
-#define _APS_NEXT_CONTROL_VALUE         1235
+#define _APS_NEXT_CONTROL_VALUE         1237
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

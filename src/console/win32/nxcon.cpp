@@ -17,6 +17,7 @@
 #include "NodePropsPolling.h"
 #include "DeploymentView.h"
 #include "LastValuesView.h"
+#include "ObjectPropsRelations.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -828,6 +829,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CObjectPropCaps wndObjectCaps;
    CObjectPropsSecurity wndObjectSecurity;
    CObjectPropsPresentation wndObjectPresentation;
+   CObjectPropsRelations wndObjectRelations;
    CNodePropsPolling wndNodePolling;
    NXC_OBJECT *pObject;
 
@@ -877,6 +879,10 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndPropSheet.AddPage(&wndObjectGeneral);
             break;
       }
+
+      // Create "Relations" tab
+      wndObjectRelations.m_pObject = pObject;
+      wndPropSheet.AddPage(&wndObjectRelations);
 
       // Create "Security" tab
       wndObjectSecurity.m_pObject = pObject;

@@ -341,6 +341,10 @@ SOURCE=.\ObjectPropsPresentation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsRelations.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropsSecurity.cpp
 # End Source File
 # Begin Source File
@@ -675,6 +679,10 @@ SOURCE=.\ObjectPropSheet.h
 # Begin Source File
 
 SOURCE=.\ObjectPropsPresentation.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropsRelations.h
 # End Source File
 # Begin Source File
 

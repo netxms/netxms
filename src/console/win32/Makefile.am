@@ -66,6 +66,7 @@ EXTRA_DIST = \
 	ObjectPropsGeneral.cpp ObjectPropsGeneral.h \
 	ObjectPropSheet.cpp ObjectPropSheet.h \
 	ObjectPropsPresentation.cpp ObjectPropsPresentation.h \
+	ObjectPropsRelations.cpp ObjectPropsRelations.h \
 	ObjectPropsSecurity.cpp ObjectPropsSecurity.h \
 	ObjectSearchBox.cpp ObjectSearchBox.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
