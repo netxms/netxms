@@ -244,6 +244,8 @@ public:
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId);
    virtual void CreateMessage(CSCPMessage *pMsg);
+
+   DWORD WakeUp(void);
 };
 
 
@@ -329,6 +331,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   DWORD WakeUp(void);
 };
 
 

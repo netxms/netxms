@@ -174,6 +174,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATE, OnObjectCreateTemplate)
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
+	ON_COMMAND(ID_OBJECT_WAKEUP, OnObjectWakeup)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1488,4 +1489,31 @@ void CObjectBrowser::OnClose()
                              (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
 	
 	CMDIChildWnd::OnClose();
+}
+
+
+//
+// Handler for WM_COMMAND::ID_OBJECT_WAKEUP message
+//
+
+void CObjectBrowser::OnObjectWakeup() 
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      if (m_pCurrentObject != NULL)
+         theApp.WakeUpNode(m_pCurrentObject->dwId);
+   }
+   else
+   {
+      int iItem;
+      NXC_OBJECT *pObject;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         theApp.WakeUpNode(pObject->dwId);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
 }

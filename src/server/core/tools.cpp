@@ -330,3 +330,41 @@ void DecodeSQLString(char *pszStr)
    }
    pszStr[iPosOut] = 0;
 }
+
+
+//
+// Send Wake-on-LAN packet (magic packet) to given IP address
+// with given MAC address inside
+//
+
+BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
+{
+   BYTE *pCurr, bPacketData[96];
+   SOCKET hSocket;
+   struct sockaddr_in addr;
+   BOOL bResult = TRUE;
+   int i;
+   
+   // Create data area
+   for(i = 0, pCurr = bPacketData; i < 16; i++, pCurr += 6)
+      memcpy(pCurr, pbMacAddr, 6);
+
+   // Create socket
+   hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   if (hSocket == -1)
+      return FALSE;
+
+   memset(&addr, 0, sizeof(struct sockaddr_in));
+   addr.sin_family = AF_INET;
+   addr.sin_addr.s_addr = dwIpAddr;
+   addr.sin_port = 53;
+
+   // Send requested number of packets
+   for(i = 0; i < iNumPackets; i++)
+      if (sendto(hSocket, (char *)bPacketData, 96, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
+         bResult = FALSE;
+
+   // Cleanup
+   closesocket(hSocket);
+   return bResult;
+}

@@ -779,3 +779,22 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType,
 
    return dwRetCode;
 }
+
+
+//
+// Wake up node by sending magic packet
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCWakeUpNode(DWORD dwObjectId)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_WAKEUP_NODE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   SendMsg(&msg);
+   return WaitForRCC(dwRqId);
+}

@@ -268,3 +268,23 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
    pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
 }
+
+
+//
+// Wake up node bound to this interface by sending magic packet
+//
+
+DWORD Interface::WakeUp(void)
+{
+   DWORD dwAddr, dwResult = RCC_NO_MAC_ADDRESS;
+
+   if (memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6))
+   {
+      dwAddr = htonl(m_dwIpAddr | ~m_dwIpNetMask);
+      if (SendMagicPacket(dwAddr, m_bMacAddr, 5))
+         dwResult = RCC_SUCCESS;
+      else
+         dwResult = RCC_COMM_FAILURE;
+   }
+   return dwResult;
+}

@@ -229,6 +229,8 @@ typedef unsigned long HREQUEST;
 #define RCC_OPERATION_IN_PROGRESS   ((DWORD)23)
 #define RCC_DCI_COPY_ERRORS         ((DWORD)24)
 #define RCC_INVALID_EVENT_CODE      ((DWORD)25)
+#define RCC_NO_WOL_INTERFACES       ((DWORD)26)
+#define RCC_NO_MAC_ADDRESS          ((DWORD)27)
 
 
 //
@@ -845,6 +847,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObje
 DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(DWORD dwObject);
 DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, 
                                      void (* pCallback)(TCHAR *, void *), void *pArg);
+DWORD LIBNXCL_EXPORTABLE NXCWakeUpNode(DWORD dwObjectId);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);

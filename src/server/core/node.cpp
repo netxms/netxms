@@ -995,3 +995,27 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    return Template::ModifyFromMessage(pRequest, TRUE);
 }
+
+
+//
+// Wakeup node using magic packet
+//
+
+DWORD Node::WakeUp(void)
+{
+   DWORD i, dwResult = RCC_NO_WOL_INTERFACES;
+
+   Lock();
+
+   for(i = 0; i < m_dwChildCount; i++)
+      if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+          (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
+          (m_pChildList[i]->IpAddr() != 0))
+      {
+         dwResult = ((Interface *)m_pChildList[i])->WakeUp();
+         break;
+      }
+
+   Unlock();
+   return dwResult;
+}

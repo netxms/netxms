@@ -568,6 +568,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_TRAP:
             OnTrap(pMsg);
             break;
+         case CMD_WAKEUP_NODE:
+            OnWakeUpNode(pMsg);
+            break;
          default:
             break;
       }
@@ -2926,6 +2929,56 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Wake up node
+//
+
+void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
+{
+   NetObj *pObject;
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Find node or interface object
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_INTERFACE))
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            DWORD dwResult;
+
+            if (pObject->Type() == OBJECT_NODE)
+               dwResult = ((Node *)pObject)->WakeUp();
+            else
+               dwResult = ((Interface *)pObject)->WakeUp();
+            msg.SetVariable(VID_RCC, dwResult);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else

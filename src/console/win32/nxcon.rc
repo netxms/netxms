@@ -228,6 +228,7 @@ BEGIN
             MENUITEM "&Configuration\tCtrl+Alt+C",  ID_OBJECT_POLL_CONFIGURATION
 
         END
+        MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
@@ -328,6 +329,7 @@ BEGIN
             MENUITEM "&Configuration\tCtrl+Alt+C",  ID_OBJECT_POLL_CONFIGURATION
 
         END
+        MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
@@ -374,6 +376,7 @@ BEGIN
             MENUITEM "&Configuration",              ID_OBJECT_POLL_CONFIGURATION
 
         END
+        MENUITEM "&Wake up",                    ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES

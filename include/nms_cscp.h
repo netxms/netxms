@@ -254,6 +254,7 @@ typedef struct
 #define CMD_POLL_NODE               0x0059
 #define CMD_POLLING_INFO            0x005A
 #define CMD_COPY_DCI                0x005B
+#define CMD_WAKEUP_NODE             0x005C
 
 
 //

@@ -349,6 +349,7 @@
 #define ID_OBJECT_OPEN                  32885
 #define ID_OBJECT_OPENPARENT            32887
 #define ID_ITEM_DUPLICATE               32889
+#define ID_OBJECT_WAKEUP                32891
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -358,7 +359,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        240
-#define _APS_NEXT_COMMAND_VALUE         32891
+#define _APS_NEXT_COMMAND_VALUE         32894
 #define _APS_NEXT_CONTROL_VALUE         1176
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

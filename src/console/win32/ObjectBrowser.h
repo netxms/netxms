@@ -148,6 +148,7 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnObjectCreateTemplate();
 	afx_msg void OnObjectCreateTemplategroup();
+	afx_msg void OnObjectWakeup();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);

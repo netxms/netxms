@@ -285,6 +285,7 @@ private:
    void SendContainerCategories(DWORD dwRqId);
    void ForcedNodePoll(CSCPMessage *pRequest);
    void OnTrap(CSCPMessage *pRequest);
+   void OnWakeUpNode(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -373,6 +374,7 @@ void GetSysInfoStr(char *pszBuffer);
 DWORD GetLocalIpAddr(void);
 
 BOOL ExecCommand(char *pszCommand);
+BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
 
 BOOL InitIdTable(void);
 DWORD CreateUniqueId(int iGroup);

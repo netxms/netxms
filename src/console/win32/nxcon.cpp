@@ -1339,3 +1339,20 @@ void CConsoleApp::OnToolsAddnode()
 {
    CreateNode(0);
 }
+
+
+//
+// Wake up node
+//
+
+void CConsoleApp::WakeUpNode(DWORD dwObjectId)
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg1(NXCWakeUpNode, (void *)dwObjectId, _T("Sending Wake-On-LAN magic packet to node..."));
+   if (dwResult != RCC_SUCCESS)
+      ErrorBox(dwResult, _T("Unable to send WOL magic packet: %s"));
+   else
+      m_pMainWnd->MessageBox(_T("Wake-On-LAN magic packet was successfully sent to node"),
+                             _T("Information"), MB_ICONINFORMATION | MB_OK);
+}
