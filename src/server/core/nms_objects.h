@@ -53,17 +53,6 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
-// Node flags
-//
-
-#define NF_IS_SNMP         0x0001
-#define NF_IS_NATIVE_AGENT 0x0002
-#define NF_IS_BRIDGE       0x0004
-#define NF_IS_ROUTER       0x0008
-#define NF_IS_LOCAL_MGMT   0x0010
-
-
-//
 // Object's status
 //
 
