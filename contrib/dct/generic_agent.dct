@@ -1,0 +1,17 @@
+<dct>
+	<title>Generic NetXMS Agent</title>
+	<version>1.0</version>
+	<copyright>Copyright (c) 2003 NetXMS Development Group</copyright>
+	<items>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.AcceptedConnections" description="Total number of accepted connections"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.AcceptErrors" description="Total number of accept() system call errors"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.AuthenticationFailures" description="Total number of failed AUTH commands (due to invalid secret)"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.FailedRequests" description="Total number of requests with errors in processing (others than unsupported parameters)"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.ProcessedRequests" description="Total number of successfully processed requests"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.RejectedConnections" description="Total number of connections rejected due to authentication failure"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.TimedOutRequests" description="Total number of timed out requests"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.UnsupportedRequests" description="Total number of requests for unsupported parameters"/>
+		<item class="0" type="2" retention="30" poll="120" name="Agent.Uptime" description="NetXMS agent's uptime"/>
+		<item class="0" type="2" retention="30" poll="3600" name="Agent.Version" description="Version of NetXMS agent"/>
+	</items>
+</dct>
