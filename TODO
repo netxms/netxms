@@ -36,6 +36,13 @@ SERVER:
 - Implement normal mailer shutdown
 - Implement locks table in memory
 - Check if object indexes always locked when used
+- Remove system-dependent code for getting interface list and ARP cache
+  from management server. Server should rely on SNMP or native agent for
+  this functionality.
+- Add SNMP OID to node type translation
+- Add special handling for VLAN interfaces on Nortel Passport routing switches
+- Change node into subnet placement algorithm
+- Add incorect netmask detection
 
 
 CORE AGENT:
