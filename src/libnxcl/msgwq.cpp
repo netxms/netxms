@@ -41,7 +41,7 @@ MsgWaitQueue::MsgWaitQueue()
    m_dwNumElements = 0;
    m_pElements = NULL;
    m_hMutex = MutexCreate();
-   m_hStopCondition = ConditionCreate();
+   m_hStopCondition = ConditionCreate(FALSE);
    ThreadCreate(MWQThreadStarter, 0, this);
 }
 

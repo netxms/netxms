@@ -79,7 +79,7 @@ void SyncEvents(void)
    CSCPMessage msg;
 
    ChangeState(STATE_SYNC_EVENTS);
-   m_hCondSyncFinished = ConditionCreate();
+   m_hCondSyncFinished = ConditionCreate(FALSE);
 
    msg.SetCode(CMD_GET_EVENTS);
    msg.SetId(0);

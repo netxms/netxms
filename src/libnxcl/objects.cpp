@@ -240,7 +240,7 @@ void SyncObjects(void)
    CSCPMessage msg;
 
    ChangeState(STATE_SYNC_OBJECTS);
-   m_hCondSyncFinished = ConditionCreate();
+   m_hCondSyncFinished = ConditionCreate(FALSE);
 
    msg.SetCode(CMD_GET_OBJECTS);
    msg.SetId(0);

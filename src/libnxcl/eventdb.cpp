@@ -123,7 +123,7 @@ DWORD OpenEventDB(DWORD dwRqId)
    DWORD dwRetCode;
 
    ChangeState(STATE_LOAD_EVENT_DB);
-   m_hCondLoadFinished = ConditionCreate();
+   m_hCondLoadFinished = ConditionCreate(FALSE);
 
    msg.SetCode(CMD_OPEN_EVENT_DB);
    msg.SetId(dwRqId);
