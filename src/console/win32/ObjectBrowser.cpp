@@ -1617,58 +1617,6 @@ void CObjectBrowser::OnObjectWakeup()
 
 
 //
-// Check if object has default name formed from IP address
-//
-
-static BOOL ObjectHasDefaultName(NXC_OBJECT *pObject)
-{
-   if (pObject->iClass == OBJECT_SUBNET)
-   {
-      TCHAR szBuffer[64], szIpAddr[32];
-      _stprintf(szBuffer, _T("%s/%d"), IpToStr(pObject->dwIpAddr, szIpAddr),
-                BitsInMask(pObject->subnet.dwIpNetMask));
-      return !_tcscmp(szBuffer, pObject->szName);
-   }
-   else
-   {
-      return ((pObject->dwIpAddr != 0) &&
-              (ntohl(inet_addr(pObject->szName)) == pObject->dwIpAddr));
-   }
-}
-
-
-//
-// Get object name suitable for comparision
-//
-
-static void GetComparableObjectName(DWORD dwObjectId, TCHAR *pszName)
-{
-   NXC_OBJECT *pObject;
-
-   pObject = NXCFindObjectById(g_hSession, dwObjectId);
-   if (pObject != NULL)
-   {
-      // If object has an IP address as name, we sort as numbers
-      // otherwise in alphabetical order
-      if (ObjectHasDefaultName(pObject))
-      {
-         _sntprintf(pszName, MAX_OBJECT_NAME, _T("\x01%03d%03d%03d%03d"),
-                    pObject->dwIpAddr >> 24, (pObject->dwIpAddr >> 16) & 255,
-                    (pObject->dwIpAddr >> 8) & 255, pObject->dwIpAddr & 255);
-      }
-      else
-      {
-         _tcscpy(pszName, pObject->szName);
-      }
-   }
-   else
-   {
-      *pszName = 0;
-   }
-}
-
-
-//
 // Comparision function for tree items sorting
 //
 
@@ -1676,8 +1624,8 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 {
    TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
 
-   GetComparableObjectName(lParam1, szName1);
-   GetComparableObjectName(lParam2, szName2);
+   NXCGetComparableObjectName(g_hSession, lParam1, szName1);
+   NXCGetComparableObjectName(g_hSession, lParam2, szName2);
    return _tcsicmp(szName1, szName2);
 }
 

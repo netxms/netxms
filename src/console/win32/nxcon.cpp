@@ -677,7 +677,6 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_bEventBrowserActive)
             m_pwndEventBrowser->AddEvent((NXC_EVENT *)pArg);
-         free(pArg);
          break;
       case NXC_EVENT_OBJECT_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
@@ -694,7 +693,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          switch(dwCode)
          {
             case NX_NOTIFY_SHUTDOWN:
-               m_pMainWnd->MessageBox("Server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
+               m_pMainWnd->MessageBox(_T("Server was shutdown"), _T("Warning"), MB_OK | MB_ICONSTOP);
                m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
                break;
             case NX_NOTIFY_EVENTDB_CHANGED:
