@@ -51,6 +51,7 @@ WINDOWS CONSOLE:
   selected parameter
 - Add parameter selection for native agents in DCI configuration dialog
 - Find good graph creation library
+- Place status icons on objects in object browser
 
 
 SUBAGENTS:

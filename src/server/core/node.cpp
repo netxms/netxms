@@ -793,6 +793,10 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
 
       DestroyInterfaceList(pIfList);
    }
+   else
+   {
+      SendPollerMsg(dwRqId, _T("   Unable to get interface list from node\r\n"));
+   }
 
    m_tLastConfigurationPoll = time(NULL);
    SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"
