@@ -114,7 +114,15 @@ src/agent/core/win32.cpp -text
 src/agent/subagents/Makefile.am -text
 src/agent/subagents/freebsd/Makefile.am -text
 src/agent/subagents/linux/Makefile.am -text
+src/agent/subagents/linux/disk.cpp -text
+src/agent/subagents/linux/disk.h -text
 src/agent/subagents/linux/linux.cpp -text
+src/agent/subagents/linux/net.cpp -text
+src/agent/subagents/linux/net.h -text
+src/agent/subagents/linux/proc.cpp -text
+src/agent/subagents/linux/proc.h -text
+src/agent/subagents/linux/system.cpp -text
+src/agent/subagents/linux/system.h -text
 src/agent/subagents/netware/Makefile.am -text
 src/agent/subagents/netware/Makefile.nw -text
 src/agent/subagents/netware/netware.cpp -text
