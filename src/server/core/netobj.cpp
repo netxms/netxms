@@ -294,24 +294,27 @@ void NetObj::CalculateCompoundStatus(void)
    DWORD i;
    int iSum, iCount, iOldStatus = m_iStatus;
 
-   /* TODO: probably status calculation algorithm should be changed */
-   for(i = 0, iSum = 0, iCount = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Status() < STATUS_UNKNOWN)
-      {
-         iSum += m_pChildList[i]->Status();
-         iCount++;
-      }
-   if (iCount > 0)
-      m_iStatus = iSum / iCount;
-   else
-      m_iStatus = STATUS_UNKNOWN;
-
-   // Cause parent object(s) to recalculate it's status
-   if (iOldStatus != m_iStatus)
+   if (m_iStatus != STATUS_UNMANAGED)
    {
-      for(i = 0; i < m_dwParentCount; i++)
-         m_pParentList[i]->CalculateCompoundStatus();
-      Modify();
+      /* TODO: probably status calculation algorithm should be changed */
+      for(i = 0, iSum = 0, iCount = 0; i < m_dwChildCount; i++)
+         if (m_pChildList[i]->Status() < STATUS_UNKNOWN)
+         {
+            iSum += m_pChildList[i]->Status();
+            iCount++;
+         }
+      if (iCount > 0)
+         m_iStatus = iSum / iCount;
+      else
+         m_iStatus = STATUS_UNKNOWN;
+
+      // Cause parent object(s) to recalculate it's status
+      if (iOldStatus != m_iStatus)
+      {
+         for(i = 0; i < m_dwParentCount; i++)
+            m_pParentList[i]->CalculateCompoundStatus();
+         Modify();
+      }
    }
 }
 
@@ -511,4 +514,42 @@ void NetObj::DropUserAccess(DWORD dwUserId)
 {
    if (m_pAccessList->DeleteElement(dwUserId))
       Modify();
+}
+
+
+//
+// Set object's management status
+//
+
+void NetObj::SetMgmtStatus(BOOL bIsManaged)
+{
+   DWORD i;
+   int iOldStatus;
+
+   Lock();
+
+   if ((bIsManaged && (m_iStatus != STATUS_UNMANAGED)) ||
+       ((!bIsManaged) && (m_iStatus == STATUS_UNMANAGED)))
+   {
+      Unlock();
+      return;  // Status is already correct
+   }
+
+   iOldStatus = m_iStatus;
+   m_iStatus = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
+
+   // Generate event if current object is a node
+   if (Type() == OBJECT_NODE)
+      PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_dwId, "d", iOldStatus);
+
+   // Change status for child objects also
+   for(i = 0; i < m_dwChildCount; i++)
+      m_pChildList[i]->SetMgmtStatus(bIsManaged);
+
+   // Cause parent object(s) to recalculate it's status
+   for(i = 0; i < m_dwParentCount; i++)
+      m_pParentList[i]->CalculateCompoundStatus();
+
+   Modify();
+   Unlock();
 }

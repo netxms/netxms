@@ -592,7 +592,8 @@ void Node::StatusPoll(void)
 
    PollerLock();
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+          (m_pChildList[i]->Status() != STATUS_UNMANAGED))
          ((Interface *)m_pChildList[i])->StatusPoll();
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);

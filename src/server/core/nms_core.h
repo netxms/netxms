@@ -286,6 +286,7 @@ private:
    void SendEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pRequest);
    void ModifyObject(CSCPMessage *pRequest);
+   void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
    void OpenNodeDCIList(CSCPMessage *pRequest);
    void CloseNodeDCIList(CSCPMessage *pRequest);
 

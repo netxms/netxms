@@ -255,6 +255,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_MODIFY_OBJECT:
             ModifyObject(pMsg);
             break;
+         case CMD_SET_OBJECT_MGMT_STATUS:
+            ChangeObjectMgmtStatus(pMsg);
+            break;
          case CMD_LOAD_USER_DB:
             SendUserDB(pMsg->GetId());
             break;
@@ -1174,6 +1177,48 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Change management status for the object
+//
+
+void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwObjectId;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check access rights
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         BOOL bIsManaged;
+
+         bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
+         pObject->SetMgmtStatus(bIsManaged);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else

@@ -201,6 +201,7 @@ public:
    NetObj *GetParent(DWORD dwIndex = 0) { return dwIndex < m_dwParentCount ? m_pParentList[dwIndex] : NULL; }
 
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
+   void SetMgmtStatus(BOOL bIsManaged);
 
    virtual void CalculateCompoundStatus(void);
 
@@ -316,12 +317,12 @@ public:
    INTERFACE_LIST *GetInterfaceList(void);
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
 
-   BOOL ReadyForDiscoveryPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval ? TRUE : FALSE; }
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
-   BOOL ReadyForStatusPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval ? TRUE : FALSE; }
    void StatusPoll(void);
-   BOOL ReadyForConfigurationPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval ? TRUE : FALSE; }
    void ConfigurationPoll(void);
+   BOOL ReadyForStatusPoll(void);
+   BOOL ReadyForConfigurationPoll(void);
+   BOOL ReadyForDiscoveryPoll(void);
 
    virtual void CalculateCompoundStatus(void);
 
@@ -339,6 +340,32 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
+
+
+//
+// Inline functions for Node class
+//
+
+inline BOOL Node::ReadyForStatusPoll(void) 
+{ 
+   return ((m_iStatus != STATUS_UNMANAGED) && 
+           ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval))
+               ? TRUE : FALSE;
+}
+
+inline BOOL Node::ReadyForConfigurationPoll(void) 
+{ 
+   return ((m_iStatus != STATUS_UNMANAGED) &&
+           ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval))
+               ? TRUE : FALSE;
+}
+
+inline BOOL Node::ReadyForDiscoveryPoll(void) 
+{ 
+   return ((m_iStatus != STATUS_UNMANAGED) &&
+           ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))
+               ? TRUE : FALSE; 
+}
 
 
 //

@@ -147,6 +147,7 @@ typedef struct
 #define CMD_DELETE_NODE_DCI         0x002C
 #define CMD_MODIFY_NODE_DCI         0x002D
 #define CMD_UNLOCK_NODE_DCI_LIST    0x002E
+#define CMD_SET_OBJECT_MGMT_STATUS  0x002F
 
 
 //
@@ -201,6 +202,7 @@ typedef struct
 #define VID_DCI_SOURCE_TYPE         ((DWORD)46)
 #define VID_DCI_DATA_TYPE           ((DWORD)47)
 #define VID_DCI_STATUS              ((DWORD)48)
+#define VID_MGMT_STATUS             ((DWORD)49)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

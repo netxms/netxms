@@ -465,3 +465,39 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 
    return dwRetCode;
 }
+
+
+//
+// Set object's mamagement status
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManaged)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   // Build request message
+   msg.SetCode(CMD_SET_OBJECT_MGMT_STATUS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.SetVariable(VID_MGMT_STATUS, (WORD)bIsManaged);
+
+   // Send request
+   SendMsg(&msg);
+
+   // Wait for reply
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
+}
