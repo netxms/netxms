@@ -107,78 +107,79 @@ static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-   struct if_nameindex *pIndex;
-   struct ifreq irq;
-   struct sockaddr_in *sa;
-	int nFd;
+	struct lifnum ln;
+	struct lifconf lc;
+   struct lifreq rq;
+	int i, nFd;
 
-	pIndex = if_nameindex();
-	if (pIndex != NULL)
+	nFd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (nFd >= 0)
 	{
-		nFd = socket(AF_INET, SOCK_DGRAM, 0);
-		if (nFd >= 0)
+		ln.lifn_family = AF_INET;
+		ln.lifn_flags = 0;
+		if (ioctl(nFd, SIOCGLIFNUM, &ln) == 0)
 		{
-			for (int i = 0; pIndex[i].if_index != 0; i++)
+			lc.lifc_family = AF_INET;
+			lc.lifc_flags = 0;
+			lc.lifc_len = sizeof(struct lifreq) * ln.lifn_count;
+			lc.lifc_buf = (caddr_t)malloc(lc.lifc_len);
+			if (ioctl(nFd, SIOCGLIFCONF, &lc) == 0)
 			{
-				char szOut[256];
-				struct sockaddr_in *sa;
-				struct in_addr in;
-				char szIpAddr[32];
-				char szMacAddr[32];
-				int nMask;
-
-				nRet = SYSINFO_RC_SUCCESS;
-
-				strcpy(irq.ifr_name, pIndex[i].if_name);
-				if (ioctl(nFd, SIOCGIFADDR, &irq) == 0)
+				for (i = 0; i < ln.lifn_count; i++)
 				{
-					sa = (struct sockaddr_in *)&irq.ifr_addr;
-					strncpy(szIpAddr, inet_ntoa(sa->sin_addr), sizeof(szIpAddr));
-				}
-				else
-				{
-					nRet = SYSINFO_RC_ERROR;
-				}
+					char szOut[256];
+					char szIpAddr[32];
+					char szMacAddr[32];
+					int nMask;
 
-				if (nRet == SYSINFO_RC_SUCCESS)
-				{
-					if (ioctl(nFd, SIOCGIFNETMASK, &irq) == 0)
+					nRet = SYSINFO_RC_SUCCESS;
+
+					strcpy(rq.lifr_name, lc.lifc_req[i].lifr_name);
+					if (ioctl(nFd, SIOCGLIFADDR, &rq) == 0)
 					{
-						sa = (struct sockaddr_in *)&irq.ifr_addr;
-						nMask = BitsInMask(htonl(sa->sin_addr.s_addr));
+						strncpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
 					}
-				}
-				else
-				{
-					nRet = SYSINFO_RC_ERROR;
-				}
-
-				if (nRet == SYSINFO_RC_SUCCESS)
-				{
-					if (!GetInterfaceHWAddr(pIndex[i].if_name, szMacAddr))
+					else
+					{
 						nRet = SYSINFO_RC_ERROR;
-				}
-				else
-				{
-					nRet = SYSINFO_RC_ERROR;
-				}
+						break;
+					}
 
-				if (nRet == SYSINFO_RC_SUCCESS)
-				{
-					snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-							   pIndex[i].if_index,
-								szIpAddr,
-								nMask,
-								InterfaceTypeFromName(pIndex[i].if_name),
-								szMacAddr,
-								pIndex[i].if_name);
-					NxAddResultString(pValue, szOut);
+					if (ioctl(nFd, SIOCGLIFNETMASK, &rq) == 0)
+					{
+						nMask = BitsInMask(htonl(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr.s_addr));
+					}
+					else
+					{
+						nRet = SYSINFO_RC_ERROR;
+						break;
+					}
+
+					if (!GetInterfaceHWAddr(lc.lifc_req[i].lifr_name, szMacAddr))
+					{
+						nRet = SYSINFO_RC_ERROR;
+						break;
+					}
+
+					if (ioctl(nFd, SIOCGLIFINDEX, &rq) == 0)
+					{
+						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
+								   rq.lifr_index, szIpAddr, nMask,
+									InterfaceTypeFromName(lc.lifc_req[i].lifr_name),
+									szMacAddr, lc.lifc_req[i].lifr_name);
+						NxAddResultString(pValue, szOut);
+					}
+					else
+					{
+						nRet = SYSINFO_RC_ERROR;
+						break;
+					}
 				}
 			}
 
-			close(nFd);
+			free(lc.lifc_buf);
 		}
-      if_freenameindex(pIndex);
+		close(nFd);
 	}
 
 	return nRet;
