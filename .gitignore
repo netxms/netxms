@@ -1,0 +1,16 @@
+/Makefile
+/Makefile.in
+/aclocal.m4
+/autom4te.cache
+/config.h
+/config.h.in
+/config.log
+/configure
+sql/dbinit_mssql.sql
+sql/dbinit_mysql.sql
+sql/dbinit_pgsql.sql
+src/server/core/messages.c
+src/server/core/messages.h
+src/server/core/netxmsd
+/stamp-h1
+/status

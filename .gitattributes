@@ -1,4 +1,5 @@
 * text=auto !eol
+/.cvsignore -text
 /AUTHORS -text
 /COPYING -text
 /ChangeLog -text
@@ -25,6 +26,7 @@ include/nxclapi.h -text
 include/nxevent.h -text
 m4/Makefile.am -text
 /reconf -text
+sql/.cvsignore -text
 sql/Makefile.am -text
 sql/clear.sql -text
 sql/dbinit.in -text
@@ -124,6 +126,7 @@ src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/request.cpp -text
 src/server/Makefile.am -text
+src/server/core/.cvsignore -text
 src/server/core/Makefile.am -text
 src/server/core/acl.cpp -text
 src/server/core/actions.cpp -text
