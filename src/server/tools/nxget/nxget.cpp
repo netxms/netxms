@@ -25,6 +25,10 @@
 #include <nms_util.h>
 #include <nxclapi.h>
 
+#ifndef _WIN32
+#include <netdb.h>
+#endif
+
 
 //
 // Constants
@@ -89,7 +93,7 @@ int RecvLine(int iBufSize, char *szBuffer)
 {
    char *pChar;
 	struct timeval timeout;
-	FD_SET rdfs;
+	fd_set rdfs;
    int iSize;
 
    pChar = strchr(m_szNetBuffer, '\r');
@@ -158,7 +162,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
    char szBuffer[MAX_LINE_SIZE];
    int iError;
 	struct timeval timeout;
-	FD_SET rdfs;
+	fd_set rdfs;
 
    if (m_hSocket == -1)
       return ERR_NOT_CONNECTED;
@@ -196,7 +200,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
    }
 
    // Check for error
-   if (memicmp(szBuffer, "+OK", 3))
+   if (memcmp(szBuffer, "+OK", 3))
    {
       if (szBuffer[0] == '-')
       {
