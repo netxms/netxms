@@ -276,6 +276,8 @@ src/libnetxms/inline.cpp -text
 src/libnetxms/libnetxms.dsp -text
 src/libnetxms/libnetxms.dsw -text
 src/libnetxms/libnetxms.h -text
+src/libnetxms/libnetxms.vcp -text
+src/libnetxms/libnetxms.vcw -text
 src/libnetxms/main.cpp -text
 src/libnetxms/md5.cpp -text
 src/libnetxms/md5.h -text
