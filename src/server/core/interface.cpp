@@ -184,7 +184,7 @@ BOOL Interface::DeleteFromDB(void)
    char szQuery[128];
 
    sprintf(szQuery, "DELETE FROM interfaces WHERE id=%ld", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
    return TRUE;
 }
 

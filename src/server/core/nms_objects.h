@@ -399,6 +399,8 @@ public:
 
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
    virtual void CreateMessage(CSCPMessage *pMsg);
+
+   DWORD IpNetMask(void) { return m_dwIpNetMask; }
 };
 
 
@@ -439,6 +441,7 @@ void ObjectsGlobalLock(void);
 void ObjectsGlobalUnlock(void);
 
 void NetObjInsert(NetObj *pObject, BOOL bNewObject);
+void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
 NetObj *FindObjectById(DWORD dwId);

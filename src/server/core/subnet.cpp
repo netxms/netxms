@@ -147,9 +147,9 @@ BOOL Subnet::DeleteFromDB(void)
    char szQuery[256];
 
    sprintf(szQuery, "DELETE FROM subnets WHERE id=%ld", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
    sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%ld", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
    return TRUE;
 }
 

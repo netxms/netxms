@@ -226,6 +226,8 @@ void NetObj::Delete(void)
    free(m_pChildList);
    m_dwChildCount = 0;
 
+   NetObjDeleteFromIndexes(this);
+
    m_bIsDeleted = TRUE;
    m_bIsModified = TRUE;
    Unlock();

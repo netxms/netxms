@@ -227,15 +227,14 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 
 
 //
-// Delete object
-// This function should be called only by syncer thread when access to objects are locked
+// Delete object from indexes
+// If object has an IP address, this function will delete it from
+// appropriate index. Normally this function should be called from
+// NetObj::Delete() method.
 //
 
-void NetObjDelete(NetObj *pObject)
+void NetObjDeleteFromIndexes(NetObj *pObject)
 {
-   MutexLock(g_hMutexIdIndex, INFINITE);
-   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
-   MutexUnlock(g_hMutexIdIndex);
    if (pObject->IpAddr() != 0)
       switch(pObject->Type())
       {
@@ -261,6 +260,49 @@ void NetObjDelete(NetObj *pObject)
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
             break;
       }
+}
+
+
+//
+// Get IP netmask for object of any class
+//
+
+DWORD GetObjectNetmask(NetObj *pObject)
+{
+   switch(pObject->Type())
+   {
+      case OBJECT_INTERFACE:
+         return ((Interface *)pObject)->IpNetMask();
+      case OBJECT_SUBNET:
+         return ((Subnet *)pObject)->IpNetMask();
+      default:
+         return 0;
+   }
+}
+
+
+//
+// Delete object (final step)
+// This function should be called only by syncer thread when access to objects are locked.
+// Object will be removed from index by ID and destroyed.
+//
+
+void NetObjDelete(NetObj *pObject)
+{
+   char szQuery[256];
+
+   // Delete object from index by ID
+   MutexLock(g_hMutexIdIndex, INFINITE);
+   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
+   MutexUnlock(g_hMutexIdIndex);
+
+   // Write object to deleted objects table
+   sprintf(szQuery, "INSERT INTO DeletedObjects (object_id,object_class,name,ip_addr,ip_netmask) VALUES (%ld,%ld,'%s',%ld,%ld)",
+           pObject->Id(), pObject->Type(), pObject->Name(), pObject->IpAddr(),
+           GetObjectNetmask(pObject));
+   QueueSQLRequest(szQuery);
+                  
+   delete pObject;
 }
 
 
