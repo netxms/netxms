@@ -85,6 +85,15 @@ WINDOWS CONSOLE:
 - Add agent configuration editor
 
 
+POCKET PC CONSOLE:
+
+- Play sound on new alarm
+- Automatically resize column in alarm view
+- Add object details view
+- Add Wake-on-LAN packet sending
+- Add last DCI values view
+
+
 SUBAGENTS:
 
 - libperl-driven subagent, allow to run perl scripts w/o forking/executing

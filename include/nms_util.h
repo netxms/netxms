@@ -109,7 +109,7 @@ typedef struct
 // Win32 API functions missing under WinCE
 //
 
-#ifdef UNDER_CE
+#if defined(UNDER_CE) && defined(__cplusplus)
 
 inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 {

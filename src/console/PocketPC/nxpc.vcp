@@ -604,10 +604,12 @@ SOURCE=.\MainFrm.cpp
 !IF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Release"
 
 DEP_CPP_MAINF=\
-	".\ChildView.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
 	".\StdAfx.h"\
+	
+NODEP_CPP_MAINF=\
+	".\ChildView.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -653,12 +655,14 @@ DEP_CPP_MAINF=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
-	".\ChildView.h"\
+	".\AlarmView.h"\
 	".\globals.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_MAINF=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -667,10 +671,12 @@ NODEP_CPP_MAINF=\
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
 
 DEP_CPP_MAINF=\
-	".\ChildView.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
 	".\StdAfx.h"\
+	
+NODEP_CPP_MAINF=\
+	".\ChildView.h"\
 	
 
 !ENDIF 
@@ -683,10 +689,12 @@ SOURCE=.\nxpc.cpp
 !IF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Release"
 
 DEP_CPP_NXPC_=\
-	".\ChildView.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
 	".\StdAfx.h"\
+	
+NODEP_CPP_NXPC_=\
+	".\ChildView.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -733,13 +741,15 @@ DEP_CPP_NXPC_=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
-	".\ChildView.h"\
+	".\AlarmView.h"\
 	".\globals.h"\
 	".\LoginDlg.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_NXPC_=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -748,10 +758,12 @@ NODEP_CPP_NXPC_=\
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
 
 DEP_CPP_NXPC_=\
-	".\ChildView.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
 	".\StdAfx.h"\
+	
+NODEP_CPP_NXPC_=\
+	".\ChildView.h"\
 	
 
 !ENDIF 
@@ -1293,7 +1305,27 @@ SOURCE=.\res\connect.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\container.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\interface.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\login.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\network.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\network_service.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\node.ico
 # End Source File
 # Begin Source File
 
@@ -1305,6 +1337,38 @@ SOURCE=.\res\nxpc.rc2
 # PROP Exclude_From_Scan -1
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_critical.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_disabled.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_major.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_minor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_testing.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_unknown.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_unmanaged.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ovl_status_warning.ico
 # End Source File
 # Begin Source File
 
@@ -1329,6 +1393,22 @@ SOURCE=.\res\SeverityNormal.ico
 # Begin Source File
 
 SOURCE=.\res\SeverityWarning.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\subnet.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\template.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\template_group.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\template_root.ico
 # End Source File
 # Begin Source File
 

@@ -49,7 +49,7 @@ inline void SetInfoText(HWND hWnd, TCHAR *pszText)
 
 static void ClientEventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
 {
-//   theApp.EventHandler(dwEvent, dwCode, pArg);
+   theApp.EventHandler(dwEvent, dwCode, pArg);
 }
 
 
@@ -174,7 +174,7 @@ static DWORD WINAPI RequestThread(void *pArg)
 // Perform request (common code)
 //
 
-static DWORD ExecuteRequest(RqData *pData, char *pszInfoText)
+static DWORD ExecuteRequest(RqData *pData, TCHAR *pszInfoText)
 {
    HANDLE hThread;
    DWORD dwThreadId, dwResult;
@@ -215,7 +215,7 @@ static DWORD ExecuteRequest(RqData *pData, char *pszInfoText)
 // Perform generic request without parameters
 //
 
-DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText)
+DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -230,7 +230,7 @@ DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText)
 // Perform request with 1 parameter
 //
 
-DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText)
+DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -246,7 +246,7 @@ DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText)
 // Perform request with 2 parameters
 //
 
-DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText)
+DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -263,7 +263,7 @@ DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText)
 // Perform request with 3 parameter
 //
 
-DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText)
+DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -282,7 +282,7 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *ps
 //
 
 DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, 
-                    void *pArg4, char *pszInfoText)
+                    void *pArg4, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -302,7 +302,7 @@ DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3,
 //
 
 DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, char *pszInfoText)
+                    void *pArg5, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -323,7 +323,7 @@ DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 //
 
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, char *pszInfoText)
+                    void *pArg5, void *pArg6, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -345,7 +345,7 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 //
 
 DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, void *pArg7, char *pszInfoText)
+                    void *pArg5, void *pArg6, void *pArg7, TCHAR *pszInfoText)
 {
    RqData rqData;
 

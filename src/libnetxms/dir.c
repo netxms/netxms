@@ -29,8 +29,11 @@ SOFTWARE.
 #define PATHLEN	1024
 
 #include "libnetxms.h"
-#include <sys/stat.h>
 #include <stdlib.h>
+
+#ifndef UNDER_CE
+#include <sys/stat.h>
+#endif
 
 
 /*

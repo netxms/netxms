@@ -16,11 +16,11 @@ Class4=CAboutDlg
 ResourceCount=7
 Resource1=IDD_ABOUTBOX
 Resource2=IDR_MAINFRAME
-Resource4=IDD_PROCESSING (English (U.S.))
+Resource4=IDR_MAINFRAME (English (U.S.))
 Class2=CChildView
-Resource3=IDD_ABOUTBOX (English (U.S.))
+Resource3=IDD_PROCESSING (English (U.S.))
 Class5=CRequestProcessingDlg
-Resource5=IDR_MAINFRAME (English (U.S.))
+Resource5=IDD_ABOUTBOX (English (U.S.))
 Class6=CLoginDlg
 Resource6=IDD_LOGIN
 Class7=CObjectView
@@ -110,7 +110,8 @@ Command2=ID_APP_EXIT
 Command3=ID_VIEW_SUMMARY
 Command4=ID_VIEW_ALARMS
 Command5=ID_VIEW_OBJECTS
-CommandCount=5
+Command6=ID_VIEW_REFRESH
+CommandCount=6
 
 [TB:IDR_MAINFRAME (English (U.S.))]
 Type=1
@@ -118,7 +119,7 @@ Class=?
 Command1=ID_VIEW_SUMMARY
 Command2=ID_VIEW_ALARMS
 Command3=ID_VIEW_OBJECTS
-Command4=ID_APP_ABOUT
+Command4=ID_VIEW_REFRESH
 CommandCount=4
 
 [ACL:IDR_MAINFRAME (English (U.S.))]
@@ -203,13 +204,15 @@ VirtualFilter=WC
 Type=0
 HeaderFile=SummaryView.h
 ImplementationFile=SummaryView.cpp
-BaseClass=generic CWnd
+BaseClass=CWnd
 Filter=W
+VirtualFilter=WC
 
 [CLS:CAlarmView]
 Type=0
 HeaderFile=AlarmView.h
 ImplementationFile=AlarmView.cpp
-BaseClass=generic CWnd
+BaseClass=CWnd
 Filter=W
+VirtualFilter=WC
 

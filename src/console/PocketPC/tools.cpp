@@ -108,85 +108,6 @@ const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDe
 
 
 //
-// Find image's index in list by image id
-//
-
-int ImageIdToIndex(DWORD dwImageId)
-{
-   DWORD i;
-
-   for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
-      if (g_pSrvImageList->pImageList[i].dwId == dwImageId)
-         return i;
-   return -1;
-}
-
-
-//
-// Create image list with object images
-//
-
-void CreateObjectImageList(void)
-{
-/*   HICON hIcon;
-   DWORD i, dwPos;
-   TCHAR szFileName[MAX_PATH];
-
-   // Create small (16x16) image list
-   if (g_pObjectSmallImageList != NULL)
-      delete g_pObjectSmallImageList;
-   g_pObjectSmallImageList = new CImageList;
-   g_pObjectSmallImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 8);
-
-   // Create normal (32x32) image list
-   if (g_pObjectNormalImageList != NULL)
-      delete g_pObjectNormalImageList;
-   g_pObjectNormalImageList = new CImageList;
-   g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 16, 8);
-
-   wcscpy(szFileName, g_szWorkDir);
-   wcscat(szFileName, WORKDIR_IMAGECACHE);
-   wcscat(szFileName, L"\\");
-   dwPos = strlen(szFileName);
-
-   for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
-   {
-      sprintf(&szFileName[dwPos], "%08x.ico", g_pSrvImageList->pImageList[i].dwId);
-      
-      // Load and add 16x16 image
-      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-      g_pObjectSmallImageList->Add(hIcon);
-      DestroyIcon(hIcon);
-
-      // Load and add 32x32 image
-      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-      g_pObjectNormalImageList->Add(hIcon);
-      DestroyIcon(hIcon);
-   }*/
-}
-
-
-//
-// Get image index for given object
-//
-
-int GetObjectImageIndex(NXC_OBJECT *pObject)
-{
-   DWORD i;
-
-   // Check if object has custom image
-   if (pObject->dwImage != IMG_DEFAULT)
-      return ImageIdToIndex(pObject->dwImage);
-
-   // Find default image for class
-   for(i = 0; i < g_dwDefImgListSize; i++)
-      if (g_pDefImgList[i].dwObjectClass == (DWORD)pObject->iClass)
-         return g_pDefImgList[i].iImageIndex;
-   
-   return -1;
-}
-
-
 //
 // Create image list with event severity icons
 //
@@ -205,4 +126,21 @@ CImageList *CreateEventImageList(void)
    pImageList->Add(theApp.LoadIcon(IDI_UNKNOWN));    // For alarms
    pImageList->Add(theApp.LoadIcon(IDI_ACK));
    return pImageList;
+}
+
+
+//
+// MulDiv() implementation
+//
+
+int MulDiv(int nNumber, int nNumerator, int nDenominator)
+{
+   INT64 qnResult;
+   int nResult;
+
+   qnResult = (INT64)nNumber * (INT64)nNumerator;
+   nResult = (int)(qnResult / (INT64)nDenominator);
+   if ((qnResult % nDenominator) > (nDenominator / 2))
+      nResult++;
+   return nResult;
 }

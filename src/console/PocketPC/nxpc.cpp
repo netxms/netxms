@@ -245,3 +245,37 @@ void CNxpcApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
               NXCGetErrorText(dwError));
    m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : _T("Error"), MB_ICONSTOP);
 }
+
+
+//
+// Handler for client library events
+//
+
+void CNxpcApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   switch(dwEvent)
+   {
+      case NXC_EVENT_OBJECT_CHANGED:
+         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
+         break;
+      case NXC_EVENT_NOTIFICATION:
+         switch(dwCode)
+         {
+            case NX_NOTIFY_SHUTDOWN:
+               m_pMainWnd->MessageBox(L"Server was shutdown", L"Warning", MB_OK | MB_ICONSTOP);
+               m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+               break;
+            case NX_NOTIFY_NEW_ALARM:
+            case NX_NOTIFY_ALARM_DELETED:
+            case NX_NOTIFY_ALARM_ACKNOWLEGED:
+               m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
+                                       (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
+               break;
+            default:
+               break;
+         }
+         break;
+      default:
+         break;
+   }
+}

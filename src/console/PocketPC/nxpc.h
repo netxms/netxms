@@ -28,6 +28,7 @@
 class CNxpcApp : public CWinApp
 {
 public:
+	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	CNxpcApp();
 
 // Overrides

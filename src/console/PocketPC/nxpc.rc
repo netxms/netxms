@@ -39,6 +39,15 @@ IDI_UNKNOWN             ICON    DISCARDABLE     "res\\question.ico"
 IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "res\\SeverityCritical.ico"
 IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "res\\SeverityMajor.ico"
 IDI_LOGIN               ICON    DISCARDABLE     "res\\login.ico"
+IDI_TEMPLATE_ROOT       ICON    DISCARDABLE     "res\\template_root.ico"
+IDI_CONTAINER           ICON    DISCARDABLE     "res\\container.ico"
+IDI_NETWORK             ICON    DISCARDABLE     "res\\network.ico"
+IDI_SERVICE             ICON    DISCARDABLE     "res\\network_service.ico"
+IDI_NODE                ICON    DISCARDABLE     "res\\node.ico"
+IDI_SUBNET              ICON    DISCARDABLE     "res\\subnet.ico"
+IDI_TEMPLATE            ICON    DISCARDABLE     "res\\template.ico"
+IDI_TEMPLATE_GROUP      ICON    DISCARDABLE     "res\\template_group.ico"
+IDI_INTERFACE           ICON    DISCARDABLE     "res\\interface.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -54,10 +63,12 @@ IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Cmdbar.bmp"
 
 IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 16
 BEGIN
+    SEPARATOR
     BUTTON      ID_VIEW_SUMMARY
     BUTTON      ID_VIEW_ALARMS
     BUTTON      ID_VIEW_OBJECTS
-    BUTTON      ID_APP_ABOUT
+    SEPARATOR
+    BUTTON      ID_VIEW_REFRESH
 END
 
 
@@ -79,6 +90,8 @@ BEGIN
         MENUITEM "Summary",                     ID_VIEW_SUMMARY
         MENUITEM "Alarms",                      ID_VIEW_ALARMS
         MENUITEM "Objects",                     ID_VIEW_OBJECTS
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                     ID_VIEW_REFRESH
     END
 END
 
@@ -313,6 +326,7 @@ BEGIN
     IDS_SUMMARY             "Summary"
     IDS_ALARMS              "Alarm browser"
     IDS_OBJECTS             "Object browser"
+    IDS_REFRESH             "Refresh"
     IDS_ABOUT               "About"
 END
 

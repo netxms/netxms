@@ -123,17 +123,14 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 // Drawing functions
 //
 
-void DrawPieTCHARt(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors);
-void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
+void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors);
+//void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
 
 
 //
 // Image and image list functions
 //
 
-void CreateObjectImageList(void);
-int ImageIdToIndex(DWORD dwImageId);
-int GetObjectImageIndex(NXC_OBJECT *pObject);
 CImageList *CreateEventImageList(void);
 void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
 
@@ -142,6 +139,7 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
 // Utility functions
 //
 
+int MulDiv(int nNumber, int nNumerator, int nDenominator);
 /*TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
@@ -173,11 +171,6 @@ extern TCHAR *g_pszItemOrigin[];
 extern TCHAR *g_pszItemOriginLong[];
 extern TCHAR *g_pszItemDataType[];
 extern TCHAR *g_pszItemStatus[];
-extern NXC_IMAGE_LIST *g_pSrvImageList;
-extern CImageList *g_pObjectSmallImageList;
-extern CImageList *g_pObjectNormalImageList;
-extern DWORD g_dwDefImgListSize;
-extern DEF_IMG *g_pDefImgList;
 extern NXC_CC_LIST *g_pCCList;
 extern CODE_TO_TEXT g_ctNodeType[];
 

@@ -75,7 +75,11 @@ protected:
 	afx_msg void OnSetFocus(CWnd *pOldWnd);
 	afx_msg void OnViewObjects();
 	afx_msg void OnViewSummary();
+	afx_msg void OnViewAlarms();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
+   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
 	LPTSTR MakeString(UINT stringID);
 	LPTSTR m_ToolTipsTable[NUM_TOOL_TIPS]; 
 

@@ -31,10 +31,21 @@ public:
 public:
 	virtual ~CAlarmView();
 
+   void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
+
 	// Generated message map functions
 protected:
+	CFont m_fontLarge;
+	CFont m_fontSmall;
+	void DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData);
+	void AddAlarm(NXC_ALARM *pAlarm);
+	CImageList *m_pImageList;
+	CListCtrl m_wndListCtrl;
 	//{{AFX_MSG(CAlarmView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -25,6 +25,8 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CSummaryView)
+	protected:
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -33,8 +35,14 @@ public:
 
 	// Generated message map functions
 protected:
+	DWORD m_dwNodeStats[8];
+	DWORD m_dwTotalNodes;
+	CFont m_fontNormal;
+	CFont m_fontTitle;
+	void PaintNodeSummary(CDC &dc);
 	//{{AFX_MSG(CSummaryView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnPaint();
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

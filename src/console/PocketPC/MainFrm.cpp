@@ -28,7 +28,11 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_OBJECTS, OnViewObjects)
 	ON_COMMAND(ID_VIEW_SUMMARY, OnViewSummary)
+	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -64,16 +68,18 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create control bar
 	m_wndCommandBar.m_bShowSharedNewButton = FALSE;
-	m_ToolTipsTable[0] = MakeString(IDS_SUMMARY);
-	m_ToolTipsTable[1] = MakeString(IDS_ALARMS);
-	m_ToolTipsTable[2] = MakeString(IDS_OBJECTS);
-	m_ToolTipsTable[3] = MakeString(IDS_ABOUT);
+	m_ToolTipsTable[0] = L"0";
+	m_ToolTipsTable[1] = L"1";
+	m_ToolTipsTable[2] = MakeString(IDS_SUMMARY);
+	m_ToolTipsTable[3] = MakeString(IDS_ALARMS);
+	m_ToolTipsTable[4] = MakeString(IDS_OBJECTS);
+	m_ToolTipsTable[5] = MakeString(IDS_REFRESH);
 
 	if(!m_wndCommandBar.Create(this) ||
 	   !m_wndCommandBar.InsertMenuBar(IDR_MAINFRAME) ||
 	   !m_wndCommandBar.AddAdornments() ||
       !m_wndCommandBar.LoadToolBar(IDR_MAINFRAME) ||
-   	!m_wndCommandBar.SendMessage(TB_SETTOOLTIPS, (WPARAM)(4), (LPARAM)m_ToolTipsTable))
+   	!m_wndCommandBar.SendMessage(TB_SETTOOLTIPS, (WPARAM)(6), (LPARAM)m_ToolTipsTable))
 	{
 		TRACE0("Failed to create CommandBar\n");
 		return -1;      // fail to create
@@ -161,6 +167,16 @@ void CMainFrame::OnViewSummary()
 
 
 //
+// WM_COMMAND::ID_VIEW_ALARMS message handler
+//
+
+void CMainFrame::OnViewAlarms() 
+{
+   ActivateView(&m_wndAlarmView);
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_OBJECTS message handler
 //
 
@@ -180,4 +196,39 @@ void CMainFrame::ActivateView(CWnd *pwndView)
       m_pwndCurrView->ShowWindow(SW_HIDE);
    m_pwndCurrView = pwndView;
    m_pwndCurrView->ShowWindow(SW_SHOW);
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CMainFrame::OnSize(UINT nType, int cx, int cy) 
+{
+	CFrameWnd::OnSize(nType, cx, cy);
+
+   m_wndAlarmView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   m_wndObjectView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   m_wndSummaryView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+}
+
+
+//
+// Handler for WM_OBJECT_CHANGE message
+//
+
+void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
+{
+   m_wndObjectView.OnObjectChange(wParam, (NXC_OBJECT *)lParam);
+}
+
+
+//
+// WM_ALARM_UPDATE message handler
+//
+
+void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
+{
+   m_wndAlarmView.OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+   free((void *)lParam);
 }

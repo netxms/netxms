@@ -53,21 +53,6 @@ TCHAR g_szWorkDir[MAX_PATH] = L"";
 
 
 //
-// Server image list
-//
-
-NXC_IMAGE_LIST *g_pSrvImageList = NULL;
-
-
-//
-// Image lists with object images
-//
-
-CImageList *g_pObjectSmallImageList = NULL;
-CImageList *g_pObjectNormalImageList = NULL;
-
-
-//
 // Global string constants
 //
 
@@ -146,14 +131,6 @@ TCHAR *g_pszItemOrigin[] = { _T("Internal"), _T("Agent"), _T("SNMP") };
 TCHAR *g_pszItemOriginLong[] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP Agent") };
 TCHAR *g_pszItemDataType[] = { _T("Integer"), _T("Unsigned Integer"), _T("Int64"), _T("Unsigned Int64"), _T("String"), _T("Float") };
 TCHAR *g_pszItemStatus[] = { _T("Active"), _T("Disabled"), _T("Not supported") };
-
-
-//
-// Default object image list
-//
-
-DWORD g_dwDefImgListSize = 0;
-DEF_IMG *g_pDefImgList = NULL;
 
 
 //

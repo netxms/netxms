@@ -7,6 +7,28 @@
 // ObjectView.h : header file
 //
 
+//
+// Hash for tree items
+//
+
+struct OBJ_TREE_HASH
+{
+   DWORD dwObjectId;
+   HTREEITEM hTreeItem;
+};
+
+
+//
+// libnxcl object index structure
+//
+
+struct NXC_OBJECT_INDEX
+{
+   DWORD dwKey;
+   NXC_OBJECT *pObject;
+};
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CObjectView window
 
@@ -29,13 +51,27 @@ public:
 
 // Implementation
 public:
+	void OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject);
 	virtual ~CObjectView();
 
 	// Generated message map functions
 protected:
+	CImageList m_imageList;
+	DWORD m_dwTreeHashSize;
+	OBJ_TREE_HASH * m_pTreeHash;
 	CTreeCtrl m_wndTreeCtrl;
+
+   void AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent);
+   void CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer);
+   void DeleteObjectTreeItem(HTREEITEM hRootItem);
+   void UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject);
+   void SortTreeItems(HTREEITEM hItem);
+   DWORD FindObjectInTree(DWORD dwObjectId);
+
 	//{{AFX_MSG(CObjectView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
