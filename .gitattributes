@@ -59,4 +59,9 @@ src/server/dbdrv/pgsql/pgsql.dsw -text
 src/server/dbdrv/pgsql/pgsqldrv.h -text
 src/server/include/dbdrv.h -text
 src/server/include/nms_threads.h -text
+src/server/tools/nxadm/comm.cpp -text
+src/server/tools/nxadm/nxadm.cpp -text
+src/server/tools/nxadm/nxadm.dsp -text
+src/server/tools/nxadm/nxadm.dsw -text
+src/server/tools/nxadm/nxadm.h -text
 tools/mc.pl -text
