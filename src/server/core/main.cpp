@@ -124,6 +124,7 @@ BOOL Initialize(void)
    // Initialize SNMP stuff
    SnmpInit();
 
+   // Initialize database driver and connect to database
    if (!DBInit())
       return FALSE;
 

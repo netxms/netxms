@@ -23,10 +23,30 @@
 #include "nms_core.h"
 
 #ifdef _WIN32
+
 #include <iphlpapi.h>
 #include <iprtrmib.h>
 #include <rtinfo.h>
+
+#else
+
+#if HAVE_FCNTL_H
+#include <fcntl.h>
 #endif
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_NET_IF_H
+#include <net/if.h>
+#endif
+//#if HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
+//#endif
+
+#endif   /* _WIN32 */
 
 
 //
@@ -71,6 +91,7 @@ ARP_CACHE *GetLocalArpCache(void)
    free(sysArpCache);
 #else
    /* TODO: Add UNIX code here */
+   printf("CODE NOT IMPLEMENTED\n");
 #endif
 
    return pArpCache;
@@ -134,17 +155,102 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
 
    free(ifTable);
 
-   // Delete loopback interface(s) from list
-   for(int j = 0; j < pIfList->iNumEntries; j++)
-      if ((pIfList->pInterfaces[j].dwIpAddr & pIfList->pInterfaces[j].dwIpNetMask) == 0x0000007F)
-      {
-         pIfList->iNumEntries--;
-         memmove(&pIfList->pInterfaces[j], &pIfList->pInterfaces[j + 1],
-                 sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - j));
-         j--;
-      }
 #else
-   /* TODO: Add UNIX code here */
+
+   struct ifconf ifc;
+   struct ifreq ifrq;
+   int i, iSock, iCount;
+   BOOL bIoFailed = FALSE;
+
+   iSock = socket(AF_INET, SOCK_DGRAM, 0);
+   if (iSock != -1)
+   {
+      ifc.ifc_buf = NULL;
+      iCount = 10;
+      do
+      {
+         iCount += 10;
+         ifc.ifc_len = sizeof(struct ifreq) * iCount;
+         ifc.ifc_buf = (char *)realloc(ifc.ifc_buf, ifc.ifc_len);
+         if (ioctl(iSock, SIOCGIFCONF, &ifc) < 0)
+         {
+            WriteLog(MSG_IOCTL_FAILED, EVENTLOG_ERROR_TYPE, "se", "SIOCGIFCONF", errno);
+            bIoFailed = TRUE;
+            break;
+         }
+      } while(ifc.ifc_len == sizeof(struct ifreq) * iCount);
+
+      if (!bIoFailed)
+      {
+         iCount = ifc.ifc_len / sizeof(struct ifreq);
+
+         // Allocate and initialize interface list structure
+         pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+         pIfList->iNumEntries = iCount;
+         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iCount);
+         memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * iCount);
+
+         for(i = 0; i < iCount; i++)
+         {
+            strcpy(ifrq.ifr_name, ifc.ifc_req[i].ifr_name);
+
+            // Interface name
+            strcpy(pIfList->pInterfaces[i].szName, ifc.ifc_req[i].ifr_name);
+
+            // IP address
+            if (ioctl(iSock, SIOCGIFADDR, &ifrq) == 0)
+            {
+               memcpy(&pIfList->pInterfaces[i].dwIpAddr,
+                      &(((struct sockaddr_in *)&ifrq.ifr_addr)->sin_addr.s_addr),
+                      sizeof(DWORD));
+            }
+
+            // IP netmask
+            if (ioctl(iSock, SIOCGIFNETMASK, &ifrq) == 0)
+            {
+               memcpy(&pIfList->pInterfaces[i].dwIpNetMask,
+                      &(((struct sockaddr_in *)&ifrq.ifr_addr)->sin_addr.s_addr),
+                      sizeof(DWORD));
+            }
+
+            // Interface type
+            if (ioctl(iSock, SIOCGIFHWADDR, &ifrq) == 0)
+            {
+               switch(ifrq.ifr_hwaddr.sa_family)
+               {
+                  case ARPHRD_ETHER:
+                     pIfList->pInterfaces[i].dwType = IFTYPE_ETHERNET_CSMACD;
+                     break;
+                  case ARPHRD_SLIP:
+                  case ARPHRD_CSLIP:
+                  case ARPHRD_SLIP6:
+                  case ARPHRD_CSLIP6:
+                     pIfList->pInterfaces[i].dwType = IFTYPE_SLIP;
+                     break;
+                  case ARPHRD_PPP:
+                     pIfList->pInterfaces[i].dwType = IFTYPE_PPP;
+                     break;
+                  case ARPHRD_LOOPBACK:
+                     pIfList->pInterfaces[i].dwType = IFTYPE_SOFTWARE_LOOPBACK;
+                     break;
+                  case ARPHRD_FDDI:
+                     pIfList->pInterfaces[i].dwType = IFTYPE_FDDI;
+                     break;
+                  default:
+                     pIfList->pInterfaces[i].dwType = IFTYPE_OTHER;
+                     break;
+               }
+            }
+
+            // Interface index
+            pIfList->pInterfaces[i].dwIndex = i + 1;
+         }
+      }
+
+      close(iSock);
+      free(ifc.ifc_buf);
+   }
+   
 #endif
 
    CleanInterfaceList(pIfList);

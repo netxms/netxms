@@ -296,4 +296,10 @@ Language=English
 Internal error: invalid DTYPE %1 in %2
 .
 
+MessageId=
+SymbolicName=MSG_IOCTL_FAILED
+Language=English
+Call to ioctl() failed (Operation: %1 Error: %2)
+.
+
 ;#endif

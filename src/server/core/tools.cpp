@@ -191,6 +191,8 @@ void GetSysInfoStr(char *pszBuffer)
    sprintf(pszBuffer, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
 #else
    /* TODO: add UNIX code here */
+   printf("GetSysInfoStr: code not implemented\n");
+   strcpy(pszBuffer, "UNIX");
 #endif
 }
 
