@@ -11,6 +11,10 @@ sql/clear.sql -text
 sql/events.sql -text
 sql/schema.sql -text
 sql/setup.sql -text
+src/libnxcl/libnxcl.dsp -text
+src/libnxcl/libnxcl.dsw -text
+src/libnxcl/libnxcl.h -text
+src/libnxcl/main.cpp -text
 src/server/core/NmsCore.dsp -text
 src/server/core/NmsCore.dsw -text
 src/server/core/acl.cpp -text
