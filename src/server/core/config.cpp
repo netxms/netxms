@@ -39,7 +39,6 @@ static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
                         "   --debug-dc        : Print data collection debug information to console.\n"
                         "   --debug-discovery : Print network discovery debug information to console.\n"
                         "   --debug-events    : Print events to console.\n"
-                        "   --debug-icmp      : Print ICMP status polls debug information.\n"
                         "\n"
                         "Valid commands are:\n"
                         "   check-config      : Check configuration file syntax\n"
@@ -222,10 +221,6 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-dc"))
       {
          g_dwFlags |= AF_DEBUG_DC;
-      }
-      else if (!strcmp(argv[i], "--debug-icmp"))
-      {
-         g_dwFlags |= AF_DEBUG_ICMP;
       }
       else if (!strcmp(argv[i], "check-config"))
       {

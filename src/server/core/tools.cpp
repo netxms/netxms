@@ -158,8 +158,7 @@ BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout)
    BOOL bResult = FALSE;
    ECHOREQUEST request;
    ECHOREPLY reply;
-   char szBuffer[32];
-   DWORD dwActualTimeout, dwStartTime, dwElapsedTime;
+   DWORD dwTimeLeft, dwStartTime, dwElapsedTime;
 
    // Create raw socket
    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -181,11 +180,8 @@ BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout)
    request.m_icmpHdr.m_wId = 0x1020;
    request.m_icmpHdr.m_wSeq = 0;
 
-   DbgPrintf(AF_DEBUG_ICMP, "IcmpPing: Pinging %s with timeout %d and possible %d retries\n",
-             IpToStr(dwAddr, szBuffer), dwTimeout, iNumRetries);
-
    // Do ping
-   while((iNumRetries--) && (!bResult))
+   while(iNumRetries--)
    {
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
@@ -197,29 +193,22 @@ BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout)
          struct sockaddr_in saSrc;
 
          // Wait for responce
-         for(dwActualTimeout = dwTimeout; dwActualTimeout > 0;)
+         for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
          {
 	         FD_ZERO(&rdfs);
 	         FD_SET(sock, &rdfs);
-	         timeout.tv_sec = dwActualTimeout / 1000;
-	         timeout.tv_usec = (dwActualTimeout % 1000) * 1000;
+	         timeout.tv_sec = dwTimeLeft / 1000;
+	         timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
             dwStartTime = GetTickCount();
 	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) != 0)
             {
                dwElapsedTime = GetTickCount() - dwStartTime;
-               dwActualTimeout -= min(dwElapsedTime, dwActualTimeout);
+               dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
 
                // Receive reply
                iAddrLen = sizeof(struct sockaddr_in);
                if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &iAddrLen) > 0)
                {
-                  // We can receive our own request if we are pinging our own address
-                  if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
-                      (reply.m_icmpHdr.m_cType == 8) &&
-                      (reply.m_icmpHdr.m_wId == request.m_icmpHdr.m_wId) &&
-                      (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
-                     continue;  // In this case, wait again for reply
-
                   // Check responce
                   if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
                       (reply.m_icmpHdr.m_cType == 0) &&
@@ -227,34 +216,30 @@ BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout)
                       (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
                   {
                      bResult = TRUE;   // We succeed
-                     break;            // Stop sending packets
+                     goto stop_ping;   // Stop sending packets
                   }
-                  DbgPrintf(AF_DEBUG_ICMP, "IcmpPing: Invalid responce: saddr=%s type=%d id=%d seq=%d\n",
-                            IpToStr(reply.m_ipHdr.m_iaSrc.s_addr, szBuffer), reply.m_icmpHdr.m_cType,
-                            reply.m_icmpHdr.m_wId, reply.m_icmpHdr.m_wSeq);
-               }
-               else
-               {
-                  DbgPrintf(AF_DEBUG_ICMP, "IcmpPing: recvfrom() failed\n");
+
+                  // Check for "destination unreacheable" error
+                  if ((reply.m_icmpHdr.m_cType == 3) &&
+                      (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreacheable"
+                  {
+                     if (((IPHDR *)reply.m_icmpHdr.m_cData)->m_iaDst.S_un.S_addr == dwAddr)
+                        goto stop_ping;      // Host unreacheable, stop trying
+                  }
                }
             }
-            else
+            else     // select() ended on timeout
             {
-               DbgPrintf(AF_DEBUG_ICMP, "IcmpPing: Timed out waiting for echo reply\n");
-               dwActualTimeout = 0;
+               dwTimeLeft = 0;
             }
          }
       }
-      else
-      {
-         DbgPrintf(AF_DEBUG_ICMP, "IcmpPing: sendto() failed [%s]\n", strerror(errno));
-      }
-      if (!bResult)
-         ThreadSleepMs(500);     // Wait half a second before sending next packet
+
+      ThreadSleepMs(500);     // Wait half a second before sending next packet
    }
 
+stop_ping:
    closesocket(sock);
-   DbgPrintf(AF_DEBUG_ICMP, "IcmpPing: Completed with result %d\n", bResult);
    return bResult;
 }
 
