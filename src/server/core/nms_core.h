@@ -52,8 +52,8 @@
 #include <dbdrv.h>
 #include <nms_cscp.h>
 #include <nms_util.h>
-#include "nms_objects.h"
 #include "nms_users.h"
+#include "nms_objects.h"
 #include "nms_dcoll.h"
 #include "messages.h"
 
@@ -87,12 +87,16 @@
 // Application flags
 //
 
-#define AF_STANDALONE      0x0001
-#define AF_USE_EVENT_LOG   0x0002
-#define AF_DEBUG_EVENTS    0x0004
-#define AF_DEBUG_CSCP      0x0008
-#define AF_DEBUG_DISCOVERY 0x0010
-#define AF_SHUTDOWN        0x8000
+#define AF_STANDALONE                     0x00000001
+#define AF_USE_EVENT_LOG                  0x00000002
+#define AF_ENABLE_ACCESS_CONTROL          0x00000004
+#define AF_ENABLE_EVENTS_ACCESS_CONTROL   0x00000008
+#define AF_DEBUG_EVENTS                   0x00000100
+#define AF_DEBUG_CSCP                     0x00000200
+#define AF_DEBUG_DISCOVERY                0x00000400
+#define AF_DEBUG_DC                       0x00000800
+#define AF_DEBUG_ALL                      0x0000FF00
+#define AF_SHUTDOWN                       0x80000000
 
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
 
@@ -292,6 +296,8 @@ void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName);
 void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(void);
+
+void CheckForMgmtNode(void);
 
 #ifdef _WIN32
 

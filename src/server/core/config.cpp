@@ -33,8 +33,10 @@ static char help_text[]="NMS Version " VERSION_STRING " Server\n"
                         "Valid options are:\n"
                         "   --config <file>   : Set non-default configuration file\n"
                         "                     : Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   --debug-all       : Turn on all possible debug output\n"
                         "   --debug-cscp      : Print client-server communication protocol debug\n"
                         "                     : information to console.\n"
+                        "   --debug-dc        : Print data collection debug information to console.\n"
                         "   --debug-discovery : Print network discovery debug information to console.\n"
                         "   --debug-events    : Print events to console.\n"
                         "\n"
@@ -193,6 +195,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
          i++;
          strcpy(g_szConfigFile, argv[i]);     // Next word should contain name of the config file
       }
+      else if (!strcmp(argv[i], "--debug-all"))
+      {
+         g_dwFlags |= AF_DEBUG_ALL;
+      }
       else if (!strcmp(argv[i], "--debug-events"))
       {
          g_dwFlags |= AF_DEBUG_EVENTS;
@@ -204,6 +210,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-discovery"))
       {
          g_dwFlags |= AF_DEBUG_DISCOVERY;
+      }
+      else if (!strcmp(argv[i], "--debug-dc"))
+      {
+         g_dwFlags |= AF_DEBUG_DC;
       }
       else if (!strcmp(argv[i], "check-config"))
       {

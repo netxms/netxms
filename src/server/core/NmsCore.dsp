@@ -87,6 +87,14 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\acl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\admin.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\agent.cpp
 # End Source File
 # Begin Source File
@@ -208,6 +216,10 @@ SOURCE=.\winsrv.cpp
 # Begin Source File
 
 SOURCE=..\include\dbdrv.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\local_admin.h
 # End Source File
 # Begin Source File
 

@@ -39,6 +39,7 @@ void ConfigurationPoller(void *pArg);
 void EventProcessor(void *pArg);
 void WatchdogThread(void *pArg);
 void ClientListener(void *pArg);
+void LocalAdminListener(void *pArg);
 void DBWriteThread(void *pArg);
 
 
@@ -46,7 +47,7 @@ void DBWriteThread(void *pArg);
 // Global variables
 //
 
-DWORD g_dwFlags = 0;
+DWORD g_dwFlags = AF_USE_EVENT_LOG;
 char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 DB_HANDLE g_hCoreDB = 0;
@@ -90,6 +91,10 @@ static void LoadGlobalConfig()
    g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 900);
    g_dwStatusPollingInterval = ConfigReadInt("StatusPollingInterval", 60);
    g_dwConfigurationPollingInterval = ConfigReadInt("ConfigurationPollingInterval", 3600);
+   if (ConfigReadInt("EnableAccessControl", 1))
+      g_dwFlags |= AF_ENABLE_ACCESS_CONTROL;
+   if (ConfigReadInt("EnableEventsAccessControl", 1))
+      g_dwFlags |= AF_ENABLE_EVENTS_ACCESS_CONTROL;
 }
 
 
@@ -156,13 +161,18 @@ BOOL Initialize(void)
    // Start threads
    ThreadCreate(WatchdogThread, 0, NULL);
    ThreadCreate(HouseKeeper, 0, NULL);
-   ThreadCreate(DiscoveryThread, 0, NULL);
    ThreadCreate(Syncer, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
    ThreadCreate(StatusPoller, 0, NULL);
    ThreadCreate(ConfigurationPoller, 0, NULL);
    ThreadCreate(ClientListener, 0, NULL);
-   
+
+   // Start network discovery thread if required
+   if (ConfigReadInt("RunNetworkDiscovery", 1))
+      ThreadCreate(DiscoveryThread, 0, NULL);
+   else
+      CheckForMgmtNode();
+
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
    for(i = 0; i < iNumThreads; i++)
@@ -170,6 +180,10 @@ BOOL Initialize(void)
 
    // Start database "lazy" write thread
    ThreadCreate(DBWriteThread, 0, NULL);
+
+   // Start local administartive interface listener if required
+   if (ConfigReadInt("EnableAdminInterface", 1))
+      ThreadCreate(LocalAdminListener, 0, NULL);
 
    return TRUE;
 }

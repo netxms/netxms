@@ -86,7 +86,7 @@ static void DataCollector(void *pArg)
       }
       else     /* pNode == NULL */
       {
-printf("** DC: Attempt to collect information for non-existing node.\n");
+         DbgPrintf(AF_DEBUG_DC, "*** DataCollector: Attempt to collect information for non-existing node.\n");
       }
       free(pEnvelope);
    }
@@ -117,7 +117,7 @@ static void ItemPoller(void *pArg)
       MutexUnlock(g_hMutexNodeIndex);
 
       dwElapsed = GetTickCount() - dwStart;
-      printf("*** ItemPoller: Time elapsed == %lu milliseconds ***\n", dwElapsed);
+      DbgPrintf(AF_DEBUG_DC, "*** ItemPoller: Time elapsed == %lu milliseconds ***\n", dwElapsed);
    }
 }
 
@@ -133,8 +133,11 @@ static void StatCollector(void *pArg)
       if (SleepAndCheckForShutdown(10))
          break;      // Shutdown has arrived
 
-      printf("*** Poller Queue size: %d ***\n", m_pItemQueue->Size());
-      printf("*** DB Writer Queue size: %d ***\n", g_pLazyRequestQueue->Size());
+      if (g_dwFlags & AF_DEBUG_DC)
+      {
+         printf("*** Poller Queue size: %d ***\n", m_pItemQueue->Size());
+         printf("*** DB Writer Queue size: %d ***\n", g_pLazyRequestQueue->Size());
+      }
    }
 }
 

@@ -157,7 +157,7 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
 // Check if management server node presented in node list
 //
 
-static void CheckForMgmtNode(void)
+void CheckForMgmtNode(void)
 {
    INTERFACE_LIST *pIfList;
    Node *pNode;

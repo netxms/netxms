@@ -234,8 +234,14 @@ protected:
    DWORD m_dwParentCount;  // Number of parent objects
    NetObj **m_pParentList; // Array of pointers to parent objects
 
+   AccessList *m_pAccessList;
+   BOOL m_bInheritAccessRights;
+
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
+
+   BOOL LoadACLFromDB(void);
+   BOOL SaveACLToDB(void);
 
 public:
    NetObj();

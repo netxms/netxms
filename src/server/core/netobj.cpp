@@ -39,6 +39,8 @@ NetObj::NetObj()
    m_pChildList = NULL;
    m_dwParentCount = 0;
    m_pParentList = NULL;
+   m_pAccessList = new AccessList;
+   m_bInheritAccessRights = TRUE;
 }
 
 
@@ -53,6 +55,7 @@ NetObj::~NetObj()
       free(m_pChildList);
    if (m_pParentList != NULL)
       free(m_pParentList);
+   delete m_pAccessList;
 }
 
 
@@ -305,4 +308,66 @@ void NetObj::CalculateCompoundStatus(void)
          m_pParentList[i]->CalculateCompoundStatus();
       m_bIsModified = TRUE;
    }
+}
+
+
+//
+// Load ACL from database
+//
+
+BOOL NetObj::LoadACLFromDB(void)
+{
+   char szQuery[256];
+   DB_RESULT hResult;
+   BOOL bSuccess = FALSE;
+
+   sprintf(szQuery, "SELECT user_id,access_rights FROM acl WHERE object_id=%d", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      int i, iNumRows;
+
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+         m_pAccessList->AddElement(DBGetFieldULong(hResult, i, 0), 
+                                   DBGetFieldULong(hResult, i, 1));
+      DBFreeResult(hResult);
+      bSuccess = TRUE;
+   }
+
+   return bSuccess;
+}
+
+
+//
+// Handler for ACL elements enumeration
+//
+
+static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
+{
+   char szQuery[256];
+
+   sprintf(szQuery, "INSERT INTO acl (objecft_id,user_id,access_rights) VALUES (%d,%d,%d)",
+           (DWORD)pArg, dwUserId, dwAccessRights);
+   DBQuery(g_hCoreDB, szQuery);
+}
+
+
+//
+// Save ACL to database
+//
+
+BOOL NetObj::SaveACLToDB(void)
+{
+   char szQuery[256];
+   BOOL bSuccess = FALSE;
+
+   sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
+   if (DBQuery(g_hCoreDB, szQuery))
+   {
+      m_pAccessList->EnumerateElements(EnumerationHandler, (void *)m_dwId);
+      bSuccess = TRUE;
+   }
+
+   return bSuccess;
 }

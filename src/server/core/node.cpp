@@ -186,6 +186,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    DBFreeResult(hResult);
    LoadItemsFromDB();
+   LoadACLFromDB();
    return bResult;
 }
 
