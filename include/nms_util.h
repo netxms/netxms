@@ -151,6 +151,8 @@ extern "C"
    char EXPORTABLE *nx_strdup(const char *pSrc);
 
    void EXPORTABLE CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
+
+   BOOL EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
 }
 
 #endif   /* _nms_util_h_ */
