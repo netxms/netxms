@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.1 2004-10-22 22:08:34 alk Exp $ */
+/* $Id: proc.cpp,v 1.2 2005-01-18 17:09:33 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -54,16 +54,6 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
-	char *pPatern;
-
-	if (szPatern != NULL)
-	{
-		pPatern = szPatern;
-	}
-	else
-	{
-		pPatern = "";
-	}
 
 	nFound = -1;
 
@@ -123,7 +113,8 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 							{
 								pProcName++;
 
-								if (strstr(pProcName, pPatern) != NULL)
+								if (szPatern == NULL ||
+										strcasecmp(pProcName, szPatern) == 0)
 								{
 									nFound++;
 									if (pEnt != NULL)
@@ -152,5 +143,15 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/22 22:08:34  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 
 */
