@@ -22,6 +22,10 @@
 
 #include "libnetxms.h"
 
+#ifndef _WIN32
+#include <sys/time.h>
+#endif
+
 #ifdef _WIN32
 #ifndef __GNUC__
 #define EPOCHFILETIME (116444736000000000i64)
