@@ -30,7 +30,7 @@
 
 static NXC_EVENT_TEMPLATE **m_ppEventTemplates = NULL;
 static DWORD m_dwNumTemplates = 0;
-static MUTEX m_mutexEventAccess = INVALID_HANDLE_VALUE;
+static MUTEX m_mutexEventAccess = INVALID_MUTEX_HANDLE;
 
 
 //

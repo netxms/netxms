@@ -41,7 +41,7 @@ struct OID_TABLE
 
 static OID_TABLE *m_pOidTable = NULL;
 static DWORD m_dwOidTableSize = 0;
-static m_dwRequestId = 1;
+static DWORD m_dwRequestId = 1;
 
 
 //
