@@ -16,6 +16,7 @@ contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text
 contrib/logo.jpg -text
 doc/Makefile.am -text
+doc/admin_guide.doc -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
 images/generic_printer.ico -text
@@ -84,6 +85,9 @@ src/agent/core/win32.cpp -text
 src/agent/subagents/Makefile.am -text
 src/agent/subagents/linux/Makefile.am -text
 src/agent/subagents/linux/linux.cpp -text
+src/agent/subagents/netware/Makefile.nw -text
+src/agent/subagents/netware/netware.cpp -text
+src/agent/subagents/netware/netware.def -text
 src/agent/subagents/skeleton/Makefile.am -text
 src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text

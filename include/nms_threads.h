@@ -140,12 +140,16 @@ typedef struct condition_t * CONDITION;
 
 inline void ThreadSleep(int nSeconds)
 {
+#ifdef _NETWARE
+	sleep(nSeconds);
+#else
 	struct timeval tv;
 
 	tv.tv_sec = nSeconds;
 	tv.tv_usec = 0;
 
 	select(1, NULL, NULL, NULL, &tv);
+#endif
 }
 
 inline void ThreadSleepMs(DWORD dwMilliseconds)
