@@ -37,6 +37,7 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue);
+LONG H_PlatformName(char *cmd, char *arg, char *value);
 
 #ifdef _WIN32
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
@@ -54,7 +55,6 @@ LONG H_NetIPStats(char *cmd, char *arg, char *value);
 LONG H_NetInterfaceStats(char *cmd, char *arg, char *value);
 LONG H_ServiceState(char *cmd, char *arg, char *value);
 LONG H_CPUCount(char *cmd, char *arg, char *value);
-LONG H_PlatformName(char *cmd, char *arg, char *value);
 #endif
 
 
