@@ -95,7 +95,7 @@ inline void ConditionDestroy(CONDITION hCond)
 
 inline void ConditionSet(CONDITION hCond)
 {
-   SetEvent(hCond);
+   PulseEvent(hCond);
 }
 
 inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
@@ -207,7 +207,8 @@ inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 		else
 		{
 			for (i = (dwTimeOut / 50) + 1; i > 0; i--) {
-				if (pthread_mutex_trylock(mutex) != EBUSY) {
+				if (pthread_mutex_trylock(mutex) == 0) 
+            {
 					ret = TRUE;
 					break;
 				}
@@ -220,7 +221,8 @@ inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 
 inline void MutexUnlock(MUTEX mutex)
 {
-   if (mutex != NULL) {
+   if (mutex != NULL) 
+   {
       pthread_mutex_unlock(mutex);
 	}
 }
@@ -230,7 +232,8 @@ inline CONDITION ConditionCreate(BOOL bBroadcast)
 	CONDITION cond;
 
    cond = (CONDITION)malloc(sizeof(struct condition_t));
-   if (cond != NULL) {
+   if (cond != NULL) 
+   {
       pthread_cond_init(&cond->cond, NULL);
       pthread_mutex_init(&cond->mutex, NULL);
 		cond->broadcast = bBroadcast;
