@@ -124,6 +124,10 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
             DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing command \"%s\"\n", pszExpandedData);
             ExecCommand(pszExpandedData);
             break;
+         case ACTION_SEND_EMAIL:
+            break;
+         case ACTION_REMOTE:
+            break;
          default:
             break;
       }

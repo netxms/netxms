@@ -529,6 +529,10 @@ SOURCE=.\UserSelectDlg.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\icons\ack.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\alarm.ico
 # End Source File
 # Begin Source File
@@ -585,6 +589,10 @@ SOURCE=.\icons\netxms.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\none.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\nxcon.ico
 # End Source File
 # Begin Source File
@@ -598,6 +606,10 @@ SOURCE=.\icons\passwd.ico
 # Begin Source File
 
 SOURCE=.\res\psym_any.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\question.ico
 # End Source File
 # Begin Source File
 

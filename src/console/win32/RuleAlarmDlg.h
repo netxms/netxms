@@ -23,6 +23,7 @@ public:
 	CString	m_strMessage;
 	CString	m_strKey;
 	CString	m_strAckKey;
+	BOOL	m_bGenerateAlarm;
 	//}}AFX_DATA
 
 
@@ -35,10 +36,12 @@ public:
 
 // Implementation
 protected:
+	void EnableControls(BOOL bEnable);
 
 	// Generated message map functions
 	//{{AFX_MSG(CRuleAlarmDlg)
-		// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnCheckAlarm();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

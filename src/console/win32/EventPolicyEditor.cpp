@@ -115,12 +115,15 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Create(g_pObjectSmallImageList);
    m_iImageAny = m_pImageList->GetImageCount();
    LoadBitmapIntoList(m_pImageList, IDB_ANY, PSYM_MASK_COLOR);
+   LoadBitmapIntoList(m_pImageList, IDB_NONE, PSYM_MASK_COLOR);
    m_iImageSeverityBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_UNKNOWN));
+   m_pImageList->Add(theApp.LoadIcon(IDI_ACK));
 	
    // Create rule list control
    GetClientRect(&rect);
@@ -131,8 +134,8 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.InsertColumn(0, "No.", 35, CF_CENTER | CF_TITLE_COLOR | CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(1, "Source", 150);
    m_wndRuleList.InsertColumn(2, "Event", 150);
-   m_wndRuleList.InsertColumn(3, "Severity", 80, CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(4, "Alarm", 150);
+   m_wndRuleList.InsertColumn(3, "Severity", 90, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(4, "Alarm", 150, CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(5, "Action", 150);
    m_wndRuleList.InsertColumn(6, "Comments", 200, CF_TEXTBOX | CF_NON_SELECTABLE);
 
@@ -326,12 +329,41 @@ void CEventPolicyEditor::UpdateRow(int iRow)
                                   m_iImageSeverityBase + i);
    }
 
+   // Alarm
+   if (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_GENERATE_ALARM)
+   {
+      if (m_wndRuleList.GetNumItems(iRow, COL_ALARM) == 0)
+         m_wndRuleList.AddItem(iRow, COL_ALARM, m_pEventPolicy->pRuleList[iRow].szAlarmMessage,
+                               m_iImageSeverityBase + m_pEventPolicy->pRuleList[iRow].wAlarmSeverity);
+      else
+         m_wndRuleList.ReplaceItem(iRow, COL_ALARM, 0, m_pEventPolicy->pRuleList[iRow].szAlarmMessage,
+                                   m_iImageSeverityBase + m_pEventPolicy->pRuleList[iRow].wAlarmSeverity);
+   }
+   else
+   {
+      if (m_wndRuleList.GetNumItems(iRow, COL_ALARM) == 0)
+         m_wndRuleList.AddItem(iRow, COL_ALARM, "None", m_iImageAny + 1);
+      else
+         m_wndRuleList.ReplaceItem(iRow, COL_ALARM, 0, "None", m_iImageAny + 1);
+   }
+
+   // Action
+   m_wndRuleList.ClearCell(iRow, COL_ACTION);
+   if (m_pEventPolicy->pRuleList[iRow].dwNumActions > 0)
+   {
+   }
+   else
+   {
+      m_wndRuleList.AddItem(iRow, COL_ACTION, "None", m_iImageAny + 1);
+   }
+
    // Comment
    m_wndRuleList.SetCellText(iRow, COL_COMMENT, m_pEventPolicy->pRuleList[iRow].pszComment);
 
    // Enable/disable selection
    m_wndRuleList.EnableCellSelection(iRow, COL_SOURCE, m_pEventPolicy->pRuleList[iRow].dwNumSources != 0);
    m_wndRuleList.EnableCellSelection(iRow, COL_EVENT, m_pEventPolicy->pRuleList[iRow].dwNumEvents != 0);
+   m_wndRuleList.EnableCellSelection(iRow, COL_ACTION, m_pEventPolicy->pRuleList[iRow].dwNumActions != 0);
 }
 
 
@@ -709,8 +741,36 @@ void CEventPolicyEditor::EditAlarm(int iRow)
 {
    CRuleAlarmDlg dlg;
 
-   if (dlg.DoModal())
+   dlg.m_bGenerateAlarm = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_GENERATE_ALARM) ? TRUE : FALSE;
+   if (dlg.m_bGenerateAlarm)
    {
+      dlg.m_strMessage = m_pEventPolicy->pRuleList[iRow].szAlarmMessage;
+      dlg.m_strKey = m_pEventPolicy->pRuleList[iRow].szAlarmKey;
+      dlg.m_strAckKey = m_pEventPolicy->pRuleList[iRow].szAlarmAckKey;
+      dlg.m_iSeverity = m_pEventPolicy->pRuleList[iRow].wAlarmSeverity;
+   }
+   else
+   {
+      dlg.m_strMessage = "";
+      dlg.m_strKey = "";
+      dlg.m_strAckKey = "";
+      dlg.m_iSeverity = 0;
+   }
+   if (dlg.DoModal() == IDOK)
+   {
+      if (dlg.m_bGenerateAlarm)
+      {
+         m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_GENERATE_ALARM;
+         m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = dlg.m_iSeverity;
+         strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmMessage, (LPCTSTR)dlg.m_strMessage, MAX_DB_STRING);
+         strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strKey, MAX_DB_STRING);
+         strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmAckKey, (LPCTSTR)dlg.m_strAckKey, MAX_DB_STRING);
+      }
+      else
+      {
+         m_pEventPolicy->pRuleList[iRow].dwFlags &= ~RF_GENERATE_ALARM;
+      }
+      UpdateRow(iRow);
    }
 }
 

@@ -91,6 +91,9 @@
 #define IDD_OBJECT_PRESENTATION         202
 #define IDD_EDIT_RULE_SEVERITY          203
 #define IDD_EDIT_RULE_ALARM             204
+#define IDB_NONE                        205
+#define IDI_UNKNOWN                     207
+#define IDI_ACK                         208
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -198,6 +201,11 @@
 #define IDC_RADIO_CRITICAL              1131
 #define IDC_RADIO_NONE                  1132
 #define IDC_CHECK_ALARM                 1133
+#define IDC_STATIC_MESSAGE              1134
+#define IDC_STATIC_ACK                  1135
+#define IDC_STATIC_KEY                  1136
+#define IDC_STATIC_KEYACK               1137
+#define IDC_STATIC_SEVERITY             1138
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -263,9 +271,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        205
+#define _APS_NEXT_RESOURCE_VALUE        209
 #define _APS_NEXT_COMMAND_VALUE         32864
-#define _APS_NEXT_CONTROL_VALUE         1134
+#define _APS_NEXT_CONTROL_VALUE         1139
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

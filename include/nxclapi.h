@@ -324,8 +324,7 @@ typedef unsigned long HREQUEST;
 #define RF_NEGATED_SOURCE     0x0002
 #define RF_NEGATED_EVENTS     0x0004
 #define RF_GENERATE_ALARM     0x0008
-#define RF_ALARM_IS_ACK       0x0010
-#define RF_DISABLED           0x0020
+#define RF_DISABLED           0x0010
 #define RF_SEVERITY_INFO      0x0100
 #define RF_SEVERITY_WARNING   0x0200
 #define RF_SEVERITY_MINOR     0x0400

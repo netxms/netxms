@@ -321,5 +321,7 @@ CImageList *CreateEventImageList(void)
    pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
    pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
    pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   pImageList->Add(theApp.LoadIcon(IDI_UNKNOWN));    // For alarms
+   pImageList->Add(theApp.LoadIcon(IDI_ACK));
    return pImageList;
 }
