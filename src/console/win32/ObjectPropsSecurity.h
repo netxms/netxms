@@ -26,10 +26,11 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CObjectPropsSecurity)
 	enum { IDD = IDD_OBJECT_SECURITY };
+	CButton	m_wndCheckAckAlarms;
+	CButton	m_wndCheckViewAlarms;
 	CButton	m_wndCheckAccess;
 	CButton	m_wndCheckCreate;
 	CButton	m_wndCheckRead;
-	CButton	m_wndCheckMove;
 	CButton	m_wndCheckModify;
 	CButton	m_wndCheckDelete;
 	CListCtrl	m_wndUserList;
@@ -56,11 +57,12 @@ protected:
 	afx_msg void OnCheckInheritRights();
 	afx_msg void OnDeleteUser();
 	afx_msg void OnCheckRead();
-	afx_msg void OnCheckMove();
 	afx_msg void OnCheckModify();
 	afx_msg void OnCheckDelete();
 	afx_msg void OnCheckCreate();
 	afx_msg void OnCheckAccess();
+	afx_msg void OnCheckViewAlarms();
+	afx_msg void OnCheckAckAlarms();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

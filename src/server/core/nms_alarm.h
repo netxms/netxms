@@ -56,6 +56,8 @@ public:
    void DeleteAlarm(DWORD dwAlarmId);
 
    void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);
+
+   NetObj *GetAlarmSourceObject(DWORD dwAlarmId);
 };
 
 

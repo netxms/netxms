@@ -427,6 +427,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_ALARM:
             break;
          case CMD_ACK_ALARM:
+            AcknowlegeAlarm(pMsg);
+            break;
+         case CMD_DELETE_ALARM:
             break;
          default:
             break;
@@ -2165,4 +2168,46 @@ void ClientSession::SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck)
    MutexLock(m_mutexSendAlarms, INFINITE);
    g_alarmMgr.SendAlarmsToClient(dwRqId, bIncludeAck, this);
    MutexUnlock(m_mutexSendAlarms);
+}
+
+
+//
+// Acknowlege alarm
+//
+
+void ClientSession::AcknowlegeAlarm(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwAlarmId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get alarm id and it's source object
+   dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+   pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
+   if (pObject != NULL)
+   {
+      // User should have "acknowlege alarm" right to the object
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      {
+         g_alarmMgr.AckById(dwAlarmId, m_dwUserId);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms pObject will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }

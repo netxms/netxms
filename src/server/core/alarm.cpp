@@ -320,3 +320,42 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
    // Send end-of-list indicator
    msg.SetVariable(VID_ALARM_ID, (DWORD)0);
 }
+
+
+//
+// Get source object for given alarm id
+//
+
+NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
+{
+   DWORD i, dwObjectId = 0;
+   char szQuery[256];
+   DB_RESULT hResult;
+
+   // First, look at our in-memory list
+   Lock();
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+         dwObjectId = m_pAlarmList[i].dwSourceObject;
+         break;
+      }
+   Unlock();
+
+   // If not found, search database
+   if (i == m_dwNumAlarms)
+   {
+      sprintf(szQuery, "SELECT source_object_id FROM alarms WHERE alarm_id=%ld", dwAlarmId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            dwObjectId = DBGetFieldULong(hResult, 0, 0);
+         }
+         DBFreeResult(hResult);
+      }
+   }
+
+   return FindObjectById(dwObjectId);
+}

@@ -285,6 +285,7 @@ private:
    void SendEventNames(DWORD dwRqId);
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
+   void AcknowlegeAlarm(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
