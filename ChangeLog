@@ -10,6 +10,8 @@
 - Fixed memory leaks in DCI cache management
 - Added interface for processing SNMP traps by server modules
 - Added internal parameters AgentStatus and ChildStatus(*)
+- Fixed issue #0000018 (incorrect aliases handling by FreeBSD subagent)
+- Some GUI improvements
 
 
 *
