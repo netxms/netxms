@@ -143,3 +143,18 @@ NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId)
 
    return pUser;
 }
+
+
+//
+// Get pointer to user list and number of users
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
+{
+   if (!m_bUserDBLoaded)
+      return FALSE;
+
+   *ppUserList = m_pUserList;
+   *pdwNumUsers = m_dwNumUsers;
+   return TRUE;
+}
