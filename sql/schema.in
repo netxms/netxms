@@ -203,6 +203,7 @@ CREATE TABLE Items
 CREATE TABLE Events
 (
 	id integer not null,
+	name varchar(64) not null,	// Short event name
 	severity integer,
 	flags integer,
 	message varchar(255),		// Message template
@@ -253,7 +254,8 @@ CREATE TABLE Actions
 CREATE TABLE NodeGroups
 (
 	id integer not null,
-	name varchar(255),
+	name varchar(64),
+	description varchar(255),
 	PRIMARY KEY(id)
 );
 
@@ -265,7 +267,8 @@ CREATE TABLE NodeGroups
 CREATE TABLE EventGroups
 (
 	id integer not null,
-	name varchar(255),
+	name varchar(64),
+	description varchar(255),
 	PRIMARY KEY(id)
 );
 
@@ -278,10 +281,7 @@ CREATE TABLE NodeGroupMembers
 (
 	group_id integer not null,
 	node_id integer not null,
-#ifdef DB_MYSQL
-	KEY(group_id),
-	KEY(node_id)
-#endif
+	PRIMARY KEY(group_id,node_id)
 );
 
 
@@ -293,10 +293,7 @@ CREATE TABLE EventGroupMembers
 (
 	group_id integer not null,
 	event_id integer not null,
-#ifdef DB_MYSQL
-	KEY(group_id),
-	KEY(event_id)
-#endif
+	PRIMARY KEY(group_id,event_id)
 );
 
 
@@ -317,9 +314,7 @@ CREATE TABLE PolicySourceList
 	rule_id integer not null,
 	source_type integer not null,
 	object_id integer not null,
-#ifdef DB_MYSQL
-	KEY(rule_id)
-#endif
+	PRIMARY KEY(rule_id,object_id)
 );
 
 CREATE TABLE PolicyEventList

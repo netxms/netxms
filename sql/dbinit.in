@@ -8,6 +8,10 @@
 #error Database type should be defined
 #endif
 
+// Event-related defines
+#include <nxevent.h>
+#include <nms_locks.h>
+
 // Define common macros for uncommon data types
 #ifdef DB_MSSQL
 #define DT_TEXT		text

@@ -35,8 +35,35 @@ INSERT INTO users (id,name,password)
 */
 
 INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (0,'NetXMS Server Instance',-1,'');
+   VALUES (CID_NETXMS_INSTANCE,'NetXMS Server Instance',-1,'');
 INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (1,'Event Processing Policy',-1,'');
+   VALUES (CID_EPP,'Event Processing Policy',-1,'');
 INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (2,'User Management',-1,'');
+   VALUES (CID_USER_MGMT,'User Management',-1,'');
+INSERT INTO locks (component_id,component_name,lock_status,owner_info)
+   VALUES (CID_EVENT_DB,'Event Processing Policy',-1,'');
+
+
+/*
+** Default event groups
+*/
+
+#define ID_GROUP_1 0x80000001
+#define ID_GROUP_2 0x80000002
+
+INSERT INTO EventGroups (id,name,description) 
+   VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change');
+INSERT INTO EventGroups (id,name,description) 
+   VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation');
+
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_NORMAL);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_MINOR);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_WARNING);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_MAJOR);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_CRITICAL);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_UNKNOWN);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_1,EVENT_NODE_UNMANAGED);
+
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
+INSERT INTO EventGroupMembers (group_id,event_id) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
