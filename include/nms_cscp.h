@@ -348,6 +348,11 @@ typedef struct
 #define VID_ACK_BY_USER             ((DWORD)95)
 #define VID_IS_ACK                  ((DWORD)96)
 #define VID_ACTION_ID               ((DWORD)97)
+#define VID_IS_DISABLED             ((DWORD)98)
+#define VID_ACTION_TYPE             ((DWORD)99)
+#define VID_ACTION_DATA             ((DWORD)100)
+#define VID_EMAIL_SUBJECT           ((DWORD)101)
+#define VID_RCPT_ADDR               ((DWORD)102)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -281,3 +281,72 @@ DWORD CreateNewAction(char *pszName, DWORD *pdwId)
    RWLockUnlock(m_rwlockActionListAccess);
    return dwResult;
 }
+
+
+//
+// Delete action
+//
+
+DWORD DeleteActionFromDB(DWORD dwActionId)
+{
+   DWORD i, dwResult = RCC_INVALID_ACTION_ID;
+   char szQuery[256];
+
+   RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
+
+   for(i = 0; i < m_dwNumActions; i++)
+      if (m_pActionList[i].dwId == dwActionId)
+      {
+         m_dwNumActions--;
+         memmove(&m_pActionList[i], &m_pActionList[i + 1], sizeof(NXC_ACTION) * (m_dwNumActions - i));
+         sprintf(szQuery, "DELETE FROM actions WHERE action_id=%ld", dwActionId);
+         DBQuery(g_hCoreDB, szQuery);
+
+         m_dwUpdateCode = NX_NOTIFY_ACTION_DELETED;
+         EnumerateClientSessions(SendActionDBUpdate, &m_pActionList[i]);
+
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+
+   RWLockUnlock(m_rwlockActionListAccess);
+   return dwResult;
+}
+
+
+//
+// Modify action record from message
+//
+
+DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
+{
+   DWORD i, dwResult = RCC_INVALID_ACTION_ID;
+   DWORD dwActionId;
+
+   dwActionId = pMsg->GetVariableLong(VID_ACTION_ID);
+   RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
+
+   // Find action with given id
+   for(i = 0; i < m_dwNumActions; i++)
+      if (m_pActionList[i].dwId == dwActionId)
+      {
+         m_pActionList[i].bIsDisabled = pMsg->GetVariableShort(VID_IS_DISABLED);
+         m_pActionList[i].iType = pMsg->GetVariableShort(VID_ACTION_TYPE);
+         safe_free(m_pActionList[i].pszData);
+         m_pActionList[i].pszData = pMsg->GetVariableStr(VID_ACTION_DATA);
+         pMsg->GetVariableStr(VID_EMAIL_SUBJECT, m_pActionList[i].szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
+         pMsg->GetVariableStr(VID_ACTION_NAME, m_pActionList[i].szName, MAX_OBJECT_NAME);
+         pMsg->GetVariableStr(VID_RCPT_ADDR, m_pActionList[i].szRcptAddr, MAX_RCPT_ADDR_LEN);
+
+         SaveActionToDB(&m_pActionList[i]);
+
+         m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
+         EnumerateClientSessions(SendActionDBUpdate, &m_pActionList[i]);
+
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+
+   RWLockUnlock(m_rwlockActionListAccess);
+   return dwResult;
+}

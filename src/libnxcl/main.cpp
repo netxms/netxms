@@ -114,9 +114,10 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Object creation failed",
       "Loop in object relationship detected",
       "Invalid object name",
-      "Invalid alarm ID"
+      "Invalid alarm ID",
+      "Invalid action ID"
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_ALARM_ID)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_ACTION_ID)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

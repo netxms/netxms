@@ -2350,17 +2350,7 @@ void ClientSession::UpdateAction(CSCPMessage *pRequest)
    }
    else
    {
-      DWORD dwActionId, dwResult = 0;
-
-      dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
-/*         user.dwId = dwUserId;
-         pRequest->GetVariableStr(VID_USER_DESCRIPTION, user.szDescription, MAX_USER_DESCR);
-         pRequest->GetVariableStr(VID_USER_FULL_NAME, user.szFullName, MAX_USER_FULLNAME);
-         pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
-         user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
-         user.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
-         dwResult = ModifyUser(&user);*/
-      msg.SetVariable(VID_RCC, dwResult);
+      msg.SetVariable(VID_RCC, ModifyActionFromMessage(pRequest));
    }
 
    // Send responce
@@ -2396,7 +2386,7 @@ void ClientSession::DeleteAction(CSCPMessage *pRequest)
    {
       // Get Id of action to be deleted
       dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
-
+      msg.SetVariable(VID_RCC, DeleteActionFromDB(dwActionId));
    }
 
    // Send responce

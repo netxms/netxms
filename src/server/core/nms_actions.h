@@ -32,5 +32,7 @@ BOOL InitActions(void);
 void CleanupActions(void);
 BOOL ExecuteAction(DWORD dwActionId, Event *pEvent);
 DWORD CreateNewAction(char *pszName, DWORD *pdwId);
+DWORD DeleteActionFromDB(DWORD dwActionId);
+DWORD ModifyActionFromMessage(CSCPMessage *pMsg);
 
 #endif   /* _nms_actions_ */
