@@ -521,6 +521,7 @@ src/server/core/main.cpp -text
 src/server/core/modules.cpp -text
 src/server/core/netinfo.cpp -text
 src/server/core/netobj.cpp -text
+src/server/core/netsrv.cpp -text
 src/server/core/node.cpp -text
 src/server/core/nortel.cpp -text
 src/server/core/np.cpp -text

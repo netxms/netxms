@@ -79,6 +79,10 @@
 #define EVENT_SMTP_FAILURE       22
 #define EVENT_MAC_ADDR_CHANGED   23
 #define EVENT_INCORRECT_NETMASK  24
+#define EVENT_SERVICE_DOWN       25
+#define EVENT_SERVICE_UP         26
+#define EVENT_NODE_DOWN          27
+#define EVENT_NODE_UP            28
 
 #define EVENT_SNMP_UNMATCHED_TRAP   500
 #define EVENT_SNMP_COLD_START       501

@@ -115,6 +115,7 @@ typedef void * NXC_SESSION;
 #define OBJECT_TEMPLATE       8
 #define OBJECT_TEMPLATEGROUP  9
 #define OBJECT_TEMPLATEROOT   10
+#define OBJECT_NETWORKSERVICE 11
 
 
 //
@@ -156,6 +157,18 @@ typedef void * NXC_SESSION;
 #define NF_IS_LOCAL_MGMT   0x0010
 #define NF_IS_PRINTER      0x0020
 #define NS_IS_OSPF         0x0040
+
+
+//
+// Service types
+//
+
+#define NETSRV_CUSTOM         0
+#define NETSRV_SSH            1
+#define NETSRV_POP3           2
+#define NETSRV_SMTP           3
+#define NETSRV_FTP            4
+#define NETSRV_HTTP           5
 
 
 //

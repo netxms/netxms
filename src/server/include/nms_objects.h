@@ -255,6 +255,40 @@ public:
 
 
 //
+// Network service class
+//
+
+class NetworkService : public NetObj
+{
+protected:
+   int m_iServiceType;   // SSH, POP3, etc.
+   Node *m_pHostNode;    // Pointer to node object which hosts this service
+   Node *m_pPollNode;    // Pointer to node object which is used for polling
+                         // If NULL, m_pHostNode->m_pPollNode will be used
+   DWORD m_dwIpBindAddr; // IP address this service listen on, or 0.0.0.0 for all interfaces
+   WORD m_wProto;        // Protocol (TCP, UDP, etc.)
+   WORD m_wPort;         // TCP or UDP port number
+   TCHAR *m_pszRequest;  // Service-specific request
+   TCHAR *m_pszResponce; // Service-specific expected responce
+
+public:
+   NetworkService();
+   virtual ~NetworkService();
+
+   virtual int Type(void) { return OBJECT_NETWORKSERVICE; }
+
+   virtual BOOL SaveToDB(void);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
+//
 // Node
 //
 
@@ -281,6 +315,7 @@ protected:
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    AgentConnection *m_pAgentConnection;
+   Node *m_pPollNode;      // Node used for network service polling
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -343,6 +378,9 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    DWORD WakeUp(void);
+
+   void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
+   Node *GetPollNode(void) { return m_pPollNode; }
 };
 
 

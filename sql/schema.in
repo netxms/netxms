@@ -158,6 +158,27 @@ CREATE TABLE interfaces
 
 
 /*
+** Network services
+*/
+
+CREATE TABLE network_services
+(
+	id integer not null,
+	name varchar(63),
+	status integer,
+        is_deleted integer,
+	node_id integer not null,
+	service_type integer,
+	ip_bind_addr varchar(15),
+	ip_proto integer,
+	ip_port integer,
+	check_request SQL_TEXT,
+	check_responce SQL_TEXT,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
 ** Container objects
 */
 

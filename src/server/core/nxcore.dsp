@@ -218,6 +218,10 @@ SOURCE=.\netobj.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\netsrv.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\node.cpp
 # End Source File
 # Begin Source File

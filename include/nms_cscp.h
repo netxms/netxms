@@ -278,6 +278,9 @@ typedef struct
 #define CMD_LOCK_PACKAGE_DB         0x0070
 #define CMD_UNLOCK_PACKAGE_DB       0x0071
 #define CMD_ABORT_FILE_TRANSFER     0x0072
+#define CMD_CHECK_NETWORK_SERVICE   0x0073
+#define CMD_GET_AGENT_CONFIG        0x0074
+#define CMD_UPDATE_AGENT_CONFIG     0x0075
 
 
 //
@@ -413,6 +416,12 @@ typedef struct
 #define VID_PACKAGE_VERSION         ((DWORD)127)
 #define VID_PLATFORM_NAME           ((DWORD)128)
 #define VID_PACKAGE_NAME            ((DWORD)129)
+#define VID_SERVICE_TYPE            ((DWORD)130)
+#define VID_IP_PROTO                ((DWORD)131)
+#define VID_IP_PORT                 ((DWORD)132)
+#define VID_SERVICE_REQUEST         ((DWORD)133)
+#define VID_SERVICE_RESPONCE        ((DWORD)134)
+#define VID_POLL_NODE_ID            ((DWORD)135)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

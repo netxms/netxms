@@ -261,6 +261,46 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   4) Actual network mask on interface#0D#0A' CONCAT
 		'   5) Correct network mask'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_NODE_DOWN, 'SYS_NODE_DOWN',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Node down',
+		'Generated when node is not responding to management server.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No event-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_NODE_UP, 'SYS_NODE_UP',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Node up',
+		'Generated when communication with the node re-established.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No event-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_SERVICE_DOWN, 'SYS_SERVICE_DOWN',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Network service "%1" is not responding',
+		'Generated when network service is not responding to management server as expected.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Service name#0D0A' CONCAT
+		'   2) Service object ID#0D0A' CONCAT
+		'   3) Service type'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_SERVICE_UP, 'SYS_SERVICE_UP',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Network service "%1" returned to operational state',
+		'Generated when network service responds as expected after failure.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Service name#0D0A' CONCAT
+		'   2) Service object ID#0D0A' CONCAT
+		'   3) Service type'
+	);
 
 
 /*
