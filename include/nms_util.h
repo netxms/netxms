@@ -74,9 +74,12 @@ public:
 // Functions
 //
 
+#define htonq(x) ntohq(x)
+
 extern "C"
 {
    void EXPORTABLE LibUtilDestroyObject(void *pObject);
+   QWORD ntohq(QWORD qwVal);
 }
 
 #endif   /* _nms_util_h_ */
