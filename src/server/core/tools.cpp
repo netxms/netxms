@@ -22,6 +22,31 @@
 
 #include "nms_core.h"
 
+#define PING_SIZE    64
+
+
+//
+// ICMP echo request structure
+//
+
+struct ECHOREQUEST
+{
+   ICMPHDR m_icmpHdr;
+   BYTE m_cData[PING_SIZE];
+};
+
+
+//
+// ICMP echo reply structure
+//
+
+struct ECHOREPLY
+{
+   IPHDR m_ipHdr;
+   ICMPHDR m_icmpHdr;
+   BYTE m_cData[256];
+};
+
 
 //
 // Strip whitespaces and tabs off the string
@@ -86,3 +111,135 @@ char *GetSystemErrorText(DWORD error)
 }
 
 #endif   /* _WIN32 */
+
+
+//
+// * Checksum routine for Internet Protocol family headers (C Version)
+// *
+// * Author -
+// *	Mike Muuss
+// *	U. S. Army Ballistic Research Laboratory
+// *	December, 1983
+//
+
+WORD IPChecksum(WORD *addr, int len)
+{
+	int nleft = len, sum = 0;
+	WORD *w = addr;
+	WORD answer;
+
+	/*
+	 *  Our algorithm is simple, using a 32 bit accumulator (sum),
+	 *  we add sequential 16 bit words to it, and at the end, fold
+	 *  back all the carry bits from the top 16 bits into the lower
+	 *  16 bits.
+	 */
+	while(nleft > 1)
+   {
+		sum += *w++;
+		nleft -= 2;
+	}
+
+	/* mop up an odd byte, if necessary */
+	if (nleft == 1) 
+   {
+		WORD u = 0;
+
+		*(BYTE *)(&u) = *(BYTE *)w ;
+		sum += u;
+	}
+
+	/*
+	 * add back carry outs from top 16 bits to low 16 bits
+	 */
+	sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
+	sum += (sum >> 16);			/* add carry */
+	answer = ~sum;				/* truncate to 16 bits */
+	return answer;
+}
+
+
+//
+// Do an ICMP ping to specific address
+// Return value: TRUE if host is alive and FALSE otherwise
+// Parameters: dwAddr - IP address with network byte order
+//             iNumRetries - number of retries
+//             dwTimeout - Timeout waiting for responce in milliseconds
+//
+
+BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout)
+{
+   SOCKET sock;
+   struct sockaddr_in saDest;
+   BOOL bResult = FALSE;
+   ECHOREQUEST request;
+   ECHOREPLY reply;
+
+   // Create raw socket
+   sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+   if (sock == -1)
+   {
+      WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      return FALSE;
+   }
+
+   // Setup destination address structure
+   saDest.sin_addr.s_addr = dwAddr;
+   saDest.sin_family = AF_INET;
+   saDest.sin_port = 0;
+
+   // Fill in request structure
+   request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
+   request.m_icmpHdr.m_cCode = 0;
+   request.m_icmpHdr.m_wChecksum = 0;
+   request.m_icmpHdr.m_wId = 0x1020;
+   request.m_icmpHdr.m_wSeq = 0;
+
+   // Do ping
+   while(iNumRetries--)
+   {
+      request.m_icmpHdr.m_wSeq++;
+      request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
+      if (sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == sizeof(ECHOREQUEST))
+      {
+         struct timeval timeout;
+         fd_set rdfs;
+         int iAddrLen;
+         struct sockaddr_in saSrc;
+
+         // Wait for responce
+wait_for_packet:
+	      FD_ZERO(&rdfs);
+	      FD_SET(sock, &rdfs);
+	      timeout.tv_sec = dwTimeout / 1000;
+	      timeout.tv_usec = (dwTimeout % 1000) * 1000;
+	      if (select(sock + 1, &rdfs, NULL, NULL, &timeout) == 0)
+            continue;      // Timeout
+
+         // Receive reply
+         iAddrLen = sizeof(struct sockaddr_in);
+         if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &iAddrLen) > 0)
+         {
+            // We can receive our own request if we are pinging our own address
+            if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
+                (reply.m_icmpHdr.m_cType == 8) &&
+                (reply.m_icmpHdr.m_wId == request.m_icmpHdr.m_wId) &&
+                (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
+               goto wait_for_packet;  // In this case, wait again for reply
+
+            // Check responce
+            if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
+                (reply.m_icmpHdr.m_cType == 0) &&
+                (reply.m_icmpHdr.m_wId == request.m_icmpHdr.m_wId) &&
+                (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
+            {
+               bResult = TRUE;   // We succeed
+               break;            // Stop sending packets
+            }
+         }
+      }
+   }
+
+   closesocket(sock);
+   return bResult;
+}

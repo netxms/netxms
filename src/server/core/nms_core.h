@@ -23,13 +23,19 @@
 #ifndef _nms_core_h_
 #define _nms_core_h_
 
-#include <stdio.h>
-
 #ifdef _WIN32
+
 #include <windows.h>
+
 #else    /* _WIN32 */
+
 #include <unistd.h>
 #include <dlfcn.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+
+#define closesocket(x) close(x)
+
 #endif   /* _WIN32 */
 
 #include <time.h>
@@ -126,6 +132,8 @@ long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
 DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
 int DBGetNumRows(DB_RESULT hResult);
 void DBFreeResult(DB_RESULT hResult);
+
+BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 #ifdef _WIN32
 

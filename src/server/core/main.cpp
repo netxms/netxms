@@ -62,6 +62,12 @@ HANDLE m_hEventShutdown = INVALID_HANDLE_VALUE;
 BOOL Initialize(void)
 {
    InitLog();
+
+#ifdef _WIN32
+   WSADATA wsaData;
+   WSAStartup(0x0002, &wsaData);
+#endif
+
    if (!DBInit())
       return FALSE;
 

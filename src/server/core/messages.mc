@@ -80,4 +80,10 @@ Language=English
 Internal error: invalid NetObj.Type() value %1
 .
 
+MessageId=
+SymbolicName=MSG_RAW_SOCK_FAILED
+Language=English
+Unable to create raw socket for ICMP protocol
+.
+
 ;#endif
