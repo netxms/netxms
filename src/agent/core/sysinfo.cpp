@@ -22,6 +22,14 @@
 
 #include "nxagentd.h"
 
+#ifndef _WIN32
+
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
+#endif   /* _WIN32 */
+
 
 //
 // Handler for Agent.Uptime parameter

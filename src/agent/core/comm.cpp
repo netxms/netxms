@@ -142,7 +142,8 @@ void ListenerThread(void *)
 {
    SOCKET hSocket, hClientSocket;
    struct sockaddr_in servAddr;
-   int iSize, iNumErrors = 0;
+   int iNumErrors = 0;
+   socklen_t iSize;
    CommSession *pSession;
    char szBuffer[256];
 

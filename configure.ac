@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.16 2004-08-09 07:16:18 victor Exp $
+# $Id: configure.ac,v 1.17 2004-08-09 11:35:01 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -323,6 +323,7 @@ AC_CONFIG_FILES([
    src/server/dbdrv/pgsql/Makefile
    src/agent/Makefile
    src/agent/core/Makefile
+   src/agent/subagents/Makefile
 ])
 
 AC_OUTPUT

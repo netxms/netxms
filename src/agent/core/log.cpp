@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <stdarg.h>
 
 
 //

@@ -85,7 +85,7 @@ BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 
 static char m_szServerList[16384] = "";
 static char m_szSubagentList[16384] = "";
-static CONDITION m_hCondShutdown = INVALID_HANDLE_VALUE;
+static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 
 
 //
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
             }
 #endif   /* _WIN32 */
 
-            if (m_hCondShutdown != INVALID_HANDLE_VALUE)
+            if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
                ConditionDestroy(m_hCondShutdown);
          }
          else
