@@ -604,3 +604,4 @@ src/server/tools/nxupload/nxupload.dsw -text
 tools/Makefile.am -text
 tools/mc.pl -text
 tools/nwmkimp.pl -text
+tools/patch_libtool.pl -text
