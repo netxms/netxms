@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.5 2004-05-15 11:45:59 victor Exp $
+# $Id: configure.ac,v 1.6 2004-05-15 21:04:13 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -123,6 +123,8 @@ AC_PROG_LIBTOOL
 
 AC_CHECK_LIB(crypto, DH_new)
 AC_CHECK_LIB(ssl, SSL_accept)
+AC_CHECK_LIB(termcap, tgetstr)
+AC_CHECK_LIB(readline, readline)
 
 # --------------------------------------------------------------------------
 # checks for headers.
@@ -133,6 +135,7 @@ AC_HEADER_TIME
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h])
 AC_CHECK_HEADERS([openssl/ssl.h])
+AC_CHECK_HEADERS([readline/readline.h])
 
 if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then
 	AC_MSG_ERROR(OpenSSL headers not found.)
@@ -169,7 +172,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex])
 
 
 # sockets/resolver (probably for solaris)
