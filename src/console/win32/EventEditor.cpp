@@ -79,7 +79,7 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CEventEditor::OnDestroy() 
 {
-   NXCCloseEventDB();
+   NXCCloseEventDB(TRUE);
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_EVENT_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
@@ -150,6 +150,7 @@ void CEventEditor::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult
 void CEventEditor::EditEvent(int iItem)
 {
    int iIdx;
+   DWORD dwFlags;
    CEditEventDlg dlgEditEvent;
 
    iIdx = m_wndListCtrl.GetItemData(iItem);
@@ -161,8 +162,14 @@ void CEventEditor::EditEvent(int iItem)
    dlgEditEvent.m_strDescription = m_ppEventTemplates[iIdx]->pszDescription;
    dlgEditEvent.m_dwSeverity = m_ppEventTemplates[iIdx]->dwSeverity;
 
-   if (dlgEditEvent.DoModal())
+   if (dlgEditEvent.DoModal() == IDOK)
    {
+      dwFlags = 0;
+      if (dlgEditEvent.m_bWriteLog)
+         dwFlags |= EF_LOG;
+      NXCModifyEventTemplate(m_ppEventTemplates[iIdx], EM_ALL, dlgEditEvent.m_dwSeverity,
+         dwFlags, (LPCTSTR)dlgEditEvent.m_strName, (LPCTSTR)dlgEditEvent.m_strMessage,
+         (LPCTSTR)dlgEditEvent.m_strDescription);
    }
 }
 
