@@ -165,6 +165,7 @@ typedef struct
 #define VID_DESCRIPTION             27
 #define VID_RCC                     28    /* RCC == Request Completion Code */
 #define VID_LOCKED_BY               29
+#define VID_IS_DELETED              30
 
 
 // Object information can contain variable number of parent objects' ids.
