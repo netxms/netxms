@@ -101,6 +101,8 @@ typedef int socklen_t;
 #define SHUT_WR      1
 #define SHUT_RDWR    2
 
+#define SetSocketReuseFlag(sd)
+
 #elif defined(_NETWARE)
 
 /********** NETWARE ********************/
@@ -150,6 +152,8 @@ typedef int SOCKET;
 #define WSAGetLastError() (errno)
 
 #define WSAEINTR  EINTR
+
+#define SetSocketReuseFlag(sd)
 
 #else    /* not _WIN32 and not _NETWARE */
 
@@ -242,6 +246,12 @@ typedef int SOCKET;
 #define WSAGetLastError() (errno)
 
 #define WSAEINTR  EINTR
+
+#define SetSocketReuseFlag(sd) { \
+	int nVal = 1; \
+	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
+			(socklen_t)sizeof(nVal)); \
+}
 
 #endif   /* _WIN32 */
 
