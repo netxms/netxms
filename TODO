@@ -71,6 +71,7 @@ WINDOWS CONSOLE:
 - Add real-time graphs
 - Play sound on new alarms
 - Add sorting to all list views
+- Add "Copy value to clipboard" to "Collected data" window
 
 
 SUBAGENTS:
