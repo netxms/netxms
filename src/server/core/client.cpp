@@ -189,7 +189,7 @@ void ClientListener(void *)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      pSession = new ClientSession(sockClient);
+      pSession = new ClientSession(sockClient, servAddr.sin_addr.S_un.S_addr);
       if (!RegisterSession(pSession))
       {
          delete pSession;

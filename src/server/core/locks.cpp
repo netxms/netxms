@@ -24,6 +24,13 @@
 
 
 //
+// Static data
+//
+
+static MUTEX m_hMutexLockerAccess;
+
+
+//
 // Lock entire database and clear all other locks
 // Will return FALSE if someone already locked database
 //
@@ -64,9 +71,12 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
       DBFreeResult(hResult);
    }
 
-   // Clear all locks if we was successfully locked the database
+   // Clear all locks and create mutex if we was successfully locked the database
    if (bSuccess)
+   {
       DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE COMPONENT_id<>0");
+      m_hMutexLockerAccess = MutexCreate();
+   }
 
    return bSuccess;
 }
@@ -74,11 +84,57 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
 
 //
 // Lock component
+// Function will try to lock specified component. On success, will return TRUE.
+// On failure, will return FALSE and pdwCurrentOwner will be set to the value of lock_status
+// field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
 //
 
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo)
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, 
+                   DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo)
 {
-   return FALSE;
+   char szQuery[256], szBuffer[256];
+   DB_RESULT hResult;
+   BOOL bSuccess = FALSE;
+   DWORD dwTemp;
+
+   if (pdwCurrentOwner == NULL)
+      pdwCurrentOwner = &dwTemp;
+   if (pszCurrentOwnerInfo == NULL)
+      pszCurrentOwnerInfo = szBuffer;
+
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Attempting to lock component %d by %d (%s)\n",
+             dwId, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
+   MutexLock(m_hMutexLockerAccess, INFINITE);
+   sprintf(szQuery, "SELECT lock_status,owner_info FROM locks WHERE component_id=%ld", dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         *pdwCurrentOwner = DBGetFieldULong(hResult, 0, 0);
+         strcpy(pszCurrentOwnerInfo, DBGetField(hResult, 0, 1));
+         DBFreeResult(hResult);
+         if (*pdwCurrentOwner == UNLOCKED)
+         {
+            sprintf(szQuery, "UPDATE locks SET lock_status=%d,owner_info='%s' WHERE component_id=%ld",
+                    dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "", dwId);
+            DBQuery(g_hCoreDB, szQuery);
+            bSuccess = TRUE;
+         }
+      }
+      else
+      {
+         *pdwCurrentOwner = UNLOCKED;
+         strcpy(pszCurrentOwnerInfo, "Unknown component");
+      }
+   }
+   else
+   {
+      *pdwCurrentOwner = UNLOCKED;
+      strcpy(pszCurrentOwnerInfo, "SQL query failed");
+   }
+   MutexUnlock(m_hMutexLockerAccess);
+   return bSuccess;
 }
 
 
@@ -88,4 +144,11 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo)
 
 void UnlockComponent(DWORD dwId)
 {
+   char szQuery[256];
+
+   MutexLock(m_hMutexLockerAccess, INFINITE);
+   sprintf(szQuery, "UPDATE locks SET lock_status=-1 WHERE component_id=%ld", dwId);
+   DBQuery(g_hCoreDB, szQuery);
+   MutexUnlock(m_hMutexLockerAccess);
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component %d unlocked\n", dwId);
 }

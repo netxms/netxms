@@ -23,6 +23,8 @@
 #ifndef _nms_events_h_
 #define _nms_events_h_
 
+#include <nxevent.h>
+
 
 //
 // Constants
@@ -30,41 +32,12 @@
 
 #define FIRST_USER_EVENT_ID      100000
 
-#define EVENT_SEVERITY_INFO      0
-#define EVENT_SEVERITY_MINOR     1
-#define EVENT_SEVERITY_WARNING   2
-#define EVENT_SEVERITY_MAJOR     3
-#define EVENT_SEVERITY_CRITICAL  4
-
 
 //
 // Event flags
 //
 
 #define EF_LOG                   0x0001
-
-
-//
-// System-defined events
-//
-
-#define EVENT_NODE_ADDED         1
-#define EVENT_SUBNET_ADDED       2
-#define EVENT_INTERFACE_ADDED    3
-#define EVENT_INTERFACE_UP       4
-#define EVENT_INTERFACE_DOWN     5
-#define EVENT_NODE_NORMAL        6
-#define EVENT_NODE_MINOR         7
-#define EVENT_NODE_WARNING       8
-#define EVENT_NODE_MAJOR         9
-#define EVENT_NODE_CRITICAL      10
-#define EVENT_NODE_UNKNOWN       11
-#define EVENT_NODE_UNMANAGED     12
-#define EVENT_NODE_FLAGS_CHANGED 13
-#define EVENT_SNMP_FAIL          14
-#define EVENT_AGENT_FAIL         15
-#define EVENT_INTERFACE_DELETED  16
-#define EVENT_THREAD_HANGS       1001
 
 
 //

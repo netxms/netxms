@@ -102,6 +102,7 @@ src/server/core/netobj.cpp -text
 src/server/core/nms_core.h -text
 src/server/core/nms_dcoll.h -text
 src/server/core/nms_events.h -text
+src/server/core/nms_locks.h -text
 src/server/core/nms_objects.h -text
 src/server/core/nms_users.h -text
 src/server/core/node.cpp -text

@@ -40,6 +40,7 @@ static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
                         "   --debug-discovery   : Print network discovery debug information to console.\n"
                         "   --debug-events      : Print events to console.\n"
                         "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
+                        "   --debug-locks       : Print debug information about component locking.\n"
                         "\n"
                         "Valid commands are:\n"
                         "   check-config        : Check configuration file syntax\n"
@@ -222,6 +223,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-dc"))
       {
          g_dwFlags |= AF_DEBUG_DC;
+      }
+      else if (!strcmp(argv[i], "--debug-locks"))
+      {
+         g_dwFlags |= AF_DEBUG_LOCKS;
       }
       else if (!strcmp(argv[i], "--debug-housekeeper"))
       {

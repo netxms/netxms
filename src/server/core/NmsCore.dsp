@@ -259,6 +259,10 @@ SOURCE=.\nms_events.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\nms_locks.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nms_objects.h
 # End Source File
 # Begin Source File
@@ -276,6 +280,10 @@ SOURCE=..\..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxclapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxevent.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

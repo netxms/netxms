@@ -27,7 +27,7 @@
 // Client session class constructor
 //
 
-ClientSession::ClientSession(SOCKET hSocket)
+ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -40,6 +40,9 @@ ClientSession::ClientSession(SOCKET hSocket)
    m_hCondProcessingThreadStopped = ConditionCreate();
    m_hCondUpdateThreadStopped = ConditionCreate();
    m_hMutexSendEvents = MutexCreate();
+   m_dwFlags = 0;
+   m_dwHostAddr = dwHostAddr;
+   strcpy(m_szUserName, "<not logged in>");
 }
 
 
@@ -60,6 +63,10 @@ ClientSession::~ClientSession()
    ConditionDestroy(m_hCondProcessingThreadStopped);
    ConditionDestroy(m_hCondUpdateThreadStopped);
    MutexDestroy(m_hMutexSendEvents);
+
+   // Unlock locked components
+   if (m_dwFlags & CSF_EVENT_DB_LOCKED)
+      UnlockComponent(CID_EVENT_DB);
 }
 
 
@@ -187,13 +194,18 @@ void ClientSession::ProcessingThread(void)
             if (m_iState != STATE_AUTHENTICATED)
             {
                BYTE szPassword[SHA_DIGEST_LENGTH];
-               char *pszLogin;
+               char *pszLogin, szBuffer[16];
                
                pszLogin = pMsg->GetVariableStr(VID_LOGIN_NAME);
                pMsg->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
 
                if (AuthenticateUser(pszLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
                   m_iState = STATE_AUTHENTICATED;
+
+               if (m_iState == STATE_AUTHENTICATED)
+               {
+                  sprintf(m_szUserName, "%s@%s", pszLogin, IpToStr(m_dwHostAddr, szBuffer));
+               }
 
                MemFree(pszLogin);
 
@@ -218,12 +230,71 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars();
             break;
+         case CMD_OPEN_EVENT_DB:
+            SendEventDB(pMsg->GetId());
+            break;
+         case CMD_CLOSE_EVENT_DB:
+            if (m_dwFlags & CSF_EVENT_DB_LOCKED)
+            {
+               UnlockComponent(CID_EVENT_DB);
+               m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
+            }
+            break;
          default:
             break;
       }
       delete pMsg;
    }
    ConditionSet(m_hCondProcessingThreadStopped);
+}
+
+
+//
+// Send event configuration to client
+//
+
+void ClientSession::SendEventDB(DWORD dwRqId)
+{
+   DB_ASYNC_RESULT hResult;
+   CSCPMessage msg;
+   char szBuffer[1024];
+
+   // Prepare responce message
+   msg.SetCode(CMD_OPEN_EVENT_DB);
+   msg.SetId(dwRqId);
+
+   if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+   {
+      msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+      msg.SetVariable(VID_LOCKED_BY, szBuffer);
+      SendMessage(&msg);
+   }
+   else
+   {
+      m_dwFlags |= CSF_EVENT_DB_LOCKED;
+
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+
+      // Prepare data message
+      msg.SetCode(CMD_EVENT_DB_RECORD);
+      msg.SetId(dwRqId);
+
+      hResult = DBAsyncSelect(g_hCoreDB, "SELECT id,name,severity,flags,message,description FROM events");
+      while(DBFetch(hResult))
+      {
+         msg.SetVariable(VID_EVENT_ID, DBGetFieldAsyncULong(hResult, 0));
+         msg.SetVariable(VID_NAME, DBGetFieldAsync(hResult, 1, szBuffer, 1024));
+         msg.SetVariable(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
+         msg.SetVariable(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
+         msg.SetVariable(VID_MESSAGE, DBGetFieldAsync(hResult, 4, szBuffer, 1024));
+         msg.SetVariable(VID_DESCRIPTION, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
+         SendMessage(&msg);
+         msg.DeleteAllVariables();
+      }
+      DBFreeAsyncResult(hResult);
+   }
 }
 
 

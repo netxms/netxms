@@ -1,6 +1,6 @@
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@
 #include "nms_objects.h"
 #include "nms_dcoll.h"
 #include "messages.h"
+#include "nms_locks.h"
 
 
 //
@@ -96,6 +97,7 @@
 #define AF_DEBUG_DISCOVERY                0x00000400
 #define AF_DEBUG_DC                       0x00000800
 #define AF_DEBUG_HOUSEKEEPER              0x00001000
+#define AF_DEBUG_LOCKS                    0x00002000
 #define AF_DEBUG_ALL                      0x0000FF00
 #define AF_SHUTDOWN                       0x80000000
 
@@ -124,20 +126,19 @@
 
 
 //
+// Client session flags
+//
+
+#define CSF_EVENT_DB_LOCKED   0x0001
+#define CSF_EPP_LOCKED        0x0002
+
+
+//
 // Information categories for UPDATE_INFO structure
 //
 
 #define INFO_CAT_EVENT        1
 #define INFO_CAT_OBJECT       2
-
-
-//
-// Component identifiers used for locking
-//
-
-#define CID_NETXMS_INSTANCE   0
-#define CID_EPP               1
-#define CID_USER_MGMT         2
 
 
 //
@@ -210,20 +211,24 @@ private:
    int m_iState;
    DWORD m_dwUserId;
    DWORD m_dwSystemAccess;    // User's system access rights
+   DWORD m_dwFlags;           // Session flags
    CSCP_BUFFER *m_pMsgBuffer;
    CONDITION m_hCondWriteThreadStopped;
    CONDITION m_hCondProcessingThreadStopped;
    CONDITION m_hCondUpdateThreadStopped;
    MUTEX m_hMutexSendEvents;
+   DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
+   char m_szUserName[256];    // String in form login_name@host
 
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
    void SendAllEvents(void);
    void SendAllConfigVars(void);
    void SetConfigVariable(CSCPMessage *pMsg);
+   void SendEventDB(DWORD dwRqId);
 
 public:
-   ClientSession(SOCKET hSocket);
+   ClientSession(SOCKET hSocket, DWORD dwHostAddr);
    ~ClientSession();
 
    void SendMessage(CSCPMessage *pMsg);
@@ -262,7 +267,7 @@ void CloseLog(void);
 void WriteLog(DWORD msg, WORD wType, char *format, ...);
 
 BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo);
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
 void UnlockComponent(DWORD dwId);
 
 BOOL ParseCommandLine(int argc, char *argv[]);
