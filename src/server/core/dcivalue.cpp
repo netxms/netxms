@@ -42,7 +42,7 @@ ItemValue::ItemValue()
 // Construct value object from string value
 //
 
-ItemValue::ItemValue(const char *pszValue)
+ItemValue::ItemValue(const TCHAR *pszValue)
 {
    strncpy(m_szString, pszValue, MAX_DB_STRING);
    m_iInt32 = strtol(m_szString, NULL, 0);
@@ -81,7 +81,7 @@ ItemValue::~ItemValue()
 // Assignment operators
 //
 
-const ItemValue& ItemValue::operator=(ItemValue &src)
+const ItemValue& ItemValue::operator=(const ItemValue &src)
 {
    strcpy(m_szString, src.m_szString);
    m_iInt32 = src.m_iInt32;
@@ -89,6 +89,17 @@ const ItemValue& ItemValue::operator=(ItemValue &src)
    m_dwInt32 = src.m_dwInt32;
    m_qwInt64 = src.m_qwInt64;
    m_dFloat = src.m_dFloat;
+   return *this;
+}
+
+const ItemValue& ItemValue::operator=(const TCHAR *pszStr)
+{
+   strncpy(m_szString, pszStr, MAX_DB_STRING);
+   m_iInt32 = strtol(m_szString, NULL, 0);
+   m_iInt64 = strtoll(m_szString, NULL, 0);
+   m_dwInt32 = strtoul(m_szString, NULL, 0);
+   m_qwInt64 = strtoull(m_szString, NULL, 0);
+   m_dFloat = strtod(m_szString, NULL);
    return *this;
 }
 

@@ -307,12 +307,12 @@ void DCItem::CheckThresholds(ItemValue &value)
    Lock();
    for(i = 0; i < m_dwNumThresholds; i++)
    {
-      iResult = m_ppThresholdList[i]->Check(value);
+      iResult = m_ppThresholdList[i]->Check(value, m_ppValueCache);
       switch(iResult)
       {
          case THRESHOLD_REACHED:
             PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssis", m_szName,
-                      m_szDescription, m_ppThresholdList[i]->Value(), 
+                      m_szDescription, m_ppThresholdList[i]->StringValue(), 
                       (const char *)value, m_dwId, m_szInstance);
             i = m_dwNumThresholds;  // Stop processing
             break;

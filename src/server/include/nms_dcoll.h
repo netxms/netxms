@@ -54,15 +54,15 @@ private:
    INT64 m_iInt64;
    DWORD m_dwInt32;
    QWORD m_qwInt64;
-   char m_szString[MAX_DB_STRING];
+   TCHAR m_szString[MAX_DB_STRING];
 
 public:
    ItemValue();
-   ItemValue(const char *pszValue);
+   ItemValue(const TCHAR *pszValue);
    ItemValue(const ItemValue *pValue);
    ~ItemValue();
 
-   const char *String(void) { return m_szString; }
+   const TCHAR *String(void) { return m_szString; }
 
    operator double() { return m_dFloat; }
    operator DWORD() { return m_dwInt32; }
@@ -71,7 +71,8 @@ public:
    operator INT64() { return m_iInt64; }
    operator const char*() const { return m_szString; }
 
-   const ItemValue& operator=(ItemValue &src);
+   const ItemValue& operator=(const ItemValue &src);
+   const ItemValue& operator=(const TCHAR *pszStr);
    const ItemValue& operator=(double dFloat);
    const ItemValue& operator=(long iInt32);
    const ItemValue& operator=(INT64 iInt64);
@@ -92,15 +93,7 @@ private:
    DWORD m_dwId;             // Unique threshold id
    DWORD m_dwItemId;         // Related item id
    DWORD m_dwEventCode;      // Event code to be generated
-   char *m_pszValueStr;
-   union
-   {
-      long iInt;
-      DWORD dwUInt;
-      INT64 iInt64;
-      QWORD qwUInt64;
-      double dFloat;
-   } m_value;
+   ItemValue m_value;
    BYTE m_iFunction;          // Function code
    BYTE m_iOperation;         // Comparision operation code
    BYTE m_iDataType;          // Related item data type
@@ -108,7 +101,7 @@ private:
    int m_iParam2;             // Function's parameter #2
    BOOL m_bIsReached;
 
-   void UpdateBinaryValueFromString(void);
+   const ItemValue& Value(void) { return m_value; }
 
 public:
    Threshold(DCItem *pRelatedItem);
@@ -120,11 +113,11 @@ public:
 
    DWORD Id(void) { return m_dwId; }
    DWORD EventCode(void) { return m_dwEventCode; }
-   const char *Value(void) { return m_pszValueStr; }
+   const char *StringValue(void) { return m_value.String(); }
    BOOL IsReached(void) { return m_bIsReached; }
 
    BOOL SaveToDB(DWORD dwIndex);
-   int Check(ItemValue &value);
+   int Check(ItemValue &value, ItemValue **ppPrevValues);
 
    void CreateMessage(DCI_THRESHOLD *pData);
    void UpdateFromMessage(DCI_THRESHOLD *pData);
