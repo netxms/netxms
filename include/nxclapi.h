@@ -132,6 +132,7 @@ typedef unsigned long HREQUEST;
 #define NXC_OP_OPEN_EVENT_DB     3
 #define NXC_OP_CLOSE_EVENT_DB    4
 #define NXC_OP_SET_EVENT_INFO    5
+#define NXC_OP_MODIFY_OBJECT     6
 
 
 //
@@ -152,6 +153,7 @@ typedef unsigned long HREQUEST;
 #define RCC_TIMEOUT                 ((DWORD)4)
 #define RCC_OUT_OF_STATE_REQUEST    ((DWORD)5)
 #define RCC_DB_FAILURE              ((DWORD)6)
+#define RCC_INVALID_OBJECT_ID       ((DWORD)7)
 
 
 //
@@ -164,6 +166,20 @@ typedef unsigned long HREQUEST;
 #define EM_MESSAGE         ((DWORD)0x08)
 #define EM_DESCRIPTION     ((DWORD)0x10)
 #define EM_ALL             ((DWORD)0x1F)
+
+
+//
+// Mask bits (flags) for NXCModifyObject()
+//
+
+#define OBJ_UPDATE_NAME             ((DWORD)0x01)
+#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x02)
+#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x04)
+#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x08)
+#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x10)
+#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x20)
+#define OBJ_UPDATE_ACL              ((DWORD)0x40)
+#define OBJ_UPDATE_ALL              ((DWORD)0x7F)
 
 
 //
@@ -211,6 +227,17 @@ typedef struct
 
 
 //
+// Entry in object's ACL
+//
+
+typedef struct
+{
+   DWORD dwUserId;
+   DWORD dwAccessRights;
+} NXC_ACL_ENTRY;
+
+
+//
 // Network object structure
 //
 
@@ -226,6 +253,9 @@ typedef struct
    DWORD dwNumChilds;
    DWORD *pdwChildList;
    BOOL bIsDeleted;     // TRUE for deleted objects
+   BOOL bInheritRights;
+   DWORD dwAclSize;
+   NXC_ACL_ENTRY *pAccessList;
    union
    {
       struct
@@ -253,6 +283,26 @@ typedef struct
 
 
 //
+// Structure with data for NXCModifyObject
+//
+
+typedef struct
+{
+   DWORD dwObjectId;
+   DWORD dwFlags;
+   char *pszName;
+   int iAgentPort;
+   int iAuthType;
+   char *pszSecret;
+   int iSnmpVersion;
+   char *pszCommunity;
+   BOOL bInheritRights;
+   DWORD dwAclSize;
+   NXC_ACL_ENTRY *pAccessList;
+} NXC_OBJECT_UPDATE;
+
+
+//
 // Functions
 //
 
@@ -261,6 +311,8 @@ extern "C" {
 #endif
 
 DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void);
+const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
+
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
 BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
 void LIBNXCL_EXPORTABLE NXCDisconnect(void);
@@ -297,6 +349,7 @@ inline DWORD NXCSyncObjects(void) { return NXCRequest(NXC_OP_SYNC_OBJECTS); }
 inline DWORD NXCSyncEvents(void) { return NXCRequest(NXC_OP_SYNC_EVENTS); }
 inline DWORD NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
 inline DWORD NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
+inline DWORD NXCModifyObject(NXC_OBJECT_UPDATE *pData) { return NXCRequest(NXC_OP_MODIFY_OBJECT, pData); }
 #endif   /* __libnxcl_inline_c__ */
 
 #else    /* __cplusplus */
@@ -305,6 +358,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
+DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
 
 #endif   /* __cplusplus */
 

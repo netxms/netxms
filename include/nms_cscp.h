@@ -108,7 +108,7 @@ typedef struct
 #define CMD_GET_OBJECTS             0x0005
 #define CMD_OBJECT                  0x0006
 #define CMD_DELETE_OBJECT           0x0007
-#define CMD_UPDATE_OBJECT           0x0008
+#define CMD_MODIFY_OBJECT           0x0008
 #define CMD_OBJECT_LIST_END         0x0009
 #define CMD_OBJECT_UPDATE           0x000A
 #define CMD_GET_EVENTS              0x000B
@@ -167,13 +167,20 @@ typedef struct
 #define VID_LOCKED_BY               ((DWORD)29)
 #define VID_IS_DELETED              ((DWORD)30)
 #define VID_CHILD_CNT               ((DWORD)31)
+#define VID_ACL_SIZE                ((DWORD)32)
+#define VID_INHERIT_RIGHTS          ((DWORD)33)
 
+// Variable ranges for object's ACL
+#define VID_ACL_USER_BASE           ((DWORD)0x00001000)
+#define VID_ACL_USER_LAST           ((DWORD)0x00001FFF)
+#define VID_ACL_RIGHTS_BASE         ((DWORD)0x00002000)
+#define VID_ACL_RIGHTS_LAST         ((DWORD)0x00002FFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,
 // we reserver a two range ids for this variables.
-#define VID_PARENT_ID_BASE          ((DWORD)4000)
-#define VID_PARENT_ID_LAST          ((DWORD)7999)
+#define VID_PARENT_ID_BASE          ((DWORD)0x00003000)
+#define VID_PARENT_ID_LAST          ((DWORD)0x00003FFF)
 
 // Reservation of 0x7FFFFFFF ids for child object's list
 #define VID_CHILD_ID_BASE           ((DWORD)0x80000000)
