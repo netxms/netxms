@@ -1024,6 +1024,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
       hdr.dwStructSize = sizeof(NXC_OBJECT);
       hdr.dwTimeStamp = ((NXCL_Session *)hSession)->GetTimeStamp();
       hdr.dwNumObjects = dwNumObjects;
+      memcpy(hdr.bsServerId, ((NXCL_Session *)hSession)->m_bsServerId, 8);
       fwrite(&hdr, 1, sizeof(OBJECT_CACHE_HEADER), hFile);
 
       // Write all objects
@@ -1095,11 +1096,14 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
    if (hFile != NULL)
    {
       // Read header
+      DebugPrintf(_T("Checking cache file %s"), pszFile);
       if (fread(&hdr, 1, sizeof(OBJECT_CACHE_HEADER), hFile) == sizeof(OBJECT_CACHE_HEADER))
       {
          if ((hdr.dwMagic == OBJECT_CACHE_MAGIC) &&
-             (hdr.dwStructSize == sizeof(NXC_OBJECT)))
+             (hdr.dwStructSize == sizeof(NXC_OBJECT)) &&
+             (!memcmp(hdr.bsServerId, m_bsServerId, 8)))
          {
+            DebugPrintf(_T("Cache file OK, loading objects"));
             m_dwTimeStamp = hdr.dwTimeStamp;
             for(i = 0; i < hdr.dwNumObjects; i++)
             {

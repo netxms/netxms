@@ -66,7 +66,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    DWORD dwNum1, dwNum2;
    int iResult;
 
-   switch(SortMode(lParamSort))
+   switch(SORT_MODE(lParamSort))
    {
       case OBJECT_SORT_BY_ID:
          iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->dwId, ((NXC_OBJECT *)lParam2)->dwId);
@@ -109,7 +109,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
          break;
    }
 
-   return (SortDir(lParamSort) == SORT_ASCENDING) ? iResult : -iResult;
+   return (SORT_DIR(lParamSort) == SORT_ASCENDING) ? iResult : -iResult;
 }
 
 
@@ -281,8 +281,8 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Mark sorting column in list control
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = m_iLastObjectImage + SortDir(m_dwSortMode);
-   m_wndListCtrl.SetColumn(SortMode(m_dwSortMode), &lvCol);
+   lvCol.iImage = m_iLastObjectImage + SORT_DIR(m_dwSortMode);
+   m_wndListCtrl.SetColumn(SORT_MODE(m_dwSortMode), &lvCol);
 
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
       m_wndTreeCtrl.ShowWindow(SW_SHOW);
@@ -825,7 +825,7 @@ void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult
    int iColumn;
 
    // Unmark old sorting column
-   iColumn = SortMode(m_dwSortMode);
+   iColumn = SORT_MODE(m_dwSortMode);
    lvCol.mask = LVCF_FMT;
    lvCol.fmt = LVCFMT_LEFT;
    m_wndListCtrl.SetColumn(iColumn, &lvCol);
@@ -835,7 +835,7 @@ void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult
    {
       // Same column, change sort direction
       m_dwSortMode = iColumn | 
-         (((SortDir(m_dwSortMode) == SORT_ASCENDING) ? SORT_DESCENDING : SORT_ASCENDING) << 8);
+         (((SORT_DIR(m_dwSortMode) == SORT_ASCENDING) ? SORT_DESCENDING : SORT_ASCENDING) << 8);
    }
    else
    {
@@ -847,7 +847,7 @@ void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult
    // Mark new sorting column
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = (SortDir(m_dwSortMode) == SORT_ASCENDING) ? m_iLastObjectImage : (m_iLastObjectImage + 1);
+   lvCol.iImage = (SORT_DIR(m_dwSortMode) == SORT_ASCENDING) ? m_iLastObjectImage : (m_iLastObjectImage + 1);
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
    *pResult = 0;

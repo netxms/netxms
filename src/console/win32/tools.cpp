@@ -431,3 +431,60 @@ void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp)
    if (bMaximized)
       ::PostMessage(pWnd->GetParent()->m_hWnd, WM_MDIMAXIMIZE, (WPARAM)pWnd->m_hWnd, 0);
 }
+
+
+//
+// Extract parameter from window parameters string
+//
+
+BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize)
+{
+   TCHAR *pCurr, szName[32];
+   int iState = 0, iPos;
+   BOOL bResult = FALSE;
+
+   for(pCurr = pszStr, iPos = 0; (*pCurr != 0) && (iState != -1); pCurr++)
+   {
+      switch(iState)
+      {
+         case 0:     // Read parameter name
+            if (*pCurr == _T(':'))
+            {
+               szName[iPos] = 0;
+               iPos = 0;
+               if (!_tcscmp(szName, pszParam))
+               {
+                  bResult = TRUE;
+                  iState = 1;
+               }
+               else
+               {
+                  iState = 2;
+               }
+            }
+            else
+            {
+               if (iPos < 31)
+                  szName[iPos++] = *pCurr;
+            }
+            break;
+         case 1:     // Read value
+            if (*pCurr == _T('\x7F'))
+            {
+               iState = -1;    // Finish
+            }
+            else
+            {
+               if (iPos < iSize - 1)
+                  pszBuffer[iPos++] = *pCurr;
+            }
+            break;
+         case 2:     // Skip value
+            if (*pCurr == _T('\x7F'))
+               iState = 0;
+            break;
+      }
+   }
+   pszBuffer[iPos] = 0;
+   return bResult;
+}

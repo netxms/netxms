@@ -30,7 +30,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define LAST_APP_MENU   3
+#define LAST_APP_MENU   4
 
 
 //
@@ -327,10 +327,13 @@ BOOL CConsoleApp::InitInstance()
 
 int CConsoleApp::ExitInstance() 
 {
-   TCHAR szBuffer[MAX_PATH];
+   TCHAR szBuffer[MAX_PATH + 32];
+   BYTE bsServerId[8];
 
+   NXCGetServerID(g_hSession, bsServerId);
    _tcscpy(szBuffer, g_szWorkDir);
    _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
+   BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
    NXCSaveObjectCache(g_hSession, szBuffer);
 
    NXCSetDebugCallback(NULL);
@@ -585,19 +588,36 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
 
 
 //
+// Show event browser window
+//
+
+CMDIChildWnd *CConsoleApp::ShowEventBrowser(void)
+{
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CMDIChildWnd *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_bEventBrowserActive)
+   {
+      m_pwndEventBrowser->BringWindowToTop();
+      pWnd = m_pwndEventBrowser;
+   }
+   else
+   {
+	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CEventBrowser), IDR_EVENTS,
+                                    m_hEventBrowserMenu, m_hEventBrowserAccel);
+   }
+   return pWnd;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_EVENTS message handler
 //
 
 void CConsoleApp::OnViewEvents() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	// create a new MDI child window or open existing
-   if (m_bEventBrowserActive)
-      m_pwndEventBrowser->BringWindowToTop();
-   else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CEventBrowser), IDR_EVENTS, m_hEventBrowserMenu, m_hEventBrowserAccel);
+   ShowEventBrowser();
 }
 
 
@@ -956,14 +976,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
 
 void CConsoleApp::OnViewNetworksummary() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	// create a new MDI child window or open existing
-   if (m_bNetSummaryActive)
-      m_pwndNetSummary->BringWindowToTop();
-   else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CNetSummaryFrame), IDR_NETWORK_SUMMARY, m_hMDIMenu, m_hMDIAccel);	
+   ShowNetworkSummary();
 }
 
 
@@ -1021,10 +1034,21 @@ void CConsoleApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 // Show window with DCI's data
 //
 
-void CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
+CMDIChildWnd *CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName, TCHAR *pszParams)
 {
-   CreateChildFrameWithSubtitle(new CDCIDataView(dwNodeId, dwItemId), IDR_DCI_DATA_VIEW,
-                                pszItemName, m_hMDIMenu, m_hMDIAccel);
+   CDCIDataView *pWnd;
+
+   if (pszParams == NULL)
+   {
+      pWnd = new CDCIDataView(dwNodeId, dwItemId, pszItemName);
+   }
+   else
+   {
+      pWnd = new CDCIDataView(pszParams);
+   }
+   CreateChildFrameWithSubtitle(pWnd, IDR_DCI_DATA_VIEW,
+                                pWnd->GetItemName(), m_hMDIMenu, m_hMDIAccel);
+   return pWnd;
 }
 
 
@@ -1032,13 +1056,14 @@ void CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
 // Show graph for collected data
 //
 
-void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
+void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, DWORD *pdwItemList, char *pszItemName)
 {
    CGraphFrame *pWnd;
-   DWORD dwCurrTime;
+   DWORD i, dwCurrTime;
 
    pWnd = new CGraphFrame;
-   pWnd->AddItem(dwNodeId, dwItemId);
+   for(i = 0; i < dwNumItems; i++)
+      pWnd->AddItem(dwNodeId, pdwItemList[i]);
    dwCurrTime = time(NULL);
    pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
 
@@ -1064,8 +1089,6 @@ void CConsoleApp::OnToolsMibbrowser()
 
 void CConsoleApp::OnControlpanelEventpolicy() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
 	// create a new MDI child window or open existing
    if (m_bEventPolicyEditorActive)
    {
@@ -1073,6 +1096,7 @@ void CConsoleApp::OnControlpanelEventpolicy()
    }
    else
    {
+   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
       DWORD dwResult;
 
       dwResult = DoRequestArg2(NXCOpenEventPolicy, g_hSession, &m_pEventPolicy, "Loading event processing policy...");
@@ -1090,19 +1114,45 @@ void CConsoleApp::OnControlpanelEventpolicy()
 
 
 //
+// Show alarm browser window
+//
+
+CMDIChildWnd *CConsoleApp::ShowAlarmBrowser(TCHAR *pszParams)
+{
+   CMDIChildWnd *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_bAlarmBrowserActive)
+   {
+      m_pwndAlarmBrowser->BringWindowToTop();
+      pWnd = m_pwndAlarmBrowser;
+   }
+   else
+   {
+   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+      if (pszParams == NULL)
+      {
+	      pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CAlarmBrowser), IDR_ALARMS,
+                                       m_hAlarmBrowserMenu, m_hAlarmBrowserAccel);
+      }
+      else
+      {
+         pWnd = new CAlarmBrowser(pszParams);
+         CreateChildFrameWithSubtitle(pWnd, IDR_ALARMS, NULL, m_hAlarmBrowserMenu, m_hAlarmBrowserAccel);
+      }
+   }
+   return pWnd;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_ALARMS message handler
 //
 
 void CConsoleApp::OnViewAlarms() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	// create a new MDI child window or open existing
-   if (m_bAlarmBrowserActive)
-      m_pwndAlarmBrowser->BringWindowToTop();
-   else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CAlarmBrowser), IDR_ALARMS, m_hAlarmBrowserMenu, m_hAlarmBrowserAccel);
+   ShowAlarmBrowser();
 }
 
 
@@ -1486,13 +1536,26 @@ void CConsoleApp::DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObj
 // Show last collected DCI values
 //
 
-void CConsoleApp::ShowLastValues(NXC_OBJECT *pObject)
+CMDIChildWnd *CConsoleApp::ShowLastValues(NXC_OBJECT *pObject, TCHAR *pszParams)
 {
-   if (pObject->iClass != OBJECT_NODE)
-      return;
+   CLastValuesView *pWnd;
 
-   CreateChildFrameWithSubtitle(new CLastValuesView(pObject->dwId), IDR_LAST_VALUES_VIEW,
-                                pObject->szName, m_hMDIMenu, m_hMDIAccel);
+   if (pObject != NULL)
+   {
+      if (pObject->iClass != OBJECT_NODE)
+         return NULL;
+
+      pWnd = new CLastValuesView(pObject->dwId);
+   }
+   else
+   {
+      pWnd = new CLastValuesView(pszParams);
+      pObject = NXCFindObjectById(g_hSession, pWnd->GetObjectId());
+   }
+   CreateChildFrameWithSubtitle(pWnd, IDR_LAST_VALUES_VIEW,
+                                (pObject != NULL) ? pObject->szName : _T("unknown object"),
+                                m_hMDIMenu, m_hMDIAccel);
+   return pWnd;
 }
 
 
@@ -1503,23 +1566,26 @@ void CConsoleApp::ShowLastValues(NXC_OBJECT *pObject)
 void CConsoleApp::CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId, 
                                                TCHAR *pszSubTitle, HMENU hMenu, HACCEL hAccel)
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
    CCreateContext context;
 
    // load the frame
 	context.m_pCurrentFrame = pFrame;
 
-	if (pWnd->LoadFrame(IDR_LAST_VALUES_VIEW, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
+	if (pWnd->LoadFrame(nId, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
    {
 	   CString strFullString, strTitle;
 
 	   if (strFullString.LoadString(nId))
 		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
 
-      // add node name to title
-      strTitle += " - [";
-      strTitle += pszSubTitle;
-      strTitle += "]";
+      // add frame subtitle
+      if (pszSubTitle != NULL)
+      {
+         strTitle += " - [";
+         strTitle += pszSubTitle;
+         strTitle += "]";
+      }
 
 	   // set the handles and redraw the frame and parent
 	   pWnd->SetHandles(hMenu, hAccel);
@@ -1565,4 +1631,28 @@ void CConsoleApp::ApplyTemplate(NXC_OBJECT *pObject)
       if (dwResult != RCC_SUCCESS)
          ErrorBox(dwResult, _T("Error applying template: %s"));
    }
+}
+
+
+//
+// Show network summary window
+//
+
+CMDIChildWnd *CConsoleApp::ShowNetworkSummary(void)
+{
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CMDIChildWnd *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_bNetSummaryActive)
+   {
+      m_pwndNetSummary->BringWindowToTop();
+      pWnd = m_pwndNetSummary;
+   }
+   else
+   {
+	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CNetSummaryFrame),
+                                    IDR_NETWORK_SUMMARY, m_hMDIMenu, m_hMDIAccel);	
+   }
+   return pWnd;
 }

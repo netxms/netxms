@@ -45,6 +45,7 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()
 };
 

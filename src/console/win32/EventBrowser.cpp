@@ -35,6 +35,7 @@ BEGIN_MESSAGE_MAP(CEventBrowser, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -168,4 +169,17 @@ void CEventBrowser::OnViewRefresh()
    EnableDisplay(FALSE);
    DoRequestArg1(NXCSyncEvents, g_hSession, "Loading events...");
    EnableDisplay(TRUE);
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CEventBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_EVENT_BROWSER;
+   GetWindowPlacement(&pInfo->placement);
+   pInfo->szParameters[0] = 0;
+   return 1;
 }

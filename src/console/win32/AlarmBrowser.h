@@ -1,6 +1,7 @@
 #if !defined(AFX_ALARMBROWSER_H__0378A627_F763_4D57_87DC_76A9EF2560D3__INCLUDED_)
 #define AFX_ALARMBROWSER_H__0378A627_F763_4D57_87DC_76A9EF2560D3__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -21,7 +22,10 @@ public:
 
 // Operations
 public:
+	CAlarmBrowser(TCHAR *pszParam);  // public constructor used by desktop restore
+
 	void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
+	NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -32,6 +36,14 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bRestoredDesktop;
+	void AddAlarmToList(NXC_ALARM *pAlarm);
+	void DeleteAlarmFromList(DWORD dwAlarmId);
+	NXC_ALARM *m_pAlarmList;
+	DWORD m_dwNumAlarms;
+	int m_iSortImageBase;
+	int m_iSortDir;
+	int m_iSortMode;
 	int m_iNumAlarms[5];
 	void UpdateStatusBar(void);
 	int m_iStatusBarHeight;
@@ -56,7 +68,13 @@ protected:
 	afx_msg void OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI);
 	afx_msg void OnClose();
 	//}}AFX_MSG
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
+
+public:
+   int SortMode(void) { return m_iSortMode; }
+   int SortDir(void) { return m_iSortDir; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

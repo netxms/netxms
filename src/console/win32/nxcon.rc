@@ -113,6 +113,7 @@ IDI_NACK                ICON    DISCARDABLE     "icons\\nack.ico"
 IDI_RUNNING             ICON    DISCARDABLE     "icons\\running.ico"
 IDI_PENDING             ICON    DISCARDABLE     "icons\\pending.ico"
 IDI_TIPS                ICON    DISCARDABLE     "icons\\Tips.ico"
+IDI_DESKTOP             ICON    DISCARDABLE     "icons\\desktop.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -163,6 +164,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+X",                ID_APP_EXIT
     END
+    POPUP "&Desktop"
+    BEGIN
+        MENUITEM "&Save\tCtrl+Shift+F2",        ID_DESKTOP_SAVE
+        MENUITEM "Save &as...",                 ID_DESKTOP_SAVEAS
+        MENUITEM "&Restore...\tCtrl+Shift+F3",  ID_DESKTOP_RESTORE
+    END
     POPUP "&View"
     BEGIN
         MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
@@ -194,7 +201,8 @@ BEGIN
     POPUP "&Window"
     BEGIN
         MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
-        MENUITEM "&Tile",                       ID_WINDOW_TILE_VERT
+        MENUITEM "&Tile vertically",            ID_WINDOW_TILE_VERT
+        MENUITEM "Tile &horizontaly",           ID_WINDOW_TILE_HORZ
         MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
     END
     POPUP "&Events"
@@ -615,7 +623,11 @@ BEGIN
     VK_F12,         ID_VIEW_DEBUG,          VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     VK_F2,          ID_VIEW_MAP,            VIRTKEY, NOINVERT
+    VK_F2,          ID_DESKTOP_SAVE,        VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
     VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
+    VK_F3,          ID_DESKTOP_RESTORE,     VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
     VK_F4,          ID_CONTROLPANEL_EVENTPOLICY, VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
@@ -1670,6 +1682,22 @@ BEGIN
     LTEXT           "Child objects",IDC_STATIC,151,7,41,8
 END
 
+IDD_DESKTOP_SAVE_AS DIALOGEX 0, 0, 224, 132
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save desktop configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,7,18,154,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_LIST_DESKTOPS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_AUTOARRANGE | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,7,50,
+                    154,75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,167,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,167,24,50,14
+    LTEXT           "Desktop configuration name",IDC_STATIC,7,7,90,8
+    LTEXT           "Existing desktop configurations",IDC_STATIC,7,39,98,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2065,6 +2093,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 163
     END
+
+    IDD_DESKTOP_SAVE_AS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 217
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 125
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -2077,6 +2113,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_INDICATOR_CONNECT    "default-server.default-domain.com"
+    ID_INDICATOR_DESKTOP    "Default_desktop_name"
     IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"

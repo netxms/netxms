@@ -389,6 +389,10 @@ SOURCE=.\RuleSeverityDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SaveDesktopDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -734,6 +738,10 @@ SOURCE=.\RuleSeverityDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\SaveDesktopDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.h
 # End Source File
 # Begin Source File
@@ -819,6 +827,10 @@ SOURCE=.\icons\dctemplate.ico
 # Begin Source File
 
 SOURCE=.\icons\deploy.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\desktop.ico
 # End Source File
 # Begin Source File
 

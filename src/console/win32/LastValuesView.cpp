@@ -26,6 +26,16 @@ CLastValuesView::CLastValuesView(DWORD dwNodeId)
    m_dwNodeId = dwNodeId;
 }
 
+CLastValuesView::CLastValuesView(TCHAR *pszParams)
+{
+   TCHAR szBuffer[32];
+
+   if (ExtractWindowParam(pszParams, _T("N"), szBuffer, 32))
+      m_dwNodeId = _tcstoul(szBuffer, NULL, 0);
+   else
+      m_dwNodeId = 0;
+}
+
 CLastValuesView::~CLastValuesView()
 {
 }
@@ -38,6 +48,7 @@ BEGIN_MESSAGE_MAP(CLastValuesView, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -89,7 +100,8 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(3, "Changed", LVCFMT_LEFT, 26);
    m_wndListCtrl.InsertColumn(4, "Timestamp", LVCFMT_LEFT, 124);
 
-   PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
+   if (m_dwNodeId != 0)
+      PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
 
 	return 0;
 }
@@ -193,4 +205,17 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
    m_wndListCtrl.SetItemText(iItem, 1, pValue->szDescription);
    m_wndListCtrl.SetItemText(iItem, 2, pValue->szValue);
    m_wndListCtrl.SetItemText(iItem, 4, szTimeStamp);
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_LAST_VALUES;
+   GetWindowPlacement(&pInfo->placement);
+   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%ld"), m_dwNodeId);
+   return 1;
 }

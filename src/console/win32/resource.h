@@ -5,6 +5,7 @@
 #define IDD_ABOUTBOX                    100
 #define ID_INDICATOR_CONNECT            101
 #define ID_LIST_VIEW                    102
+#define ID_INDICATOR_DESKTOP            102
 #define ID_CONNECT_TO_SERVER            103
 #define IDP_SOCKETS_INIT_FAILED         104
 #define IDC_PREVIEW_PANE                105
@@ -153,6 +154,8 @@
 #define IDI_PENDING                     261
 #define IDD_OBJECT_RELATIONS            262
 #define IDI_TIPS                        264
+#define IDD_DESKTOP_SAVE_AS             265
+#define IDI_DESKTOP                     266
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -190,6 +193,7 @@
 #define IDC_LIST_PARAMETERS             1024
 #define IDC_LIST_PARAMS                 1024
 #define IDC_LIST_PARENTS                1024
+#define IDC_LIST_DESKTOPS               1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_EDIT_CLASS                  1026
@@ -468,6 +472,9 @@
 #define ID_OBJECT_CREATE_SERVICE        32913
 #define ID_OBJECT_LASTDCIVALUES         32915
 #define ID_OBJECT_APPLY                 32916
+#define ID_DESKTOP_SAVE                 32917
+#define ID_DESKTOP_SAVEAS               32918
+#define ID_DESKTOP_RESTORE              32919
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -476,9 +483,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        265
-#define _APS_NEXT_COMMAND_VALUE         32917
-#define _APS_NEXT_CONTROL_VALUE         1238
+#define _APS_NEXT_RESOURCE_VALUE        267
+#define _APS_NEXT_COMMAND_VALUE         32920
+#define _APS_NEXT_CONTROL_VALUE         1239
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

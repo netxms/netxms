@@ -24,6 +24,9 @@ public:
 // Operations
 public:
 	CLastValuesView(DWORD dwNodeId);
+	CLastValuesView(TCHAR *pszParams);
+
+   DWORD GetObjectId(void) { return m_dwNodeId; }
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -48,6 +51,7 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()
 };
 

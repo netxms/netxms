@@ -47,6 +47,19 @@ extern CConsoleApp theApp;
 
 
 //
+// Window classes
+//
+
+#define WNDC_LAST_VALUES      1
+#define WNDC_GRAPH            2
+#define WNDC_DCI_DATA         3
+#define WNDC_NETWORK_SUMMARY  4
+#define WNDC_ALARM_BROWSER    5
+#define WNDC_EVENT_BROWSER    6
+#define WNDC_OBJECT_BROWSER   7
+
+
+//
 // User interface options
 //
 
@@ -78,6 +91,7 @@ extern CConsoleApp theApp;
 #define WM_START_DEPLOYMENT      (WM_USER + 11)
 #define WM_DEPLOYMENT_INFO       (WM_USER + 12)
 #define WM_DEPLOYMENT_FINISHED   (WM_USER + 13)
+#define WM_GET_SAVE_INFO         (WM_USER + 14)
 
 
 //
@@ -94,7 +108,7 @@ extern CConsoleApp theApp;
 
 #define WORKDIR_MIBCACHE      _T("\\MIBCache")
 #define WORKDIR_IMAGECACHE    _T("\\ImageCache")
-#define WORKFILE_OBJECTCACHE  _T("\\objects.cache")
+#define WORKFILE_OBJECTCACHE  _T("\\objects.cache.")
 
 
 //
@@ -154,6 +168,18 @@ struct DEPLOYMENT_JOB
 
 
 //
+// Window state saving information
+//
+
+struct WINDOW_SAVE_INFO
+{
+   int iWndClass;
+   WINDOWPLACEMENT placement;
+   TCHAR szParameters[MAX_DB_STRING];
+};
+
+
+//
 // Communication functions
 //
 
@@ -202,6 +228,7 @@ const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefa
 char *TranslateUNIXText(const char *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
 void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
+BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize);
 
 
 //

@@ -471,6 +471,8 @@ src/console/win32/RuleList.cpp -text
 src/console/win32/RuleList.h -text
 src/console/win32/RuleSeverityDlg.cpp -text
 src/console/win32/RuleSeverityDlg.h -text
+src/console/win32/SaveDesktopDlg.cpp -text
+src/console/win32/SaveDesktopDlg.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/ThresholdDlg.cpp -text
@@ -512,6 +514,7 @@ src/console/win32/icons/database.ico -text
 src/console/win32/icons/datacoll.ico -text
 src/console/win32/icons/dctemplate.ico -text
 src/console/win32/icons/deploy.ico -text
+src/console/win32/icons/desktop.ico -text
 src/console/win32/icons/disabled.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/exec.ico -text

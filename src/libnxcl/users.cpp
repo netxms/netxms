@@ -242,3 +242,120 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId,
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Get user variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName,
+                                            TCHAR *pszValue, DWORD dwSize)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_USER_VARIABLE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, pszVarName);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponce != NULL)
+   {
+      dwResult = pResponce->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+         pResponce->GetVariableStr(VID_VALUE, pszValue, dwSize);
+      delete pResponce;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+
+   return dwResult;
+}
+
+
+//
+// Set user variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName, TCHAR *pszValue)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SET_USER_VARIABLE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, pszVarName);
+   msg.SetVariable(VID_VALUE, pszValue);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Delete user variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszVarName)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_DELETE_USER_VARIABLE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, pszVarName);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Enumerate user variables
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPattern,
+                                              DWORD *pdwNumVars, TCHAR ***pppszVarList)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD i, dwId, dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_ENUM_USER_VARIABLES);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_SEARCH_PATTERN, pszPattern);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponce != NULL)
+   {
+      dwResult = pResponce->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pdwNumVars = pResponce->GetVariableLong(VID_NUM_VARIABLES);
+         if (*pdwNumVars > 0)
+         {
+            *pppszVarList = (TCHAR **)malloc(sizeof(TCHAR *) * (*pdwNumVars));
+            for(i = 0, dwId = VID_VARLIST_BASE; i < *pdwNumVars; i++, dwId++)
+               (*pppszVarList)[i] = pResponce->GetVariableStr(dwId);
+         }
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+
+   return dwResult;
+}

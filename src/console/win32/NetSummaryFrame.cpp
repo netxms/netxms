@@ -35,6 +35,7 @@ BEGIN_MESSAGE_MAP(CNetSummaryFrame, CMDIChildWnd)
 	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -153,4 +154,17 @@ void CNetSummaryFrame::OnClose()
    theApp.WriteProfileBinary(_T("NetSummaryFrame"), _T("WindowPlacement"), 
                              (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
    CMDIChildWnd::OnClose();
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CNetSummaryFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_NETWORK_SUMMARY;
+   GetWindowPlacement(&pInfo->placement);
+   pInfo->szParameters[0] = 0;
+   return 1;
 }

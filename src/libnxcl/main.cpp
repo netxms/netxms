@@ -111,6 +111,16 @@ void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeo
 
 
 //
+// Get server ID
+//
+
+void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId)
+{
+   memcpy(pbsId, ((NXCL_Session *)hSession)->m_bsServerId, 8);
+}
+
+
+//
 // Get text for error
 //
 

@@ -286,6 +286,10 @@ typedef struct
 #define CMD_INSTALLER_INFO          0x0078
 #define CMD_GET_LAST_VALUES         0x0079
 #define CMD_APPLY_TEMPLATE          0x007A
+#define CMD_SET_USER_VARIABLE       0x007B
+#define CMD_GET_USER_VARIABLE       0x007C
+#define CMD_ENUM_USER_VARIABLES     0x007D
+#define CMD_DELETE_USER_VARIABLE    0x007E
 
 
 //
@@ -434,6 +438,8 @@ typedef struct
 #define VID_DEPLOYMENT_STATUS       ((DWORD)140)
 #define VID_ERROR_MESSAGE           ((DWORD)141)
 #define VID_SERVER_ID               ((DWORD)142)
+#define VID_SEARCH_PATTERN          ((DWORD)143)
+#define VID_NUM_VARIABLES           ((DWORD)144)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -488,6 +494,9 @@ typedef struct
 
 // Base value for DCI last values
 #define VID_DCI_VALUES_BASE         ((DWORD)0x10000000)
+
+// Base value for variable names
+#define VID_VARLIST_BASE            ((DWORD)0x10000000)
 
 //
 // Inline functions

@@ -350,6 +350,10 @@ private:
    void RemovePackage(CSCPMessage *pRequest);
    void DeployPackage(CSCPMessage *pRequest);
    void SendParametersList(CSCPMessage *pRequest);
+   void GetUserVariable(CSCPMessage *pRequest);
+   void SetUserVariable(CSCPMessage *pRequest);
+   void EnumUserVariables(CSCPMessage *pRequest);
+   void DeleteUserVariable(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

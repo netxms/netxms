@@ -419,7 +419,7 @@ void CDataCollectionEditor::OnUpdateItemShowdata(CCmdUI* pCmdUI)
 
 void CDataCollectionEditor::OnUpdateItemGraph(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() == 1) && (!m_bIsTemplate));
+   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() > 0) && (!m_bIsTemplate));
 }
 
 void CDataCollectionEditor::OnUpdateItemCopy(CCmdUI* pCmdUI) 
@@ -551,20 +551,34 @@ void CDataCollectionEditor::OnItemShowdata()
 void CDataCollectionEditor::OnItemGraph() 
 {
    int iItem;
-   DWORD dwItemId, dwIndex;
+   DWORD i, *pdwItemList, dwNumItems, dwIndex;
    char szBuffer[384];
    NXC_OBJECT *pObject;
 
-   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
-   if (iItem != -1)
+   pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumItems); i++)
    {
-      dwItemId = m_wndListCtrl.GetItemData(iItem);
-      dwIndex = NXCItemIndex(m_pItemList, dwItemId);
-      pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
+      pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   if (dwNumItems == 1)
+   {
+      dwIndex = NXCItemIndex(m_pItemList, pdwItemList[0]);
       sprintf(szBuffer, "%s - %s", pObject->szName, 
               m_pItemList->pItems[dwIndex].szDescription);
-      theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwItemId, szBuffer);
    }
+   else
+   {
+      strcpy(szBuffer, pObject->szName);
+   }
+
+   theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwNumItems, pdwItemList, szBuffer);
+   free(pdwItemList);
 }
 
 

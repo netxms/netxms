@@ -22,8 +22,11 @@ public:
 
 // Operations
 public:
-   CDCIDataView(DWORD dwNodeId, DWORD dwItemId);
+   CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName);
+   CDCIDataView(TCHAR *pszParams);
 	virtual ~CDCIDataView();
+
+   TCHAR *GetItemName(void) { return m_szItemName; }
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -32,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	TCHAR m_szItemName[MAX_OBJECT_NAME];
 	CStatusBarCtrl m_wndStatusBar;
 	// Generated message map functions
 	//{{AFX_MSG(CDCIDataView)
@@ -42,6 +46,7 @@ protected:
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
    afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;

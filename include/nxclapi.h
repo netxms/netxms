@@ -62,6 +62,7 @@ typedef void * NXC_SESSION;
 #define MAX_USER_DESCR           256
 #define MAX_ITEM_NAME            256
 #define MAX_STRING_VALUE         256
+#define MAX_VARIABLE_NAME        256
 #define MAX_AGENT_VERSION_LEN    64
 #define MAX_PLATFORM_NAME_LEN    64
 #define MAX_PACKAGE_NAME_LEN     64
@@ -258,6 +259,7 @@ typedef void * NXC_SESSION;
 #define RCC_INVALID_PACKAGE_ID      ((DWORD)36)
 #define RCC_INVALID_IP_ADDR         ((DWORD)37)
 #define RCC_ACTION_IN_USE           ((DWORD)38)
+#define RCC_VARIABLE_NOT_FOUND      ((DWORD)39)
 
 
 //
@@ -971,6 +973,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin,
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout);
+void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile);
@@ -1028,6 +1031,12 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName, BOO
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo);
 DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, TCHAR *pszNewPassword);
+DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName,
+                                            TCHAR *pszValue, DWORD dwSize);
+DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName, TCHAR *pszValue);
+DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPattern,
+                                              DWORD *pdwNumVars, TCHAR ***pppszVarList);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszVarName);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList);

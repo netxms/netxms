@@ -79,6 +79,7 @@ typedef struct
    DWORD dwStructSize;  // sizeof(NXC_OBJECT)
    DWORD dwTimeStamp;
    DWORD dwNumObjects;
+   BYTE bsServerId[8];
 } OBJECT_CACHE_HEADER;
 
 

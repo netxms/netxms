@@ -46,11 +46,16 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
+	void SetDesktopIndicator(void);
+	TCHAR m_szDesktopName[MAX_OBJECT_NAME];
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
 	afx_msg void OnUpdateEventList();
 	afx_msg void OnClose();
+	afx_msg void OnDesktopSave();
+	afx_msg void OnDesktopSaveas();
+	afx_msg void OnDesktopRestore();
 	//}}AFX_MSG
    afx_msg void OnStateChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);

@@ -18,12 +18,34 @@ IMPLEMENT_DYNCREATE(CDCIDataView, CMDIChildWnd)
 
 CDCIDataView::CDCIDataView()
 {
+   m_dwNodeId = 0;
+   m_dwItemId = 0;
+   m_szItemName[0] = 0;
 }
 
-CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId)
+CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName)
 {
    m_dwNodeId = dwNodeId;
    m_dwItemId = dwItemId;
+   _tcsncpy(m_szItemName, pszItemName, MAX_OBJECT_NAME);
+}
+
+CDCIDataView::CDCIDataView(TCHAR *pszParams)
+{
+   TCHAR szBuffer[32];
+
+   if (ExtractWindowParam(pszParams, _T("N"), szBuffer, 32))
+      m_dwNodeId = _tcstoul(szBuffer, NULL, 0);
+   else
+      m_dwNodeId = 0;
+
+   if (ExtractWindowParam(pszParams, _T("I"), szBuffer, 32))
+      m_dwItemId = _tcstoul(szBuffer, NULL, 0);
+   else
+      m_dwItemId = 0;
+
+   if (!ExtractWindowParam(pszParams, _T("IN"), m_szItemName, MAX_OBJECT_NAME))
+      m_szItemName[0] = 0;
 }
 
 CDCIDataView::~CDCIDataView()
@@ -40,6 +62,7 @@ BEGIN_MESSAGE_MAP(CDCIDataView, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
+   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -211,4 +234,18 @@ void CDCIDataView::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
             m_wndStatusBar.SetText("", 1, 0);
          }
       }
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CDCIDataView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_DCI_DATA;
+   GetWindowPlacement(&pInfo->placement);
+   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%ld\x7FI:%ld\x7FIN:%s"),
+              m_dwNodeId, m_dwItemId, m_szItemName);
+   return 1;
 }

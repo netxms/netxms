@@ -187,8 +187,11 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	CMDIChildWnd *ShowEventBrowser(void);
+	CMDIChildWnd *ShowAlarmBrowser(TCHAR *pszParams = NULL);
+	CMDIChildWnd *ShowNetworkSummary(void);
 	void ApplyTemplate(NXC_OBJECT *pObject);
-	void ShowLastValues(NXC_OBJECT *pObject);
+	CMDIChildWnd *ShowLastValues(NXC_OBJECT *pObject, TCHAR *pszParams = NULL);
 	void DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList);
 	void CreateNetworkService(DWORD dwParent);
 	void WakeUpNode(DWORD dwObjectId);
@@ -200,8 +203,8 @@ public:
 	void CreateContainer(DWORD dwParent);
    NXC_EPP *m_pEventPolicy;
 
-	void ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
-	void ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
+	void ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, DWORD *pdwItemList, char *pszItemName);
+	CMDIChildWnd *ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName, TCHAR *pszParams = NULL);
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);

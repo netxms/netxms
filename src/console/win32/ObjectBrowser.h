@@ -43,8 +43,8 @@
 // Extract components from m_dwSortMode
 //
 
-#define SortMode(x) ((x) & 0xFF)
-#define SortDir(x) (((x) >> 8) & 0xFF)
+#define SORT_MODE(x) ((x) & 0xFF)
+#define SORT_DIR(x) (((x) >> 8) & 0xFF)
 
 
 //
