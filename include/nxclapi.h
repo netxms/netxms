@@ -126,6 +126,7 @@ typedef unsigned long HREQUEST;
 #define NXC_EVENT_NEW_ELOG_RECORD      4
 #define NXC_EVENT_USER_DB_CHANGED      5
 #define NXC_EVENT_OBJECT_CHANGED       6
+#define NXC_EVENT_NOTIFICATION         7
 
 
 //
@@ -154,7 +155,8 @@ typedef unsigned long HREQUEST;
 // Notification codes
 //
 
-#define NX_NOTIFY_SHUTDOWN       1
+#define NX_NOTIFY_SHUTDOWN          1
+#define NX_NOTIFY_EVENTDB_CHANGED   2
 
 
 //
@@ -328,6 +330,17 @@ typedef struct
    DWORD dwSeverity;
    char  szMessage[MAX_EVENT_MSG_LENGTH];
 } NXC_EVENT;
+
+
+//
+// Event name/code pair
+//
+
+typedef struct
+{
+   DWORD dwEventId;
+   char szName[MAX_EVENT_NAME];
+} NXC_EVENT_NAME;
 
 
 /********************************************************************
@@ -627,6 +640,9 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWO
 void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
                                        DWORD dwSeverity, DWORD dwFlags, const char *pszName,
                                        const char *pszMessage, const char *pszDescription);
+DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void);
+NXC_EVENT_NAME LIBNXCL_EXPORTABLE *NXCGetEventNamesList(DWORD *pdwNumEvents);
+const char LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
 NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);

@@ -148,6 +148,10 @@ SOURCE=.\EventPolicyEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EventSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.cpp
 # End Source File
 # Begin Source File
@@ -338,6 +342,10 @@ SOURCE=.\EventEditor.h
 # Begin Source File
 
 SOURCE=.\EventPolicyEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EventSelDlg.h
 # End Source File
 # Begin Source File
 

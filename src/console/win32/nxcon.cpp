@@ -581,6 +581,20 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       case NXC_EVENT_USER_DB_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_USERDB_CHANGE, dwCode, (LPARAM)pArg);
          break;
+      case NXC_EVENT_NOTIFICATION:
+         switch(dwCode)
+         {
+            case NX_NOTIFY_SHUTDOWN:
+               m_pMainWnd->MessageBox("Server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
+               PostQuitMessage(0);
+               break;
+            case NX_NOTIFY_EVENTDB_CHANGED:
+               m_pMainWnd->PostMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0);
+               break;
+            default:
+               break;
+         }
+         break;
       default:
          break;
    }

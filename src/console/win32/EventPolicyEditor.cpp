@@ -319,6 +319,9 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    }
    else
    {
+      for(i = 0; i < m_pEventPolicy->pRuleList[iRow].dwNumEvents; i++)
+         m_wndRuleList.AddItem(iRow, COL_EVENT, 
+                               (char *)NXCGetEventName(m_pEventPolicy->pRuleList[iRow].pdwEventList[i]), -1);
    }
 
    // Severity
@@ -430,6 +433,7 @@ void CEventPolicyEditor::OnPolicyAdd()
          AddSource();
          break;
       case COL_EVENT:  // Event
+         AddEvent();
          break;
    }
 }
@@ -493,7 +497,7 @@ void CEventPolicyEditor::OnUpdatePolicyDelete(CCmdUI* pCmdUI)
 // Add new source object to current row
 //
 
-void CEventPolicyEditor::AddSource()
+void CEventPolicyEditor::AddSource(void)
 {
    CObjectSelDlg dlg;
    DWORD i, j;
@@ -524,10 +528,44 @@ void CEventPolicyEditor::AddSource()
 
 
 //
+// Add new event to current rule
+//
+
+void CEventPolicyEditor::AddEvent(void)
+{
+   CEventSelDlg dlg;
+   DWORD i, j;
+   int iRow;
+
+   if (dlg.DoModal() == IDOK)
+   {
+      iRow = m_wndRuleList.GetCurrentRow();
+      for(i = 0; i < dlg.m_dwNumEvents; i++)
+      {
+         // Check if object already in the list
+         for(j = 0; j < m_pEventPolicy->pRuleList[iRow].dwNumEvents; j++)
+            if (m_pEventPolicy->pRuleList[iRow].pdwEventList[j] == dlg.m_pdwEventList[i])
+               break;
+         if (j == m_pEventPolicy->pRuleList[iRow].dwNumEvents)
+         {
+            // New object, add it to source list
+            m_pEventPolicy->pRuleList[iRow].dwNumEvents++;
+            m_pEventPolicy->pRuleList[iRow].pdwEventList = 
+               (DWORD *)MemReAlloc(m_pEventPolicy->pRuleList[iRow].pdwEventList,
+                  sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumEvents);
+            m_pEventPolicy->pRuleList[iRow].pdwEventList[j] = dlg.m_pdwEventList[i];
+         }
+      }
+      UpdateRow(iRow);
+   }
+}
+
+
+//
 // Delete element
 //
 
-void CEventPolicyEditor::OnPolicyDelete() 
+void CEventPolicyEditor::OnPolicyDelete(void) 
 {
    int iRow, iCol, iItem;
 
@@ -585,7 +623,7 @@ void CEventPolicyEditor::OnPolicyDelete()
 // Delete selected rule(s)
 //
 
-void CEventPolicyEditor::OnPolicyDeleterule() 
+void CEventPolicyEditor::OnPolicyDeleterule(void) 
 {
    int i, iRow;
    char szBuffer[32];

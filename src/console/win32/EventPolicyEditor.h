@@ -9,6 +9,7 @@
 //
 
 #include "ObjectSelDlg.h"
+#include "EventSelDlg.h"
 #include "RuleCommentDlg.h"
 
 
@@ -36,6 +37,7 @@ public:
 
 // Implementation
 protected:
+	void AddEvent(void);
 	void EditComment(int iRow);
 	void EditAlarm(int iRow);
 	void EditSeverity(int iRow);

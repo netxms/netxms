@@ -68,6 +68,8 @@ src/console/win32/EventEditor.cpp -text
 src/console/win32/EventEditor.h -text
 src/console/win32/EventPolicyEditor.cpp -text
 src/console/win32/EventPolicyEditor.h -text
+src/console/win32/EventSelDlg.cpp -text
+src/console/win32/EventSelDlg.h -text
 src/console/win32/Graph.cpp -text
 src/console/win32/Graph.h -text
 src/console/win32/GraphFrame.cpp -text

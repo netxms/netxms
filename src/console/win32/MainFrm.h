@@ -46,6 +46,7 @@ protected:
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
+	afx_msg void OnUpdateEventList();
 	//}}AFX_MSG
    afx_msg void OnUpdateState(CCmdUI *pCmdUI);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);

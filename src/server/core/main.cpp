@@ -267,9 +267,9 @@ BOOL Initialize(void)
 // Handler for client notification
 //
 
-static void NotifyClient(ClientSession *pSession, void *pArg)
+void NotifyClient(ClientSession *pSession, void *pArg)
 {
-   pSession->Notify(NX_NOTIFY_SHUTDOWN);
+   pSession->Notify((DWORD)pArg);
 }
 
 
@@ -280,7 +280,7 @@ static void NotifyClient(ClientSession *pSession, void *pArg)
 void Shutdown(void)
 {
    // Notify clients
-   EnumerateClientSessions(NotifyClient, NULL);
+   EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_SHUTDOWN);
 
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag

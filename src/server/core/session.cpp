@@ -222,7 +222,7 @@ void ClientSession::WriteThread(void)
 
 void ClientSession::ProcessingThread(void)
 {
-   CSCPMessage *pMsg, *pReply;
+   CSCPMessage *pMsg;
    char szBuffer[128];
 
    while(1)
@@ -256,21 +256,7 @@ void ClientSession::ProcessingThread(void)
             SendEventDB(pMsg->GetId());
             break;
          case CMD_CLOSE_EVENT_DB:
-            if (m_dwFlags & CSF_EVENT_DB_LOCKED)
-            {
-               // Check if event configuration DB has been modified
-               if (m_dwFlags & CSF_EVENT_DB_MODIFIED)
-                  ReloadEvents();
-               UnlockComponent(CID_EVENT_DB);
-               m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
-            }
-            // Send reply
-            pReply = new CSCPMessage;
-            pReply->SetCode(CMD_REQUEST_COMPLETED);
-            pReply->SetId(pMsg->GetId());
-            pReply->SetVariable(VID_RCC, RCC_SUCCESS);
-            SendMessage(pReply);
-            delete pReply;
+            CloseEventDB(pMsg->GetId());
             break;
          case CMD_SET_EVENT_INFO:
             SetEventInfo(pMsg);
@@ -336,6 +322,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_CREATE_OBJECT:
             CreateObject(pMsg);
+            break;
+         case CMD_GET_EVENT_NAMES:
+            SendEventNames(pMsg->GetId());
             break;
          default:
             break;
@@ -447,6 +436,39 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       msg.SetCode(CMD_EVENT_DB_EOF);
       SendMessage(&msg);
    }
+}
+
+
+//
+// Close event configuration database
+//
+
+void ClientSession::CloseEventDB(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwFlags & CSF_EVENT_DB_LOCKED)
+   {
+      // Check if event configuration DB has been modified
+      if (m_dwFlags & CSF_EVENT_DB_MODIFIED)
+      {
+         ReloadEvents();
+
+         // Notify clients on event database change
+         EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_EVENTDB_CHANGED);
+      }
+      UnlockComponent(CID_EVENT_DB);
+      m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   SendMessage(&msg);
 }
 
 
@@ -1732,6 +1754,47 @@ void ClientSession::SendMIB(CSCPMessage *pRequest)
    }
 
    // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of event name/identifier pairs
+//
+
+void ClientSession::SendEventNames(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+
+   msg.SetCode(CMD_EVENT_NAME_LIST);
+   msg.SetId(dwRqId);
+   hResult = DBSelect(g_hCoreDB, "SELECT event_id,name FROM events");
+   if (hResult != NULL)
+   {
+      DWORD i, dwNumEvents;
+      NXC_EVENT_NAME *pList;
+
+      dwNumEvents = DBGetNumRows(hResult);
+      msg.SetVariable(VID_NUM_EVENTS, dwNumEvents);
+      if (dwNumEvents > 0)
+      {
+         pList = (NXC_EVENT_NAME *)malloc(sizeof(NXC_EVENT_NAME) * dwNumEvents);
+         for(i = 0; i < dwNumEvents; i++)
+         {
+            pList[i].dwEventId = htonl(DBGetFieldULong(hResult, i, 0));
+            strcpy(pList[i].szName, DBGetField(hResult, i, 1));
+         }
+         msg.SetVariable(VID_EVENT_NAME_TABLE, (BYTE *)pList, sizeof(NXC_EVENT_NAME) * dwNumEvents);
+         free(pList);
+      }
+      DBFreeResult(hResult);
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
    SendMessage(&msg);
 }
 

@@ -169,6 +169,10 @@ static void NetReceiver(void *pArg)
             case CMD_NODE_DCI_LIST_END:
                ProcessDCI(pMsg);
                break;
+            case CMD_NOTIFY:
+               CallEventHandler(NXC_EVENT_NOTIFICATION, 
+                                pMsg->GetVariableLong(VID_NOTIFICATION_CODE), NULL);
+               break;
             default:
                m_msgWaitQueue.Put(pMsg);
                bMsgNotNeeded = FALSE;

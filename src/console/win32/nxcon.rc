@@ -252,6 +252,10 @@ BEGIN
         MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
         MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
     END
+    POPUP "Hidden"
+    BEGIN
+        MENUITEM "Update event names list",     ID_UPDATE_EVENT_LIST
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -809,6 +813,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,129,74,50,14
 END
 
+IDD_SELECT_EVENT DIALOGEX 0, 0, 207, 146
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Event"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,150,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,150,24,50,14
+    CONTROL         "List1",IDC_LIST_EVENTS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | 
+                    WS_TABSTOP,7,7,137,132,WS_EX_CLIENTEDGE
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1011,6 +1027,14 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 88
+    END
+
+    IDD_SELECT_EVENT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 139
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -86,6 +86,7 @@
 #define IDB_PSYM_SUBNET                 187
 #define IDA_EPP                         188
 #define IDD_EDIT_RULE_COMMENT           189
+#define IDD_SELECT_EVENT                190
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -113,6 +114,7 @@
 #define IDC_LIST_MEMBERS                1024
 #define IDC_LIST_THRESHOLDS             1024
 #define IDC_LIST_OBJECTS                1024
+#define IDC_LIST_EVENTS                 1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_EDIT_CLASS                  1026
 #define IDC_CHECK_READ                  1027
@@ -223,6 +225,7 @@
 #define ID_POLICY_DISABLERULE           32851
 #define ID_POLICY_ENABLERULE            32852
 #define ID_POLICY_EDIT                  32853
+#define ID_UPDATE_EVENT_LIST            32855
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -231,8 +234,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        190
-#define _APS_NEXT_COMMAND_VALUE         32855
+#define _APS_NEXT_RESOURCE_VALUE        191
+#define _APS_NEXT_COMMAND_VALUE         32856
 #define _APS_NEXT_CONTROL_VALUE         1105
 #define _APS_NEXT_SYMED_VALUE           119
 #endif

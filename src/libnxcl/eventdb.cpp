@@ -32,6 +32,8 @@ static CONDITION m_hCondLoadFinished = NULL;
 static NXC_EVENT_TEMPLATE **m_ppEventTemplates = NULL;
 static DWORD m_dwNumTemplates = 0;
 static BOOL m_bEventDBOpened = FALSE;
+static NXC_EVENT_NAME *m_pEventNamesList = NULL;
+static DWORD m_dwNumEvents = 0;
 
 
 //
@@ -280,4 +282,67 @@ void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD
       pEvent->pszDescription = nx_strdup(pszDescription);
    }
    pEvent->dwFlags |= EF_MODIFIED;
+}
+
+
+//
+// Load event name/id pairs
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD i, dwRqId, dwRetCode;
+
+   dwRqId = g_dwMsgId++;
+   msg.SetCode(CMD_GET_EVENT_NAMES);
+   msg.SetId(dwRqId);
+   SendMsg(&msg);
+   pResponce = WaitForMessage(CMD_EVENT_NAME_LIST, dwRqId, 3000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         MemFree(m_pEventNamesList);
+         m_dwNumEvents = pResponce->GetVariableLong(VID_NUM_EVENTS);
+         m_pEventNamesList = (NXC_EVENT_NAME *)MemAlloc(sizeof(NXC_EVENT_NAME) * m_dwNumEvents);
+         pResponce->GetVariableBinary(VID_EVENT_NAME_TABLE, (BYTE *)m_pEventNamesList,
+                                      sizeof(NXC_EVENT_NAME) * m_dwNumEvents);
+         for(i = 0; i < m_dwNumEvents; i++)
+            m_pEventNamesList[i].dwEventId = ntohl(m_pEventNamesList[i].dwEventId);
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Get pointer to event names list
+//
+
+NXC_EVENT_NAME LIBNXCL_EXPORTABLE *NXCGetEventNamesList(DWORD *pdwNumEvents)
+{
+   *pdwNumEvents = m_dwNumEvents;
+   return m_pEventNamesList;
+}
+
+
+//
+// Resolve event id to name
+//
+
+const char LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumEvents; i++)
+      if (m_pEventNamesList[i].dwEventId == dwId)
+         return m_pEventNamesList[i].szName;
+   return "<unknown>";
 }

@@ -21,6 +21,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_COMMAND(ID_UPDATE_EVENT_LIST, OnUpdateEventList)
 	//}}AFX_MSG_MAP
    ON_UPDATE_COMMAND_UI(ID_INDICATOR_STATE, OnUpdateState)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
@@ -189,3 +190,12 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
    BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam);
 }
 
+
+//
+// WM_COMMAND::ID_UPDATE_EVENT_LIST message handler
+//
+
+void CMainFrame::OnUpdateEventList(void) 
+{
+   DoRequest(NXCLoadEventNames, "Loading event information...");
+}

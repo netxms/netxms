@@ -303,6 +303,7 @@ private:
    void LockUserDB(DWORD dwRqId, BOOL bLock);
    void SetConfigVariable(CSCPMessage *pRequest);
    void SendEventDB(DWORD dwRqId);
+   void CloseEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pRequest);
    void ModifyObject(CSCPMessage *pRequest);
    void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
@@ -317,6 +318,7 @@ private:
    void SendMIBList(DWORD dwRqId);
    void SendMIB(CSCPMessage *pRequest);
    void CreateObject(CSCPMessage *pRequest);
+   void SendEventNames(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -422,6 +424,7 @@ void WatchdogPrintStatus(void);
 void CheckForMgmtNode(void);
 
 void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
+void NotifyClient(ClientSession *pSession, void *pArg);
 
 void BinToStr(BYTE *pData, DWORD dwSize, char *pStr);
 DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize);
