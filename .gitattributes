@@ -497,6 +497,7 @@ src/server/core/alarm.cpp -text
 src/server/core/client.cpp -text
 src/server/core/config.cpp -text
 src/server/core/container.cpp -text
+src/server/core/correlate.cpp -text
 src/server/core/datacoll.cpp -text
 src/server/core/dbwrite.cpp -text
 src/server/core/dcitem.cpp -text

@@ -48,6 +48,9 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      // Attempt to correlate event to some of previous events
+      CorrelateEvent(pEvent);
+
       // Write event to log if required
       if (pEvent->Flags() & EF_LOG)
       {
@@ -55,14 +58,15 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 
          pszMsg = EncodeSQLString(pEvent->Message());
          sprintf(szQuery, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
-                          "event_source,event_severity,event_message) "
+                          "event_source,event_severity,event_message,root_event_id) "
 #ifdef _WIN32
-                          "VALUES (%I64d,%d,%d,%d,%d,'%s')", 
+                          "VALUES (%I64d,%d,%d,%d,%d,'%s',%I64d)", 
 #else
-                          "VALUES (%lld,%d,%d,%d,%d,'%s')", 
+                          "VALUES (%lld,%d,%d,%d,%d,'%s',%lld)", 
 #endif
                  pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
-                 pEvent->SourceId(), pEvent->Severity(), pszMsg);
+                 pEvent->SourceId(), pEvent->Severity(), pszMsg,
+                 pEvent->GetRootId());
          free(pszMsg);
          DBQuery(g_hCoreDB, szQuery);
       }
@@ -76,12 +80,15 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->SourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-         printf("EVENT %d (F:0x%04X S:%d) FROM %s: %s\n", pEvent->Code(), 
-                pEvent->Flags(), pEvent->Severity(), pObject->Name(), pEvent->Message());
+         printf("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s\n", pEvent->Code(), 
+                pEvent->Flags(), pEvent->Severity(),
+                (pEvent->GetRootId() == 0) ? "" : " CORRELATED",
+                pObject->Name(), pEvent->Message());
       }
 
       // Pass event through event processing policy
-      g_pEventPolicy->ProcessEvent(pEvent);
+      if (pEvent->GetRootId() == 0)
+         g_pEventPolicy->ProcessEvent(pEvent);
 
       // Destroy event
       delete pEvent;

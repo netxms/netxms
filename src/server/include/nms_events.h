@@ -55,6 +55,7 @@ class Event
 {
 private:
    QWORD m_qwId;
+   QWORD m_qwRootId;    // Root event id
    DWORD m_dwCode;
    DWORD m_dwSeverity;
    DWORD m_dwFlags;
@@ -78,6 +79,9 @@ public:
    DWORD SourceId(void) { return m_dwSource; }
    const char *Message(void) { return m_pszMessageText; }
    time_t TimeStamp(void) { return m_tTimeStamp; }
+   
+   QWORD GetRootId(void) { return m_qwRootId; }
+   void SetRootId(QWORD qwId) { m_qwRootId = qwId; }
 
    void PrepareMessage(NXC_EVENT *pEventData);
 
@@ -165,6 +169,7 @@ BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
 BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...);
 void ReloadEvents(void);
+void CorrelateEvent(Event *pEvent);
 
 
 //

@@ -50,6 +50,7 @@ static RWLOCK m_rwlockTemplateAccess;
 Event::Event()
 {
    m_qwId = 0;
+   m_qwRootId = 0;
    m_dwCode = 0;
    m_dwSeverity = 0;
    m_dwSource = 0;
@@ -69,6 +70,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
 {
    m_tTimeStamp = time(NULL);
    m_qwId = CreateUniqueEventId();
+   m_qwRootId = 0;
    m_dwCode = pTemplate->dwCode;
    m_dwSeverity = pTemplate->dwSeverity;
    m_dwFlags = pTemplate->dwFlags;

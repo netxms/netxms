@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,22 +16,17 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netxms-version.h
+** $module: correlate.cpp
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#include "nxcore.h"
 
 
 //
-// Version constants 
+// Correlate event
 //
 
-#define NETXMS_VERSION_MAJOR      0
-#define NETXMS_VERSION_MINOR      1
-#define NETXMS_VERSION_BUILD      11
-#define NETXMS_VERSION_STRING     _T("0.1.11")
-
-
-#endif
+void CorrelateEvent(Event *pEvent)
+{
+}

@@ -130,6 +130,10 @@ SOURCE=.\container.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\correlate.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\datacoll.cpp
 # End Source File
 # Begin Source File
