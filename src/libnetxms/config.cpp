@@ -28,11 +28,13 @@
 // Universal configuration loader
 //
 
-DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint)
+DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
+                                        NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint)
 {
    FILE *cfg;
    char *ptr, *eptr, szBuffer[4096];
    int i, iSourceLine = 0, iErrors = 0;
+   BOOL bActiveSection = (pszSection[0] == 0);
 
    cfg = fopen(pszFileName, "r");
    if (cfg == NULL)
@@ -59,80 +61,92 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, NX_CFG_TEMPLATE *pTem
       if (szBuffer[0] == 0)
          continue;
 
-      // Divide on two parts at = sign
-      ptr = strchr(szBuffer, '=');
-      if (ptr == NULL)
+      // Check if it's a section name
+      if (szBuffer[0] == '*')
       {
-         iErrors++;
-         if (bPrint)
-            printf("Syntax error in configuration file at line %d\n", iSourceLine);
-         continue;
+         if (!stricmp(&szBuffer[1], pszSection))
+            bActiveSection = TRUE;
       }
-      *ptr = 0;
-      ptr++;
-      StrStrip(szBuffer);
-      StrStrip(ptr);
-
-      // Find corresponding token in template list
-      for(i = 0; pTemplateList[i].iType != CT_END_OF_LIST; i++)
-         if (!stricmp(pTemplateList[i].szToken, szBuffer))
-         {
-            switch(pTemplateList[i].iType)
-            {
-               case CT_LONG:
-                  *((long *)pTemplateList[i].pBuffer) = strtol(ptr, &eptr, 0);
-                  if (*eptr != 0)
-                  {
-                     iErrors++;
-                     if (bPrint)
-                        printf("Invalid number '%s' in configuration file at line %d\n", ptr, iSourceLine);
-                  }
-                  break;
-               case CT_WORD:
-                  *((WORD *)pTemplateList[i].pBuffer) = (WORD)strtoul(ptr, &eptr, 0);
-                  if (*eptr != 0)
-                  {
-                     iErrors++;
-                     if (bPrint)
-                        printf("Invalid number '%s' in configuration file at line %d\n", ptr, iSourceLine);
-                  }
-                  break;
-               case CT_BOOLEAN:
-                  if (!stricmp(ptr, "yes") || !stricmp(ptr, "true") ||
-                      !stricmp(ptr, "on") || !stricmp(ptr, "1"))
-                  {
-                     *((DWORD *)pTemplateList[i].pBuffer) |= pTemplateList[i].dwBufferSize;
-                  }
-                  else
-                  {
-                     *((DWORD *)pTemplateList[i].pBuffer) &= ~(pTemplateList[i].dwBufferSize);
-                  }
-                  break;
-               case CT_STRING:
-                  strncpy((char *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
-                  break;
-               case CT_STRING_LIST:
-                  if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
-                  {
-                     strncpy((char *)pTemplateList[i].pBuffer + pTemplateList[i].dwBufferPos, 
-                             ptr, pTemplateList[i].dwBufferSize - pTemplateList[i].dwBufferPos - 1);
-                     pTemplateList[i].dwBufferPos += strlen(ptr);
-                     if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
-                        ((char *)pTemplateList[i].pBuffer)[pTemplateList[i].dwBufferPos++] = pTemplateList[i].cSeparator;
-                  }
-                  break;
-               default:
-                  break;
-            }
-            break;
-         }
-
-      // Invalid keyword
-      if (pTemplateList[i].iType == CT_END_OF_LIST)
+      else
       {
-         iErrors++;
-         if (bPrint)
-            printf("Invalid keyword %s in configuration file at line %d\n", szBuffer, iSourceLine);
+         if (!bActiveSection)
+            continue;
+
+         // Divide on two parts at = sign
+         ptr = strchr(szBuffer, '=');
+         if (ptr == NULL)
+         {
+            iErrors++;
+            if (bPrint)
+               printf("Syntax error in configuration file at line %d\n", iSourceLine);
+            continue;
+         }
+         *ptr = 0;
+         ptr++;
+         StrStrip(szBuffer);
+         StrStrip(ptr);
+
+         // Find corresponding token in template list
+         for(i = 0; pTemplateList[i].iType != CT_END_OF_LIST; i++)
+            if (!stricmp(pTemplateList[i].szToken, szBuffer))
+            {
+               switch(pTemplateList[i].iType)
+               {
+                  case CT_LONG:
+                     *((long *)pTemplateList[i].pBuffer) = strtol(ptr, &eptr, 0);
+                     if (*eptr != 0)
+                     {
+                        iErrors++;
+                        if (bPrint)
+                           printf("Invalid number '%s' in configuration file at line %d\n", ptr, iSourceLine);
+                     }
+                     break;
+                  case CT_WORD:
+                     *((WORD *)pTemplateList[i].pBuffer) = (WORD)strtoul(ptr, &eptr, 0);
+                     if (*eptr != 0)
+                     {
+                        iErrors++;
+                        if (bPrint)
+                           printf("Invalid number '%s' in configuration file at line %d\n", ptr, iSourceLine);
+                     }
+                     break;
+                  case CT_BOOLEAN:
+                     if (!stricmp(ptr, "yes") || !stricmp(ptr, "true") ||
+                         !stricmp(ptr, "on") || !stricmp(ptr, "1"))
+                     {
+                        *((DWORD *)pTemplateList[i].pBuffer) |= pTemplateList[i].dwBufferSize;
+                     }
+                     else
+                     {
+                        *((DWORD *)pTemplateList[i].pBuffer) &= ~(pTemplateList[i].dwBufferSize);
+                     }
+                     break;
+                  case CT_STRING:
+                     strncpy((char *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
+                     break;
+                  case CT_STRING_LIST:
+                     if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
+                     {
+                        strncpy((char *)pTemplateList[i].pBuffer + pTemplateList[i].dwBufferPos, 
+                                ptr, pTemplateList[i].dwBufferSize - pTemplateList[i].dwBufferPos - 1);
+                        pTemplateList[i].dwBufferPos += strlen(ptr);
+                        if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
+                           ((char *)pTemplateList[i].pBuffer)[pTemplateList[i].dwBufferPos++] = pTemplateList[i].cSeparator;
+                     }
+                     break;
+                  default:
+                     break;
+               }
+               break;
+            }
+
+         // Invalid keyword
+         if (pTemplateList[i].iType == CT_END_OF_LIST)
+         {
+            iErrors++;
+            if (bPrint)
+               printf("Invalid keyword %s in configuration file at line %d\n", szBuffer, iSourceLine);
+         }
       }
    }
    fclose(cfg);

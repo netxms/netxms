@@ -246,6 +246,11 @@ typedef struct
 #define CMD_CREATE_ACTION           0x0051
 #define CMD_DELETE_ACTION           0x0052
 #define CMD_ACTION_DATA             0x0053
+#define CMD_GET_CONTAINER_CAT_LIST  0x0054
+#define CMD_CONTAINER_CAT_DATA      0x0055
+#define CMD_DELETE_CONTAINER_CAT    0x0056
+#define CMD_CREATE_CONTAINER_CAT    0x0057
+#define CMD_MODIFY_CONTAINER_CAT    0x0058
 
 
 //
@@ -354,6 +359,8 @@ typedef struct
 #define VID_ACTION_DATA             ((DWORD)100)
 #define VID_EMAIL_SUBJECT           ((DWORD)101)
 #define VID_RCPT_ADDR               ((DWORD)102)
+#define VID_CATEGORY_NAME           ((DWORD)103)
+#define VID_CATEGORY_ID             ((DWORD)104)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

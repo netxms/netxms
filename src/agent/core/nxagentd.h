@@ -118,6 +118,26 @@
 
 
 //
+// Attributes for H_NetIPStats and H_NetInterfacStats
+//
+
+#ifdef _WIN32
+#define NET_IP_FORWARDING        1
+
+#define NET_IF_BYTES_IN          1
+#define NET_IF_BYTES_OUT         2
+#define NET_IF_DESCR             3
+#define NET_IF_IN_ERRORS         4
+#define NET_IF_LINK              5
+#define NET_IF_OUT_ERRORS        6
+#define NET_IF_PACKETS_IN        7
+#define NET_IF_PACKETS_OUT       8
+#define NET_IF_SPEED             9
+#define NET_IF_ADMIN_STATUS      10
+#endif
+
+
+//
 // Request types for H_MemoryInfo
 //
 
@@ -138,8 +158,8 @@
 // Action types
 //
 
-#define ACTION_EXEC        1
-#define ACTION_SUBAGENT    2
+#define AGENT_ACTION_EXEC        1
+#define AGENT_ACTION_SUBAGENT    2
 
 
 //
@@ -281,6 +301,7 @@ extern DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
 extern BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
 extern BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
 extern BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
+extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */
 
 #endif   /* _nxagentd_h_ */

@@ -196,7 +196,7 @@ BEGIN
         POPUP "&Create..."
         BEGIN
             MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
-            MENUITEM "&Container",                  ID_OBJECT_CREATE_CONTAINER
+            MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
 
         END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
@@ -296,7 +296,7 @@ BEGIN
         POPUP "&Create"
         BEGIN
             MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
-            MENUITEM "&Container",                  ID_OBJECT_CREATE_CONTAINER
+            MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
 
         END
         MENUITEM "&Bind...",                    ID_OBJECT_BIND
@@ -1020,6 +1020,28 @@ BEGIN
                     WS_TABSTOP,7,7,189,132,WS_EX_CLIENTEDGE
 END
 
+IDD_CREATE_OBJECT DIALOG DISCARDABLE  0, 0, 229, 153
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Object"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,27,146,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO_CATEGORY,13,55,146,30,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_DESCRIPTION,13,80,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,110,115,50,12
+    DEFPUSHBUTTON   "OK",IDOK,172,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,24,50,14
+    GROUPBOX        "New object",IDC_STATIC,7,7,158,93
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+    LTEXT           "Category",IDC_STATIC_CATEGORY,13,45,29,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,104,158,42
+    ICON            "",IDC_ICON_PARENT,14,117,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,117,54,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,131,112,9
+    LTEXT           "Description",IDC_STATIC,13,71,36,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1286,6 +1308,14 @@ BEGIN
         RIGHTMARGIN, 252
         TOPMARGIN, 7
         BOTTOMMARGIN, 139
+    END
+
+    IDD_CREATE_OBJECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 146
     END
 END
 #endif    // APSTUDIO_INVOKED

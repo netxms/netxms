@@ -432,6 +432,7 @@ struct CONTAINER_CATEGORY
    DWORD dwCatId;
    char szName[MAX_OBJECT_NAME];
    char *pszDescription;
+   DWORD dwImageId;
 };
 
 

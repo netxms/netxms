@@ -70,7 +70,7 @@ BOOL AddActionFromConfig(char *pszLine)
    pCmdLine++;
    StrStrip(pszLine);
    StrStrip(pCmdLine);
-   return AddAction(pszLine, ACTION_EXEC, pCmdLine);
+   return AddAction(pszLine, AGENT_ACTION_EXEC, pCmdLine);
 }
 
 
@@ -88,7 +88,7 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
          DebugPrintf("Executing action %s of type %d", pszAction, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
-            case ACTION_EXEC:
+            case AGENT_ACTION_EXEC:
                dwErrorCode = ExecuteCommand(m_pActionList[i].pszCmdLine, pArgs);
                break;
             default:

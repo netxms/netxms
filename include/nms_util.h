@@ -153,7 +153,8 @@ extern "C"
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
 
-   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
+   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection, 
+                                           NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
 
    HMODULE LIBNETXMS_EXPORTABLE DLOpen(char *szLibName, char *pszErrorText);
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);

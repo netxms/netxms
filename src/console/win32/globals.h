@@ -208,6 +208,7 @@ extern DEF_IMG *g_pDefImgList;
 extern DWORD g_dwNumActions;
 extern NXC_ACTION *g_pActionList;
 extern HANDLE g_mutexActionListAccess;
+extern NXC_CC_LIST *g_pCCList;
 
 
 //

@@ -82,6 +82,7 @@ DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
 BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
 BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
 BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
+DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */
 
 
@@ -164,6 +165,7 @@ static void ImportSymbols(void)
 {
    HMODULE hModule;
 
+   // USER32.DLL
    hModule = GetModuleHandle("USER32.DLL");
    if (hModule != NULL)
    {
@@ -174,6 +176,7 @@ static void ImportSymbols(void)
       WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "USER32.DLL");
    }
 
+   // KERNEL32.DLL
    hModule = GetModuleHandle("KERNEL32.DLL");
    if (hModule != NULL)
    {
@@ -185,6 +188,7 @@ static void ImportSymbols(void)
       WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "KERNEL32.DLL");
    }
 
+   // PSAPI.DLL
    hModule = GetModuleHandle("PSAPI.DLL");
    if (hModule != NULL)
    {
@@ -193,6 +197,19 @@ static void ImportSymbols(void)
    else
    {
       WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "PSAPI.DLL");
+   }
+
+   // NETMAN.DLL
+   hModule = LoadLibrary("NETMAN.DLL");
+   if (hModule != NULL)
+   {
+      imp_HrLanConnectionNameFromGuidOrPath = 
+         (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddressAndLog(hModule,
+            "HrLanConnectionNameFromGuidOrPath");
+   }
+   else
+   {
+      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "NETMAN.DLL");
    }
 }
 
@@ -404,7 +421,7 @@ int main(int argc, char *argv[])
    switch(iAction)
    {
       case ACTION_RUN_AGENT:
-         if (NxLoadConfig(szConfigFile, cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
+         if (NxLoadConfig(szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
             if ((!stricmp(g_szLogFile, "{syslog}")) || 
                 (!stricmp(g_szLogFile, "{eventlog}")))
@@ -462,7 +479,7 @@ int main(int argc, char *argv[])
          }
          break;
       case ACTION_CHECK_CONFIG:
-         if (NxLoadConfig(szConfigFile, cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
+         if (NxLoadConfig(szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
          {
             ConsolePrintf("Configuration file check failed\n");
             iExitCode = 2;

@@ -103,9 +103,17 @@ static DWORD WINAPI LoginThread(void *pArg)
    DWORD dwResult;
 
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword);
+
+   // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
-      // Now we are connected, request data sync
+      SetInfoText(hWnd, "Loading container categories...");
+      dwResult = NXCLoadCCList(&g_pCCList);
+   }
+
+   // Synchronize objects
+   if (dwResult == RCC_SUCCESS)
+   {
       SetInfoText(hWnd, "Synchronizing objects...");
       dwResult = NXCSyncObjects();
    }

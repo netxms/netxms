@@ -284,6 +284,7 @@ private:
    void DeleteAction(CSCPMessage *pRequest);
    void LockActionDB(DWORD dwRqId, BOOL bLock);
    void SendAllActions(DWORD dwRqId);
+   void SendContainerCategories(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

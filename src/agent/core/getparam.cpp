@@ -47,6 +47,8 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value);
 LONG H_HostName(char *cmd, char *arg, char *value);
 LONG H_SystemUname(char *cmd, char *arg, char *value);
 LONG H_ThreadCount(char *cmd, char *arg, char *value);
+LONG H_NetIPStats(char *cmd, char *arg, char *value);
+LONG H_NetInterfaceStats(char *cmd, char *arg, char *value);
 #endif
 
 
@@ -136,6 +138,17 @@ static AGENT_PARAM m_stdParams[] =
    { "Disk.Free(*)", H_DiskInfo, NULL },
    { "Disk.Total(*)", H_DiskInfo, NULL },
    { "Disk.Used(*)", H_DiskInfo, NULL },
+   { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS },
+   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN },
+   { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_OUT },
+   { "Net.Interface.Description(*)", H_NetInterfaceStats, (char *)NET_IF_DESCR },
+   { "Net.Interface.InErrors(*)", H_NetInterfaceStats, (char *)NET_IF_IN_ERRORS },
+   { "Net.Interface.Link(*)", H_NetInterfaceStats, (char *)NET_IF_LINK },
+   { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, (char *)NET_IF_OUT_ERRORS },
+   { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_IN },
+   { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_OUT },
+   { "Net.Interface.Speed(*)", H_NetInterfaceStats, (char *)NET_IF_SPEED },
+   { "Net.IP.Forwarding", H_NetIPStats, (char *)NET_IP_FORWARDING },
    { "Process.Count(*)", H_ProcCountSpecific, NULL },
    { "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ },
    { "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B },
@@ -187,14 +200,14 @@ static AGENT_PARAM m_stdParams[] =
 
 static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 {
-   { "Actions", H_ActionList, NULL },
+   { "Agent.ActionList", H_ActionList, NULL },
 #ifdef _WIN32
-   { "ArpCache", H_ArpCache, NULL },
-   { "InterfaceList", H_InterfaceList, NULL },
+   { "Net.ArpCache", H_ArpCache, NULL },
+   { "Net.InterfaceList", H_InterfaceList, NULL },
 #endif
-   { "SubAgents", H_SubAgentList, NULL },
-   { "SupportedEnums", H_EnumList, NULL },
-   { "SupportedParameters", H_ParamList, NULL }
+   { "Agent.SubAgentList", H_SubAgentList, NULL },
+   { "Agent.SupportedEnums", H_EnumList, NULL },
+   { "Agent.SupportedParameters", H_ParamList, NULL }
 };
 
 

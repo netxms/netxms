@@ -468,6 +468,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOAD_ACTIONS:
             SendAllActions(pMsg->GetId());
             break;
+         case CMD_GET_CONTAINER_CAT_LIST:
+            SendContainerCategories(pMsg->GetId());
+            break;
          default:
             break;
       }
@@ -2451,4 +2454,33 @@ void ClientSession::SendAllActions(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       SendMessage(&msg);
    }
+}
+
+
+//
+// Send list of configured container categories to client
+//
+
+void ClientSession::SendContainerCategories(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DWORD i;
+
+   // Prepare responce message
+   msg.SetCode(CMD_CONTAINER_CAT_DATA);
+   msg.SetId(dwRqId);
+
+   for(i = 0; i < g_dwNumCategories; i++)
+   {
+      msg.SetVariable(VID_CATEGORY_ID, g_pContainerCatList[i].dwCatId);
+      msg.SetVariable(VID_CATEGORY_NAME, g_pContainerCatList[i].szName);
+      msg.SetVariable(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
+      msg.SetVariable(VID_DESCRIPTION, g_pContainerCatList[i].pszDescription);
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+
+   // Send end-of-list indicator
+   msg.SetVariable(VID_CATEGORY_ID, (DWORD)0);
+   SendMessage(&msg);
 }

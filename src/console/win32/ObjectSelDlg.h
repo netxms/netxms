@@ -7,6 +7,19 @@
 // ObjectSelDlg.h : header file
 //
 
+//
+// Allowed classes
+//
+
+#define SCL_NODE        0x0001
+#define SCL_INTERFACE   0x0002
+#define SCL_CONTAINER   0x0004
+#define SCL_SUBNET      0x0008
+#define SCL_NETWORK     0x0010
+#define SCL_SERVICEROOT 0x0020
+#define SCL_ZONE        0x0040
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CObjectSelDlg dialog
 
@@ -14,6 +27,7 @@ class CObjectSelDlg : public CDialog
 {
 // Construction
 public:
+	DWORD m_dwAllowedClasses;
 	DWORD m_dwNumObjects;
 	DWORD *m_pdwObjectList;
 	CObjectSelDlg(CWnd* pParent = NULL);   // standard constructor

@@ -576,3 +576,81 @@ DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObje
 {
    return ChangeObjectBinding(dwParentObject, dwChildObject, FALSE);
 }
+
+
+//
+// Load container categories
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumCats = 0, dwCatId = 0;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_GET_CONTAINER_CAT_LIST);
+   msg.SetId(dwRqId);
+   SendMsg(&msg);
+
+   *ppList = (NXC_CC_LIST *)malloc(sizeof(NXC_CC_LIST));
+   (*ppList)->dwNumElements = 0;
+   (*ppList)->pElements = NULL;
+
+   do
+   {
+      pResponce = WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId, 2000);
+      if (pResponce != NULL)
+      {
+         dwCatId = pResponce->GetVariableLong(VID_CATEGORY_ID);
+         if (dwCatId != 0)  // 0 is end of list indicator
+         {
+            (*ppList)->pElements = (NXC_CONTAINER_CATEGORY *)realloc((*ppList)->pElements, 
+               sizeof(NXC_CONTAINER_CATEGORY) * ((*ppList)->dwNumElements + 1));
+            (*ppList)->pElements[(*ppList)->dwNumElements].dwId = dwCatId;
+            (*ppList)->pElements[(*ppList)->dwNumElements].dwImageId =
+               pResponce->GetVariableLong(VID_IMAGE_ID);
+            pResponce->GetVariableStr(VID_CATEGORY_NAME, 
+               (*ppList)->pElements[(*ppList)->dwNumElements].szName, MAX_OBJECT_NAME);
+            (*ppList)->pElements[(*ppList)->dwNumElements].pszDescription =
+               pResponce->GetVariableStr(VID_DESCRIPTION);
+            (*ppList)->dwNumElements++;
+         }
+         delete pResponce;
+      }
+      else
+      {
+         dwRetCode = RCC_TIMEOUT;
+         dwCatId = 0;
+      }
+   }
+   while(dwCatId != 0);
+
+   // Destroy results on failure
+   if (dwRetCode != RCC_SUCCESS)
+   {
+      safe_free((*ppList)->pElements);
+      free(*ppList);
+      *ppList = NULL;
+   }
+
+   return dwRetCode;
+}
+
+
+//
+// Destroy list of container categories
+//
+
+void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList)
+{
+   DWORD i;
+
+   if (pList == NULL)
+      return;
+
+   for(i = 0; i < pList->dwNumElements; i++)
+      safe_free(pList->pElements[i].pszDescription);
+   safe_free(pList->pElements);
+   free(pList);
+}

@@ -33,6 +33,7 @@ SERVER:
 - Implement sending of all alarms from database
 - Add signal handlers for UNIX
 - Implement normal mailer shutdown
+- Implement locks table in memory
 
 
 CORE AGENT:

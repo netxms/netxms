@@ -203,3 +203,10 @@ DEF_IMG *g_pDefImgList = NULL;
 DWORD g_dwNumActions = 0;
 NXC_ACTION *g_pActionList = NULL;
 HANDLE g_mutexActionListAccess = INVALID_HANDLE_VALUE;
+
+
+//
+// Container categories list
+//
+
+NXC_CC_LIST *g_pCCList = NULL;

@@ -85,7 +85,7 @@ BOOL LoadConfig(void)
    if (IsStandalone())
       printf("Using configuration file \"%s\"\n", g_szConfigFile);
 
-   if (NxLoadConfig(g_szConfigFile, m_cfgTemplate, IsStandalone()) == NXCFG_ERR_OK)
+   if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, IsStandalone()) == NXCFG_ERR_OK)
    {
       if ((!stricmp(g_szLogFile,"{EventLog}")) ||
           (!stricmp(g_szLogFile,"{syslog}")))

@@ -734,6 +734,30 @@ typedef struct
 
 
 //
+// Container category
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwImageId;
+   char szName[MAX_OBJECT_NAME];
+   char *pszDescription;
+} NXC_CONTAINER_CATEGORY;
+
+
+//
+// Container categories list
+//
+
+typedef struct
+{
+   DWORD dwNumElements;
+   NXC_CONTAINER_CATEGORY *pElements;
+} NXC_CC_LIST;
+
+
+//
 // Functions
 //
 
@@ -767,6 +791,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
 DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId);
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObject);
+
+DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList);
+void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);

@@ -43,6 +43,7 @@ CONTAINER_CATEGORY *FindContainerCategory(DWORD dwId)
 //
 
 Container::Container()
+          :NetObj()
 {
    m_pszDescription = NULL;
    m_pdwChildIdList = NULL;
@@ -56,7 +57,9 @@ Container::Container()
 //
 
 Container::Container(char *pszName, DWORD dwCategory, char *pszDescription)
+          :NetObj()
 {
+   strncpy(m_szName, pszName, MAX_OBJECT_NAME);
    m_pszDescription = strdup(pszDescription);
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;

@@ -323,7 +323,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
    DWORD i;
    char *pChar, *pBuf;
 
-   if (GetList("InterfaceList") == ERR_SUCCESS)
+   if (GetList("Net.InterfaceList") == ERR_SUCCESS)
    {
       pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
       pIfList->iNumEntries = m_dwNumDataLines;
@@ -440,7 +440,7 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
    char szByte[4], *pBuf, *pChar;
    DWORD i, j;
 
-   if (GetList("ArpCache") == ERR_SUCCESS)
+   if (GetList("Net.ArpCache") == ERR_SUCCESS)
    {
       // Create empty structure
       pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));

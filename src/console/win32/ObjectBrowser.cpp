@@ -163,6 +163,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MANAGE, OnUpdateObjectManage)
 	ON_COMMAND(ID_OBJECT_BIND, OnObjectBind)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
+	ON_COMMAND(ID_OBJECT_CREATE_CONTAINER, OnObjectCreateContainer)
+	ON_COMMAND(ID_OBJECT_CREATE_NODE, OnObjectCreateNode)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1256,6 +1258,7 @@ void CObjectBrowser::OnObjectBind()
    CObjectSelDlg dlg;
    DWORD i, dwResult;
 
+   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET;
    if (dlg.DoModal() == IDOK)
    {
       for(i = 0; i < dlg.m_dwNumObjects; i++)
@@ -1269,4 +1272,26 @@ void CObjectBrowser::OnObjectBind()
          }
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CREATE_CONTAINER message handler
+//
+
+void CObjectBrowser::OnObjectCreateContainer() 
+{
+   theApp.CreateObject(OBJECT_CONTAINER, 
+                       (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CREATE_NODE message handler
+//
+
+void CObjectBrowser::OnObjectCreateNode() 
+{
+   theApp.CreateObject(OBJECT_NODE, 
+                       (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }

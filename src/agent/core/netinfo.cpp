@@ -72,44 +72,229 @@ LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
 LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 {
-   MIB_IPADDRTABLE *ifTable;
-   MIB_IFROW ifRow;
-   DWORD i, dwSize, dwError, dwIfType;
-   char szBuffer[2048], szIfName[32], *pszIfName;
+   DWORD dwSize;
+   IP_ADAPTER_INFO *pBuffer, *pInfo;
+   LONG iResult = SYSINFO_RC_SUCCESS;
+   char szAdapterName[MAX_OBJECT_NAME], szBuffer[256];
+   IP_ADDR_STRING *pAddr;
 
-   ifTable = (MIB_IPADDRTABLE *)malloc(SIZEOF_IPADDRTABLE(256));
-   if (ifTable == NULL)
+   if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
-   dwSize = SIZEOF_IPADDRTABLE(256);
-   dwError = GetIpAddrTable(ifTable, &dwSize, FALSE);
-   if (dwError != NO_ERROR)
+   pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
+   if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
    {
-      free(ifTable);
-      return SYSINFO_RC_ERROR;
+      for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
+      {
+         // Get network connection name from adapter name, if possible
+         if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
+         {
+            WORD wGUID[256], wName[256];
+
+            // Resolve GUID to network connection name
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
+            dwSize = 256;
+            if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
+            {
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                                   wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
+            }
+            else
+            {
+               strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            }
+         }
+         else
+         {
+            // We don't have a GUID resolving function, use GUID as name
+            strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+         }
+
+         // Compose result string for each ip address
+         for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
+         {
+            sprintf(szBuffer, "%d %s/%d %d %s", pInfo->Index, 
+                    pAddr->IpAddress.String, 
+                    BitsInMask(inet_addr(pAddr->IpMask.String)),
+                    pInfo->Type, szAdapterName);
+            NxAddResultString(value, szBuffer);
+         }
+      }
+   }
+   else
+   {
+      iResult = SYSINFO_RC_ERROR;
    }
 
-   for(i = 0; i < ifTable->dwNumEntries; i++)
+   free(pBuffer);
+   return iResult;
+}
+
+
+//
+// Get IP statistics
+//
+
+LONG H_NetIPStats(char *cmd, char *arg, char *value)
+{
+   MIB_IPSTATS ips;
+   LONG iResult = SYSINFO_RC_SUCCESS;
+
+   if (GetIpStatistics(&ips) == NO_ERROR)
    {
-      ifRow.dwIndex = ifTable->table[i].dwIndex;
-      if (GetIfEntry(&ifRow) == NO_ERROR)
+      switch((int)arg)
       {
-         dwIfType = ifRow.dwType;
-         pszIfName = (char *)ifRow.bDescr;
+         case NET_IP_FORWARDING:
+            ret_int(value, ips.dwForwarding);
+            break;
+         default:
+            iResult = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+   }
+   else
+   {
+      iResult = SYSINFO_RC_ERROR;
+   }
+
+   return iResult;
+}
+
+
+//
+// Get adapter index from name
+//
+
+static DWORD AdapterNameToIndex(char *pszName)
+{
+   DWORD dwSize, dwIndex = 0;
+   IP_ADAPTER_INFO *pBuffer, *pInfo;
+   char szAdapterName[MAX_OBJECT_NAME];
+
+   if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
+      return 0;
+
+   pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
+   if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
+   {
+      for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
+      {
+         // Get network connection name from adapter name, if possible
+         if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
+         {
+            WORD wGUID[256], wName[256];
+
+            // Resolve GUID to network connection name
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
+            dwSize = 256;
+            if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
+            {
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                                   wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
+            }
+            else
+            {
+               strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            }
+         }
+         else
+         {
+            // We don't have a GUID resolving function, use GUID as name
+            strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+         }
+
+         if (!stricmp(szAdapterName, pszName))
+         {
+            dwIndex = pInfo->Index;
+            break;
+         }
+      }
+   }
+
+   free(pBuffer);
+   return dwIndex;
+}
+
+
+//
+// Get interface statistics
+//
+
+LONG H_NetInterfaceStats(char *cmd, char *arg, char *value)
+{
+   LONG iResult = SYSINFO_RC_SUCCESS;
+   char *eptr, szBuffer[256];
+   DWORD dwIndex;
+
+   NxGetParameterArg(cmd, 1, szBuffer, 256);
+   if (szBuffer[0] == 0)
+   {
+      iResult = SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      // Determine if it index or name
+      dwIndex = strtoul(szBuffer, &eptr, 10);
+      if (*eptr != 0)
+      {
+         // It's a name, determine index
+         dwIndex = AdapterNameToIndex(szBuffer);
+      }
+
+      if (dwIndex != 0)
+      {
+         MIB_IFROW info;
+
+         info.dwIndex = dwIndex;
+         if (GetIfEntry(&info) == NO_ERROR)
+         {
+            switch((int)arg)
+            {
+               case NET_IF_BYTES_IN:
+                  ret_uint(value, info.dwInOctets);
+                  break;
+               case NET_IF_BYTES_OUT:
+                  ret_uint(value, info.dwOutOctets);
+                  break;
+               case NET_IF_DESCR:
+                  ret_string(value, (char *)info.bDescr);
+                  break;
+               case NET_IF_IN_ERRORS:
+                  ret_uint(value, info.dwInErrors);
+                  break;
+               case NET_IF_LINK:
+                  ret_uint(value, (info.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED) ? 1 : 0);
+                  break;
+               case NET_IF_OUT_ERRORS:
+                  ret_uint(value, info.dwOutErrors);
+                  break;
+               case NET_IF_PACKETS_IN:
+                  ret_uint(value, info.dwInUcastPkts + info.dwInNUcastPkts);
+                  break;
+               case NET_IF_PACKETS_OUT:
+                  ret_uint(value, info.dwOutUcastPkts + info.dwOutNUcastPkts);
+                  break;
+               case NET_IF_SPEED:
+                  ret_uint(value, info.dwSpeed);
+                  break;
+               case NET_IF_ADMIN_STATUS:
+                  ret_uint(value, info.dwAdminStatus ? 1 : 0);
+                  break;
+               default:
+                  iResult = SYSINFO_RC_UNSUPPORTED;
+                  break;
+            }
+         }
+         else
+         {
+            iResult = SYSINFO_RC_ERROR;
+         }
       }
       else
       {
-         dwIfType = IFTYPE_OTHER;
-         sprintf(szIfName, "IF-UNKNOWN-%d", ifTable->table[i].dwIndex);
-         pszIfName = szIfName;
+         iResult = SYSINFO_RC_UNSUPPORTED;
       }
-      sprintf(szBuffer, "%d %d.%d.%d.%d/%d %d %s", ifTable->table[i].dwIndex,
-              ifTable->table[i].dwAddr & 255, (ifTable->table[i].dwAddr >> 8) & 255,
-              (ifTable->table[i].dwAddr >> 16) & 255, ifTable->table[i].dwAddr >> 24,
-              BitsInMask(ifTable->table[i].dwMask), dwIfType, pszIfName);
-      NxAddResultString(value, szBuffer);
    }
 
-   free(ifTable);
-   return SYSINFO_RC_SUCCESS;
+   return iResult;
 }

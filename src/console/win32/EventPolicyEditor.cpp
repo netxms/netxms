@@ -561,6 +561,7 @@ void CEventPolicyEditor::AddSource(void)
    DWORD i, j;
    int iRow;
 
+   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_NETWORK | SCL_SERVICEROOT;
    if (dlg.DoModal() == IDOK)
    {
       iRow = m_wndRuleList.GetCurrentRow();

@@ -23,6 +23,7 @@ CObjectSelDlg::CObjectSelDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
    m_dwNumObjects = 0;
    m_pdwObjectList = NULL;
+   m_dwAllowedClasses = 0xFFFF;  // Allow all classes by default
 }
 
 
@@ -62,6 +63,9 @@ BOOL CObjectSelDlg::OnInitDialog()
    DWORD i, dwNumObjects;
    int iItem;
    CBitmap bmp;
+   static DWORD dwClassMask[8] = { 0, SCL_SUBNET, SCL_NODE, SCL_INTERFACE,
+                                   SCL_NETWORK, SCL_CONTAINER, SCL_ZONE,
+                                   SCL_SERVICEROOT };
 
 	CDialog::OnInitDialog();
 
@@ -80,11 +84,7 @@ BOOL CObjectSelDlg::OnInitDialog()
    NXCLockObjectIndex();
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
-      if ((pIndex[i].pObject->iClass == OBJECT_NODE) ||
-          (pIndex[i].pObject->iClass == OBJECT_SUBNET) ||
-          (pIndex[i].pObject->iClass == OBJECT_NETWORK) ||
-          (pIndex[i].pObject->iClass == OBJECT_CONTAINER) ||
-          (pIndex[i].pObject->iClass == OBJECT_SERVICEROOT))
+      if (dwClassMask[pIndex[i].pObject->iClass] & m_dwAllowedClasses)
       {
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pIndex[i].pObject->szName,
                                           GetObjectImageIndex(pIndex[i].pObject));

@@ -125,6 +125,10 @@ SOURCE=.\ControlPanel.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateObjectDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DataCollectionEditor.cpp
 # End Source File
 # Begin Source File
@@ -359,6 +363,10 @@ SOURCE=.\ConsolePropsGeneral.h
 # Begin Source File
 
 SOURCE=.\ControlPanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateObjectDlg.h
 # End Source File
 # Begin Source File
 

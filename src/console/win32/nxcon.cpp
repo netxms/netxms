@@ -6,6 +6,7 @@
 
 #include "MainFrm.h"
 #include "LoginDialog.h"
+#include "CreateObjectDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -294,6 +295,7 @@ int CConsoleApp::ExitInstance()
    NXCSetDebugCallback(NULL);
    NXCDisconnect();
    NXCShutdown();
+   NXCDestroyCCList(g_pCCList);
 
    // Save configuration
    WriteProfileInt(_T("General"), _T("Options"), g_dwOptions);
@@ -1165,4 +1167,39 @@ HMENU CConsoleApp::LoadAppMenu(HMENU hViewMenu)
    }
 
    return hMenu;
+}
+
+
+//
+// Create new object
+//
+
+void CConsoleApp::CreateObject(int iClass, DWORD dwParent)
+{
+   CCreateObjectDlg dlg;
+   DWORD dwResult, dwObjectId;
+   NXC_OBJECT_CREATE_INFO ci;
+
+   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = iClass;
+      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      switch(iClass)
+      {
+         case OBJECT_NODE:
+            break;
+         case OBJECT_CONTAINER:
+            ci.cs.container.dwCategory = 1;
+            ci.cs.container.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
+            break;
+      }
+
+      dwResult = DoRequestArg2(NXCCreateObject, &ci, &dwObjectId, "Creating object...");
+      if (dwResult != RCC_SUCCESS)
+      {
+         ErrorBox(dwResult, "Error creating object: %s");
+      }
+   }
 }
