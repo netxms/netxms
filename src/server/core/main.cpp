@@ -256,7 +256,6 @@ void Main(void)
                {
                   DWORD i;
                   char szBuffer[32];
-                  static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
 
                   for(i = 0; i < g_dwInterfaceAddrIndexSize; i++)
                   {
@@ -278,6 +277,20 @@ void Main(void)
                DbgTestMutex(g_hMutexInterfaceIndex, "g_hMutexInterfaceIndex");
                DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
                printf("*** Done ***\n");
+               break;
+            case 'p':   // Performance test
+            case 'P':
+               {
+                  DWORD i, dwStart, dwElapsed;
+
+                  dwStart = GetTickCount();
+                  for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+                  {
+                  }
+
+                  dwElapsed = GetTickCount() - dwStart;
+                  printf("*** Time elapsed: %lu milliseconds ***\n", dwElapsed);
+               }
                break;
             default:
                break;

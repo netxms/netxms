@@ -31,6 +31,7 @@
 //
 
 class AgentConnection;
+class Queue;
 
 
 //
@@ -111,6 +112,7 @@ struct DC_ITEM
 {
    DWORD dwId;
    char szName[MAX_ITEM_NAME];
+   time_t tLastPoll;       // Last poll time
    int iPollingInterval;   // Polling interval in seconds
    int iRetentionTime;     // Retention time in seconds
    BYTE iSource;           // SNMP or native agent?
@@ -373,11 +375,14 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    void LoadItemsFromDB(void);
+   void SetItemStatus(DWORD dwItemId, int iStatus);
+   void SetItemLastPollTime(DWORD dwItemId, time_t tPollTime);
 
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer);
+   void QueueItemsForPolling(Queue *pPollerQueue);
 };
 
 

@@ -40,7 +40,9 @@ static MUTEX m_hMutexListAccess;
 static void DataCollector(void *pArg)
 {
    DCI_ENVELOPE *pEnvelope;
+   Node *pNode;
    DWORD dwError;
+   time_t currTime;
    char *pBuffer, szQuery[MAX_LINE_SIZE + 128];
 
    pBuffer = (char *)malloc(MAX_LINE_SIZE);
@@ -48,41 +50,46 @@ static void DataCollector(void *pArg)
    while(1)
    {
       pEnvelope = (DCI_ENVELOPE *)m_pItemQueue->GetOrBlock();
-      if (pEnvelope->bDeleted)
+      pNode = (Node *)FindObjectById(pEnvelope->dwNodeId);
+      if (pNode != NULL)
       {
-
-      }
-      else
-      {
-         switch(pEnvelope->pItem->iSource)
+         switch(pEnvelope->iDataSource)
          {
             case DS_INTERNAL:    // Server internal parameters (like status)
-               dwError = pEnvelope->pNode->GetInternalItem(pEnvelope->pItem->szName, MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetInternalItem(pEnvelope->szItemName, MAX_LINE_SIZE, pBuffer);
                break;
             case DS_SNMP_AGENT:
-               dwError = pEnvelope->pNode->GetItemFromSNMP(pEnvelope->pItem->szName, MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromSNMP(pEnvelope->szItemName, MAX_LINE_SIZE, pBuffer);
                break;
             case DS_NATIVE_AGENT:
-               dwError = pEnvelope->pNode->GetItemFromAgent(pEnvelope->pItem->szName, MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromAgent(pEnvelope->szItemName, MAX_LINE_SIZE, pBuffer);
                break;
          }
+
+         // Update item's last poll time
+         currTime = time(NULL);
+         pNode->SetItemLastPollTime(pEnvelope->dwItemId, currTime);
 
          // Store received value into database or handle error
          switch(dwError)
          {
             case DCE_SUCCESS:
                sprintf(szQuery, "INSERT INTO idata_%d (item_id,timestamp,value)"
-                                " VALUES (%d,%d,'%s')", pEnvelope->pNode->Id(),
-                       pEnvelope->pItem->dwId, time(NULL), pBuffer);
+                                " VALUES (%d,%d,'%s')", pEnvelope->dwNodeId,
+                       pEnvelope->dwItemId, currTime, pBuffer);
                DBQuery(g_hCoreDB, szQuery);
                break;
             case DCE_COMM_ERROR:
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status
-               pEnvelope->pItem->iStatus = ITEM_STATUS_NOT_SUPPORTED;
+               pNode->SetItemStatus(pEnvelope->dwItemId, ITEM_STATUS_NOT_SUPPORTED);
                break;
          }
+      }
+      else     /* pNode == NULL */
+      {
+printf("Attempt to collect information for non-existing node.\n");
       }
    }
 }
@@ -111,6 +118,7 @@ BOOL InitDataCollector(void)
 }
 
 
+/*
 //
 // Delete all items for specific node from polls
 //
@@ -127,3 +135,4 @@ void DeleteAllItemsForNode(DWORD dwNodeId)
 
    MutexUnlock(m_hMutexListAccess);
 }
+*/

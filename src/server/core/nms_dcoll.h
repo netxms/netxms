@@ -39,11 +39,10 @@
 
 typedef struct
 {
-   time_t tNextPoll;
-   MUTEX hMutex;
-   BOOL bDeleted;
-   DC_ITEM *pItem;
-   Node *pNode;
+   DWORD dwNodeId;
+   DWORD dwItemId;
+   char szItemName[MAX_ITEM_NAME];
+   int iDataSource;
 } DCI_ENVELOPE;
 
 

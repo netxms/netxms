@@ -658,6 +658,7 @@ void Node::LoadItemsFromDB(void)
             m_pItems[i].iDataType = (BYTE)DBGetFieldLong(hResult, i, 3);
             m_pItems[i].iPollingInterval = DBGetFieldLong(hResult, i, 4);
             m_pItems[i].iRetentionTime = DBGetFieldLong(hResult, i, 5);
+            m_pItems[i].tLastPoll = 0;
          }
       }
       DBFreeResult(hResult);
@@ -751,4 +752,37 @@ DWORD Node::GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer)
    }
 
    return dwError;
+}
+
+
+//
+// Put items which requires polling into the queue
+//
+
+void Node::QueueItemsForPolling(Queue *pPollerQueue)
+{
+   DWORD i;
+   time_t currTime;
+
+   currTime = time(NULL);
+
+   Lock();
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      if (m_pItems[i].tLastPoll + m_pItems[i].iPollingInterval < currTime)
+      {
+         DCI_ENVELOPE *pEnv;
+
+         // Create envelope for item
+         pEnv = (DCI_ENVELOPE *)malloc(sizeof(DCI_ENVELOPE));
+         pEnv->dwItemId = m_pItems[i].dwId;
+         pEnv->dwNodeId = m_dwId;
+         pEnv->iDataSource = m_pItems[i].iSource;
+         strcpy(pEnv->szItemName, m_pItems[i].szName);
+
+         // Put request into queue
+         pPollerQueue->Put(pEnv);
+      }
+   }
+   Unlock();
 }
