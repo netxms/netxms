@@ -19,7 +19,33 @@ CREATE TABLE Users
 	id integer not null,
 	name varchar(64) not null,
 	password varchar(64),
+	access integer,
 	PRIMARY KEY(id)
+);
+
+
+--
+-- User groups
+--
+
+CREATE TABLE UserGroups
+(
+	id integer not null,
+	name varchar(64) not null,
+	access integer,
+	PRIMARY KEY(id)
+);
+
+
+--
+-- Users to groups mapping
+--
+
+CREATE TABLE UserGroupMembers
+(
+	group_id integer not null,
+	user_id integer not null,
+	KEY(group_id)
 );
 
 
@@ -60,6 +86,7 @@ CREATE TABLE Nodes
 	secret varchar(64),
 	agent_port integer,
 	status_poll_type integer,
+	inherit_access_rights integer,
 	PRIMARY KEY(id)
 );
 
@@ -109,6 +136,19 @@ CREATE TABLE nsmap
 	subnet_id integer not null,
 	node_id integer not null,
 	KEY (subnet_id)
+);
+
+
+--
+-- Objects' ACLs
+--
+
+CREATE TABLE acl
+(
+	object_id integer not null,
+	user_id integer not null,
+	access_rights integer not null,
+	KEY(object_id)
 );
 
 
