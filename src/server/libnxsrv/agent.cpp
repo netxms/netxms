@@ -308,9 +308,9 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 
    if (GetList("InterfaceList") == ERR_SUCCESS)
    {
-      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+      pIfList = (INTERFACE_LIST *)MemAlloc(sizeof(INTERFACE_LIST));
       pIfList->iNumEntries = m_dwNumDataLines;
-      pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      pIfList->pInterfaces = (INTERFACE_INFO *)MemAlloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
       memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
       for(i = 0; i < m_dwNumDataLines; i++)
       {
@@ -424,9 +424,9 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
    if (GetList("ArpCache") == ERR_SUCCESS)
    {
       // Create empty structure
-      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+      pArpCache = (ARP_CACHE *)MemAlloc(sizeof(ARP_CACHE));
       pArpCache->dwNumEntries = m_dwNumDataLines;
-      pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
+      pArpCache->pEntries = (ARP_ENTRY *)MemAlloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
       memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
 
       szByte[2] = 0;
