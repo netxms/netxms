@@ -77,6 +77,10 @@ typedef void * HMODULE;
 
 #include <netinet/in.h>
 
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
 #endif
 
 
