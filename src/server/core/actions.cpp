@@ -219,7 +219,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
       }
       else
       {
-         char *pszExpandedData;
+         char *pszExpandedData, *pszExpandedSubject;
 
          pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData));
          switch(pAction->iType)
@@ -231,7 +231,9 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
             case ACTION_SEND_EMAIL:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
-               PostMail(pAction->szRcptAddr, pAction->szEmailSubject, pszExpandedData);
+               pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject);
+               PostMail(pAction->szRcptAddr, pszExpandedSubject, pszExpandedData);
+               free(pszExpandedSubject);
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
