@@ -234,6 +234,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_COMMUNITY_STRING, pObject->node.szCommunityString, MAX_COMMUNITY_LENGTH);
          pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
          pObject->node.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
+         pObject->node.wSNMPVersion = pMsg->GetVariableShort(VID_SNMP_VERSION);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
@@ -485,6 +486,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
       msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
    if (pUpdate->dwFlags & OBJ_UPDATE_IMAGE)
       msg.SetVariable(VID_IMAGE_ID, pUpdate->dwImage);
+   if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_VERSION)
+      msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
    if (pUpdate->dwFlags & OBJ_UPDATE_DESCRIPTION)
       msg.SetVariable(VID_DESCRIPTION, pUpdate->pszDescription);
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)

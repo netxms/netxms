@@ -231,6 +231,7 @@ typedef unsigned long HREQUEST;
 #define RCC_INVALID_EVENT_CODE      ((DWORD)25)
 #define RCC_NO_WOL_INTERFACES       ((DWORD)26)
 #define RCC_NO_MAC_ADDRESS          ((DWORD)27)
+#define RCC_NOT_IMPLEMENTED         ((DWORD)28)
 
 
 //
@@ -444,18 +445,6 @@ typedef struct
 
 
 //
-// Event name/code pair
-//
-
-typedef struct
-{
-   DWORD dwEventId;
-   DWORD dwSeverity;
-   TCHAR szName[MAX_EVENT_NAME];
-} NXC_EVENT_NAME;
-
-
-//
 // Image information
 //
 
@@ -559,6 +548,7 @@ typedef struct
          WORD wAgentPort;     // Listening TCP port for native agent
          WORD wAuthMethod;    // Native agent's authentication method
          TCHAR *pszDescription;
+         WORD wSNMPVersion;
       } node;
       struct
       {
@@ -591,12 +581,12 @@ typedef struct
    int iAgentPort;
    int iAuthType;
    TCHAR *pszSecret;
-   int iSnmpVersion;
    TCHAR *pszCommunity;
    BOOL bInheritRights;
    DWORD dwImage;
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
+   WORD wSNMPVersion;
 } NXC_OBJECT_UPDATE;
 
 
@@ -853,14 +843,15 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
-DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
-DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
+DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg);
+DWORD LIBNXCL_EXPORTABLE NXCGenerateEventId(DWORD *pdwEventId);
+void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate);
+void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventId);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventId);
+DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(void);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
-void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
-                                       DWORD dwSeverity, DWORD dwFlags, const TCHAR *pszName,
-                                       const TCHAR *pszMessage, const TCHAR *pszDescription);
-DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void);
-NXC_EVENT_NAME LIBNXCL_EXPORTABLE *NXCGetEventNamesList(DWORD *pdwNumEvents);
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId);
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, DWORD dwObjectId, int iNumArgs, TCHAR **pArgList);

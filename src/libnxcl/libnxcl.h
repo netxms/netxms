@@ -84,10 +84,13 @@ typedef struct
 void ObjectsInit(void);
 void DestroyAllObjects(void);
 
+void InitEventDB(void);
+void ShutdownEventDB(void);
+void ProcessEventDBRecord(CSCPMessage *pMsg);
+
 void ProcessAlarmUpdate(CSCPMessage *pMsg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
-void ProcessEventDBRecord(CSCPMessage *pMsg);
 void ProcessActionUpdate(CSCPMessage *pMsg);
 
 void ProcessUserDBRecord(CSCPMessage *pMsg);

@@ -274,6 +274,8 @@
 #define IDC_BUTTON_RESOLVE              1173
 #define IDC_BUTTON_NONE                 1174
 #define IDC_EDIT_INSTANCE               1175
+#define IDC_RADIO_VERSION1              1176
+#define IDC_RADIO_VERSION_2C            1177
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -364,7 +366,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        241
 #define _APS_NEXT_COMMAND_VALUE         32897
-#define _APS_NEXT_CONTROL_VALUE         1176
+#define _APS_NEXT_CONTROL_VALUE         1178
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

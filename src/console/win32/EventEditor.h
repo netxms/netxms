@@ -25,13 +25,15 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CEventEditor)
+	protected:
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
+	void UpdateItem(int iItem, NXC_EVENT_TEMPLATE *pData);
 	CImageList *m_pImageList;
-	BOOL m_bModified;
-	void EditEvent(int iItem);
+	BOOL EditEvent(int iItem);
 	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
 	DWORD m_dwNumTemplates;
 	NXC_EVENT_TEMPLATE ** m_ppEventTemplates;
@@ -45,6 +47,12 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnClose();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnUpdateEventEdit(CCmdUI* pCmdUI);
+	afx_msg void OnEventEdit();
+	afx_msg void OnUpdateEventDelete(CCmdUI* pCmdUI);
+	afx_msg void OnEventNew();
+	afx_msg void OnEventDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

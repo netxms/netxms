@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
                         "   check        : Check database for errors\n"
                         "   upgrade      : Upgrade database to new version\n"
                         "Valid options are:\n"
-                        "   -c <config>  : Use alternate configuration file. Default is" DEFAULT_CONFIG_FILE "\n"
+                        "   -c <config>  : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
                         "   -f           : Force repair - do not ask for confirmation.\n"
                         "   -h           : Display help and exit.\n"
                         "   -v           : Display version and exit.\n"

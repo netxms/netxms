@@ -257,8 +257,11 @@ private:
    void LockUserDB(DWORD dwRqId, BOOL bLock);
    void SetConfigVariable(CSCPMessage *pRequest);
    void SendEventDB(DWORD dwRqId);
-   void CloseEventDB(DWORD dwRqId);
+   void LockEventDB(DWORD dwRqId);
+   void UnlockEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pRequest);
+   void DeleteEventTemplate(CSCPMessage *pRequest);
+   void GenerateEventId(DWORD dwRqId);
    void ModifyObject(CSCPMessage *pRequest);
    void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
    void OpenNodeDCIList(CSCPMessage *pRequest);
@@ -272,7 +275,6 @@ private:
    void ProcessEPPRecord(CSCPMessage *pRequest);
    void SendMIBList(DWORD dwRqId);
    void SendMIB(CSCPMessage *pRequest);
-   void SendEventNames(DWORD dwRqId);
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void DeleteObject(CSCPMessage *pRequest);
@@ -340,11 +342,11 @@ void StartDBWriter(void);
 void StopDBWriter(void);
 
 void SnmpInit(void);
-BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr,
+BOOL SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szOidStr,
              const oid *oidBinary, size_t iOidLen, void *pValue,
              DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
-BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
-                   void (* pHandler)(DWORD, const char *, variable_list *, void *), 
+BOOL SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szRootOid,
+                   void (* pHandler)(DWORD, DWORD, const char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose);
 void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize);
 void StrToMac(char *pszStr, BYTE *pBuffer);
@@ -353,9 +355,9 @@ DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 void InitLocalNetInfo(void);
 
 ARP_CACHE *GetLocalArpCache(void);
-ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
+ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, const char *szCommunity);
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity, DWORD dwNodeType);
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, DWORD dwNodeType);
 INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 
@@ -393,7 +395,7 @@ void InitMailer(void);
 void ShutdownMailer(void);
 void PostMail(char *pszRcpt, char *pszSubject, char *pszText);
 
-void GetAccelarVLANIfList(DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
+void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
 
 #ifdef _WIN32
 

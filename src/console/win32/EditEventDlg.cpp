@@ -62,3 +62,16 @@ BOOL CEditEventDlg::OnInitDialog()
    
 	return TRUE;
 }
+
+
+//
+// Handle "OK" button
+//
+
+void CEditEventDlg::OnOK() 
+{
+   m_dwSeverity = m_wndComboBox.GetCurSel();
+	
+	CDialog::OnOK();
+}
+

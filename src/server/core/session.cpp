@@ -435,14 +435,23 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars();
             break;
-         case CMD_OPEN_EVENT_DB:
+         case CMD_LOAD_EVENT_DB:
             SendEventDB(pMsg->GetId());
             break;
-         case CMD_CLOSE_EVENT_DB:
-            CloseEventDB(pMsg->GetId());
+         case CMD_LOCK_EVENT_DB:
+            LockEventDB(pMsg->GetId());
+            break;
+         case CMD_UNLOCK_EVENT_DB:
+            UnlockEventDB(pMsg->GetId());
             break;
          case CMD_SET_EVENT_INFO:
             SetEventInfo(pMsg);
+            break;
+         case CMD_DELETE_EVENT_TEMPLATE:
+            DeleteEventTemplate(pMsg);
+            break;
+         case CMD_GENERATE_EVENT_ID:
+            GenerateEventId(pMsg->GetId());
             break;
          case CMD_MODIFY_OBJECT:
             ModifyObject(pMsg);
@@ -515,9 +524,6 @@ void ClientSession::ProcessingThread(void)
          case CMD_UNBIND_OBJECT:
             ChangeObjectBinding(pMsg, FALSE);
             break;
-         case CMD_GET_EVENT_NAMES:
-            SendEventNames(pMsg->GetId());
-            break;
          case CMD_GET_IMAGE_LIST:
             SendImageCatalogue(this, pMsg->GetId(), pMsg->GetVariableShort(VID_IMAGE_FORMAT));
             break;
@@ -572,6 +578,14 @@ void ClientSession::ProcessingThread(void)
             OnWakeUpNode(pMsg);
             break;
          default:
+            {
+               CSCPMessage responce;
+
+               responce.SetId(pMsg->GetId());
+               responce.SetCode(CMD_REQUEST_COMPLETED);
+               responce.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+               SendMessage(&responce);
+            }
             break;
       }
       delete pMsg;
@@ -640,17 +654,8 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       SendMessage(&msg);
    }
-   else if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
-   {
-      msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
-      msg.SetVariable(VID_LOCKED_BY, szBuffer);
-      SendMessage(&msg);
-   }
    else
    {
-      m_dwFlags |= CSF_EVENT_DB_LOCKED;
-      m_dwFlags &= ~CSF_EVENT_DB_MODIFIED;
-
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       SendMessage(&msg);
       msg.DeleteAllVariables();
@@ -684,9 +689,42 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       }
 
       // Send end-of-list indicator
-      msg.SetCode(CMD_EVENT_DB_EOF);
+      msg.SetVariable(VID_EVENT_ID, (DWORD)0);
       SendMessage(&msg);
    }
+}
+
+
+//
+// Lock event configuration database
+//
+
+void ClientSession::LockEventDB(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   char szBuffer[1024];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (!CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+   {
+      msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+      msg.SetVariable(VID_LOCKED_BY, szBuffer);
+   }
+   else
+   {
+      m_dwFlags |= CSF_EVENT_DB_LOCKED;
+      m_dwFlags &= ~CSF_EVENT_DB_MODIFIED;
+
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   }
+   SendMessage(&msg);
 }
 
 
@@ -694,7 +732,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
 // Close event configuration database
 //
 
-void ClientSession::CloseEventDB(DWORD dwRqId)
+void ClientSession::UnlockEventDB(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -719,6 +757,192 @@ void ClientSession::CloseEventDB(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
+   SendMessage(&msg);
+}
+
+
+//
+// Update event template
+//
+
+void ClientSession::SetEventInfo(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare reply message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check if we have event configuration database opened
+   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      // Check access rights
+      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+      {
+         char szQuery[4096], szName[MAX_EVENT_NAME];
+         DWORD dwEventId;
+         BOOL bEventExist = FALSE;
+         DB_RESULT hResult;
+
+         // Check if event with specific id exists
+         dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
+         sprintf(szQuery, "SELECT event_id FROM events WHERE event_id=%ld", dwEventId);
+         hResult = DBSelect(g_hCoreDB, szQuery);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+               bEventExist = TRUE;
+            DBFreeResult(hResult);
+         }
+
+         // Check that we are not trying to create event below 100000
+         if (bEventExist || (dwEventId >= FIRST_USER_EVENT_ID))
+         {
+            // Prepare and execute SQL query
+            pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
+            if (IsValidObjectName(szName))
+            {
+               char szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
+
+               pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
+               pszEscMsg = EncodeSQLString(szMessage);
+
+               pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+               pszEscDescr = EncodeSQLString(pszDescription);
+               safe_free(pszDescription);
+
+               if (bEventExist)
+               {
+                  sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
+                          szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
+                          pszEscMsg, pszEscDescr, dwEventId);
+               }
+               else
+               {
+                  sprintf(szQuery, "INSERT INTO events (event_id,name,severity,flags,"
+                                   "message,description) VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
+                          dwEventId, szName, pRequest->GetVariableLong(VID_SEVERITY),
+                          pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
+               }
+
+               free(pszEscMsg);
+               free(pszEscDescr);
+
+               if (DBQuery(g_hCoreDB, szQuery))
+               {
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                  m_dwFlags |= CSF_EVENT_DB_MODIFIED;
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_EVENT_CODE);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Delete event template
+//
+
+void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwEventId;
+
+   // Prepare reply message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check if we have event configuration database opened
+   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
+
+      // Check access rights
+      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventId >= FIRST_USER_EVENT_ID))
+      {
+         TCHAR szQuery[256];
+
+         _stprintf(szQuery, _T("DELETE FROM events WHERE event_id=%ld"), dwEventId);
+         if (DBQuery(g_hCoreDB, szQuery))
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            m_dwFlags |= CSF_EVENT_DB_LOCKED;
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Generate ID for new event template
+//
+
+void ClientSession::GenerateEventId(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Prepare reply message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   // Check if we have event configuration database opened
+   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      // Check access rights
+      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+      {
+         msg.SetVariable(VID_EVENT_ID, CreateUniqueId(IDG_EVENT));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+
+   // Send responce
    SendMessage(&msg);
 }
 
@@ -919,99 +1143,6 @@ void ClientSession::Notify(DWORD dwCode, DWORD dwData)
    msg.SetCode(CMD_NOTIFY);
    msg.SetVariable(VID_NOTIFICATION_CODE, dwCode);
    msg.SetVariable(VID_NOTIFICATION_DATA, dwData);
-   SendMessage(&msg);
-}
-
-
-//
-// Update event template
-//
-
-void ClientSession::SetEventInfo(CSCPMessage *pRequest)
-{
-   CSCPMessage msg;
-
-   // Prepare reply message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(pRequest->GetId());
-
-   // Check if we have event configuration database opened
-   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
-   {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-   }
-   else
-   {
-      // Check access rights
-      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
-      {
-         char szQuery[4096], szName[MAX_EVENT_NAME];
-         DWORD dwEventId;
-         BOOL bEventExist = FALSE;
-         DB_RESULT hResult;
-
-         // Check if event with specific id exists
-         dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
-         sprintf(szQuery, "SELECT event_id FROM events WHERE event_id=%ld", dwEventId);
-         hResult = DBSelect(g_hCoreDB, szQuery);
-         if (hResult != NULL)
-         {
-            if (DBGetNumRows(hResult) > 0)
-               bEventExist = TRUE;
-            DBFreeResult(hResult);
-         }
-
-         // Prepare and execute SQL query
-         pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
-         if (IsValidObjectName(szName))
-         {
-            char szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
-
-            pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
-            pszEscMsg = EncodeSQLString(szMessage);
-
-            pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-            pszEscDescr = EncodeSQLString(pszDescription);
-            safe_free(pszDescription);
-
-            if (bEventExist)
-            {
-               sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
-                       szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
-                       pszEscMsg, pszEscDescr, dwEventId);
-            }
-            else
-            {
-               sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
-                       dwEventId, szName, pRequest->GetVariableLong(VID_SEVERITY),
-                       pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
-            }
-
-            free(pszEscMsg);
-            free(pszEscDescr);
-
-            if (DBQuery(g_hCoreDB, szQuery))
-            {
-               msg.SetVariable(VID_RCC, RCC_SUCCESS);
-               m_dwFlags |= CSF_EVENT_DB_MODIFIED;
-            }
-            else
-            {
-               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-            }
-         }
-         else
-         {
-            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
-         }
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-
-   // Send responce
    SendMessage(&msg);
 }
 
@@ -2165,48 +2296,6 @@ void ClientSession::SendMIB(CSCPMessage *pRequest)
    }
 
    // Send responce
-   SendMessage(&msg);
-}
-
-
-//
-// Send list of event name/identifier pairs
-//
-
-void ClientSession::SendEventNames(DWORD dwRqId)
-{
-   CSCPMessage msg;
-   DB_RESULT hResult;
-
-   msg.SetCode(CMD_EVENT_NAME_LIST);
-   msg.SetId(dwRqId);
-   hResult = DBSelect(g_hCoreDB, "SELECT event_id,name,severity FROM events");
-   if (hResult != NULL)
-   {
-      DWORD i, dwNumEvents;
-      NXC_EVENT_NAME *pList;
-
-      dwNumEvents = DBGetNumRows(hResult);
-      msg.SetVariable(VID_NUM_EVENTS, dwNumEvents);
-      if (dwNumEvents > 0)
-      {
-         pList = (NXC_EVENT_NAME *)malloc(sizeof(NXC_EVENT_NAME) * dwNumEvents);
-         for(i = 0; i < dwNumEvents; i++)
-         {
-            pList[i].dwEventId = htonl(DBGetFieldULong(hResult, i, 0));
-            pList[i].dwSeverity = htonl(DBGetFieldLong(hResult, i, 2));
-            strcpy(pList[i].szName, DBGetField(hResult, i, 1));
-         }
-         msg.SetVariable(VID_EVENT_NAME_TABLE, (BYTE *)pList, sizeof(NXC_EVENT_NAME) * dwNumEvents);
-         free(pList);
-      }
-      DBFreeResult(hResult);
-      msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-   }
    SendMessage(&msg);
 }
 

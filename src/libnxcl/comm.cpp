@@ -154,7 +154,6 @@ static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
                ProcessEvent(pMsg, NULL);
                break;
             case CMD_EVENT_DB_RECORD:
-            case CMD_EVENT_DB_EOF:
                ProcessEventDBRecord(pMsg);
                break;
             case CMD_USER_DATA:

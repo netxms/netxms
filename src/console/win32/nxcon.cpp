@@ -683,7 +683,7 @@ void CConsoleApp::OnControlpanelEvents()
    {
       DWORD dwResult;
 
-      dwResult = DoRequest(NXCOpenEventDB, "Opening event configuration database...");
+      dwResult = DoRequest(NXCLockEventDB, "Locking event configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -792,6 +792,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
          wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
          wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
          wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
+         wndNodeGeneral.m_iSNMPVersion = (pObject->node.wSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
          wndPropSheet.AddPage(&wndNodeGeneral);
       }
       else

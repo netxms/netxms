@@ -46,7 +46,7 @@ struct VLAN_LIST
 // Handler for VLAN enumeration on Passport
 //
 
-static void HandlerVlanList(DWORD dwAddr, const char *pszCommunity, variable_list *pVar, void *pArg)
+static void HandlerVlanList(DWORD dwVersion, DWORD dwAddr, const char *pszCommunity, variable_list *pVar, void *pArg)
 {
    oid oidName[MAX_OID_LEN];
    VLAN_LIST *pVlanList = (VLAN_LIST *)pArg;
@@ -62,19 +62,19 @@ static void HandlerVlanList(DWORD dwAddr, const char *pszCommunity, variable_lis
    // Get VLAN name
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
    oidName[pVar->name_length - 2] = 2;
-   SnmpGet(dwAddr, pszCommunity, NULL, oidName, pVar->name_length, 
+   SnmpGet(dwVersion, dwAddr, pszCommunity, NULL, oidName, pVar->name_length, 
            pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, FALSE, FALSE);
 
    // Get VLAN interface index
    oidName[pVar->name_length - 2] = 6;
-   SnmpGet(dwAddr, pszCommunity, NULL, oidName, pVar->name_length, 
+   SnmpGet(dwVersion, dwAddr, pszCommunity, NULL, oidName, pVar->name_length, 
            &pVlanList->pList[dwIndex].dwIfIndex, sizeof(DWORD), FALSE, FALSE);
 
    // Get VLAN MAC address
    oidName[pVar->name_length - 2] = 19;
    memset(pVlanList->pList[dwIndex].bMacAddr, 0, MAC_ADDR_LENGTH);
    memset(szBuffer, 0, MAC_ADDR_LENGTH);
-   SnmpGet(dwAddr, pszCommunity, NULL, oidName, pVar->name_length, 
+   SnmpGet(dwVersion, dwAddr, pszCommunity, NULL, oidName, pVar->name_length, 
            szBuffer, 256, FALSE, FALSE);
    memcpy(pVlanList->pList[dwIndex].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
 }
@@ -84,7 +84,7 @@ static void HandlerVlanList(DWORD dwAddr, const char *pszCommunity, variable_lis
 // Handler for VLAN enumeration on Passport
 //
 
-static void HandlerPassportIfList(DWORD dwAddr, const char *pszCommunity, variable_list *pVar, void *pArg)
+static void HandlerPassportIfList(DWORD dwVersion, DWORD dwAddr, const char *pszCommunity, variable_list *pVar, void *pArg)
 {
    oid oidName[MAX_OID_LEN];
    INTERFACE_LIST *pIfList = (INTERFACE_LIST *)pArg;
@@ -113,12 +113,12 @@ static void HandlerPassportIfList(DWORD dwAddr, const char *pszCommunity, variab
       // Get IP address
       memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
       oidName[pVar->name_length - 6] = 2;
-      SnmpGet(dwAddr, pszCommunity, NULL, oidName, pVar->name_length,
+      SnmpGet(dwVersion, dwAddr, pszCommunity, NULL, oidName, pVar->name_length,
               &pIfList->pInterfaces[iIndex].dwIpAddr, sizeof(DWORD), FALSE, FALSE);
 
       // Get netmask
       oidName[pVar->name_length - 6] = 3;
-      SnmpGet(dwAddr, pszCommunity, NULL, oidName, pVar->name_length,
+      SnmpGet(dwVersion, dwAddr, pszCommunity, NULL, oidName, pVar->name_length,
               &pIfList->pInterfaces[iIndex].dwIpNetMask, sizeof(DWORD), FALSE, FALSE);
    }
 }
@@ -128,18 +128,18 @@ static void HandlerPassportIfList(DWORD dwAddr, const char *pszCommunity, variab
 // Get list of VLAN interfaces from Nortel Passport 8000/Accelar switch
 //
 
-void GetAccelarVLANIfList(DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList)
+void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList)
 {
    VLAN_LIST vlanList;
 
    // Get VLAN list
    memset(&vlanList, 0, sizeof(VLAN_LIST));
-   SnmpEnumerate(dwIpAddr, pszCommunity, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), 
+   SnmpEnumerate(dwVersion, dwIpAddr, pszCommunity, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), 
                  HandlerVlanList, &vlanList, FALSE);
 
    // Get interfaces
    pIfList->pArg = &vlanList;
-   SnmpEnumerate(dwIpAddr, pszCommunity, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), 
+   SnmpEnumerate(dwVersion, dwIpAddr, pszCommunity, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), 
                  HandlerPassportIfList, pIfList, FALSE);
    safe_free(vlanList.pList);
 }

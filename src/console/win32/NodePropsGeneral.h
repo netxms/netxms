@@ -22,7 +22,6 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CNodePropsGeneral)
 	enum { IDD = IDD_OBJECT_NODE_GENERAL };
-	CComboBox	m_wndSnmpVersionList;
 	CComboBox	m_wndAuthList;
 	DWORD	m_dwObjectId;
 	CString	m_strName;
@@ -31,8 +30,8 @@ public:
 	CString	m_strPrimaryIp;
 	CString	m_strSecret;
 	CString	m_strCommunity;
-	int		m_iSnmpVersion;
 	int		m_iAuthType;
+	int		m_iSNMPVersion;
 	//}}AFX_DATA
 
 
@@ -55,6 +54,8 @@ protected:
 	afx_msg void OnChangeEditPort();
 	afx_msg void OnChangeEditCommunity();
 	afx_msg void OnSelchangeComboAuth();
+	afx_msg void OnRadioVersion2c();
+	afx_msg void OnRadioVersion1();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -186,11 +186,11 @@ typedef struct
 #define CMD_CLOSE_EPP               0x0015
 #define CMD_SAVE_EPP                0x0016
 #define CMD_EPP_RECORD              0x0017
-#define CMD_OPEN_EVENT_DB           0x0018
-#define CMD_CLOSE_EVENT_DB          0x0019
+#define CMD_LOCK_EVENT_DB           0x0018
+#define CMD_UNLOCK_EVENT_DB         0x0019
 #define CMD_SET_EVENT_INFO          0x001A
 #define CMD_EVENT_DB_RECORD         0x001B
-#define CMD_EVENT_DB_EOF            0x001C
+#define CMD_LOAD_EVENT_DB           0x001C
 #define CMD_REQUEST_COMPLETED       0x001D
 #define CMD_LOAD_USER_DB            0x001E
 #define CMD_USER_DATA               0x001F
@@ -255,6 +255,8 @@ typedef struct
 #define CMD_POLLING_INFO            0x005A
 #define CMD_COPY_DCI                0x005B
 #define CMD_WAKEUP_NODE             0x005C
+#define CMD_DELETE_EVENT_TEMPLATE   0x005D
+#define CMD_GENERATE_EVENT_ID       0x005E
 
 
 //

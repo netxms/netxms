@@ -475,6 +475,7 @@ src/server/core/objects.cpp -text
 src/server/core/rootobj.cpp -text
 src/server/core/session.cpp -text
 src/server/core/snmp.cpp -text
+src/server/core/snmptrap.cpp -text
 src/server/core/status.cpp -text
 src/server/core/subnet.cpp -text
 src/server/core/syncer.cpp -text

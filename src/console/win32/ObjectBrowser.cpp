@@ -210,6 +210,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    LVCOLUMN lvCol;
    BYTE *pwp;
    UINT iBytes;
+   int i;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -258,6 +259,17 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_iLastObjectImage = m_pImageList->GetImageCount();
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_UP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));
+   m_iStatusImageBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_WARNING));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MINOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MAJOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_CRITICAL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNKNOWN));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNMANAGED));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_DISABLED));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_TESTING));
+   for(i = STATUS_WARNING; i <= STATUS_TESTING; i++)
+      m_pImageList->SetOverlayImage(m_iStatusImageBase + i - 1, i);
    m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
@@ -386,6 +398,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    iImage = GetObjectImageIndex(pObject);
    hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImage, iImage, hParent);
    m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
+   m_wndTreeCtrl.SetItemState(hItem, INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
 
    // Add to hash
    m_pTreeHash = (OBJ_TREE_HASH *)realloc(m_pTreeHash, sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize + 1));
@@ -658,11 +671,15 @@ restart_parent_check:;
                else  // Current tree item is still valid
                {
                   m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
+                  m_wndTreeCtrl.SetItemState(m_pTreeHash[i].hTreeItem,
+                                    INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
                }
             }
             else  // Current tree item has no parent
             {
                m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
+               m_wndTreeCtrl.SetItemState(m_pTreeHash[i].hTreeItem,
+                                       INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
             }
          }
 
@@ -1096,6 +1113,8 @@ void CObjectBrowser::UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject)
 {
    char szBuffer[64];
    int iPos;
+
+   m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pObject->iStatus), LVIS_OVERLAYMASK);
 
    m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
    m_wndListCtrl.SetItemText(iItem, 2, g_szObjectClass[pObject->iClass]);

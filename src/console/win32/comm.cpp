@@ -135,7 +135,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Loading event information...");
-      dwResult = NXCLoadEventNames();
+      dwResult = NXCLoadEventDB();
    }
 
    // Synchronize images

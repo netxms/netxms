@@ -203,7 +203,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", LOCAL_ADMIN_PORT, "LocalAdminListener", WSAGetLastError());
-      exit(1);
+      closesocket(sock);
+      /* TODO: we should initiate shutdown from here */
+      return THREAD_OK;
    }
 
    // Set up queue

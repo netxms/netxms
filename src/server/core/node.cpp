@@ -327,13 +327,26 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    PollerLock();
 
    // Determine node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+   if (SnmpGet(SNMP_VERSION_2c, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
       DWORD dwNodeFlags;
 
       m_dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
       m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
+      m_iSNMPVersion = SNMP_VERSION_2c;
+   }
+   else
+   {
+      if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+                  m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
+      {
+         DWORD dwNodeFlags;
+
+         m_dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
+         m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
+         m_iSNMPVersion = SNMP_VERSION_1;
+      }
    }
 
    pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod,
@@ -356,7 +369,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
          CleanInterfaceList(pIfList);
       }
       if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
-         pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString, m_dwNodeType);
+         pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, m_dwNodeType);
 
       if (pIfList != NULL)
       {
@@ -412,7 +425,7 @@ ARP_CACHE *Node::GetArpCache(void)
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
-      pArpCache = SnmpGetArpCache(m_dwIpAddr, m_szCommunityString);
+      pArpCache = SnmpGetArpCache(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString);
    }
 
    return pArpCache;
@@ -443,7 +456,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
-      pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString, m_dwNodeType);
+      pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, m_dwNodeType);
    }
 
    return pIfList;
@@ -660,7 +673,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
 
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
       DWORD dwNodeFlags, dwNodeType;
@@ -841,7 +854,7 @@ BOOL Node::ConnectToAgent(void)
 
 DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
-   return SnmpGet(m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
+   return SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
                   szBuffer, dwBufSize, FALSE, TRUE) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 
@@ -965,6 +978,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_COMMUNITY_STRING, m_szCommunityString);
    pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
    pMsg->SetVariable(VID_NODE_TYPE, m_dwNodeType);
+   pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_iSNMPVersion);
 }
 
 
@@ -988,6 +1002,10 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change shared secret of native agent
    if (pRequest->IsVariableExist(VID_SHARED_SECRET))
       pRequest->GetVariableStr(VID_SHARED_SECRET, m_szSharedSecret, MAX_SECRET_LENGTH);
+
+   // Change SNMP protocol version
+   if (pRequest->IsVariableExist(VID_SNMP_VERSION))
+      m_iSNMPVersion = pRequest->GetVariableShort(VID_SNMP_VERSION);
 
    // Change SNMP community string
    if (pRequest->IsVariableExist(VID_COMMUNITY_STRING))

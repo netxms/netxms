@@ -94,6 +94,7 @@ public:
 
 // Implementation
 protected:
+	int m_iStatusImageBase;
 	void ChangeMgmtStatus(BOOL bIsManaged);
 	NXC_OBJECT * m_pCurrentObject;
 	DWORD GetSelectedObject(void);

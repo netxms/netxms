@@ -56,7 +56,7 @@ END_MESSAGE_MAP()
 
 BOOL CEventSelDlg::OnInitDialog() 
 {
-   NXC_EVENT_NAME *pList;
+   NXC_EVENT_TEMPLATE **pList;
    DWORD i, dwListSize;
    char szBuffer[32];
    RECT rect;
@@ -69,7 +69,6 @@ BOOL CEventSelDlg::OnInitDialog()
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup list control
-   //m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 
@@ -77,14 +76,14 @@ BOOL CEventSelDlg::OnInitDialog()
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 	
    // Fill in event list
-   pList = NXCGetEventNamesList(&dwListSize);
+   NXCGetEventDB(&pList, &dwListSize);
    if (pList != NULL)
       for(i = 0; i < dwListSize; i++)
       {
-         sprintf(szBuffer, "%u", pList[i].dwEventId);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pList[i].dwSeverity);
-         m_wndListCtrl.SetItemText(iItem, 1, pList[i].szName);
-         m_wndListCtrl.SetItemData(iItem, pList[i].dwEventId);
+         sprintf(szBuffer, "%u", pList[i]->dwCode);
+         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pList[i]->dwSeverity);
+         m_wndListCtrl.SetItemText(iItem, 1, pList[i]->szName);
+         m_wndListCtrl.SetItemData(iItem, pList[i]->dwCode);
       }
 
 	return TRUE;

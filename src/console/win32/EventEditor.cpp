@@ -19,7 +19,6 @@ IMPLEMENT_DYNCREATE(CEventEditor, CMDIChildWnd)
 
 CEventEditor::CEventEditor()
 {
-   m_bModified = FALSE;
    m_pImageList = NULL;
 }
 
@@ -36,6 +35,12 @@ BEGIN_MESSAGE_MAP(CEventEditor, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_WM_CLOSE()
+	ON_WM_CONTEXTMENU()
+	ON_UPDATE_COMMAND_UI(ID_EVENT_EDIT, OnUpdateEventEdit)
+	ON_COMMAND(ID_EVENT_EDIT, OnEventEdit)
+	ON_UPDATE_COMMAND_UI(ID_EVENT_DELETE, OnUpdateEventDelete)
+	ON_COMMAND(ID_EVENT_NEW, OnEventNew)
+	ON_COMMAND(ID_EVENT_DELETE, OnEventDelete)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDoubleClick)
 END_MESSAGE_MAP()
@@ -47,7 +52,7 @@ END_MESSAGE_MAP()
 int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   char szBuffer[32];
+   TCHAR szBuffer[32];
    DWORD i;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
@@ -63,39 +68,46 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 50);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 120);
-   m_wndListCtrl.InsertColumn(2, "Severity", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(3, "Flags", LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(4, "Message", LVCFMT_LEFT, 180);
-   m_wndListCtrl.InsertColumn(5, "Description", LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 190);
+   m_wndListCtrl.InsertColumn(2, _T("Severity"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(3, _T("Flags"), LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(4, _T("Message"), LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(5, _T("Description"), LVCFMT_LEFT, 300);
 	
    // Create image list
-   m_pImageList = new CImageList;
-   m_pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   m_pImageList = CreateEventImageList();
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Load event templates
    NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
-      sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwCode);
+      _stprintf(szBuffer, _T("%ld"), m_ppEventTemplates[i]->dwCode);
       m_wndListCtrl.InsertItem(i, szBuffer, m_ppEventTemplates[i]->dwSeverity);
-      m_wndListCtrl.SetItemText(i, 1, m_ppEventTemplates[i]->szName);
-      m_wndListCtrl.SetItemText(i, 2, g_szStatusTextSmall[m_ppEventTemplates[i]->dwSeverity]);
-      sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwFlags);
-      m_wndListCtrl.SetItemText(i, 3, szBuffer);
-      m_wndListCtrl.SetItemText(i, 4, m_ppEventTemplates[i]->pszMessage);
-      m_wndListCtrl.SetItemText(i, 5, m_ppEventTemplates[i]->pszDescription);
-      m_wndListCtrl.SetItemData(i, i);
+      m_wndListCtrl.SetItemData(i, m_ppEventTemplates[i]->dwCode);
+      UpdateItem(i, m_ppEventTemplates[i]);
    }
 
    return 0;
+}
+
+
+//
+// Update list view item
+//
+
+void CEventEditor::UpdateItem(int iItem, NXC_EVENT_TEMPLATE *pData)
+{
+   TCHAR szBuffer[32];
+
+   m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, pData->dwSeverity, 0, 0, 0);
+   m_wndListCtrl.SetItemText(iItem, 1, pData->szName);
+   m_wndListCtrl.SetItemText(iItem, 2, g_szStatusTextSmall[pData->dwSeverity]);
+   _stprintf(szBuffer, _T("%ld"), pData->dwFlags);
+   m_wndListCtrl.SetItemText(iItem, 3, szBuffer);
+   m_wndListCtrl.SetItemText(iItem, 4, pData->pszMessage);
+   m_wndListCtrl.SetItemText(iItem, 5, pData->pszDescription);
 }
 
 
@@ -137,31 +149,56 @@ void CEventEditor::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult
 // Edit currently selected event
 //
 
-void CEventEditor::EditEvent(int iItem)
+BOOL CEventEditor::EditEvent(int iItem)
 {
-   int iIdx;
-   DWORD dwFlags;
+   DWORD dwIndex, dwResult, dwId;
    CEditEventDlg dlgEditEvent;
+   BOOL bResult = FALSE;
 
-   iIdx = m_wndListCtrl.GetItemData(iItem);
+   dwId = m_wndListCtrl.GetItemData(iItem);
+   for(dwIndex = 0; dwIndex < m_dwNumTemplates; dwIndex++)
+      if (m_ppEventTemplates[dwIndex]->dwCode == dwId)
+         break;
 
-   dlgEditEvent.m_bWriteLog = m_ppEventTemplates[iIdx]->dwFlags & EF_LOG;
-   dlgEditEvent.m_dwEventId = m_ppEventTemplates[iIdx]->dwCode;
-   dlgEditEvent.m_strName = m_ppEventTemplates[iIdx]->szName;
-   dlgEditEvent.m_strMessage = m_ppEventTemplates[iIdx]->pszMessage;
-   dlgEditEvent.m_strDescription = m_ppEventTemplates[iIdx]->pszDescription;
-   dlgEditEvent.m_dwSeverity = m_ppEventTemplates[iIdx]->dwSeverity;
-
-   if (dlgEditEvent.DoModal() == IDOK)
+   if (dwIndex < m_dwNumTemplates)
    {
-      dwFlags = 0;
-      if (dlgEditEvent.m_bWriteLog)
-         dwFlags |= EF_LOG;
-      NXCModifyEventTemplate(m_ppEventTemplates[iIdx], EM_ALL, dlgEditEvent.m_dwSeverity,
-         dwFlags, (LPCTSTR)dlgEditEvent.m_strName, (LPCTSTR)dlgEditEvent.m_strMessage,
-         (LPCTSTR)dlgEditEvent.m_strDescription);
-      m_bModified = TRUE;
+      dlgEditEvent.m_bWriteLog = m_ppEventTemplates[dwIndex]->dwFlags & EF_LOG;
+      dlgEditEvent.m_dwEventId = m_ppEventTemplates[dwIndex]->dwCode;
+      dlgEditEvent.m_strName = m_ppEventTemplates[dwIndex]->szName;
+      dlgEditEvent.m_strMessage = m_ppEventTemplates[dwIndex]->pszMessage;
+      dlgEditEvent.m_strDescription = m_ppEventTemplates[dwIndex]->pszDescription;
+      dlgEditEvent.m_dwSeverity = m_ppEventTemplates[dwIndex]->dwSeverity;
+
+      if (dlgEditEvent.DoModal() == IDOK)
+      {
+         NXC_EVENT_TEMPLATE evt;
+
+         evt.dwCode = m_ppEventTemplates[dwIndex]->dwCode;
+         evt.dwFlags = dlgEditEvent.m_bWriteLog ? EF_LOG : 0;
+         evt.dwSeverity = dlgEditEvent.m_dwSeverity;
+         evt.pszDescription = _tcsdup((LPCTSTR)dlgEditEvent.m_strDescription);
+         evt.pszMessage = _tcsdup((LPCTSTR)dlgEditEvent.m_strMessage);
+         _tcsncpy(evt.szName, (LPCTSTR)dlgEditEvent.m_strName, MAX_EVENT_NAME);
+
+         dwResult = DoRequestArg1(NXCSetEventInfo, &evt, _T("Updating event configuration database..."));
+         if (dwResult == RCC_SUCCESS)
+         {
+            // Record was successfully updated on server, update local copy
+            safe_free(m_ppEventTemplates[dwIndex]->pszDescription);
+            safe_free(m_ppEventTemplates[dwIndex]->pszMessage);
+            memcpy(m_ppEventTemplates[dwIndex], &evt, sizeof(NXC_EVENT_TEMPLATE));
+            UpdateItem(iItem, m_ppEventTemplates[dwIndex]);
+            bResult = TRUE;
+         }
+         else
+         {
+            theApp.ErrorBox(dwResult, _T("Unable to update event configuration record: %s"));
+            safe_free(evt.pszDescription);
+            safe_free(evt.pszMessage);
+         }
+      }
    }
+   return bResult;
 }
 
 
@@ -182,40 +219,120 @@ void CEventEditor::OnSetFocus(CWnd* pOldWnd)
 
 void CEventEditor::OnClose() 
 {
-   static char szClosingMessage[] = "Closing event configuration database...";
-   int iAction;
    DWORD dwResult;
 
-   if (m_bModified)
+   dwResult = DoRequest(NXCUnlockEventDB, _T("Unlocking event configuration database..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Unable to unlock event configuration database: %s"));
+	CMDIChildWnd::OnClose();
+}
+
+
+//
+// PreCreateWindow()
+//
+
+BOOL CEventEditor::PreCreateWindow(CREATESTRUCT& cs) 
+{
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
+                                         AfxGetApp()->LoadIcon(IDI_LOG));
+	return CMDIChildWnd::PreCreateWindow(cs);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CEventEditor::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(10);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// OnUpdate...() handlers
+//
+
+void CEventEditor::OnUpdateEventEdit(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
+void CEventEditor::OnUpdateEventDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+
+//
+// WM_COMMAND::ID_EVENT_EDIT message handler
+//
+
+void CEventEditor::OnEventEdit() 
+{
+   int iItem;
+
+   if (m_wndListCtrl.GetSelectedCount() == 1)
    {
-      iAction = MessageBox("Event configuration database has been modified. "
-                           "Do you wish to save it?", "Event Editor", 
-                           MB_YESNOCANCEL | MB_ICONQUESTION);
-      switch(iAction)
+      iItem = m_wndListCtrl.GetNextItem(-1, LVIS_FOCUSED);
+      if (iItem != -1)
+         EditEvent(iItem);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_EVENT_NEW message handler
+//
+
+void CEventEditor::OnEventNew() 
+{
+   DWORD dwNewId, dwResult;
+   NXC_EVENT_TEMPLATE *pData;
+   TCHAR szBuffer[32];
+   int iItem;
+
+   dwResult = DoRequestArg1(NXCGenerateEventId, &dwNewId, _T("Generating ID for new event..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      // Create new item in list view
+      _stprintf(szBuffer, _T("%ld"), dwNewId);
+      iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
+      m_wndListCtrl.SetItemData(iItem, dwNewId);
+
+      // Create empty record in template list
+      pData = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));
+      memset(pData, 0, sizeof(NXC_EVENT_TEMPLATE));
+      pData->dwCode = dwNewId;
+      NXCAddEventTemplate(pData);
+
+      // Pointers inside client library can change after adding new template, so we reget it
+      NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
+
+      // Edit new event
+      if (!EditEvent(iItem))
       {
-         case IDYES:
-            dwResult = DoRequestArg1(NXCCloseEventDB, (void *)TRUE, szClosingMessage);
-            if (dwResult == RCC_SUCCESS)
-            {
-         	   CMDIChildWnd::OnClose();
-            }
-            else
-            {
-               theApp.ErrorBox(dwResult, "Error closing event configuration database:\n%s",
-                               "Event Editor");
-            }
-            break;
-         case IDNO:
-            dwResult = DoRequestArg1(NXCCloseEventDB, (void *)FALSE, szClosingMessage);
-      	   CMDIChildWnd::OnClose();
-            break;
-         case IDCANCEL:
-            break;
+         m_wndListCtrl.DeleteItem(iItem);
+         NXCDeleteEDBRecord(dwNewId);
+         NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
       }
    }
    else
    {
-      dwResult = DoRequestArg1(NXCCloseEventDB, (void *)FALSE, szClosingMessage);
-	   CMDIChildWnd::OnClose();
+      theApp.ErrorBox(dwResult, _T("Unable to generate ID for new event: %s"));
    }
+}
+
+
+//
+// WM_COMMAND::ID_EVENT_DELETE message handler
+//
+
+void CEventEditor::OnEventDelete() 
+{
 }

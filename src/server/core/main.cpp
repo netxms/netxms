@@ -52,6 +52,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
 THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
 THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
+THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
 
 
 //
@@ -286,6 +287,10 @@ BOOL Initialize(void)
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
    for(i = 0; i < iNumThreads; i++)
       ThreadCreate(EventProcessor, 0, (void *)(i + 1));
+
+   // Start SNMP trapper
+   if (ConfigReadInt("EnableSNMPTraps", 1))
+      ThreadCreate(SNMPTrapReceiver, 0, NULL);
 
    // Start database "lazy" write thread
    StartDBWriter();

@@ -42,6 +42,7 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
    ObjectsInit();
    InitSyncStuff();
+   InitEventDB();
    return TRUE;
 }
 
@@ -53,6 +54,7 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 void LIBNXCL_EXPORTABLE NXCShutdown(void)
 {
    SyncCleanup();
+   ShutdownEventDB();
 }
 
 
@@ -132,9 +134,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Copy operation failed for one or more DCI(s)"),
       _T("Invalid or unknown event code"),
       _T("No interfaces suitable for sending magic packet"),
-      _T("No MAC address on interface")
+      _T("No MAC address on interface"),
+      _T("Command not implemented")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NO_MAC_ADDRESS)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_NOT_IMPLEMENTED)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 
