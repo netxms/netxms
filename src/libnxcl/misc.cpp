@@ -132,7 +132,7 @@ DWORD WaitForSync(DWORD dwTimeOut)
 		   gettimeofday(&now, NULL);
 		   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
 		   timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
-		   iRetCode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
+		   iRetCode = pthread_cond_timedwait(&m_condSyncOp, &m_mutexSyncOp, &timeout);
 #endif
 	   }
 	   else
