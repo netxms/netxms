@@ -16,6 +16,8 @@ INSERT INTO config (name,value) VALUES ('RunNetworkDiscovery','1');
 INSERT INTO config (name,value) VALUES ('EnableAdminInterface','1');
 INSERT INTO config (name,value) VALUES ('EnableAccessControl','1');
 INSERT INTO config (name,value) VALUES ('EnableEventsAccessControl','0');
+INSERT INTO config (name,value) VALUES ('EventLogRetentionTime','5184000'); // Default retention time is 60 days == 5184000 seconds
+INSERT INTO config (name,value) VALUES ('HouseKeepingInterval','3600');
 
 
 /*
