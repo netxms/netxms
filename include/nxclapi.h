@@ -28,6 +28,15 @@
 
 
 //
+// Some constants
+//
+
+#define MAX_OBJECT_NAME       64
+#define MAX_COMMUNITY_LENGTH  32
+#define MAX_OID_LENGTH        1024
+
+
+//
 // Events
 //
 
@@ -59,14 +68,56 @@
 //
 
 #define NXC_OP_SYNC_OBJECTS   1
+#define NXC_OP_SYNC_EVENTS    2
 
 
 //
-// Event handler data type
+// Callbacks data types
 //
 
 typedef void (* NXC_EVENT_HANDLER)(DWORD dwEvent, DWORD dwCode, void *pArg);
 typedef void (* NXC_DEBUG_CALLBACK)(char *pMsg);
+
+
+//
+// Network object structure
+//
+
+typedef struct
+{
+   DWORD dwId;          // Unique object's identifier
+   int iClass;          // Object's class
+   int iStatus;         // Object's status
+   DWORD dwIpAddr;      // IP address
+   char szName[MAX_OBJECT_NAME];
+   DWORD dwNumParents;
+   DWORD *pdwParentList;
+   DWORD dwNumChilds;
+   DWORD *pdwChildList;
+   union
+   {
+      struct
+      {
+         DWORD dwIpNetMask;   // Ip netmask.
+         DWORD dwIfIndex;     // Interface index.
+         DWORD dwIfType;      // Interface type
+      } iface;
+      struct
+      {
+         DWORD dwFlags;
+         DWORD dwDiscoveryFlags;
+         char szSharedSecret[MAX_SECRET_LENGTH];
+         char szCommunityString[MAX_COMMUNITY_LENGTH];
+         char szObjectId[MAX_OID_LENGTH];
+         WORD wAgentPort;     // Listening TCP port for native agent
+         WORD wAuthMethod;    // Native agent's authentication method
+      } node;
+      struct
+      {
+         DWORD dwIpNetMask;
+      } subnet;
+   };
+} NXC_OBJECT;
 
 
 //
@@ -84,7 +135,6 @@ void EXPORTABLE NXCDisconnect(void);
 void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
-int EXPORTABLE NXCSyncRequest(DWORD dwOperation, ...);
 
 #ifdef __cplusplus
 }
