@@ -150,6 +150,7 @@ src/server/dbdrv/mssql/mssql.cpp -text
 src/server/dbdrv/mssql/mssql.dsp -text
 src/server/dbdrv/mssql/mssql.dsw -text
 src/server/dbdrv/mssql/mssqldrv.h -text
+src/server/dbdrv/mysql/Makefile -text
 src/server/dbdrv/mysql/mysql.cpp -text
 src/server/dbdrv/mysql/mysql.dsp -text
 src/server/dbdrv/mysql/mysql.dsw -text
