@@ -796,9 +796,9 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
    msg.SetVariable(VID_SERVICE_TYPE, (WORD)iServiceType);
    msg.SetVariable(VID_IP_PORT, 
       (wPort != 0) ? wPort : 
-         m_wDefaultPort[((iServiceType >=NETSRV_CUSTOM) && 
+         m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) && 
                          (iServiceType <= NETSRV_HTTP)) ? iServiceType : 0]);
-   msg.SetVariable(VID_IP_PORT, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
+   msg.SetVariable(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
    msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
    msg.SetVariable(VID_SERVICE_RESPONCE, pszResponce);
 
