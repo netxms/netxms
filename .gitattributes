@@ -97,6 +97,7 @@ src/libnxcl/misc.cpp -text
 src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/request.cpp -text
+src/server/core/Makefile -text
 src/server/core/NmsCore.dsp -text
 src/server/core/NmsCore.dsw -text
 src/server/core/acl.cpp -text
