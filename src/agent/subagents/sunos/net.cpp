@@ -348,6 +348,7 @@ LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
 								break;
 							default:
 								ret_int(pValue, 0);
+								break;
 						}
 						nRet = SYSINFO_RC_SUCCESS;
 					}

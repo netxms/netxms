@@ -196,17 +196,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 
 LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	int nCount;
-
-	nCount = ProcRead(NULL, NULL);
-	if (nCount >= 0)
-	{
-		ret_int(pValue, nCount);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
+	return ReadKStatValue("unix", 0, "system_misc", "nproc", pValue);
 }
 
 

@@ -7,6 +7,7 @@
 - Added support of HDD temperature monitoring under Windows and Linux
 - Added PhysicalDisk.Model, PhysicalDisk.SerialNumber and
   PhysicalDisk.Firmware parameters under Windows
+- Added parameters System.CPU.Count and System.KStat(*) to Solaris subagent
 
 
 *
