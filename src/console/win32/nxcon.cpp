@@ -390,6 +390,11 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
    }
 }
 
+
+//
+// WM_COMMAND::ID_VIEW_EVENTS message handler
+//
+
 void CConsoleApp::OnViewEvents() 
 {
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
@@ -402,6 +407,11 @@ void CConsoleApp::OnViewEvents()
 		   RUNTIME_CLASS(CEventBrowser), IDR_EVENTS, m_hEventBrowserMenu, m_hEventBrowserAccel);
 }
 
+
+//
+// WM_COMMAND::ID_VIEW_MAP message handler
+//
+
 void CConsoleApp::OnViewMap() 
 {
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
@@ -409,6 +419,11 @@ void CConsoleApp::OnViewMap()
 	// create a new MDI child window
 	pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMDIMenu, m_hMDIAccel);
 }
+
+
+//
+// WM_COMMAND::ID_CONNECT_TO_SERVER message handler
+//
 
 void CConsoleApp::OnConnectToServer() 
 {
@@ -435,15 +450,15 @@ void CConsoleApp::OnConnectToServer()
       // Initiate connection
       dwResult = DoLogin();
       if (dwResult != RCC_SUCCESS)
-      {
-         char szBuffer[256];
-
-         sprintf(szBuffer, "Unable to connect: %s", NXCGetErrorText(dwResult));
-         m_pMainWnd->MessageBox(szBuffer, "Connection error", MB_OK | MB_ICONSTOP);
-      }
+         ErrorBox(dwResult, "Unable to connect: %s", "Connection error");
    }
    while(dwResult != RCC_SUCCESS);
 }
+
+
+//
+// WM_COMMAND::ID_VIEW_OBJECTBROWSER message handler
+//
 
 void CConsoleApp::OnViewObjectbrowser() 
 {
@@ -528,17 +543,14 @@ void CConsoleApp::OnControlpanelEvents()
       }
       else
       {
-         char szBuffer[256];
-
-         sprintf(szBuffer, "Unable to open event configuration database:\n%s", NXCGetErrorText(dwResult));
-         GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+         ErrorBox(dwResult, "Unable to open event configuration database:\n%s");
       }
    }
 }
 
 
 //
-// Handler for WM_COMMAND(ID_CONTROLPANEL_USERS) message
+// Handler for WM_COMMAND::ID_CONTROLPANEL_USERS message
 //
 
 void CConsoleApp::OnControlpanelUsers() 
@@ -560,10 +572,7 @@ void CConsoleApp::OnControlpanelUsers()
       }
       else
       {
-         char szBuffer[256];
-
-         sprintf(szBuffer, "Unable to lock user database:\n%s", NXCGetErrorText(dwResult));
-         GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+         ErrorBox(dwResult, "Unable to lock user database:\n%s");
       }
    }
 }
@@ -723,11 +732,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
       }
       else
       {
-         char szBuffer[256];
-
-         sprintf(szBuffer, "Unable to load data collection information for node:\n%s", 
-                 NXCGetErrorText(dwResult));
-         m_pMainWnd->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+         ErrorBox(dwResult, "Unable to load data collection information for node:\n%s");
       }
    }
    else
@@ -788,4 +793,18 @@ CWnd *CConsoleApp::FindOpenDCEditor(DWORD dwNodeId)
       if (m_openDCEditors[i].dwNodeId == dwNodeId)
          return m_openDCEditors[i].pWnd;
    return NULL;
+}
+
+
+//
+// Display message box with error text from client library
+//
+
+void CConsoleApp::ErrorBox(DWORD dwError, char *pszMessage, char *pszTitle)
+{
+   char szBuffer[512];
+
+   sprintf(szBuffer, (pszMessage != NULL) ? pszMessage : "Error: %s", 
+           NXCGetErrorText(dwError));
+   m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : "Error", MB_ICONSTOP);
 }

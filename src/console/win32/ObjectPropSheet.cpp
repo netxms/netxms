@@ -66,11 +66,6 @@ void CObjectPropSheet::SaveObjectChanges()
                          m_update.dwObjectId, m_update.dwFlags);
       dwResult = DoRequestArg1(NXCModifyObject, &m_update, "Updating object...");
       if (dwResult != RCC_SUCCESS)
-      {
-         char szBuffer[256];
-
-         sprintf(szBuffer, "Error updating object: %s", NXCGetErrorText(dwResult));
-         MessageBox(szBuffer, "Error", MB_OK | MB_ICONSTOP);
-      }
+         theApp.ErrorBox(dwResult, "Error updating object: %s");
    }
 }

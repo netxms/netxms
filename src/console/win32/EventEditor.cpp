@@ -189,11 +189,8 @@ void CEventEditor::OnClose()
             }
             else
             {
-               char szBuffer[256];
-
-               sprintf(szBuffer, "Error closing event configuration database:\n%s",
-                       NXCGetErrorText(dwResult));
-               MessageBox(szBuffer, "Event Editor", MB_OK | MB_ICONSTOP);
+               theApp.ErrorBox(dwResult, "Error closing event configuration database:\n%s",
+                               "Event Editor");
             }
             break;
          case IDNO:

@@ -60,7 +60,6 @@ void ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
             m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
-            m_pItemList->pItems[i].bModified = FALSE;
          }
          break;
       default:
@@ -159,7 +158,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
 // Create new data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(DWORD dwNodeId, DWORD *pdwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItemId)
 {
    DWORD dwRetCode, dwRqId;
    CSCPMessage msg, *pResponce;
@@ -168,7 +167,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(DWORD dwNodeId, DWORD *pdwItemId)
 
    msg.SetCode(CMD_CREATE_NEW_DCI);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
    SendMsg(&msg);
 
    pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
@@ -176,7 +175,19 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(DWORD dwNodeId, DWORD *pdwItemId)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
+      {
          *pdwItemId = pResponce->GetVariableLong(VID_DCI_ID);
+
+         // Create new entry in list
+         pItemList->pItems = (NXC_DCI *)MemReAlloc(pItemList->pItems, 
+                                                   sizeof(NXC_DCI) * (pItemList->dwNumItems + 1));
+         memset(&pItemList->pItems[pItemList->dwNumItems], 0, sizeof(NXC_DCI));
+         pItemList->pItems[pItemList->dwNumItems].dwId = *pdwItemId;
+         pItemList->pItems[pItemList->dwNumItems].iStatus = ITEM_STATUS_ACTIVE;
+         pItemList->pItems[pItemList->dwNumItems].iPollingInterval = 60;
+         pItemList->pItems[pItemList->dwNumItems].iRetentionTime = 30;
+         pItemList->dwNumItems++;
+      }
       delete pResponce;
    }
    else
@@ -219,27 +230,47 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
 // Delete data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(DWORD dwNodeId, DWORD dwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
 {
-   DWORD dwRqId;
+   DWORD i, dwRqId, dwResult = RCC_INVALID_DCI_ID;
    CSCPMessage msg;
 
-   dwRqId = g_dwMsgId++;
+   // Find item with given ID in list
+   for(i = 0; i < pItemList->dwNumItems; i++)
+      if (pItemList->pItems[i].dwId == dwItemId)
+      {
+         dwRqId = g_dwMsgId++;
 
-   msg.SetCode(CMD_DELETE_NODE_DCI);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
-   msg.SetVariable(VID_DCI_ID, dwItemId);
-   SendMsg(&msg);
+         msg.SetCode(CMD_DELETE_NODE_DCI);
+         msg.SetId(dwRqId);
+         msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
+         msg.SetVariable(VID_DCI_ID, dwItemId);
+         SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+         dwResult = WaitForRCC(dwRqId);
+         if (dwResult == RCC_SUCCESS)
+         {
+            // Item was successfully deleted on server, delete it from our list
+            pItemList->dwNumItems--;
+            memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1], 
+                    sizeof(NXC_DCI) * (pItemList->dwNumItems - i));
+         }
+         break;
+      }
+   return dwResult;
 }
 
 
 //
-// Delete data collection item from list
+// Find item in list by id and return it's index
 //
 
-void LIBNXCL_EXPORTABLE NXCDeleteDCIFromList(NXC_DCI_LIST *pItemList, DWORD dwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId)
 {
+   DWORD i;
+
+   for(i = 0; i < pItemList->dwNumItems; i++)
+      if (pItemList->pItems[i].dwId == dwItemId)
+         return i;
+   return INVALID_INDEX;
 }

@@ -131,6 +131,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void ErrorBox(DWORD dwError, char *pszMessage = NULL, char *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);
 	CMenu * GetContextMenu(int iIndex);

@@ -34,9 +34,10 @@ public:
 
 // Implementation
 protected:
+	void SelectListItem(int iItem);
 	void UpdateListItem(int iItem, NXC_DCI *pItem);
-	BOOL EditItem(DWORD dwIndex);
-	void AddListItem(DWORD dwIndex, NXC_DCI *pItem);
+	BOOL EditItem(NXC_DCI *pItem);
+	int AddListItem(NXC_DCI *pItem);
 	NXC_DCI_LIST * m_pItemList;
 	CListCtrl m_wndListCtrl;
 
@@ -51,7 +52,10 @@ protected:
 	afx_msg void OnItemEdit();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnUpdateItemEdit(CCmdUI* pCmdUI);
+	afx_msg void OnItemDelete();
+	afx_msg void OnUpdateItemDelete(CCmdUI* pCmdUI);
 	//}}AFX_MSG
+   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -411,7 +411,6 @@ typedef struct
    BYTE iSource;
    BYTE iDataType;
    BYTE iStatus;
-   BYTE bModified;   // Modification flag to be used by client. It's not used by library.
 } NXC_DCI;
 
 
@@ -476,7 +475,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList);
-DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(DWORD dwNodeId, DWORD *pdwItemId);
+DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItemId);
+DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId);
+DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId);
 
 #ifdef __cplusplus
 }

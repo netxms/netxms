@@ -423,12 +423,7 @@ void CUserEditor::OnUserProperties()
 
             dwResult = DoRequestArg1(NXCModifyUser, &userInfo, "Updating user database...");
             if (dwResult != RCC_SUCCESS)
-            {
-               char szBuffer[256];
-
-               sprintf(szBuffer, "Cannot modify user record: %s", NXCGetErrorText(dwResult));
-               MessageBox(szBuffer, "Error", MB_ICONSTOP | MB_OK);
-            }
+               theApp.ErrorBox(dwResult, "Cannot modify user record: %s");
 
             // Destroy group members list
             safe_free(userInfo.pdwMemberList);
@@ -484,10 +479,7 @@ void CUserEditor::OnUserDelete()
 
                dwResult = DoRequestArg1(NXCDeleteUser, (void *)dwId, "Deleting user...");
                if (dwResult != RCC_SUCCESS)
-               {
-                  sprintf(szBuffer, "Cannot delete user record: %s", NXCGetErrorText(dwResult));
-                  MessageBox(szBuffer, "Error", MB_ICONSTOP | MB_OK);
-               }
+                  theApp.ErrorBox(dwResult, "Cannot delete user record: %s");
             }
          }
          else
@@ -561,16 +553,9 @@ void CUserEditor::OnUserSetpassword()
 
             dwResult = DoRequestArg2(NXCSetPassword, (void *)dwId, dlg.m_szPassword, "Changing password...");
             if (dwResult != RCC_SUCCESS)
-            {
-               char szBuffer[256];
-
-               sprintf(szBuffer, "Cannot change password: %s", NXCGetErrorText(dwResult));
-               MessageBox(szBuffer, "Error", MB_ICONSTOP | MB_OK);
-            }
+               theApp.ErrorBox(dwResult, "Cannot change password: %s");
             else
-            {
                MessageBox("Password was successfully changed", "Information", MB_ICONINFORMATION | MB_OK);
-            }
          }
       }
       else

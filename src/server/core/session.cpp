@@ -186,6 +186,7 @@ void ClientSession::ReadThread(void)
 void ClientSession::WriteThread(void)
 {
    CSCP_MESSAGE *pMsg;
+   char szBuffer[128];
 
    while(1)
    {
@@ -193,6 +194,7 @@ void ClientSession::WriteThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
+      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode) & 0x0FFF, szBuffer));
       if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
       {
          MemFree(pMsg);
