@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.49 2005-01-06 20:42:58 victor Exp $
+# $Id: configure.ac,v 1.50 2005-01-10 11:44:00 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -12,7 +12,9 @@ AM_INIT_AUTOMAKE
 # disable C++ exceptions
 CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
-LDFLAGS="-nodefaultlibs -lc $LDFLAGS"
+LDFLAGS="-nodefaultlibs $LDFLAGS"
+
+AC_CHECK_LIB(c_r, pthread_create, [], [LDFLAGS="$LDFLAGS -lc"])
 
 # --------------------------------------------------------------------------
 # misc
