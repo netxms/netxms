@@ -48,7 +48,7 @@ sql/setup.in -text
 src/Makefile.am -text
 src/agent/Makefile.am -text
 src/agent/core/Makefile.am -text
-src/agent/core/dload.cpp -text
+src/agent/core/comm.cpp -text
 src/agent/core/getparam.cpp -text
 src/agent/core/log.cpp -text
 src/agent/core/messages.mc -text
@@ -59,6 +59,7 @@ src/agent/core/nxagentd.h -text
 src/agent/core/nxagentd.rc -text
 src/agent/core/resource.h -text
 src/agent/core/service.cpp -text
+src/agent/core/session.cpp -text
 src/agent/core/subagent.cpp -text
 src/agent/core/sysinfo.cpp -text
 src/agent/core/tools.cpp -text

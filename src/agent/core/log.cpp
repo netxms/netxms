@@ -42,6 +42,7 @@ static HANDLE m_hEventLog = INVALID_HANDLE_VALUE;
 #endif
 static FILE *m_hLogFile = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
+static BOOL m_bLogOpened = FALSE;
 
 
 //
@@ -63,13 +64,17 @@ void InitLog(void)
       time_t t;
 
       m_hLogFile = fopen(g_szLogFile, "a");
-      t = time(NULL);
-      loc = localtime(&t);
-      strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
-      fprintf(m_hLogFile, "**************************************************************\r\n[%s] Log file opened\r\n", szTimeBuf);
+      if (m_hLogFile != NULL)
+      {
+         t = time(NULL);
+         loc = localtime(&t);
+         strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
+         fprintf(m_hLogFile, "**************************************************************\r\n[%s] Log file opened\r\n", szTimeBuf);
+      }
 
       m_mutexLogAccess = MutexCreate();
    }
+   m_bLogOpened = TRUE;
 }
 
 
@@ -79,18 +84,22 @@ void InitLog(void)
 
 void CloseLog(void)
 {
-   if (g_dwFlags & AF_USE_SYSLOG)
+   if (m_bLogOpened)
    {
+      if (g_dwFlags & AF_USE_SYSLOG)
+      {
 #ifdef _WIN32
-      DeregisterEventSource(m_hEventLog);
+         DeregisterEventSource(m_hEventLog);
 #endif
-   }
-   else
-   {
-      if (m_hLogFile != NULL)
-         fclose(m_hLogFile);
-      if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
-         MutexDestroy(m_mutexLogAccess);
+      }
+      else
+      {
+         if (m_hLogFile != NULL)
+            fclose(m_hLogFile);
+         if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
+            MutexDestroy(m_mutexLogAccess);
+      }
+      m_bLogOpened = FALSE;
    }
 }
 
@@ -111,7 +120,8 @@ static void WriteLogToFile(char *szMessage)
    t = time(NULL);
    loc = localtime(&t);
    strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
-   fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
+   if (m_hLogFile != NULL)
+      fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
    if (!(g_dwFlags & AF_DAEMON))
       printf("%s %s", szBuffer, szMessage);
 

@@ -26,7 +26,9 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>
+#include <nms_cscp.h>
 #include <stdio.h>
+#include <nxqueue.h>
 #include "messages.h"
 
 
@@ -64,12 +66,13 @@
 #define AGENT_EVENT_SOURCE    "NetXMS Win32 Agent"
 #endif
 
-#define MAX_SERVERS     32
+#define MAX_SERVERS        32
 
-#define AF_DAEMON       0x0001
-#define AF_USE_SYSLOG   0x0002
-#define AF_DEBUG        0x0004
-#define AF_REQUIRE_AUTH 0x0008
+#define AF_DAEMON          0x0001
+#define AF_USE_SYSLOG      0x0002
+#define AF_DEBUG           0x0004
+#define AF_REQUIRE_AUTH    0x0008
+#define AF_SHUTDOWN        0x1000
 
 
 //
@@ -97,6 +100,37 @@ struct SUBAGENT
 
 
 //
+// Communication session
+//
+
+class CommSession
+{
+private:
+   SOCKET m_hSocket;
+   Queue *m_pSendQueue;
+   Queue *m_pMessageQueue;
+   CSCP_BUFFER *m_pMsgBuffer;
+   CONDITION m_hCondWriteThreadStopped;
+   CONDITION m_hCondProcessingThreadStopped;
+   DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
+   DWORD m_dwIndex;
+
+public:
+   CommSession(SOCKET hSocket, DWORD dwHostAddr);
+   ~CommSession();
+
+   void ReadThread(void);
+   void WriteThread(void);
+   void ProcessingThread(void);
+
+   void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+
+   DWORD GetIndex(void) { return m_dwIndex; }
+   void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+};
+
+
+//
 // Functions
 //
 
@@ -107,10 +141,6 @@ void Main(void);
 void WriteLog(DWORD msg, WORD wType, char *format, ...);
 void InitLog(void);
 void CloseLog(void);
-
-HMODULE DLOpen(char *szLibName);
-void DLClose(HMODULE hModule);
-void *DLGetSymbolAddr(HMODULE hModule, char *szSymbol);
 
 void ConsolePrintf(char *pszFormat, ...);
 
@@ -129,8 +159,7 @@ void StopAgentService(void);
 void InstallEventSource(char *path);
 void RemoveEventSource(void);
 
-char *GetSystemErrorText(DWORD dwError);
-char *GetPdhErrorText(DWORD dwError);
+char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
 
 #endif
 
@@ -146,5 +175,9 @@ extern WORD g_wListenPort;
 extern DWORD g_dwServerAddr[];
 extern DWORD g_dwServerCount;
 extern time_t g_dwAgentStartTime;
+
+extern DWORD g_dwAcceptErrors;
+extern DWORD g_dwAcceptedConnections;
+extern DWORD g_dwRejectedConnections;
 
 #endif   /* _nxagentd_h_ */

@@ -115,9 +115,11 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
 void InitService(void)
 {
    static SERVICE_TABLE_ENTRY serviceTable[2]={ { AGENT_SERVICE_NAME, AgentServiceMain }, { NULL, NULL } };
+   char szErrorText[256];
 
    if (!StartServiceCtrlDispatcher(serviceTable))
-      printf("StartServiceCtrlDispatcher() failed: %s\n", GetSystemErrorText(GetLastError()));
+      printf("StartServiceCtrlDispatcher() failed: %s\n",
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
 }
 
 
@@ -128,12 +130,13 @@ void InitService(void)
 void InstallService(char *execName, char *confFile)
 {
    SC_HANDLE mgr, service;
-   char cmdLine[MAX_PATH*2];
+   char cmdLine[MAX_PATH*2], szErrorText[256];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n",
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
@@ -147,7 +150,7 @@ void InstallService(char *execName, char *confFile)
       if (code == ERROR_SERVICE_EXISTS)
          printf("ERROR: Service named '" AGENT_SERVICE_NAME "' already exist\n");
       else
-         printf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code));
+         printf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code, szErrorText, 256));
    }
    else
    {
@@ -168,11 +171,13 @@ void InstallService(char *execName, char *confFile)
 void RemoveService(void)
 {
    SC_HANDLE mgr, service;
+   char szErrorText[256];
 
    mgr = OpenSCManager(NULL,NULL,GENERIC_WRITE);
    if (mgr==NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n",
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
@@ -180,7 +185,7 @@ void RemoveService(void)
    if (service==NULL)
    {
       printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
@@ -188,7 +193,7 @@ void RemoveService(void)
          printf("Win32 Agent service deleted successfully\n");
       else
          printf("ERROR: Cannot remove service named '" AGENT_SERVICE_NAME "' (%s)\n",
-                GetSystemErrorText(GetLastError()));
+                GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
    }
@@ -206,11 +211,13 @@ void RemoveService(void)
 void StartAgentService(void)
 {
    SC_HANDLE mgr, service;
+   char szErrorText[256];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n",
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
@@ -218,7 +225,7 @@ void StartAgentService(void)
    if (service == NULL)
    {
       printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
@@ -226,7 +233,7 @@ void StartAgentService(void)
          printf("Win32 Agent service started successfully\n");
       else
          printf("ERROR: Cannot start service named '" AGENT_SERVICE_NAME "' (%s)\n",
-                GetSystemErrorText(GetLastError()));
+                GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
    }
@@ -242,11 +249,13 @@ void StartAgentService(void)
 void StopAgentService(void)
 {
    SC_HANDLE mgr, service;
+   char szErrorText[256];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", 
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
@@ -254,7 +263,7 @@ void StopAgentService(void)
    if (service == NULL)
    {
       printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
    {
@@ -264,7 +273,7 @@ void StopAgentService(void)
          printf("Win32 Agent service stopped successfully\n");
       else
          printf("ERROR: Cannot stop service named '" AGENT_SERVICE_NAME "' (%s)\n",
-                GetSystemErrorText(GetLastError()));
+                GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
    }
@@ -281,12 +290,14 @@ void InstallEventSource(char *path)
 {
    HKEY hKey;
    DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+   char szErrorText[256];
 
    if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
          "System\\CurrentControlSet\\Services\\EventLog\\System\\" AGENT_EVENT_SOURCE,
          0,NULL,REG_OPTION_NON_VOLATILE,KEY_SET_VALUE,NULL,&hKey,NULL))
    {
-      printf("Unable to create registry key: %s\n", GetSystemErrorText(GetLastError()));
+      printf("Unable to create registry key: %s\n",
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
@@ -304,6 +315,8 @@ void InstallEventSource(char *path)
 
 void RemoveEventSource(void)
 {
+   char szErrorText[256];
+
    if (ERROR_SUCCESS == RegDeleteKey(HKEY_LOCAL_MACHINE,
          "System\\CurrentControlSet\\Services\\EventLog\\System\\" AGENT_EVENT_SOURCE))
    {
@@ -312,6 +325,6 @@ void RemoveEventSource(void)
    else
    {
       printf("Unable to uninstall event source \"" AGENT_EVENT_SOURCE "\": %s\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
 }

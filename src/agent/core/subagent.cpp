@@ -39,13 +39,14 @@ BOOL LoadSubAgent(char *szModuleName)
 {
    HMODULE hModule;
    BOOL bSuccess = FALSE;
+   char szErrorText[256];
 
-   hModule = DLOpen(szModuleName);
+   hModule = DLOpen(szModuleName, szErrorText);
    if (hModule != NULL)
    {
       BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **);
 
-      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **))DLGetSymbolAddr(hModule, "NxSubAgentInit");
+      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **))DLGetSymbolAddr(hModule, "NxSubAgentInit", szErrorText);
       if (SubAgentInit != NULL)
       {
          NETXMS_SUBAGENT_INFO *pInfo;
@@ -88,7 +89,7 @@ BOOL LoadSubAgent(char *szModuleName)
    }
    else
    {
-      WriteLog(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "s", szModuleName);
+      WriteLog(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "ss", szModuleName, szErrorText);
    }
 
    return bSuccess;

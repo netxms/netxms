@@ -22,6 +22,17 @@
 
 #include "nxagentd.h"
 
+#ifdef _WIN32
+#include <conio.h>
+#endif
+
+
+//
+// Externals
+//
+
+void ListenerThread(void *);
+
 
 //
 // Valid options for getopt()
@@ -65,8 +76,9 @@ time_t g_dwAgentStartTime;
 // Static variables
 //
 
-static m_szServerList[16384];
-static m_szSubagentList[16384];
+static char m_szServerList[16384] = "";
+static char m_szSubagentList[16384] = "";
+static CONDITION m_hCondShutdown = INVALID_HANDLE_VALUE;
 
 
 //
@@ -78,8 +90,9 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
-   { "Servers", CT_STRING_LIST, 0, 0, 16384, 0, m_szServerList },
-   { "SubAgent", CT_STRING_LIST, 0, 0, 16384, 0, m_szSubagentList },
+   { "Servers", CT_STRING_LIST, ',', 0, 16384, 0, m_szServerList },
+   { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
+   { "SubAgent", CT_STRING_LIST, '\n', 0, 16384, 0, m_szSubagentList },
    { "Timeout", CT_LONG, 0, 0, 0, 0, &g_dwTimeOut },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -113,11 +126,59 @@ static char m_szHelpText[] =
 
 BOOL Initialize(void)
 {
+   char *pItem, *pEnd;
+
    // Open log file
    InitLog();
 
+#ifdef _WIN32
+   WSADATA wsaData;
+   if (WSAStartup(2, &wsaData) != 0)
+   {
+      WriteLog(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      return FALSE;
+   }
+#endif
+
+   // Initialize built-in parameters
+   if (!InitParameterList())
+      return FALSE;
+
+   // Parse server list
+   for(pItem = m_szServerList; *pItem != 0; pItem = pEnd + 1)
+   {
+      pEnd = strchr(pItem, ',');
+      if (pEnd != NULL)
+         *pEnd = 0;
+      g_dwServerAddr[g_dwServerCount] = inet_addr(pItem);
+      if (g_dwServerAddr[g_dwServerCount] == INADDR_NONE)
+      {
+         if (!(g_dwFlags & AF_DAEMON))
+            printf("Invalid server address '%s'\n", pItem);
+      }
+      else
+      {
+         g_dwServerCount++;
+      }
+   }
+
+   // Load subagents
+   for(pItem = m_szSubagentList; *pItem != 0; pItem = pEnd + 1)
+   {
+      pEnd = strchr(pItem, '\n');
+      if (pEnd != NULL)
+         *pEnd = 0;
+      LoadSubAgent(pItem);
+   }
+
    // Agent start time
    g_dwAgentStartTime = time(NULL);
+
+   // Start network listener
+   ThreadCreate(ListenerThread, 0, NULL);
+
+   m_hCondShutdown = ConditionCreate(FALSE);
+   ThreadSleep(3);
 
    return TRUE;
 }
@@ -129,7 +190,15 @@ BOOL Initialize(void)
 
 void Shutdown(void)
 {
+   // Set shutdowm flag and sleep for some time
+   // to allow other threads to finish
+   g_dwFlags |= AF_SHUTDOWN;
+   ThreadSleep(5);
+
    CloseLog();
+
+   // Notify main thread about shutdown
+   ConditionSet(m_hCondShutdown);
 }
 
 
@@ -140,6 +209,27 @@ void Shutdown(void)
 void Main(void)
 {
    WriteLog(MSG_AGENT_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+
+   if (g_dwFlags & AF_DAEMON)
+   {
+      ConditionWait(m_hCondShutdown, INFINITE);
+   }
+   else
+   {
+#ifdef _WIN32
+      printf("Agent running. Press ESC to shutdown.\n");
+      while(1)
+      {
+         if (getch() == 27)
+            break;
+      }
+      printf("Agent shutting down...\n");
+      Shutdown();
+#else
+      printf("Agent running. Press Ctrl+C to shutdown.\n");
+      ConditionWait(m_hCondShutdown, INFINITE);
+#endif
+   }
 }
 
 
@@ -207,10 +297,48 @@ int main(int argc, char *argv[])
       case ACTION_RUN_AGENT:
          if (NxLoadConfig(szConfigFile, cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
-            if (Initialize())
+#ifdef _WIN32
+            if (g_dwFlags & AF_DAEMON)
             {
-               Main();
+               InitService();
             }
+            else
+            {
+               if (Initialize())
+               {
+                  Main();
+               }
+               else
+               {
+                  ConsolePrintf("Agent initialization failed\n");
+                  CloseLog();
+                  iExitCode = 3;
+               }
+            }
+#else    /* _WIN32 */
+            if (g_dwFlags & AF_DAEMON)
+               if (daemon(0, 0) == -1)
+               {
+                  perror("Unable to setup itself as a daemon");
+                  iExitCode = 4;
+               }
+            if (iExitCode == 0)
+            {
+               if (Initialize())
+               {
+                  Main();
+               }
+               else
+               {
+                  ConsolePrintf("Agent initialization failed\n");
+                  CloseLog();
+                  iExitCode = 3;
+               }
+            }
+#endif   /* _WIN32 */
+
+            if (m_hCondShutdown != INVALID_HANDLE_VALUE)
+               ConditionDestroy(m_hCondShutdown);
          }
          else
          {

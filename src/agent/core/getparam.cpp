@@ -41,10 +41,7 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 
 static AGENT_PARAM *m_pParamList = NULL;
 static int m_iNumParams = 0;
-static DWORD m_dwAcceptedConnections = 0;
-static DWORD m_dwRejectedConnections = 0;
 static DWORD m_dwTimedOutRequests = 0;
-static DWORD m_dwAcceptErrors = 0;
 static DWORD m_dwAuthenticationFailures = 0;
 static DWORD m_dwProcessedRequests = 0;
 static DWORD m_dwFailedRequests = 0;
@@ -90,12 +87,12 @@ static LONG H_UIntPtr(char *cmd, char *arg, char *value)
 
 static AGENT_PARAM m_stdParams[] =
 {
-   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&m_dwAcceptedConnections },
-   { "Agent.AcceptErrors", H_UIntPtr, (char *)&m_dwAcceptErrors },
+   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections },
+   { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors },
    { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures },
    { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests },
    { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests },
-   { "Agent.RejectedConnections", H_UIntPtr, (char *)&m_dwRejectedConnections },
+   { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections },
    { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests },
    { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests },
    { "Agent.Uptime", H_AgentUptime, NULL },
