@@ -1,13 +1,15 @@
 #!/bin/sh
 
 trap '
-	rm tmp
+	rm -f tmp
 ' INT EXIT
 
 if [ "x"$3 = "x" ]; then
 	echo "Usage: $0 input.tar.gz scriptname output.sh"
 	exit
 fi
+
+[ -r $1 ] || echo "Can't read $1" && exit
 
 md5=`which md5`
 if [ $? != 0 ]; then
