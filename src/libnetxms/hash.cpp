@@ -103,12 +103,9 @@ static DWORD crctab[256]=
 //
 
 DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData,
-		DWORD nBytes, DWORD dwCRC = 0xFFFFFFFF)
+		DWORD nBytes, DWORD dwCRC = 0)
 {
-	if (dwCRC != 0xFFFFFFFF)
-	{
-		dwCRC = ~dwCRC;
-	}
+	dwCRC = ~dwCRC;
 
 	while (nBytes-- != 0)
 	{
