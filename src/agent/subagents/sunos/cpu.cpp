@@ -36,6 +36,7 @@
 //
 
 static int m_nCPUCount = 1;
+static int m_nInstanceMap[MAX_CPU_COUNT];
 static DWORD m_dwUsage[MAX_CPU_COUNT + 1];
 static DWORD m_dwUsage5[MAX_CPU_COUNT + 1];
 static DWORD m_dwUsage15[MAX_CPU_COUNT + 1];
@@ -53,13 +54,14 @@ static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
 
    for(i = 0, pData = pValues; i < m_nCPUCount; i++, pData += CPU_STATES)
    {
-      kp = kstat_lookup(kc, "cpu_stat", i, NULL);
+      kp = kstat_lookup(kc, "cpu_stat", m_nInstanceMap[i], NULL);
       if (kp != NULL)
       {
          if (kstat_read(kc, kp, NULL) != -1)
          {
             memcpy(pData, ((cpu_stat_t *)kp->ks_data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
          }
+			else printf("read failed\n");
       }
    }
 }
@@ -74,7 +76,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 	kstat_ctl_t *kc;
 	kstat_t *kp;
 	kstat_named_t *kn;
-   int i, j, iIdleTime;
+   int i, j, iIdleTime, iLimit;
    DWORD *pdwHistory, dwHistoryPos, dwCurrPos, dwIndex;
    DWORD dwSum[MAX_CPU_COUNT + 1];
    uint_t *pnLastTimes, *pnCurrTimes, *pnTemp;
@@ -104,6 +106,15 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 		}
 	}
 
+	// Read CPU instance numbers
+	memset(m_nInstanceMap, 0xFF, sizeof(int) * MAX_CPU_COUNT);
+	for(i = 0, j = 0; i < m_nCPUCount; i++)
+	{
+		while(kstat_lookup(kc, "cpu_stat", j, NULL) == NULL)
+			j++;
+		m_nInstanceMap[i] = j++;
+	}
+
    // Initialize data
    memset(m_dwUsage, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
    memset(m_dwUsage5, 0, sizeof(DWORD) * (MAX_CPU_COUNT + 1));
@@ -129,7 +140,8 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg)
 		    i < m_nCPUCount; i++)
       {
          iIdleTime = j + CPU_IDLE;
-         for(nSum = 0; j < CPU_STATES; j++)
+			iLimit = j + CPU_STATES;
+         for(nSum = 0; j < iLimit; j++)
             nSum += pnCurrTimes[j] - pnLastTimes[j];
          nSysSum += nSum;
          nSysCurrIdle += pnCurrTimes[iIdleTime];
@@ -234,12 +246,18 @@ LONG H_CPUUsage(char *pszParam, char *pArg, char *pValue)
    }
    else
    {
-      LONG nCPU;
+      LONG nCPU = -1, nInstance;
       char *eptr, szBuffer[32] = "error";
 
       // Get CPU number
       NxGetParameterArg(pszParam, 1, szBuffer, 32);
-      nCPU = strtol(szBuffer, &eptr, 0);
+      nInstance = strtol(szBuffer, &eptr, 0);
+		if (nInstance != -1)
+		{
+			for(nCPU = 0; nCPU < MAX_CPU_COUNT; nCPU++)
+				if (m_nInstanceMap[nCPU] == nInstance)
+			   	break;
+		}
       if ((*eptr == 0) && (nCPU >= 0) && (nCPU < m_nCPUCount))
       {
          switch(pArg[1])
