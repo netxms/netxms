@@ -37,6 +37,8 @@
 #define AGENT_PROTOCOL_VERSION   1
 #define MAX_PARAM_NAME           256
 #define MAX_RESULT_LENGTH        256
+#define MAX_CMD_LEN              256
+#define COMMAND_TIMEOUT          60
 
 
 //
