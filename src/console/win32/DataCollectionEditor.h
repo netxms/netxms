@@ -33,6 +33,7 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bIsTemplate;
 	void SortList(void);
 	void ChangeItemsStatus(int iStatus);
 	void SelectListItem(int iItem);

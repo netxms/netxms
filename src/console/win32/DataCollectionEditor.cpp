@@ -23,6 +23,7 @@ IMPLEMENT_DYNCREATE(CDataCollectionEditor, CMDIChildWnd)
 CDataCollectionEditor::CDataCollectionEditor()
 {
    m_pItemList = NULL;
+   m_bIsTemplate = FALSE;
 
    m_iSortMode = theApp.GetProfileInt(_T("DCEditor"), _T("SortMode"), 0);
    m_iSortDir = theApp.GetProfileInt(_T("DCEditor"), _T("SortDir"), 1);
@@ -30,7 +31,15 @@ CDataCollectionEditor::CDataCollectionEditor()
 
 CDataCollectionEditor::CDataCollectionEditor(NXC_DCI_LIST *pList)
 {
+   NXC_OBJECT *pObject;
+
    m_pItemList = pList;
+
+   pObject = NXCFindObjectById(g_hSession, pList->dwNodeId);
+   if (pObject != NULL)
+      m_bIsTemplate = (pObject->iClass == OBJECT_TEMPLATE);
+   else
+      m_bIsTemplate = FALSE;
 
    m_iSortMode = theApp.GetProfileInt(_T("DCEditor"), _T("SortMode"), 0);
    m_iSortDir = theApp.GetProfileInt(_T("DCEditor"), _T("SortDir"), 1);
@@ -405,12 +414,12 @@ void CDataCollectionEditor::OnUpdateItemDelete(CCmdUI* pCmdUI)
 
 void CDataCollectionEditor::OnUpdateItemShowdata(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() > 0) && (!m_bIsTemplate));
 }
 
 void CDataCollectionEditor::OnUpdateItemGraph(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() == 1) && (!m_bIsTemplate));
 }
 
 void CDataCollectionEditor::OnUpdateItemCopy(CCmdUI* pCmdUI) 
