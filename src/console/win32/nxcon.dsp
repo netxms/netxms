@@ -289,6 +289,10 @@ SOURCE=.\NodePropsGeneral.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodePropsPolling.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NodeSummary.cpp
 # End Source File
 # Begin Source File
@@ -603,6 +607,10 @@ SOURCE=.\NodePoller.h
 # Begin Source File
 
 SOURCE=.\NodePropsGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NodePropsPolling.h
 # End Source File
 # Begin Source File
 

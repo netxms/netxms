@@ -1566,16 +1566,69 @@ BEGIN
     GROUPBOX        "General",IDC_STATIC,7,7,170,68
     LTEXT           "Name",IDC_STATIC,13,18,20,8
     GROUPBOX        "Parent object",IDC_STATIC,7,191,170,42
-    ICON            "",IDC_ICON_PARENT,14,204,21,20
+    ICON            "",IDC_ICON_PARENT,14,204,20,20
     LTEXT           "ID:",IDC_STATIC_ID,43,204,69,8
     LTEXT           "Name",IDC_STATIC_NAME,44,218,127,9
     LTEXT           "Service type",IDC_STATIC,13,45,40,8
     LTEXT           "TCP/UDP Port",IDC_STATIC,113,45,48,8
     GROUPBOX        "IP Protocol",IDC_STATIC,7,79,169,37
     LTEXT           "Protocol number",IDC_STATIC,103,87,52,8
-    GROUPBOX        "Static",IDC_STATIC,7,119,169,68
+    GROUPBOX        "Request/Responce",IDC_STATIC,7,119,169,68
     LTEXT           "Request",IDC_STATIC,13,128,28,8
     LTEXT           "Expected responce",IDC_STATIC,13,156,62,8
+END
+
+IDD_OBJECT_NETSRV_GENERAL DIALOG DISCARDABLE  0, 0, 292, 170
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,26,211,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ID,233,26,45,14,ES_AUTOHSCROLL | ES_READONLY
+    COMBOBOX        IDC_COMBO_TYPE,14,58,84,76,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_PORT,109,57,48,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_IPADDR,167,57,94,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "...",IDC_SELECT_IP,265,57,14,14
+    CONTROL         "&TCP",IDC_RADIO_TCP,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,13,94,30,10
+    CONTROL         "&UDP",IDC_RADIO_UDP,"Button",BS_AUTORADIOBUTTON,13,105,
+                    31,10
+    CONTROL         "&ICMP",IDC_RADIO_ICMP,"Button",BS_AUTORADIOBUTTON,13,
+                    116,33,10
+    CONTROL         "&Other:",IDC_RADIO_OTHER,"Button",BS_AUTORADIOBUTTON,56,
+                    94,35,10
+    EDITTEXT        IDC_EDIT_PROTO,56,106,42,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_POLLER,13,143,66,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "...",IDC_SELECT_POLLER,84,143,14,14
+    EDITTEXT        IDC_EDIT_REQUEST,113,108,164,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_RESPONCE,113,137,164,14,ES_AUTOHSCROLL
+    LTEXT           "Object ID",IDC_STATIC,233,16,31,8
+    LTEXT           "Bound to IP address",IDC_STATIC,167,47,65,8
+    LTEXT           "Name",IDC_STATIC,13,16,20,8
+    GROUPBOX        "General",IDC_STATIC,7,7,278,73
+    LTEXT           "Service type",IDC_STATIC,14,47,40,8
+    LTEXT           "TCP/UDP port",IDC_STATIC,108,47,48,8
+    GROUPBOX        "IP Protocol",IDC_STATIC,7,83,96,46
+    GROUPBOX        "Request/Responce",IDC_STATIC,107,83,178,80
+    LTEXT           "Request",IDC_STATIC,113,98,28,8
+    LTEXT           "Expected responce",IDC_STATIC,113,127,62,8
+    GROUPBOX        "Poller node",IDC_STATIC,7,132,96,31
+END
+
+IDD_OBJECT_NODE_POLL DIALOG DISCARDABLE  0, 0, 292, 170
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Polling"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_POLLER,13,27,84,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_SELECT_POLLER,100,27,14,14
+    GROUPBOX        "Network Service Poller",IDC_STATIC,7,7,278,42
+    LTEXT           "Poller node:",IDC_STATIC,13,17,38,8
+    LTEXT           "All network services of this node will be polled from poller node specified here, if not overrided by network service settings.",
+                    IDC_STATIC,126,17,153,25
 END
 
 
@@ -1948,6 +2001,22 @@ BEGIN
         RIGHTMARGIN, 233
         TOPMARGIN, 7
         BOTTOMMARGIN, 232
+    END
+
+    IDD_OBJECT_NETSRV_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_OBJECT_NODE_POLL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
     END
 END
 #endif    // APSTUDIO_INVOKED

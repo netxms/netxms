@@ -297,6 +297,10 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
       }
    }
 
+   // Listen IP address
+   if (pRequest->IsVariableExist(VID_IP_ADDRESS))
+      m_dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+
    // Service type
    if (pRequest->IsVariableExist(VID_SERVICE_TYPE))
       m_iServiceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);

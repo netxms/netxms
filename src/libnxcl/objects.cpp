@@ -209,6 +209,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
          pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong(VID_DISCOVERY_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
+         pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
          pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
@@ -234,7 +235,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->netsrv.iServiceType = (int)pMsg->GetVariableShort(VID_SERVICE_TYPE);
          pObject->netsrv.wProto = pMsg->GetVariableShort(VID_IP_PROTO);
          pObject->netsrv.wPort = pMsg->GetVariableShort(VID_IP_PORT);
-         pObject->netsrv.dwPollerNode = pMsg->GetVariableShort(VID_POLLER_NODE_ID);
+         pObject->netsrv.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->netsrv.pszRequest = pMsg->GetVariableStr(VID_SERVICE_REQUEST);
          pObject->netsrv.pszResponce = pMsg->GetVariableStr(VID_SERVICE_RESPONCE);
          break;
@@ -525,6 +526,10 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_IP_PORT, pUpdate->wPort);
    if (pUpdate->dwFlags & OBJ_UPDATE_SERVICE_TYPE)
       msg.SetVariable(VID_SERVICE_TYPE, (WORD)pUpdate->iServiceType);
+   if (pUpdate->dwFlags & OBJ_UPDATE_POLLER_NODE)
+      msg.SetVariable(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
+   if (pUpdate->dwFlags & OBJ_UPDATE_IP_ADDR)
+      msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
    {
       DWORD i, dwId1, dwId2;

@@ -144,6 +144,8 @@
 #define IDD_SELECT_AGENT_PARAM          253
 #define IDD_INPUT_BOX                   254
 #define IDD_CREATE_NETSRV               255
+#define IDD_OBJECT_NETSRV_GENERAL       256
+#define IDD_OBJECT_NODE_POLL            257
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -163,6 +165,7 @@
 #define IDC_CHECK_LOG                   1012
 #define IDC_EDIT_PRIMARY_IP             1015
 #define IDC_SELECT_IP                   1016
+#define IDC_SELECT_POLLER               1017
 #define IDC_COMBO_AUTH                  1018
 #define IDC_EDIT_SECRET                 1019
 #define IDC_EDIT_PORT                   1020
@@ -346,10 +349,13 @@
 #define IDC_CB_ITEM10                   1227
 #define IDC_EDIT_RESPONCE               1227
 #define IDC_CB_ITEM14                   1228
+#define IDC_COMBO_TYPE                  1228
 #define IDC_CB_ITEM11                   1229
 #define IDC_CB_ITEM15                   1230
 #define IDC_CB_ITEM12                   1231
 #define IDC_CB_ITEM16                   1232
+#define IDC_EDIT_POLLER                 1232
+#define IDC_EDIT_IPADDR                 1233
 #define IDR_PACKAGE_MGR                 8156
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
@@ -454,9 +460,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        256
+#define _APS_NEXT_RESOURCE_VALUE        258
 #define _APS_NEXT_COMMAND_VALUE         32915
-#define _APS_NEXT_CONTROL_VALUE         1228
+#define _APS_NEXT_CONTROL_VALUE         1235
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif
