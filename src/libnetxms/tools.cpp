@@ -97,7 +97,8 @@ void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
 
 static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
 {
-   const TCHAR *SPtr,*MPtr,*BPtr;
+   const TCHAR *SPtr, *MPtr, *BPtr, *EPtr;
+   BOOL bFinishScan;
 
    SPtr = string;
    MPtr = pattern;
@@ -118,33 +119,55 @@ static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
          case _T('*'):
             while(*MPtr == _T('*'))
                MPtr++;
-            if (*MPtr==0)
+            if (*MPtr == 0)
 	            return TRUE;
-            if (*MPtr==_T('?'))      // Handle "*?" case
+            if (*MPtr == _T('?'))      // Handle "*?" case
             {
-               if (*SPtr!=0)
+               if (*SPtr != 0)
                   SPtr++;
                else
                   return FALSE;
                break;
             }
-            BPtr=MPtr;           // Text block begins here
-            while((*MPtr!=0)&&(*MPtr!=_T('?'))&&(*MPtr!=_T('*')))
+            BPtr = MPtr;           // Text block begins here
+            while((*MPtr != 0) && (*MPtr != _T('?')) && (*MPtr != _T('*')))
                MPtr++;     // Find the end of text block
-            while(1)
+            // Try to find rightmost matching block
+            EPtr = NULL;
+            bFinishScan = FALSE;
+            do
             {
-               while((*SPtr!=0)&&(*SPtr!=*BPtr))
+               while(1)
+               {
+                  while((*SPtr != 0) && (*SPtr != *BPtr))
+                     SPtr++;
+                  if (_tcslen(SPtr) < ((size_t)(MPtr - BPtr)) * sizeof(TCHAR))
+                  {
+                     if (EPtr == NULL)
+                     {
+                        return FALSE;  // Length of remained text less than remaining pattern
+                     }
+                     else
+                     {
+                        SPtr = EPtr;   // Revert back to last match
+                        bFinishScan = TRUE;
+                        break;
+                     }
+                  }
+                  if (!memcmp(BPtr, SPtr, (MPtr - BPtr) * sizeof(TCHAR)))
+                     break;
                   SPtr++;
-               if (_tcslen(SPtr)<((size_t)(MPtr-BPtr)) * sizeof(TCHAR))
-                  return FALSE;  // Length of remained text less than remaining pattern
-               if (!memcmp(BPtr,SPtr,(MPtr-BPtr) * sizeof(TCHAR)))
-                  break;
-               SPtr++;
+               }
+               if (!bFinishScan)
+               {
+                  SPtr += (MPtr - BPtr);   // Increment SPtr because we alredy match current fragment
+                  EPtr = SPtr;   // Remember current point
+               }
             }
-            SPtr+=(MPtr-BPtr);   // Increment SPtr because we alredy match current fragment
+            while(!bFinishScan);
             break;
          default:
-            if (*MPtr==*SPtr)
+            if (*MPtr == *SPtr)
             {
                SPtr++;
                MPtr++;
@@ -155,7 +178,7 @@ static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
       }
    }
 
-   return *SPtr==0 ? TRUE : FALSE;
+   return *SPtr == 0 ? TRUE : FALSE;
 }
 
 BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern,
