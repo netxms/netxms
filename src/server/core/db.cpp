@@ -55,32 +55,52 @@ static void (* m_fpDrvUnload)(void) = NULL;
 
 
 //
+// Get symbol address and log errors
+//
+
+static void *DLGetSymbolAddrEx(HMODULE hModule, char *pszSymbol)
+{
+   void *pFunc;
+   char szErrorText[256];
+
+   pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
+   if (pFunc == NULL)
+      WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, "ss", pszSymbol, szErrorText);
+   return pFunc;
+}
+
+
+//
 // Load and initialize database driver
 //
 
 BOOL DBInit(void)
 {
    BOOL (* fpDrvInit)(char *);
+   char szErrorText[256];
 
    // Load driver's module
-   m_hDriver = DLOpen(g_szDbDriver);
+   m_hDriver = DLOpen(g_szDbDriver, szErrorText);
    if (m_hDriver == NULL)
+   {
+      WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", g_szDbDriver, szErrorText);
       return FALSE;
+   }
 
    // Import symbols
-   fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddr(m_hDriver, "DrvInit");
-   m_fpDrvConnect = (DB_HANDLE (*)(char *, char *, char *, char *))DLGetSymbolAddr(m_hDriver, "DrvConnect");
-   m_fpDrvDisconnect = (void (*)(DB_HANDLE))DLGetSymbolAddr(m_hDriver, "DrvDisconnect");
-   m_fpDrvQuery = (BOOL (*)(DB_HANDLE, char *))DLGetSymbolAddr(m_hDriver, "DrvQuery");
-   m_fpDrvSelect = (DB_RESULT (*)(DB_HANDLE, char *))DLGetSymbolAddr(m_hDriver, "DrvSelect");
-   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_HANDLE, char *))DLGetSymbolAddr(m_hDriver, "DrvAsyncSelect");
-   m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddr(m_hDriver, "DrvFetch");
-   m_fpDrvGetField = (char* (*)(DB_RESULT, int, int))DLGetSymbolAddr(m_hDriver, "DrvGetField");
-   m_fpDrvGetFieldAsync = (char* (*)(DB_ASYNC_RESULT, int, char *, int))DLGetSymbolAddr(m_hDriver, "DrvGetFieldAsync");
-   m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddr(m_hDriver, "DrvGetNumRows");
-   m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddr(m_hDriver, "DrvFreeResult");
-   m_fpDrvFreeAsyncResult = (void (*)(DB_ASYNC_RESULT))DLGetSymbolAddr(m_hDriver, "DrvFreeAsyncResult");
-   m_fpDrvUnload = (void (*)(void))DLGetSymbolAddr(m_hDriver, "DrvUnload");
+   fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddrEx(m_hDriver, "DrvInit");
+   m_fpDrvConnect = (DB_HANDLE (*)(char *, char *, char *, char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
+   m_fpDrvDisconnect = (void (*)(DB_HANDLE))DLGetSymbolAddrEx(m_hDriver, "DrvDisconnect");
+   m_fpDrvQuery = (BOOL (*)(DB_HANDLE, char *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
+   m_fpDrvSelect = (DB_RESULT (*)(DB_HANDLE, char *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
+   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_HANDLE, char *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
+   m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
+   m_fpDrvGetField = (char* (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
+   m_fpDrvGetFieldAsync = (char* (*)(DB_ASYNC_RESULT, int, char *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
+   m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
+   m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeResult");
+   m_fpDrvFreeAsyncResult = (void (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeAsyncResult");
+   m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(m_hDriver, "DrvUnload");
    if ((fpDrvInit == NULL) || (m_fpDrvConnect == NULL) || (m_fpDrvDisconnect == NULL) ||
        (m_fpDrvQuery == NULL) || (m_fpDrvSelect == NULL) || (m_fpDrvGetField == NULL) ||
        (m_fpDrvGetNumRows == NULL) || (m_fpDrvFreeResult == NULL) || 

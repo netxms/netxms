@@ -376,10 +376,6 @@ BOOL SleepAndCheckForShutdown(int iSeconds);
 
 void SaveObjects(void);
 
-HMODULE DLOpen(char *szModule);
-void *DLGetSymbolAddr(HMODULE hModule, char *szSymbol);
-void DLClose(HMODULE hModule);
-
 BOOL DBInit(void);
 DB_HANDLE DBConnect(void);
 void DBDisconnect(DB_HANDLE hConn);

@@ -65,117 +65,40 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
 // Returns TRUE on success and FALSE on failure
 //
 
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
+{
+   { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
+   { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
+   { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
+   { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
+   { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
+   { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
+   { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
+   { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
 BOOL LoadConfig(void)
 {
-   FILE *cfg;
-   char *ptr, buffer[4096];
-   int sourceLine = 0, errors = 0;
+   BOOL bSuccess = FALSE;
 
    if (IsStandalone())
       printf("Using configuration file \"%s\"\n", g_szConfigFile);
 
-   cfg = fopen(g_szConfigFile, "r");
-   if (cfg == NULL)
+   if (NxLoadConfig(g_szConfigFile, m_cfgTemplate, IsStandalone()))
    {
-      if (IsStandalone())
-         printf("Unable to open configuration file: %s\n", strerror(errno));
-      return FALSE;
-   }
-
-   while(!feof(cfg))
-   {
-      buffer[0] = 0;
-      fgets(buffer, 4095, cfg);
-      sourceLine++;
-      ptr = strchr(buffer, '\n');
-      if (ptr != NULL)
-         *ptr = 0;
-      ptr = strchr(buffer, '#');
-      if (ptr != NULL)
-         *ptr = 0;
-
-      StrStrip(buffer);
-      if (buffer[0] == 0)
-         continue;
-
-      ptr = strchr(buffer, '=');
-      if (ptr == NULL)
+      if ((!stricmp(g_szLogFile,"{EventLog}")) ||
+          (!stricmp(g_szLogFile,"{syslog}")))
       {
-         errors++;
-         if (IsStandalone())
-            printf("Syntax error in configuration file, line %d\n", sourceLine);
-         continue;
-      }
-      *ptr = 0;
-      ptr++;
-      StrStrip(buffer);
-      StrStrip(ptr);
-
-      if (!stricmp(buffer,"LogFile"))
-      {
-#ifdef _WIN32
-         if (!stricmp(ptr,"{EventLog}"))
-         {
-            g_dwFlags |= AF_USE_EVENT_LOG;
-         }
-         else
-#endif  /* _WIN32 */
-         {
-            g_dwFlags &= ~AF_USE_EVENT_LOG;
-            memset(g_szLogFile, 0, MAX_PATH);
-            strncpy(g_szLogFile, ptr, MAX_PATH - 1);
-         }
-      }
-      else if (!stricmp(buffer,"DBDriver"))
-      {
-         memset(g_szDbDriver, 0, MAX_PATH);
-         strncpy(g_szDbDriver, ptr, MAX_PATH - 1);
-      }
-      else if (!stricmp(buffer,"DBDrvParams"))
-      {
-         memset(g_szDbDrvParams, 0, MAX_PATH);
-         strncpy(g_szDbDrvParams, ptr, MAX_PATH - 1);
-      }
-      else if (!stricmp(buffer,"DBServer"))
-      {
-         memset(g_szDbServer, 0, MAX_PATH);
-         strncpy(g_szDbServer, ptr, MAX_PATH - 1);
-      }
-      else if (!stricmp(buffer,"DBLogin"))
-      {
-         memset(g_szDbLogin, 0, MAX_DB_LOGIN);
-         strncpy(g_szDbLogin, ptr, MAX_DB_LOGIN - 1);
-      }
-      else if (!stricmp(buffer,"DBPassword"))
-      {
-         memset(g_szDbPassword, 0, MAX_DB_PASSWORD);
-         strncpy(g_szDbPassword, ptr, MAX_DB_PASSWORD - 1);
-      }
-      else if (!stricmp(buffer,"DBName"))
-      {
-         memset(g_szDbName, 0, MAX_DB_NAME);
-         strncpy(g_szDbName, ptr, MAX_DB_NAME - 1);
-      }
-      else if (!stricmp(buffer,"LogFailedSQLQueries"))
-      {
-         if (!stricmp(ptr, "yes") || !stricmp(ptr, "true") || !stricmp(ptr, "1"))
-            g_dwFlags |= AF_LOG_SQL_ERRORS;
-         else
-            g_dwFlags &= ~AF_LOG_SQL_ERRORS;
+         g_dwFlags |= AF_USE_EVENT_LOG;
       }
       else
       {
-         errors++;
-         if (g_dwFlags & AF_STANDALONE)
-            printf("Error in configuration file, line %d: unknown option \"%s\"\n",sourceLine,buffer);
+         g_dwFlags &= ~AF_USE_EVENT_LOG;
       }
+      bSuccess = TRUE;
    }
-
-   if ((IsStandalone()) && (!errors))
-      printf("Configuration file OK\n");
-
-   fclose(cfg);
-   return TRUE;
+   return bSuccess;
 }
 
 
