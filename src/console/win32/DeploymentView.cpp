@@ -30,6 +30,7 @@ CDeploymentView::CDeploymentView()
 {
    m_dwRqId = 0;
    m_bFinished = FALSE;
+   m_dwFailedNodes = 0;
 }
 
 CDeploymentView::~CDeploymentView()
@@ -90,12 +91,16 @@ int CDeploymentView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    GetClientRect(&rect);
    rect.top += STATUS_HEIGHT + 1;
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, ID_LIST_VIEW);
-   m_wndListCtrl.InsertColumn(0, _T("Node"), LVCFMT_LEFT, 120);
-   m_wndListCtrl.InsertColumn(1, _T("Status"), LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 250);
+   m_wndListCtrl.InsertColumn(0, _T("Node"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(1, _T("Status"), LVCFMT_LEFT, 120);
+   m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 350);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
-   m_imageList.Create(g_pObjectSmallImageList);
+   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
+   m_imageList.Add(theApp.LoadIcon(IDI_RUNNING));
+   m_imageList.Add(theApp.LoadIcon(IDI_PENDING));
+   m_imageList.Add(theApp.LoadIcon(IDI_ACK));
+   m_imageList.Add(theApp.LoadIcon(IDI_NACK));
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 	
 	return 0;
@@ -166,15 +171,25 @@ void CDeploymentView::OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInf
          pObject = NXCFindObjectById(g_hSession, pInfo->dwNodeId);
          if (pObject != NULL)
          {
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pObject->szName,
-                                             GetObjectImageIndex(pObject));
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pObject->szName, 1);
          }
          else
          {
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("<invalid>"), -1);
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("<invalid>"), 3);
          }
          m_wndListCtrl.SetItemData(iItem, pInfo->dwNodeId);
          m_wndProgressCtrl.SetRange32(0, m_wndListCtrl.GetItemCount());
+      }
+      else
+      {
+         LVITEM lvi;
+         static m_iStateImage[] = { 1, 0, 0, 2, 3, 0 };
+
+         lvi.iItem = iItem;
+         lvi.iSubItem = 0;
+         lvi.mask = LVIF_IMAGE;
+         lvi.iImage = m_iStateImage[pInfo->dwStatus];
+         m_wndListCtrl.SetItem(&lvi);
       }
       m_wndListCtrl.SetItemText(iItem, 1, g_szDeploymentStatus[pInfo->dwStatus]);
       m_wndListCtrl.SetItemText(iItem, 2, 
@@ -183,6 +198,9 @@ void CDeploymentView::OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInf
       if ((pInfo->dwStatus == DEPLOYMENT_STATUS_FAILED) ||
           (pInfo->dwStatus == DEPLOYMENT_STATUS_COMPLETED))
          m_wndProgressCtrl.StepIt();
+
+      if (pInfo->dwStatus == DEPLOYMENT_STATUS_FAILED)
+         m_dwFailedNodes++;
    }
 }
 
@@ -237,7 +255,16 @@ void CDeploymentView::OnDeploymentFinished(WPARAM wParam, LPARAM lParam)
    m_bFinished = TRUE;
    InvalidateRect(NULL);
    if (lParam == RCC_SUCCESS)
-      MessageBox(_T("Deployment job finished successfully"), _T("Information"), MB_OK | MB_ICONINFORMATION);
+   {
+      if (m_dwFailedNodes == 0)
+         MessageBox(_T("Deployment job finished successfully"),
+                    _T("Information"), MB_OK | MB_ICONINFORMATION);
+      else
+         MessageBox(_T("Deployment job finished with errors"),
+                    _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+   }
    else
+   {
       theApp.ErrorBox(lParam, _T("Deployment job failed: %s"));
+   }
 }

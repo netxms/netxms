@@ -17,4 +17,6 @@ EXTRA_DIST = \
 	ovl_status_warning.ico passwd.ico question.ico rexec.ico RuleManager.ico \
 	setup.ico SeverityCritical.ico SeverityMajor.ico SeverityMinor.ico \
 	SeverityNormal.ico SeverityWarning.ico sms.ico sortdown.ico \
-	sort_up.ico tree.ico unsupported.ico user.ico users.ico
+	sort_up.ico tree.ico unsupported.ico user.ico users.ico \
+	nack.ico running.ico pending.ico
+

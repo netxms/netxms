@@ -109,6 +109,9 @@ IDI_TRAP                ICON    DISCARDABLE     "icons\\trap.ico"
 IDI_PACKAGE             ICON    DISCARDABLE     "icons\\package.ico"
 IDI_DATABASE            ICON    DISCARDABLE     "icons\\database.ico"
 IDI_DEPLOY              ICON    DISCARDABLE     "icons\\deploy.ico"
+IDI_NACK                ICON    DISCARDABLE     "icons\\nack.ico"
+IDI_RUNNING             ICON    DISCARDABLE     "icons\\running.ico"
+IDI_PENDING             ICON    DISCARDABLE     "icons\\pending.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

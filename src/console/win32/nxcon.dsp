@@ -854,6 +854,10 @@ SOURCE=.\res\login.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\nack.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\NetMap.ICO
 # End Source File
 # Begin Source File
@@ -922,6 +926,10 @@ SOURCE=.\icons\passwd.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\pending.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\psym_any.bmp
 # End Source File
 # Begin Source File
@@ -935,6 +943,10 @@ SOURCE=.\icons\rexec.ico
 # Begin Source File
 
 SOURCE=.\icons\RuleManager.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\running.ico
 # End Source File
 # Begin Source File
 

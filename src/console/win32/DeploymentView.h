@@ -31,6 +31,7 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwFailedNodes;
 	CImageList m_imageList;
 	CProgressCtrl m_wndProgressCtrl;
 	CFont m_font;
