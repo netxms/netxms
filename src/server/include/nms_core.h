@@ -104,6 +104,7 @@
 
 #define DDIR_MIBS             "/mibs"
 #define DDIR_IMAGES           "/images"
+#define DDIR_PACKAGES         "/packages"
 
 #endif   /* _WIN32 */
 
