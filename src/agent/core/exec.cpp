@@ -35,40 +35,47 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    DebugPrintf("EXEC: Expanding command \"%s\"", pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
-   iSize = strlen(pszCommand) + 1;
-   pszCmdLine = (char *)malloc(iSize);
-   for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
-      if (*sptr == '$')
-      {
-         sptr++;
-         if (*sptr == 0)
-            break;   // Single $ character at the end of line
-         if ((*sptr >= '1') && (*sptr <= '9'))
+   if (pArgs != NULL)
+   {
+      iSize = strlen(pszCommand) + 1;
+      pszCmdLine = (char *)malloc(iSize);
+      for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
+         if (*sptr == '$')
          {
-            DWORD dwArg = *sptr - '1';
-
-            if (dwArg < pArgs->dwNumStrings)
+            sptr++;
+            if (*sptr == 0)
+               break;   // Single $ character at the end of line
+            if ((*sptr >= '1') && (*sptr <= '9'))
             {
-               int iArgLength;
+               DWORD dwArg = *sptr - '1';
 
-               // Extend resulting line
-               iArgLength = strlen(pArgs->ppStringList[dwArg]);
-               iSize += iArgLength;
-               pszCmdLine = (char *)realloc(pszCmdLine, iSize);
-               strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
-               i += iArgLength;
+               if (dwArg < pArgs->dwNumStrings)
+               {
+                  int iArgLength;
+
+                  // Extend resulting line
+                  iArgLength = strlen(pArgs->ppStringList[dwArg]);
+                  iSize += iArgLength;
+                  pszCmdLine = (char *)realloc(pszCmdLine, iSize);
+                  strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
+                  i += iArgLength;
+               }
+            }
+            else
+            {
+               pszCmdLine[i++] = *sptr;
             }
          }
          else
          {
             pszCmdLine[i++] = *sptr;
          }
-      }
-      else
-      {
-         pszCmdLine[i++] = *sptr;
-      }
-   pszCmdLine[i] = 0;
+      pszCmdLine[i] = 0;
+   }
+   else
+   {
+      pszCmdLine = pszCommand;
+   }
 
    DebugPrintf("EXEC: Executing \"%s\"", pszCmdLine);
 #if defined(_WIN32)
@@ -86,7 +93,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
                       NULL, NULL, &si, &pi))
    {
       WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
-      dwRetCode = ERR_INTERNAL_ERROR;
+      dwRetCode = ERR_EXEC_FAILED;
    }
    else
    {
@@ -98,14 +105,15 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    if (system(pszCmdLine) == 0)
       dwRetCode = ERR_SUCCESS;
    else
-      dwRetCode = ERR_INTERNAL_ERROR;
+      dwRetCode = ERR_EXEC_FAILED;
 #else
    /* TODO: add UNIX code here */
    dwRetCode = ERR_NOT_IMPLEMENTED;
 #endif
 
    // Cleanup
-   free(pszCmdLine);
+   if (pArgs != NULL)
+      free(pszCmdLine);
 
    return dwRetCode;
 }

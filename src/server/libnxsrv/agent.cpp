@@ -737,3 +737,37 @@ DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 
    return dwResult;
 }
+
+
+//
+// Send upgrade command
+//
+
+DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg;
+   int i;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
+
+   dwRqId = m_dwRequestId++;
+
+   msg.SetCode(CMD_UPGRADE_AGENT);
+   msg.SetId(dwRqId);
+   for(i = _tcslen(pszPkgName) - 1; 
+       (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
+   msg.SetVariable(VID_FILE_NAME, &pszPkgName[i + 1]);
+
+   if (SendMessage(&msg))
+   {
+      dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+   }
+   else
+   {
+      dwResult = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwResult;
+}

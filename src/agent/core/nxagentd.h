@@ -239,6 +239,7 @@ private:
    void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   DWORD Upgrade(CSCPMessage *pRequest);
 
    void ReadThread(void);
    void WriteThread(void);
@@ -275,6 +276,8 @@ void CloseLog(void);
 
 void ConsolePrintf(char *pszFormat, ...);
 void DebugPrintf(char *pszFormat, ...);
+
+void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg);

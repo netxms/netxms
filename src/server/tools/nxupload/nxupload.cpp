@@ -32,13 +32,86 @@
 
 
 //
+// Do agent upgrade
+//
+
+static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
+{
+   DWORD dwError;
+   int i;
+   BOOL bConnected = FALSE;
+
+   dwError = conn.StartUpgrade(pszPkgName);
+   if (dwError == ERR_SUCCESS)
+   {
+      conn.Disconnect();
+
+      if (bVerbose)
+      {
+         printf("Agent upgrade started, waiting for completion...\n"
+                "[............................................................]\r[");
+         fflush(stdout);
+         for(i = 0; i < 120; i += 2)
+         {
+            ThreadSleep(2);
+            putc('*', stdout);
+            fflush(stdout);
+            if ((i % 20 == 0) && (i > 30))
+            {
+               if (conn.Connect(FALSE))
+               {
+                  bConnected = TRUE;
+                  break;   // Connected successfully
+               }
+            }
+         }
+         putc('\n', stdout);
+      }
+      else
+      {
+         ThreadSleep(20);
+         for(i = 20; i < 120; i += 20)
+         {
+            ThreadSleep(20);
+            if (conn.Connect(FALSE))
+            {
+               bConnected = TRUE;
+               break;   // Connected successfully
+            }
+         }
+      }
+
+      // Last attempt to reconnect
+      if (!bConnected)
+         bConnected = conn.Connect(bVerbose);
+
+      if (bConnected && bVerbose)
+      {
+         printf("Successfully established connection to agent after upgrade\n");
+      }
+      else
+      {
+         fprintf(stderr, "Failed to establish connection to the agent after upgrade\n");
+      }
+   }
+   else
+   {
+      if (bVerbose)
+         fprintf(stderr, "%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+   }
+
+   return bConnected ? 0 : 1;
+}
+
+
+//
 // Startup
 //
 
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE;
+   BOOL bStart = TRUE, bVerbose = TRUE, bUpgrade = TRUE;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
    WORD wPort = AGENT_LISTEN_PORT;
@@ -48,7 +121,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hp:qs:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:hp:qs:uvw:")) != -1)
    {
       switch(ch)
       {
@@ -61,6 +134,7 @@ int main(int argc, char *argv[])
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
                    "   -q           : Quiet mode.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
+                   "   -u           : Start agent upgrade from uploaded package.\n"
                    "   -v           : Display version and exit.\n"
                    "   -w <seconds> : Specify command timeout (default is 3 seconds)\n"
                    "\n", wPort);
@@ -99,6 +173,9 @@ int main(int argc, char *argv[])
          case 's':   // Shared secret
             strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
+         case 'u':   // Upgrade agent
+            bUpgrade = TRUE;
+            break;
          case 'v':   // Print version and exit
             printf("NetXMS UPLOAD command-line utility Version " NETXMS_VERSION_STRING "\n");
             bStart = FALSE;
@@ -128,12 +205,14 @@ int main(int argc, char *argv[])
    {
       if (argc - optind < 2)
       {
-         printf("Required argument(s) missing.\nUse nxupload -h to get complete command line syntax.\n");
+         if (bVerbose)
+            printf("Required argument(s) missing.\nUse nxupload -h to get complete command line syntax.\n");
          bStart = FALSE;
       }
       else if ((iAuthMethod != AUTH_NONE) && (szSecret[0] == 0))
       {
-         printf("Shared secret not specified or empty\n");
+         if (bVerbose)
+            fprintf(stderr, "Shared secret not specified or empty\n");
          bStart = FALSE;
       }
 
@@ -160,7 +239,8 @@ int main(int argc, char *argv[])
          }
          if ((dwAddr == 0) || (dwAddr == INADDR_NONE))
          {
-            fprintf(stderr, "Invalid host name or address specified\n");
+            if (bVerbose)
+               fprintf(stderr, "Invalid host name or address specified\n");
          }
          else
          {
@@ -194,10 +274,18 @@ int main(int argc, char *argv[])
                   }
                   else
                   {
-                     printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+                     fprintf(stderr, "%d: %s\n", dwError, AgentErrorCodeToText(dwError));
                   }
                }
-               iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
+
+               if (bUpgrade && (dwError == RCC_SUCCESS))
+               {
+                  iExitCode = UpgradeAgent(conn, argv[optind + 1], bVerbose);
+               }
+               else
+               {
+                  iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
+               }
                conn.Disconnect();
             }
             else

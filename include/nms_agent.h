@@ -61,6 +61,7 @@
 #define ERR_BAD_RESPONCE            ((DWORD)902)
 #define ERR_IO_FAILURE              ((DWORD)903)
 #define ERR_RESOURCE_BUSY           ((DWORD)904)
+#define ERR_EXEC_FAILED             ((DWORD)905)
 
 
 //

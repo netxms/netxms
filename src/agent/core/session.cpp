@@ -298,6 +298,7 @@ void CommSession::ProcessingThread(void)
                RecvFile(pMsg, &msg);
                break;
             case CMD_UPGRADE_AGENT:
+               msg.SetVariable(VID_RCC, Upgrade(pMsg));
                break;
             default:
                msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
@@ -462,8 +463,6 @@ void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   int i;
-   size_t nLen;
    TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
 
    if (m_bInstallationServer)
@@ -471,18 +470,7 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
       szFileName[0] = 0;
       pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
       DebugPrintf("Preparing for receiving file \"%s\"", szFileName);
-      for(i = _tcslen(szFileName) - 1; 
-          (i >= 0) && (szFileName[i] != '\\') && (szFileName[i] != '/'); i--);
-
-      _tcscpy(szFullPath, g_szFileStore);
-      nLen = _tcslen(szFullPath);
-      if ((szFullPath[nLen - 1] != '\\') &&
-          (szFullPath[nLen - 1] != '/'))
-      {
-         _tcscat(szFullPath, FS_PATH_SEPARATOR);
-         nLen++;
-      }
-      _tcsncpy(&szFullPath[nLen], szFileName, MAX_PATH - nLen);
+      BuildFullPath(szFileName, szFullPath);
 
       // Check if for some reason we have already opened file
       if (m_hCurrFile != -1)
@@ -509,4 +497,19 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+
+//
+// Upgrade agent from package in the file store
+//
+
+DWORD CommSession::Upgrade(CSCPMessage *pRequest)
+{
+   TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
+
+   szPkgName[0] = 0;
+   pRequest->GetVariableStr(VID_FILE_NAME, szPkgName, MAX_PATH);
+   BuildFullPath(szPkgName, szFullPath);
+   return UpgradeAgent(szFullPath);
 }

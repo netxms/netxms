@@ -270,6 +270,7 @@ typedef struct
 #define CMD_SET_DCI_STATUS          0x0068
 #define CMD_FILE_DATA               0x0069
 #define CMD_TRANSFER_FILE           0x006A
+#define CMD_UPGRADE_AGENT           0x006B
 
 
 //

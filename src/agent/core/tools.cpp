@@ -61,6 +61,31 @@ void DebugPrintf(char *pszFormat, ...)
 }
 
 
+//
+// Build full path for file in file store
+//
+
+void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
+{
+   int i, nLen;
+
+   // Strip path from original file name, if any
+   for(i = _tcslen(pszFileName) - 1; 
+       (i >= 0) && (pszFileName[i] != '\\') && (pszFileName[i] != '/'); i--);
+
+   // Create full path to the file store
+   _tcscpy(pszFullPath, g_szFileStore);
+   nLen = _tcslen(pszFullPath);
+   if ((pszFullPath[nLen - 1] != '\\') &&
+       (pszFullPath[nLen - 1] != '/'))
+   {
+      _tcscat(pszFullPath, FS_PATH_SEPARATOR);
+      nLen++;
+   }
+   _tcsncpy(&pszFullPath[nLen], &pszFileName[i + 1], MAX_PATH - nLen);
+}
+
+
 /**********************************************************
  Following functions are Windows specific
 **********************************************************/

@@ -51,6 +51,7 @@ static struct
    { ERR_BAD_RESPONCE, _T("Bad responce") },
    { ERR_IO_FAILURE, _T("I/O failure") },
    { ERR_RESOURCE_BUSY, _T("Resource busy") },
+   { ERR_EXEC_FAILED, _T("External program execution failed") },
    { -1, NULL }
 };
 
