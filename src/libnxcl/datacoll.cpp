@@ -234,3 +234,12 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(DWORD dwNodeId, DWORD dwItemId)
 
    return WaitForRCC(dwRqId);
 }
+
+
+//
+// Delete data collection item from list
+//
+
+void LIBNXCL_EXPORTABLE NXCDeleteDCIFromList(NXC_DCI_LIST *pItemList, DWORD dwItemId)
+{
+}

@@ -49,6 +49,8 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnItemNew();
 	afx_msg void OnItemEdit();
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnUpdateItemEdit(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

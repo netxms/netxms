@@ -41,6 +41,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_ITEM_NEW, OnItemNew)
 	ON_COMMAND(ID_ITEM_EDIT, OnItemEdit)
+	ON_WM_SETFOCUS()
+	ON_UPDATE_COMMAND_UI(ID_ITEM_EDIT, OnUpdateItemEdit)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -191,8 +193,21 @@ void CDataCollectionEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 
 void CDataCollectionEditor::OnItemNew() 
 {
-	// TODO: Add your command handler code here
-	
+   DWORD dwResult, dwItemId;
+
+   dwResult = DoRequestArg2(NXCCreateNewDCI, (void *)m_pItemList->dwNodeId, &dwItemId, 
+                            "Creating new data collection item...");
+   if (dwResult == RCC_SUCCESS)
+   {
+   }
+   else
+   {
+      char szBuffer[256];
+
+      sprintf(szBuffer, "Unable to create new data collection item:\n%s", 
+              NXCGetErrorText(dwResult));
+      MessageBox(szBuffer, "Error", MB_ICONSTOP);
+   }
 }
 
 
@@ -210,7 +225,9 @@ void CDataCollectionEditor::OnItemEdit()
       iItem = m_wndListCtrl.GetSelectionMark();
       dwIndex = m_wndListCtrl.GetItemData(iItem);
       if (EditItem(dwIndex))
+      {
          UpdateListItem(iItem, &m_pItemList->pItems[dwIndex]);
+      }
    }
 }
 
@@ -241,4 +258,25 @@ BOOL CDataCollectionEditor::EditItem(DWORD dwIndex)
       bSuccess = TRUE;
    }
    return bSuccess;
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CDataCollectionEditor::OnSetFocus(CWnd* pOldWnd) 
+{
+	CMDIChildWnd::OnSetFocus(pOldWnd);
+   m_wndListCtrl.SetFocus();
+}
+
+
+//
+// UPDATE_COMMAND_UI handlers
+//
+
+void CDataCollectionEditor::OnUpdateItemEdit(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
 }
