@@ -33,6 +33,9 @@ SERVER:
   this functionality.
 - Chech if ObjectGlobalLock()/ObjectGlobalUnlock() really needed or we can
   use just index locking
+- Check what happens if DCI copied while being polled
+- Potential bug: "rearmed" event lost for "service not responding" event
+- On startup, server must read last poll time from database for each DCI
 
 
 CORE AGENT:
