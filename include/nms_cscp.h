@@ -66,6 +66,15 @@ typedef struct
 
 
 //
+// Data types
+//
+
+#define DT_INTEGER   0
+#define DT_STRING    1
+#define DT_INT64     2
+
+
+//
 // Message (command) codes
 //
 

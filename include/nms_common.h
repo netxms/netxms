@@ -23,7 +23,17 @@
 #ifndef _nms_common_h_
 #define _nms_common_h_
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+typedef unsigned __int64 QWORD;
+
+#ifdef _USRDLL
+#define EXPORTABLE __declspec(dllexport)
+#else    /* _USRDLL */
+#define EXPORTABLE __declspec(dllimport)
+#endif   /* _USRDLL */
+
+#else
 
 typedef int BOOL;
 typedef unsigned long DWORD;
@@ -34,6 +44,8 @@ typedef void * HMODULE;
 
 #define TRUE   1
 #define FALSE  0
+
+#define EXPORTABLE
 
 #endif
 
