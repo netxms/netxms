@@ -48,6 +48,7 @@ DWORD g_dwRequestId;
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
+   ObjectsInit();
    g_dwRequestId = 1;
    g_pRequestQueue = new Queue;
    if (g_pRequestQueue == NULL)

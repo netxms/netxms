@@ -31,6 +31,17 @@
 static CONDITION m_hCondSyncFinished;
 static DWORD m_dwNumObjects = 0;
 static INDEX *m_pIndexById = NULL;
+static MUTEX m_mutexIndexAccess;
+
+
+//
+// Initialize object handling module
+//
+
+void ObjectsInit(void)
+{
+   m_mutexIndexAccess = MutexCreate();
+}
 
 
 //
@@ -85,12 +96,14 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
    DebugPrintf("AddObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
+   NXCLockObjectIndex();
    m_pIndexById = (INDEX *)MemReAlloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
    m_pIndexById[m_dwNumObjects].pObject = pObject;
    m_dwNumObjects++;
    if (bSortIndex)
       qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
+   NXCUnlockObjectIndex();
 }
 
 
@@ -266,9 +279,13 @@ void SyncObjects(void)
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId)
 {
    DWORD dwPos;
+   NXC_OBJECT *pObject;
 
+   NXCLockObjectIndex();
    dwPos = SearchIndex(m_pIndexById, m_dwNumObjects, dwId);
-   return dwPos == INVALID_INDEX ? NULL : m_pIndexById[dwPos].pObject;
+   pObject = (dwPos == INVALID_INDEX) ? NULL : m_pIndexById[dwPos].pObject;
+   NXCUnlockObjectIndex();
+   return pObject;
 }
 
 
@@ -280,9 +297,11 @@ void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
 {
    DWORD i;
 
+   NXCLockObjectIndex();
    for(i = 0; i < m_dwNumObjects; i++)
       if (!pHandler(m_pIndexById[i].pObject))
          break;
+   NXCUnlockObjectIndex();
 }
 
 
@@ -296,4 +315,36 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetRootObject(void)
       if (m_pIndexById[0].dwKey == 1)
          return m_pIndexById[0].pObject;
    return NULL;
+}
+
+
+//
+// Get pointer to first object on objects' list and entire number of objects
+//
+
+void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(DWORD *pdwNumObjects)
+{
+   if (pdwNumObjects != NULL)
+      *pdwNumObjects = m_dwNumObjects;
+   return m_pIndexById;
+}
+
+
+//
+// Lock object index
+//
+
+void LIBNXCL_EXPORTABLE NXCLockObjectIndex(void)
+{
+   MutexLock(m_mutexIndexAccess, INFINITE);
+}
+
+
+//
+// Unlock object index
+//
+
+void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void)
+{
+   MutexUnlock(m_mutexIndexAccess);
 }

@@ -132,6 +132,8 @@ public:
 // Functions
 //
 
+void ObjectsInit(void);
+
 BOOL Connect(void);
 void SyncObjects(void);
 void SyncEvents(void);
