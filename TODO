@@ -17,10 +17,12 @@ GENERAL:
 - Allow converting counters to deltas in data collection
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
-- Add --with-client option to configure (should enable libnxcl and nxevent)
 - Optimize WaitForMessage method in message waiting queue class
 - Rewrite event management in a way to eliminate the need to unlock
   event configuration to allow sending of new events
+- View and update agent's configuration from server
+- Centralized agents upgrade
+- Add diff() method for DCI thresholds
 
 
 SERVER:
@@ -39,12 +41,15 @@ SERVER:
 - Optimize SNMP subsystem
 - Add special handling for HP iLO boards
 - Multiple status pollers
+- Housekeeping for DCI
+- Add logging API for database drivers
 
 
 CORE AGENT:
 
 - Check shutdown procedure on different platforms
 - Add signal handlers for UNIX
+- Implement System.PlatformName on all platforms
 
 
 LINUX AGENT:
