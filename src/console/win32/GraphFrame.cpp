@@ -63,6 +63,7 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -287,4 +288,50 @@ void CGraphFrame::OnTimer(UINT nIDEvent)
    }
    m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
                           (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   TCHAR szBuffer[32];
+   DWORD i;
+
+   pInfo->iWndClass = WNDC_GRAPH;
+   GetWindowPlacement(&pInfo->placement);
+   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
+              _T("F:%ld\x7FN:%ld\x7FTS:%ld\x7FTF:%ld\x7F" "A:%ld\x7FS:%d\x7F"
+                 "CA:%lu\x7F" "CB:%lu\x7F" "CG:%lu\x7F" "CK:%lu\x7F" "CL:%lu\x7F" "CT:%lu"),
+              m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
+              m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
+              m_wndGraph.m_rgbBkColor, m_wndGraph.m_rgbGridColor,
+              m_wndGraph.m_rgbLabelBkColor, m_wndGraph.m_rgbLabelTextColor,
+              m_wndGraph.m_rgbTextColor);
+
+   for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+   {
+      _sntprintf(szBuffer, 32, _T("\x7F" "C%d:%lu"), i, m_wndGraph.m_rgbLineColors[i]);
+      if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
+         _tcscat(pInfo->szParameters, szBuffer);
+   }
+   
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      _sntprintf(szBuffer, 32, _T("\x7FN%d:%d\x7FI%d:%d"), i, m_pdwNodeId[i], i, m_pdwItemId[i]);
+      if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
+         _tcscat(pInfo->szParameters, szBuffer);
+   }
+   return 1;
+}
+
+
+//
+// Restore graph window from server
+//
+
+void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
+{
 }

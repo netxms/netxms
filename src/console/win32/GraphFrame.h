@@ -39,6 +39,7 @@ public:
 
 // Operations
 public:
+	void RestoreFromServer(TCHAR *pszParams);
 	void SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo);
 	void AddItem(DWORD dwNodeId, DWORD dwItemId);
 	CGraphFrame();           // default constructor
@@ -67,6 +68,7 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;

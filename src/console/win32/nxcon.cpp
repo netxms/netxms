@@ -1056,19 +1056,30 @@ CMDIChildWnd *CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *psz
 // Show graph for collected data
 //
 
-void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, DWORD *pdwItemList, char *pszItemName)
+CMDIChildWnd *CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems,
+                                        DWORD *pdwItemList, TCHAR *pszItemName,
+                                        TCHAR *pszParams)
 {
    CGraphFrame *pWnd;
    DWORD i, dwCurrTime;
 
    pWnd = new CGraphFrame;
-   for(i = 0; i < dwNumItems; i++)
-      pWnd->AddItem(dwNodeId, pdwItemList[i]);
-   dwCurrTime = time(NULL);
-   pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
+   if (pszParams == NULL)
+   {
+      for(i = 0; i < dwNumItems; i++)
+         pWnd->AddItem(dwNodeId, pdwItemList[i]);
+      dwCurrTime = time(NULL);
+      pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
+   }
+   else
+   {
+      // Restore desktop
+      pWnd->RestoreFromServer(pszParams);
+   }
 
    CreateChildFrameWithSubtitle(pWnd, IDR_DCI_HISTORY_GRAPH,
                                 pszItemName, m_hGraphMenu, m_hGraphAccel);
+   return pWnd;
 }
 
 
@@ -1099,11 +1110,12 @@ void CConsoleApp::OnControlpanelEventpolicy()
    	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
       DWORD dwResult;
 
-      dwResult = DoRequestArg2(NXCOpenEventPolicy, g_hSession, &m_pEventPolicy, "Loading event processing policy...");
+      dwResult = DoRequestArg2(NXCOpenEventPolicy, g_hSession, &m_pEventPolicy, 
+                               _T("Loading event processing policy..."));
       if (dwResult == RCC_SUCCESS)
       {
-	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CEventPolicyEditor), IDR_EPP_EDITOR, m_hPolicyEditorMenu, m_hPolicyEditorAccel);
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CEventPolicyEditor), IDR_EPP_EDITOR,
+                                m_hPolicyEditorMenu, m_hPolicyEditorAccel);
       }
       else
       {

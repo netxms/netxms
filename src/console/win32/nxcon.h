@@ -203,7 +203,8 @@ public:
 	void CreateContainer(DWORD dwParent);
    NXC_EPP *m_pEventPolicy;
 
-	void ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, DWORD *pdwItemList, char *pszItemName);
+	CMDIChildWnd *ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, DWORD *pdwItemList,
+                              TCHAR *pszItemName, TCHAR *pszParams = NULL);
 	CMDIChildWnd *ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName, TCHAR *pszParams = NULL);
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
