@@ -279,6 +279,8 @@
 #define IDC_RADIO_VERSION1              1176
 #define IDC_RADIO_VERSION_2C            1177
 #define IDC_VERSION                     1178
+#define IDC_CHECK_SNMP_TRAPS            1179
+#define IDC_CHECK_MANAGE_CONFIG         1180
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -360,6 +362,7 @@
 #define ID_EVENT_EDIT                   32895
 #define ID_EVENT_DELETE                 32896
 #define ID_CONTROLPANEL_SNMPTRAPS       32897
+#define ID_POLICY_SAVE                  32898
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -369,8 +372,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        242
-#define _APS_NEXT_COMMAND_VALUE         32898
-#define _APS_NEXT_CONTROL_VALUE         1179
+#define _APS_NEXT_COMMAND_VALUE         32899
+#define _APS_NEXT_CONTROL_VALUE         1181
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

@@ -24,8 +24,11 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMainFrame)
+	public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	protected:
 	//}}AFX_VIRTUAL
+	virtual void OnUpdateFrameTitle(BOOL bAddToTitle);
 
 // Implementation
 public:

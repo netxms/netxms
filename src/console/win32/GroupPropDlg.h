@@ -26,15 +26,15 @@ public:
 	CListCtrl	m_wndListCtrl;
 	BOOL	m_bDisabled;
 	BOOL	m_bDropConn;
-	BOOL	m_bEditConfig;
 	BOOL	m_bEditEventDB;
 	BOOL	m_bManageUsers;
-	BOOL	m_bViewConfig;
 	BOOL	m_bViewEventDB;
 	CString	m_strDescription;
 	CString	m_strName;
 	BOOL	m_bManageActions;
 	BOOL	m_bManageEPP;
+	BOOL	m_bManageConfig;
+	BOOL	m_bConfigureTraps;
 	//}}AFX_DATA
 
 

@@ -35,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	void SortList(void);
 	CImageList *m_pImageList;
 
 	// Generated message map functions
@@ -42,8 +43,13 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnDblclkListEvents(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnColumnclickListEvents(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+	int m_iLastEventImage;
+	int m_iSortDir;
+	int m_iSortMode;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -21,17 +21,17 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CUserPropDlg)
 	m_bAccountDisabled = FALSE;
 	m_bDropConn = FALSE;
-	m_bEditConfig = FALSE;
 	m_bEditEventDB = FALSE;
 	m_bManageUsers = FALSE;
 	m_bChangePassword = FALSE;
-	m_bViewConfig = FALSE;
 	m_bViewEventDB = FALSE;
 	m_strDescription = _T("");
 	m_strLogin = _T("");
 	m_strFullName = _T("");
 	m_bManageActions = FALSE;
 	m_bManageEPP = FALSE;
+	m_bManageConfig = FALSE;
+	m_bConfigureTraps = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -42,11 +42,9 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CUserPropDlg)
 	DDX_Check(pDX, IDC_CHECK_DISABLED, m_bAccountDisabled);
 	DDX_Check(pDX, IDC_CHECK_DROP_CONN, m_bDropConn);
-	DDX_Check(pDX, IDC_CHECK_EDIT_CONFIG, m_bEditConfig);
 	DDX_Check(pDX, IDC_CHECK_EDIT_EVENTDB, m_bEditEventDB);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_USERS, m_bManageUsers);
 	DDX_Check(pDX, IDC_CHECK_PASSWORD, m_bChangePassword);
-	DDX_Check(pDX, IDC_CHECK_VIEW_CONFIG, m_bViewConfig);
 	DDX_Check(pDX, IDC_CHECK_VIEW_EVENTDB, m_bViewEventDB);
 	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
 	DDV_MaxChars(pDX, m_strDescription, 255);
@@ -56,6 +54,8 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strFullName, 127);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_ACTIONS, m_bManageActions);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_EPP, m_bManageEPP);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_CONFIG, m_bManageConfig);
+	DDX_Check(pDX, IDC_CHECK_SNMP_TRAPS, m_bConfigureTraps);
 	//}}AFX_DATA_MAP
 }
 
@@ -78,8 +78,8 @@ BOOL CUserPropDlg::OnInitDialog()
       GetDlgItem(IDC_CHECK_DISABLED)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_DROP_CONN)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_MANAGE_USERS)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_VIEW_CONFIG)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_EDIT_CONFIG)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_SNMP_TRAPS)->EnableWindow(FALSE);
+      GetDlgItem(IDC_CHECK_MANAGE_CONFIG)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_VIEW_EVENTDB)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_EDIT_EVENTDB)->EnableWindow(FALSE);
       GetDlgItem(IDC_CHECK_MANAGE_ACTIONS)->EnableWindow(FALSE);

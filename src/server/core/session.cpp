@@ -1063,7 +1063,7 @@ void ClientSession::SendAllConfigVars(void)
    DB_RESULT hResult;
 
    // Check user rights
-   if ((m_dwUserId != 0) && ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_CONFIG) == 0))
+   if ((m_dwUserId != 0) && ((m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG) == 0))
    {
       // Access denied
       msg.SetCode(CMD_CONFIG_VARLIST_END);

@@ -356,8 +356,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_strDescription = pUser->szDescription;
             dlg.m_bDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
             dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS) ? TRUE : FALSE;
-            dlg.m_bEditConfig = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG) ? TRUE : FALSE;
-            dlg.m_bViewConfig = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG) ? TRUE : FALSE;
+            dlg.m_bManageConfig = (pUser->wSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
+            dlg.m_bConfigureTraps = (pUser->wSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
             dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
@@ -373,8 +373,8 @@ void CUserEditor::OnUserProperties()
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
                                         (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
                                         (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
-                                        (dlg.m_bEditConfig ? SYSTEM_ACCESS_EDIT_CONFIG : 0) |
-                                        (dlg.m_bViewConfig ? SYSTEM_ACCESS_VIEW_CONFIG : 0) |
+                                        (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
+                                        (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
                                         (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0);
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
@@ -397,8 +397,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bAccountDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
             dlg.m_bChangePassword = (pUser->wFlags & UF_CHANGE_PASSWORD) ? TRUE : FALSE;
             dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS) ? TRUE : FALSE;
-            dlg.m_bEditConfig = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG) ? TRUE : FALSE;
-            dlg.m_bViewConfig = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG) ? TRUE : FALSE;
+            dlg.m_bManageConfig = (pUser->wSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
+            dlg.m_bConfigureTraps = (pUser->wSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
             dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
             dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
@@ -416,8 +416,8 @@ void CUserEditor::OnUserProperties()
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
                                         (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
                                         (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
-                                        (dlg.m_bEditConfig ? SYSTEM_ACCESS_EDIT_CONFIG : 0) |
-                                        (dlg.m_bViewConfig ? SYSTEM_ACCESS_VIEW_CONFIG : 0) |
+                                        (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
+                                        (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
                                         (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0);
                bModify = TRUE;

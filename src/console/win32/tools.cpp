@@ -321,7 +321,7 @@ CImageList *CreateEventImageList(void)
    CImageList *pImageList;
 
    pImageList = new CImageList;
-   pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   pImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 8);
    pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
    pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
    pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
@@ -400,4 +400,20 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction)
    }
 
    UnlockActions();
+}
+
+
+//
+// Restore placement of MDI child window
+//
+
+void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp)
+{
+   BOOL bMaximized;
+
+   bMaximized = (pwp->showCmd == SW_SHOWMAXIMIZED);
+   pwp->showCmd = SW_SHOWNORMAL;
+   pWnd->SetWindowPlacement(pwp);
+   if (bMaximized)
+      ::PostMessage(pWnd->GetParent()->m_hWnd, WM_MDIMAXIMIZE, (WPARAM)pWnd->m_hWnd, 0);
 }

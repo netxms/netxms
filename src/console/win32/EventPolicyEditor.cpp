@@ -45,7 +45,7 @@ CEventPolicyEditor::CEventPolicyEditor()
 {
    m_pEventPolicy = theApp.m_pEventPolicy;
    m_pImageList = NULL;
-   m_bIsModified = TRUE;
+   m_bIsModified = FALSE;
 }
 
 CEventPolicyEditor::~CEventPolicyEditor()
@@ -189,7 +189,10 @@ void CEventPolicyEditor::OnClose()
       {
          dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
          if (dwResult != RCC_SUCCESS)
+         {
             theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
+            iAnswer = IDCANCEL;  // Will not close window if there are errors
+         }
       }
    }
 
@@ -293,6 +296,8 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
       sprintf(szBuffer, "%d", iPos + 1);
       m_wndRuleList.ReplaceItem(iPos, 0, 0, szBuffer);
    }
+
+   Modify();
 }
 
 
@@ -459,14 +464,18 @@ void CEventPolicyEditor::EnableSelectedRows(BOOL bEnable)
    int iRow;
 
    iRow = m_wndRuleList.GetNextRow(-1, RLF_SELECTED);
-   while(iRow != -1)
+   if (iRow != -1)
    {
-      if (bEnable)
-         m_pEventPolicy->pRuleList[iRow].dwFlags &= ~RF_DISABLED;
-      else
-         m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_DISABLED;
-      m_wndRuleList.EnableRow(iRow, bEnable);
-      iRow = m_wndRuleList.GetNextRow(iRow, RLF_SELECTED);
+      while(iRow != -1)
+      {
+         if (bEnable)
+            m_pEventPolicy->pRuleList[iRow].dwFlags &= ~RF_DISABLED;
+         else
+            m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_DISABLED;
+         m_wndRuleList.EnableRow(iRow, bEnable);
+         iRow = m_wndRuleList.GetNextRow(iRow, RLF_SELECTED);
+      }
+      Modify();
    }
 }
 
@@ -598,6 +607,7 @@ void CEventPolicyEditor::AddSource(void)
          }
       }
       UpdateRow(iRow);
+      Modify();
    }
 }
 
@@ -633,6 +643,7 @@ void CEventPolicyEditor::AddEvent(void)
          }
       }
       UpdateRow(iRow);
+      Modify();
    }
 }
 
@@ -668,6 +679,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                {
                   m_wndRuleList.DeleteItem(iRow, iCol, iItem);
                }
+               Modify();
             }
             break;
          case COL_EVENT:     // Event
@@ -686,6 +698,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                {
                   m_wndRuleList.DeleteItem(iRow, iCol, iItem);
                }
+               Modify();
             }
             break;
          case COL_ACTION:
@@ -704,6 +717,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                {
                   m_wndRuleList.DeleteItem(iRow, iCol, iItem);
                }
+               Modify();
             }
             break;
       }
@@ -721,16 +735,20 @@ void CEventPolicyEditor::OnPolicyDeleterule(void)
    char szBuffer[32];
 
    iRow = m_wndRuleList.GetNextRow(-1, RLF_SELECTED);
-   while(iRow != -1)
+   if (iRow != -1)
    {
-      m_wndRuleList.DeleteRow(iRow);
-      NXCDeletePolicyRule(m_pEventPolicy, iRow);
-      for(i = iRow; i < (int)m_pEventPolicy->dwNumRules; i++)
+      while(iRow != -1)
       {
-         sprintf(szBuffer, "%d", i + 1);
-         m_wndRuleList.ReplaceItem(i, 0, 0, szBuffer);
+         m_wndRuleList.DeleteRow(iRow);
+         NXCDeletePolicyRule(m_pEventPolicy, iRow);
+         for(i = iRow; i < (int)m_pEventPolicy->dwNumRules; i++)
+         {
+            sprintf(szBuffer, "%d", i + 1);
+            m_wndRuleList.ReplaceItem(i, 0, 0, szBuffer);
+         }
+         iRow = m_wndRuleList.GetNextRow(iRow - 1, RLF_SELECTED);
       }
-      iRow = m_wndRuleList.GetNextRow(iRow - 1, RLF_SELECTED);
+      Modify();
    }
 }
 
@@ -893,5 +911,6 @@ void CEventPolicyEditor::AddAction()
          }
       }
       UpdateRow(iRow);
+      Modify();
    }
 }

@@ -42,10 +42,10 @@ static DWORD GetObjectNetMask(NXC_OBJECT *pObject)
    switch(pObject->iClass)
    {
       case OBJECT_SUBNET:
-         dwMask = ntohl(pObject->subnet.dwIpNetMask);
+         dwMask = pObject->subnet.dwIpNetMask;
          break;
       case OBJECT_INTERFACE:
-         dwMask = ntohl(pObject->iface.dwIpNetMask);
+         dwMask = pObject->iface.dwIpNetMask;
          break;
       default:
          dwMask = 0;
@@ -81,8 +81,8 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
          iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->iStatus, ((NXC_OBJECT *)lParam2)->iStatus);
          break;
       case OBJECT_SORT_BY_IP:
-         dwNum1 = ntohl(((NXC_OBJECT *)lParam1)->dwIpAddr);
-         dwNum2 = ntohl(((NXC_OBJECT *)lParam2)->dwIpAddr);
+         dwNum1 = ((NXC_OBJECT *)lParam1)->dwIpAddr;
+         dwNum2 = ((NXC_OBJECT *)lParam2)->dwIpAddr;
          iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
          break;
       case OBJECT_SORT_BY_MASK:
@@ -257,8 +257,8 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList = new CImageList;
    m_pImageList->Create(g_pObjectSmallImageList);
    m_iLastObjectImage = m_pImageList->GetImageCount();
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_UP));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
    m_iStatusImageBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_WARNING));
    m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MINOR));
@@ -290,9 +290,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    {
       if (iBytes == sizeof(WINDOWPLACEMENT))
       {
-         SetWindowPlacement((WINDOWPLACEMENT *)pwp);
-         if (IsIconic())
-            ShowWindow(SW_RESTORE);
+         RestoreMDIChildPlacement(this, (WINDOWPLACEMENT *)pwp);
       }
       delete pwp;
    }
@@ -415,7 +413,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    }
 
    // Sort childs
-   m_wndTreeCtrl.SortChildren(hItem);
+   SortTreeItems(hItem);
 }
 
 
@@ -673,6 +671,7 @@ restart_parent_check:;
                   m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
                   m_wndTreeCtrl.SetItemState(m_pTreeHash[i].hTreeItem,
                                     INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
+                  SortTreeItems(hItem);
                }
             }
             else  // Current tree item has no parent
@@ -694,7 +693,10 @@ restart_parent_check:;
                   // Walk through all occurences of current parent object
                   for(j = dwIndex; (j < m_dwTreeHashSize) && 
                                    (m_pTreeHash[j].dwObjectId == pdwParentList[i]); j++)
+                  {
                      AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
+                     SortTreeItems(m_pTreeHash[j].hTreeItem);
+                  }
                   qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
                }
             }
@@ -713,7 +715,10 @@ restart_parent_check:;
                // Walk through all occurences of current parent object
                for(j = dwIndex; (j < m_dwTreeHashSize) && 
                                 (m_pTreeHash[j].dwObjectId == pObject->pdwParentList[i]); j++)
+               {
                   AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
+                  SortTreeItems(m_pTreeHash[j].hTreeItem);
+               }
                qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
             }
          }
@@ -1566,4 +1571,84 @@ void CObjectBrowser::OnObjectWakeup()
          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
       }
    }
+}
+
+
+//
+// Check if object has default name formed from IP address
+//
+
+static BOOL ObjectHasDefaultName(NXC_OBJECT *pObject)
+{
+   if (pObject->iClass == OBJECT_SUBNET)
+   {
+      TCHAR szBuffer[64], szIpAddr[32];
+      _stprintf(szBuffer, _T("%s/%d"), IpToStr(pObject->dwIpAddr, szIpAddr),
+                BitsInMask(pObject->subnet.dwIpNetMask));
+      return !_tcscmp(szBuffer, pObject->szName);
+   }
+   else
+   {
+      return ((pObject->dwIpAddr != 0) &&
+              (ntohl(inet_addr(pObject->szName)) == pObject->dwIpAddr));
+   }
+}
+
+
+//
+// Get object name suitable for comparision
+//
+
+static void GetComparableObjectName(DWORD dwObjectId, TCHAR *pszName)
+{
+   NXC_OBJECT *pObject;
+
+   pObject = NXCFindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      // If object has an IP address as name, we sort as numbers
+      // otherwise in alphabetical order
+      if (ObjectHasDefaultName(pObject))
+      {
+         _sntprintf(pszName, MAX_OBJECT_NAME, _T("\x01%03d%03d%03d%03d"),
+                    pObject->dwIpAddr >> 24, (pObject->dwIpAddr >> 16) & 255,
+                    (pObject->dwIpAddr >> 8) & 255, pObject->dwIpAddr & 255);
+      }
+      else
+      {
+         _tcscpy(pszName, pObject->szName);
+      }
+   }
+   else
+   {
+      *pszName = 0;
+   }
+}
+
+
+//
+// Comparision function for tree items sorting
+//
+
+static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
+
+   GetComparableObjectName(lParam1, szName1);
+   GetComparableObjectName(lParam2, szName2);
+   return _tcsicmp(szName1, szName2);
+}
+
+
+//
+// Sort childs of given tree item
+//
+
+void CObjectBrowser::SortTreeItems(HTREEITEM hItem)
+{
+   TVSORTCB tvs;
+
+   tvs.hParent = hItem;
+   tvs.lpfnCompare = CompareTreeItems;
+   m_wndTreeCtrl.SortChildrenCB(&tvs);
 }

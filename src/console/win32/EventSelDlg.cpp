@@ -20,6 +20,8 @@ CEventSelDlg::CEventSelDlg(CWnd* pParent /*=NULL*/)
 {
    m_pImageList = NULL;
    m_pdwEventList = NULL;
+   m_iSortMode = theApp.GetProfileInt(_T("EventSelDlg"), _T("SortMode"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("EventSelDlg"), _T("SortDir"), 1);
 
 	//{{AFX_DATA_INIT(CEventSelDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -30,6 +32,8 @@ CEventSelDlg::~CEventSelDlg()
 {
    delete m_pImageList;
    safe_free(m_pdwEventList);
+   theApp.WriteProfileInt(_T("EventSelDlg"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("EventSelDlg"), _T("SortDir"), m_iSortDir);
 }
 
 void CEventSelDlg::DoDataExchange(CDataExchange* pDX)
@@ -44,6 +48,7 @@ void CEventSelDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CEventSelDlg, CDialog)
 	//{{AFX_MSG_MAP(CEventSelDlg)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_EVENTS, OnDblclkListEvents)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_EVENTS, OnColumnclickListEvents)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -66,6 +71,9 @@ BOOL CEventSelDlg::OnInitDialog()
 	
    // Create image list
    m_pImageList = CreateEventImageList();
+   m_iLastEventImage = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup list control
@@ -78,6 +86,7 @@ BOOL CEventSelDlg::OnInitDialog()
    // Fill in event list
    NXCGetEventDB(&pList, &dwListSize);
    if (pList != NULL)
+   {
       for(i = 0; i < dwListSize; i++)
       {
          sprintf(szBuffer, "%u", pList[i]->dwCode);
@@ -85,6 +94,8 @@ BOOL CEventSelDlg::OnInitDialog()
          m_wndListCtrl.SetItemText(iItem, 1, pList[i]->szName);
          m_wndListCtrl.SetItemData(iItem, pList[i]->dwCode);
       }
+      SortList();
+   }
 
 	return TRUE;
 }
@@ -127,5 +138,67 @@ void CEventSelDlg::OnDblclkListEvents(NMHDR* pNMHDR, LRESULT* pResult)
 {
    if (m_wndListCtrl.GetSelectedCount() > 0)
       PostMessage(WM_COMMAND, IDOK, 0);
+	*pResult = 0;
+}
+
+
+//
+// Compare list control items
+//
+
+static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   int iSortDir = (((DWORD)lParamSort & 0xFFFF0000) == 0xABCD0000) ? 1 : -1;
+
+   if ((lParamSort & 0xFFFF) == 0)
+      return (lParam1 < lParam2) ? -iSortDir : ((lParam1 == lParam2) ? 0 : iSortDir);
+   return _tcsicmp(NXCGetEventName(lParam1), NXCGetEventName(lParam2)) * iSortDir;
+}
+
+
+//
+// Sort event list
+//
+
+void CEventSelDlg::SortList()
+{
+   LVCOLUMN lvCol;
+
+   m_wndListCtrl.SortItems(CompareListItems, ((m_iSortDir == 1) ? 0xABCD0000 : 0xDCBA0000) | (WORD)m_iSortMode);
+
+   // Mark sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir == 1) ? m_iLastEventImage : (m_iLastEventImage + 1);
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+}
+
+
+//
+// Handler for list control column click
+//
+
+void CEventSelDlg::OnColumnclickListEvents(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	NM_LISTVIEW *pNMListView = (NM_LISTVIEW *)pNMHDR;
+   LVCOLUMN lvCol;
+
+   // Unmark current sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   if (pNMListView->iSubItem == m_iSortMode)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMListView->iSubItem;
+   }
+
+   SortList();
 	*pResult = 0;
 }

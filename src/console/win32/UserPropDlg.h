@@ -22,17 +22,17 @@ public:
 	enum { IDD = IDD_USER_PROPERTIES };
 	BOOL	m_bAccountDisabled;
 	BOOL	m_bDropConn;
-	BOOL	m_bEditConfig;
 	BOOL	m_bEditEventDB;
 	BOOL	m_bManageUsers;
 	BOOL	m_bChangePassword;
-	BOOL	m_bViewConfig;
 	BOOL	m_bViewEventDB;
 	CString	m_strDescription;
 	CString	m_strLogin;
 	CString	m_strFullName;
 	BOOL	m_bManageActions;
 	BOOL	m_bManageEPP;
+	BOOL	m_bManageConfig;
+	BOOL	m_bConfigureTraps;
 	//}}AFX_DATA
 
 

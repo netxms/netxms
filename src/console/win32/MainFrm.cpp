@@ -240,3 +240,37 @@ void CMainFrame::OnClose()
 
    CMDIFrameWnd::OnClose();
 }
+
+
+//
+// Overrided frame window title update
+//
+
+void CMainFrame::OnUpdateFrameTitle(BOOL bAddToTitle)
+{
+	CMDIChildWnd *pActiveChild = NULL;
+
+   if (!bAddToTitle)
+   {
+      CMDIFrameWnd::OnUpdateFrameTitle(FALSE);
+   }
+   else
+   {
+      pActiveChild = MDIGetActive();
+      if (pActiveChild != NULL)
+      {
+         if (pActiveChild->GetStyle() & WS_MAXIMIZE)
+         {
+            CMDIFrameWnd::OnUpdateFrameTitle(FALSE);
+         }
+         else
+         {
+            UpdateFrameTitleForDocument(pActiveChild->GetTitle());
+         }
+      }
+      else
+      {
+         CMDIFrameWnd::OnUpdateFrameTitle(FALSE);
+      }
+   }
+}

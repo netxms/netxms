@@ -76,9 +76,7 @@ int CNetSummaryFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    {
       if (iBytes == sizeof(WINDOWPLACEMENT))
       {
-         SetWindowPlacement((WINDOWPLACEMENT *)pwp);
-         if (IsIconic())
-            ShowWindow(SW_RESTORE);
+         RestoreMDIChildPlacement(this, (WINDOWPLACEMENT *)pwp);
       }
       delete pwp;
    }

@@ -94,6 +94,7 @@ public:
 
 // Implementation
 protected:
+	void SortTreeItems(HTREEITEM hItem);
 	int m_iStatusImageBase;
 	void ChangeMgmtStatus(BOOL bIsManaged);
 	NXC_OBJECT * m_pCurrentObject;

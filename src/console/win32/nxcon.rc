@@ -92,6 +92,11 @@ IDI_DISABLED            ICON    DISCARDABLE     "icons\\disabled.ico"
 IDI_UNSUPPORTED         ICON    DISCARDABLE     "icons\\unsupported.ico"
 IDI_DATACOLLECT         ICON    DISCARDABLE     "icons\\datacoll.ico"
 IDI_DCT                 ICON    DISCARDABLE     "icons\\dctemplate.ico"
+IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "icons\\SeverityWarning.ico"
+IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "icons\\SeverityCritical.ico"
+IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "icons\\SeverityMajor.ico"
+IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "icons\\SeverityMinor.ico"
+IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "icons\\SeverityNormal.ico"
 IDI_OVL_STATUS_MINOR    ICON    DISCARDABLE     "icons\\ovl_status_minor.ico"
 IDI_OVL_STATUS_WARNING  ICON    DISCARDABLE     "icons\\ovl_status_warning.ico"
 IDI_OVL_STATUS_CRITICAL ICON    DISCARDABLE     "icons\\ovl_status_critical.ico"
@@ -282,6 +287,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
         MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
+        MENUITEM SEPARATOR
+        MENUITEM "&Save policy\tCtrl+S",        ID_POLICY_SAVE
     END
     POPUP "&Alarm"
     BEGIN
@@ -580,6 +587,7 @@ BEGIN
     "E",            ID_POLICY_INSERTRULE_BOTTOM, VIRTKEY, CONTROL, ALT, 
                                                     NOINVERT
     "N",            ID_POLICY_NEGATECELL,   VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_POLICY_SAVE,         VIRTKEY, CONTROL, NOINVERT
     "T",            ID_POLICY_INSERTRULE_TOP, VIRTKEY, CONTROL, ALT, 
                                                     NOINVERT
     VK_DELETE,      ID_POLICY_DELETE,       VIRTKEY, NOINVERT
@@ -813,21 +821,21 @@ BEGIN
                     IDC_CHECK_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     13,86,148,10
     CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,118,61,10
-    CONTROL         "&View server configuration",IDC_CHECK_VIEW_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,129,95,10
-    CONTROL         "&Edit server configuration",IDC_CHECK_EDIT_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,140,92,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,117,61,10
+    CONTROL         "Configure SNMP &traps",IDC_CHECK_SNMP_TRAPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,128,86,10
+    CONTROL         "Manage server &configuration",IDC_CHECK_MANAGE_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,139,106,10
     CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,151,82,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,150,82,10
     CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,118,91,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,117,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,129,83,10
-    CONTROL         "Edi&t event database",IDC_CHECK_EDIT_EVENTDB,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,140,79,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,128,83,10
+    CONTROL         "&Edit event database",IDC_CHECK_EDIT_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,139,79,10
     CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,151,86,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,150,86,10
     DEFPUSHBUTTON   "OK",IDOK,110,168,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,165,168,50,14
     LTEXT           "Login name:",IDC_STATIC,7,10,40,8
@@ -840,7 +848,7 @@ END
 IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 258
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
@@ -848,17 +856,17 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,58,79,10
     CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,91,61,10
-    CONTROL         "&View server configuration",IDC_CHECK_VIEW_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,102,95,10
-    CONTROL         "&Edit server configuration",IDC_CHECK_EDIT_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,113,92,10
+    CONTROL         "Configure SNMP &traps",IDC_CHECK_SNMP_TRAPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,102,86,10
+    CONTROL         "Manage server &configuration",IDC_CHECK_MANAGE_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,113,106,10
     CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,124,82,10
     CONTROL         "D&rop client connections",IDC_CHECK_DROP_CONN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,91,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,102,83,10
-    CONTROL         "Edi&t event database",IDC_CHECK_EDIT_EVENTDB,"Button",
+    CONTROL         "&Edit event database",IDC_CHECK_EDIT_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,113,79,10
     CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,124,67,10
@@ -932,7 +940,7 @@ END
 IDD_DCI_THRESHOLDS DIALOGEX 0, 0, 228, 170
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Thresholds"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_INSTANCE,7,16,214,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_LIST_THRESHOLDS,"SysListView32",LVS_REPORT | 
@@ -1010,7 +1018,7 @@ END
 IDD_SELECT_OBJECT DIALOGEX 0, 0, 231, 146
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select Object"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST_OBJECTS,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | 
@@ -1040,8 +1048,8 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,203,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,203,24,50,14
     CONTROL         "List1",IDC_LIST_EVENTS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | 
-                    WS_TABSTOP,7,7,189,132,WS_EX_CLIENTEDGE
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_TABSTOP,7,7,
+                    189,132,WS_EX_CLIENTEDGE
 END
 
 IDD_OBJECT_PRESENTATION DIALOG DISCARDABLE  0, 0, 292, 170
@@ -1710,31 +1718,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "icons\\SeverityWarning.ico"
-IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "icons\\SeverityCritical.ico"
-IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "icons\\SeverityMajor.ico"
-IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "icons\\SeverityMinor.ico"
-IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "icons\\SeverityNormal.ico"
-#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

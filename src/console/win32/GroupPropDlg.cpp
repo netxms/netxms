@@ -21,15 +21,15 @@ CGroupPropDlg::CGroupPropDlg(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CGroupPropDlg)
 	m_bDisabled = FALSE;
 	m_bDropConn = FALSE;
-	m_bEditConfig = FALSE;
 	m_bEditEventDB = FALSE;
 	m_bManageUsers = FALSE;
-	m_bViewConfig = FALSE;
 	m_bViewEventDB = FALSE;
 	m_strDescription = _T("");
 	m_strName = _T("");
 	m_bManageActions = FALSE;
 	m_bManageEPP = FALSE;
+	m_bManageConfig = FALSE;
+	m_bConfigureTraps = FALSE;
 	//}}AFX_DATA_INIT
 
    m_pdwMembers = NULL;
@@ -49,15 +49,15 @@ void CGroupPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_MEMBERS, m_wndListCtrl);
 	DDX_Check(pDX, IDC_CHECK_DISABLED, m_bDisabled);
 	DDX_Check(pDX, IDC_CHECK_DROP_CONN, m_bDropConn);
-	DDX_Check(pDX, IDC_CHECK_EDIT_CONFIG, m_bEditConfig);
 	DDX_Check(pDX, IDC_CHECK_EDIT_EVENTDB, m_bEditEventDB);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_USERS, m_bManageUsers);
-	DDX_Check(pDX, IDC_CHECK_VIEW_CONFIG, m_bViewConfig);
 	DDX_Check(pDX, IDC_CHECK_VIEW_EVENTDB, m_bViewEventDB);
 	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_strName);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_ACTIONS, m_bManageActions);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_EPP, m_bManageEPP);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_CONFIG, m_bManageConfig);
+	DDX_Check(pDX, IDC_CHECK_SNMP_TRAPS, m_bConfigureTraps);
 	//}}AFX_DATA_MAP
 }
 
