@@ -481,7 +481,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
                               DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr)
 {
    Interface *pInterface;
-   Subnet *pSubnet;
+   Subnet *pSubnet = NULL;
 
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
@@ -489,11 +489,12 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
       pSubnet = FindSubnetForNode(dwIpAddr);
       if (pSubnet == NULL)
       {
+         DWORD dwAddr = ntohl(dwIpAddr);
+
          // Check if netmask is 0 (detect), and if yes, create
          // new subnet with class mask
          if (dwNetMask == 0)
          {
-            DWORD dwAddr = ntohl(dwIpAddr);
             if (dwAddr < 0x80000000)
                dwNetMask = htonl(0xFF000000);   // Class A
             else if (dwAddr < 0xC0000000)
@@ -502,18 +503,22 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
                dwNetMask = htonl(0xFFFFFF00);   // Class C
             else
             {
+               TCHAR szBuffer[16];
+
                // Multicast address??
                DbgPrintf(AF_DEBUG_DISCOVERY, 
                          "Attempt to create interface object with multicast address %s", 
-                         IpToStr(dwIpAddr));
-               dwIpAddr = 0;
+                         IpToStr(dwIpAddr, szBuffer));
             }
          }
 
          // Create new subnet object
-         pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask);
-         NetObjInsert(pSubnet, TRUE);
-         g_pEntireNet->AddSubnet(pSubnet);
+         if (dwAddr < 0xE0000000)
+         {
+            pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask);
+            NetObjInsert(pSubnet, TRUE);
+            g_pEntireNet->AddSubnet(pSubnet);
+         }
       }
       else
       {
@@ -541,9 +546,15 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
              pInterface->IpNetMask(), pInterface->IfIndex());
 
    // Bind node to appropriate subnet
-   if (pInterface->IpAddr() != 0)   // Do not link non-IP interfaces to 0.0.0.0 subnet
+   if (pSubnet != NULL)
    {
       pSubnet->AddNode(this);
+      
+      // Check if subnet mask is correct on interface
+      if (pSubnet->IpNetMask() != dwNetMask)
+         PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
+                   pInterface->IfIndex(), pInterface->Name(),
+                   pInterface->IpNetMask(), pSubnet->IpNetMask());
    }
 }
 
@@ -752,7 +763,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
 
                      BinToStr((BYTE *)pInterface->MacAddr(), MAC_ADDR_LENGTH, szOldMac);
                      BinToStr(pIfList->pInterfaces[j].bMacAddr, MAC_ADDR_LENGTH, szNewMac);
-                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "ddsss",
+                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
                                pInterface->Id(), pInterface->IfIndex(),
                                pInterface->Name(), szOldMac, szNewMac);
                      pInterface->SetMacAddr(pIfList->pInterfaces[j].bMacAddr);

@@ -93,6 +93,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
                sprintf(m_ppszParameters[i], "%d", va_arg(args, LONG));
                break;
             case 'x':
+            case 'i':
                m_ppszParameters[i] = (char *)malloc(16);
                sprintf(m_ppszParameters[i], "0x%08X", va_arg(args, DWORD));
                break;
@@ -470,6 +471,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwId)
 //        d - Decimal integer
 //        x - Hex integer
 //        a - IP address
+//        i - Object ID
 //
 
 BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...)

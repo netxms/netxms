@@ -78,5 +78,6 @@
 #define EVENT_THREAD_RUNNING     21
 #define EVENT_SMTP_FAILURE       22
 #define EVENT_MAC_ADDR_CHANGED   23
+#define EVENT_INCORRECT_NETMASK  24
 
 #endif
