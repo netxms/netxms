@@ -25,16 +25,20 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CDeploymentView)
+	protected:
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
+	CListCtrl m_wndListCtrl;
 	virtual ~CDeploymentView();
 
 	// Generated message map functions
 	//{{AFX_MSG(CDeploymentView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	//}}AFX_MSG
+   afx_msg void OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob);
 	DECLARE_MESSAGE_MAP()
 };
 

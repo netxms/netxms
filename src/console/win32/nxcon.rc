@@ -2155,6 +2155,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
+    IDR_DEPLOYMENT_VIEW     "\nPackage Deployment\nPackage Deployment"
 END
 
 #endif    // English (U.S.) resources

@@ -72,6 +72,8 @@ extern CConsoleApp theApp;
 #define WM_STATE_CHANGE          (WM_USER + 8)
 #define WM_ALARM_UPDATE          (WM_USER + 9)
 #define WM_POLLER_MESSAGE        (WM_USER + 10)
+#define WM_START_DEPLOYMENT      (WM_USER + 11)
+#define WM_DEPLOYMENT_INFO       (WM_USER + 12)
 
 
 //
@@ -129,6 +131,19 @@ struct DEF_IMG
    DWORD dwObjectClass;
    DWORD dwImageId;
    int iImageIndex;
+};
+
+
+//
+// Package deployment startup info
+//
+
+struct DEPLOYMENT_JOB
+{
+   DWORD dwPkgId;
+   DWORD dwNumObjects;
+   DWORD *pdwObjectList;
+   HWND hWnd;
 };
 
 

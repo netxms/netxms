@@ -357,6 +357,7 @@
 #define IDC_EDIT_POLLER                 1232
 #define IDC_EDIT_IPADDR                 1233
 #define IDR_PACKAGE_MGR                 8156
+#define IDR_DEPLOYMENT_VIEW             8157
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776

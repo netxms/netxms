@@ -1525,7 +1525,18 @@ void CConsoleApp::WakeUpNode(DWORD dwObjectId)
 void CConsoleApp::DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList)
 {
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CMDIChildWnd *pWnd;
 
-	pFrame->CreateNewChild(
-		RUNTIME_CLASS(CDeploymentView), IDR_PACKAGE_MGR, m_hMDIMenu, m_hMDIAccel);
+	pWnd = pFrame->CreateNewChild(
+		RUNTIME_CLASS(CDeploymentView), IDR_DEPLOYMENT_VIEW, m_hMDIMenu, m_hMDIAccel);
+   if (pWnd != NULL)
+   {
+      DEPLOYMENT_JOB *pJob;
+
+      pJob = (DEPLOYMENT_JOB *)malloc(sizeof(DEPLOYMENT_JOB));
+      pJob->dwPkgId = dwPkgId;
+      pJob->dwNumObjects = dwNumObjects;
+      pJob->pdwObjectList = (DWORD *)nx_memdup(pdwObjectList, sizeof(DWORD) * dwNumObjects);
+      pWnd->PostMessage(WM_START_DEPLOYMENT, 0, (LPARAM)pJob);
+   }
 }
