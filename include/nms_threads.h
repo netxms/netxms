@@ -41,10 +41,21 @@
 #define INVALID_CONDITION_HANDLE    INVALID_HANDLE_VALUE
 #define INVALID_THREAD_HANDLE       (NULL)
 
+#ifdef UNDER_CE
+typedef DWORD THREAD_RESULT;
+typedef DWORD THREAD_ID;
+#else
 typedef unsigned int THREAD_RESULT;
+typedef unsigned int THREAD_ID;
+#endif
 
 #define THREAD_OK       0
+
+#ifdef UNDER_CE
+#define THREAD_CALL
+#else
 #define THREAD_CALL     __stdcall
+#endif
 
 
 //
@@ -64,11 +75,10 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
 inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
 {
    HANDLE hThread;
-   unsigned int dwThreadId;
+   THREAD_ID dwThreadId;
 
 #ifdef UNDER_CE
-	hThread = CreateThread(NULL, (DWORD)stack_size, (LPTHREAD_START_ROUTINE)start_address,
-		                    args, 0, (LPDWORD)&dwThreadId);
+	hThread = CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &dwThreadId);
 #else
    hThread = (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
 #endif
@@ -79,13 +89,12 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), in
 
 inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
 {
-   unsigned int dwThreadId;
+   THREAD_ID dwThreadId;
 
-#ifndef UNDER_CE
-   return (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
+#ifdef UNDER_CE
+	return CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &dwThreadId);
 #else
-	return CreateThread(NULL, (DWORD)stack_size, (LPTHREAD_START_ROUTINE)start_address,
-		args, 0, (LPDWORD)&dwThreadId);
+   return (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
 #endif
 }
 
