@@ -184,3 +184,178 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 	return nRet;
 }
+
+
+//
+// Get interface description
+//
+
+LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue)
+{
+	char *eptr, szIfName[IF_NAMESIZE];
+	int nIndex, nFd;
+	struct lifreq rq;
+   LONG nRet = SYSINFO_RC_ERROR;
+
+   NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+   if (szIfName[0] == 0)
+   {
+      nRet = SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      // Determine if parameter is index or name
+      nIndex = strtol(szIfName, &eptr, 10);
+      if (*eptr == 0)
+      {
+         // It's an index, determine name
+			if (if_indextoname(nIndex, szIfName) == NULL)
+      		nRet = SYSINFO_RC_UNSUPPORTED;
+      }
+	}
+
+	if (nRet != SYSINFO_RC_UNSUPPORTED)
+	{
+		ret_string(pValue, szIfName);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
+}
+
+
+//
+// Get interface administrative status
+//
+
+LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue)
+{
+	char *eptr, szIfName[IF_NAMESIZE];
+	int nIndex, nFd;
+	struct lifreq rq;
+   LONG nRet = SYSINFO_RC_ERROR;
+
+   NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+   if (szIfName[0] == 0)
+   {
+      nRet = SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      // Determine if parameter is index or name
+      nIndex = strtol(szIfName, &eptr, 10);
+      if (*eptr == 0)
+      {
+         // It's an index, determine name
+			if (if_indextoname(nIndex, szIfName) == NULL)
+      		nRet = SYSINFO_RC_UNSUPPORTED;
+      }
+	}
+
+	if (nRet != SYSINFO_RC_UNSUPPORTED)
+	{
+		nFd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (nFd >= 0)
+		{			  
+			strcpy(rq.lifr_name, szIfName);
+			if (ioctl(nFd, SIOCGLIFFLAGS, &rq) == 0)
+			{
+				ret_int(pValue, (rq.lifr_flags & IFF_UP) ? 1 : 0);
+				nRet = SYSINFO_RC_SUCCESS;
+			}
+			close(nFd);				  
+		}
+	}
+
+	return nRet;
+}
+
+
+//
+// Get interface statistics
+//
+
+LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
+{
+   kstat_ctl_t *kc;
+   kstat_t *kp;
+   kstat_named_t *kn;
+	char *ptr, *eptr, szIfName[IF_NAMESIZE], szDevice[IF_NAMESIZE];
+	int nInstance, nIndex;
+   LONG nRet = SYSINFO_RC_ERROR;
+
+   NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+   if (szIfName[0] == 0)
+   {
+      nRet = SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      // Determine if parameter is index or name
+      nIndex = strtol(szIfName, &eptr, 10);
+      if (*eptr == 0)
+      {
+         // It's an index, determine name
+			if (if_indextoname(nIndex, szIfName) == NULL)
+      		nRet = SYSINFO_RC_UNSUPPORTED;
+      }
+	}
+
+	if (nRet != SYSINFO_RC_UNSUPPORTED)
+	{
+		// Parse interface name and create device name and instance number
+		for(ptr = szIfName; (*ptr != 0) && (!isdigit(*ptr)); ptr++);
+		memcpy(szDevice, szIfName, ptr - szIfName);
+		szDevice[(int)(ptr - szIfName)] = 0;
+		for(eptr = ptr; (*eptr != 0) && isdigit(*eptr); eptr++);
+		*eptr = 0;
+		nInstance = atoi(ptr);
+
+   	// Open kstat
+   	kc = kstat_open();
+   	if (kc != NULL)
+   	{
+      	kp = kstat_lookup(kc, szDevice, nInstance, szIfName);
+      	if (kp != NULL)
+      	{
+         	if(kstat_read(kc, kp, 0) != -1)
+         	{
+					kn = (kstat_named_t *)kstat_data_lookup(kp, pArg);
+					if (kn != NULL)
+					{
+						switch(kn->data_type)
+						{
+							case KSTAT_DATA_CHAR:
+								ret_string(pValue, kn->value.c);
+								break;
+							case KSTAT_DATA_INT32:
+								ret_int(pValue, kn->value.i32);
+								break;
+							case KSTAT_DATA_UINT32:
+								ret_uint(pValue, kn->value.ui32);
+								break;
+							case KSTAT_DATA_INT64:
+								ret_int64(pValue, kn->value.i64);
+								break;
+							case KSTAT_DATA_UINT64:
+								ret_uint64(pValue, kn->value.ui64);
+								break;
+							case KSTAT_DATA_FLOAT:
+								ret_double(pValue, kn->value.f);
+								break;
+							case KSTAT_DATA_DOUBLE:
+								ret_double(pValue, kn->value.d);
+								break;
+							default:
+								ret_int(pValue, 0);
+						}
+						nRet = SYSINFO_RC_SUCCESS;
+					}
+         	}
+      	}
+      	kstat_close(kc);
+   	}
+	}
+
+   return nRet;
+}

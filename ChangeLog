@@ -18,6 +18,7 @@
 - Added interface for SMS drivers
 - Optimized access to collected DCI data in database
 - Added support for System.CPU.LoadAvg to Solaris subagent
+- Added support for all Net.Interface.* parameters to Solaris subagent
 
 
 *

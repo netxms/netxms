@@ -31,6 +31,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue);
 LONG H_LoadAvg(char *pszParam, char *pArg, char *pValue);
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue);
+LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue);
+LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
@@ -69,7 +72,17 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, "Free disk space on *" },
    { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, "Total disk space on *" },
    { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, "Used disk space on *" },
-   { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, "" },
+   { "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, NULL, DCI_DT_INT, "Administrative status of interface {instance}" },
+   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, "rbytes", DCI_DT_UINT, "Number of input bytes on interface {instance}" },
+   { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, "obytes", DCI_DT_UINT, "Number of output bytes on interface {instance}" },
+   { "Net.Interface.Description(*)", H_NetIfDescription, NULL, DCI_DT_STRING, "" },
+   { "Net.Interface.InErrors(*)", H_NetInterfaceStats, "ierrors", DCI_DT_UINT, "Number of input errors on interface {instance}" },
+   { "Net.Interface.Link(*)", H_NetInterfaceStats, "link_up", DCI_DT_INT, "Link status for interface {instance}" },
+   { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, "oerrors", DCI_DT_UINT, "Number of output errors on interface {instance}" },
+   { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, "ipackets", DCI_DT_UINT, "Number of input packets on interface {instance}" },
+   { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, "Number of output packets on interface {instance}" },
+   { "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, "Speed of interface {instance}" },
+   { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, "Number of proceses {instance}" },
    { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
    { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
    { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
