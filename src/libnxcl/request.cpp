@@ -128,7 +128,7 @@ void RequestProcessor(void *pArg)
                                      pRequest->bDynamicArg);
             break;
          default:
-            CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
+            CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, (void *)"Internal error");
             dwRetCode = RCC_INVALID_REQUEST;
             break;
       }

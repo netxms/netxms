@@ -36,12 +36,15 @@
 #include <nxclapi.h>
 #include <nms_util.h>
 #include <nms_threads.h>
+#include <string.h>
 #include <openssl/ssl.h>
 
 
 //
 // Constants
 //
+
+#define LIBNXCL_VERSION    0
 
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64

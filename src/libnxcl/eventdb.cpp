@@ -73,7 +73,7 @@ NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
 // Add template to list
 //
 
-static AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
+static void AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
 {
    m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)MemReAlloc(m_ppEventTemplates, 
       sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates + 1));
