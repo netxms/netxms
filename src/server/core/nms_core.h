@@ -267,10 +267,14 @@ private:
       return m_dwUserId == 0 ? TRUE : 
          ((dwRequiredAccess & m_dwSystemAccess) ? TRUE : FALSE);
    }
+   void SendMessage(CSCPMessage *pMsg)
+   {
+      m_pSendQueue->Put(pMsg->CreateMessage());
+   }
 
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
-   void SendAllEvents(void);
+   void SendAllEvents(DWORD dwRqId);
    void SendAllConfigVars(void);
    void SendUserDB(DWORD dwRqId);
    void CreateUser(CSCPMessage *pMsg);
@@ -285,9 +289,6 @@ private:
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
    ~ClientSession();
-
-   void SendMessage(CSCPMessage *pMsg);
-   void DispatchMessage(CSCP_MESSAGE *pMsg);
 
    void ReadThread(void);
    void WriteThread(void);

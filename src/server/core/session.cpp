@@ -88,16 +88,6 @@ void ClientSession::DebugPrintf(char *szFormat, ...)
 
 
 //
-// Post message to send queue
-//
-
-void ClientSession::SendMessage(CSCPMessage *pMsg)
-{
-   m_pSendQueue->Put(pMsg->CreateMessage());
-}
-
-
-//
 // ReadThread()
 //
 
@@ -176,6 +166,7 @@ void ClientSession::WriteThread(void)
 void ClientSession::ProcessingThread(void)
 {
    CSCPMessage *pMsg, *pReply;
+   char szBuffer[128];
 
    while(1)
    {
@@ -183,7 +174,7 @@ void ClientSession::ProcessingThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Received message with code %d\n", pMsg->GetCode());
+      DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
       if ((m_iState != STATE_AUTHENTICATED) && (pMsg->GetCode() != CMD_LOGIN))
       {
          delete pMsg;
@@ -227,7 +218,7 @@ void ClientSession::ProcessingThread(void)
             SendAllObjects();
             break;
          case CMD_GET_EVENTS:
-            SendAllEvents();
+            SendAllEvents(pMsg->GetId());
             break;
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars();
@@ -381,11 +372,18 @@ void ClientSession::SendAllObjects(void)
 // Send all events to client
 //
 
-void ClientSession::SendAllEvents(void)
+void ClientSession::SendAllEvents(DWORD dwRqId)
 {
    CSCPMessage msg;
    DB_ASYNC_RESULT hResult;
    NXC_EVENT event;
+
+   // Send confirmation message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
+   msg.DeleteAllVariables();
 
    MutexLock(m_hMutexSendEvents, INFINITE);
 
@@ -401,7 +399,7 @@ void ClientSession::SendAllEvents(void)
          event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 2));
          event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 3));
          DBGetFieldAsync(hResult, 4, event.szMessage, MAX_EVENT_MSG_LENGTH);
-         m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), &event, NULL));
+         m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, sizeof(NXC_EVENT), &event, NULL));
       }
       DBFreeAsyncResult(hResult);
    }

@@ -307,6 +307,10 @@ SOURCE=..\..\..\include\nxclapi.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxcscpapi.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nxevent.h
 # End Source File
 # End Group
