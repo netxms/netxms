@@ -28,6 +28,13 @@
 
 
 //
+// Events
+//
+
+#define NXC_EVENT_STATE_CHANGED     1
+
+
+//
 // States
 //
 
