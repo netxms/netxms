@@ -210,16 +210,16 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), in
 
 inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
 {
-	THREAD id;
+   THREAD id;
 
-	if pthread_create(&id, NULL, start_address, args) == 0) 
+   if (pthread_create(&id, NULL, start_address, args) == 0)
    {
-		return id;
-	} 
+      return id;
+   } 
    else 
    {
-		return INVALID_THREAD_HANDLE;
-	}
+      return INVALID_THREAD_HANDLE;
+   }
 }
 
 inline void ThreadExit(void)
@@ -230,7 +230,7 @@ inline void ThreadExit(void)
 inline void ThreadJoin(THREAD hThread)
 {
    if (hThread != INVALID_THREAD_HANDLE)
-      pthread_join(hThread);
+      pthread_join(hThread, NULL);
 }
 
 inline MUTEX MutexCreate(void)
