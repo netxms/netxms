@@ -151,6 +151,7 @@ typedef unsigned long HREQUEST;
 #define RCC_ALREADY_EXIST           ((DWORD)8)
 #define RCC_COMM_FAILURE            ((DWORD)9)
 #define RCC_SYSTEM_FAILURE          ((DWORD)10)
+#define RCC_INVALID_USER_ID         ((DWORD)11)
 
 
 //
