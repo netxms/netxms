@@ -28,8 +28,6 @@
 #include <net-snmp/mib_api.h>
 #include <net-snmp/config_api.h>
 
-#include <ximage.h>
-
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -148,7 +148,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       SetInfoText(hWnd, "Synchronizing images...");
       strcpy(szCacheDir, g_szWorkDir);
       strcat(szCacheDir, WORKDIR_IMAGECACHE);
-      dwResult = NXCSyncImages(&g_pSrvImageList, szCacheDir);
+      dwResult = NXCSyncImages(&g_pSrvImageList, szCacheDir, IMAGE_FORMAT_ICO);
       if (dwResult == RCC_SUCCESS)
          CreateObjectImageList();
    }

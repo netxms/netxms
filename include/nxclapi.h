@@ -64,7 +64,15 @@ typedef unsigned long HREQUEST;
 #define GROUP_FLAG               ((DWORD)0x80000000)
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
-#define OBJECT_STATUS_COUNT      7
+#define OBJECT_STATUS_COUNT      9
+
+
+//
+// Image formats
+//
+
+#define IMAGE_FORMAT_ICO      0
+#define IMAGE_FORMAT_PNG      1
 
 
 //
@@ -737,8 +745,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir);
-DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir);
+DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir, WORD wFormat);
+DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir, WORD wFormat);
 void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
 DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize,
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId);

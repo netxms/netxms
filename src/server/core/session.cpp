@@ -333,10 +333,11 @@ void ClientSession::ProcessingThread(void)
             SendEventNames(pMsg->GetId());
             break;
          case CMD_GET_IMAGE_LIST:
-            SendImageCatalogue(this, pMsg->GetId());
+            SendImageCatalogue(this, pMsg->GetId(), pMsg->GetVariableShort(VID_IMAGE_FORMAT));
             break;
          case CMD_LOAD_IMAGE_FILE:
-            SendImageFile(this, pMsg->GetId(), pMsg->GetVariableLong(VID_IMAGE_ID));
+            SendImageFile(this, pMsg->GetId(), pMsg->GetVariableLong(VID_IMAGE_ID),
+                          pMsg->GetVariableShort(VID_IMAGE_FORMAT));
             break;
          case CMD_GET_DEFAULT_IMAGE_LIST:
             SendDefaultImageList(this, pMsg->GetId());

@@ -27,22 +27,6 @@
 
 
 //
-// Convert PNG to ICO
-//
-
-BOOL ConvertPNGToIcon(char *pszSrcFile, char *pszDstFile)
-{
-   CxImage image;
-
-   if (image.Load(pszSrcFile, CXIMAGE_FORMAT_PNG))
-   {
-      image.Save(pszDstFile, CXIMAGE_FORMAT_ICO);
-   }
-   return TRUE;
-}
-
-
-//
 // Format time stamp
 //
 
@@ -263,11 +247,9 @@ DWORD ImageIdToIndex(DWORD dwImageId)
 
 void CreateObjectImageList(void)
 {
-   HBITMAP hBitmap;
    HICON hIcon;
    DWORD i, dwPos;
-   char szPngFileName[MAX_PATH], szIcoFileName[MAX_PATH];
-   COLORREF rgbMaskColor;
+   char szFileName[MAX_PATH];
 
    // Create small (16x16) image list
    if (g_pObjectSmallImageList != NULL)
@@ -281,32 +263,18 @@ void CreateObjectImageList(void)
    g_pObjectNormalImageList = new CImageList;
    g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 8, 8);
 
-   strcpy(szPngFileName, g_szWorkDir);
-   strcat(szPngFileName, WORKDIR_IMAGECACHE);
-   strcat(szPngFileName, "\\");
-   dwPos = strlen(szPngFileName);
-   strcpy(szIcoFileName, szPngFileName);
+   strcpy(szFileName, g_szWorkDir);
+   strcat(szFileName, WORKDIR_IMAGECACHE);
+   strcat(szFileName, "\\");
+   dwPos = strlen(szFileName);
 
    for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
    {
-      sprintf(&szPngFileName[dwPos], "%d.png", g_pSrvImageList->pImageList[i].dwId);
-      sprintf(&szIcoFileName[dwPos], "%d.ico", g_pSrvImageList->pImageList[i].dwId);
-      if (ConvertPNGToIcon(szPngFileName, szIcoFileName))
-      {
-         hIcon = (HICON)LoadImage(NULL, szIcoFileName, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-         g_pObjectSmallImageList->Add(hIcon);
-         g_pObjectNormalImageList->Add(hIcon);
-         DestroyIcon(hIcon);
-/*         // Load 16x16 image
-         hBitmap = LoadPNG(szFileName, &rgbMaskColor, 16, 16);
-         if (hBitmap != NULL)
-            ImageList_AddMasked(g_pObjectSmallImageList->m_hImageList, hBitmap, rgbMaskColor);
-
-         // Load 32x32 image
-         hBitmap = LoadPNG(szFileName, &rgbMaskColor, 32, 32);
-         if (hBitmap != NULL)
-            ImageList_AddMasked(g_pObjectNormalImageList->m_hImageList, hBitmap, rgbMaskColor);*/
-      }
+      sprintf(&szFileName[dwPos], "%08x.ico", g_pSrvImageList->pImageList[i].dwId);
+      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+      g_pObjectSmallImageList->Add(hIcon);
+      g_pObjectNormalImageList->Add(hIcon);
+      DestroyIcon(hIcon);
    }
 }
 

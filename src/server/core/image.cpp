@@ -30,37 +30,41 @@
 void UpdateImageHashes(void)
 {
    DB_RESULT hResult;
-   int i, j, iNumImages, iPathLen;
+   int i, j, iNumImages, iPathLen, iFormat;
    char szPath[MAX_PATH], szHashText[MD5_DIGEST_SIZE * 2 + 1], szQuery[1024];
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD dwImageId;
+   static char szExt[3][4] = { "err", "png", "ico" };
 
    strcpy(szPath, g_szDataDir);
    strcat(szPath, DDIR_IMAGES);
    strcat(szPath, FS_PATH_SEPARATOR);
    iPathLen = strlen(szPath);
 
-   hResult = DBSelect(g_hCoreDB, "SELECT image_id,file_name FROM images");
+   hResult = DBSelect(g_hCoreDB, "SELECT image_id,file_name_png,file_name_ico FROM images");
    if (hResult != NULL)
    {
       iNumImages = DBGetNumRows(hResult);
       for(i = 0; i < iNumImages; i++)
       {
-         strcpy(&szPath[iPathLen], DBGetField(hResult, i, 1));
          dwImageId = DBGetFieldULong(hResult, i, 0);
-         if (CalculateFileMD5Hash(szPath, hash))
+         for(iFormat = 1; iFormat < 3; iFormat++)
          {
-            // Convert MD5 hash to text form
-            for(j = 0; j < MD5_DIGEST_SIZE; j++)
-               sprintf(&szHashText[j << 1], "%02x", hash[j]);
+            strcpy(&szPath[iPathLen], DBGetField(hResult, i, iFormat));
+            if (CalculateFileMD5Hash(szPath, hash))
+            {
+               // Convert MD5 hash to text form
+               for(j = 0; j < MD5_DIGEST_SIZE; j++)
+                  sprintf(&szHashText[j << 1], "%02x", hash[j]);
 
-            sprintf(szQuery, "UPDATE images SET file_hash='%s' WHERE image_id=%ld",
-                    szHashText, dwImageId);
-            DBQuery(g_hCoreDB, szQuery);
-         }
-         else
-         {
-            WriteLog(MSG_IMAGE_FILE_IO_ERROR, EVENTLOG_ERROR_TYPE, "ds", dwImageId, szPath);
+               sprintf(szQuery, "UPDATE images SET file_hash_%s='%s' WHERE image_id=%ld",
+                       szExt[iFormat], szHashText, dwImageId);
+               DBQuery(g_hCoreDB, szQuery);
+            }
+            else
+            {
+               WriteLog(MSG_IMAGE_FILE_IO_ERROR, EVENTLOG_ERROR_TYPE, "ds", dwImageId, szPath);
+            }
          }
       }
       DBFreeResult(hResult);
@@ -122,20 +126,22 @@ void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId)
 // Send current image catalogue to client
 //
 
-void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId)
+void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
    DWORD i, j, k, dwNumImages;
    NXC_IMAGE *pImageList;
-   char szHashText[MD5_DIGEST_SIZE * 2 + 1];
+   char szQuery[256], szHashText[MD5_DIGEST_SIZE * 2 + 1];
 
    // Prepare message
    msg.SetId(dwRqId);
    msg.SetCode(CMD_IMAGE_LIST);
 
    // Load image catalogue from database
-   hResult = DBSelect(g_hCoreDB, "SELECT image_id,name,file_hash FROM images");
+   sprintf(szQuery, "SELECT image_id,name,file_hash_%s FROM images",
+           (wFormat == IMAGE_FORMAT_PNG) ? "png" : "ico");
+   hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
       dwNumImages = DBGetNumRows(hResult);
@@ -176,7 +182,7 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId)
 // Send image file to client
 //
 
-void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId)
+void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD wFormat)
 {
    CSCPMessage msg;
    char szQuery[256], szFileName[MAX_PATH];
@@ -188,7 +194,8 @@ void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId)
    msg.SetId(dwRqId);
    msg.SetCode(CMD_IMAGE_FILE);
 
-   sprintf(szQuery, "SELECT file_name FROM images WHERE image_id=%ld", dwImageId);
+   sprintf(szQuery, "SELECT file_name_%s FROM images WHERE image_id=%ld", 
+           (wFormat == IMAGE_FORMAT_PNG) ? "png" : "ico", dwImageId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {

@@ -127,7 +127,6 @@ void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
 // Image functions
 //
 
-HBITMAP LoadPNG(char *pszFileName, COLORREF *prgbMaskColor, int cx, int cy);
 void CreateObjectImageList(void);
 DWORD ImageIdToIndex(DWORD dwImageId);
 DWORD GetObjectImageIndex(NXC_OBJECT *pObject);

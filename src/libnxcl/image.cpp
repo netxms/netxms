@@ -32,7 +32,7 @@
 // Download image file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir)
+DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir, WORD wFormat)
 {
    DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
    CSCPMessage msg, *pResponce;
@@ -45,6 +45,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir)
    msg.SetCode(CMD_LOAD_IMAGE_FILE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IMAGE_ID, dwImageId);
+   msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
    SendMsg(&msg);
 
    pResponce = WaitForMessage(CMD_IMAGE_FILE, dwRqId, 30000);
@@ -59,8 +60,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir)
          {
             pResponce->GetVariableBinary(VID_IMAGE_FILE, pBuffer, dwFileSize);
             cLastChar = pszCacheDir[strlen(pszCacheDir) - 1];
-            sprintf(szFileName, "%s%s%lu.png", pszCacheDir, 
-                    (cLastChar == '\\') || (cLastChar == '/') ? "" : "/", dwImageId);
+            sprintf(szFileName, "%s%s%08x.%s", pszCacheDir, 
+                    (cLastChar == '\\') || (cLastChar == '/') ? "" : FS_PATH_SEPARATOR, 
+                    dwImageId, (wFormat == IMAGE_FORMAT_PNG) ? "png" : "ico");
             fd = open(szFileName, O_CREAT | O_WRONLY | O_BINARY, 0644);
             if (fd != -1)
             {
@@ -97,18 +99,19 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir)
 // Synchronize single image file
 //
 
-static DWORD SyncImageFile(char *pszCacheDir, DWORD dwImageId, BYTE *pServerHash)
+static DWORD SyncImageFile(char *pszCacheDir, DWORD dwImageId, BYTE *pServerHash, WORD wFormat)
 {
    char szFileName[MAX_PATH];
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD dwRetCode = RCC_SUCCESS;
 
-   sprintf(szFileName, "%s" FS_PATH_SEPARATOR "%lu.png", pszCacheDir, dwImageId);
+   sprintf(szFileName, "%s" FS_PATH_SEPARATOR "%08x.%s", pszCacheDir, dwImageId,
+           (wFormat == IMAGE_FORMAT_PNG) ? "png" : "ico");
    memset(hash, 0, MD5_DIGEST_SIZE);
    CalculateFileMD5Hash(szFileName, hash);
    if (memcmp(hash, pServerHash, MD5_DIGEST_SIZE))
       // Hash not match, need to download file
-      dwRetCode = NXCLoadImageFile(dwImageId, pszCacheDir);
+      dwRetCode = NXCLoadImageFile(dwImageId, pszCacheDir, wFormat);
    return dwRetCode;
 }
 
@@ -117,7 +120,7 @@ static DWORD SyncImageFile(char *pszCacheDir, DWORD dwImageId, BYTE *pServerHash
 // Synchronize images with client
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir)
+DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir, WORD wFormat)
 {
    DWORD i, dwRqId, dwRetCode;
    CSCPMessage msg, *pResponce;
@@ -126,6 +129,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCa
 
    msg.SetCode(CMD_GET_IMAGE_LIST);
    msg.SetId(dwRqId);
+   msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
    SendMsg(&msg);
 
    pResponce = WaitForMessage(CMD_IMAGE_LIST, dwRqId, 5000);
@@ -145,7 +149,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCa
             {
                (*ppImageList)->pImageList[i].dwId = ntohl((*ppImageList)->pImageList[i].dwId);
                dwRetCode = SyncImageFile(pszCacheDir, (*ppImageList)->pImageList[i].dwId,
-                                         (*ppImageList)->pImageList[i].hash);
+                                         (*ppImageList)->pImageList[i].hash, wFormat);
                if (dwRetCode != RCC_SUCCESS)
                {
                   NXCDestroyImageList(*ppImageList);
