@@ -1320,6 +1320,8 @@ BOOL CRuleList::DeleteRow(int iRow)
 
    if ((iRow >= 0) && (iRow < m_iNumRows))
    {
+      if (iRow == m_iCurrRow)
+         m_iCurrRow = -1;
       delete m_ppRowList[iRow];
       m_iNumRows--;
       memmove(&m_ppRowList[iRow], &m_ppRowList[iRow + 1], sizeof(RL_Row *) * (m_iNumRows - iRow));
