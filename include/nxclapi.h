@@ -107,6 +107,7 @@ typedef unsigned long HREQUEST;
 #define NXC_OP_SYNC_EVENTS       2
 #define NXC_OP_OPEN_EVENT_DB     3
 #define NXC_OP_CLOSE_EVENT_DB    4
+#define NXC_OP_SET_EVENT_INFO    5
 
 
 //

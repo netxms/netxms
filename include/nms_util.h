@@ -147,6 +147,9 @@ extern "C"
    void EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
    void EXPORTABLE MemFree(void *pBlock);
 
+   void EXPORTABLE *nx_memdup(void *pData, DWORD dwSize);
+   char EXPORTABLE *nx_strdup(char *pSrc);
+
    void EXPORTABLE CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 }
 
