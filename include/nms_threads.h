@@ -192,13 +192,21 @@ inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 	int ret = FALSE;
 
    if (mutex != NULL) {
-		// FIXME: hack, always waiting a bit longer
-		for (i = (dwTimeOut / 50) + 1; i > 0; i--) {
-	      if (pthread_mutex_trylock(mutex) != EBUSY) {
+		if (dwTimeOut == INFINITE)
+		{
+			if (pthread_mutex_lock(mutex) == 0) {
 				ret = TRUE;
-				break;
 			}
-			ThreadSleep(50);
+		}
+		else
+		{
+			for (i = (dwTimeOut / 50) + 1; i > 0; i--) {
+				if (pthread_mutex_trylock(mutex) != EBUSY) {
+					ret = TRUE;
+					break;
+				}
+				ThreadSleep(50);
+			}
 		}
 	}
    return ret;
