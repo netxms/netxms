@@ -266,7 +266,7 @@ LONG H_NetInterfaceStats(char *cmd, char *arg, char *value)
                   ret_uint(value, info.dwInErrors);
                   break;
                case NET_IF_LINK:
-                  ret_uint(value, (info.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED) ? 1 : 0);
+                  ret_uint(value, (info.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL) ? 1 : 0);
                   break;
                case NET_IF_OUT_ERRORS:
                   ret_uint(value, info.dwOutErrors);

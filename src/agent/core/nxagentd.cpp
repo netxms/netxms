@@ -99,6 +99,7 @@ static char m_szActionList[16384] = "";
 static char m_szServerList[16384] = "";
 static char m_szSubagentList[16384] = "";
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+static DWORD m_dwStartupDelay = 0;
 
 
 //
@@ -115,6 +116,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
    { "Servers", CT_STRING_LIST, ',', 0, 16384, 0, m_szServerList },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
+   { "StartupDelay", CT_LONG, 0, 0, 0, 0, &m_dwStartupDelay },
    { "SubAgent", CT_STRING_LIST, '\n', 0, 16384, 0, m_szSubagentList },
    { "Timeout", CT_LONG, 0, 0, 0, 0, &g_dwTimeOut },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -347,6 +349,27 @@ void Shutdown(void)
 
 void Main(void)
 {
+   if (m_dwStartupDelay > 0)
+   {
+      if (g_dwFlags & AF_DAEMON)
+      {
+         ThreadSleep(m_dwStartupDelay);
+      }
+      else
+      {
+         DWORD i;
+
+         printf("XXXXXX%*s]\rWAIT [", m_dwStartupDelay, " ");
+         fflush(stdout);
+         for(i = 0; i < m_dwStartupDelay; i++)
+         {
+            ThreadSleep(1);
+            putc('.', stdout);
+            fflush(stdout);
+         }
+         printf("\n");
+      }
+   }
    WriteLog(MSG_AGENT_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
    if (g_dwFlags & AF_DAEMON)
