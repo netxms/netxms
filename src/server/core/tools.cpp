@@ -49,6 +49,20 @@ struct ECHOREPLY
 
 
 //
+// Calculate number of bits in netmask
+//
+
+int BitsInMask(DWORD dwMask)
+{
+   int bits;
+   DWORD dwTemp;
+
+   for(bits = 0, dwTemp = ntohl(dwMask); dwTemp != 0; bits++, dwTemp <<= 1);
+   return bits;
+}
+
+
+//
 // Strip whitespaces and tabs off the string
 //
 

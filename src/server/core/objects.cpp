@@ -103,17 +103,22 @@ static void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, 
             dwPos = (dwFirst + dwLast) / 2;
             if (dwPos == 0)
                dwPos++;
-            if (pIndex[dwPos].dwKey == dwKey)
+            if ((pIndex[dwPos - 1].dwKey < dwKey) && (pIndex[dwPos].dwKey > dwKey))
+               break;
+            if ((pIndex[dwPos].dwKey < dwKey) && (pIndex[dwPos + 1].dwKey > dwKey))
+            {
+               dwPos++;
+               break;
+            }
+            if (dwKey < pIndex[dwPos].dwKey)
+               dwLast = dwPos;
+            else if (dwKey > pIndex[dwPos].dwKey)
+               dwFirst = dwPos;
+            else
             {
                WriteLog(MSG_DUPLICATE_KEY, EVENTLOG_ERROR_TYPE, "x", dwKey);
                return;
             }
-            if ((pIndex[dwPos - 1].dwKey < dwKey) && (pIndex[dwPos].dwKey > dwKey))
-               break;
-            if (dwKey < pIndex[dwPos].dwKey)
-               dwLast = dwPos;
-            else
-               dwFirst = dwPos;
          }
    }
 
@@ -186,29 +191,20 @@ static void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dw
 void NetObjInsert(NetObj *pObject)
 {
    ObjectsGlobalLock();
-printf("insert: free id = %d\n", dwFreeObjectId);
    pObject->SetId(dwFreeObjectId++);
-printf("Adding object %p to index with id %d\n", pObject, pObject->Id());
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
-printf("Added\n", pObject, pObject->Id());
    switch(pObject->Type())
    {
       case OBJECT_GENERIC:
          break;
       case OBJECT_SUBNET:
-printf("Adding subnet %p to index with addr %d\n", pObject, pObject->IpAddr());
          AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
-printf("Added\n", pObject, pObject->Id());
          break;
       case OBJECT_NODE:
-printf("Adding node %p to index with addr %d\n", pObject, pObject->IpAddr());
          AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
-printf("Added\n", pObject, pObject->Id());
          break;
       case OBJECT_INTERFACE:
-printf("Adding interface %p to index with addr %d\n", pObject, pObject->IpAddr());
          AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
-printf("Added\n", pObject, pObject->Id());
          break;
       default:
          WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());

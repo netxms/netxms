@@ -117,6 +117,7 @@ void Main(void);
 
 void StrStrip(char *str);
 char *IpToStr(DWORD dwAddr, char *szBuffer);
+int BitsInMask(DWORD dwMask);
 
 HMODULE DLOpen(char *szModule);
 void *DLGetSymbolAddr(HMODULE hModule, char *szSymbol);

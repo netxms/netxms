@@ -40,8 +40,11 @@ Subnet::Subnet()
 
 Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask)
 {
+   char szBuffer[32];
+
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
+   sprintf(m_szName, "%s/%d", IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
 }
 
 

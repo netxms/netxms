@@ -34,8 +34,6 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    Subnet *pSubnet;
    DWORD dwSubnetAddr;
 
-   printf("Polling IP: %s\n", IpToStr(dwIpAddr, NULL));
-
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
@@ -48,29 +46,21 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 
    // Find appropriate subnet
    dwSubnetAddr = dwIpAddr & dwNetMask;
-printf("Subnet: %s\n", IpToStr(dwSubnetAddr, NULL));
    pSubnet = FindSubnetByIP(dwSubnetAddr);
-printf("Subnet object: %p\n", pSubnet);
    if (pSubnet == NULL)
    {
-printf("Subnet object not found, creating new one\n");
       pSubnet = new Subnet(dwSubnetAddr, dwNetMask);
       NetObjInsert(pSubnet);
-printf("Subnet added with ID %d\n",pSubnet->Id());
    }
 
-printf("Creating interface\n");
    pInterface = new Interface(dwIpAddr, dwNetMask);
    NetObjInsert(pInterface);
-printf("Interface added with ID %d\n",pInterface->Id());
    pNode = new Node(dwIpAddr, dwFlags, 0);
    pNode->AddInterface(pInterface);
    NetObjInsert(pNode);
-printf("Node added with ID %d\n",pNode->Id());
 
    // Link node to subnet
    pSubnet->AddNode(pNode);
-printf("Finished node processing\n");
 }
 
 
