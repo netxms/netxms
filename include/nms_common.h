@@ -187,9 +187,15 @@ typedef struct tagICMPHDR
                     (((toupper(x) >= 'A') && (toupper(x) <= 'F')) ? (toupper(x) - 'A' + 10) : 0))
 
 
-// choice minimal value
+//
+// Define min() and max() if needed
+//
+
 #ifndef min
 # define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+#ifndef max
+# define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 

@@ -168,11 +168,12 @@ inline void MutexDestroy(MUTEX mutex)
    }
 }
 
-inline void MutexLock(MUTEX mutex, DWORD dwTimeOut)
+inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 {
    if (mutex != NULL) {
-      pthread_mutex_lock(mutex);
+      pthread_mutex_lock(mutex); /* TODO: add timeout here */
 	}
+   return TRUE;
 }
 
 inline void MutexUnlock(MUTEX mutex)
