@@ -39,6 +39,12 @@
 #define IDC_STATIC_TEXT                 1004
 #define IDC_LIST_VIEW                   1005
 #define IDC_TREE_VIEW                   1006
+#define IDC_EDIT_NAME                   1007
+#define IDC_EDIT_ID                     1008
+#define IDC_EDIT_MESSAGE                1009
+#define IDC_EDIT_DESCRIPTION            1010
+#define IDC_COMBO_SEVERITY              1011
+#define IDC_CHECK_LOG                   1012
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -54,7 +60,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32786
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

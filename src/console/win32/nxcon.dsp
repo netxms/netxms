@@ -100,6 +100,10 @@ SOURCE=.\ControlPanel.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditEventDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EventBrowser.cpp
 # End Source File
 # Begin Source File
@@ -158,6 +162,10 @@ SOURCE=.\StdAfx.cpp
 # Begin Source File
 
 SOURCE=.\ControlPanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditEventDlg.h
 # End Source File
 # Begin Source File
 

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "EventEditor.h"
+#include "EditEventDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,8 +30,10 @@ BEGIN_MESSAGE_MAP(CEventEditor, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CEventEditor)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
-   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
 	ON_WM_SIZE()
+   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDoubleClick)
+	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -48,7 +51,7 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, ID_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS, rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
@@ -105,6 +108,7 @@ LRESULT CEventEditor::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
          m_wndListCtrl.SetItemText(i, 3, szBuffer);
          m_wndListCtrl.SetItemText(i, 4, m_ppEventTemplates[i]->pszMessage);
          m_wndListCtrl.SetItemText(i, 5, m_ppEventTemplates[i]->pszDescription);
+         m_wndListCtrl.SetItemData(i, i);
       }
    }
    else
@@ -125,4 +129,50 @@ void CEventEditor::OnSize(UINT nType, int cx, int cy)
 	CMDIChildWnd::OnSize(nType, cx, cy);
 	
    m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+}
+
+
+//
+// Handler for double-clicks in list view
+//
+
+void CEventEditor::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
+{
+   if (pInfo->iItem != -1)
+      EditEvent(pInfo->iItem);
+}
+
+
+//
+// Edit currently selected event
+//
+
+void CEventEditor::EditEvent(int iItem)
+{
+   int iIdx;
+   CEditEventDlg dlgEditEvent;
+
+   iIdx = m_wndListCtrl.GetItemData(iItem);
+
+   dlgEditEvent.m_bWriteLog = m_ppEventTemplates[iIdx]->dwFlags & EF_LOG;
+   dlgEditEvent.m_dwEventId = m_ppEventTemplates[iIdx]->dwCode;
+   dlgEditEvent.m_strName = m_ppEventTemplates[iIdx]->szName;
+   dlgEditEvent.m_strMessage = m_ppEventTemplates[iIdx]->pszMessage;
+   dlgEditEvent.m_strDescription = m_ppEventTemplates[iIdx]->pszDescription;
+   dlgEditEvent.m_dwSeverity = m_ppEventTemplates[iIdx]->dwSeverity;
+
+   if (dlgEditEvent.DoModal())
+   {
+   }
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CEventEditor::OnSetFocus(CWnd* pOldWnd) 
+{
+	CMDIChildWnd::OnSetFocus(pOldWnd);
+   m_wndListCtrl.SetFocus();
 }

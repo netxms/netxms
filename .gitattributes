@@ -22,6 +22,8 @@ src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
+src/console/win32/EditEventDlg.cpp -text
+src/console/win32/EditEventDlg.h -text
 src/console/win32/EventBrowser.cpp -text
 src/console/win32/EventBrowser.h -text
 src/console/win32/EventEditor.cpp -text

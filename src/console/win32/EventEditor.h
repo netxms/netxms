@@ -29,6 +29,8 @@ public:
 
 // Implementation
 protected:
+	void EditEvent(int iItem);
+	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
 	DWORD m_dwNumTemplates;
 	NXC_EVENT_TEMPLATE ** m_ppEventTemplates;
 	afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
@@ -40,6 +42,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CEventEditor
-LastTemplate=CMDIChildWnd
+LastClass=CEditEventDlg
+LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=14
+ClassCount=15
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -16,24 +16,24 @@ Class7=CEventBrowser
 Class9=CMapView
 
 ResourceCount=20
-Resource1=IDR_CTRLPANEL
+Resource1=IDR_EVENTS
 Resource2=IDD_LOGIN (English (U.S.))
-Resource3=IDR_MAPFRAME
-Resource4=IDD_PROGRESS
-Resource5=IDR_EVENTS
+Resource3=IDR_OBJECTS
+Resource4=IDD_OBJECT_PROPERTIES
+Resource5=IDR_MAPFRAME
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_LOGIN
+Resource6=IDD_PROGRESS
 Class11=CProgressDialog
-Resource7=IDR_OBJECTS
+Resource7=IDR_CTRLPANEL
 Class12=CObjectBrowser
-Resource8=IDD_OBJECT_PROPERTIES
+Resource8=IDR_MAINFRAME
 Class13=CObjectPropDlg
-Resource9=IDR_MAINFRAME
-Resource10=IDD_ABOUTBOX
+Resource9=IDD_ABOUTBOX
+Resource10=IDD_LOGIN
 Resource11=IDR_MAINFRAME (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
@@ -44,6 +44,7 @@ Resource17=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource18=IDD_PROGRESS (English (U.S.))
 Class14=CEventEditor
 Resource19=IDD_ABOUTBOX (English (U.S.))
+Class15=CEditEventDlg
 Resource20=IDD_EDIT_EVENT
 
 [CLS:CConsoleApp]
@@ -480,11 +481,32 @@ ImplementationFile=EventEditor.cpp
 BaseClass=CMDIChildWnd
 Filter=M
 VirtualFilter=mfWC
+LastObject=CEventEditor
 
 [DLG:IDD_EDIT_EVENT]
 Type=1
-Class=?
-ControlCount=2
-Control1=IDOK,button,1342242817
-Control2=IDCANCEL,button,1342242816
+Class=CEditEventDlg
+ControlCount=13
+Control1=IDC_EDIT_ID,edit,1350633600
+Control2=IDC_COMBO_SEVERITY,combobox,1344340227
+Control3=IDC_EDIT_NAME,edit,1350631552
+Control4=IDC_CHECK_LOG,button,1342242819
+Control5=IDC_EDIT_MESSAGE,edit,1350631552
+Control6=IDC_EDIT_DESCRIPTION,edit,1352732868
+Control7=IDOK,button,1342242817
+Control8=IDCANCEL,button,1342242816
+Control9=IDC_STATIC,static,1342308352
+Control10=IDC_STATIC,static,1342308352
+Control11=IDC_STATIC,static,1342308352
+Control12=IDC_STATIC,static,1342308352
+Control13=IDC_STATIC,static,1342308354
+
+[CLS:CEditEventDlg]
+Type=0
+HeaderFile=EditEventDlg.h
+ImplementationFile=EditEventDlg.cpp
+BaseClass=CDialog
+Filter=D
+LastObject=CEditEventDlg
+VirtualFilter=dWC
 
