@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.12 2005-01-24 19:40:31 alk Exp $ */
+/* $Id: linux.cpp,v 1.13 2005-01-24 19:46:50 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -89,7 +89,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Uptime",                H_Uptime,          NULL,
 			DCI_DT_UINT,	"System uptime" },
 
-   { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL },
+   { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,
+			DCI_DT_INT,		""},
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -126,6 +127,11 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/01/24 19:40:31  alk
+return type/comments added for command list
+
+System.ProcessCount/Process.Count(*) misunderstanding resolved
+
 Revision 1.11  2005/01/17 23:31:01  alk
 Agent.SourcePackageSupport added
 
