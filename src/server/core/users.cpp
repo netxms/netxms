@@ -301,17 +301,9 @@ BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSy
    DWORD i;
    BOOL bResult = FALSE;
 
-char temp[256];
-BinToStr(szPassword, SHA1_DIGEST_SIZE, temp);
-printf("login='%s' hash='%s'\n",szName,temp);
    MutexLock(m_hMutexUserAccess, INFINITE);
    for(i = 0; i < g_dwNumUsers; i++)
    {
-BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, temp);
-printf("checking: '%s' '%s' %d %d %d\n",g_pUserList[i].szName,temp,g_pUserList[i].wFlags,UF_DISABLED,g_pUserList[i].wFlags & UF_DISABLED);      
-printf("expr: %d\n",(!strcmp(szName, g_pUserList[i].szName) &&
-                   !memcmp(szPassword, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) &&
-                             !(g_pUserList[i].wFlags & UF_DELETED) && !(g_pUserList[i].wFlags & UF_DISABLED)));
       if (!strcmp(szName, g_pUserList[i].szName) &&
           !memcmp(szPassword, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) &&
           !(g_pUserList[i].wFlags & UF_DELETED) && !(g_pUserList[i].wFlags & UF_DISABLED))

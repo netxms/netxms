@@ -146,7 +146,7 @@ typedef void * HSNMPSESSION;
 #define AF_DEBUG_ACTIONS                  0x00004000
 #define AF_DEBUG_MISC                     0x00008000
 #define AF_DEBUG_SQL                      0x00010000
-#define AF_DEBUG_ALL                      0x0001FF00
+#define AF_DEBUG_ALL                      0x0000FF00
 #define AF_DB_LOCKED                      0x01000000
 #define AF_SHUTDOWN                       0x80000000
 
