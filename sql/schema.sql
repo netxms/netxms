@@ -40,6 +40,7 @@ CREATE TABLE Nodes
 	is_router integer,
 	snmp_version integer,
 	community varchar(32),
+	snmp_oid varchar(255),
 	discovery_flags integer,
 	auth_method integer,
 	secret varchar(64),
