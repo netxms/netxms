@@ -98,3 +98,12 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+//
+// Handler for System.Hostname parameter
+//
+
+LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+{
+	return (sysinfo(SI_HOSTNAME, pValue, MAX_RESULT_LENGTH) == -1) ?
+											SYSINFO_RC_ERROR : SYSINFO_RC_SUCCESS;
+}
