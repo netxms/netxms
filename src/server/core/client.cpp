@@ -136,6 +136,7 @@ void ClientSession::WriteThread(void)
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+printf("We have message to send in write queue\n");
       if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
       {
          LibUtilDestroyObject(pMsg);
@@ -159,6 +160,12 @@ void ClientSession::ProcessingThread(void)
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
 
       DebugPrintf("Received message with code %d\n", pMsg->GetCode());
+      if ((m_iState != STATE_AUTHENTICATED) && (pMsg->GetCode() != CMD_LOGIN))
+      {
+         delete pMsg;
+         continue;
+      }
+
       switch(pMsg->GetCode())
       {
          case CMD_LOGIN:
@@ -185,11 +192,42 @@ void ClientSession::ProcessingThread(void)
             {
             }
             break;
+         case CMD_GET_OBJECTS:
+            SendAllObjects();
+            break;
          default:
             break;
       }
       delete pMsg;
    }
+}
+
+
+//
+// Send all objects to client
+//
+
+void ClientSession::SendAllObjects(void)
+{
+   DWORD i;
+   CSCPMessage msg;
+
+   // Prepare message
+   msg.SetCode(CMD_OBJECT);
+
+   // Send objects, one per message
+   ObjectsGlobalLock();
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      g_pIndexById[i].pObject->CreateMessage(&msg);
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+   ObjectsGlobalUnlock();
+
+   // Send end of list notification
+   msg.SetCode(CMD_OBJECT_LIST_END);
+   SendMessage(&msg);
 }
 
 

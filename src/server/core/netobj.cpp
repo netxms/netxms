@@ -371,3 +371,26 @@ BOOL NetObj::SaveACLToDB(void)
 
    return bSuccess;
 }
+
+
+//
+// Create CSCP message with object's data
+//
+
+void NetObj::CreateMessage(CSCPMessage *pMsg)
+{
+   DWORD i;
+   char szBuffer[32];
+
+   pMsg->SetVariable("class", (WORD)Type());
+   pMsg->SetVariable("id", m_dwId);
+   pMsg->SetVariable("name", m_szName);
+   pMsg->SetVariable("status", (WORD)m_iStatus);
+   pMsg->SetVariable("ipaddr", m_dwIpAddr);
+   pMsg->SetVariable("parent_cnt", m_dwParentCount);
+   for(i = 0; i < m_dwParentCount; i++)
+   {
+      sprintf(szBuffer, "parent.%d", i);
+      pMsg->SetVariable(szBuffer, m_pParentList[i]->Id());
+   }
+}

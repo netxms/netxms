@@ -875,3 +875,20 @@ BOOL Node::AddItem(DC_ITEM *pItem)
    Unlock();
    return bResult;
 }
+
+
+//
+// Create CSCP message with object's data
+//
+
+void Node::CreateMessage(CSCPMessage *pMsg)
+{
+   NetObj::CreateMessage(pMsg);
+   pMsg->SetVariable("flags", m_dwFlags);
+   pMsg->SetVariable("dflags", m_dwDiscoveryFlags);
+   pMsg->SetVariable("agent_port", m_wAgentPort);
+   pMsg->SetVariable("auth_method", m_wAuthMethod);
+   pMsg->SetVariable("shared_secret", m_szSharedSecret);
+   pMsg->SetVariable("community", m_szCommunityString);
+   pMsg->SetVariable("oid", m_szObjectId);
+}

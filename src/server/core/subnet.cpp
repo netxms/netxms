@@ -152,3 +152,14 @@ BOOL Subnet::DeleteFromDB(void)
    DBQuery(g_hCoreDB, szQuery);
    return TRUE;
 }
+
+
+//
+// Create CSCP message with object's data
+//
+
+void Subnet::CreateMessage(CSCPMessage *pMsg)
+{
+   NetObj::CreateMessage(pMsg);
+   pMsg->SetVariable("netmask", m_dwIpNetMask);
+}

@@ -212,3 +212,16 @@ void Interface::StatusPoll(void)
       m_bIsModified = TRUE;
    }
 }
+
+
+//
+// Create CSCP message with object's data
+//
+
+void Interface::CreateMessage(CSCPMessage *pMsg)
+{
+   NetObj::CreateMessage(pMsg);
+   pMsg->SetVariable("if_index", m_dwIfIndex);
+   pMsg->SetVariable("if_type", m_dwIfType);
+   pMsg->SetVariable("netmask", m_dwIpNetMask);
+}

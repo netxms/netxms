@@ -276,6 +276,8 @@ public:
 
    virtual void CalculateCompoundStatus(void);
 
+   virtual void CreateMessage(CSCPMessage *pMsg);
+
    // Debug methods
    const char *ParentList(char *szBuffer);
    const char *ChildList(char *szBuffer);
@@ -308,6 +310,7 @@ public:
    DWORD IfIndex(void) { return m_dwIfIndex; }
 
    void StatusPoll(void);
+   virtual void CreateMessage(CSCPMessage *pMsg);
 };
 
 
@@ -391,6 +394,8 @@ public:
    DWORD GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer);
    void QueueItemsForPolling(Queue *pPollerQueue);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
 };
 
 
@@ -415,6 +420,7 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
+   virtual void CreateMessage(CSCPMessage *pMsg);
 };
 
 

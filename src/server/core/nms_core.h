@@ -176,6 +176,7 @@ private:
    DWORD m_dwUserId;
 
    void DebugPrintf(char *szFormat, ...);
+   void SendAllObjects(void);
 
 public:
    ClientSession(SOCKET hSocket);
