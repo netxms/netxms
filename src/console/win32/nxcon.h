@@ -96,6 +96,7 @@ public:
 
 // Implementation
 protected:
+	HMENU LoadAppMenu(HMENU hViewMenu);
 	BOOL SetupWorkDir(void);
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
