@@ -18,6 +18,7 @@
 - Bug fixed: objects was not marked as modified when platform name or agent
   version changes
 - Windows console: implemented cell edit by double click in policy editor
+- Implemented external command execution under UNIX
 
 
 *
