@@ -42,6 +42,7 @@ EXTRA_DIST = \
 	GraphFrame.cpp GraphFrame.h \
 	GraphPropDlg.cpp GraphPropDlg.h \
 	GroupPropDlg.cpp GroupPropDlg.h \
+	LastValuesView.cpp LastValuesView.h \
 	LoginDialog.cpp LoginDialog.h \
 	MainFrm.cpp MainFrm.h \
 	MapFrame.cpp MapFrame.h \
@@ -86,4 +87,5 @@ EXTRA_DIST = \
 	TrapParamDlg.cpp TrapParamDlg.h \
 	UserEditor.cpp UserEditor.h \
 	UserPropDlg.cpp UserPropDlg.h \
-	UserSelectDlg.cpp UserSelectDlg.h
+	UserSelectDlg.cpp UserSelectDlg.h \
+	ValueList.cpp ValueList.h

@@ -618,7 +618,8 @@ void DCItem::UpdateCacheSize(void)
 {
    DWORD i, dwRequiredSize;
 
-   for(i = 0, dwRequiredSize = 0; i < m_dwNumThresholds; i++)
+   // Minimum cache size is 1 (so GetLastValue can work)
+   for(i = 0, dwRequiredSize = 1; i < m_dwNumThresholds; i++)
       if (dwRequiredSize < m_ppThresholdList[i]->RequiredCacheSize())
          dwRequiredSize = m_ppThresholdList[i]->RequiredCacheSize();
    if (dwRequiredSize < m_dwCacheSize)
@@ -686,5 +687,29 @@ void DCItem::UpdateCacheSize(void)
          }
       }
       m_dwCacheSize = dwRequiredSize;
+   }
+}
+
+
+//
+// Put last value into CSCP message
+//
+
+void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
+{
+   pMsg->SetVariable(dwId++, m_dwId);
+   pMsg->SetVariable(dwId++, m_szName);
+   pMsg->SetVariable(dwId++, m_szDescription);
+   if (m_dwCacheSize > 0)
+   {
+      pMsg->SetVariable(dwId++, (WORD)m_iDataType);
+      pMsg->SetVariable(dwId++, (TCHAR *)m_ppValueCache[0]->String());
+      pMsg->SetVariable(dwId++, (DWORD)m_tLastPoll);
+   }
+   else
+   {
+      pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);
+      pMsg->SetVariable(dwId++, _T(""));
+      pMsg->SetVariable(dwId++, (DWORD)0);
    }
 }

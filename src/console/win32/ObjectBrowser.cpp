@@ -177,6 +177,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_WAKEUP, OnObjectWakeup)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_WAKEUP, OnUpdateObjectWakeup)
 	ON_COMMAND(ID_OBJECT_CREATE_SERVICE, OnObjectCreateService)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
+	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1216,6 +1218,11 @@ void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI)
    pCmdUI->Enable(CurrObjectIsNode(TRUE));
 }
 
+void CObjectBrowser::OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
+}
+
 void CObjectBrowser::OnUpdateObjectWakeup(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(CurrObjectIsNode(FALSE) || CurrObjectIsInterface());
@@ -1668,4 +1675,31 @@ void CObjectBrowser::SortTreeItems(HTREEITEM hItem)
    tvs.hParent = hItem;
    tvs.lpfnCompare = CompareTreeItems;
    m_wndTreeCtrl.SortChildrenCB(&tvs);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_LASTDCIVALUES message handler
+//
+
+void CObjectBrowser::OnObjectLastdcivalues() 
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      if (m_pCurrentObject != NULL)
+         theApp.ShowLastValues(m_pCurrentObject);
+   }
+   else
+   {
+      int iItem;
+      NXC_OBJECT *pObject;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         theApp.ShowLastValues(pObject);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
 }

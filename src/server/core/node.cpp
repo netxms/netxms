@@ -1486,3 +1486,22 @@ AgentConnection *Node::CreateAgentConnection(void)
    }
    return pConn;
 }
+
+
+//
+// Get last collected values of all DCIs
+//
+
+DWORD Node::GetLastValues(CSCPMessage *pMsg)
+{
+   DWORD i, dwId;
+
+   Lock();
+
+   pMsg->SetVariable(VID_NUM_ITEMS, m_dwNumItems);
+   for(i = 0, dwId = VID_DCI_VALUES_BASE; i < m_dwNumItems; i++, dwId += 6)
+      m_ppItems[i]->GetLastValue(pMsg, dwId);
+
+   Unlock();
+   return RCC_SUCCESS;
+}

@@ -431,6 +431,7 @@ public:
    DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
    void QueueItemsForPolling(Queue *pPollerQueue);
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
+   DWORD GetLastValues(CSCPMessage *pMsg);
 
    AgentConnection *CreateAgentConnection(void);
 

@@ -937,6 +937,21 @@ typedef struct
 
 
 //
+// DCI information and last value for NXCGetLastValues()
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwTimestamp;
+   TCHAR szName[MAX_ITEM_NAME];
+   TCHAR szDescription[MAX_DB_STRING];
+   TCHAR szValue[MAX_DB_STRING];
+   int iDataType;
+} NXC_DCI_VALUE;
+
+
+//
 // Functions
 //
 
@@ -1076,6 +1091,8 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
                                           DWORD dwNumObjects, DWORD *pdwObjectList,
                                           DWORD *pdwRqId);
+DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
+                                          DWORD *pdwNumItems, NXC_DCI_VALUE **ppValueList);
 
 #ifdef __cplusplus
 }

@@ -19,10 +19,10 @@ protected:
 
 // Attributes
 public:
-   CDCIDataView(DWORD dwNodeId, DWORD dwItemId);
 
 // Operations
 public:
+   CDCIDataView(DWORD dwNodeId, DWORD dwItemId);
 	virtual ~CDCIDataView();
 
 // Overrides

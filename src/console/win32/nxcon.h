@@ -97,6 +97,7 @@ public:
 
 // Implementation
 protected:
+	void CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId, TCHAR *pszSubTitle, HMENU hMenu, HACCEL hAccel);
 	void CreateObject(NXC_OBJECT_CREATE_INFO *pInfo);
 	HMENU LoadAppMenu(HMENU hViewMenu);
 	BOOL SetupWorkDir(void);
@@ -186,6 +187,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void ShowLastValues(NXC_OBJECT *pObject);
 	void DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList);
 	void CreateNetworkService(DWORD dwParent);
 	void WakeUpNode(DWORD dwObjectId);

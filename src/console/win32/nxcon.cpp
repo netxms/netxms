@@ -16,6 +16,7 @@
 #include "NetSrvPropsGeneral.h"
 #include "NodePropsPolling.h"
 #include "DeploymentView.h"
+#include "LastValuesView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -922,34 +923,8 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
                                &pItemList, "Loading node's data collection information...");
       if (dwResult == RCC_SUCCESS)
       {
-   	   CCreateContext context;
-      
-         pWnd = new CDataCollectionEditor(pItemList);
-
-   	   // load the frame
-	      context.m_pCurrentFrame = pFrame;
-
-	      if (pWnd->LoadFrame(IDR_DC_EDITOR, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
-         {
-	         CString strFullString, strTitle;
-
-	         if (strFullString.LoadString(IDR_DC_EDITOR))
-		         AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
-
-            // add node name to title
-            strTitle += " - [";
-            strTitle += pObject->szName;
-            strTitle += "]";
-
-	         // set the handles and redraw the frame and parent
-	         pWnd->SetHandles(m_hDCEditorMenu, m_hDCEditorAccel);
-	         pWnd->SetTitle(strTitle);
-	         pWnd->InitialUpdateFrame(NULL, TRUE);
-         }
-         else
-	      {
-		      delete pWnd;
-	      }
+         CreateChildFrameWithSubtitle(new CDataCollectionEditor(pItemList), IDR_DC_EDITOR,
+                                      pObject->szName, m_hDCEditorMenu, m_hDCEditorAccel);
       }
       else
       {
@@ -1037,36 +1012,8 @@ void CConsoleApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 
 void CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-   CCreateContext context;
-   CDCIDataView *pWnd;
-
-   pWnd = new CDCIDataView(dwNodeId, dwItemId);
-
-   // load the frame
-	context.m_pCurrentFrame = pFrame;
-
-	if (pWnd->LoadFrame(IDR_DCI_DATA_VIEW, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
-   {
-	   CString strFullString, strTitle;
-
-	   if (strFullString.LoadString(IDR_DCI_DATA_VIEW))
-		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
-
-      // add node name to title
-      strTitle += " - [";
-      strTitle += pszItemName;
-      strTitle += "]";
-
-	   // set the handles and redraw the frame and parent
-	   pWnd->SetHandles(m_hMDIMenu, m_hMDIAccel);
-	   pWnd->SetTitle(strTitle);
-	   pWnd->InitialUpdateFrame(NULL, TRUE);
-   }
-   else
-	{
-		delete pWnd;
-	}
+   CreateChildFrameWithSubtitle(new CDCIDataView(dwNodeId, dwItemId), IDR_DCI_DATA_VIEW,
+                                pszItemName, m_hMDIMenu, m_hMDIAccel);
 }
 
 
@@ -1076,8 +1023,6 @@ void CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
 
 void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-   CCreateContext context;
    CGraphFrame *pWnd;
    DWORD dwCurrTime;
 
@@ -1086,30 +1031,8 @@ void CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName
    dwCurrTime = time(NULL);
    pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
 
-   // load the frame
-	context.m_pCurrentFrame = pFrame;
-
-	if (pWnd->LoadFrame(IDR_DCI_HISTORY_GRAPH, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
-   {
-	   CString strFullString, strTitle;
-
-	   if (strFullString.LoadString(IDR_DCI_HISTORY_GRAPH))
-		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
-
-      // add item name to title
-      strTitle += " - [";
-      strTitle += pszItemName;
-      strTitle += "]";
-
-	   // set the handles and redraw the frame and parent
-	   pWnd->SetHandles(m_hGraphMenu, m_hGraphAccel);
-	   pWnd->SetTitle(strTitle);
-	   pWnd->InitialUpdateFrame(NULL, TRUE);
-   }
-   else
-	{
-		delete pWnd;
-	}
+   CreateChildFrameWithSubtitle(pWnd, IDR_DCI_HISTORY_GRAPH,
+                                pszItemName, m_hGraphMenu, m_hGraphAccel);
 }
 
 
@@ -1545,4 +1468,55 @@ void CConsoleApp::DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObj
       pJob->pdwObjectList = (DWORD *)nx_memdup(pdwObjectList, sizeof(DWORD) * dwNumObjects);
       pWnd->PostMessage(WM_START_DEPLOYMENT, 0, (LPARAM)pJob);
    }
+}
+
+
+//
+// Show last collected DCI values
+//
+
+void CConsoleApp::ShowLastValues(NXC_OBJECT *pObject)
+{
+   if (pObject->iClass != OBJECT_NODE)
+      return;
+
+   CreateChildFrameWithSubtitle(new CLastValuesView(pObject->dwId), IDR_LAST_VALUES_VIEW,
+                                pObject->szName, m_hMDIMenu, m_hMDIAccel);
+}
+
+
+//
+// Create child frame and add subtitle (- [<text>]) to it
+//
+
+void CConsoleApp::CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId, 
+                                               TCHAR *pszSubTitle, HMENU hMenu, HACCEL hAccel)
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CCreateContext context;
+
+   // load the frame
+	context.m_pCurrentFrame = pFrame;
+
+	if (pWnd->LoadFrame(IDR_LAST_VALUES_VIEW, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
+   {
+	   CString strFullString, strTitle;
+
+	   if (strFullString.LoadString(nId))
+		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
+
+      // add node name to title
+      strTitle += " - [";
+      strTitle += pszSubTitle;
+      strTitle += "]";
+
+	   // set the handles and redraw the frame and parent
+	   pWnd->SetHandles(hMenu, hAccel);
+	   pWnd->SetTitle(strTitle);
+	   pWnd->InitialUpdateFrame(NULL, TRUE);
+   }
+   else
+	{
+		delete pWnd;
+	}
 }

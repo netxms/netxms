@@ -725,6 +725,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_DEPLOY_PACKAGE:
             DeployPackage(pMsg);
             break;
+         case CMD_GET_LAST_VALUES:
+            SendLastValues(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -2305,6 +2308,49 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    // Send responce
    if (!bSuccess)
       SendMessage(&msg);
+}
+
+
+//
+// Send latest collected values for all DCIs of given node
+//
+
+void ClientSession::SendLastValues(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (pObject->Type() == OBJECT_NODE)
+         {
+            msg.SetVariable(VID_RCC, ((Node *)pObject)->GetLastValues(&msg));
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 

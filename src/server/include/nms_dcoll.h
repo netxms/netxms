@@ -199,6 +199,8 @@ public:
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
 
+   void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
+
    void CreateMessage(CSCPMessage *pMsg);
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
 };

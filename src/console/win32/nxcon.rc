@@ -241,6 +241,7 @@ BEGIN
         MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
     POPUP "&User"
@@ -346,6 +347,7 @@ BEGIN
         MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
     POPUP "Event"
@@ -428,6 +430,7 @@ BEGIN
         MENUITEM "&Wake up",                    ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
     POPUP "Item"
@@ -2157,6 +2160,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
     IDR_DEPLOYMENT_VIEW     "\nPackage Deployment\nPackage Deployment"
+    IDR_LAST_VALUES_VIEW    "\nLast Values\nLast Values"
 END
 
 #endif    // English (U.S.) resources

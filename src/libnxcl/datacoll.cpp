@@ -513,3 +513,51 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
    }
    return dwResult;
 }
+
+
+//
+// Get last values for all DCIs of selected node
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
+                                          DWORD *pdwNumItems, NXC_DCI_VALUE **ppValueList)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD i, dwId, dwRqId, dwResult;
+
+   *pdwNumItems = 0;
+   *ppValueList = NULL;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_LAST_VALUES);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponce != NULL)
+   {
+      dwResult = pResponce->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pdwNumItems = pResponce->GetVariableLong(VID_NUM_ITEMS);
+         *ppValueList = (NXC_DCI_VALUE *)malloc(sizeof(NXC_DCI_VALUE) * (*pdwNumItems));
+         memset(*ppValueList, 0, sizeof(NXC_DCI_VALUE) * (*pdwNumItems));
+         for(i = 0, dwId = VID_DCI_VALUES_BASE; i < *pdwNumItems; i++)
+         {
+            (*ppValueList)[i].dwId = pResponce->GetVariableLong(dwId++);
+            pResponce->GetVariableStr(dwId++, (*ppValueList)[i].szName, MAX_ITEM_NAME);
+            pResponce->GetVariableStr(dwId++, (*ppValueList)[i].szDescription, MAX_DB_STRING);
+            (*ppValueList)[i].iDataType = pResponce->GetVariableShort(dwId++);
+            pResponce->GetVariableStr(dwId++, (*ppValueList)[i].szValue, MAX_DB_STRING);
+            (*ppValueList)[i].dwTimestamp = pResponce->GetVariableLong(dwId++);
+         }
+      }
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}

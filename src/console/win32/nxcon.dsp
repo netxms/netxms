@@ -249,6 +249,10 @@ SOURCE=.\InternalItemSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\LastValuesView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\LoginDialog.cpp
 # End Source File
 # Begin Source File
@@ -420,6 +424,10 @@ SOURCE=.\UserPropDlg.cpp
 
 SOURCE=.\UserSelectDlg.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\ValueList.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -563,6 +571,10 @@ SOURCE=.\InputBox.h
 # Begin Source File
 
 SOURCE=.\InternalItemSelDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LastValuesView.h
 # End Source File
 # Begin Source File
 
@@ -747,6 +759,10 @@ SOURCE=.\UserPropDlg.h
 # Begin Source File
 
 SOURCE=.\UserSelectDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ValueList.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

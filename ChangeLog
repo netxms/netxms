@@ -13,6 +13,7 @@
 - Windows console: implemented user deletion from access lists
 - Implemented action delete
 - Windows agent deployment packages now built with InnoSetup
+- "Last Values" view added to Windows console
 
 
 *

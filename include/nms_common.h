@@ -436,6 +436,7 @@ typedef struct tagICMPHDR
 #define DCI_DT_UINT64      3
 #define DCI_DT_STRING      4
 #define DCI_DT_FLOAT       5
+#define DCI_DT_NULL        6
 
 
 #endif   /* _nms_common_h_ */

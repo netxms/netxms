@@ -340,6 +340,8 @@ src/console/win32/InputBox.cpp -text
 src/console/win32/InputBox.h -text
 src/console/win32/InternalItemSelDlg.cpp -text
 src/console/win32/InternalItemSelDlg.h -text
+src/console/win32/LastValuesView.cpp -text
+src/console/win32/LastValuesView.h -text
 src/console/win32/LoginDialog.cpp -text
 src/console/win32/LoginDialog.h -text
 src/console/win32/MIBBrowserDlg.cpp -text
@@ -419,6 +421,8 @@ src/console/win32/UserPropDlg.cpp -text
 src/console/win32/UserPropDlg.h -text
 src/console/win32/UserSelectDlg.cpp -text
 src/console/win32/UserSelectDlg.h -text
+src/console/win32/ValueList.cpp -text
+src/console/win32/ValueList.h -text
 src/console/win32/comm.cpp -text
 src/console/win32/draw.cpp -text
 src/console/win32/globals.cpp -text

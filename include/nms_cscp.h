@@ -284,6 +284,7 @@ typedef struct
 #define CMD_GET_PARAMETER_LIST      0x0076
 #define CMD_DEPLOY_PACKAGE          0x0077
 #define CMD_INSTALLER_INFO          0x0078
+#define CMD_GET_LAST_VALUES         0x0079
 
 
 //
@@ -483,6 +484,8 @@ typedef struct
 // Base value for agent's parameter list
 #define VID_PARAM_LIST_BASE         ((DWORD)0x10000000)
 
+// Base value for DCI last values
+#define VID_DCI_VALUES_BASE         ((DWORD)0x10000000)
 
 //
 // Inline functions
