@@ -40,7 +40,7 @@ char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical
 
 static DWORD m_dwNumTemplates = 0;
 static EVENT_TEMPLATE *m_pEventTemplates = NULL;
-static MUTEX m_mutexTemplateAccess;
+static RWLOCK m_rwlockTemplateAccess;
 
 
 //
@@ -374,7 +374,7 @@ BOOL InitEventSubsystem(void)
    BOOL bSuccess;
 
    // Create template access mutex
-   m_mutexTemplateAccess = MutexCreate();
+   m_rwlockTemplateAccess = RWLockCreate();
 
    // Create event queue
    g_pEventQueue = new Queue;
@@ -407,7 +407,7 @@ void ShutdownEventSubsystem(void)
    delete g_pEventQueue;
    delete g_pEventPolicy;
    safe_free(m_pEventTemplates);
-   MutexDestroy(m_mutexTemplateAccess);
+   RWLockDestroy(m_rwlockTemplateAccess);
 }
 
 
@@ -417,13 +417,13 @@ void ShutdownEventSubsystem(void)
 
 void ReloadEvents(void)
 {
-   MutexLock(m_mutexTemplateAccess, INFINITE);
+   RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
    if (m_pEventTemplates != NULL)
       free(m_pEventTemplates);
    m_dwNumTemplates = 0;
    m_pEventTemplates = NULL;
    LoadEvents();
-   MutexUnlock(m_mutexTemplateAccess);
+   RWLockUnlock(m_rwlockTemplateAccess);
 }
 
 
@@ -479,25 +479,28 @@ BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...)
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
    va_list args;
+   BOOL bResult = FALSE;
 
-   MutexLock(m_mutexTemplateAccess, INFINITE);
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
    // Find event template
-   if (m_dwNumTemplates == 0)    // No event templates at all?
-      return FALSE;
-   pEventTemplate = FindEventTemplate(dwEventId);
-   if (pEventTemplate == NULL)   // No event with such ID
-      return FALSE;
+   if (m_dwNumTemplates > 0)    // Is there any templates?
+   {
+      pEventTemplate = FindEventTemplate(dwEventId);
+      if (pEventTemplate != NULL)
+      {
+         // Template found, create new event
+         va_start(args, szFormat);
+         pEvent = new Event(pEventTemplate, dwSourceId, szFormat, args);
+         va_end(args);
 
-   // Create new event
-   va_start(args, szFormat);
-   pEvent = new Event(pEventTemplate, dwSourceId, szFormat, args);
-   va_end(args);
+         // Add new event to queue
+         g_pEventQueue->Put(pEvent);
 
-   MutexUnlock(m_mutexTemplateAccess);
+         bResult = TRUE;
+      }
+   }
 
-   // Add new event to queue
-   g_pEventQueue->Put(pEvent);
-
-   return TRUE;
+   RWLockUnlock(m_rwlockTemplateAccess);
+   return bResult;
 }

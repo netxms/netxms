@@ -565,6 +565,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_POLL_NODE:
             ForcedNodePoll(pMsg);
             break;
+         case CMD_TRAP:
+            OnTrap(pMsg);
+            break;
          default:
             break;
       }
@@ -2855,5 +2858,73 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    msg.SetCode(CMD_POLLING_INFO);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
+}
+
+
+//
+// Receive event from user
+//
+
+void ClientSession::OnTrap(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwObjectId, dwEventCode;
+   int i, iNumArgs;
+   NetObj *pObject;
+   TCHAR *pszArgList[32];
+   TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
+   BOOL bSuccess;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Find event's source object
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   if (dwObjectId != 0)
+      pObject = FindObjectById(dwObjectId);  // Object is specified explicitely
+   else
+      pObject = FindNodeByIP(m_dwHostAddr);  // Client is the source
+   if (pObject != NULL)
+   {
+      // User should have SEND_EVENTS access right to object
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
+      {
+         dwEventCode = pRequest->GetVariableLong(VID_EVENT_ID);
+         iNumArgs = pRequest->GetVariableShort(VID_NUM_ARGS);
+         for(i = 0; i < iNumArgs; i++)
+            pszArgList[i] = pRequest->GetVariableStr(VID_EVENT_ARG_BASE + i);
+
+         // Following call is not very good, but I'm too lazy now
+         // to change PostEvent()
+         szFormat[iNumArgs] = 0;
+         bSuccess = PostEvent(dwEventCode, pObject->Id(), (iNumArgs > 0) ? szFormat : NULL,
+                              pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
+                              pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
+                              pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
+                              pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
+                              pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
+                              pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
+                              pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
+                              pszArgList[30], pszArgList[31], pszArgList[32], pszArgList[33]);
+         
+         // Cleanup
+         for(i = 0; i < iNumArgs; i++)
+            free(pszArgList[i]);
+
+         msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
    SendMessage(&msg);
 }

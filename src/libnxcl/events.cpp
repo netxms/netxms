@@ -91,7 +91,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
 // Send event to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, int iNumArgs, TCHAR **pArgList)
+DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, DWORD dwObjectId, int iNumArgs, TCHAR **pArgList)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -102,6 +102,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, int iNumArgs, TCHAR **p
    msg.SetCode(CMD_TRAP);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_EVENT_ID, dwEventCode);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, pArgList[i]);

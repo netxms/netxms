@@ -286,6 +286,7 @@ private:
    void SendAllActions(DWORD dwRqId);
    void SendContainerCategories(DWORD dwRqId);
    void ForcedNodePoll(CSCPMessage *pRequest);
+   void OnTrap(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -129,9 +129,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Invalid alarm ID"),
       _T("Invalid action ID"),
       _T("Operation in progress"),
-      _T("Copy operation failed for one or more DCI(s)")
+      _T("Copy operation failed for one or more DCI(s)"),
+      _T("Invalid or unknown event code")
    };
-   return ((dwError >= 0) && (dwError <= RCC_DCI_COPY_ERRORS)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_EVENT_CODE)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

@@ -30,10 +30,12 @@
 
 static WORD m_wServerPort = 4701;
 static BOOL m_bDebug = FALSE;
-static TCHAR m_szServer[256] = _T("127.0.0.1");
-static TCHAR m_szLogin[256] = _T("guest");
-static TCHAR m_szPassword[256] = _T("");
+static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
+static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
+static TCHAR m_szPassword[MAX_DB_STRING] = _T("");
 static DWORD m_dwEventCode = 0;
+static DWORD m_dwObjectId = 0;
+static DWORD m_dwTimeOut = 3;
 
 
 //
@@ -62,6 +64,7 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList)
    {
       if (m_bDebug)
          NXCSetDebugCallback(DebugCallback);
+      NXCSetCommandTimeout(m_dwTimeOut * 1000);
 
       dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword);
       if (dwResult != RCC_SUCCESS)
@@ -70,7 +73,7 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList)
       }
       else
       {
-         dwResult = NXCSendEvent(m_dwEventCode, iNumArgs, pArgList);
+         dwResult = NXCSendEvent(m_dwEventCode, m_dwObjectId, iNumArgs, pArgList);
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
          NXCDisconnect();
@@ -90,22 +93,47 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "dhp:w:")) != -1)
+   while((ch = getopt(argc, argv, "dho:p:P:u:vw:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxevent [<options>] <server> <event_id> [<param_1> [... <param_N>]]\n"
                    "Valid options are:\n"
-                   "   -d           : Turn on debug mode.\n"
-                   "   -h           : Display help and exit.\n"
-                   "   -p <port>    : Specify server's port number. Default is %d.\n"
-                   "   -w <seconds> : Specify command timeout (default is 3 seconds).\n"
+                   "   -d            : Turn on debug mode.\n"
+                   "   -h            : Display help and exit.\n"
+                   "   -o <id>       : Specify source object ID.\n"
+                   "   -p <port>     : Specify server's port number. Default is %d.\n"
+                   "   -P <password> : Specify user's password. Default is empty password.\n"
+                   "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
+                   "   -v            : Display version and exit.\n"
+                   "   -w <seconds>  : Specify command timeout (default is 3 seconds).\n"
                    "\n", m_wServerPort);
             bStart = FALSE;
             break;
          case 'd':
             m_bDebug = TRUE;
+            break;
+         case 'o':
+            m_dwObjectId = _tcstoul(optarg, NULL, 0);
+            break;
+         case 'u':
+            _tcsncpy(m_szLogin, optarg, MAX_DB_STRING);
+            break;
+         case 'P':
+            _tcsncpy(m_szPassword, optarg, MAX_DB_STRING);
+            break;
+         case 'w':
+            m_dwTimeOut = _tcstoul(optarg, NULL, 0);
+            if ((m_dwTimeOut < 1) || (m_dwTimeOut > 120))
+            {
+               _tprintf(_T("Invalid timeout %s\n"), optarg);
+               bStart = FALSE;
+            }
+            break;
+         case 'v':
+            printf("NetXMS Event Sender  Version " NETXMS_VERSION_STRING "\n");
+            bStart = FALSE;
             break;
          case '?':
             bStart = FALSE;

@@ -8,6 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
-	nxevent.cpp nxevent.h \
-	nxevent.dsp nxevent.dsw
+INCLUDES=-I@top_srcdir@/include
+
+bin_PROGRAMS = nxevent
+nxevent_SOURCES = nxevent.cpp
+nxevent_LDADD = @PTHREAD_LIBS@ -ldl ../libnetxms/libnetxms.la ../libnxcscp/libnxcscp.la ../libnxcl/libnxcl.la
+
+EXTRA_DIST = nxevent.dsp nxevent.dsw
