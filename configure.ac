@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.4 2004-05-12 09:23:21 alk Exp $
+# $Id: configure.ac,v 1.5 2004-05-15 11:45:59 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -131,6 +131,7 @@ AC_HEADER_STDC
 AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
+AC_CHECK_HEADERS([net/if.h net/if_arp.h])
 AC_CHECK_HEADERS([openssl/ssl.h])
 
 if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then

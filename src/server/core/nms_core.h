@@ -23,18 +23,14 @@
 #ifndef _nms_core_h_
 #define _nms_core_h_
 
-#ifdef _WIN32
+#include <nms_common.h>
 
-#include <windows.h>
+#ifndef _WIN32
 
-#else    /* _WIN32 */
-
-#include <unistd.h>
+#if HAVE_DLFCN_H
 #include <dlfcn.h>
-#include <sys/socket.h>
-#include <sys/select.h>
+#endif
 
-#define closesocket(x) close(x)
 #define WSAGetLastError() (errno)
 
 #endif   /* _WIN32 */
@@ -44,15 +40,16 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef _WIN32
 #define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
 #define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
+#endif   /* _WIN32 */
 
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
 #include <openssl/ssl.h>
 
-#include <nms_common.h>
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include <nms_cscp.h>

@@ -302,4 +302,10 @@ Language=English
 Call to ioctl() failed (Operation: %1 Error: %2)
 .
 
+MessageId=
+SymbolicName=MSG_IFNAMEINDEX_FAILED
+Language=English
+Call to if_nameindex() failed (%1)
+.
+
 ;#endif

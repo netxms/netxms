@@ -37,15 +37,12 @@
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
 #if HAVE_NET_IF_H
 #include <net/if.h>
 #endif
-//#if HAVE_NET_IF_ARP_H
+#if HAVE_NET_IF_ARP_H
 #include <net/if_arp.h>
-//#endif
+#endif
 
 #endif   /* _WIN32 */
 
