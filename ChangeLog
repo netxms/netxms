@@ -8,6 +8,7 @@
 - Fixed server crash sometimes caused by DCI deletion
 - Fixed issue #0000017 (server crash after DCI copy)
 - Fixed memory leaks in DCI cache management
+- Added interface for processing SNMP traps by server modules
 
 
 *
