@@ -1,6 +1,6 @@
---
--- System-defined events
---
+/*
+** System-defined events
+*/
 
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(

@@ -1,6 +1,6 @@
---
--- Default configuration parameters
---
+/*
+** Default configuration parameters
+*/
 
 INSERT INTO config (name,value) VALUES ('SyncInterval','60');
 INSERT INTO config (name,value) VALUES ('NewNodePollingInterval','60');
@@ -18,9 +18,9 @@ INSERT INTO config (name,value) VALUES ('EnableAccessControl','1');
 INSERT INTO config (name,value) VALUES ('EnableEventsAccessControl','0');
 
 
---
--- Default users
---
+/*
+** Default users
+*/
 
 INSERT INTO users (id,name,password) VALUES (0,'admin','');
 INSERT INTO users (id,name,password) VALUES (1,'guest','');

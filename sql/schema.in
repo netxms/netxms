@@ -1,6 +1,6 @@
---
--- System configuration table
---
+/*
+** System configuration table
+*/
 
 CREATE TABLE Config
 (
@@ -10,9 +10,9 @@ CREATE TABLE Config
 );
 
 
---
--- Users
---
+/*
+** Users
+*/
 
 CREATE TABLE Users
 (
@@ -24,9 +24,9 @@ CREATE TABLE Users
 );
 
 
---
--- User groups
---
+/*
+** User groups
+*/
 
 CREATE TABLE UserGroups
 (
@@ -37,9 +37,9 @@ CREATE TABLE UserGroups
 );
 
 
---
--- Users to groups mapping
---
+/*
+** Users to groups mapping
+*/
 
 CREATE TABLE UserGroupMembers
 (
@@ -49,9 +49,9 @@ CREATE TABLE UserGroupMembers
 );
 
 
---
--- Nodes to be added
---
+/*
+** Nodes to be added
+*/
 
 CREATE TABLE NewNodes
 (
@@ -62,9 +62,9 @@ CREATE TABLE NewNodes
 );
 
 
---
--- Nodes information
---
+/*
+** Nodes information
+*/
 
 CREATE TABLE Nodes
 (
@@ -91,9 +91,9 @@ CREATE TABLE Nodes
 );
 
 
---
--- Subnets
---
+/*
+** Subnets
+*/
 
 CREATE TABLE Subnets
 (
@@ -107,9 +107,9 @@ CREATE TABLE Subnets
 );
 
 
---
--- Nodes' interfaces
---
+/*
+** Nodes' interfaces
+*/
 
 CREATE TABLE Interfaces
 (
@@ -127,9 +127,9 @@ CREATE TABLE Interfaces
 );
 
 
---
--- Nodes to subnets mapping
---
+/*
+** Nodes to subnets mapping
+*/
 
 CREATE TABLE nsmap
 (
@@ -139,9 +139,9 @@ CREATE TABLE nsmap
 );
 
 
---
--- Objects' ACLs
---
+/*
+** Objects' ACLs
+*/
 
 CREATE TABLE acl
 (
@@ -152,9 +152,9 @@ CREATE TABLE acl
 );
 
 
---
--- Data collection items
---
+/*
+** Data collection items
+*/
 
 CREATE TABLE Items
 (
@@ -162,7 +162,7 @@ CREATE TABLE Items
 	node_id integer not null,
 	name varchar(255),
 	description varchar(255),
-	source integer,			-- 0 for internal or 1 for native agent or 2 for SNMP
+	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP
 	datatype integer,
 	polling_interval integer,
 	retention_time integer,
@@ -171,30 +171,30 @@ CREATE TABLE Items
 );
 
 
---
--- Events configuration
---
+/*
+** Events configuration
+*/
 
 CREATE TABLE Events
 (
 	id integer not null,
 	severity integer,
 	flags integer,
-	message varchar(255),		-- Message template
-	description blob,
+	message varchar(255),		// Message template
+	description DT_TEXT,
 	PRIMARY KEY(id)
 );
 
 
---
--- Event log
---
+/*
+** Event log
+*/
 
 CREATE TABLE EventLog
 (
 	event_id integer,
 	timestamp integer,
-	source integer,			-- Source object ID
+	source integer,			// Source object ID
 	severity integer,
 	message varchar(255),
 	KEY(event_id),
@@ -202,9 +202,9 @@ CREATE TABLE EventLog
 );
 
 
---
--- Actions on events
---
+/*
+** Actions on events
+*/
 
 CREATE TABLE ACTIONS
 (
@@ -215,9 +215,9 @@ CREATE TABLE ACTIONS
 );
 
 
---
--- Node groups
---
+/*
+** Node groups
+*/
 
 CREATE TABLE NodeGroups
 (
@@ -227,9 +227,9 @@ CREATE TABLE NodeGroups
 );
 
 
---
--- Event groups
---
+/*
+** Event groups
+*/
 
 CREATE TABLE EventGroups
 (
@@ -239,9 +239,9 @@ CREATE TABLE EventGroups
 );
 
 
---
--- Node group members
---
+/*
+** Node group members
+*/
 
 CREATE TABLE NodeGroupMembers
 (
@@ -252,9 +252,9 @@ CREATE TABLE NodeGroupMembers
 );
 
 
---
--- Event group members
---
+/*
+** Event group members
+*/
 
 CREATE TABLE EventGroupMembers
 (
@@ -265,13 +265,13 @@ CREATE TABLE EventGroupMembers
 );
 
 
---
--- Event processing policy
---
+/*
+** Event processing policy
+*/
 
 CREATE TABLE EventPolicy
 (
-	id integer not null,	-- Rule number
+	id integer not null,	// Rule number
 	comments varchar(255),
 	PRIMARY KEY(id)
 );
@@ -291,4 +291,3 @@ CREATE TABLE PolicyEventList
 	event_id integer not null,
 	KEY(rule_id)
 );
-
