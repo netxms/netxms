@@ -319,7 +319,8 @@ BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
    if (bVarExist)
       sprintf(szQuery, "UPDATE config SET var_value='%s' WHERE var_name='%s'", szValue, szVar);
    else
-      sprintf(szQuery, "INSERT INTO config (var_name,var_value) VALUES ('%s','%s')", szVar, szValue);
+      sprintf(szQuery, "INSERT INTO config (var_name,var_value,is_visible,"
+                       "need_server_restart) VALUES ('%s','%s',0,0)", szVar, szValue);
    return DBQuery(g_hCoreDB, szQuery);
 }
 
