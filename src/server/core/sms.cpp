@@ -75,9 +75,9 @@ void InitSMSSender(void)
 {
    TCHAR szDriver[MAX_PATH], szDrvConfig[MAX_PATH];
 
-   ConfigReadStr(_T("SMSDriver"), szDriver, MAX_PATH, _T("none"));
+   ConfigReadStr(_T("SMSDriver"), szDriver, MAX_PATH, _T("<none>"));
    ConfigReadStr(_T("SMSDrvConfig"), szDrvConfig, MAX_DB_STRING, _T(""));
-   if (_tcsicmp(szDriver, _T("none")))
+   if (_tcsicmp(szDriver, _T("<none>")))
    {
       TCHAR szErrorText[256];
       HMODULE hModule;
@@ -125,11 +125,14 @@ void InitSMSSender(void)
 
 void ShutdownSMSSender(void)
 {
-   m_pMsgQueue->Clear();
-   m_pMsgQueue->Put(INVALID_POINTER_VALUE);
-   if (m_hThread != INVALID_THREAD_HANDLE)
-      ThreadJoin(m_hThread);
-   delete m_pMsgQueue;
+   if (m_pMsgQueue != NULL)
+   {
+      m_pMsgQueue->Clear();
+      m_pMsgQueue->Put(INVALID_POINTER_VALUE);
+      if (m_hThread != INVALID_THREAD_HANDLE)
+         ThreadJoin(m_hThread);
+      delete m_pMsgQueue;
+   }
 }
 
 
