@@ -3,4 +3,11 @@ doc/NMS[!!-~]Architecture.doc -text
 include/nms_agent.h -text
 include/nms_common.h -text
 sql/schema.sql -text
+src/server/core/NmsCore.dsp -text
+src/server/core/NmsCore.dsw -text
+src/server/core/config.cpp -text
+src/server/core/main.cpp -text
+src/server/core/nms_core.h -text
+src/server/core/tools.cpp -text
+src/server/core/winsrv.cpp -text
 src/server/include/nms_threads.h -text
