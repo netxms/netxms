@@ -31,6 +31,8 @@ public:
 
 // Implementation
 protected:
+	void ReplaceItem(int iItem, NXC_ACTION *pAction);
+	int AddItem(NXC_ACTION *pAction);
 	virtual ~CActionEditor();
 
 	// Generated message map functions
@@ -41,6 +43,12 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnClose();
 	afx_msg void OnViewRefresh();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnUpdateActionDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateActionProperties(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateActionRename(CCmdUI* pCmdUI);
+	afx_msg void OnActionNew();
+	afx_msg void OnActionProperties();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

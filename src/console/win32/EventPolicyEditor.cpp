@@ -6,6 +6,7 @@
 #include "EventPolicyEditor.h"
 #include "RuleSeverityDlg.h"
 #include "RuleAlarmDlg.h"
+#include "ActionSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -483,11 +484,14 @@ void CEventPolicyEditor::OnPolicyAdd()
 {
    switch(m_wndRuleList.GetCurrentColumn())
    {
-      case COL_SOURCE:  // Source
+      case COL_SOURCE:
          AddSource();
          break;
-      case COL_EVENT:  // Event
+      case COL_EVENT:
          AddEvent();
+         break;
+      case COL_ACTION:
+         AddAction();
          break;
    }
 }
@@ -666,7 +670,23 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                }
             }
             break;
-         case COL_SEVERITY:     // Severity
+         case COL_ACTION:
+            if (m_pEventPolicy->pRuleList[iRow].dwNumActions > 0)
+            {
+               m_pEventPolicy->pRuleList[iRow].dwNumActions--;
+               memmove(&m_pEventPolicy->pRuleList[iRow].pdwActionList[iItem],
+                       &m_pEventPolicy->pRuleList[iRow].pdwActionList[iItem + 1],
+                       sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumActions - iItem));
+               if (m_pEventPolicy->pRuleList[iRow].dwNumActions == 0)
+               {
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", m_iImageAny);
+                  m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
+               }
+               else
+               {
+                  m_wndRuleList.DeleteItem(iRow, iCol, iItem);
+               }
+            }
             break;
       }
    }
@@ -816,6 +836,40 @@ void CEventPolicyEditor::EditComment(int iRow)
    {
       safe_free(m_pEventPolicy->pRuleList[iRow].pszComment);
       m_pEventPolicy->pRuleList[iRow].pszComment = strdup((LPCTSTR)dlg.m_strText);
+      UpdateRow(iRow);
+   }
+}
+
+
+//
+// Add new action to rule
+//
+
+void CEventPolicyEditor::AddAction()
+{
+   CActionSelDlg dlg;
+   DWORD i, j;
+   int iRow;
+
+   if (dlg.DoModal() == IDOK)
+   {
+      iRow = m_wndRuleList.GetCurrentRow();
+      for(i = 0; i < dlg.m_dwNumActions; i++)
+      {
+         // Check if object already in the list
+         for(j = 0; j < m_pEventPolicy->pRuleList[iRow].dwNumActions; j++)
+            if (m_pEventPolicy->pRuleList[iRow].pdwActionList[j] == dlg.m_pdwActionList[i])
+               break;
+         if (j == m_pEventPolicy->pRuleList[iRow].dwNumActions)
+         {
+            // New object, add it to source list
+            m_pEventPolicy->pRuleList[iRow].dwNumActions++;
+            m_pEventPolicy->pRuleList[iRow].pdwActionList = 
+               (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwActionList,
+                  sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumActions);
+            m_pEventPolicy->pRuleList[iRow].pdwActionList[j] = dlg.m_pdwActionList[i];
+         }
+      }
       UpdateRow(iRow);
    }
 }

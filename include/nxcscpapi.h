@@ -37,6 +37,14 @@
 
 
 //
+// Encryption methods
+//
+
+#define CSCP_ENCRYPTION_NONE           0
+#define CSCP_ENCRYPTION_BLOWFISH_SHA1  1
+
+
+//
 // Temporary buffer structure for RecvCSCPMessage() function
 //
 

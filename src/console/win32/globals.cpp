@@ -33,6 +33,7 @@
 char g_szServer[MAX_SERVER_NAME_LEN] = "localhost";
 char g_szLogin[MAX_LOGIN_NAME_LEN] = "";
 char g_szPassword[MAX_PASSWORD_LEN] = "";
+DWORD g_dwEncryptionMethod = CSCP_ENCRYPTION_NONE;
 
 
 //
@@ -65,6 +66,7 @@ CImageList *g_pObjectNormalImageList = NULL;
 char *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
 char *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
 char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", "Container", "Zone", "ServiceRoot" };
+char *g_szActionType[] = { "Execute", "Remote", "E-Mail", "SMS" };
 char *g_szInterfaceTypes[] = {
    "Unknown",
    "Other",

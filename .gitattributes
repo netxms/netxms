@@ -103,6 +103,8 @@ src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
 src/console/win32/ActionEditor.cpp -text
 src/console/win32/ActionEditor.h -text
+src/console/win32/ActionSelDlg.cpp -text
+src/console/win32/ActionSelDlg.h -text
 src/console/win32/AlarmBrowser.cpp -text
 src/console/win32/AlarmBrowser.h -text
 src/console/win32/ConsolePropsGeneral.cpp -text
@@ -119,6 +121,8 @@ src/console/win32/DataCollectionEditor.cpp -text
 src/console/win32/DataCollectionEditor.h -text
 src/console/win32/DebugFrame.cpp -text
 src/console/win32/DebugFrame.h -text
+src/console/win32/EditActionDlg.cpp -text
+src/console/win32/EditActionDlg.h -text
 src/console/win32/EditBox.cpp -text
 src/console/win32/EditBox.h -text
 src/console/win32/EditEventDlg.cpp -text
@@ -149,6 +153,8 @@ src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
 src/console/win32/NetSummaryFrame.cpp -text
 src/console/win32/NetSummaryFrame.h -text
+src/console/win32/NewActionDlg.cpp -text
+src/console/win32/NewActionDlg.h -text
 src/console/win32/NewUserDlg.cpp -text
 src/console/win32/NewUserDlg.h -text
 src/console/win32/NodePropsGeneral.cpp -text

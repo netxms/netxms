@@ -170,6 +170,7 @@ char *BuildSymbolicOIDString(struct tree *pNode);
 //
 
 NXC_ACTION *FindActionById(DWORD dwActionId);
+void UpdateActions(DWORD dwCode, NXC_ACTION *pAction);
 
 
 //
@@ -180,9 +181,11 @@ extern DWORD g_dwOptions;
 extern char g_szServer[];
 extern char g_szLogin[];
 extern char g_szPassword[];
+extern DWORD g_dwEncryptionMethod;
 extern char g_szWorkDir[];
 extern char *g_szStatusText[];
 extern char *g_szStatusTextSmall[];
+extern char *g_szActionType[];
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];

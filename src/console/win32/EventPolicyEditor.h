@@ -37,6 +37,7 @@ public:
 
 // Implementation
 protected:
+	void AddAction(void);
 	int m_iImageAny;
 	CImageList *m_pImageList;
 	void AddEvent(void);

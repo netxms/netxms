@@ -340,3 +340,58 @@ NXC_ACTION *FindActionById(DWORD dwActionId)
          return &g_pActionList[i];
    return NULL;
 }
+
+
+//
+// Update action list with information received from server
+//
+
+void UpdateActions(DWORD dwCode, NXC_ACTION *pAction)
+{
+   DWORD i;
+   NXC_ACTION *pCurrAction;
+
+   LockActions();
+
+   // Find action with given ID
+   pCurrAction = FindActionById(pAction->dwId);
+
+   // Update action list depending on notification code
+   switch(dwCode)
+   {
+      case NX_NOTIFY_ACTION_CREATED:
+      case NX_NOTIFY_ACTION_MODIFIED:
+         if (pCurrAction == NULL)
+         {
+            i = g_dwNumActions;
+            g_dwNumActions++;
+            g_pActionList = (NXC_ACTION *)realloc(g_pActionList, sizeof(NXC_ACTION) * g_dwNumActions);
+            memcpy(&g_pActionList[i], pAction, sizeof(NXC_ACTION));
+            g_pActionList[i].pszData = strdup(pAction->pszData);
+         }
+         else
+         {
+            // Action with given id already exist, just update it
+            safe_free(pCurrAction->pszData);
+            memcpy(pCurrAction, pAction, sizeof(NXC_ACTION));
+            pCurrAction->pszData = strdup(pAction->pszData);
+         }
+         break;
+      case NX_NOTIFY_ACTION_DELETED:
+         if (pCurrAction != NULL)
+         {
+            for(i = 0; i < g_dwNumActions; i++)
+               if (g_pActionList[i].dwId == pAction->dwId)
+               {
+                  g_dwNumActions--;
+                  safe_free(g_pActionList[i].pszData);
+                  memmove(&g_pActionList[i], &g_pActionList[i + 1], 
+                          sizeof(NXC_ACTION) * (g_dwNumActions - i));
+                  break;
+               }
+         }
+         break;
+   }
+
+   UnlockActions();
+}

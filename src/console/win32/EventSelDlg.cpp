@@ -19,6 +19,7 @@ CEventSelDlg::CEventSelDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CEventSelDlg::IDD, pParent)
 {
    m_pImageList = NULL;
+   m_pdwEventList = NULL;
 
 	//{{AFX_DATA_INIT(CEventSelDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -28,6 +29,7 @@ CEventSelDlg::CEventSelDlg(CWnd* pParent /*=NULL*/)
 CEventSelDlg::~CEventSelDlg()
 {
    delete m_pImageList;
+   safe_free(m_pdwEventList);
 }
 
 void CEventSelDlg::DoDataExchange(CDataExchange* pDX)
@@ -113,7 +115,7 @@ void CEventSelDlg::OnOK()
    }
    else
    {
-      MessageBox("You should select at least one object", "Warning", MB_OK | MB_ICONEXCLAMATION);
+      MessageBox("You should select at least one event", "Warning", MB_OK | MB_ICONEXCLAMATION);
    }
 }
 

@@ -105,6 +105,10 @@ SOURCE=.\ActionEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ActionSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AlarmBrowser.cpp
 # End Source File
 # Begin Source File
@@ -142,6 +146,10 @@ SOURCE=.\DebugFrame.cpp
 # Begin Source File
 
 SOURCE=.\draw.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditActionDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -206,6 +214,10 @@ SOURCE=.\MIBBrowserDlg.cpp
 # Begin Source File
 
 SOURCE=.\NetSummaryFrame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\NewActionDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -334,6 +346,10 @@ SOURCE=.\ActionEditor.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ActionSelDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\AlarmBrowser.h
 # End Source File
 # Begin Source File
@@ -363,6 +379,10 @@ SOURCE=.\DCIThresholdsPage.h
 # Begin Source File
 
 SOURCE=.\DebugFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditActionDlg.h
 # End Source File
 # Begin Source File
 
@@ -427,6 +447,10 @@ SOURCE=.\MIBBrowserDlg.h
 # Begin Source File
 
 SOURCE=.\NetSummaryFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NewActionDlg.h
 # End Source File
 # Begin Source File
 

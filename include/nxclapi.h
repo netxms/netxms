@@ -28,6 +28,7 @@
 #include <nms_util.h>
 #include <nxevent.h>
 #include <nximage.h>
+#include <nxcscpapi.h>
 
 #ifdef _WIN32
 #ifdef LIBNXCL_EXPORTS

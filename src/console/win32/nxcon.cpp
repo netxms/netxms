@@ -203,6 +203,7 @@ BOOL CConsoleApp::InitInstance()
    g_dwOptions = GetProfileInt(_T("General"), _T("Options"), 0);
    strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   g_dwEncryptionMethod = GetProfileInt(_T("Connection"), _T("Encryption"), CSCP_ENCRYPTION_NONE);
 
    // Create mutex for action list access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);
@@ -550,6 +551,7 @@ void CConsoleApp::OnConnectToServer()
 
    dlgLogin.m_szServer = g_szServer;
    dlgLogin.m_szLogin = g_szLogin;
+   dlgLogin.m_iEncryption = g_dwEncryptionMethod;
    do
    {
       if (dlgLogin.DoModal() != IDOK)
@@ -560,10 +562,12 @@ void CConsoleApp::OnConnectToServer()
       strcpy(g_szServer, (LPCTSTR)dlgLogin.m_szServer);
       strcpy(g_szLogin, (LPCTSTR)dlgLogin.m_szLogin);
       strcpy(g_szPassword, (LPCTSTR)dlgLogin.m_szPassword);
+      g_dwEncryptionMethod = dlgLogin.m_iEncryption;
 
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
+      WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
 
       // Initiate connection
       dwResult = DoLogin();
@@ -631,6 +635,11 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case NX_NOTIFY_ALARM_ACKNOWLEGED:
                m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
                                        (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
+               break;
+            case NX_NOTIFY_ACTION_CREATED:
+            case NX_NOTIFY_ACTION_MODIFIED:
+            case NX_NOTIFY_ACTION_DELETED:
+               UpdateActions(dwCode, (NXC_ACTION *)pArg);
                break;
             default:
                break;
