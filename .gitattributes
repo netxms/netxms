@@ -204,7 +204,6 @@ src/console/win32/icons/SeverityWarning.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/board.ico -text
 src/console/win32/icons/graph.ico -text
-src/console/win32/icons/icon1.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/node.ico -text
 src/console/win32/icons/passwd.ico -text
