@@ -1,4 +1,12 @@
 *
+* 0.1.16
+*
+
+- Added System.CPU.Usage(*), System.CPU.Usage5(*) and System.CPU.Usage15(*)
+  parameters to WinPerf subagent
+
+
+*
 * 0.1.15
 *
 
