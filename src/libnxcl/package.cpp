@@ -161,9 +161,9 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 {
    FILE *fp;
    DWORD dwResult = RCC_SUCCESS;
-   TCHAR szBuffer[256], *ptr;
+   TCHAR szBuffer[256], szTag[256], *ptr;
 
-   fp = fopen(pszInfoFile, "r");
+   fp = _tfopen(pszInfoFile, _T("r"));
    if (fp != NULL)
    {
       while(1)
@@ -177,6 +177,33 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
          StrStrip(szBuffer);
          if ((szBuffer[0] == _T('#')) || (szBuffer[0] == 0))
             continue;   // Empty line or comment
+
+         ptr = ExtractWord(szBuffer, szTag);
+         StrStrip(ptr);
+         _tcsupr(szTag);
+
+         if (!_tcscmp(szTag, _T("NAME")))
+         {
+         }
+         else if (!_tcscmp(szTag, _T("PLATFORM")))
+         {
+            _tcsncpy(pInfo->szPlatform, ptr, MAX_PLATFORM_NAME_LEN);
+         }
+         else if (!_tcscmp(szTag, _T("VERSION")))
+         {
+            _tcsncpy(pInfo->szVersion, ptr, MAX_AGENT_VERSION_LEN);
+         }
+         else if (!_tcscmp(szTag, _T("DESCRIPTION")))
+         {
+         }
+         else if (!_tcscmp(szTag, _T("FILE")))
+         {
+         }
+         else
+         {
+            dwResult = RCC_NPI_PARSE_ERROR;
+            break;
+         }
       }
       fclose(fp);
    }

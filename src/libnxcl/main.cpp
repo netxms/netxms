@@ -152,7 +152,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Client and server versions mismatch"),
       _T("Error parsing package information file")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NPI_PARSING_FAILED)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_NPI_PARSE_ERROR)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

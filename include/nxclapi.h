@@ -235,7 +235,7 @@ typedef void * NXC_SESSION;
 #define RCC_INVALID_TRAP_ID         ((DWORD)29)
 #define RCC_DCI_NOT_SUPPORTED       ((DWORD)30)
 #define RCC_VERSION_MISMATCH        ((DWORD)31)
-#define RCC_NPI_PARSING_FAILED      ((DWORD)32)
+#define RCC_NPI_PARSE_ERROR         ((DWORD)32)
 
 
 //
