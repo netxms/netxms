@@ -156,7 +156,7 @@ typedef void * NXC_SESSION;
 #define NF_IS_ROUTER       0x0008
 #define NF_IS_LOCAL_MGMT   0x0010
 #define NF_IS_PRINTER      0x0020
-#define NS_IS_OSPF         0x0040
+#define NF_IS_OSPF         0x0040
 
 
 //

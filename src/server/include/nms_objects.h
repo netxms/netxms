@@ -371,6 +371,8 @@ protected:
    void AgentLock(void) { MutexLock(m_hAgentAccessMutex, INFINITE); }
    void AgentUnlock(void) { MutexUnlock(m_hAgentAccessMutex); }
 
+   void CheckOSPFSupport(void);
+
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:

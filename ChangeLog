@@ -11,6 +11,7 @@
   Solaris subagent
 - Object status now recalculated after binding change
 - Implemented primary IP address selection for nodes
+- Added OSPF support detection
 
 
 *

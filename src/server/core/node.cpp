@@ -378,6 +378,12 @@ void Node::NewNodePoll(DWORD dwNetMask)
       }
    }
 
+   // Check OSPF capabilities
+   if (m_dwFlags & NF_IS_SNMP)
+   {
+      CheckOSPFSupport();
+   }
+
    pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod,
                                     m_szSharedSecret);
    if (pAgentConn->Connect())
@@ -766,6 +772,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          m_dwNodeType = dwNodeType;
          SendPollerMsg(dwRqId, _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
       }
+
+      CheckOSPFSupport();
    }
    else
    {
@@ -1386,4 +1394,27 @@ void Node::OnObjectDelete(DWORD dwObjectId)
       DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
    }
    Unlock();
+}
+
+
+//
+// Check node for OSPF support
+//
+
+void Node::CheckOSPFSupport(void)
+{
+   long nAdminStatus;
+
+   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.14.1.2.0",
+               NULL, 0, &nAdminStatus, sizeof(long), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+   {
+      if (nAdminStatus)
+      {
+         m_dwFlags |= NF_IS_OSPF;
+      }
+      else
+      {
+         m_dwFlags &= ~NF_IS_OSPF;
+      }
+   }
 }
