@@ -47,6 +47,14 @@
 
 
 //
+// Session flags
+//
+
+#define NXC_SF_USERDB_LOADED     0x0001
+#define NXC_SF_SYNC_FINISHED     0x0002
+
+
+//
 // Index structure
 //
 
@@ -67,6 +75,7 @@ class NXCL_Session
 
    // Attributes
 private:
+   DWORD m_dwFlags;
    DWORD m_dwMsgId;
    DWORD m_dwState;
    DWORD m_dwNumObjects;
@@ -75,6 +84,22 @@ private:
    SOCKET m_hSocket;
    MsgWaitQueue m_msgWaitQueue;
    DWORD m_dwReceiverBufferSize;
+   NXC_DCI_LIST *m_pItemList;
+
+   NXC_EVENT_TEMPLATE **m_ppEventTemplates;
+   DWORD m_dwNumTemplates;
+   MUTEX m_mutexEventAccess;
+
+   DWORD m_dwNumUsers;
+   NXC_USER *m_pUserList;
+
+#ifdef _WIN32
+   HANDLE m_condSyncOp;
+#else
+   pthread_cond_t m_condSyncOp;
+   pthread_mutex_t m_mutexSyncOp;
+#endif
+   DWORD m_dwSyncExitCode;
 
 public:
    DWORD m_dwCommandTimeout;
@@ -83,6 +108,14 @@ public:
    // Methods
 private:
    void DestroyAllObjects(void);
+   void ProcessDCI(CSCPMessage *pMsg);
+   void DestroyEventDB(void);
+   void DestroyUserDB(void);
+   void ProcessUserDBRecord(CSCPMessage *pMsg);
+   void ProcessUserDBUpdate(CSCPMessage *pMsg);
+
+   void ProcessObjectUpdate(CSCPMessage *pMsg);
+   void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex);
 
 public:
    NXCL_Session();
@@ -98,6 +131,34 @@ public:
    DWORD CreateRqId(void) { return m_dwMsgId++; }
 
    void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
+
+   DWORD WaitForSync(DWORD dwTimeOut);
+   void PrepareForSync(void);
+   void CompleteSync(DWORD dwRetCode);
+
+   DWORD OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
+
+   DWORD LoadEventDB(void);
+   void AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate);
+   void DeleteEDBRecord(DWORD dwEventCode);
+   BOOL GetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
+   const TCHAR *GetEventName(DWORD dwId);
+   BOOL GetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
+   int GetEventSeverity(DWORD dwId);
+   BOOL GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
+
+   DWORD LoadUserDB(void);
+   BOOL GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
+   NXC_USER *FindUserById(DWORD dwId);
+
+   DWORD SyncObjects(void);
+   void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
+   void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
+   NXC_OBJECT *FindObjectById(DWORD dwId);
+   NXC_OBJECT *FindObjectByName(TCHAR *pszName);
+   void EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
+   NXC_OBJECT *GetRootObject(DWORD dwId, DWORD dwIndex);
+   void *GetObjectIndex(DWORD *pdwNumObjects);
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
@@ -112,26 +173,14 @@ inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pA
 //
 
 void DestroyObject(NXC_OBJECT *pObject);
-
-void InitEventDB(void);
-void ShutdownEventDB(void);
-void ProcessEventDBRecord(CSCPMessage *pMsg);
+void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser);
 
 void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessObjectUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
-
-void ProcessUserDBRecord(CSCPMessage *pMsg);
+void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);
-
-void ProcessDCI(CSCPMessage *pMsg);
-
-void InitSyncStuff(void);
-void SyncCleanup(void);
-DWORD WaitForSync(DWORD dwTimeOut);
-void PrepareForSync(void);
-void CompleteSync(DWORD dwRetCode);
+void ProcessDCI(NXCL_Session *pSession, CSCPMessage *pMsg);
 
 void DebugPrintf(TCHAR *szFormat, ...);
 

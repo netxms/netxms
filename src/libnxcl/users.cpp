@@ -25,19 +25,10 @@
 
 
 //
-// Static data
-//
-
-static DWORD m_dwNumUsers;
-static NXC_USER *m_pUserList = NULL;
-static BOOL m_bUserDBLoaded = FALSE;
-
-
-//
 // Fill user record with data from message
 //
 
-static void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
+void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
 {
    // Process common fields
    pUser->dwId = pMsg->GetVariableLong(VID_USER_ID);
@@ -59,84 +50,7 @@ static void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
    else     // User-specific data
    {
       pMsg->GetVariableStr(VID_USER_FULL_NAME, pUser->szFullName, MAX_USER_FULLNAME);
-   }
-}
-
-
-//
-// Process user database update
-//
-
-void ProcessUserDBUpdate(CSCPMessage *pMsg)
-{
-   int iCode;
-   DWORD dwUserId;
-   NXC_USER *pUser;
-
-   iCode = pMsg->GetVariableShort(VID_UPDATE_TYPE);
-   dwUserId = pMsg->GetVariableLong(VID_USER_ID);
-   pUser = NXCFindUserById(dwUserId);
-
-   switch(iCode)
-   {
-      case USER_DB_CREATE:
-         if (pUser == NULL)
-         {
-            // No user with this id, create one
-            m_pUserList = (NXC_USER *)realloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
-            memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
-
-            // Process common fields
-            m_pUserList[m_dwNumUsers].dwId = dwUserId;
-            pMsg->GetVariableStr(VID_USER_NAME, m_pUserList[m_dwNumUsers].szName, MAX_USER_NAME);
-            pUser = &m_pUserList[m_dwNumUsers];
-            m_dwNumUsers++;
-         }
-         break;
-      case USER_DB_MODIFY:
-         if (pUser == NULL)
-         {
-            // No user with this id, create one
-            m_pUserList = (NXC_USER *)realloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
-            memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
-            pUser = &m_pUserList[m_dwNumUsers];
-            m_dwNumUsers++;
-         }
-         UpdateUserFromMessage(pMsg, pUser);
-         break;
-      case USER_DB_DELETE:
-         if (pUser != NULL)
-            pUser->wFlags |= UF_DELETED;
-         break;
-      default:
-         break;
-   }
-
-   if (pUser != NULL)
-      CallEventHandler(NXC_EVENT_USER_DB_CHANGED, iCode, pUser);
-}
-
-
-//
-// Process record from network
-//
-
-void ProcessUserDBRecord(CSCPMessage *pMsg)
-{
-   switch(pMsg->GetCode())
-   {
-      case CMD_USER_DB_EOF:
-         CompleteSync(RCC_SUCCESS);
-         break;
-      case CMD_USER_DATA:
-      case CMD_GROUP_DATA:
-         m_pUserList = (NXC_USER *)realloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
-         memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
-         UpdateUserFromMessage(pMsg, &m_pUserList[m_dwNumUsers]);
-         m_dwNumUsers++;
-         break;
-      default:
-         break;
+      pUser->pdwMemberList = NULL;
    }
 }
 
@@ -146,32 +60,9 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
+DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(NXC_SESSION hSession)
 {
-   CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
-
-   dwRqId = g_dwMsgId++;
-   PrepareForSync();
-
-   safe_free(m_pUserList);
-   m_pUserList = NULL;
-   m_dwNumUsers = 0;
-
-   msg.SetCode(CMD_LOAD_USER_DB);
-   msg.SetId(dwRqId);
-   SendMsg(&msg);
-
-   dwRetCode = WaitForRCC(dwRqId);
-
-   if (dwRetCode == RCC_SUCCESS)
-   {
-      dwRetCode = WaitForSync(INFINITE);
-      if (dwRetCode == RCC_SUCCESS)
-         m_bUserDBLoaded = TRUE;
-   }
-
-   return dwRetCode;
+   return ((NXCL_Session *)hSession)->LoadUserDB();
 }
 
 
@@ -179,22 +70,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
 // Find user in database by ID
 //
 
-NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId)
+NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, DWORD dwId)
 {
-   DWORD i;
-   NXC_USER *pUser = NULL;
-
-   if (m_bUserDBLoaded)
-   {
-      for(i = 0; i < m_dwNumUsers; i++)
-         if (m_pUserList[i].dwId == dwId)
-         {
-            pUser = &m_pUserList[i];
-            break;
-         }
-   }
-
-   return pUser;
+   return ((NXCL_Session *)hSession)->FindUserById(dwId);
 }
 
 
@@ -202,14 +80,10 @@ NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId)
 // Get pointer to user list and number of users
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
+BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList, 
+                                     DWORD *pdwNumUsers)
 {
-   if (!m_bUserDBLoaded)
-      return FALSE;
-
-   *ppUserList = m_pUserList;
-   *pdwNumUsers = m_dwNumUsers;
-   return TRUE;
+   return ((NXCL_Session *)hSession)->GetUserDB(ppUserList, pdwNumUsers);
 }
 
 
@@ -217,20 +91,21 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers)
 // Create new user or group on server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwNewId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
+                                       BOOL bIsGroup, DWORD *pdwNewId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode, dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_CREATE_USER);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_USER_NAME, pszName);
    msg.SetVariable(VID_IS_GROUP, (WORD)bIsGroup);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -250,20 +125,19 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdw
 // Delete user or group
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_DELETE_USER);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_USER_ID, dwId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -271,19 +145,18 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId)
 // Lock/unlock user database
 //
 
-static DWORD LockUserDB(BOOL bLock)
+static DWORD LockUserDB(NXCL_Session *pSession, BOOL bLock)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = pSession->CreateRqId();
 
    msg.SetCode(bLock ? CMD_LOCK_USER_DB : CMD_UNLOCK_USER_DB);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   pSession->SendMsg(&msg);
 
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return pSession->WaitForRCC(dwRqId);
 }
 
 
@@ -291,9 +164,9 @@ static DWORD LockUserDB(BOOL bLock)
 // Client interface: lock user database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void)
+DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(NXC_SESSION hSession)
 {
-   return LockUserDB(TRUE);
+   return LockUserDB((NXCL_Session *)hSession, TRUE);
 }
 
 
@@ -301,9 +174,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void)
 // Client interface: unlock user database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void)
+DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(NXC_SESSION hSession)
 {
-   return LockUserDB(FALSE);
+   return LockUserDB((NXCL_Session *)hSession, FALSE);
 }
 
 
@@ -311,12 +184,12 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void)
 // Modify user record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
+DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo)
 {
    CSCPMessage msg;
    DWORD i, dwId, dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Fill in request
    msg.SetCode(CMD_UPDATE_USER);
@@ -339,10 +212,10 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
       msg.SetVariable(VID_USER_FULL_NAME, pUserInfo->szFullName);
    }
 
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for responce
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -350,13 +223,14 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
 // Set password for user
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword)
+DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, 
+                                        char *pszNewPassword)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   DWORD dwRqId;
    BYTE hash[SHA1_DIGEST_SIZE];
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    CalculateSHA1Hash((BYTE *)pszNewPassword, strlen(pszNewPassword), hash);
 
@@ -364,8 +238,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword)
    msg.SetId(dwRqId);
    msg.SetVariable(VID_USER_ID, dwUserId);
    msg.SetVariable(VID_PASSWORD, hash, SHA1_DIGEST_SIZE);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

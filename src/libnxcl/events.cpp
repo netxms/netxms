@@ -28,7 +28,7 @@
 // Process events coming from server
 //
 
-void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
+void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 {
    NXC_EVENT *pEvent;
    WORD wCode;
@@ -38,7 +38,7 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
    switch(wCode)
    {
       case CMD_EVENT_LIST_END:
-         CompleteSync(RCC_SUCCESS);
+         pSession->CompleteSync(RCC_SUCCESS);
          break;
       case CMD_EVENT:
          if (pRawMsg != NULL)    // We should receive events as raw data
@@ -54,7 +54,7 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 
             // Call client's callback to handle new record
             // It's up to client to destroy allocated event structure
-            CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, pEvent);
+            pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, pEvent);
          }
          break;
       default:
@@ -68,21 +68,21 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
+DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
-   dwRqId = g_dwMsgId++;
-   PrepareForSync();
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+   ((NXCL_Session *)hSession)->PrepareForSync();
 
    msg.SetCode(CMD_GET_EVENTS);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwRetCode = WaitForRCC(dwRqId);
+   dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
-      dwRetCode = WaitForSync(INFINITE);
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(INFINITE);
 
    return dwRetCode;
 }
@@ -92,13 +92,14 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
 // Send event to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, DWORD dwObjectId, int iNumArgs, TCHAR **pArgList)
+DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, 
+                                      DWORD dwObjectId, int iNumArgs, TCHAR **pArgList)
 {
    CSCPMessage msg;
    DWORD dwRqId;
    int i;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_TRAP);
    msg.SetId(dwRqId);
@@ -107,7 +108,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, DWORD dwObjectId, int i
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, pArgList[i]);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

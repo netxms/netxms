@@ -32,6 +32,25 @@ NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 
 
 //
+// Print debug messages
+//
+
+void DebugPrintf(TCHAR *szFormat, ...)
+{
+   va_list args;
+   TCHAR szBuffer[4096];
+
+   if (g_pDebugCallBack == NULL)
+      return;
+
+   va_start(args, szFormat);
+   _vstprintf(szBuffer, szFormat, args);
+   va_end(args);
+   g_pDebugCallBack(szBuffer);
+}
+
+
+//
 // Initialization function
 //
 

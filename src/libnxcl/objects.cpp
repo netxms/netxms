@@ -102,17 +102,17 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 // Add object to list
 //
 
-static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
+void NXCL_Session::AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
    DebugPrintf(_T("AddObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
-   NXCLockObjectIndex();
+   LockObjectIndex();
    m_pIndexById = (INDEX *)realloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
    m_pIndexById[m_dwNumObjects].pObject = pObject;
    m_dwNumObjects++;
    if (bSortIndex)
       qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-   NXCUnlockObjectIndex();
+   UnlockObjectIndex();
 }
 
 
@@ -222,16 +222,16 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 // Process object information received from server
 //
 
-void ProcessObjectUpdate(CSCPMessage *pMsg)
+void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject, *pNewObject;
 
    switch(pMsg->GetCode())
    {
       case CMD_OBJECT_LIST_END:
-         NXCLockObjectIndex();
+         LockObjectIndex();
          qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-         NXCUnlockObjectIndex();
+         UnlockObjectIndex();
          CompleteSync(RCC_SUCCESS);
          break;
       case CMD_OBJECT:
@@ -244,7 +244,7 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          break;
       case CMD_OBJECT_UPDATE:
          pNewObject = NewObjectFromMsg(pMsg);
-         pObject = NXCFindObjectById(pNewObject->dwId);
+         pObject = FindObjectById(pNewObject->dwId);
          if (pObject == NULL)
          {
             AddObject(pNewObject, TRUE);
@@ -267,12 +267,12 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
+DWORD NXCL_Session::SyncObjects(void)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = CreateRqId();
    PrepareForSync();
 
    DestroyAllObjects();
@@ -292,106 +292,34 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
 
 
 //
+// Wrapper for NXCL_Session::SyncObjects()
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->SyncObjects();
+}
+
+
+//
 // Find object by ID
 //
 
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId)
+NXC_OBJECT *NXCL_Session::FindObjectById(DWORD dwId)
 {
    DWORD dwPos;
    NXC_OBJECT *pObject;
 
-   NXCLockObjectIndex();
+   LockObjectIndex();
    dwPos = SearchIndex(m_pIndexById, m_dwNumObjects, dwId);
    pObject = (dwPos == INVALID_INDEX) ? NULL : m_pIndexById[dwPos].pObject;
-   NXCUnlockObjectIndex();
+   UnlockObjectIndex();
    return pObject;
 }
 
-
-//
-// Enumerate all objects
-//
-
-void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(NXC_SESSION hSession, DWORD dwId)
 {
-   DWORD i;
-
-   NXCLockObjectIndex();
-   for(i = 0; i < m_dwNumObjects; i++)
-      if (!pHandler(m_pIndexById[i].pObject))
-         break;
-   NXCUnlockObjectIndex();
-}
-
-
-//
-// Get topology root ("Entire Network") object
-//
-
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(void)
-{
-   if (m_dwNumObjects > 0)
-      if (m_pIndexById[0].dwKey == 1)
-         return m_pIndexById[0].pObject;
-   return NULL;
-}
-
-
-//
-// Get service tree root ("All Services") object
-//
-
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(void)
-{
-   if (m_dwNumObjects > 1)
-      if (m_pIndexById[1].dwKey == 2)
-         return m_pIndexById[1].pObject;
-   return NULL;
-}
-
-
-//
-// Get template tree root ("Templates") object
-//
-
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTemplateRootObject(void)
-{
-   if (m_dwNumObjects > 2)
-      if (m_pIndexById[2].dwKey == 3)
-         return m_pIndexById[2].pObject;
-   return NULL;
-}
-
-
-//
-// Get pointer to first object on objects' list and entire number of objects
-//
-
-void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(DWORD *pdwNumObjects)
-{
-   if (pdwNumObjects != NULL)
-      *pdwNumObjects = m_dwNumObjects;
-   return m_pIndexById;
-}
-
-
-//
-// Lock object index
-//
-
-void LIBNXCL_EXPORTABLE NXCLockObjectIndex(void)
-{
-   MutexLock(m_mutexIndexAccess, INFINITE);
-}
-
-
-//
-// Unlock object index
-//
-
-void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void)
-{
-   MutexUnlock(m_mutexIndexAccess);
+   return ((NXCL_Session *)hSession)->FindObjectById(dwId);
 }
 
 
@@ -399,7 +327,7 @@ void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void)
 // Find object by name
 //
 
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName)
+NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName)
 {
    NXC_OBJECT *pObject = NULL;
    DWORD i;
@@ -407,7 +335,7 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName)
    if (pszName != NULL)
       if (*pszName != 0)
       {
-         NXCLockObjectIndex();
+         LockObjectIndex();
 
          for(i = 0; i < m_dwNumObjects; i++)
             if (MatchString(pszName, m_pIndexById[i].pObject->szName, FALSE))
@@ -416,9 +344,115 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName)
                break;
             }
 
-         NXCUnlockObjectIndex();
+         UnlockObjectIndex();
       }
    return pObject;
+}
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *pszName)
+{
+   return ((NXCL_Session *)hSession)->FindObjectByName(pszName);
+}
+
+
+//
+// Enumerate all objects
+//
+
+void NXCL_Session::EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
+{
+   DWORD i;
+
+   LockObjectIndex();
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (!pHandler(m_pIndexById[i].pObject))
+         break;
+   UnlockObjectIndex();
+}
+
+void LIBNXCL_EXPORTABLE NXCEnumerateObjects(NXC_SESSION hSession, BOOL (* pHandler)(NXC_OBJECT *))
+{
+   ((NXCL_Session *)hSession)->EnumerateObjects(pHandler);
+}
+
+
+//
+// Get root object
+//
+
+NXC_OBJECT *NXCL_Session::GetRootObject(DWORD dwId, DWORD dwIndex)
+{
+   if (m_dwNumObjects > dwIndex)
+      if (m_pIndexById[dwIndex].dwKey == dwId)
+         return m_pIndexById[dwIndex].pObject;
+   return NULL;
+}
+
+
+//
+// Get topology root ("Entire Network") object
+//
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->GetRootObject(1, 0);
+}
+
+
+//
+// Get service tree root ("All Services") object
+//
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->GetRootObject(2, 1);
+}
+
+
+//
+// Get template tree root ("Templates") object
+//
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTemplateRootObject(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->GetRootObject(3, 2);
+}
+
+
+//
+// Get pointer to first object on objects' list and entire number of objects
+//
+
+void *NXCL_Session::GetObjectIndex(DWORD *pdwNumObjects)
+{
+   if (pdwNumObjects != NULL)
+      *pdwNumObjects = m_dwNumObjects;
+   return m_pIndexById;
+}
+
+void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(NXC_SESSION hSession, DWORD *pdwNumObjects)
+{
+   return ((NXCL_Session *)hSession)->GetObjectIndex(pdwNumObjects);
+}
+
+
+//
+// Lock object index
+//
+
+void LIBNXCL_EXPORTABLE NXCLockObjectIndex(NXC_SESSION hSession)
+{
+   ((NXCL_Session *)hSession)->LockObjectIndex();
+}
+
+
+//
+// Unlock object index
+//
+
+void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(NXC_SESSION hSession)
+{
+   ((NXCL_Session *)hSession)->UnlockObjectIndex();
 }
 
 
@@ -426,12 +460,12 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName)
 // Modify object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
+DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE *pUpdate)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
    msg.SetCode(CMD_MODIFY_OBJECT);
@@ -468,10 +502,10 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
    }
 
    // Send request
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -479,12 +513,13 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 // Set object's mamagement status
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManaged)
+DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(NXC_SESSION hSession, DWORD dwObjectId, 
+                                                BOOL bIsManaged)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
    msg.SetCode(CMD_SET_OBJECT_MGMT_STATUS);
@@ -493,10 +528,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
    msg.SetVariable(VID_MGMT_STATUS, (WORD)bIsManaged);
 
    // Send request
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -504,12 +539,14 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
 // Create new object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession, 
+                                         NXC_OBJECT_CREATE_INFO *pCreateInfo, 
+                                         DWORD *pdwObjectId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
    msg.SetCode(CMD_CREATE_OBJECT);
@@ -535,11 +572,11 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DW
    }
 
    // Send request
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for responce. Creating node object can include polling,
    // which can take a minute or even more in worst cases
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -562,12 +599,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DW
 // Bind/unbind objects
 //
 
-static DWORD ChangeObjectBinding(DWORD dwParentObject, DWORD dwChildObject, BOOL bBind)
+static DWORD ChangeObjectBinding(NXCL_Session *pSession, DWORD dwParentObject,
+                                 DWORD dwChildObject, BOOL bBind)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = pSession->CreateRqId();
 
    // Build request message
    msg.SetCode(bBind ? CMD_BIND_OBJECT : CMD_UNBIND_OBJECT);
@@ -576,10 +614,10 @@ static DWORD ChangeObjectBinding(DWORD dwParentObject, DWORD dwChildObject, BOOL
    msg.SetVariable(VID_CHILD_ID, dwChildObject);
 
    // Send request
-   SendMsg(&msg);
+   pSession->SendMsg(&msg);
 
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return pSession->WaitForRCC(dwRqId);
 }
 
 
@@ -587,9 +625,10 @@ static DWORD ChangeObjectBinding(DWORD dwParentObject, DWORD dwChildObject, BOOL
 // Bind object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject)
+DWORD LIBNXCL_EXPORTABLE NXCBindObject(NXC_SESSION hSession, DWORD dwParentObject, 
+                                       DWORD dwChildObject)
 {
-   return ChangeObjectBinding(dwParentObject, dwChildObject, TRUE);
+   return ChangeObjectBinding((NXCL_Session *)hSession, dwParentObject, dwChildObject, TRUE);
 }
 
 
@@ -597,9 +636,10 @@ DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject
 // Unbind object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObject)
+DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(NXC_SESSION hSession, DWORD dwParentObject,
+                                         DWORD dwChildObject)
 {
-   return ChangeObjectBinding(dwParentObject, dwChildObject, FALSE);
+   return ChangeObjectBinding((NXCL_Session *)hSession, dwParentObject, dwChildObject, FALSE);
 }
 
 
@@ -607,12 +647,12 @@ DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObje
 // Delete object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(DWORD dwObject)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
    msg.SetCode(CMD_DELETE_OBJECT);
@@ -620,10 +660,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(DWORD dwObject)
    msg.SetVariable(VID_OBJECT_ID, dwObject);
 
    // Send request
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -631,16 +671,16 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(DWORD dwObject)
 // Load container categories
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList)
+DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumCats = 0, dwCatId = 0;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_CONTAINER_CAT_LIST);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *ppList = (NXC_CC_LIST *)malloc(sizeof(NXC_CC_LIST));
    (*ppList)->dwNumElements = 0;
@@ -648,7 +688,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList)
 
    do
    {
-      pResponce = WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId, g_dwCommandTimeout);
+      pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId);
       if (pResponce != NULL)
       {
          dwCatId = pResponce->GetVariableLong(VID_CATEGORY_ID);
@@ -709,25 +749,25 @@ void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList)
 // Perform a forced node poll
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType, 
+DWORD LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, DWORD dwObjectId, int iPollType, 
                                      void (* pfCallback)(TCHAR *, void *), void *pArg)
 {
    DWORD dwRetCode, dwRqId;
    CSCPMessage msg, *pResponce;
    TCHAR *pszMsg;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_POLL_NODE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
    msg.SetVariable(VID_POLL_TYPE, (WORD)iPollType);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    do
    {
       // Polls can take a long time, so we wait up to 120 seconds for each message
-      pResponce = WaitForMessage(CMD_POLLING_INFO, dwRqId, 120000);
+      pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_POLLING_INFO, dwRqId, 120000);
       if (pResponce != NULL)
       {
          dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -754,16 +794,16 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(DWORD dwObjectId, int iPollType,
 // Wake up node by sending magic packet
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCWakeUpNode(DWORD dwObjectId)
+DWORD LIBNXCL_EXPORTABLE NXCWakeUpNode(NXC_SESSION hSession, DWORD dwObjectId)
 {
    DWORD dwRqId;
    CSCPMessage msg;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_WAKEUP_NODE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-   SendMsg(&msg);
-   return WaitForRCC(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

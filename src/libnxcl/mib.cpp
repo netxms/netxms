@@ -32,18 +32,19 @@
 // Get list of available MIB files from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList)
+DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_SESSION hSession, NXC_MIB_LIST **ppMibList)
 {
    DWORD i, dwRqId, dwRetCode, dwId1, dwId2;
    CSCPMessage msg, *pResponce;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_MIB_LIST);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_MIB_LIST, dwRqId, g_dwCommandTimeout * 2);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB_LIST, dwRqId, 
+                                       ((NXCL_Session *)hSession)->m_dwCommandTimeout * 2);
    if (pResponce != NULL)
    {
       *ppMibList = (NXC_MIB_LIST *)malloc(sizeof(NXC_MIB_LIST));
@@ -92,7 +93,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList)
 // Download MIB file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(TCHAR *pszName, TCHAR *pszDestDir)
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName, TCHAR *pszDestDir)
 {
    DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
    CSCPMessage msg, *pResponce;
@@ -100,15 +101,15 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(TCHAR *pszName, TCHAR *pszDestDir)
    TCHAR cLastChar, szFileName[MAX_PATH];
    FILE *hFile;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_MIB);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_MIB_NAME, pszName);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Loading file can take time, so timeout is 60 sec. instead of default
-   pResponce = WaitForMessage(CMD_MIB, dwRqId, 60000);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB, dwRqId, 60000);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -122,7 +123,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(TCHAR *pszName, TCHAR *pszDestDir)
             cLastChar = pszDestDir[_tcslen(pszDestDir) - 1];
             _stprintf(szFileName, _T("%s%s%s"), pszDestDir, 
                     (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : _T("/"), pszName);
-			hFile = _tfopen(szFileName, _T("wb"));
+			   hFile = _tfopen(szFileName, _T("wb"));
             if (hFile != NULL)
             {
                for(i = 0; i < dwFileSize; i += dwNumBytes)

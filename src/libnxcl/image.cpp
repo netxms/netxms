@@ -32,7 +32,8 @@
 // Download image file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, TCHAR *pszCacheDir, WORD wFormat)
+DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId, 
+                                          TCHAR *pszCacheDir, WORD wFormat)
 {
    DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
    CSCPMessage msg, *pResponce;
@@ -40,16 +41,16 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, TCHAR *pszCacheDir, W
    TCHAR cLastChar, szFileName[MAX_PATH];
    FILE *hFile;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_LOAD_IMAGE_FILE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IMAGE_ID, dwImageId);
    msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Loading  file can take time, so we use 60 sec. timeout instead of default
-   pResponce = WaitForMessage(CMD_IMAGE_FILE, dwRqId, 60000);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_IMAGE_FILE, dwRqId, 60000);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -103,7 +104,8 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, TCHAR *pszCacheDir, W
 // Synchronize single image file
 //
 
-static DWORD SyncImageFile(TCHAR *pszCacheDir, DWORD dwImageId, BYTE *pServerHash, WORD wFormat)
+static DWORD SyncImageFile(NXC_SESSION hSession, TCHAR *pszCacheDir, 
+                           DWORD dwImageId, BYTE *pServerHash, WORD wFormat)
 {
    TCHAR szFileName[MAX_PATH];
    BYTE hash[MD5_DIGEST_SIZE];
@@ -115,7 +117,7 @@ static DWORD SyncImageFile(TCHAR *pszCacheDir, DWORD dwImageId, BYTE *pServerHas
    CalculateFileMD5Hash(szFileName, hash);
    if (memcmp(hash, pServerHash, MD5_DIGEST_SIZE))
       // Hash not match, need to download file
-      dwRetCode = NXCLoadImageFile(dwImageId, pszCacheDir, wFormat);
+      dwRetCode = NXCLoadImageFile(hSession, dwImageId, pszCacheDir, wFormat);
    return dwRetCode;
 }
 
@@ -124,19 +126,21 @@ static DWORD SyncImageFile(TCHAR *pszCacheDir, DWORD dwImageId, BYTE *pServerHas
 // Synchronize images with client
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, TCHAR *pszCacheDir, WORD wFormat)
+DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **ppImageList, 
+                                       TCHAR *pszCacheDir, WORD wFormat)
 {
    DWORD i, dwRqId, dwRetCode;
    CSCPMessage msg, *pResponce;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_IMAGE_LIST);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_IMAGE_LIST, dwRqId, g_dwCommandTimeout * 2);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_IMAGE_LIST, dwRqId, 
+                                  ((NXCL_Session *)hSession)->m_dwCommandTimeout * 2);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -152,7 +156,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, TCHAR *pszC
             for(i = 0; i < (*ppImageList)->dwNumImages; i++)
             {
                (*ppImageList)->pImageList[i].dwId = ntohl((*ppImageList)->pImageList[i].dwId);
-               dwRetCode = SyncImageFile(pszCacheDir, (*ppImageList)->pImageList[i].dwId,
+               dwRetCode = SyncImageFile(hSession, pszCacheDir, 
+                                         (*ppImageList)->pImageList[i].dwId,
                                          (*ppImageList)->pImageList[i].hash, wFormat);
                if (dwRetCode != RCC_SUCCESS)
                {
@@ -195,19 +200,19 @@ void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList)
 // Load default image list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize, 
+DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(NXC_SESSION hSession, DWORD *pdwListSize, 
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode, dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_DEFAULT_IMAGE_LIST);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

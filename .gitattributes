@@ -445,7 +445,6 @@ src/libnxcl/libnxcl.vcp -text
 src/libnxcl/libnxcl.vcw -text
 src/libnxcl/main.cpp -text
 src/libnxcl/mib.cpp -text
-src/libnxcl/misc.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text

@@ -25,58 +25,6 @@
 
 
 //
-// Static data
-//
-
-static NXC_EVENT_TEMPLATE **m_ppEventTemplates = NULL;
-static DWORD m_dwNumTemplates = 0;
-static MUTEX m_mutexEventAccess = INVALID_MUTEX_HANDLE;
-
-
-//
-// Destroy event template database
-//
-
-static void DestroyEventDB(void)
-{
-   DWORD i;
-
-   for(i = 0; i < m_dwNumTemplates; i++)
-   {
-      safe_free(m_ppEventTemplates[i]->pszDescription);
-      safe_free(m_ppEventTemplates[i]->pszMessage);
-      free(m_ppEventTemplates[i]);
-   }
-   safe_free(m_ppEventTemplates);
-   m_dwNumTemplates = 0;
-   m_ppEventTemplates = NULL;
-}
-
-
-//
-// Initialize
-//
-
-void InitEventDB(void)
-{
-   m_mutexEventAccess = MutexCreate();
-}
-
-
-//
-// Cleanup
-//
-
-void ShutdownEventDB(void)
-{
-   MutexLock(m_mutexEventAccess, INFINITE);
-   MutexUnlock(m_mutexEventAccess);
-   MutexDestroy(m_mutexEventAccess);
-   DestroyEventDB();
-}
-
-
-//
 // Duplicate event template
 //
 
@@ -95,12 +43,9 @@ NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
 // Add template to list
 //
 
-void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
+void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pEventTemplate)
 {
-   m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)realloc(m_ppEventTemplates, 
-      sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates + 1));
-   m_ppEventTemplates[m_dwNumTemplates] = pEventTemplate;
-   m_dwNumTemplates++;
+   ((NXCL_Session *)hSession)->AddEventTemplate(pEventTemplate);
 }
 
 
@@ -108,23 +53,9 @@ void LIBNXCL_EXPORTABLE NXCAddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
 // Delete record from list
 //
 
-void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventCode)
+void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(NXC_SESSION hSession, DWORD dwEventCode)
 {
-   DWORD i;
-
-   MutexLock(m_mutexEventAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
-      if (m_ppEventTemplates[i]->dwCode == dwEventCode)
-      {
-         m_dwNumTemplates--;
-         safe_free(m_ppEventTemplates[i]->pszDescription);
-         safe_free(m_ppEventTemplates[i]->pszMessage);
-         free(m_ppEventTemplates[i]);
-         memmove(&m_ppEventTemplates[i], m_ppEventTemplates[i + 1], 
-                 sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates - i));
-         break;
-      }
-   MutexUnlock(m_mutexEventAccess);
+   ((NXCL_Session *)hSession)->DeleteEDBRecord(dwEventCode);
 }
 
 
@@ -132,7 +63,7 @@ void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(DWORD dwEventCode)
 // Process record from network
 //
 
-void ProcessEventDBRecord(CSCPMessage *pMsg)
+void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_EVENT_TEMPLATE *pEventTemplate;
    DWORD dwEventCode;
@@ -150,11 +81,11 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
          pEventTemplate->pszMessage = pMsg->GetVariableStr(VID_MESSAGE, NULL, 0);
          pEventTemplate->pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION, NULL, 0);
-         NXCAddEventTemplate(pEventTemplate);
+         pSession->AddEventTemplate(pEventTemplate);
       }
       else
       {
-         CompleteSync(RCC_SUCCESS);
+         pSession->CompleteSync(RCC_SUCCESS);
       }
    }
 }
@@ -164,30 +95,9 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
 // Load event configuration database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(void)
+DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession)
 {
-   CSCPMessage msg;
-   DWORD dwRetCode;
-   DWORD dwRqId;
-
-   dwRqId = g_dwMsgId++;
-   PrepareForSync();
-
-   DestroyEventDB();
-   MutexLock(m_mutexEventAccess, INFINITE);
-
-   msg.SetCode(CMD_LOAD_EVENT_DB);
-   msg.SetId(dwRqId);
-   SendMsg(&msg);
-
-   dwRetCode = WaitForRCC(dwRqId);
-
-   /* TODO: this probably should be recoded as loop with calls to WaitForMessage() */
-   if (dwRetCode == RCC_SUCCESS)
-      dwRetCode = WaitForSync(INFINITE);
-
-   MutexUnlock(m_mutexEventAccess);
-   return dwRetCode;
+   return ((NXCL_Session *)hSession)->LoadEventDB();
 }
 
 
@@ -195,12 +105,12 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(void)
 // Set event information
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg)
+DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
    msg.SetCode(CMD_SET_EVENT_INFO);
@@ -211,10 +121,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg)
    msg.SetVariable(VID_NAME, pArg->szName);
    msg.SetVariable(VID_MESSAGE, pArg->pszMessage);
    msg.SetVariable(VID_DESCRIPTION, pArg->pszDescription);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -222,21 +132,21 @@ DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_EVENT_TEMPLATE *pArg)
 // Delete event template
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventCode)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, DWORD dwEventCode)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
    msg.SetCode(CMD_DELETE_EVENT_TEMPLATE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_EVENT_CODE, dwEventCode);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -244,20 +154,20 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(DWORD dwEventCode)
 // Generate ID for new event
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(DWORD *pdwEventCode)
+DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, DWORD *pdwEventCode)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
    msg.SetCode(CMD_GENERATE_EVENT_CODE);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -276,11 +186,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(DWORD *pdwEventCode)
 // Get pointer to event templates list
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords)
+BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_SESSION hSession, 
+                                      NXC_EVENT_TEMPLATE ***pppTemplateList, 
+                                      DWORD *pdwNumRecords)
 {
-   *pppTemplateList = m_ppEventTemplates;
-   *pdwNumRecords = m_dwNumTemplates;
-   return TRUE;
+   return ((NXCL_Session *)hSession)->GetEventDB(pppTemplateList, pdwNumRecords);
 }
 
 
@@ -288,19 +198,9 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWO
 // Resolve event id to name
 //
 
-const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, DWORD dwId)
 {
-   DWORD i;
-
-   MutexLock(m_mutexEventAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
-      if (m_ppEventTemplates[i]->dwCode == dwId)
-      {
-         MutexUnlock(m_mutexEventAccess);
-         return m_ppEventTemplates[i]->szName;
-      }
-   MutexUnlock(m_mutexEventAccess);
-   return _T("<unknown>");
+   return ((NXCL_Session *)hSession)->GetEventName(dwId);
 }
 
 
@@ -308,21 +208,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
 // Resolve event id to name using application-provided buffer
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, DWORD dwId, 
+                                          TCHAR *pszBuffer, DWORD dwBufSize)
 {
-   DWORD i;
-
-   MutexLock(m_mutexEventAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
-      if (m_ppEventTemplates[i]->dwCode == dwId)
-      {
-         _tcsncpy(pszBuffer, m_ppEventTemplates[i]->szName, dwBufSize);
-         MutexUnlock(m_mutexEventAccess);
-         return TRUE;
-      }
-   MutexUnlock(m_mutexEventAccess);
-   *pszBuffer = 0;
-   return FALSE;
+   return ((NXCL_Session *)hSession)->GetEventNameEx(dwId, pszBuffer, dwBufSize);
 }
 
 
@@ -330,60 +219,9 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dw
 // Get severity for given event id. Will return -1 for unknown id.
 //
 
-int LIBNXCL_EXPORTABLE NXCGetEventSeverity(DWORD dwId)
+int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, DWORD dwId)
 {
-   DWORD i;
-
-   MutexLock(m_mutexEventAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
-      if (m_ppEventTemplates[i]->dwCode == dwId)
-      {
-         MutexUnlock(m_mutexEventAccess);
-         return (int)(m_ppEventTemplates[i]->dwSeverity);
-      }
-   MutexUnlock(m_mutexEventAccess);
-   return -1;
-}
-
-
-//
-// Lock/unlock event DB
-//
-
-static DWORD DoEventDBLock(BOOL bLock)
-{
-   CSCPMessage msg;
-   DWORD dwRqId;
-
-   dwRqId = g_dwMsgId++;
-
-   // Prepare message
-   msg.SetCode(bLock ? CMD_LOCK_EVENT_DB : CMD_UNLOCK_EVENT_DB);
-   msg.SetId(dwRqId);
-   SendMsg(&msg);
-   
-   // Wait for reply
-   return WaitForRCC(dwRqId);
-}
-
-
-//
-// Lock event DB
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(void)
-{
-   return DoEventDBLock(TRUE);
-}
-
-
-//
-// Unlock event DB
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(void)
-{
-   return DoEventDBLock(FALSE);
+   return ((NXCL_Session *)hSession)->GetEventSeverity(dwId);
 }
 
 
@@ -392,19 +230,48 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(void)
 // If there are no template with such ID, empty string will be returned.
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
 {
-   DWORD i;
+   return ((NXCL_Session *)hSession)->GetEventText(dwId, pszBuffer, dwBufSize);
+}
 
-   MutexLock(m_mutexEventAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
-      if (m_ppEventTemplates[i]->dwCode == dwId)
-      {
-         _tcsncpy(pszBuffer, m_ppEventTemplates[i]->pszMessage, dwBufSize);
-         MutexUnlock(m_mutexEventAccess);
-         return TRUE;
-      }
-   MutexUnlock(m_mutexEventAccess);
-   *pszBuffer = 0;
-   return FALSE;
+
+//
+// Lock/unlock event DB
+//
+
+static DWORD DoEventDBLock(NXCL_Session *pSession, BOOL bLock)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = pSession->CreateRqId();
+
+   // Prepare message
+   msg.SetCode(bLock ? CMD_LOCK_EVENT_DB : CMD_UNLOCK_EVENT_DB);
+   msg.SetId(dwRqId);
+   pSession->SendMsg(&msg);
+   
+   // Wait for reply
+   return pSession->WaitForRCC(dwRqId);
+}
+
+
+//
+// Lock event DB
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(NXC_SESSION hSession)
+{
+   return DoEventDBLock((NXCL_Session *)hSession, TRUE);
+}
+
+
+//
+// Unlock event DB
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(NXC_SESSION hSession)
+{
+   return DoEventDBLock((NXCL_Session *)hSession, FALSE);
 }

@@ -105,25 +105,25 @@ static THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_OBJECT:        // Object information
             case CMD_OBJECT_UPDATE:
             case CMD_OBJECT_LIST_END:
-               ProcessObjectUpdate(pSession, pMsg);
+               pSession->ProcessObjectUpdate(pMsg);
                break;
             case CMD_EVENT_LIST_END:
                ProcessEvent(pSession, pMsg, NULL);
                break;
             case CMD_EVENT_DB_RECORD:
-               ProcessEventDBRecord(pMsg);
+               ProcessEventDBRecord(pSession, pMsg);
                break;
             case CMD_USER_DATA:
             case CMD_GROUP_DATA:
             case CMD_USER_DB_EOF:
-               ProcessUserDBRecord(pMsg);
+               pSession->ProcessUserDBRecord(pMsg);
                break;
             case CMD_USER_DB_UPDATE:
-               ProcessUserDBUpdate(pMsg);
+               pSession->ProcessUserDBUpdate(pMsg);
                break;
             case CMD_NODE_DCI:
             case CMD_NODE_DCI_LIST_END:
-               ProcessDCI(pMsg);
+               pSession->ProcessDCI(pMsg);
                break;
             case CMD_ALARM_UPDATE:
                ProcessAlarmUpdate(pSession, pMsg);
@@ -146,9 +146,8 @@ static THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       }
    }
 
-   CompleteSync(RCC_COMM_FAILURE);    // Abort active sync operation
+   pSession->CompleteSync(RCC_COMM_FAILURE);    // Abort active sync operation
    DebugPrintf(_T("Network receiver thread stopped"));
-   ChangeState(STATE_DISCONNECTED);
    free(pRawMsg);
    free(pMsgBuffer);
 

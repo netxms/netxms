@@ -25,131 +25,14 @@
 
 
 //
-// Static data
-//
-
-static NXC_DCI_LIST *m_pItemList = NULL;
-
-
-//
-// Process events coming from server
-//
-
-void ProcessDCI(CSCPMessage *pMsg)
-{
-   switch(pMsg->GetCode())
-   {
-      case CMD_NODE_DCI_LIST_END:
-         CompleteSync(RCC_SUCCESS);
-         break;
-      case CMD_NODE_DCI:
-         if (m_pItemList != NULL)
-         {
-            DWORD i, j, dwId;
-            DCI_THRESHOLD dct;
-
-            i = m_pItemList->dwNumItems;
-            m_pItemList->dwNumItems++;
-            m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems, 
-                                          sizeof(NXC_DCI) * m_pItemList->dwNumItems);
-            m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
-            m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
-            m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
-            m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);
-            m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
-            m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
-            m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-            m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
-            pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
-            pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription,
-                                 MAX_DB_STRING);
-            pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance,
-                                 MAX_DB_STRING);
-            m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
-            m_pItemList->pItems[i].pThresholdList = 
-               (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
-            for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
-            {
-               pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
-               m_pItemList->pItems[i].pThresholdList[j].dwId = ntohl(dct.dwId);
-               m_pItemList->pItems[i].pThresholdList[j].dwEvent = ntohl(dct.dwEvent);
-               m_pItemList->pItems[i].pThresholdList[j].dwArg1 = ntohl(dct.dwArg1);
-               m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
-               m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);
-               m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
-               switch(m_pItemList->pItems[i].iDataType)
-               {
-                  case DCI_DT_INT:
-                  case DCI_DT_UINT:
-                     m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
-                     break;
-                  case DCI_DT_INT64:
-                  case DCI_DT_UINT64:
-                     m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
-                     break;
-                  case DCI_DT_FLOAT:
-                     m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
-                     break;
-                  case DCI_DT_STRING:
-                     _tcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
-                     break;
-                  default:
-                     break;
-               }
-            }
-         }
-         break;
-      default:
-         break;
-   }
-}
-
-
-//
 // Load data collection items list for specified node
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
+DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId, 
+                                            NXC_DCI_LIST **ppItemList)
 {
-   CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
-
-   dwRqId = g_dwMsgId++;
-   PrepareForSync();
-
-   m_pItemList = (NXC_DCI_LIST *)malloc(sizeof(NXC_DCI_LIST));
-   m_pItemList->dwNodeId = dwNodeId;
-   m_pItemList->dwNumItems = 0;
-   m_pItemList->pItems = NULL;
-
-   msg.SetCode(CMD_GET_NODE_DCI_LIST);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
-   SendMsg(&msg);
-
-   dwRetCode = WaitForRCC(dwRqId);
-
-   if (dwRetCode == RCC_SUCCESS)
-   {
-      // Wait for DCI list end or for disconnection
-      dwRetCode = WaitForSync(INFINITE);
-      if (dwRetCode == RCC_SUCCESS)
-      {
-         *ppItemList = m_pItemList;
-      }
-      else
-      {
-         free(m_pItemList);
-      }
-   }
-   else
-   {
-      free(m_pItemList);
-   }
-
-   m_pItemList = NULL;
-   return dwRetCode;
+   return ((NXCL_Session *)hSession)->OpenNodeDCIList(dwNodeId, ppItemList);
 }
 
 
@@ -157,21 +40,21 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
 // Unlock and destroy previously opened node's DCI list
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
+DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList)
 {
    DWORD i, dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;
    CSCPMessage msg;
 
    if (pItemList != NULL)
    {
-      dwRqId = g_dwMsgId++;
+      dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
       msg.SetCode(CMD_UNLOCK_NODE_DCI_LIST);
       msg.SetId(dwRqId);
       msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
-      SendMsg(&msg);
+      ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-      dwRetCode = WaitForRCC(dwRqId);
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 
       for(i = 0; i < pItemList->dwNumItems; i++)
       {
@@ -189,19 +72,20 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
 // Create new data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, 
+                                         DWORD *pdwItemId)
 {
    DWORD dwRetCode, dwRqId;
    CSCPMessage msg, *pResponce;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_CREATE_NEW_DCI);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -235,13 +119,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItem
 // Update data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
+DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_DCI *pItem)
 {
    DWORD i, dwId, dwRqId, dwRetCode;
    CSCPMessage msg, *pResponce;
    DCI_THRESHOLD dct;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_MODIFY_NODE_DCI);
    msg.SetId(dwRqId);
@@ -287,9 +171,9 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
       }
       msg.SetVariable(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
    }
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -326,7 +210,8 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
 // Delete data collection item
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, 
+                                      DWORD dwItemId)
 {
    DWORD i, dwRqId, dwResult = RCC_INVALID_DCI_ID;
    CSCPMessage msg;
@@ -335,15 +220,15 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
    for(i = 0; i < pItemList->dwNumItems; i++)
       if (pItemList->pItems[i].dwId == dwItemId)
       {
-         dwRqId = g_dwMsgId++;
+         dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
          msg.SetCode(CMD_DELETE_NODE_DCI);
          msg.SetId(dwRqId);
          msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
          msg.SetVariable(VID_DCI_ID, dwItemId);
-         SendMsg(&msg);
+         ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-         dwResult = WaitForRCC(dwRqId);
+         dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
          if (dwResult == RCC_SUCCESS)
          {
             // Item was successfully deleted on server, delete it from our list
@@ -363,13 +248,13 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
 // Set status for multiple DCIs
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetDCIStatus(DWORD dwNodeId, DWORD dwNumItems, 
+DWORD LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwNumItems, 
                                          DWORD *pdwItemList, int iStatus)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_SET_DCI_STATUS);
    msg.SetId(dwRqId);
@@ -377,8 +262,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSetDCIStatus(DWORD dwNodeId, DWORD dwNumItems,
    msg.SetVariable(VID_DCI_STATUS, (WORD)iStatus);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
    msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
-   SendMsg(&msg);
-   return WaitForRCC(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -401,13 +286,14 @@ DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId)
 // Retrieve collected data from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwMaxRows,
-                                       DWORD dwTimeFrom, DWORD dwTimeTo, NXC_DCI_DATA **ppData)
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId, 
+                                       DWORD dwMaxRows, DWORD dwTimeFrom, DWORD dwTimeTo, 
+                                       NXC_DCI_DATA **ppData)
 {
    CSCPMessage msg;
    DWORD i, dwRqId, dwResult;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_DCI_DATA);
    msg.SetId(dwRqId);
@@ -416,15 +302,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
    msg.SetVariable(VID_MAX_ROWS, dwMaxRows);
    msg.SetVariable(VID_TIME_FROM, dwTimeFrom);
    msg.SetVariable(VID_TIME_TO, dwTimeTo);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwResult = WaitForRCC(dwRqId);
+   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwResult == RCC_SUCCESS)
    {
       CSCP_MESSAGE *pRawMsg;
 
       // We wait a long time because data message can be quite large
-      pRawMsg = WaitForRawMessage(CMD_DCI_DATA, dwRqId, 30000);
+      pRawMsg = ((NXCL_Session *)hSession)->WaitForRawMessage(CMD_DCI_DATA, dwRqId, 30000);
       if (pRawMsg != NULL)
       {
          DCI_DATA_HEADER *pHdr;
@@ -574,13 +460,13 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD 
 // Copy data collection items from one node to another
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId, 
+DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, DWORD dwSrcNodeId, DWORD dwDstNodeId, 
                                     DWORD dwNumItems, DWORD *pdwItemList)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_COPY_DCI);
    msg.SetId(dwRqId);
@@ -588,9 +474,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId,
    msg.SetVariable(VID_DESTINATION_OBJECT_ID, dwDstNodeId);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
    msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -598,22 +484,23 @@ DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId,
 // Query value of specific parameter from node
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(DWORD dwNodeId, int iOrigin, TCHAR *pszParameter,
-                                           TCHAR *pszBuffer, DWORD dwBufferSize)
+DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId, int iOrigin, 
+                                           TCHAR *pszParameter, TCHAR *pszBuffer, 
+                                           DWORD dwBufferSize)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwResult;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_QUERY_PARAMETER);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
    msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)iOrigin);
    msg.SetVariable(VID_NAME, pszParameter);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
    if (pResponce != NULL)
    {
       dwResult = pResponce->GetVariableLong(VID_RCC);
@@ -623,7 +510,6 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(DWORD dwNodeId, int iOrigin, TCHAR *p
    else
    {
       dwResult = RCC_TIMEOUT;
-DebugPrintf("WaitForMessage returns NULL\n");
    }
    return dwResult;
 }

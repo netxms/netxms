@@ -141,10 +141,6 @@ SOURCE=.\mib.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\misc.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
