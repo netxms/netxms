@@ -23,19 +23,21 @@
 
 #include "nxreport.h"
 
-
 //
 // Static data
 //
 
 static WORD m_wServerPort = 4701;
 static BOOL m_bDebug = FALSE;
+static BOOL m_bShowContainers = FALSE;
 static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
 static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
 static TCHAR m_szPassword[MAX_DB_STRING] = _T("");
 static DWORD m_dwEventCode = 0;
 static DWORD m_dwTimeOut = 3;
+static BOOL m_dwRootObj = 0; // If it will stay 0 - we'll show all objects.
 static NXC_SESSION g_hSession;
+static StrictTree *pObjectTree;
 
 //
 // Callback function for debug printing
@@ -49,9 +51,9 @@ static void DebugCallback(char *pMsg)
 
 
 // Will get objects one by one during enumeration and will dump it.
-static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj)
+static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj, DWORD dwLevel)
 {
-  DWORD i;
+  DWORD i,t;
   DWORD dwResult;
   NXC_OBJECT *hSubObj;
   NXC_DCI_LIST *pItemList;
@@ -59,6 +61,7 @@ static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj)
   // Display only nodes.
   if (hCurObj->iClass == OBJECT_NODE && !hCurObj->bIsDeleted)
   { 
+    for(t=0; t < dwLevel; t++) printf("\t");
 
     // display node header and name
     _tprintf("%s\n", hCurObj->szName);
@@ -74,6 +77,7 @@ static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj)
       }
       else 
 	   if (!hSubObj->bIsDeleted) 
+    	 for(t=0; t < dwLevel; t++) printf("\t");
          _tprintf("\t%s\n", hSubObj->szName); 
     }
 
@@ -88,7 +92,8 @@ static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj)
     {
       for(i = 0; i < pItemList->dwNumItems; i++)
       {
-         _tprintf("\t\t%s\n", pItemList->pItems[i].szName);
+	 for(t=0; t < dwLevel; t++) printf("\t");
+         _tprintf("\t%s\n", pItemList->pItems[i].szName);
 	      // TCHAR szDescription[MAX_DB_STRING];
       }
       NXCCloseNodeDCIList(g_hSession, pItemList);
@@ -96,8 +101,16 @@ static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj)
     
     // display node footer here if applicable
 
-  };
-
+  }
+  else
+  {
+      if (m_bShowContainers)
+      {
+	for(t=0; t < dwLevel; t++) printf("\t");
+      	printf("[%s]\n",hCurObj->szName);
+      };
+  }
+  
   return TRUE; // FALSE will stop enumaration, we don't want if for now.
 };
 
@@ -109,7 +122,8 @@ static BOOL ReportCurrentObject(NXC_OBJECT *hCurObj)
 static void ReportNodeList()
 {
    DWORD dwResult;
-   NXC_SESSION hSession;
+   NXC_OBJECT *pCurrentObj;
+   DWORD dwObjectLevel;
 
    if (!NXCInitialize())
    {
@@ -120,15 +134,14 @@ static void ReportNodeList()
       if (m_bDebug)
          NXCSetDebugCallback(DebugCallback);
 
-      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &hSession);
+      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &g_hSession);
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
       }
       else
       {
-	 g_hSession=hSession;
-         NXCSetCommandTimeout(hSession, m_dwTimeOut * 1000);
+         NXCSetCommandTimeout(g_hSession, m_dwTimeOut * 1000);
 	
 	 // Sync local and remote object list.
 	 dwResult = NXCSyncObjects(g_hSession);
@@ -137,10 +150,20 @@ static void ReportNodeList()
             _tprintf(_T("Unable to sync objects: %s\n"), NXCGetErrorText(dwResult));
       	 };
 
-	 // Enumerate all object to callback function one-by-one.
-	 NXCEnumerateObjects(g_hSession, &ReportCurrentObject);
- 
-         NXCDisconnect(g_hSession);
+	if (m_dwRootObj)
+		pObjectTree = new StrictTree(g_hSession,m_dwRootObj);
+	else
+		pObjectTree = new StrictTree(g_hSession);
+	
+	if (pObjectTree->LoadTree())
+        {
+	  while ((pCurrentObj = pObjectTree->GetNextObject(&dwObjectLevel)) != NULL)
+	  {
+		ReportCurrentObject(pCurrentObj,dwObjectLevel);	
+	  };
+	}
+
+        NXCDisconnect(g_hSession);
       }
    }
 }
@@ -154,7 +177,6 @@ int main(int argc, char *argv[])
 {
    int ch;
    BOOL bStart = TRUE;
-
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, "dho:p:P:u:vw:")) != -1)
@@ -164,8 +186,10 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             printf("Usage: nxreport [<options>] <server> <event_id> [<param_1> [... <param_N>]]\n"
                    "Valid options are:\n"
+		   "   -c            : Show container objects too. Default is not to show.\n"
                    "   -d            : Turn on debug mode.\n"
                    "   -h            : Display help and exit.\n"
+		   "   -o <obj_id>   : Specify report's root object. Default is 0 (show all).\n"
                    "   -p <port>     : Specify server's port number. Default is %d.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
@@ -174,14 +198,20 @@ int main(int argc, char *argv[])
                    "\n", m_wServerPort);
             bStart = FALSE;
             break;
+	 case 'b':
+	    m_bShowContainers = TRUE;
+	    break;
          case 'd':
             m_bDebug = TRUE;
             break;
-         case 'u':
-            _tcsncpy(m_szLogin, optarg, MAX_DB_STRING);
+         case 'o':
+            m_dwRootObj = _tcstoul(optarg, NULL, 0);
             break;
          case 'P':
             _tcsncpy(m_szPassword, optarg, MAX_DB_STRING);
+            break;
+         case 'u':
+            _tcsncpy(m_szLogin, optarg, MAX_DB_STRING);
             break;
          case 'v':
             printf("NetXMS Event Sender  Version " NETXMS_VERSION_STRING "\n");

@@ -27,5 +27,6 @@
 #include <nms_common.h>
 #include <getopt.h>
 #include <nxclapi.h>
+#include "nx_strict_tree.h"
 
 #endif
