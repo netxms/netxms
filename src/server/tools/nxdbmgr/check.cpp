@@ -117,7 +117,8 @@ static void CheckInterfaces(void)
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
-   TCHAR szQuery[256];
+   TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
+   BOOL bIsDeleted;
 
    _tprintf(_T("Checking interface objects...\n"));
    hResult = SQLSelect(_T("SELECT id,node_id FROM interfaces"));
