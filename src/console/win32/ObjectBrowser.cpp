@@ -146,6 +146,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_VIEW_VIEWASLIST, OnObjectViewViewaslist)
 	ON_COMMAND(ID_OBJECT_VIEW_VIEWASTREE, OnObjectViewViewastree)
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_OBJECT_PROPERTIES, OnObjectProperties)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -897,4 +898,20 @@ void CObjectBrowser::ClearListSelection()
 void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
    theApp.DebugPrintf("Menu at %d %d", point.x, point.y);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_PROPERTIES message handler
+//
+
+void CObjectBrowser::OnObjectProperties() 
+{
+	CPropertySheet wndPropSheet;
+   COPGeneral wndPageGeneral;
+
+   // Create tabs
+   wndPropSheet.AddPage(&wndPageGeneral);
+
+   wndPropSheet.DoModal();
 }

@@ -62,6 +62,8 @@ src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
 src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
+src/console/win32/OPGeneral.cpp -text
+src/console/win32/OPGeneral.h -text
 src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
 src/console/win32/ObjectInfoBox.cpp -text

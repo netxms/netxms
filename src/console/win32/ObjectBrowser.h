@@ -8,6 +8,7 @@
 //
 
 #include "ObjectPreview.h"
+#include "OPGeneral.h"
 
 
 #define SHOW_OBJECT_PREVIEW      ((DWORD)0x00000001)
@@ -119,6 +120,7 @@ protected:
 	afx_msg void OnObjectViewViewaslist();
 	afx_msg void OnObjectViewViewastree();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnObjectProperties();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);

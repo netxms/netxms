@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CEditBox
-LastTemplate=CEdit
+LastClass=COPGeneral
+LastTemplate=CPropertyPage
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=21
+ClassCount=22
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -17,20 +17,20 @@ Class9=CMapView
 
 ResourceCount=23
 Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
-Resource2=IDR_MAINFRAME
-Resource3=IDD_OBJECT_PROPERTIES
-Resource4=IDD_ABOUTBOX
+Resource2=IDA_MDI_DEFAULT
+Resource3=IDD_EDIT_EVENT (English (U.S.))
+Resource4=IDD_EDIT_EVENT
 Resource5=IDD_PROGRESS (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDA_MDI_DEFAULT
+Resource6=IDA_OBJECT_BROWSER
 Class11=CProgressDialog
 Resource7=IDA_MDI_DEFAULT (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDD_PROGRESS
+Resource8=IDD_LOGIN
 Class13=CObjectPropDlg
 Resource9=IDM_VIEW_SPECIFIC
 Resource10=IDD_LOGIN (English (U.S.))
@@ -44,17 +44,18 @@ Class14=CEventEditor
 Class15=CEditEventDlg
 Resource17=IDA_OBJECT_BROWSER (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDA_OBJECT_BROWSER
+Resource18=IDD_PROGRESS
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
-Resource20=IDD_EDIT_EVENT
+Resource20=IDD_ABOUTBOX
 Class17=CObjectPreview
 Resource21=IDR_MAINFRAME (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
-Resource22=IDD_LOGIN
+Resource22=IDR_MAINFRAME
 Class21=CEditBox
-Resource23=IDD_EDIT_EVENT (English (U.S.))
+Class22=COPGeneral
+Resource23=IDD_OP_GENERAL
 
 [CLS:CConsoleApp]
 Type=0
@@ -236,12 +237,6 @@ BaseClass=CMDIChildWnd
 Filter=M
 VirtualFilter=mfWC
 LastObject=CObjectBrowser
-
-[DLG:IDD_OBJECT_PROPERTIES]
-Type=1
-Class=CObjectPropDlg
-ControlCount=1
-Control1=IDC_LIST_VIEW,SysListView32,1342275613
 
 [CLS:CObjectPropDlg]
 Type=0
@@ -588,4 +583,19 @@ ImplementationFile=EditBox.cpp
 BaseClass=CEdit
 Filter=W
 VirtualFilter=WC
+LastObject=CEditBox
+
+[DLG:IDD_OP_GENERAL]
+Type=1
+Class=COPGeneral
+ControlCount=1
+Control1=IDC_STATIC,static,1342308352
+
+[CLS:COPGeneral]
+Type=0
+HeaderFile=OPGeneral.h
+ImplementationFile=OPGeneral.cpp
+BaseClass=CPropertyPage
+Filter=D
+LastObject=COPGeneral
 

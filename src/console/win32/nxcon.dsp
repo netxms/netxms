@@ -168,6 +168,10 @@ SOURCE=.\ObjectSearchBox.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\OPGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ProgressDialog.cpp
 # End Source File
 # Begin Source File
@@ -262,6 +266,10 @@ SOURCE=.\ObjectPropDlg.h
 # Begin Source File
 
 SOURCE=.\ObjectSearchBox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\OPGeneral.h
 # End Source File
 # Begin Source File
 
