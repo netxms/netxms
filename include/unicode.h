@@ -77,6 +77,8 @@
 #define _tcsspn   strspn
 #define _tcscat   strcat
 #define _topen    open
+#define _taccess  access
+#define _tunlink  unlink
 
 #endif
 

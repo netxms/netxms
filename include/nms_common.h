@@ -81,9 +81,14 @@
 #include <windows.h>
 #include <process.h>
 #include <sys/stat.h>
+
 #ifndef UNDER_CE
+#include <io.h>
 #include <fcntl.h>
 #endif
+
+#define S_IRUSR      0400
+#define S_IWUSR      0200
 
 #define snprintf  _snprintf
 
