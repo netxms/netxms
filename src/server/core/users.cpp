@@ -74,7 +74,7 @@ BOOL LoadUsers(void)
    DBFreeResult(hResult);
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access FROM groups ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access FROM UserGroups ORDER BY id");
    if (hResult == 0)
       return FALSE;
 

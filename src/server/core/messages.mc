@@ -236,4 +236,10 @@ Language=English
 Too many client sessions open - unable to accept new client connection
 .
 
+MessageId=
+SymbolicName=MSG_ERROR_LOADING_USERS
+Language=English
+Unable to load users and user groups from database (probably database is corrupted)
+.
+
 ;#endif

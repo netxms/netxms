@@ -105,6 +105,7 @@ static void LoadGlobalConfig()
 BOOL Initialize(void)
 {
    int i, iNumThreads;
+
    InitLog();
 
 #ifdef _WIN32
@@ -140,7 +141,10 @@ BOOL Initialize(void)
 
    // Load users from database
    if (!LoadUsers())
+   {
+      WriteLog(MSG_ERROR_LOADING_USERS, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
+   }
 
    // Initialize event handling subsystem
    if (!InitEventSubsystem())
