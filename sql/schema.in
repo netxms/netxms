@@ -312,7 +312,6 @@ CREATE TABLE EventPolicy
 CREATE TABLE PolicySourceList
 (
 	rule_id integer not null,
-	source_type integer not null,
 	object_id integer not null,
 	PRIMARY KEY(rule_id,object_id)
 );
