@@ -1,0 +1,31 @@
+#
+# Makefile for building NetXMS Core Agent for Novell NetWare platform
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+include ../../../netware/Makefile.inc
+
+OBJECTS  = messages.o actions.o comm.o exec.o getparam.o log.o nxagentd.o \
+	   session.o subagent.o sysinfo.o tools.o
+EXEC     = nxagentd.nlm
+DEF      = nxagentd.def
+OBJTMP   = nxagentd_r.o
+
+all: $(EXEC)
+
+.cpp.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+.c.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+$(EXEC): $(OBJECTS) $(DEF)
+	$(PRELINK) -o $(OBJTMP) $(OBJECTS) $(PLDFLAGS)
+	$(LINK) $(LDFLAGS) -T $(DEF)
+	rm -f $(OBJTMP)
+
+messages.c: messages.mc
+	$(PERL) ../../../tools/mc.pl $<
+
+clean:
+	rm -f *.o $(EXEC) messages.c messages.h

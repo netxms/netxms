@@ -1,0 +1,27 @@
+#
+# nxcscp.def - NLM Header definition file for nlmconv
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+# define startup object files
+INPUT c:/novell/ndk/libc/imports/libcpre.gcc.o   # clib startup code
+INPUT nxagentd_r.o
+
+# Import/Export
+IMPORT @c:/novell/ndk/libc/imports/libc.imp
+IMPORT @../../libnetxms/netxms.imp
+IMPORT @../../libnxcscp/nxcscp.imp
+
+# Entry points
+START _LibCPrelude
+EXIT _LibCPostlude
+
+# NLM header
+OUTPUT nxagentd.nlm
+TYPE 0
+VERSION 1,0,0
+COPYRIGHT "Copyright (c) 2004 NetXMS Team"
+DESCRIPTION "NetXMS Core Agent"
+SCREENNAME "System Console"
+
+MODULE LIBC, NETXMS, NXCSCP

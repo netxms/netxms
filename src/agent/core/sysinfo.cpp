@@ -24,7 +24,7 @@
 
 #ifndef _WIN32
 
-#if HAVE_SYS_STAT_H
+#if HAVE_SYS_STAT_H || defined(_NETWARE)
 #include <sys/stat.h>
 #endif
 

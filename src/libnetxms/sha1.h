@@ -80,7 +80,7 @@ A million repetitions of "a"
 
 #include <string.h>
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_NETWARE)
 
 typedef unsigned long uint32;
 

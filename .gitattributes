@@ -7,6 +7,7 @@
 /Makefile.am -text
 /NEWS -text
 /README -text
+/README.NetWare -text
 /README.in -text
 /THANKS -text
 /TODO -text
@@ -42,6 +43,8 @@ include/nxevent.h -text
 include/nximage.h -text
 include/nxqueue.h -text
 m4/Makefile.am -text
+netware/Makefile.inc -text
+netware/bin/.keep -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text
@@ -56,6 +59,7 @@ sql/setup.in -text
 src/Makefile.am -text
 src/agent/Makefile.am -text
 src/agent/core/Makefile.am -text
+src/agent/core/Makefile.nw -text
 src/agent/core/actions.cpp -text
 src/agent/core/comm.cpp -text
 src/agent/core/exec.cpp -text
@@ -64,6 +68,7 @@ src/agent/core/log.cpp -text
 src/agent/core/messages.mc -text
 src/agent/core/netinfo.cpp -text
 src/agent/core/nxagentd.cpp -text
+src/agent/core/nxagentd.def -text
 src/agent/core/nxagentd.dsp -text
 src/agent/core/nxagentd.dsw -text
 src/agent/core/nxagentd.h -text
@@ -223,6 +228,7 @@ src/console/win32starter/nxcstart.dsw -text
 src/console/win32starter/nxcstart.rc -text
 src/console/win32starter/resource.h -text
 src/libnetxms/Makefile.am -text
+src/libnetxms/Makefile.nw -text
 src/libnetxms/config.cpp -text
 src/libnetxms/dload.cpp -text
 src/libnetxms/getopt.c -text
@@ -235,6 +241,7 @@ src/libnetxms/libnetxms.h -text
 src/libnetxms/main.cpp -text
 src/libnetxms/md5.cpp -text
 src/libnetxms/md5.h -text
+src/libnetxms/netxms.def -text
 src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text
 src/libnetxms/tools.cpp -text
@@ -346,3 +353,4 @@ src/server/tools/nxget/nxget.cpp -text
 src/server/tools/nxget/nxget.dsp -text
 src/server/tools/nxget/nxget.dsw -text
 tools/mc.pl -text
+tools/nwmkimp.pl -text

@@ -13,6 +13,7 @@ GENERAL:
 - Performance subagent for Windows (winperf)
 - Cross-platform pinger subagent
 - Change configure script to allow select components to build
+- Write README for NetWare
 
 
 SERVER:

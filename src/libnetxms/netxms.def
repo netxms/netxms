@@ -1,0 +1,26 @@
+#
+# netxms.def - NLM Header definition file for nlmconv
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+# define startup object files
+INPUT c:/novell/ndk/libc/imports/libcpre.gcc.o   # clib startup code
+INPUT netxms_r.o
+
+# Imports/Exports
+IMPORT @c:/novell/ndk/libc/imports/libc.imp
+EXPORT @netxms.imp
+
+# Entry points
+START _LibCPrelude
+EXIT _LibCPostlude
+
+# NLM header
+OUTPUT netxms.nlm
+TYPE 0
+VERSION 1,0,0
+COPYRIGHT "Copyright (c) 2004 NetXMS Team"
+DESCRIPTION "NetXMS Foundation Library"
+SCREENNAME "System Console"
+
+MODULE LIBC

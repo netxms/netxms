@@ -48,7 +48,9 @@
 // Platform dependent includes and defines
 //
 
-#ifdef _WIN32
+#if defined(_WIN32)
+
+/********** WINDOWS ********************/
 
 #define FS_PATH_SEPARATOR  "\\"
 
@@ -62,7 +64,55 @@ typedef int socklen_t;
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
 
-#else    /* not _WIN32 */
+#elif defined(_NETWARE)
+
+/********** NETWARE ********************/
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdint.h>
+#include <fcntl.h>
+
+typedef int BOOL;
+typedef long int LONG;
+typedef unsigned long DWORD;
+typedef unsigned short WORD;
+typedef unsigned char BYTE;
+typedef void * HANDLE;
+typedef void * HMODULE;
+
+#ifdef X_INT64_X
+typedef X_INT64_X INT64;
+#else
+#error Target system does not have signed 64bit integer type
+#endif
+
+#ifdef X_UINT64_X
+typedef X_UINT64_X QWORD;
+#else
+#error Target system does not have unsigned 64bit integer type
+#endif
+
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
+// Socket compatibility
+typedef int SOCKET;
+
+#define closesocket(x) close(x)
+#define WSAGetLastError() (errno)
+
+#define WSAEINTR  EINTR
+
+#else    /* not _WIN32 and not _NETWARE */
+
+/*********** UNIX *********************/
 
 #define FS_PATH_SEPARATOR  "/"
 

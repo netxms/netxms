@@ -129,7 +129,7 @@ extern "C"
 #endif
    double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_NETWARE)
    void LIBNETXMS_EXPORTABLE strupr(char *in);
 #endif
    

@@ -68,7 +68,7 @@ double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
 // strupr() implementation for non-windows platforms
 //
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_NETWARE)
 
 void LIBNETXMS_EXPORTABLE strupr(char *in)
 {
