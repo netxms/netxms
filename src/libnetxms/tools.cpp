@@ -44,7 +44,7 @@ static void (* m_pLogFunction)(int, TCHAR *);
 
 
 //
-// Calculate number of bits in netmask
+// Calculate number of bits in netmask (in host byte order)
 //
 
 int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask)
@@ -52,13 +52,13 @@ int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask)
    int bits;
    DWORD dwTemp;
 
-   for(bits = 0, dwTemp = ntohl(dwMask); dwTemp != 0; bits++, dwTemp <<= 1);
+   for(bits = 0, dwTemp = dwMask; dwTemp != 0; bits++, dwTemp <<= 1);
    return bits;
 }
 
 
 //
-// Convert IP address from binary form (network bytes order) to string
+// Convert IP address from binary form (host bytes order) to string
 //
 
 TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
@@ -67,13 +67,8 @@ TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
    TCHAR *szBufPtr;
 
    szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
-#if WORDS_BIGENDIAN
    _stprintf(szBufPtr, _T("%ld.%ld.%ld.%ld"), dwAddr >> 24, (dwAddr >> 16) & 255,
-           (dwAddr >> 8) & 255, dwAddr & 255);
-#else
-   _stprintf(szBufPtr, _T("%ld.%ld.%ld.%ld"), dwAddr & 255, (dwAddr >> 8) & 255,
-           (dwAddr >> 16) & 255, dwAddr >> 24);
-#endif
+             (dwAddr >> 8) & 255, dwAddr & 255);
    return szBufPtr;
 }
 

@@ -157,6 +157,8 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       dwPollerQS[dwCurrPos] = m_pItemQueue->Size();
       dwDBWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size();
       dwCurrPos++;
+      if (dwCurrPos == 12)
+         dwCurrPos = 0;
 
       // Calculate new averages
       for(i = 0, dSum1 = 0, dSum2 = 0; i < 12; i++)

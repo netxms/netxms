@@ -118,7 +118,7 @@ LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
          {
             sprintf(szBuffer, "%d %s/%d %d %s %s", pInfo->Index, 
                     pAddr->IpAddress.String, 
-                    BitsInMask(inet_addr(pAddr->IpMask.String)),
+                    BitsInMask(ntohl(inet_addr(pAddr->IpMask.String))),
                     pInfo->Type, szMacAddr, szAdapterName);
             NxAddResultString(value, szBuffer);
          }

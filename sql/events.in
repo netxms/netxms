@@ -251,7 +251,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_INCORRECT_NETMASK, 'SYS_INCORRECT_NETMASK', 
 		EVENT_SEVERITY_MINOR, 1,
-		'Invalid network mask %4 on interface %3, should be %5',
+		'Invalid network mask %4 on interface "%3", should be %5',
 		'Generated when server detects invalid network mask on an interface.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
 		'   1) Interface object ID#0D#0A' CONCAT

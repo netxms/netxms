@@ -50,8 +50,6 @@ END_MESSAGE_MAP()
 void CCreateNodeDlg::OnOK() 
 {
    m_wndIPAddr.GetAddress(m_dwIpAddr);
-   m_dwIpAddr = htonl(m_dwIpAddr);
-	
 	CCreateObjectDlg::OnOK();
 }
 

@@ -239,7 +239,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
       if (bVerbose)
-         PrintMsg(_T("Cannot establish connection with agent %s"), IpToStr(m_dwAddr, szBuffer));
+         PrintMsg(_T("Cannot establish connection with agent %s"), IpToStr(ntohl(m_dwAddr), szBuffer));
       goto connect_cleanup;
    }
 
@@ -249,7 +249,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    // Authenticate itself to agent
    if ((dwError = Authenticate()) != ERR_SUCCESS)
    {
-      PrintMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(m_dwAddr, szBuffer),
+      PrintMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -257,7 +257,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    // Test connectivity
    if ((dwError = Nop()) != ERR_SUCCESS)
    {
-      PrintMsg(_T("Communication with agent %s failed (%s)"), IpToStr(m_dwAddr, szBuffer),
+      PrintMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -366,8 +366,8 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
             {
                pSlash = _T("24");
             }
-            pIfList->pInterfaces[i].dwIpAddr = _t_inet_addr(pBuf);
-            pIfList->pInterfaces[i].dwIpNetMask = htonl(~(0xFFFFFFFF >> _tcstoul(pSlash, NULL, 10)));
+            pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+            pIfList->pInterfaces[i].dwIpNetMask = ~(0xFFFFFFFF >> _tcstoul(pSlash, NULL, 10));
             pBuf = pChar + 1;
          }
 
@@ -376,7 +376,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
          if (pChar != NULL)
          {
             *pChar = 0;
-            pIfList->pInterfaces[i].dwIndex = _tcstoul(pBuf, NULL, 10);
+            pIfList->pInterfaces[i].dwType = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
@@ -490,7 +490,7 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
          pChar = _tcschr(pBuf, _T(' '));
          if (pChar != NULL)
             *pChar = 0;
-         pArpCache->pEntries[i].dwIpAddr = _t_inet_addr(pBuf);
+         pArpCache->pEntries[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
 
          // Interface index
          if (pChar != NULL)

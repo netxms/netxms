@@ -277,6 +277,19 @@ double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
 
 
 //
+// Get field's value as IP address
+//
+
+DWORD DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
+{
+   char *szVal;
+
+   szVal = DBGetField(hResult, iRow, iColumn);
+   return szVal == NULL ? INADDR_NONE : ntohl(inet_addr(szVal));
+}
+
+
+//
 // Get number of rows in result
 //
 
@@ -401,6 +414,19 @@ double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
    char szBuffer[64];
    
    return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtod(szBuffer, NULL);
+}
+
+
+//
+// Get field's value as IP address from asynchronous SELECT result
+//
+
+DWORD DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
+{
+   char szBuffer[64];
+   
+   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? INADDR_NONE : 
+      ntohl(inet_addr(szBuffer));
 }
 
 

@@ -100,8 +100,8 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwId = dwId;
       strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
       m_iStatus = DBGetFieldLong(hResult, 0, 2);
-      m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
-      m_dwIpNetMask = DBGetFieldULong(hResult, 0, 4);
+      m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 3);
+      m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 4);
       m_dwIfType = DBGetFieldULong(hResult, 0, 5);
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 6);
       dwNodeId = DBGetFieldULong(hResult, 0, 7);
@@ -149,7 +149,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 
 BOOL Interface::SaveToDB(void)
 {
-   char szQuery[1024], szMacStr[16];
+   char szQuery[1024], szMacStr[16], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
    DWORD dwNodeId;
    DB_RESULT hResult;
@@ -178,14 +178,16 @@ BOOL Interface::SaveToDB(void)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO interfaces (id,name,status,is_deleted,ip_addr,"
                        "ip_netmask,node_id,if_type,if_index,image_id,mac_addr) "
-                       "VALUES (%ld,'%s',%d,%d,%ld,%ld,%ld,%ld,%ld,%ld,'%s')",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId,
+                       "VALUES (%ld,'%s',%d,%d,'%s','%s',%ld,%ld,%ld,%ld,'%s')",
+              m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
+              IpToStr(m_dwIpAddr, szIpAddr), IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, m_dwImageId, szMacStr);
    else
       sprintf(szQuery, "UPDATE interfaces SET name='%s',status=%d,is_deleted=%d,"
-                       "ip_addr=%ld,ip_netmask=%ld,node_id=%ld,if_type=%ld,"
+                       "ip_addr='%s',ip_netmask='%s',node_id=%ld,if_type=%ld,"
                        "if_index=%ld,image_id=%ld,mac_addr='%s' WHERE id=%ld",
-              m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId,
+              m_szName, m_iStatus, m_bIsDeleted, IpToStr(m_dwIpAddr, szIpAddr),
+              IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, m_dwImageId, szMacStr, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
@@ -238,7 +240,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    SendPollerMsg(dwRqId, "   Starting status poll on interface %s\r\n"
                          "   Current interface status is %s\r\n",
                  m_szName, g_pszStatusName[m_iStatus]);
-   dwPingStatus = IcmpPing(m_dwIpAddr, 3, 1500, NULL);
+   dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL);
    if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
       WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
    m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;

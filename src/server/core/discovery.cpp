@@ -89,6 +89,7 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
 {
    DWORD dwNewNodeId = 1, dwWatchdogId;
    Node *pNode;
+   char szIpAddr[16], szNetMask[16];
 
    dwWatchdogId = WatchdogAddThread("Network Discovery Thread", 90);
 
@@ -112,6 +113,8 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
          {
             ARP_CACHE *pArpCache;
 
+            DbgPrintf(AF_DEBUG_DISCOVERY, _T("Starting discovery poll for node %s (%s)"),
+                      pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
             // Retrieve and analize node's ARP cache
             pArpCache = pNode->GetArpCache();
             if (pArpCache != NULL)
@@ -128,9 +131,9 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
                         {
                            char szQuery[256];
 
-                           sprintf(szQuery, "INSERT INTO new_nodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,%d,%d)",
-                                   dwNewNodeId++, pArpCache->pEntries[j].dwIpAddr,
-                                   pInterface->IpNetMask(), DF_DEFAULT);
+                           sprintf(szQuery, "INSERT INTO new_nodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,'%s','%s',%d)",
+                                   dwNewNodeId++, IpToStr(pArpCache->pEntries[j].dwIpAddr, szIpAddr),
+                                   IpToStr(pInterface->IpNetMask(), szNetMask), DF_DEFAULT);
                            DBQuery(g_hCoreDB, szQuery);
                         }
                   }
@@ -138,6 +141,8 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
                DestroyArpCache(pArpCache);
             }
 
+            DbgPrintf(AF_DEBUG_DISCOVERY, _T("Finished discovery poll for node %s (%s)"),
+                      pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
             pNode->SetDiscoveryPollTimeStamp();
          }
       }

@@ -80,8 +80,8 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    m_dwId = dwId;
    strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
    m_iStatus = DBGetFieldLong(hResult, 0, 2);
-   m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
-   m_dwIpNetMask = DBGetFieldULong(hResult, 0, 4);
+   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 3);
+   m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 4);
    m_dwImageId = DBGetFieldULong(hResult, 0, 5);
    m_bIsDeleted = DBGetFieldLong(hResult, 0, 6);
 
@@ -100,7 +100,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
 
 BOOL Subnet::SaveToDB(void)
 {
-   char szQuery[1024];
+   char szQuery[1024], szIpAddr[16], szNetMask[16];
    DB_RESULT hResult;
    DWORD i;
    BOOL bNewObject = TRUE;
@@ -121,12 +121,14 @@ BOOL Subnet::SaveToDB(void)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO subnets (id,name,status,is_deleted,ip_addr,ip_netmask,image_id) "
-                       "VALUES (%ld,'%s',%d,%d,%ld,%ld,%ld)",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, m_dwImageId);
+                       "VALUES (%ld,'%s',%d,%d,'%s','%s',%ld)",
+              m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
+              IpToStr(m_dwIpAddr, szIpAddr), IpToStr(m_dwIpNetMask, szNetMask), m_dwImageId);
    else
-      sprintf(szQuery, "UPDATE subnets SET name='%s',status=%d,is_deleted=%d,ip_addr=%ld,"
-                       "ip_netmask=%ld,image_id=%ld WHERE id=%ld",
-              m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, m_dwImageId, m_dwId);
+      sprintf(szQuery, "UPDATE subnets SET name='%s',status=%d,is_deleted=%d,ip_addr='%s',"
+                       "ip_netmask='%s',image_id=%ld WHERE id=%ld",
+              m_szName, m_iStatus, m_bIsDeleted, IpToStr(m_dwIpAddr, szIpAddr),
+              IpToStr(m_dwIpNetMask, szNetMask), m_dwImageId, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update node to subnet mapping

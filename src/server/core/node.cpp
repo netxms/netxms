@@ -124,7 +124,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwId = dwId;
    strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
    m_iStatus = DBGetFieldLong(hResult, 0, 2);
-   m_dwIpAddr = DBGetFieldULong(hResult, 0, 3);
+   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 3);
 
    // Flags
    if (DBGetFieldLong(hResult, 0, 4))
@@ -215,7 +215,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 BOOL Node::SaveToDB(void)
 {
-   TCHAR *pszEscDescr, szQuery[4096];
+   TCHAR *pszEscDescr, szQuery[4096], szIpAddr[16];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
@@ -240,9 +240,10 @@ BOOL Node::SaveToDB(void)
                        "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
                        "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
                        "snmp_oid,is_local_mgmt,image_id,description,node_type)"
-                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
+                       " VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
                        "'%s','%s',%d,%ld,'%s',%ld)",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
+              m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
+              IpToStr(m_dwIpAddr, szIpAddr),
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
@@ -252,12 +253,13 @@ BOOL Node::SaveToDB(void)
               m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId,
               pszEscDescr, m_dwNodeType);
    else
-      sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip=%d,"
+      sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip='%s',"
                        "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
                        "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
                        "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,"
                        "image_id=%ld,description='%s',node_type=%ld WHERE id=%ld",
-              m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
+              m_szName, m_iStatus, m_bIsDeleted, 
+              IpToStr(m_dwIpAddr, szIpAddr), 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
@@ -334,7 +336,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
       m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
    }
 
-   pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod,
+   pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod,
                                     m_szSharedSecret);
    if (pAgentConn->Connect())
       m_dwFlags |= NF_IS_NATIVE_AGENT;
@@ -461,12 +463,14 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
       {
          pInterface = (Interface *)m_pChildList[i];
          if (pInterface->IfIndex() == dwIndex)
+         {
             if ((pInterface->IpAddr() & pInterface->IpNetMask()) ==
                 (dwHostAddr & pInterface->IpNetMask()))
             {
                Unlock();
                return pInterface;
             }
+         }
       }
    Unlock();
    return NULL;
@@ -489,18 +493,16 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
       pSubnet = FindSubnetForNode(dwIpAddr);
       if (pSubnet == NULL)
       {
-         DWORD dwAddr = ntohl(dwIpAddr);
-
          // Check if netmask is 0 (detect), and if yes, create
          // new subnet with class mask
          if (dwNetMask == 0)
          {
-            if (dwAddr < 0x80000000)
-               dwNetMask = htonl(0xFF000000);   // Class A
-            else if (dwAddr < 0xC0000000)
-               dwNetMask = htonl(0xFFFF0000);   // Class B
-            else if (dwAddr < 0xE0000000)
-               dwNetMask = htonl(0xFFFFFF00);   // Class C
+            if (dwIpAddr < 0x80000000)
+               dwNetMask = 0xFF000000;   // Class A
+            else if (dwIpAddr < 0xC0000000)
+               dwNetMask = 0xFFFF0000;   // Class B
+            else if (dwIpAddr < 0xE0000000)
+               dwNetMask = 0xFFFFFF00;   // Class C
             else
             {
                TCHAR szBuffer[16];
@@ -513,7 +515,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
          }
 
          // Create new subnet object
-         if (dwAddr < 0xE0000000)
+         if (dwIpAddr < 0xE0000000)
          {
             pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask);
             NetObjInsert(pSubnet, TRUE);
@@ -684,7 +686,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
       SendPollerMsg(dwRqId, _T("   SNMP agent is not responding\r\n"));
    }
 
-   pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
    if (pAgentConn->Connect())
    {
       m_dwFlags |= NF_IS_NATIVE_AGENT;
@@ -814,7 +816,7 @@ BOOL Node::ConnectToAgent(void)
 {
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
-      m_pAgentConnection = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      m_pAgentConnection = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 
    // Check if we already connected
    if (m_pAgentConnection->Nop() == ERR_SUCCESS)

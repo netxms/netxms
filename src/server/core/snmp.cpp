@@ -186,9 +186,9 @@ BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr,
                      break;
                   case ASN_IPADDRESS:
                      if (bStringResult)
-                        IpToStr(*pVar->val.integer, (char *)pValue);
+                        IpToStr(ntohl(*pVar->val.integer), (char *)pValue);
                      else
-                        *((long *)pValue) = *pVar->val.integer;
+                        *((long *)pValue) = ntohl(*pVar->val.integer);
                      break;
                   case ASN_OCTET_STR:
                      memcpy(pValue, pVar->val.string, min(pVar->val_len, dwBufferSize - 1));
@@ -383,7 +383,7 @@ static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *
                }
                i = ((INTERFACE_LIST *)pArg)->iNumEntries - 1;
             }
-            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = *pVar->val.integer;
+            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = ntohl(*pVar->val.integer);
             ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpNetMask = dwNetMask;
             break;
          }
@@ -478,7 +478,7 @@ static void HandlerArp(DWORD dwAddr, const char *szCommunity, variable_list *pVa
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = *pVar->val.integer;
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(*pVar->val.integer);
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }

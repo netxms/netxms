@@ -99,8 +99,8 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
             WatchdogNotify(dwWatchdogId);
 
             dwId = DBGetFieldULong(hResult, i, 0);
-            dwIpAddr = DBGetFieldULong(hResult, i, 1);
-            dwNetMask = DBGetFieldULong(hResult, i, 2);
+            dwIpAddr = DBGetFieldIPAddr(hResult, i, 1);
+            dwNetMask = DBGetFieldIPAddr(hResult, i, 2);
             dwFlags = DBGetFieldULong(hResult, i, 3);
 
             PollNewNode(dwIpAddr, dwNetMask, dwFlags, NULL);

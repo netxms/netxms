@@ -144,7 +144,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      pSession = new ClientSession(sockClient, servAddr.sin_addr.s_addr);
+      pSession = new ClientSession(sockClient, ntohl(servAddr.sin_addr.s_addr));
       if (!RegisterSession(pSession))
       {
          delete pSession;

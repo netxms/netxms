@@ -196,7 +196,7 @@ static char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 //             d - Decimal integer
 //             x - Hex integer
 //             e - System error code (will appear in log as textual description)
-//             a - IP address in network byte order
+//             a - IP address in host byte order
 //
 
 void WriteLog(DWORD msg, WORD wType, char *format, ...)

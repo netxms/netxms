@@ -151,7 +151,7 @@ static ARP_CACHE *SysGetLocalArpCache(void)
           (sysArpCache->table[i].dwType == 4))  // Only static and dynamic entries
       {
          pArpCache->pEntries[pArpCache->dwNumEntries].dwIndex = sysArpCache->table[i].dwIndex;
-         pArpCache->pEntries[pArpCache->dwNumEntries].dwIpAddr = sysArpCache->table[i].dwAddr;
+         pArpCache->pEntries[pArpCache->dwNumEntries].dwIpAddr = ntohl(sysArpCache->table[i].dwAddr);
          memcpy(pArpCache->pEntries[pArpCache->dwNumEntries].bMacAddr, sysArpCache->table[i].bPhysAddr, 6);
          pArpCache->dwNumEntries++;
       }
@@ -196,7 +196,7 @@ static ARP_CACHE *SysGetLocalArpCache(void)
          pArpCache->pEntries = (ARP_ENTRY *)realloc(pArpCache->pEntries,
                                  sizeof(ARP_ENTRY) * pArpCache->dwNumEntries);
          pArpCache->pEntries[i].dwIndex = InterfaceIndexFromName(szIfName);
-         pArpCache->pEntries[i].dwIpAddr = inet_addr(szIpAddr);
+         pArpCache->pEntries[i].dwIpAddr = ntohl(inet_addr(szIpAddr));
          StrToMac(szMacAddr, pArpCache->pEntries[i].bMacAddr);
       }
       fclose(fp);
@@ -271,8 +271,8 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
             _tcsncpy(pIfList->pInterfaces[pIfList->iNumEntries].szName, szAdapterName, MAX_OBJECT_NAME);
             memcpy(pIfList->pInterfaces[pIfList->iNumEntries].bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
             pIfList->pInterfaces[pIfList->iNumEntries].dwIndex = pInfo->Index;
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = inet_addr(pAddr->IpAddress.String);
-            pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = inet_addr(pAddr->IpMask.String);
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = ntohl(_t_inet_addr(pAddr->IpAddress.String));
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = ntohl(_t_inet_addr(pAddr->IpMask.String));
             pIfList->pInterfaces[pIfList->iNumEntries].dwType = pInfo->Type;
             pIfList->pInterfaces[pIfList->iNumEntries].iNumSecondary = 0;
             pIfList->iNumEntries++;
@@ -316,6 +316,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
                memcpy(&pIfList->pInterfaces[i].dwIpAddr,
                       &(((struct sockaddr_in *)&ifrq.ifr_addr)->sin_addr.s_addr),
                       sizeof(DWORD));
+               pIfList->pInterfaces[i].dwIpAddr = ntohl(pIfList->pInterfaces[i].dwIpAddr);
             }
 
             // IP netmask
@@ -324,6 +325,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
                memcpy(&pIfList->pInterfaces[i].dwIpNetMask,
                       &(((struct sockaddr_in *)&ifrq.ifr_addr)->sin_addr.s_addr),
                       sizeof(DWORD));
+               pIfList->pInterfaces[i].dwIpNetMask = ntohl(pIfList->pInterfaces[i].dwIpNetMask);
             }
 
             // Interface type

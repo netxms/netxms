@@ -79,8 +79,8 @@ CREATE TABLE user_group_members
 CREATE TABLE new_nodes
 (
 	id integer not null,
-	ip_addr integer not null,
-	ip_netmask integer not null,
+	ip_addr varchar(15) not null,
+	ip_netmask varchar(15) not null,
 	discovery_flags integer not null
 );
 
@@ -95,7 +95,7 @@ CREATE TABLE nodes
 	name varchar(63),
 	status integer,
 	is_deleted integer not null,
-	primary_ip integer,
+	primary_ip varchar(15),
 	is_snmp integer,
 	is_agent integer,
 	is_bridge integer,
@@ -127,8 +127,8 @@ CREATE TABLE subnets
 	name varchar(63),
 	status integer,
 	is_deleted integer not null,
-	ip_addr integer,
-	ip_netmask integer,
+	ip_addr varchar(15),
+	ip_netmask varchar(15),
 	image_id integer,
 	PRIMARY KEY(id)
 );
@@ -145,8 +145,8 @@ CREATE TABLE interfaces
 	status integer,
         is_deleted integer,
 	node_id integer not null,
-	ip_addr integer,
-	ip_netmask integer,
+	ip_addr varchar(15),
+	ip_netmask varchar(15),
 	if_type integer,
 	if_index integer,
 	image_id integer,
@@ -418,8 +418,8 @@ CREATE TABLE deleted_objects
 	object_id integer not null,
 	object_class integer,
 	name varchar(63),
-	ip_addr integer,
-	ip_netmask integer,
+	ip_addr varchar(15),
+	ip_netmask varchar(15),
 	PRIMARY KEY(object_id)
 );
 

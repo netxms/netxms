@@ -158,7 +158,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       }
 
       iNumErrors = 0;     // Reset consecutive errors counter
-      DebugPrintf("Incoming connection from %s", IpToStr(servAddr.sin_addr.s_addr, szBuffer));
+      DebugPrintf("Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
 
       if (IsValidServerAddr(servAddr.sin_addr.s_addr))
       {
@@ -166,7 +166,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          DebugPrintf("Connection from %s accepted", szBuffer);
 
          // Create new session structure and threads
-         pSession = new CommSession(hClientSocket, servAddr.sin_addr.s_addr);
+         pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr));
          if (!RegisterSession(pSession))
          {
             delete pSession;
