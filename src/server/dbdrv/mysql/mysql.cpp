@@ -63,14 +63,16 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
    if (pConn == NULL)
       return 0;
 
-   if (!mysql_connect(pConn, szHost, szLogin[0] == 0 ? NULL : szLogin,
-                      (szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword))
-   {
-      mysql_close(pConn);
-      return 0;
-   }
-
-   if (mysql_select_db(pConn, szDatabase) < 0)
+   if (!mysql_real_connect(
+				pConn, // MYSQL *
+				szHost, // host
+				szLogin[0] == 0 ? NULL : szLogin, // user
+				(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
+				szDatabase, // DB Name
+				0, // use default port
+				NULL, // char * - unix socket
+				0 // flags
+			))
    {
       mysql_close(pConn);
       return 0;

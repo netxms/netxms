@@ -19,4 +19,4 @@ echo "- autoheader." &&
 autoheader-2.59 &&
 echo "- automake." &&
 automake-1.7 -a &&
-exit
+exit $?

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.2 2004-05-11 14:39:56 alk Exp $
+# $Id: configure.ac,v 1.3 2004-05-11 22:14:55 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -37,16 +37,17 @@ AC_ARG_WITH(mysql,
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/mysql -L${withval}/mysql/lib"
-		CFLAGS="$CFLAGS -I${withval}/include -I${withval}/include/mysql -I${withval}/mysql/include"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}/include/mysql -I${withval}/mysql/include"
 	else
 		LD_RUN_PATH="/usr/local/mysql/lib:/usr/local/mysql/lib/mysql:/usr/lib/mysql:/usr/mysql/lib:/usr/mysql/lib/mysql:/usr/local/lib/mysql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 		LDFLAGS="$LDFLAGS -L/usr/local/mysql/lib -L/usr/lib/mysql -L/usr/mysql/lib -L/usr/local/lib/mysql -L/usr/local/mysql/lib/mysql -L/usr/mysql/lib/mysql"
-		CFLAGS="$CFLAGS -I/usr/local/mysql/include -I/usr/include/mysql -I/usr/mysql/include -I/usr/local/include/mysql -I/usr/local/mysql/include/mysql -I/usr/mysql/include/mysql"
+		CPPFLAGS="$CPPFLAGS -I/usr/local/mysql/include -I/usr/include/mysql -I/usr/mysql/include -I/usr/local/include/mysql -I/usr/local/mysql/include/mysql -I/usr/mysql/include/mysql"
 	fi
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(z, gzclose)
 	with_mysql="yes"
 	AC_DEFINE(WITH_MYSQL,,[with mysql])
+	DB_DRIVERS="$DB_DRIVERS mysql"
 	AC_CHECK_LIB(mysqlclient, mysql_init, ,
 		[AC_MSG_ERROR(libmysqlclient is needed for MySQL support)])
 	AC_MSG_CHECKING(whether mysql clients can run)
@@ -64,44 +65,44 @@ AC_ARG_WITH(mysql,
 	],[])
 	AC_MSG_RESULT(yes)
 	AC_CHECK_FUNCS(mysql_real_escape_string)
-	fi ])
+fi ])
 
 AC_ARG_WITH(pgsql,
 [AS_HELP_STRING(--with-pgsql,enable postgres backend)],
 [ if test "x$withval" != "xno" ; then
-    if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-      LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
-      LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/pgsql -L${withval}/lib/postgresql -L${withval}/pgsql/lib -L${withval}/postgresql/lib"
-      CFLAGS="$CFLAGS -I${withval}/include -I${withval}/include/pgsql -I${withval}/include/postgresql -I${withval}/pgsql/include -I${withval}/postgresql/include"
-    else
-      LD_RUN_PATH="/usr/local/pgsql/lib:/usr/local/pgsql/lib/pgsql:/usr/lib/pgsql:/usr/pgsql/lib:/usr/pgsql/lib/pgsql:/usr/local/lib/pgsql:/usr/local/postgresql/lib:/usr/local/postgresql/lib/postgresql:/usr/lib/postgresql:/usr/postgresql/lib:/usr/postgresql/lib/postgresql:/usr/local/lib/postgresql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-      LDFLAGS="$LDFLAGS -L/usr/local/pgsql/lib -L/usr/lib/pgsql -L/usr/pgsql/lib -L/usr/local/lib/pgsql -L/usr/local/pgsql/lib/pgsql -L/usr/pgsql/lib/pgsql -L/usr/local/postgresql/lib -L/usr/lib/postgresql -L/usr/postgresql/lib -L/usr/local/lib/postgresql -L/usr/local/postgresql/lib/postgresql -L/usr/postgresql/lib/postgresql"
-      CFLAGS="$CFLAGS -I/usr/local/pgsql/include -I/usr/include/pgsql -I/usr/pgsql/include -I/usr/local/include/pgsql -I/usr/local/pgsql/include/pgsql -I/usr/pgsql/include/pgsql -I/usr/local/postgresql/include -I/usr/include/postgresql -I/usr/postgresql/include -I/usr/local/include/postgresql -I/usr/local/postgresql/include/postgresql -I/usr/postgresql/include/postgresql"
-    fi
-    AC_CHECK_LIB(m, floor)
-    AC_CHECK_LIB(z, gzclose)
-    with_pgsql="yes"
-    AC_DEFINE(WITH_PGSQL,,[with pgsql])
-    AC_CHECK_LIB(pq, PQconnectdb, ,
-      [AC_MSG_ERROR(libpq is needed for PostgreSQL support)])        
-    AC_MSG_CHECKING(whether postgresql clients can run)
-    AC_RUN_IFELSE([AC_LANG_SOURCE([[
-      #include <stdio.h>
-      #include <libpq-fe.h>
-      int main(void)
-      {
-          PGconn *a = PQconnectdb("");
-          return 0;
-      }
-      ]])],[],[
-        AC_MSG_RESULT(no)
-        AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
-      
-    ],[])    
-    AC_MSG_RESULT(yes)
-  fi ])
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
+		LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/pgsql -L${withval}/lib/postgresql -L${withval}/pgsql/lib -L${withval}/postgresql/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}/include/pgsql -I${withval}/include/postgresql -I${withval}/pgsql/include -I${withval}/postgresql/include"
+	else
+		LD_RUN_PATH="/usr/local/pgsql/lib:/usr/local/pgsql/lib/pgsql:/usr/lib/pgsql:/usr/pgsql/lib:/usr/pgsql/lib/pgsql:/usr/local/lib/pgsql:/usr/local/postgresql/lib:/usr/local/postgresql/lib/postgresql:/usr/lib/postgresql:/usr/postgresql/lib:/usr/postgresql/lib/postgresql:/usr/local/lib/postgresql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L/usr/local/pgsql/lib -L/usr/lib/pgsql -L/usr/pgsql/lib -L/usr/local/lib/pgsql -L/usr/local/pgsql/lib/pgsql -L/usr/pgsql/lib/pgsql -L/usr/local/postgresql/lib -L/usr/lib/postgresql -L/usr/postgresql/lib -L/usr/local/lib/postgresql -L/usr/local/postgresql/lib/postgresql -L/usr/postgresql/lib/postgresql"
+		CPPFLAGS="$CPPFLAGS -I/usr/local/pgsql/include -I/usr/include/pgsql -I/usr/pgsql/include -I/usr/local/include/pgsql -I/usr/local/pgsql/include/pgsql -I/usr/pgsql/include/pgsql -I/usr/local/postgresql/include -I/usr/include/postgresql -I/usr/postgresql/include -I/usr/local/include/postgresql -I/usr/local/postgresql/include/postgresql -I/usr/postgresql/include/postgresql"
+	fi
+	AC_CHECK_LIB(m, floor)
+	AC_CHECK_LIB(z, gzclose)
+	with_pgsql="yes"
+	DB_DRIVERS="$DB_DRIVERS pgsql"
+	AC_DEFINE(WITH_PGSQL,,[with pgsql])
+	AC_CHECK_LIB(pq, PQconnectdb, ,
+		[AC_MSG_ERROR(libpq is needed for PostgreSQL support)])        
+			AC_MSG_CHECKING(whether postgresql clients can run)
+			AC_RUN_IFELSE([AC_LANG_SOURCE([[
+				#include <stdio.h>
+				#include <libpq-fe.h>
+				int main(void)
+				{
+					PGconn *a = PQconnectdb("");
+					return 0;
+				}
+			]])],[],[
+			AC_MSG_RESULT(no)
+			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
+		],[])    
+	AC_MSG_RESULT(yes)
+fi ])
 
-
+AC_SUBST(DB_DRIVERS)
 
 
 # --------------------------------------------------------------------------
@@ -201,22 +202,23 @@ AC_EGREP_CPP(yes,
 		yes
 	#endif
 	], AC_MSG_RESULT(yes)
-	CFLAGS="$CFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
+	CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
 	AC_MSG_RESULT(no))
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_CHECK_LIB(pthread, pthread_attr_init,
-	PTHREAD_LIBS="-lpthread")
+		PTHREAD_LIBS="-lpthread")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_CHECK_LIB(pthreads, pthread_attr_init,
-	PTHREAD_LIBS="-lpthreads")
+		PTHREAD_LIBS="-lpthreads")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_CHECK_LIB(c_r, pthread_attr_init,
-	PTHREAD_LIBS="-lc_r")
+		PTHREAD_LIBS="-lc_r")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
+	AC_CHECK_FUNC(pthread_attr_init,
+		PTHREAD_LIBS="")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
@@ -271,6 +273,9 @@ AC_CONFIG_FILES([
    src/libnetxms/Makefile
    src/server/Makefile
    src/server/core/Makefile
+   src/server/dbdrv/Makefile
+   src/server/dbdrv/mysql/Makefile
+   src/server/dbdrv/pgsql/Makefile
 ])
 
 AC_OUTPUT
