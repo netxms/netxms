@@ -15,6 +15,9 @@
 - Windows agent deployment packages now built with InnoSetup
 - "Last Values" view added to Windows console
 - Fixed issue #0000008
+- Added interface for SMS drivers
+- Optimized access to collected DCI data in database
+- Added support for System.CPU.LoadAvg to Solaris subagent
 
 
 *

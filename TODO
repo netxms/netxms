@@ -28,7 +28,6 @@ GENERAL:
 SERVER:
 
 - Implement sending of all alarms from database
-- Implement normal mailer shutdown
 - Check if object indexes always locked when used
 - Remove system-dependent code for getting interface list and ARP cache
   from management server. Server should rely on SNMP or native agent for
@@ -55,6 +54,11 @@ CORE AGENT:
 
 - Check shutdown procedure on different platforms
 - Remote config editing
+
+
+WINDOWS AGENT:
+
+- Add support for S.M.A.R.T. (HDD monitoring)
 
 
 LINUX AGENT:
