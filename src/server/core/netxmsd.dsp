@@ -219,15 +219,15 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\rootobj.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\snmp.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\srvroot.cpp
 # End Source File
 # Begin Source File
 
@@ -248,6 +248,10 @@ SOURCE=.\template.cpp
 # Begin Source File
 
 SOURCE=.\tools.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\uniroot.cpp
 # End Source File
 # Begin Source File
 

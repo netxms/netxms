@@ -246,7 +246,7 @@ BOOL ParseCommandLine(int argc, char *argv[])
 // Read string value from configuration table
 //
 
-BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault)
+BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault)
 {
    DB_RESULT hResult;
    char szQuery[256];

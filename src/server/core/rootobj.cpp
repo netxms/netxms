@@ -16,29 +16,60 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nximage.h
+** $module: rootobj.cpp
 **
 **/
 
-#ifndef _nximage_h_
-#define _nximage_h_
+#include "nms_core.h"
 
 
 //
-// Default object image IDs
+// Service root class default constructor
 //
 
-#define IMG_DEFAULT                 0
-#define IMG_NETWORK                 1
-#define IMG_INTERFACE               2
-#define IMG_NODE_GENERIC            3
-#define IMG_PRINTER_GENERIC         4
-#define IMG_CONTAINER_NODE_GROUP    5
-#define IMG_SUBNET                  6
-#define IMG_SERVICE_ROOT            7
-#define IMG_CONTAINER_SERVICE       8
-#define IMG_TEMPLATE                9
-#define IMG_TEMPLATE_GROUP          10
-#define IMG_TEMPLATE_ROOT           11
+ServiceRoot::ServiceRoot()
+            :UniversalRoot()
+{
+   m_dwId = 2;
+   strcpy(m_szName, "All Services");
+}
 
-#endif
+
+//
+// Service root class destructor
+//
+
+ServiceRoot::~ServiceRoot()
+{
+}
+
+
+//
+// Template root class default constructor
+//
+
+TemplateRoot::TemplateRoot()
+             :UniversalRoot()
+{
+   m_dwId = 3;
+   strcpy(m_szName, "Templates");
+}
+
+
+//
+// Template root class destructor
+//
+
+TemplateRoot::~TemplateRoot()
+{
+}
+
+
+//
+// Redefined status calculation for template root
+//
+
+void TemplateRoot::CalculateCompoundStatus(void)
+{
+   m_iStatus = STATUS_UNMANAGED;
+}

@@ -161,15 +161,15 @@ BOOL Container::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO containers (id,name,status,is_deleted,category,description,image_id)"
-                       " VALUES (%ld,'%s',%d,%d,%ld,'%s',%ld)",
+      sprintf(szQuery, "INSERT INTO containers (id,name,status,is_deleted,category,"
+                       "description,image_id,object_class) VALUES (%ld,'%s',%d,%d,%ld,'%s',%ld,%d)",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwCategory,
-              CHECK_NULL(m_pszDescription), m_dwImageId);
+              CHECK_NULL(m_pszDescription), m_dwImageId, Type());
    else
       sprintf(szQuery, "UPDATE containers SET name='%s',status=%d,is_deleted=%d,category=%ld,"
-                       "description='%s',image_id=%ld WHERE id=%ld",
+                       "description='%s',image_id=%ld,object_class=%d WHERE id=%ld",
               m_szName, m_iStatus, m_bIsDeleted, m_dwCategory, 
-              CHECK_NULL(m_pszDescription), m_dwImageId, m_dwId);
+              CHECK_NULL(m_pszDescription), m_dwImageId, Type(), m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update members list

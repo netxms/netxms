@@ -8,6 +8,8 @@
 #include "LoginDialog.h"
 #include "CreateContainerDlg.h"
 #include "CreateNodeDlg.h"
+#include "CreateTemplateDlg.h"
+#include "CreateTGDlg.h"
 #include "NodePoller.h"
 
 #ifdef _DEBUG
@@ -1227,6 +1229,47 @@ void CConsoleApp::CreateNode(DWORD dwParent)
       ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
       ci.cs.node.dwNetMask = dlg.m_dwNetMask;
+      CreateObject(&ci);
+   }
+}
+
+
+//
+// Create template object
+//
+
+void CConsoleApp::CreateTemplate(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateTemplateDlg dlg;
+
+   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_TEMPLATE;
+      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      CreateObject(&ci);
+   }
+}
+
+
+//
+// Create template group object
+//
+
+void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateTGDlg dlg;
+
+   dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_TEMPLATEGROUP;
+      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      ci.cs.templateGroup.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
       CreateObject(&ci);
    }
 }

@@ -94,6 +94,8 @@ typedef int socklen_t;
 
 /********** NETWARE ********************/
 
+#define FS_PATH_SEPARATOR  _T("/")
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>

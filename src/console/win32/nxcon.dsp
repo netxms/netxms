@@ -137,6 +137,14 @@ SOURCE=.\CreateObjectDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateTemplateDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateTGDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DataCollectionEditor.cpp
 # End Source File
 # Begin Source File
@@ -391,6 +399,14 @@ SOURCE=.\CreateNodeDlg.h
 # Begin Source File
 
 SOURCE=.\CreateObjectDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateTemplateDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateTGDlg.h
 # End Source File
 # Begin Source File
 

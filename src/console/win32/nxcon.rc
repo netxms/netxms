@@ -203,6 +203,10 @@ BEGIN
             MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
 
+            MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
+
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
+
         END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
@@ -310,6 +314,10 @@ BEGIN
         BEGIN
             MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
+
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
         END
         MENUITEM "&Bind...",                    ID_OBJECT_BIND
@@ -1117,6 +1125,42 @@ BEGIN
     PUSHBUTTON      "&Create...",IDC_BUTTON_CREATE,171,68,50,14
 END
 
+IDD_CREATE_TG DIALOG DISCARDABLE  0, 0, 229, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Template Group"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,26,146,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DESCRIPTION,13,53,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,110,88,50,12
+    DEFPUSHBUTTON   "OK",IDOK,172,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,24,50,14
+    GROUPBOX        "New object",IDC_STATIC,7,7,158,66
+    LTEXT           "Name",IDC_STATIC,13,17,20,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,77,158,42
+    ICON            "",IDC_ICON_PARENT,14,90,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,90,54,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,104,112,9
+    LTEXT           "Description",IDC_STATIC,13,44,36,8
+END
+
+IDD_CREATE_TEMPLATE DIALOG DISCARDABLE  0, 0, 229, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Template"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,27,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,110,62,50,12
+    DEFPUSHBUTTON   "OK",IDOK,172,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,24,50,14
+    GROUPBOX        "New object",IDC_STATIC,7,7,158,41
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,51,158,42
+    ICON            "",IDC_ICON_PARENT,14,64,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,64,54,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,78,112,9
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1407,6 +1451,22 @@ BEGIN
         RIGHTMARGIN, 221
         TOPMARGIN, 7
         BOTTOMMARGIN, 128
+    END
+
+    IDD_CREATE_TG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+
+    IDD_CREATE_TEMPLATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 93
     END
 END
 #endif    // APSTUDIO_INVOKED

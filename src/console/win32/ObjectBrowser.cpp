@@ -172,6 +172,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_STATUS, OnUpdateObjectPollStatus)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_CONFIGURATION, OnUpdateObjectPollConfiguration)
 	ON_WM_CLOSE()
+	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATE, OnObjectCreateTemplate)
+	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -345,6 +347,10 @@ void CObjectBrowser::OnViewRefresh()
       AddObjectToTree(pObject, TVI_ROOT);
 
    pObject = NXCGetServiceRootObject();
+   if (pObject != NULL)
+      AddObjectToTree(pObject, TVI_ROOT);
+   
+   pObject = NXCGetTemplateRootObject();
    if (pObject != NULL)
       AddObjectToTree(pObject, TVI_ROOT);
    
@@ -1173,7 +1179,7 @@ void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI)
 
 void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(CurrObjectIsNode());
+   pCmdUI->Enable(CurrObjectIsNode(TRUE));
 }
 
 void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
@@ -1335,6 +1341,26 @@ void CObjectBrowser::OnObjectCreateNode()
 
 
 //
+// WM_COMMAND::ID_OBJECT_CREATE_TEMPLATE message handler
+//
+
+void CObjectBrowser::OnObjectCreateTemplate() 
+{
+   theApp.CreateTemplate((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CREATE_TEMPLATEGROUP message handler
+//
+
+void CObjectBrowser::OnObjectCreateTemplategroup() 
+{
+   theApp.CreateTemplateGroup((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
 // WM_COMMAND::ID_OBJECT_DELETE message handler
 //
 
@@ -1419,7 +1445,7 @@ void CObjectBrowser::OnObjectPollConfiguration()
 // returns TRUE if currently selected object is node
 //
 
-BOOL CObjectBrowser::CurrObjectIsNode()
+BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
 {
    if (m_pCurrentObject == NULL)
    {
@@ -1428,10 +1454,20 @@ BOOL CObjectBrowser::CurrObjectIsNode()
    else
    {
       if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-         return (m_pCurrentObject->iClass == OBJECT_NODE);
+      {
+         return bIncludeTemplates ? 
+            ((m_pCurrentObject->iClass == OBJECT_NODE) || 
+             (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
+            (m_pCurrentObject->iClass == OBJECT_NODE);
+      }
       else
-         return ((m_pCurrentObject->iClass == OBJECT_NODE) &&
+      {
+         return ((bIncludeTemplates ? 
+            ((m_pCurrentObject->iClass == OBJECT_NODE) || 
+             (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
+            (m_pCurrentObject->iClass == OBJECT_NODE)) &&
                  (m_wndListCtrl.GetSelectedCount() == 1));
+      }
    }
 }
 

@@ -30,7 +30,7 @@
 void UpdateImageHashes(void)
 {
    DB_RESULT hResult;
-   int i, j, iNumImages, iPathLen, iFormat;
+   int i, iNumImages, iPathLen, iFormat;
    char szPath[MAX_PATH], szHashText[MD5_DIGEST_SIZE * 2 + 1], szQuery[1024];
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD dwImageId;
@@ -53,10 +53,8 @@ void UpdateImageHashes(void)
             strcpy(&szPath[iPathLen], DBGetField(hResult, i, iFormat));
             if (CalculateFileMD5Hash(szPath, hash))
             {
-               // Convert MD5 hash to text form
-               for(j = 0; j < MD5_DIGEST_SIZE; j++)
-                  sprintf(&szHashText[j << 1], "%02x", hash[j]);
-
+               // Convert MD5 hash to text form and update database
+               BinToStr(hash, MD5_DIGEST_SIZE, szHashText);
                sprintf(szQuery, "UPDATE images SET file_hash_%s='%s' WHERE image_id=%ld",
                        szExt[iFormat], szHashText, dwImageId);
                DBQuery(g_hCoreDB, szQuery);

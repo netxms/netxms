@@ -116,6 +116,8 @@
 #define IDI_DATACOLLECT                 226
 #define IDI_DCT                         227
 #define IDD_POLL_NODE                   228
+#define IDD_CREATE_TG                   229
+#define IDD_CREATE_TEMPLATE             230
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -330,6 +332,8 @@
 #define ID_CONTROLPANEL_DCT             32880
 #define ID_POLL_RESTART                 32881
 #define ID_ITEM_COPY                    32882
+#define ID_OBJECT_CREATE_TEMPLATEGROUP  32883
+#define ID_OBJECT_CREATE_TEMPLATE       32884
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -338,8 +342,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        229
-#define _APS_NEXT_COMMAND_VALUE         32883
+#define _APS_NEXT_RESOURCE_VALUE        231
+#define _APS_NEXT_COMMAND_VALUE         32885
 #define _APS_NEXT_CONTROL_VALUE         1173
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

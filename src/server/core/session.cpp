@@ -1444,12 +1444,13 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
    {
-      if (pObject->Type() == OBJECT_NODE)
+      if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
-            bSuccess = ((Node *)pObject)->LockDCIList(m_dwIndex);
+            bSuccess = ((Template *)pObject)->LockDCIList(m_dwIndex);
             msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_COMPONENT_LOCKED);
 
             // Modify list of open nodes DCI lists
@@ -1480,7 +1481,7 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
 
    // If DCI list was successfully locked, send it to client
    if (bSuccess)
-      ((Node *)pObject)->SendItemsToClient(this, pRequest->GetId());
+      ((Template *)pObject)->SendItemsToClient(this, pRequest->GetId());
 }
 
 
@@ -1503,14 +1504,15 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
    {
-      if (pObject->Type() == OBJECT_NODE)
+      if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             BOOL bSuccess;
 
             // Try to unlock DCI list
-            bSuccess = ((Node *)pObject)->UnlockDCIList(m_dwIndex);
+            bSuccess = ((Template *)pObject)->UnlockDCIList(m_dwIndex);
             msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_OUT_OF_STATE_REQUEST);
 
             // Modify list of open nodes DCI lists
@@ -1567,9 +1569,10 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
    {
-      if (pObject->Type() == OBJECT_NODE)
+      if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_TEMPLATE))
       {
-         if (((Node *)pObject)->IsLockedBySession(m_dwIndex))
+         if (((Template *)pObject)->IsLockedBySession(m_dwIndex))
          {
             if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -1584,7 +1587,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
                      pItem->SetStatus(ITEM_STATUS_DISABLED);
-                     if (((Node *)pObject)->AddItem(pItem))
+                     if (((Template *)pObject)->AddItem(pItem))
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
                         // Return new item id to client
@@ -1598,8 +1601,8 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_MODIFY_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Node *)pObject)->UpdateItem(dwItemId, pRequest, &dwNumMaps,
-                                                              &pdwMapIndex, &pdwMapId);
+                     bSuccess = ((Template *)pObject)->UpdateItem(dwItemId, pRequest, &dwNumMaps,
+                                                                  &pdwMapIndex, &pdwMapId);
                      if (bSuccess)
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -1623,7 +1626,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Node *)pObject)->DeleteItem(dwItemId);
+                     bSuccess = ((Template *)pObject)->DeleteItem(dwItemId);
                      msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
@@ -1654,7 +1657,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
 
 
 //
-// Copy DCI from one node to another
+// Copy DCI from one node or template to another
 //
 
 void ClientSession::CopyDCI(CSCPMessage *pRequest)
@@ -1672,16 +1675,17 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if ((pSource->Type() == OBJECT_NODE) && (pDestination->Type() == OBJECT_NODE))
+      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_TEMPLATE)) && 
+          (pDestination->Type() == OBJECT_NODE))
       {
-         if (((Node *)pSource)->IsLockedBySession(m_dwIndex))
+         if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
          {
             // Check access rights
             if ((pSource->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
                 (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((Node *)pDestination)->LockDCIList(m_dwIndex))
+               if (((Template *)pDestination)->LockDCIList(m_dwIndex))
                {
                   DWORD i, *pdwItemList, dwNumItems;
                   const DCItem *pSrcItem;
@@ -1696,13 +1700,13 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
                   {
-                     pSrcItem = ((Node *)pSource)->GetItemById(pdwItemList[i]);
+                     pSrcItem = ((Template *)pSource)->GetItemById(pdwItemList[i]);
                      if (pSrcItem != NULL)
                      {
                         pDstItem = new DCItem(pSrcItem);
                         pDstItem->SetId(CreateUniqueId(IDG_ITEM));
                         pDstItem->SetStatus(ITEM_STATUS_ACTIVE);
-                        if (!((Node *)pDestination)->AddItem(pDstItem))
+                        if (!((Template *)pDestination)->AddItem(pDstItem))
                         {
                            delete pDstItem;
                            iErrors++;
@@ -1716,7 +1720,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
 
                   // Cleanup
                   free(pdwItemList);
-                  ((Node *)pDestination)->UnlockDCIList(m_dwIndex);
+                  ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
                }
                else  // Destination's DCI list already locked by someone else
@@ -1862,6 +1866,10 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                                     pData, NULL));
             free(pData);
             bSuccess = TRUE;
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
          }
       }
       else
@@ -2214,50 +2222,54 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
       // User should have create access to parent object
       if (pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
-         // Parent object should be container or service root
-         if ((pParent->Type() == OBJECT_CONTAINER) ||
-             (pParent->Type() == OBJECT_SERVICEROOT))
+         iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
+
+         // Parent object should be of valid type
+         if (IsValidParentClass(iClass, pParent->Type()))
          {
-            iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
             pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
             if (IsValidObjectName(szObjectName))
             {
-               if ((iClass == OBJECT_NODE) || (iClass == OBJECT_CONTAINER))
+               // Create new object
+               switch(iClass)
                {
-                  // Create new object
-                  switch(iClass)
-                  {
-                     case OBJECT_NODE:
-                        pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
-                                              pRequest->GetVariableLong(VID_IP_NETMASK),
-                                              DF_DEFAULT, szObjectName);
-                        break;
-                     case OBJECT_CONTAINER:
-                        pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-                        pObject = new Container(szObjectName, 
-                                                pRequest->GetVariableLong(VID_CATEGORY),
-                                                pDescription);
-                        safe_free(pDescription);
-                        NetObjInsert(pObject, TRUE);
-                        break;
-                  }
+                  case OBJECT_NODE:
+                     pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
+                                           pRequest->GetVariableLong(VID_IP_NETMASK),
+                                           DF_DEFAULT, szObjectName);
+                     break;
+                  case OBJECT_CONTAINER:
+                     pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+                     pObject = new Container(szObjectName, 
+                                             pRequest->GetVariableLong(VID_CATEGORY),
+                                             pDescription);
+                     safe_free(pDescription);
+                     NetObjInsert(pObject, TRUE);
+                     break;
+                  case OBJECT_TEMPLATEGROUP:
+                     pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+                     pObject = new TemplateGroup(szObjectName, pDescription);
+                     safe_free(pDescription);
+                     NetObjInsert(pObject, TRUE);
+                     break;
+                  case OBJECT_TEMPLATE:
+                     pObject = new Template;
+                     pObject->SetName(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+                     break;
+               }
 
-                  // If creation was successful do binding
-                  if (pObject != NULL)
-                  {
-                     pParent->AddChild(pObject);
-                     pObject->AddParent(pParent);
-                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                     msg.SetVariable(VID_OBJECT_ID, pObject->Id());
-                  }
-                  else
-                  {
-                     msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
-                  }
+               // If creation was successful do binding
+               if (pObject != NULL)
+               {
+                  pParent->AddChild(pObject);
+                  pObject->AddParent(pParent);
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                  msg.SetVariable(VID_OBJECT_ID, pObject->Id());
                }
                else
                {
-                  msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+                  msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
                }
             }
             else

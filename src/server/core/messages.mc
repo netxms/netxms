@@ -111,6 +111,18 @@ Failed to load container object with id %1 from database
 .
 
 MessageId=
+SymbolicName=MSG_TG_LOAD_FAILED
+Language=English
+Failed to load template group object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_TEMPLATE_LOAD_FAILED
+Language=English
+Failed to load template object with id %1 from database
+.
+
+MessageId=
 SymbolicName=MSG_INVALID_SUBNET_ID
 Language=English
 Inconsistent database: node %1 linked to non-existing subnet %2
@@ -351,9 +363,9 @@ Inconsistent database: container object %1 has reference to non-existing child o
 .
 
 MessageId=
-SymbolicName=MSG_SRVROOT_INVALID_CHILD_ID
+SymbolicName=MSG_ROOT_INVALID_CHILD_ID
 Language=English
-Inconsistent database: service root object has reference to non-existing child object %1
+Inconsistent database: %2 object has reference to non-existing child object %1
 .
 
 MessageId=
@@ -390,6 +402,18 @@ MessageId=
 SymbolicName=MSG_SIGNAL_RECEIVED
 Language=English
 Signal %1 received
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_DCT_MAP
+Language=English
+Inconsistent database: template object %1 has reference to non-existing node object %2
+.
+
+MessageId=
+SymbolicName=MSG_DCT_MAP_NOT_NODE
+Language=English
+Inconsistent database: template object %1 has reference to child object %2 which is not a node object
 .
 
 ;#endif

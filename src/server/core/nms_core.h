@@ -115,7 +115,7 @@ typedef void * HSNMPSESSION;
 #define IDG_CONTAINER_CAT     1
 #define IDG_EVENT             2
 #define IDG_ITEM              3
-#define IDG_DCT               4
+//#define IDG_DCT               4
 #define IDG_IMAGE             5
 #define IDG_ACTION            6
 #define IDG_EVENT_GROUP       7
@@ -332,7 +332,7 @@ public:
 // Functions
 //
 
-BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault);
+BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 int ConfigReadInt(char *szVar, int iDefault);
 DWORD ConfigReadULong(char *szVar, DWORD dwDefault);
 BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);

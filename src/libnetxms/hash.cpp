@@ -169,7 +169,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
       I_md5_init(&state);
       while(1)
       {
-         iSize = fread(szBuffer, FILE_BLOCK_SIZE, 1, fileHandle);
+         iSize = fread(szBuffer, 1, FILE_BLOCK_SIZE, fileHandle);
          if (iSize <= 0)
             break;
       	I_md5_append(&state, (const md5_byte_t *)szBuffer, iSize);
@@ -203,7 +203,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
       I_SHA1Init(&context);
       while(1)
       {
-         iSize = fread(szBuffer, FILE_BLOCK_SIZE, 1, fileHandle);
+         iSize = fread(szBuffer, 1, FILE_BLOCK_SIZE, fileHandle);
          if (iSize <= 0)
             break;
          I_SHA1Update(&context, (BYTE *)szBuffer, iSize);

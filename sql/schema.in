@@ -166,7 +166,34 @@ CREATE TABLE containers
 	category integer,
 	description TEXT,
 	image_id integer,
+	object_class integer not null,
 	PRIMARY KEY(id)
+);
+
+
+/*
+** Data collection templates
+*/
+
+CREATE TABLE templates
+(
+	id integer not null,
+	name varchar(63),
+	is_deleted integer not null,
+	image_id integer,
+	PRIMARY KEY(id)
+);
+
+
+/*
+** Mapping hosts to templates
+*/
+
+CREATE TABLE dct_node_map
+(
+	template_id integer not null,
+	node_id integer not null,
+	PRIMARY KEY(template_id,node_id)
 );
 
 
@@ -410,30 +437,6 @@ CREATE TABLE thresholds
 	parameter_2 integer,
 	event_code integer,
 	PRIMARY KEY(threshold_id)
-);
-
-
-/*
-** Data collection templates
-*/
-
-CREATE TABLE dct
-(
-	template_id integer not null,
-	name varchar(255),
-	PRIMARY KEY(template_id)
-);
-
-
-/*
-** Mapping hosts to templates
-*/
-
-CREATE TABLE dct_host_map
-(
-	template_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(template_id,node_id)
 );
 
 

@@ -110,7 +110,8 @@ typedef unsigned long HREQUEST;
 #define OBJECT_ZONE           6
 #define OBJECT_SERVICEROOT    7
 #define OBJECT_TEMPLATE       8
-#define OBJECT_TEMPLATE_GROUP 9
+#define OBJECT_TEMPLATEGROUP  9
+#define OBJECT_TEMPLATEROOT   10
 
 
 //
@@ -761,6 +762,10 @@ typedef struct
          DWORD dwCategory;
          TCHAR *pszDescription;
       } container;
+      struct
+      {
+         TCHAR *pszDescription;
+      } templateGroup;
    } cs;
 } NXC_OBJECT_CREATE_INFO;
 
@@ -815,6 +820,7 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(TCHAR *pszName);
 void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(void);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(void);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTemplateRootObject(void);
 void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(DWORD *pdwNumObjects);
 void LIBNXCL_EXPORTABLE NXCLockObjectIndex(void);
 void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void);

@@ -348,6 +348,19 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(void)
 
 
 //
+// Get template tree root ("Templates") object
+//
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTemplateRootObject(void)
+{
+   if (m_dwNumObjects > 2)
+      if (m_pIndexById[2].dwKey == 3)
+         return m_pIndexById[2].pObject;
+   return NULL;
+}
+
+
+//
 // Get pointer to first object on objects' list and entire number of objects
 //
 
@@ -506,6 +519,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DW
       case OBJECT_CONTAINER:
          msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);
          msg.SetVariable(VID_DESCRIPTION, pCreateInfo->cs.container.pszDescription);
+         break;
+      case OBJECT_TEMPLATEGROUP:
+         msg.SetVariable(VID_DESCRIPTION, pCreateInfo->cs.templateGroup.pszDescription);
          break;
       default:
          break;

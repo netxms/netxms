@@ -29,6 +29,7 @@
 
 Network *g_pEntireNet = NULL;
 ServiceRoot *g_pServiceRoot = NULL;
+TemplateRoot *g_pTemplateRoot = NULL;
 
 DWORD g_dwMgmtNode = 0;
 INDEX *g_pIndexById = NULL;
@@ -51,6 +52,9 @@ CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
 char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
                             "Unknown", "Unmanaged", "Disabled", "Testing" };
+char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
+                        "Network", "Container", "Zone", "ServiceRoot",
+                        "Template", "TemplateGroup", "TemplateRoot" };
 
 
 //
@@ -72,6 +76,10 @@ void ObjectsInit(void)
    // Create "Service Root" object
    g_pServiceRoot = new ServiceRoot;
    NetObjInsert(g_pServiceRoot, FALSE);
+
+   // Create "Template Root" object
+   g_pTemplateRoot = new TemplateRoot;
+   NetObjInsert(g_pTemplateRoot, FALSE);
 }
 
 
@@ -408,6 +416,7 @@ BOOL LoadObjects(void)
    DB_RESULT hResult;
    DWORD i, dwNumRows;
    DWORD dwId;
+   char szQuery[256];
 
    // Load container categories
    hResult = DBSelect(g_hCoreDB, "SELECT category,name,image_id,description FROM container_categories");
@@ -428,6 +437,7 @@ BOOL LoadObjects(void)
    // Load built-in object properties
    g_pEntireNet->LoadFromDB();
    g_pServiceRoot->LoadFromDB();
+   g_pTemplateRoot->LoadFromDB();
 
    // Load subnets
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
@@ -503,8 +513,33 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load templates
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
+   if (hResult != 0)
+   {
+      Template *pTemplate;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pTemplate = new Template;
+         if (pTemplate->CreateFromDB(dwId))
+         {
+            NetObjInsert(pTemplate, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pTemplate;
+            WriteLog(MSG_TEMPLATE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load container objects
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM containers");
+   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_CONTAINER);
+   hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
       Container *pContainer;
@@ -527,17 +562,45 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
-   // Link childs to container objects
+   // Load template group objects
+   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_TEMPLATEGROUP);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      TemplateGroup *pGroup;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pGroup = new TemplateGroup;
+         if (pGroup->CreateFromDB(dwId))
+         {
+            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pGroup;
+            WriteLog(MSG_TG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Link childs to container and template group objects
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if (g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER)
+      if ((g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER) ||
+          (g_pIndexById[i].pObject->Type() == OBJECT_TEMPLATEGROUP))
          ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
-   // Link childs to "All services" object
+   // Link childs to "Service Root" and "Template Root" objects
    g_pServiceRoot->LinkChildObjects();
+   g_pTemplateRoot->LinkChildObjects();
 
-   // Recalculate status for "Entire Net" and "All Services" objects
+   // Recalculate status for built-in objects
    g_pEntireNet->CalculateCompoundStatus();
    g_pServiceRoot->CalculateCompoundStatus();
+   g_pTemplateRoot->CalculateCompoundStatus();
 
    return TRUE;
 }
@@ -570,9 +633,6 @@ void DumpObjects(void)
    DWORD i;
    char *pBuffer;
    CONTAINER_CATEGORY *pCat;
-   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface",
-                             "Network", "Container", "Zone", "ServiceRoot",
-                             "Template", "TemplateGroup" };
 
    pBuffer = (char *)malloc(128000);
    MutexLock(g_hMutexIdIndex, INFINITE);
@@ -581,7 +641,7 @@ void DumpObjects(void)
       printf("Object ID %d \"%s\"\n"
              "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n",
              g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
-             objTypes[g_pIndexById[i].pObject->Type()],
+             g_szClassName[g_pIndexById[i].pObject->Type()],
              IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
              g_pszStatusName[g_pIndexById[i].pObject->Status()],
              g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
@@ -610,4 +670,31 @@ void DumpObjects(void)
    }
    MutexUnlock(g_hMutexIdIndex);
    free(pBuffer);
+}
+
+
+//
+// Check is given object class is a valid parent class for other object
+// This function is used to check manually created bindings, so i won't
+// return TRUE for node -- subnet for example
+//
+
+BOOL IsValidParentClass(int iChildClass, int iParentClass)
+{
+   switch(iParentClass)
+   {
+      case OBJECT_SERVICEROOT:
+      case OBJECT_CONTAINER:
+         if ((iChildClass == OBJECT_CONTAINER) || 
+             (iChildClass == OBJECT_NODE))
+            return TRUE;
+         break;
+      case OBJECT_TEMPLATEROOT:
+      case OBJECT_TEMPLATEGROUP:
+         if ((iChildClass == OBJECT_TEMPLATEGROUP) || 
+             (iChildClass == OBJECT_TEMPLATE))
+            return TRUE;
+         break;
+   }
+   return FALSE;
 }

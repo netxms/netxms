@@ -180,11 +180,13 @@ public:
    Template();
    virtual ~Template();
 
-   virtual int Type(void) { return OBJECT_NODE; }
+   virtual int Type(void) { return OBJECT_TEMPLATE; }
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CalculateCompoundStatus(void);
 
    BOOL AddItem(DCItem *pItem);
    BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
@@ -371,6 +373,25 @@ public:
 
 
 //
+// Universal root object
+//
+
+class UniversalRoot : public NetObj
+{
+public:
+   UniversalRoot();
+   virtual ~UniversalRoot();
+
+   virtual BOOL SaveToDB(void);
+   virtual void LoadFromDB(void);
+   virtual const char *DefaultName(void) { return "Root Object"; }
+
+   void LinkChildObjects(void);
+   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+};
+
+
+//
 // Entire network
 //
 
@@ -392,18 +413,30 @@ public:
 // Service root
 //
 
-class ServiceRoot : public NetObj
+class ServiceRoot : public UniversalRoot
 {
 public:
    ServiceRoot();
    virtual ~ServiceRoot();
 
    virtual int Type(void) { return OBJECT_SERVICEROOT; }
-   virtual BOOL SaveToDB(void);
-   void LoadFromDB(void);
-   void LinkChildObjects(void);
+   virtual const char *DefaultName(void) { return "All Services"; }
+};
 
-   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+
+//
+// Template root
+//
+
+class TemplateRoot : public UniversalRoot
+{
+public:
+   TemplateRoot();
+   virtual ~TemplateRoot();
+
+   virtual int Type(void) { return OBJECT_TEMPLATEROOT; }
+   virtual const char *DefaultName(void) { return "Templates"; }
+   virtual void CalculateCompoundStatus(void);
 };
 
 
@@ -453,7 +486,7 @@ public:
    TemplateGroup(char *pszName, char *pszDescription) : Container(pszName, 0, pszDescription) { }
    virtual ~TemplateGroup() { }
 
-   virtual int Type(void) { return OBJECT_TEMPLATE_GROUP; }
+   virtual int Type(void) { return OBJECT_TEMPLATEGROUP; }
 };
 
 
@@ -504,6 +537,8 @@ void DumpObjects(void);
 
 void DeleteUserFromAllObjects(DWORD dwUserId);
 
+BOOL IsValidParentClass(int iChildClass, int iParentClass);
+
 
 //
 // Global variables
@@ -511,6 +546,7 @@ void DeleteUserFromAllObjects(DWORD dwUserId);
 
 extern Network *g_pEntireNet;
 extern ServiceRoot *g_pServiceRoot;
+extern TemplateRoot *g_pTemplateRoot;
 
 extern DWORD g_dwMgmtNode;
 extern INDEX *g_pIndexById;
@@ -528,6 +564,7 @@ extern MUTEX g_hMutexInterfaceIndex;
 extern MUTEX g_hMutexObjectAccess;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
+extern char *g_szClassName[];
 
 
 #endif   /* _nms_objects_h_ */
