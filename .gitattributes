@@ -66,6 +66,10 @@ src/server/core/tools.cpp -text
 src/server/core/users.cpp -text
 src/server/core/watchdog.cpp -text
 src/server/core/winsrv.cpp -text
+src/server/dbdrv/mssql/mssql.cpp -text
+src/server/dbdrv/mssql/mssql.dsp -text
+src/server/dbdrv/mssql/mssql.dsw -text
+src/server/dbdrv/mssql/mssqldrv.h -text
 src/server/dbdrv/mysql/mysql.cpp -text
 src/server/dbdrv/mysql/mysql.dsp -text
 src/server/dbdrv/mysql/mysql.dsw -text
