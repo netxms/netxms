@@ -20,3 +20,9 @@ SERVER:
 
 - Recalculate object status after binding change
 - Add read/write locking implementation
+
+
+CORE AGENT:
+
+- Check shutdown procedure on different platforms
+- Add signal handlers for UNIX
