@@ -347,37 +347,42 @@ void CObjectBrowser::OnSetFocus(CWnd* pOldWnd)
 
 void CObjectBrowser::OnViewRefresh() 
 {
-   NXC_OBJECT *pObject;
+   NXC_OBJECT **ppRootObjects;
    NXC_OBJECT_INDEX *pIndex;
-   DWORD i, dwNumObjects;
+   DWORD i, j, dwNumObjects, dwNumRootObj;
    
+   // Populate object's list and select root objects
+   m_wndListCtrl.DeleteAllItems();
+   NXCLockObjectIndex(g_hSession);
+   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
+   ppRootObjects = (NXC_OBJECT **)malloc(sizeof(NXC_OBJECT *) * dwNumObjects);
+   for(i = 0, dwNumRootObj = 0; i < dwNumObjects; i++)
+      if (!pIndex[i].pObject->bIsDeleted)
+      {
+         AddObjectToList(pIndex[i].pObject);
+
+         // Check if some of the parents are accessible
+         for(j = 0; j < pIndex[i].pObject->dwNumParents; j++)
+            if (NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]) != NULL)
+               break;
+         if (j == pIndex[i].pObject->dwNumParents)
+         {
+            // No accessible parents or no parents at all
+            ppRootObjects[dwNumRootObj++] = pIndex[i].pObject;
+         }
+      }
+   NXCUnlockObjectIndex(g_hSession);
+   m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
+
    // Populate objects' tree
    m_wndTreeCtrl.DeleteAllItems();
    m_dwTreeHashSize = 0;
 
-   pObject = NXCGetTopologyRootObject(g_hSession);
-   if (pObject != NULL)
-      AddObjectToTree(pObject, TVI_ROOT);
-
-   pObject = NXCGetServiceRootObject(g_hSession);
-   if (pObject != NULL)
-      AddObjectToTree(pObject, TVI_ROOT);
-   
-   pObject = NXCGetTemplateRootObject(g_hSession);
-   if (pObject != NULL)
-      AddObjectToTree(pObject, TVI_ROOT);
+   for(i = 0; i < dwNumRootObj; i++)
+      AddObjectToTree(ppRootObjects[i], TVI_ROOT);
+   safe_free(ppRootObjects);
    
    qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
-
-   // Populate object's list
-   m_wndListCtrl.DeleteAllItems();
-   NXCLockObjectIndex(g_hSession);
-   pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
-   for(i = 0; i < dwNumObjects; i++)
-      if (!pIndex[i].pObject->bIsDeleted)
-         AddObjectToList(pIndex[i].pObject);
-   NXCUnlockObjectIndex(g_hSession);
-   m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
 }
 
 

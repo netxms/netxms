@@ -31,6 +31,7 @@ public:
 
 // Implementation
 protected:
+	CImageList m_imageList;
 	CProgressCtrl m_wndProgressCtrl;
 	CFont m_font;
    BOOL m_bFinished;

@@ -273,7 +273,7 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
          break;
       case CMD_OBJECT_UPDATE:
          pNewObject = NewObjectFromMsg(pMsg);
-         pObject = FindObjectById(pNewObject->dwId);
+         pObject = FindObjectById(pNewObject->dwId, TRUE);
          if (pObject == NULL)
          {
             AddObject(pNewObject, TRUE);
@@ -334,21 +334,31 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession)
 // Find object by ID
 //
 
-NXC_OBJECT *NXCL_Session::FindObjectById(DWORD dwId)
+NXC_OBJECT *NXCL_Session::FindObjectById(DWORD dwId, BOOL bLock)
 {
    DWORD dwPos;
    NXC_OBJECT *pObject;
 
-   LockObjectIndex();
+   if (bLock)
+      LockObjectIndex();
+
    dwPos = SearchIndex(m_pIndexById, m_dwNumObjects, dwId);
    pObject = (dwPos == INVALID_INDEX) ? NULL : m_pIndexById[dwPos].pObject;
-   UnlockObjectIndex();
+
+   if (bLock)
+      UnlockObjectIndex();
+
    return pObject;
 }
 
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(NXC_SESSION hSession, DWORD dwId)
 {
-   return ((NXCL_Session *)hSession)->FindObjectById(dwId);
+   return ((NXCL_Session *)hSession)->FindObjectById(dwId, TRUE);
+}
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWORD dwId)
+{
+   return ((NXCL_Session *)hSession)->FindObjectById(dwId, FALSE);
 }
 
 

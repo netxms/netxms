@@ -92,6 +92,9 @@ int CDeploymentView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(1, _T("Status"), LVCFMT_LEFT, 100);
    m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 250);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
+   m_imageList.Create(g_pObjectSmallImageList);
+   m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 	
 	return 0;
 }
@@ -159,7 +162,15 @@ void CDeploymentView::OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInf
 
          // Create new record
          pObject = NXCFindObjectById(g_hSession, pInfo->dwNodeId);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, (pObject != NULL) ? pObject->szName : _T("<invalid>"));
+         if (pObject != NULL)
+         {
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pObject->szName,
+                                             GetObjectImageIndex(pObject));
+         }
+         else
+         {
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("<invalid>"), -1);
+         }
          m_wndListCtrl.SetItemData(iItem, pInfo->dwNodeId);
          m_wndProgressCtrl.SetRange32(0, m_wndListCtrl.GetItemCount());
       }

@@ -159,7 +159,7 @@ public:
    DWORD SyncObjects(void);
    void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
    void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
-   NXC_OBJECT *FindObjectById(DWORD dwId);
+   NXC_OBJECT *FindObjectById(DWORD dwId, BOOL bLock);
    NXC_OBJECT *FindObjectByName(TCHAR *pszName);
    void EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
    NXC_OBJECT *GetRootObject(DWORD dwId, DWORD dwIndex);

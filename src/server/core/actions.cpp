@@ -246,7 +246,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
                          pAction->szRcptAddr, pszExpandedData);
                break;
             case ACTION_REMOTE:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"", 
+               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"",
                          pAction->szRcptAddr, pszExpandedData);
                break;
             default:
