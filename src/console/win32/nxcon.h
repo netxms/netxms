@@ -49,6 +49,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "EventPolicyEditor.h"
 #include "AlarmBrowser.h"
 #include "ConsolePropsGeneral.h"
+#include "ActionEditor.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -99,6 +100,7 @@ protected:
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
+   CActionEditor *m_pwndActionEditor;
 	CAlarmBrowser *m_pwndAlarmBrowser;
 	CEventBrowser *m_pwndEventBrowser;
    CEventEditor *m_pwndEventEditor;
@@ -144,9 +146,11 @@ public:
 	afx_msg void OnControlpanelEventpolicy();
 	afx_msg void OnViewAlarms();
 	afx_msg void OnFileSettings();
+	afx_msg void OnControlpanelActions();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL m_bActionEditorActive;
 	BOOL m_bAlarmBrowserActive;
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;

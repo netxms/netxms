@@ -52,6 +52,7 @@
 #define IDM_VIEW_SPECIFIC               152
 #define IDR_DEBUG_WINDOW                152
 #define IDA_MDI_DEFAULT                 153
+#define IDR_ACTION_EDITOR               153
 #define IDA_OBJECT_BROWSER              154
 #define IDI_SORT_UP                     156
 #define IDI_SORT_DOWN                   157

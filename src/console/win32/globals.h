@@ -166,6 +166,13 @@ char *BuildSymbolicOIDString(struct tree *pNode);
 
 
 //
+// Action functions
+//
+
+NXC_ACTION *FindActionById(DWORD dwActionId);
+
+
+//
 // Variables
 //
 

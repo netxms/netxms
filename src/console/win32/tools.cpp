@@ -325,3 +325,18 @@ CImageList *CreateEventImageList(void)
    pImageList->Add(theApp.LoadIcon(IDI_ACK));
    return pImageList;
 }
+
+
+//
+// Find action in list by ID
+//
+
+NXC_ACTION *FindActionById(DWORD dwActionId)
+{
+   DWORD i;
+
+   for(i = 0; i < g_dwNumActions; i++)
+      if (g_pActionList[i].dwId == dwActionId)
+         return &g_pActionList[i];
+   return NULL;
+}

@@ -367,8 +367,16 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, COL_ACTION);
    if (m_pEventPolicy->pRuleList[iRow].dwNumActions > 0)
    {
-      LockActions();
+      NXC_ACTION *pAction;
 
+      LockActions();
+      for(i = 0; i < m_pEventPolicy->pRuleList[iRow].dwNumActions; i++)
+      {
+         pAction = FindActionById(m_pEventPolicy->pRuleList[iRow].pdwActionList[i]);
+         if (pAction != NULL)
+            m_wndRuleList.AddItem(iRow, COL_ACTION, pAction->szName, 
+                                  m_iImageActionsBase + pAction->iType);
+      }
       UnlockActions();
    }
    else

@@ -101,6 +101,8 @@ src/console/cmdline/main.cpp -text
 src/console/cmdline/nxcmd.dsp -text
 src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
+src/console/win32/ActionEditor.cpp -text
+src/console/win32/ActionEditor.h -text
 src/console/win32/AlarmBrowser.cpp -text
 src/console/win32/AlarmBrowser.h -text
 src/console/win32/ConsolePropsGeneral.cpp -text

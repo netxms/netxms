@@ -101,6 +101,10 @@ PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\ActionEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AlarmBrowser.cpp
 # End Source File
 # Begin Source File
@@ -324,6 +328,10 @@ SOURCE=.\UserSelectDlg.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\ActionEditor.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\AlarmBrowser.h

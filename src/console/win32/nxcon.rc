@@ -1323,6 +1323,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDR_OBJECTS             "\nObject Browser\nObject Browser"
     IDR_DEBUG_WINDOW        "\nDebug Log\nDebug Log"
+    IDR_ACTION_EDITOR       "\nAction Configuration\nAction Configuration"
 END
 
 STRINGTABLE DISCARDABLE 

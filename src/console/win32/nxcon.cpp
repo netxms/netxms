@@ -61,6 +61,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTPOLICY, OnControlpanelEventpolicy)
 	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
 	ON_COMMAND(ID_FILE_SETTINGS, OnFileSettings)
+	ON_COMMAND(ID_CONTROLPANEL_ACTIONS, OnControlpanelActions)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -71,6 +72,7 @@ END_MESSAGE_MAP()
 
 CConsoleApp::CConsoleApp()
 {
+   m_bActionEditorActive = FALSE;
    m_bCtrlPanelActive = FALSE;
    m_bAlarmBrowserActive = FALSE;
    m_bEventBrowserActive = FALSE;
@@ -413,6 +415,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bEventEditorActive = TRUE;
          m_pwndEventEditor = (CEventEditor *)pWnd;
          break;
+      case IDR_ACTION_EDITOR:
+         m_bActionEditorActive = TRUE;
+         m_pwndActionEditor = (CActionEditor *)pWnd;
+         break;
       case IDR_USER_EDITOR:
          m_bUserEditorActive = TRUE;
          m_pwndUserEditor = (CUserEditor *)pWnd;
@@ -470,6 +476,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_EVENT_EDITOR:
          m_bEventEditorActive = FALSE;
+         break;
+      case IDR_ACTION_EDITOR:
+         m_bActionEditorActive = FALSE;
          break;
       case IDR_USER_EDITOR:
          m_bUserEditorActive = FALSE;
@@ -1095,5 +1104,36 @@ void CConsoleApp::OnFileSettings()
          g_dwOptions |= UI_OPT_SHOW_GRID;
       else
          g_dwOptions &= ~UI_OPT_SHOW_GRID;
+   }
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_ACTIONS message handler
+//
+
+void CConsoleApp::OnControlpanelActions() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bActionEditorActive)
+   {
+      m_pwndActionEditor->BringWindowToTop();
+   }
+   else
+   {
+      DWORD dwResult;
+
+      dwResult = DoRequest(NXCLockActionDB, "Locking action configuration database...");
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(
+		      RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR, m_hMDIMenu, m_hMDIAccel);
+      }
+      else
+      {
+         ErrorBox(dwResult, "Unable to lock action configuration database:\n%s");
+      }
    }
 }
