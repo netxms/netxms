@@ -208,7 +208,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "ArpCache", H_ArpCache, NULL }
+   { "Net.ArpCache", H_ArpCache, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
