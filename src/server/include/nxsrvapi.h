@@ -184,6 +184,8 @@ public:
    DWORD ExecAction(TCHAR *pszAction, int argc, TCHAR **argv);
    DWORD UploadFile(TCHAR *pszFile);
    DWORD StartUpgrade(TCHAR *pszPkgName);
+   DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
+                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponce = NULL);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

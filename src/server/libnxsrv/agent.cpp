@@ -771,3 +771,59 @@ DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
 
    return dwResult;
 }
+
+
+//
+// Check status of network service via agent
+//
+
+DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, 
+                                           WORD wPort, WORD wProto, 
+                                           TCHAR *pszRequest, TCHAR *pszResponce)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg, *pResponce;
+   static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80 };
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
+
+   dwRqId = m_dwRequestId++;
+
+   msg.SetCode(CMD_CHECK_NETWORK_SERVICE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_IP_ADDRESS, dwIpAddr);
+   msg.SetVariable(VID_SERVICE_TYPE, (WORD)iServiceType);
+   msg.SetVariable(VID_IP_PORT, 
+      (wPort != 0) ? wPort : 
+         m_wDefaultPort[((iServiceType >=NETSRV_CUSTOM) && 
+                         (iServiceType <= NETSRV_HTTP)) ? iServiceType : 0]);
+   msg.SetVariable(VID_IP_PORT, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
+   msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
+   msg.SetVariable(VID_SERVICE_RESPONCE, pszResponce);
+
+   if (SendMessage(&msg))
+   {
+      // Wait up to 90 seconds for results
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
+      if (pResponce != NULL)
+      {
+         dwResult = pResponce->GetVariableLong(VID_RCC);
+         if (dwResult == ERR_SUCCESS)
+         {
+            *pdwStatus = pResponce->GetVariableLong(VID_SERVICE_STATUS);
+         }
+         delete pResponce;
+      }
+      else
+      {
+         dwResult = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwResult = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwResult;
+}
