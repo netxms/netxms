@@ -29,9 +29,9 @@
 // Login parameters
 //
 
-TCHAR g_szServer[MAX_PATH] = _T("monitor");
-TCHAR g_szLogin[MAX_USER_NAME] = _T("admin");
-TCHAR g_szPassword[MAX_SECRET_LENGTH] = _T("VantageP01nt");
+TCHAR g_szServer[MAX_PATH] = _T("localhost");
+TCHAR g_szLogin[MAX_USER_NAME] = _T("guest");
+TCHAR g_szPassword[MAX_SECRET_LENGTH] = _T("");
 
 
 //
