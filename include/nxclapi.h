@@ -159,6 +159,7 @@ int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
 NXC_OBJECT EXPORTABLE *NXCFindObjectById(DWORD dwId);
 void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
+NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
 
 #ifdef __cplusplus
 }

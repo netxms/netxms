@@ -295,3 +295,16 @@ void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
       if (!pHandler(m_pIndexById[i].pObject))
          break;
 }
+
+
+//
+// Get root ("Entire Network") object
+//
+
+NXC_OBJECT EXPORTABLE *NXCGetRootObject(void)
+{
+   if (m_dwNumObjects > 0)
+      if (m_pIndexById[0].dwKey == 1)
+         return m_pIndexById[0].pObject;
+   return NULL;
+}
