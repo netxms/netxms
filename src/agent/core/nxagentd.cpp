@@ -514,6 +514,7 @@ void Main(void)
 #else
       printf("Agent running. Press Ctrl+C to shutdown.\n");
       ConditionWait(m_hCondShutdown, INFINITE);
+      printf("\nStopping agent...\n");
 #endif
    }
 }
