@@ -36,11 +36,17 @@ void SaveObjects(void)
    // Delete objects marked for deletion
    for(i = 0; i < g_dwIdIndexSize; i++)
       if (g_pIndexById[i].pObject->IsDeleted())
-      {
-         g_pIndexById[i].pObject->DeleteFromDB();
-         NetObjDelete(g_pIndexById[i].pObject);
-         i = 0xFFFFFFFF;   // Restart loop
-      }
+         if (g_pIndexById[i].pObject->RefCount() == 0)
+         {
+            g_pIndexById[i].pObject->DeleteFromDB();
+            NetObjDelete(g_pIndexById[i].pObject);
+            i = 0xFFFFFFFF;   // Restart loop
+         }
+         else
+         {
+            DbgPrintf(AF_DEBUG_HOUSEKEEPER, "* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)\n",
+                      g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->RefCount());
+         }
 
    // Save objects
    for(i = 0; i < g_dwIdIndexSize; i++)

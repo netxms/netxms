@@ -152,6 +152,7 @@ class NetObj
 {
 protected:
    DWORD m_dwId;
+   DWORD m_dwRefCount;     // Number of references. Object can be deleted only when this counter is zero
    char m_szName[MAX_OBJECT_NAME];
    int m_iStatus;
    BOOL m_bIsModified;
@@ -170,6 +171,8 @@ protected:
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
+
+   void Modify(void);                  // Used to mark object as modified
 
    BOOL LoadACLFromDB(void);
    BOOL SaveACLToDB(void);
@@ -190,6 +193,10 @@ public:
    BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
    BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
 
+   DWORD RefCount(void) { return m_dwRefCount; }
+   void IncRefCount(void) { m_dwRefCount++; }
+   void DecRefCount(void) { if (m_dwRefCount > 0) m_dwRefCount--; }
+
    void AddChild(NetObj *pObject);     // Add reference to child object
    void AddParent(NetObj *pObject);    // Add reference to parent object
 
@@ -204,7 +211,7 @@ public:
 
    NetObj *GetParent(DWORD dwIndex = 0) { return dwIndex < m_dwParentCount ? m_pParentList[dwIndex] : NULL; }
 
-   void SetId(DWORD dwId) { m_dwId = dwId; m_bIsModified = TRUE; }
+   void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
 
    virtual void CalculateCompoundStatus(void);
 

@@ -40,6 +40,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hCondProcessingThreadStopped = ConditionCreate();
    m_hCondUpdateThreadStopped = ConditionCreate();
    m_hMutexSendEvents = MutexCreate();
+   m_hMutexSendObjects = MutexCreate();
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
    strcpy(m_szUserName, "<not logged in>");
@@ -63,6 +64,7 @@ ClientSession::~ClientSession()
    ConditionDestroy(m_hCondProcessingThreadStopped);
    ConditionDestroy(m_hCondUpdateThreadStopped);
    MutexDestroy(m_hMutexSendEvents);
+   MutexDestroy(m_hMutexSendObjects);
 
    // Unlock locked components
    if (m_dwFlags & CSF_EVENT_DB_LOCKED)
@@ -330,6 +332,8 @@ void ClientSession::SendAllObjects(void)
    DWORD i;
    CSCPMessage msg;
 
+   MutexLock(m_hMutexSendObjects, INFINITE);
+
    // Prepare message
    msg.SetCode(CMD_OBJECT);
 
@@ -346,6 +350,8 @@ void ClientSession::SendAllObjects(void)
    // Send end of list notification
    msg.SetCode(CMD_OBJECT_LIST_END);
    SendMessage(&msg);
+
+   MutexUnlock(m_hMutexSendObjects);
 }
 
 
@@ -465,8 +471,15 @@ void ClientSession::OnNewEvent(Event *pEvent)
 // Handler for object changes
 //
 
-void ClientSession::OnObjectChange(DWORD dwObjectId)
+void ClientSession::OnObjectChange(NetObj *pObject)
 {
+   UPDATE_INFO *pUpdate;
+
+   pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+   pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
+   pUpdate->pData = pObject;
+   m_pUpdateQueue->Put(pUpdate);
+   pObject->IncRefCount();
 }
 
 
@@ -477,6 +490,7 @@ void ClientSession::OnObjectChange(DWORD dwObjectId)
 void ClientSession::UpdateThread(void)
 {
    UPDATE_INFO *pUpdate;
+   CSCPMessage msg;
 
    while(1)
    {
@@ -491,6 +505,16 @@ void ClientSession::UpdateThread(void)
             m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
             MutexUnlock(m_hMutexSendEvents);
             free(pUpdate->pData);
+            break;
+         case INFO_CAT_OBJECT_CHANGE:
+            MutexLock(m_hMutexSendObjects, INFINITE);
+            msg.SetId(0);
+            msg.SetCode(CMD_OBJECT_UPDATE);
+            ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
+            SendMessage(&msg);
+            MutexUnlock(m_hMutexSendObjects);
+            msg.DeleteAllVariables();
+            ((NetObj *)pUpdate->pData)->DecRefCount();
             break;
          default:
             break;

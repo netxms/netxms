@@ -45,6 +45,7 @@
 #include <stdarg.h>
 
 #define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
+#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
 
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
@@ -175,8 +176,8 @@
 // Information categories for UPDATE_INFO structure
 //
 
-#define INFO_CAT_EVENT        1
-#define INFO_CAT_OBJECT       2
+#define INFO_CAT_EVENT           1
+#define INFO_CAT_OBJECT_CHANGE   2
 
 
 //
@@ -256,6 +257,7 @@ private:
    CONDITION m_hCondProcessingThreadStopped;
    CONDITION m_hCondUpdateThreadStopped;
    MUTEX m_hMutexSendEvents;
+   MUTEX m_hMutexSendObjects;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
 
@@ -293,7 +295,7 @@ public:
    void Notify(DWORD dwCode);
 
    void OnNewEvent(Event *pEvent);
-   void OnObjectChange(DWORD dwObjectId);
+   void OnObjectChange(NetObj *pObject);
 };
 
 

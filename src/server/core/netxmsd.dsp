@@ -8,17 +8,17 @@ CFG=NmsCore - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "NmsCore.mak".
+!MESSAGE NMAKE /f "netxmsd.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "NmsCore.mak" CFG="NmsCore - Win32 Debug"
+!MESSAGE NMAKE /f "netxmsd.mak" CFG="netxmsd - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "NmsCore - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "NmsCore - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "netxmsd - Win32 Release" (based on "Win32 (x86) Console Application")
+!MESSAGE "netxmsd - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
@@ -28,7 +28,7 @@ CFG=NmsCore - Win32 Debug
 CPP=cl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "NmsCore - Win32 Release"
+!IF  "$(CFG)" == "netxmsd - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -52,7 +52,7 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libsnmp.lib iphlpapi.lib libnetxms.lib libeay32.lib ssleay32.lib /nologo /subsystem:console /machine:I386 /libpath:"..\..\libnetxms\Release"
 
-!ELSEIF  "$(CFG)" == "NmsCore - Win32 Debug"
+!ELSEIF  "$(CFG)" == "netxmsd - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -77,15 +77,15 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libsnmp.lib iphlpapi.lib libnetxms.lib libeay32.lib ssleay32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy Debug\nmscore.exe ..\..\..\bin
+PostBuild_Cmds=copy Debug\netxmsd.exe ..\..\..\bin
 # End Special Build Tool
 
 !ENDIF 
 
 # Begin Target
 
-# Name "NmsCore - Win32 Release"
-# Name "NmsCore - Win32 Debug"
+# Name "netxmsd - Win32 Release"
+# Name "netxmsd - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -325,7 +325,7 @@ SOURCE=.\MSG00001.bin
 
 SOURCE=.\messages.mc
 
-!IF  "$(CFG)" == "NmsCore - Win32 Release"
+!IF  "$(CFG)" == "netxmsd - Win32 Release"
 
 # Begin Custom Build - Running Message Compiler on $(InputPath)
 ProjDir=.
@@ -344,7 +344,7 @@ BuildCmds= \
    $(BuildCmds)
 # End Custom Build
 
-!ELSEIF  "$(CFG)" == "NmsCore - Win32 Debug"
+!ELSEIF  "$(CFG)" == "netxmsd - Win32 Debug"
 
 # Begin Custom Build - Running Message Compiler on $(InputPath)
 ProjDir=.

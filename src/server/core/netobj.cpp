@@ -29,6 +29,7 @@
 
 NetObj::NetObj()
 {
+   m_dwRefCount = 0;
    m_hMutex = MutexCreate();
    m_iStatus = STATUS_UNKNOWN;
    m_szName[0] = 0;
@@ -106,7 +107,7 @@ void NetObj::AddChild(NetObj *pObject)
       }
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
    m_pChildList[m_dwChildCount++] = pObject;
-   m_bIsModified = TRUE;
+   Modify();
    Unlock();
 }
 
@@ -128,7 +129,7 @@ void NetObj::AddParent(NetObj *pObject)
       }
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
    m_pParentList[m_dwParentCount++] = pObject;
-   m_bIsModified = TRUE;
+   Modify();
    Unlock();
 }
 
@@ -162,7 +163,7 @@ void NetObj::DeleteChild(NetObj *pObject)
       free(m_pChildList);
       m_pChildList = NULL;
    }
-   m_bIsModified = TRUE;
+   Modify();
    Unlock();
 }
 
@@ -195,7 +196,7 @@ void NetObj::DeleteParent(NetObj *pObject)
       free(m_pParentList);
       m_pParentList = NULL;
    }
-   m_bIsModified = TRUE;
+   Modify();
    Unlock();
 }
 
@@ -231,7 +232,7 @@ void NetObj::Delete(void)
    NetObjDeleteFromIndexes(this);
 
    m_bIsDeleted = TRUE;
-   m_bIsModified = TRUE;
+   Modify();
    Unlock();
 }
 
@@ -310,7 +311,7 @@ void NetObj::CalculateCompoundStatus(void)
    {
       for(i = 0; i < m_dwParentCount; i++)
          m_pParentList[i]->CalculateCompoundStatus();
-      m_bIsModified = TRUE;
+      Modify();
    }
 }
 
@@ -391,6 +392,31 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
    pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
+   pMsg->SetVariable(VID_IS_DELETED, (WORD)m_bIsDeleted);
    for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pParentList[i]->Id());
+}
+
+
+//
+// Handler for EnumerateSessions()
+//
+
+static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
+{
+   if (pSession->GetState() == STATE_AUTHENTICATED)
+      pSession->OnObjectChange((NetObj *)pArg);
+}
+
+
+//
+// Mark object as modified and put on client's notification queue
+//
+
+void NetObj::Modify(void)
+{
+   m_bIsModified = TRUE;
+
+   // Send event to all connected clients
+   EnumerateClientSessions(BroadcastObjectChange, this);
 }

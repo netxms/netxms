@@ -843,7 +843,7 @@ BOOL Node::AddItem(DCItem *pItem)
       m_ppItems[i]->SetLastPollTime(0);    // Cause item to be polled immediatelly
       m_ppItems[i]->SetStatus(ITEM_STATUS_ACTIVE);
       m_ppItems[i]->SetBusyFlag(FALSE);
-      m_bIsModified = TRUE;
+      Modify();
       bResult = TRUE;
    }
 

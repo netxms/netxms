@@ -99,8 +99,6 @@ src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/request.cpp -text
 src/server/core/Makefile -text
-src/server/core/NmsCore.dsp -text
-src/server/core/NmsCore.dsw -text
 src/server/core/acl.cpp -text
 src/server/core/actions.cpp -text
 src/server/core/admin.cpp -text
@@ -128,6 +126,8 @@ src/server/core/log.cpp -text
 src/server/core/main.cpp -text
 src/server/core/messages.mc -text
 src/server/core/netobj.cpp -text
+src/server/core/netxmsd.dsp -text
+src/server/core/netxmsd.dsw -text
 src/server/core/nms_actions.h -text
 src/server/core/nms_core.h -text
 src/server/core/nms_dcoll.h -text

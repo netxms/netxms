@@ -213,7 +213,7 @@ void Interface::StatusPoll(void)
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
                 GetParent()->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
                 m_dwIfIndex);
-      m_bIsModified = TRUE;
+      Modify();
    }
 }
 
