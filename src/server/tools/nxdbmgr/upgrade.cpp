@@ -61,6 +61,7 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 static BOOL H_UpgradeFromV16(void)
 {
    static TCHAR m_szBatch[] =
+      "DROP TABLE locks\n"
       "CREATE TABLE snmp_trap_cfg (trap_id integer not null,snmp_oid varchar(255) not null,"
 	      "event_id integer not null,sequence integer not null,PRIMARY KEY(trap_id))\n"
       "CREATE TABLE snmp_trap_pmap (trap_id integer not null,parameter integer not null,"
@@ -70,9 +71,53 @@ static BOOL H_UpgradeFromV16(void)
 		   "'Generated when system receives an SNMP trap without match in trap "
          "configuration table#0D#0AParameters:#0D#0A   1) SNMP trap OID#0D#0A"
 		   "   2) Trap parameters')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(501, 'SNMP_COLD_START', 0, 1, 'System was cold-started',"
+		   "'Generated when system receives a coldStart SNMP trap#0D#0AParameters:#0D#0A"
+		   "   No message-specific parameters')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(502, 'SNMP_WARM_START', 0, 1, 'System was warm-started',"
+		   "'Generated when system receives a warmStart SNMP trap#0D#0A"
+		   "Parameters:#0D#0A   No message-specific parameters')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(503, 'SNMP_LINK_DOWN', 3, 1, 'Link is down',"
+		   "'Generated when system receives a linkDown SNMP trap#0D#0A"
+		   "Parameters:#0D#0A   No message-specific parameters')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(504, 'SNMP_LINK_UP', 0, 1, 'Link is up',"
+		   "'Generated when system receives a linkUp SNMP trap#0D#0AParameters:#0D#0A"
+		   "   No message-specific parameters')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(505, 'SNMP_AUTH_FAILURE', 1, 1, 'SNMP authentication failure',"
+		   "'Generated when system receives an authenticationFailure SNMP trap#0D#0A"
+		   "Parameters:#0D#0A   No message-specific parameters')\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(506, 'SNMP_EGP_NEIGHBOR_LOSS',	1, 1,	'EGP neighbor loss',"
+		   "'Generated when system receives an egpNeighborLoss SNMP trap#0D#0A"
+		   "Parameters:#0D#0A   No message-specific parameters')\n"
+      "INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,sequence) "
+         "VALUES (1,'.1.3.6.1.6.3.1.1.5.1',501 ,1)\n"
+      "INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,sequence) "
+         "VALUES (2,'.1.3.6.1.6.3.1.1.5.2',502 ,2)\n"
+      "INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,sequence) "
+         "VALUES (3,'.1.3.6.1.6.3.1.1.5.3',503 ,3)\n"
+      "INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,sequence) "
+         "VALUES (4,'.1.3.6.1.6.3.1.1.5.4',504 ,4)\n"
+      "INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,sequence) "
+         "VALUES (5,'.1.3.6.1.6.3.1.1.5.5',505 ,5)\n"
+      "INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,sequence) "
+         "VALUES (6,'.1.3.6.1.6.3.1.1.5.6',506 ,6)\n"
       "<END>";
 
    if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DBLockStatus"), _T("UNLOCKED"), 0, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DBLockInfo"), _T(""), 0, 0))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -223,7 +268,8 @@ static struct
 void UpgradeDatabase(void)
 {
    DB_RESULT hResult;
-   long i, iVersion = 0, iLock = -1;
+   long i, iVersion = 0;
+   BOOL bLocked = FALSE;
 
    _tprintf(_T("Upgrading database...\n"));
 
@@ -248,14 +294,14 @@ void UpgradeDatabase(void)
    else
    {
       // Check if database is locked
-      hResult = DBSelect(g_hCoreDB, _T("SELECT lock_status FROM locks WHERE component_id=0"));
+      hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
-            iLock = DBGetFieldLong(hResult, 0, 0);
+            bLocked = _tcscmp(DBGetField(hResult, 0, 0), _T("UNLOCKED"));
          DBFreeResult(hResult);
       }
-      if (iLock == -1)
+      if (!bLocked)
       {
          // Upgrade database
          while(iVersion < DB_FORMAT_VERSION)
