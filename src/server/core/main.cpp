@@ -25,6 +25,8 @@
 #include <conio.h>
 #endif   /* _WIN32 */
 
+void DumpUsers(void);
+
 
 //
 // Thread functions
@@ -341,6 +343,10 @@ void Main(void)
                   }
                   printf("*** Done ***\n");
                }
+               break;
+            case 'u':      // Dump users
+            case 'U':
+               DumpUsers();
                break;
             default:
                break;

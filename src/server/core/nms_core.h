@@ -86,6 +86,7 @@
 #define AF_USE_EVENT_LOG                  0x00000002
 #define AF_ENABLE_ACCESS_CONTROL          0x00000004
 #define AF_ENABLE_EVENTS_ACCESS_CONTROL   0x00000008
+#define AF_LOG_SQL_ERRORS                 0x00000010
 #define AF_DEBUG_EVENTS                   0x00000100
 #define AF_DEBUG_CSCP                     0x00000200
 #define AF_DEBUG_DISCOVERY                0x00000400

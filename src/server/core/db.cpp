@@ -134,7 +134,12 @@ void DBDisconnect(DB_HANDLE hConn)
 
 BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
 {
-   return m_fpDrvQuery(hConn, szQuery);
+   BOOL bResult;
+
+   bResult = m_fpDrvQuery(hConn, szQuery);
+   if ((!bResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+   return bResult;
 }
 
 
@@ -144,7 +149,12 @@ BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
 
 DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
 {
-   return m_fpDrvSelect(hConn, szQuery);
+   DB_RESULT hResult;
+   
+   hResult = m_fpDrvSelect(hConn, szQuery);
+   if ((!hResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+   return hResult;
 }
 
 

@@ -153,6 +153,13 @@ BOOL LoadConfig(void)
          memset(g_szDbName, 0, MAX_DB_NAME);
          strncpy(g_szDbName, ptr, MAX_DB_NAME - 1);
       }
+      else if (!stricmp(buffer,"LogFailedSQLQueries"))
+      {
+         if (!stricmp(ptr, "yes") || !stricmp(ptr, "true") || !stricmp(ptr, "1"))
+            g_dwFlags |= AF_LOG_SQL_ERRORS;
+         else
+            g_dwFlags &= ~AF_LOG_SQL_ERRORS;
+      }
       else
       {
          errors++;

@@ -270,3 +270,18 @@ BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 {
    return FALSE;
 }
+
+
+//
+// Dump user list to stdout
+//
+
+void DumpUsers(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumUsers; i++)
+      printf("%-16s \"%s\" %d\n", m_pUserList[i].szName, m_pUserList[i].szPassword,
+             m_pUserList[i].wSystemRights);
+   printf("*** done ***\n");
+}
