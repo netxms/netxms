@@ -538,7 +538,7 @@ void NXCORE_EXPORTABLE Main(void)
 
 #if USE_READLINE
       // Initialize readline library if we use it
-      rl_bind_key('\t', rl_insert);
+      rl_bind_key('\t', (Function *)rl_insert);
 #endif
       
       while(1)
