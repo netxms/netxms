@@ -81,7 +81,7 @@ int GetData(int argc, char *argv[])
       // Send request and process responce
       if (iExit == 0)
       {
-         if ((dwResult = pTransport->DoRequest(request, &responce)) == SNMP_ERR_SUCCESS)
+         if ((dwResult = pTransport->DoRequest(request, &responce, m_dwTimeout, 3)) == SNMP_ERR_SUCCESS)
          {
             SNMP_Variable *var;
             char szBuffer[1024];

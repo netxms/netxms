@@ -668,13 +668,14 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
 
    PollerLock();
    m_pPollRequestor = pSession;
-   SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
+   SendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
    DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+DWORD rc;
+   if ((rc=SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE)) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags, dwNodeType;
 
@@ -693,6 +694,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    }
    else
    {
+printf("%s: rc=%d (%s)\n",m_szName,rc,SNMPGetErrorText(rc));      
       if (m_dwFlags & NF_IS_SNMP)
       {
          if (m_iSnmpAgentFails == 0)

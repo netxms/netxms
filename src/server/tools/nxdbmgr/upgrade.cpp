@@ -63,9 +63,9 @@ static BOOL H_UpgradeFromV16(void)
    static TCHAR m_szBatch[] =
       "DROP TABLE locks\n"
       "CREATE TABLE snmp_trap_cfg (trap_id integer not null,snmp_oid varchar(255) not null,"
-	      "event_id integer not null,PRIMARY KEY(trap_id))\n"
+	      "event_id integer not null,description varchar(255),PRIMARY KEY(trap_id))\n"
       "CREATE TABLE snmp_trap_pmap (trap_id integer not null,parameter integer not null,"
-         "snmp_oid varchar(255),PRIMARY KEY(trap_id,parameter))\n"
+         "snmp_oid varchar(255),description varchar(255),PRIMARY KEY(trap_id,parameter))\n"
       "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
 	      "(500, 'SNMP_UNMATCHED_TRAP',	0, 1,	'SNMP trap received: %1 (Parameters: %2)',"
 		   "'Generated when system receives an SNMP trap without match in trap "

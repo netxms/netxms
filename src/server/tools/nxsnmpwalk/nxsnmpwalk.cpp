@@ -80,9 +80,9 @@ int GetData(char *pszHost, char *pszRootOid)
          // Walk the MIB
          while(bRunning)
          {
-            pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_szCommunity, 1, m_dwVersion);
+            pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_szCommunity, getpid(), m_dwVersion);
             pRqPDU->BindVariable(new SNMP_Variable(pdwName, dwNameLen));
-            dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
+            dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, m_dwTimeout, 3);
 
             // Analyze response
             if (dwResult == SNMP_ERR_SUCCESS)
