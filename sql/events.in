@@ -284,7 +284,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'System was cold-started',
 		'Generated when system receives a coldStart SNMP trap#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   No message-specific parameters'
+		'   1) SNMP trap OID'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
@@ -293,25 +293,27 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'System was warm-started',
 		'Generated when system receives a warmStart SNMP trap#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   No message-specific parameters'
+		'   1) SNMP trap OID'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_LINK_DOWN, 'SNMP_LINK_DOWN',
 		EVENT_SEVERITY_MAJOR, 1,
-		'Link is down',
+		'Link is down (interface index %2)',
 		'Generated when system receives a linkDown SNMP trap#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   No message-specific parameters'
+		'   1) SNMP trap OID#0D#0A' CONCAT
+		'   2) Interface index'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_LINK_UP, 'SNMP_LINK_UP',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Link is up',
+		'Link is up (interface index %2)',
 		'Generated when system receives a linkUp SNMP trap#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   No message-specific parameters'
+		'   1) SNMP trap OID#0D#0A' CONCAT
+		'   2) Interface index'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
@@ -320,7 +322,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'SNMP authentication failure',
 		'Generated when system receives an authenticationFailure SNMP trap#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   No message-specific parameters'
+		'   1) SNMP trap OID'
 	);
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
@@ -329,7 +331,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'EGP neighbor loss',
 		'Generated when system receives an egpNeighborLoss SNMP trap#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   No message-specific parameters'
+		'   1) SNMP trap OID'
 	);
 
 

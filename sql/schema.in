@@ -515,6 +515,7 @@ CREATE TABLE snmp_trap_cfg
 	snmp_oid varchar(255) not null,
 	event_id integer not null,
 	sequence integer not null,
+	description varchar(255),
 	PRIMARY KEY(trap_id)
 );
 
@@ -528,5 +529,6 @@ CREATE TABLE snmp_trap_pmap
 	trap_id integer not null,
 	parameter integer not null,
 	snmp_oid varchar(255),
+	description varchar(255),
 	PRIMARY KEY(trap_id,parameter)
 );
