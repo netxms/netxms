@@ -649,9 +649,25 @@ void DCItem::UpdateCacheSize(void)
          char szBuffer[MAX_DB_STRING];
          BOOL bHasData;
 
-         sprintf(szBuffer, "SELECT idata_value FROM idata_%ld "
-                           "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
-                 m_pNode->Id(), m_dwId);
+         switch(g_dwDBSyntax)
+         {
+            case DB_SYNTAX_MSSQL:
+               sprintf(szBuffer, "SELECT TOP %ld idata_value FROM idata_%ld "
+                                 "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
+                       m_dwCacheSize, m_pNode->Id(), m_dwId);
+               break;
+            case DB_SYNTAX_MYSQL:
+            case DB_SYNTAX_PGSQL:
+               sprintf(szBuffer, "SELECT idata_value FROM idata_%ld "
+                                 "WHERE item_id=%ld ORDER BY idata_timestamp DESC LIMIT %ld",
+                       m_pNode->Id(), m_dwId, m_dwCacheSize);
+               break;
+            default:
+               sprintf(szBuffer, "SELECT idata_value FROM idata_%ld "
+                                 "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
+                       m_pNode->Id(), m_dwId);
+               break;
+         }
          hResult = DBAsyncSelect(g_hCoreDB, szBuffer);
          if (hResult != NULL)
          {
