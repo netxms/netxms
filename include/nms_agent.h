@@ -24,6 +24,7 @@
 #define _nms_agent_h_
 
 #include <stdio.h>
+#include <nms_common.h>
 
 
 //
