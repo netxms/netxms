@@ -65,6 +65,16 @@ static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 
 //
+// Called by master agent at unload
+//
+
+static void UnloadHandler(void)
+{
+   /* you can perform necessary shutdown tasks here */
+}
+
+
+//
 // Subagent information
 //
 
@@ -80,7 +90,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	0x01000000,
+	"SKELETON", 0x01000000, UnloadHandler,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),

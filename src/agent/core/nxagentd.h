@@ -237,6 +237,7 @@ DWORD GetParameterValue(char *pszParam, char *pszValue);
 DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
 
 BOOL LoadSubAgent(char *szModuleName);
+void UnloadAllSubAgents(void);
 
 BOOL AddAction(char *pszName, int iType, char *pszCmdLine);
 BOOL AddActionFromConfig(char *pszLine);

@@ -128,6 +128,25 @@ BOOL LoadSubAgent(char *szModuleName)
 
 
 //
+// Unload all subagents.
+// This function should be called on shutdown, so we don't care
+// about deregistering parameters and so on.
+//
+
+void UnloadAllSubAgents(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumSubAgents; i++)
+   {
+      if (m_pSubAgentList[i].pInfo->pUnloadHandler != NULL)
+         m_pSubAgentList[i].pInfo->pUnloadHandler();
+      DLClose(m_pSubAgentList[i].hModule);
+   }
+}
+
+
+//
 // Enumerate loaded subagents
 //
 
@@ -138,7 +157,8 @@ LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
-      snprintf(szBuffer, MAX_PATH + 32, "0x%08X %s", m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+      snprintf(szBuffer, MAX_PATH + 32, "%s 0x%08X %s", m_pSubAgentList[i].pInfo->szName,
+               m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
       NxAddResultString(value, szBuffer);
    }
    return SYSINFO_RC_SUCCESS;

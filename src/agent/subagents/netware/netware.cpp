@@ -212,7 +212,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	0x01000000,
+	"NETWARE", 0x01000000, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),

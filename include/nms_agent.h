@@ -39,6 +39,7 @@
 #define MAX_RESULT_LENGTH        256
 #define MAX_CMD_LEN              256
 #define COMMAND_TIMEOUT          60
+#define MAX_SUBAGENT_NAME        64
 
 
 //
@@ -118,7 +119,9 @@ typedef struct
 
 typedef struct
 {
+   char szName[MAX_SUBAGENT_NAME];
    DWORD dwVersion;
+   void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
    DWORD dwNumParameters;
    NETXMS_SUBAGENT_PARAM *pParamList;
    DWORD dwNumEnums;

@@ -293,6 +293,7 @@ void Shutdown(void)
    g_dwFlags |= AF_SHUTDOWN;
    ThreadSleep(5);
 
+   UnloadAllSubAgents();
    CloseLog();
 
    // Notify main thread about shutdown
