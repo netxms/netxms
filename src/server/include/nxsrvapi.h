@@ -122,6 +122,7 @@ protected:
    DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
 
    virtual void PrintMsg(char *pszFormat, ...);
+   virtual void OnTrap(CSCPMessage *pMsg);
 
 public:
    AgentConnection();
@@ -134,7 +135,11 @@ public:
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    DWORD GetParameter(char *pszParam, DWORD dwBufSize, char *pszBuffer);
+   DWORD GetList(char *pszParam);
    DWORD Nop(void);
+
+   DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
+   const char *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : "(error)"; }
 };
 
 

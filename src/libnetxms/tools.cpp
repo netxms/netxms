@@ -223,11 +223,23 @@ void LIBNETXMS_EXPORTABLE StrStrip(char *str)
 
 
 //
+// Add string to enumeration result set
+//
+
+void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, char *pszString)
+{
+   pList->ppStringList = (char **)MemReAlloc(pList->ppStringList, sizeof(char *) * (pList->dwNumStrings + 1));
+   pList->ppStringList[pList->dwNumStrings] = nx_strdup(pszString);
+   pList->dwNumStrings++;
+}
+
+
+//
 // Get arguments for parameters like name(arg1,...)
 // Returns FALSE on processing error
 //
 
-BOOL LIBNETXMS_EXPORTABLE GetParameterArg(char *param, int index, char *arg, int maxSize)
+BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize)
 {
    char *ptr1, *ptr2;
    int state, currIndex, pos;

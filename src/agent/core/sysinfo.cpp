@@ -48,7 +48,7 @@ LONG H_FileSize(char *cmd, char *arg, char *value)
    struct stat fileInfo;
 #endif
 
-   if (!GetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
       return SYSINFO_RC_UNSUPPORTED;
 
 #ifdef _WIN32
@@ -79,7 +79,7 @@ LONG H_MD5Hash(char *cmd, char *arg, char *value)
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD i;
 
-   if (!GetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileMD5Hash(szFileName, hash))
@@ -100,7 +100,22 @@ LONG H_MD5Hash(char *cmd, char *arg, char *value)
 
 LONG H_SHA1Hash(char *cmd, char *arg, char *value)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   char szFileName[MAX_PATH], szHashText[SHA1_DIGEST_SIZE * 2 + 1];
+   BYTE hash[SHA1_DIGEST_SIZE];
+   DWORD i;
+
+   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH - 1))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (!CalculateFileSHA1Hash(szFileName, hash))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Convert MD5 hash to text form
+   for(i = 0; i < SHA1_DIGEST_SIZE; i++)
+      sprintf(&szHashText[i << 1], "%02x", hash[i]);
+
+   ret_string(value, szHashText);
+   return SYSINFO_RC_SUCCESS;
 }
 
 

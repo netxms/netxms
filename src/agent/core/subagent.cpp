@@ -94,3 +94,21 @@ BOOL LoadSubAgent(char *szModuleName)
 
    return bSuccess;
 }
+
+
+//
+// Enumerate loaded subagents
+//
+
+LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+{
+   DWORD i;
+   char szBuffer[MAX_PATH + 32];
+
+   for(i = 0; i < m_dwNumSubAgents; i++)
+   {
+      snprintf(szBuffer, MAX_PATH + 32, "0x%08X %s\r\n", m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+      NxAddResultString(value, szBuffer);
+   }
+   return SYSINFO_RC_SUCCESS;
+}

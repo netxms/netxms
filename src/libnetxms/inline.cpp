@@ -30,40 +30,38 @@
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_string(char *rbuf, char *value)
 {
-   memset(rbuf, 0, MAX_RESULT_LENGTH);
-   strncpy(rbuf, value, MAX_RESULT_LENGTH - 3);
-   strcat(rbuf, "\r\n");
+   strncpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_int(char *rbuf, long value)
 {
-   sprintf(rbuf, "%ld\r\n", value);
+   sprintf(rbuf, "%ld", value);
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
 {
-   sprintf(rbuf, "%lu\r\n", value);
+   sprintf(rbuf, "%lu", value);
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_double(char *rbuf, double value)
 {
-   sprintf(rbuf, "%f\r\n", value);
+   sprintf(rbuf, "%f", value);
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_int64(char *rbuf, INT64 value)
 {
 #ifdef _WIN32
-   sprintf(rbuf, "%I64d\r\n", value);
+   sprintf(rbuf, "%I64d", value);
 #else    /* _WIN32 */
-   sprintf(rbuf, "%lld\r\n", value);
+   sprintf(rbuf, "%lld", value);
 #endif   /* _WIN32 */
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
 {
 #ifdef _WIN32
-   sprintf(rbuf, "%I64u\r\n", value);
+   sprintf(rbuf, "%I64u", value);
 #else    /* _WIN32 */
-   sprintf(rbuf, "%llu\r\n", value);
+   sprintf(rbuf, "%llu", value);
 #endif   /* _WIN32 */
 }

@@ -777,7 +777,7 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_pAgentConnection->GetParameter(szParam, dwBufSize, szBuffer);
+      dwError = m_pAgentConnection->GetParameter((char *)szParam, dwBufSize, szBuffer);
       switch(dwError)
       {
          case ERR_SUCCESS:

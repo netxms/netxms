@@ -34,6 +34,12 @@ LONG H_FileSize(char *cmd, char *arg, char *value);
 LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 
+LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+#ifdef _WIN32
+LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+#endif
+
 
 //
 // Static data
@@ -41,6 +47,8 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 
 static AGENT_PARAM *m_pParamList = NULL;
 static int m_iNumParams = 0;
+static NETXMS_SUBAGENT_ENUM *m_pEnumList = NULL;
+static int m_iNumEnums = 0;
 static DWORD m_dwTimedOutRequests = 0;
 static DWORD m_dwAuthenticationFailures = 0;
 static DWORD m_dwProcessedRequests = 0;
@@ -82,6 +90,34 @@ static LONG H_UIntPtr(char *cmd, char *arg, char *value)
 
 
 //
+// Handler for parameters list
+//
+
+static LONG H_ParamList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+{
+   int i;
+
+   for(i = 0; i < m_iNumParams; i++)
+      NxAddResultString(value, m_pParamList[i].name);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for enums list
+//
+
+static LONG H_EnumList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+{
+   int i;
+
+   for(i = 0; i < m_iNumEnums; i++)
+      NxAddResultString(value, m_pEnumList[i].szName);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // Standard agent's parameters
 //
 
@@ -105,20 +141,42 @@ static AGENT_PARAM m_stdParams[] =
 
 
 //
+// Standard agent's enumerations
+//
+
+static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
+{
+#ifdef _WIN32
+   { "ArpCache", H_ArpCache, NULL },
+   { "InterfaceList", H_InterfaceList, NULL },
+#endif
+   { "SubAgents", H_SubAgentList, NULL },
+   { "SupportedEnums", H_EnumList, NULL },
+   { "SupportedParameters", H_ParamList, NULL }
+};
+
+
+//
 // Initialize dynamic parameters list from default static list
 //
 
 BOOL InitParameterList(void)
 {
-   if (m_pParamList != NULL)
+   if ((m_pParamList != NULL) || (m_pEnumList != NULL))
       return FALSE;
 
    m_iNumParams = sizeof(m_stdParams) / sizeof(AGENT_PARAM);
    m_pParamList = (AGENT_PARAM *)malloc(sizeof(AGENT_PARAM) * m_iNumParams);
    if (m_pParamList == NULL)
       return FALSE;
-
    memcpy(m_pParamList, m_stdParams, sizeof(AGENT_PARAM) * m_iNumParams);
+
+   m_iNumEnums = sizeof(m_stdEnums) / sizeof(NETXMS_SUBAGENT_ENUM);
+   m_pEnumList = (NETXMS_SUBAGENT_ENUM *)malloc(sizeof(NETXMS_SUBAGENT_ENUM) * m_iNumEnums);
+   if (m_pEnumList == NULL)
+      return FALSE;
+   memcpy(m_pEnumList, m_stdEnums, sizeof(NETXMS_SUBAGENT_ENUM) * m_iNumEnums);
+
    return TRUE;
 }
 
@@ -173,6 +231,50 @@ DWORD GetParameterValue(char *pszParam, char *pszValue)
          break;
       }
    if (i == m_iNumParams)
+   {
+      dwErrorCode = ERR_UNKNOWN_PARAMETER;
+      m_dwUnsupportedRequests++;
+   }
+   return dwErrorCode;
+}
+
+
+//
+// Get parameter's value
+//
+
+DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue)
+{
+   int i, rc;
+   DWORD dwErrorCode;
+
+   for(i = 0; i < m_iNumEnums; i++)
+      if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
+      {
+         rc = m_pEnumList[i].fpHandler(pszParam, m_pEnumList[i].pArg, pValue);
+         switch(rc)
+         {
+            case SYSINFO_RC_SUCCESS:
+               dwErrorCode = ERR_SUCCESS;
+               m_dwProcessedRequests++;
+               break;
+            case SYSINFO_RC_ERROR:
+               dwErrorCode = ERR_INTERNAL_ERROR;
+               m_dwFailedRequests++;
+               break;
+            case SYSINFO_RC_UNSUPPORTED:
+               dwErrorCode = ERR_UNKNOWN_PARAMETER;
+               m_dwUnsupportedRequests++;
+               break;
+            default:
+               WriteLog(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               dwErrorCode = ERR_INTERNAL_ERROR;
+               m_dwFailedRequests++;
+               break;
+         }
+         break;
+      }
+   if (i == m_iNumEnums)
    {
       dwErrorCode = ERR_UNKNOWN_PARAMETER;
       m_dwUnsupportedRequests++;

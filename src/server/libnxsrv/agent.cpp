@@ -159,6 +159,7 @@ void AgentConnection::ReceiverThread(void)
       pMsg = new CSCPMessage(pRawMsg);
       if (pMsg->GetCode() == CMD_TRAP)
       {
+         OnTrap(pMsg);
          delete pMsg;
       }
       else
@@ -267,8 +268,8 @@ void AgentConnection::DestroyResultData(void)
    {
       for(i = 0; i < m_dwNumDataLines; i++)
          if (m_ppDataLines[i] != NULL)
-            free(m_ppDataLines[i]);
-      free(m_ppDataLines);
+            MemFree(m_ppDataLines[i]);
+      MemFree(m_ppDataLines);
       m_ppDataLines = NULL;
    }
    m_dwNumDataLines = 0;
@@ -387,4 +388,57 @@ BOOL AgentConnection::SendMessage(CSCPMessage *pMsg)
    bResult = (send(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
    MemFree(pRawMsg);
    return bResult;
+}
+
+
+//
+// Trap handler. Should be overriden in derived classes to implement
+// actual trap processing. Default implementation do nothing.
+//
+
+void AgentConnection::OnTrap(CSCPMessage *pMsg)
+{
+}
+
+
+//
+// Get list of values
+//
+
+DWORD AgentConnection::GetList(char *pszParam)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD i, dwRqId, dwRetCode;
+
+   DestroyResultData();
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_GET_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_PARAMETER, pszParam);
+   if (SendMessage(&msg))
+   {
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (pResponce != NULL)
+      {
+         dwRetCode = pResponce->GetVariableLong(VID_RCC);
+         if (dwRetCode == ERR_SUCCESS)
+         {
+            m_dwNumDataLines = pResponce->GetVariableLong(VID_NUM_STRINGS);
+            m_ppDataLines = (char **)MemAlloc(sizeof(char *) * m_dwNumDataLines);
+            for(i = 0; i < m_dwNumDataLines; i++)
+               m_ppDataLines[i] = pResponce->GetVariableStr(VID_ENUM_VALUE_BASE + i);
+         }
+         delete pResponce;
+      }
+      else
+      {
+         dwRetCode = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwRetCode = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwRetCode;
 }

@@ -59,6 +59,7 @@ typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
+#define snprintf _snprintf
 #define vsnprintf _vsnprintf
 
 #else    /* not _WIN32 */

@@ -121,6 +121,7 @@ private:
 
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
 
 public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -155,6 +156,7 @@ void DebugPrintf(char *pszFormat, ...);
 BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg);
 DWORD GetParameterValue(char *pszParam, char *pszValue);
+DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
 
 BOOL LoadSubAgent(char *szModuleName);
 

@@ -91,7 +91,7 @@ void CommSession::ReadThread(void)
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohl(pRawMsg->dwSize));
+         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -130,7 +130,7 @@ void CommSession::WriteThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
+      DebugPrintf("Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
       if (send(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
       {
          MemFree(pMsg);
@@ -157,7 +157,7 @@ void CommSession::ProcessingThread(void)
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-      DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+      DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
 
       // Prepare responce message
       msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -179,7 +179,7 @@ void CommSession::ProcessingThread(void)
                GetParameter(pMsg, &msg);
                break;
             case CMD_GET_LIST:
-               msg.SetVariable(VID_RCC, ERR_NOT_IMPLEMENTED);
+               GetList(pMsg, &msg);
                break;
             case CMD_KEEPALIVE:
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
@@ -253,4 +253,33 @@ void CommSession::GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
       pMsg->SetVariable(VID_VALUE, szValue);
+}
+
+
+//
+// Get list of values
+//
+
+void CommSession::GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   char szParameter[MAX_PARAM_NAME];
+   DWORD i, dwErrorCode;
+   NETXMS_VALUES_LIST value;
+
+   pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
+   value.dwNumStrings = 0;
+   value.ppStringList = NULL;
+
+   dwErrorCode = GetEnumValue(szParameter, &value);
+   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   if (dwErrorCode == ERR_SUCCESS)
+   {
+      pMsg->SetVariable(VID_NUM_STRINGS, value.dwNumStrings);
+      for(i = 0; i < value.dwNumStrings; i++)
+         pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.ppStringList[i]);
+   }
+
+   for(i = 0; i < value.dwNumStrings; i++)
+      MemFree(value.ppStringList[i]);
+   MemFree(value.ppStringList);
 }

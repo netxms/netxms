@@ -38,14 +38,8 @@
 #define MAX_LINE_SIZE      4096
 #define NXGET_VERSION      "2"
 
-#define TRACE_IN           0
-#define TRACE_OUT          1
-
 #define CMD_GET            0
-#define CMD_LIST_PARAMS    1
-#define CMD_LIST_SUBAGENTS 2
-#define CMD_LIST_ARP       3
-#define CMD_LIST_IF        4
+#define CMD_LIST           1
 
 
 //
@@ -57,19 +51,45 @@ static int m_iAuthMethod = AUTH_NONE;
 static char m_szSecret[MAX_SECRET_LENGTH] = "";
 static WORD m_wPort = AGENT_LISTEN_PORT;
 static BOOL m_bVerbose = TRUE;
-static BOOL m_bTrace = FALSE;
 static DWORD m_dwTimeout = 3000;
 
 
 //
-// Print protocol trace information
+// Get single parameter
 //
 
-static void Trace(int iDirection, char *pszLine)
+static void Get(AgentConnection *pConn, char *pszParam)
 {
-   static char *pszDir[] = { "<<<", ">>>" };
-   if (m_bTrace)
-      printf("%s %s\n", pszDir[iDirection], pszLine);
+   DWORD dwError;
+   char szBuffer[1024];
+
+   dwError = pConn->GetParameter(pszParam, 1024, szBuffer);
+   if (dwError == ERR_SUCCESS)
+      printf("%s\n", szBuffer);
+   else
+      printf("Error %d\n", dwError);
+}
+
+
+//
+// Get list of values for enum parameters
+//
+
+static void List(AgentConnection *pConn, char *pszParam)
+{
+   DWORD i, dwNumLines, dwError;
+
+   dwError = pConn->GetList(pszParam);
+   if (dwError == ERR_SUCCESS)
+   {
+      dwNumLines = pConn->GetNumDataLines();
+      for(i = 0; i < dwNumLines; i++)
+         printf("%s\n", pConn->GetDataLine(i));
+   }
+   else
+   {
+      printf("Error %d\n", dwError);
+   }
 }
 
 
@@ -79,37 +99,33 @@ static void Trace(int iDirection, char *pszLine)
 
 int main(int argc, char *argv[])
 {
-   char *eptr, szBuffer[1024];
-   DWORD dwError;
+   char *eptr;
    BOOL bStart = TRUE;
    int i, ch, iExitCode = 3, iCommand = CMD_GET;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hp:qs:tvw:AILS")) != -1)
+   while((ch = getopt(argc, argv, "a:hlp:qs:vw:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxget [<options>] <host> <parameter>\n"
-                   "   or: nxget [<options>] <command> <host>\n\n"
                    "Valid options are:\n"
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
-                   "                  \"plain-text\", \"md5\" and \"sha1\". Default is \"none\".\n"
+                   "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
                    "   -h           : Display help and exit.\n"
+                   "   -l           : Get list of values for enum parameter.\n"
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
                    "   -q           : Quiet mode.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
-                   "   -t           : Turn on protocol trace\n"
                    "   -v           : Display version and exit.\n"
                    "   -w <seconds> : Specify command timeout (default is 3 seconds)\n"
-                   "\nValid commands are:\n"
-                   "   -A           : Retrieve ARP cache\n"
-                   "   -I           : Retrieve a list of interfaces\n"
-                   "   -L           : Retrieve a list of supported parameters\n"
-                   "   -S           : Retrieve a list of loaded subagents\n"
                    "\n", m_wPort);
             bStart = FALSE;
+            break;
+         case 'l':
+            iCommand = CMD_LIST;
             break;
          case 'p':   // Port number
             i = strtol(optarg, &eptr, 0);
@@ -129,9 +145,6 @@ int main(int argc, char *argv[])
          case 's':   // Shared secret
             strncpy(m_szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
-         case 't':   // Protocol trace
-            m_bTrace = TRUE;
-            break;
          case 'v':   // Print version and exit
             printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "." NXGET_VERSION "\n");
             bStart = FALSE;
@@ -148,18 +161,6 @@ int main(int argc, char *argv[])
                m_dwTimeout = (DWORD)i;
             }
             break;
-         case 'A':
-            iCommand = CMD_LIST_ARP;
-            break;
-         case 'I':
-            iCommand = CMD_LIST_IF;
-            break;
-         case 'L':
-            iCommand = CMD_LIST_PARAMS;
-            break;
-         case 'S':
-            iCommand = CMD_LIST_SUBAGENTS;
-            break;
          case '?':
             bStart = FALSE;
             break;
@@ -170,7 +171,7 @@ int main(int argc, char *argv[])
 
    if (bStart)
    {
-      if (argc - optind < (iCommand == CMD_GET ? 2 : 1))
+      if (argc - optind < 2)
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
       }
@@ -205,12 +206,18 @@ int main(int argc, char *argv[])
 
             if (conn.Connect(m_bVerbose))
             {
-               dwError = conn.GetParameter(argv[optind + 1], 1024, szBuffer);
+               switch(iCommand)
+               {
+                  case CMD_GET:
+                     Get(&conn, argv[optind + 1]);
+                     break;
+                  case CMD_LIST:
+                     List(&conn, argv[optind + 1]);
+                     break;
+                  default:
+                     break;
+               }
                conn.Disconnect();
-               if (dwError == ERR_SUCCESS)
-                  printf("%s\n", szBuffer);
-               else
-                  printf("Error %d\n", dwError);
             }
          }
       }

@@ -53,6 +53,7 @@ src/agent/core/comm.cpp -text
 src/agent/core/getparam.cpp -text
 src/agent/core/log.cpp -text
 src/agent/core/messages.mc -text
+src/agent/core/netinfo.cpp -text
 src/agent/core/nxagentd.cpp -text
 src/agent/core/nxagentd.dsp -text
 src/agent/core/nxagentd.dsw -text
