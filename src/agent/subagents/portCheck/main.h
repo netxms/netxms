@@ -15,5 +15,6 @@ LONG H_CheckSSH(char *, char *, char *);
 int CheckSSH(char *, DWORD, short, char *, char *);
 LONG H_CheckSMTP(char *, char *, char *);
 int CheckSMTP(char *, DWORD, short, char *);
+int CheckHTTP(char *, DWORD, short, char *, char *, char *);
 
 #endif // __MAIN__H__

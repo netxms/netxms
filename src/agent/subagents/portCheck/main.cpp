@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.6 2005-01-28 23:45:01 alk Exp $ */
+/* $Id: main.cpp,v 1.7 2005-01-29 00:21:29 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -86,6 +86,26 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 		bHandled = FALSE;
 		break;
 	case NETSRV_HTTP:
+		{
+			char *pHost;
+			char *pURI;
+
+			nRet = PC_ERR_BAD_PARAMS;
+
+			pHost = szRequest;
+			pURI = strchr(szRequest, ':');
+			if (pURI != NULL)
+			{
+				*pURI = 0;
+				pURI++;
+
+				nRet = CheckHTTP(NULL, dwAddress, wPort, pURI, pHost,
+						szResponce);
+			}
+
+			pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
+			pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+		}
 		break;
 	default:
 		bHandled = FALSE;
@@ -138,6 +158,9 @@ extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInf
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/28 23:45:01  alk
+SMTP check added, requst string == rcpt to
+
 Revision 1.5  2005/01/28 23:19:35  alk
 VID_SERVICE_STATUS set
 

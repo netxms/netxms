@@ -185,6 +185,7 @@ src/agent/subagents/ping/ping.cpp -text
 src/agent/subagents/ping/ping.dsp -text
 src/agent/subagents/ping/ping.dsw -text
 src/agent/subagents/portCheck/Makefile.am -text
+src/agent/subagents/portCheck/http.cpp -text
 src/agent/subagents/portCheck/main.cpp -text
 src/agent/subagents/portCheck/main.h -text
 src/agent/subagents/portCheck/net.cpp -text
