@@ -243,13 +243,25 @@ BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwN
 
 
 //
-// Macros
+// Inline functions
 //
 
-#define NXCSyncObjects() NXCRequest(NXC_OP_SYNC_OBJECTS)
-#define NXCSyncEvents() NXCRequest(NXC_OP_SYNC_EVENTS)
-#define NXCOpenEventDB() NXCRequest(NXC_OP_OPEN_EVENT_DB)
-#define NXCCloseEventDB() NXCRequest(NXC_OP_CLOSE_EVENT_DB)
+#ifdef __cplusplus
 
+#ifndef __libnxcl_inline_c__
+inline DWORD NXCSyncObjects(void) { return NXCRequest(NXC_OP_SYNC_OBJECTS); }
+inline DWORD NXCSyncEvents(void) { return NXCRequest(NXC_OP_SYNC_EVENTS); }
+inline DWORD NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
+inline DWORD NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
+#endif   /* __libnxcl_inline_c__ */
+
+#else    /* __cplusplus */
+
+DWORD EXPORTABLE NXCSyncObjects(void);
+DWORD EXPORTABLE NXCSyncEvents(void);
+DWORD EXPORTABLE NXCOpenEventDB(void);
+DWORD EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
+
+#endif   /* __cplusplus */
 
 #endif   /* _nxclapi_h_ */

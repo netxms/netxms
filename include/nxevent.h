@@ -27,7 +27,15 @@
 // Event flags
 //
 
-#define EF_LOG                   0x0001
+#define EF_LOG                   0x00000001
+
+
+//
+// Event flags used by client library (has no meaning for server)
+//
+
+#define EF_MODIFIED              0x01000000
+#define EF_DELETED               0x02000000
 
 
 //
