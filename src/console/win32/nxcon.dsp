@@ -104,6 +104,10 @@ SOURCE=.\EventBrowser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EventEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.cpp
 # End Source File
 # Begin Source File
@@ -161,11 +165,11 @@ SOURCE=.\EventBrowser.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\globals.h
+SOURCE=.\EventEditor.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\id.h
+SOURCE=.\globals.h
 # End Source File
 # Begin Source File
 

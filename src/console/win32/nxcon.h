@@ -29,9 +29,21 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "globals.h"       // Global symbols
 #include "ControlPanel.h"
 #include "EventBrowser.h"
+#include "EventEditor.h"
 #include "ObjectBrowser.h"
 #include "MapFrame.h"
 #include "ProgressDialog.h"	// Added by ClassView
+
+
+//
+// Request waiting structure
+//
+
+struct RQ_WAIT_INFO
+{
+   HREQUEST hRequest;
+   CWnd *pWnd;
+};
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -56,6 +68,7 @@ public:
 protected:
 	DWORD m_dwClientState;
 	CEventBrowser *m_pwndEventBrowser;
+   CEventEditor *m_pwndEventEditor;
 	CWnd* m_pwndObjectBrowser;
 	CWnd *m_pwndCtrlPanel;
 	HMENU m_hCtrlPanelMenu;
@@ -64,9 +77,10 @@ protected:
 	HACCEL m_hMDIAccel;
 	BOOL m_bAuthFailed;
 	CProgressDialog m_dlgProgress;
-
+   RQ_WAIT_INFO *m_pRqWaitList;
 
 public:
+	void RegisterRequest(HREQUEST hRequest, CWnd *pWnd);
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	void OnViewDestroy(DWORD dwView, CWnd *pWnd);
 	void OnViewCreate(DWORD dwView, CWnd *pWnd);
@@ -78,10 +92,12 @@ public:
 	afx_msg void OnViewMap();
 	afx_msg void OnConnectToServer();
 	afx_msg void OnViewObjectbrowser();
+	afx_msg void OnControlpanelEvents();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
 	BOOL m_bEventBrowserActive;
+	BOOL m_bEventEditorActive;
 	BOOL m_bObjectBrowserActive;
 	BOOL m_bCtrlPanelActive;
 };

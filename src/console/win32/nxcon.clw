@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CObjectPropDlg
-LastTemplate=CDialog
+LastClass=CEventEditor
+LastTemplate=CMDIChildWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=13
+ClassCount=14
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -16,24 +16,24 @@ Class7=CEventBrowser
 Class9=CMapView
 
 ResourceCount=20
-Resource1=IDR_MAPFRAME
-Resource2=IDR_MAINFRAME
-Resource3=IDR_CTRLPANEL
-Resource4=IDD_LOGIN
-Resource5=IDR_OBJECTS
+Resource1=IDR_CTRLPANEL
+Resource2=IDD_DUMMY (English (U.S.))
+Resource3=IDR_MAPFRAME
+Resource4=IDD_PROGRESS
+Resource5=IDR_EVENTS
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_ABOUTBOX
+Resource6=IDD_LOGIN
 Class11=CProgressDialog
-Resource7=IDR_EVENTS
+Resource7=IDR_OBJECTS
 Class12=CObjectBrowser
-Resource8=IDD_PROGRESS
+Resource8=IDD_OBJECT_PROPERTIES
 Class13=CObjectPropDlg
-Resource9=IDD_OBJECT_PROPERTIES
-Resource10=IDD_DUMMY
+Resource9=IDR_MAINFRAME
+Resource10=IDD_ABOUTBOX
 Resource11=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource12=IDR_MAPFRAME (English (U.S.))
 Resource13=IDR_OBJECTS (English (U.S.))
@@ -43,7 +43,8 @@ Resource16=IDR_MAINFRAME (English (U.S.))
 Resource17=IDD_ABOUTBOX (English (U.S.))
 Resource18=IDD_LOGIN (English (U.S.))
 Resource19=IDD_PROGRESS (English (U.S.))
-Resource20=IDD_DUMMY (English (U.S.))
+Class14=CEventEditor
+Resource20=IDD_DUMMY
 
 [CLS:CConsoleApp]
 Type=0
@@ -102,8 +103,10 @@ Command6=ID_VIEW_CONTROLPANEL
 Command7=ID_VIEW_TOOLBAR
 Command8=ID_VIEW_STATUS_BAR
 Command9=ID_VIEW_REFRESH
-Command10=ID_APP_ABOUT
-CommandCount=10
+Command10=ID_CONTROLPANEL_EVENTS
+Command11=ID_CONTROLPANEL_USERS
+Command12=ID_APP_ABOUT
+CommandCount=12
 
 [TB:IDR_MAINFRAME]
 Type=1
@@ -432,7 +435,7 @@ CommandCount=14
 
 [DLG:IDD_ABOUTBOX (English (U.S.))]
 Type=1
-Class=?
+Class=CAboutDlg
 ControlCount=4
 Control1=IDC_STATIC,static,1342177283
 Control2=IDC_STATIC,static,1342308480
@@ -441,7 +444,7 @@ Control4=IDOK,button,1342373889
 
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
-Class=?
+Class=CLoginDialog
 ControlCount=11
 Control1=IDC_EDIT_SERVER,edit,1350631552
 Control2=IDC_EDIT_LOGIN,edit,1350631552
@@ -457,14 +460,14 @@ Control11=IDC_STATIC,static,1342308352
 
 [DLG:IDD_PROGRESS (English (U.S.))]
 Type=1
-Class=?
+Class=CProgressDialog
 ControlCount=2
 Control1=IDC_STATIC_TITLE,button,1342177287
 Control2=IDC_STATIC_TEXT,static,1342308865
 
 [DLG:IDD_OBJECT_PROPERTIES (English (U.S.))]
 Type=1
-Class=?
+Class=CObjectPropDlg
 ControlCount=1
 Control1=IDC_LIST_VIEW,SysListView32,1342275613
 
@@ -475,4 +478,12 @@ ControlCount=3
 Control1=IDOK,button,1342242817
 Control2=IDCANCEL,button,1342242816
 Control3=IDC_TREE_VIEW,SysTreeView32,1350631424
+
+[CLS:CEventEditor]
+Type=0
+HeaderFile=EventEditor.h
+ImplementationFile=EventEditor.cpp
+BaseClass=CMDIChildWnd
+Filter=M
+VirtualFilter=mfWC
 

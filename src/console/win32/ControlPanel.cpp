@@ -11,8 +11,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
+
+//
+// Control panel items
+//
+
+#define CP_ITEM_EPP     0
+#define CP_ITEM_USERS   1
+#define CP_ITEM_EVENTS  2
+
+
+//
 // CControlPanel
+//
 
 IMPLEMENT_DYNCREATE(CControlPanel, CMDIChildWnd)
 
@@ -33,6 +44,7 @@ BEGIN_MESSAGE_MAP(CControlPanel, CMDIChildWnd)
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+   ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDoubleClick)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -67,11 +79,13 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Create(32, 32, ILC_COLOR8 | ILC_MASK, 8, 8);
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USERS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_RULEMGR));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EVENT));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
-   m_wndListCtrl.InsertItem(0, "Event Processing Policy", 1);
-   m_wndListCtrl.InsertItem(1, "Users", 0);
+   m_wndListCtrl.InsertItem(CP_ITEM_EPP, "Event Processing Policy", 1);
+   m_wndListCtrl.InsertItem(CP_ITEM_USERS, "Users", 0);
+   m_wndListCtrl.InsertItem(CP_ITEM_EVENTS, "Events", 2);
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;
@@ -110,4 +124,24 @@ void CControlPanel::OnSetFocus(CWnd* pOldWnd)
 	CMDIChildWnd::OnSetFocus(pOldWnd);
 	
    m_wndListCtrl.SetFocus();
+}
+
+
+//
+// Process double click on list control
+//
+
+void CControlPanel::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
+{
+   switch(pInfo->iItem)
+   {
+      case CP_ITEM_EVENTS:
+         PostMessage(WM_COMMAND, ID_CONTROLPANEL_EVENTS, 0);
+         break;
+      case CP_ITEM_USERS:
+         PostMessage(WM_COMMAND, ID_CONTROLPANEL_USERS, 0);
+         break;
+      default:
+         break;
+   }
 }

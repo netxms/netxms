@@ -43,6 +43,13 @@ extern CConsoleApp theApp;
 
 
 //
+// Custom windows messages
+//
+
+#define WM_REQUEST_COMPLETED     (WM_USER + 1)
+
+
+//
 // Variables
 //
 

@@ -36,6 +36,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_MAP, OnViewMap)
 	ON_COMMAND(ID_CONNECT_TO_SERVER, OnConnectToServer)
 	ON_COMMAND(ID_VIEW_OBJECTBROWSER, OnViewObjectbrowser)
+	ON_COMMAND(ID_CONTROLPANEL_EVENTS, OnControlpanelEvents)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -48,8 +49,10 @@ CConsoleApp::CConsoleApp()
 {
    m_bCtrlPanelActive = FALSE;
    m_bEventBrowserActive = FALSE;
+   m_bEventEditorActive = FALSE;
    m_bObjectBrowserActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
+   m_pRqWaitList = NULL;
 }
 
 //
@@ -240,6 +243,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
          m_bObjectBrowserActive = TRUE;
          m_pwndObjectBrowser = pWnd;
          break;
+      case IDR_EVENT_EDITOR:
+         m_bEventEditorActive = TRUE;
+         m_pwndEventEditor = (CEventEditor *)pWnd;
+         break;
       default:
          break;
    }
@@ -262,6 +269,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd)
          break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = FALSE;
+         break;
+      case IDR_EVENT_EDITOR:
+         m_bEventEditorActive = FALSE;
          break;
       default:
          break;
@@ -398,7 +408,31 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          MemFree(pArg);
 //         Sleep(0);
          break;
+      case NXC_EVENT_REQUEST_COMPLETED:
+         break;
       default:
          break;
    }
+}
+
+void CConsoleApp::OnControlpanelEvents() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bEventEditorActive)
+      m_pwndEventEditor->BringWindowToTop();
+   else
+	   pFrame->CreateNewChild(
+		   RUNTIME_CLASS(CEventEditor), IDR_OBJECTS, m_hCtrlPanelMenu, m_hCtrlPanelAccel);	
+}
+
+
+//
+// Register callback for request completion
+//
+
+void CConsoleApp::RegisterRequest(HREQUEST hRequest, CWnd *pWnd)
+{
+
 }

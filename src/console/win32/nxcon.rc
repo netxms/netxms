@@ -130,6 +130,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
     END
+    POPUP "Control Panel"
+    BEGIN
+        MENUITEM "&Events\tCtrl+F2",            ID_CONTROLPANEL_EVENTS
+        MENUITEM "&Users\tCtrl+F3",             ID_CONTROLPANEL_USERS
+    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&About nxcon...",             ID_APP_ABOUT
