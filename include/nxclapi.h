@@ -66,6 +66,7 @@
 //
 
 typedef void (* NXC_EVENT_HANDLER)(DWORD dwEvent, DWORD dwCode, void *pArg);
+typedef void (* NXC_DEBUG_CALLBACK)(char *pMsg);
 
 
 //
@@ -81,6 +82,7 @@ BOOL EXPORTABLE NXCInitialize(void);
 BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
 void EXPORTABLE NXCDisconnect(void);
 void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
+void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 int EXPORTABLE NXCSyncRequest(DWORD dwOperation, ...);
 

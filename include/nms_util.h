@@ -27,7 +27,20 @@
 #include <nms_cscp.h>
 #include <nms_threads.h>
 
-#define INVALID_INDEX      0xFFFFFFFF
+#define INVALID_INDEX         0xFFFFFFFF
+#define CSCP_TEMP_BUF_SIZE    4096
+
+
+//
+// Temporary buffer structure for RecvCSCPMessage() function
+//
+
+typedef struct
+{
+   DWORD dwBufSize;
+   DWORD dwBufPos;
+   char szBuffer[CSCP_TEMP_BUF_SIZE];
+} CSCP_BUFFER;
 
 
 //
@@ -121,7 +134,8 @@ public:
 extern "C"
 {
    void EXPORTABLE LibUtilDestroyObject(void *pObject);
-   QWORD __bswap_64(QWORD qwVal);
+   QWORD EXPORTABLE __bswap_64(QWORD qwVal);
+   int EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
 }
 
 #endif   /* _nms_util_h_ */
