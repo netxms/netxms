@@ -247,6 +247,9 @@ void ClientSession::ProcessingThread(void)
             SendMessage(pReply);
             delete pReply;
             break;
+         case CMD_SET_EVENT_INFO:
+            SetEventInfo(pMsg);
+            break;
          default:
             break;
       }
@@ -500,5 +503,73 @@ void ClientSession::Notify(DWORD dwCode)
 
    msg.SetCode(CMD_NOTIFY);
    msg.SetVariable(VID_NOTIFICATION_CODE, dwCode);
+   SendMessage(&msg);
+}
+
+
+//
+// Update event template
+//
+
+void ClientSession::SetEventInfo(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare reply message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check if we have event configuration database opened
+   if (!(m_dwFlags & CSF_EVENT_DB_LOCKED))
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      // Check access rights
+      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+      {
+         char szQuery[4096], *pszName, *pszMessage, *pszDescription;
+         DWORD dwEventId;
+         BOOL bEventExist = FALSE;
+         DB_RESULT hResult;
+
+         // Check if event with specific id exists
+         dwEventId = pRequest->GetVariableLong(VID_EVENT_ID);
+         sprintf(szQuery, "SELECT event_id FROM events WHERE event_id=%ld", dwEventId);
+         hResult = DBSelect(g_hCoreDB, szQuery);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+               bEventExist = TRUE;
+            DBFreeResult(hResult);
+         }
+
+         // Prepare SQL query
+         pszName = msg.GetVariableStr(VID_NAME);
+         pszMessage = msg.GetVariableStr(VID_MESSAGE);
+         pszDescription = msg.GetVariableStr(VID_DESCRIPTION);
+         if (bEventExist)
+            sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
+                    pszName, msg.GetVariableLong(VID_SEVERITY), msg.GetVariableLong(VID_FLAGS),
+                    pszMessage, pszDescription);
+         else
+            sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES ",
+         if (DBQuery(g_hCoreDB, szQuery))
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         else
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+
+         MemFree(pszName);
+         MemFree(pszMessage);
+         MemFree(pszDescription);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+
+   // Send responce
    SendMessage(&msg);
 }

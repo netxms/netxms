@@ -220,12 +220,19 @@ private:
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
 
+   BOOL CheckSysAccessRights(DWORD dwRequiredAccess) 
+   { 
+      return m_dwUserId == 0 ? TRUE : 
+         ((dwRequiredAccess & m_dwSystemAccess) ? TRUE : FALSE);
+   }
+
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
    void SendAllEvents(void);
    void SendAllConfigVars(void);
    void SetConfigVariable(CSCPMessage *pMsg);
    void SendEventDB(DWORD dwRqId);
+   void SetEventInfo(CSCPMessage *pMsg);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

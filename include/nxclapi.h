@@ -125,6 +125,8 @@ typedef unsigned long HREQUEST;
 #define RCC_ACCESS_DENIED           ((DWORD)2)
 #define RCC_INVALID_REQUEST         ((DWORD)3)
 #define RCC_TIMEOUT                 ((DWORD)4)
+#define RCC_OUT_OF_STATE_REQUEST    ((DWORD)5)
+#define RCC_DB_FAILURE              ((DWORD)6)
 
 
 //
