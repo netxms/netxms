@@ -13,6 +13,8 @@
 #include "CreateNetSrvDlg.h"
 #include "NodePoller.h"
 #include "MIBBrowserDlg.h"
+#include "NetSrvPropsGeneral.h"
+#include "NodePropsPolling.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -813,44 +815,60 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 {
 	CObjectPropSheet wndPropSheet("Object Properties", GetMainWnd(), 0);
    CNodePropsGeneral wndNodeGeneral;
+   CNetSrvPropsGeneral wndNetSrvGeneral;
    CObjectPropsGeneral wndObjectGeneral;
    CObjectPropCaps wndObjectCaps;
    CObjectPropsSecurity wndObjectSecurity;
    CObjectPropsPresentation wndObjectPresentation;
+   CNodePropsPolling wndNodePolling;
    NXC_OBJECT *pObject;
    char szBuffer[32];
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
    if (pObject != NULL)
    {
-      // Create "General" tab
-      if (pObject->iClass == OBJECT_NODE)
+      // Create "General" tab and class-specific tabs
+      switch(pObject->iClass)
       {
-         wndNodeGeneral.m_dwObjectId = dwObjectId;
-         wndNodeGeneral.m_strName = pObject->szName;
-         wndNodeGeneral.m_strOID = pObject->node.szObjectId;
-         wndNodeGeneral.m_strPrimaryIp = IpToStr(pObject->dwIpAddr, szBuffer);
-         wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
-         wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
-         wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
-         wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
-         wndNodeGeneral.m_iSNMPVersion = (pObject->node.wSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
-         wndPropSheet.AddPage(&wndNodeGeneral);
-      }
-      else
-      {
-         wndObjectGeneral.m_dwObjectId = dwObjectId;
-         wndObjectGeneral.m_strClass = g_szObjectClass[pObject->iClass];
-         wndObjectGeneral.m_strName = pObject->szName;
-         wndPropSheet.AddPage(&wndObjectGeneral);
-      }
+         case OBJECT_NODE:
+            wndNodeGeneral.m_dwObjectId = dwObjectId;
+            wndNodeGeneral.m_strName = pObject->szName;
+            wndNodeGeneral.m_strOID = pObject->node.szObjectId;
+            wndNodeGeneral.m_strPrimaryIp = IpToStr(pObject->dwIpAddr, szBuffer);
+            wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
+            wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
+            wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
+            wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
+            wndNodeGeneral.m_iSNMPVersion = (pObject->node.wSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
+            wndPropSheet.AddPage(&wndNodeGeneral);
 
-      // Create tabs specific for node objects
-      if (pObject->iClass == OBJECT_NODE)
-      {
-         // Create "Capabilities" tab
-         wndObjectCaps.m_pObject = pObject;
-         wndPropSheet.AddPage(&wndObjectCaps);
+            // Create "Polling" tab
+            wndNodePolling.m_dwPollerNode = pObject->node.dwPollerNode;
+            wndPropSheet.AddPage(&wndNodePolling);
+
+            // Create "Capabilities" tab
+            wndObjectCaps.m_pObject = pObject;
+            wndPropSheet.AddPage(&wndObjectCaps);
+            break;
+         case OBJECT_NETWORKSERVICE:
+            wndNetSrvGeneral.m_pObject = pObject;
+            wndNetSrvGeneral.m_dwObjectId = dwObjectId;
+            wndNetSrvGeneral.m_strName = pObject->szName;
+            wndNetSrvGeneral.m_iServiceType = pObject->netsrv.iServiceType;
+            wndNetSrvGeneral.m_iPort = pObject->netsrv.wPort;
+            wndNetSrvGeneral.m_iProto = pObject->netsrv.wProto;
+            wndNetSrvGeneral.m_strRequest = pObject->netsrv.pszRequest;
+            wndNetSrvGeneral.m_strResponce = pObject->netsrv.pszResponce;
+            wndNetSrvGeneral.m_dwIpAddr = pObject->dwIpAddr;
+            wndNetSrvGeneral.m_dwPollerNode = pObject->netsrv.dwPollerNode;
+            wndPropSheet.AddPage(&wndNetSrvGeneral);
+            break;
+         default:
+            wndObjectGeneral.m_dwObjectId = dwObjectId;
+            wndObjectGeneral.m_strClass = g_szObjectClass[pObject->iClass];
+            wndObjectGeneral.m_strName = pObject->szName;
+            wndPropSheet.AddPage(&wndObjectGeneral);
+            break;
       }
 
       // Create "Security" tab

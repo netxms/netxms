@@ -11,13 +11,17 @@
 // Allowed classes
 //
 
-#define SCL_NODE        0x0001
-#define SCL_INTERFACE   0x0002
-#define SCL_CONTAINER   0x0004
-#define SCL_SUBNET      0x0008
-#define SCL_NETWORK     0x0010
-#define SCL_SERVICEROOT 0x0020
-#define SCL_ZONE        0x0040
+#define SCL_NODE              0x0001
+#define SCL_INTERFACE         0x0002
+#define SCL_CONTAINER         0x0004
+#define SCL_SUBNET            0x0008
+#define SCL_NETWORK           0x0010
+#define SCL_SERVICEROOT       0x0020
+#define SCL_ZONE              0x0040
+#define SCL_NETWORKSERVICE    0x0080
+#define SCL_TEMPLATE          0x0100
+#define SCL_TEMPLATEGROUP     0x0200
+#define SCL_TEMPLATEROOT      0x0400
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -27,6 +31,9 @@ class CObjectSelDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bAllowEmptySelection;
+	BOOL m_bSelectAddress;
+	DWORD m_dwParentObject;
 	BOOL m_bSingleSelection;
 	DWORD m_dwAllowedClasses;
 	DWORD m_dwNumObjects;
@@ -56,6 +63,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnDblclkListObjects(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnButtonNone();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

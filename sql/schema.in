@@ -115,6 +115,7 @@ CREATE TABLE nodes
 	node_type integer,
 	agent_version varchar(63),
 	platform_name varchar(63),
+	poller_node_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

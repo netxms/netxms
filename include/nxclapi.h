@@ -287,9 +287,10 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x1000)
 #define OBJ_UPDATE_CHECK_RESPONCE   ((DWORD)0x2000)
 #define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x4000)
+#define OBJ_UPDATE_IP_ADDR          ((DWORD)0x8000)
 
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x01FF)
-#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x7EC1)
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x41FF)
+#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0xFEC1)
 
 
 //
@@ -623,6 +624,7 @@ typedef struct
          DWORD dwFlags;
          DWORD dwDiscoveryFlags;
          DWORD dwNodeType;
+         DWORD dwPollerNode;
          TCHAR szSharedSecret[MAX_SECRET_LENGTH];
          TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
          TCHAR szObjectId[MAX_OID_LENGTH];
@@ -685,6 +687,7 @@ typedef struct
    DWORD dwPollerNode;
    TCHAR *pszRequest;
    TCHAR *pszResponce;
+   DWORD dwIpAddr;
 } NXC_OBJECT_UPDATE;
 
 

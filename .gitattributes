@@ -349,6 +349,8 @@ src/console/win32/NodePoller.cpp -text
 src/console/win32/NodePoller.h -text
 src/console/win32/NodePropsGeneral.cpp -text
 src/console/win32/NodePropsGeneral.h -text
+src/console/win32/NodePropsPolling.cpp -text
+src/console/win32/NodePropsPolling.h -text
 src/console/win32/NodeSummary.cpp -text
 src/console/win32/NodeSummary.h -text
 src/console/win32/ObjectBrowser.cpp -text

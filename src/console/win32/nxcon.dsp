@@ -265,6 +265,10 @@ SOURCE=.\MIBBrowserDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NetSrvPropsGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NetSummaryFrame.cpp
 # End Source File
 # Begin Source File
@@ -567,6 +571,10 @@ SOURCE=.\MapView.h
 # Begin Source File
 
 SOURCE=.\MIBBrowserDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NetSrvPropsGeneral.h
 # End Source File
 # Begin Source File
 
