@@ -325,7 +325,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		4006, 'DC_AGENT_VERSION_CHANGE',
-		EVENT_SEVERITY_INFO, 1,
+		EVENT_SEVERITY_NORMAL, 1,
 		'NetXMS agent version was changed from %3 to %4',
 		'Custom data collection threshold event.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
