@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.53 2005-01-17 17:13:50 alk Exp $
+# $Id: configure.ac,v 1.54 2005-01-17 17:50:34 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -26,9 +26,9 @@ AC_PROG_LIBTOOL
 # disable C++ exceptions
 CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
-LDFLAGS="-nodefaultlibs $LDFLAGS"
+LDFLAGS="-nodefaultlibs $LDFLAGS -lc"
 
-AC_CHECK_LIB(c_r, pthread_create, [], [LDFLAGS="$LDFLAGS -lc_r"])
+AC_CHECK_LIB(c_r, pthread_create, LDFLAGS="$LDFLAGS -lc_r")
 
 
 # --------------------------------------------------------------------------

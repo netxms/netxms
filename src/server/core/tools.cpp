@@ -213,6 +213,7 @@ BOOL ExecCommand(char *pszCommand)
    }
 #else
    /* TODO: add UNIX code here */
+	bSuccess = FALSE;
 #endif
 
    return bSuccess;
