@@ -59,12 +59,17 @@
 // libnxsnmp error codes
 //
 
-#define SNMP_ERR_SUCCESS   0
-#define SNMP_ERR_TIMEOUT   1
-#define SNMP_ERR_PARAM     2
-#define SNMP_ERR_SOCKET    3
-#define SNMP_ERR_COMM      4
-#define SNMP_ERR_PARSE     5
+#define SNMP_ERR_SUCCESS   0     /* success */
+#define SNMP_ERR_TIMEOUT   1     /* request timeout */
+#define SNMP_ERR_PARAM     2     /* invalid parameters passed to function */
+#define SNMP_ERR_SOCKET    3     /* unable to create socket */
+#define SNMP_ERR_COMM      4     /* send/receive error */
+#define SNMP_ERR_PARSE     5     /* error parsing PDU */
+#define SNMP_ERR_NO_OBJECT 6     /* given object doesn't exist on agent */
+#define SNMP_ERR_HOSTNAME  7     /* invalid hostname or IP address */
+#define SNMP_ERR_BAD_OID   8     /* object id is incorrect */
+#define SNMP_ERR_AGENT     9     /* agent returns an error */
+#define SNMP_ERR_BAD_TYPE  10    /* unknown variable data type */
 
 
 //
@@ -107,6 +112,8 @@
 #define ASN_NSAP_ADDR               0x45
 #define ASN_COUNTER64               0x46
 #define ASN_UINTEGER32              0x47
+#define ASN_NO_SUCH_OBJECT          0x80
+#define ASN_NO_SUCH_INSTANCE        0x81
 #define ASN_GET_REQUEST_PDU         0xA0
 #define ASN_GET_NEXT_REQUEST_PDU    0xA1
 #define ASN_GET_RESPONCE_PDU        0xA2
@@ -221,6 +228,7 @@ public:
    SNMP_Variable *GetVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
    const char *GetCommunity(void) { return m_pszCommunity; }
    DWORD GetVersion(void) { return m_dwVersion; }
+   DWORD GetErrorCode(void) { return m_dwErrorCode; }
 
    DWORD GetRequestId(void) { return m_dwRqId; }
    void SetRequestId(DWORD dwId) { m_dwRqId = dwId; }
@@ -257,7 +265,7 @@ public:
    DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponce, 
                    DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
 
-   BOOL CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = 161);
+   DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = 161);
 };
 
 
@@ -268,6 +276,7 @@ public:
 void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
 BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText);
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError);
 
 
 #endif

@@ -233,6 +233,7 @@ typedef unsigned long HREQUEST;
 #define RCC_NO_MAC_ADDRESS          ((DWORD)27)
 #define RCC_NOT_IMPLEMENTED         ((DWORD)28)
 #define RCC_INVALID_TRAP_ID         ((DWORD)29)
+#define RCC_DCI_NOT_SUPPORTED       ((DWORD)30)
 
 
 //
@@ -910,6 +911,8 @@ NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, DWORD dwRow);
 DWORD LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOLD *pThreshold);
 BOOL LIBNXCL_EXPORTABLE NXCDeleteThresholdFromItem(NXC_DCI *pItem, DWORD dwIndex);
 BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD dwIndex2);
+DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(DWORD dwNodeId, int iOrigin, TCHAR *pszParameter,
+                                           TCHAR *pszBuffer, DWORD dwBufferSize);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList);
 void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList);

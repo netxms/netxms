@@ -136,9 +136,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("No interfaces suitable for sending magic packet"),
       _T("No MAC address on interface"),
       _T("Command not implemented"),
-      _T("Invalid trap configuration record ID")
+      _T("Invalid trap configuration record ID"),
+      _T("Requested data collection item is not supported by agent")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_TRAP_ID)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_DCI_NOT_SUPPORTED)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

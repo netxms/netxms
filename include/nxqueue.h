@@ -34,7 +34,13 @@ class LIBNXCSCP_EXPORTABLE Queue
 {
 private:
    MUTEX m_hQueueAccess;
-   CONDITION m_hConditionNotEmpty;
+#ifdef _WIN32
+   HANDLE m_eventWakeup;
+#else
+   pthread_mutex_t m_mutexWakeup;
+   pthread_cond_t m_condWakeup;
+#endif
+   //CONDITION m_hConditionNotEmpty;
    void **m_pElements;
    DWORD m_dwNumElements;
    DWORD m_dwBufferSize;

@@ -21,6 +21,7 @@ GENERAL:
 - Add DEFAULT keyword for config.need_server_restart and 
   config.is_visible in schema
 - Add --with-client option to configure (should enable libnxcl and nxevent)
+- Optimize WaitForMessage method in message waiting queue class
 
 
 SERVER:
@@ -37,14 +38,12 @@ SERVER:
 - Check what happens if DCI copied while being polled
 - On startup, server must read last poll time from database for each DCI
 - Optimize SNMP subsystem
-- Get interface status via SNMP or native agent when possible
 
 
 CORE AGENT:
 
 - Check shutdown procedure on different platforms
 - Add signal handlers for UNIX
-- Add "startup delay" parameter
 
 
 LINUX AGENT:
@@ -59,15 +58,10 @@ WINDOWS CONSOLE:
 - Add parameter selection for native agents in DCI configuration dialog
 - Find good graph creation library
 - In object browser, automatically enclose search string in * when searching
+- Enlarge 16x16 status overlay icons
 
 
 SUBAGENTS:
 
 - libperl-driven subagent, allow to run perl scripts w/o forking/executing
 - bandwidth meter; data in/out for last N seconds
-
-
-ALARM VIEWER:
-
-- Don't display alarms which was acknowleged on creation
-- Save last used server name and login

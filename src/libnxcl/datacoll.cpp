@@ -569,3 +569,38 @@ DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId,
 
    return WaitForRCC(dwRqId);
 }
+
+
+//
+// Query value of specific parameter from node
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(DWORD dwNodeId, int iOrigin, TCHAR *pszParameter,
+                                           TCHAR *pszBuffer, DWORD dwBufferSize)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_QUERY_PARAMETER);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)iOrigin);
+   msg.SetVariable(VID_NAME, pszParameter);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
+   if (pResponce != NULL)
+   {
+      dwResult = pResponce->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+         pResponce->GetVariableStr(VID_VALUE, pszBuffer, dwBufferSize);
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+DebugPrintf("WaitForMessage returns NULL\n");
+   }
+   return dwResult;
+}

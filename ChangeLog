@@ -19,6 +19,14 @@
 - Windows console: Status icons now placed over object icons in
   object browser
 - Windows console: Policy editor drawing code improved
+- Added StartupDelay parameter to agent's configuration file
+- Windows console: Added "Save policy" function to policy editor
+- Fixed deadlock in Queue::GetOrBlock() which sometimes cause communication
+  failures between client and server
+- Server now can detect that SNMP variable is not supported by agent and
+  change DCI status to "Not supported" accordingly
+- Added interface status polling via SNMP
+- Agent: Fixed bug in interface operational status detection under Windows
 
 
 *

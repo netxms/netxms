@@ -264,6 +264,7 @@ typedef struct
 #define CMD_DELETE_TRAP             0x0063
 #define CMD_LOAD_TRAP_CFG           0x0064
 #define CMD_TRAP_CFG_RECORD         0x0065
+#define CMD_QUERY_PARAMETER         0x0066
 
 
 //

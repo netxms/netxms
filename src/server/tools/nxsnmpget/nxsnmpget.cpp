@@ -55,9 +55,10 @@ int GetData(int argc, char *argv[])
 
    // Create SNMP transport
    pTransport = new SNMP_Transport;
-   if (!pTransport->CreateUDPTransport(argv[0], 0, m_wPort))
+   dwResult = pTransport->CreateUDPTransport(argv[0], 0, m_wPort);
+   if (dwResult != SNMP_ERR_SUCCESS)
    {
-      printf("Unable to create UDP transport\n");
+      printf("Unable to create UDP transport: %s\n", SNMPGetErrorText(dwResult));
       iExit = 2;
    }
    else
@@ -88,14 +89,25 @@ int GetData(int argc, char *argv[])
             for(i = 0; i < (int)responce->GetNumVariables(); i++)
             {
                var = responce->GetVariable(i);
-               printf("%s [%02X]: %s\n", var->GetName()->GetValueAsText(),
-                      var->GetType(),var->GetValueAsString(szBuffer, 1024));
+               if (var->GetType() == ASN_NO_SUCH_OBJECT)
+               {
+                  printf("No such object: %s\n", var->GetName()->GetValueAsText());
+               }
+               else if (var->GetType() == ASN_NO_SUCH_INSTANCE)
+               {
+                  printf("No such instance: %s\n", var->GetName()->GetValueAsText());
+               }
+               else
+               {
+                  printf("%s [%02X]: %s\n", var->GetName()->GetValueAsText(),
+                         var->GetType(),var->GetValueAsString(szBuffer, 1024));
+               }
             }
             delete responce;
          }
          else
          {
-            printf("SNMP error: %d\n", dwResult);
+            printf("%s\n", SNMPGetErrorText(dwResult));
             iExit = 3;
          }
       }
