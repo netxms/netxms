@@ -21,6 +21,8 @@ public:
 
 // Operations
 public:
+	CDataCollectionEditor(NXC_DCI_LIST *pList);           // public constructor
+	virtual ~CDataCollectionEditor();
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -29,11 +31,14 @@ public:
 
 // Implementation
 protected:
-	virtual ~CDataCollectionEditor();
+	NXC_DCI_LIST * m_pItemList;
+	CListCtrl m_wndListCtrl;
 
 	// Generated message map functions
 	//{{AFX_MSG(CDataCollectionEditor)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
+	afx_msg void OnClose();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

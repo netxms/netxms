@@ -68,6 +68,7 @@ CConsoleApp::CConsoleApp()
    m_bDebugWindowActive = FALSE;
    m_bNetSummaryActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
+   memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
 }
 
 
@@ -282,8 +283,10 @@ void CConsoleApp::OnViewControlpanel()
 // This method called when new view is created
 //
 
-void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
+void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
 {
+   DWORD i;
+
    switch(dwView)
    {
       case IDR_CTRLPANEL:
@@ -315,6 +318,16 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
          m_bNetSummaryActive = TRUE;
          m_pwndNetSummary = (CNetSummaryFrame *)pWnd;
          break;
+      case IDR_DC_EDITOR:
+         // Register new DC editor
+         for(i = 0; i < MAX_DC_EDITORS; i++)
+            if (m_openDCEditors[i].pWnd == NULL)
+            {
+               m_openDCEditors[i].pWnd = pWnd;
+               m_openDCEditors[i].dwNodeId = dwArg;
+               break;
+            }
+         break;
       default:
          break;
    }
@@ -325,8 +338,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
 // This method called when view is destroyed
 //
 
-void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd)
+void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
 {
+   DWORD i;
+
    switch(dwView)
    {
       case IDR_CTRLPANEL:
@@ -350,6 +365,16 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd)
          break;
       case IDR_NETWORK_SUMMARY:
          m_bNetSummaryActive = FALSE;
+         break;
+      case IDR_DC_EDITOR:
+         // Unregister DC editor
+         for(i = 0; i < MAX_DC_EDITORS; i++)
+            if (m_openDCEditors[i].pWnd == pWnd)
+            {
+               m_openDCEditors[i].pWnd = NULL;
+               m_openDCEditors[i].dwNodeId = 0;
+               break;
+            }
          break;
       default:
          break;
@@ -649,21 +674,57 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
    NXC_DCI_LIST *pItemList;
    DWORD dwResult;
+   CDataCollectionEditor *pWnd;
 
-   dwResult = DoRequestArg2(NXCOpenNodeDCIList, (void *)pObject->dwId, 
-                            &pItemList, "Loading node's data collection information...");
-   if (dwResult == RCC_SUCCESS)
+   pWnd = (CDataCollectionEditor *)FindOpenDCEditor(pObject->dwId);
+   if (pWnd == NULL)
    {
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CDataCollectionEditor), IDR_EDIT_DCI, m_hMDIMenu, m_hMDIAccel);	
+      dwResult = DoRequestArg2(NXCOpenNodeDCIList, (void *)pObject->dwId, 
+                               &pItemList, "Loading node's data collection information...");
+      if (dwResult == RCC_SUCCESS)
+      {
+   	   CCreateContext context;
+      
+         pWnd = new CDataCollectionEditor(pItemList);
+
+   	   // load the frame
+	      context.m_pCurrentFrame = pFrame;
+
+	      if (pWnd->LoadFrame(IDR_DC_EDITOR, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
+         {
+	         CString strFullString, strTitle;
+
+	         if (strFullString.LoadString(IDR_DC_EDITOR))
+		         AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
+
+            // add node name to title
+            strTitle += " - [";
+            strTitle += pObject->szName;
+            strTitle += "]";
+
+	         // set the handles and redraw the frame and parent
+	         pWnd->SetHandles(m_hMDIMenu, m_hMDIAccel);
+	         pWnd->SetTitle(strTitle);
+	         pWnd->InitialUpdateFrame(NULL, TRUE);
+         }
+         else
+	      {
+		      delete pWnd;
+	      }
+      }
+      else
+      {
+         char szBuffer[256];
+
+         sprintf(szBuffer, "Unable to load data collection information for node:\n%s", 
+                 NXCGetErrorText(dwResult));
+         m_pMainWnd->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+      }
    }
    else
    {
-      char szBuffer[256];
-
-      sprintf(szBuffer, "Unable to load data collection information for node:\n%s", 
-              NXCGetErrorText(dwResult));
-      m_pMainWnd->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+      // Data collection editor already open, activate it
+      pWnd->BringWindowToTop();
    }
 }
 
@@ -703,4 +764,19 @@ void CConsoleApp::SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged)
               pObject->szName, NXCGetErrorText(dwResult));
       GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
    }
+}
+
+
+//
+// Find open data collection editor for given node, if any
+//
+
+CWnd *CConsoleApp::FindOpenDCEditor(DWORD dwNodeId)
+{
+   DWORD i;
+
+   for(i = 0; i < MAX_DC_EDITORS; i++)
+      if (m_openDCEditors[i].dwNodeId == dwNodeId)
+         return m_openDCEditors[i].pWnd;
+   return NULL;
 }

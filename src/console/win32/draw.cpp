@@ -32,7 +32,7 @@
 
 void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors)
 {
-   int i, iTotalSize, cx, cy, ncx, ncy, dir, inc;
+   int i, iTotalSize, iSum, cx, cy, ncx, ncy, dir, inc;
    int *piSize;
    CBrush brush, *pOldBrush; 
    CPen pen, *pOldPen;
@@ -47,6 +47,23 @@ void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLO
    iTotalSize = ((pRect->bottom - pRect->top) + (pRect->right - pRect->left)) * 2;
    for(i = 0; i < iNumElements; i++)
       piSize[i] = (int)(iTotalSize * ((double)pdwValues[i] / (double)dwTotal));
+
+   // Check if sum of all sizes equals total size of graph
+   for(i = 0, iSum = 0; i < iNumElements; i++)
+      iSum += piSize[i];
+   if (iSum != iTotalSize)
+   {
+      inc = iTotalSize - iSum;
+      
+      // Correct largest sector (iSum here is a temporary variable to hold max value)
+      for(i = 0, iSum = 0; i < iNumElements; i++)
+         if (piSize[i] > iSum)
+         {
+            iSum = piSize[i];
+            cx = i;
+         }
+      piSize[cx] += inc;
+   }
 
    // Start coordinates
    ncx = cx = pRect->left;

@@ -15,6 +15,7 @@
 #define IDR_NETWORK_SUMMARY             107
 #define ID_FIND_OBJECT                  108
 #define IDR_EDIT_DCI                    108
+#define IDR_DC_EDITOR                   108
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130

@@ -717,7 +717,7 @@ BEGIN
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
-    IDR_EDIT_DCI            "\nData Collection Configuration\nData Collection Configuration"
+    IDR_DC_EDITOR           "\nData Collection Configuration\nData Collection Configuration"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

@@ -44,13 +44,16 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "DataCollectionEditor.h"
 
 
+#define MAX_DC_EDITORS     1024
+
+
 //
-// Request waiting structure
+// Open DCI editor structure
 //
 
-struct RQ_WAIT_INFO
+struct DC_EDITOR
 {
-   HREQUEST hRequest;
+   DWORD dwNodeId;
    CWnd *pWnd;
 };
 
@@ -76,6 +79,7 @@ public:
 
 // Implementation
 protected:
+	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
 	CEventBrowser *m_pwndEventBrowser;
@@ -97,8 +101,8 @@ protected:
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
-	void OnViewDestroy(DWORD dwView, CWnd *pWnd);
-	void OnViewCreate(DWORD dwView, CWnd *pWnd);
+	void OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg = 0);
+	void OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg = 0);
    DWORD GetClientState(void) { return m_dwClientState; }
 	//{{AFX_MSG(CConsoleApp)
 	afx_msg void OnAppAbout();
@@ -122,7 +126,8 @@ private:
    BOOL m_bDebugWindowActive;
    BOOL m_bNetSummaryActive;
 
-   // Inline functions
+   DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
+
 public:
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);
