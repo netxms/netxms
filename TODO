@@ -24,6 +24,7 @@ SERVER:
 - Add internal stats collection:
 	1. Average data collector queue length
 	2. Average database writer queue length
+- Implement sending of all alarms from database
 
 
 CORE AGENT:
@@ -37,6 +38,7 @@ WINDOWS CONSOLE:
 - Add custom background erasing code in policy editor for smooth painting
 - Add support for "View -> Refresh" in data collection configurator
   (or, even better, automatic update)
+- Add status bar to alarm browser
 
 
 SUBAGENTS:
