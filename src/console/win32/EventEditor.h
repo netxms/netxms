@@ -29,6 +29,7 @@ public:
 
 // Implementation
 protected:
+	CImageList *m_pImageList;
 	BOOL m_bModified;
 	void EditEvent(int iItem);
 	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);

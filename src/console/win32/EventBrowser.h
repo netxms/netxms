@@ -33,6 +33,7 @@ public:
 
 // Implementation
 protected:
+	CImageList *m_pImageList;
 	CListCtrl m_wndListCtrl;
 	virtual ~CEventBrowser();
 

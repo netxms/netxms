@@ -108,7 +108,7 @@ BOOL CDebugFrame::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          NULL, 
                                          GetSysColorBrush(COLOR_WINDOW), 
-                                         AfxGetApp()->LoadIcon(IDI_EVENT));
+                                         AfxGetApp()->LoadIcon(IDI_LOG));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
 

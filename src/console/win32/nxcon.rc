@@ -67,11 +67,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\nxcon.ico"
-IDI_ALARM               ICON    DISCARDABLE     "icons\\Alarms.ICO"
 IDI_SETUP               ICON    DISCARDABLE     "icons\\setup.ico"
 IDI_USER_GROUP          ICON    DISCARDABLE     "icons\\users.ico"
 IDI_RULEMGR             ICON    DISCARDABLE     "icons\\RuleManager.ico"
-IDI_EVENT               ICON    DISCARDABLE     "icons\\event.ico"
 IDI_NETMAP              ICON    DISCARDABLE     "icons\\NetMap.ICO"
 IDI_INTERFACE           ICON    DISCARDABLE     "icons\\board.ico"
 IDI_NODE                ICON    DISCARDABLE     "icons\\node.ico"
@@ -83,6 +81,7 @@ IDI_USER                ICON    DISCARDABLE     "icons\\user.ico"
 IDI_EVERYONE            ICON    DISCARDABLE     "icons\\EARTH.ICO"
 IDI_PASSWORD            ICON    DISCARDABLE     "icons\\passwd.ico"
 IDI_GRAPH               ICON    DISCARDABLE     "icons\\graph.ico"
+IDI_LOG                 ICON    DISCARDABLE     "icons\\log.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1189,6 +1188,32 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "icons\\SeverityWarning.ico"
+IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "icons\\SeverityCritical.ico"
+IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "icons\\SeverityMajor.ico"
+IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "icons\\SeverityMinor.ico"
+IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "icons\\SeverityNormal.ico"
+IDI_ALARM               ICON    DISCARDABLE     "icons\\alarm.ico"
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

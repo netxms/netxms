@@ -18,10 +18,12 @@ IMPLEMENT_DYNCREATE(CEventBrowser, CMDIChildWnd)
 
 CEventBrowser::CEventBrowser()
 {
+   m_pImageList = NULL;
 }
 
 CEventBrowser::~CEventBrowser()
 {
+   delete m_pImageList;
 }
 
 
@@ -43,7 +45,7 @@ BOOL CEventBrowser::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          NULL, 
                                          GetSysColorBrush(COLOR_WINDOW), 
-                                         AfxGetApp()->LoadIcon(IDI_EVENT));
+                                         AfxGetApp()->LoadIcon(IDI_LOG));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
 
@@ -66,8 +68,18 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
+   // Create image list
+   m_pImageList = new CImageList;
+   m_pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
+
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 120);
+   m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 135);
    m_wndListCtrl.InsertColumn(1, "Severity", LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(2, "Source", LVCFMT_LEFT, 140);
    m_wndListCtrl.InsertColumn(3, "Message", LVCFMT_LEFT, 500);
@@ -126,7 +138,7 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
 
    ptm = localtime((const time_t *)&pEvent->dwTimeStamp);
    strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
+   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pEvent->dwSeverity);
    if (iIdx != -1)
    {
       NXC_OBJECT *pObject;

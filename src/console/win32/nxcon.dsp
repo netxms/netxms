@@ -505,6 +505,10 @@ SOURCE=.\UserSelectDlg.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\icons\alarm.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\Alarms.ICO
 # End Source File
 # Begin Source File
@@ -538,6 +542,10 @@ SOURCE=.\icons\graph.ico
 # Begin Source File
 
 SOURCE=.\icons\icon1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\log.ico
 # End Source File
 # Begin Source File
 
@@ -598,6 +606,26 @@ SOURCE=.\icons\RuleManager.ico
 # Begin Source File
 
 SOURCE=.\icons\setup.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\SeverityCritical.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\SeverityMajor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\SeverityMinor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\SeverityNormal.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\SeverityWarning.ico
 # End Source File
 # Begin Source File
 

@@ -20,10 +20,12 @@ IMPLEMENT_DYNCREATE(CEventEditor, CMDIChildWnd)
 CEventEditor::CEventEditor()
 {
    m_bModified = FALSE;
+   m_pImageList = NULL;
 }
 
 CEventEditor::~CEventEditor()
 {
+   delete m_pImageList;
 }
 
 
@@ -61,21 +63,31 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 50);
+   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 120);
    m_wndListCtrl.InsertColumn(2, "Severity", LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(3, "Flags", LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(4, "Message", LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(4, "Message", LVCFMT_LEFT, 180);
    m_wndListCtrl.InsertColumn(5, "Description", LVCFMT_LEFT, 300);
 	
+   // Create image list
+   m_pImageList = new CImageList;
+   m_pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
+   m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
+
+   // Load event templates
    NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
       sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwCode);
-      m_wndListCtrl.InsertItem(i, szBuffer);
+      m_wndListCtrl.InsertItem(i, szBuffer, m_ppEventTemplates[i]->dwSeverity);
       m_wndListCtrl.SetItemText(i, 1, m_ppEventTemplates[i]->szName);
-      sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwSeverity);
-      m_wndListCtrl.SetItemText(i, 2, szBuffer);
+      m_wndListCtrl.SetItemText(i, 2, g_szStatusTextSmall[m_ppEventTemplates[i]->dwSeverity]);
       sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwFlags);
       m_wndListCtrl.SetItemText(i, 3, szBuffer);
       m_wndListCtrl.SetItemText(i, 4, m_ppEventTemplates[i]->pszMessage);

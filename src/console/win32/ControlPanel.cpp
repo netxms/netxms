@@ -79,7 +79,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Create(32, 32, ILC_COLOR8 | ILC_MASK, 8, 8);
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USERS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_RULEMGR));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EVENT));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LOG));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
