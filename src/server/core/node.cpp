@@ -114,8 +114,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
    _sntprintf(szQuery, 512, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
                             "is_router,snmp_version,discovery_flags,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt,"
-                            "image_id,is_deleted,description,node_type,agent_version "
-                            "FROM nodes WHERE id=%d", dwId);
+                            "image_id,is_deleted,description,node_type,agent_version,"
+                            "platform_name FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -158,6 +158,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwNodeType = DBGetFieldULong(hResult, 0, 20);
    _tcsncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 21)), MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
+   _tcsncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 22)), MAX_PLATFORM_NAME_LEN);
+   DecodeSQLString(m_szPlatformName);
 
    DBFreeResult(hResult);
 
@@ -222,7 +224,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 BOOL Node::SaveToDB(void)
 {
-   TCHAR *pszEscDescr, *pszEscVersion, szQuery[4096], szIpAddr[16];
+   TCHAR *pszEscDescr, *pszEscVersion, *pszEscPlatform;
+   TCHAR szQuery[4096], szIpAddr[16];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
@@ -243,43 +246,48 @@ BOOL Node::SaveToDB(void)
    // Form and execute INSERT or UPDATE query
    pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    pszEscVersion = EncodeSQLString(m_szAgentVersion);
+   pszEscPlatform = EncodeSQLString(m_szPlatformName);
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
-                       "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
-                       "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
-                       "snmp_oid,is_local_mgmt,image_id,description,node_type,agent_version)"
-                       " VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
-                       "'%s','%s',%d,%ld,'%s',%ld,'%s')",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
-              IpToStr(m_dwIpAddr, szIpAddr),
-              m_dwFlags & NF_IS_SNMP ? 1 : 0,
-              m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
-              m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
-              m_dwFlags & NF_IS_ROUTER ? 1 : 0,
-              m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
-              m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
-              m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId,
-              pszEscDescr, m_dwNodeType, pszEscVersion);
+      snprintf(szQuery, 4096,
+               "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
+               "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
+               "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
+               "snmp_oid,is_local_mgmt,image_id,description,node_type,"
+               "agent_version,platform_name)"
+               " VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
+               "'%s','%s',%d,%ld,'%s',%ld,'%s','%s')",
+               m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
+               IpToStr(m_dwIpAddr, szIpAddr),
+               m_dwFlags & NF_IS_SNMP ? 1 : 0,
+               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
+               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
+               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
+               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
+               m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
+               m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId,
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform);
    else
-      sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip='%s',"
-                       "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
-                       "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
-                       "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,"
-                       "image_id=%ld,description='%s',node_type=%ld,agent_version='%s' "
-                       "WHERE id=%ld",
-              m_szName, m_iStatus, m_bIsDeleted, 
-              IpToStr(m_dwIpAddr, szIpAddr), 
-              m_dwFlags & NF_IS_SNMP ? 1 : 0,
-              m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
-              m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
-              m_dwFlags & NF_IS_ROUTER ? 1 : 0,
-              m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
-              m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
-              m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, 
-              pszEscDescr, m_dwNodeType, pszEscVersion, m_dwId);
+      snprintf(szQuery, 4096,
+               "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip='%s',"
+               "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
+               "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
+               "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,"
+               "image_id=%ld,description='%s',node_type=%ld,agent_version='%s',"
+               "platform_name='%s' WHERE id=%ld",
+               m_szName, m_iStatus, m_bIsDeleted, 
+               IpToStr(m_dwIpAddr, szIpAddr), 
+               m_dwFlags & NF_IS_SNMP ? 1 : 0,
+               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
+               m_dwFlags & NF_IS_BRIDGE ? 1 : 0,
+               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
+               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
+               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
+               m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, 
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscDescr);
    free(pszEscVersion);
+   free(pszEscPlatform);
 
    // Save data collection items
    if (bResult)

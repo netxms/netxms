@@ -80,9 +80,12 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <process.h>
+#include <sys/stat.h>
 #ifndef UNDER_CE
 #include <fcntl.h>
 #endif
+
+#define snprintf  _snprintf
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;

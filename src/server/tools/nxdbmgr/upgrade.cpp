@@ -55,6 +55,29 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V18 to V19
+//
+
+static BOOL H_UpgradeFromV18(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE nodes ADD platform_name varchar(63)\n"
+      "UPADTE nodes SET platform_name=''\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='19' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V17 to V18
 //
 
