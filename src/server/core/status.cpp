@@ -45,7 +45,10 @@ void StatusPoller(void *arg)
       {
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
          if (pNode->ReadyForStatusPoll())
+         {
             pNode->StatusPoll();
+            WatchdogNotify(dwWatchdogId);
+         }
       }
    }
 }
@@ -73,7 +76,10 @@ void ConfigurationPoller(void *arg)
       {
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
          if (pNode->ReadyForConfigurationPoll())
+         {
             pNode->ConfigurationPoll();
+            WatchdogNotify(dwWatchdogId);
+         }
       }
    }
 }

@@ -24,6 +24,24 @@
 
 
 //
+// Static data
+//
+
+static MUTEX m_hMutexSnmp;
+
+
+//
+// Initialize SNMP subsystem
+//
+
+void SnmpInit(void)
+{
+   m_hMutexSnmp = MutexCreate();
+   init_mib();
+}
+
+
+//
 // Convert OID to from binary to string representation
 //
 
@@ -62,6 +80,8 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
    char szNodeName[32];
    BOOL bResult = TRUE;
 
+   MutexLock(m_hMutexSnmp, INFINITE);
+
    // Open SNMP session
    snmp_sess_init(&session);
    session.version = SNMP_VERSION_1;
@@ -73,6 +93,7 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
    if(sptr == NULL)
    {
       WriteLog(MSG_SNMP_OPEN_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      MutexUnlock(m_hMutexSnmp);
       return FALSE;
    }
 
@@ -83,6 +104,7 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
       if (read_objid(szOidStr, oidName, &iNameLen) == 0)
       {
          WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
+         MutexUnlock(m_hMutexSnmp);
          return FALSE;
       }
    }
@@ -145,6 +167,7 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
 
    // Close session and cleanup
    snmp_close(sptr);
+   MutexUnlock(m_hMutexSnmp);
    return bResult;
 }
 
@@ -166,6 +189,8 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
    char szNodeName[32];
    BOOL bRunning = TRUE, bResult = TRUE;
 
+   MutexLock(m_hMutexSnmp, INFINITE);
+
    // Open SNMP session
    snmp_sess_init(&session);
    session.version = SNMP_VERSION_1;
@@ -177,6 +202,7 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
    if(sptr == NULL)
    {
       WriteLog(MSG_SNMP_OPEN_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      MutexUnlock(m_hMutexSnmp);
       return FALSE;
    }
 
@@ -184,6 +210,7 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
    if (read_objid(szRootOid, oidRoot, &iRootLen) == 0)
    {
       WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
+      MutexUnlock(m_hMutexSnmp);
       return FALSE;
    }
    memcpy(oidName, oidRoot, iRootLen * sizeof(oid));
@@ -240,6 +267,7 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
 
    // Close session and cleanup
    snmp_close(sptr);
+   MutexUnlock(m_hMutexSnmp);
    return bResult;
 }
 

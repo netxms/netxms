@@ -432,6 +432,7 @@ BOOL LoadObjects(void);
 // Global variables
 //
 
+extern DWORD g_dwMgmtNode;
 extern INDEX *g_pIndexById;
 extern DWORD g_dwIdIndexSize;
 extern INDEX *g_pSubnetIndexByAddr;
@@ -441,6 +442,11 @@ extern DWORD g_dwNodeAddrIndexSize;
 extern INDEX *g_pInterfaceIndexByAddr;
 extern DWORD g_dwInterfaceAddrIndexSize;
 extern Network *g_pEntireNet;
+extern MUTEX g_hMutexIdIndex;
+extern MUTEX g_hMutexNodeIndex;
+extern MUTEX g_hMutexSubnetIndex;
+extern MUTEX g_hMutexInterfaceIndex;
+extern MUTEX g_hMutexObjectAccess;
 
 
 #endif   /* _nms_objects_h_ */

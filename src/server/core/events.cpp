@@ -66,15 +66,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
    m_dwId = pTemplate->dwId;
    m_dwSeverity = pTemplate->dwSeverity;
    m_dwFlags = pTemplate->dwFlags;
-   if (dwSourceId == 0)
-   {
-      // Local node
-      m_dwSource = FindLocalMgmtNode();
-   }
-   else
-   {
-      m_dwSource = dwSourceId;
-   }
+   m_dwSource = dwSourceId;
 
    // Create parameters
    if (szFormat != NULL)

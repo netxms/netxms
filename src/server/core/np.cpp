@@ -44,8 +44,9 @@ printf("Node %s already exist in database\n", IpToStr(dwIpAddr,buffer));
    NetObjInsert(pNode, TRUE);
    if (!pNode->NewNodePoll(dwNetMask))
    {
-printf("New node %s cannot be added\n",pNode->Name());
+      ObjectsGlobalLock();
       NetObjDelete(pNode);
+      ObjectsGlobalUnlock();
       delete pNode;     // Node poll failed, delete it
    }
 }
@@ -81,6 +82,8 @@ void NodePoller(void *arg)
          iNumRows = DBGetNumRows(hResult);
          for(i = 0; i < iNumRows; i++)
          {
+            WatchdogNotify(dwWatchdogId);
+
             dwId = DBGetFieldULong(hResult, i, 0);
             dwIpAddr = DBGetFieldULong(hResult, i, 1);
             dwNetMask = DBGetFieldULong(hResult, i, 2);

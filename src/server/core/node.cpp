@@ -271,6 +271,8 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
 {
    AgentConnection *pAgentConn;
 
+   PollerLock();
+
    // Determine node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE))
       m_dwFlags |= NF_IS_SNMP;
@@ -317,6 +319,8 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    if (m_dwFlags & NF_IS_NATIVE_AGENT)
       pAgentConn->Disconnect();
    delete pAgentConn;
+
+   PollerUnlock();
 
    return TRUE;
 }

@@ -160,21 +160,27 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
 static void CheckForMgmtNode(void)
 {
    INTERFACE_LIST *pIfList;
+   Node *pNode;
    int i;
 
    pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
       for(i = 0; i < pIfList->iNumEntries; i++)
-         if (FindNodeByIP(pIfList->pInterfaces[i].dwIpAddr) != NULL)
+         if ((pNode = FindNodeByIP(pIfList->pInterfaces[i].dwIpAddr)) != NULL)
+         {
+            g_dwMgmtNode = pNode->Id();   // Set local management node ID
             break;
+         }
       if (i == pIfList->iNumEntries)   // No such node
       {
-         Node *pNode = new Node(pIfList->pInterfaces[0].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
+         pNode = new Node(pIfList->pInterfaces[0].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
          NetObjInsert(pNode, TRUE);
          if (!pNode->NewNodePoll(0))
          {
+            ObjectsGlobalLock();
             NetObjDelete(pNode);
+            ObjectsGlobalUnlock();
             delete pNode;     // Node poll failed, delete it
          }
       }
@@ -206,6 +212,7 @@ void DiscoveryThread(void *arg)
       CheckForMgmtNode();
 
       // Walk through nodes and poll for ARP tables
+      MutexLock(g_hMutexNodeIndex, INFINITE);
       for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
       {
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
@@ -242,5 +249,6 @@ void DiscoveryThread(void *arg)
             pNode->SetDiscoveryPollTimeStamp();
          }
       }
+      MutexUnlock(g_hMutexNodeIndex);
    }
 }

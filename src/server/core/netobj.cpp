@@ -97,7 +97,10 @@ void NetObj::AddChild(NetObj *pObject)
    Lock();
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i] == pObject)
+      {
+         Unlock();
          return;     // Already in the child list
+      }
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
    m_pChildList[m_dwChildCount++] = pObject;
    m_bIsModified = TRUE;
@@ -116,7 +119,10 @@ void NetObj::AddParent(NetObj *pObject)
    Lock();
    for(i = 0; i < m_dwParentCount; i++)
       if (m_pParentList[i] == pObject)
+      {
+         Unlock();
          return;     // Already in the parents list
+      }
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
    m_pParentList[m_dwParentCount++] = pObject;
    m_bIsModified = TRUE;
@@ -136,8 +142,12 @@ void NetObj::DeleteChild(NetObj *pObject)
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i] == pObject)
          break;
+
    if (i == m_dwChildCount)   // No such object
+   {
+      Unlock();
       return;
+   }
    m_dwChildCount--;
    if (m_dwChildCount > 0)
    {
@@ -167,7 +177,10 @@ void NetObj::DeleteParent(NetObj *pObject)
       if (m_pParentList[i] == pObject)
          break;
    if (i == m_dwParentCount)   // No such object
+   {
+      Unlock();
       return;
+   }
    m_dwParentCount--;
    if (m_dwParentCount > 0)
    {

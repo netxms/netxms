@@ -220,6 +220,7 @@ void DBUnloadDriver(void);
 
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
+void SnmpInit(void);
 BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary, 
              size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose);
 BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
@@ -253,6 +254,8 @@ void RemoveEventSource(void);
 char *GetSystemErrorText(DWORD error);
 
 #endif   /* _WIN32 */
+
+void DbgTestMutex(MUTEX hMutex, char *szName);
 
 
 //

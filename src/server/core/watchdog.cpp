@@ -84,7 +84,7 @@ void WatchdogNotify(DWORD dwId)
    if (dwId < m_dwNumThreads)
    {
       m_threadInfo[dwId].tLastCheck = time(NULL);
-      m_threadInfo[m_dwNumThreads].bNotResponding = FALSE;
+      m_threadInfo[dwId].bNotResponding = FALSE;
    }
    MutexUnlock(m_hWatchdogAccess);
 }
@@ -131,7 +131,7 @@ void WatchdogThread(void *arg)
          if ((currTime - m_threadInfo[i].tLastCheck > 60) &&
              (!m_threadInfo[i].bNotResponding))
          {
-            PostEvent(EVENT_THREAD_HANGS, 0, "s", m_threadInfo[i].szName);
+            PostEvent(EVENT_THREAD_HANGS, g_dwMgmtNode, "s", m_threadInfo[i].szName);
             WriteLog(MSG_THREAD_HANGS, EVENTLOG_ERROR_TYPE, "s", m_threadInfo[i].szName);
             m_threadInfo[i].bNotResponding = TRUE;
          }

@@ -106,7 +106,7 @@ BOOL Initialize(void)
 #endif
 
    // Initialize SNMP stuff
-   init_mib();
+   SnmpInit();
 
    if (!DBInit())
       return FALSE;
@@ -209,6 +209,7 @@ void Main(void)
             case 't':   // Thread status
             case 'T':
                WatchdogPrintStatus();
+               printf("*** Done ***\n");
                break;
             case 'd':   // Dump objects
             case 'D':
@@ -256,120 +257,15 @@ void Main(void)
                   printf("*** Interface IP index dump complete ***\n");
                }
                break;
-            case 'a':
-               {
-                  char szBuffer[32];
-                  ARP_CACHE *arp;
-                  arp=SnmpGetArpCache(inet_addr("10.0.0.44"),"public");
-                  for(DWORD i=0;i<arp->dwNumEntries;i++)
-                     printf("%d %s %02X:%02X:%02X:%02X:%02X:%02X\n",
-                        arp->pEntries[i].dwIndex,
-                        IpToStr(arp->pEntries[i].dwIpAddr,szBuffer),
-                        arp->pEntries[i].bMacAddr[0],
-                        arp->pEntries[i].bMacAddr[1],
-                        arp->pEntries[i].bMacAddr[2],
-                        arp->pEntries[i].bMacAddr[3],
-                        arp->pEntries[i].bMacAddr[4],
-                        arp->pEntries[i].bMacAddr[5]);
-                  printf("Total %d entries\n",arp->dwNumEntries);
-                  DestroyArpCache(arp);
-               }
-               break;
-            case 's':
-               {
-                  INTERFACE_LIST *iflist;
-                  printf("*** 10.0.0.1 *** \n");
-                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.1"),"public");
-                  if (iflist != NULL)
-                  {
-                     char addr[32],mask[32];
-                     for(int i=0;i<iflist->iNumEntries;i++)
-                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
-                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
-                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
-                        iflist->pInterfaces[i].szName);
-                     DestroyInterfaceList(iflist);
-                  }
-                  printf("*** 159.148.208.1 *** \n");
-                  iflist=SnmpGetInterfaceList(inet_addr("159.148.208.1"),"public");
-                  if (iflist != NULL)
-                  {
-                     char addr[32],mask[32];
-                     for(int i=0;i<iflist->iNumEntries;i++)
-                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
-                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
-                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
-                        iflist->pInterfaces[i].szName);
-                     DestroyInterfaceList(iflist);
-                  }
-                  printf("*** 10.0.0.77 *** \n");
-                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.77"),"public");
-                  if (iflist != NULL)
-                  {
-                     char addr[32],mask[32];
-                     for(int i=0;i<iflist->iNumEntries;i++)
-                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
-                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
-                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
-                        iflist->pInterfaces[i].szName);
-                     DestroyInterfaceList(iflist);
-                  }
-                  printf("*** 159.148.208.222 *** \n");
-                  iflist=SnmpGetInterfaceList(inet_addr("159.148.208.222"),"public");
-                  if (iflist != NULL)
-                  {
-                     char addr[32],mask[32];
-                     for(int i=0;i<iflist->iNumEntries;i++)
-                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
-                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
-                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
-                        iflist->pInterfaces[i].szName);
-                     DestroyInterfaceList(iflist);
-                  }
-               }
-               break;
-            case 'l':
-               {
-                  char buffer[256],addr[32],mask[32];
-                  INTERFACE_LIST *iflist;
-                  AgentConnection *ac = new AgentConnection(inet_addr("127.0.0.1"));
-                  ac->Connect();
-                  ac->GetParameter("Agent.Version",255,buffer);
-                  printf("Agent version: %s\n",buffer);
-                  iflist = ac->GetInterfaceList();
-                  if (iflist != NULL)
-                  {
-                     for(int i=0;i<iflist->iNumEntries;i++)
-                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
-                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
-                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
-                        iflist->pInterfaces[i].szName);
-                     DestroyInterfaceList(iflist);
-                  }
-                  ARP_CACHE *arp;
-                  arp=ac->GetArpCache();
-                  if (arp!=NULL)
-                  {
-                     for(DWORD i=0;i<arp->dwNumEntries;i++)
-                        printf("%d %s %02X:%02X:%02X:%02X:%02X:%02X\n",
-                           arp->pEntries[i].dwIndex,
-                           IpToStr(arp->pEntries[i].dwIpAddr,buffer),
-                           arp->pEntries[i].bMacAddr[0],
-                           arp->pEntries[i].bMacAddr[1],
-                           arp->pEntries[i].bMacAddr[2],
-                           arp->pEntries[i].bMacAddr[3],
-                           arp->pEntries[i].bMacAddr[4],
-                           arp->pEntries[i].bMacAddr[5]);
-                     printf("Total %d entries\n",arp->dwNumEntries);
-                     DestroyArpCache(arp);
-                  }
-                  else
-                  {
-                     printf("Unable to retrieve ARP cache from agent\n");
-                  }
-                  ac->Disconnect();
-                  delete ac;
-               }
+            case 'm':   // Print mutex status
+            case 'M':
+               printf("Mutex status:\n");
+               DbgTestMutex(g_hMutexIdIndex, "g_hMutexIdIndex");
+               DbgTestMutex(g_hMutexNodeIndex, "g_hMutexNodeIndex");
+               DbgTestMutex(g_hMutexSubnetIndex, "g_hMutexSubnetIndex");
+               DbgTestMutex(g_hMutexInterfaceIndex, "g_hMutexInterfaceIndex");
+               DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
+               printf("*** Done ***\n");
                break;
             default:
                break;
