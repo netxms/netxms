@@ -82,7 +82,7 @@ BOOL CDCIPropPage::OnInitDialog()
    m_wndSelectButton.EnableWindow(m_iOrigin == DS_SNMP_AGENT);
 	
    // Add data types
-   for(i = 0; i < 4; i++)
+   for(i = 0; i < 6; i++)
       m_wndTypeList.AddString(g_pszItemDataType[i]);
    m_wndTypeList.SelectString(-1, g_pszItemDataType[m_iDataType]);
 	
