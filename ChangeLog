@@ -1,4 +1,11 @@
 *
+* 0.1.6
+*
+
+- Added parameter System.ServiceState(*) to core agent (Windows only)
+
+
+*
 * 0.1.5
 *
 
@@ -13,6 +20,7 @@
 - All IP addresses now stored in database as text
 - Added external event sender (nxevent)
 - Fixed bug with user password change (new password was not saved to database)
+- Configuration script ("configure") improved
 
 
 *

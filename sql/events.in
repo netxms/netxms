@@ -5,7 +5,7 @@
 */
 
 #define THRESHOLD_EVENT_PARAMS \
-	'   1) Parameter name#0D#0A   2) Item description#0D#0A   3) Threshold value#0D#0A   4) Actual value'
+	'   1) Parameter name#0D#0A   2) Item description#0D#0A   3) Threshold value#0D#0A   4) Actual value#0D#0A   5) Parameter#27s argument'
 
 
 /*
@@ -289,7 +289,25 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		4002, 'DC_HOST_RESTARTED',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Host has been restarted within last 5 minutes',
+		'Host was restarted within last 5 minutes',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		4003, 'DC_AGENT_RESTARTED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'NetXMS agent was restarted within last 5 minutes',
+		'Custom data collection threshold event.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		THRESHOLD_EVENT_PARAMS
+	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		4004, 'DC_SERVICE_NOT_RUNNING',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Service "%5" is not running',
 		'Custom data collection threshold event.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
 		THRESHOLD_EVENT_PARAMS

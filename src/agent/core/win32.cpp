@@ -321,3 +321,55 @@ LONG H_SystemUname(char *cmd, char *arg, char *value)
            versionInfo.dwMinorVersion, versionInfo.dwBuildNumber, osVersion, cpuType);
    return SYSINFO_RC_SUCCESS;
 }
+
+
+//
+// Handler for System.ServiceState parameter
+//
+
+LONG H_ServiceState(char *cmd, char *arg, char *value)
+{
+   SC_HANDLE hManager, hService;
+   TCHAR szServiceName[MAX_PATH];
+   LONG iResult = SYSINFO_RC_SUCCESS;
+
+   if (!NxGetParameterArg(cmd, 1, szServiceName, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
+   if (hManager == NULL)
+   {
+      return SYSINFO_RC_ERROR;
+   }
+
+   hService = OpenService(hManager, szServiceName, SERVICE_QUERY_STATUS);
+   if (hService == NULL)
+   {
+      iResult = SYSINFO_RC_UNSUPPORTED;
+   }
+   else
+   {
+      SERVICE_STATUS status;
+
+      if (QueryServiceStatus(hService, &status))
+      {
+         int i;
+         static DWORD dwStates[7]={ SERVICE_RUNNING, SERVICE_PAUSED, SERVICE_START_PENDING,
+                                    SERVICE_PAUSE_PENDING, SERVICE_CONTINUE_PENDING,
+                                    SERVICE_STOP_PENDING, SERVICE_STOPPED };
+
+         for(i = 0; i < 7; i++)
+            if (status.dwCurrentState == dwStates[i])
+               break;
+         ret_uint(value, i);
+      }
+      else
+      {
+         ret_uint(value, 255);    // Unable to retrieve information
+      }
+      CloseServiceHandle(hService);
+   }
+
+   CloseServiceHandle(hManager);
+   return iResult;
+}
