@@ -210,3 +210,19 @@ void DCItem::CheckThresholds(const char *pszLastValue)
       }
    }
 }
+
+
+//
+// Create CSCP message with item data
+//
+
+void DCItem::CreateMessage(CSCPMessage *pMsg)
+{
+   pMsg->SetVariable(VID_DCI_ID, m_dwId);
+   pMsg->SetVariable(VID_NAME, m_szName);
+   pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
+   pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
+   pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
+   pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_iDataType);
+   pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
+}

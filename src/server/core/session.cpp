@@ -276,6 +276,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_SET_PASSWORD:
             SetPassword(pMsg);
             break;
+         case CMD_GET_NODE_DCI_LIST:
+            OpenNodeDCIList(pMsg);
+            break;
+         case CMD_UNLOCK_NODE_DCI_LIST:
+            CloseNodeDCIList(pMsg);
+            break;
          default:
             break;
       }
@@ -1073,6 +1079,45 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
       // Current user has no rights to change password for specific user
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Send node's DCIs to client and lock data collection settings
+//
+
+void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwNodeId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id
+   dwNodeId = pRequest->GetVariableLong(VID_OBJECT_ID);
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Unlock node's data collection settings
+//
+
+void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwNodeId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
 
    // Send responce
    SendMessage(&msg);

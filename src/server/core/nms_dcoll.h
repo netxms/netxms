@@ -185,6 +185,8 @@ public:
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
 
    void CheckThresholds(const char *pszLastValue);
+
+   void CreateMessage(CSCPMessage *pMsg);
 };
 
 

@@ -274,20 +274,22 @@ private:
    }
 
    void DebugPrintf(char *szFormat, ...);
-   void Login(CSCPMessage *pMsg);
+   void Login(CSCPMessage *pRequest);
    void SendAllObjects(DWORD dwRqId);
    void SendAllEvents(DWORD dwRqId);
    void SendAllConfigVars(void);
    void SendUserDB(DWORD dwRqId);
-   void CreateUser(CSCPMessage *pMsg);
-   void UpdateUser(CSCPMessage *pMsg);
-   void DeleteUser(CSCPMessage *pMsg);
+   void CreateUser(CSCPMessage *pRequest);
+   void UpdateUser(CSCPMessage *pRequest);
+   void DeleteUser(CSCPMessage *pRequest);
    void SetPassword(CSCPMessage *pRequest);
    void LockUserDB(DWORD dwRqId, BOOL bLock);
-   void SetConfigVariable(CSCPMessage *pMsg);
+   void SetConfigVariable(CSCPMessage *pRequest);
    void SendEventDB(DWORD dwRqId);
-   void SetEventInfo(CSCPMessage *pMsg);
-   void ModifyObject(CSCPMessage *pMsg);
+   void SetEventInfo(CSCPMessage *pRequest);
+   void ModifyObject(CSCPMessage *pRequest);
+   void OpenNodeDCIList(CSCPMessage *pRequest);
+   void CloseNodeDCIList(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
