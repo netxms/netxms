@@ -380,7 +380,7 @@ INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 
 void WatchdogInit(void);
-DWORD WatchdogAddThread(char *szName);
+DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval);
 void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(void);
 

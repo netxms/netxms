@@ -58,7 +58,7 @@ BOOL CUserEditor::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          NULL, 
                                          GetSysColorBrush(COLOR_WINDOW), 
-                                         AfxGetApp()->LoadIcon(IDI_USERS));
+                                         AfxGetApp()->LoadIcon(IDI_USER_GROUP));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
 

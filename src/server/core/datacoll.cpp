@@ -107,7 +107,7 @@ static void ItemPoller(void *pArg)
    DWORD i, dwElapsed, dwWatchdogId;
    INT64 qwStart;
 
-   dwWatchdogId = WatchdogAddThread("Item Poller");
+   dwWatchdogId = WatchdogAddThread("Item Poller", 20);
 
    while(!ShutdownInProgress())
    {

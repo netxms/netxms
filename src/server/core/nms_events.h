@@ -118,6 +118,7 @@ public:
    ~EPRule();
 
    DWORD Id(void) { return m_dwId; }
+   void SetId(DWORD dwNewId) { m_dwId = dwNewId; }
    BOOL LoadFromDB(void);
    void SaveToDB(void);
    BOOL ProcessEvent(Event *pEvent);

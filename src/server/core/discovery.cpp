@@ -80,7 +80,7 @@ void DiscoveryThread(void *arg)
    DWORD dwNewNodeId = 1, dwWatchdogId;
    Node *pNode;
 
-   dwWatchdogId = WatchdogAddThread("Network Discovery Thread");
+   dwWatchdogId = WatchdogAddThread("Network Discovery Thread", 90);
 
    // Flush new nodes table
    DBQuery(g_hCoreDB, "DELETE FROM new_nodes");
@@ -133,4 +133,6 @@ void DiscoveryThread(void *arg)
       }
       MutexUnlock(g_hMutexNodeIndex);
    }
+
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Discovery thread terminated\n");
 }

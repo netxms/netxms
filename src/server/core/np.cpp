@@ -75,7 +75,7 @@ void NodePoller(void *arg)
 
    // Read configuration and initialize
    iPollInterval = ConfigReadInt("NewNodePollingInterval", 60);
-   dwWatchdogId = WatchdogAddThread("Node Poller");
+   dwWatchdogId = WatchdogAddThread("Node Poller", iPollInterval * 2 + 10);
    DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller started with poll interval %d seconds\n", iPollInterval);
 
    while(!ShutdownInProgress())

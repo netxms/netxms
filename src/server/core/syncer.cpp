@@ -64,16 +64,19 @@ void SaveObjects(void)
 void Syncer(void *arg)
 {
    int iSyncInterval;
+   DWORD dwWatchdogId;
 
    // Read configuration
    iSyncInterval = ConfigReadInt("SyncInterval", 60);
    DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread started, sync_interval = %d\n", iSyncInterval);
+   dwWatchdogId = WatchdogAddThread("Syncer Thread", iSyncInterval * 2 + 10);
 
    // Main syncer loop
    while(!ShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(iSyncInterval))
          break;   // Shutdown time has arrived
+      WatchdogNotify(dwWatchdogId);
       SaveObjects();
       SaveUsers();
    }

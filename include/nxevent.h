@@ -75,5 +75,6 @@
 #define EVENT_THRESHOLD_REARMED  18
 #define EVENT_SUBNET_DELETED     19
 #define EVENT_THREAD_HANGS       20
+#define EVENT_THREAD_RUNNING     21
 
 #endif

@@ -367,6 +367,7 @@ typedef struct
 {
    DWORD dwId;
    int iType;
+   char szName[MAX_OBJECT_NAME];
    char szRcptAddr[MAX_RCPT_ADDR_LEN];
    char szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
    char *pszData;

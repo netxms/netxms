@@ -206,3 +206,12 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Thread name'
 	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_THREAD_RUNNING, 'NX_SYS_THREAD_RUNNING', 
+		EVENT_SEVERITY_INFO, 1,
+		'Thread "%1" was returned to running state',
+		'Generated when one of the system threads which previously hangs or stops unexpectedly was returned to running state.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Thread name'
+	);

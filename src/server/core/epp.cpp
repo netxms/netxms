@@ -520,9 +520,18 @@ void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
 
 void EventPolicy::ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
 {
+   DWORD i;
+
    WriteLock();
+
+   // Replace rule list
    Clear();
    m_dwNumRules = dwNumRules;
    m_ppRuleList = ppRuleList;
+
+   // Replace id's in rules
+   for(i = 0; i < m_dwNumRules; i++)
+      m_ppRuleList[i]->SetId(i);
+   
    Unlock();
 }
