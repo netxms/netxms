@@ -182,6 +182,8 @@ typedef unsigned long HREQUEST;
 #define RCC_OUT_OF_MEMORY           ((DWORD)15)
 #define RCC_IO_ERROR                ((DWORD)16)
 #define RCC_INCOMPATIBLE_OPERATION  ((DWORD)17)
+#define RCC_OBJECT_CREATION_FAILED  ((DWORD)18)
+#define RCC_OBJECT_LOOP             ((DWORD)19)
 
 
 //
@@ -607,6 +609,31 @@ typedef struct
 
 
 //
+// Object creation information structure
+//
+
+typedef struct
+{
+   int iClass;
+   DWORD dwParentId;
+   char *pszName;
+   union
+   {
+      struct
+      {
+         DWORD dwIpAddr;
+         DWORD dwNetMask;
+      } node;
+      struct
+      {
+         DWORD dwCategory;
+         char *pszDescription;
+      } container;
+   } cs;
+} NXC_OBJECT_CREATE_INFO;
+
+
+//
 // Functions
 //
 
@@ -635,7 +662,7 @@ void LIBNXCL_EXPORTABLE NXCLockObjectIndex(void);
 void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void);
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
 DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManaged);
-DWORD LIBNXCL_EXPORTABLE NXCCreateObject(int iClass, DWORD dwParentObject);
+DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId);
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObject);
 

@@ -1814,7 +1814,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
    CSCPMessage msg;
    NetObj *pObject, *pParent;
    int iClass;
-   char szObjectName[MAX_OBJECT_NAME];
+   char *pDescription, szObjectName[MAX_OBJECT_NAME];
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1835,18 +1835,36 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
             pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
             if ((iClass == OBJECT_NODE) || (iClass == OBJECT_CONTAINER))
             {
+               // Create new object
                switch(iClass)
                {
                   case OBJECT_NODE:
-                     pObject = new Node;
+                     pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
+                                           pRequest->GetVariableLong(VID_IP_NETMASK),
+                                           DF_DEFAULT);
                      break;
                   case OBJECT_CONTAINER:
-                     pObject = new Container;
+                     pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+                     pObject = new Container(szObjectName, 
+                                             pRequest->GetVariableLong(VID_CATEGORY),
+                                             pDescription);
+                     MemFree(pDescription);
+                     NetObjInsert(pObject, TRUE);
                      break;
                }
-               NetObjInsert(pObject, TRUE);
-               pParent->AddChild(pObject);
-               pObject->AddParent(pParent);
+
+               // If creation was successful do binding
+               if (pObject != NULL)
+               {
+                  pParent->AddChild(pObject);
+                  pObject->AddParent(pParent);
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                  msg.SetVariable(VID_OBJECT_ID, pObject->Id());
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+               }
             }
             else
             {
@@ -1903,15 +1921,24 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
          {
             if (bBind)
             {
-               pParent->AddChild(pChild);
-               pChild->AddParent(pParent);
+               // Prevent loops
+               if (!pChild->IsChild(pParent->Id()))
+               {
+                  pParent->AddChild(pChild);
+                  pChild->AddParent(pParent);
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_OBJECT_LOOP);
+               }
             }
             else
             {
                pParent->DeleteChild(pChild);
                pChild->DeleteParent(pParent);
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
             }
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else
          {

@@ -99,9 +99,11 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Invalid DCI ID",
       "Out of memory",
       "Input/Output error",
-      "Incompatible operation"
+      "Incompatible operation",
+      "Object creation failed",
+      "Loop in object relationship detected"
    };
-   return ((dwError >= 0) && (dwError <= RCC_INCOMPATIBLE_OPERATION)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_OBJECT_LOOP)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

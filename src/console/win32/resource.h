@@ -226,8 +226,9 @@
 #define ID_POLICY_ENABLERULE            32852
 #define ID_POLICY_EDIT                  32853
 #define ID_UPDATE_EVENT_LIST            32855
-#define ID_OBJECT_CREATE                32856
 #define ID_OBJECT_BIND                  32857
+#define ID_OBJECT_CREATE_NODE           32860
+#define ID_OBJECT_CREATE_CONTAINER      32861
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -237,7 +238,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        191
-#define _APS_NEXT_COMMAND_VALUE         32858
+#define _APS_NEXT_COMMAND_VALUE         32864
 #define _APS_NEXT_CONTROL_VALUE         1105
 #define _APS_NEXT_SYMED_VALUE           119
 #endif

@@ -25,9 +25,10 @@
 
 //
 // Poll new node for configuration
+// Returns pointer to new node object on success or NULL on failure
 //
 
-static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
+NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 {
    Node *pNode;
    char szIpAddr1[32], szIpAddr2[32];
@@ -40,7 +41,7 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    {
       DbgPrintf(AF_DEBUG_DISCOVERY, "PollNode: Node %s already exist in database\n", 
                 IpToStr(dwIpAddr, szIpAddr1));
-      return;
+      return NULL;
    }
 
    pNode = new Node(dwIpAddr, 0, dwFlags);
@@ -53,11 +54,12 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
       NetObjDelete(pNode);
       ObjectsGlobalUnlock();
       delete pNode;     // Node poll failed, delete it
-      return;
+      return NULL;
    }
 
    // DEBUG
    pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DTYPE_INTEGER, 60, 30, pNode));
+   return pNode;
 }
 
 
@@ -99,7 +101,7 @@ void NodePoller(void *arg)
             dwNetMask = DBGetFieldULong(hResult, i, 2);
             dwFlags = DBGetFieldULong(hResult, i, 3);
 
-            PollNode(dwIpAddr, dwNetMask, dwFlags);
+            PollNewNode(dwIpAddr, dwNetMask, dwFlags);
 
             // Delete processed node
             sprintf(szQuery, "DELETE FROM new_nodes WHERE id=%ld", dwId);

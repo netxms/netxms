@@ -196,7 +196,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Create...",                  ID_OBJECT_CREATE
+        POPUP "&Create..."
+        BEGIN
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Container",                  ID_OBJECT_CREATE_CONTAINER
+
+        END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
@@ -278,7 +283,12 @@ BEGIN
     END
     POPUP "Object"
     BEGIN
-        MENUITEM "&Create...",                  ID_OBJECT_CREATE
+        POPUP "&Create"
+        BEGIN
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Container",                  ID_OBJECT_CREATE_CONTAINER
+
+        END
         MENUITEM "&Bind...",                    ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE

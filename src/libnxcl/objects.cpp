@@ -494,27 +494,56 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
 
 
 //
-// Create new container object
+// Create new object
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateObject(int iClass, DWORD dwParentObject)
+DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId)
 {
-   CSCPMessage msg;
-   DWORD dwRqId;
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwRetCode;
 
    dwRqId = g_dwMsgId++;
 
    // Build request message
    msg.SetCode(CMD_CREATE_OBJECT);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_PARENT_ID, dwParentObject);
-   msg.SetVariable(VID_OBJECT_CLASS, (WORD)iClass);
+   msg.SetVariable(VID_PARENT_ID, pCreateInfo->dwParentId);
+   msg.SetVariable(VID_OBJECT_CLASS, (WORD)pCreateInfo->iClass);
+   msg.SetVariable(VID_OBJECT_NAME, pCreateInfo->pszName);
+   switch(pCreateInfo->iClass)
+   {
+      case OBJECT_NODE:
+         msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
+         msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwNetMask);
+         break;
+      case OBJECT_CONTAINER:
+         msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);
+         msg.SetVariable(VID_DESCRIPTION, pCreateInfo->cs.container.pszDescription);
+         break;
+      default:
+         break;
+   }
 
    // Send request
    SendMsg(&msg);
 
-   // Wait for reply
-   return WaitForRCC(dwRqId);
+   // Wait for responce
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 60000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         *pdwObjectId = pResponce->GetVariableLong(VID_OBJECT_ID);
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
 }
 
 

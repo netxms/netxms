@@ -463,3 +463,17 @@ CREATE TABLE alarm_notes
 	note_text DT_TEXT,
 	PRIMARY KEY(note_id)
 );
+
+
+/*
+** Image catalog
+*/
+
+CREATE TABLE images
+(
+	image_id integer not null,
+	name varchar(64),
+	file_name varchar(255),
+	file_hash varchar(32),
+	PRIMARY KEY(image_id)
+);
