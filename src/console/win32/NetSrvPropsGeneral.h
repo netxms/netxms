@@ -62,6 +62,8 @@ protected:
 	afx_msg void OnRadioOther();
 	afx_msg void OnSelectIp();
 	afx_msg void OnSelectPoller();
+	afx_msg void OnChangeEditPort();
+	afx_msg void OnChangeEditProto();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

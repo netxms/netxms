@@ -175,6 +175,8 @@ public:
           char *pszDescription = NULL);
    ~DCItem();
 
+   void PrepareForDeletion(void);
+
    BOOL SaveToDB(void);
    BOOL LoadThresholdsFromDB(void);
    void DeleteFromDB(void);
@@ -186,9 +188,14 @@ public:
    Template *RelatedNode(void) { return m_pNode; }
 
    BOOL ReadyForPolling(time_t currTime) 
-   { 
-      return ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) &&
-              (m_tLastPoll + m_iPollingInterval <= currTime));
+   {
+      BOOL bResult;
+
+      Lock();
+      bResult = ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) &&
+                 (m_tLastPoll + m_iPollingInterval <= currTime));
+      Unlock();
+      return bResult;
    }
 
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }

@@ -61,6 +61,8 @@ BEGIN_MESSAGE_MAP(CNetSrvPropsGeneral, CPropertyPage)
 	ON_BN_CLICKED(IDC_RADIO_OTHER, OnRadioOther)
 	ON_BN_CLICKED(IDC_SELECT_IP, OnSelectIp)
 	ON_BN_CLICKED(IDC_SELECT_POLLER, OnSelectPoller)
+	ON_EN_CHANGE(IDC_EDIT_PORT, OnChangeEditPort)
+	ON_EN_CHANGE(IDC_EDIT_PROTO, OnChangeEditProto)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -163,6 +165,18 @@ void CNetSrvPropsGeneral::OnChangeEditRequest()
 void CNetSrvPropsGeneral::OnChangeEditResponce() 
 {
    m_pUpdate->dwFlags |= OBJ_UPDATE_CHECK_RESPONCE;
+   SetModified();
+}
+
+void CNetSrvPropsGeneral::OnChangeEditPort() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PORT;
+   SetModified();
+}
+
+void CNetSrvPropsGeneral::OnChangeEditProto() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
    SetModified();
 }
 

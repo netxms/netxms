@@ -306,6 +306,7 @@ BOOL Template::DeleteItem(DWORD dwItemId)
       if (m_ppItems[i]->Id() == dwItemId)
       {
          // Destroy item
+         m_ppItems[i]->PrepareForDeletion();
          m_ppItems[i]->DeleteFromDB();
          delete m_ppItems[i];
          m_dwNumItems--;

@@ -158,6 +158,8 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
+
+   UpdateCacheSize();
 }
 
 
@@ -746,4 +748,24 @@ void DCItem::CleanData(void)
               m_pNode->Id(), m_dwId, now - (DWORD)m_iRetentionTime * 86400);
    Unlock();
    QueueSQLRequest(szQuery);
+}
+
+
+//
+// Prepare item for deletion
+//
+
+void DCItem::PrepareForDeletion(void)
+{
+   Lock();
+
+   m_iStatus = ITEM_STATUS_DISABLED;   // Prevent future polls
+
+   // Wait until current poll ends, if any
+   // while() is not a very good solution, and probably need to be
+   // rewrited using conditions
+   while(m_iBusy)
+      ThreadSleepMs(100);
+
+   Unlock();
 }

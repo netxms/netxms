@@ -29,4 +29,5 @@
 
 BOOL TraceRoute(Node *pSrc, Node *pDest, NetObj **ppTrace)
 {
+   return FALSE;
 }
