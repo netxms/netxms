@@ -24,6 +24,7 @@ include/nms_util.h -text
 include/nxclapi.h -text
 include/nxevent.h -text
 m4/Makefile.am -text
+/reconf -text
 sql/Makefile -text
 sql/Makefile.am -text
 sql/clear.sql -text

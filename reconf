@@ -1,0 +1,21 @@
+# Copyright (C) 2004 Alex Kirhenshtein <alk@alk.lv>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+#!/bin/sh
+rm -f config.cache &&
+echo "- aclocal." &&
+aclocal-1.7 -I m4 &&
+echo "- autoconf." &&
+autoconf-2.59 &&
+echo "- autoheader." &&
+autoheader-2.59 &&
+echo "- automake." &&
+automake-1.7 -a &&
+exit
