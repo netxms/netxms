@@ -47,7 +47,8 @@ void ProcessDCI(CSCPMessage *pMsg)
       case CMD_NODE_DCI:
          if (m_pItemList != NULL)
          {
-            int i;
+            DWORD i, j, dwId;
+            DCI_THRESHOLD dct;
 
             i = m_pItemList->dwNumItems;
             m_pItemList->dwNumItems++;
@@ -63,6 +64,33 @@ void ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
             m_pItemList->pItems[i].pThresholdList = 
                (NXC_DCI_THRESHOLD *)MemAlloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
+            for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
+            {
+               pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
+               m_pItemList->pItems[i].pThresholdList[j].dwId = ntohl(dct.dwId);
+               m_pItemList->pItems[i].pThresholdList[j].dwEvent = ntohl(dct.dwEvent);
+               m_pItemList->pItems[i].pThresholdList[j].dwArg1 = ntohl(dct.dwArg1);
+               m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
+               m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);
+               m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
+               switch(m_pItemList->pItems[i].iDataType)
+               {
+                  case DT_INTEGER:
+                     m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
+                     break;
+                  case DT_INT64:
+                     m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
+                     break;
+                  case DT_FLOAT:
+                     m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
+                     break;
+                  case DT_STRING:
+                     strcpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+                     break;
+                  default:
+                     break;
+               }
+            }
          }
          break;
       default:
@@ -210,8 +238,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItem
 
 DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
 {
-   DWORD dwRqId;
-   CSCPMessage msg;
+   DWORD i, dwId, dwRqId, dwRetCode;
+   CSCPMessage msg, *pResponce;
+   DCI_THRESHOLD dct;
 
    dwRqId = g_dwMsgId++;
 
@@ -225,9 +254,66 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
    msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->iSource);
    msg.SetVariable(VID_DCI_STATUS, (WORD)pItem->iStatus);
    msg.SetVariable(VID_NAME, pItem->szName);
+   msg.SetVariable(VID_NUM_THRESHOLDS, pItem->dwNumThresholds);
+   for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < pItem->dwNumThresholds; i++, dwId++)
+   {
+      dct.dwId = htonl(pItem->pThresholdList[i].dwId);
+      dct.dwEvent = htonl(pItem->pThresholdList[i].dwEvent);
+      dct.dwArg1 = htonl(pItem->pThresholdList[i].dwArg1);
+      dct.dwArg2 = htonl(pItem->pThresholdList[i].dwArg2);
+      dct.wFunction = htons(pItem->pThresholdList[i].wFunction);
+      dct.wOperation = htons(pItem->pThresholdList[i].wOperation);
+      switch(pItem->iDataType)
+      {
+         case DT_INTEGER:
+            dct.value.dwInt32 = htonl(pItem->pThresholdList[i].value.dwInt32);
+            break;
+         case DT_INT64:
+            dct.value.qwInt64 = htonq(pItem->pThresholdList[i].value.qwInt64);
+            break;
+         case DT_FLOAT:
+            dct.value.dFloat = htond(pItem->pThresholdList[i].value.dFloat);
+            break;
+         case DT_STRING:
+            strcpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
+            break;
+         default:
+            break;
+      }
+      msg.SetVariable(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
+   }
    SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         DWORD dwNumMaps, *pdwMapId, *pdwMapIndex;
+
+         // Get index to id mapping for newly created thresholds
+         dwNumMaps = pResponce->GetVariableLong(VID_DCI_NUM_MAPS);
+         if (dwNumMaps > 0)
+         {
+            pdwMapId = (DWORD *)malloc(sizeof(DWORD) * dwNumMaps);
+            pdwMapIndex = (DWORD *)malloc(sizeof(DWORD) * dwNumMaps);
+            pResponce->GetVariableBinary(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
+            pResponce->GetVariableBinary(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
+            for(i = 0; i < dwNumMaps; i++)
+               pItem->pThresholdList[pdwMapIndex[i]].dwId = pdwMapId[i];
+            free(pdwMapId);
+            free(pdwMapIndex);
+         }
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
 }
 
 
