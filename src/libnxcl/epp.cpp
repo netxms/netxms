@@ -105,7 +105,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
                   pResponce->GetVariableLong(VID_NUM_SOURCES);
                (*ppEventPolicy)->pRuleList[i].pdwSourceList = 
                   (DWORD *)MemAlloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
-               pResponce->GetVariableInt32Array(VID_RULE_ACTIONS, 
+               pResponce->GetVariableInt32Array(VID_RULE_SOURCES, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumSources,
                                                 (*ppEventPolicy)->pRuleList[i].pdwSourceList);
 
@@ -173,7 +173,54 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(void)
 
 DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
 {
-   return RCC_SYSTEM_FAILURE;
+   CSCPMessage msg;
+   DWORD i, dwRqId, dwRetCode;
+
+   dwRqId = g_dwMsgId++;
+
+   // Prepare message
+   msg.SetCode(CMD_SAVE_EPP);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NUM_RULES, pEventPolicy->dwNumRules);
+
+   // Send message and wait for responce
+   SendMsg(&msg);
+   dwRetCode = WaitForRCC(dwRqId);
+   if (dwRetCode == RCC_SUCCESS)
+   {
+      // Send all event policy records, one per message
+      msg.SetCode(CMD_EPP_RECORD);
+      for(i = 0; i < pEventPolicy->dwNumRules; i++)
+      {
+         msg.DeleteAllVariables();
+
+         msg.SetVariable(VID_FLAGS, pEventPolicy->pRuleList[i].dwFlags);
+         msg.SetVariable(VID_RULE_ID, pEventPolicy->pRuleList[i].dwId);
+         msg.SetVariable(VID_COMMENT, VALIDATE_STRING(pEventPolicy->pRuleList[i].pszComment));
+         msg.SetVariable(VID_NUM_ACTIONS, pEventPolicy->pRuleList[i].dwNumActions);
+         msg.SetVariableToInt32Array(VID_RULE_ACTIONS,
+                                     pEventPolicy->pRuleList[i].dwNumActions,
+                                     pEventPolicy->pRuleList[i].pdwActionList);
+         msg.SetVariable(VID_NUM_EVENTS, pEventPolicy->pRuleList[i].dwNumEvents);
+         msg.SetVariableToInt32Array(VID_RULE_EVENTS,
+                                     pEventPolicy->pRuleList[i].dwNumEvents,
+                                     pEventPolicy->pRuleList[i].pdwEventList);
+         msg.SetVariable(VID_NUM_SOURCES, pEventPolicy->pRuleList[i].dwNumSources);
+         msg.SetVariableToInt32Array(VID_RULE_SOURCES,
+                                     pEventPolicy->pRuleList[i].dwNumSources,
+                                     pEventPolicy->pRuleList[i].pdwSourceList);
+         msg.SetVariable(VID_ALARM_KEY, pEventPolicy->pRuleList[i].szAlarmKey);
+         msg.SetVariable(VID_ALARM_ACK_KEY, pEventPolicy->pRuleList[i].szAlarmAckKey);
+         msg.SetVariable(VID_ALARM_MESSAGE, pEventPolicy->pRuleList[i].szAlarmMessage);
+         msg.SetVariable(VID_ALARM_SEVERITY, pEventPolicy->pRuleList[i].wAlarmSeverity);
+
+         SendMsg(&msg);
+      }
+
+      // Wait for final confirmation
+      dwRetCode = WaitForRCC(dwRqId);
+   }
+   return dwRetCode;
 }
 
 

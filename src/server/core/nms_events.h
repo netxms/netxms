@@ -114,6 +114,7 @@ private:
 public:
    EPRule(DWORD dwId);
    EPRule(DB_RESULT hResult, int iRow);
+   EPRule(CSCPMessage *pMsg);
    ~EPRule();
 
    DWORD Id(void) { return m_dwId; }
@@ -134,8 +135,10 @@ private:
    EPRule **m_ppRuleList;
    RWLOCK m_rwlock;
 
-   void Lock(BOOL bWrite = FALSE);
+   void ReadLock(void) { RWLockReadLock(m_rwlock, INFINITE); }
+   void WriteLock(void) { RWLockWriteLock(m_rwlock, INFINITE); }
    void Unlock(void) { RWLockUnlock(m_rwlock); }
+   void Clear(void);
 
 public:
    EventPolicy();
@@ -145,6 +148,7 @@ public:
    BOOL LoadFromDB(void);
    void ProcessEvent(Event *pEvent);
    void SendToClient(ClientSession *pSession, DWORD dwRqId);
+   void ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList);
 };
 
 

@@ -189,6 +189,7 @@ typedef unsigned long HREQUEST;
 #define RCC_INCOMPATIBLE_OPERATION  ((DWORD)17)
 #define RCC_OBJECT_CREATION_FAILED  ((DWORD)18)
 #define RCC_OBJECT_LOOP             ((DWORD)19)
+#define RCC_INVALID_OBJECT_NAME     ((DWORD)20)
 
 
 //

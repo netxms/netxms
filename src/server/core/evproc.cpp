@@ -51,11 +51,13 @@ void EventProcessor(void *arg)
       // Write event to log if required
       if (pEvent->Flags() & EF_LOG)
       {
-         char szQuery[1024];
+         char *pszMsg, szQuery[1024];
 
+         pszMsg = EncodeSQLString(pEvent->Message());
          sprintf(szQuery, "INSERT INTO event_log (event_id,timestamp,source,severity,message) "
                           "VALUES (%d,%d,%d,%d,'%s')", pEvent->Id(), pEvent->TimeStamp(),
-                 pEvent->SourceId(), pEvent->Severity(), pEvent->Message());
+                 pEvent->SourceId(), pEvent->Severity(), pszMsg);
+         free(pszMsg);
          DBQuery(g_hCoreDB, szQuery);
       }
 

@@ -173,6 +173,7 @@ typedef void * HSNMPSESSION;
 #define CSF_EPP_LOCKED           ((DWORD)0x0002)
 #define CSF_EVENT_DB_MODIFIED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
+#define CSF_EPP_UPLOAD           ((DWORD)0x0010)
 
 
 //
@@ -219,15 +220,18 @@ private:
    DWORD m_dwSystemAccess;    // User's system access rights
    DWORD m_dwFlags;           // Session flags
    CSCP_BUFFER *m_pMsgBuffer;
-   CONDITION m_hCondWriteThreadStopped;
-   CONDITION m_hCondProcessingThreadStopped;
-   CONDITION m_hCondUpdateThreadStopped;
+   MUTEX m_mutexWriteThreadRunning;
+   MUTEX m_mutexProcessingThreadRunning;
+   MUTEX m_mutexUpdateThreadRunning;
    MUTEX m_hMutexSendEvents;
    MUTEX m_hMutexSendObjects;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
    DWORD *m_pOpenDCIList;     // List of nodes with DCI lists open
+   DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
+   DWORD m_dwRecordsUploaded;
+   EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
 
    BOOL CheckSysAccessRights(DWORD dwRequiredAccess) 
    { 
@@ -259,7 +263,7 @@ private:
    void OpenEPP(DWORD dwRqId);
    void CloseEPP(DWORD dwRqId);
    void SaveEPP(CSCPMessage *pRequest);
-   void InstallEPP(DWORD dwRqId);
+   void ProcessEPPRecord(CSCPMessage *pRequest);
    void SendMIBList(DWORD dwRqId);
    void SendMIB(CSCPMessage *pRequest);
    void SendEventNames(DWORD dwRqId);
@@ -384,6 +388,10 @@ void UpdateImageHashes(void);
 void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat);
 void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD wFormat);
 void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId);
+
+BOOL IsValidObjectName(char *pszName);
+char *EncodeSQLString(const char *pszIn);
+void DecodeSQLString(char *pszStr);
 
 #ifdef _WIN32
 

@@ -570,6 +570,12 @@ DWORD ModifyUser(NMS_USER *pUserInfo)
    for(i = 0; i < g_dwNumUsers; i++)
       if (g_pUserList[i].dwId == pUserInfo->dwId)
       {
+         if (!IsValidObjectName(pUserInfo->szName))
+         {
+            dwResult = RCC_INVALID_OBJECT_NAME;
+            break;
+         }
+
          strcpy(g_pUserList[i].szName, pUserInfo->szName);
          strcpy(g_pUserList[i].szFullName, pUserInfo->szFullName);
          strcpy(g_pUserList[i].szDescription, pUserInfo->szDescription);
@@ -612,6 +618,12 @@ DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo)
    for(i = 0; i < g_dwNumGroups; i++)
       if (g_pGroupList[i].dwId == pGroupInfo->dwId)
       {
+         if (!IsValidObjectName(pGroupInfo->szName))
+         {
+            dwResult = RCC_INVALID_OBJECT_NAME;
+            break;
+         }
+
          strcpy(g_pGroupList[i].szName, pGroupInfo->szName);
          strcpy(g_pGroupList[i].szDescription, pGroupInfo->szDescription);
          g_pGroupList[i].wSystemRights = pGroupInfo->wSystemRights;

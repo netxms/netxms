@@ -50,6 +50,8 @@
 #define MAX_LOGIN_NAME     64
 #define MAX_PASSWORD_LEN   64
 
+#define VALIDATE_STRING(s) (((s) == NULL) ? "" : (s))
+
 
 //
 // Index structure

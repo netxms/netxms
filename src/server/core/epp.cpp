@@ -38,6 +38,7 @@ EPRule::EPRule(DWORD dwId)
    m_dwNumActions = 0;
    m_pdwActionList = NULL;
    m_pszComment = NULL;
+   m_iAlarmSeverity = 0;
 }
 
 
@@ -51,11 +52,40 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
-   m_pszComment = strdup(DBGetField(hResult, iRow, 2));
+   m_pszComment = nx_strdup(DBGetField(hResult, iRow, 2));
    strcpy(m_szAlarmMessage, DBGetField(hResult, iRow, 3));
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
    strcpy(m_szAlarmKey, DBGetField(hResult, iRow, 5));
    strcpy(m_szAlarmAckKey, DBGetField(hResult, iRow, 6));
+}
+
+
+//
+// Construct event policy rule from CSCP message
+//
+
+EPRule::EPRule(CSCPMessage *pMsg)
+{
+   m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
+   m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
+   m_pszComment = pMsg->GetVariableStr(VID_COMMENT);
+
+   m_dwNumActions = pMsg->GetVariableLong(VID_NUM_ACTIONS);
+   m_pdwActionList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumActions);
+   pMsg->GetVariableInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+
+   m_dwNumEvents = pMsg->GetVariableLong(VID_NUM_EVENTS);
+   m_pdwEventList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumEvents);
+   pMsg->GetVariableInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+
+   m_dwNumSources = pMsg->GetVariableLong(VID_NUM_SOURCES);
+   m_pdwSourceList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumSources);
+   pMsg->GetVariableInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+
+   pMsg->GetVariableStr(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_ALARM_ACK_KEY, m_szAlarmAckKey, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
+   m_iAlarmSeverity = pMsg->GetVariableShort(VID_ALARM_SEVERITY);
 }
 
 
@@ -68,7 +98,7 @@ EPRule::~EPRule()
    safe_free(m_pdwSourceList);
    safe_free(m_pdwEventList);
    safe_free(m_pdwActionList);
-   safe_free(m_pszComment);
+   MemFree(m_pszComment);
 }
 
 
@@ -283,7 +313,7 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
    pMsg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);
    pMsg->SetVariableToInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
-   pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
+   pMsg->SetVariable(VID_NUM_SOURCES, m_dwNumSources);
    pMsg->SetVariableToInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
 }
 
@@ -306,25 +336,23 @@ EventPolicy::EventPolicy()
 
 EventPolicy::~EventPolicy()
 {
-   DWORD i;
-
-   for(i = 0; i < m_dwNumRules; i++)
-      delete m_ppRuleList[i];
-   safe_free(m_ppRuleList);
+   Clear();
    RWLockDestroy(m_rwlock);
 }
 
 
 //
-// Lock event policy for reading or writing
+// Clear existing policy
 //
 
-void EventPolicy::Lock(BOOL bWrite)
+void EventPolicy::Clear(void)
 {
-   if (bWrite)
-      RWLockWriteLock(m_rwlock, INFINITE);
-   else
-      RWLockReadLock(m_rwlock, INFINITE);
+   DWORD i;
+
+   for(i = 0; i < m_dwNumRules; i++)
+      delete m_ppRuleList[i];
+   safe_free(m_ppRuleList);
+   m_ppRuleList = NULL;
 }
 
 
@@ -367,7 +395,7 @@ void EventPolicy::ProcessEvent(Event *pEvent)
 {
    DWORD i;
 
-   Lock();
+   ReadLock();
    for(i = 0; i < m_dwNumRules; i++)
       if (m_ppRuleList[i]->ProcessEvent(pEvent))
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
@@ -384,7 +412,7 @@ void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
    DWORD i;
    CSCPMessage msg;
 
-   Lock();
+   ReadLock();
    msg.SetCode(CMD_EPP_RECORD);
    msg.SetId(dwRqId);
    for(i = 0; i < m_dwNumRules; i++)
@@ -393,5 +421,19 @@ void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
       pSession->SendMessage(&msg);
       msg.DeleteAllVariables();
    }
+   Unlock();
+}
+
+
+//
+// Replace policy with new one
+//
+
+void EventPolicy::ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
+{
+   WriteLock();
+   Clear();
+   m_dwNumRules = dwNumRules;
+   m_ppRuleList = ppRuleList;
    Unlock();
 }

@@ -297,3 +297,86 @@ BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
    }
    return pBuffer;
 }
+
+
+//
+// Check if given name is a valid object name
+//
+
+BOOL IsValidObjectName(char *pszName)
+{
+   static char szValidCharacters[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./";
+   return (pszName[0] != 0) && (strspn(pszName, szValidCharacters) == strlen(pszName));
+}
+
+
+//
+// Characters to be escaped before writing to SQL
+//
+
+static char m_szSpecialChars[] = "\x01\x02\x03\x04\x05\x06\x07\x08"
+                                 "\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10"
+                                 "\x11\x12\x13\x14\x15\x16\x17\x18"
+                                 "\x19\x1A\x1B\x1C\x1D\x1E\x1F"
+                                 "#%\"\\'\x7F";
+
+
+//
+// Escape some special characters in string for writing into database
+//
+
+char *EncodeSQLString(const char *pszIn)
+{
+   char *pszOut;
+   int iPosIn, iPosOut, iStrSize;
+
+   // Allocate destination buffer
+   iStrSize = strlen(pszIn) + 1;
+   for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
+      if (strchr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
+         iStrSize += 2;
+   pszOut = (char *)malloc(iStrSize);
+
+   // TRanslate string
+   for(iPosIn = 0, iPosOut = 0; pszIn[iPosIn] != 0; iPosIn++)
+      if (strchr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
+      {
+         pszOut[iPosOut++] = '#';
+         pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] >> 4);
+         pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] & 0x0F);
+      }
+      else
+      {
+         pszOut[iPosOut++] = pszIn[iPosIn];
+      }
+   pszOut[iPosOut] = 0;
+   return pszOut;
+}
+
+
+//
+// Restore characters encoded by EncodeSQLString()
+// Characters are decoded "in place"
+//
+
+void DecodeSQLString(char *pszStr)
+{
+   int iPosIn, iPosOut;
+
+   for(iPosIn = 0, iPosOut = 0; pszStr[iPosIn] != 0; iPosIn++)
+   {
+      if (pszStr[iPosIn] == '#')
+      {
+         iPosIn++;
+         pszStr[iPosOut] = hex2bin(pszStr[iPosIn]) << 4;
+         iPosIn++;
+         pszStr[iPosOut] |= hex2bin(pszStr[iPosIn]);
+         iPosOut++;
+      }
+      else
+      {
+         pszStr[iPosOut++] = pszStr[iPosIn];
+      }
+   }
+   pszStr[iPosOut] = 0;
+}

@@ -76,9 +76,9 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwIndex = INVALID_INDEX;
    m_iState = STATE_CONNECTED;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   m_hCondWriteThreadStopped = ConditionCreate(FALSE);
-   m_hCondProcessingThreadStopped = ConditionCreate(FALSE);
-   m_hCondUpdateThreadStopped = ConditionCreate(FALSE);
+   m_mutexWriteThreadRunning = MutexCreate();
+   m_mutexProcessingThreadRunning = MutexCreate();
+   m_mutexUpdateThreadRunning = MutexCreate();
    m_hMutexSendEvents = MutexCreate();
    m_hMutexSendObjects = MutexCreate();
    m_dwFlags = 0;
@@ -87,6 +87,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwUserId = INVALID_INDEX;
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
+   m_ppEPPRuleList = NULL;
 }
 
 
@@ -102,12 +103,21 @@ ClientSession::~ClientSession()
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
    safe_free(m_pMsgBuffer);
-   ConditionDestroy(m_hCondWriteThreadStopped);
-   ConditionDestroy(m_hCondProcessingThreadStopped);
-   ConditionDestroy(m_hCondUpdateThreadStopped);
+   MutexDestroy(m_mutexWriteThreadRunning);
+   MutexDestroy(m_mutexProcessingThreadRunning);
+   MutexDestroy(m_mutexUpdateThreadRunning);
    MutexDestroy(m_hMutexSendEvents);
    MutexDestroy(m_hMutexSendObjects);
    safe_free(m_pOpenDCIList);
+   if (m_ppEPPRuleList != NULL)
+   {
+      DWORD i;
+
+      if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
+         for(i = 0; i < m_dwRecordsUploaded; i++)
+            delete m_ppEPPRuleList[i];
+      free(m_ppEPPRuleList);
+   }
 }
 
 
@@ -172,10 +182,17 @@ void ClientSession::ReadThread(void)
    // Notify other threads to exit
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
-   ConditionWait(m_hCondWriteThreadStopped, INFINITE);
-   ConditionWait(m_hCondProcessingThreadStopped, INFINITE);
+   MutexLock(m_mutexWriteThreadRunning, INFINITE);
+   MutexUnlock(m_mutexWriteThreadRunning);
+
+   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
+   MutexUnlock(m_mutexProcessingThreadRunning);
+
+   MutexLock(m_mutexUpdateThreadRunning, INFINITE);
+   MutexUnlock(m_mutexUpdateThreadRunning);
 
    // Remove all locks created by this session
    RemoveAllSessionLocks(m_dwIndex);
@@ -186,6 +203,8 @@ void ClientSession::ReadThread(void)
          if (pObject->Type() == OBJECT_NODE)
             ((Node *)pObject)->UnlockDCIList(m_dwIndex);
    }
+
+   DebugPrintf("Session closed\n");
 }
 
 
@@ -198,6 +217,7 @@ void ClientSession::WriteThread(void)
    CSCP_MESSAGE *pMsg;
    char szBuffer[128];
 
+   MutexLock(m_mutexWriteThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
@@ -212,7 +232,51 @@ void ClientSession::WriteThread(void)
       }
       MemFree(pMsg);
    }
-   ConditionSet(m_hCondWriteThreadStopped);
+   MutexUnlock(m_mutexWriteThreadRunning);
+}
+
+
+//
+// Update processing thread
+//
+
+void ClientSession::UpdateThread(void)
+{
+   UPDATE_INFO *pUpdate;
+   CSCPMessage msg;
+
+   MutexLock(m_mutexUpdateThreadRunning, INFINITE);
+   while(1)
+   {
+      pUpdate = (UPDATE_INFO *)m_pUpdateQueue->GetOrBlock();
+      if (pUpdate == INVALID_POINTER_VALUE)    // Session termination indicator
+         break;
+
+      switch(pUpdate->dwCategory)
+      {
+         case INFO_CAT_EVENT:
+            MutexLock(m_hMutexSendEvents, INFINITE);
+            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+            MutexUnlock(m_hMutexSendEvents);
+            free(pUpdate->pData);
+            break;
+         case INFO_CAT_OBJECT_CHANGE:
+            MutexLock(m_hMutexSendObjects, INFINITE);
+            msg.SetId(0);
+            msg.SetCode(CMD_OBJECT_UPDATE);
+            ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
+            SendMessage(&msg);
+            MutexUnlock(m_hMutexSendObjects);
+            msg.DeleteAllVariables();
+            ((NetObj *)pUpdate->pData)->DecRefCount();
+            break;
+         default:
+            break;
+      }
+
+      free(pUpdate);
+   }
+   MutexUnlock(m_mutexUpdateThreadRunning);
 }
 
 
@@ -225,6 +289,7 @@ void ClientSession::ProcessingThread(void)
    CSCPMessage *pMsg;
    char szBuffer[128];
 
+   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
@@ -311,8 +376,8 @@ void ClientSession::ProcessingThread(void)
          case CMD_SAVE_EPP:
             SaveEPP(pMsg);
             break;
-         case CMD_INSTALL_EPP:
-            InstallEPP(pMsg->GetId());
+         case CMD_EPP_RECORD:
+            ProcessEPPRecord(pMsg);
             break;
          case CMD_GET_MIB_LIST:
             SendMIBList(pMsg->GetId());
@@ -347,7 +412,7 @@ void ClientSession::ProcessingThread(void)
       }
       delete pMsg;
    }
-   ConditionSet(m_hCondProcessingThreadStopped);
+   MutexUnlock(m_mutexProcessingThreadRunning);
 }
 
 
@@ -440,8 +505,15 @@ void ClientSession::SendEventDB(DWORD dwRqId)
             msg.SetVariable(VID_NAME, DBGetFieldAsync(hResult, 1, szBuffer, 1024));
             msg.SetVariable(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
             msg.SetVariable(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
-            msg.SetVariable(VID_MESSAGE, DBGetFieldAsync(hResult, 4, szBuffer, 1024));
-            msg.SetVariable(VID_DESCRIPTION, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
+
+            DBGetFieldAsync(hResult, 4, szBuffer, 1024);
+            DecodeSQLString(szBuffer);
+            msg.SetVariable(VID_MESSAGE, szBuffer);
+
+            DBGetFieldAsync(hResult, 5, szBuffer, 1024);
+            DecodeSQLString(szBuffer);
+            msg.SetVariable(VID_DESCRIPTION, szBuffer);
+
             SendMessage(&msg);
             msg.DeleteAllVariables();
          }
@@ -559,6 +631,7 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
          event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 2));
          event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 3));
          DBGetFieldAsync(hResult, 4, event.szMessage, MAX_EVENT_MSG_LENGTH);
+         DecodeSQLString(event.szMessage);
          m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, sizeof(NXC_EVENT), &event, NULL));
       }
       DBFreeAsyncResult(hResult);
@@ -671,49 +744,6 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 
 
 //
-// Update processing thread
-//
-
-void ClientSession::UpdateThread(void)
-{
-   UPDATE_INFO *pUpdate;
-   CSCPMessage msg;
-
-   while(1)
-   {
-      pUpdate = (UPDATE_INFO *)m_pUpdateQueue->GetOrBlock();
-      if (pUpdate == INVALID_POINTER_VALUE)    // Session termination indicator
-         break;
-
-      switch(pUpdate->dwCategory)
-      {
-         case INFO_CAT_EVENT:
-            MutexLock(m_hMutexSendEvents, INFINITE);
-            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
-            MutexUnlock(m_hMutexSendEvents);
-            free(pUpdate->pData);
-            break;
-         case INFO_CAT_OBJECT_CHANGE:
-            MutexLock(m_hMutexSendObjects, INFINITE);
-            msg.SetId(0);
-            msg.SetCode(CMD_OBJECT_UPDATE);
-            ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
-            SendMessage(&msg);
-            MutexUnlock(m_hMutexSendObjects);
-            msg.DeleteAllVariables();
-            ((NetObj *)pUpdate->pData)->DecRefCount();
-            break;
-         default:
-            break;
-      }
-
-      free(pUpdate);
-   }
-   ConditionSet(m_hCondUpdateThreadStopped);
-}
-
-
-//
 // Send notification message to server
 //
 
@@ -749,7 +779,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
       // Check access rights
       if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
       {
-         char szQuery[4096], *pszName, *pszMessage, *pszDescription;
+         char szQuery[4096], szName[MAX_EVENT_NAME];
          DWORD dwEventId;
          BOOL bEventExist = FALSE;
          DB_RESULT hResult;
@@ -766,30 +796,48 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
          }
 
          // Prepare and execute SQL query
-         pszName = pRequest->GetVariableStr(VID_NAME);
-         pszMessage = pRequest->GetVariableStr(VID_MESSAGE);
-         pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-         if (bEventExist)
-            sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
-                    pszName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
-                    pszMessage, pszDescription, dwEventId);
-         else
-            sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
-                    dwEventId, pszName, pRequest->GetVariableLong(VID_SEVERITY),
-                    pRequest->GetVariableLong(VID_FLAGS), pszMessage, pszDescription);
-         if (DBQuery(g_hCoreDB, szQuery))
+         pRequest->GetVariableStr(VID_NAME, szName, MAX_EVENT_NAME);
+         if (IsValidObjectName(szName))
          {
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            m_dwFlags |= CSF_EVENT_DB_MODIFIED;
-         }
-         else
-         {
-            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-         }
+            char szMessage[MAX_DB_STRING], *pszDescription, *pszEscMsg, *pszEscDescr;
 
-         MemFree(pszName);
-         MemFree(pszMessage);
-         MemFree(pszDescription);
+            pRequest->GetVariableStr(VID_MESSAGE, szMessage, MAX_DB_STRING);
+            pszEscMsg = EncodeSQLString(szMessage);
+
+            pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+            pszEscDescr = EncodeSQLString(pszDescription);
+            MemFree(pszDescription);
+
+            if (bEventExist)
+            {
+               sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
+                       szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
+                       pszEscMsg, pszEscDescr, dwEventId);
+            }
+            else
+            {
+               sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
+                       dwEventId, szName, pRequest->GetVariableLong(VID_SEVERITY),
+                       pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
+            }
+
+            free(pszEscMsg);
+            free(pszEscDescr);
+
+            if (DBQuery(g_hCoreDB, szQuery))
+            {
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               m_dwFlags |= CSF_EVENT_DB_MODIFIED;
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+         }
       }
       else
       {
@@ -917,11 +965,18 @@ void ClientSession::CreateUser(CSCPMessage *pRequest)
       char szUserName[MAX_USER_NAME];
 
       pRequest->GetVariableStr(VID_USER_NAME, szUserName, MAX_USER_NAME);
-      bIsGroup = pRequest->GetVariableShort(VID_IS_GROUP);
-      dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
-      msg.SetVariable(VID_RCC, dwResult);
-      if (dwResult == RCC_SUCCESS)
-         msg.SetVariable(VID_USER_ID, dwUserId);   // Send id of new user to client
+      if (IsValidObjectName(szUserName))
+      {
+         bIsGroup = pRequest->GetVariableShort(VID_IS_GROUP);
+         dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
+         msg.SetVariable(VID_RCC, dwResult);
+         if (dwResult == RCC_SUCCESS)
+            msg.SetVariable(VID_USER_ID, dwUserId);   // Send id of new user to client
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+      }
    }
 
    // Send responce
@@ -1658,17 +1713,83 @@ void ClientSession::CloseEPP(DWORD dwRqId)
 // Save event processing policy
 //
 
-void ClientSession::SaveEPP(CSCPMessage *pMsg)
+void ClientSession::SaveEPP(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
+   {
+      if (m_dwFlags & CSF_EPP_LOCKED)
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         m_dwFlags |= CSF_EPP_UPLOAD;
+         m_dwNumRecordsToUpload = pRequest->GetVariableLong(VID_NUM_RULES);
+         m_dwRecordsUploaded = 0;
+         m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
+         memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
+         DebugPrintf("Accepted EPP upload request for %d rules\n", m_dwNumRecordsToUpload);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
+      // Current user has no rights for event policy management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 
 //
-// Install event processing policy
+// Process EPP rule received from client
 //
 
-void ClientSession::InstallEPP(DWORD dwRqId)
+void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
 {
+   if (!(m_dwFlags & CSF_EPP_LOCKED))
+   {
+      CSCPMessage msg;
+
+      msg.SetCode(CMD_REQUEST_COMPLETED);
+      msg.SetId(pRequest->GetId());
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      SendMessage(&msg);
+   }
+   else
+   {
+      if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
+      {
+         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(pRequest);
+         m_dwRecordsUploaded++;
+         if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
+         {
+            CSCPMessage msg;
+
+            // All records received, replace event policy...
+            DebugPrintf("Replacing event processing policy with a new one at %p (%d rules)\n",
+                        m_ppEPPRuleList, m_dwNumRecordsToUpload);
+            g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
+            m_ppEPPRuleList = NULL;
+            
+            // ... and send final confirmation
+            msg.SetCode(CMD_REQUEST_COMPLETED);
+            msg.SetId(pRequest->GetId());
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            SendMessage(&msg);
+
+            m_dwFlags &= ~CSF_EPP_UPLOAD;
+         }
+      }
+   }
 }
 
 
@@ -1844,42 +1965,49 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
          {
             iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
             pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
-            if ((iClass == OBJECT_NODE) || (iClass == OBJECT_CONTAINER))
+            if (IsValidObjectName(szObjectName))
             {
-               // Create new object
-               switch(iClass)
+               if ((iClass == OBJECT_NODE) || (iClass == OBJECT_CONTAINER))
                {
-                  case OBJECT_NODE:
-                     pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
-                                           pRequest->GetVariableLong(VID_IP_NETMASK),
-                                           DF_DEFAULT);
-                     break;
-                  case OBJECT_CONTAINER:
-                     pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-                     pObject = new Container(szObjectName, 
-                                             pRequest->GetVariableLong(VID_CATEGORY),
-                                             pDescription);
-                     MemFree(pDescription);
-                     NetObjInsert(pObject, TRUE);
-                     break;
-               }
+                  // Create new object
+                  switch(iClass)
+                  {
+                     case OBJECT_NODE:
+                        pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
+                                              pRequest->GetVariableLong(VID_IP_NETMASK),
+                                              DF_DEFAULT);
+                        break;
+                     case OBJECT_CONTAINER:
+                        pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+                        pObject = new Container(szObjectName, 
+                                                pRequest->GetVariableLong(VID_CATEGORY),
+                                                pDescription);
+                        MemFree(pDescription);
+                        NetObjInsert(pObject, TRUE);
+                        break;
+                  }
 
-               // If creation was successful do binding
-               if (pObject != NULL)
-               {
-                  pParent->AddChild(pObject);
-                  pObject->AddParent(pParent);
-                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                  msg.SetVariable(VID_OBJECT_ID, pObject->Id());
+                  // If creation was successful do binding
+                  if (pObject != NULL)
+                  {
+                     pParent->AddChild(pObject);
+                     pObject->AddParent(pParent);
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                     msg.SetVariable(VID_OBJECT_ID, pObject->Id());
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+                  }
                }
                else
                {
-                  msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+                  msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
                }
             }
             else
             {
-               msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
             }
          }
          else

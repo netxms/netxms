@@ -188,6 +188,12 @@ static void NetReceiver(void *pArg)
    ChangeState(STATE_DISCONNECTED);
    MemFree(pRawMsg);
    MemFree(pMsgBuffer);
+
+   // Close socket
+   shutdown(m_hSocket, SHUT_WR);
+   while(recv(m_hSocket, szBuffer, 128, 0) > 0);
+   shutdown(m_hSocket, SHUT_RD);
+   closesocket(m_hSocket);
 }
 
 
@@ -287,7 +293,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
 void LIBNXCL_EXPORTABLE NXCDisconnect(void)
 {
    // Close socket
-   shutdown(m_hSocket, 2);
+   shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
 
    // Clear message wait queue

@@ -106,6 +106,7 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
    RECT rect;
    CBitmap bmp;
+   DWORD i;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -139,6 +140,13 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.InsertColumn(5, "Action", 150);
    m_wndRuleList.InsertColumn(6, "Comments", 200, CF_TEXTBOX | CF_NON_SELECTABLE);
 
+   // Fill rule list with existing rules
+   for(i = 0; i < m_pEventPolicy->dwNumRules; i++)
+   {
+      m_wndRuleList.InsertRow(i);
+      UpdateRow(i);
+   }      
+
    theApp.OnViewCreate(IDR_EPP_EDITOR, this);
 	return 0;
 }
@@ -164,6 +172,9 @@ void CEventPolicyEditor::OnClose()
 {
    DWORD dwResult;
 
+   dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
 	dwResult = DoRequest(NXCCloseEventPolicy, "Unlocking event processing policy...");
    if (dwResult != RCC_SUCCESS)
       theApp.ErrorBox(dwResult, "Error unlocking event processing policy: %s");

@@ -181,9 +181,9 @@ typedef struct
 #define CMD_CONFIG_VARLIST_END      0x0010
 #define CMD_DELETE_CONFIG_VARIABLE  0x0011
 #define CMD_NOTIFY                  0x0012
-#define CMD_OPEN_EPP                0x0013
-#define CMD_CLOSE_EPP               0x0014
-#define CMD_INSTALL_EPP             0x0015
+#define CMD_TRAP                    0x0013
+#define CMD_OPEN_EPP                0x0014
+#define CMD_CLOSE_EPP               0x0015
 #define CMD_SAVE_EPP                0x0016
 #define CMD_EPP_RECORD              0x0017
 #define CMD_OPEN_EVENT_DB           0x0018
@@ -229,10 +229,9 @@ typedef struct
 #define CMD_AUTHENTICATE            0x0040
 #define CMD_GET_PARAMETER           0x0041
 #define CMD_GET_LIST                0x0042
-#define CMD_TRAP                    0x0043
-#define CMD_ACTION                  0x0044
-#define CMD_GET_DEFAULT_IMAGE_LIST  0x0045
-#define CMD_DEFAULT_IMAGE_LIST      0x0046
+#define CMD_ACTION                  0x0043
+#define CMD_GET_DEFAULT_IMAGE_LIST  0x0044
+#define CMD_DEFAULT_IMAGE_LIST      0x0045
 
 
 //

@@ -64,6 +64,11 @@ typedef int socklen_t;
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
 
+// Socket compatibility
+#define SHUT_RD      0
+#define SHUT_WR      1
+#define SHUT_RDWR    2
+
 #elif defined(_NETWARE)
 
 /********** NETWARE ********************/

@@ -335,7 +335,9 @@ static BOOL LoadEvents(void)
          m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
          m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
          m_pEventTemplates[i].szMessageTemplate = strdup(DBGetField(hResult, i, 3));
+         DecodeSQLString(m_pEventTemplates[i].szMessageTemplate);
          m_pEventTemplates[i].szDescription = strdup(DBGetField(hResult, i, 4));
+         DecodeSQLString(m_pEventTemplates[i].szDescription);
       }
 
       DBFreeResult(hResult);
