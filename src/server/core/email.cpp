@@ -68,6 +68,7 @@ static char m_szSmtpServer[MAX_PATH] = "localhost";
 static WORD m_wSmtpPort = 25;
 static char m_szFromAddr[MAX_PATH] = "netxms@localhost";
 static Queue *m_pMailerQueue = NULL;
+static THREAD m_hThread = INVALID_THREAD_HANDLE;
 
 
 //
@@ -309,7 +310,7 @@ void InitMailer(void)
 
    m_pMailerQueue = new Queue;
 
-   ThreadCreate(MailerThread, 0, NULL);
+   m_hThread = ThreadCreateEx(MailerThread, 0, NULL);
 }
 
 
@@ -321,6 +322,9 @@ void ShutdownMailer(void)
 {
    m_pMailerQueue->Clear();
    m_pMailerQueue->Put(INVALID_POINTER_VALUE);
+   if (m_hThread != INVALID_THREAD_HANDLE)
+      ThreadJoin(m_hThread);
+   delete m_pMailerQueue;
 }
 
 

@@ -24,10 +24,47 @@
 
 
 //
+// SMS structure
+//
+
+typedef struct
+{
+   char szRcpt[MAX_RCPT_ADDR_LEN];
+   char szText[160];
+} SMS;
+
+
+//
 // Static data
 //
 
 static Queue *m_pMsgQueue;
+static BOOL (* m_DrvSendMsg)(TCHAR *, TCHAR *);
+static void (* m_DrvUnload)(void);
+static THREAD m_hThread = INVALID_THREAD_HANDLE;
+
+
+//
+// Sender thread
+//
+
+static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
+{
+   SMS *pMsg;
+
+   while(1)
+   {
+      pMsg = (SMS *)m_pMsgQueue->GetOrBlock();
+      if (pMsg == INVALID_POINTER_VALUE)
+         break;
+
+      if (!m_DrvSendMsg(pMsg->szRcpt, pMsg->szText))
+         PostEvent(EVENT_SMS_FAILURE, g_dwMgmtNode, "s", pMsg->szRcpt);
+
+      free(pMsg);
+   }
+   return THREAD_OK;
+}
 
 
 //
@@ -48,14 +85,29 @@ void InitSMSSender(void)
       hModule = DLOpen(szDriver, szErrorText);
       if (hModule != NULL)
       {
-         BOOL (* ModuleInit)(NXMODULE *);
+         BOOL (* DrvInit)(TCHAR *);
 
-         ModuleInit = (BOOL (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NetXMSModuleInit", szErrorText);
-         if (ModuleInit != NULL)
+         DrvInit = (BOOL (*)(TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverInit", szErrorText);
+         m_DrvSendMsg = (BOOL (*)(TCHAR *, TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverSend", szErrorText);
+         m_DrvUnload = (void (*)(void))DLGetSymbolAddr(hModule, "SMSDriverUnload", szErrorText);
+         if ((DrvInit != NULL) && (m_DrvSendMsg != NULL) && (m_DrvUnload != NULL))
          {
-            m_pMsgQueue = new Queue;
+            if (DrvInit(szDrvConfig))
+            {
+               m_pMsgQueue = new Queue;
 
-            ThreadCreate(SenderThread, 0, NULL);
+               m_hThread = ThreadCreateEx(SenderThread, 0, NULL);
+            }
+            else
+            {
+               WriteLog(MSG_SMSDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", szDriver);
+               DLClose(hModule);
+            }
+         }
+         else
+         {
+            WriteLog(MSG_SMSDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", szDriver);
+            DLClose(hModule);
          }
       }
       else
@@ -68,27 +120,29 @@ void InitSMSSender(void)
 
 
 //
-// Shutdown mailer
+// Shutdown SMS sender
 //
 
 void ShutdownSMSSender(void)
 {
    m_pMsgQueue->Clear();
    m_pMsgQueue->Put(INVALID_POINTER_VALUE);
+   if (m_hThread != INVALID_THREAD_HANDLE)
+      ThreadJoin(m_hThread);
+   delete m_pMsgQueue;
 }
 
 
 //
-// Post e-mail to queue
+// Post SMS to queue
 //
 
-void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText)
+void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText)
 {
-   MAIL_ENVELOPE *pEnvelope;
+   SMS *pMsg;
 
-   pEnvelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
-   strncpy(pEnvelope->szRcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
-   strncpy(pEnvelope->szSubject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
-   pEnvelope->pszText = strdup(pszText);
-   m_pMailerQueue->Put(pEnvelope);
+   pMsg = (SMS *)malloc(sizeof(SMS));
+   _tcsncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
+   _tcsncpy(pMsg->szText, pszText, 160);
+   m_pMsgQueue->Put(pMsg);
 }

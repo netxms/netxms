@@ -458,4 +458,16 @@ Language=English
 Failed to load network service object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_SMSDRV_NO_ENTRY_POINTS
+Language=English
+Unable to find all required exportable functions in SMS driver "%1"
+.
+
+MessageId=
+SymbolicName=MSG_SMSDRV_INIT_FAILED
+Language=English
+SMS driver "%1" initialization failed
+.
+
 ;#endif

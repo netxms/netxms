@@ -80,9 +80,29 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 static BOOL H_UpgradeFromV20(void)
 {
+   static TCHAR m_szBatch[] =
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)" 
+         " VALUES (30,'SYS_SMS_FAILURE',1,1,'Unable to send SMS to phone %1',"
+		   "'Generated when server is unable to send SMS.#0D#0A"
+		   "   Parameters:#0D#0A   1) Phone number')\n"
+      "ALTER TABLE nodes ADD node_flags integer\n"
+      "<END>";
+   static TCHAR m_szBatch2[] =
+      "ALTER TABLE nodes DROP COLUMN is_snmp\n"
+      "ALTER TABLE nodes DROP COLUMN is_agent\n"
+      "ALTER TABLE nodes DROP COLUMN is_bridge\n"
+      "ALTER TABLE nodes DROP COLUMN is_router\n"
+      "ALTER TABLE nodes DROP COLUMN is_local_mgmt\n"
+      "ALTER TABLE nodes DROP COLUMN is_ospf\n"
+      "<END>";
+   static DWORD m_dwFlag[] = { NF_IS_SNMP, NF_IS_NATIVE_AGENT, NF_IS_BRIDGE,
+                               NF_IS_ROUTER, NF_IS_LOCAL_MGMT, NF_IS_OSPF };
    DB_RESULT hResult;
+   int i, j, iNumRows;
+   DWORD dwFlags;
+   TCHAR szQuery[256];
 
-   if (!SQLQuery(_T("ALTER TABLE nodes ADD node_flags integer")))
+   if (!SQLBatch(m_szBatch))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -91,6 +111,22 @@ static BOOL H_UpgradeFromV20(void)
                           "is_local_mgmt,is_ospf FROM nodes"));
    if (hResult != NULL)
    {
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwFlags = 0;
+         for(j = 1; j <= 6; j++)
+            if (DBGetFieldLong(hResult, i, j))
+               dwFlags |= m_dwFlag[j];
+         _sntprintf(szQuery, 256, _T("UPDATE nodes SET node_flags=%ld WHERE id=%ld"),
+                    dwFlags, DBGetFieldULong(hResult, i, 0));
+         if (!SQLQuery(m_szBatch))
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+      }
       DBFreeResult(hResult);
    }
    else
@@ -98,6 +134,10 @@ static BOOL H_UpgradeFromV20(void)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+
+   if (!SQLBatch(m_szBatch2))
+      if (!g_bIgnoreErrors)
+         return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='21' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)

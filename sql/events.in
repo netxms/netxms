@@ -312,6 +312,15 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   2) Service object ID#0D0A' CONCAT
 		'   3) Service type'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_SMS_FAILURE, 'SYS_SMS_FAILURE', 
+		EVENT_SEVERITY_WARNING, 1,
+		'Unable to send SMS to phone %1',
+		'Generated when server is unable to send SMS.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Phone number'
+	);
 
 
 /*

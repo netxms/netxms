@@ -252,8 +252,9 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    if (!InitIdTable())
       return FALSE;
 
-   // Initialize mailer
+   // Initialize mailer and SMS sender
    InitMailer();
+   InitSMSSender();
 
    // Load users from database
    if (!LoadUsers())
@@ -360,6 +361,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
       g_pEventQueue->Put(INVALID_POINTER_VALUE);
 
    ShutdownMailer();
+   ShutdownSMSSender();
 
    ThreadSleep(3);     // Give other threads a chance to terminate in a safe way
    DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown");

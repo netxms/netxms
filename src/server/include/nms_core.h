@@ -447,6 +447,10 @@ void InitMailer(void);
 void ShutdownMailer(void);
 void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText);
 
+void InitSMSSender(void);
+void ShutdownSMSSender(void);
+void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText);
+
 void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
 
 void InitTraps(void);
