@@ -86,4 +86,10 @@ Language=English
 Too many communication sessions open - unable to accept new connection
 .
 
+MessageId=
+SymbolicName=MSG_SESSION_BROKEN
+Language=English
+Communication session broken: %1
+.
+
 ;#endif

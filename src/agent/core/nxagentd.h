@@ -143,6 +143,7 @@ void InitLog(void);
 void CloseLog(void);
 
 void ConsolePrintf(char *pszFormat, ...);
+void DebugPrintf(char *pszFormat, ...);
 
 BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg);

@@ -27,14 +27,31 @@
 // Print message to the console if allowed to do so
 //
 
-void ConsolePrintf(char *szFormat, ...)
+void ConsolePrintf(char *pszFormat, ...)
 {
    if (!(g_dwFlags & AF_DAEMON))
    {
       va_list args;
 
-      va_start(args, szFormat);
-      vprintf(szFormat, args);
+      va_start(args, pszFormat);
+      vprintf(pszFormat, args);
+      va_end(args);
+   }
+}
+
+
+//
+// Print debug messages
+//
+
+void DebugPrintf(char *pszFormat, ...)
+{
+   if (!(g_dwFlags & AF_DAEMON) && (g_dwFlags & AF_DEBUG))
+   {
+      va_list args;
+
+      va_start(args, pszFormat);
+      vprintf(pszFormat, args);
       va_end(args);
    }
 }
