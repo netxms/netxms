@@ -409,17 +409,11 @@ DWORD GetLocalIpAddr(void)
 
 BOOL ExecCommand(char *pszCommand)
 {
-   char szShell[MAX_PATH];
    BOOL bSuccess = TRUE;
-
-   ConfigReadStr("Shell", szShell, MAX_PATH, DEFAULT_SHELL);
 
 #ifdef _WIN32
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
-
-   char *pszCmdLine = (char *)malloc(strlen(pszCommand) + strlen(szShell) + 16);
-   sprintf(pszCmdLine, "%s /c \"%s\"", szShell, pszCommand);
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
@@ -427,9 +421,9 @@ BOOL ExecCommand(char *pszCommand)
    si.dwFlags = 0;
 
    // Create new process
-   if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi))
+   if (!CreateProcess(NULL, pszCommand, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi))
    {
-      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, GetLastError());
       bSuccess = FALSE;
    }
    else
@@ -438,9 +432,6 @@ BOOL ExecCommand(char *pszCommand)
       CloseHandle(pi.hThread);
       CloseHandle(pi.hProcess);
    }
-
-   // Cleanup
-   free(pszCmdLine);
 #else
    /* TODO: add UNIX code here */
 #endif

@@ -58,9 +58,9 @@ private:
    DWORD m_dwSeverity;
    DWORD m_dwFlags;
    DWORD m_dwSource;
-   char *m_szMessageText;
+   char *m_pszMessageText;
    DWORD m_dwNumParameters;
-   char **m_pszParameters;
+   char **m_ppszParameters;
    time_t m_tTimeStamp;
 
    void ExpandMessageText(char *szMessageTemplate);
@@ -74,7 +74,7 @@ public:
    DWORD Severity(void) { return m_dwSeverity; }
    DWORD Flags(void) { return m_dwFlags; }
    DWORD SourceId(void) { return m_dwSource; }
-   const char *Message(void) { return m_szMessageText; }
+   const char *Message(void) { return m_pszMessageText; }
    time_t TimeStamp(void) { return m_tTimeStamp; }
 
    void PrepareMessage(NXC_EVENT *pEventData);
@@ -118,7 +118,7 @@ private:
    DWORD m_dwId;
    DWORD m_dwFlags;
    DWORD m_dwNumSources;
-   EVENT_SOURCE *m_pSourceList;
+   DWORD *m_pdwSourceList;
    DWORD m_dwNumEvents;
    DWORD *m_pdwEventList;
    DWORD m_dwNumActions;

@@ -62,7 +62,7 @@
 
 
 //
-// Common constants
+// Common constants and macros
 //
 
 #ifdef _WIN32
@@ -85,6 +85,8 @@
 #define UNLOCKED           ((DWORD)0xFFFFFFFF)
 
 #define GROUP_FLAG_BIT     ((DWORD)0x80000000)
+
+#define CHECK_NULL(x)      ((x) == NULL ? "(null)" : (x))
 
 
 //

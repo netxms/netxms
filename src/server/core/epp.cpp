@@ -32,7 +32,7 @@ EPRule::EPRule(DWORD dwId, char *szComment, DWORD dwFlags)
    m_dwId = dwId;
    m_dwFlags = dwFlags;
    m_dwNumSources = 0;
-   m_pSourceList = NULL;
+   m_pdwSourceList = NULL;
    m_dwNumEvents = 0;
    m_pdwEventList = NULL;
    m_dwNumActions = 0;
@@ -47,7 +47,7 @@ EPRule::EPRule(DWORD dwId, char *szComment, DWORD dwFlags)
 
 EPRule::~EPRule()
 {
-   safe_free(m_pSourceList);
+   safe_free(m_pdwSourceList);
    safe_free(m_pdwEventList);
    safe_free(m_pdwActionList);
    safe_free(m_pszComment);
@@ -70,13 +70,13 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
    else
    {
       for(i = 0; i < m_dwNumSources; i++)
-         if (m_pSourceList[i] & GROUP_FLAG_BIT)
+         if (m_pdwSourceList[i] & GROUP_FLAG_BIT)
          {
-            /* TODO: check group membership */
+           /* TODO: check group membership */
          }
          else
          {
-            if (m_pSourceList[i] == dwObjectId)
+            if (m_pdwSourceList[i] == dwObjectId)
             {
                bMatch = TRUE;
                break;
@@ -96,20 +96,20 @@ BOOL EPRule::MatchEvent(DWORD dwEventId)
    DWORD i;
    BOOL bMatch = FALSE;
 
-   if (m_dwNumSources == 0)   // No sources in list means "any"
+   if (m_dwNumEvents == 0)   // No sources in list means "any"
    {
       bMatch = TRUE;
    }
    else
    {
-      for(i = 0; i < m_dwNumSources; i++)
-         if (m_pSourceList[i] & GROUP_FLAG_BIT)
+      for(i = 0; i < m_dwNumEvents; i++)
+         if (m_pdwEventList[i] & GROUP_FLAG_BIT)
          {
             /* TODO: check group membership */
          }
          else
          {
-            if (m_pSourceList[i] == dwObjectId)
+            if (m_pdwEventList[i] == dwEventId)
             {
                bMatch = TRUE;
                break;
@@ -121,6 +121,19 @@ BOOL EPRule::MatchEvent(DWORD dwEventId)
 
 
 //
+// Check if event's severity match to the rule
+//
+
+BOOL EPRule::MatchSeverity(DWORD dwSeverity)
+{
+   static DWORD dwSeverityFlag[] = { RF_SEVERITY_INFO, RF_SEVERITY_MINOR,
+                                     RF_SEVERITY_WARNING, RF_SEVERITY_MAJOR,
+                                     RF_SEVERITY_CRITICAL };
+   return dwSeverityFlag[dwSeverity] & m_dwFlags;
+}
+
+
+//
 // Check if event match to rule and perform required actions if yes
 // Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
 //
@@ -128,11 +141,17 @@ BOOL EPRule::MatchEvent(DWORD dwEventId)
 BOOL EPRule::ProcessEvent(Event *pEvent)
 {
    BOOL bStopProcessing = FALSE;
+   DWORD i;
 
    // Check if event match
    if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Id())) &&
        (MatchSeverity(pEvent->Severity())))
    {
+      // Event matched, perform actions
+      for(i = 0; i < m_dwNumActions; i++)
+         ExecuteAction(m_pdwActionList[i], pEvent);
+
+      bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
    }
 
    return bStopProcessing;
@@ -151,17 +170,14 @@ BOOL EPRule::LoadFromDB(void)
    DWORD i;
    
    // Load rule's sources
-   sprintf(szQuery, "SELECT source_type,object_id FROM PolicySourceList WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT object_id FROM PolicySourceList WHERE rule_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
       m_dwNumSources = DBGetNumRows(hResult);
-      m_pSourceList = (EVENT_SOURCE *)malloc(sizeof(EVENT_SOURCE) * m_dwNumSources);
+      m_pdwSourceList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumSources);
       for(i = 0; i < m_dwNumSources; i++)
-      {
-         m_pSourceList[i].iType = DBGetFieldLong(hResult, i, 0);
-         m_pSourceList[i].dwObjectId = DBGetFieldULong(hResult, i, 1);
-      }
+         m_pdwSourceList[i] = DBGetFieldULong(hResult, i, 0);
       DBFreeResult(hResult);
    }
    else

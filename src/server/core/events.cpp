@@ -54,8 +54,8 @@ Event::Event()
    m_dwSource = 0;
    m_dwFlags = 0;
    m_dwNumParameters = 0;
-   m_pszParameters = NULL;
-   m_szMessageText = NULL;
+   m_ppszParameters = NULL;
+   m_pszMessageText = NULL;
    m_tTimeStamp = 0;
 }
 
@@ -71,6 +71,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
    m_dwSeverity = pTemplate->dwSeverity;
    m_dwFlags = pTemplate->dwFlags;
    m_dwSource = dwSourceId;
+   m_pszMessageText = NULL;
 
    // Create parameters
    if (szFormat != NULL)
@@ -78,30 +79,30 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
       DWORD i;
 
       m_dwNumParameters = strlen(szFormat);
-      m_pszParameters = (char **)malloc(sizeof(char *) * m_dwNumParameters);
+      m_ppszParameters = (char **)malloc(sizeof(char *) * m_dwNumParameters);
 
       for(i = 0; i < m_dwNumParameters; i++)
       {
          switch(szFormat[i])
          {
             case 's':
-               m_pszParameters[i] = strdup(va_arg(args, char *));
+               m_ppszParameters[i] = strdup(va_arg(args, char *));
                break;
             case 'd':
-               m_pszParameters[i] = (char *)malloc(16);
-               sprintf(m_pszParameters[i], "%d", va_arg(args, LONG));
+               m_ppszParameters[i] = (char *)malloc(16);
+               sprintf(m_ppszParameters[i], "%d", va_arg(args, LONG));
                break;
             case 'x':
-               m_pszParameters[i] = (char *)malloc(16);
-               sprintf(m_pszParameters[i], "0x%08X", va_arg(args, DWORD));
+               m_ppszParameters[i] = (char *)malloc(16);
+               sprintf(m_ppszParameters[i], "0x%08X", va_arg(args, DWORD));
                break;
             case 'a':
-               m_pszParameters[i] = (char *)malloc(16);
-               IpToStr(va_arg(args, DWORD), m_pszParameters[i]);
+               m_ppszParameters[i] = (char *)malloc(16);
+               IpToStr(va_arg(args, DWORD), m_ppszParameters[i]);
                break;
             default:
-               m_pszParameters[i] = (char *)malloc(64);
-               sprintf(m_pszParameters[i], "BAD FORMAT \"%c\" [value = 0x%08X]", szFormat[i], va_arg(args, DWORD));
+               m_ppszParameters[i] = (char *)malloc(64);
+               sprintf(m_ppszParameters[i], "BAD FORMAT \"%c\" [value = 0x%08X]", szFormat[i], va_arg(args, DWORD));
                break;
          }
       }
@@ -109,7 +110,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
    else
    {
       m_dwNumParameters = 0;
-      m_pszParameters = NULL;
+      m_ppszParameters = NULL;
    }
 
    // Create message text from template
@@ -123,16 +124,16 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
 
 Event::~Event()
 {
-   if (m_szMessageText != NULL)
-      free(m_szMessageText);
-   if (m_pszParameters != NULL)
+   if (m_pszMessageText != NULL)
+      free(m_pszMessageText);
+   if (m_ppszParameters != NULL)
    {
       DWORD i;
 
       for(i = 0; i < m_dwNumParameters; i++)
-         if (m_pszParameters[i] != NULL)
-            free(m_pszParameters[i]);
-      free(m_pszParameters);
+         if (m_ppszParameters[i] != NULL)
+            free(m_ppszParameters[i]);
+      free(m_ppszParameters);
    }
 }
 
@@ -143,12 +144,12 @@ Event::~Event()
 
 void Event::ExpandMessageText(char *szMessageTemplate)
 {
-   if (m_szMessageText != NULL)
+   if (m_pszMessageText != NULL)
    {
-      free(m_szMessageText);
-      m_szMessageText = NULL;
+      free(m_pszMessageText);
+      m_pszMessageText = NULL;
    }
-   m_szMessageText = ExpandText(szMessageTemplate);
+   m_pszMessageText = ExpandText(szMessageTemplate);
 }
 
 
@@ -237,12 +238,12 @@ char *Event::ExpandText(char *szTemplate)
                   dwPos += strlen(NETXMS_VERSION_STRING);
                   break;
                case 'm':
-                  if (m_szMessageText != NULL)
+                  if (m_pszMessageText != NULL)
                   {
-                     dwSize += strlen(m_szMessageText);
+                     dwSize += strlen(m_pszMessageText);
                      pText = (char *)realloc(pText, dwSize);
-                     strcpy(&pText[dwPos], m_szMessageText);
-                     dwPos += strlen(m_szMessageText);
+                     strcpy(&pText[dwPos], m_pszMessageText);
+                     dwPos += strlen(m_pszMessageText);
                   }
                   break;
                case '0':
@@ -270,10 +271,10 @@ char *Event::ExpandText(char *szTemplate)
                   if ((dwParam > 0) && (dwParam <= m_dwNumParameters))
                   {
                      dwParam--;
-                     dwSize += strlen(m_pszParameters[dwParam]);
+                     dwSize += strlen(m_ppszParameters[dwParam]);
                      pText = (char *)realloc(pText, dwSize);
-                     strcpy(&pText[dwPos], m_pszParameters[dwParam]);
-                     dwPos += strlen(m_pszParameters[dwParam]);
+                     strcpy(&pText[dwPos], m_ppszParameters[dwParam]);
+                     dwPos += strlen(m_ppszParameters[dwParam]);
                   }
                   break;
                default:    // All other characters are invalid, ignore
@@ -309,7 +310,7 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
    pEventData->dwEventId = htonl(m_dwId);
    pEventData->dwSeverity = htonl(m_dwSeverity);
    pEventData->dwSourceId = htonl(m_dwSource);
-   strcpy(pEventData->szMessage, m_szMessageText);
+   strcpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText));
 }
 
 

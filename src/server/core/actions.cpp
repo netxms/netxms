@@ -60,6 +60,7 @@ BOOL LoadActions(void)
    DB_RESULT hResult;
    BOOL bResult = FALSE;
    DWORD i;
+   char *pStr;
 
    hResult = DBSelect(g_hCoreDB, "SELECT action_id,action_type,email_addr,email_subject,action_data FROM actions ORDER BY action_id");
    if (hResult != NULL)
@@ -71,10 +72,14 @@ BOOL LoadActions(void)
       {
          m_pActionList[i].dwId = DBGetFieldULong(hResult, i, 0);
          m_pActionList[i].iType = DBGetFieldLong(hResult, i, 1);
-         strcpy(m_pActionList[i].szEmailAddr, DBGetField(hResult, i, 2));
-         strcpy(m_pActionList[i].szEmailSubject, DBGetField(hResult, i, 3));
-         m_pActionList[i].pszData = (char *)malloc(strlen(DBGetField(hResult, i, 4)) + 1);
-         strcpy(m_pActionList[i].pszData, DBGetField(hResult, i, 4));
+         pStr = DBGetField(hResult, i, 2);
+         strcpy(m_pActionList[i].szEmailAddr, CHECK_NULL(pStr));
+         pStr = DBGetField(hResult, i, 3);
+         strcpy(m_pActionList[i].szEmailSubject, CHECK_NULL(pStr));
+         pStr = DBGetField(hResult, i, 4);
+         pStr = CHECK_NULL(pStr);
+         m_pActionList[i].pszData = (char *)malloc(strlen(pStr) + 1);
+         strcpy(m_pActionList[i].pszData, pStr);
       }
       DBFreeResult(hResult);
       bResult = TRUE;

@@ -59,7 +59,7 @@ struct NMS_ACTION
 //
 
 BOOL LoadActions(void);
-BOOL ExecuteAction(Event *pEvent);
+BOOL ExecuteAction(DWORD dwActionId, Event *pEvent);
 void DestroyActionList(void);
 
 #endif   /* _nms_actions_ */
