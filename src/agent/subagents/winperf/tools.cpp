@@ -38,7 +38,7 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
                      (LPTSTR)&pszMsg, 0, NULL)>0)
    {
-      //pszMsg[_tcscspn(pszMsg, _T("\r\n"))] = 0;
+      TranslateStr(pszMsg, _T("\r\n"), _T(""));
       _tcsncpy(pszBuffer, pszMsg, iBufferSize);
       LocalFree(pszMsg);
    }

@@ -27,7 +27,7 @@
 // CPU utilization
 //
 
-static LONG H_PdhhCounterValue(char *pszParam, char *pArg, char *pValue)
+static LONG H_PdhCounterValue(char *pszParam, char *pArg, char *pValue)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;
@@ -39,7 +39,8 @@ static LONG H_PdhhCounterValue(char *pszParam, char *pArg, char *pValue)
    static TCHAR szFName[] = _T("H_PdhCounterValue");
    DWORD dwSize;
 
-   NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH);
+   if (!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
 
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
    {
@@ -172,7 +173,7 @@ static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pVa
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("PDH.CounterValue(*)"), H_PdhhCounterValue, NULL }
+   { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {

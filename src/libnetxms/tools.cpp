@@ -494,3 +494,32 @@ void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...)
       m_pLogFunction(iLevel, szBuffer);
    }
 }
+
+
+//
+// Translate string
+// NOTE: replacement string shouldn't be longer than original
+//
+
+void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace)
+{
+   TCHAR *pszSrc, *pszDst;
+   int iSrcLen, iRepLen;
+
+   iSrcLen = _tcslen(pszSubStr);
+   iRepLen = _tcslen(pszReplace);
+   for(pszSrc = pszString, pszDst = pszString; *pszSrc != 0;)
+   {
+      if (!_tcsncmp(pszSrc, pszSubStr, iSrcLen))
+      {
+         memcpy(pszDst, pszReplace, sizeof(TCHAR) * iRepLen);
+         pszSrc += iSrcLen;
+         pszDst += iRepLen;
+      }
+      else
+      {
+         *pszDst++ = *pszSrc++;
+      }
+   }
+   *pszDst = 0;
+}
