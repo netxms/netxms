@@ -154,6 +154,8 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    {
       m_wndRuleList.InsertRow(i);
       UpdateRow(i);
+      if (m_pEventPolicy->pRuleList[i].dwFlags & RF_DISABLED)
+         m_wndRuleList.EnableRow(i, FALSE);
    }      
 
    theApp.OnViewCreate(IDR_EPP_EDITOR, this);
