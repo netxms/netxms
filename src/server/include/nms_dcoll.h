@@ -165,6 +165,7 @@ private:
    void Transform(ItemValue &value, long nElapsedTime);
    void CheckThresholds(ItemValue &value);
    void UpdateCacheSize(void);
+   void ClearCache(void);
 
 public:
    DCItem();
@@ -201,8 +202,7 @@ public:
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
-   void SetId(DWORD dwNewId);
-   void BindToNode(Template *pNode) { m_pNode = pNode; }
+   void ChangeBinding(DWORD dwNewId, Template *pNode);
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
 

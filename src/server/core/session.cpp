@@ -2137,9 +2137,8 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                      if (pSrcItem != NULL)
                      {
                         pDstItem = new DCItem(pSrcItem);
-                        pDstItem->SetId(CreateUniqueId(IDG_ITEM));
-                        pDstItem->SetStatus(ITEM_STATUS_ACTIVE);
-                        pDstItem->BindToNode((Template *)pDestination);
+                        pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
+                                                (Template *)pDestination);
                         if (!((Template *)pDestination)->AddItem(pDstItem))
                         {
                            delete pDstItem;

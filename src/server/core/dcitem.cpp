@@ -87,8 +87,6 @@ DCItem::DCItem(const DCItem *pSrc)
       m_ppThresholdList[i] = new Threshold(pSrc->m_ppThresholdList[i]);
       m_ppThresholdList[i]->CreateId();
    }
-
-   UpdateCacheSize();
 }
 
 
@@ -175,10 +173,24 @@ DCItem::~DCItem()
       delete m_ppThresholdList[i];
    safe_free(m_ppThresholdList);
    safe_free(m_pszFormula);
+   ClearCache();
+   MutexDestroy(m_hMutex);
+}
+
+
+//
+// Clear data cache
+//
+
+void DCItem::ClearCache(void)
+{
+   DWORD i;
+
    for(i = 0; i < m_dwCacheSize; i++)
       delete m_ppValueCache[i];
    safe_free(m_ppValueCache);
-   MutexDestroy(m_hMutex);
+   m_ppValueCache = NULL;
+   m_dwCacheSize = 0;
 }
 
 
@@ -600,14 +612,17 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
 // Set new ID
 //
 
-void DCItem::SetId(DWORD dwNewId)
+void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode)
 {
    DWORD i;
 
    Lock();
+   m_pNode = pNewNode;
    m_dwId = dwNewId;
    for(i = 0; i < m_dwNumThresholds; i++)
       m_ppThresholdList[i]->BindToItem(m_dwId);
+   ClearCache();
+   UpdateCacheSize();
    Unlock();
 }
 
@@ -620,12 +635,30 @@ void DCItem::UpdateCacheSize(void)
 {
    DWORD i, dwRequiredSize;
 
-   // Minimum cache size is 1 (so GetLastValue can work)
-   for(i = 0, dwRequiredSize = 1; i < m_dwNumThresholds; i++)
+   // Minimum cache size is 1 for nodes (so GetLastValue can work)
+   // and 0 for templates
+   if (m_pNode != NULL)
+   {
+      dwRequiredSize = (m_pNode->Type() == OBJECT_NODE) ? 1 : 0;
+   }
+   else
+   {
+      dwRequiredSize = 0;
+   }
+
+   // Calculate required cache size
+   for(i = 0; i < m_dwNumThresholds; i++)
       if (dwRequiredSize < m_ppThresholdList[i]->RequiredCacheSize())
          dwRequiredSize = m_ppThresholdList[i]->RequiredCacheSize();
+
+   // Update cache if needed
    if (dwRequiredSize < m_dwCacheSize)
    {
+      // Destroy unneeded values
+      if (m_dwCacheSize > 0)
+         for(i = m_dwCacheSize - 1; i >= dwRequiredSize; i--)
+            delete m_ppValueCache[i];
+
       m_dwCacheSize = dwRequiredSize;
       if (m_dwCacheSize > 0)
       {
@@ -674,7 +707,7 @@ void DCItem::UpdateCacheSize(void)
          if (hResult != NULL)
          {
             // Skip already cached values
-            for(i = 0, bHasData = TRUE; (i < m_dwCacheSize) && bHasData; i++)
+            for(i = 0, bHasData = TRUE; i < m_dwCacheSize; i++)
                bHasData = DBFetch(hResult);
 
             // Create new cache entries
@@ -700,7 +733,7 @@ void DCItem::UpdateCacheSize(void)
          else
          {
             // Error reading data from database, fill cache with empty values
-            for(i = 0; i < dwRequiredSize; i++)
+            for(i = m_dwCacheSize; i < dwRequiredSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""));
          }
       }

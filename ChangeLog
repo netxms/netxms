@@ -4,8 +4,10 @@
 
 - Added System.CPU.Usage(*), System.CPU.Usage5(*) and System.CPU.Usage15(*)
   parameters to WinPerf subagent
-- Fixed issue #00000x (unable to modify network service port number)
+- Fixed issue #0000015 (unable to modify network service port number)
 - Fixed server crash sometimes caused by DCI deletion
+- Fixed issue #0000017 (server crash after DCI copy)
+- Fixed memory leaks in DCI cache management
 
 
 *
