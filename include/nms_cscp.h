@@ -129,6 +129,7 @@ typedef struct
 #define CMD_SET_EVENT_INFO          0x001A
 #define CMD_EVENT_DB_RECORD         0x001B
 #define CMD_EVENT_DB_EOF            0x001C
+#define CMD_REQUEST_COMPLETED       0x001D
 
 
 //
@@ -171,15 +172,6 @@ typedef struct
 // we reserver a 4000 ids for this variables.
 #define VID_PARENT_ID_BASE          4000
 #define VID_PARENT_ID_LAST          7999
-
-
-//
-// Request completion codes
-//
-
-#define RCC_SUCCESS                 ((WORD)0)
-#define RCC_COMPONENT_LOCKED        ((WORD)1)
-#define RCC_ACCESS_DENIED           ((WORD)2)
 
 
 //

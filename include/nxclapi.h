@@ -31,10 +31,12 @@
 // Some constants
 //
 
-#define MAX_OBJECT_NAME       64
-#define MAX_COMMUNITY_LENGTH  32
-#define MAX_OID_LENGTH        1024
-#define MAX_EVENT_MSG_LENGTH  256
+#define MAX_OBJECT_NAME          64
+#define MAX_COMMUNITY_LENGTH     32
+#define MAX_OID_LENGTH           1024
+#define MAX_EVENT_MSG_LENGTH     256
+#define MAX_EVENT_NAME           64
+#define INVALID_REQUEST_HANDLE   ((HREQUEST)0xFFFFFFFF)
 
 
 //
@@ -62,10 +64,11 @@
 // Events
 //
 
-#define NXC_EVENT_STATE_CHANGED     1
-#define NXC_EVENT_ERROR             2
-#define NXC_EVENT_LOGIN_RESULT      3
-#define NXC_EVENT_NEW_ELOG_RECORD   4
+#define NXC_EVENT_STATE_CHANGED        1
+#define NXC_EVENT_ERROR                2
+#define NXC_EVENT_LOGIN_RESULT         3
+#define NXC_EVENT_NEW_ELOG_RECORD      4
+#define NXC_EVENT_REQUEST_COMPLETED    5
 
 
 //
@@ -84,22 +87,43 @@
 #define STATE_IDLE            2
 #define STATE_SYNC_OBJECTS    3
 #define STATE_SYNC_EVENTS     4
+#define STATE_LOAD_EVENT_DB   5
+#define STATE_LOAD_EPP        6
 
 
 //
 // Operations
 //
 
-#define NXC_OP_SYNC_OBJECTS   1
-#define NXC_OP_SYNC_EVENTS    2
-#define NXC_OP_OPEN_EVENT_DB  3
+#define NXC_OP_SYNC_OBJECTS      1
+#define NXC_OP_SYNC_EVENTS       2
+#define NXC_OP_OPEN_EVENT_DB     3
+#define NXC_OP_CLOSE_EVENT_DB    4
 
 
 //
 // Notification codes
 //
 
-#define NX_NOTIFY_SHUTDOWN    1
+#define NX_NOTIFY_SHUTDOWN       1
+
+
+//
+// Request completion codes
+//
+
+#define RCC_SUCCESS                 ((DWORD)0)
+#define RCC_COMPONENT_LOCKED        ((DWORD)1)
+#define RCC_ACCESS_DENIED           ((DWORD)2)
+#define RCC_INVALID_REQUEST         ((DWORD)3)
+#define RCC_TIMEOUT                 ((DWORD)4)
+
+
+//
+// Custom data types
+//
+
+typedef unsigned long HREQUEST;
 
 
 //
@@ -108,6 +132,21 @@
 
 typedef void (* NXC_EVENT_HANDLER)(DWORD dwEvent, DWORD dwCode, void *pArg);
 typedef void (* NXC_DEBUG_CALLBACK)(char *pMsg);
+
+
+//
+// Event configuration structure
+//
+
+typedef struct
+{
+   DWORD dwCode;
+   DWORD dwSeverity;
+   DWORD dwFlags;
+   char szName[MAX_EVENT_NAME];
+   char *pszMessage;
+   char *pszDescription;
+} NXC_EVENT_TEMPLATE;
 
 
 //
@@ -179,11 +218,13 @@ BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
 void EXPORTABLE NXCDisconnect(void);
 void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
-int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
+HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
 NXC_OBJECT EXPORTABLE *NXCFindObjectById(DWORD dwId);
 void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
 NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
+
+BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
 
 #ifdef __cplusplus
 }
@@ -197,6 +238,7 @@ NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
 #define NXCSyncObjects() NXCRequest(NXC_OP_SYNC_OBJECTS)
 #define NXCSyncEvents() NXCRequest(NXC_OP_SYNC_EVENTS)
 #define NXCOpenEventDB() NXCRequest(NXC_OP_OPEN_EVENT_DB)
+#define NXCCloseEventDB() NXCRequest(NXC_OP_CLOSE_EVENT_DB)
 
 
 #endif   /* _nxclapi_h_ */
