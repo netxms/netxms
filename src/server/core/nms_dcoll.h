@@ -25,48 +25,12 @@
 
 
 //
-// Constants
-//
-
-#define MAX_ITEM_NAME         256
-#define MAX_STRING_VALUE      256
-
-
-//
 // Data collection errors
 //
 
 #define DCE_SUCCESS        0
 #define DCE_COMM_ERROR     1
 #define DCE_NOT_SUPPORTED  2
-
-
-//
-// Data types
-//
-
-#define DTYPE_INTEGER   0
-#define DTYPE_INT64     1
-#define DTYPE_STRING    2
-#define DTYPE_FLOAT     3
-
-
-//
-// Data sources
-//
-
-#define DS_INTERNAL        0
-#define DS_NATIVE_AGENT    1
-#define DS_SNMP_AGENT      2
-
-
-//
-// Item status
-//
-
-#define ITEM_STATUS_ACTIVE          0
-#define ITEM_STATUS_DISABLED        1
-#define ITEM_STATUS_NOT_SUPPORTED   2
 
 
 //

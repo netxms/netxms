@@ -31,6 +31,7 @@
 //
 
 class AgentConnection;
+class ClientSession;
 class Queue;
 
 
@@ -271,6 +272,7 @@ protected:
    MUTEX m_hAgentAccessMutex;
    DWORD m_dwNumItems;     // Number of data collection items
    DCItem **m_ppItems;     // Data collection items
+   DWORD m_dwDCILockStatus;
    AgentConnection *m_pAgentConnection;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
@@ -324,6 +326,9 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    BOOL AddItem(DCItem *pItem);
+   BOOL LockDCIList(DWORD dwSessionId);
+   BOOL UnlockDCIList(DWORD dwSessionId);
+   void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
 
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);

@@ -1092,17 +1092,48 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
 void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwNodeId;
+   DWORD dwObjectId;
+   NetObj *pObject;
+   BOOL bSuccess = FALSE;
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Get node id
-   dwNodeId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   // Get node id and check object class and access rights
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            // Try to lock DCI list
+            bSuccess = ((Node *)pObject)->LockDCIList(m_dwIndex);
+            msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_COMPONENT_LOCKED);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
 
    // Send responce
    SendMessage(&msg);
+
+   // If DCI list was successfully locked, send it to client
+   if (bSuccess)
+      ((Node *)pObject)->SendItemsToClient(this, pRequest->GetId());
 }
 
 
@@ -1113,11 +1144,42 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
 void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwNodeId;
+   DWORD dwObjectId;
+   NetObj *pObject;
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            BOOL bSuccess;
+
+            // Try to unlock DCI list
+            bSuccess = ((Node *)pObject)->UnlockDCIList(m_dwIndex);
+            msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_OUT_OF_STATE_REQUEST);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
 
    // Send responce
    SendMessage(&msg);

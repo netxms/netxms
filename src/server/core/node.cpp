@@ -49,6 +49,7 @@ Node::Node()
    m_dwNumItems = 0;
    m_ppItems = NULL;
    m_pAgentConnection = NULL;
+   m_dwDCILockStatus = INVALID_INDEX;
 }
 
 
@@ -80,6 +81,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_dwNumItems = 0;
    m_ppItems = NULL;
    m_pAgentConnection = NULL;
+   m_dwDCILockStatus = INVALID_INDEX;
 }
 
 
@@ -902,4 +904,69 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       pRequest->GetVariableStr(VID_COMMUNITY_STRING, m_szCommunityString, MAX_COMMUNITY_LENGTH);
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Lock data collection items list
+//
+
+BOOL Node::LockDCIList(DWORD dwSessionId)
+{
+   BOOL bSuccess = FALSE;
+
+   Lock();
+   if (m_dwDCILockStatus == INVALID_INDEX)
+   {
+      m_dwDCILockStatus = dwSessionId;
+      bSuccess = TRUE;
+   }
+   Unlock();
+   return bSuccess;
+}
+
+
+//
+// Unlock data collection items list
+//
+
+BOOL Node::UnlockDCIList(DWORD dwSessionId)
+{
+   BOOL bSuccess = FALSE;
+
+   Lock();
+   if (m_dwDCILockStatus == dwSessionId)
+   {
+      m_dwDCILockStatus = INVALID_INDEX;
+      bSuccess = TRUE;
+   }
+   Unlock();
+   return bSuccess;
+}
+
+
+//
+// Send DCI list to client
+//
+
+void Node::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DWORD i;
+
+   // Prepare message
+   msg.SetCode(CMD_NODE_DCI);
+   msg.SetId(dwRqId);
+
+   // Walk through items list
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      m_ppItems[i]->CreateMessage(&msg);
+      pSession->SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+
+   // Send end-of-list indicator
+   msg.SetCode(CMD_NODE_DCI_LIST_END);
+   pSession->SendMessage(&msg);
 }

@@ -23,6 +23,8 @@
 #ifndef _nms_core_h_
 #define _nms_core_h_
 
+#define LIBNXCL_NO_DECLARATIONS  1
+
 #include <nms_common.h>
 
 #ifndef _WIN32
@@ -268,10 +270,6 @@ private:
       return m_dwUserId == 0 ? TRUE : 
          ((dwRequiredAccess & m_dwSystemAccess) ? TRUE : FALSE);
    }
-   void SendMessage(CSCPMessage *pMsg)
-   {
-      m_pSendQueue->Put(pMsg->CreateMessage());
-   }
 
    void DebugPrintf(char *szFormat, ...);
    void Login(CSCPMessage *pRequest);
@@ -299,6 +297,8 @@ public:
    void WriteThread(void);
    void ProcessingThread(void);
    void UpdateThread(void);
+
+   void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
