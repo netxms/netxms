@@ -78,6 +78,8 @@ extern DWORD g_dwConfigurationPollingInterval;
 #define NDF_QUEUED_FOR_STATUS_POLL     0x0001
 #define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
 #define NDF_UNREACHEABLE               0x0004
+#define NDF_AGENT_UNREACHEABLE         0x0008
+#define NDF_SNMP_UNREACHEABLE          0x0010
 
 
 //

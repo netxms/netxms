@@ -778,6 +778,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
       }
 
       m_dwFlags |= NF_IS_SNMP;
+      m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
       m_iSnmpAgentFails = 0;
       SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
 
@@ -800,6 +801,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          if (m_iSnmpAgentFails == 0)
             PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
          m_iSnmpAgentFails++;
+         m_dwDynamicFlags |= NDF_SNMP_UNREACHEABLE;
       }
       SendPollerMsg(dwRqId, _T("   SNMP agent is not responding\r\n"));
    }
@@ -808,6 +810,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    if (pAgentConn->Connect())
    {
       m_dwFlags |= NF_IS_NATIVE_AGENT;
+      m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
       m_iNativeAgentFails = 0;
       
       Lock();
@@ -846,6 +849,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          if (m_iNativeAgentFails == 0)
             PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
          m_iNativeAgentFails++;
+         m_dwDynamicFlags |= NDF_AGENT_UNREACHEABLE;
       }
       SendPollerMsg(dwRqId, _T("   NetXMS native agent is not responding\r\n"));
    }
@@ -1113,6 +1117,18 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    if (!stricmp(szParam, "status"))
    {
       sprintf(szBuffer, "%d", m_iStatus);
+   }
+   else if (!stricmp(szParam, "AgentStatus"))
+   {
+      if (m_dwFlags & NF_IS_NATIVE_AGENT)
+      {
+         szBuffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE) ? '1' : '0';
+         szBuffer[1] = 0;
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
    }
    else if (MatchString("ChildStatus(*)", szParam, FALSE))
    {

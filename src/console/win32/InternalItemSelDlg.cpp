@@ -25,6 +25,7 @@ static struct __item_info
    TCHAR *pszDescription;
 } m_itemList[] =
 {
+   { NF_IS_NATIVE_AGENT, DCI_DT_INT, _T("AgentStatus"), _T("Status of NetXMS agent") },
    { 0, DCI_DT_INT, _T("ChildStatus(*)"), _T("Status of child object {instance}") },
    { NF_IS_LOCAL_MGMT, DCI_DT_FLOAT, _T("Server.AverageConfigurationPollerQueueSize"), _T("Average length of configuration poller queue for last minute") },
    { NF_IS_LOCAL_MGMT, DCI_DT_FLOAT, _T("Server.AverageDBWriterQueueSize"), _T("Average length of database writer's request queue for last minute") },
