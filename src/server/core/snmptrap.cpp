@@ -227,23 +227,33 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       }
       else     // Process unmatched traps
       {
-         // Build trap's parameters string
-         dwBufSize = pdu->GetNumVariables() * 4096 + 16;
-         pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
-         pszTrapArgs[0] = 0;
-         for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
-         {
-            pVar = pdu->GetVariable(i);
-            dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                   (i == 0) ? _T("") : _T("; "),
-                                   pVar->GetName()->GetValueAsText(), 
-                                   pVar->GetValueAsString(szBuffer, 512));
-         }
+         // Pass trap to loaded modules
+         for(i = 0; i < g_dwNumModules; i++)
+            if (g_pModuleList[i].pfTrapHandler != NULL)
+               if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
+                  break;   // Message was processed by the module
 
-         // Generate default event for unmatched traps
-         PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
-                   pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
-         free(pszTrapArgs);
+         // Handle unprocessed traps
+         if (i == g_dwNumModules)
+         {
+            // Build trap's parameters string
+            dwBufSize = pdu->GetNumVariables() * 4096 + 16;
+            pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
+            pszTrapArgs[0] = 0;
+            for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+            {
+               pVar = pdu->GetVariable(i);
+               dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
+                                      (i == 0) ? _T("") : _T("; "),
+                                      pVar->GetName()->GetValueAsText(), 
+                                      pVar->GetValueAsString(szBuffer, 512));
+            }
+
+            // Generate default event for unmatched traps
+            PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
+                      pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
+            free(pszTrapArgs);
+         }
       }
       MutexUnlock(m_mutexTrapCfgAccess);
    }

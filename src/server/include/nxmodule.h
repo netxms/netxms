@@ -25,10 +25,11 @@
 
 
 //
-// Forward declaration of client session class
+// Forward declaration of server classes
 //
 
 class ClientSession;
+class Node;
 
 
 //
@@ -50,6 +51,7 @@ typedef struct
    DWORD dwFlags;
    void (* pfMain)(void);  // Pointer to module's main()
    BOOL (* pfCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
+   BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    HMODULE hModule;
 } NXMODULE;
 
