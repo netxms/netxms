@@ -141,6 +141,12 @@ typedef struct
 #define CMD_UNLOCK_USER_DB          0x0026
 #define CMD_USER_DB_UPDATE          0x0027
 #define CMD_SET_PASSWORD            0x0028
+#define CMD_GET_NODE_DCI_LIST       0x0029
+#define CMD_NODE_DCI                0x002A
+#define CMD_NODE_DCI_LIST_END       0x002B
+#define CMD_DELETE_NODE_DCI         0x002C
+#define CMD_MODIFY_NODE_DCI         0x002D
+#define CMD_UNLOCK_NODE_DCI_LIST    0x002E
 
 
 //
@@ -189,6 +195,12 @@ typedef struct
 #define VID_USER_FULL_NAME          ((DWORD)40)
 #define VID_USER_DESCRIPTION        ((DWORD)41)
 #define VID_UPDATE_TYPE             ((DWORD)42)
+#define VID_DCI_ID                  ((DWORD)43)
+#define VID_POLLING_INTERVAL        ((DWORD)44)
+#define VID_RETENTION_TIME          ((DWORD)45)
+#define VID_DCI_SOURCE_TYPE         ((DWORD)46)
+#define VID_DCI_DATA_TYPE           ((DWORD)47)
+#define VID_DCI_STATUS              ((DWORD)48)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
