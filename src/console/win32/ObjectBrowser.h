@@ -9,6 +9,18 @@
 
 #include "ObjectPreview.h"
 
+
+//
+// Hash for tree items
+//
+
+struct OBJ_TREE_HASH
+{
+   DWORD dwObjectId;
+   HTREEITEM hTreeItem;
+};
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CObjectBrowser frame
 
@@ -33,6 +45,10 @@ public:
 
 // Implementation
 protected:
+	void CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer);
+	HTREEITEM FindObjectInTree(DWORD dwObjectId);
+	DWORD m_dwTreeHashSize;
+	OBJ_TREE_HASH * m_pTreeHash;
 	CTreeCtrl m_wndTreeCtrl;
    CObjectPreview m_wndPreviewPane;
 	virtual ~CObjectBrowser();

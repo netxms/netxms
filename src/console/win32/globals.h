@@ -57,6 +57,7 @@ extern CConsoleApp theApp;
 //
 
 #define AF_SHOW_OBJECT_PREVIEW   ((DWORD)0x00000001)
+#define AF_FOLLOW_OBJECT_UPDATES ((DWORD)0x00000002)
 
 
 //

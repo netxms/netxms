@@ -28,11 +28,14 @@ IMPLEMENT_DYNCREATE(CObjectBrowser, CMDIChildWnd)
 CObjectBrowser::CObjectBrowser()
 {
    m_pImageList = NULL;
+   m_dwTreeHashSize = 0;
+   m_pTreeHash = NULL;
 }
 
 CObjectBrowser::~CObjectBrowser()
 {
    delete m_pImageList;
+   safe_free(m_pTreeHash);
 }
 
 
@@ -43,12 +46,12 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
-	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
 	ON_WM_GETMINMAXINFO()
 	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
+	//}}AFX_MSG_MAP
+	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
-	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -59,6 +62,11 @@ void CObjectBrowser::OnDestroy()
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_OBJECTS, this);
 	CMDIChildWnd::OnDestroy();
 }
+
+
+//
+// WM_CREATE message handler
+//
 
 int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
@@ -130,43 +138,58 @@ void CObjectBrowser::OnSetFocus(CWnd* pOldWnd)
    m_wndTreeCtrl.SetFocus();	
 }
 
+
+//
+// Compare two items in object tree hash for qsort()
+//
+
+static int CompareTreeHashItems(const void *p1, const void *p2)
+{
+   return ((OBJ_TREE_HASH *)p1)->dwObjectId < ((OBJ_TREE_HASH *)p2)->dwObjectId ? -1 :
+            (((OBJ_TREE_HASH *)p1)->dwObjectId > ((OBJ_TREE_HASH *)p2)->dwObjectId ? 1 : 0);
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_REFRESH message handler
+//
+
 void CObjectBrowser::OnViewRefresh() 
 {
    NXC_OBJECT *pObject;
    
    m_wndTreeCtrl.DeleteAllItems();
+   m_dwTreeHashSize = 0;
    pObject = NXCGetRootObject();
    if (pObject != NULL)
+   {
       AddObjectToTree(pObject, TVI_ROOT);
+      qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+   }
 }
+
+
+//
+// Add new object to tree
+//
 
 void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 {
    DWORD i;
    HTREEITEM hItem;
-   char szBuffer[512], szIpBuffer[32];
+   char szBuffer[512];
    static int iImageCode[] = { -1, 3, 2, 1, 0 };
 
    // Add object record with class-dependent text
-   switch(pObject->iClass)
-   {
-      case OBJECT_SUBNET:
-         sprintf(szBuffer, "%s [Status: %s]", pObject->szName, g_szStatusText[pObject->iStatus]);
-         break;
-      case OBJECT_INTERFACE:
-         if (pObject->dwIpAddr != 0)
-            sprintf(szBuffer, "%s [IP: %s/%d Status: %s]", pObject->szName, 
-                    IpToStr(pObject->dwIpAddr, szIpBuffer), 
-                    BitsInMask(pObject->iface.dwIpNetMask), g_szStatusText[pObject->iStatus]);
-         else
-            sprintf(szBuffer, "%s [Status: %s]", pObject->szName, g_szStatusText[pObject->iStatus]);
-         break;
-      default:
-         strcpy(szBuffer, pObject->szName);
-         break;
-   }
+   CreateTreeItemText(pObject, szBuffer);
    hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImageCode[pObject->iClass], iImageCode[pObject->iClass], hParent);
    m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
+
+   // Add to hash
+   m_pTreeHash = (OBJ_TREE_HASH *)realloc(m_pTreeHash, sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize + 1));
+   m_pTreeHash[m_dwTreeHashSize].dwObjectId = pObject->dwId;
+   m_pTreeHash[m_dwTreeHashSize].hTreeItem = hItem;
+   m_dwTreeHashSize++;
 
    // Add object's childs
    for(i = 0; i < pObject->dwNumChilds; i++)
@@ -179,6 +202,11 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    // Sort childs
    m_wndTreeCtrl.SortChildren(hItem);
 }
+
+
+//
+// Overloaded PreCreateWindow() method
+//
 
 BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs) 
 {
@@ -248,16 +276,93 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 
 //
 // WM_OBJECT_CHANGE message handler
+// wParam contains object's ID, and lParam pointer to corresponding NXC_OBJECT structure
 //
 
 void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
    NXC_OBJECT *pObject = (NXC_OBJECT *)lParam;
+   HTREEITEM hItem;
+
+   // Find object in tree
+   hItem = FindObjectInTree(wParam);
 
    if (pObject->bIsDeleted)
    {
+      if (hItem != NULL)
+         m_wndTreeCtrl.DeleteItem(hItem);
    }
    else
    {
+      if (hItem != NULL)
+      {
+         char szBuffer[256];
+
+         if (g_dwFlags & AF_FOLLOW_OBJECT_UPDATES)
+            m_wndTreeCtrl.Select(hItem, TVGN_CARET);
+         CreateTreeItemText(pObject, szBuffer);
+         m_wndTreeCtrl.SetItemText(hItem, szBuffer);
+
+         // Update preview pane
+         m_wndPreviewPane.Invalidate();
+         m_wndPreviewPane.UpdateWindow();
+      }
+      else
+      {
+         DWORD i;
+
+         // New object, link to all parents
+         for(i = 0; i < pObject->dwNumParents; i++)
+         {
+            hItem = FindObjectInTree(pObject->pdwParentList[i]);
+            if (hItem != NULL)
+            {
+               AddObjectToTree(pObject, hItem);
+               qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+            }
+         }
+      }
+   }
+}
+
+
+//
+// Find object's tree item for give object's id
+//
+
+HTREEITEM CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
+{
+   OBJ_TREE_HASH *pHashElement;
+
+   pHashElement = (OBJ_TREE_HASH *)bsearch(&dwObjectId, m_pTreeHash, m_dwTreeHashSize,
+                                           sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+   return (pHashElement == NULL) ? NULL : pHashElement->hTreeItem;
+}
+
+
+//
+// Create class-depemdent text for tree item
+//
+
+void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer)
+{
+   char szIpBuffer[32];
+
+   switch(pObject->iClass)
+   {
+      case OBJECT_SUBNET:
+         sprintf(pszBuffer, "%s [Status: %s]", pObject->szName, g_szStatusText[pObject->iStatus]);
+         break;
+      case OBJECT_INTERFACE:
+         if (pObject->dwIpAddr != 0)
+            sprintf(pszBuffer, "%s [IP: %s/%d Status: %s]", pObject->szName, 
+                    IpToStr(pObject->dwIpAddr, szIpBuffer), 
+                    BitsInMask(pObject->iface.dwIpNetMask), g_szStatusText[pObject->iStatus]);
+         else
+            sprintf(pszBuffer, "%s [Status: %s]", pObject->szName, g_szStatusText[pObject->iStatus]);
+         break;
+      default:
+         strcpy(pszBuffer, pObject->szName);
+         break;
    }
 }
