@@ -144,7 +144,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Disk.Free(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Free disk space on *" },
    { "Disk.Total(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Total disk space on *" },
    { "Disk.Used(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Used disk space on *" },
-   { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS, DCI_DT_INT, "Administrative status of interface {instance}" },   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN, DCI_DT_UINT, "" },
+   { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS, DCI_DT_INT, "Administrative status of interface {instance}" },
    { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN, DCI_DT_UINT, "Number of input bytes on interface {instance}" },
    { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_OUT, DCI_DT_UINT, "Number of output bytes on interface {instance}" },
    { "Net.Interface.Description(*)", H_NetInterfaceStats, (char *)NET_IF_DESCR, DCI_DT_STRING, "" },
