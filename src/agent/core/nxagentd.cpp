@@ -409,9 +409,11 @@ int main(int argc, char *argv[])
          case 'c':   // Configuration file
             strncpy(g_szConfigFile, optarg, MAX_PATH - 1);
             break;
+#if !defined(_WIN32) && !defined(_NETWARE)
          case 'p':   // PID file
             strncpy(g_szPidFile, optarg, MAX_PATH - 1);
             break;
+#endif
          case 'C':   // Configuration check only
             iAction = ACTION_CHECK_CONFIG;
             break;
