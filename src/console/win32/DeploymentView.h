@@ -31,14 +31,22 @@ public:
 
 // Implementation
 protected:
+	CProgressCtrl m_wndProgressCtrl;
+	CFont m_font;
+   BOOL m_bFinished;
+	DWORD m_dwRqId;
 	CListCtrl m_wndListCtrl;
 	virtual ~CDeploymentView();
 
 	// Generated message map functions
 	//{{AFX_MSG(CDeploymentView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnPaint();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
    afx_msg void OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob);
+   afx_msg void OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInfo);
+   afx_msg void OnDeploymentFinished(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

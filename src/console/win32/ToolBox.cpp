@@ -55,7 +55,7 @@ BOOL CToolBox::PreCreateWindow(CREATESTRUCT& cs)
 	return CWnd::PreCreateWindow(cs);
 }
 
-BOOL CToolBox::Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
+BOOL CToolBox::Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext)
 {
    strncpy(m_szTitle, lpszWindowName, MAX_TOOLBOX_TITLE - 1);
 	return CWnd::Create(NULL, lpszWindowName, dwStyle, rect, pParentWnd, nID, pContext);

@@ -12,14 +12,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-//
-// Constants
-//
-
-#define TOOLBOX_X_MARGIN   5
-#define TOOLBOX_Y_MARGIN   5
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CObjectPreview
 
@@ -100,17 +92,16 @@ void CObjectPreview::OnPaint()
 {
    CPaintDC dc(this); // device context for painting
    RECT rect;
-   CPen pen;
+   CPen pen, *pOldPen;
 
    pen.CreatePen(PS_SOLID, 0, RGB(127, 127, 127));
-   dc.SelectObject(&pen);
+   pOldPen = dc.SelectObject(&pen);
 
    GetClientRect(&rect);
-   
    dc.MoveTo(rect.right - 1, 0);
    dc.LineTo(rect.right - 1, rect.bottom);
 
-   pen.DeleteObject();
+   dc.SelectObject(pOldPen);
 }
 
 

@@ -668,6 +668,7 @@ void CConsoleApp::OnViewObjectbrowser()
 void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 {
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   NXC_DEPLOYMENT_STATUS *pStatus;
 
    switch(dwEvent)
    {
@@ -682,12 +683,17 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       case NXC_EVENT_USER_DB_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_USERDB_CHANGE, dwCode, (LPARAM)pArg);
          break;
+      case NXC_EVENT_DEPLOYMENT_STATUS:
+         pStatus = (NXC_DEPLOYMENT_STATUS *)nx_memdup(pArg, sizeof(NXC_DEPLOYMENT_STATUS));
+         pStatus->pszErrorMessage = _tcsdup(pStatus->pszErrorMessage);
+         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_DEPLOYMENT_INFO, dwCode, (LPARAM)pStatus);
+         break;
       case NXC_EVENT_NOTIFICATION:
          switch(dwCode)
          {
             case NX_NOTIFY_SHUTDOWN:
                m_pMainWnd->MessageBox("Server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
-               PostQuitMessage(0);
+               m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
                break;
             case NX_NOTIFY_EVENTDB_CHANGED:
                m_pMainWnd->PostMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0);

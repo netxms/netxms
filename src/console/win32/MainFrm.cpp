@@ -29,6 +29,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
    ON_MESSAGE(WM_STATE_CHANGE, OnStateChange)
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
+   ON_MESSAGE(WM_DEPLOYMENT_INFO, OnDeploymentInfo)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -173,6 +174,18 @@ void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam, TRUE);
+}
+
+
+//
+// Handler for WM_DEPLOYMENT_INFO message
+//
+
+void CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
+{
+   BroadcastMessage(WM_DEPLOYMENT_INFO, wParam, lParam, FALSE);
+   safe_free(((NXC_DEPLOYMENT_STATUS *)lParam)->pszErrorMessage)
+   free((void *)lParam);
 }
 
 

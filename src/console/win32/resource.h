@@ -26,6 +26,7 @@
 #define ID_RULE_LIST                    114
 #define ID_HEADER_CTRL                  115
 #define ID_SIZEBOX                      118
+#define ID_PROGRESS_CTRL                120
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -464,6 +465,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        258
 #define _APS_NEXT_COMMAND_VALUE         32915
 #define _APS_NEXT_CONTROL_VALUE         1235
-#define _APS_NEXT_SYMED_VALUE           120
+#define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

@@ -164,6 +164,10 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       // Preset node id in notification message
       msg.SetVariable(VID_OBJECT_ID, pNode->Id());
 
+      // Change deployment status to "Initializing"
+      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
+      pStartup->pSession->SendMessage(&msg);
+
       // Create agent connection
       pAgentConn = pNode->CreateAgentConnection();
       if (pAgentConn != NULL)

@@ -1501,10 +1501,10 @@ AgentConnection *Node::CreateAgentConnection(void)
 {
    AgentConnection *pConn;
 
-   if (!(g_dwFlags & NF_IS_NATIVE_AGENT))
+   if (!(m_dwFlags & NF_IS_NATIVE_AGENT))
       return NULL;
 
-   pConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
    if (!pConn->Connect())
    {
       delete pConn;

@@ -83,12 +83,15 @@ TCHAR *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR",
 TCHAR *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major",
                                  "Critical", "Unknown", "Unmanaged",
                                  "Disabled", "Testing" };
-TCHAR *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", 
-                             "Container", "Zone", "ServiceRoot", "Template", 
-                             "TemplateGroup", "TemplateRoot", "NetworkService" };
+TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
+                             _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
+                             _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService") };
 TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS") };
 TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP"),
                              _T("FTP"), _T("HTTP"), NULL };
+TCHAR *g_szDeploymentStatus[] = { _T("Pending"), _T("Uploading package"),
+                                  _T("Installing"), _T("Completed"), _T("Failed"),
+                                  _T("Initializing") };
 TCHAR *g_szInterfaceTypes[] = 
 {
    "Unknown",

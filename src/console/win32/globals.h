@@ -42,6 +42,9 @@ extern CConsoleApp theApp;
 #define MAX_PASSWORD_LEN      64
 #define MAX_INTERFACE_TYPE    32
 
+#define TOOLBOX_X_MARGIN      5
+#define TOOLBOX_Y_MARGIN      5
+
 
 //
 // User interface options
@@ -74,6 +77,7 @@ extern CConsoleApp theApp;
 #define WM_POLLER_MESSAGE        (WM_USER + 10)
 #define WM_START_DEPLOYMENT      (WM_USER + 11)
 #define WM_DEPLOYMENT_INFO       (WM_USER + 12)
+#define WM_DEPLOYMENT_FINISHED   (WM_USER + 13)
 
 
 //
@@ -144,6 +148,7 @@ struct DEPLOYMENT_JOB
    DWORD dwNumObjects;
    DWORD *pdwObjectList;
    HWND hWnd;
+   DWORD *pdwRqId;
 };
 
 
@@ -229,6 +234,7 @@ extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];
 extern TCHAR *g_szActionType[];
 extern TCHAR *g_szServiceType[];
+extern TCHAR *g_szDeploymentStatus[];
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];
