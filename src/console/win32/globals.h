@@ -180,6 +180,7 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText = "Unknown");
 char *TranslateUNIXText(const char *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
+void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 
 
 //
@@ -209,9 +210,10 @@ extern char g_szLogin[];
 extern char g_szPassword[];
 extern DWORD g_dwEncryptionMethod;
 extern char g_szWorkDir[];
-extern char *g_szStatusText[];
-extern char *g_szStatusTextSmall[];
-extern char *g_szActionType[];
+extern TCHAR *g_szStatusText[];
+extern TCHAR *g_szStatusTextSmall[];
+extern TCHAR *g_szActionType[];
+extern TCHAR *g_szServiceType[];
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];

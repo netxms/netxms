@@ -278,6 +278,8 @@ src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
 src/console/win32/CreateContainerDlg.cpp -text
 src/console/win32/CreateContainerDlg.h -text
+src/console/win32/CreateNetSrvDlg.cpp -text
+src/console/win32/CreateNetSrvDlg.h -text
 src/console/win32/CreateNodeDlg.cpp -text
 src/console/win32/CreateNodeDlg.h -text
 src/console/win32/CreateObjectDlg.cpp -text
@@ -322,6 +324,8 @@ src/console/win32/GraphPropDlg.cpp -text
 src/console/win32/GraphPropDlg.h -text
 src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
+src/console/win32/InputBox.cpp -text
+src/console/win32/InputBox.h -text
 src/console/win32/InternalItemSelDlg.cpp -text
 src/console/win32/InternalItemSelDlg.h -text
 src/console/win32/LoginDialog.cpp -text

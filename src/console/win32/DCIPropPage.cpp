@@ -217,6 +217,7 @@ void CDCIPropPage::SelectAgentItem(void)
    if (dwResult == RCC_SUCCESS)
    {
       CAgentParamSelDlg dlg;
+      TCHAR *p;
 
       dlg.m_pNode = m_pNode;
       dlg.m_dwNumParams = m_dwNumParams;
@@ -228,6 +229,22 @@ void CDCIPropPage::SelectAgentItem(void)
                         m_pParamList[dlg.m_dwSelectionIndex].szDescription);
          m_wndTypeList.SelectString(-1, g_pszItemDataType[m_pParamList[dlg.m_dwSelectionIndex].iDataType]);
          m_wndEditName.SetFocus();
+
+         // Replace (*) in parameter's name
+         p = _tcschr(m_pParamList[dlg.m_dwSelectionIndex].szName, _T('('));
+         if (p != NULL)
+         {
+            int iPos;
+
+            p++;
+            if (*p == _T('*'))
+            {
+               iPos = (int)((char *)p - (char *)m_pParamList[dlg.m_dwSelectionIndex].szName) / sizeof(TCHAR);
+               m_wndEditName.SetSel(iPos, iPos + 1, FALSE);
+               m_wndEditName.ReplaceSel(_T("<insert arguments here>"));
+               m_wndEditName.SetSel(iPos, iPos + 23, FALSE);
+            }
+         }
       }
    }
 }

@@ -186,6 +186,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void CreateNetworkService(DWORD dwParent);
 	void WakeUpNode(DWORD dwObjectId);
 	void CreateTemplateGroup(DWORD dwParent);
 	void CreateTemplate(DWORD dwParent);

@@ -142,6 +142,8 @@
 #define IDI_DATABASE                    250
 #define IDD_SELECT_INTERNAL_ITEM        252
 #define IDD_SELECT_AGENT_PARAM          253
+#define IDD_INPUT_BOX                   254
+#define IDD_CREATE_NETSRV               255
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -327,14 +329,22 @@
 #define IDC_CB_ITEM1                    1217
 #define IDC_CB_ITEM5                    1218
 #define IDC_CB_ITEM2                    1219
+#define IDC_COMBO_TYPES                 1219
 #define IDC_CB_ITEM6                    1220
 #define IDC_CB_ITEM3                    1221
+#define IDC_RADIO_TCP                   1221
 #define IDC_CB_ITEM7                    1222
+#define IDC_RADIO_UDP                   1222
 #define IDC_CB_ITEM4                    1223
+#define IDC_RADIO_ICMP                  1223
 #define IDC_CB_ITEM8                    1224
+#define IDC_RADIO_OTHER                 1224
 #define IDC_CB_ITEM9                    1225
+#define IDC_EDIT_PROTO                  1225
 #define IDC_CB_ITEM13                   1226
+#define IDC_EDIT_REQUEST                1226
 #define IDC_CB_ITEM10                   1227
+#define IDC_EDIT_RESPONCE               1227
 #define IDC_CB_ITEM14                   1228
 #define IDC_CB_ITEM11                   1229
 #define IDC_CB_ITEM15                   1230
@@ -435,6 +445,7 @@
 #define ID_PACKAGE_INSTALL              32908
 #define ID_PACKAGE_REMOVE               32909
 #define ID_PACKAGE_DEPLOY               32910
+#define ID_OBJECT_CREATE_SERVICE        32913
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -443,9 +454,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        254
-#define _APS_NEXT_COMMAND_VALUE         32912
-#define _APS_NEXT_CONTROL_VALUE         1217
+#define _APS_NEXT_RESOURCE_VALUE        256
+#define _APS_NEXT_COMMAND_VALUE         32915
+#define _APS_NEXT_CONTROL_VALUE         1228
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

@@ -10,6 +10,7 @@
 #include "CreateNodeDlg.h"
 #include "CreateTemplateDlg.h"
 #include "CreateTGDlg.h"
+#include "CreateNetSrvDlg.h"
 #include "NodePoller.h"
 #include "MIBBrowserDlg.h"
 
@@ -1323,9 +1324,9 @@ void CConsoleApp::CreateContainer(DWORD dwParent)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_CONTAINER;
-      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.container.dwCategory = 1;
-      ci.cs.container.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
+      ci.cs.container.pszDescription = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
       CreateObject(&ci);
    }
 }
@@ -1349,9 +1350,41 @@ void CConsoleApp::CreateNode(DWORD dwParent)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_NODE;
-      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
       ci.cs.node.dwNetMask = 0;
+      CreateObject(&ci);
+   }
+}
+
+
+//
+// Create network service object
+//
+
+void CConsoleApp::CreateNetworkService(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateNetSrvDlg dlg;
+
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if (dlg.m_pParentObject->iClass != OBJECT_NODE)
+         dlg.m_pParentObject = NULL;
+   dlg.m_iServiceType = NETSRV_HTTP;
+   dlg.m_iPort = 80;
+   dlg.m_iProtocolNumber = 6;
+   dlg.m_iProtocolType = 0;
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_NETWORKSERVICE;
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+      ci.cs.netsrv.iServiceType = dlg.m_iServiceType;
+      ci.cs.netsrv.wPort = (WORD)dlg.m_iPort;
+      ci.cs.netsrv.wProto = (WORD)dlg.m_iProtocolNumber;
+      ci.cs.netsrv.pszRequest = (TCHAR *)((LPCTSTR)dlg.m_strRequest);
+      ci.cs.netsrv.pszResponce = (TCHAR *)((LPCTSTR)dlg.m_strResponce);
       CreateObject(&ci);
    }
 }

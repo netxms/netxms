@@ -137,6 +137,10 @@ SOURCE=.\CreateContainerDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateNetSrvDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\CreateNodeDlg.cpp
 # End Source File
 # Begin Source File
@@ -230,6 +234,10 @@ SOURCE=.\GraphPropDlg.cpp
 # Begin Source File
 
 SOURCE=.\GroupPropDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\InputBox.cpp
 # End Source File
 # Begin Source File
 
@@ -438,6 +446,10 @@ SOURCE=.\CreateContainerDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateNetSrvDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\CreateNodeDlg.h
 # End Source File
 # Begin Source File
@@ -527,6 +539,10 @@ SOURCE=.\GraphPropDlg.h
 # Begin Source File
 
 SOURCE=.\GroupPropDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\InputBox.h
 # End Source File
 # Begin Source File
 

@@ -176,6 +176,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
 	ON_COMMAND(ID_OBJECT_WAKEUP, OnObjectWakeup)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_WAKEUP, OnUpdateObjectWakeup)
+	ON_COMMAND(ID_OBJECT_CREATE_SERVICE, OnObjectCreateService)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1389,6 +1390,16 @@ void CObjectBrowser::OnObjectCreateTemplate()
 void CObjectBrowser::OnObjectCreateTemplategroup() 
 {
    theApp.CreateTemplateGroup((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CREATE_SERVICE message handler
+//
+
+void CObjectBrowser::OnObjectCreateService() 
+{
+   theApp.CreateNetworkService((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }
 
 

@@ -60,6 +60,7 @@ void CInternalItemSelDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CInternalItemSelDlg, CDialog)
 	//{{AFX_MSG_MAP(CInternalItemSelDlg)
 	ON_BN_CLICKED(IDC_BUTTON_GET, OnButtonGet)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_PARAMETERS, OnDblclkListParameters)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -142,4 +143,17 @@ void CInternalItemSelDlg::OnButtonGet()
       dlg.DoModal();
    }
    m_wndListCtrl.SetFocus();
+}
+
+
+//
+// Handle double click in list view
+//
+
+void CInternalItemSelDlg::OnDblclkListParameters(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+   if (m_wndListCtrl.GetSelectedCount() > 0)
+      PostMessage(WM_COMMAND, IDOK, 0);
+	
+	*pResult = 0;
 }

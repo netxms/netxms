@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "AgentParamSelDlg.h"
 #include "DataQueryDlg.h"
+#include "InputBox.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,11 +40,18 @@ void CAgentParamSelDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAgentParamSelDlg, CDialog)
 	//{{AFX_MSG_MAP(CAgentParamSelDlg)
 	ON_BN_CLICKED(IDC_BUTTON_GET, OnButtonGet)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_PARAMS, OnDblclkListParams)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CAgentParamSelDlg message handlers
+
+static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   return _tcsicmp(((CAgentParamSelDlg *)lParamSort)->m_pParamList[lParam1].szName,
+                   ((CAgentParamSelDlg *)lParamSort)->m_pParamList[lParam2].szName);
+}
 
 
 //
@@ -76,6 +84,8 @@ BOOL CAgentParamSelDlg::OnInitDialog()
          m_wndListCtrl.SetItemText(iItem, 2, m_pParamList[i].szDescription);
       }
    }
+
+   m_wndListCtrl.SortItems(CompareItems, (LPARAM)this);
 
 	return TRUE;
 }
@@ -110,13 +120,63 @@ void CAgentParamSelDlg::OnButtonGet()
    {
       CDataQueryDlg dlg;
       DWORD dwIndex;
+      int iLen;
+      BOOL bStart = TRUE;
 
+      // Detect (*) at the end of parameter's name
       dwIndex = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
       dlg.m_dwObjectId = m_pNode->dwId;
       dlg.m_strNode = (LPCTSTR)m_pNode->szName;
-      dlg.m_strParameter = (LPCTSTR)m_pParamList[dwIndex].szName;
       dlg.m_iOrigin = DS_NATIVE_AGENT;
-      dlg.DoModal();
+
+      iLen = _tcslen(m_pParamList[dwIndex].szName);
+      if (iLen > 3)
+      {
+         if (!_tcscmp(&m_pParamList[dwIndex].szName[iLen - 3], _T("(*)")))
+         {
+            CInputBox boxDlg;
+
+            boxDlg.m_strTitle = _T("Arguments");
+            boxDlg.m_strHeader = _T("Enter parameter's argument(s):");
+            if (boxDlg.DoModal() == IDOK)
+            {
+               TCHAR szBuffer[MAX_DB_STRING];
+
+               memcpy(szBuffer, m_pParamList[dwIndex].szName, (iLen - 2) * sizeof(TCHAR));
+               _tcscpy(&szBuffer[iLen - 2], boxDlg.m_strText);
+               _tcscat(szBuffer, _T(")"));
+               dlg.m_strParameter = (LPCTSTR)szBuffer;
+            }
+            else
+            {
+               bStart = FALSE;
+            }
+         }
+         else
+         {
+            dlg.m_strParameter = (LPCTSTR)m_pParamList[dwIndex].szName;
+         }
+      }
+      else
+      {
+         dlg.m_strParameter = (LPCTSTR)m_pParamList[dwIndex].szName;
+      }
+
+      if (bStart)
+         dlg.DoModal();
    }
    m_wndListCtrl.SetFocus();
+}
+
+
+//
+// Process double click on list
+//
+
+void CAgentParamSelDlg::OnDblclkListParams(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+   if (m_wndListCtrl.GetSelectedCount() > 0)
+      PostMessage(WM_COMMAND, IDOK, 0);
+	
+	*pResult = 0;
 }

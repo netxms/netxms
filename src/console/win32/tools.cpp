@@ -64,6 +64,20 @@ CSize GetWindowSize(CWnd *pWnd)
 
 
 //
+// Enable or disable dialog item
+//
+
+void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable)
+{
+   CWnd *pCtrl;
+
+   pCtrl = pWnd->GetDlgItem(nCtrl);
+   if (pCtrl != NULL)
+      pCtrl->EnableWindow(bEnable);
+}
+
+
+//
 // Select given item in list view
 // Will remove selection from all currently selected items and set
 // LVIS_SELECTED and LVIS_FOCUSED flags to specified item

@@ -223,6 +223,7 @@ BEGIN
 
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
         END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
@@ -327,6 +328,7 @@ BEGIN
 
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
         END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
@@ -408,6 +410,7 @@ BEGIN
 
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
         END
         MENUITEM "&Bind...",                    ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
@@ -932,7 +935,7 @@ END
 IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 266
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
@@ -1074,7 +1077,7 @@ IDD_MIB_BROWSER DIALOGEX 0, 0, 329, 322
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "MIB Browser"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_OID,7,17,224,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_INSTANCE,235,17,31,14,ES_AUTOHSCROLL | 
@@ -1391,7 +1394,7 @@ END
 IDD_EDIT_TRAP DIALOGEX 0, 0, 271, 258
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Trap Configuration"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_DESCRIPTION,13,17,245,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_TRAP,13,50,189,14,ES_AUTOHSCROLL
@@ -1434,7 +1437,7 @@ END
 IDD_GRAPH_PROPERTIES DIALOGEX 0, 0, 227, 199
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Graph Properties"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,170,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,170,24,50,14
@@ -1503,7 +1506,7 @@ END
 IDD_SELECT_INTERNAL_ITEM DIALOGEX 0, 0, 416, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Available internal parameters"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST_PARAMETERS,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_AUTOARRANGE | 
@@ -1511,6 +1514,68 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,359,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,359,25,50,14
     PUSHBUTTON      "&Get...",IDC_BUTTON_GET,359,44,50,14
+END
+
+IDD_SELECT_AGENT_PARAM DIALOGEX 0, 0, 386, 229
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Supported agent parameters"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_LIST_PARAMS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_TABSTOP,7,7,315,
+                    215,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,329,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,329,24,50,14
+    PUSHBUTTON      "&Get...",IDC_BUTTON_GET,329,41,50,14
+END
+
+IDD_INPUT_BOX DIALOG DISCARDABLE  0, 0, 271, 46
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Query"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_TEXT,7,17,199,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,214,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,214,24,50,14
+    LTEXT           "Static",IDC_STATIC_HEADER,7,7,199,8
+END
+
+IDD_CREATE_NETSRV DIALOG DISCARDABLE  0, 0, 240, 239
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Network Service"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,27,158,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO_TYPES,13,55,92,57,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_PORT,114,55,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "&TCP",IDC_RADIO_TCP,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,89,30,10
+    CONTROL         "&UDP",IDC_RADIO_UDP,"Button",BS_AUTORADIOBUTTON,13,101,
+                    31,10
+    CONTROL         "&ICMP",IDC_RADIO_ICMP,"Button",BS_AUTORADIOBUTTON,56,89,
+                    33,10
+    CONTROL         "&Other:",IDC_RADIO_OTHER,"Button",BS_AUTORADIOBUTTON,56,
+                    101,35,10
+    EDITTEXT        IDC_EDIT_PROTO,103,97,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_REQUEST,13,138,158,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_RESPONCE,13,166,158,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,121,202,50,12
+    DEFPUSHBUTTON   "OK",IDOK,183,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,183,24,50,14
+    GROUPBOX        "General",IDC_STATIC,7,7,170,68
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,191,170,42
+    ICON            "",IDC_ICON_PARENT,14,204,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,204,69,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,218,127,9
+    LTEXT           "Service type",IDC_STATIC,13,45,40,8
+    LTEXT           "TCP/UDP Port",IDC_STATIC,113,45,48,8
+    GROUPBOX        "IP Protocol",IDC_STATIC,7,79,169,37
+    LTEXT           "Protocol number",IDC_STATIC,103,87,52,8
+    GROUPBOX        "Static",IDC_STATIC,7,119,169,68
+    LTEXT           "Request",IDC_STATIC,13,128,28,8
+    LTEXT           "Expected responce",IDC_STATIC,13,156,62,8
 END
 
 
@@ -1860,6 +1925,30 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
     END
+
+    IDD_SELECT_AGENT_PARAM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 379
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 222
+    END
+
+    IDD_INPUT_BOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 264
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 39
+    END
+
+    IDD_CREATE_NETSRV, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 232
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -2000,56 +2089,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_SELECT_AGENT_PARAM DIALOGEX 0, 0, 386, 229
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Supported agent parameters"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "List1",IDC_LIST_PARAMS,"SysListView32",LVS_REPORT | 
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_TABSTOP,7,7,315,
-                    215,WS_EX_CLIENTEDGE
-    DEFPUSHBUTTON   "OK",IDOK,329,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,329,24,50,14
-    PUSHBUTTON      "&Get...",IDC_BUTTON_GET,329,41,50,14
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_SELECT_AGENT_PARAM, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 379
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 222
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
