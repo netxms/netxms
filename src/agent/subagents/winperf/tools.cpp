@@ -38,7 +38,7 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
                      (LPTSTR)&pszMsg, 0, NULL)>0)
    {
-      pszMsg[_tcscspn(pszMsg, _T("\r\n"))] = 0;
+      //pszMsg[_tcscspn(pszMsg, _T("\r\n"))] = 0;
       _tcsncpy(pszBuffer, pszMsg, iBufferSize);
       LocalFree(pszMsg);
    }
@@ -59,5 +59,5 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
    TCHAR szBuffer[1024];
 
    NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("%s: PDH Error %08X in call to %s (%s)"), 
-                   pszFunction, rc, pszPdhCall, GetPdhErrorText(rc, szBuffer, 1024));
+                   pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, szBuffer, 1024));
 }

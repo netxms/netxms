@@ -30,15 +30,16 @@
 static LONG H_PdhhCounterValue(char *pszParam, char *pArg, char *pValue)
 {
    HQUERY hQuery;
-   HhCounter hhCounter;
+   HCOUNTER hCounter;
    PDH_RAW_COUNTER rawData;
-   PDH_FMT_COUNTERVALUE hCounterValue;
+   PDH_FMT_COUNTERVALUE counterValue;
    PDH_STATUS rc;
-   PDH_hCounter_INFO ci;
-   TCHAR szhCounter[MAX_PATH], szBuffer[1024];
-   static TCHAR szFName[] = _T("H_PdhhCounterValue");
+   PDH_COUNTER_INFO ci;
+   TCHAR szCounter[MAX_PATH];
+   static TCHAR szFName[] = _T("H_PdhCounterValue");
+   DWORD dwSize;
 
-   NxGetParameterArg(pszParam, 1, szhCounter, MAX_PATH);
+   NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH);
 
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
    {
@@ -46,18 +47,11 @@ static LONG H_PdhhCounterValue(char *pszParam, char *pArg, char *pValue)
       return SYSINFO_RC_ERROR;
    }
 
-   if ((rc = PdhAddhCounter(hQuery, szhCounter, 0, &hCounter)) != ERROR_SUCCESS)
+   if ((rc = PdhAddCounter(hQuery, szCounter, 0, &hCounter)) != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhAddhCounter"), rc);
+      ReportPdhError(szFName, _T("PdhAddCounter"), rc);
       PdhCloseQuery(hQuery);
       return SYSINFO_RC_UNSUPPORTED;
-   }
-
-   if ((rc = PdhGethCounterInfo(hCounter, FALSE, &dwSize, &ci)) != ERROR_SUCCESS)
-   {
-      ReportPdhError(szFName, _T("PdhGetCounterInfo"), rc);
-      PdhCloseQuery(hQuery);
-      return SYSINFO_RC_ERROR;
    }
 
    if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
@@ -67,9 +61,27 @@ static LONG H_PdhhCounterValue(char *pszParam, char *pArg, char *pValue)
       return SYSINFO_RC_ERROR;
    }
 
+   dwSize = sizeof(ci);
+   if ((rc = PdhGetCounterInfo(hCounter, FALSE, &dwSize, &ci)) != ERROR_SUCCESS)
+   {
+      ReportPdhError(szFName, _T("PdhGetCounterInfo"), rc);
+      PdhCloseQuery(hQuery);
+      return SYSINFO_RC_ERROR;
+   }
+
    PdhGetRawCounterValue(hCounter, NULL, &rawData);
-   PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_DOUBLE,
-                                   &rawData, NULL, &hCounterValue);
+   if (ci.dwType & PERF_SIZE_LARGE)
+   {
+      PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
+                                      &rawData, NULL, &counterValue);
+      ret_int64(pValue, counterValue.largeValue);
+   }
+   else
+   {
+      PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG,
+                                      &rawData, NULL, &counterValue);
+      ret_int64(pValue, counterValue.longValue);
+   }
    PdhCloseQuery(hQuery);
    return SYSINFO_RC_SUCCESS;
 }
@@ -83,6 +95,7 @@ static LONG H_PdhObjects(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
    TCHAR *pszObject, *pszObjList, szHostName[256];
    LONG iResult = SYSINFO_RC_ERROR;
+   PDH_STATUS rc;
    DWORD dwSize;
 
    dwSize = 256;
@@ -90,7 +103,8 @@ static LONG H_PdhObjects(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
    {
       dwSize = 256000;
       pszObjList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize);
-      if (PdhEnumObjects(NULL, szHostName, pszObjList, &dwSize, PERF_DETAIL_WIZARD, TRUE) == ERROR_SUCCESS)
+      if ((rc = PdhEnumObjects(NULL, szHostName, pszObjList, &dwSize, 
+                               PERF_DETAIL_WIZARD, TRUE)) == ERROR_SUCCESS)
       {
          for(pszObject = pszObjList; *pszObject != 0; pszObject += _tcslen(pszObject) + 1)
             NxAddResultString(pValue, pszObject);
@@ -112,7 +126,7 @@ static LONG H_PdhObjects(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-   TCHAR *pszElement, *pszhCounterList, *pszInstanceList, szHostName[256], szObject[256];
+   TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];
    LONG iResult = SYSINFO_RC_ERROR;
    DWORD dwSize1, dwSize2;
    PDH_STATUS rc;
@@ -124,14 +138,14 @@ static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pVa
       if (GetComputerName(szHostName, &dwSize1))
       {
          dwSize1 = dwSize2 = 256000;
-         pszhCounterList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize1);
+         pszCounterList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize1);
          pszInstanceList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize2);
          rc = PdhEnumObjectItems(NULL, szHostName, szObject,
-                                 pszhCounterList, &dwSize1, pszInstanceList, &dwSize2, 
+                                 pszCounterList, &dwSize1, pszInstanceList, &dwSize2, 
                                  PERF_DETAIL_WIZARD, 0);
          if ((rc == ERROR_SUCCESS) || (rc == PDH_MORE_DATA))
          {
-            for(pszElement = (pArg[0] == _T('C')) ? pszhCounterList : pszInstanceList;
+            for(pszElement = (pArg[0] == _T('C')) ? pszCounterList : pszInstanceList;
                 *pszElement != 0; pszElement += _tcslen(pszElement) + 1)
                NxAddResultString(pValue, pszElement);
             iResult = SYSINFO_RC_SUCCESS;
@@ -140,8 +154,8 @@ static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pVa
          {
             ReportPdhError(_T("H_PdhObjectItems"), _T("PdhEnumObjectItems"), rc);
          }
-         free(pszhCounterList);
-         free(pszInstanceLIst)
+         free(pszCounterList);
+         free(pszInstanceList);
       }
    }
    else
@@ -158,13 +172,13 @@ static LONG H_PdhObjectItems(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pVa
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "PDH.hCounterValue(*)", H_PdhhCounterValue, NULL }
+   { _T("PDH.CounterValue(*)"), H_PdhhCounterValue, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "PDH.ObjecthCounters(*)", H_PdhObjectItems, _T("C") },
-   { "PDH.ObjectInstances(*)", H_PdhObjectItems, _T("I") },
-   { "PDH.Objects", H_PdhObjects, NULL }
+   { _T("PDH.ObjectCounters(*)"), H_PdhObjectItems, _T("C") },
+   { _T("PDH.ObjectInstances(*)"), H_PdhObjectItems, _T("I") },
+   { _T("PDH.Objects"), H_PdhObjects, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
