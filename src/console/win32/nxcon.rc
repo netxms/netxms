@@ -87,6 +87,9 @@ IDI_EMAIL               ICON    DISCARDABLE     "icons\\e-mail.ico"
 IDI_SMS                 ICON    DISCARDABLE     "icons\\sms.ico"
 IDI_EXEC                ICON    DISCARDABLE     "icons\\exec.ico"
 IDI_REXEC               ICON    DISCARDABLE     "icons\\rexec.ico"
+IDI_ACTIVE              ICON    DISCARDABLE     "icons\\active.ico"
+IDI_DISABLED            ICON    DISCARDABLE     "icons\\disabled.ico"
+IDI_UNSUPPORTED         ICON    DISCARDABLE     "icons\\unsupported.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

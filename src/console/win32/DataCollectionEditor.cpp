@@ -76,12 +76,19 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    if (m_pItemList == NULL)
       return -1;
 
+   // Create image list
+   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
+   m_imageList.Add(theApp.LoadIcon(IDI_ACTIVE));
+   m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
+   m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));
+
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
+   m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
@@ -178,6 +185,7 @@ void CDataCollectionEditor::UpdateListItem(int iItem, NXC_DCI *pItem)
    sprintf(szBuffer, "%d days", pItem->iRetentionTime);
    m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 7, g_pszItemStatus[pItem->iStatus]);
+   m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, pItem->iStatus, 0, 0, 0);
 }
 
 

@@ -618,6 +618,10 @@ SOURCE=.\icons\ack.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\active.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\alarm.ico
 # End Source File
 # Begin Source File
@@ -638,6 +642,10 @@ SOURCE=.\icons\connect.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\disabled.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\down_arrow.bmp
 # End Source File
 # Begin Source File
@@ -647,6 +655,10 @@ SOURCE=".\icons\e-mail.ico"
 # Begin Source File
 
 SOURCE=.\icons\EARTH.ICO
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\enabled.ico
 # End Source File
 # Begin Source File
 
@@ -763,6 +775,14 @@ SOURCE=.\res\Toolbar.bmp
 # Begin Source File
 
 SOURCE=.\icons\tree.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\unsuppor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\unsupported.ico
 # End Source File
 # Begin Source File
 

@@ -109,6 +109,9 @@
 #define IDD_CREATE_CONTAINER            220
 #define IDD_CREATE_NODE                 221
 #define IDD_DCI_TRANSFORM               222
+#define IDI_ACTIVE                      223
+#define IDI_DISABLED                    224
+#define IDI_UNSUPPORTED                 225
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -324,7 +327,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        223
+#define _APS_NEXT_RESOURCE_VALUE        226
 #define _APS_NEXT_COMMAND_VALUE         32880
 #define _APS_NEXT_CONTROL_VALUE         1169
 #define _APS_NEXT_SYMED_VALUE           119
