@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.52 2005-01-17 17:05:24 victor Exp $
+# $Id: configure.ac,v 1.53 2005-01-17 17:13:50 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -28,7 +28,7 @@ CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
 LDFLAGS="-nodefaultlibs $LDFLAGS"
 
-AC_CHECK_LIB(c_r, pthread_create, [], [LDFLAGS="$LDFLAGS -lc"])
+AC_CHECK_LIB(c_r, pthread_create, [], [LDFLAGS="$LDFLAGS -lc_r"])
 
 
 # --------------------------------------------------------------------------
@@ -279,6 +279,7 @@ if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
 	fi
 fi
 
+#ALK:	CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
 # posix threads
 AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
