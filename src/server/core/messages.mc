@@ -165,6 +165,24 @@ Unable to create socket in function %1
 .
 
 MessageId=
+SymbolicName=MSG_BIND_ERROR
+Language=English
+Unable to bind socket to port %1 in function %2: %3
+.
+
+MessageId=
+SymbolicName=MSG_ACCEPT_ERROR
+Language=English
+Error returned by accept() system call: %1
+.
+
+MessageId=
+SymbolicName=MSG_TOO_MANY_ACCEPT_ERRORS
+Language=English
+There are too many consecutive accept() errors
+.
+
+MessageId=
 SymbolicName=MSG_AGENT_CONNECT_FAILED
 Language=English
 Unable to establish connection with agent on host %1

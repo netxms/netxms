@@ -163,7 +163,7 @@ BOOL Interface::SaveToDB(void)
                        "VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d)",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId, m_dwIfType, m_dwIfIndex);
    else
-      sprintf(szQuery, "UPDATE subnets SET name='%s',status=%d,is_deleted=%d,ip_addr=%d,ip_netmask=%d,node_id=%d,if_type=%d,if_index=%d WHERE id=%d",
+      sprintf(szQuery, "UPDATE interfaces SET name='%s',status=%d,is_deleted=%d,ip_addr=%d,ip_netmask=%d,node_id=%d,if_type=%d,if_index=%d WHERE id=%d",
               m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId, m_dwIfType, m_dwIfIndex, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 

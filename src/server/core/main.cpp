@@ -38,6 +38,7 @@ void StatusPoller(void *arg);
 void ConfigurationPoller(void *arg);
 void EventProcessor(void *arg);
 void WatchdogThread(void *arg);
+void ClientListener(void *);
 
 
 //
@@ -148,6 +149,7 @@ BOOL Initialize(void)
    ThreadCreate(NodePoller, 0, NULL);
    ThreadCreate(StatusPoller, 0, NULL);
    ThreadCreate(ConfigurationPoller, 0, NULL);
+   ThreadCreate(ClientListener, 0, NULL);
    
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
@@ -218,14 +220,15 @@ void Main(void)
                   char szBuffer[1024];
                   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
 
+                  MutexLock(g_hMutexIdIndex, INFINITE);
                   for(i = 0; i < g_dwIdIndexSize; i++)
                   {
                      printf("Object ID %d\n"
-                            "   Name='%s' Type=%s Addr=%s Status=%d\n",
+                            "   Name='%s' Type=%s Addr=%s Status=%d IsModified=%d\n",
                             g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
                             objTypes[g_pIndexById[i].pObject->Type()],
                             IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer),
-                            g_pIndexById[i].pObject->Status());
+                            g_pIndexById[i].pObject->Status(), g_pIndexById[i].pObject->IsModified());
                      printf("   Parents: <%s> Childs: <%s>\n", 
                             g_pIndexById[i].pObject->ParentList(szBuffer),
                             g_pIndexById[i].pObject->ChildList(&szBuffer[512]));
@@ -236,6 +239,7 @@ void Main(void)
                                ((Node *)(g_pIndexById[i].pObject))->IsLocalManagenet(),
                                ((Node *)(g_pIndexById[i].pObject))->ObjectId());
                   }
+                  MutexUnlock(g_hMutexIdIndex);
                   printf("*** Object dump complete ***\n");
                }
                break;

@@ -239,12 +239,14 @@ const char *NetObj::ChildList(char *szBuffer)
    char *pBuf = szBuffer;
 
    *pBuf = 0;
+   Lock();
    for(i = 0, pBuf = szBuffer; i < m_dwChildCount; i++)
    {
       sprintf(pBuf, "%d ", m_pChildList[i]->Id());
       while(*pBuf)
          pBuf++;
    }
+   Unlock();
    if (pBuf != szBuffer)
       *(pBuf - 1) = 0;
    return szBuffer;
@@ -261,12 +263,14 @@ const char *NetObj::ParentList(char *szBuffer)
    char *pBuf = szBuffer;
 
    *pBuf = 0;
+   Lock();
    for(i = 0; i < m_dwParentCount; i++)
    {
       sprintf(pBuf, "%d ", m_pParentList[i]->Id());
       while(*pBuf)
          pBuf++;
    }
+   Unlock();
    if (pBuf != szBuffer)
       *(pBuf - 1) = 0;
    return szBuffer;
