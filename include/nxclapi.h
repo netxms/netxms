@@ -32,6 +32,14 @@
 //
 
 #define NXC_EVENT_STATE_CHANGED     1
+#define NXC_EVENT_ERROR             2
+
+
+//
+// Errors
+//
+
+#define NXC_ERR_INTERNAL            1
 
 
 //
@@ -60,7 +68,7 @@ extern "C" {
 
 DWORD EXPORTABLE NXCGetVersion(void);
 BOOL EXPORTABLE NXCInitialize(void);
-void EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
+BOOL EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
 void EXPORTABLE NXCDisconnect(void);
 void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
