@@ -110,6 +110,8 @@ protected:
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
+	HMENU m_hAlarmBrowserMenu;    // Menu for alarm browser
+	HACCEL m_hAlarmBrowserAccel;  // Accelerator for alarm browser
 	HMENU m_hEventBrowserMenu;    // Menu for event browser
 	HACCEL m_hEventBrowserAccel;  // Accelerator for event browser
 	HMENU m_hObjectBrowserMenu;   // Menu for object browser

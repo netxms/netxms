@@ -35,6 +35,9 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEGE, OnUpdateAlarmAcknowlege)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -228,4 +231,48 @@ int CAlarmBrowser::FindAlarmRecord(DWORD dwAlarmId)
    lvfi.flags = LVFI_PARAM;
    lvfi.lParam = dwAlarmId;
    return m_wndListCtrl.FindItem(&lvfi);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CAlarmBrowser::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   int iItem;
+   UINT uFlags;
+   CMenu *pMenu;
+   CPoint pt;
+
+   pt = point;
+   pWnd->ScreenToClient(&pt);
+   iItem = m_wndListCtrl.HitTest(pt, &uFlags);
+   if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+   {
+      pMenu = theApp.GetContextMenu(6);
+      pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_ACKNOWLEGE message handler
+//
+
+void CAlarmBrowser::OnAlarmAcknowlege() 
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   while(iItem != -1)
+   {
+      DoRequestArg1(NXCAcknowlegeAlarm, (void *)m_wndListCtrl.GetItemData(iItem), "Acknowleging alarm...");
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+}
+
+void CAlarmBrowser::OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }

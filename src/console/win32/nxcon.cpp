@@ -235,7 +235,12 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 5), "&Policy");
 
+   m_hAlarmBrowserMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 6), "&Alarm");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjectBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_BROWSER));
 	m_hUserEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -279,6 +284,8 @@ int CConsoleApp::ExitInstance()
    // Free resources
    SafeFreeResource(m_hMDIMenu);
    SafeFreeResource(m_hMDIAccel);
+   SafeFreeResource(m_hAlarmBrowserMenu);
+   SafeFreeResource(m_hAlarmBrowserAccel);
    SafeFreeResource(m_hEventBrowserMenu);
    SafeFreeResource(m_hEventBrowserAccel);
    SafeFreeResource(m_hUserEditorMenu);
@@ -1043,5 +1050,5 @@ void CConsoleApp::OnViewAlarms()
       m_pwndAlarmBrowser->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CAlarmBrowser), IDR_ALARMS, m_hMDIMenu, m_hMDIAccel);
+		   RUNTIME_CLASS(CAlarmBrowser), IDR_ALARMS, m_hAlarmBrowserMenu, m_hAlarmBrowserAccel);
 }

@@ -167,18 +167,18 @@ END
 
 IDM_VIEW_SPECIFIC MENU DISCARDABLE 
 BEGIN
-    POPUP "Window"
+    POPUP "&Window"
     BEGIN
         MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
         MENUITEM "&Tile",                       ID_WINDOW_TILE_VERT
         MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
     END
-    POPUP "Events"
+    POPUP "&Events"
     BEGIN
         MENUITEM "&Details...\tEnter",          ID_EVENTS_DETAILS
         MENUITEM "&Go to source",               ID_EVENTS_GOTOSOURCE
     END
-    POPUP "Object"
+    POPUP "&Object"
     BEGIN
         POPUP "&View"
         BEGIN
@@ -211,7 +211,7 @@ BEGIN
         MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
-    POPUP "User"
+    POPUP "&User"
     BEGIN
         POPUP "&Create"
         BEGIN
@@ -222,7 +222,7 @@ BEGIN
         MENUITEM "&Set password...",            ID_USER_SETPASSWORD
         MENUITEM "&Properties...\tAlt+Enter",   ID_USER_PROPERTIES
     END
-    POPUP "Item"
+    POPUP "&Item"
     BEGIN
         MENUITEM "&New...\tIns",                ID_ITEM_NEW
         MENUITEM "&Edit...\tAlt+Enter",         ID_ITEM_EDIT
@@ -234,7 +234,7 @@ BEGIN
         MENUITEM "&Show data\tCtrl+S",          ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
     END
-    POPUP "Policy"
+    POPUP "&Policy"
     BEGIN
         MENUITEM "&Add...\tIns",                ID_POLICY_ADD
         MENUITEM "&Delete\tDel",                ID_POLICY_DELETE
@@ -257,6 +257,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
         MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
+    END
+    POPUP "&Alarm"
+    BEGIN
+        MENUITEM "&Acknowlege\tCtrl+A",         ID_ALARM_ACKNOWLEGE
+        MENUITEM "&Delete\tDel",                ID_ALARM_DELETE
+        MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
     END
     POPUP "Hidden"
     BEGIN
@@ -371,6 +377,12 @@ BEGIN
         MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
         MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
     END
+    POPUP "Alarm"
+    BEGIN
+        MENUITEM "&Acknowlege",                 ID_ALARM_ACKNOWLEGE
+        MENUITEM "&Delete",                     ID_ALARM_DELETE
+        MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
+    END
 END
 
 
@@ -432,6 +444,12 @@ BEGIN
                                                     NOINVERT
     VK_DELETE,      ID_POLICY_DELETE,       VIRTKEY, NOINVERT
     VK_INSERT,      ID_POLICY_ADD,          VIRTKEY, NOINVERT
+END
+
+IDA_ALARM_BROWSER ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_ALARM_ACKNOWLEGE,    VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_ALARM_DELETE,        VIRTKEY, NOINVERT
 END
 
 

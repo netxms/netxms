@@ -96,6 +96,7 @@
 #define IDI_UNKNOWN                     207
 #define IDI_ACK                         208
 #define IDI_CONNECT                     209
+#define IDA_ALARM_BROWSER               211
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -269,6 +270,9 @@
 #define ID_OBJECT_CREATE_NODE           32860
 #define ID_OBJECT_CREATE_CONTAINER      32861
 #define ID_VIEW_ALARMS                  32864
+#define ID_ALARM_ACKNOWLEGE             32865
+#define ID_ALARM_DELETE                 32866
+#define ID_ALARM_GOTOSOURCE             32867
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -277,8 +281,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        210
-#define _APS_NEXT_COMMAND_VALUE         32865
+#define _APS_NEXT_RESOURCE_VALUE        212
+#define _APS_NEXT_COMMAND_VALUE         32871
 #define _APS_NEXT_CONTROL_VALUE         1141
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
