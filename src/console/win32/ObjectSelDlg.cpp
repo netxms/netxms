@@ -106,7 +106,8 @@ BOOL CObjectSelDlg::OnInitDialog()
       NXCLockObjectIndex(g_hSession);
       pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
       for(i = 0; i < dwNumObjects; i++)
-         if (dwClassMask[pIndex[i].pObject->iClass] & m_dwAllowedClasses)
+         if ((dwClassMask[pIndex[i].pObject->iClass] & m_dwAllowedClasses) &&
+             (!pIndex[i].pObject->bIsDeleted))
          {
             iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pIndex[i].pObject->szName,
                                              GetObjectImageIndex(pIndex[i].pObject));
@@ -131,7 +132,7 @@ BOOL CObjectSelDlg::OnInitDialog()
                if (m_bSelectAddress)
                {
                   if ((pChild->iClass == OBJECT_INTERFACE) &&
-                      (pChild->dwIpAddr != 0))
+                      (pChild->dwIpAddr != 0) && (!pChild->bIsDeleted))
                   {
                      iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pChild->szName,
                                                       GetObjectImageIndex(pChild));
@@ -141,7 +142,8 @@ BOOL CObjectSelDlg::OnInitDialog()
                }
                else
                {
-                  if (dwClassMask[pChild->iClass] & m_dwAllowedClasses)
+                  if ((dwClassMask[pChild->iClass] & m_dwAllowedClasses) &&
+                      (!pChild->bIsDeleted))
                   {
                      iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pChild->szName,
                                                       GetObjectImageIndex(pChild));
