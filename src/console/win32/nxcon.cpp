@@ -151,8 +151,13 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hEventBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hEventBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
 
+   m_hObjectBrowserMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hObjectBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hObjectBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hObjectBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_BROWSER));
 
    // Load configuration from registry
    dwBytes = sizeof(WINDOWPLACEMENT);
@@ -404,7 +409,7 @@ void CConsoleApp::OnViewObjectbrowser()
       m_pwndObjectBrowser->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CObjectBrowser), IDR_OBJECTS, m_hMDIMenu, m_hMDIAccel);	
+		   RUNTIME_CLASS(CObjectBrowser), IDR_OBJECTS, m_hObjectBrowserMenu, m_hObjectBrowserAccel);	
 }
 
 

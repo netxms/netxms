@@ -148,6 +148,10 @@ SOURCE=.\ObjectBrowser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPreview.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropDlg.cpp
 # End Source File
 # Begin Source File
@@ -158,6 +162,10 @@ SOURCE=.\ProgressDialog.cpp
 
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
+# End Source File
+# Begin Source File
+
+SOURCE=.\ToolBox.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -221,6 +229,10 @@ SOURCE=.\ObjectBrowser.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPreview.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropDlg.h
 # End Source File
 # Begin Source File
@@ -234,6 +246,10 @@ SOURCE=.\Resource.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ToolBox.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

@@ -50,6 +50,13 @@ extern CConsoleApp theApp;
 
 
 //
+// Global flags
+//
+
+#define AF_SHOW_OBJECT_PREVIEW   ((DWORD)0x00000001)
+
+
+//
 // Variables
 //
 
@@ -58,5 +65,6 @@ extern char g_szLogin[];
 extern char g_szPassword[];
 extern char *g_szStatusText[];
 extern char *g_szStatusTextSmall[];
+extern DWORD g_dwFlags;
 
 #endif

@@ -114,14 +114,20 @@ IDR_MAINFRAME MENU PRELOAD DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Settings...",                ID_FILE_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
+        MENUITEM "&Export...",                  ID_FILE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Page Setup...",               ID_FILE_PAGESETUP
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+X",                ID_APP_EXIT
     END
     POPUP "&View"
     BEGIN
         MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
         MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
+        MENUITEM "Event Processing &Policy\tF4", ID_VIEW_EPP
         MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
         MENUITEM "&Debug",                      ID_VIEW_DEBUG
@@ -138,7 +144,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About nxcon...",             ID_APP_ABOUT
+        MENUITEM "&About NetXMS Console...",    ID_APP_ABOUT
     END
 END
 
@@ -154,6 +160,26 @@ BEGIN
     BEGIN
         MENUITEM "&Details...\tEnter",          ID_EVENTS_DETAILS
         MENUITEM "&Go to source",               ID_EVENTS_GOTOSOURCE
+    END
+    POPUP "Object"
+    BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "&Show preview pane\tAlt+P",   ID_OBJECT_VIEW_SHOWPREVIEWPANE
+
+            MENUITEM SEPARATOR
+            MENUITEM "View as &tree\tCtrl+T",       ID_OBJECT_VIEW_VIEWASTREE
+
+            MENUITEM "View as &list\tCtrl+L",       ID_OBJECT_VIEW_VIEWASLIST
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Rename",                     ID_OBJECT_RENAME
+        MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
 END
 
@@ -171,6 +197,7 @@ BEGIN
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
     VK_F2,          ID_VIEW_MAP,            VIRTKEY, NOINVERT
+    VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_F8,          ID_VIEW_EVENTS,         VIRTKEY, NOINVERT
@@ -472,6 +499,31 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDA_OBJECT_BROWSER ACCELERATORS DISCARDABLE 
+BEGIN
+    "F",            ID_OBJECT_FIND,         VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_OBJECT_VIEW_SHOWPREVIEWPANE, VIRTKEY, ALT, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+END
+
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

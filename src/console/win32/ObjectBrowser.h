@@ -7,6 +7,8 @@
 // ObjectBrowser.h : header file
 //
 
+#include "ObjectPreview.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CObjectBrowser frame
 
@@ -32,6 +34,7 @@ public:
 // Implementation
 protected:
 	CTreeCtrl m_wndTreeCtrl;
+   CObjectPreview m_wndPreviewPane;
 	virtual ~CObjectBrowser();
 
 	// Generated message map functions
@@ -42,6 +45,8 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
 	afx_msg void OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
+	afx_msg void OnObjectViewShowpreviewpane();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

@@ -74,16 +74,20 @@ protected:
 	CWnd* m_pwndObjectBrowser;
 	CWnd *m_pwndCtrlPanel;
    CDebugFrame *m_pwndDebugWindow;
-	HMENU m_hMDIMenu;             // Default menu for MDI
-	HACCEL m_hMDIAccel;           // Default accelerator for MDI
-	HMENU m_hEventBrowserMenu;    // Menu for event browser
-	HACCEL m_hEventBrowserAccel;  // Accelerator for event browser
-	BOOL m_bAuthFailed;
+
+   BOOL m_bAuthFailed;
 	CProgressDialog m_dlgProgress;
    DWORD m_dwRqWaitListSize;
    RQ_WAIT_INFO *m_pRqWaitList;
    MUTEX m_mutexRqWaitList;
 
+   HMENU m_hMDIMenu;             // Default menu for MDI
+	HACCEL m_hMDIAccel;           // Default accelerator for MDI
+	HMENU m_hEventBrowserMenu;    // Menu for event browser
+	HACCEL m_hEventBrowserAccel;  // Accelerator for event browser
+	HMENU m_hObjectBrowserMenu;   // Menu for object browser
+	HACCEL m_hObjectBrowserAccel; // Accelerator for object browser
+	
 public:
 	void RegisterRequest(HREQUEST hRequest, CWnd *pWnd);
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

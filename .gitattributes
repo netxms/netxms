@@ -44,12 +44,16 @@ src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
 src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
+src/console/win32/ObjectPreview.cpp -text
+src/console/win32/ObjectPreview.h -text
 src/console/win32/ObjectPropDlg.cpp -text
 src/console/win32/ObjectPropDlg.h -text
 src/console/win32/ProgressDialog.cpp -text
 src/console/win32/ProgressDialog.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
+src/console/win32/ToolBox.cpp -text
+src/console/win32/ToolBox.h -text
 src/console/win32/globals.cpp -text
 src/console/win32/globals.h -text
 src/console/win32/icons/Alarms.ICO -text

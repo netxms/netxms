@@ -11,8 +11,17 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-// CObjectBrowser
+
+//
+// Constants
+//
+
+#define PREVIEW_PANE_WIDTH    200
+
+
+//
+// CObjectBrowser implementation
+//
 
 IMPLEMENT_DYNCREATE(CObjectBrowser, CMDIChildWnd)
 
@@ -35,6 +44,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
+	ON_WM_GETMINMAXINFO()
+	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -54,8 +65,19 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
+   // Create preview pane
+   GetClientRect(&rect);
+   rect.right = PREVIEW_PANE_WIDTH;
+   m_wndPreviewPane.Create(WS_CHILD | ((g_dwFlags & AF_SHOW_OBJECT_PREVIEW) ? WS_VISIBLE : 0),
+                           rect, this, IDC_PREVIEW_PANE);
+
    // Create list view control
    GetClientRect(&rect);
+   if (g_dwFlags & AF_SHOW_OBJECT_PREVIEW)
+   {
+      rect.left = PREVIEW_PANE_WIDTH;
+      rect.right -= PREVIEW_PANE_WIDTH;
+   }
    m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
                         rect, this, IDC_TREE_VIEW);
 
@@ -82,7 +104,16 @@ void CObjectBrowser::OnSize(UINT nType, int cx, int cy)
 {
 	CMDIChildWnd::OnSize(nType, cx, cy);
 	
-   m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   if (g_dwFlags & AF_SHOW_OBJECT_PREVIEW)
+   {
+      m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, cy, SWP_NOZORDER);
+      m_wndTreeCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, cx - PREVIEW_PANE_WIDTH, 
+                                 cy, SWP_NOZORDER);
+   }
+   else
+   {
+      m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   }
 }
 
 
@@ -154,4 +185,43 @@ BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs)
 void CObjectBrowser::OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	*pResult = 0;
+}
+
+
+//
+// WM_GETMINMAXINFO message handler
+//
+
+void CObjectBrowser::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
+{
+	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
+   lpMMI->ptMinTrackSize.x = 300;
+   lpMMI->ptMinTrackSize.y = 100;
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_VIEW_SHOWPREVIEWPANE message handler
+//
+
+void CObjectBrowser::OnObjectViewShowpreviewpane() 
+{
+   RECT rect;
+
+   GetClientRect(&rect);
+
+   if (g_dwFlags & AF_SHOW_OBJECT_PREVIEW)
+   {
+      g_dwFlags &= ~AF_SHOW_OBJECT_PREVIEW;
+      m_wndPreviewPane.ShowWindow(SW_HIDE);
+      m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER);
+   }
+   else
+   {
+      g_dwFlags |= AF_SHOW_OBJECT_PREVIEW;
+      m_wndTreeCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, rect.right - PREVIEW_PANE_WIDTH,
+                                 rect.bottom, SWP_NOZORDER);
+      m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, rect.bottom, SWP_NOZORDER);
+      m_wndPreviewPane.ShowWindow(SW_SHOW);
+   }
 }

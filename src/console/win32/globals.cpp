@@ -41,3 +41,10 @@ char g_szPassword[MAX_PASSWORD_LEN] = "";
 
 char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED" };
 char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged" };
+
+
+//
+// Global flags
+//
+
+DWORD g_dwFlags = AF_SHOW_OBJECT_PREVIEW;
