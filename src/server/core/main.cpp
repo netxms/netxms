@@ -271,6 +271,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    // Setup unique identifiers table
    if (!InitIdTable())
       return FALSE;
+   DbgPrintf(AF_DEBUG_MISC, "ID table created");
 
    // Initialize mailer and SMS sender
    InitMailer();
@@ -282,6 +283,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
       WriteLog(MSG_ERROR_LOADING_USERS, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
    }
+   DbgPrintf(AF_DEBUG_MISC, "User accounts loaded");
 
    // Initialize objects infrastructure and load objects from database
    ObjectsInit();
