@@ -35,6 +35,8 @@ ClientSession::ClientSession(SOCKET hSocket)
    m_dwIndex = INVALID_INDEX;
    m_iState = STATE_CONNECTED;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   m_hCondWriteThreadStopped = ConditionCreate();
+   m_hCondProcessingThreadStopped = ConditionCreate();
 }
 
 
@@ -50,6 +52,8 @@ ClientSession::~ClientSession()
    delete m_pMessageQueue;
    if (m_pMsgBuffer != NULL)
       free(m_pMsgBuffer);
+   ConditionDestroy(m_hCondWriteThreadStopped);
+   ConditionDestroy(m_hCondProcessingThreadStopped);
 }
 
 
@@ -116,8 +120,12 @@ void ClientSession::ReadThread(void)
    free(pRawMsg);
 
    // Notify other threads to exit
-   m_pSendQueue->Put(NULL);
-   m_pMessageQueue->Put(NULL);
+   m_pSendQueue->Put(INVALID_POINTER_VALUE);
+   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+
+   // Wait for other threads to finish
+   ConditionWait(m_hCondWriteThreadStopped, INFINITE);
+   ConditionWait(m_hCondProcessingThreadStopped, INFINITE);
 }
 
 
@@ -132,7 +140,7 @@ void ClientSession::WriteThread(void)
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
-      if (pMsg == NULL)    // Session termination indicator
+      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
       if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
@@ -142,6 +150,7 @@ void ClientSession::WriteThread(void)
       }
       MemFree(pMsg);
    }
+   ConditionSet(m_hCondWriteThreadStopped);
 }
 
 
@@ -156,7 +165,7 @@ void ClientSession::ProcessingThread(void)
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
-      if (pMsg == NULL)    // Session termination indicator
+      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
       DebugPrintf("Received message with code %d\n", pMsg->GetCode());
@@ -206,6 +215,7 @@ void ClientSession::ProcessingThread(void)
       }
       delete pMsg;
    }
+   ConditionSet(m_hCondProcessingThreadStopped);
 }
 
 

@@ -26,6 +26,7 @@
 #endif   /* _WIN32 */
 
 void DumpUsers(void);
+void DumpSessions(void);
 
 
 //
@@ -347,6 +348,10 @@ void Main(void)
             case 'u':      // Dump users
             case 'U':
                DumpUsers();
+               break;
+            case 's':      // Dump sessions
+            case 'S':
+               DumpSessions();
                break;
             default:
                break;

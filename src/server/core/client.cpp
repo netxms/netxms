@@ -38,36 +38,6 @@ static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
 
 
 //
-// Client communication read thread
-//
-
-static void ReadThread(void *pArg)
-{
-   ((ClientSession *)pArg)->ReadThread();
-}
-
-
-//
-// Client communication write thread
-//
-
-static void WriteThread(void *pArg)
-{
-   ((ClientSession *)pArg)->WriteThread();
-}
-
-
-//
-// Received message processing thread
-//
-
-static void ProcessingThread(void *pArg)
-{
-   ((ClientSession *)pArg)->ProcessingThread();
-}
-
-
-//
 // Register new session in list
 //
 
@@ -95,6 +65,42 @@ static BOOL RegisterSession(ClientSession *pSession)
 static void UnregisterSession(DWORD dwIndex)
 {
    m_pSessionList[dwIndex] = NULL;
+}
+
+
+//
+// Client communication read thread
+//
+
+static void ReadThread(void *pArg)
+{
+   ((ClientSession *)pArg)->ReadThread();
+
+   // When ClientSession::ReadThread exits, all other session
+   // threads are already stopped, so we can safely destroy
+   // session object
+   UnregisterSession(((ClientSession *)pArg)->GetIndex());
+   delete (ClientSession *)pArg;
+}
+
+
+//
+// Client communication write thread
+//
+
+static void WriteThread(void *pArg)
+{
+   ((ClientSession *)pArg)->WriteThread();
+}
+
+
+//
+// Received message processing thread
+//
+
+static void ProcessingThread(void *pArg)
+{
+   ((ClientSession *)pArg)->ProcessingThread();
 }
 
 
@@ -178,4 +184,18 @@ void ClientListener(void *)
    }
 
    closesocket(sock);
+}
+
+
+//
+// Dump client sessions to screen
+//
+
+void DumpSessions(void)
+{
+   int i;
+
+   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] != NULL)
+         printf("%d\n", i);
 }

@@ -177,6 +177,8 @@ private:
    DWORD m_dwUserId;
    DWORD m_dwSystemAccess;    // User's system access rights
    CSCP_BUFFER *m_pMsgBuffer;
+   CONDITION m_hCondWriteThreadStopped;
+   CONDITION m_hCondProcessingThreadStopped;
 
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
