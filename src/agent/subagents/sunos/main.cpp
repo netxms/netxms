@@ -33,6 +33,7 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue);
 LONG H_KStat(char *pszParam, char *pArg, char *pValue);
 LONG H_LoadAvg(char *pszParam, char *pArg, char *pValue);
+LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
 LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue);
 LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue);
@@ -117,6 +118,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
    { "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, "Host name" },
    { "System.KStat(*)", H_KStat, NULL, DCI_DT_STRING, "" },
+	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
+	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
+	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Used physical memory" },
+   { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, "Free swap space" },
+   { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, "Total amount of swap space" },
+   { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, "Used swap space" },
    { "System.ProcessCount", H_SysProcCount, NULL, DCI_DT_INT, "Total number of processes" },
    { "System.Uname", H_Uname, NULL, DCI_DT_STRING, "System uname" },
    { "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, "System uptime" }

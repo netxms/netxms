@@ -193,7 +193,8 @@ LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
 // Handler for generic kstat parameter
 //
 
-LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName, char *pszStat, char *pValue)
+LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
+                    char *pszStat, char *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -244,6 +245,28 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName, char *pszSta
 			}
 		}
 		kstat_close(kc);
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for System.CPU.Count
+//
+
+LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+{
+	LONG nRet = SYSINFO_RC_SUCCESS;
+
+	switch((int)pArg)
+	{
+		case MEMINFO_PHYSICAL_TOTAL:
+			ret_uint64(pValue, (QWORD)sysconf(_SC_PAGESIZE) * (QWORD)sysconf(_SC_PHYS_PAGES));
+			break;
+		default:
+			nRet = SYSINFO_RC_UNSUPPORTED;
+			break;
 	}
 
 	return nRet;
