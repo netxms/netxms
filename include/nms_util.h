@@ -46,6 +46,7 @@
 #define INVALID_INDEX         0xFFFFFFFF
 #define CSCP_TEMP_BUF_SIZE    4096
 #define MD5_DIGEST_SIZE       16
+#define SHA1_DIGEST_SIZE      20
 
 
 //
