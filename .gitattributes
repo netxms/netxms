@@ -449,6 +449,7 @@ src/libnxcl/misc.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
+src/libnxcl/webapi.cpp -text
 src/libnxsnmp/Makefile.am -text
 src/libnxsnmp/ber.cpp -text
 src/libnxsnmp/libnxsnmp.dsp -text

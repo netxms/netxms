@@ -155,6 +155,10 @@ SOURCE=.\snmptrap.cpp
 
 SOURCE=.\users.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\webapi.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -162,6 +166,10 @@ SOURCE=.\users.cpp
 # Begin Source File
 
 SOURCE=.\libnxcl.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\include\netxms-version.h"
 # End Source File
 # Begin Source File
 

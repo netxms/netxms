@@ -166,7 +166,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_pUpdateQueue = new Queue;
    m_hSocket = hSocket;
    m_dwIndex = INVALID_INDEX;
-   m_iState = STATE_CONNECTED;
+   m_iState = SESSION_STATE_INIT;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
@@ -415,7 +415,7 @@ void ClientSession::ProcessingThread(void)
 {
    CSCPMessage *pMsg;
    char szBuffer[128];
-   DWORD i, dwCode;
+   DWORD i;
 
    while(1)
    {
@@ -424,15 +424,16 @@ void ClientSession::ProcessingThread(void)
          break;
 
       DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
-      if ((m_iState != STATE_AUTHENTICATED) && 
+      if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (pMsg->GetCode() != CMD_LOGIN) && (pMsg->GetCode() != CMD_GET_SERVER_INFO))
       {
          delete pMsg;
          continue;
       }
 
-      dwCode = pMsg->GetCode();
-      switch(dwCode)
+      m_wCurrentCmd = pMsg->GetCode();
+      m_iState = SESSION_STATE_PROCESSING;
+      switch(m_wCurrentCmd)
       {
          case CMD_LOGIN:
             Login(pMsg);
@@ -618,7 +619,7 @@ void ClientSession::ProcessingThread(void)
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
-               if (g_pModuleList[i].pfCommandHandler(dwCode, pMsg, this))
+               if (g_pModuleList[i].pfCommandHandler(m_wCurrentCmd, pMsg, this))
                   break;   // Message was processed by the module
             if (i == g_dwNumModules)
             {
@@ -632,6 +633,7 @@ void ClientSession::ProcessingThread(void)
             break;
       }
       delete pMsg;
+      m_iState = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    }
 }
 
@@ -672,7 +674,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
    msg.SetCode(CMD_LOGIN_RESP);
    msg.SetId(pRequest->GetId());
 
-   if (m_iState != STATE_AUTHENTICATED)
+   if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
       
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
@@ -680,7 +682,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
 
       if (AuthenticateUser(szLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
       {
-         m_iState = STATE_AUTHENTICATED;
+         m_dwFlags |= CSF_AUTHENTICATED;
          sprintf(m_szUserName, "%s@%s", szLogin, IpToStr(m_dwHostAddr, szBuffer));
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          DebugPrintf("User %s authenticated\n", m_szUserName);
@@ -1167,7 +1169,7 @@ void ClientSession::OnNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
 
-   if (m_iState == STATE_AUTHENTICATED)
+   if (IsAuthenticated())
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_EVENT;
@@ -1186,7 +1188,7 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 {
    UPDATE_INFO *pUpdate;
 
-   if (m_iState == STATE_AUTHENTICATED)
+   if (IsAuthenticated())
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
@@ -1517,7 +1519,7 @@ void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, N
 {
    CSCPMessage msg;
 
-   if (m_iState == STATE_AUTHENTICATED)
+   if (IsAuthenticated())
    {
       msg.SetCode(CMD_USER_DB_UPDATE);
       msg.SetId(0);
@@ -2660,7 +2662,7 @@ void ClientSession::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
    UPDATE_INFO *pUpdate;
    NetObj *pObject;
 
-   if (m_iState == STATE_AUTHENTICATED)
+   if (IsAuthenticated())
    {
       pObject = FindObjectById(pAlarm->dwSourceObject);
       if (pObject != NULL)
@@ -2903,7 +2905,7 @@ void ClientSession::OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
 {
    UPDATE_INFO *pUpdate;
 
-   if (m_iState == STATE_AUTHENTICATED)
+   if (IsAuthenticated())
    {
       if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
       {

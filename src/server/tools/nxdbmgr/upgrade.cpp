@@ -61,6 +61,7 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 static BOOL H_UpgradeFromV17(void)
 {
    static TCHAR m_szBatch[] =
+      "ALTER TABLE nodes DROP COLUMN inherit_access_rights\n"
       "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
          "message,description) SELECT event_id,name,severity,flags,"
          "message,description FROM events\n"

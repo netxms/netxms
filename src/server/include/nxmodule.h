@@ -35,7 +35,8 @@ class ClientSession;
 // Module flags
 //
 
-#define MODFLAG_DISABLED   0x0001
+#define MODFLAG_DISABLED               0x0001
+#define MODFLAG_ACCEPT_ALL_COMMANDS    0x0002
 
 
 //

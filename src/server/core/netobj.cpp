@@ -450,7 +450,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 
 static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
 {
-   if (pSession->GetState() == STATE_AUTHENTICATED)
+   if (pSession->IsAuthenticated())
       pSession->OnObjectChange((NetObj *)pArg);
 }
 

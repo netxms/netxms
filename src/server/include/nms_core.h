@@ -172,6 +172,16 @@ typedef void * HSNMPSESSION;
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
 #define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
+#define CSF_AUTHENTICATED        ((DWORD)0x0080)
+
+
+//
+// Client session states
+//
+
+#define SESSION_STATE_INIT       0
+#define SESSION_STATE_IDLE       1
+#define SESSION_STATE_PROCESSING 2
 
 
 //
@@ -218,6 +228,7 @@ private:
    Queue *m_pUpdateQueue;
    DWORD m_dwIndex;
    int m_iState;
+   WORD m_wCurrentCmd;
    DWORD m_dwUserId;
    DWORD m_dwSystemAccess;    // User's system access rights
    DWORD m_dwFlags;           // Session flags
@@ -322,6 +333,8 @@ public:
    int GetState(void) { return m_iState; }
    const char *GetUserName(void) { return m_szUserName; }
    DWORD GetUserId(void) { return m_dwUserId; }
+   BOOL IsAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
+   WORD GetCurrentCmd(void) { return m_wCurrentCmd; }
 
    void Kill(void);
    void Notify(DWORD dwCode, DWORD dwData = 0);

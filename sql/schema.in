@@ -10,7 +10,7 @@ CREATE TABLE config
 	is_visible integer DEFAULT 1,
 	need_server_restart integer DEFAULT 0,
 	PRIMARY KEY(var_name)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -26,7 +26,7 @@ CREATE TABLE modules
 	description SQL_TEXT,
 	license_key varchar(255),
 	PRIMARY KEY(module_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -43,7 +43,7 @@ CREATE TABLE users
 	full_name varchar(127),
 	description varchar(255),
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -58,7 +58,7 @@ CREATE TABLE user_groups
 	flags integer,
 	description varchar(255),
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -70,7 +70,7 @@ CREATE TABLE user_group_members
 	group_id integer not null,
 	user_id integer not null,
 	PRIMARY KEY(group_id,user_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -83,7 +83,7 @@ CREATE TABLE new_nodes
 	ip_addr varchar(15) not null,
 	ip_netmask varchar(15) not null,
 	discovery_flags integer not null
-);
+) TABLE_TYPE;
 
 
 /*
@@ -110,12 +110,11 @@ CREATE TABLE nodes
 	secret varchar(64),
 	agent_port integer,
 	status_poll_type integer,
-	inherit_access_rights integer,
 	image_id integer,
 	description SQL_TEXT,
 	node_type integer,
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -132,7 +131,7 @@ CREATE TABLE subnets
 	ip_netmask varchar(15),
 	image_id integer,
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -153,7 +152,7 @@ CREATE TABLE interfaces
 	image_id integer,
 	mac_addr varchar(15),
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -171,7 +170,7 @@ CREATE TABLE containers
 	image_id integer,
 	object_class integer not null,
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -187,7 +186,7 @@ CREATE TABLE templates
 	version integer,
 	description SQL_TEXT,
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -199,7 +198,7 @@ CREATE TABLE dct_node_map
 	template_id integer not null,
 	node_id integer not null,
 	PRIMARY KEY(template_id,node_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -211,7 +210,7 @@ CREATE TABLE nsmap
 	subnet_id integer not null,
 	node_id integer not null,
 	PRIMARY KEY(subnet_id,node_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -223,7 +222,7 @@ CREATE TABLE container_members
 	container_id integer not null,
 	object_id integer not null,
 	PRIMARY KEY(container_id,object_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -237,7 +236,7 @@ CREATE TABLE container_categories
 	image_id integer not null,
 	description SQL_TEXT,
 	PRIMARY KEY(category)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -250,7 +249,7 @@ CREATE TABLE acl
 	user_id integer not null,
 	access_rights integer not null,
 	PRIMARY KEY(object_id,user_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -262,7 +261,7 @@ CREATE TABLE access_options
 	object_id integer not null,
 	inherit_rights integer not null,
 	PRIMARY KEY(object_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -292,7 +291,7 @@ CREATE TABLE items
 	transformation SQL_TEXT,	// Transformation formula
 	instance varchar(255),		// Free form text which can be used in events
 	PRIMARY KEY(item_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -308,7 +307,7 @@ CREATE TABLE event_cfg
 	message varchar(255),		// Message template
 	description SQL_TEXT,
 	PRIMARY KEY(event_code)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -326,7 +325,7 @@ CREATE TABLE event_log
 	root_event_id SQL_INT64 default 0,	
 		/* Non-zero if current event correlates to some other event */
 	PRIMARY KEY(event_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -349,7 +348,7 @@ CREATE TABLE actions
 	// action name with optional arguments for remote execution actions
 	action_data SQL_TEXT not null,
 	PRIMARY KEY(action_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -362,7 +361,7 @@ CREATE TABLE event_groups
 	name varchar(63),
 	description varchar(255),
 	PRIMARY KEY(id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -374,7 +373,7 @@ CREATE TABLE event_group_members
 	group_id integer not null,
 	event_code integer not null,
 	PRIMARY KEY(group_id,event_code)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -391,28 +390,28 @@ CREATE TABLE event_policy
 	alarm_key varchar(255),	    // Alarm key (used for auto acknowlegment)
 	alarm_ack_key varchar(255), // Acknowlege all alarms with given key
 	PRIMARY KEY(rule_id)
-);
+) TABLE_TYPE;
 
 CREATE TABLE policy_source_list
 (
 	rule_id integer not null,
 	object_id integer not null,
 	PRIMARY KEY(rule_id,object_id)
-);
+) TABLE_TYPE;
 
 CREATE TABLE policy_event_list
 (
 	rule_id integer not null,
 	event_code integer not null,
 	PRIMARY KEY(rule_id,event_code)
-);
+) TABLE_TYPE;
 
 CREATE TABLE policy_action_list
 (
 	rule_id integer not null,
 	action_id integer not null,
 	PRIMARY KEY(rule_id,action_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -427,7 +426,7 @@ CREATE TABLE deleted_objects
 	ip_addr varchar(15),
 	ip_netmask varchar(15),
 	PRIMARY KEY(object_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -447,7 +446,7 @@ CREATE TABLE thresholds
 	parameter_2 integer,
 	event_code integer,
 	PRIMARY KEY(threshold_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -467,7 +466,7 @@ CREATE TABLE alarms
 	is_ack integer,		// TRUE if alarm is acknowleged
 	ack_by integer,         // ID of user who acknowleges alarm
 	PRIMARY KEY(alarm_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -481,7 +480,7 @@ CREATE TABLE alarm_notes
 	alarm_note_timestamp integer,
 	note_text SQL_TEXT,
 	PRIMARY KEY(note_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -497,7 +496,7 @@ CREATE TABLE images
 	file_name_ico varchar(255),
 	file_hash_ico varchar(32),
 	PRIMARY KEY(image_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -509,7 +508,7 @@ CREATE TABLE default_images
 	object_class integer not null,
 	image_id integer not null,
 	PRIMARY KEY(object_class)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -523,7 +522,7 @@ CREATE TABLE oid_to_type
 	node_type integer not null,
 	node_flags integer not null,
 	PRIMARY KEY(pair_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -537,7 +536,7 @@ CREATE TABLE snmp_trap_cfg
 	event_code integer not null,
 	description varchar(255),
 	PRIMARY KEY(trap_id)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -551,7 +550,7 @@ CREATE TABLE snmp_trap_pmap
 	snmp_oid varchar(255),
 	description varchar(255),
 	PRIMARY KEY(trap_id,parameter)
-);
+) TABLE_TYPE;
 
 
 /*
@@ -565,4 +564,4 @@ CREATE TABLE agent_pkg
 	platform varchar(63),
 	pkg_file varchar(255),
 	PRIMARY KEY(pkg_id)	
-);
+) TABLE_TYPE;

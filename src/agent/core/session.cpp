@@ -130,6 +130,7 @@ void CommSession::ReadThread(void)
    CSCPMessage *pMsg;
    int iErr;
    char szBuffer[32];
+   WORD wFlags;
 
    // Initialize raw message receiving function
    RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0);
@@ -151,9 +152,23 @@ void CommSession::ReadThread(void)
          continue;   // Bad packet, wait for next
       }
 
-      // Create message object from raw message
-      pMsg = new CSCPMessage(pRawMsg);
-      m_pMessageQueue->Put(pMsg);
+      wFlags = ntohs(pRawMsg->wFlags);
+      if (wFlags & MF_BINARY)
+      {
+         // Convert message header to host format
+         pRawMsg->dwId = ntohl(pRawMsg->dwId);
+         pRawMsg->wCode = ntohs(pRawMsg->wCode);
+         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         if (pRawMsg->wCode == CMD_FILE_DATA)
+         {
+         }
+      }
+      else
+      {
+         // Create message object from raw message
+         pMsg = new CSCPMessage(pRawMsg);
+         m_pMessageQueue->Put(pMsg);
+      }
    }
    if (iErr < 0)
       WriteLog(MSG_SESSION_BROKEN, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
