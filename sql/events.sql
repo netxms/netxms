@@ -68,8 +68,8 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		7, 0, 1,
-		'Node status changed to INFO',
-		'Generated when node status changed to informational.\n'
+		'Node status changed to MINOR',
+		'Generated when node status changed to "Minor Problem" (informational).\n'
 		'Parameters:\n'
 		'   1) Previous node status'
 	);
@@ -77,15 +77,15 @@ INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		8, 0, 1,
 		'Node status changed to WARNING',
-		'Generated when node status changed to warning.\n'
+		'Generated when node status changed to "Warning".\n'
 		'Parameters:\n'
 		'   1) Previous node status'
 	);
 INSERT INTO events (id,severity,flags,message,description) VALUES
 	(
 		9, 0, 1,
-		'Node status changed to ERROR',
-		'Generated when node status changed to error.\n'
+		'Node status changed to MAJOR',
+		'Generated when node status changed to "Major Problem".\n'
 		'Parameters:\n'
 		'   1) Previous node status'
 	);
