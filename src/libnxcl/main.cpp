@@ -25,12 +25,48 @@
 
 
 //
+// Externals
+//
+
+void RequestProcessor(void *pArg);
+
+
+//
+// Global variables
+//
+
+NXC_EVENT_HANDLER g_pEventHandler = NULL;
+DWORD g_dwState = STATE_IDLE;
+
+
+//
+// Initialization function
+//
+
+BOOL EXPORTABLE NXCInitialize(void)
+{
+   ThreadCreate(RequestProcessor, 0, NULL);
+   return TRUE;
+}
+
+
+//
 // Get library version
 //
 
-DWORD EXPORTABLE NXC_GetVersion(void)
+DWORD EXPORTABLE NXCGetVersion(void)
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_RELEASE;
+}
+
+
+//
+// Set event handler
+//
+
+void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler)
+{
+   g_pEventHandler = pHandler;
 }
 
 

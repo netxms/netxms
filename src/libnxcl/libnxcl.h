@@ -33,5 +33,27 @@
 #endif   /* _WIN32 */
 
 #include <nms_common.h>
+#include <nxclapi.h>
+#include <nms_util.h>
+#include <nms_threads.h>
+
+
+//
+// Global variables
+//
+
+extern NXC_EVENT_HANDLER g_pEventHandler;
+extern DWORD g_dwState;
+
+
+//
+// Call client's event handler
+//
+
+inline void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   if (g_pEventHandler != NULL)
+      g_pEventHandler(dwEvent, dwCode, pArg);
+}
 
 #endif   /* _libnxcl_h_ */
