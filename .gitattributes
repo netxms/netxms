@@ -114,6 +114,7 @@ src/agent/core/session.cpp -text
 src/agent/core/subagent.cpp -text
 src/agent/core/sysinfo.cpp -text
 src/agent/core/tools.cpp -text
+src/agent/core/upgrade.cpp -text
 src/agent/core/win32.cpp -text
 src/agent/subagents/Makefile.am -text
 src/agent/subagents/freebsd/Makefile.am -text

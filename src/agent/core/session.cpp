@@ -297,6 +297,8 @@ void CommSession::ProcessingThread(void)
             case CMD_TRANSFER_FILE:
                RecvFile(pMsg, &msg);
                break;
+            case CMD_UPGRADE_AGENT:
+               break;
             default:
                msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;

@@ -43,7 +43,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDhIRsSv"
+#define VALID_OPTIONS   "c:CdDEhIRsSUv"
 #elif defined(_NETWARE)
 #define VALID_OPTIONS   "c:CDhv"
 #else
@@ -55,13 +55,15 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 // Actions
 //
 
-#define ACTION_NONE              0
-#define ACTION_RUN_AGENT         1
-#define ACTION_INSTALL_SERVICE   2
-#define ACTION_REMOVE_SERVICE    3
-#define ACTION_START_SERVICE     4
-#define ACTION_STOP_SERVICE      5
-#define ACTION_CHECK_CONFIG      6
+#define ACTION_NONE                    0
+#define ACTION_RUN_AGENT               1
+#define ACTION_INSTALL_SERVICE         2
+#define ACTION_REMOVE_SERVICE          3
+#define ACTION_START_SERVICE           4
+#define ACTION_STOP_SERVICE            5
+#define ACTION_CHECK_CONFIG            6
+#define ACTION_INSTALL_EVENT_SOURCE    7
+#define ACTION_REMOVE_EVENT_SOURCE     8
 
 
 //
@@ -531,6 +533,12 @@ int main(int argc, char *argv[])
          case 'S':   // Stop Windows service
             iAction = ACTION_STOP_SERVICE;
             break;
+         case 'E':   // Install Windows event source
+            iAction = ACTION_INSTALL_EVENT_SOURCE;
+            break;
+         case 'U':   // Remove Windows event source
+            iAction = ACTION_REMOVE_EVENT_SOURCE;
+            break;
 #endif
          case '?':
             iAction = ACTION_NONE;
@@ -627,6 +635,13 @@ int main(int argc, char *argv[])
          break;
       case ACTION_REMOVE_SERVICE:
          RemoveService();
+         break;
+      case ACTION_INSTALL_EVENT_SOURCE:
+         GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
+         InstallEventSource(szModuleName);
+         break;
+      case ACTION_REMOVE_EVENT_SOURCE:
+         RemoveEventSource();
          break;
       case ACTION_START_SERVICE:
          StartAgentService();

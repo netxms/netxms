@@ -48,7 +48,7 @@
 #ifdef _DEBUG
 #define DEBUG_SUFFIX          "-debug"
 #else
-#define DEBUG_SUFFIX
+#define DEBUG_SUFFIX          ""
 #endif
 #define AGENT_VERSION_STRING  NETXMS_VERSION_STRING DEBUG_SUFFIX
 
@@ -291,6 +291,8 @@ BOOL AddActionFromConfig(char *pszLine);
 DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 
 DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
+
+DWORD UpgradeAgent(TCHAR *pszPkgFile);
 
 #ifdef _WIN32
 
