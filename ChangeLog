@@ -8,6 +8,8 @@
 - Added support for NAT'ed nodes (correct interface polling, etc.)
 - Backslash (\) character is no longer works as escape character
   inside parameter arguments enclosed in quotes
+- Windows console: object tree works correctly for users without rights
+  on root objects
 
 
 *
