@@ -149,6 +149,12 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    BOOL bSuccess = FALSE;
    AgentConnection *pAgentConn;
    char *pszErrorMsg = "";
+   DWORD dwMaxWait;
+
+   // Read configuration
+   dwMaxWait = ConfigReadULong("AgentUpgradeWaitTime", 600);
+   if (dwMaxWait % 20 != 0)
+      dwMaxWait += 20 - (dwMaxWait % 20);
 
    // Prepare notification message
    msg.SetCode(CMD_INSTALLER_INFO);
@@ -221,7 +227,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 
                   // Wait for agent's restart
                   ThreadSleep(20);
-                  for(i = 20; i < 120; i += 20)
+                  for(i = 20; i < dwMaxWait; i += 20)
                   {
                      ThreadSleep(20);
                      if (pAgentConn->Connect())
