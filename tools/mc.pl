@@ -1,6 +1,6 @@
 #!c:/apps/perl/bin/pelr -w
 
-# $Id: mc.pl,v 1.2 2004-04-26 14:51:00 victor Exp $
+# $Id: mc.pl,v 1.3 2004-04-30 11:21:14 victor Exp $
 
 ###############################################################################
 #
@@ -89,7 +89,7 @@ while(<IN>) {
 			if ($type =~ /^(WORD|short)$/i) {
 				$size = 4;
 			}
-			printf OUTH ("#define %-30s (($type)%0" . $size . "x)\n\n", $symbolicName, $messageId);
+			printf OUTH ("#define %-30s (($type)0x%0" . $size . "x)\n\n", $symbolicName, $messageId);
 			last;
 		}
 	}
