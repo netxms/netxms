@@ -61,6 +61,8 @@
 
 #define UF_MODIFIED                 0x0001
 #define UF_DELETED                  0x0002
+#define UF_DISABLED                 0x0004
+#define UF_CHANGE_PASSWORD          0x0008
 
 
 //
@@ -98,7 +100,7 @@ typedef struct
 
 typedef struct
 {
-   DWORD dwObjectId;
+   DWORD dwUserId;
    DWORD dwAccessRights;
 } ACL_ELEMENT;
 
@@ -122,10 +124,13 @@ public:
    ~AccessList();
 
    BOOL GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights);
-   void AddElement(DWORD dwObjectId, DWORD dwAccessRights);
-   void DeleteElement(DWORD dwObjectId);
+   void AddElement(DWORD dwUserId, DWORD dwAccessRights);
+   void DeleteElement(DWORD dwUserId);
+   void DeleteAll(void);
 
    void EnumerateElements(void (* pHandler)(DWORD, DWORD, void *), void *pArg);
+
+   void CreateMessage(CSCPMessage *pMsg);
 };
 
 

@@ -398,6 +398,8 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
       pMsg->SetVariable(dwId, m_pParentList[i]->Id());
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pChildList[i]->Id());
+   pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
+   m_pAccessList->CreateMessage(pMsg);
 }
 
 
@@ -422,4 +424,80 @@ void NetObj::Modify(void)
 
    // Send event to all connected clients
    EnumerateClientSessions(BroadcastObjectChange, this);
+}
+
+
+//
+// Modify object from message
+//
+
+DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      Lock();
+
+   // Change object's name
+   if (pRequest->IsVariableExist(VID_OBJECT_NAME))
+      pRequest->GetVariableStr(VID_OBJECT_NAME, m_szName, MAX_OBJECT_NAME);
+
+   // Change object's ACL
+   if (pRequest->IsVariableExist(VID_ACL_SIZE))
+   {
+      DWORD i, dwNumElements;
+
+      dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
+      m_bInheritAccessRights = pRequest->GetVariableShort(VID_INHERIT_RIGHTS);
+      m_pAccessList->DeleteAll();
+      for(i = 0; i < dwNumElements; i++)
+         m_pAccessList->AddElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
+                                   pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
+   }
+
+   Unlock();
+   Modify();
+
+   return RCC_SUCCESS;
+}
+
+
+//
+// Get rights to object for specific user
+//
+
+DWORD NetObj::GetUserRights(DWORD dwUserId)
+{
+   DWORD dwRights;
+
+   // Admin always has all rights to any object
+   if (dwUserId == 0)
+      return 0xFFFFFFFF;
+
+   Lock();
+
+   // Check if have direct right assignment
+   if (!m_pAccessList->GetUserRights(dwUserId, &dwRights))
+   {
+      // We don't. If this object inherit rights from parents, get them
+      if (m_bInheritAccessRights)
+      {
+         DWORD i;
+
+         for(i = 0, dwRights = 0; i < m_dwParentCount; i++)
+            dwRights |= m_pParentList[i]->GetUserRights(dwUserId);
+      }
+   }
+
+   Unlock();
+   return dwRights;
+}
+
+
+//
+// Check if given user has specific rights on this object
+//
+
+BOOL NetObj::CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights)
+{
+   DWORD dwRights = GetUserRights(dwUserId);
+   return (dwRights & dwRequiredRights) == dwRequiredRights;
 }

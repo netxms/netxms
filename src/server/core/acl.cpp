@@ -41,8 +41,7 @@ AccessList::AccessList()
 
 AccessList::~AccessList()
 {
-   if (m_pElements != NULL)
-      free(m_pElements);
+   safe_free(m_pElements);
    MutexDestroy(m_hMutex);
 }
 
@@ -51,13 +50,13 @@ AccessList::~AccessList()
 // Add element to list
 //
 
-void AccessList::AddElement(DWORD dwObjectId, DWORD dwAccessRights)
+void AccessList::AddElement(DWORD dwUserId, DWORD dwAccessRights)
 {
    DWORD i;
 
    Lock();
    for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].dwObjectId == dwObjectId)    // Object already exist in list
+      if (m_pElements[i].dwUserId == dwUserId)    // Object already exist in list
       {
          m_pElements[i].dwAccessRights = dwAccessRights;
          break;
@@ -66,7 +65,7 @@ void AccessList::AddElement(DWORD dwObjectId, DWORD dwAccessRights)
    if (i == m_dwNumElements)
    {
       m_pElements = (ACL_ELEMENT *)realloc(m_pElements, sizeof(ACL_ELEMENT) * (m_dwNumElements + 1));
-      m_pElements[m_dwNumElements].dwObjectId = dwObjectId;
+      m_pElements[m_dwNumElements].dwUserId = dwUserId;
       m_pElements[m_dwNumElements].dwAccessRights = dwAccessRights;
       m_dwNumElements++;
    }
@@ -78,13 +77,13 @@ void AccessList::AddElement(DWORD dwObjectId, DWORD dwAccessRights)
 // Delete element from list
 //
 
-void AccessList::DeleteElement(DWORD dwObjectId)
+void AccessList::DeleteElement(DWORD dwUserId)
 {
    DWORD i;
 
    Lock();
    for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].dwObjectId == dwObjectId)
+      if (m_pElements[i].dwUserId == dwUserId)
       {
          m_dwNumElements--;
          memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(ACL_ELEMENT) * (m_dwNumElements - i));
@@ -107,7 +106,7 @@ BOOL AccessList::GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
 
    // Check for explicit rights
    for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].dwObjectId == dwUserId)
+      if (m_pElements[i].dwUserId == dwUserId)
       {
          *pdwAccessRights = m_pElements[i].dwAccessRights;
          bFound = TRUE;
@@ -118,9 +117,9 @@ BOOL AccessList::GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
    {
       *pdwAccessRights = 0;   // Default: no access
       for(i = 0; i < m_dwNumElements; i++)
-         if (m_pElements[i].dwObjectId & GROUP_FLAG)
+         if (m_pElements[i].dwUserId & GROUP_FLAG)
          {
-            if (CheckUserMembership(dwUserId, m_pElements[i].dwObjectId))
+            if (CheckUserMembership(dwUserId, m_pElements[i].dwUserId))
             {
                *pdwAccessRights |= m_pElements[i].dwAccessRights;
                bFound = TRUE;
@@ -142,6 +141,40 @@ void AccessList::EnumerateElements(void (* pHandler)(DWORD, DWORD, void *), void
 
    Lock();
    for(i = 0; i < m_dwNumElements; i++)
-      pHandler(m_pElements[i].dwObjectId, m_pElements[i].dwAccessRights, pArg);
+      pHandler(m_pElements[i].dwUserId, m_pElements[i].dwAccessRights, pArg);
+   Unlock();
+}
+
+
+//
+// Fill CSCP message with ACL's data
+//
+
+void AccessList::CreateMessage(CSCPMessage *pMsg)
+{
+   DWORD i, dwId1, dwId2;
+
+   Lock();
+   pMsg->SetVariable(VID_ACL_SIZE, m_dwNumElements);
+   for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;
+       i < m_dwNumElements; i++, dwId1++, dwId2++)
+   {
+      pMsg->SetVariable(dwId1, m_pElements[i].dwUserId);
+      pMsg->SetVariable(dwId2, m_pElements[i].dwAccessRights);
+   }
+   Unlock();
+}
+
+
+//
+// Delete all elements
+//
+
+void AccessList::DeleteAll(void)
+{
+   Lock();
+   m_dwNumElements = 0;
+   safe_free(m_pElements);
+   m_pElements = NULL;
    Unlock();
 }

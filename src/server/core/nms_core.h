@@ -270,6 +270,7 @@ private:
    void SetConfigVariable(CSCPMessage *pMsg);
    void SendEventDB(DWORD dwRqId);
    void SetEventInfo(CSCPMessage *pMsg);
+   void ModifyObject(CSCPMessage *pMsg);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

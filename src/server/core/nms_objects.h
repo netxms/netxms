@@ -205,6 +205,10 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   DWORD GetUserRights(DWORD dwUserId);
+   BOOL CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
 
    // Debug methods
    const char *ParentList(char *szBuffer);
@@ -328,6 +332,7 @@ public:
    void QueueItemsForPolling(Queue *pPollerQueue);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 

@@ -255,6 +255,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_SET_EVENT_INFO:
             SetEventInfo(pMsg);
             break;
+         case CMD_MODIFY_OBJECT:
+            ModifyObject(pMsg);
+            break;
          default:
             break;
       }
@@ -340,11 +343,12 @@ void ClientSession::SendAllObjects(void)
    // Send objects, one per message
    ObjectsGlobalLock();
    for(i = 0; i < g_dwIdIndexSize; i++)
-   {
-      g_pIndexById[i].pObject->CreateMessage(&msg);
-      SendMessage(&msg);
-      msg.DeleteAllVariables();
-   }
+      if (g_pIndexById[i].pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         g_pIndexById[i].pObject->CreateMessage(&msg);
+         SendMessage(&msg);
+         msg.DeleteAllVariables();
+      }
    ObjectsGlobalUnlock();
 
    // Send end of list notification
@@ -475,11 +479,14 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 {
    UPDATE_INFO *pUpdate;
 
-   pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-   pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
-   pUpdate->pData = pObject;
-   m_pUpdateQueue->Put(pUpdate);
-   pObject->IncRefCount();
+   if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+   {
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
+      pUpdate->pData = pObject;
+      m_pUpdateQueue->Put(pUpdate);
+      pObject->IncRefCount();
+   }
 }
 
 
@@ -608,6 +615,44 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
       }
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Modify object
+//
+
+void ClientSession::ModifyObject(CSCPMessage *pRequest)
+{
+   DWORD dwObjectId, dwResult;
+   NetObj *pObject;
+   CSCPMessage msg;
+
+   // Prepare reply message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         dwResult = pObject->ModifyFromMessage(pRequest);
+         msg.SetVariable(VID_RCC, dwResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send responce

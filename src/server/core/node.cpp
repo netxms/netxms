@@ -871,3 +871,32 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_COMMUNITY_STRING, m_szCommunityString);
    pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
 }
+
+
+//
+// Modify object from message
+//
+
+DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      Lock();
+
+   // Change listen port of native agent
+   if (pRequest->IsVariableExist(VID_AGENT_PORT))
+      m_wAgentPort = pRequest->GetVariableShort(VID_AGENT_PORT);
+
+   // Change authentication method of native agent
+   if (pRequest->IsVariableExist(VID_AUTH_METHOD))
+      m_wAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
+
+   // Change shared secret of native agent
+   if (pRequest->IsVariableExist(VID_SHARED_SECRET))
+      pRequest->GetVariableStr(VID_SHARED_SECRET, m_szSharedSecret, MAX_SECRET_LENGTH);
+
+   // Change SNMP community string
+   if (pRequest->IsVariableExist(VID_COMMUNITY_STRING))
+      pRequest->GetVariableStr(VID_COMMUNITY_STRING, m_szCommunityString, MAX_COMMUNITY_LENGTH);
+
+   return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
