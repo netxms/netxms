@@ -315,7 +315,9 @@
 #define IDC_CB_BACKGROUND               1211
 #define IDC_CB_AXIS                     1212
 #define IDC_CB_GRID                     1213
+#define IDC_STATIC_WARNING_ICON         1213
 #define IDC_CB_TEXT                     1214
+#define IDC_STATIC_WARNING_TEXT         1214
 #define IDC_CB_LABELBK                  1215
 #define IDC_CB_LABEL                    1216
 #define IDC_CB_ITEM1                    1217
@@ -438,8 +440,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        252
-#define _APS_NEXT_COMMAND_VALUE         32911
-#define _APS_NEXT_CONTROL_VALUE         1213
+#define _APS_NEXT_COMMAND_VALUE         32912
+#define _APS_NEXT_CONTROL_VALUE         1215
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

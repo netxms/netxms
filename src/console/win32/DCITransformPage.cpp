@@ -57,6 +57,7 @@ void CDCITransformPage::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDCITransformPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCITransformPage)
+	ON_CBN_SELCHANGE(IDC_COMBO_DELTA, OnSelchangeComboDelta)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -73,6 +74,53 @@ BOOL CDCITransformPage::OnInitDialog()
    for(i = 0; m_pszMethodList[i] != NULL; i++)
       m_wndDeltaList.AddString(m_pszMethodList[i]);
    m_wndDeltaList.SelectString(-1, m_pszMethodList[m_iDeltaProc]);
-	
+
+   EnableWarning();
 	return TRUE;
+}
+
+
+//
+// Show or hide warning message
+//
+
+void CDCITransformPage::EnableWarning(void)
+{
+   TCHAR szBuffer[256];
+   int nShow;
+
+   // Get current polling interval from "Collection" page
+   ((CPropertySheet *)GetParent())->GetPage(0)->GetDlgItemText(IDC_EDIT_INTERVAL, szBuffer, 256);
+
+   // Enable or disable warning message
+   nShow = ((m_iDeltaProc == DCM_AVERAGE_PER_MINUTE) && (strtol(szBuffer, NULL, 10) < 60)) ? SW_SHOWNA : SW_HIDE;
+   ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING_ICON), nShow);
+   ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING_TEXT), nShow);
+}
+
+
+//
+// Page activation handler
+//
+
+BOOL CDCITransformPage::OnSetActive() 
+{
+   EnableWarning();
+	return CPropertyPage::OnSetActive();
+}
+
+
+//
+// Process delta calculation method selection change
+//
+
+void CDCITransformPage::OnSelchangeComboDelta() 
+{
+   TCHAR szBuffer[256];
+
+   m_wndDeltaList.GetWindowText(szBuffer, 256);
+   for(m_iDeltaProc = 0; m_pszMethodList[m_iDeltaProc] != NULL; m_iDeltaProc++)
+      if (!_tcsicmp(m_pszMethodList[m_iDeltaProc], szBuffer))
+         break;
+   EnableWarning();
 }

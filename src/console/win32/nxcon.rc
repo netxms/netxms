@@ -1330,6 +1330,9 @@ BEGIN
     LTEXT           "Step 2 - Formula",IDC_STATIC,7,39,52,8
     EDITTEXT        IDC_EDIT_FORMULA,7,50,214,14,ES_AUTOHSCROLL
     PUSHBUTTON      "&Create...",IDC_BUTTON_CREATE,171,68,50,14
+    ICON            IDI_SEVERITY_MINOR,IDC_STATIC_WARNING_ICON,7,91,20,20
+    LTEXT           "WARNING! Delta calculation will produce incorrect results for polling interval less than 60 seconds.",
+                    IDC_STATIC_WARNING_TEXT,33,93,188,18
 END
 
 IDD_CREATE_TG DIALOG DISCARDABLE  0, 0, 229, 126

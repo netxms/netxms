@@ -23,15 +23,23 @@ IMPLEMENT_DYNCREATE(CDataCollectionEditor, CMDIChildWnd)
 CDataCollectionEditor::CDataCollectionEditor()
 {
    m_pItemList = NULL;
+
+   m_iSortMode = theApp.GetProfileInt(_T("DCEditor"), _T("SortMode"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("DCEditor"), _T("SortDir"), 1);
 }
 
 CDataCollectionEditor::CDataCollectionEditor(NXC_DCI_LIST *pList)
 {
    m_pItemList = pList;
+
+   m_iSortMode = theApp.GetProfileInt(_T("DCEditor"), _T("SortMode"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("DCEditor"), _T("SortDir"), 1);
 }
 
 CDataCollectionEditor::~CDataCollectionEditor()
 {
+   theApp.WriteProfileInt(_T("DCEditor"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("DCEditor"), _T("SortDir"), m_iSortDir);
 }
 
 
@@ -92,6 +100,8 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_ACTIVE));
    m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
    m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
 
    // Create list view control
    GetClientRect(&rect);
@@ -774,4 +784,20 @@ void CDataCollectionEditor::ChangeItemsStatus(int iStatus)
 
       free(pdwItemList);
    }
+}
+
+
+//
+// Sort item list
+//
+
+void CDataCollectionEditor::SortList()
+{
+/*   LVCOLUMN lvc;
+
+   m_wndListCtrl.SortItems(TrapCompareProc, (LPARAM)this);
+   lvc.mask = LVCF_IMAGE | LVCF_FMT;
+   lvc.fmt = LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_BITMAP_ON_RIGHT;
+   lvc.iImage = (m_iSortDir == 1) ? m_iSortImageBase : m_iSortImageBase + 1;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvc);*/
 }

@@ -33,6 +33,7 @@ public:
 
 // Implementation
 protected:
+	void SortList(void);
 	void ChangeItemsStatus(int iStatus);
 	void SelectListItem(int iItem);
 	void UpdateListItem(int iItem, NXC_DCI *pItem);
@@ -73,6 +74,8 @@ protected:
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	int m_iSortDir;
+	int m_iSortMode;
 	CImageList m_imageList;
 };
 

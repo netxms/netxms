@@ -31,15 +31,19 @@ public:
 // Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CDCITransformPage)
+	public:
+	virtual BOOL OnSetActive();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
+	void EnableWarning(void);
 	// Generated message map functions
 	//{{AFX_MSG(CDCITransformPage)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnSelchangeComboDelta();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
