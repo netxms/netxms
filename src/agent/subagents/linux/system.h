@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.1 2004-10-22 22:08:35 alk Exp $ */
+/* $Id: system.h,v 1.2 2005-01-17 23:31:01 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -45,6 +45,7 @@ LONG H_CpuLoad(char *, char *, char *);
 LONG H_CpuUsage(char *, char *, char *);
 LONG H_ProcessCount(char *, char *, char *);
 LONG H_MemoryInfo(char *, char *, char *);
+LONG H_SourcePkgSupport(char *, char *, char *);
 
 #endif // __SYSTEM_H__
 
@@ -52,5 +53,15 @@ LONG H_MemoryInfo(char *, char *, char *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/22 22:08:35  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 
 */

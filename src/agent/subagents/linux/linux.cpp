@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.10 2004-12-29 19:42:44 victor Exp $ */
+/* $Id: linux.cpp,v 1.11 2005-01-17 23:31:01 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -62,6 +62,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED },
    { "System.Uname",                 H_Uname,           NULL },
    { "System.Uptime",                H_Uptime,          NULL },
+
+   { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -98,6 +100,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2004/12/29 19:42:44  victor
+Linux compatibility fixes
+
 Revision 1.9  2004/10/22 22:08:34  alk
 source restructured;
 implemented:
