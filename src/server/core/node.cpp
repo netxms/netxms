@@ -32,6 +32,7 @@ Node::Node()
 {
    m_dwFlags = 0;
    m_dwDiscoveryFlags = 0;
+   m_dwDynamicFlags = 0;
    m_dwNodeType = NODE_TYPE_GENERIC;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
@@ -62,6 +63,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
 {
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
+   m_dwDynamicFlags = 0;
    m_dwNodeType = NODE_TYPE_GENERIC;
    m_dwDiscoveryFlags = dwDiscoveryFlags;
    m_wAgentPort = AGENT_LISTEN_PORT;
@@ -671,6 +673,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n"
                          "Node status after poll is %s\r\n", m_szName, g_pszStatusName[m_iStatus]);
    m_pPollRequestor = NULL;
+   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
    PollerUnlock();
 }
 
@@ -779,7 +782,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
                          pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
                DeleteInterface(pInterface);
-               i = 0;   // Restart loop
+               i = 0xFFFFFFFF;   // Restart loop
                bHasChanges = TRUE;
             }
          }
@@ -838,6 +841,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                             "Finished configuration poll for node %s\r\n"
                             "Node configuration was%schanged after poll\r\n"),
                  m_szName, bHasChanges ? _T(" ") : _T(" not "));
+   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    PollerUnlock();
    DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
@@ -951,6 +955,18 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       {
          sprintf(szBuffer, "%f", g_dAvgDBWriterQueueSize);
       }
+      else if (!stricmp(szParam, "Server.AverageStatusPollerQueueSize"))
+      {
+         sprintf(szBuffer, "%f", g_dAvgStatusPollerQueueSize);
+      }
+      else if (!stricmp(szParam, "Server.AverageConfigurationPollerQueueSize"))
+      {
+         sprintf(szBuffer, "%f", g_dAvgConfigPollerQueueSize);
+      }
+      else if (!stricmp(szParam, "Server.AverageDCIQueuingTime"))
+      {
+         sprintf(szBuffer, "%lu", g_dwAvgDCIQueuingTime);
+      }
       else
       {
          dwError = DCE_NOT_SUPPORTED;
@@ -1031,6 +1047,7 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
       if (m_ppItems[i]->ReadyForPolling(currTime))
       {
          m_ppItems[i]->SetBusyFlag(TRUE);
+         m_dwRefCount++;   // Increment reference count for each queued DCI
          pPollerQueue->Put(m_ppItems[i]);
       }
    }

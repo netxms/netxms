@@ -24,11 +24,29 @@
 
 
 //
+// Constants
+//
+
+#define ITEM_POLLING_INTERVAL    2
+
+
+//
+// Externals
+//
+
+extern Queue g_statusPollQueue;
+extern Queue g_configPollQueue;
+
+
+//
 // Global data
 //
 
 double g_dAvgPollerQueueSize = 0;
 double g_dAvgDBWriterQueueSize = 0;
+double g_dAvgStatusPollerQueueSize = 0;
+double g_dAvgConfigPollerQueueSize = 0;
+DWORD g_dwAvgDCIQueuingTime = 0;
 
 
 //
@@ -91,6 +109,9 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          // Update item's last poll time and clear busy flag so item can be polled again
          pItem->SetLastPollTime(currTime);
          pItem->SetBusyFlag(FALSE);
+
+         // Decrement node's usage counter
+         pNode->DecRefCount();
       }
       else     /* pNode == NULL */
       {
@@ -111,14 +132,16 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
-   DWORD i, dwElapsed, dwWatchdogId;
+   DWORD i, dwSum, dwWatchdogId, dwCurrPos = 0;
+   DWORD dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
    dwWatchdogId = WatchdogAddThread("Item Poller", 20);
+   memset(dwTimingHistory, 0, sizeof(DWORD) * (60 / ITEM_POLLING_INTERVAL));
 
    while(!ShutdownInProgress())
    {
-      if (SleepAndCheckForShutdown(2))
+      if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
       WatchdogNotify(dwWatchdogId);
 
@@ -128,7 +151,16 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
          ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(m_pItemQueue);
       RWLockUnlock(g_rwlockNodeIndex);
 
-      dwElapsed = (DWORD)(GetCurrentTimeMs() - qwStart);
+      // Save last poll time
+      dwTimingHistory[dwCurrPos] = (DWORD)(GetCurrentTimeMs() - qwStart);
+      dwCurrPos++;
+      if (dwCurrPos == (60 / ITEM_POLLING_INTERVAL))
+         dwCurrPos = 0;
+
+      // Calculate new average for last minute
+      for(i = 0, dwSum = 0; i < (60 / ITEM_POLLING_INTERVAL); i++)
+         dwSum += dwTimingHistory[i];
+      g_dwAvgDCIQueuingTime = dwSum / (60 / ITEM_POLLING_INTERVAL);
    }
    DbgPrintf(AF_DEBUG_DC, "Item poller thread terminated");
    return THREAD_OK;
@@ -141,13 +173,19 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 
 static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
-   DWORD i, dwPollerQS[12], dwDBWriterQS[12], dwCurrPos = 0;
-   double dSum1, dSum2;
+   DWORD i, dwCurrPos = 0;
+   DWORD dwPollerQS[12], dwDBWriterQS[12];
+   DWORD dwStatusPollerQS[12], dwConfigPollerQS[12];
+   double dSum1, dSum2, dSum3, dSum4;
 
    memset(dwPollerQS, 0, sizeof(DWORD) * 12);
    memset(dwDBWriterQS, 0, sizeof(DWORD) * 12);
+   memset(dwStatusPollerQS, 0, sizeof(DWORD) * 12);
+   memset(dwConfigPollerQS, 0, sizeof(DWORD) * 12);
    g_dAvgPollerQueueSize = 0;
    g_dAvgDBWriterQueueSize = 0;
+   g_dAvgStatusPollerQueueSize = 0;
+   g_dAvgConfigPollerQueueSize = 0;
    while(!ShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
@@ -156,18 +194,24 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       // Get current values
       dwPollerQS[dwCurrPos] = m_pItemQueue->Size();
       dwDBWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size();
+      dwStatusPollerQS[dwCurrPos] = g_statusPollQueue.Size();
+      dwConfigPollerQS[dwCurrPos] = g_configPollQueue.Size();
       dwCurrPos++;
       if (dwCurrPos == 12)
          dwCurrPos = 0;
 
       // Calculate new averages
-      for(i = 0, dSum1 = 0, dSum2 = 0; i < 12; i++)
+      for(i = 0, dSum1 = 0, dSum2 = 0, dSum3 = 0, dSum4 = 0; i < 12; i++)
       {
          dSum1 += dwPollerQS[i];
          dSum2 += dwDBWriterQS[i];
+         dSum3 += dwStatusPollerQS[i];
+         dSum4 += dwConfigPollerQS[i];
       }
       g_dAvgPollerQueueSize = dSum1 / 12;
       g_dAvgDBWriterQueueSize = dSum2 / 12;
+      g_dAvgStatusPollerQueueSize = dSum3 / 12;
+      g_dAvgConfigPollerQueueSize = dSum4 / 12;
    }
    return THREAD_OK;
 }

@@ -64,6 +64,18 @@ void CheckForMgmtNode(void)
                                          "Server.AverageDBWriterQueueSize", 
                                          DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
                                          "Average length of database writer's request queue for last minute"));
+               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                         "Server.AverageDCIQueuingTime", 
+                                         DS_INTERNAL, DCI_DT_UINT, 60, 30, pNode,
+                                         "Average time to queue DCI for polling for last minute"));
+               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                         "Server.AverageStatusPollerQueueSize", 
+                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                         "Average length of status poller queue for last minute"));
+               pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                         "Server.AverageConfigurationPollerQueueSize", 
+                                         DS_INTERNAL, DCI_DT_FLOAT, 60, 30, pNode,
+                                         "Average length of configuration poller queue for last minute"));
                break;
             }
       }

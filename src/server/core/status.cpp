@@ -24,32 +24,29 @@
 
 
 //
+// Global data
+//
+
+Queue g_statusPollQueue;
+Queue g_configPollQueue;
+
+
+//
 // Status poll thread
 //
 
-THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
+static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
    Node *pNode;
-   DWORD dwWatchdogId;
-
-   dwWatchdogId = WatchdogAddThread("Status Poller", 60);
 
    while(!ShutdownInProgress())
    {
-      if (SleepAndCheckForShutdown(5))
-         break;      // Shutdown has arrived
-      WatchdogNotify(dwWatchdogId);
+      pNode = (Node *)g_statusPollQueue.GetOrBlock();
+      if (pNode == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
 
-      // Walk through nodes and do status poll
-      for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
-      {
-         pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
-         if (pNode->ReadyForStatusPoll())
-         {
-            pNode->StatusPoll(NULL, 0);
-            WatchdogNotify(dwWatchdogId);
-         }
-      }
+      pNode->StatusPoll(NULL, 0);
+      pNode->DecRefCount();
    }
    return THREAD_OK;
 }
@@ -59,29 +56,80 @@ THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 // Configuration poll thread
 //
 
-THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
+static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 {
    Node *pNode;
-   DWORD dwWatchdogId;
-
-   dwWatchdogId = WatchdogAddThread("Configuration Poller", 120);
 
    while(!ShutdownInProgress())
    {
-      if (SleepAndCheckForShutdown(30))
+      pNode = (Node *)g_configPollQueue.GetOrBlock();
+      if (pNode == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      pNode->ConfigurationPoll(NULL, 0);
+      pNode->DecRefCount();
+   }
+   return THREAD_OK;
+}
+
+
+//
+// Node queuing thread
+//
+
+THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
+{
+   Node *pNode;
+   DWORD dwWatchdogId;
+   int i, iNumStatusPollers, iNumConfigPollers;
+
+   // Start status pollers
+   iNumStatusPollers = ConfigReadInt("NumberOfStatusPollers", 10);
+   for(i = 0; i < iNumStatusPollers; i++)
+      ThreadCreate(StatusPoller, 0, NULL);
+
+   // Start configuration pollers
+   iNumConfigPollers = ConfigReadInt("NumberOfConfigurationPollers", 4);
+   for(i = 0; i < iNumConfigPollers; i++)
+      ThreadCreate(ConfigurationPoller, 0, NULL);
+
+   dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
+
+   while(!ShutdownInProgress())
+   {
+      if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived
       WatchdogNotify(dwWatchdogId);
 
-      // Walk through nodes and do configuration poll
+      // Walk through nodes and queue them for status 
+      // and/or configuration poll
+      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
       for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
       {
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
          if (pNode->ReadyForConfigurationPoll())
          {
-            pNode->ConfigurationPoll(NULL, 0);
-            WatchdogNotify(dwWatchdogId);
+            pNode->IncRefCount();
+            pNode->LockForStatusPoll();
+            g_configPollQueue.Put(pNode);
+         }
+         if (pNode->ReadyForStatusPoll())
+         {
+            pNode->IncRefCount();
+            pNode->LockForConfigurationPoll();
+            g_statusPollQueue.Put(pNode);
          }
       }
+      RWLockUnlock(g_rwlockNodeIndex);
    }
+
+   // Send stop signal to all pollers
+   g_statusPollQueue.Clear();
+   g_configPollQueue.Clear();
+   for(i = 0; i < iNumStatusPollers; i++)
+      g_statusPollQueue.Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < iNumConfigPollers; i++)
+      g_configPollQueue.Put(INVALID_POINTER_VALUE);
+
    return THREAD_OK;
 }

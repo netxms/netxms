@@ -45,8 +45,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg);
 THREAD_RESULT THREAD_CALL DiscoveryThread(void *pArg);
 THREAD_RESULT THREAD_CALL Syncer(void *pArg);
 THREAD_RESULT THREAD_CALL NodePoller(void *pArg);
-THREAD_RESULT THREAD_CALL StatusPoller(void *pArg);
-THREAD_RESULT THREAD_CALL ConfigurationPoller(void *pArg);
+THREAD_RESULT THREAD_CALL NodePollManager(void *pArg);
 THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
 THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
 THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
@@ -295,8 +294,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    ThreadCreate(HouseKeeper, 0, NULL);
    ThreadCreate(Syncer, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
-   ThreadCreate(StatusPoller, 0, NULL);
-   ThreadCreate(ConfigurationPoller, 0, NULL);
+   ThreadCreate(NodePollManager, 0, NULL);
    ThreadCreate(ClientListener, 0, NULL);
 
    // Start network discovery thread if required
@@ -477,7 +475,6 @@ static BOOL ProcessCommand(char *pszCmdLine)
       DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex");
       DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex");
       DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex");
-      DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
       printf("\n");
    }
    else if (IsCommand("WD", szBuffer, 2))

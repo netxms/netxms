@@ -1167,7 +1167,7 @@ void ClientSession::SendAllObjects(DWORD dwRqId)
    msg.SetCode(CMD_OBJECT);
 
    // Send objects, one per message
-   ObjectsGlobalLock();
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
       if (g_pIndexById[i].pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
@@ -1175,7 +1175,7 @@ void ClientSession::SendAllObjects(DWORD dwRqId)
          SendMessage(&msg);
          msg.DeleteAllVariables();
       }
-   ObjectsGlobalUnlock();
+   RWLockUnlock(g_rwlockIdIndex);
 
    // Send end of list notification
    msg.SetCode(CMD_OBJECT_LIST_END);
@@ -2219,14 +2219,14 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             sprintf(&szCond[iPos], " AND idata_timestamp<=%d", dwTimeTo);
          }
 
+         // Get item's data type to determine actual row size
+         iType = ((Node *)pObject)->GetItemType(dwItemId);
+
          sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
                  dwObjectId, dwItemId, szCond);
          hResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
-            // Get item's data type to determine actual row size
-            iType = ((Node *)pObject)->GetItemType(dwItemId);
-
             // Allocate initial memory block and prepare data header
             pData = (DCI_DATA_HEADER *)malloc(dwAllocatedRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER));
             pData->dwDataType = htonl((DWORD)iType);

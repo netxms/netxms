@@ -63,6 +63,14 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
+// Node runtime (dynamic) flags
+//
+
+#define NDF_QUEUED_FOR_STATUS_POLL     0x0001
+#define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
+
+
+//
 // Status poll types
 //
 
@@ -125,8 +133,8 @@ public:
    BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
 
    DWORD RefCount(void) { return m_dwRefCount; }
-   void IncRefCount(void) { m_dwRefCount++; }
-   void DecRefCount(void) { if (m_dwRefCount > 0) m_dwRefCount--; }
+   void IncRefCount(void) { Lock(); m_dwRefCount++; Unlock(); }
+   void DecRefCount(void) { Lock(); if (m_dwRefCount > 0) m_dwRefCount--; Unlock(); }
 
    BOOL IsChild(DWORD dwObjectId);
 
@@ -296,6 +304,7 @@ class NXCORE_EXPORTABLE Node : public Template
 protected:
    DWORD m_dwFlags;
    DWORD m_dwDiscoveryFlags;
+   DWORD m_dwDynamicFlags;       // Flags used at runtime by server
    WORD m_wAgentPort;
    WORD m_wAuthMethod;
    DWORD m_dwNodeType;
@@ -314,7 +323,7 @@ protected:
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    AgentConnection *m_pAgentConnection;
-   Node *m_pPollNode;      // Node used for network service polling
+   Node *m_pPollerNode;      // Node used for network service polling
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -335,6 +344,7 @@ public:
 
    DWORD Flags(void) { return m_dwFlags; }
    DWORD DiscoveryFlags(void) { return m_dwDiscoveryFlags; }
+   DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
 
    BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
    BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
@@ -363,6 +373,8 @@ public:
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);
    BOOL ReadyForDiscoveryPoll(void);
+   void LockForStatusPoll(void);
+   void LockForConfigurationPoll(void);
 
    virtual void CalculateCompoundStatus(void);
 
@@ -379,7 +391,7 @@ public:
    DWORD WakeUp(void);
 
    void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
-   Node *GetPollNode(void) { return m_pPollNode; }
+   Node *GetPollerNode(void) { return m_pPollerNode; }
 };
 
 
@@ -390,6 +402,7 @@ public:
 inline BOOL Node::ReadyForStatusPoll(void) 
 { 
    return ((m_iStatus != STATUS_UNMANAGED) && 
+           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval))
                ? TRUE : FALSE;
 }
@@ -397,6 +410,7 @@ inline BOOL Node::ReadyForStatusPoll(void)
 inline BOOL Node::ReadyForConfigurationPoll(void) 
 { 
    return ((m_iStatus != STATUS_UNMANAGED) &&
+           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval))
                ? TRUE : FALSE;
 }
@@ -406,6 +420,20 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
    return ((m_iStatus != STATUS_UNMANAGED) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))
                ? TRUE : FALSE; 
+}
+
+inline void Node::LockForStatusPoll(void)
+{ 
+   Lock(); 
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_STATUS_POLL; 
+   Unlock(); 
+}
+
+inline void Node::LockForConfigurationPoll(void) 
+{ 
+   Lock(); 
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL; 
+   Unlock(); 
 }
 
 
@@ -583,8 +611,6 @@ struct CONTAINER_CATEGORY
 //
 
 void ObjectsInit(void);
-void ObjectsGlobalLock(void);
-void ObjectsGlobalUnlock(void);
 
 void NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
@@ -626,7 +652,6 @@ extern RWLOCK g_rwlockIdIndex;
 extern RWLOCK g_rwlockNodeIndex;
 extern RWLOCK g_rwlockSubnetIndex;
 extern RWLOCK g_rwlockInterfaceIndex;
-extern MUTEX g_hMutexObjectAccess;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern char *g_szClassName[];

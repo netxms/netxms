@@ -53,7 +53,7 @@ static void CleanDeletedObjects(void)
             {
                // No records with that source ID, so we can purge this object
                sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%ld", dwObjectId);
-               DBQuery(g_hCoreDB, szQuery);
+               QueueSQLRequest(szQuery);
                DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %ld was purged", dwObjectId);
             }
             DBFreeAsyncResult(hAsyncResult);
@@ -72,17 +72,20 @@ static void DeleteEmptySubnets(void)
 {
    DWORD i;
 
-   ObjectsGlobalLock();
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
 
    // Walk through subnets and delete empty ones
-   for(i = 0; i < g_dwSubnetAddrIndexSize; i++)
-      if (g_pSubnetIndexByAddr[i].pObject->IsEmpty())
+   for(i = 0; i < g_dwIdIndexSize; i++)
+      if (g_pIndexById[i].pObject->Type() == OBJECT_SUBNET)
       {
-         PostEvent(EVENT_SUBNET_DELETED, g_pSubnetIndexByAddr[i].pObject->Id(), NULL);
-         g_pSubnetIndexByAddr[i].pObject->Delete();
+         if (g_pIndexById[i].pObject->IsEmpty())
+         {
+            PostEvent(EVENT_SUBNET_DELETED, g_pIndexById[i].pObject->Id(), NULL);
+            g_pIndexById[i].pObject->Delete();
+         }
       }
 
-   ObjectsGlobalUnlock();
+   RWLockUnlock(g_rwlockIdIndex);
 }
 
 

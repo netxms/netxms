@@ -24,6 +24,13 @@
 
 
 //
+// Externals
+//
+
+void NetObjDelete(NetObj *pObject);
+
+
+//
 // Save objects to database
 //
 
@@ -31,9 +38,9 @@ void SaveObjects(void)
 {
    DWORD i;
 
-   ObjectsGlobalLock();
-
    // Delete objects marked for deletion
+   RWLockWriteLock(g_rwlockIdIndex, INFINITE);
+delete_loop_start:;
    for(i = 0; i < g_dwIdIndexSize; i++)
       if (g_pIndexById[i].pObject->IsDeleted())
          if (g_pIndexById[i].pObject->RefCount() == 0)
@@ -42,20 +49,21 @@ void SaveObjects(void)
                       g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->Name());
             g_pIndexById[i].pObject->DeleteFromDB();
             NetObjDelete(g_pIndexById[i].pObject);
-            i = 0xFFFFFFFF;   // Restart loop
+            goto delete_loop_start;   // Restart loop
          }
          else
          {
             DbgPrintf(AF_DEBUG_HOUSEKEEPER, "* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)",
                       g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->RefCount());
          }
+   RWLockUnlock(g_rwlockIdIndex);
 
    // Save objects
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
       if (g_pIndexById[i].pObject->IsModified())
          g_pIndexById[i].pObject->SaveToDB();
-
-   ObjectsGlobalUnlock();
+   RWLockUnlock(g_rwlockIdIndex);
 }
 
 

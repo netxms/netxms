@@ -218,6 +218,9 @@ void DeleteAllItemsForNode(DWORD dwNodeId);
 
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
+extern double g_dAvgStatusPollerQueueSize;
+extern double g_dAvgConfigPollerQueueSize;
+extern DWORD g_dwAvgDCIQueuingTime;
 
 
 #endif   /* _nms_dcoll_h_ */

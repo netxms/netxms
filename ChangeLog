@@ -4,6 +4,9 @@
 
 - Added new object class - NetworkService, for simplified network service
   health checking
+- Server internal synchronization mechanisms improved to increase
+  stability and performance
+- Fixed deadlock sometimes caused by retrieving DCI collected data
 
 
 *

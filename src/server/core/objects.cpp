@@ -41,7 +41,6 @@ DWORD g_dwNodeAddrIndexSize = 0;
 INDEX *g_pInterfaceIndexByAddr = NULL;
 DWORD g_dwInterfaceAddrIndexSize = 0;
 
-MUTEX g_hMutexObjectAccess;
 RWLOCK g_rwlockIdIndex;
 RWLOCK g_rwlockNodeIndex;
 RWLOCK g_rwlockSubnetIndex;
@@ -54,7 +53,7 @@ char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
                             "Unknown", "Unmanaged", "Disabled", "Testing" };
 char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
                         "Network", "Container", "Zone", "ServiceRoot",
-                        "Template", "TemplateGroup", "TemplateRoot" };
+                        "Template", "TemplateGroup", "TemplateRoot", "NetworkService" };
 
 
 //
@@ -63,7 +62,6 @@ char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
 
 void ObjectsInit(void)
 {
-   g_hMutexObjectAccess = MutexCreate();
    g_rwlockIdIndex = RWLockCreate();
    g_rwlockNodeIndex = RWLockCreate();
    g_rwlockSubnetIndex = RWLockCreate();
@@ -80,26 +78,6 @@ void ObjectsInit(void)
    // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
-}
-
-
-//
-// Lock write access to all objects
-//
-
-void ObjectsGlobalLock(void)
-{
-   MutexLock(g_hMutexObjectAccess, INFINITE);
-}
-
-
-//
-// Unlock write access to all objects
-//
-
-void ObjectsGlobalUnlock(void)
-{
-   MutexUnlock(g_hMutexObjectAccess);
 }
 
 
@@ -186,7 +164,6 @@ static void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dw
 
 void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 {
-   ObjectsGlobalLock();
    if (bNewObject)   
    {
       // Assign unique ID to new object
@@ -239,7 +216,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
       }
    }
-   ObjectsGlobalUnlock();
 }
 
 
@@ -287,7 +263,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 // Get IP netmask for object of any class
 //
 
-DWORD GetObjectNetmask(NetObj *pObject)
+static DWORD GetObjectNetmask(NetObj *pObject)
 {
    switch(pObject->Type())
    {
@@ -298,33 +274,6 @@ DWORD GetObjectNetmask(NetObj *pObject)
       default:
          return 0;
    }
-}
-
-
-//
-// Delete object (final step)
-// This function should be called only by syncer thread when access to objects are locked.
-// Object will be removed from index by ID and destroyed.
-//
-
-void NetObjDelete(NetObj *pObject)
-{
-   char szQuery[256], szIpAddr[16], szNetMask[16];
-
-   // Write object to deleted objects table
-   _sntprintf(szQuery, 256, _T("INSERT INTO deleted_objects (object_id,object_class,name,"
-                               "ip_addr,ip_netmask) VALUES (%ld,%ld,'%s','%s','%s')"),
-              pObject->Id(), pObject->Type(), pObject->Name(), 
-              IpToStr(pObject->IpAddr(), szIpAddr),
-              IpToStr(GetObjectNetmask(pObject), szNetMask));
-   DBQuery(g_hCoreDB, szQuery);
-
-   // Delete object from index by ID
-   RWLockWriteLock(g_rwlockIdIndex, INFINITE);
-   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
-   RWLockUnlock(g_rwlockIdIndex);
-            
-   delete pObject;
 }
 
 
@@ -643,15 +592,11 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
 {
    DWORD i;
 
-   ObjectsGlobalLock();
-
    // Walk through all objects
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
       g_pIndexById[i].pObject->DropUserAccess(dwUserId);
    RWLockUnlock(g_rwlockIdIndex);
-
-   ObjectsGlobalUnlock();
 }
 
 
@@ -738,4 +683,29 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
          break;
    }
    return FALSE;
+}
+
+
+//
+// Delete object (final step)
+// This function should be called ONLY from syncer thread
+// Access to object index by id are write-locked when this function is called
+// Object will be removed from index by ID and destroyed.
+//
+
+void NetObjDelete(NetObj *pObject)
+{
+   char szQuery[256], szIpAddr[16], szNetMask[16];
+
+   // Write object to deleted objects table
+   _sntprintf(szQuery, 256, _T("INSERT INTO deleted_objects (object_id,object_class,name,"
+                               "ip_addr,ip_netmask) VALUES (%ld,%ld,'%s','%s','%s')"),
+              pObject->Id(), pObject->Type(), pObject->Name(), 
+              IpToStr(pObject->IpAddr(), szIpAddr),
+              IpToStr(GetObjectNetmask(pObject), szNetMask));
+   DBQuery(g_hCoreDB, szQuery);
+
+   // Delete object from index by ID and object itself
+   DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
+   delete pObject;
 }
