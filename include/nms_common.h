@@ -156,4 +156,11 @@ typedef struct tagICMPHDR
 #define IsBroadcastAddress(addr, mask) (((addr) & (~(mask))) == (~(mask)))
 
 
+//
+// Convert half-byte's value to hex digit
+//
+
+#define bin2hex(x) ((x) < 10 ? ((x) + '0') : ((x) + ('A' - 10)))
+
+
 #endif   /* _nms_common_h_ */
