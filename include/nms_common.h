@@ -56,9 +56,13 @@ typedef __int64 INT64;
 
 #else
 
-
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 typedef int BOOL;
 typedef long int LONG;
@@ -80,6 +84,8 @@ typedef u_int64_t QWORD;
 #endif
 
 typedef int SOCKET;
+
+#define closesocket(x) close(x)
 
 #endif
 
