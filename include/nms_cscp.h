@@ -136,43 +136,48 @@ typedef struct
 // Variable identifiers
 //
 
-#define VID_LOGIN_NAME              1
-#define VID_PASSWORD                2
-#define VID_OBJECT_ID               3
-#define VID_OBJECT_NAME             4
-#define VID_OBJECT_CLASS            5
-#define VID_LOGIN_RESULT            6
-#define VID_PARENT_CNT              7
-#define VID_IP_ADDRESS              8
-#define VID_IP_NETMASK              9
-#define VID_OBJECT_STATUS           10
-#define VID_IF_INDEX                11
-#define VID_IF_TYPE                 12
-#define VID_FLAGS                   13
-#define VID_DISCOVERY_FLAGS         14
-#define VID_AGENT_PORT              15
-#define VID_AUTH_METHOD             16
-#define VID_SHARED_SECRET           17
-#define VID_COMMUNITY_STRING        18
-#define VID_SNMP_OID                19
-#define VID_NAME                    20
-#define VID_VALUE                   21
-#define VID_ERROR                   22
-#define VID_NOTIFICATION_CODE       23
-#define VID_EVENT_ID                24
-#define VID_SEVERITY                25
-#define VID_MESSAGE                 26
-#define VID_DESCRIPTION             27
-#define VID_RCC                     28    /* RCC == Request Completion Code */
-#define VID_LOCKED_BY               29
-#define VID_IS_DELETED              30
+#define VID_LOGIN_NAME              ((DWORD)1)
+#define VID_PASSWORD                ((DWORD)2)
+#define VID_OBJECT_ID               ((DWORD)3)
+#define VID_OBJECT_NAME             ((DWORD)4)
+#define VID_OBJECT_CLASS            ((DWORD)5)
+#define VID_LOGIN_RESULT            ((DWORD)6)
+#define VID_PARENT_CNT              ((DWORD)7)
+#define VID_IP_ADDRESS              ((DWORD)8)
+#define VID_IP_NETMASK              ((DWORD)9)
+#define VID_OBJECT_STATUS           ((DWORD)10)
+#define VID_IF_INDEX                ((DWORD)11)
+#define VID_IF_TYPE                 ((DWORD)12)
+#define VID_FLAGS                   ((DWORD)13)
+#define VID_DISCOVERY_FLAGS         ((DWORD)14)
+#define VID_AGENT_PORT              ((DWORD)15)
+#define VID_AUTH_METHOD             ((DWORD)16)
+#define VID_SHARED_SECRET           ((DWORD)17)
+#define VID_COMMUNITY_STRING        ((DWORD)18)
+#define VID_SNMP_OID                ((DWORD)19)
+#define VID_NAME                    ((DWORD)20)
+#define VID_VALUE                   ((DWORD)21)
+#define VID_ERROR                   ((DWORD)22)
+#define VID_NOTIFICATION_CODE       ((DWORD)23)
+#define VID_EVENT_ID                ((DWORD)24)
+#define VID_SEVERITY                ((DWORD)25)
+#define VID_MESSAGE                 ((DWORD)26)
+#define VID_DESCRIPTION             ((DWORD)27)
+#define VID_RCC                     ((DWORD)28)    /* RCC == Request Completion Code */
+#define VID_LOCKED_BY               ((DWORD)29)
+#define VID_IS_DELETED              ((DWORD)30)
+#define VID_CHILD_CNT               ((DWORD)31)
 
 
-// Object information can contain variable number of parent objects' ids.
+// Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,
-// we reserver a 4000 ids for this variables.
-#define VID_PARENT_ID_BASE          4000
-#define VID_PARENT_ID_LAST          7999
+// we reserver a two range ids for this variables.
+#define VID_PARENT_ID_BASE          ((DWORD)4000)
+#define VID_PARENT_ID_LAST          ((DWORD)7999)
+
+// Reservation of 0x7FFFFFFF ids for child object's list
+#define VID_CHILD_ID_BASE           ((DWORD)0x80000000)
+#define VID_CHILD_ID_LAST           ((DWORD)0xFFFFFFFE)
 
 
 //
