@@ -65,7 +65,7 @@ void CheckDatabase(BOOL bForce)
    }
    else
    {
-      TCHAR szLockInfo[MAX_DB_STRING];
+      TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
       BOOL bLocked;
 
       // Check if database is locked
@@ -74,8 +74,8 @@ void CheckDatabase(BOOL bForce)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            _tcsncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
-            bLocked = _tcscmp(szLockInfo, _T("UNLOCKED"));
+            _tcsncpy(szLockStatus, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+            bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
          }
          DBFreeResult(hResult);
 
@@ -97,9 +97,9 @@ void CheckDatabase(BOOL bForce)
       {
          TCHAR szBuffer[16];
 
-         _tprintf(_T("Database is locked. Lock information: \"%s\"\n"
+         _tprintf(_T("Database is locked by server %s [%s]\n"
                      "Do you wish to force database unlock? (Y/N)\n"),
-                  szLockInfo);
+                  szLockStatus, szLockInfo);
          _fgetts(szBuffer, 16, stdin);
          if ((szBuffer[0] == _T('y')) || (szBuffer[0] == _T('Y')))
          {
