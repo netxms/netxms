@@ -6,4 +6,7 @@ ALTER TABLE nodes ADD COLUMN description $TEXT
 ALTER TABLE templates ADD COLUMN version integer
 ALTER TABLE templates ADD COLUMN description $TEXT
 
+UPDATE nodes SET description=''
+UPDATE templates SET version=65536,description=''
+
 UPDATE config SET var_value=11 WHERE var_name='DBFormatVersion'
