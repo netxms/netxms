@@ -27,7 +27,7 @@
 // Help text
 //
 
-static char help_text[]="NMS Version " VERSION_STRING " Server\n"
+static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
                         "Copyright (c) 2003 SecurityProjects.org\n\n"
                         "Usage: nms_core [<options>] <command>\n\n"
                         "Valid options are:\n"
@@ -187,7 +187,7 @@ BOOL ParseCommandLine(int argc, char *argv[])
       }
       else if (!strcmp(argv[i], "version"))    // Display version and exit
       {
-         printf("NMS Version " VERSION_STRING " Build of " __DATE__ "\n");
+         printf("NMS Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
          return FALSE;
       }
       else if (!strcmp(argv[i], "--config"))  // Config file

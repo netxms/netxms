@@ -175,10 +175,6 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\queue.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\snmp.cpp
 # End Source File
 # Begin Source File
@@ -251,7 +247,7 @@ SOURCE=.\nms_objects.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\nms_threads.h
+SOURCE=..\..\..\include\nms_threads.h
 # End Source File
 # Begin Source File
 
