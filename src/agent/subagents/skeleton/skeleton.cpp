@@ -80,8 +80,10 @@ static void UnloadHandler(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Skeleton.Version", H_Version, NULL },
-   { "Skeleton.Echo(*)", H_Echo, NULL }
+   { "Skeleton.Version",				H_Version,				NULL,
+			DCI_DT_STRING, "Skeleton version" },
+   { "Skeleton.Echo(*)",				H_Echo,					NULL,
+			DCI_DT_STRING, "Echoes * string back" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
