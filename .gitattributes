@@ -71,6 +71,7 @@ src/console/win32/resource.h -text
 src/libnxcl/comm.cpp -text
 src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
+src/libnxcl/inline.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text

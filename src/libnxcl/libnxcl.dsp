@@ -108,6 +108,10 @@ SOURCE=.\events.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\inline.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -153,6 +157,10 @@ SOURCE=..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=..\..\include\nxclapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxevent.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

@@ -133,7 +133,7 @@ BOOL Connect(void);
 void SyncObjects(void);
 void SyncEvents(void);
 DWORD OpenEventDB(DWORD dwRqId);
-DWORD CloseEventDB(DWORD dwRqId);
+DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges);
 DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);

@@ -143,19 +143,39 @@ DWORD OpenEventDB(DWORD dwRqId)
 // Close event configuration database
 //
 
-DWORD CloseEventDB(DWORD dwRqId)
+DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode;
 
-   msg.SetCode(CMD_CLOSE_EVENT_DB);
-   msg.SetId(dwRqId);
-   SendMsg(&msg);
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-   else
-      dwRetCode = RCC_TIMEOUT;
+   // Go through event templates and save modified events
+   if (bSaveChanges)
+   {
+      DWORD i;
+
+      for(i = 0; i < m_dwNumTemplates; i++)
+         if (m_ppEventTemplates[i]->dwFlags & EF_MODIFIED)
+         {
+            m_ppEventTemplates[i]->dwFlags &= ~EF_MODIFIED;
+            dwRetCode = SetEventInfo(g_dwRequestId++, m_ppEventTemplates[i]);
+            if (dwRetCode != RCC_SUCCESS)
+               break;
+         }
+   }
+
+   // Close database
+   if (dwRetCode == RCC_SUCCESS)
+   {
+      msg.SetCode(CMD_CLOSE_EVENT_DB);
+      msg.SetId(dwRqId);
+      SendMsg(&msg);
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+      if (pResponce != NULL)
+         dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      else
+         dwRetCode = RCC_TIMEOUT;
+   }
+
    return dwRetCode;
 }
 

@@ -57,6 +57,7 @@ HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
    }
    else
    {
+      va_start(args, dwOperation);
       switch(dwOperation)
       {
          case NXC_OP_SYNC_OBJECTS:
@@ -66,21 +67,20 @@ HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
             hRequest = CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
             break;
          case NXC_OP_OPEN_EVENT_DB:
-            hRequest = CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
+            hRequest = CreateRequest(RQ_OPEN_EVENT_DB, (void *)va_arg(args, BOOL), FALSE);
             break;
          case NXC_OP_CLOSE_EVENT_DB:
             hRequest = CreateRequest(RQ_CLOSE_EVENT_DB, NULL, FALSE);
             break;
          case NXC_OP_SET_EVENT_INFO:
-            va_start(args, dwOperation);
             hRequest = CreateRequest(RQ_SET_EVENT_INFO, 
                                      DuplicateEventTemplate(va_arg(args, NXC_EVENT_TEMPLATE *)), TRUE);
-            va_end(args);
             break;
          default:
             hRequest = INVALID_REQUEST_HANDLE;
             break;
       }
+      va_end(args);
    }
    return hRequest;
 }
@@ -121,7 +121,7 @@ void RequestProcessor(void *pArg)
             dwRetCode = OpenEventDB(pRequest->dwHandle);
             break;
          case RQ_CLOSE_EVENT_DB:
-            dwRetCode = CloseEventDB(pRequest->dwHandle);
+            dwRetCode = CloseEventDB(pRequest->dwHandle, (BOOL)pRequest->pArg);
             break;
          case RQ_SET_EVENT_INFO:
             dwRetCode = SetEventInfo(pRequest->dwHandle, (NXC_EVENT_TEMPLATE *)pRequest->pArg);
