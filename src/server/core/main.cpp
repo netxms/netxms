@@ -61,6 +61,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 DWORD g_dwFlags = AF_USE_EVENT_LOG;
 char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+#ifndef _WIN32
+char g_szPIDFile[MAX_PATH] = "/var/run/netxmsd.pid";
+#endif
 DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
@@ -354,6 +357,11 @@ void Shutdown(void)
       delete g_pIndexById[i].pObject;
 
    CloseLog();
+
+   // Remove PID file
+#ifndef _WIN32
+   remove(g_szPIDFile);
+#endif
 }
 
 
@@ -549,6 +557,7 @@ int main(int argc, char *argv[])
 {
 #ifndef _WIN32
    int i;
+   FILE *fp;
 #endif
 
    if (!ParseCommandLine(argc, argv))
@@ -590,6 +599,14 @@ int main(int argc, char *argv[])
          perror("Call to daemon() failed");
          return 2;
       }
+   }
+
+   // Write PID file
+   fp = fopen(g_szPIDFile, "w");
+   if (fp != NULL)
+   {
+      fprintf(fp, "%d", getpid());
+      fclose(fp);
    }
 
    // Setup signal handlers

@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# netxmsd This script starts and stops the netxmsd daemon
+#
+# chkconfig: 2345 95 05
+#
+# description: netxmsd is a NetXMS server daemon process
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+# Source netxmsdd configuration.
+if [ -f /etc/sysconfig/netxmsd ] ; then
+        . /etc/sysconfig/netxmsd
+else
+        NETXMSD_OPTIONS=""
+        NETXMSD_CONFIG="/etc/netxmsd.conf"
+        NETXMSD_PID_FILE="/var/run/netxmsd.pid"
+fi
+
+[ -f /usr/bin/netxmsd -o -f /usr/local/bin/netxmsd ] || exit 0
+PATH=$PATH:/usr/bin:/usr/local/bin
+
+# See how we were called.
+case "$1" in
+  start)
+	# Start daemon.
+	echo -n "Starting netxmsd: "
+	daemon netxmsd $NETXMSD_OPTIONS --config $NETXMSD_CONFIG --pid-file $NETXMSD_PID_FILE
+	RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && touch /var/lock/subsys/netxmsd
+        ;;
+  stop)
+        # Stop daemons.
+        echo -n "Shutting down netxmsd: "
+        kill `cat $NETXMSD_PID_FILE 2>/dev/null` 2> /dev/null
+        RETVAL=$?
+        if [ $RETVAL = 0 ] ; then
+                success
+        else
+                failure
+        fi
+        echo
+        [ $RETVAL = 0 ] && rm -f /var/lock/subsys/netxmsd
+        ;;
+  restart)
+        $0 stop
+        $0 start
+        ;;
+  condrestart)
+       [ -e /var/lock/subsys/netxmsd ] && $0 restart
+       ;;
+  status)
+	status netxmsd
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart|status|condrestart}"
+	exit 1
+esac
+
+exit 0

@@ -15,6 +15,7 @@
 contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text
 contrib/logo.jpg -text
+contrib/startup/redhat/netxmsd -text
 doc/Makefile.am -text
 doc/admin_guide.doc -text
 doc/internals.rtf -text

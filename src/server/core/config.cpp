@@ -43,6 +43,9 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
                         "   --debug-locks       : Print debug information about component locking.\n"
                         "   --dump-sql          : Dump all SQL queries to log.\n"
+#ifndef _WIN32
+                        "   --pid-file <file>   : Specify pid file.\n"
+#endif
                         "\n"
                         "Valid commands are:\n"
                         "   check-config        : Check configuration file syntax\n"
@@ -129,6 +132,13 @@ BOOL ParseCommandLine(int argc, char *argv[])
          i++;
          strcpy(g_szConfigFile, argv[i]);     // Next word should contain name of the config file
       }
+#ifndef _WIN32
+      else if (!strcmp(argv[i], "--pid-file"))  // PID file
+      {
+         i++;
+         strcpy(g_szPIDFile, argv[i]);     // Next word should contain name of the PID file
+      }
+#endif
       else if (!strcmp(argv[i], "--debug-all"))
       {
          g_dwFlags |= AF_DEBUG_ALL;

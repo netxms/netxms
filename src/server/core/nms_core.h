@@ -86,8 +86,8 @@
 #else    /* _WIN32 */
 
 #define DEFAULT_SHELL         "/bin/sh"
-#define DEFAULT_CONFIG_FILE   "/etc/netxms.conf"
-#define DEFAULT_LOG_FILE      "/var/log/netxms.log"
+#define DEFAULT_CONFIG_FILE   "/etc/netxmsd.conf"
+#define DEFAULT_LOG_FILE      "/var/log/netxmsd.log"
 #define DEFAULT_DATA_DIR      "/var/netxms"
 
 #define DDIR_MIBS             "/mibs"
@@ -455,6 +455,9 @@ void DumpSessions(void);
 extern DWORD g_dwFlags;
 extern char g_szConfigFile[];
 extern char g_szLogFile[];
+#ifndef _WIN32
+extern char g_szPIDFile[];
+#endif
 extern char g_szDataDir[];
 
 extern char g_szDbDriver[];
