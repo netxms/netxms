@@ -294,10 +294,15 @@ CREATE TABLE event_group_members
 
 CREATE TABLE event_policy
 (
-	id integer not null,	// Rule number
+	rule_id integer not null,   // Rule number
 	flags integer not null,
 	comments varchar(255),
-	PRIMARY KEY(id)
+	alarm_message varchar(255),
+	alarm_severity integer,
+	alarm_key varchar(255),	    // Alarm key (used for auto acknowlegment)
+	alarm_ack_key varchar(255), // Acknowlege all alarms with given key
+	alarm_ack_flag integer,	    // 1 if alarm will be acknowleged at creation time
+	PRIMARY KEY(rule_id)
 );
 
 CREATE TABLE policy_source_list
@@ -345,6 +350,7 @@ CREATE TABLE thresholds
 (
 	threshold_id integer not null,
 	item_id integer not null,
+	sequence_number integer not null,
 	fire_value varchar(255),
 	rearm_value varchar(255),
 	check_function integer,
@@ -395,4 +401,36 @@ CREATE TABLE dct_host_map
 	template_id integer not null,
 	node_id integer not null,
 	PRIMARY KEY(template_id,node_id)
+);
+
+
+/*
+** Alarms
+*/
+
+CREATE TABLE alarms
+(
+	alarm_id integer not null,	// Unique alarm identifier
+	timestamp integer,
+	source integer,
+	message varchar(255),
+	severity integer,
+	alarm_key varchar(255),	// Alarm key (used for auto acknowlegment)
+	is_ack integer,		// TRUE if alarm is acknowleged
+	ack_by integer,         // ID of user who acknowleges alarm
+	PRIMARY KEY(alarm_id)
+);
+
+
+/*
+** Alarm notes
+*/
+
+CREATE TABLE alarm_notes
+(
+	note_id integer not null,
+	alarm_id integer not null,
+	timestamp integer,
+	note_text DT_TEXT,
+	PRIMARY KEY(note_id)
 );
