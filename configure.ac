@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.45 2005-01-02 10:20:19 victor Exp $
+# $Id: configure.ac,v 1.46 2005-01-04 17:15:57 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -7,6 +7,11 @@ AC_INIT([NetXMS], [0.1.10], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
+
+# --------------------------------------------------------------------------
+# disable C++ exceptions
+CPPFLAGS="$CPPFLAGS -fno-exceptions"
+LDFLAGS="-nodefaultlibs -lc $LDFLAGS"
 
 # --------------------------------------------------------------------------
 # misc
@@ -24,11 +29,6 @@ if test -d /usr/kerberos/include; then
 	CFLAGS="$CFLAGS -I/usr/kerberos/include"
 	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
 fi
-
-#if test -d /usr/local/ssl/include; then
-#	CFLAGS="$CFLAGS -I/usr/local/ssl/include"
-#	CPPFLAGS="$CPPFLAGS -I/usr/local/ssl/include"
-#fi
 
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
@@ -116,6 +116,14 @@ AC_ARG_WITH(server,
 ])
 
 
+AC_ARG_WITH(client,
+[AS_HELP_STRING(--with-client,build client library and tools)],
+[
+	MODULES="$MODULES libnxcl nxevent console"
+	BUILD_CLIENT="yes"
+])
+
+
 SUBAGENT_DIRS=""
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
@@ -140,7 +148,7 @@ AC_ARG_WITH(agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql"
-	MODULES="server agent"
+	MODULES="server agent libnxcl nxevent console"
 	SUBAGENT_DIRS="linux freebsd sunos"
 )
 
@@ -154,6 +162,7 @@ AC_SUBST(SUBAGENT_DIRS)
 
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_CXX
 AC_PROG_INSTALL
 
 AC_LIBTOOL_DLOPEN
@@ -165,12 +174,13 @@ AC_PROG_LIBTOOL
 #AC_CHECK_LIB([socket], [socket])
 #AC_CHECK_LIB([nsl], [gethostbyname])
 
-#AC_CHECK_LIB(crypto, DH_new)
-#AC_CHECK_LIB(ssl, SSL_accept)
-AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
-AC_CHECK_LIB(readline, readline)
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
+
+if test "x$BUILD_SERVER" = "xyes" ; then
+   AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
+   AC_CHECK_LIB(readline, readline)
+fi
 
 # --------------------------------------------------------------------------
 # checks for headers.
@@ -241,14 +251,6 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir])
-
-# --------------------------------------------------------------------------
-# UNICODE support
-
-AC_CHECK_HEADERS([wchar.h])
-AC_CHECK_TYPES([wchar_t])
-AC_CHECK_FUNCS([wctomb mbtowc wcslen])
-
 
 # sockets/resolver (probably for solaris)
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
