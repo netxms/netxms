@@ -109,8 +109,12 @@ static DWORD WINAPI LoginThread(void *pArg)
    // Synchronize objects
    if (dwResult == RCC_SUCCESS)
    {
+      TCHAR szCacheFile[MAX_PATH];
+
       SetInfoText(hWnd, "Synchronizing objects...");
-      dwResult = NXCSyncObjects(g_hSession);
+      _tcscpy(szCacheFile, g_szWorkDir);
+      _tcscat(szCacheFile, WORKFILE_OBJECTCACHE);
+      dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
    }
 
    if (dwResult == RCC_SUCCESS)

@@ -741,7 +741,8 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n"
                          "Node status after poll is %s\r\n", m_szName, g_pszStatusName[m_iStatus]);
    m_pPollRequestor = NULL;
-   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
+   if (dwRqId == 0)
+      m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
    PollerUnlock();
 }
 
@@ -1013,7 +1014,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                  m_szName, bHasChanges ? _T(" ") : _T(" not "));
 
    // Finish configuration poll
-   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
+   if (dwRqId == 0)
+      m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    PollerUnlock();
    DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 

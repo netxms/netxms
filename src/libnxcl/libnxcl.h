@@ -38,7 +38,9 @@
 // Constants
 //
 
-#define LIBNXCL_VERSION    1
+#define OBJECT_CACHE_MAGIC 0x7080ABCD
+
+#define LIBNXCL_VERSION    2
 
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64
@@ -53,6 +55,7 @@
 
 #define NXC_SF_USERDB_LOADED     0x0001
 #define NXC_SF_SYNC_FINISHED     0x0002
+#define NXC_SF_HAS_OBJECT_CACHE  0x0004
 
 
 //
@@ -64,6 +67,19 @@ typedef struct
    DWORD dwKey;
    NXC_OBJECT *pObject;
 } INDEX;
+
+
+//
+// Object cache file header structure
+//
+
+typedef struct
+{
+   DWORD dwMagic;
+   DWORD dwStructSize;  // sizeof(NXC_OBJECT)
+   DWORD dwTimeStamp;
+   DWORD dwNumObjects;
+} OBJECT_CACHE_HEADER;
 
 
 //
@@ -79,6 +95,7 @@ private:
    DWORD m_dwFlags;
    DWORD m_dwMsgId;
    DWORD m_dwState;
+   DWORD m_dwTimeStamp;    // Last known server's timestamp
    DWORD m_dwNumObjects;
    INDEX *m_pIndexById;
    MUTEX m_mutexIndexAccess;
@@ -118,6 +135,7 @@ private:
 
    void ProcessObjectUpdate(CSCPMessage *pMsg);
    void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex);
+   void LoadObjectsFromCache(TCHAR *pszCacheFile);
 
 public:
    NXCL_Session();
@@ -156,7 +174,7 @@ public:
    BOOL GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
    NXC_USER *FindUserById(DWORD dwId);
 
-   DWORD SyncObjects(void);
+   DWORD SyncObjects(TCHAR *pszCacheFile);
    void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
    void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
    NXC_OBJECT *FindObjectById(DWORD dwId, BOOL bLock);
@@ -164,6 +182,9 @@ public:
    void EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
    NXC_OBJECT *GetRootObject(DWORD dwId, DWORD dwIndex);
    void *GetObjectIndex(DWORD *pdwNumObjects);
+
+   void SetTimeStamp(DWORD dwTimeStamp) { m_dwTimeStamp = dwTimeStamp; }
+   DWORD GetTimeStamp(void) { return m_dwTimeStamp; }
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

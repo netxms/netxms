@@ -89,11 +89,12 @@ extern CConsoleApp theApp;
 
 
 //
-// Subdirectories in working directory
+// Subdirectories and files in working directory
 //
 
-#define WORKDIR_MIBCACHE   "\\MIBCache"
-#define WORKDIR_IMAGECACHE "\\ImageCache"
+#define WORKDIR_MIBCACHE      _T("\\MIBCache")
+#define WORKDIR_IMAGECACHE    _T("\\ImageCache")
+#define WORKFILE_OBJECTCACHE  _T("\\objects.cache")
 
 
 //

@@ -75,6 +75,41 @@ void UnregisterSession(DWORD dwIndex)
 
 
 //
+// Keep-alive thread
+//
+
+static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
+{
+   int i, iSleepTime;
+   CSCPMessage msg;
+
+   // Read configuration
+   iSleepTime = ConfigReadInt("KeepAliveInterval", 60);
+
+   // Prepare keepalive message
+   msg.SetCode(CMD_KEEPALIVE);
+   msg.SetId(0);
+
+   while(1)
+   {
+      if (SleepAndCheckForShutdown(iSleepTime))
+         break;
+
+      msg.SetVariable(VID_TIMESTAMP, (DWORD)time(NULL));
+      MutexLock(m_hSessionListAccess, INFINITE);
+      for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+         if (m_pSessionList[i] != NULL)
+            if (m_pSessionList[i]->IsAuthenticated())
+               m_pSessionList[i]->SendMessage(&msg);
+      MutexUnlock(m_hSessionListAccess);
+   }
+
+   DbgPrintf(AF_DEBUG_MISC, _T("Client keep-alive thread terminated"));
+   return THREAD_OK;
+}
+
+
+//
 // Listener thread
 //
 
@@ -119,6 +154,9 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
 
    // Set up queue
    listen(sock, SOMAXCONN);
+
+   // Start client keep-alive thread
+   ThreadCreate(ClientKeepAliveThread, 0, NULL);
 
    // Wait for connection requests
    while(!ShutdownInProgress())

@@ -293,7 +293,7 @@ private:
    void DebugPrintf(char *szFormat, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
-   void SendAllObjects(DWORD dwRqId);
+   void SendAllObjects(CSCPMessage *pRequest);
    void SendAllEvents(DWORD dwRqId);
    void SendAllConfigVars(void);
    void SendUserDB(DWORD dwRqId);

@@ -542,7 +542,7 @@ void ClientSession::ProcessingThread(void)
             SendServerInfo(pMsg->GetId());
             break;
          case CMD_GET_OBJECTS:
-            SendAllObjects(pMsg->GetId());
+            SendAllObjects(pMsg);
             break;
          case CMD_GET_EVENTS:
             SendAllEvents(pMsg->GetId());
@@ -1174,17 +1174,20 @@ void ClientSession::GenerateEventCode(DWORD dwRqId)
 // Send all objects to client
 //
 
-void ClientSession::SendAllObjects(DWORD dwRqId)
+void ClientSession::SendAllObjects(CSCPMessage *pRequest)
 {
-   DWORD i;
+   DWORD i, dwTimeStamp;
    CSCPMessage msg;
 
    // Send confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
+   msg.SetId(pRequest->GetId());
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    SendMessage(&msg);
    msg.DeleteAllVariables();
+
+   // Get client's last known time stamp
+   dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 
    MutexLock(m_mutexSendObjects, INFINITE);
 
@@ -1194,7 +1197,8 @@ void ClientSession::SendAllObjects(DWORD dwRqId)
    // Send objects, one per message
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if (g_pIndexById[i].pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if ((g_pIndexById[i].pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+          (g_pIndexById[i].pObject->TimeStamp() > dwTimeStamp))
       {
          g_pIndexById[i].pObject->CreateMessage(&msg);
          SendMessage(&msg);

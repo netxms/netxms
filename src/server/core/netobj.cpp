@@ -153,12 +153,12 @@ BOOL NetObj::SaveCommonProperties(void)
          _sntprintf(szQuery, 512, 
                     _T("UPDATE object_properties SET name='%s',status=%d,"
                        "is_deleted=%d,image_id=%ld,inherit_access_rights=%d,"
-                       "last_modified WHERE object_id=%ld"),
+                       "last_modified=%ld WHERE object_id=%ld"),
                     m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_dwId);
       else
          _sntprintf(szQuery, 512, 
-                    _T("INSERT INTO access_options (object_id,name,status,is_deleted,"
+                    _T("INSERT INTO object_properties (object_id,name,status,is_deleted,"
                        "image_id,inherit_access_rights,last_modified) "
                        "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld)"),
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,

@@ -144,6 +144,7 @@ public:
    DWORD Id(void) { return m_dwId; }
    const char *Name(void) { return m_szName; }
    int Status(void) { return m_iStatus; }
+   DWORD TimeStamp(void) { return m_dwTimeStamp; }
 
    BOOL IsModified(void) { return m_bIsModified; }
    BOOL IsDeleted(void) { return m_bIsDeleted; }

@@ -258,9 +258,12 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_OBJECT_LIST_END:
-         LockObjectIndex();
-         qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-         UnlockObjectIndex();
+         if (!(m_dwFlags & NXC_SF_HAS_OBJECT_CACHE))
+         {
+            LockObjectIndex();
+            qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
+            UnlockObjectIndex();
+         }
          CompleteSync(RCC_SUCCESS);
          break;
       case CMD_OBJECT:
@@ -268,8 +271,25 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
                      pMsg->GetVariableStr(VID_OBJECT_NAME), pMsg->GetVariableShort(VID_OBJECT_CLASS));
       
          // Create new object from message and add it to list
-         pObject = NewObjectFromMsg(pMsg);
-         AddObject(pObject, FALSE);
+         pNewObject = NewObjectFromMsg(pMsg);
+         if (m_dwFlags & NXC_SF_HAS_OBJECT_CACHE)
+         {
+            // We already have some objects loaded from cache file
+            pObject = FindObjectById(pNewObject->dwId, TRUE);
+            if (pObject == NULL)
+            {
+               AddObject(pNewObject, TRUE);
+            }
+            else
+            {
+               ReplaceObject(pObject, pNewObject);
+            }
+         }
+         else
+         {
+            // No cache file, all objects are new
+            AddObject(pNewObject, FALSE);
+         }
          break;
       case CMD_OBJECT_UPDATE:
          pNewObject = NewObjectFromMsg(pMsg);
@@ -296,7 +316,7 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD NXCL_Session::SyncObjects(void)
+DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
@@ -306,8 +326,13 @@ DWORD NXCL_Session::SyncObjects(void)
 
    DestroyAllObjects();
 
+   m_dwFlags &= ~NXC_SF_HAS_OBJECT_CACHE;
+   if (pszCacheFile != NULL)
+      LoadObjectsFromCache(pszCacheFile);
+
    msg.SetCode(CMD_GET_OBJECTS);
    msg.SetId(dwRqId);
+   msg.SetVariable(VID_TIMESTAMP, m_dwTimeStamp);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);
@@ -321,12 +346,17 @@ DWORD NXCL_Session::SyncObjects(void)
 
 
 //
-// Wrapper for NXCL_Session::SyncObjects()
+// Wrappers for NXCL_Session::SyncObjects()
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->SyncObjects();
+   return ((NXCL_Session *)hSession)->SyncObjects(NULL);
+}
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile)
+{
+   return ((NXCL_Session *)hSession)->SyncObjects(pszCacheFile);
 }
 
 
@@ -968,5 +998,167 @@ void LIBNXCL_EXPORTABLE NXCGetComparableObjectName(NXC_SESSION hSession, DWORD d
    else
    {
       *pszName = 0;
+   }
+}
+
+
+//
+// Save object's cache to file
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile)
+{
+   FILE *hFile;
+   OBJECT_CACHE_HEADER hdr;
+   DWORD i, dwResult, dwNumObjects, dwSize;
+   INDEX *pList;
+
+   hFile = _tfopen(pszFile, _T("wb"));
+   if (hFile != NULL)
+   {
+      ((NXCL_Session *)hSession)->LockObjectIndex();
+      pList = (INDEX *)((NXCL_Session *)hSession)->GetObjectIndex(&dwNumObjects);
+
+      // Write cache file header
+      hdr.dwMagic = OBJECT_CACHE_MAGIC;
+      hdr.dwStructSize = sizeof(NXC_OBJECT);
+      hdr.dwTimeStamp = ((NXCL_Session *)hSession)->GetTimeStamp();
+      hdr.dwNumObjects = dwNumObjects;
+      fwrite(&hdr, 1, sizeof(OBJECT_CACHE_HEADER), hFile);
+
+      // Write all objects
+      for(i = 0; i < dwNumObjects; i++)
+      {
+         fwrite(pList[i].pObject, 1, sizeof(NXC_OBJECT), hFile);
+         fwrite(pList[i].pObject->pdwChildList, 1, 
+                sizeof(DWORD) * pList[i].pObject->dwNumChilds, hFile);
+         fwrite(pList[i].pObject->pdwParentList, 1, 
+                sizeof(DWORD) * pList[i].pObject->dwNumParents, hFile);
+         fwrite(pList[i].pObject->pAccessList, 1, 
+                sizeof(NXC_ACL_ENTRY) * pList[i].pObject->dwAclSize, hFile);
+         switch(pList[i].pObject->iClass)
+         {
+            case OBJECT_NODE:
+               dwSize = _tcslen(pList[i].pObject->node.pszDescription) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->node.pszDescription, 1, dwSize, hFile);
+               break;
+            case OBJECT_CONTAINER:
+               dwSize = _tcslen(pList[i].pObject->container.pszDescription) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->container.pszDescription, 1, dwSize, hFile);
+               break;
+            case OBJECT_TEMPLATE:
+               dwSize = _tcslen(pList[i].pObject->dct.pszDescription) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->dct.pszDescription, 1, dwSize, hFile);
+               break;
+            case OBJECT_NETWORKSERVICE:
+               dwSize = _tcslen(pList[i].pObject->netsrv.pszRequest) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->netsrv.pszRequest, 1, dwSize, hFile);
+
+               dwSize = _tcslen(pList[i].pObject->netsrv.pszResponce) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->netsrv.pszResponce, 1, dwSize, hFile);
+               break;
+            default:
+               break;
+         }
+      }
+
+      ((NXCL_Session *)hSession)->UnlockObjectIndex();
+      fclose(hFile);
+      dwResult = RCC_SUCCESS;
+   }
+   else
+   {
+      dwResult = RCC_IO_ERROR;
+   }
+
+   return dwResult;
+}
+
+
+//
+// Load objects from cache file
+//
+
+void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
+{
+   FILE *hFile;
+   OBJECT_CACHE_HEADER hdr;
+   NXC_OBJECT object;
+   DWORD i, dwSize;
+
+   hFile = _tfopen(pszFile, _T("rb"));
+   if (hFile != NULL)
+   {
+      // Read header
+      if (fread(&hdr, 1, sizeof(OBJECT_CACHE_HEADER), hFile) == sizeof(OBJECT_CACHE_HEADER))
+      {
+         if ((hdr.dwMagic == OBJECT_CACHE_MAGIC) &&
+             (hdr.dwStructSize == sizeof(NXC_OBJECT)))
+         {
+            m_dwTimeStamp = hdr.dwTimeStamp;
+            for(i = 0; i < hdr.dwNumObjects; i++)
+            {
+               if (fread(&object, 1, sizeof(NXC_OBJECT), hFile) == sizeof(NXC_OBJECT))
+               {
+                  object.pdwChildList = (DWORD *)malloc(sizeof(DWORD) * object.dwNumChilds);
+                  fread(object.pdwChildList, 1, sizeof(DWORD) * object.dwNumChilds, hFile);
+                  
+                  object.pdwParentList = (DWORD *)malloc(sizeof(DWORD) * object.dwNumParents);
+                  fread(object.pdwParentList, 1, sizeof(DWORD) * object.dwNumParents, hFile);
+                  
+                  object.pAccessList = (NXC_ACL_ENTRY *)malloc(sizeof(NXC_ACL_ENTRY) * object.dwAclSize);
+                  fread(object.pAccessList, 1, sizeof(NXC_ACL_ENTRY) * object.dwAclSize, hFile);
+
+                  switch(object.iClass)
+                  {
+                     case OBJECT_NODE:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.node.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.node.pszDescription, 1, dwSize, hFile);
+                        object.node.pszDescription[dwSize / sizeof(TCHAR)] = 0;
+                        break;
+                     case OBJECT_CONTAINER:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.container.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.container.pszDescription, 1, dwSize, hFile);
+                        object.container.pszDescription[dwSize / sizeof(TCHAR)] = 0;
+                        break;
+                     case OBJECT_TEMPLATE:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.dct.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.dct.pszDescription, 1, dwSize, hFile);
+                        object.dct.pszDescription[dwSize / sizeof(TCHAR)] = 0;
+                        break;
+                     case OBJECT_NETWORKSERVICE:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.netsrv.pszRequest = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.netsrv.pszRequest, 1, dwSize, hFile);
+                        object.netsrv.pszRequest[dwSize / sizeof(TCHAR)] = 0;
+
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.netsrv.pszResponce = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.netsrv.pszResponce, 1, dwSize, hFile);
+                        object.netsrv.pszResponce[dwSize / sizeof(TCHAR)] = 0;
+                        break;
+                     default:
+                        break;
+                  }
+
+                  AddObject((NXC_OBJECT *)nx_memdup(&object, sizeof(NXC_OBJECT)), FALSE);
+               }
+            }
+            LockObjectIndex();
+            qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
+            UnlockObjectIndex();
+            m_dwFlags |= NXC_SF_HAS_OBJECT_CACHE;
+         }
+      }
+
+      fclose(hFile);
    }
 }

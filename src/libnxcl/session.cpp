@@ -32,6 +32,7 @@ NXCL_Session::NXCL_Session()
 {
    m_dwFlags = 0;
    m_dwMsgId = 0;
+   m_dwTimeStamp = 0;
    m_pEventHandler = NULL;
    m_dwState = STATE_DISCONNECTED;
    m_dwCommandTimeout = 10000;    // Default timeout is 10 seconds

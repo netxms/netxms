@@ -327,6 +327,12 @@ BOOL CConsoleApp::InitInstance()
 
 int CConsoleApp::ExitInstance() 
 {
+   TCHAR szBuffer[MAX_PATH];
+
+   _tcscpy(szBuffer, g_szWorkDir);
+   _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
+   NXCSaveObjectCache(g_hSession, szBuffer);
+
    NXCSetDebugCallback(NULL);
    NXCDisconnect(g_hSession);
    NXCShutdown();

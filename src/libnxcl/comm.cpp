@@ -104,6 +104,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          switch(pMsg->GetCode())
          {
             case CMD_KEEPALIVE:     // Keepalive message, ignore it
+               pSession->SetTimeStamp(pMsg->GetVariableLong(VID_TIMESTAMP));
                break;
             case CMD_OBJECT:        // Object information
             case CMD_OBJECT_UPDATE:
