@@ -53,14 +53,6 @@ extern CConsoleApp theApp;
 
 
 //
-// Global flags
-//
-
-#define AF_SHOW_OBJECT_PREVIEW   ((DWORD)0x00000001)
-#define AF_FOLLOW_OBJECT_UPDATES ((DWORD)0x00000002)
-
-
-//
 // Variables
 //
 
@@ -69,7 +61,6 @@ extern char g_szLogin[];
 extern char g_szPassword[];
 extern char *g_szStatusText[];
 extern char *g_szStatusTextSmall[];
-extern DWORD g_dwFlags;
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];

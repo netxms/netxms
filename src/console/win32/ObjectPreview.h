@@ -40,6 +40,7 @@ public:
 
 // Implementation
 public:
+	void Refresh(void);
 	void SetCurrentObject(NXC_OBJECT *pObject);
 	virtual ~CObjectPreview();
 

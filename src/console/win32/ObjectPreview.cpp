@@ -111,3 +111,14 @@ void CObjectPreview::OnPaint()
 
    pen.DeleteObject();
 }
+
+
+//
+// Refresh object information
+//
+
+void CObjectPreview::Refresh()
+{
+   m_wndObjectPreview.Invalidate();
+   m_wndObjectPreview.UpdateWindow();
+}

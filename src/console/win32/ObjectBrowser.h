@@ -10,6 +10,10 @@
 #include "ObjectPreview.h"
 
 
+#define SHOW_OBJECT_PREVIEW   ((DWORD)0x00000001)
+#define FOLLOW_OBJECT_UPDATES ((DWORD)0x00000002)
+
+
 //
 // Hash for tree items
 //
@@ -45,6 +49,8 @@ public:
 
 // Implementation
 protected:
+	void DeleteObjectTreeItem(HTREEITEM hItem);
+	DWORD m_dwFlags;
 	void CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer);
 	DWORD FindObjectInTree(DWORD dwObjectId);
 	DWORD m_dwTreeHashSize;

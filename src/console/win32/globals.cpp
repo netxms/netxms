@@ -79,13 +79,6 @@ char *g_szInterfaceTypes[] = {
 
 
 //
-// Global flags
-//
-
-DWORD g_dwFlags = AF_SHOW_OBJECT_PREVIEW;
-
-
-//
 // Status color table
 //
 
