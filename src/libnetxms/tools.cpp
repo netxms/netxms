@@ -442,11 +442,29 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, 
 // daemon() implementation for systems which doesn't have one
 //
 
-#if !(HAVE_DAEMON) && !defined(_NETWARE)
+#if !(HAVE_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
 
 int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 {
-   /* TODO: add implementation */
+   int pid;
+
+   if ((pid = fork()) < 0)
+      return -1;
+   if (pid != 0)
+      exit(0);                // Terminate parent
+
+   setsid();
+
+   if (!nochdir)
+      chdir("/");
+
+   if (!noclose) 
+   {
+      fclose(stdin);          // don't need stdin, stdout, stderr
+      fclose(stdout);
+      fclose(stderr);
+   }
+
    return 0;
 }
 
