@@ -265,6 +265,7 @@ typedef struct
 #define CMD_LOAD_TRAP_CFG           0x0064
 #define CMD_TRAP_CFG_RECORD         0x0065
 #define CMD_QUERY_PARAMETER         0x0066
+#define CMD_GET_SERVER_INFO         0x0067
 
 
 //
@@ -391,6 +392,8 @@ typedef struct
 #define VID_TRAP_OID                ((DWORD)118)
 #define VID_TRAP_OID_LEN            ((DWORD)119)
 #define VID_TRAP_NUM_MAPS           ((DWORD)120)
+#define VID_SERVER_VERSION          ((DWORD)121)
+#define VID_SUPPORTED_ENCRYPTION    ((DWORD)122)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

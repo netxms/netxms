@@ -245,6 +245,7 @@ private:
    }
 
    void DebugPrintf(char *szFormat, ...);
+   void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(DWORD dwRqId);
    void SendAllEvents(DWORD dwRqId);
@@ -290,9 +291,7 @@ private:
    void OnTrap(CSCPMessage *pRequest);
    void OnWakeUpNode(CSCPMessage *pRequest);
    void QueryParameter(CSCPMessage *pRequest);
-   void CreateTrap(CSCPMessage *pRequest);
-   void UpdateTrap(CSCPMessage *pRequest);
-   void DeleteTrap(CSCPMessage *pRequest);
+   void EditTrap(int iOperation, CSCPMessage *pRequest);
    void LockTrapCfg(DWORD dwRqId, BOOL bLock);
    void SendAllTraps(DWORD dwRqId);
 
@@ -406,6 +405,8 @@ void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommu
 
 void InitTraps(void);
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
+DWORD CreateNewTrap(DWORD *pdwTrapId);
+DWORD UpdateTrapFromMsg(CSCPMessage *pMsg);
 DWORD DeleteTrap(DWORD dwId);
 
 #ifdef _WIN32

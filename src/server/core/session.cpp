@@ -22,11 +22,18 @@
 
 #include "nms_core.h"
 
-#ifdef _WIN32
-# include <direct.h>
-#else
-# include <dirent.h>
+#ifndef _WIN32
+#include <dirent.h>
 #endif
+
+
+//
+// Constants
+//
+
+#define TRAP_CREATE     1
+#define TRAP_UPDATE     2
+#define TRAP_DELETE     3
 
 
 //
@@ -416,7 +423,8 @@ void ClientSession::ProcessingThread(void)
          break;
 
       DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
-      if ((m_iState != STATE_AUTHENTICATED) && (pMsg->GetCode() != CMD_LOGIN))
+      if ((m_iState != STATE_AUTHENTICATED) && 
+          (pMsg->GetCode() != CMD_LOGIN) && (pMsg->GetCode() != CMD_GET_SERVER_INFO))
       {
          delete pMsg;
          continue;
@@ -426,6 +434,9 @@ void ClientSession::ProcessingThread(void)
       {
          case CMD_LOGIN:
             Login(pMsg);
+            break;
+         case CMD_GET_SERVER_INFO:
+            SendServerInfo(pMsg->GetId());
             break;
          case CMD_GET_OBJECTS:
             SendAllObjects(pMsg->GetId());
@@ -585,13 +596,13 @@ void ClientSession::ProcessingThread(void)
             LockTrapCfg(pMsg->GetId(), FALSE);
             break;
          case CMD_CREATE_TRAP:
-            CreateTrap(pMsg);
+            EditTrap(TRAP_CREATE, pMsg);
             break;
          case CMD_MODIFY_TRAP:
-            UpdateTrap(pMsg);
+            EditTrap(TRAP_UPDATE, pMsg);
             break;
          case CMD_DELETE_TRAP:
-            DeleteTrap(pMsg);
+            EditTrap(TRAP_DELETE, pMsg);
             break;
          case CMD_LOAD_TRAP_CFG:
             SendAllTraps(pMsg->GetId());
@@ -612,6 +623,28 @@ void ClientSession::ProcessingThread(void)
       }
       delete pMsg;
    }
+}
+
+
+//
+// Send server information to client
+//
+
+void ClientSession::SendServerInfo(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   // Fill message with server info
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
+   msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (DWORD)0);
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 
@@ -3155,31 +3188,13 @@ void ClientSession::QueryParameter(CSCPMessage *pRequest)
 
 
 //
-// Create new trap configuration record
+// Edit trap configuration record
 //
 
-void ClientSession::CreateTrap(CSCPMessage *pRequest)
-{
-}
-
-
-//
-// Update trap configuration record
-//
-
-void ClientSession::UpdateTrap(CSCPMessage *pRequest)
-{
-}
-
-
-//
-// Delete trap configuration record
-//
-
-void ClientSession::DeleteTrap(CSCPMessage *pRequest)
+void ClientSession::EditTrap(int iOperation, CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwTrapId;
+   DWORD dwTrapId, dwResult;
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -3190,8 +3205,25 @@ void ClientSession::DeleteTrap(CSCPMessage *pRequest)
    {
       if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
       {
-         dwTrapId = pRequest->GetVariableLong(VID_TRAP_ID);
-         msg.SetVariable(VID_RCC, ::DeleteTrap(dwTrapId));
+         switch(iOperation)
+         {
+            case TRAP_CREATE:
+               dwResult = CreateNewTrap(&dwTrapId);
+               msg.SetVariable(VID_RCC, dwResult);
+               if (dwResult == RCC_SUCCESS)
+                  msg.SetVariable(VID_TRAP_ID, dwTrapId);   // Send id of new trap to client
+               break;
+            case TRAP_UPDATE:
+               msg.SetVariable(VID_RCC, UpdateTrapFromMsg(pRequest));
+               break;
+            case TRAP_DELETE:
+               dwTrapId = pRequest->GetVariableLong(VID_TRAP_ID);
+               msg.SetVariable(VID_RCC, DeleteTrap(dwTrapId));
+               break;
+            default:
+               msg.SetVariable(VID_RCC, RCC_SYSTEM_FAILURE);
+               break;
+         }
       }
       else
       {

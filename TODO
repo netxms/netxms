@@ -18,8 +18,6 @@ GENERAL:
 - Allow converting counters to deltas in data collection
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
-- Add DEFAULT keyword for config.need_server_restart and 
-  config.is_visible in schema
 - Add --with-client option to configure (should enable libnxcl and nxevent)
 - Optimize WaitForMessage method in message waiting queue class
 
@@ -59,6 +57,7 @@ WINDOWS CONSOLE:
 - Find good graph creation library
 - In object browser, automatically enclose search string in * when searching
 - Enlarge 16x16 status overlay icons
+- Add primary IP address selection 
 
 
 SUBAGENTS:

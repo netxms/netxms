@@ -197,9 +197,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       MutexLock(m_mutexTrapCfgAccess, INFINITE);
       for(i = 0; i < m_dwNumTraps; i++)
       {
-         iResult = pdu->GetTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
-         if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
-            break;   // Find the match
+         if (m_pTrapCfg[i].dwOidLen > 0)
+         {
+            iResult = pdu->GetTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
+            if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
+               break;   // Find the match
+         }
       }
 
       if (i < m_dwNumTraps)
@@ -360,6 +363,81 @@ DWORD DeleteTrap(DWORD dwId)
          QueueSQLRequest(szQuery);
          _stprintf(szQuery, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%ld"), dwId);
          QueueSQLRequest(szQuery);
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+   }
+
+   MutexUnlock(m_mutexTrapCfgAccess);
+   return dwResult;
+}
+
+
+//
+// Create new trap configuration record
+//
+
+DWORD CreateNewTrap(DWORD *pdwTrapId)
+{
+   DWORD dwResult = RCC_SUCCESS;
+   TCHAR szQuery[256];
+
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   
+   *pdwTrapId = CreateUniqueId(IDG_SNMP_TRAP);
+   m_pTrapCfg = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapCfg, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
+   memset(&m_pTrapCfg[m_dwNumTraps], 0, sizeof(NXC_TRAP_CFG_ENTRY));
+   m_pTrapCfg[m_dwNumTraps].dwId = *pdwTrapId;
+   m_pTrapCfg[m_dwNumTraps].dwEventId = EVENT_SNMP_UNMATCHED_TRAP;
+   m_dwNumTraps++;
+
+   MutexUnlock(m_mutexTrapCfgAccess);
+
+   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,description) ")
+                      _T("VALUES (%ld,'',%d,'')"), *pdwTrapId, EVENT_SNMP_UNMATCHED_TRAP);
+   return dwResult;
+}
+
+
+//
+// Update trap configuration record from message
+//
+
+DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
+{
+   DWORD i, j, dwId1, dwId2, dwId3, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
+
+   dwTrapId = pMsg->GetVariableLong(VID_TRAP_ID);
+
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   for(i = 0; i < m_dwNumTraps; i++)
+   {
+      if (m_pTrapCfg[i].dwId == dwTrapId)
+      {
+         // Read trap configuration from event
+         m_pTrapCfg[i].dwEventId = pMsg->GetVariableLong(VID_EVENT_ID);
+         m_pTrapCfg[i].dwOidLen = pMsg->GetVariableLong(VID_TRAP_OID_LEN);
+         m_pTrapCfg[i].pdwObjectId = (DWORD *)realloc(m_pTrapCfg[i].pdwObjectId, sizeof(DWORD) * m_pTrapCfg[i].dwOidLen);
+         pMsg->GetVariableInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
+         pMsg->GetVariableStr(VID_DESCRIPTION, m_pTrapCfg[i].szDescription, MAX_DB_STRING);
+
+         // Destroy current parameter mapping
+         for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+            safe_free(m_pTrapCfg[i].pMaps[j].pdwObjectId);
+         safe_free(m_pTrapCfg[i].pMaps);
+
+         // Read new mappings from message
+         m_pTrapCfg[i].dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
+         m_pTrapCfg[i].pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * m_pTrapCfg[i].dwNumMaps);
+         for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
+             j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
+         {
+            m_pTrapCfg[i].pMaps[j].dwOidLen = pMsg->GetVariableLong(dwId1);
+            pMsg->GetVariableInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, 
+                                        m_pTrapCfg[i].pMaps[j].pdwObjectId);
+            pMsg->GetVariableStr(dwId3, m_pTrapCfg[i].pMaps[j].szDescription, MAX_DB_STRING);
+         }
+
          dwResult = RCC_SUCCESS;
          break;
       }

@@ -190,3 +190,67 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(DWORD dwTrapId)
 
    return WaitForRCC(dwRqId);
 }
+
+
+//
+// Create new trap configuration record
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(DWORD *pdwTrapId)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_CREATE_TRAP);
+   msg.SetId(dwRqId);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   if (pResponce != NULL)
+   {
+      dwResult = pResponce->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+         *pdwTrapId = pResponce->GetVariableLong(VID_TRAP_ID);
+      delete pResponce;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+
+   return dwResult;
+}
+
+
+//
+// Update trap configuration record
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_TRAP_CFG_ENTRY *pTrap)
+{
+   CSCPMessage msg;
+   DWORD i, dwRqId, dwId1, dwId2, dwId3;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_MODIFY_TRAP);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_TRAP_ID, pTrap->dwId);
+   msg.SetVariable(VID_TRAP_OID_LEN, pTrap->dwOidLen); 
+   msg.SetVariableToInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
+   msg.SetVariable(VID_EVENT_ID, pTrap->dwEventId);
+   msg.SetVariable(VID_DESCRIPTION, pTrap->szDescription);
+   msg.SetVariable(VID_TRAP_NUM_MAPS, pTrap->dwNumMaps);
+   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
+       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++)
+   {
+      msg.SetVariable(dwId1, pTrap->pMaps[i].dwOidLen);
+      msg.SetVariableToInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
+      msg.SetVariable(dwId3, pTrap->pMaps[i].szDescription);
+   }
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
+}

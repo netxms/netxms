@@ -31,7 +31,7 @@
 NXC_EVENT_HANDLER g_pEventHandler = NULL;
 NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 DWORD g_dwState = STATE_DISCONNECTED;
-DWORD g_dwCommandTimeout = 3000;    // Default timeout is 3 seconds
+DWORD g_dwCommandTimeout = 10000;    // Default timeout is 10 seconds
 
 
 //
@@ -137,9 +137,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("No MAC address on interface"),
       _T("Command not implemented"),
       _T("Invalid trap configuration record ID"),
-      _T("Requested data collection item is not supported by agent")
+      _T("Requested data collection item is not supported by agent"),
+      _T("Client and server versions mismatch")
    };
-   return ((dwError >= 0) && (dwError <= RCC_DCI_NOT_SUPPORTED)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_VERSION_MISMATCH)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

@@ -262,22 +262,53 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin, TCHAR *szPa
             {
                // Start receiver thread
                ThreadCreate(NetReceiver, 0, NULL);
-   
-               // Prepare login message
-               msg.SetId(g_dwMsgId++);
-               msg.SetCode(CMD_LOGIN);
-               msg.SetVariable(VID_LOGIN_NAME, szLogin);
-               CalculateSHA1Hash((BYTE *)szPassword, _tcslen(szPassword), szPasswordHash);
-               msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
 
+               // Query server information
+               msg.SetId(g_dwMsgId++);
+               msg.SetCode(CMD_GET_SERVER_INFO);
                if (SendMsg(&msg))
                {
                   // Receive responce message
-                  pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), g_dwCommandTimeout);
+                  pResp = m_msgWaitQueue.WaitForMessage(CMD_REQUEST_COMPLETED, msg.GetId(), g_dwCommandTimeout);
                   if (pResp != NULL)
                   {
                      dwRetCode = pResp->GetVariableLong(VID_RCC);
+                     if (dwRetCode == RCC_SUCCESS)
+                     {
+                        TCHAR szServerVersion[64];
+
+                        pResp->GetVariableStr(VID_SERVER_VERSION, szServerVersion, 64);
+                        if (_tcsncmp(szServerVersion, NETXMS_VERSION_STRING, 64))
+                           dwRetCode = RCC_VERSION_MISMATCH;
+                     }
                      delete pResp;
+
+                     if (dwRetCode == RCC_SUCCESS)
+                     {
+                        // Prepare login message
+                        msg.DeleteAllVariables();
+                        msg.SetId(g_dwMsgId++);
+                        msg.SetCode(CMD_LOGIN);
+                        msg.SetVariable(VID_LOGIN_NAME, szLogin);
+                        CalculateSHA1Hash((BYTE *)szPassword, _tcslen(szPassword), szPasswordHash);
+                        msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
+
+                        if (SendMsg(&msg))
+                        {
+                           // Receive responce message
+                           pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), g_dwCommandTimeout);
+                           if (pResp != NULL)
+                           {
+                              dwRetCode = pResp->GetVariableLong(VID_RCC);
+                              delete pResp;
+                           }
+                           else
+                           {
+                              // Connection is broken or timed out
+                              dwRetCode = RCC_TIMEOUT;
+                           }
+                        }
+                     }
                   }
                   else
                   {

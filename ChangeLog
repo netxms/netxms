@@ -27,6 +27,8 @@
   change DCI status to "Not supported" accordingly
 - Added interface status polling via SNMP
 - Agent: Fixed bug in interface operational status detection under Windows
+- Added server version checking in client connection procedure. If versions
+  mismatch, client will not connect to server.
 
 
 *
