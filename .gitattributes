@@ -108,6 +108,11 @@ src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
+src/agent/subagents/winperf/tools.cpp -text
+src/agent/subagents/winperf/winperf.cpp -text
+src/agent/subagents/winperf/winperf.dsp -text
+src/agent/subagents/winperf/winperf.dsw -text
+src/agent/subagents/winperf/winperf.h -text
 src/console/cmdline/cmdline.cpp -text
 src/console/cmdline/main.cpp -text
 src/console/cmdline/nxcmd.dsp -text
