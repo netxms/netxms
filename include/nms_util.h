@@ -183,6 +183,7 @@ extern "C"
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
+   void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
 
    void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, char *pStr);
    DWORD LIBNETXMS_EXPORTABLE StrToBin(char *pStr, BYTE *pData, DWORD dwSize);

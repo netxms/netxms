@@ -49,6 +49,11 @@ protected:
 	afx_msg void OnSelectEvent();
 	afx_msg void OnButtonAdd();
 	afx_msg void OnButtonDelete();
+	afx_msg void OnButtonEdit();
+	afx_msg void OnButtonUp();
+	afx_msg void OnButtonDown();
+	afx_msg void OnItemchangedListArgs(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDblclkListArgs(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

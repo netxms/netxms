@@ -23,10 +23,16 @@ CTrapEditor::CTrapEditor()
    m_pTrapList = NULL;
    m_dwNumTraps = 0;
    m_pImageList = NULL;
+
+   m_iSortMode = theApp.GetProfileInt(_T("TrapEditor"), _T("SortMode"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("TrapEditor"), _T("SortDir"), 1);
 }
 
 CTrapEditor::~CTrapEditor()
 {
+   theApp.WriteProfileInt(_T("TrapEditor"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("TrapEditor"), _T("SortDir"), m_iSortDir);
+
    if (m_pTrapList != NULL)
       NXCDestroyTrapList(m_dwNumTraps, m_pTrapList);
    delete m_pImageList;
@@ -49,6 +55,7 @@ BEGIN_MESSAGE_MAP(CTrapEditor, CMDIChildWnd)
 	ON_COMMAND(ID_TRAP_EDIT, OnTrapEdit)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -78,18 +85,23 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    theApp.OnViewCreate(IDR_TRAP_EDITOR, this);
 
+   // Create image list
    m_pImageList = CreateEventImageList();
+   m_iSortImageBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
 	
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS,
+                        rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT |
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 60);
    m_wndListCtrl.InsertColumn(1, "SNMP Trap ID", LVCFMT_LEFT, 200);
    m_wndListCtrl.InsertColumn(2, "Event", LVCFMT_LEFT, 200);
    m_wndListCtrl.InsertColumn(3, "Description", LVCFMT_LEFT, 250);
@@ -162,6 +174,7 @@ void CTrapEditor::OnViewRefresh()
    {
       for(i = 0; i < m_dwNumTraps; i++)
          AddItem(i);
+      SortList();
    }
    else
    {
@@ -381,6 +394,7 @@ void CTrapEditor::OnTrapEdit()
                   dlg.m_trap.pMaps = NULL;
 
                   UpdateItem(iItem, dwIndex);
+                  SortList();
                }
                else
                {
@@ -400,4 +414,126 @@ void CTrapEditor::OnTrapEdit()
 void CTrapEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_TRAP_EDIT, 0);
+}
+
+
+//
+// Compare two OIDs
+//
+
+static int CompareOID(DWORD *pdwOid1, DWORD *pdwOid2, DWORD dwLen)
+{
+   DWORD i;
+
+   for(i = 0; i < dwLen; i++)
+   {
+      if (pdwOid1[i] < pdwOid2[i])
+         return -1;
+      if (pdwOid1[i] > pdwOid2[i])
+         return 1;
+   }
+   return 0;
+}
+
+
+//
+// Trap comparision procedure for sorting
+//
+
+static int CALLBACK TrapCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   CTrapEditor *pWnd = (CTrapEditor *)lParamSort;
+   NXC_TRAP_CFG_ENTRY *pTrap1, *pTrap2;
+   TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
+   int iResult;
+   
+   pTrap1 = pWnd->GetTrapById(lParam1);
+   pTrap2 = pWnd->GetTrapById(lParam2);
+   
+   switch(pWnd->GetSortMode())
+   {
+      case 0:     // ID
+         iResult = COMPARE_NUMBERS(pTrap1->dwId, pTrap2->dwId);
+         break;
+      case 1:     // Object ID
+         iResult = CompareOID(pTrap1->pdwObjectId, pTrap2->pdwObjectId,
+                              min(pTrap1->dwOidLen, pTrap2->dwOidLen));
+         if (iResult == 0)
+            iResult = COMPARE_NUMBERS(pTrap1->dwOidLen, pTrap2->dwOidLen);
+         break;
+      case 2:     // Event
+         NXCGetEventNameEx(pTrap1->dwEventId, szEvent1, MAX_EVENT_NAME);
+         NXCGetEventNameEx(pTrap2->dwEventId, szEvent2, MAX_EVENT_NAME);
+         iResult = _tcsicmp(szEvent1, szEvent2);
+         break;
+      case 3:     // Description
+         iResult = _tcsicmp(pTrap1->szDescription, pTrap2->szDescription);
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+
+   return iResult * pWnd->GetSortDir();
+}
+
+
+//
+// Sort trap list
+//
+
+void CTrapEditor::SortList()
+{
+   LVCOLUMN lvc;
+
+   m_wndListCtrl.SortItems(TrapCompareProc, (LPARAM)this);
+   lvc.mask = LVCF_IMAGE | LVCF_FMT;
+   lvc.fmt = LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_BITMAP_ON_RIGHT;
+   lvc.iImage = (m_iSortDir == 1) ? m_iSortImageBase : m_iSortImageBase + 1;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvc);
+}
+
+
+//
+// Get trap structure by id
+//
+
+NXC_TRAP_CFG_ENTRY *CTrapEditor::GetTrapById(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumTraps; i++)
+      if (m_pTrapList[i].dwId == dwId)
+         return &m_pTrapList[i];
+   return NULL;
+}
+
+
+//
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
+//
+
+void CTrapEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   SortList();
+   
+   *pResult = 0;
 }

@@ -51,7 +51,7 @@ static BOOL LoadTrapCfg(void)
    DWORD i, j, pdwBuffer[MAX_OID_LEN];
 
    // Load traps
-   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_id,description FROM snmp_trap_cfg ORDER BY sequence");
+   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_id,description FROM snmp_trap_cfg");
    if (hResult != NULL)
    {
       m_dwNumTraps = DBGetNumRows(hResult);
@@ -181,7 +181,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
 
 static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 {
-   DWORD i, dwOriginAddr, dwBufPos, dwBufSize;
+   DWORD i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[512];
    SNMP_Variable *pVar;
    Node *pNode;
@@ -197,19 +197,33 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    {
       // Find if we have this trap in our list
       MutexLock(m_mutexTrapCfgAccess, INFINITE);
-      for(i = 0; i < m_dwNumTraps; i++)
+
+      // Try to find closest match
+      for(i = 0, dwMatchLen = 0; i < m_dwNumTraps; i++)
       {
          if (m_pTrapCfg[i].dwOidLen > 0)
          {
             iResult = pdu->GetTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
-            if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
-               break;   // Find the match
+            if (iResult == OID_EQUAL)
+            {
+               dwMatchLen = m_pTrapCfg[i].dwOidLen;
+               dwMatchIdx = i;
+               break;   // Find exact match
+            }
+            if (iResult == OID_SHORTER)
+            {
+               if (m_pTrapCfg[i].dwOidLen > dwMatchLen)
+               {
+                  dwMatchLen = m_pTrapCfg[i].dwOidLen;
+                  dwMatchIdx = i;
+               }
+            }
          }
       }
 
-      if (i < m_dwNumTraps)
+      if (dwMatchLen > 0)
       {
-         GenerateTrapEvent(pNode->Id(), i, pdu);
+         GenerateTrapEvent(pNode->Id(), dwMatchIdx, pdu);
       }
       else     // Process unmatched traps
       {

@@ -18,10 +18,20 @@ protected:
 	CTrapEditor();           // protected constructor used by dynamic creation
 
 // Attributes
+private:
+	int m_iSortImageBase;
+	int m_iSortDir;
+	int m_iSortMode;
+	NXC_TRAP_CFG_ENTRY *m_pTrapList;
+	DWORD m_dwNumTraps;
+
 public:
 
 // Operations
 public:
+	NXC_TRAP_CFG_ENTRY *GetTrapById(DWORD dwId);
+   int GetSortMode(void) { return m_iSortMode; }
+   int GetSortDir(void) { return m_iSortDir; }
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -32,6 +42,7 @@ public:
 
 // Implementation
 protected:
+	void SortList(void);
 	CImageList *m_pImageList;
 	void UpdateItem(int iItem, DWORD dwIndex);
 	int AddItem(DWORD dwIndex);
@@ -54,10 +65,8 @@ protected:
 	afx_msg void OnTrapEdit();
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
-private:
-	NXC_TRAP_CFG_ENTRY *m_pTrapList;
-	DWORD m_dwNumTraps;
 };
 
 /////////////////////////////////////////////////////////////////////////////

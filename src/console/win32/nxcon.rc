@@ -361,9 +361,6 @@ BEGIN
         MENUITEM "&New...\tCtrl+N",             ID_TRAP_NEW
         MENUITEM "&Edit...\tEnter",             ID_TRAP_EDIT
         MENUITEM "&Delete\tDel",                ID_TRAP_DELETE
-        MENUITEM SEPARATOR
-        MENUITEM "Move &up\tCtrl+U",            ID_TRAP_MOVEUP
-        MENUITEM "Move do&wn\tCtrl+D",          ID_TRAP_MOVEDOWN
     END
 END
 
@@ -547,9 +544,6 @@ BEGIN
         MENUITEM "&New...",                     ID_TRAP_NEW
         MENUITEM "&Edit...",                    ID_TRAP_EDIT
         MENUITEM "&Delete",                     ID_TRAP_DELETE
-        MENUITEM SEPARATOR
-        MENUITEM "Move &up",                    ID_TRAP_MOVEUP
-        MENUITEM "Move do&wn",                  ID_TRAP_MOVEDOWN
     END
 END
 

@@ -88,6 +88,22 @@ void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
 
 
 //
+// Swap two memory blocks
+//
+
+void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize)
+{
+   void *pTemp;
+
+   pTemp = malloc(dwSize);
+   memcpy(pTemp, pBlock1, dwSize);
+   memcpy(pBlock1, pBlock2, dwSize);
+   memcpy(pBlock2, pTemp, dwSize);
+   free(pTemp);
+}
+
+
+//
 // Match string against pattern with * and ? metasymbols
 //
 
@@ -430,6 +446,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, 
 
 int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 {
+   /* TODO: add implementation */
    return 0;
 }
 
