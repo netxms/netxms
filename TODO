@@ -103,3 +103,4 @@ SUBAGENTS:
 CLIENT LIBRARY:
 
 - Add locks to functions which calls PrepareForSync()/WaitForSync()
+- Check for broken connections
