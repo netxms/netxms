@@ -185,3 +185,24 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 
 	return nRet;
 }
+
+
+//
+// Handler for Process.XXX parameters
+//
+
+LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
+{
+   int nRet = SYSINFO_RC_ERROR;
+   char szArg[128] = "";
+	int nCount;
+
+	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	nCount = ProcRead(NULL, szArg);
+	if (nCount >= 0)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
+}
