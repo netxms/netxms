@@ -56,7 +56,8 @@ typedef unsigned long HREQUEST;
 #define MAX_EVENT_NAME           64
 #define INVALID_REQUEST_HANDLE   ((HREQUEST)0xFFFFFFFF)
 #define MAX_USER_NAME            64
-#define GROUP_FLAG               0x01000000
+#define GROUP_FLAG               0x80000000
+#define GROUP_EVERYONE           0x80000000
 
 
 //
@@ -386,6 +387,7 @@ void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD
                                        const char *pszMessage, const char *pszDescription);
 
 NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);
+BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
 
 #ifdef __cplusplus
 }
