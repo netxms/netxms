@@ -2,27 +2,29 @@
 
 [General Info]
 Version=1
-LastClass=CLoginDialog
-LastTemplate=CDialog
+LastClass=CFlatButton
+LastTemplate=CButton
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxav.h"
 LastPage=0
 
-ClassCount=8
+ClassCount=10
 Class1=CAlarmViewApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
 ResourceCount=5
-Resource1=IDR_MAINFRAME
+Resource1=IDD_LOGIN
 Resource2=IDD_REQUEST_WAIT
 Class2=CChildView
 Class5=CAlarmList
 Class6=CInfoLine
 Class7=CRequestProcessingDlg
 Class8=CLoginDialog
-Resource3=IDD_LOGIN
+Resource3=IDR_MAINFRAME
 Resource4=IDD_ABOUTBOX
+Class9=CAlarmBrowser
+Class10=CFlatButton
 Resource5=IDM_CONTEXT
 
 [CLS:CAlarmViewApp]
@@ -30,6 +32,8 @@ Type=0
 HeaderFile=nxav.h
 ImplementationFile=nxav.cpp
 Filter=N
+BaseClass=CWinApp
+VirtualFilter=AC
 
 [CLS:CChildView]
 Type=0
@@ -70,13 +74,14 @@ Command1=ID_EDIT_COPY
 Command2=ID_EDIT_PASTE
 Command3=ID_EDIT_UNDO
 Command4=ID_EDIT_CUT
-Command5=ID_NEXT_PANE
-Command6=ID_PREV_PANE
-Command7=ID_EDIT_COPY
-Command8=ID_EDIT_PASTE
-Command9=ID_EDIT_CUT
-Command10=ID_EDIT_UNDO
-CommandCount=10
+Command5=ID_VIEW_REFRESH
+Command6=ID_NEXT_PANE
+Command7=ID_PREV_PANE
+Command8=ID_EDIT_COPY
+Command9=ID_EDIT_PASTE
+Command10=ID_EDIT_CUT
+Command11=ID_EDIT_UNDO
+CommandCount=11
 
 [CLS:CAlarmList]
 Type=0
@@ -122,7 +127,9 @@ LastObject=CLoginDialog
 Type=1
 Class=?
 Command1=ID_VIEW_REFRESH
-CommandCount=1
+Command2=ID_CMD_EXIT
+Command3=ID_CMD_SETTINGS
+CommandCount=3
 
 [DLG:IDD_LOGIN]
 Type=1
@@ -143,4 +150,20 @@ Control12=IDC_STATIC,static,1342308352
 Control13=IDC_STATIC,static,1342177296
 Control14=IDC_RADIO_CLEAR,button,1342308361
 Control15=IDC_RADIO_BLOWFISH,button,1342177289
+
+[CLS:CAlarmBrowser]
+Type=0
+HeaderFile=AlarmBrowser.h
+ImplementationFile=AlarmBrowser.cpp
+BaseClass=CHtmlView
+Filter=C
+VirtualFilter=7VWC
+
+[CLS:CFlatButton]
+Type=0
+HeaderFile=FlatButton.h
+ImplementationFile=FlatButton.cpp
+BaseClass=CWnd
+Filter=W
+VirtualFilter=WC
 

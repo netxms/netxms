@@ -34,11 +34,13 @@ public:
 	//{{AFX_VIRTUAL(CAlarmViewApp)
 	public:
 	virtual BOOL InitInstance();
+	virtual int ExitInstance();
 	//}}AFX_VIRTUAL
 
 // Implementation
 
 public:
+	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	//{{AFX_MSG(CAlarmViewApp)
 	afx_msg void OnAppAbout();
@@ -47,6 +49,7 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 protected:
+	void DeleteWorkDir(void);
 	BOOL InitWorkDir(void);
 };
 

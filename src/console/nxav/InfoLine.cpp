@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CInfoLine, CWnd)
 	//{{AFX_MSG_MAP(CInfoLine)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -36,7 +37,7 @@ END_MESSAGE_MAP()
 
 BOOL CInfoLine::PreCreateWindow(CREATESTRUCT& cs) 
 {
-   cs.lpszClass = AfxRegisterWndClass(0, 0, CreateSolidBrush(RGB(255, 255, 255)));
+   cs.lpszClass = AfxRegisterWndClass(0, LoadCursor(NULL, IDC_ARROW), CreateSolidBrush(g_rgbInfoLineBackground));
 	
 	return CWnd::PreCreateWindow(cs);
 }
@@ -48,6 +49,8 @@ BOOL CInfoLine::PreCreateWindow(CREATESTRUCT& cs)
 
 int CInfoLine::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
+   RECT rect;
+
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
@@ -57,6 +60,13 @@ int CInfoLine::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
 	
+   // Create buttons
+   GetClientRect(&rect);
+   m_wndButtonSettings.Create(NULL, _T("Settings..."), WS_CHILD | WS_VISIBLE,
+                           rect, this, ID_CMD_SETTINGS);
+   m_wndButtonClose.Create(NULL, _T("Exit"), WS_CHILD | WS_VISIBLE,
+                           rect, this, ID_CMD_EXIT);
+
 	return 0;
 }
 
@@ -89,6 +99,35 @@ void CInfoLine::OnPaint()
    pFont = dc.SelectObject(&m_fontSmall);
    dc.TextOut(8, bitmapInfo.bmHeight + 7, szVersion, sizeof(szVersion) - 1);
 
+   // Draw divider at the bottom
+   dc.DrawEdge(&rect, EDGE_BUMP, BF_BOTTOM);
+
    // Cleanup
    dc.SelectObject(pFont);
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CInfoLine::OnSize(UINT nType, int cx, int cy) 
+{
+	CWnd::OnSize(nType, cx, cy);
+	
+   m_wndButtonSettings.MoveWindow(cx - 100, 10, 90, 24);
+   m_wndButtonClose.MoveWindow(cx - 100, 44, 90, 24);
+}
+
+
+//
+// Override OnCmdMsg() to pass all commands to parent first
+//
+
+BOOL CInfoLine::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+{
+   if (GetParent()->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+      return TRUE;
+	
+	return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }

@@ -85,6 +85,7 @@ BEGIN
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
@@ -129,7 +130,7 @@ BEGIN
                     ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,35,184,50,14
     PUSHBUTTON      "&Quit",IDCANCEL,129,184,50,14
-    CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,
+    CONTROL         140,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,
                     201,44
     LTEXT           "Connect to server",IDC_STATIC,7,58,59,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,68,62,140,1
@@ -230,6 +231,7 @@ END
 //
 
 IDB_NETXMS_LOGO         BITMAP  DISCARDABLE     "res\\small_logo.bmp"
+IDB_LOGIN               BITMAP  DISCARDABLE     "res\\login.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -242,8 +244,26 @@ BEGIN
     BEGIN
         MENUITEM "&Refresh",                    ID_VIEW_REFRESH
     END
+    POPUP "Dummy"
+    BEGIN
+        MENUITEM "Exit",                        ID_CMD_EXIT
+        MENUITEM "Settings",                    ID_CMD_SETTINGS
+    END
 END
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// FILE
+//
+
+IDF_BACKGROUND          FILE    DISCARDABLE     "res\\background.jpg"
+IDF_WARNING             FILE    DISCARDABLE     "res\\warning.ico"
+IDF_CRITICAL            FILE    DISCARDABLE     "res\\critical.ico"
+IDF_MAJOR               FILE    DISCARDABLE     "res\\major.ico"
+IDF_MINOR               FILE    DISCARDABLE     "res\\minor.ico"
+IDF_NORMAL              FILE    DISCARDABLE     "res\\normal.ico"
+IDF_ACK                 FILE    DISCARDABLE     "res\\ack.png"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -5,6 +5,8 @@
 #define IDD_ABOUTBOX                    100
 #define IDC_ALARM_LIST                  101
 #define IDC_INFO_LINE                   102
+#define ID_CMD_SETTINGS                 103
+#define ID_CMD_EXIT                     104
 #define IDR_MAINFRAME                   128
 #define IDR_NXAVTYPE                    129
 #define IDD_REQUEST_WAIT                130
@@ -17,6 +19,14 @@
 #define IDI_SEVERITY_MINOR              138
 #define IDI_SEVERITY_NORMAL             139
 #define IDD_LOGIN                       140
+#define IDB_LOGIN                       140
+#define IDF_BACKGROUND                  141
+#define IDF_WARNING                     142
+#define IDF_CRITICAL                    143
+#define IDF_MAJOR                       144
+#define IDF_MINOR                       145
+#define IDF_NORMAL                      146
+#define IDF_ACK                         147
 #define IDC_INFO_TEXT                   1000
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -34,9 +44,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        140
+#define _APS_NEXT_RESOURCE_VALUE        149
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1001
-#define _APS_NEXT_SYMED_VALUE           103
+#define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

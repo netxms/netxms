@@ -13,6 +13,17 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Event handler for client library
+//
+
+static void __EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   theApp.EventHandler(dwEvent, dwCode, pArg);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmViewApp
 
@@ -60,6 +71,7 @@ BOOL CAlarmViewApp::InitInstance()
 		AfxMessageBox(IDS_NXC_INIT_FAILED, MB_OK | MB_ICONSTOP);
 		return FALSE;
    }
+   NXCSetEventHandler(__EventHandler);
 
    if (!InitWorkDir())
       return FALSE;
@@ -86,7 +98,7 @@ BOOL CAlarmViewApp::InitInstance()
 
    dlg.m_szServer = g_szServer;
    dlg.m_szLogin = g_szLogin;
-   dlg.m_szPassword = _T("");
+   dlg.m_szPassword = g_szPassword;
    if (dlg.DoModal() != IDOK)
       return FALSE;
    _tcsncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
@@ -103,6 +115,15 @@ BOOL CAlarmViewApp::InitInstance()
       pFrame->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
       return FALSE;
    }
+
+   // Create files from resources
+   FileFromResource(IDF_BACKGROUND, _T("background.jpg"));
+   FileFromResource(IDF_NORMAL, _T("normal.ico"));
+   FileFromResource(IDF_WARNING, _T("warning.ico"));
+   FileFromResource(IDF_MINOR, _T("minor.ico"));
+   FileFromResource(IDF_MAJOR, _T("major.ico"));
+   FileFromResource(IDF_CRITICAL, _T("critical.ico"));
+   FileFromResource(IDF_ACK, _T("ack.png"));
 
 	// The one and only window has been initialized, so show and update it.
 	pFrame->ShowWindow(SW_SHOW);
@@ -216,4 +237,78 @@ BOOL CAlarmViewApp::InitWorkDir()
       }
 
    return TRUE;
+}
+
+
+//
+// Delete working directory on exit
+//
+
+void CAlarmViewApp::DeleteWorkDir()
+{
+   HANDLE hFile;
+   WIN32_FIND_DATA data;
+   TCHAR szName[1024];
+
+   _tcscpy(szName, g_szWorkDir);
+   _tcscat(szName, _T("\\*"));
+
+   hFile = FindFirstFile(szName, &data);
+   if (hFile != INVALID_HANDLE_VALUE)
+   {
+      do
+      {
+         if ((!_tcscmp(data.cFileName, _T("."))) || 
+             (!_tcscmp(data.cFileName, _T(".."))))
+            continue;
+
+         _tcscpy(szName, g_szWorkDir);
+         _tcscat(szName, _T("\\"));
+         _tcscat(szName, data.cFileName);
+         DeleteFile(szName);
+      } while(FindNextFile(hFile, &data));
+
+      FindClose(hFile);
+   }
+
+   RemoveDirectory(g_szWorkDir);
+}
+
+
+//
+// Handle application exit
+//
+
+int CAlarmViewApp::ExitInstance() 
+{
+   DeleteWorkDir();
+   
+	return CWinApp::ExitInstance();
+}
+
+
+//
+// Handle events in client library
+//
+
+void CAlarmViewApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   if (dwEvent == NXC_EVENT_NOTIFICATION)
+   {
+      switch(dwCode)
+      {
+         case NX_NOTIFY_SHUTDOWN:
+            m_pMainWnd->MessageBox("Server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
+            m_pMainWnd->DestroyWindow();
+            break;
+         case NX_NOTIFY_NEW_ALARM:
+         case NX_NOTIFY_ALARM_DELETED:
+         case NX_NOTIFY_ALARM_ACKNOWLEGED:
+            m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
+                                    (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
+            break;
+         default:
+            break;
+      }
+   }
 }

@@ -29,9 +29,9 @@
 // Login parameters
 //
 
-TCHAR g_szServer[MAX_PATH] = _T("localhost");
-TCHAR g_szLogin[MAX_USER_NAME] = _T("alarm_view");
-TCHAR g_szPassword[MAX_SECRET_LENGTH] = _T("");
+TCHAR g_szServer[MAX_PATH] = _T("monitor");
+TCHAR g_szLogin[MAX_USER_NAME] = _T("admin");
+TCHAR g_szPassword[MAX_SECRET_LENGTH] = _T("VantageP01nt");
 
 
 //
@@ -47,3 +47,11 @@ TCHAR *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major", "Critica
 //
 
 TCHAR g_szWorkDir[MAX_PATH];
+
+
+//
+// Colors
+//
+
+COLORREF g_rgbInfoLineButtons = RGB(130, 70, 210);
+COLORREF g_rgbInfoLineBackground = RGB(255, 255, 255);

@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnxcl.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release"
+# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
 
 !ELSEIF  "$(CFG)" == "nxav - Win32 Debug"
 
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnxcl.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug"
+# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -97,7 +97,15 @@ PostBuild_Cmds=copy Debug\nxav.exe ..\..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\AlarmBrowser.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\comm.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\FlatButton.cpp
 # End Source File
 # Begin Source File
 
@@ -132,10 +140,22 @@ SOURCE=.\RequestProcessingDlg.cpp
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
+# Begin Source File
+
+SOURCE=.\tools.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\AlarmBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FlatButton.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\globals.h
@@ -186,6 +206,30 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\background.jpg
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\critical.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\login.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\major.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\minor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\normal.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\nxav.ico
 # End Source File
 # Begin Source File
@@ -220,10 +264,38 @@ SOURCE=.\res\SeverityWarning.ico
 
 SOURCE=.\res\small_logo.bmp
 # End Source File
+# Begin Source File
+
+SOURCE=.\res\warning.ico
+# End Source File
 # End Group
 # Begin Source File
 
+SOURCE=.\res\ack.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\critical.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\major.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\minor.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\normal.png
+# End Source File
+# Begin Source File
+
 SOURCE=.\ReadMe.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\warning.png
 # End Source File
 # End Target
 # End Project

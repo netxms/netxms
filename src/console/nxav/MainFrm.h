@@ -6,6 +6,8 @@
 #define AFX_MAINFRM_H__8840A3A5_A463_43B9_8540_F0C3A797AB06__INCLUDED_
 
 #include "InfoLine.h"	// Added by ClassView
+#include "AlarmBrowser.h"
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -40,7 +42,12 @@ public:
 
 // Generated message map functions
 protected:
-	CHtmlView *m_pwndAlarmView;
+	void SortAlarms(void);
+	int m_iNumAlarms[5];
+	DWORD m_dwNumAlarms;
+	NXC_ALARM *m_pAlarmList;
+	void GenerateHtml(void);
+	CAlarmBrowser *m_pwndAlarmView;
 	void AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine);
 	CInfoLine m_wndInfoLine;
 	//{{AFX_MSG(CMainFrame)
@@ -48,7 +55,9 @@ protected:
 	afx_msg void OnSetFocus(CWnd *pOldWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnCmdExit();
 	//}}AFX_MSG
+   afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
 	FILE *m_pHtmlFile;

@@ -30,6 +30,7 @@
 
 #define WM_REQUEST_COMPLETED     (WM_USER + 1)
 #define WM_SET_INFO_TEXT         (WM_USER + 2)
+#define WM_ALARM_UPDATE          (WM_USER + 3)
 
 
 //
@@ -44,6 +45,7 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *ps
 DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, char *pszInfoText);
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, char *pszInfoText);
+BOOL FileFromResource(UINT nResId, TCHAR *pszFileName);
 
 
 //
@@ -56,6 +58,8 @@ extern TCHAR g_szPassword[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];
 extern TCHAR g_szWorkDir[];
+extern COLORREF g_rgbInfoLineButtons;
+extern COLORREF g_rgbInfoLineBackground;
 
 
 #endif

@@ -1,21 +1,20 @@
-#if !defined(AFX_INFOLINE_H__6A4E4CEC_1D4E_4D3C_B97B_4AFA962A622C__INCLUDED_)
-#define AFX_INFOLINE_H__6A4E4CEC_1D4E_4D3C_B97B_4AFA962A622C__INCLUDED_
+#if !defined(AFX_FLATBUTTON_H__83895B89_BE46_484C_A33C_B728C78AAFD7__INCLUDED_)
+#define AFX_FLATBUTTON_H__83895B89_BE46_484C_A33C_B728C78AAFD7__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// InfoLine.h : header file
+// FlatButton.h : header file
 //
-#include "FlatButton.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CInfoLine window
+// CFlatButton window
 
-class CInfoLine : public CWnd
+class CFlatButton : public CWnd
 {
 // Construction
 public:
-	CInfoLine();
+	CFlatButton();
 
 // Attributes
 public:
@@ -25,27 +24,30 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CInfoLine)
-	public:
-	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
+	//{{AFX_VIRTUAL(CFlatButton)
 	protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 public:
-	virtual ~CInfoLine();
+	virtual ~CFlatButton();
 
 	// Generated message map functions
 protected:
-	CFlatButton m_wndButtonSettings;
-	CFlatButton m_wndButtonClose;
-	CFont m_fontSmall;
-	//{{AFX_MSG(CInfoLine)
+	BOOL m_bMouseHover;
+	void SetMouseTracking(void);
+	CFont m_fontNormal;
+	CFont m_fontFocused;
+	//{{AFX_MSG(CFlatButton)
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	//}}AFX_MSG
+   afx_msg int OnMouseHover(WPARAM wParam, LPARAM lParam);
+   afx_msg int OnMouseLeave(WPARAM wParam, LPARAM lParam);
+
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -54,4 +56,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_INFOLINE_H__6A4E4CEC_1D4E_4D3C_B97B_4AFA962A622C__INCLUDED_)
+#endif // !defined(AFX_FLATBUTTON_H__83895B89_BE46_484C_A33C_B728C78AAFD7__INCLUDED_)
