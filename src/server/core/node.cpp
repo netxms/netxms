@@ -1103,3 +1103,26 @@ int Node::GetItemType(DWORD dwItemId)
    Unlock();
    return iType;
 }
+
+
+//
+// Get item by it's id
+//
+
+const DCItem *Node::GetItemById(DWORD dwItemId)
+{
+   DWORD i;
+   DCItem *pItem = NULL;
+
+   Lock();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_ppItems[i]->Id() == dwItemId)
+      {
+         pItem = m_ppItems[i];
+         break;
+      }
+
+   Unlock();
+   return pItem;
+}

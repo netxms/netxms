@@ -223,6 +223,7 @@ typedef unsigned long HREQUEST;
 #define RCC_INVALID_ALARM_ID        ((DWORD)21)
 #define RCC_INVALID_ACTION_ID       ((DWORD)22)
 #define RCC_OPERATION_IN_PROGRESS   ((DWORD)23)
+#define RCC_DCI_COPY_ERRORS         ((DWORD)24)
 
 
 //
@@ -852,6 +853,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItemId);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId);
+DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId, 
+                                    DWORD dwNumItems, DWORD *pdwItemList);
 DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId);
 DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwMaxRows,
                                        DWORD dwTimeFrom, DWORD dwTimeTo, NXC_DCI_DATA **ppData);

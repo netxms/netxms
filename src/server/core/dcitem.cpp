@@ -43,11 +43,48 @@ DCItem::DCItem()
    m_szName[0] = 0;
    m_szDescription[0] = 0;
    m_tLastPoll = 0;
-   m_pszFormula = strdup("");
+   m_pszFormula = _tcsdup(_T(""));
    m_pNode = NULL;
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
+}
+
+
+//
+// Create DCItem from another DCItem
+//
+
+DCItem::DCItem(const DCItem *pSrc)
+{
+   DWORD i;
+
+   m_dwId = pSrc->m_dwId;
+   m_dwTemplateId = pSrc->m_dwTemplateId;
+   m_iBusy = 0;
+   m_iDataType = pSrc->m_iDataType;
+   m_iPollingInterval = pSrc->m_iPollingInterval;
+   m_iRetentionTime = pSrc->m_iRetentionTime;
+   m_iDeltaCalculation = pSrc->m_iDeltaCalculation;
+   m_iSource = pSrc->m_iSource;
+   m_iStatus = pSrc->m_iStatus;
+   _tcscpy(m_szName, pSrc->m_szName);
+   _tcscpy(m_szDescription, pSrc->m_szDescription);
+   m_tLastPoll = 0;
+   m_pszFormula = _tcsdup(pSrc->m_pszFormula);
+   m_pNode = NULL;
+   m_hMutex = MutexCreate();
+   m_dwCacheSize = 0;
+   m_ppValueCache = NULL;
+
+   // Copy thresholds
+   m_dwNumThresholds = pSrc->m_dwNumThresholds;
+   m_ppThresholdList = (Threshold **)malloc(sizeof(Threshold *) * m_dwNumThresholds);
+   for(i = 0; i < m_dwNumThresholds; i++)
+   {
+      m_ppThresholdList[i] = new Threshold(pSrc->m_ppThresholdList[i]);
+      m_ppThresholdList[i]->CreateId();
+   }
 }
 
 

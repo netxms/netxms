@@ -116,9 +116,10 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Invalid object name",
       "Invalid alarm ID",
       "Invalid action ID",
-      "Operation in progress"
+      "Operation in progress",
+      "Copy operation failed for one or more DCI(s)"
    };
-   return ((dwError >= 0) && (dwError <= RCC_OPERATION_IN_PROGRESS)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_DCI_COPY_ERRORS)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

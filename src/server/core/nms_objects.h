@@ -275,6 +275,7 @@ public:
                    DWORD **ppdwMapIndex, DWORD **ppdwMapId);
    BOOL DeleteItem(DWORD dwItemId);
    int GetItemType(DWORD dwItemId);
+   const DCItem *GetItemById(DWORD dwItemId);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);

@@ -43,6 +43,28 @@ Threshold::Threshold(DCItem *pRelatedItem)
 
 
 //
+// Create from another threshold object
+//
+
+Threshold::Threshold(Threshold *pSrc)
+{
+   m_dwId = pSrc->m_dwId;
+   m_dwItemId = pSrc->m_dwItemId;
+   m_dwEventCode = pSrc->m_dwEventCode;
+   m_pszValueStr = (pSrc->m_pszValueStr == NULL) ? NULL : _tcsdup(pSrc->m_pszValueStr);
+   m_iFunction = pSrc->m_iFunction;
+   m_iOperation = pSrc->m_iOperation;
+   m_iDataType = pSrc->m_iDataType;
+   m_iParam1 = pSrc->m_iParam1;
+   m_iParam2 = pSrc->m_iParam2;
+   m_bIsReached = FALSE;
+
+   if (m_pszValueStr != NULL)
+      UpdateBinaryValueFromString();
+}
+
+
+//
 // Constructor for creating object from database
 // This constructor assumes that SELECT query look as following:
 // SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
@@ -62,6 +84,26 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_iParam2 = DBGetFieldLong(hResult, iRow, 6);
    m_bIsReached = FALSE;
 
+   UpdateBinaryValueFromString();
+}
+
+
+//
+// Destructor
+//
+
+Threshold::~Threshold()
+{
+   safe_free(m_pszValueStr);
+}
+
+
+//
+// Update binary value from string value
+//
+
+void Threshold::UpdateBinaryValueFromString(void)
+{
    switch(m_iDataType)
    {
       case DCI_DT_INT:
@@ -82,16 +124,6 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
       default:
          break;
    }
-}
-
-
-//
-// Destructor
-//
-
-Threshold::~Threshold()
-{
-   safe_free(m_pszValueStr);
 }
 
 

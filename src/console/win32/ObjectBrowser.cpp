@@ -705,8 +705,11 @@ restart_parent_check:;
          {
             // Check if current item has been changed
             hItem = m_wndTreeCtrl.GetSelectedItem();
-            if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
-               m_wndPreviewPane.Refresh();
+            if (hItem != NULL)
+            {
+               if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
+                  m_wndPreviewPane.Refresh();
+            }
          }
       }
    }

@@ -52,6 +52,7 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_SHOWDATA, OnUpdateItemShowdata)
 	ON_COMMAND(ID_ITEM_GRAPH, OnItemGraph)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_GRAPH, OnUpdateItemGraph)
+	ON_COMMAND(ID_ITEM_COPY, OnItemCopy)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
@@ -503,4 +504,46 @@ BOOL CDataCollectionEditor::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
                                          AfxGetApp()->LoadIcon(IDI_DATACOLLECT));
 	return CMDIChildWnd::PreCreateWindow(cs);
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_COPY message handler
+//
+
+void CDataCollectionEditor::OnItemCopy() 
+{
+   CObjectSelDlg dlg;
+   int iPos, iItem;
+   DWORD dwResult, dwNumItems, *pdwItemList;
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (dwNumItems > 0)
+   {
+      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+
+      // Build list of items to be copied
+      iPos = 0;
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pdwItemList[iPos++] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+
+      // Ask for destination nodes
+      dlg.m_dwAllowedClasses = SCL_NODE;
+      if (dlg.DoModal() == IDOK)
+      {
+         // Perform request to server
+         dwResult = DoRequestArg4(NXCCopyDCI, (void *)m_pItemList->dwNodeId, 
+               (void *)dlg.m_pdwObjectList[0], (void *)dwNumItems, 
+               pdwItemList, "Copying items...");
+         if (dwResult != RCC_SUCCESS)
+            theApp.ErrorBox(dwResult, "Error copying items: %s");
+      }
+
+      // Cleanup
+      free(pdwItemList);
+   }
 }

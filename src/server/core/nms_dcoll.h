@@ -108,8 +108,11 @@ private:
    int m_iParam2;             // Function's parameter #2
    BOOL m_bIsReached;
 
+   void UpdateBinaryValueFromString(void);
+
 public:
    Threshold(DCItem *pRelatedItem);
+   Threshold(Threshold *pSrc);
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
    ~Threshold();
 
@@ -166,6 +169,7 @@ private:
 
 public:
    DCItem();
+   DCItem(const DCItem *pItem);
    DCItem(DB_RESULT hResult, int iRow, Node *pNode);
    DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
           int iPollingInterval, int iRetentionTime, Node *pNode);
@@ -190,6 +194,7 @@ public:
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
+   void SetId(DWORD dwNewId) { m_dwId = dwNewId; }
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
 

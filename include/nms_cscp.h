@@ -253,6 +253,7 @@ typedef struct
 #define CMD_MODIFY_CONTAINER_CAT    0x0058
 #define CMD_POLL_NODE               0x0059
 #define CMD_POLLING_INFO            0x005A
+#define CMD_COPY_DCI                0x005B
 
 
 //
@@ -367,6 +368,10 @@ typedef struct
 #define VID_DCI_FORMULA             ((DWORD)106)
 #define VID_POLL_TYPE               ((DWORD)107)
 #define VID_POLLER_MESSAGE          ((DWORD)108)
+#define VID_SOURCE_OBJECT_ID        ((DWORD)109)
+#define VID_DESTINATION_OBJECT_ID   ((DWORD)110)
+#define VID_NUM_ITEMS               ((DWORD)111)
+#define VID_ITEM_LIST               ((DWORD)112)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

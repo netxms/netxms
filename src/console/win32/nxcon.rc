@@ -236,6 +236,7 @@ BEGIN
         MENUITEM "&New...\tIns",                ID_ITEM_NEW
         MENUITEM "&Edit...\tAlt+Enter",         ID_ITEM_EDIT
         MENUITEM "&Delete\tDel",                ID_ITEM_DELETE
+        MENUITEM "&Copy to other node(s)...\tCtrl+C", ID_ITEM_COPY
         MENUITEM SEPARATOR
         MENUITEM "&Activate\tAlt+A",            ID_ITEM_ACTIVATE
         MENUITEM "D&isable\tAlt+D",             ID_ITEM_DISABLE
@@ -332,6 +333,7 @@ BEGIN
         MENUITEM "&New...",                     ID_ITEM_NEW
         MENUITEM "&Edit...",                    ID_ITEM_EDIT
         MENUITEM "&Delete",                     ID_ITEM_DELETE
+        MENUITEM "&Copy to other node(s)...",   ID_ITEM_COPY
         MENUITEM SEPARATOR
         MENUITEM "&Activate",                   ID_ITEM_ACTIVATE
         MENUITEM "D&isable",                    ID_ITEM_DISABLE

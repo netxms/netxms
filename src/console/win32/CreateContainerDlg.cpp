@@ -56,6 +56,7 @@ BOOL CCreateContainerDlg::OnInitDialog()
    // Setup list of container categories
    for(i = 0; i < g_pCCList->dwNumElements; i++)
       m_wndCategoryList.AddString(g_pCCList->pElements[i].szName);
+   m_wndCategoryList.SelectString(-1, g_pCCList->pElements[0].szName);
 
    return TRUE;
 }

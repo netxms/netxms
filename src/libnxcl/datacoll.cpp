@@ -541,3 +541,27 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD 
    }
    return bResult;
 }
+
+
+//
+// Copy data collection items from one node to another
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId, 
+                                    DWORD dwNumItems, DWORD *pdwItemList)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_COPY_DCI);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_SOURCE_OBJECT_ID, dwSrcNodeId);
+   msg.SetVariable(VID_DESTINATION_OBJECT_ID, dwDstNodeId);
+   msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
+   msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
+}

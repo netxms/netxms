@@ -232,8 +232,12 @@ static DWORD WINAPI RequestThread(void *pArg)
       case 3:
          dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3);
          break;
+      case 4:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, pData->pArg4);
+         break;
       case 6:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, pData->pArg4, pData->pArg5, pData->pArg6);
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+                                 pData->pArg4, pData->pArg5, pData->pArg6);
          break;
    }
    if (pData->hWnd != NULL)
@@ -344,6 +348,26 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *ps
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
    rqData.pArg3 = pArg3;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Perform request with 4 parameter
+//
+
+DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, 
+                    void *pArg4, char *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 4;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pArg3 = pArg3;
+   rqData.pArg4 = pArg4;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
 }
