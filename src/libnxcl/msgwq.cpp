@@ -104,9 +104,9 @@ void MsgWaitQueue::Put(CSCP_MESSAGE *pMsg)
    Lock();
    m_pElements = (WAIT_QUEUE_ELEMENT *)MemReAlloc(m_pElements, 
                               sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
-   m_pElements[m_dwNumElements].wCode = ntohs(pMsg->wCode);
+   m_pElements[m_dwNumElements].wCode = pMsg->wCode;
    m_pElements[m_dwNumElements].wIsBinary = 1;
-   m_pElements[m_dwNumElements].dwId = ntohl(pMsg->dwId);
+   m_pElements[m_dwNumElements].dwId = pMsg->dwId;
    m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
    m_pElements[m_dwNumElements].pMsg = pMsg;
    m_dwNumElements++;

@@ -37,6 +37,7 @@ DWORD g_dwMsgId;
 
 static SOCKET m_hSocket = -1;
 static MsgWaitQueue m_msgWaitQueue;
+static DWORD m_dwReceiverBufferSize = 4194304;     // 4MB
 
 
 //
@@ -82,17 +83,26 @@ static void NetReceiver(void *pArg)
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pMsgBuffer);
+   RecvCSCPMessage(0, NULL, pMsgBuffer, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)MemAlloc(65536);
+   pRawMsg = (CSCP_MESSAGE *)MemAlloc(m_dwReceiverBufferSize);
 
    // Message receiving loop
    while(1)
    {
       // Receive raw message
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer, m_dwReceiverBufferSize)) <= 0)
          break;
+
+      // Check if we get too large message
+      if (iErr == 1)
+      {
+         DebugPrintf("Received too large message %s (%ld bytes)", 
+                     CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
+                     ntohl(pRawMsg->dwSize));
+         continue;
+      }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
@@ -120,7 +130,7 @@ static void NetReceiver(void *pArg)
                ProcessEvent(NULL, pRawMsg);
                break;
             default:    // Put unknown raw messages into the wait queue
-               //m_msgWaitQueue.Put(pMsg);
+               m_msgWaitQueue.Put((CSCP_MESSAGE *)nx_memdup(pRawMsg, pRawMsg->dwSize));
                break;
          }
       }

@@ -284,7 +284,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
                                        DWORD dwTimeFrom, DWORD dwTimeTo, NXC_DCI_DATA **ppData)
 {
    CSCPMessage msg;
-   DWORD dwRqId, dwResult;
+   DWORD i, dwRqId, dwResult;
 
    dwRqId = g_dwMsgId++;
 
@@ -306,6 +306,43 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
       pRawMsg = WaitForRawMessage(CMD_DCI_DATA, dwRqId, 30000);
       if (pRawMsg != NULL)
       {
+         DCI_DATA_HEADER *pHdr;
+         DCI_DATA_ROW *pSrc;
+         NXC_DCI_ROW *pDst;
+         static WORD m_wRowSize[] = { 8, 12, 260, 12 };
+
+         pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
+
+         // Allocate memory for results and initialize header
+         *ppData = (NXC_DCI_DATA *)MemAlloc(sizeof(NXC_DCI_DATA));
+         (*ppData)->dwNumRows = ntohl(pHdr->dwNumRows);
+         (*ppData)->dwNodeId = dwNodeId;
+         (*ppData)->dwItemId = dwItemId;
+         (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
+         (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
+         (*ppData)->pRows = (NXC_DCI_ROW *)MemAlloc((*ppData)->dwNumRows * (*ppData)->wRowSize);
+
+         // Convert and copy values from message to rows in result
+         pSrc = (DCI_DATA_ROW *)(((char *)pHdr) + sizeof(DCI_DATA_HEADER));
+         pDst = (*ppData)->pRows;
+         for(i = 0; i < (*ppData)->dwNumRows; i++)
+         {
+            pDst->dwTimeStamp = ntohl(pSrc->dwTimeStamp);
+            switch((*ppData)->wDataType)
+            {
+               case DTYPE_INTEGER:
+                  pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
+                  break;
+               case DTYPE_STRING:
+                  strcpy(pDst->value.szString, pSrc->value.szString);
+                  break;
+            }
+
+            pSrc = (DCI_DATA_ROW *)(((char *)pSrc) + (*ppData)->wRowSize);
+            pDst = (NXC_DCI_ROW *)(((char *)pDst) + (*ppData)->wRowSize);
+         }
+
+         // Destroy message
          MemFree(pRawMsg);
       }
       else
@@ -315,4 +352,28 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
    }
 
    return dwResult;
+}
+
+
+//
+// Destroy DCI result set
+//
+
+void LIBNXCL_EXPORTABLE NXCDestroyDCIData(NXC_DCI_DATA *pData)
+{
+   MemFree(pData->pRows);
+   MemFree(pData);
+}
+
+
+//
+// Get pointer to specific row in result set
+//
+
+NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, DWORD dwRow)
+{
+   if (dwRow >= pData->dwNumRows)
+      return NULL;
+
+   return (NXC_DCI_ROW *)(((char *)(pData->pRows)) + dwRow * pData->wRowSize);
 }
