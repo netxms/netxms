@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
    WORD wPort = AGENT_LISTEN_PORT;
    DWORD dwAddr, dwTimeout = 3000;
    char szSecret[MAX_SECRET_LENGTH] = "";
+   INT64 nElapsedTime;
 
    // Parse command line
    opterr = 1;
@@ -170,13 +171,31 @@ int main(int argc, char *argv[])
             {
                DWORD dwError;
 
+               nElapsedTime = GetCurrentTimeMs();
                dwError = conn.UploadFile(argv[optind + 1]);
+               nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
                if (bVerbose)
                {
                   if (dwError == ERR_SUCCESS)
-                     printf("File transferred successfully\n");
+                  {
+                     QWORD qwBytes;
+
+                     qwBytes = FileSize(argv[optind + 1]);
+                     printf("File transferred successfully\n"
+#ifdef _WIN32
+                            "%I64u"
+#else
+                            "%llu"
+#endif
+                            " bytes in %d.%03d seconds (%.2f KB/sec)\n",
+                            qwBytes, (long)(nElapsedTime / 1000), 
+                            (long)(nElapsedTime % 1000), 
+                            ((double)((INT64)qwBytes / 1024) / (double)nElapsedTime) * 1000);
+                  }
                   else
+                  {
                      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+                  }
                }
                iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
                conn.Disconnect();

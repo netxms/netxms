@@ -181,6 +181,7 @@ extern "C"
 #endif
    
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
+   QWORD LIBNETXMS_EXPORTABLE FileSize(TCHAR *pszFileName);
 
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
