@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 #SUBDIRS = libnetxms libnxcl server agent console
-SUBDIRS = libnetxms server libnxcl
+SUBDIRS = libnetxms libnxcscp server libnxcl

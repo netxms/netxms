@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.9 2004-05-20 15:51:07 victor Exp $
+# $Id: configure.ac,v 1.10 2004-05-28 15:15:48 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -291,6 +291,7 @@ AC_SUBST(PTHREAD_LIBS)
 #
 
 LIBNETXMS_LIBRARY_VERSION=0:1:0
+LIBNXCSCP_LIBRARY_VERSION=0:1:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
 
 # --------------------------------------------------------------------------
