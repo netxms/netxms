@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.33 2004-10-18 15:56:48 victor Exp $
+# $Id: configure.ac,v 1.34 2004-10-18 16:46:25 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.1.5], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.1.6], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE

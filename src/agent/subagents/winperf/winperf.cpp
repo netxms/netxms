@@ -392,6 +392,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 
    // Load configuration
    cfgTemplate[0].pBuffer = malloc(CFG_BUFFER_SIZE);
+   *((TCHAR *)cfgTemplate[0].pBuffer) = 0;
    dwResult = NxLoadConfig(pszConfigFile, _T("WinPerf"), cfgTemplate, FALSE);
    if (dwResult == NXCFG_ERR_OK)
    {
