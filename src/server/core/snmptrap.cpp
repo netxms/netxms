@@ -51,7 +51,7 @@ static BOOL LoadTrapCfg(void)
    DWORD i, j, pdwBuffer[MAX_OID_LEN];
 
    // Load traps
-   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_id FROM snmp_trap_cfg ORDER BY sequence");
+   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_id,description FROM snmp_trap_cfg ORDER BY sequence");
    if (hResult != NULL)
    {
       m_dwNumTraps = DBGetNumRows(hResult);
@@ -71,19 +71,20 @@ static BOOL LoadTrapCfg(void)
             bResult = FALSE;
          }
          m_pTrapCfg[i].dwEventId = DBGetFieldULong(hResult, i, 2);
+         _tcsncpy(m_pTrapCfg[i].szDescription, DBGetField(hResult, i, 3), MAX_DB_STRING);
       }
       DBFreeResult(hResult);
 
       // Load parameter mappings
       for(i = 0; i < m_dwNumTraps; i++)
       {
-         sprintf(szQuery, "SELECT snmp_oid FROM snmp_trap_pmap "
+         sprintf(szQuery, "SELECT snmp_oid,description FROM snmp_trap_pmap "
                           "WHERE trap_id=%ld ORDER BY parameter", m_pTrapCfg[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
             m_pTrapCfg[i].dwNumMaps = DBGetNumRows(hResult);
-            m_pTrapCfg[i].pMaps = (NXC_OID *)malloc(sizeof(NXC_OID) * m_pTrapCfg[i].dwNumMaps);
+            m_pTrapCfg[i].pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * m_pTrapCfg[i].dwNumMaps);
             for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
             {
                m_pTrapCfg[i].pMaps[j].dwOidLen = SNMPParseOID(DBGetField(hResult, j, 0), pdwBuffer, MAX_OID_LEN);
@@ -98,6 +99,7 @@ static BOOL LoadTrapCfg(void)
                            DBGetField(hResult, j, 0), m_pTrapCfg[i].dwId);
                   bResult = FALSE;
                }
+               _tcsncpy(m_pTrapCfg[i].pMaps[j].szDescription, DBGetField(hResult, j, 1), MAX_DB_STRING);
             }
             DBFreeResult(hResult);
          }
@@ -122,25 +124,30 @@ static BOOL LoadTrapCfg(void)
 static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
 {
    TCHAR *pszArgList[32], szBuffer[256];
-   TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
+   TCHAR szFormat[] = "sssssssssssssssssssssssssssssssss";
    DWORD i, j;
+   int iResult;
 
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
    {
       for(j = 0; j < pdu->GetNumVariables(); j++)
-         if (pdu->GetVariable(j)->GetName()->Compare(m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
-                     m_pTrapCfg[dwIndex].pMaps[i].dwOidLen) == OID_EQUAL)
+      {
+         iResult = pdu->GetVariable(j)->GetName()->Compare(
+               m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
+               m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
+         if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
          {
             pszArgList[i] = _tcsdup(pdu->GetVariable(j)->GetValueAsString(szBuffer, 256));
             break;
          }
+      }
       if (j == pdu->GetNumVariables())
          pszArgList[i] = _tcsdup(_T("<null>"));
    }
 
-   szFormat[m_pTrapCfg[dwIndex].dwNumMaps] = 0;
-   PostEvent(m_pTrapCfg[dwIndex].dwEventId, dwObjectId, 
-             (m_pTrapCfg[dwIndex].dwNumMaps > 0) ? szFormat : NULL,
+   szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 1] = 0;
+   PostEvent(m_pTrapCfg[dwIndex].dwEventId, dwObjectId, szFormat,
+             pdu->GetTrapId()->GetValueAsText(),
              pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
              pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
              pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
@@ -190,7 +197,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       else     // Process unmatched traps
       {
          // Build trap's parameters string
-         dwBufSize = pdu->GetNumVariables() * 4096;
+         dwBufSize = pdu->GetNumVariables() * 4096 + 16;
          pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
          pszTrapArgs[0] = 0;
          for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
@@ -278,7 +285,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
 {
-   DWORD i, j, dwId1, dwId2;
+   DWORD i, j, dwId1, dwId2, dwId3;
    CSCPMessage msg;
 
    // Prepare message
@@ -291,12 +298,14 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
       msg.SetVariable(VID_TRAP_OID_LEN, m_pTrapCfg[i].dwOidLen); 
       msg.SetVariableToInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
       msg.SetVariable(VID_EVENT_ID, m_pTrapCfg[i].dwEventId);
+      msg.SetVariable(VID_DESCRIPTION, m_pTrapCfg[i].szDescription);
       msg.SetVariable(VID_TRAP_NUM_MAPS, m_pTrapCfg[i].dwNumMaps);
-      for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE; 
+      for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
           j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
       {
          msg.SetVariable(dwId1, m_pTrapCfg[i].pMaps[j].dwOidLen);
          msg.SetVariableToInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, m_pTrapCfg[i].pMaps[j].pdwObjectId);
+         msg.SetVariable(dwId3, m_pTrapCfg[i].pMaps[j].szDescription);
       }
       pSession->SendMessage(&msg);
       msg.DeleteAllVariables();
