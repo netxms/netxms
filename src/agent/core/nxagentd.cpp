@@ -249,6 +249,8 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 
 #ifndef _WIN32
 
+static int m_XXX = 0;
+
 void OnSignal(int iSignal)
 {
 	//WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
@@ -256,7 +258,11 @@ void OnSignal(int iSignal)
 	{
 		case SIGTERM:
 		case SIGINT:
-			ConditionSet(m_hCondShutdown);
+			if (m_XXX == 0)
+			{
+				ConditionSet(m_hCondShutdown);
+				m_XXX = 1;
+			}
 			break;
 		case SIGSEGV:
 			abort();
