@@ -31,6 +31,7 @@
 
 DWORD g_dwState = STATE_DISCONNECTED;
 CONDITION g_hCondOperationComplete;
+HREQUEST g_hOpenRq;
 
 
 //
@@ -67,6 +68,9 @@ static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
          MemFree(pArg);
          break;
+      case NXC_EVENT_REQUEST_COMPLETED:
+         printf("Request %d completed with code %d\n", dwCode, (DWORD)pArg);
+         break;
       default:
          printf("Event %d [Code = %d, Arg = 0x%08X]\n", dwEvent, dwCode, pArg);
          break;
@@ -95,6 +99,8 @@ int main(int argc, char *argv[])
 {
    DWORD dwVersion;
    char szServer[256], szLogin[256], szPassword[256];
+   NXC_EVENT_TEMPLATE **ppEventList;
+   DWORD dwNumEvents;
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -113,7 +119,7 @@ int main(int argc, char *argv[])
 
 strcpy(szServer,"eagle");
 strcpy(szLogin,"admin");
-strcpy(szPassword," ");
+strcpy(szPassword,"netxms");
 
    printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
    NXCConnect(szServer, szLogin, szPassword);
@@ -142,6 +148,25 @@ strcpy(szPassword," ");
 
    NXCSetDebugCallback(DebugCallback);
    printf("Debug mode activated\n");
+
+   g_hOpenRq = NXCOpenEventDB();
+   ConditionWait(g_hCondOperationComplete, INFINITE);
+   printf("Event templates loaded.\n");
+
+   if (NXCGetEventDB(&ppEventList, &dwNumEvents))
+   {
+      DWORD i;
+
+      for(i = 0; i < dwNumEvents; i++)
+         printf("%5d %-24s %s\n", ppEventList[i]->dwCode, ppEventList[i]->szName,
+                ppEventList[i]->pszMessage);
+      printf("%d events total\n", dwNumEvents);
+   }
+   else
+   {
+      printf("NXCGetEventDB() failed\n");
+   }
+   NXCCloseEventDB();
 
    while(1)
       Sleep(1000);
