@@ -25,7 +25,7 @@
 
 #ifndef _WIN32
 
-typedef int BOOL
+typedef int BOOL;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 typedef unsigned char BYTE;

@@ -24,13 +24,24 @@
 
 
 //
-// Subnet class constructor
+// Subnet class default constructor
 //
 
 Subnet::Subnet()
        :NetObj()
 {
    m_dwIpNetMask = 0;
+}
+
+
+//
+// Subnet class constructor
+//
+
+Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask)
+{
+   m_dwIpAddr = dwAddr;
+   m_dwIpNetMask = dwNetMask;
 }
 
 

@@ -19,6 +19,7 @@ src/server/core/messages.mc -text
 src/server/core/netobj.cpp -text
 src/server/core/nms_core.h -text
 src/server/core/nms_objects.h -text
+src/server/core/node.cpp -text
 src/server/core/np.cpp -text
 src/server/core/objects.cpp -text
 src/server/core/resource.h -text

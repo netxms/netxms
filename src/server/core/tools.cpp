@@ -122,7 +122,7 @@ char *GetSystemErrorText(DWORD error)
 // *	December, 1983
 //
 
-WORD IPChecksum(WORD *addr, int len)
+static WORD IPChecksum(WORD *addr, int len)
 {
 	int nleft = len, sum = 0;
 	WORD *w = addr;
@@ -238,6 +238,7 @@ wait_for_packet:
             }
          }
       }
+      ThreadSleepMs(500);     // Wait half a second before sending next packet
    }
 
    closesocket(sock);

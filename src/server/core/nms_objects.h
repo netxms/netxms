@@ -121,6 +121,10 @@ public:
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
+
+   NetObj *GetParent(DWORD dwIndex = 0) { return dwIndex < m_dwParentCount ? m_pParentList[dwIndex] : NULL; }
+
+   void SetId(DWORD dwId) { m_dwId = dwId; m_bIsModified = TRUE; }
 };
 
 
@@ -159,10 +163,13 @@ protected:
 
 public:
    Node();
-   Node(DWORD dwId, DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags);
+   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags);
    virtual ~Node();
 
    virtual int Type(void) { return OBJECT_NODE; }
+
+   virtual BOOL SaveToDB(void);
+   virtual BOOL DeleteFromDB(void);
 
    DWORD Flags(void) { return m_dwFlags; }
    DWORD DiscoveryFlags(void) { return m_dwDiscoveryFlags; }
@@ -171,6 +178,8 @@ public:
    BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT; }
    BOOL IsBridge(void) { return m_dwFlags & NF_IS_BRIDGE; }
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER; }
+
+   void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
 };
 
 
@@ -185,12 +194,15 @@ protected:
 
 public:
    Subnet();
+   Subnet(DWORD dwAddr, DWORD dwNetMask);
    virtual ~Subnet();
 
    virtual int Type(void) { return OBJECT_SUBNET; }
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
+
+   void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
 };
 
 
@@ -215,6 +227,9 @@ void ObjectsGlobalUnlock(void);
 
 void NetObjInsert(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
+
+Node *FindNodeByIP(DWORD dwAddr);
+Subnet *FindSubnetByIP(DWORD dwAddr);
 
 
 //

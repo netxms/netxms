@@ -86,4 +86,10 @@ Language=English
 Unable to create raw socket for ICMP protocol
 .
 
+MessageId=
+SymbolicName=MSG_DUPLICATE_KEY
+Language=English
+Attempt to add object with non-unique key %1 to index
+.
+
 ;#endif

@@ -123,6 +123,10 @@ SOURCE=.\netobj.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\node.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\np.cpp
 # End Source File
 # Begin Source File

@@ -42,6 +42,7 @@ DWORD g_dwInterfaceAddrIndexSize = 0;
 //
 
 static MUTEX m_hMutexObjectAccess;
+static DWORD dwFreeObjectId = 1;
 
 
 //
@@ -102,6 +103,11 @@ static void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, 
             dwPos = (dwFirst + dwLast) / 2;
             if (dwPos == 0)
                dwPos++;
+            if (pIndex[dwPos].dwKey == dwKey)
+            {
+               WriteLog(MSG_DUPLICATE_KEY, EVENTLOG_ERROR_TYPE, "x", dwKey);
+               return;
+            }
             if ((pIndex[dwPos - 1].dwKey < dwKey) && (pIndex[dwPos].dwKey > dwKey))
                break;
             if (dwKey < pIndex[dwPos].dwKey)
@@ -179,6 +185,36 @@ static void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dw
 
 void NetObjInsert(NetObj *pObject)
 {
+   ObjectsGlobalLock();
+printf("insert: free id = %d\n", dwFreeObjectId);
+   pObject->SetId(dwFreeObjectId++);
+printf("Adding object %p to index with id %d\n", pObject, pObject->Id());
+   AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
+printf("Added\n", pObject, pObject->Id());
+   switch(pObject->Type())
+   {
+      case OBJECT_GENERIC:
+         break;
+      case OBJECT_SUBNET:
+printf("Adding subnet %p to index with addr %d\n", pObject, pObject->IpAddr());
+         AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
+printf("Added\n", pObject, pObject->Id());
+         break;
+      case OBJECT_NODE:
+printf("Adding node %p to index with addr %d\n", pObject, pObject->IpAddr());
+         AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
+printf("Added\n", pObject, pObject->Id());
+         break;
+      case OBJECT_INTERFACE:
+printf("Adding interface %p to index with addr %d\n", pObject, pObject->IpAddr());
+         AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
+printf("Added\n", pObject, pObject->Id());
+         break;
+      default:
+         WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+         break;
+   }
+   ObjectsGlobalUnlock();
 }
 
 
@@ -209,4 +245,36 @@ void NetObjDelete(NetObj *pObject)
          break;
    }
    ObjectsGlobalUnlock();
+}
+
+
+//
+// Find node by IP address
+//
+
+Node *FindNodeByIP(DWORD dwAddr)
+{
+   DWORD dwPos;
+
+   if (g_pInterfaceIndexByAddr == NULL)
+      return NULL;
+
+   dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
+   return (dwPos == INVALID_INDEX) ? NULL : (Node *)g_pInterfaceIndexByAddr[dwPos].pObject->GetParent();
+}
+
+
+//
+// Find subnet by IP address
+//
+
+Subnet *FindSubnetByIP(DWORD dwAddr)
+{
+   DWORD dwPos;
+
+   if (g_pSubnetIndexByAddr == NULL)
+      return NULL;
+
+   dwPos = SearchIndex(g_pSubnetIndexByAddr, g_dwSubnetAddrIndexSize, dwAddr);
+   return (dwPos == INVALID_INDEX) ? NULL : (Subnet *)g_pSubnetIndexByAddr[dwPos].pObject;
 }
