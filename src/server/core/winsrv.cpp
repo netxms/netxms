@@ -137,7 +137,7 @@ void InstallService(char *execName)
       return;
    }
 
-   sprintf(cmdLine, "\"%s\" --config \"%s\"", execName, g_configFile);
+   sprintf(cmdLine, "\"%s\" --config \"%s\"", execName, g_szConfigFile);
    service=CreateService(mgr,CORE_SERVICE_NAME,"NMS Core",GENERIC_READ,SERVICE_WIN32_OWN_PROCESS,
                          SERVICE_AUTO_START,SERVICE_ERROR_NORMAL,cmdLine,NULL,NULL,NULL,NULL,NULL);
    if (service==NULL)

@@ -1,5 +1,5 @@
 /* 
-** Project X - Network Management System
+** MySQL Database Driver
 ** Copyright (C) 2003 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -16,24 +16,21 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_common.h
+** $module: mysqldrv.h
 **
 **/
 
-#ifndef _nms_common_h_
-#define _nms_common_h_
+#ifndef _mysqldrv_h_
+#define _mysqldrv_h_
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif   /* _WIN32 */
 
-typedef int BOOL
-typedef unsigned long DWORD;
-typedef unsigned short WORD;
-typedef unsigned char BYTE;
-typedef void * HANDLE;
+#include <dbdrv.h>
+#include <mysql.h>
 
-#define TRUE   1
-#define FALSE  0
-
-#endif
-
-#endif   /* _nms_common_h_ */
+#endif   /* _mysqldrv_h_ */

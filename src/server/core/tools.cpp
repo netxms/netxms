@@ -24,6 +24,22 @@
 
 
 //
+// Strip whitespaces and tabs off the string
+//
+
+void StrStrip(char *str)
+{
+   int i;
+
+   for(i=0;(str[i]!=0)&&((str[i]==' ')||(str[i]=='\t'));i++);
+   if (i>0)
+      memmove(str,&str[i],strlen(&str[i])+1);
+   for(i=strlen(str)-1;(i>=0)&&((str[i]==' ')||(str[i]=='\t'));i--);
+   str[i+1]=0;
+}
+
+
+//
 // Get system error string by call to FormatMessage
 //
 

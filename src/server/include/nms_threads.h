@@ -27,14 +27,48 @@
 
 #include <process.h>
 
-inline HANDLE nms_create_thread(void (__cdecl *start_address )(void *), int stack_size, void *args)
+//
+// Related datatypes and constants
+//
+
+#define MUTEX  HANDLE
+#define THREAD HANDLE
+
+#define INVALID_MUTEX_HANDLE  INVALID_HANDLE_VALUE
+
+
+//
+// Inline functions
+//
+
+inline THREAD ThreadCreate(void (__cdecl *start_address )(void *), int stack_size, void *args)
 {
-   return (HANDLE)_beginthread(start_address, stack_size, args);
+   return (THREAD)_beginthread(start_address, stack_size, args);
 }
 
-inline void nms_exit_thread(void)
+inline void ThreadExit(void)
 {
    _endthread();
+}
+
+inline MUTEX MutexCreate(void)
+{
+   return CreateMutex(NULL, FALSE, NULL);
+}
+
+inline void MutexDestroy(MUTEX mutex)
+{
+   CloseHandle(mutex);
+}
+
+inline void MutexLock(MUTEX mutex, DWORD dwTimeOut)
+{
+   WaitForSingleObject(mutex, dwTimeOut);
+}
+
+inline void MutexUnlock(MUTEX mutex)
+{
+   ReleaseMutex(mutex);
 }
 
 #else    /* _WIN32 */

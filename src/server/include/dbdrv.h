@@ -16,77 +16,21 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** $module: dbdrv.h
 **
 **/
 
-#include "nms_core.h"
+#ifndef _dbdrv_h_
+#define _dbdrv_h_
+
+#include <nms_common.h>
 
 
 //
-// Global variables
+// Datatypes
 //
 
-DWORD g_dwFlags = 0;
-char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
-char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+#define DB_HANDLE unsigned long
+#define DB_RESULT unsigned long
 
-
-//
-// Server initialization
-//
-
-BOOL Initialize(void)
-{
-   InitLog();
-
-   return TRUE;
-}
-
-
-//
-// Server shutdown
-//
-
-void Shutdown(void)
-{
-   CloseLog();
-}
-
-
-//
-// Common main()
-//
-
-void Main(void)
-{
-}
-
-
-//
-// Startup code
-//
-
-int main(int argc, char *argv[])
-{
-   if (!ParseCommandLine(argc, argv))
-      return 1;
-
-   if (!LoadConfig())
-      return 1;
-
-   if (!IsStandalone())
-   {
-      InitService();
-   }
-   else
-   {
-      if (!Initialize())
-      {
-         printf("NMS Core initialization failed\n");
-         return 1;
-      }
-      Main();
-   }
-   return 0;
-}
+#endif   /* _dbdrv_h_ */

@@ -31,6 +31,9 @@
 #include <unistd.h>
 #endif   /* _WIN32 */
 
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
 #include <nms_common.h>
 #include <nms_threads.h>
 
@@ -46,18 +49,21 @@
 
 #ifdef _WIN32
 #define DEFAULT_CONFIG_FILE   "C:\\nms.conf"
-#define IsStandalone() (g_flags & CF_STANDALONE)
+#define DEFAULT_LOG_FILE      "C:\\nms.log"
+#define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #else    /* _WIN32 */
 #define DEFAULT_CONFIG_FILE   "/etc/nms.conf"
+#define DEFAULT_LOG_FILE      "/var/log/nms.log"
 #define IsStandalone() (1)
 #endif   /* _WIN32 */
 
 
 //
-// Configuration flags
+// Application flags
 //
 
-#define CF_STANDALONE   0x0001
+#define AF_STANDALONE      0x0001
+#define AF_USE_EVENT_LOG   0x0002
 
 
 //
@@ -76,12 +82,14 @@
 // Functions
 //
 
-int ParseCommandLine(int argc, char *argv[]);
-int LoadConfig(void);
+BOOL ParseCommandLine(int argc, char *argv[]);
+BOOL LoadConfig(void);
 
 void Shutdown(void);
 BOOL Initialize(void);
 void Main(void);
+
+void StrStrip(char *str);
 
 #ifdef _WIN32
 
@@ -102,7 +110,9 @@ char *GetSystemErrorText(DWORD error);
 // Global variables
 //
 
-extern DWORD g_flags;
-extern char g_configFile[];
+extern DWORD g_dwFlags;
+extern char g_szConfigFile[];
+extern char g_szLogFile[];
+extern char g_szDbDriver[];
 
 #endif   /* _nms_core_h_ */

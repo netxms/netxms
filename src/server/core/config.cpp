@@ -52,21 +52,122 @@ static char help_text[]="NMS Version " VERSION_STRING " Server\n"
 
 //
 // Load and parse configuration file
-// Returns 0 on success and -1 on failure
+// Returns TRUE on success and FALSE on failure
 //
 
-int LoadConfig(void)
+BOOL LoadConfig(void)
 {
-   return 0;
+   FILE *cfg;
+   char *ptr, buffer[4096];
+   int sourceLine = 0, errors = 0;
+
+   if (IsStandalone())
+      printf("Using configuration file \"%s\"\n", g_szConfigFile);
+
+   cfg = fopen(g_szConfigFile, "r");
+   if (cfg == NULL)
+   {
+      if (IsStandalone())
+         printf("Unable to open configuration file: %s\n", strerror(errno));
+      return FALSE;
+   }
+
+   while(!feof(cfg))
+   {
+      buffer[0] = 0;
+      fgets(buffer, 4095, cfg);
+      sourceLine++;
+      ptr = strchr(buffer, '\n');
+      if (ptr != NULL)
+         *ptr = 0;
+      ptr = strchr(buffer, '#');
+      if (ptr != NULL)
+         *ptr = 0;
+
+      StrStrip(buffer);
+      if (buffer[0] == 0)
+         continue;
+
+      ptr = strchr(buffer, '=');
+      if (ptr == NULL)
+      {
+         errors++;
+         if (IsStandalone())
+            printf("Syntax error in configuration file, line %d\n", sourceLine);
+         continue;
+      }
+      *ptr = 0;
+      ptr++;
+      StrStrip(buffer);
+      StrStrip(ptr);
+
+      if (!stricmp(buffer,"LogFile"))
+      {
+#ifdef _WIN32
+         if (!stricmp(ptr,"{EventLog}"))
+         {
+            g_dwFlags |= AF_USE_EVENT_LOG;
+         }
+         else
+#endif  /* _WIN32 */
+         {
+            g_dwFlags &= ~AF_USE_EVENT_LOG;
+            memset(g_szLogFile, 0, MAX_PATH);
+            strncpy(g_szLogFile, ptr, MAX_PATH - 1);
+         }
+      }
+      else if (!stricmp(buffer,"DBDriver"))
+      {
+         memset(g_szDbDriver, 0, MAX_PATH);
+         strncpy(g_szDbDriver, ptr, MAX_PATH - 1);
+      }
+      else if (!stricmp(buffer,"DBDrvParams"))
+      {
+         memset(g_szDbDrvParams, 0, MAX_PATH);
+         strncpy(g_szDbDrvParams, ptr, MAX_PATH - 1);
+      }
+      else if (!stricmp(buffer,"DBServer"))
+      {
+         memset(g_szDbServer, 0, MAX_PATH);
+         strncpy(g_szDbServer, ptr, MAX_PATH - 1);
+      }
+      else if (!stricmp(buffer,"DBLogin"))
+      {
+         memset(g_szDbLogin, 0, MAX_DB_LOGIN);
+         strncpy(g_szDbLogin, ptr, MAX_DB_LOGIN - 1);
+      }
+      else if (!stricmp(buffer,"DBPassword"))
+      {
+         memset(g_szDbPassword, 0, MAX_DB_PASSWORD);
+         strncpy(g_szDbPassword, ptr, MAX_DB_PASSWORD - 1);
+      }
+      else if (!stricmp(buffer,"DBName"))
+      {
+         memset(g_szDbName, 0, MAX_DB_NAME);
+         strncpy(g_szDbName, ptr, MAX_DB_NAME - 1);
+      }
+      else
+      {
+         errors++;
+         if (g_dwFlags & AF_STANDALONE)
+            printf("Error in configuration file, line %d: unknown option \"%s\"\n",sourceLine,buffer);
+      }
+   }
+
+   if ((IsStandalone()) && (!errors))
+      printf("Configuration file OK\n");
+
+   fclose(cfg);
+   return TRUE;
 }
 
 
 //
 // Parse command line
-// Returns 0 on success and -1 on failure
+// Returns TRUE on success and FALSE on failure
 //
 
-int ParseCommandLine(int argc, char *argv[])
+BOOL ParseCommandLine(int argc, char *argv[])
 {
    int i;
 
@@ -75,29 +176,29 @@ int ParseCommandLine(int argc, char *argv[])
       if (!strcmp(argv[i], "help"))    // Display help and exit
       {
          printf(help_text);
-         return -1;
+         return FALSE;
       }
       else if (!strcmp(argv[i], "version"))    // Display version and exit
       {
          printf("NMS Version " VERSION_STRING " Build of " __DATE__ "\n");
-         return -1;
+         return FALSE;
       }
       else if (!strcmp(argv[i], "--config"))  // Config file
       {
          i++;
-         strcpy(g_configFile, argv[i]);     // Next word should contain name of the config file
+         strcpy(g_szConfigFile, argv[i]);     // Next word should contain name of the config file
       }
       else if (!strcmp(argv[i], "check-config"))
       {
-         g_flags |= CF_STANDALONE;
-         printf("Checking configuration file (%s):\n\n", g_configFile);
+         g_dwFlags |= AF_STANDALONE;
+         printf("Checking configuration file (%s):\n\n", g_szConfigFile);
          LoadConfig();
-         return -1;
+         return FALSE;
       }
 #ifdef _WIN32
       else if (!strcmp(argv[i], "standalone"))  // Run in standalone mode
       {
-         g_flags |= CF_STANDALONE;
+         g_dwFlags |= AF_STANDALONE;
          return TRUE;
       }
       else if ((!strcmp(argv[i], "install"))||
@@ -146,9 +247,9 @@ int ParseCommandLine(int argc, char *argv[])
       else
       {
          printf("ERROR: Invalid command line argument\n\n");
-         return -1;
+         return FALSE;
       }
    }
 
-   return 0;
+   return TRUE;
 }
