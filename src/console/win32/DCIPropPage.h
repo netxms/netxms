@@ -1,6 +1,7 @@
 #if !defined(AFX_DCIPROPPAGE_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_)
 #define AFX_DCIPROPPAGE_H__45FF1964_0A50_43D7_9F4A_BDFB03DD7A4C__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -16,6 +17,7 @@ class CDCIPropPage : public CPropertyPage
 
 // Construction
 public:
+	NXC_OBJECT *m_pNode;
 	CDCIPropPage();   // standard constructor
 
 // Dialog Data

@@ -143,7 +143,7 @@ void BuildOIDString(struct tree *pNode, char *pszBuffer)
 // Build full symbolic OID for MIB tree leaf
 //
 
-char *BuildSymbolicOIDString(struct tree *pNode)
+char *BuildSymbolicOIDString(struct tree *pNode, DWORD dwInstance)
 {
    DWORD dwPos, dwSize;
    char *pszBuffer, *pszSubIdList[MAX_OID_LEN];
@@ -162,12 +162,12 @@ char *BuildSymbolicOIDString(struct tree *pNode)
          pszSubIdList[dwPos++] = pCurr->label;
          dwSize += strlen(pCurr->label) + 1;
       }
-      pszBuffer = (char *)malloc(dwSize + 1);
-      while(dwPos > 0)
+      pszBuffer = (char *)malloc(dwSize + 16);
+      for(iBufPos = 0; dwPos > 0;)
       {
-         sprintf(&pszBuffer[iBufPos], ".%s", pszSubIdList[--dwPos]);
-         iBufPos = strlen(pszBuffer);
+         iBufPos += sprintf(&pszBuffer[iBufPos], ".%s", pszSubIdList[--dwPos]);
       }
+      sprintf(&pszBuffer[iBufPos], ".%lu", dwInstance);
    }
    return pszBuffer;
 }

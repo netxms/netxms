@@ -12,6 +12,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/mib_api.h>
 #include <net-snmp/config_api.h>
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 
 /////////////////////////////////////////////////////////////////////////////
 // CMIBBrowserDlg dialog
@@ -20,11 +21,13 @@ class CMIBBrowserDlg : public CDialog
 {
 // Construction
 public:
+	NXC_OBJECT *m_pNode;
 	CMIBBrowserDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CMIBBrowserDlg)
 	enum { IDD = IDD_MIB_BROWSER };
+	CEdit	m_wndEditInstance;
 	CEdit	m_wndEditType;
 	CEdit	m_wndEditStatus;
 	CEdit	m_wndEditOIDText;
@@ -34,6 +37,7 @@ public:
 	CTreeCtrl	m_wndTreeCtrl;
 	CEdit	m_wndEditOID;
 	CString	m_strOID;
+	DWORD	m_dwInstance;
 	//}}AFX_DATA
 
 
@@ -54,9 +58,13 @@ protected:
 	afx_msg void OnSelchangedTreeMib(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnButtonDetails();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnChangeEditOid();
+	afx_msg void OnChangeEditInstance();
+	afx_msg void OnButtonGet();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL m_bDisableOIDUpdate;
 	void ShowExtControls(BOOL bShow);
 	CSize m_sizeCollapsed;
 	CSize m_sizeExpanded;

@@ -29,6 +29,8 @@ CDCIPropPage::CDCIPropPage()
 	m_iStatus = -1;
 	m_strDescription = _T("");
 	//}}AFX_DATA_INIT
+   
+   m_pNode = NULL;
 }
 
 
@@ -98,10 +100,28 @@ BOOL CDCIPropPage::OnInitDialog()
 void CDCIPropPage::OnButtonSelect() 
 {
    CMIBBrowserDlg dlg;
+   TCHAR *pDot, szBuffer[1024];
 
-   m_wndEditName.GetWindowText(dlg.m_strOID);
+   dlg.m_pNode = m_pNode;
+   m_wndEditName.GetWindowText(szBuffer, 1024);
+   pDot = _tcsrchr(szBuffer, _T('.'));
+   if (pDot != NULL)
+   {
+      *pDot = 0;
+      pDot++;
+      dlg.m_dwInstance = strtoul(pDot, NULL, 10);
+   }
+   else
+   {
+      dlg.m_dwInstance = 0;
+   }
+   dlg.m_strOID = szBuffer;
    if (dlg.DoModal() == IDOK)
+   {
+      _stprintf(szBuffer, _T(".%lu"), dlg.m_dwInstance);
+      dlg.m_strOID += szBuffer;
       m_wndEditName.SetWindowText(dlg.m_strOID);
+   }
 }
 
 

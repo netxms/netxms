@@ -80,6 +80,8 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_DELETE, OnUpdatePolicyDelete)
 	ON_COMMAND(ID_POLICY_DELETERULE, OnPolicyDeleterule)
 	ON_COMMAND(ID_POLICY_EDIT, OnPolicyEdit)
+	ON_COMMAND(ID_POLICY_SAVE, OnPolicySave)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_SAVE, OnUpdatePolicySave)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -574,6 +576,11 @@ void CEventPolicyEditor::OnUpdatePolicyDelete(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndRuleList.GetCurrentItem() != -1);
 }
 
+void CEventPolicyEditor::OnUpdatePolicySave(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_bIsModified);
+}
+
 
 //
 // Add new source object to current row
@@ -924,4 +931,32 @@ void CEventPolicyEditor::ModifyTitle()
 {
    SetTitle(GetTitle() + _T(" (Modified)")); 
    OnUpdateFrameTitle(TRUE);
+}
+
+
+//
+// WM_COMMAND::ID_POLICY_SAVE message handler
+//
+
+void CEventPolicyEditor::OnPolicySave() 
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
+   if (dwResult != RCC_SUCCESS)
+   {
+      theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
+   }
+   else
+   {
+      TCHAR szBuffer[256], *ptr;
+
+      m_bIsModified = FALSE;
+      ::LoadString(theApp.m_hInstance, IDR_EPP_EDITOR, szBuffer, 256);
+      ptr = _tcschr(&szBuffer[1], _T('\n'));
+      if (ptr != NULL)
+         *ptr = 0;
+      SetTitle(&szBuffer[1]);
+      OnUpdateFrameTitle(TRUE);
+   }
 }

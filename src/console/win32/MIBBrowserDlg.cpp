@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "MIBBrowserDlg.h"
+#include "DataQueryDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -17,7 +18,7 @@ static char THIS_FILE[] = __FILE__;
 //
 
 void BuildOIDString(struct tree *pNode, char *pszBuffer);
-char *BuildSymbolicOIDString(struct tree *pNode);
+char *BuildSymbolicOIDString(struct tree *pNode, DWORD dwInstance);
 
 
 //
@@ -38,8 +39,11 @@ CMIBBrowserDlg::CMIBBrowserDlg(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CMIBBrowserDlg)
 	m_strOID = _T("");
+	m_dwInstance = 0;
 	//}}AFX_DATA_INIT
    m_bIsExpanded = FALSE;
+   m_bDisableOIDUpdate = FALSE;
+   m_pNode = NULL;
 }
 
 
@@ -47,6 +51,7 @@ void CMIBBrowserDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CMIBBrowserDlg)
+	DDX_Control(pDX, IDC_EDIT_INSTANCE, m_wndEditInstance);
 	DDX_Control(pDX, IDC_EDIT_TYPE, m_wndEditType);
 	DDX_Control(pDX, IDC_EDIT_STATUS, m_wndEditStatus);
 	DDX_Control(pDX, IDC_EDIT_OID_TEXT, m_wndEditOIDText);
@@ -56,6 +61,7 @@ void CMIBBrowserDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_TREE_MIB, m_wndTreeCtrl);
 	DDX_Control(pDX, IDC_EDIT_OID, m_wndEditOID);
 	DDX_Text(pDX, IDC_EDIT_OID, m_strOID);
+	DDX_Text(pDX, IDC_EDIT_INSTANCE, m_dwInstance);
 	//}}AFX_DATA_MAP
 }
 
@@ -65,6 +71,9 @@ BEGIN_MESSAGE_MAP(CMIBBrowserDlg, CDialog)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_MIB, OnSelchangedTreeMib)
 	ON_BN_CLICKED(IDC_BUTTON_DETAILS, OnButtonDetails)
 	ON_WM_CTLCOLOR()
+	ON_EN_CHANGE(IDC_EDIT_OID, OnChangeEditOid)
+	ON_EN_CHANGE(IDC_EDIT_INSTANCE, OnChangeEditInstance)
+	ON_BN_CLICKED(IDC_BUTTON_GET, OnButtonGet)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -106,7 +115,22 @@ BOOL CMIBBrowserDlg::OnInitDialog()
 
    // Select node with given OID (or closest match)
    if (read_objid((LPCTSTR)m_strOID, oidName, &uNameLen) != 0)
+   {
       SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oidName, uNameLen);
+   }
+
+   // Change dialog title
+   if (m_pNode != NULL)
+   {
+      CString strTitle;
+
+      GetWindowText(strTitle);
+      strTitle += " (";
+      strTitle += m_pNode->szName;
+      strTitle += ")";
+      SetWindowText(strTitle);
+   }
+
 	return TRUE;
 }
 
@@ -139,17 +163,25 @@ void CMIBBrowserDlg::OnSelchangedTreeMib(NMHDR *pNMHDR, LRESULT *pResult)
    char *pszTemp, szBuffer[MAX_OID_LEN * 8];
 
    pNode = (struct tree *)m_wndTreeCtrl.GetItemData(pNMTreeView->itemNew.hItem);
-   BuildOIDString(pNode, szBuffer);
-   m_wndEditOID.SetWindowText(szBuffer);
+
+   if (!m_bDisableOIDUpdate)
+   {
+      BuildOIDString(pNode, szBuffer);
+      m_wndEditOID.SetWindowText(szBuffer);
+   }
+
    pszTemp = TranslateUNIXText(pNode->description != NULL ? pNode->description : "");
    m_wndEditDescription.SetWindowText(pszTemp);
    free(pszTemp);
+
    m_wndEditStatus.SetWindowText(CodeToText(pNode->status, g_ctSnmpMibStatus, ""));
    m_wndEditAccess.SetWindowText(CodeToText(pNode->access, g_ctSnmpMibAccess, ""));
    m_wndEditType.SetWindowText(CodeToText(pNode->type, g_ctSnmpMibType, ""));
-   pszTemp = BuildSymbolicOIDString(pNode);
+
+   pszTemp = BuildSymbolicOIDString(pNode, m_dwInstance);
    m_wndEditOIDText.SetWindowText(pszTemp);
    free(pszTemp);
+
 	*pResult = 0;
 }
 
@@ -216,7 +248,7 @@ HBRUSH CMIBBrowserDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
    HBRUSH hbr;
 
    nId = pWnd->GetDlgCtrlID();
-   if ((nId == IDC_EDIT_DESCRIPTION) || (nId == IDC_EDIT_OID) ||
+   if ((nId == IDC_EDIT_DESCRIPTION) ||
        (nId == IDC_EDIT_STATUS) || (nId == IDC_EDIT_OID_TEXT) ||
        (nId == IDC_EDIT_ACCESS) || (nId == IDC_EDIT_TYPE))
    {
@@ -257,4 +289,99 @@ void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, oid *oidName, unsigned int uNam
    }
    if ((!bMatch) && (hRoot != TVI_ROOT))
       m_wndTreeCtrl.SelectItem(hRoot);
+}
+
+
+//
+// Handle manual OID change
+//
+
+void CMIBBrowserDlg::OnChangeEditOid() 
+{
+   TCHAR szBuffer[1024];
+   oid oidName[MAX_OID_LEN];
+   unsigned int uNameLen = MAX_OID_LEN;
+
+   // Select node with given OID (or closest match)
+   m_wndEditOID.GetWindowText(szBuffer, 1024);
+   if (read_objid(szBuffer, oidName, &uNameLen) != 0)
+   {
+      m_bDisableOIDUpdate = TRUE;   // Prevent edit box text replacement when tree selection changes
+      SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oidName, uNameLen);
+      m_bDisableOIDUpdate = FALSE;
+   }
+}
+
+
+//
+// Handle instance change
+//
+
+void CMIBBrowserDlg::OnChangeEditInstance() 
+{
+   TCHAR szBuffer[32];
+   HTREEITEM hItem;
+
+   m_wndEditInstance.GetWindowText(szBuffer, 32);
+   m_dwInstance = strtoul(szBuffer, NULL, 10);
+
+   // Update symbolic OID
+   hItem = m_wndTreeCtrl.GetNextItem(NULL, TVGN_CARET);
+   if (hItem != NULL)
+   {
+      struct tree *pNode;
+      char *pszTemp;
+
+      pNode = (struct tree *)m_wndTreeCtrl.GetItemData(hItem);
+
+      pszTemp = BuildSymbolicOIDString(pNode, m_dwInstance);
+      m_wndEditOIDText.SetWindowText(pszTemp);
+      free(pszTemp);
+   }
+}
+
+
+//
+// Get requested parameter from host immediately
+//
+
+void CMIBBrowserDlg::OnButtonGet() 
+{
+   // Select node object if none selected
+   if (m_pNode == NULL)
+   {
+      CObjectSelDlg dlg;
+
+      dlg.m_dwAllowedClasses = SCL_NODE;
+      if (dlg.DoModal() == IDOK)
+      {
+         m_pNode = NXCFindObjectById(dlg.m_pdwObjectList[0]);
+         if (m_pNode != NULL)
+         {
+            CString strTitle;
+
+            GetWindowText(strTitle);
+            strTitle += " (";
+            strTitle += m_pNode->szName;
+            strTitle += ")";
+            SetWindowText(strTitle);
+         }
+      }
+   }
+
+   // If node is selected, continue
+   if (m_pNode != NULL)
+   {
+      CDataQueryDlg dlg;
+      TCHAR szBuffer[1024];
+
+      m_wndEditOID.GetWindowText(szBuffer, 1024);
+      dlg.m_dwObjectId = m_pNode->dwId;
+      dlg.m_strNode = (LPCTSTR)m_pNode->szName;
+      dlg.m_strParameter = (LPCTSTR)szBuffer;
+      _stprintf(szBuffer, _T(".%ld"), m_dwInstance);
+      dlg.m_strParameter += szBuffer;
+      dlg.m_iOrigin = DS_SNMP_AGENT;
+      dlg.DoModal();
+   }
 }

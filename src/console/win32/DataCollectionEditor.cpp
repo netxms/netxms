@@ -324,6 +324,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_iStatus = pItem->iStatus;
    pgCollection.m_strName = pItem->szName;
    pgCollection.m_strDescription = pItem->szDescription;
+   pgCollection.m_pNode = NXCFindObjectById(m_pItemList->dwNodeId);
 
    // Setup "Transformation" page
    pgTransform.m_iDeltaProc = pItem->iDeltaCalculation;

@@ -80,6 +80,8 @@ protected:
 	afx_msg void OnUpdatePolicyDelete(CCmdUI* pCmdUI);
 	afx_msg void OnPolicyDeleterule();
 	afx_msg void OnPolicyEdit();
+	afx_msg void OnPolicySave();
+	afx_msg void OnUpdatePolicySave(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
