@@ -108,7 +108,7 @@ static char m_szHelpText[] =
    "   -c <file>  : Use configuration file <file> (default " AGENT_DEFAULT_CONFIG ")\n"
    "   -C         : Check configuration file and exit\n"
    "   -d         : Run as daemon/service\n"
-   "   -D         : Turn on debug output (only in foreground mode)\n"
+   "   -D         : Turn on debug output\n"
    "   -h         : Display help and exit\n"
 #ifdef _WIN32
    "   -I         : Install Windows service\n"
@@ -178,7 +178,7 @@ BOOL Initialize(void)
    ThreadCreate(ListenerThread, 0, NULL);
 
    m_hCondShutdown = ConditionCreate(FALSE);
-   ThreadSleep(3);
+   ThreadSleep(1);
 
    return TRUE;
 }

@@ -31,6 +31,9 @@
 #include <nxqueue.h>
 #include "messages.h"
 
+#define LIBNXCL_NO_DECLARATIONS
+#include <nxclapi.h>
+
 
 //
 // Version
@@ -114,6 +117,10 @@ private:
    CONDITION m_hCondProcessingThreadStopped;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    DWORD m_dwIndex;
+   BOOL m_bIsAuthenticated;
+
+   void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
 
 public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -147,6 +154,7 @@ void DebugPrintf(char *pszFormat, ...);
 
 BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg);
+DWORD GetParameterValue(char *pszParam, char *pszValue);
 
 BOOL LoadSubAgent(char *szModuleName);
 

@@ -141,31 +141,32 @@ void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *
 // Get parameter's value
 //
 
-void GetParameterValue(char *param, int *errorCode, char *pValue)
+DWORD GetParameterValue(char *pszParam, char *pszValue)
 {
    int i, rc;
+   DWORD dwErrorCode;
 
    for(i = 0; i < m_iNumParams; i++)
-      if (MatchString(m_pParamList[i].name, param, FALSE))
+      if (MatchString(m_pParamList[i].name, pszParam, FALSE))
       {
-         rc = m_pParamList[i].handler(param, m_pParamList[i].arg, pValue);
+         rc = m_pParamList[i].handler(pszParam, m_pParamList[i].arg, pszValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
-               *errorCode = ERR_SUCCESS;
+               dwErrorCode = ERR_SUCCESS;
                m_dwProcessedRequests++;
                break;
             case SYSINFO_RC_ERROR:
-               *errorCode = ERR_INTERNAL_ERROR;
+               dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
             case SYSINFO_RC_UNSUPPORTED:
-               *errorCode = ERR_UNKNOWN_PARAMETER;
+               dwErrorCode = ERR_UNKNOWN_PARAMETER;
                m_dwUnsupportedRequests++;
                break;
             default:
-               WriteLog(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
-               *errorCode = ERR_INTERNAL_ERROR;
+               WriteLog(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
          }
@@ -173,7 +174,8 @@ void GetParameterValue(char *param, int *errorCode, char *pValue)
       }
    if (i == m_iNumParams)
    {
-      *errorCode = ERR_UNKNOWN_PARAMETER;
+      dwErrorCode = ERR_UNKNOWN_PARAMETER;
       m_dwUnsupportedRequests++;
    }
+   return dwErrorCode;
 }

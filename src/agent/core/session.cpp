@@ -44,6 +44,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hCondWriteThreadStopped = ConditionCreate(FALSE);
    m_hCondProcessingThreadStopped = ConditionCreate(FALSE);
    m_dwHostAddr = dwHostAddr;
+   m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
 }
 
 
@@ -72,6 +73,7 @@ void CommSession::ReadThread(void)
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
    int iErr;
+   char szBuffer[32];
 
    // Initialize raw message receiving function
    RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0);
@@ -108,6 +110,8 @@ void CommSession::ReadThread(void)
    // Wait for other threads to finish
    ConditionWait(m_hCondWriteThreadStopped, INFINITE);
    ConditionWait(m_hCondProcessingThreadStopped, INFINITE);
+
+   DebugPrintf("Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
 }
 
 
@@ -146,15 +150,104 @@ void CommSession::ProcessingThread(void)
 {
    CSCPMessage *pMsg;
    char szBuffer[128];
+   CSCPMessage msg;
 
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-
       DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+
+      // Prepare responce message
+      msg.SetCode(CMD_REQUEST_COMPLETED);
+      msg.SetId(pMsg->GetId());
+
+      // Check if authentication required
+      if ((!m_bIsAuthenticated) && (pMsg->GetCode() != CMD_AUTHENTICATE))
+      {
+         msg.SetVariable(VID_RCC, ERR_AUTH_REQUIRED);
+      }
+      else
+      {
+         switch(pMsg->GetCode())
+         {
+            case CMD_AUTHENTICATE:
+               Authenticate(pMsg, &msg);
+               break;
+            case CMD_GET_PARAMETER:
+               GetParameter(pMsg, &msg);
+               break;
+            case CMD_GET_LIST:
+               msg.SetVariable(VID_RCC, ERR_NOT_IMPLEMENTED);
+               break;
+            default:
+               msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
+               break;
+         }
+      }
       delete pMsg;
+
+      // Send responce
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
    }
    ConditionSet(m_hCondProcessingThreadStopped);
+}
+
+
+//
+// Authenticate peer
+//
+
+void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   if (m_bIsAuthenticated)
+   {
+      // Already authenticated
+      pMsg->SetVariable(VID_RCC, (g_dwFlags & AF_REQUIRE_AUTH) ? ERR_ALREADY_AUTHENTICATED : ERR_AUTH_NOT_REQUIRED);
+   }
+   else
+   {
+      char szSecret[MAX_SECRET_LENGTH];
+      WORD wAuthMethod;
+
+      wAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
+      switch(wAuthMethod)
+      {
+         case AUTH_PLAINTEXT:
+            pRequest->GetVariableStr(VID_SHARED_SECRET, szSecret, MAX_SECRET_LENGTH);
+            if (!strcmp(szSecret, g_szSharedSecret))
+            {
+               m_bIsAuthenticated = TRUE;
+               pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "PLAIN");
+               pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
+            }
+            break;
+         default:
+            pMsg->SetVariable(VID_RCC, ERR_NOT_IMPLEMENTED);
+            break;
+      }
+   }
+}
+
+
+//
+// Get parameter's value
+//
+
+void CommSession::GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   char szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
+   DWORD dwErrorCode;
+
+   pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
+   dwErrorCode = GetParameterValue(szParameter, szValue);
+   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   if (dwErrorCode == ERR_SUCCESS)
+      pMsg->SetVariable(VID_VALUE, szValue);
 }

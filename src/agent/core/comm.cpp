@@ -144,6 +144,7 @@ void ListenerThread(void *)
    struct sockaddr_in servAddr;
    int iSize, iNumErrors = 0;
    CommSession *pSession;
+   char szBuffer[256];
 
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -192,6 +193,7 @@ void ListenerThread(void *)
       }
 
       iNumErrors = 0;     // Reset consecutive errors counter
+      DebugPrintf("Incoming connection from %s", IpToStr(servAddr.sin_addr.S_un.S_addr, szBuffer));
 
       if (IsValidServerAddr(servAddr.sin_addr.S_un.S_addr))
       {

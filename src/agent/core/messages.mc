@@ -92,4 +92,16 @@ Language=English
 Communication session broken: %1
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG
+Language=English
+Debug: %1
+.
+
+MessageId=
+SymbolicName=MSG_AUTH_FAILED
+Language=English
+Authentication failed for peer %1, method: %2
+.
+
 ;#endif

@@ -46,13 +46,16 @@ void ConsolePrintf(char *pszFormat, ...)
 
 void DebugPrintf(char *pszFormat, ...)
 {
-   if (!(g_dwFlags & AF_DAEMON) && (g_dwFlags & AF_DEBUG))
+   if (g_dwFlags & AF_DEBUG)
    {
       va_list args;
+      char szBuffer[1024];
 
       va_start(args, pszFormat);
-      vprintf(pszFormat, args);
+      vsnprintf(szBuffer, 1024, pszFormat, args);
       va_end(args);
+      
+      WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
    }
 }
 
