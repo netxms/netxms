@@ -205,6 +205,8 @@ BOOL DCItem::LoadThresholdsFromDB(void)
       bResult = TRUE;
    }
 
+   UpdateCacheSize();
+
    return bResult;
 }
 
@@ -492,9 +494,18 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
    // Check thresholds and add value to cache
    CheckThresholds(*pValue);
 
-   /* TODO: add value to cache */
-   // Temporary:
-   delete pValue;
+   if (m_dwCacheSize > 0)
+   {
+      Lock();
+      delete m_ppValueCache[m_dwCacheSize - 1];
+      memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_dwCacheSize - 1));
+      m_ppValueCache[0] = pValue;
+      Unlock();
+   }
+   else
+   {
+      delete pValue;
+   }
 }
 
 
@@ -552,4 +563,70 @@ void DCItem::SetId(DWORD dwNewId)
    for(i = 0; i < m_dwNumThresholds; i++)
       m_ppThresholdList[i]->BindToItem(m_dwId);
    Unlock();
+}
+
+
+//
+// Update required cache size depending on thresholds
+//
+
+void DCItem::UpdateCacheSize(void)
+{
+   DWORD i, dwRequiredSize;
+
+   for(i = 0, dwRequiredSize = 0; i < m_dwNumThresholds; i++)
+      if (dwRequiredSize < m_ppThresholdList[i]->RequiredCacheSize())
+         dwRequiredSize = m_ppThresholdList[i]->RequiredCacheSize();
+   if (dwRequiredSize < m_dwCacheSize)
+   {
+      m_dwCacheSize = dwRequiredSize;
+      if (m_dwCacheSize > 0)
+      {
+         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_dwCacheSize);
+      }
+      else
+      {
+         safe_free(m_ppValueCache);
+         m_ppValueCache = NULL;
+      }
+   }
+   else if (dwRequiredSize > m_dwCacheSize)
+   {
+      // Expand cache
+      m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
+      for(i = m_dwCacheSize; i < dwRequiredSize; i++)
+         m_ppValueCache[i] = NULL;
+
+      // Load missing values from database
+      if (m_pNode != NULL)
+      {
+         DB_ASYNC_RESULT hResult;
+         char szBuffer[MAX_DB_STRING];
+         BOOL bHasData;
+
+         sprintf(szBuffer, "SELECT idata_value FROM idata_%ld "
+                           "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
+                 m_pNode->Id(), m_dwId);
+         hResult = DBAsyncSelect(g_hCoreDB, szBuffer);
+         if (hResult != NULL)
+         {
+            // Skip already cached values
+            for(i = 0, bHasData = TRUE; (i < m_dwCacheSize) && bHasData; i++)
+               bHasData = DBFetch(hResult);
+
+            // Create new cache entries
+            for(; (i < dwRequiredSize) && bHasData; i++)
+            {
+               bHasData = DBFetch(hResult);
+               if (bHasData)
+               {
+                  m_ppValueCache[i] = new ItemValue(DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING));
+               }
+            }
+
+            DBFreeAsyncResult(hResult);
+         }
+      }
+      m_dwCacheSize = dwRequiredSize;
+   }
 }

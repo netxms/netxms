@@ -1282,7 +1282,6 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    }
 
    // Send end-of-database notification
-printf("sending user list end\n");
    msg.SetCode(CMD_USER_DB_EOF);
    SendMessage(&msg);
 }

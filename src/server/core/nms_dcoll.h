@@ -130,6 +130,7 @@ public:
    void UpdateFromMessage(DCI_THRESHOLD *pData);
 
    void CreateId(void);
+   DWORD RequiredCacheSize(void) { return (m_iFunction == F_LAST) ? 0 : m_iParam1; }
 };
 
 
@@ -169,6 +170,7 @@ private:
 
    void Transform(ItemValue &value);
    void CheckThresholds(ItemValue &value);
+   void UpdateCacheSize(void);
 
 public:
    DCItem();
