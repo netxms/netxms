@@ -100,6 +100,31 @@
 
 
 //
+// Interface information structure used by discovery functions
+//
+
+struct INTERFACE_INFO
+{
+   char szName[MAX_OBJECT_NAME];
+   DWORD dwIndex;
+   DWORD dwType;
+   DWORD dwIpAddr;
+   DWORD dwIpNetMask;
+};
+
+
+//
+// Interface list used by discovery functions
+//
+
+struct INTERFACE_LIST
+{
+   int iNumEntries;
+   INTERFACE_INFO *pInterfaces;
+};
+
+
+//
 // Functions
 //
 
@@ -145,6 +170,9 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
              size_t iOidLen, void *pValue);
 BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
                    void (* pHandler)(DWORD, char *, variable_list *, void *), void *pUserArg);
+
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity);
+void DestroyInterfaceList(INTERFACE_LIST *pIfList);
 
 #ifdef _WIN32
 

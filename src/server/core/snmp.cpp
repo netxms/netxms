@@ -24,6 +24,24 @@
 
 
 //
+// Convert OID to from binary to string representation
+//
+
+void OidToStr(oid *pOid, int iOidLen, char *szBuffer)
+{
+   int i;
+   char *pCurr;
+
+   for(i = 0, pCurr = szBuffer; i < iOidLen; i++)
+   {
+      sprintf(pCurr, ".%d", pOid[i]);
+      while(*pCurr)
+         pCurr++;
+   }
+}
+
+
+//
 // Get value for SNMP variable
 // If szOidStr is not NULL, string representation of OID is used, otherwise -
 // binary representation from oidBinary and iOidLen
@@ -93,7 +111,7 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
                ((char *)pValue)[pVar->val_len]=0;
                break;
             case ASN_OBJECT_ID:
-//               snprint_objid((char *)pValue, MAX_OID_LEN * 4, (oid *)pVar->val.string, pVar->val_len);
+               OidToStr(pVar->val.objid, pVar->val_len / sizeof(oid), (char *)pValue);
                break;
             default:
                WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "d", pVar->type);
@@ -215,4 +233,101 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
    // Close session and cleanup
    snmp_close(sptr);
    return bResult;
+}
+
+
+//
+// Handler for enumerating IP addresses
+//
+
+static void HandlerIpAddr(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+{
+   DWORD dwIndex;
+   oid oidName[MAX_OID_LEN];
+
+   memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
+   oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex))
+   {
+      int i;
+
+      for(i = 0; i < ((INTERFACE_LIST *)pArg)->iNumEntries; i++)
+         if (((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIndex == dwIndex)
+         {
+            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = *pVar->val.integer;
+            break;
+         }
+   }
+}
+
+
+//
+// Handler for enumerating IP net masks
+//
+
+static void HandlerNetMask(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+{
+   DWORD dwIndex;
+   oid oidName[MAX_OID_LEN];
+
+   memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
+   oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex))
+   {
+      int i;
+
+      for(i = 0; i < ((INTERFACE_LIST *)pArg)->iNumEntries; i++)
+         if (((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIndex == dwIndex)
+         {
+            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpNetMask = *pVar->val.integer;
+            break;
+         }
+   }
+}
+
+
+//
+// Get interface list via SNMP
+//
+
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
+{
+   long i, iNumIf;
+   char szOid[128];
+   INTERFACE_LIST *pIfList = NULL;
+
+   // Get number of interfaces
+   if (!SnmpGet(dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0, &iNumIf))
+      return NULL;
+
+   // Create empty list
+   pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+   pIfList->iNumEntries = iNumIf;
+   pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iNumIf);
+   memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
+
+   // Enumerate interfaces
+   for(i = 1; i <= iNumIf; i++)
+   {
+      // Interface index
+      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.1.%d", i);
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i - 1].dwIndex))
+         continue;
+
+      // Interface name
+      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", i);
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, pIfList->pInterfaces[i - 1].szName))
+         continue;
+
+      // Interface type
+      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", i);
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i - 1].dwType))
+         continue;
+   }
+
+   // Interface IP address'es and netmasks
+   SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1", HandlerIpAddr, pIfList);
+   SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.3", HandlerNetMask, pIfList);
+
+   return pIfList;
 }

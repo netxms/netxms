@@ -258,3 +258,18 @@ wait_for_packet:
    closesocket(sock);
    return bResult;
 }
+
+
+//
+// Destroy interface list created by discovery functions
+//
+
+void DestroyInterfaceList(INTERFACE_LIST *pIfList)
+{
+   if (pIfList != NULL)
+   {
+      if (pIfList->pInterfaces != NULL)
+         free(pIfList->pInterfaces);
+      free(pIfList);
+   }
+}
