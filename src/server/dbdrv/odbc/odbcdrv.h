@@ -64,4 +64,16 @@ typedef struct
 } ODBCDRV_QUERY_RESULT;
 
 
+//
+// Async result buffer structure
+//
+
+typedef struct
+{
+   long iNumCols;
+   ODBCDRV_CONN *pConn;
+   BOOL bNoMoreRows;
+} ODBCDRV_ASYNC_QUERY_RESULT;
+
+
 #endif   /* _odbcdrv_h_ */

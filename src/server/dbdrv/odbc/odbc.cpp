@@ -108,6 +108,8 @@ connect_failure_0:
 
 extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 {
+   MutexLock(pConn->mutexQuery, INFINITE);
+   MutexUnlock(pConn->mutexQuery);
    SQLDisconnect(pConn->sqlConn);
    SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
    SQLFreeHandle(SQL_HANDLE_ENV, pConn->sqlEnv);
@@ -188,7 +190,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery)
             for(i = 1; i <= pResult->iNumCols; i++)
             {
                pDataBuffer[0] = 0;
-               SQLGetData(pConn->sqlStatement, (WORD)i, SQL_C_CHAR, pDataBuffer, 
+               SQLGetData(pConn->sqlStatement, (short)i, SQL_C_CHAR, pDataBuffer, 
                           DATA_BUFFER_SIZE, &iDataSize);
                pResult->pValues[iCurrValue++] = strdup((const char *)pDataBuffer);
             }
@@ -256,7 +258,37 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQuery)
 {
-   return NULL;
+   ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
+   long iResult;
+   short wNumCols;
+
+   MutexLock(pConn->mutexQuery, INFINITE);
+
+   // Allocate statement handle
+   iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   {
+      // Execute statement
+      iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)szQuery, SQL_NTS);
+	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+      {
+         // Allocate result buffer and determine column info
+         pResult = (ODBCDRV_ASYNC_QUERY_RESULT *)malloc(sizeof(ODBCDRV_ASYNC_QUERY_RESULT));
+         SQLNumResultCols(pConn->sqlStatement, &wNumCols);
+         pResult->iNumCols = wNumCols;
+         pResult->pConn = pConn;
+         pResult->bNoMoreRows = FALSE;
+      }
+      else
+      {
+         // Free statement handle if query failed
+         SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+      }
+   }
+
+   if (pResult == NULL) // Unlock mutex if query has failed
+      MutexUnlock(pConn->mutexQuery);
+   return pResult;
 }
 
 
@@ -264,9 +296,20 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQu
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
-   return FALSE;
+   BOOL bResult = FALSE;
+
+   if (pResult != NULL)
+   {
+      long iResult;
+
+      iResult = SQLFetch(pResult->pConn->sqlStatement);
+      bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
+      if (!bResult)
+         pResult->bNoMoreRows = TRUE;
+   }
+   return bResult;
 }
 
 
@@ -274,9 +317,31 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field from current row in async query result
 //
 
-extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+extern "C" char EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn, char *pBuffer, int iBufSize)
 {
-   return NULL;
+   SQLINTEGER iDataSize;
+   long iResult;
+
+   // Check if we have valid result handle
+   if (pResult == NULL)
+      return NULL;
+
+   // Check if there are valid fetched row
+   if (pResult->bNoMoreRows)
+      return NULL;
+
+   if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
+   {
+      iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
+                           pBuffer, iBufSize, &iDataSize);
+      if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+         pBuffer[0] = 0;
+   }
+   else
+   {
+      pBuffer[0] = 0;
+   }
+   return pBuffer;
 }
 
 
@@ -284,8 +349,14 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, c
 // Destroy result of async query
 //
 
-extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
+   if (pResult != NULL)
+   {
+      SQLFreeHandle(SQL_HANDLE_STMT, pResult->pConn->sqlStatement);
+      MutexUnlock(pResult->pConn->mutexQuery);
+      free(pResult);
+   }
 }
 
 
