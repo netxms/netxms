@@ -97,6 +97,10 @@ PostBuild_Cmds=copy Debug\winperf.nsm ..\..\..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\collect.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
@@ -110,6 +114,10 @@ SOURCE=.\winperf.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\include\nms_agent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\include\nms_threads.h
 # End Source File
 # Begin Source File
 

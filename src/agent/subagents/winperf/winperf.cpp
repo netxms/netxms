@@ -29,6 +29,44 @@
 
 #define CFG_BUFFER_SIZE    256000
 
+#define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
+
+
+//
+// Global variables
+//
+
+HANDLE g_hCondShutdown = NULL;
+
+
+//
+// Static variables
+//
+
+static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
+
+
+//
+// List of predefined performance counters
+//
+static struct
+{
+   TCHAR *pszParamName;
+   TCHAR *pszCounterName;
+   int iClass;
+   int iNumSamples;
+   int iDataType;
+} m_counterList[] =
+{
+   { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0, 60, COUNTER_TYPE_FLOAT },
+   { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0, 300, COUNTER_TYPE_FLOAT },
+   { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0, 900, COUNTER_TYPE_FLOAT },
+   { _T("System.CPU.Usage"), _T("\\Processor(_Total)\\% Processor Time"), 0, 60, COUNTER_TYPE_INT32 },
+   { _T("System.CPU.Usage5"), _T("\\Processor(_Total)\\% Processor Time"), 0, 300, COUNTER_TYPE_INT32 },
+   { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0, 900, COUNTER_TYPE_INT32 },
+   { NULL, NULL, 0, 0, 0 }
+};
+
 
 //
 // Value of given performance counter
@@ -46,6 +84,28 @@ static LONG H_PdhVersion(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
 
 //
+// Value of given counter collected by one of the collector threads
+//
+
+static LONG H_CollectedCounterData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+{
+   switch(((WINPERF_COUNTER *)pArg)->wType)
+   {
+      case COUNTER_TYPE_INT32:
+         ret_int(pValue, ((WINPERF_COUNTER *)pArg)->value.iLong);
+         break;
+      case COUNTER_TYPE_INT64:
+         ret_int64(pValue, ((WINPERF_COUNTER *)pArg)->value.iLarge);
+         break;
+      case COUNTER_TYPE_FLOAT:
+         ret_double(pValue, ((WINPERF_COUNTER *)pArg)->value.dFloat);
+         break;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // Value of given performance counter
 //
 
@@ -56,11 +116,10 @@ static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    PDH_RAW_COUNTER rawData1, rawData2;
    PDH_FMT_COUNTERVALUE counterValue;
    PDH_STATUS rc;
-   PDH_COUNTER_INFO ci;
    TCHAR szCounter[MAX_PATH], szBuffer[16];
-   static TCHAR szFName[] = _T("H_PdhCounterValue");
-   DWORD dwSize;
+   DWORD dwType;
    BOOL bUseTwoSamples = FALSE;
+   static TCHAR szFName[] = _T("H_PdhCounterValue");
 
    if ((!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
        (!NxGetParameterArg(pszParam, 2, szBuffer, 16)))
@@ -88,7 +147,7 @@ static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       PdhCloseQuery(hQuery);
       return SYSINFO_RC_ERROR;
    }
-   PdhGetRawCounterValue(hCounter, NULL, &rawData1);
+   PdhGetRawCounterValue(hCounter, &dwType, &rawData1);
 
    // Get second sample if required
    if (bUseTwoSamples)
@@ -103,15 +162,7 @@ static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       PdhGetRawCounterValue(hCounter, NULL, &rawData2);
    }
 
-   dwSize = sizeof(ci);
-   if ((rc = PdhGetCounterInfo(hCounter, FALSE, &dwSize, &ci)) != ERROR_SUCCESS)
-   {
-      ReportPdhError(szFName, _T("PdhGetCounterInfo"), rc);
-      PdhCloseQuery(hQuery);
-      return SYSINFO_RC_ERROR;
-   }
-
-   if (ci.dwType & PERF_SIZE_LARGE)
+   if (dwType & PERF_SIZE_LARGE)
    {
       if (bUseTwoSamples)
          PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
@@ -216,6 +267,18 @@ static LONG H_PdhObjectItems(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *p
 
 
 //
+// Handler for subagent unload
+//
+
+static void OnUnload(void)
+{
+   if (g_hCondShutdown != NULL)
+      SetEvent(g_hCondShutdown);
+   Sleep(500);
+}
+
+
+//
 // Subagent information
 //
 
@@ -233,12 +296,59 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	"WinPerf", 0x01000000, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
+	"WinPerf", 0x01000000, OnUnload,
+	0, NULL,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	m_enums
 };
+
+
+//
+// Add new parameter to list
+//
+
+static BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *), TCHAR *pArg)
+{
+   DWORD i;
+
+   for(i = 0; i < m_info.dwNumParameters; i++)
+      if (!_tcsicmp(pszName, m_info.pParamList[i].szName))
+         break;
+
+   if (i == m_info.dwNumParameters)
+   {
+      // Extend list
+      m_info.dwNumParameters++;
+      m_info.pParamList = 
+         (NETXMS_SUBAGENT_PARAM *)realloc(m_info.pParamList, 
+                  sizeof(NETXMS_SUBAGENT_PARAM) * m_info.dwNumParameters);
+   }
+
+   _tcsncpy(m_info.pParamList[i].szName, pszName, MAX_PARAM_NAME);
+   m_info.pParamList[i].fpHandler = fpHandler;
+   m_info.pParamList[i].pArg = pArg;
+   
+   return TRUE;
+}
+
+
+//
+// Add predefined counters
+//
+
+static void AddPredefinedCounters(void)
+{
+   int i;
+   WINPERF_COUNTER *pCnt;
+
+   for(i = 0; m_counterList[i].pszParamName != NULL; i++)
+   {
+      pCnt = AddCounter(m_counterList[i].pszCounterName, m_counterList[i].iClass,
+                        m_counterList[i].iNumSamples, m_counterList[i].iDataType);
+      if (pCnt != NULL)
+         AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData, (TCHAR *)pCnt);
+   }
+}
 
 
 //
@@ -247,8 +357,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
-   { "Counter", CT_STRING_LIST, ',', 0, CFG_BUFFER_SIZE, 0, NULL },
-   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("Counter"), CT_STRING_LIST, _T('\n'), 0, CFG_BUFFER_SIZE, 0, NULL },
+   { _T("EnableDefaultCounters"), CT_BOOLEAN, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 
@@ -261,11 +372,37 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 {
    DWORD dwResult;
 
+   // Init parameters list
+   m_info.dwNumParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
+   m_info.pParamList = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
+
    // Load configuration
    cfgTemplate[0].pBuffer = malloc(CFG_BUFFER_SIZE);
    dwResult = NxLoadConfig(pszConfigFile, _T("WinPerf"), cfgTemplate, FALSE);
    if (dwResult == NXCFG_ERR_OK)
    {
+      TCHAR *pItem, *pEnd;
+
+      // Parse counter list
+      for(pItem = (TCHAR *)cfgTemplate[0].pBuffer; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = _tcschr(pItem, _T('\n'));
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddCounterFromConfig(pItem))
+            NxWriteAgentLog(EVENTLOG_WARNING_TYPE, 
+                            _T("Unable to add counter from configuration file. "
+                               "Original configuration record: %s",), pItem);
+      }
+
+      if (m_dwFlags & WPF_ENABLE_DEFAULT_COUNTERS)
+         AddPredefinedCounters();
+
+      // Create shitdown condition object
+      g_hCondShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+      StartCollectorThreads();
    }
    free(cfgTemplate[0].pBuffer);
    *ppInfo = &m_info;

@@ -26,15 +26,72 @@
 #include <windows.h>
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nms_threads.h>
 #include <pdh.h>
 #include <pdhmsg.h>
+
+
+//
+// Counter types
+//
+
+#define COUNTER_TYPE_AUTO     0
+#define COUNTER_TYPE_INT32    1
+#define COUNTER_TYPE_INT64    2
+#define COUNTER_TYPE_FLOAT    3
+
+
+//
+// Counter structure
+//
+
+struct WINPERF_COUNTER
+{
+   TCHAR *pszName;
+   WORD  wType;
+   WORD  wNumSamples;
+   union
+   {
+      LONG iLong;
+      INT64 iLarge;
+      double dFloat;
+   } value;
+   DWORD dwFormat;   // Format code for PDH functions
+   PDH_RAW_COUNTER *pRawValues;
+   DWORD dwBufferPos;
+   HCOUNTER handle;
+};
+
+
+//
+// Counter set structure
+//
+
+struct WINPERF_COUNTER_SET
+{
+   DWORD dwInterval;    // Interval beetween samples in milliseconds
+   DWORD dwNumCounters;
+   WINPERF_COUNTER **ppCounterList;
+   TCHAR cClass;
+};
 
 
 //
 // Functions
 //
 
+void StartCollectorThreads(void);
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize);
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError);
+WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDataType);
+BOOL AddCounterFromConfig(TCHAR *pszStr);
+
+
+//
+// Global variables
+//
+
+extern HANDLE g_hCondShutdown;
+
 
 #endif

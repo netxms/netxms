@@ -108,6 +108,7 @@ src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
+src/agent/subagents/winperf/collect.cpp -text
 src/agent/subagents/winperf/tools.cpp -text
 src/agent/subagents/winperf/winperf.cpp -text
 src/agent/subagents/winperf/winperf.dsp -text
