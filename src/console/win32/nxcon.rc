@@ -82,6 +82,7 @@ IDI_LOG                 ICON    DISCARDABLE     "icons\\log.ico"
 IDI_ALARM               ICON    DISCARDABLE     "icons\\alarm.ico"
 IDI_UNKNOWN             ICON    DISCARDABLE     "icons\\question.ico"
 IDI_ACK                 ICON    DISCARDABLE     "icons\\ack.ico"
+IDI_CONNECT             ICON    DISCARDABLE     "icons\\connect.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1158,7 +1159,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    ID_INDICATOR_STATE      "DEFAULT TEXT FOR STATE INDICATOR"
+    ID_INDICATOR_CONNECT    "default-server.default-domain.com"
     IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"

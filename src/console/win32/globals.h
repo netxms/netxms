@@ -61,6 +61,7 @@ extern CConsoleApp theApp;
 #define WM_EDITBOX_EVENT         (WM_USER + 5)
 #define WM_SET_INFO_TEXT         (WM_USER + 6)
 #define WM_USERDB_CHANGE         (WM_USER + 7)
+#define WM_STATE_CHANGE          (WM_USER + 8)
 
 
 //

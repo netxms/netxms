@@ -272,6 +272,7 @@ int CConsoleApp::ExitInstance()
 {
    NXCSetDebugCallback(NULL);
    NXCDisconnect();
+   NXCShutdown();
 
    // Free resources
    SafeFreeResource(m_hMDIMenu);
@@ -561,6 +562,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
    {
       case NXC_EVENT_STATE_CHANGED:
          m_dwClientState = dwCode;
+         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_STATE_CHANGE, dwCode, (LPARAM)pArg);
          break;
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_bEventBrowserActive)

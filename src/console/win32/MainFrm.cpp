@@ -23,15 +23,16 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_WM_DESTROY()
 	ON_COMMAND(ID_UPDATE_EVENT_LIST, OnUpdateEventList)
 	//}}AFX_MSG_MAP
-   ON_UPDATE_COMMAND_UI(ID_INDICATOR_STATE, OnUpdateState)
+//   ON_UPDATE_COMMAND_UI(ID_INDICATOR_CONNECT, OnUpdateConnState)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
+   ON_MESSAGE(WM_STATE_CHANGE, OnStateChange)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
 {
    ID_SEPARATOR,
-	ID_INDICATOR_STATE,
+	ID_INDICATOR_CONNECT,
 	ID_INDICATOR_CAPS,
 	ID_INDICATOR_NUM,
 	ID_INDICATOR_SCRL
@@ -80,6 +81,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create status bar\n");
 		return -1;      // fail to create
 	}
+
+   m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, NULL);
+   m_wndStatusBar.GetStatusBarCtrl().SetText("", 1, 0);
 
 	// TODO: Remove this if you don't want tool tips
 	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() |
@@ -132,28 +136,6 @@ void CMainFrame::OnDestroy()
 
 
 //
-// Called by framework to update client library state indicator
-//
-
-void CMainFrame::OnUpdateState(CCmdUI *pCmdUI)
-{
-   static char *pszStateText[] =
-   {
-      "Disconnected",
-      "Connecting to server...",
-      "Idle",
-      "Loading objects...",
-      "Loading events...",
-      "Loading event configuration...",
-      "Loading event policy...",
-      "Loading user database..."
-   };
-   pCmdUI->Enable();
-   pCmdUI->SetText(pszStateText[theApp.GetClientState()]);
-}
-
-
-//
 // Broadcast message to all MDI child windows
 //
 
@@ -198,4 +180,25 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 void CMainFrame::OnUpdateEventList(void) 
 {
    DoRequest(NXCLoadEventNames, "Loading event information...");
+}
+
+
+//
+// Handler for WM_STATE_CHANGE message
+//
+
+void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
+{
+   if (wParam == STATE_CONNECTED)
+   {
+      m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, 
+         (HICON)LoadImage(theApp.m_hInstance, MAKEINTRESOURCE(IDI_CONNECT), 
+                          IMAGE_ICON, 16, 16, LR_SHARED));
+      m_wndStatusBar.GetStatusBarCtrl().SetText(g_szServer, 1, 0);
+   }
+   else
+   {
+      m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, NULL);
+      m_wndStatusBar.GetStatusBarCtrl().SetText("", 1, 0);
+   }
 }
