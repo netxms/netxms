@@ -120,3 +120,94 @@ BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary,
    snmp_close(sptr);
    return bResult;
 }
+
+
+//
+// Enumerate multiple values by walking throgh MIB, starting at given root
+//
+
+BOOL SnmpEnumerate(char *szNode, char *szCommunity, char *szRootOid,
+                   void (* pHandler)(char *, char *, variable_list *, void *), void *pUserArg)
+{
+   struct snmp_session session, *sptr;
+   struct snmp_pdu *pdu, *response;
+   oid oidName[MAX_OID_LEN], oidRoot[MAX_OID_LEN];
+   size_t iNameLen, iRootLen = MAX_OID_LEN;
+   struct variable_list *pVar;
+   int iStatus;
+   BOOL bRunning = TRUE, bResult = TRUE;
+
+   // Open SNMP session
+   snmp_sess_init(&session);
+   session.version = SNMP_VERSION_1;
+   session.peername = szNode;
+   session.community = (unsigned char *)szCommunity;
+   session.community_len = strlen((char *)session.community);
+
+   sptr = snmp_open(&session);
+   if(sptr == NULL)
+   {
+      WriteLog(MSG_SNMP_OPEN_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      return FALSE;
+   }
+
+   // Get root
+   if (read_objid(szRootOid, oidRoot, &iRootLen) == 0)
+   {
+      WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
+      return FALSE;
+   }
+   memcpy(oidName, oidRoot, iRootLen * sizeof(oid));
+   iNameLen = iRootLen;
+
+   // Walk the MIB
+   while(bRunning)
+   {
+      pdu = snmp_pdu_create(SNMP_MSG_GETNEXT);
+      snmp_add_null_var(pdu, oidName, iNameLen);
+      iStatus = snmp_synch_response(sptr, pdu, &response);
+
+      if ((iStatus == STAT_SUCCESS) && (response->errstat == SNMP_ERR_NOERROR))
+      {
+         for(pVar = response->variables; pVar != NULL; pVar = pVar->next_variable)
+         {
+            // Should we stop walking?
+            if ((pVar->name_length < iRootLen) ||
+                (memcmp(oidRoot, pVar->name, iRootLen * sizeof(oid))))
+            {
+               bRunning = 0;
+               break;
+            }
+            memmove(oidName, pVar->name, pVar->name_length * sizeof(oid));
+            iNameLen = pVar->name_length;
+
+            // Call user's callback for processing
+            pHandler(szNode, szCommunity, pVar, pUserArg);
+         }
+      }
+      else
+      {
+         if (iStatus == STAT_SUCCESS)
+         {
+            WriteLog(MSG_SNMP_BAD_PACKET, EVENTLOG_ERROR_TYPE, "s", snmp_errstring(response->errstat));
+            bResult = FALSE;
+         }
+         else
+         {
+            WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", iStatus);
+            bResult = FALSE;
+         }
+         bRunning = FALSE;
+      }
+
+      // Destroy responce PDU if needed
+      if (response)
+      {
+         snmp_free_pdu(response);
+      }
+   }
+
+   // Close session and cleanup
+   snmp_close(sptr);
+   return bResult;
+}

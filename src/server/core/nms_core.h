@@ -140,7 +140,10 @@ void DBUnloadDriver(void);
 
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
-BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary, size_t iOidLen, void *pValue);
+BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary, 
+             size_t iOidLen, void *pValue);
+BOOL SnmpEnumerate(char *szNode, char *szCommunity, char *szRootOid,
+                   void (* pHandler)(char *, char *, variable_list *, void *), void *pUserArg);
 
 #ifdef _WIN32
 
