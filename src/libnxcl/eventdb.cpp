@@ -229,3 +229,33 @@ BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwN
    *pdwNumRecords = m_dwNumTemplates;
    return TRUE;
 }
+
+
+//
+// Modify event template
+//
+
+void EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
+                                       DWORD dwSeverity, DWORD dwFlags, const char *pszName,
+                                       const char *pszMessage, const char *pszDescription)
+{
+   if (dwMask & EM_SEVERITY)
+      pEvent->dwSeverity = dwSeverity;
+   if (dwMask & EM_FLAGS)
+      pEvent->dwFlags = dwFlags & SERVER_FLAGS_BITS;
+   if ((dwMask & EM_NAME) && (pszName != NULL))
+      strncpy(pEvent->szName, pszName, MAX_EVENT_NAME);
+   if ((dwMask & EM_MESSAGE) && (pszMessage != NULL))
+   {
+      if (pEvent->pszMessage != NULL)
+         MemFree(pEvent->pszMessage);
+      pEvent->pszMessage = nx_strdup(pszMessage);
+   }
+   if ((dwMask & EM_DESCRIPTION) && (pszDescription != NULL))
+   {
+      if (pEvent->pszDescription != NULL)
+         MemFree(pEvent->pszDescription);
+      pEvent->pszDescription = nx_strdup(pszDescription);
+   }
+   pEvent->dwFlags |= EF_MODIFIED;
+}
