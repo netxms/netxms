@@ -28,9 +28,6 @@
 //
 
 static Queue *m_pItemQueue = NULL;
-static DCI_ENVELOPE *m_pItems = NULL;
-static DWORD m_dwNumItems = 0;
-static MUTEX m_hMutexListAccess;
 
 
 //
@@ -47,7 +44,7 @@ static void DataCollector(void *pArg)
 
    pBuffer = (char *)malloc(MAX_LINE_SIZE);
 
-   while(1)
+   while(!ShutdownInProgress())
    {
       pEnvelope = (DCI_ENVELOPE *)m_pItemQueue->GetOrBlock();
       pNode = (Node *)FindObjectById(pEnvelope->dwNodeId);
@@ -77,7 +74,7 @@ static void DataCollector(void *pArg)
                sprintf(szQuery, "INSERT INTO idata_%d (item_id,timestamp,value)"
                                 " VALUES (%d,%d,'%s')", pEnvelope->dwNodeId,
                        pEnvelope->dwItemId, currTime, pBuffer);
-               DBQuery(g_hCoreDB, szQuery);
+               QueueSQLRequest(szQuery);
                break;
             case DCE_COMM_ERROR:
                break;
@@ -89,8 +86,55 @@ static void DataCollector(void *pArg)
       }
       else     /* pNode == NULL */
       {
-printf("Attempt to collect information for non-existing node.\n");
+printf("** DC: Attempt to collect information for non-existing node.\n");
       }
+      free(pEnvelope);
+   }
+}
+
+
+//
+// Item poller thread: check nodes' items and put into the 
+// data collector queue when data polling required
+//
+
+static void ItemPoller(void *pArg)
+{
+   DWORD i, dwStart, dwElapsed, dwWatchdogId;
+
+   dwWatchdogId = WatchdogAddThread("Item Poller");
+
+   while(!ShutdownInProgress())
+   {
+      if (SleepAndCheckForShutdown(2))
+         break;      // Shutdown has arrived
+      WatchdogNotify(dwWatchdogId);
+
+      MutexLock(g_hMutexNodeIndex, INFINITE);
+      dwStart = GetTickCount();
+      for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+         ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(m_pItemQueue);
+      MutexUnlock(g_hMutexNodeIndex);
+
+      dwElapsed = GetTickCount() - dwStart;
+      printf("*** ItemPoller: Time elapsed == %lu milliseconds ***\n", dwElapsed);
+   }
+}
+
+
+//
+// Statistics collection thread
+//
+
+static void StatCollector(void *pArg)
+{
+   while(!ShutdownInProgress())
+   {
+      if (SleepAndCheckForShutdown(10))
+         break;      // Shutdown has arrived
+
+      printf("*** Poller Queue size: %d ***\n", m_pItemQueue->Size());
+      printf("*** DB Writer Queue size: %d ***\n", g_pLazyRequestQueue->Size());
    }
 }
 
@@ -103,36 +147,19 @@ BOOL InitDataCollector(void)
 {
    int i, iNumCollectors;
 
-   // Create mutex for synchronizing access to item list
-   m_hMutexListAccess = MutexCreate();
-
    // Create collection requests queue
-   m_pItemQueue = new Queue;
+   m_pItemQueue = new Queue(4096, 256);
 
    // Start data collection threads
    iNumCollectors = ConfigReadInt("NumberOfDataCollectors", 10);
    for(i = 0; i < iNumCollectors; i++)
       ThreadCreate(DataCollector, 0, NULL);
 
+   // Start item poller thread
+   ThreadCreate(ItemPoller, 0, NULL);
+
+   // Start statistics collection thread
+   ThreadCreate(StatCollector, 0, NULL);
+
    return TRUE;
 }
-
-
-/*
-//
-// Delete all items for specific node from polls
-//
-
-void DeleteAllItemsForNode(DWORD dwNodeId)
-{
-   DWORD i;
-
-   MutexLock(m_hMutexListAccess, INFINITE);
-
-   for(i = 0; i < m_dwNumItems; i++)
-      if (m_pItems[i].pNode->Id() == dwNodeId)
-         m_pItems[i].bDeleted = TRUE;
-
-   MutexUnlock(m_hMutexListAccess);
-}
-*/

@@ -27,14 +27,15 @@
 // Queue constructor
 //
 
-Queue::Queue()
+Queue::Queue(DWORD dwInitialSize, DWORD dwBufferIncrement)
 {
    m_hQueueAccess = MutexCreate();
    m_hConditionNotEmpty = ConditionCreate();
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;
-   m_dwBufferSize = 256;    // Initial buffer size of 256 elements
+   m_dwBufferSize = dwInitialSize;
+   m_dwBufferIncrement = dwBufferIncrement;
    m_pElements = (void **)malloc(sizeof(void *) * m_dwBufferSize);
 }
 
@@ -62,8 +63,13 @@ void Queue::Put(void *pElement)
    if (m_dwNumElements == m_dwBufferSize)
    {
       // Extend buffer
-      m_dwBufferSize += 32;
+      m_dwBufferSize += m_dwBufferIncrement;
       m_pElements = (void **)realloc(m_pElements, sizeof(void *) * m_dwBufferSize);
+      
+      // Move free space
+      memmove(&m_pElements[m_dwFirst + m_dwBufferIncrement], &m_pElements[m_dwFirst],
+              sizeof(void *) * (m_dwBufferSize - m_dwFirst - m_dwBufferIncrement));
+      m_dwFirst += m_dwBufferIncrement;
    }
    m_pElements[m_dwLast++] = pElement;
    if (m_dwLast == m_dwBufferSize)

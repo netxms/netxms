@@ -30,15 +30,16 @@
 // Thread functions
 //
 
-void HouseKeeper(void *arg);
-void DiscoveryThread(void *arg);
-void Syncer(void *arg);
-void NodePoller(void *arg);
-void StatusPoller(void *arg);
-void ConfigurationPoller(void *arg);
-void EventProcessor(void *arg);
-void WatchdogThread(void *arg);
-void ClientListener(void *);
+void HouseKeeper(void *pArg);
+void DiscoveryThread(void *pArg);
+void Syncer(void *pArg);
+void NodePoller(void *pArg);
+void StatusPoller(void *pArg);
+void ConfigurationPoller(void *pArg);
+void EventProcessor(void *pArg);
+void WatchdogThread(void *pArg);
+void ClientListener(void *pArg);
+void DBWriteThread(void *pArg);
 
 
 //
@@ -106,6 +107,9 @@ BOOL Initialize(void)
    WSAStartup(0x0002, &wsaData);
 #endif
 
+   // Create queue for delayed SQL queries
+   g_pLazyRequestQueue = new Queue(64, 16);
+
    // Initialize SNMP stuff
    SnmpInit();
 
@@ -163,6 +167,9 @@ BOOL Initialize(void)
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
    for(i = 0; i < iNumThreads; i++)
       ThreadCreate(EventProcessor, 0, NULL);
+
+   // Start database "lazy" write thread
+   ThreadCreate(DBWriteThread, 0, NULL);
 
    return TRUE;
 }
@@ -225,9 +232,10 @@ void Main(void)
             case 'D':
                {
                   DWORD i;
-                  char szBuffer[1024];
+                  char *pBuffer;
                   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
 
+                  pBuffer = (char *)malloc(128000);
                   MutexLock(g_hMutexIdIndex, INFINITE);
                   for(i = 0; i < g_dwIdIndexSize; i++)
                   {
@@ -235,11 +243,11 @@ void Main(void)
                             "   Name='%s' Type=%s Addr=%s Status=%d IsModified=%d\n",
                             g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
                             objTypes[g_pIndexById[i].pObject->Type()],
-                            IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer),
+                            IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
                             g_pIndexById[i].pObject->Status(), g_pIndexById[i].pObject->IsModified());
                      printf("   Parents: <%s> Childs: <%s>\n", 
-                            g_pIndexById[i].pObject->ParentList(szBuffer),
-                            g_pIndexById[i].pObject->ChildList(&szBuffer[512]));
+                            g_pIndexById[i].pObject->ParentList(pBuffer),
+                            g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
                      if (g_pIndexById[i].pObject->Type() == OBJECT_NODE)
                         printf("   IsSNMP:%d IsAgent:%d IsLocal:%d OID='%s'\n",
                                ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
@@ -248,6 +256,7 @@ void Main(void)
                                ((Node *)(g_pIndexById[i].pObject))->ObjectId());
                   }
                   MutexUnlock(g_hMutexIdIndex);
+                  free(pBuffer);
                   printf("*** Object dump complete ***\n");
                }
                break;
@@ -278,18 +287,41 @@ void Main(void)
                DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
                printf("*** Done ***\n");
                break;
-            case 'p':   // Performance test
-            case 'P':
+            case 'g':   // Generate test objects
+            case 'G':
                {
-                  DWORD i, dwStart, dwElapsed;
+                  int i;
+                  char szQuery[1024];
 
-                  dwStart = GetTickCount();
+                  for(i = 0; i < 10000; i++)
+                  {
+                     sprintf(szQuery, "INSERT INTO newnodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,65535,%d)",
+                        i + 1000, htonl(0x0A800001 + i), DF_DEFAULT);
+                     DBQuery(g_hCoreDB, szQuery);
+                  }
+               }
+               break;
+            case 'c':   // Create test items
+            case 'C':
+               {
+                  DWORD i, j;
+                  DC_ITEM item;
+
+                  item.dwId = 20000;
+                  item.iDataType = DT_INTEGER;
+                  item.iPollingInterval = 60;
+                  item.iRetentionTime = 30;
+                  item.iSource = DS_INTERNAL;
                   for(i = 0; i < g_dwNodeAddrIndexSize; i++)
                   {
+                     for(j = 1; j <= 100; j++)
+                     {
+                        sprintf(item.szName, "Debug.%d", j);
+                        ((Node *)g_pNodeIndexByAddr[i].pObject)->AddItem(&item);
+                        item.dwId++;
+                     }
                   }
-
-                  dwElapsed = GetTickCount() - dwStart;
-                  printf("*** Time elapsed: %lu milliseconds ***\n", dwElapsed);
+                  printf("*** Done ***\n");
                }
                break;
             default:

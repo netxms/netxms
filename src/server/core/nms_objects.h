@@ -118,6 +118,7 @@ struct DC_ITEM
    BYTE iSource;           // SNMP or native agent?
    BYTE iDataType;
    BYTE iStatus;           // Item status: active, disabled or not supported
+   BYTE iBusy;             // 1 when item is queued for polling, 0 if not
 };
 
 
@@ -375,6 +376,7 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    void LoadItemsFromDB(void);
+   BOOL AddItem(DC_ITEM *pItem);
    void SetItemStatus(DWORD dwItemId, int iStatus);
    void SetItemLastPollTime(DWORD dwItemId, time_t tPollTime);
 

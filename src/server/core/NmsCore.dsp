@@ -107,6 +107,10 @@ SOURCE=.\db.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\dbwrite.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\debug.cpp
 # End Source File
 # Begin Source File

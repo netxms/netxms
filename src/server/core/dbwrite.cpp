@@ -24,17 +24,37 @@
 
 
 //
-// Housekeeper thread
+// Global variables
 //
 
-void HouseKeeper(void *pArg)
+Queue *g_pLazyRequestQueue = NULL;
+
+
+//
+// Put SQL request into queue for later execution
+//
+
+void QueueSQLRequest(char *szQuery)
 {
-   time_t currTime;
+   g_pLazyRequestQueue->Put(strdup(szQuery));
+}
+
+
+//
+// Database "lazy" write thread
+//
+
+void DBWriteThread(void *pArg)
+{
+   char *pQuery;
 
    while(!ShutdownInProgress())
    {
-      currTime = time(NULL);
-      if (SleepAndCheckForShutdown(3600 - (currTime % 3600)))
-         break;      // Shutdown has arrived
+      pQuery = (char *)g_pLazyRequestQueue->GetOrBlock();
+      if (pQuery != NULL)
+      {
+         DBQuery(g_hCoreDB, pQuery);
+         free(pQuery);
+      }
    }
 }

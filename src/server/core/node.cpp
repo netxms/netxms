@@ -659,6 +659,7 @@ void Node::LoadItemsFromDB(void)
             m_pItems[i].iPollingInterval = DBGetFieldLong(hResult, i, 4);
             m_pItems[i].iRetentionTime = DBGetFieldLong(hResult, i, 5);
             m_pItems[i].tLastPoll = 0;
+            m_pItems[i].iBusy = 0;
          }
       }
       DBFreeResult(hResult);
@@ -746,6 +747,10 @@ DWORD Node::GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer)
    {
       sprintf(szBuffer, "%d", m_iStatus);
    }
+   else if (!memicmp(szParam, "debug.", 6))
+   {
+      strcpy(szBuffer, "0");
+   }
    else
    {
       dwError = DCE_NOT_SUPPORTED;
@@ -769,7 +774,9 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    Lock();
    for(i = 0; i < m_dwNumItems; i++)
    {
-      if (m_pItems[i].tLastPoll + m_pItems[i].iPollingInterval < currTime)
+      if ((m_pItems[i].iStatus == ITEM_STATUS_ACTIVE) && 
+          (m_pItems[i].tLastPoll + m_pItems[i].iPollingInterval < currTime) &&
+          (m_pItems[i].iBusy == 0))
       {
          DCI_ENVELOPE *pEnv;
 
@@ -782,7 +789,88 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
 
          // Put request into queue
          pPollerQueue->Put(pEnv);
+         m_pItems[i].iBusy = 1;
       }
    }
    Unlock();
+}
+
+
+//
+// Set item's status
+//
+
+void Node::SetItemStatus(DWORD dwItemId, int iStatus)
+{
+   DWORD i;
+
+   Lock();
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      if (m_pItems[i].dwId == dwItemId)
+      {
+         if (m_pItems[i].iStatus != iStatus)
+         {
+            m_pItems[i].iStatus = iStatus;
+            m_bIsModified = TRUE;
+         }
+         break;
+      }
+   }
+   Unlock();
+}
+
+
+//
+// Set item's last poll time
+//
+
+void Node::SetItemLastPollTime(DWORD dwItemId, time_t tLastPoll)
+{
+   DWORD i;
+
+   Lock();
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      if (m_pItems[i].dwId == dwItemId)
+      {
+         m_pItems[i].tLastPoll = tLastPoll;
+         m_pItems[i].iBusy = 0;
+         break;
+      }
+   }
+   Unlock();
+}
+
+
+//
+// Add item to node
+//
+
+BOOL Node::AddItem(DC_ITEM *pItem)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   Lock();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if ((m_pItems[i].dwId == pItem->dwId) || 
+          (!stricmp(m_pItems[i].szName, pItem->szName)))
+         break;   // Item with specified name or id already exist
+   
+   if (i == m_dwNumItems)     // Add new item
+   {
+      m_dwNumItems++;
+      m_pItems = (DC_ITEM *)realloc(m_pItems, sizeof(DC_ITEM) * m_dwNumItems);
+      memcpy(&m_pItems[i], pItem, sizeof(DC_ITEM));
+      m_pItems[i].tLastPoll = 0;    // Cause item to be polled immediatelly
+      m_pItems[i].iStatus = ITEM_STATUS_ACTIVE;
+      m_pItems[i].iBusy = 0;
+      m_bIsModified = TRUE;
+      bResult = TRUE;
+   }
+
+   Unlock();
+   return bResult;
 }

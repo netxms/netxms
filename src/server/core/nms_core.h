@@ -131,17 +131,19 @@ private:
    DWORD m_dwBufferSize;
    DWORD m_dwFirst;
    DWORD m_dwLast;
+   DWORD m_dwBufferIncrement;
 
    void Lock(void) { MutexLock(m_hQueueAccess, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hQueueAccess); }
 
 public:
-   Queue();
+   Queue(DWORD dwInitialSize = 256, DWORD dwBufferIncrement = 32);
    ~Queue();
 
    void Put(void *pObject);
    void *Get(void);
    void *GetOrBlock(void);
+   DWORD Size(void) { return m_dwNumElements; }
 };
 
 
@@ -265,6 +267,8 @@ int DBGetNumRows(DB_RESULT hResult);
 void DBFreeResult(DB_RESULT hResult);
 void DBUnloadDriver(void);
 
+void QueueSQLRequest(char *szQuery);
+
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 void SnmpInit(void);
@@ -322,5 +326,6 @@ extern char g_szDbPassword[];
 extern char g_szDbName[];
 
 extern DB_HANDLE g_hCoreDB;
+extern Queue *g_pLazyRequestQueue;
 
 #endif   /* _nms_core_h_ */

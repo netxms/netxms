@@ -18,6 +18,7 @@ src/server/core/config.cpp -text
 src/server/core/core.rc -text
 src/server/core/datacoll.cpp -text
 src/server/core/db.cpp -text
+src/server/core/dbwrite.cpp -text
 src/server/core/debug.cpp -text
 src/server/core/discovery.cpp -text
 src/server/core/dload.cpp -text
