@@ -42,7 +42,7 @@ NetObj::NetObj()
    m_pParentList = NULL;
    m_pAccessList = new AccessList;
    m_bInheritAccessRights = TRUE;
-   m_dwImage = 0;    // Default image
+   m_dwImage = IMG_DEFAULT;    // Default image
 }
 
 

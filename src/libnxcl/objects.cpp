@@ -160,6 +160,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatus = pMsg->GetVariableShort(VID_OBJECT_STATUS);
    pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
    pObject->bIsDeleted = pMsg->GetVariableShort(VID_IS_DELETED);
+   pObject->dwImage = pMsg->GetVariableLong(VID_IMAGE_ID);
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);

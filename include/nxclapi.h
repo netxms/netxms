@@ -27,6 +27,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxevent.h>
+#include <nximage.h>
 
 #ifdef _WIN32
 #ifdef LIBNXCL_EXPORTS
@@ -431,6 +432,7 @@ typedef struct
    BOOL bInheritRights;
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
+   DWORD dwImage;       // Image ID or IMG_DEFAULT for default image
    union
    {
       struct
@@ -738,6 +740,7 @@ void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule)
 DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCacheDir);
 DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir);
 void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
+DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize, DWORD *pdwClassId, DWORD *pdwImageId);
 
 #ifdef __cplusplus
 }

@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxevent.h
+** $module: nximage.h
 **
 **/
 
@@ -28,6 +28,7 @@
 // Default object image IDs
 //
 
+#define IMG_DEFAULT                 0
 #define IMG_NETWORK                 1
 #define IMG_INTERFACE               2
 #define IMG_NODE_GENERIC            3

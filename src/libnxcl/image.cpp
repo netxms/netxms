@@ -181,3 +181,40 @@ void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList)
       MemFree(pImageList);
    }
 }
+
+
+//
+// Load default image list
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize, DWORD *pdwClassId, DWORD *pdwImageId)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_GET_DEFAULT_IMAGE_LIST);
+   msg.SetId(dwRqId);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId, 3000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         *pdwListSize = pResponce->GetVariableLong(VID_NUM_IMAGES);
+         pdwClassId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
+         pdwImageId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
+         pResponce->GetVariableInt32Array(VID_CLASS_ID_LIST, *pdwListSize, pdwClassId);
+         pResponce->GetVariableInt32Array(VID_IMAGE_ID_LIST, *pdwListSize, pdwImageId);
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
