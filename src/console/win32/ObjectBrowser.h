@@ -46,7 +46,7 @@ public:
 // Implementation
 protected:
 	void CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer);
-	HTREEITEM FindObjectInTree(DWORD dwObjectId);
+	DWORD FindObjectInTree(DWORD dwObjectId);
 	DWORD m_dwTreeHashSize;
 	OBJ_TREE_HASH * m_pTreeHash;
 	CTreeCtrl m_wndTreeCtrl;
