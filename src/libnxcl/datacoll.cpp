@@ -404,7 +404,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
          DCI_DATA_HEADER *pHdr;
          DCI_DATA_ROW *pSrc;
          NXC_DCI_ROW *pDst;
-         static WORD m_wRowSize[] = { 8, 12, 260, 12 };
+         static WORD m_wRowSize[] = { 8, 8, 12, 12, 260, 12 };
 
          pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
 
