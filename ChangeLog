@@ -8,6 +8,7 @@
 - Alarm deletion implemented
 - Implemented all delta calculation methods for DCI
 - Implemented thresholds for average values
+- Fixed bug with policy editor header drawing
 
 
 *

@@ -66,7 +66,6 @@ WINDOWS CONSOLE:
 - Enlarge 16x16 status overlay icons
 - Add primary IP address selection 
 - Add real-time graphs
-- Fix problem with header colors in event policy editor
 - Play sound on new alarms
 - Add sorting to all list views
 
