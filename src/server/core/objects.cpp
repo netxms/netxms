@@ -177,6 +177,13 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          ConfigReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
          sprintf(szQuery, szQueryTemplate, pObject->Id());
          DBQuery(g_hCoreDB, szQuery);
+
+         ConfigReadStr("IDataIndexCreationCommand", szQueryTemplate, 255, "");
+         if (szQueryTemplate[0] != 0)
+         {
+            sprintf(szQuery, szQueryTemplate, pObject->Id());
+            DBQuery(g_hCoreDB, szQuery);
+         }
       }
    }
    RWLockWriteLock(g_rwlockIdIndex, INFINITE);

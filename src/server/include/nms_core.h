@@ -117,6 +117,16 @@ typedef void * HSNMPSESSION;
 
 
 //
+// Database syntax codes
+//
+
+#define DB_SYNTAX_GENERIC     0
+#define DB_SYNTAX_MSSQL       1
+#define DB_SYNTAX_MYSQL       2
+#define DB_SYNTAX_PGSQL       3
+
+
+//
 // Unique identifier group codes
 //
 
@@ -492,5 +502,7 @@ extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
 
 extern char *g_pszStatusName[];
+
+extern DWORD g_dwDBSyntax;
 
 #endif   /* _nms_core_h_ */

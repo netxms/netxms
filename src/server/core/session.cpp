@@ -2231,8 +2231,31 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          // Get item's data type to determine actual row size
          iType = ((Node *)pObject)->GetItemType(dwItemId);
 
-         sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
-                 dwObjectId, dwItemId, szCond);
+         // Create database-dependent query for fetching N rows
+         if (dwMaxRows > 0)
+         {
+            switch(g_dwDBSyntax)
+            {
+               case DB_SYNTAX_MSSQL:
+                  sprintf(szQuery, "SELECT TOP %ld idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
+                          dwMaxRows, dwObjectId, dwItemId, szCond);
+                  break;
+               case DB_SYNTAX_MYSQL:
+               case DB_SYNTAX_PGSQL:
+                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %ld",
+                          dwObjectId, dwItemId, szCond, dwMaxRows);
+                  break;
+               default:
+                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
+                          dwObjectId, dwItemId, szCond);
+                  break;
+            }
+         }
+         else
+         {
+            sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
+                    dwObjectId, dwItemId, szCond);
+         }
          hResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {

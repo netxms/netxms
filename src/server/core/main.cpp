@@ -69,6 +69,7 @@ DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
 char g_szDataDir[MAX_PATH];
+DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 
 
 //
@@ -218,6 +219,25 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    {
       WriteLog(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", iDBVersion, DB_FORMAT_VERSION);
       return FALSE;
+   }
+
+   // Read database syntax
+   ConfigReadStr("DBSyntax", szInfo, 256, "");
+   if (!stricmp(szInfo, "MYSQL"))
+   {
+      g_dwDBSyntax = DB_SYNTAX_MYSQL;
+   }
+   else if (!stricmp(szInfo, "PGSQL"))
+   {
+      g_dwDBSyntax = DB_SYNTAX_PGSQL;
+   }
+   else if (!stricmp(szInfo, "MSSQL"))
+   {
+      g_dwDBSyntax = DB_SYNTAX_MSSQL;
+   }
+   else
+   {
+      g_dwDBSyntax = DB_SYNTAX_GENERIC;
    }
 
    // Initialize locks
