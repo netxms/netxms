@@ -131,9 +131,13 @@ typedef u_int64_t QWORD;
 #define MAX_PATH 256
 #endif
 
+// Socket compatibility
 typedef int SOCKET;
 
 #define closesocket(x) close(x)
+#define WSAGetLastError() (errno)
+
+#define WSAEINTR  EINTR
 
 #endif   /* _WIN32 */
 

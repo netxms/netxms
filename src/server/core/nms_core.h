@@ -63,7 +63,7 @@
 #include <nxclapi.h>
 #include <nxcscpapi.h>
 #include <nximage.h>
-#include "nxqueue.h"
+#include <nxqueue.h>
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nms_objects.h"

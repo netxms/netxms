@@ -23,12 +23,14 @@
 #ifndef _nxqueue_h_
 #define _nxqueue_h_
 
+#include <nxcscpapi.h>
+
 
 //
 // Queue class
 //
 
-class Queue
+class LIBNXCSCP_EXPORTABLE Queue
 {
 private:
    MUTEX m_hQueueAccess;

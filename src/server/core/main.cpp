@@ -492,7 +492,11 @@ int main(int argc, char *argv[])
       return 1;
 
    if (!LoadConfig())
+   {
+      if (IsStandalone())
+         printf("Error loading configuration file\n");
       return 1;
+   }
 
 #ifdef _WIN32
    if (!IsStandalone())

@@ -32,6 +32,7 @@ include/nxclapi.h -text
 include/nxcscpapi.h -text
 include/nxevent.h -text
 include/nximage.h -text
+include/nxqueue.h -text
 m4/Makefile.am -text
 /reconf -text
 sql/.cvsignore -text
@@ -275,9 +276,7 @@ src/server/core/nms_objects.h -text
 src/server/core/nms_users.h -text
 src/server/core/node.cpp -text
 src/server/core/np.cpp -text
-src/server/core/nxqueue.h -text
 src/server/core/objects.cpp -text
-src/server/core/queue.cpp -text
 src/server/core/resource.h -text
 src/server/core/session.cpp -text
 src/server/core/snmp.cpp -text
