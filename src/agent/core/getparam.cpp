@@ -39,6 +39,7 @@ LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 #ifdef _WIN32
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ProcCount(char *cmd, char *arg, char *value);
 LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
 LONG H_ProcInfo(char *cmd, char *arg, char *value);
@@ -50,6 +51,7 @@ LONG H_ThreadCount(char *cmd, char *arg, char *value);
 LONG H_NetIPStats(char *cmd, char *arg, char *value);
 LONG H_NetInterfaceStats(char *cmd, char *arg, char *value);
 LONG H_ServiceState(char *cmd, char *arg, char *value);
+LONG H_CPUCount(char *cmd, char *arg, char *value);
 #endif
 
 
@@ -164,6 +166,7 @@ static AGENT_PARAM m_stdParams[] =
    { "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME },
    { "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE },
    { "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET },
+   { "System.CPU.Count", H_CPUCount, NULL },
    { "System.Hostname", H_HostName, NULL },
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE },
    { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL },
@@ -202,11 +205,12 @@ static AGENT_PARAM m_stdParams[] =
 
 static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 {
-   { "Agent.ActionList", H_ActionList, NULL },
 #ifdef _WIN32
    { "Net.ArpCache", H_ArpCache, NULL },
    { "Net.InterfaceList", H_InterfaceList, NULL },
+   { "System.ProcessList", H_ProcessList, NULL },
 #endif
+   { "Agent.ActionList", H_ActionList, NULL },
    { "Agent.SubAgentList", H_SubAgentList, NULL },
    { "Agent.SupportedEnums", H_EnumList, NULL },
    { "Agent.SupportedParameters", H_ParamList, NULL }

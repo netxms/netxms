@@ -373,3 +373,93 @@ LONG H_ServiceState(char *cmd, char *arg, char *value)
    CloseServiceHandle(hManager);
    return iResult;
 }
+
+
+//
+// Handler for System.CPU.Count parameter
+//
+
+LONG H_CPUCount(char *cmd, char *arg, char *value)
+{
+   SYSTEM_INFO sysInfo;
+
+   GetSystemInfo(&sysInfo);
+   ret_uint(value, sysInfo.dwNumberOfProcessors);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for System.ProcessList enum
+//
+
+LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+{
+   DWORD i, dwSize, dwNumProc, *pdwProcList;
+   LONG iResult = SYSINFO_RC_SUCCESS;
+   TCHAR szBuffer[MAX_PATH + 64];
+   HMODULE phModList[MAX_MODULES];
+   HANDLE hProcess;
+
+   // On Windows XP and higher, use new method
+   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+   if (EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize))
+   {
+      dwNumProc = dwSize / sizeof(DWORD);
+      for(i = 0; i < dwNumProc; i++)
+      {
+         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
+         if (hProcess != NULL)
+         {
+            if (EnumProcessModules(hProcess, phModList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
+            {
+               if (dwSize >= sizeof(HMODULE))     // At least one module exist
+               {
+                  TCHAR szBaseName[MAX_PATH];
+
+                  GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu %s"), pdwProcList[i], szBaseName);
+                  NxAddResultString(value, szBuffer);
+               }
+               else
+               {
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unknown>"), pdwProcList[i]);
+                  NxAddResultString(value, szBuffer);
+               }
+            }
+            else
+            {
+               if (pdwProcList[i] == 4)
+               {
+                  NxAddResultString(value, _T("4 System"));
+               }
+               else
+               {
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unknown>"), pdwProcList[i]);
+                  NxAddResultString(value, szBuffer);
+               }
+            }
+            CloseHandle(hProcess);
+         }
+         else
+         {
+            if (pdwProcList[i] == 0)
+            {
+               NxAddResultString(value, _T("0 System Idle Process"));
+            }
+            else
+            {
+               _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unaccessible>"), pdwProcList[i]);
+               NxAddResultString(value, szBuffer);
+            }
+         }
+      }
+   }
+   else
+   {
+      iResult = SYSINFO_RC_ERROR;
+   }
+
+   free(pdwProcList);
+   return iResult;
+}
