@@ -34,6 +34,7 @@ void CObjectPropsSecurity::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CObjectPropsSecurity)
+	DDX_Control(pDX, IDC_CHECK_ACCESS, m_wndCheckAccess);
 	DDX_Control(pDX, IDC_CHECK_CREATE, m_wndCheckCreate);
 	DDX_Control(pDX, IDC_CHECK_READ, m_wndCheckRead);
 	DDX_Control(pDX, IDC_CHECK_MOVE, m_wndCheckMove);
@@ -49,6 +50,14 @@ BEGIN_MESSAGE_MAP(CObjectPropsSecurity, CPropertyPage)
 	//{{AFX_MSG_MAP(CObjectPropsSecurity)
 	ON_BN_CLICKED(IDC_ADD_USER, OnAddUser)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_USERS, OnItemchangedListUsers)
+	ON_BN_CLICKED(IDC_CHECK_INHERIT_RIGHTS, OnCheckInheritRights)
+	ON_BN_CLICKED(IDC_DELETE_USER, OnDeleteUser)
+	ON_BN_CLICKED(IDC_CHECK_READ, OnCheckRead)
+	ON_BN_CLICKED(IDC_CHECK_MOVE, OnCheckMove)
+	ON_BN_CLICKED(IDC_CHECK_MODIFY, OnCheckModify)
+	ON_BN_CLICKED(IDC_CHECK_DELETE, OnCheckDelete)
+	ON_BN_CLICKED(IDC_CHECK_CREATE, OnCheckCreate)
+	ON_BN_CLICKED(IDC_CHECK_ACCESS, OnCheckAccess)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -78,7 +87,7 @@ BOOL CObjectPropsSecurity::OnInitDialog()
    m_wndUserList.InsertColumn(0, "Name", LVCFMT_LEFT, 
                               rect.right - GetSystemMetrics(SM_CXVSCROLL) - 4);
 	m_wndUserList.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
-   m_wndUserList.SetHoverTime();
+   m_wndUserList.SetHoverTime(0x7FFFFFFF);
 
    // Create image list
    pImageList = new CImageList;
@@ -106,6 +115,15 @@ BOOL CObjectPropsSecurity::OnInitDialog()
             m_wndUserList.SetItemData(iItem, m_pAccessList[i].dwUserId);
       }
    }
+
+   // We have no selection by default, so disable all checkboxes
+   m_dwCurrAclEntry = INVALID_INDEX;
+   m_wndCheckRead.EnableWindow(FALSE);
+   m_wndCheckModify.EnableWindow(FALSE);
+   m_wndCheckCreate.EnableWindow(FALSE);
+   m_wndCheckDelete.EnableWindow(FALSE);
+   m_wndCheckMove.EnableWindow(FALSE);
+   m_wndCheckAccess.EnableWindow(FALSE);
 	
 	return TRUE;
 }
@@ -195,6 +213,17 @@ void CObjectPropsSecurity::OnAddUser()
 
 
 //
+// Handler for "Delete user" button
+//
+
+void CObjectPropsSecurity::OnDeleteUser() 
+{
+	// TODO: Add your control notification handler code here
+	
+}
+
+
+//
 // LVN_ITEMCHANGED handler for IDC_LIST_USERS
 //
 
@@ -225,9 +254,104 @@ void CObjectPropsSecurity::OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResul
                m_wndCheckCreate.SetCheck((dwRights & OBJECT_ACCESS_CREATE) ? BST_CHECKED : BST_UNCHECKED);
                m_wndCheckDelete.SetCheck((dwRights & OBJECT_ACCESS_DELETE) ? BST_CHECKED : BST_UNCHECKED);
                m_wndCheckMove.SetCheck((dwRights & OBJECT_ACCESS_MOVE) ? BST_CHECKED : BST_UNCHECKED);
+               m_wndCheckAccess.SetCheck((dwRights & OBJECT_ACCESS_CONTROL) ? BST_CHECKED : BST_UNCHECKED);
+
+               // Enable checkboxes if they was disabled
+               if (m_dwCurrAclEntry == INVALID_INDEX)
+               {
+                  m_wndCheckRead.EnableWindow(TRUE);
+                  m_wndCheckModify.EnableWindow(TRUE);
+                  m_wndCheckCreate.EnableWindow(TRUE);
+                  m_wndCheckDelete.EnableWindow(TRUE);
+                  m_wndCheckMove.EnableWindow(TRUE);
+                  m_wndCheckAccess.EnableWindow(TRUE);
+               }
+               m_dwCurrAclEntry = i;
             }
          }
       }
    
 	*pResult = 0;
+}
+
+
+//
+// Handle clicks on checkboxes
+//
+
+void CObjectPropsSecurity::OnCheckInheritRights() 
+{
+   m_bIsModified = TRUE;
+}
+
+void CObjectPropsSecurity::OnCheckRead() 
+{
+   m_bIsModified = TRUE;
+   if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
+   {
+      if (m_wndCheckRead.GetCheck() == BST_CHECKED)
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_READ;
+      else
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_READ;
+   }
+}
+
+void CObjectPropsSecurity::OnCheckMove() 
+{
+   m_bIsModified = TRUE;
+   if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
+   {
+      if (m_wndCheckMove.GetCheck() == BST_CHECKED)
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_MOVE;
+      else
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_MOVE;
+   }
+}
+
+void CObjectPropsSecurity::OnCheckModify() 
+{
+   m_bIsModified = TRUE;
+   if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
+   {
+      if (m_wndCheckModify.GetCheck() == BST_CHECKED)
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_MODIFY;
+      else
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_MODIFY;
+   }
+}
+
+void CObjectPropsSecurity::OnCheckDelete() 
+{
+   m_bIsModified = TRUE;
+   if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
+   {
+      if (m_wndCheckDelete.GetCheck() == BST_CHECKED)
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_DELETE;
+      else
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_DELETE;
+   }
+}
+
+void CObjectPropsSecurity::OnCheckCreate() 
+{
+   m_bIsModified = TRUE;
+   if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
+   {
+      if (m_wndCheckCreate.GetCheck() == BST_CHECKED)
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_CREATE;
+      else
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_CREATE;
+   }
+}
+
+void CObjectPropsSecurity::OnCheckAccess() 
+{
+   m_bIsModified = TRUE;
+   if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
+   {
+      if (m_wndCheckAccess.GetCheck() == BST_CHECKED)
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_CONTROL;
+      else
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_CONTROL;
+   }
 }

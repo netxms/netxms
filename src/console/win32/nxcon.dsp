@@ -201,6 +201,10 @@ SOURCE=.\ToolBox.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\UserEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\UserSelectDlg.cpp
 # End Source File
 # End Group
@@ -322,6 +326,10 @@ SOURCE=.\StdAfx.h
 # Begin Source File
 
 SOURCE=.\ToolBox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\UserEditor.h
 # End Source File
 # Begin Source File
 

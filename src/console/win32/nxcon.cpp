@@ -48,6 +48,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_OBJECTBROWSER, OnViewObjectbrowser)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTS, OnControlpanelEvents)
 	ON_COMMAND(ID_VIEW_DEBUG, OnViewDebug)
+	ON_COMMAND(ID_CONTROLPANEL_USERS, OnControlpanelUsers)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -61,6 +62,7 @@ CConsoleApp::CConsoleApp()
    m_bCtrlPanelActive = FALSE;
    m_bEventBrowserActive = FALSE;
    m_bEventEditorActive = FALSE;
+   m_bUserEditorActive = FALSE;
    m_bObjectBrowserActive = FALSE;
    m_bDebugWindowActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
@@ -295,6 +297,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
          m_bEventEditorActive = TRUE;
          m_pwndEventEditor = (CEventEditor *)pWnd;
          break;
+      case IDR_USER_EDITOR:
+         m_bUserEditorActive = TRUE;
+         m_pwndUserEditor = (CUserEditor *)pWnd;
+         break;
       case IDR_DEBUG_WINDOW:
          m_bDebugWindowActive = TRUE;
          m_pwndDebugWindow = (CDebugFrame *)pWnd;
@@ -325,6 +331,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd)
          break;
       case IDR_EVENT_EDITOR:
          m_bEventEditorActive = FALSE;
+         break;
+      case IDR_USER_EDITOR:
+         m_bUserEditorActive = FALSE;
          break;
       case IDR_DEBUG_WINDOW:
          m_bDebugWindowActive = FALSE;
@@ -490,8 +499,55 @@ void CConsoleApp::OnControlpanelEvents()
    if (m_bEventEditorActive)
       m_pwndEventEditor->BringWindowToTop();
    else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR, m_hMDIMenu, m_hMDIAccel);	
+   {
+      DWORD dwResult;
+
+      dwResult = WaitForRequest(NXCOpenEventDB(), "Opening event configuration database...");
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(
+		      RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR, m_hMDIMenu, m_hMDIAccel);
+      }
+      else
+      {
+         char szBuffer[256];
+
+         sprintf(szBuffer, "Unable to open event configuration database:\n%s", NXCGetErrorText(dwResult));
+         GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+      }
+   }
+}
+
+
+//
+// Handler for WM_COMMAND(ID_CONTROLPANEL_USERS) message
+//
+
+void CConsoleApp::OnControlpanelUsers() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bUserEditorActive)
+      m_pwndUserEditor->BringWindowToTop();
+   else
+   {
+      DWORD dwResult;
+
+      dwResult = WaitForRequest(NXCLockUserDB(), "Locking user database...");
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(
+		      RUNTIME_CLASS(CUserEditor), IDR_USER_EDITOR, m_hMDIMenu, m_hMDIAccel);
+      }
+      else
+      {
+         char szBuffer[256];
+
+         sprintf(szBuffer, "Unable to lock user database:\n%s", NXCGetErrorText(dwResult));
+         GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+      }
+   }
 }
 
 

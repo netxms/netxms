@@ -26,6 +26,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CObjectPropsSecurity)
 	enum { IDD = IDD_OBJECT_SECURITY };
+	CButton	m_wndCheckAccess;
 	CButton	m_wndCheckCreate;
 	CButton	m_wndCheckRead;
 	CButton	m_wndCheckMove;
@@ -52,10 +53,19 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnAddUser();
 	afx_msg void OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnCheckInheritRights();
+	afx_msg void OnDeleteUser();
+	afx_msg void OnCheckRead();
+	afx_msg void OnCheckMove();
+	afx_msg void OnCheckModify();
+	afx_msg void OnCheckDelete();
+	afx_msg void OnCheckCreate();
+	afx_msg void OnCheckAccess();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
+	DWORD m_dwCurrAclEntry;
 	NXC_ACL_ENTRY * m_pAccessList;
 	DWORD m_dwAclSize;
 	BOOL m_bIsModified;

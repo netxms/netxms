@@ -45,11 +45,13 @@ END_MESSAGE_MAP()
 int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   DWORD dwResult;
-   char szBuffer[256];
+   char szBuffer[32];
+   DWORD i;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
+
+   theApp.OnViewCreate(IDR_EVENT_EDITOR, this);
 
    // Create list view control
    GetClientRect(&rect);
@@ -66,36 +68,19 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(4, "Message", LVCFMT_LEFT, 150);
    m_wndListCtrl.InsertColumn(5, "Description", LVCFMT_LEFT, 300);
 	
-   theApp.OnViewCreate(IDR_EVENT_EDITOR, this);
-
-   dwResult = theApp.WaitForRequest(NXCOpenEventDB(), "Opening event configuration database...");
-   if (dwResult == RCC_SUCCESS)
+   NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
+   for(i = 0; i < m_dwNumTemplates; i++)
    {
-      DWORD i;
-
-      NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
-      for(i = 0; i < m_dwNumTemplates; i++)
-      {
-         sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwCode);
-         m_wndListCtrl.InsertItem(i, szBuffer);
-         m_wndListCtrl.SetItemText(i, 1, m_ppEventTemplates[i]->szName);
-         sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwSeverity);
-         m_wndListCtrl.SetItemText(i, 2, szBuffer);
-         sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwFlags);
-         m_wndListCtrl.SetItemText(i, 3, szBuffer);
-         m_wndListCtrl.SetItemText(i, 4, m_ppEventTemplates[i]->pszMessage);
-         m_wndListCtrl.SetItemText(i, 5, m_ppEventTemplates[i]->pszDescription);
-         m_wndListCtrl.SetItemData(i, i);
-      }
-   }
-   else
-   {
-      sprintf(szBuffer, "Unable to open event configuration database:\n%s", NXCGetErrorText(dwResult));
-      theApp.GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
-
-      // For unknown reason MFC crashes if this function just returns -1,
-      // so we just post WM_CLOSE to itself
-      PostMessage(WM_CLOSE, 0, 0);
+      sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwCode);
+      m_wndListCtrl.InsertItem(i, szBuffer);
+      m_wndListCtrl.SetItemText(i, 1, m_ppEventTemplates[i]->szName);
+      sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwSeverity);
+      m_wndListCtrl.SetItemText(i, 2, szBuffer);
+      sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwFlags);
+      m_wndListCtrl.SetItemText(i, 3, szBuffer);
+      m_wndListCtrl.SetItemText(i, 4, m_ppEventTemplates[i]->pszMessage);
+      m_wndListCtrl.SetItemText(i, 5, m_ppEventTemplates[i]->pszDescription);
+      m_wndListCtrl.SetItemData(i, i);
    }
 
    return 0;

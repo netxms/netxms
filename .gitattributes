@@ -88,6 +88,8 @@ src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/ToolBox.cpp -text
 src/console/win32/ToolBox.h -text
+src/console/win32/UserEditor.cpp -text
+src/console/win32/UserEditor.h -text
 src/console/win32/UserSelectDlg.cpp -text
 src/console/win32/UserSelectDlg.h -text
 src/console/win32/globals.cpp -text

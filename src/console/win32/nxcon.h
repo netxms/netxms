@@ -40,6 +40,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "RequestProcessingDlg.h"
 #include "ObjectPropsGeneral.h"
 #include "ObjectPropsSecurity.h"
+#include "UserEditor.h"
 
 
 //
@@ -77,6 +78,7 @@ protected:
 	DWORD m_dwClientState;
 	CEventBrowser *m_pwndEventBrowser;
    CEventEditor *m_pwndEventEditor;
+   CUserEditor *m_pwndUserEditor;
 	CWnd* m_pwndObjectBrowser;
 	CWnd *m_pwndCtrlPanel;
    CDebugFrame *m_pwndDebugWindow;
@@ -109,12 +111,14 @@ public:
 	afx_msg void OnViewObjectbrowser();
 	afx_msg void OnControlpanelEvents();
 	afx_msg void OnViewDebug();
+	afx_msg void OnControlpanelUsers();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
 	void OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode);
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;
+	BOOL m_bUserEditorActive;
 	BOOL m_bObjectBrowserActive;
 	BOOL m_bCtrlPanelActive;
    BOOL m_bDebugWindowActive;

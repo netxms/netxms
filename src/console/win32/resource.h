@@ -10,6 +10,7 @@
 #define IDC_PREVIEW_PANE                105
 #define IDR_EVENT_EDITOR                105
 #define IDC_TOOLBOX_OBJECT_DETAILS      106
+#define IDR_USER_EDITOR                 106
 #define IDC_EDIT_SEARCH_STRING          107
 #define ID_FIND_OBJECT                  108
 #define IDR_MAINFRAME                   128
@@ -86,6 +87,7 @@
 #define IDC_CHECK_INHERIT_RIGHTS        1032
 #define IDC_ADD_USER                    1033
 #define IDC_DELETE_USER                 1034
+#define IDC_CHECK_ACCESS                1035
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -116,7 +118,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        168
 #define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1035
+#define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif
