@@ -74,12 +74,19 @@ public:
 // Functions
 //
 
-#define htonq(x) ntohq(x)
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define htonq(x) __bswap_64(x)
+#define ntohq(x) __bswap_64(x)
+#else
+#define htonq(x) (x)
+#define ntohq(x) (x)
+#endif
 
 extern "C"
 {
    void EXPORTABLE LibUtilDestroyObject(void *pObject);
-   QWORD ntohq(QWORD qwVal);
+   QWORD __bswap_64(QWORD qwVal);
 }
 
 #endif   /* _nms_util_h_ */
