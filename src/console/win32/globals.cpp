@@ -48,7 +48,7 @@ char g_szWorkDir[MAX_PATH] = "";
 
 char *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
 char *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
-char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", "Location", "Zone" };
+char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", "Container", "Zone", "ServiceRoot" };
 char *g_szInterfaceTypes[] = {
    "Unknown",
    "Other",

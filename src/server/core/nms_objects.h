@@ -442,6 +442,7 @@ protected:
 
 public:
    Container();
+   Container(char *pszName, DWORD dwCategory, char *pszDescription);
    virtual ~Container();
 
    virtual int Type(void) { return OBJECT_CONTAINER; }

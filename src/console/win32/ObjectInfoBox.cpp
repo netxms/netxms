@@ -185,6 +185,9 @@ int CObjectInfoBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_hIconList[2] = theApp.LoadIcon(IDI_NODE);        // Node
    m_hIconList[3] = theApp.LoadIcon(IDI_INTERFACE);   // Interface
    m_hIconList[4] = theApp.LoadIcon(IDI_NETMAP);      // Network
+   m_hIconList[5] = NULL;                             // Container
+   m_hIconList[6] = NULL;                             // Zone
+   m_hIconList[7] = m_hIconList[4];                   // Service root
 
 	return 0;
 }

@@ -337,14 +337,27 @@ void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *))
 
 
 //
-// Get root ("Entire Network") object
+// Get topology root ("Entire Network") object
 //
 
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetRootObject(void)
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(void)
 {
    if (m_dwNumObjects > 0)
       if (m_pIndexById[0].dwKey == 1)
          return m_pIndexById[0].pObject;
+   return NULL;
+}
+
+
+//
+// Get service tree root ("All Services") object
+//
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(void)
+{
+   if (m_dwNumObjects > 1)
+      if (m_pIndexById[1].dwKey == 2)
+         return m_pIndexById[1].pObject;
    return NULL;
 }
 
@@ -415,7 +428,7 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName)
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   DWORD dwRqId;
 
    dwRqId = g_dwMsgId++;
 
@@ -451,8 +464,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
    SendMsg(&msg);
 
    // Wait for reply
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return WaitForRCC(dwRqId);
 }
 
 
@@ -463,7 +475,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManaged)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   DWORD dwRqId;
 
    dwRqId = g_dwMsgId++;
 
@@ -477,8 +489,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
    SendMsg(&msg);
 
    // Wait for reply
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return WaitForRCC(dwRqId);
 }
 
 
@@ -486,23 +497,67 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
 // Create new container object
 //
 
-DWORD LIBNXCL_EXPORTABLE CreateObject(int iClass, DWORD dwParentObject)
+DWORD LIBNXCL_EXPORTABLE NXCCreateObject(int iClass, DWORD dwParentObject)
 {
    CSCPMessage msg;
-   DWORD dwRetCode, dwRqId;
+   DWORD dwRqId;
 
    dwRqId = g_dwMsgId++;
 
    // Build request message
    msg.SetCode(CMD_CREATE_OBJECT);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_PARENT_OBJECT_ID, dwParentObject);
+   msg.SetVariable(VID_PARENT_ID, dwParentObject);
    msg.SetVariable(VID_OBJECT_CLASS, (WORD)iClass);
 
    // Send request
    SendMsg(&msg);
 
    // Wait for reply
-   dwRetCode = WaitForRCC(dwRqId);
-   return dwRetCode;
+   return WaitForRCC(dwRqId);
+}
+
+
+//
+// Bind/unbind objects
+//
+
+static DWORD ChangeObjectBinding(DWORD dwParentObject, DWORD dwChildObject, BOOL bBind)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   // Build request message
+   msg.SetCode(bBind ? CMD_BIND_OBJECT : CMD_UNBIND_OBJECT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_PARENT_ID, dwParentObject);
+   msg.SetVariable(VID_CHILD_ID, dwChildObject);
+
+   // Send request
+   SendMsg(&msg);
+
+   // Wait for reply
+   return WaitForRCC(dwRqId);
+}
+
+
+//
+// Bind object
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject)
+{
+   return ChangeObjectBinding(dwParentObject, dwChildObject, TRUE);
+}
+
+
+//
+// Unbind object
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObject)
+{
+   return ChangeObjectBinding(dwParentObject, dwChildObject, FALSE);
 }

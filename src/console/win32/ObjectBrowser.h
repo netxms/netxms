@@ -135,6 +135,8 @@ protected:
 	afx_msg void OnObjectUnmanage();
 	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateObjectManage(CCmdUI* pCmdUI);
+	afx_msg void OnObjectBind();
+	afx_msg void OnUpdateObjectBind(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);

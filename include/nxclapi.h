@@ -86,6 +86,7 @@ typedef unsigned long HREQUEST;
 #define OBJECT_NETWORK     4
 #define OBJECT_CONTAINER   5
 #define OBJECT_ZONE        6
+#define OBJECT_SERVICEROOT 7
 
 
 //
@@ -180,6 +181,7 @@ typedef unsigned long HREQUEST;
 #define RCC_INVALID_DCI_ID          ((DWORD)14)
 #define RCC_OUT_OF_MEMORY           ((DWORD)15)
 #define RCC_IO_ERROR                ((DWORD)16)
+#define RCC_INCOMPATIBLE_OPERATION  ((DWORD)17)
 
 
 //
@@ -626,12 +628,16 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName);
 void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetRootObject(void);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetTopologyRootObject(void);
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetServiceRootObject(void);
 void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(DWORD *pdwNumObjects);
 void LIBNXCL_EXPORTABLE NXCLockObjectIndex(void);
 void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void);
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
 DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManaged);
+DWORD LIBNXCL_EXPORTABLE NXCCreateObject(int iClass, DWORD dwParentObject);
+DWORD LIBNXCL_EXPORTABLE NXCBindObject(DWORD dwParentObject, DWORD dwChildObject);
+DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObject);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);

@@ -196,6 +196,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
         MENUITEM SEPARATOR
+        MENUITEM "&Create...",                  ID_OBJECT_CREATE
+        MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM SEPARATOR
@@ -276,6 +278,8 @@ BEGIN
     END
     POPUP "Object"
     BEGIN
+        MENUITEM "&Create...",                  ID_OBJECT_CREATE
+        MENUITEM "&Bind...",                    ID_OBJECT_BIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM SEPARATOR
@@ -283,7 +287,7 @@ BEGIN
         MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
         MENUITEM SEPARATOR
         MENUITEM "Data &collection",            ID_OBJECT_DATACOLLECTION
-        MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
+        MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
     POPUP "Item"
     BEGIN
@@ -396,6 +400,7 @@ END
 
 IDA_OBJECT_BROWSER ACCELERATORS DISCARDABLE 
 BEGIN
+    "B",            ID_OBJECT_BIND,         VIRTKEY, CONTROL, NOINVERT
     "F",            ID_OBJECT_FIND,         VIRTKEY, CONTROL, NOINVERT
     "F",            ID_OBJECT_VIEW_SELECTION, VIRTKEY, ALT, NOINVERT
     "L",            ID_OBJECT_VIEW_VIEWASLIST, VIRTKEY, CONTROL, NOINVERT
@@ -537,9 +542,9 @@ CAPTION "General"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Object ID",IDC_STATIC,7,10,31,8
-    EDITTEXT        IDC_EDIT_ID,42,7,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_ID,42,7,60,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Class",IDC_STATIC,7,31,18,8
-    EDITTEXT        IDC_EDIT_CLASS,42,28,40,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_CLASS,42,28,60,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Name",IDC_STATIC,7,52,20,8
     EDITTEXT        IDC_EDIT_NAME,42,49,243,14,ES_AUTOHSCROLL
 END
@@ -804,7 +809,7 @@ END
 IDD_EDIT_RULE_COMMENT DIALOGEX 0, 0, 186, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Comment"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_TEXT,7,7,172,61,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | 
@@ -816,7 +821,7 @@ END
 IDD_SELECT_EVENT DIALOGEX 0, 0, 207, 146
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select Event"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,150,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,150,24,50,14

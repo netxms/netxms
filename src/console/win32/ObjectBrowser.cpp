@@ -161,6 +161,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MANAGE, OnUpdateObjectManage)
+	ON_COMMAND(ID_OBJECT_BIND, OnObjectBind)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -307,12 +309,16 @@ void CObjectBrowser::OnViewRefresh()
    // Populate objects' tree
    m_wndTreeCtrl.DeleteAllItems();
    m_dwTreeHashSize = 0;
-   pObject = NXCGetRootObject();
+
+   pObject = NXCGetTopologyRootObject();
    if (pObject != NULL)
-   {
       AddObjectToTree(pObject, TVI_ROOT);
-      qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
-   }
+
+   pObject = NXCGetServiceRootObject();
+   if (pObject != NULL)
+      AddObjectToTree(pObject, TVI_ROOT);
+   
+   qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
 
    // Populate object's list
    m_wndListCtrl.DeleteAllItems();
@@ -334,7 +340,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    DWORD i;
    HTREEITEM hItem;
    char szBuffer[512];
-   static int iImageCode[] = { -1, 3, 2, 1, 0 };
+   static int iImageCode[] = { -1, 3, 2, 1, 0, -1, -1, 0 };
 
    // Add object record with class-dependent text
    CreateTreeItemText(pObject, szBuffer);
@@ -683,7 +689,7 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
 {
    int iItem;
    char szBuffer[16];
-   static int iImageCode[] = { -1, 3, 2, 1, 0 };
+   static int iImageCode[] = { -1, 3, 2, 1, 0, -1, -1, 0 };
 
    sprintf(szBuffer, "%ld", pObject->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, iImageCode[pObject->iClass]);
@@ -1157,6 +1163,24 @@ void CObjectBrowser::OnUpdateObjectManage(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_pCurrentObject != NULL);
 }
 
+void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI) 
+{
+   if (m_pCurrentObject == NULL)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
+                        (m_pCurrentObject->iClass == OBJECT_SERVICEROOT));
+      else
+         pCmdUI->Enable(((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
+                         (m_pCurrentObject->iClass == OBJECT_SERVICEROOT)) &&
+                        (m_wndListCtrl.GetSelectedCount() == 1));
+   }
+}
+
 
 //
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
@@ -1221,6 +1245,31 @@ void CObjectBrowser::ChangeMgmtStatus(BOOL bIsManaged)
          pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
          theApp.SetObjectMgmtStatus(pObject, bIsManaged);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_BIND message handler
+//
+
+void CObjectBrowser::OnObjectBind() 
+{
+   CObjectSelDlg dlg;
+   DWORD i, dwResult;
+
+   if (dlg.DoModal() == IDOK)
+   {
+      for(i = 0; i < dlg.m_dwNumObjects; i++)
+      {
+         dwResult = DoRequestArg2(NXCBindObject, (void *)m_pCurrentObject->dwId,
+                                  (void *)dlg.m_pdwObjectList[i], "Binding objects...");
+         if (dwResult != RCC_SUCCESS)
+         {
+            theApp.ErrorBox(dwResult, "Cannot bind object: %s");
+            break;
+         }
       }
    }
 }

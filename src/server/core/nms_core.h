@@ -317,8 +317,9 @@ private:
    void InstallEPP(DWORD dwRqId);
    void SendMIBList(DWORD dwRqId);
    void SendMIB(CSCPMessage *pRequest);
-   void CreateObject(CSCPMessage *pRequest);
    void SendEventNames(DWORD dwRqId);
+   void CreateObject(CSCPMessage *pRequest);
+   void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

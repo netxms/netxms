@@ -98,9 +98,10 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Duplicate DCI",
       "Invalid DCI ID",
       "Out of memory",
-      "Input/Output error"
+      "Input/Output error",
+      "Incompatible operation"
    };
-   return ((dwError >= 0) && (dwError <= RCC_IO_ERROR)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_INCOMPATIBLE_OPERATION)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

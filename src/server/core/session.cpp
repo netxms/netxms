@@ -323,6 +323,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_CREATE_OBJECT:
             CreateObject(pMsg);
             break;
+         case CMD_BIND_OBJECT:
+            ChangeObjectBinding(pMsg, TRUE);
+            break;
+         case CMD_UNBIND_OBJECT:
+            ChangeObjectBinding(pMsg, FALSE);
+            break;
          case CMD_GET_EVENT_NAMES:
             SendEventNames(pMsg->GetId());
             break;
@@ -1805,4 +1811,123 @@ void ClientSession::SendEventNames(DWORD dwRqId)
 
 void ClientSession::CreateObject(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+   NetObj *pObject, *pParent;
+   int iClass;
+   char szObjectName[MAX_OBJECT_NAME];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Find parent object
+   pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
+   if (pParent != NULL)
+   {
+      // User should have create access to parent object
+      if (pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
+      {
+         // Parent object should be container or service root
+         if ((pParent->Type() == OBJECT_CONTAINER) ||
+             (pParent->Type() == OBJECT_SERVICEROOT))
+         {
+            iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
+            pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
+            if ((iClass == OBJECT_NODE) || (iClass == OBJECT_CONTAINER))
+            {
+               switch(iClass)
+               {
+                  case OBJECT_NODE:
+                     pObject = new Node;
+                     break;
+                  case OBJECT_CONTAINER:
+                     pObject = new Container;
+                     break;
+               }
+               NetObjInsert(pObject, TRUE);
+               pParent->AddChild(pObject);
+               pObject->AddParent(pParent);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Bind/unbind object
+//
+
+void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
+{
+   CSCPMessage msg;
+   NetObj *pParent, *pChild;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get parent and child objects
+   pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
+   pChild = FindObjectById(pRequest->GetVariableLong(VID_CHILD_ID));
+
+   // Check access rights and change binding
+   if ((pParent != NULL) && (pChild != NULL))
+   {
+      // User should have modify access to both objects
+      if ((pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) &&
+          (pChild->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+      {
+         // Parent object should be container or service root
+         if ((pParent->Type() == OBJECT_CONTAINER) ||
+             (pParent->Type() == OBJECT_SERVICEROOT))
+         {
+            if (bBind)
+            {
+               pParent->AddChild(pChild);
+               pChild->AddParent(pParent);
+            }
+            else
+            {
+               pParent->DeleteChild(pChild);
+               pChild->DeleteParent(pParent);
+            }
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }

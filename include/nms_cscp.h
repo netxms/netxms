@@ -220,6 +220,8 @@ typedef struct
 #define CMD_CREATE_OBJECT           0x0037
 #define CMD_GET_EVENT_NAMES         0x0038
 #define CMD_EVENT_NAME_LIST         0x0039
+#define CMD_BIND_OBJECT             0x003A
+#define CMD_UNBIND_OBJECT           0x003B
 
 
 //
@@ -301,9 +303,10 @@ typedef struct
 #define VID_RULE_ACTIONS            ((DWORD)73)
 #define VID_NUM_RULES               ((DWORD)74)
 #define VID_CATEGORY                ((DWORD)75)
-#define VID_PARENT_OBJECT_ID        ((DWORD)76)
-#define VID_UPDATED_CHILD_LIST      ((DWORD)77)
-#define VID_EVENT_NAME_TABLE        ((DWORD)78)
+#define VID_UPDATED_CHILD_LIST      ((DWORD)76)
+#define VID_EVENT_NAME_TABLE        ((DWORD)77)
+#define VID_PARENT_ID               ((DWORD)78)
+#define VID_CHILD_ID                ((DWORD)79)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

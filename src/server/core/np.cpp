@@ -53,6 +53,7 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
       NetObjDelete(pNode);
       ObjectsGlobalUnlock();
       delete pNode;     // Node poll failed, delete it
+      return;
    }
 
    // DEBUG

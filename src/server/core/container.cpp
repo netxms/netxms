@@ -39,7 +39,7 @@ CONTAINER_CATEGORY *FindContainerCategory(DWORD dwId)
 
 
 //
-// Container class constructor
+// Default container class constructor
 //
 
 Container::Container()
@@ -47,6 +47,20 @@ Container::Container()
    m_pszDescription = NULL;
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
+   m_dwCategory = 1;
+}
+
+
+//
+// "Normal" container class constructor
+//
+
+Container::Container(char *pszName, DWORD dwCategory, char *pszDescription)
+{
+   m_pszDescription = strdup(pszDescription);
+   m_pdwChildIdList = NULL;
+   m_dwChildIdListSize = 0;
+   m_dwCategory = dwCategory;
 }
 
 
