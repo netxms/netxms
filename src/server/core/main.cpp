@@ -68,6 +68,9 @@ BOOL Initialize(void)
    WSAStartup(0x0002, &wsaData);
 #endif
 
+   // Initialize SNMP stuff
+   init_mib();
+
    if (!DBInit())
       return FALSE;
 

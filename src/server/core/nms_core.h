@@ -47,6 +47,9 @@
 #include "nms_objects.h"
 #include "messages.h"
 
+#include <net-snmp/net-snmp-config.h>
+#include <net-snmp/net-snmp-includes.h>
+
 
 //
 // Common constants
@@ -136,6 +139,8 @@ void DBFreeResult(DB_RESULT hResult);
 void DBUnloadDriver(void);
 
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
+
+BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary, size_t iOidLen, void *pValue);
 
 #ifdef _WIN32
 
