@@ -181,7 +181,7 @@ public:
    ClientSession(SOCKET hSocket);
    ~ClientSession();
 
-   void SendMessage(CSCP_MESSAGE *pMsg);
+   void SendMessage(CSCPMessage *pMsg);
    void DispatchMessage(CSCP_MESSAGE *pMsg);
 
    void ReadThread(void);

@@ -86,9 +86,9 @@ void ClientSession::DebugPrintf(char *szFormat, ...)
 // Post message to send queue
 //
 
-void ClientSession::SendMessage(CSCP_MESSAGE *pMsg)
+void ClientSession::SendMessage(CSCPMessage *pMsg)
 {
-   m_pSendQueue->Put(pMsg);
+   m_pSendQueue->Put(pMsg->CreateMessage());
 }
 
 
@@ -140,7 +140,7 @@ void ClientSession::WriteThread(void)
          free(pMsg);
          break;
       }
-      free(pMsg);
+      LibUtilDestroyObject(pMsg);
    }
 }
 
@@ -151,7 +151,7 @@ void ClientSession::WriteThread(void)
 
 void ClientSession::ProcessingThread(void)
 {
-   CSCPMessage *pMsg;
+   CSCPMessage *pMsg, *pReply;
 
    while(1)
    {
@@ -171,6 +171,14 @@ void ClientSession::ProcessingThread(void)
 
                LibUtilDestroyObject(pszLogin);
                LibUtilDestroyObject(pszPassword);
+
+               // Send reply
+               pReply = new CSCPMessage;
+               pReply->SetCode(CMD_LOGIN_RESP);
+               pReply->SetId(pMsg->GetId());
+               pReply->SetVariable("result", (DWORD)(m_iState == STATE_AUTHENTICATED));
+               SendMessage(pReply);
+               delete pReply;
             }
             else
             {
