@@ -41,14 +41,15 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <net-snmp/net-snmp-config.h>
+#include <net-snmp/net-snmp-includes.h>
+
 #include <nms_common.h>
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include "nms_objects.h"
 #include "messages.h"
-
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/net-snmp-includes.h>
 
 
 //
@@ -140,10 +141,10 @@ void DBUnloadDriver(void);
 
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
-BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary, 
+BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary, 
              size_t iOidLen, void *pValue);
-BOOL SnmpEnumerate(char *szNode, char *szCommunity, char *szRootOid,
-                   void (* pHandler)(char *, char *, variable_list *, void *), void *pUserArg);
+BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
+                   void (* pHandler)(DWORD, char *, variable_list *, void *), void *pUserArg);
 
 #ifdef _WIN32
 

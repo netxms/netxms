@@ -29,7 +29,7 @@
 // binary representation from oidBinary and iOidLen
 //
 
-BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary,
+BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
              size_t iOidLen, void *pValue)
 {
    struct snmp_session session, *sptr;
@@ -38,12 +38,13 @@ BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary,
    size_t iNameLen = MAX_OID_LEN;
    struct variable_list *pVar;
    int iStatus;
+   char szNodeName[32];
    BOOL bResult = TRUE;
 
    // Open SNMP session
    snmp_sess_init(&session);
    session.version = SNMP_VERSION_1;
-   session.peername = szNode;
+   session.peername = IpToStr(dwAddr, szNodeName);
    session.community = (unsigned char *)szCommunity;
    session.community_len = strlen((char *)session.community);
 
@@ -91,6 +92,9 @@ BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary,
                memcpy(pValue, pVar->val.string, pVar->val_len);
                ((char *)pValue)[pVar->val_len]=0;
                break;
+            case ASN_OBJECT_ID:
+//               snprint_objid((char *)pValue, MAX_OID_LEN * 4, (oid *)pVar->val.string, pVar->val_len);
+               break;
             default:
                WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "d", pVar->type);
                bResult = FALSE;
@@ -126,8 +130,8 @@ BOOL SnmpGet(char *szNode, char *szCommunity, char *szOidStr, oid *oidBinary,
 // Enumerate multiple values by walking throgh MIB, starting at given root
 //
 
-BOOL SnmpEnumerate(char *szNode, char *szCommunity, char *szRootOid,
-                   void (* pHandler)(char *, char *, variable_list *, void *), void *pUserArg)
+BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
+                   void (* pHandler)(DWORD, char *, variable_list *, void *), void *pUserArg)
 {
    struct snmp_session session, *sptr;
    struct snmp_pdu *pdu, *response;
@@ -135,12 +139,13 @@ BOOL SnmpEnumerate(char *szNode, char *szCommunity, char *szRootOid,
    size_t iNameLen, iRootLen = MAX_OID_LEN;
    struct variable_list *pVar;
    int iStatus;
+   char szNodeName[32];
    BOOL bRunning = TRUE, bResult = TRUE;
 
    // Open SNMP session
    snmp_sess_init(&session);
    session.version = SNMP_VERSION_1;
-   session.peername = szNode;
+   session.peername = IpToStr(dwAddr, szNodeName);
    session.community = (unsigned char *)szCommunity;
    session.community_len = strlen((char *)session.community);
 
@@ -181,8 +186,8 @@ BOOL SnmpEnumerate(char *szNode, char *szCommunity, char *szRootOid,
             memmove(oidName, pVar->name, pVar->name_length * sizeof(oid));
             iNameLen = pVar->name_length;
 
-            // Call user's callback for processing
-            pHandler(szNode, szCommunity, pVar, pUserArg);
+            // Call user's callback function for processing
+            pHandler(dwAddr, szCommunity, pVar, pUserArg);
          }
       }
       else

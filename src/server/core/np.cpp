@@ -30,9 +30,6 @@
 static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 {
    Node *pNode;
-   Interface *pInterface;
-   Subnet *pSubnet;
-   DWORD dwSubnetAddr, dwNodeFlags = 0;
 
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
@@ -44,24 +41,15 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
       return;
    }
 
-   // Find appropriate subnet
-   dwSubnetAddr = dwIpAddr & dwNetMask;
-   pSubnet = FindSubnetByIP(dwSubnetAddr);
-   if (pSubnet == NULL)
-   {
-      pSubnet = new Subnet(dwSubnetAddr, dwNetMask);
-      NetObjInsert(pSubnet, TRUE);
-      g_pEntireNet->AddSubnet(pSubnet);
-   }
-
-   pInterface = new Interface(dwIpAddr, dwNetMask);
-   NetObjInsert(pInterface, TRUE);
    pNode = new Node(dwIpAddr, 0, dwFlags);
-   pNode->AddInterface(pInterface);
-   NetObjInsert(pNode, TRUE);
-
-   // Link node to subnet
-   pSubnet->AddNode(pNode);
+   if (!pNode->NewNodePoll(dwNetMask))
+   {
+      delete pNode;     // Node poll failed, delete it
+   }
+   else
+   {
+      NetObjInsert(pNode, TRUE);
+   }
 }
 
 

@@ -36,8 +36,9 @@ Node::Node()
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
-   m_iSNMPVersion = 1;
+   m_iSNMPVersion = SNMP_VERSION_1;
    strcpy(m_szCommunityString, "public");
+   m_szObjectId[0] = 0;
 }
 
 
@@ -55,9 +56,10 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
-   m_iSNMPVersion = 1;
+   m_iSNMPVersion = SNMP_VERSION_1;
    strcpy(m_szCommunityString, "public");
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
+   m_szObjectId[0] = 0;
 }
 
 
@@ -229,5 +231,32 @@ BOOL Node::DeleteFromDB(void)
 
    sprintf(szQuery, "DELETE FROM nodes WHERE id=%ld", m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   return TRUE;
+}
+
+
+//
+// Poll newly discovered node
+// Usually called once by node poller thread when new node is discovered
+// and object for it is created
+//
+
+BOOL Node::NewNodePoll(DWORD dwNetMask)
+{
+   // Determine node's capabilities
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId))
+      m_dwFlags |= NF_IS_SNMP;
+
+   // Get interface list
+   if (m_dwFlags & NF_IS_SNMP)
+   {
+   }
+   else  // No SNMP, no native agent - create pseudo interface object
+   {
+      Interface *pInterface = new Interface(m_dwIpAddr, dwNetMask);
+      NetObjInsert(pInterface, TRUE);
+      AddInterface(pInterface);
+   }
+
    return TRUE;
 }

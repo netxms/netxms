@@ -160,6 +160,8 @@ void Main(void)
                             g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
                             objTypes[g_pIndexById[i].pObject->Type()],
                             IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer));
+                     if (g_pIndexById[i].pObject->Type() == OBJECT_NODE)
+                        printf("   OID='%s'\n", ((Node *)(g_pIndexById[i].pObject))->ObjectId());
                   }
                   printf("*** Object dump complete ***\n");
                }

@@ -192,6 +192,7 @@ protected:
    int m_iStatusPollType;
    int m_iSNMPVersion;
    char m_szCommunityString[MAX_COMMUNITY_LENGTH];
+   char m_szObjectId[MAX_OID_LEN * 4];
 
 public:
    Node();
@@ -212,7 +213,11 @@ public:
    BOOL IsBridge(void) { return m_dwFlags & NF_IS_BRIDGE; }
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER; }
 
+   const char *ObjectId(void) { return m_szObjectId; }
+
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
+
+   BOOL NewNodePoll(DWORD dwNetMask);
 };
 
 
