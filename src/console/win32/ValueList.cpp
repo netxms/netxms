@@ -41,7 +41,7 @@ int CValueList::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CListCtrl::OnCreate(lpCreateStruct) == -1)
 		return -1;
-
+/*
    m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                            0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
@@ -52,7 +52,7 @@ int CValueList::OnCreate(LPCREATESTRUCT lpCreateStruct)
                          VARIABLE_PITCH | FF_DONTCARE, "Verdana");
 
    SetFont(&m_fontNormal);
-	
+*/	
 	return 0;
 }
 
@@ -92,14 +92,14 @@ void CValueList::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
       if ((i == 2) && (item.iImage == 1))
       {
          rgbOldColor = dc.SetTextColor(RGB(192, 0, 0));
-         pOrigFont = dc.SelectObject(&m_fontBold);
+//         pOrigFont = dc.SelectObject(&m_fontBold);
       }
       dc.DrawText(szBuffer, _tcslen(szBuffer), &rcItem,
                   DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS);
       if ((i == 2) && (item.iImage == 1))
       {
          dc.SetTextColor(rgbOldColor);
-         dc.SelectObject(pOrigFont);
+//         dc.SelectObject(pOrigFont);
       }
       nPos += GetColumnWidth(i);
    }

@@ -798,7 +798,11 @@ void DCItem::PrepareForDeletion(void)
    // while() is not a very good solution, and probably need to be
    // rewrited using conditions
    while(m_iBusy)
+   {
+      Unlock();
       ThreadSleepMs(100);
+      Lock();
+   }
 
    Unlock();
 }

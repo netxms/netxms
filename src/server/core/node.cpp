@@ -1114,6 +1114,42 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    {
       sprintf(szBuffer, "%d", m_iStatus);
    }
+   else if (MatchString("ChildStatus(*)", szParam, FALSE))
+   {
+      char *pEnd, szArg[256];
+      DWORD i, dwId;
+      NetObj *pObject = NULL;
+
+      NxGetParameterArg((char *)szParam, 1, szArg, 256);
+      dwId = strtoul(szArg, &pEnd, 0);
+      if (*pEnd != 0)
+      {
+         // Argument is object's name
+         dwId = 0;
+      }
+
+      // Find child object with requested ID or name
+      Lock();
+      for(i = 0; i < m_dwChildCount; i++)
+      {
+         if (((dwId == 0) && (!stricmp(m_pChildList[i]->Name(), szArg))) ||
+             (dwId == m_pChildList[i]->Id()))
+         {
+            pObject = m_pChildList[i];
+            break;
+         }
+      }
+      Unlock();
+
+      if (pObject != NULL)
+      {
+         sprintf(szBuffer, "%d", pObject->Status());
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
    else if (m_dwFlags & NF_IS_LOCAL_MGMT)
    {
       if (!stricmp(szParam, "Server.AverageDCPollerQueueSize"))

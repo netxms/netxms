@@ -37,6 +37,7 @@ protected:
 	void UpdateItem(int iItem, NXC_DCI_VALUE *pValue);
 	CImageList m_imageList;
 	CValueList m_wndListCtrl;
+   //CListCtrl m_wndListCtrl;
 	DWORD m_dwNodeId;
 	virtual ~CLastValuesView();
 

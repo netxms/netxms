@@ -183,10 +183,28 @@ void CDCIPropPage::SelectInternalItem(void)
    dlg.m_pNode = m_pNode;
    if (dlg.DoModal() == IDOK)
    {
+      TCHAR *p;
+
       m_wndEditName.SetWindowText(dlg.m_szItemName);
       SetDlgItemText(IDC_EDIT_DESCRIPTION, dlg.m_szItemDescription);
       m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);
       m_wndEditName.SetFocus();
+
+      // Replace (*) in parameter's name
+      p = _tcschr(dlg.m_szItemName, _T('('));
+      if (p != NULL)
+      {
+         int iPos;
+
+         p++;
+         if (*p == _T('*'))
+         {
+            iPos = (int)((char *)p - (char *)dlg.m_szItemName) / sizeof(TCHAR);
+            m_wndEditName.SetSel(iPos, iPos + 1, FALSE);
+            m_wndEditName.ReplaceSel(_T("<insert arguments here>"));
+            m_wndEditName.SetSel(iPos, iPos + 23, FALSE);
+         }
+      }
    }
 }
 

@@ -65,7 +65,7 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create image list
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
    m_imageList.Add(theApp.LoadIcon(IDI_ACTIVE));
-   m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
+   m_imageList.Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
    m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
@@ -73,17 +73,19 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_OWNERDRAWFIXED,
+//   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT,
                         rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
-                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES |
+                                  LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(1, "Description", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(2, "Value", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(3, "Timestamp", LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(1, "Description", LVCFMT_LEFT, 250);
+   m_wndListCtrl.InsertColumn(2, "Value", LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, 100);
+   m_wndListCtrl.InsertColumn(3, "Timestamp", LVCFMT_LEFT, 124);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
 
@@ -138,7 +140,7 @@ void CLastValuesView::OnViewRefresh()
          if (iItem == -1)
          {
             _sntprintf(szBuffer, 256, _T("%ld"), pItemList[i].dwId);
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 1);
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
             m_wndListCtrl.SetItemData(iItem, pItemList[i].dwId);
          }
          UpdateItem(iItem, &pItemList[i]);
@@ -180,7 +182,7 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
    }
    else
    {
-      item.iImage = 0;
+      item.iImage = -1;
    }
    m_wndListCtrl.SetItem(&item);
 
