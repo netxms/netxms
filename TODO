@@ -20,6 +20,7 @@ GENERAL:
 - Add possibility to set different polling timeouts for different nodes
 - Add DEFAULT keyword for config.need_server_restart and 
   config.is_visible in schema
+- Add --with-client option to configure (should enable libnxcl and nxevent)
 
 
 SERVER:
