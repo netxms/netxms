@@ -119,8 +119,6 @@ typedef struct
 
 class LIBNXCSCP_EXPORTABLE MsgWaitQueue
 {
-   friend void MWQThreadStarter(void *);
-
 private:
    MUTEX m_hMutex;
    CONDITION m_hStopCondition;
@@ -132,6 +130,8 @@ private:
    void Unlock(void) { MutexUnlock(m_hMutex); }
    void HousekeeperThread(void);
    void *WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
+   
+   static void MWQThreadStarter(void *);
 
 public:
    MsgWaitQueue();

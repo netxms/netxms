@@ -189,13 +189,13 @@ void ListenerThread(void *)
             WriteLog(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
             iNumErrors = 0;
          }
-         Sleep(500);
+         ThreadSleepMs(500);
       }
 
       iNumErrors = 0;     // Reset consecutive errors counter
-      DebugPrintf("Incoming connection from %s", IpToStr(servAddr.sin_addr.S_un.S_addr, szBuffer));
+      DebugPrintf("Incoming connection from %s", IpToStr(servAddr.sin_addr.S_addr, szBuffer));
 
-      if (IsValidServerAddr(servAddr.sin_addr.S_un.S_addr))
+      if (IsValidServerAddr(servAddr.sin_addr.S_addr))
       {
          g_dwAcceptedConnections++;
 

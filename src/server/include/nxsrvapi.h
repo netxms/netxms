@@ -98,8 +98,6 @@ typedef struct
 
 class LIBNXSRV_EXPORTABLE AgentConnection
 {
-   friend void AgentReceiverThread(void *);
-
 private:
    DWORD m_dwAddr;
    int m_iAuthMethod;
@@ -114,6 +112,7 @@ private:
    MsgWaitQueue *m_pMsgWaitQueue;
 
    void ReceiverThread(void);
+   static void ReceiverThreadStarter(void *);
 
 protected:
    void DestroyResultData(void);

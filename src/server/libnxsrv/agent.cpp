@@ -22,6 +22,7 @@
 **/
 
 #include "libnxsrv.h"
+#include <stdarg.h>
 
 
 //
@@ -35,7 +36,7 @@
 // Receiver thread starter
 //
 
-static void AgentReceiverThread(void *pArg)
+void AgentConnection::ReceiverThreadStarter(void *pArg)
 {
    ((AgentConnection *)pArg)->ReceiverThread();
 }
@@ -206,7 +207,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    }
 
    // Start receiver thread
-   ThreadCreate(AgentReceiverThread, 0, this);
+   ThreadCreate(ReceiverThreadStarter, 0, this);
 
    // Authenticate itself to agent
    switch(m_iAuthMethod)

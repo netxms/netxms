@@ -23,6 +23,10 @@
 
 #include "libnetxms.h"
 
+#ifndef _WIN32
+#include <dlfcn.h>
+#endif
+
 
 //
 // Load DLL/shared library

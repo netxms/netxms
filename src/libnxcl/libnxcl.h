@@ -29,7 +29,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else    /* _WIN32 */
-#include <unistd.h>
+#include <fcntl.h>
 #endif   /* _WIN32 */
 
 #include <nms_common.h>
