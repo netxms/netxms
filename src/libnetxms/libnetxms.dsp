@@ -101,6 +101,10 @@ SOURCE=.\cscp.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\getopt.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\hash.cpp
 # End Source File
 # Begin Source File
@@ -123,6 +127,10 @@ SOURCE=.\tools.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\..\include\getopt.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\libnetxms.h

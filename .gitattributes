@@ -3,6 +3,7 @@ contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text
 contrib/logo.jpg -text
 doc/internals.rtf -text
+include/getopt.h -text
 include/nms_agent.h -text
 include/nms_common.h -text
 include/nms_cscp.h -text
@@ -73,6 +74,7 @@ src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
 src/libnetxms/Makefile -text
 src/libnetxms/cscp.cpp -text
+src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text
 src/libnetxms/inline.cpp -text
 src/libnetxms/libnetxms.dsp -text

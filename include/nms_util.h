@@ -44,6 +44,15 @@
 
 
 //
+// getopt() prototype if needed
+//
+
+#ifdef _WIN32
+#include <getopt.h>
+#endif
+
+
+//
 // Temporary buffer structure for RecvCSCPMessage() function
 //
 
