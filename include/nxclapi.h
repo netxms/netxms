@@ -979,6 +979,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
                                            NXC_PACKAGE_INFO **ppList);
+DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, TCHAR *pszPkgFile, 
+                                           DWORD *pdwPkgId);
+DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId);
 
 #ifdef __cplusplus
 }

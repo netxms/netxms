@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.48 2005-01-05 12:21:18 victor Exp $
+# $Id: configure.ac,v 1.49 2005-01-06 20:42:58 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -251,7 +251,7 @@ AC_FUNC_VPRINTF
 
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
-AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir])
+AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname])
 
 # sockets/resolver (probably for solaris)
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])

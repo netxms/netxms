@@ -31,8 +31,8 @@
 DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
                                            NXC_PACKAGE_INFO **ppList)
 {
-   CSCPMessage msg;
-   DWORD dwResult, dwRqId;
+   CSCPMessage msg, *pResponce;
+   DWORD dwResult, dwRqId, dwPkgId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -41,14 +41,74 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   *pdwNumPackages = 0;
+   *ppList = NULL;
    if (dwResult == RCC_SUCCESS)
    {
-   }
-   else
-   {
       *pdwNumPackages = 0;
-      *ppList = NULL;
+      do
+      {
+         pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_PACKAGE_INFO, dwRqId);
+         if (pResponce != NULL)
+         {
+            dwPkgId = pResponce->GetVariableLong(VID_PACKAGE_ID);
+            if (dwPkgId != 0)
+            {
+               *ppList = (NXC_PACKAGE_INFO *)realloc(*ppList, sizeof(NXC_PACKAGE_INFO) * (*pdwNumPackages + 1));
+               (*ppList)[*pdwNumPackages].dwId = dwPkgId;
+               pResponce->GetVariableStr(VID_FILE_NAME, 
+                                         (*ppList)[*pdwNumPackages].szFileName, 
+                                         MAX_DB_STRING);
+               pResponce->GetVariableStr(VID_PLATFORM_NAME, 
+                                         (*ppList)[*pdwNumPackages].szPlatform, 
+                                         MAX_PLATFORM_NAME_LEN);
+               pResponce->GetVariableStr(VID_PACKAGE_VERSION, 
+                                         (*ppList)[*pdwNumPackages].szVersion, 
+                                         MAX_AGENT_VERSION_LEN);
+               *pdwNumPackages++;
+            }
+            delete pResponce;
+         }
+         else
+         {
+            dwResult = RCC_TIMEOUT;
+            *pdwNumPackages = 0;
+            safe_free(*ppList);
+            *ppList = NULL;
+            break;
+         }
+      } while(dwPkgId != 0);
    }
 
    return dwResult;
+}
+
+
+//
+// Remove package from server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_PACKAGE_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_PACKAGE_ID, dwPkgId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Install package to server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, TCHAR *pszPkgFile, DWORD *pdwPkgId)
+{
+   return 0;
 }

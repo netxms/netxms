@@ -180,7 +180,6 @@ static AGENT_PARAM m_stdParams[] =
    { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE },
    { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL },
    { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED },
-   { "System.PlatformName", H_PlatformName, NULL },
    { "System.ProcessCount", H_ProcCount, NULL },
    { "System.ServiceState(*)", H_ServiceState, NULL },
    { "System.ThreadCount", H_ThreadCount, NULL },
@@ -200,7 +199,8 @@ static AGENT_PARAM m_stdParams[] =
    { "File.Hash.CRC32(*)", H_CRC32, NULL },
    { "File.Hash.MD5(*)", H_MD5Hash, NULL },
    { "File.Hash.SHA1(*)", H_SHA1Hash, NULL },
-   { "File.Size(*)", H_FileSize, NULL }
+   { "File.Size(*)", H_FileSize, NULL },
+   { "System.PlatformName", H_PlatformName, NULL }
 };
 
 
@@ -251,13 +251,39 @@ BOOL InitParameterList(void)
 // Add parameter to list
 //
 
-void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg)
+void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char *pArg)
 {
-   m_pParamList = (AGENT_PARAM *)realloc(m_pParamList, sizeof(AGENT_PARAM) * (m_iNumParams + 1));
-   strncpy(m_pParamList[m_iNumParams].name, szName, MAX_PARAM_NAME - 1);
-   m_pParamList[m_iNumParams].handler = fpHandler;
-   m_pParamList[m_iNumParams].arg = pArg;
-   m_iNumParams++;
+   int i;
+
+   // Search for existing parameter
+   for(i = 0; i < m_iNumParams; i++)
+      if (!stricmp(m_pParamList[i].name, pszName))
+         break;
+   if (i < m_iNumParams)
+   {
+      // Replace existing handler
+      m_pParamList[i].handler = fpHandler;
+
+      // If we are replacing System.PlatformName, add pointer to
+      // platform suffix as argument, otherwise, use supplied pArg
+      if (!strcmp(pszName, "System.PlatformName"))
+      {
+         m_pParamList[i].arg = g_szPlatformSuffix;
+      }
+      else
+      {
+         m_pParamList[i].arg = pArg;
+      }
+   }
+   else
+   {
+      // Add new parameter
+      m_pParamList = (AGENT_PARAM *)realloc(m_pParamList, sizeof(AGENT_PARAM) * (m_iNumParams + 1));
+      strncpy(m_pParamList[m_iNumParams].name, pszName, MAX_PARAM_NAME - 1);
+      m_pParamList[m_iNumParams].handler = fpHandler;
+      m_pParamList[m_iNumParams].arg = pArg;
+      m_iNumParams++;
+   }
 }
 
 
@@ -265,13 +291,29 @@ void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *
 // Add enum to list
 //
 
-void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg)
+void AddEnum(char *pszName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg)
 {
-   m_pEnumList = (NETXMS_SUBAGENT_ENUM *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_ENUM) * (m_iNumEnums + 1));
-   strncpy(m_pEnumList[m_iNumEnums].szName, szName, MAX_PARAM_NAME - 1);
-   m_pEnumList[m_iNumEnums].fpHandler = fpHandler;
-   m_pEnumList[m_iNumEnums].pArg = pArg;
-   m_iNumEnums++;
+   int i;
+
+   // Search for existing enum
+   for(i = 0; i < m_iNumEnums; i++)
+      if (!stricmp(m_pEnumList[i].szName, pszName))
+         break;
+   if (i < m_iNumEnums)
+   {
+      // Replace existing handler and arg
+      m_pEnumList[i].fpHandler = fpHandler;
+      m_pEnumList[i].pArg = pArg;
+   }
+   else
+   {
+      // Add new enum
+      m_pEnumList = (NETXMS_SUBAGENT_ENUM *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_ENUM) * (m_iNumEnums + 1));
+      strncpy(m_pEnumList[m_iNumEnums].szName, pszName, MAX_PARAM_NAME - 1);
+      m_pEnumList[m_iNumEnums].fpHandler = fpHandler;
+      m_pEnumList[m_iNumEnums].pArg = pArg;
+      m_iNumEnums++;
+   }
 }
 
 
@@ -316,16 +358,6 @@ DWORD GetParameterValue(char *pszParam, char *pszValue)
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
-               // Special handling for System.PlatformName parameter
-               if (!stricmp(pszParam, "System.PlatformName"))
-               {
-                  if (g_szPlatformSuffix[0] != 0)
-                  {
-                     if (g_szPlatformSuffix[0] != '-')
-                        strcat(pszValue, "-");
-                     strcat(pszValue, g_szPlatformSuffix);
-                  }
-               }
                dwErrorCode = ERR_SUCCESS;
                m_dwProcessedRequests++;
                break;

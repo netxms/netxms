@@ -22,6 +22,10 @@
 
 #include "nxagentd.h"
 
+#if HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 
 //
 // Handler for Agent.Uptime parameter
@@ -170,4 +174,83 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
 LONG H_CRC32(char *cmd, char *arg, char *value)
 {
    return SYSINFO_RC_UNSUPPORTED;
+}
+
+
+//
+// Handler for System.PlatformName
+//
+
+LONG H_PlatformName(char *cmd, char *arg, char *value)
+{
+   LONG nResult = SYSINFO_RC_SUCCESS;
+
+#if defined(_WIN32)
+
+   SYSTEM_INFO sysInfo;
+
+   GetSystemInfo(&sysInfo);
+   switch(sysInfo.wProcessorArchitecture)
+   {
+      case PROCESSOR_ARCHITECTURE_INTEL:
+         strcpy(value, "windows-i386");
+         break;
+      case PROCESSOR_ARCHITECTURE_MIPS:
+         strcpy(value, "windows-mips");
+         break;
+      case PROCESSOR_ARCHITECTURE_ALPHA:
+         strcpy(value, "windows-alpha");
+         break;
+      case PROCESSOR_ARCHITECTURE_PPC:
+         strcpy(value, "windows-ppc");
+         break;
+      case PROCESSOR_ARCHITECTURE_IA64:
+         strcpy(value, "windows-ia64");
+         break;
+      case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+         strcpy(value, "windows-i386");
+         break;
+      case PROCESSOR_ARCHITECTURE_AMD64:
+         strcpy(value, "windows-amd64");
+         break;
+      default:
+         strcpy(value, "windows-unknown");
+         break;
+   }
+
+#elif defined(_NETWARE)
+
+   // NetWare only exists on Intel x86 CPU,
+   // so there are nothing to detect
+   strcpy(value, "netware-i386");
+
+#elif HAVE_UNAME
+
+   struct utsname info;
+
+	if (uname(&info) == 0)
+	{
+      sprintf(value, "%s-%s", info.sysname, info.machine);
+   }
+   else
+   {
+      nResult = SYSINFO_RC_ERROR;
+   }
+
+#else
+
+   // Finally, we don't know a way to detect platform
+   strcpy(value, "unknown");
+
+#endif
+
+   // Add user-configurable platform name suffix
+   if ((nResult == SYSINFO_RC_SUCCESS) && (g_szPlatformSuffix[0] != 0))
+   {
+      if (g_szPlatformSuffix[0] != '-')
+         strcat(value, "-");
+      strcat(value, g_szPlatformSuffix);
+   }
+
+   return nResult;
 }
