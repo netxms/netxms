@@ -31,16 +31,20 @@ static LONG H_PdhCounterValue(char *pszParam, char *pArg, char *pValue)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;
-   PDH_RAW_COUNTER rawData;
+   PDH_RAW_COUNTER rawData1, rawData2;
    PDH_FMT_COUNTERVALUE counterValue;
    PDH_STATUS rc;
    PDH_COUNTER_INFO ci;
-   TCHAR szCounter[MAX_PATH];
+   TCHAR szCounter[MAX_PATH], szBuffer[16];
    static TCHAR szFName[] = _T("H_PdhCounterValue");
    DWORD dwSize;
+   BOOL bUseTwoSamples = FALSE;
 
-   if (!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH))
+   if ((!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
+       (!NxGetParameterArg(pszParam, 2, szBuffer, 16)))
       return SYSINFO_RC_UNSUPPORTED;
+
+   bUseTwoSamples = _tcstol(szBuffer, NULL, 0) ? TRUE : FALSE;
 
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
    {
@@ -55,11 +59,26 @@ static LONG H_PdhCounterValue(char *pszParam, char *pArg, char *pValue)
       return SYSINFO_RC_UNSUPPORTED;
    }
 
+   // Get first sample
    if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
    {
       ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
       PdhCloseQuery(hQuery);
       return SYSINFO_RC_ERROR;
+   }
+   PdhGetRawCounterValue(hCounter, NULL, &rawData1);
+
+   // Get second sample if required
+   if (bUseTwoSamples)
+   {
+      Sleep(1000);   // We will take second sample after one second
+      if ((rc = PdhCollectQueryData(hQuery)) != ERROR_SUCCESS)
+      {
+         ReportPdhError(szFName, _T("PdhCollectQueryData"), rc);
+         PdhCloseQuery(hQuery);
+         return SYSINFO_RC_ERROR;
+      }
+      PdhGetRawCounterValue(hCounter, NULL, &rawData2);
    }
 
    dwSize = sizeof(ci);
@@ -70,18 +89,25 @@ static LONG H_PdhCounterValue(char *pszParam, char *pArg, char *pValue)
       return SYSINFO_RC_ERROR;
    }
 
-   PdhGetRawCounterValue(hCounter, NULL, &rawData);
    if (ci.dwType & PERF_SIZE_LARGE)
    {
-      PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
-                                      &rawData, NULL, &counterValue);
+      if (bUseTwoSamples)
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
+                                         &rawData2, &rawData1, &counterValue);
+      else
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
+                                         &rawData1, NULL, &counterValue);
       ret_int64(pValue, counterValue.largeValue);
    }
    else
    {
-      PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG,
-                                      &rawData, NULL, &counterValue);
-      ret_int64(pValue, counterValue.longValue);
+      if (bUseTwoSamples)
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG,
+                                         &rawData2, &rawData1, &counterValue);
+      else
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG,
+                                         &rawData1, NULL, &counterValue);
+      ret_int(pValue, counterValue.longValue);
    }
    PdhCloseQuery(hQuery);
    return SYSINFO_RC_SUCCESS;
