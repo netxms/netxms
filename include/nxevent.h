@@ -37,6 +37,8 @@
 #define EF_MODIFIED              0x01000000
 #define EF_DELETED               0x02000000
 
+#define SERVER_FLAGS_BITS        0x00FFFFFF
+
 
 //
 // Event severity codes

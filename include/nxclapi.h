@@ -131,6 +131,18 @@ typedef unsigned long HREQUEST;
 
 
 //
+// Mask bits for NXCModifyEventTemplate()
+//
+
+#define EM_SEVERITY        ((DWORD)0x01)
+#define EM_FLAGS           ((DWORD)0x02)
+#define EM_NAME            ((DWORD)0x04)
+#define EM_MESSAGE         ((DWORD)0x08)
+#define EM_DESCRIPTION     ((DWORD)0x10)
+#define EM_ALL             ((DWORD)0x1F)
+
+
+//
 // Custom data types
 //
 
@@ -236,6 +248,9 @@ void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
 NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
 
 BOOL EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
+void EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
+                                       DWORD dwSeverity, DWORD dwFlags, const char *pszName,
+                                       const char *pszMessage, const char *pszDescription);
 
 #ifdef __cplusplus
 }
