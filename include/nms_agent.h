@@ -25,6 +25,22 @@
 
 #include <stdio.h>
 
+
+//
+// Prefix for exportable functions
+//
+
+#ifdef _WIN32
+#ifdef LIBNXAGENT_EXPORTS
+#define LIBNXAGENT_EXPORTABLE __declspec(dllexport)
+#else
+#define LIBNXAGENT_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define LIBNXAGENT_EXPORTABLE
+#endif
+
+
 //
 // Some constants
 //
@@ -65,10 +81,27 @@
 
 
 //
+// Subagent's parameter information
+//
+
+typedef struct
+{
+   char szName[MAX_PARAM_NAME];
+   LONG (* fpHandler)(char *,char *,char *);
+   char *pArg;
+} NETXMS_SUBAGENT_PARAM;
+
+
+//
 // Subagent initialization structure
 //
 
-
+typedef struct
+{
+   DWORD dwVersion;
+   DWORD dwNumParameters;
+   NETXMS_SUBAGENT_PARAM *pParamList;
+} NETXMS_SUBAGENT_INFO;
 
 
 //
@@ -76,6 +109,7 @@
 //
 
 #ifdef __cplusplus
+#ifndef LIBNXAGENT_INLINE
 
 inline void ret_string(char *rbuf, char *value)
 {
@@ -117,6 +151,32 @@ inline void ret_uint64(char *rbuf, unsigned __int64 value)
 #endif   /* _WIN32 */
 }
 
+#endif   /* LIBNXAGENT_INLINE */
+#else    /* __cplusplus */
+
+void LIBNXAGENT_EXPORTABLE ret_string(char *rbuf, char *value)
+void LIBNXAGENT_EXPORTABLE ret_int(char *rbuf, long value)
+void LIBNXAGENT_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
+void LIBNXAGENT_EXPORTABLE ret_double(char *rbuf, double value)
+void LIBNXAGENT_EXPORTABLE ret_int64(char *rbuf, __int64 value)
+void LIBNXAGENT_EXPORTABLE ret_uint64(char *rbuf, unsigned __int64 value)
+
 #endif   /* __cplusplus */
+
+
+//
+// Functions from libnxagent
+//
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void LIBNXAGENT_EXPORTABLE NxStrStrip(char *pszStr);
+BOOL LIBNXAGENT_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   /* _nms_agent_h_ */
