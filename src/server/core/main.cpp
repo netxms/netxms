@@ -348,9 +348,11 @@ void Shutdown(void)
    if (g_hCoreDB != 0)
       DBDisconnect(g_hCoreDB);
    DBUnloadDriver();
+   DbgPrintf(AF_DEBUG_MISC, "Database driver unloaded");
 
    CleanupActions();
    ShutdownEventSubsystem();
+   DbgPrintf(AF_DEBUG_MISC, "Event processing stopped");
 
    // Delete all objects
    for(i = 0; i < g_dwIdIndexSize; i++)

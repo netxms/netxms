@@ -1660,7 +1660,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    DWORD dwObjectId;
    NetObj *pObject;
    BOOL bSuccess = FALSE;
-   static DWORD m_dwRowSize[] = { 8, 12, 260, 12 };
+   static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 260, 12 };
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
