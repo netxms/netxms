@@ -160,6 +160,13 @@ typedef struct tagICMPHDR
 
 
 //
+// Free memory block if it isn't NULL
+//
+
+#define safe_free(x) { if ((x) != NULL) free(x); }
+
+
+//
 // Convert half-byte's value to hex digit and vice versa
 //
 

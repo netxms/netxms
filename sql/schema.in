@@ -11,6 +11,21 @@ CREATE TABLE Config
 
 
 /*
+** This table contains information about currently locked tables
+** or subsystems
+*/
+
+CREATE TABLE Locks
+(
+	component_id integer not null,
+	component_name varchar(64),
+	lock_status integer not null,
+	owner_info varchar(255),  // Information about current lock owner, may be empty
+	PRIMARY KEY(component_id)
+);
+
+
+/*
 ** Users
 */
 
@@ -218,11 +233,15 @@ CREATE TABLE EventLog
 ** Actions on events
 */
 
-CREATE TABLE ACTIONS
+CREATE TABLE Actions
 (
 	id integer not null,
-	type integer,
-	command varchar(255),
+	action_type integer,
+	email_addr varchar(255),
+	email_subject varchar(255),
+	// Field "action_data" holds message text for e-mail actions or
+	// command line for external command execution actions
+	action_data TEXT,
 	PRIMARY KEY(id)
 );
 
@@ -288,6 +307,7 @@ CREATE TABLE EventGroupMembers
 CREATE TABLE EventPolicy
 (
 	id integer not null,	// Rule number
+	flags integer not null,
 	comments varchar(255),
 	PRIMARY KEY(id)
 );
@@ -305,11 +325,15 @@ CREATE TABLE PolicySourceList
 CREATE TABLE PolicyEventList
 (
 	rule_id integer not null,
-	is_group integer not null,
 	event_id integer not null,
-#ifdef DB_MYSQL
-	KEY(rule_id)
-#endif
+	PRIMARY KEY(rule_id,event_id)
+);
+
+CREATE TABLE PolicyActionList
+(
+	rule_id integer not null,
+	action_id integer not null,
+	PRIMARY KEY(rule_id,action_id)
 );
 
 

@@ -24,5 +24,19 @@ INSERT INTO config (name,value) VALUES ('HouseKeepingInterval','3600');
 ** Default users
 */
 
-INSERT INTO users (id,name,password) VALUES (0,'admin','3A445C0072CD69D9030CC6644020E5C4576051B1');  // Default password: netxms
-INSERT INTO users (id,name,password) VALUES (1,'guest','DA39A3EE5E6B4B0D3255BFEF95601890AFD80709');  // Default password is empty
+INSERT INTO users (id,name,password)
+   VALUES (0,'admin','3A445C0072CD69D9030CC6644020E5C4576051B1');  // Default password: netxms
+INSERT INTO users (id,name,password)
+   VALUES (1,'guest','DA39A3EE5E6B4B0D3255BFEF95601890AFD80709');  // Default password is empty
+
+
+/*
+** Component lock table
+*/
+
+INSERT INTO locks (component_id,component_name,lock_status,owner_info)
+   VALUES (0,'NetXMS Server Instance',-1,'');
+INSERT INTO locks (component_id,component_name,lock_status,owner_info)
+   VALUES (1,'Event Processing Policy',-1,'');
+INSERT INTO locks (component_id,component_name,lock_status,owner_info)
+   VALUES (2,'User Management',-1,'');
