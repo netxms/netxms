@@ -24,3 +24,5 @@ dbinit_mssql.sql: $(SOURCE)
 
 clean:
 	rm -f dbinit_*.sql
+
+EXTRA_DIST = $(sql_SCRIPTS)
