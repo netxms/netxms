@@ -34,6 +34,7 @@ void HouseKeeper(void *arg);
 void DiscoveryThread(void *arg);
 void Syncer(void *arg);
 void NodePoller(void *arg);
+void StatusPoller(void *arg);
 void EventProcessor(void *arg);
 
 
@@ -46,6 +47,7 @@ char g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 char g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
+DWORD g_dwStatusPollingInterval;
 
 
 //
@@ -81,6 +83,7 @@ BOOL SleepAndCheckForShutdown(int iSeconds)
 static void LoadGlobalConfig()
 {
    g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 3600);
+   g_dwStatusPollingInterval = ConfigReadInt("StatusPollingInterval", 60);
 }
 
 
@@ -135,6 +138,7 @@ BOOL Initialize(void)
    ThreadCreate(DiscoveryThread, 0, NULL);
    ThreadCreate(Syncer, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
+   ThreadCreate(StatusPoller, 0, NULL);
    
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
@@ -197,16 +201,20 @@ void Main(void)
             case 'D':
                {
                   DWORD i;
-                  char szBuffer[32];
+                  char szBuffer[1024];
                   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
 
                   for(i = 0; i < g_dwIdIndexSize; i++)
                   {
                      printf("Object ID %d\n"
-                            "   Name='%s' Type=%s Addr=%s\n",
+                            "   Name='%s' Type=%s Addr=%s Status=%d\n",
                             g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
                             objTypes[g_pIndexById[i].pObject->Type()],
-                            IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer));
+                            IpToStr(g_pIndexById[i].pObject->IpAddr(), szBuffer),
+                            g_pIndexById[i].pObject->Status());
+                     printf("   Parents: <%s> Childs: <%s>\n", 
+                            g_pIndexById[i].pObject->ParentList(szBuffer),
+                            g_pIndexById[i].pObject->ChildList(&szBuffer[512]));
                      if (g_pIndexById[i].pObject->Type() == OBJECT_NODE)
                         printf("   IsSNMP:%d IsAgent:%d IsLocal:%d OID='%s'\n",
                                ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),

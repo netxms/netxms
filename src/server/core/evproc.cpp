@@ -46,6 +46,16 @@ void EventProcessor(void *arg)
          DBQuery(g_hCoreDB, szQuery);
       }
 
+      // Write event information to screen if event debugging is on
+      if (IsStandalone() && (g_dwFlags & AF_DEBUG_EVENTS))
+      {
+         NetObj *pObject = FindObjectById(pEvent->SourceId());
+         if (pObject == NULL)
+            pObject = g_pEntireNet;
+         printf("EVENT %d (F:0x%04X S:%d) FROM %s: %s\n", pEvent->Id(), 
+                pEvent->Flags(), pEvent->Severity(), pObject->Name(), pEvent->Message());
+      }
+
       // Destroy event
       delete pEvent;
    }

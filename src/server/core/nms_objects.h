@@ -31,6 +31,7 @@
 //
 
 extern DWORD g_dwDiscoveryPollingInterval;
+extern DWORD g_dwStatusPollingInterval;
 
 
 //
@@ -109,9 +110,9 @@ struct ARP_CACHE
 //
 
 #define STATUS_NORMAL      0
-#define STATUS_INFO        1
+#define STATUS_MINOR       1
 #define STATUS_WARNING     2
-#define STATUS_ERROR       3
+#define STATUS_MAJOR       3
 #define STATUS_CRITICAL    4
 #define STATUS_UNKNOWN     5
 #define STATUS_UNMANAGED   6
@@ -189,6 +190,7 @@ public:
    DWORD IpAddr(void) { return m_dwIpAddr; }
    DWORD Id(void) { return m_dwId; }
    const char *Name(void) { return m_szName; }
+   int Status(void) { return m_iStatus; }
 
    BOOL IsModified(void) { return m_bIsModified; }
    BOOL IsDeleted(void) { return m_bIsDeleted; }
@@ -209,6 +211,12 @@ public:
    NetObj *GetParent(DWORD dwIndex = 0) { return dwIndex < m_dwParentCount ? m_pParentList[dwIndex] : NULL; }
 
    void SetId(DWORD dwId) { m_dwId = dwId; m_bIsModified = TRUE; }
+
+   virtual void CalculateCompoundStatus(void);
+
+   // Debug methods
+   const char *ParentList(char *szBuffer);
+   const char *ChildList(char *szBuffer);
 };
 
 
@@ -236,6 +244,8 @@ public:
 
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD IfIndex(void) { return m_dwIfIndex; }
+
+   void StatusPoll(void);
 };
 
 
@@ -256,6 +266,7 @@ protected:
    char m_szCommunityString[MAX_COMMUNITY_LENGTH];
    char m_szObjectId[MAX_OID_LEN * 4];
    time_t m_tLastDiscoveryPoll;
+   time_t m_tLastStatusPoll;
 
 public:
    Node();
@@ -289,6 +300,10 @@ public:
 
    BOOL ReadyForDiscoveryPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval ? TRUE : FALSE; }
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
+   BOOL ReadyForStatusPoll(void) { return (DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval ? TRUE : FALSE; }
+   void StatusPoll(void);
+
+   virtual void CalculateCompoundStatus(void);
 };
 
 

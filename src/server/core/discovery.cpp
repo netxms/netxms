@@ -200,7 +200,6 @@ void DiscoveryThread(void *arg)
       if (SleepAndCheckForShutdown(30))
          break;      // Shutdown has arrived
 
-printf("* Discovery thread wake up\n");
       CheckForMgmtNode();
 
       // Walk through nodes and poll for ARP tables
@@ -211,7 +210,6 @@ printf("* Discovery thread wake up\n");
          {
             ARP_CACHE *pArpCache;
 
-printf("Discovery poll on node %s\n",pNode->Name());
             // Retrieve and analize node's ARP cache
             pArpCache = pNode->GetArpCache();
             if (pArpCache != NULL)
@@ -241,7 +239,5 @@ printf("Discovery poll on node %s\n",pNode->Name());
             pNode->SetDiscoveryPollTimeStamp();
          }
       }
-printf("* Discovery thread goes to sleep\n");
    }
-printf("* Discovery thread terminated\n");
 }

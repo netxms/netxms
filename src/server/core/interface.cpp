@@ -187,3 +187,28 @@ BOOL Interface::DeleteFromDB(void)
    DBQuery(g_hCoreDB, szQuery);
    return TRUE;
 }
+
+
+//
+// Perform status poll on interface
+//
+
+void Interface::StatusPoll(void)
+{
+   int iOldStatus = m_iStatus;
+
+   if (m_dwIpAddr == 0)
+   {
+      m_iStatus = STATUS_UNKNOWN;
+      return;     // Interface has no IP address, we cannot check it
+   }
+
+   m_iStatus = IcmpPing(m_dwIpAddr, 3, 1000) ? STATUS_NORMAL : STATUS_CRITICAL;
+   if (m_iStatus != iOldStatus)
+   {
+      PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
+                GetParent()->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
+                m_dwIfIndex);
+      m_bIsModified = TRUE;
+   }
+}

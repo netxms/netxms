@@ -33,6 +33,8 @@ static char help_text[]="NMS Version " VERSION_STRING " Server\n"
                         "Valid options are:\n"
                         "   --config <file>  : Set non-default configuration file\n"
                         "                    : Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   --debug-events   : Print events to console (only in\n"
+                        "                    : standalone mode).\n"
                         "\n"
                         "Valid commands are:\n"
                         "   check-config     : Check configuration file syntax\n"
@@ -187,6 +189,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       {
          i++;
          strcpy(g_szConfigFile, argv[i]);     // Next word should contain name of the config file
+      }
+      else if (!strcmp(argv[i], "--debug-events"))
+      {
+         g_dwFlags |= AF_DEBUG_EVENTS;
       }
       else if (!strcmp(argv[i], "check-config"))
       {

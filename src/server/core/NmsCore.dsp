@@ -159,6 +159,10 @@ SOURCE=.\snmp.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\status.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\subnet.cpp
 # End Source File
 # Begin Source File

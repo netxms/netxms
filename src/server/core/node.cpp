@@ -40,6 +40,7 @@ Node::Node()
    strcpy(m_szCommunityString, "public");
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
+   m_tLastStatusPoll = 0;
 }
 
 
@@ -62,6 +63,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
+   m_tLastStatusPoll = 0;
 }
 
 
@@ -298,6 +300,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
                   // Create new subnet object
                   pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
                   NetObjInsert(pSubnet, TRUE);
+                  g_pEntireNet->AddSubnet(pSubnet);
                }
                pSubnet->AddNode(this);
             }
@@ -320,6 +323,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
             // Create new subnet object
             pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
             NetObjInsert(pSubnet, TRUE);
+            g_pEntireNet->AddSubnet(pSubnet);
          }
          pSubnet->AddNode(this);
       }
@@ -339,6 +343,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
          // Create new subnet object
          pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
          NetObjInsert(pSubnet, TRUE);
+         g_pEntireNet->AddSubnet(pSubnet);
       }
       pSubnet->AddNode(this);
    }
@@ -434,4 +439,37 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
                return pInterface;
       }
    return NULL;
+}
+
+
+//
+// Calculate node status based on child objects status
+//
+
+void Node::CalculateCompoundStatus(void)
+{
+   int iOldStatus = m_iStatus;
+   static DWORD dwEventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_MINOR,
+      EVENT_NODE_WARNING, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
+      EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
+
+   NetObj::CalculateCompoundStatus();
+   if (m_iStatus != iOldStatus)
+      PostEvent(dwEventCodes[m_iStatus], m_dwId, "d", iOldStatus);
+}
+
+
+//
+// Perform status poll on node
+//
+
+void Node::StatusPoll(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+         ((Interface *)m_pChildList[i])->StatusPoll();
+   CalculateCompoundStatus();
+   m_tLastStatusPoll = time(NULL);
 }

@@ -84,6 +84,7 @@
 
 #define AF_STANDALONE      0x0001
 #define AF_USE_EVENT_LOG   0x0002
+#define AF_DEBUG_EVENTS    0x0004
 #define AF_SHUTDOWN        0x8000
 
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)

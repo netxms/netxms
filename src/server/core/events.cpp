@@ -97,7 +97,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
                break;
             default:
                m_pszParameters[i] = (char *)malloc(64);
-               sprintf(m_pszParameters[i], "BAD FORMAT '%c' [value = 0x%08X]", szFormat[i], va_arg(args, DWORD));
+               sprintf(m_pszParameters[i], "BAD FORMAT \"%c\" [value = 0x%08X]", szFormat[i], va_arg(args, DWORD));
                break;
          }
       }

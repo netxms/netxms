@@ -387,6 +387,9 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Recalculate status for "Entire Net" object
+   g_pEntireNet->CalculateCompoundStatus();
+
    // Set first available node ID
    m_dwFreeObjectId = g_pIndexById[g_dwIdIndexSize - 1].dwKey + 1;
 

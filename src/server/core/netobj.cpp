@@ -30,7 +30,7 @@
 NetObj::NetObj()
 {
    m_hMutex = MutexCreate();
-   m_iStatus = STATUS_UNMANAGED;
+   m_iStatus = STATUS_UNKNOWN;
    m_szName[0] = 0;
    m_bIsModified = FALSE;
    m_bIsDeleted = FALSE;
@@ -213,4 +213,79 @@ void NetObj::Delete(void)
    m_bIsDeleted = TRUE;
    m_bIsModified = TRUE;
    Unlock();
+}
+
+
+//
+// Print childs IDs
+//
+
+const char *NetObj::ChildList(char *szBuffer)
+{
+   DWORD i;
+   char *pBuf = szBuffer;
+
+   *pBuf = 0;
+   for(i = 0, pBuf = szBuffer; i < m_dwChildCount; i++)
+   {
+      sprintf(pBuf, "%d ", m_pChildList[i]->Id());
+      while(*pBuf)
+         pBuf++;
+   }
+   if (pBuf != szBuffer)
+      *(pBuf - 1) = 0;
+   return szBuffer;
+}
+
+
+//
+// Print parents IDs
+//
+
+const char *NetObj::ParentList(char *szBuffer)
+{
+   DWORD i;
+   char *pBuf = szBuffer;
+
+   *pBuf = 0;
+   for(i = 0; i < m_dwParentCount; i++)
+   {
+      sprintf(pBuf, "%d ", m_pParentList[i]->Id());
+      while(*pBuf)
+         pBuf++;
+   }
+   if (pBuf != szBuffer)
+      *(pBuf - 1) = 0;
+   return szBuffer;
+}
+
+
+//
+// Calculate status for compound object based on childs' status
+//
+
+void NetObj::CalculateCompoundStatus(void)
+{
+   DWORD i;
+   int iSum, iCount, iOldStatus = m_iStatus;
+
+   /* TODO: probably status calculation algorithm should be changed */
+   for(i = 0, iSum = 0, iCount = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Status() < STATUS_UNKNOWN)
+      {
+         iSum += m_pChildList[i]->Status();
+         iCount++;
+      }
+   if (iCount > 0)
+      m_iStatus = iSum / iCount;
+   else
+      m_iStatus = STATUS_UNKNOWN;
+
+   // Cause parent object(s) to recalculate it's status
+   if (iOldStatus != m_iStatus)
+   {
+      for(i = 0; i < m_dwParentCount; i++)
+         m_pParentList[i]->CalculateCompoundStatus();
+      m_bIsModified = TRUE;
+   }
 }
