@@ -22,6 +22,10 @@
 
 #include "nxagentd.h"
 
+#ifndef _WIN32
+# include <sys/wait.h>
+#endif
+
 
 //
 // Execute external command
@@ -108,7 +112,82 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
       dwRetCode = ERR_EXEC_FAILED;
 #else
    /* TODO: add UNIX code here */
-   dwRetCode = ERR_NOT_IMPLEMENTED;
+   dwRetCode = ERR_EXEC_FAILED;
+	{
+		int nPid;
+		char *pCmd[128];
+		int i;
+		char *pTmp;
+
+		pTmp = pszCmdLine;
+		for (i = 0; i < 128; i++)
+		{
+			pCmd[i] = pTmp;
+			pTmp = strchr(pTmp, ' ');
+			if (pTmp != NULL)
+			{
+				*pTmp = 0;
+				pTmp++;
+			}
+			else
+			{
+				break;
+			}
+		}
+		pCmd[i+1] = 0;
+
+		switch ((nPid = fork()))
+		{
+		case -1:
+			perror("fork()");
+			break;
+		case 0: // child
+			close(0);
+			close(1);
+			close(2);
+			execv(pCmd[0], pCmd);
+			// should not be reached
+			//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
+			_exit(127);
+			break;
+		default: // parent
+			{
+				int nStatus;
+				int x;
+				int nCounter = 100; // 1 sec
+
+				//sleep(1);
+				while ((x = waitpid(nPid, &nStatus, WNOHANG)) == 0)
+				{
+					usleep(1000);
+					if (--nCounter <= 0)
+					{
+						break;;
+					}
+				}
+
+				//printf("%d:%d\n", x, nCounter);
+
+				switch (x)
+				{
+				case -1:
+					perror("waitpid");
+					break;
+				case 0:
+      			dwRetCode = ERR_SUCCESS;
+					break;
+				default:
+					if (WIFEXITED(nStatus) && WEXITSTATUS(nStatus) != 127)
+					{
+      				dwRetCode = ERR_SUCCESS;
+						break;
+					}
+					break;
+				}
+			}
+			break;
+		}
+	}
 #endif
 
    // Cleanup
@@ -224,9 +303,32 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
       WriteLog(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
       iStatus = SYSINFO_RC_ERROR;
    }
-#else
-   /* TODO: add NetWare and UNIX code here */
-   iStatus = SYSINFO_RC_UNSUPPORTED;
+#elif defined(_NETWARE)
+   /* TODO: add NetWare code here */
+#else // UNIX
+   iStatus = SYSINFO_RC_ERROR;
+	{
+		FILE *hPipe;
+		if ((hPipe = popen(pszCmdLine, "r")) != NULL)
+		{
+			char *pTmp;
+
+			fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
+			fclose(hPipe);
+			if ((pTmp = strchr(pValue, '\n')) != NULL)
+			{
+				*pTmp = 0;
+			}
+			iStatus = SYSINFO_RC_SUCCESS;
+		}
+		else
+		{
+         WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
+					pszCmdLine, errno);
+         iStatus = SYSINFO_RC_ERROR;
+		}
+	}
+//EXEC::popen
 #endif
 
    free(pszCmdLine);
