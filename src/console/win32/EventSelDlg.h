@@ -14,6 +14,7 @@ class CEventSelDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bSingleSelection;
 	DWORD *m_pdwEventList;
 	DWORD m_dwNumEvents;
 	CEventSelDlg(CWnd* pParent = NULL);   // standard constructor

@@ -20,6 +20,8 @@ GENERAL:
 - Add possibility to set different polling timeouts for different nodes
 - Add --with-client option to configure (should enable libnxcl and nxevent)
 - Optimize WaitForMessage method in message waiting queue class
+- Rewrite event management in a way to eliminate the need to unlock
+  event configuration to allow sending of new events
 
 
 SERVER:

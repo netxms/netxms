@@ -22,10 +22,9 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CTrapEditDlg)
 	enum { IDD = IDD_EDIT_TRAP };
+	CStatic	m_wndEventIcon;
 	CEdit	m_wndEditDescr;
 	CEdit	m_wndEditOID;
-	CEdit	m_wndEditEvent;
-	CEdit	m_wndEditMsg;
 	CListCtrl	m_wndArgList;
 	//}}AFX_DATA
 
@@ -39,14 +38,19 @@ public:
 
 // Implementation
 protected:
+	void AddParameterEntry(DWORD dwIndex);
 
 	// Generated message map functions
 	//{{AFX_MSG(CTrapEditDlg)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelectTrap();
 	virtual void OnOK();
+	afx_msg void OnSelectEvent();
+	afx_msg void OnButtonAdd();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+	void UpdateEventInfo(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

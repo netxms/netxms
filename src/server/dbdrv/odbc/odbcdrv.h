@@ -24,6 +24,7 @@
 #define _odbcdrv_h_
 
 #ifdef _WIN32
+#include <winsock2.h>
 #include <windows.h>
 #define EXPORT __declspec(dllexport)
 #else

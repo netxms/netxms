@@ -133,6 +133,7 @@ BOOL CMIBBrowserDlg::OnInitDialog()
    }
 
    // Disable "instance" field if it's not needed
+   // If instance is disabled, hide "Get..." button as well
    if (!m_bUseInstance)
    {
       CWnd *pWnd;
@@ -142,6 +143,10 @@ BOOL CMIBBrowserDlg::OnInitDialog()
       pWnd = GetDlgItem(IDC_STATIC_INSTANCE);
       if (pWnd != NULL)
          pWnd->EnableWindow(FALSE);
+
+      pWnd = GetDlgItem(IDC_BUTTON_GET);
+      if (pWnd != NULL)
+         pWnd->ShowWindow(SW_HIDE);
    }
 
 	return TRUE;
@@ -397,4 +402,19 @@ void CMIBBrowserDlg::OnButtonGet()
       dlg.m_iOrigin = DS_SNMP_AGENT;
       dlg.DoModal();
    }
+}
+
+
+//
+// Handler for "OK" button
+//
+
+void CMIBBrowserDlg::OnOK() 
+{
+   // To avoid errors in data exchange we should
+   // set input box text to correct number
+   if (!m_bUseInstance)
+      m_wndEditInstance.SetWindowText(_T("0"));
+	
+	CDialog::OnOK();
 }

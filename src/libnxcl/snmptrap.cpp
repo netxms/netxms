@@ -163,7 +163,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY 
 
    for(i = 0; i < dwNumTraps; i++)
    {
-      for(j = 0; i < pTrapList[i].dwNumMaps; j++)
+      for(j = 0; j < pTrapList[i].dwNumMaps; j++)
          safe_free(pTrapList[i].pMaps[j].pdwObjectId);
       safe_free(pTrapList[i].pMaps);
       safe_free(pTrapList[i].pdwObjectId);

@@ -318,6 +318,8 @@ src/console/win32/TrapEditDlg.cpp -text
 src/console/win32/TrapEditDlg.h -text
 src/console/win32/TrapEditor.cpp -text
 src/console/win32/TrapEditor.h -text
+src/console/win32/TrapParamDlg.cpp -text
+src/console/win32/TrapParamDlg.h -text
 src/console/win32/UserEditor.cpp -text
 src/console/win32/UserEditor.h -text
 src/console/win32/UserPropDlg.cpp -text

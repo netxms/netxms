@@ -72,6 +72,7 @@ static BOOL LoadTrapCfg(void)
          }
          m_pTrapCfg[i].dwEventId = DBGetFieldULong(hResult, i, 2);
          _tcsncpy(m_pTrapCfg[i].szDescription, DBGetField(hResult, i, 3), MAX_DB_STRING);
+         DecodeSQLString(m_pTrapCfg[i].szDescription);
       }
       DBFreeResult(hResult);
 
@@ -100,6 +101,7 @@ static BOOL LoadTrapCfg(void)
                   bResult = FALSE;
                }
                _tcsncpy(m_pTrapCfg[i].pMaps[j].szDescription, DBGetField(hResult, j, 1), MAX_DB_STRING);
+               DecodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
             }
             DBFreeResult(hResult);
          }
@@ -395,6 +397,9 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 
    _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_id,description) ")
                       _T("VALUES (%ld,'',%d,'')"), *pdwTrapId, EVENT_SNMP_UNMATCHED_TRAP);
+   if (!DBQuery(g_hCoreDB, szQuery))
+      dwResult = RCC_DB_FAILURE;
+
    return dwResult;
 }
 

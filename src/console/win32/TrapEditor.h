@@ -32,6 +32,7 @@ public:
 
 // Implementation
 protected:
+	CImageList *m_pImageList;
 	void UpdateItem(int iItem, DWORD dwIndex);
 	int AddItem(DWORD dwIndex);
 	CListCtrl m_wndListCtrl;

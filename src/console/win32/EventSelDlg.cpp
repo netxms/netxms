@@ -18,6 +18,7 @@ static char THIS_FILE[] = __FILE__;
 CEventSelDlg::CEventSelDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CEventSelDlg::IDD, pParent)
 {
+   m_bSingleSelection = FALSE;
    m_pImageList = NULL;
    m_pdwEventList = NULL;
    m_iSortMode = theApp.GetProfileInt(_T("EventSelDlg"), _T("SortMode"), 0);
@@ -82,6 +83,11 @@ BOOL CEventSelDlg::OnInitDialog()
    m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 
                               rect.right - 70 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+   if (m_bSingleSelection)
+   {
+      ::SetWindowLong(m_wndListCtrl.m_hWnd, GWL_STYLE, 
+         ::GetWindowLong(m_wndListCtrl.m_hWnd, GWL_STYLE) | LVS_SINGLESEL);
+   }
 	
    // Fill in event list
    NXCGetEventDB(&pList, &dwListSize);

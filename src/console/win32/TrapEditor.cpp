@@ -22,12 +22,14 @@ CTrapEditor::CTrapEditor()
 {
    m_pTrapList = NULL;
    m_dwNumTraps = 0;
+   m_pImageList = NULL;
 }
 
 CTrapEditor::~CTrapEditor()
 {
    if (m_pTrapList != NULL)
       NXCDestroyTrapList(m_dwNumTraps, m_pTrapList);
+   delete m_pImageList;
 }
 
 
@@ -74,6 +76,8 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	
    theApp.OnViewCreate(IDR_TRAP_EDITOR, this);
+
+   m_pImageList = CreateEventImageList();
 	
    // Create list view control
    GetClientRect(&rect);
@@ -81,6 +85,7 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT |
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
+   m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
@@ -197,6 +202,10 @@ void CTrapEditor::UpdateItem(int iItem, DWORD dwIndex)
    m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 2, NXCGetEventName(m_pTrapList[dwIndex].dwEventId));
    m_wndListCtrl.SetItemText(iItem, 3, m_pTrapList[dwIndex].szDescription);
+   
+   m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, 
+                         NXCGetEventSeverity(m_pTrapList[dwIndex].dwEventId),
+                         0, 0, 0);
 }
 
 

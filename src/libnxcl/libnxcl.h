@@ -58,19 +58,6 @@ typedef struct
 
 
 //
-// Request structure
-//
-
-typedef struct
-{
-   DWORD dwCode;
-   void *pArg;
-   BOOL bDynamicArg;
-   HREQUEST dwHandle;
-} REQUEST;
-
-
-//
 // Functions
 //
 

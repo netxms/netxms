@@ -284,7 +284,6 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWO
 }
 
 
-
 //
 // Resolve event id to name
 //
@@ -302,6 +301,28 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
       }
    MutexUnlock(m_mutexEventAccess);
    return _T("<unknown>");
+}
+
+
+//
+// Resolve event id to name using application-provided buffer
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+{
+   DWORD i;
+
+   MutexLock(m_mutexEventAccess, INFINITE);
+   for(i = 0; i < m_dwNumTemplates; i++)
+      if (m_ppEventTemplates[i]->dwCode == dwId)
+      {
+         _tcsncpy(pszBuffer, m_ppEventTemplates[i]->szName, dwBufSize);
+         MutexUnlock(m_mutexEventAccess);
+         return TRUE;
+      }
+   MutexUnlock(m_mutexEventAccess);
+   *pszBuffer = 0;
+   return FALSE;
 }
 
 
@@ -363,4 +384,27 @@ DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(void)
 DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(void)
 {
    return DoEventDBLock(FALSE);
+}
+
+
+//
+// Get text of event template with given ID.
+// If there are no template with such ID, empty string will be returned.
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCGetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
+{
+   DWORD i;
+
+   MutexLock(m_mutexEventAccess, INFINITE);
+   for(i = 0; i < m_dwNumTemplates; i++)
+      if (m_ppEventTemplates[i]->dwCode == dwId)
+      {
+         _tcsncpy(pszBuffer, m_ppEventTemplates[i]->pszMessage, dwBufSize);
+         MutexUnlock(m_mutexEventAccess);
+         return TRUE;
+      }
+   MutexUnlock(m_mutexEventAccess);
+   *pszBuffer = 0;
+   return FALSE;
 }

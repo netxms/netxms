@@ -134,6 +134,7 @@
 #define IDA_TRAP_EDITOR                 243
 #define IDD_DATA_QUERY                  244
 #define IDD_EDIT_TRAP                   245
+#define IDD_EDIT_TRAP_ARG               246
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -297,6 +298,8 @@
 #define IDC_BUTTON_UP                   1198
 #define IDC_BUTTON_DOWN                 1199
 #define IDC_STATIC_INSTANCE             1201
+#define IDC_SELECT_OID                  1202
+#define IDC_BUTTON_EDIT                 1203
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -392,9 +395,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        246
+#define _APS_NEXT_RESOURCE_VALUE        247
 #define _APS_NEXT_COMMAND_VALUE         32904
-#define _APS_NEXT_CONTROL_VALUE         1202
+#define _APS_NEXT_CONTROL_VALUE         1204
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

@@ -110,6 +110,7 @@ void CThresholdDlg::OnButtonSelect()
 {
    CEventSelDlg dlg;
 
+   dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {
       m_dwEventId = dlg.m_pdwEventList[0];

@@ -42,13 +42,6 @@
 
 
 //
-// Custom data types
-//
-
-typedef unsigned long HREQUEST;
-
-
-//
 // Some constants
 //
 
@@ -848,7 +841,6 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin, TCHAR *szPa
 void LIBNXCL_EXPORTABLE NXCDisconnect(void);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
-HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId);
@@ -884,7 +876,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(void);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId);
+BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(DWORD dwId);
+BOOL LIBNXCL_EXPORTABLE NXCGetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
 DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, DWORD dwObjectId, int iNumArgs, TCHAR **pArgList);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
