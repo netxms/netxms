@@ -92,6 +92,7 @@ images/template_root.ico -text
 images/template_root.png -text
 include/Makefile.am -text
 include/ata.h -text
+include/config-netware.h -text
 include/getopt.h -text
 include/netxms-regex.h -text
 include/netxms-version.h -text
