@@ -48,8 +48,8 @@ INSERT INTO locks (component_id,component_name,lock_status,owner_info)
 ** Default event groups
 */
 
-#define ID_GROUP_1 0x80000001
-#define ID_GROUP_2 0x80000002
+#define ID_GROUP_1 -2147483647
+#define ID_GROUP_2 -2147483646
 
 INSERT INTO EventGroups (id,name,description) 
    VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change');

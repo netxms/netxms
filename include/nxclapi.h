@@ -28,6 +28,13 @@
 
 
 //
+// Custom data types
+//
+
+typedef unsigned long HREQUEST;
+
+
+//
 // Some constants
 //
 
