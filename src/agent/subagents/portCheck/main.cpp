@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.4 2005-01-28 12:56:46 victor Exp $ */
+/* $Id: main.cpp,v 1.5 2005-01-28 23:19:35 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -13,8 +13,6 @@
 
 #include "main.h"
 #include "net.h"
-#include "pop3.h"
-#include "ssh.h"
 
 //
 // Command handler
@@ -48,12 +46,13 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 	case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL);
 
-			pResponce->SetVariable(VID_RCC, nRet);
+			pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
+			pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 		break;
 	case NETSRV_POP3:
 		{
 			char *pUser, *pPass;
-			nRet = PC_ERR_PARAM;
+			nRet = 0;
 
 			pUser = szRequest;
 			pPass = strchr(szRequest, ':');
@@ -63,12 +62,20 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 				pPass++;
 
 				nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass);
+
+				pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
+			}
+			else
+			{
+				pResponce->SetVariable(VID_RCC, ERR_UNKNOWN_PARAMETER);
 			}
 
-			pResponce->SetVariable(VID_RCC, nRet);
+			pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 		}
 		break;
 	case NETSRV_SMTP:
+		/*nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass);
+		pResponce->SetVariable(VID_RCC, nRet);*/
 		bHandled = FALSE;
 		break;
 	case NETSRV_FTP:
@@ -127,6 +134,9 @@ extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInf
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/28 12:56:46  victor
+Make it compile on WIndows
+
 Revision 1.3  2005/01/28 02:50:32  alk
 added support for CMD_CHECK_NETWORK_SERVICE
 suported:

@@ -1,11 +1,10 @@
-/* $Id: pop3.cpp,v 1.2 2005-01-28 02:50:32 alk Exp $ */
+/* $Id: pop3.cpp,v 1.3 2005-01-28 23:19:36 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 
 #include "main.h"
 #include "net.h"
-#include "pop3.h"
 
 LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 {
@@ -86,6 +85,12 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/28 02:50:32  alk
+added support for CMD_CHECK_NETWORK_SERVICE
+suported:
+	ssh: host/port req.
+	pop3: host/port/request string req. request string format: "login:password"
+
 Revision 1.1.1.1  2005/01/18 18:38:54  alk
 Initial import
 

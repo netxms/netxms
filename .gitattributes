@@ -190,11 +190,9 @@ src/agent/subagents/portCheck/main.h -text
 src/agent/subagents/portCheck/net.cpp -text
 src/agent/subagents/portCheck/net.h -text
 src/agent/subagents/portCheck/pop3.cpp -text
-src/agent/subagents/portCheck/pop3.h -text
 src/agent/subagents/portCheck/portcheck.dsp -text
 src/agent/subagents/portCheck/portcheck.dsw -text
 src/agent/subagents/portCheck/ssh.cpp -text
-src/agent/subagents/portCheck/ssh.h -text
 src/agent/subagents/skeleton/Makefile.am -text
 src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text

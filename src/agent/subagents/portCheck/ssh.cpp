@@ -1,11 +1,10 @@
-/* $Id: ssh.cpp,v 1.2 2005-01-28 02:50:32 alk Exp $ */
+/* $Id: ssh.cpp,v 1.3 2005-01-28 23:19:36 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 
 #include "main.h"
 #include "net.h"
-#include "ssh.h"
 
 LONG H_CheckSSH(char *pszParam, char *pArg, char *pValue)
 {
@@ -83,6 +82,12 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/28 02:50:32  alk
+added support for CMD_CHECK_NETWORK_SERVICE
+suported:
+	ssh: host/port req.
+	pop3: host/port/request string req. request string format: "login:password"
+
 Revision 1.1  2005/01/19 13:42:47  alk
 + ServiceCheck.SSH(host[, port]) Added
 

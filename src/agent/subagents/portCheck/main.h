@@ -4,9 +4,13 @@
 enum
 {
 	PC_ERR_NONE,
-	PC_ERR_PARAM,
 	PC_ERR_CONNECT,
 	PC_ERR_HANDSHAKE,
 };
+
+LONG H_CheckPOP3(char *, char *, char *);
+int CheckPOP3(char *, DWORD, short, char *, char *);
+LONG H_CheckSSH(char *, char *, char *);
+int CheckSSH(char *, DWORD, short, char *, char *);
 
 #endif // __MAIN__H__
