@@ -570,8 +570,8 @@ void DumpObjects(void)
    DWORD i;
    char *pBuffer;
    CONTAINER_CATEGORY *pCat;
-   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network",
-                             "Container", "Zone" };
+   static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface",
+                             "Network", "Container", "Zone", "ServiceRoot" };
 
    pBuffer = (char *)malloc(128000);
    MutexLock(g_hMutexIdIndex, INFINITE);

@@ -215,6 +215,7 @@ BOOL Container::DeleteFromDB(void)
 
 //
 // Link child objects after loading from database
+// This method is expected to be called only at startup, so we don't lock
 //
 
 void Container::LinkChildObjects(void)

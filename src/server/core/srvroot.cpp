@@ -94,6 +94,7 @@ void ServiceRoot::LoadFromDB(void)
 
 //
 // Link child objects
+// This method is expected to be called only at startup, so we don't lock
 //
 
 void ServiceRoot::LinkChildObjects(void)
@@ -102,8 +103,6 @@ void ServiceRoot::LinkChildObjects(void)
    NetObj *pObject;
    char szQuery[256];
    DB_RESULT hResult;
-
-   Lock();
 
    // Load child list and link objects
    sprintf(szQuery, "SELECT object_id FROM container_members WHERE container_id=%d", m_dwId);
@@ -122,6 +121,4 @@ void ServiceRoot::LinkChildObjects(void)
       }
       DBFreeResult(hResult);
    }
-
-   Unlock();
 }
