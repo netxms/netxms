@@ -31,7 +31,7 @@
 #define NETXMS_VERSION_MAJOR      0
 #define NETXMS_VERSION_MINOR      1
 #define NETXMS_VERSION_BUILD      17
-#define NETXMS_VERSION_STRING     _T("0.1.17-dev")
+#define NETXMS_VERSION_STRING     _T("0.1.17")
 
 
 #endif
