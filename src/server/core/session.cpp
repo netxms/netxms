@@ -2227,11 +2227,14 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
 
    // Find parent object
    pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
-   if ((pParent == NULL) && (iClass == OBJECT_NODE))
+   if (iClass == OBJECT_NODE)
    {
       dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
-      pParent = FindSubnetForNode(dwIpAddr);
-      bParentAlwaysValid = TRUE;
+      if ((pParent == NULL) && (dwIpAddr != 0))
+      {
+         pParent = FindSubnetForNode(dwIpAddr);
+         bParentAlwaysValid = TRUE;
+      }
    }
    if ((pParent != NULL) || (iClass == OBJECT_NODE))
    {
@@ -2277,8 +2280,11 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                // If creation was successful do binding
                if (pObject != NULL)
                {
-                  pParent->AddChild(pObject);
-                  pObject->AddParent(pParent);
+                  if (pParent != NULL)    // parent can be NULL for nodes
+                  {
+                     pParent->AddChild(pObject);
+                     pObject->AddParent(pParent);
+                  }
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   msg.SetVariable(VID_OBJECT_ID, pObject->Id());
                }

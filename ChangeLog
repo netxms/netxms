@@ -11,6 +11,7 @@
 - Added internal statistics collection for average data collector queue length
   and average database writer queue length
 - All IP addresses now stored in database as text
+- Added external event sender (nxevent)
 
 
 *

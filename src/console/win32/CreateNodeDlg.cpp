@@ -49,8 +49,23 @@ END_MESSAGE_MAP()
 
 void CCreateNodeDlg::OnOK() 
 {
-   m_wndIPAddr.GetAddress(m_dwIpAddr);
-	CCreateObjectDlg::OnOK();
+   int iNumBytes;
+
+   iNumBytes = m_wndIPAddr.GetAddress(m_dwIpAddr);
+   if ((iNumBytes != 0) && (iNumBytes != 4))
+   {
+      MessageBox(_T("Invalid IP address"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+   }
+   else
+   {
+      if (iNumBytes == 0)
+         m_dwIpAddr = 0;
+      if ((m_pParentObject == NULL) && (m_dwIpAddr == 0))
+         MessageBox(_T("Node without IP address and parent container object cannot be created"),
+                    _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+      else
+	      CCreateObjectDlg::OnOK();
+   }
 }
 
 
