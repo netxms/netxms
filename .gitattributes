@@ -25,6 +25,7 @@ doc/Makefile.am -text
 doc/admin_guide.doc -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
+doc/snmp.txt -text
 images/Makefile.am -text
 images/generic_printer.ico -text
 images/generic_printer.png -text

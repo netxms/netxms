@@ -204,6 +204,10 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
          SNMPConvertOIDToText(m_dwValueLength / sizeof(DWORD), (DWORD *)m_pValue,
                               pszBuffer, dwBufferSize);
          break;
+      case ASN_OCTET_STRING:
+         memcpy(pszBuffer, m_pValue, min(dwBufferSize - 1, m_dwValueLength));
+         pszBuffer[min(dwBufferSize - 1, m_dwValueLength)] = 0;
+         break;
       default:
          pszBuffer[0] = 0;
          break;

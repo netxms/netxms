@@ -1,0 +1,61 @@
+Processing an outgoing SNMPv2 TRAP
+
+   If SNMPv2 compliant instrumentation presents an SNMPv2 trap to the
+   SNMP engine and such a trap passes all regular checking and then is
+   to be sent to an SNMPv1 destination, then the following steps must be
+   followed to convert such a trap to an SNMPv1 trap.  This is basically
+   the reverse of the SNMPv1 to SNMPv2 mapping as described in RFC1908
+   [3].
+
+     1.  If any of the varBinds in the varBindList has an SNMPv2 syntax
+         of Counter64, then such varBinds are implicitly considered to
+         be not in view, and so they are removed from the varBindList to
+         be sent with the SNMPv1 trap.
+
+     2.  The 3 special varBinds in the varBindList of an SNMPv2 trap
+         (sysUpTime.0 (TimeTicks), snmpTrapOID.0 (OBJECT IDENTIFIER) and
+         optionally snmpTrapEnterprise.0 (OBJECT IDENTIFIER)) are
+         removed from the varBindList to be sent with the SNMPv1 trap.
+         These 2 (or 3) varBinds are used to decide how to set other
+         fields in the SNMPv1 trap PDU as follows:
+
+         a.  The value of sysUpTime.0 is copied into the timestamp field
+             of the SNMPv1 trap.
+
+         b.  If the snmpTrapOID.0 value is one of the standard traps the
+             specific-trap field is set to zero and the generic trap
+             field is set according to this mapping:
+
+                value of snmpTrapOID.0                generic-trap
+                ===============================       ============
+                1.3.6.1.6.3.1.1.5.1 (coldStart)                  0
+                1.3.6.1.6.3.1.1.5.2 (warmStart)                  1
+                1.3.6.1.6.3.1.1.5.3 (linkDown)                   2
+                1.3.6.1.6.3.1.1.5.4 (linkUp)                     3
+                1.3.6.1.6.3.1.1.5.5 (authenticationFailure)      4
+                1.3.6.1.6.3.1.1.5.6 (egpNeighborLoss)            5
+
+             The enterprise field is set to the value of
+             snmpTrapEnterprise.0 if this varBind is present, otherwise
+             it is set to the value snmpTraps as defined in RFC1907 [4].
+
+         c.  If the snmpTrapOID.0 value is not one of the standard
+             traps, then the generic-trap field is set to 6 and the
+             specific-trap field is set to the last subid of the
+             snmpTrapOID.0 value.
+
+             o   If the next to last subid of snmpTrapOID.0 is zero,
+                 then the enterprise field is set to snmpTrapOID.0 value
+                 and the last 2 subids are truncated from that value.
+             o   If the next to last subid of snmpTrapOID.0 is not zero,
+                 then the enterprise field is set to snmpTrapOID.0 value
+                 and the last 1 subid is truncated from that value.
+
+             In any event, the snmpTrapEnterprise.0 varBind (if present)
+             is ignored in this case.
+
+     3.  The agent-addr field is set with the appropriate address of the
+         the sending SNMP entity, which is the IP address of the sending
+         entity of the trap goes out over UDP; otherwise the agent-addr
+         field is set to address 0.0.0.0.
+

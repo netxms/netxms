@@ -330,6 +330,8 @@ BOOL SNMP_PDU::Parse(BYTE *pRawData, DWORD dwRawLength)
             break;
          case ASN_TRAP_V2_PDU:
             m_dwCommand = SNMP_TRAP;
+            m_iTrapType = 6;
+            m_iSpecificTrap = 0;
             bResult = ParsePDU(pbCurrPos, dwLength);
             if (bResult)
             {

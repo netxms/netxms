@@ -56,7 +56,7 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType,
          BYTE *pbTemp;
          int iNumBytes;
 
-         iNumBytes = *pbCurrPos & 0x80;
+         iNumBytes = *pbCurrPos & 0x7F;
          pbCurrPos++;
          dwIdLength++;
          pbTemp = ((BYTE *)&dwLength) + (4 - iNumBytes);
