@@ -20,7 +20,6 @@ GENERAL:
 - Add new data types for data collection: unsigned integer 32 bits
   and unsigned integer 64 bits
 - Allow converting counters to deltas in data collection
-- Implement ThreadWait
 
 
 SERVER:

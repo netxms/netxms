@@ -4,6 +4,9 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "DataCollectionEditor.h"
+#include "DCIPropPage.h"
+#include "DCIThresholdsPage.h"
+#include "DCITransformPage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -284,6 +287,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    BOOL bSuccess = FALSE;
    CPropertySheet dlg;
    CDCIPropPage pgCollection;
+   CDCITransformPage pgTransform;
    CDCIThresholdsPage pgThresholds;
 
    // Setup "Collection" page
@@ -294,6 +298,10 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_iStatus = pItem->iStatus;
    pgCollection.m_strName = pItem->szName;
 
+   // Setup "Transformation" page
+   pgTransform.m_iDeltaProc = 0;
+   pgTransform.m_strFormula = "";
+
    // Setup "Thresholds" page
    pgThresholds.m_pItem = pItem;
 
@@ -301,6 +309,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    dlg.SetTitle("Data Collection Item");
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    dlg.AddPage(&pgCollection);
+   dlg.AddPage(&pgTransform);
    dlg.AddPage(&pgThresholds);
    if (dlg.DoModal() == IDOK)
    {

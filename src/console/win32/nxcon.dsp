@@ -153,6 +153,10 @@ SOURCE=.\DCIThresholdsPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DCITransformPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
@@ -399,6 +403,10 @@ SOURCE=.\DCIPropPage.h
 # Begin Source File
 
 SOURCE=.\DCIThresholdsPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DCITransformPage.h
 # End Source File
 # Begin Source File
 

@@ -7,10 +7,6 @@
 // DataCollectionEditor.h : header file
 //
 
-#include "DCIPropPage.h"
-#include "DCIThresholdsPage.h"
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CDataCollectionEditor frame
 
