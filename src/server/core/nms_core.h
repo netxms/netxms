@@ -105,10 +105,6 @@
 
 #define CHECK_NULL(x)      ((x) == NULL ? ((char *)"(null)") : (x))
 
-#ifndef O_BINARY
-# define O_BINARY 0
-#endif
-
 typedef void * HSNMPSESSION;
 
 

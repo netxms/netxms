@@ -25,8 +25,6 @@
 #include "md5.h"
 #include "sha1.h"
 
-#include <fcntl.h>
-
 #ifdef _WIN32
 # include <io.h>
 #else

@@ -51,12 +51,13 @@
 #ifdef _WIN32
 
 #include <windows.h>
+#include <fcntl.h>
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
-#else
+#else    /* not _WIN32 */
 
 #include <config.h>
 
@@ -130,6 +131,15 @@ typedef int SOCKET;
 
 #define closesocket(x) close(x)
 
+#endif   /* _WIN32 */
+
+
+//
+// open() flags compatibility
+//
+
+#ifndef O_BINARY
+#define O_BINARY 0
 #endif
 
 
