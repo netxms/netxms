@@ -515,10 +515,17 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 DWORD CommSession::Upgrade(CSCPMessage *pRequest)
 {
-   TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
+   if (m_bInstallationServer)
+   {
+      TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
 
-   szPkgName[0] = 0;
-   pRequest->GetVariableStr(VID_FILE_NAME, szPkgName, MAX_PATH);
-   BuildFullPath(szPkgName, szFullPath);
-   return UpgradeAgent(szFullPath);
+      szPkgName[0] = 0;
+      pRequest->GetVariableStr(VID_FILE_NAME, szPkgName, MAX_PATH);
+      BuildFullPath(szPkgName, szFullPath);
+      return UpgradeAgent(szFullPath);
+   }
+   else
+   {
+      return ERR_ACCESS_DENIED;
+   }
 }
