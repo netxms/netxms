@@ -68,7 +68,6 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 EPRule::EPRule(CSCPMessage *pMsg)
 {
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-printf("RECEIVED FLAGS %d from %d\n",m_dwFlags,VID_FLAGS);
    m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
    m_pszComment = pMsg->GetVariableStr(VID_COMMENT);
 
@@ -373,7 +372,6 @@ void EPRule::SaveToDB(void)
 
 void EPRule::CreateMessage(CSCPMessage *pMsg)
 {
-printf("SENDING FLAGS %d in %d\n",m_dwFlags,VID_FLAGS);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RULE_ID, m_dwId);
    pMsg->SetVariable(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
