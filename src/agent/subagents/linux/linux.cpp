@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.1 2004-08-17 10:24:18 alk Exp $ */
+/* $Id: linux.cpp,v 1.2 2004-08-17 15:11:24 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -25,27 +25,82 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 
+#include <locale.h>
+#include <sys/utsname.h>
+
 
 //
 // Hanlder functions
 //
 
-static LONG H_Version(char *pszParam, char *pArg, char *pValue)
+static LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 {
-   ret_uint(pValue, 0x01000000);
+	FILE *hFile;
+	unsigned int uUptime = 0;
 
-   return SYSINFO_RC_SUCCESS;
+	hFile = fopen("/proc/uptime", "r");
+	if (hFile != NULL)
+	{
+		char szTmp[64];
+
+		if (fgets(szTmp, sizeof(szTmp), hFile) != NULL)
+		{
+			double dTmp;
+
+			setlocale(LC_NUMERIC, "C");
+			if (sscanf(szTmp, "%lf", &dTmp) == 1)
+			{
+				uUptime = (unsigned int)dTmp;
+			}
+			setlocale(LC_NUMERIC, "");
+		}
+		fclose(hFile);
+	}
+	
+	if (uUptime > 0)
+	{
+   	ret_uint(pValue, uUptime);
+	}
+
+   return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
+static LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 {
-   char szArg[256];
+	struct utsname utsName;
+	int nRet = SYSINFO_RC_ERROR;
 
-   NxGetParameterArg(pszParam, 1, szArg, 255);
-   ret_string(pValue, szArg);
+	if (uname(&utsName) == 0)
+	{
+		char szBuff[1024];
 
-   return SYSINFO_RC_SUCCESS;
+		snprintf(szBuff, sizeof(szBuff), "%s %s %s %s %s", utsName.sysname,
+				utsName.nodename, utsName.release, utsName.version,
+				utsName.machine);
+		// TODO: processor & platform
+
+   	ret_string(pValue, szBuff);
+
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+   return nRet;
 }
+
+static LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	char szBuff[128];
+
+	if (gethostname(szBuff, sizeof(szBuff)) == 0)
+	{
+   	ret_string(pValue, szBuff);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+   return nRet;
+}
+
 
 static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
@@ -68,15 +123,25 @@ static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Skeleton.Version", H_Version, NULL },
-   { "Skeleton.Echo(*)", H_Echo, NULL }
+   { "System.Uptime",    H_Uptime,      NULL },
+   { "System.Uname",     H_Uname,       NULL },
+   { "System.Hostname",  H_Hostname,    NULL }
 };
+
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "Skeleton.Enum", H_Enum, NULL }
 };
-static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters, 1, m_enums };
 
+//static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, sizeof(m_parameters), m_parameters, sizeof(m_enums), m_enums };
+static NETXMS_SUBAGENT_INFO m_info =
+{
+	0x01000000,
+	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	m_parameters,
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	m_enums
+};
 
 //
 // Entry point for NetXMS agent
@@ -93,5 +158,8 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/08/17 10:24:18  alk
++ subagent selection based on "uname -s"
+
 
 */
