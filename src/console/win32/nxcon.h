@@ -179,7 +179,7 @@ public:
 
 	void ShowDCIGraph(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
 	void ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
-	void ErrorBox(DWORD dwError, char *pszMessage = NULL, char *pszTitle = NULL);
+	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);
 	CMenu * GetContextMenu(int iIndex);

@@ -669,6 +669,7 @@ DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword)
       if (g_pUserList[i].dwId == dwId)
       {
          memcpy(g_pUserList[i].szPassword, pszPassword, SHA1_DIGEST_SIZE);
+         g_pUserList[i].wFlags |= UF_MODIFIED;
          dwResult = RCC_SUCCESS;
          break;
       }

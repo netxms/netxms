@@ -949,13 +949,13 @@ CWnd *CConsoleApp::FindOpenDCEditor(DWORD dwNodeId)
 // Display message box with error text from client library
 //
 
-void CConsoleApp::ErrorBox(DWORD dwError, char *pszMessage, char *pszTitle)
+void CConsoleApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 {
-   char szBuffer[512];
+   TCHAR szBuffer[512];
 
-   sprintf(szBuffer, (pszMessage != NULL) ? pszMessage : "Error: %s", 
-           NXCGetErrorText(dwError));
-   m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : "Error", MB_ICONSTOP);
+   _sntprintf(szBuffer, 512, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
+              NXCGetErrorText(dwError));
+   m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : _T("Error"), MB_ICONSTOP);
 }
 
 
