@@ -193,9 +193,9 @@ void ListenerThread(void *)
       }
 
       iNumErrors = 0;     // Reset consecutive errors counter
-      DebugPrintf("Incoming connection from %s", IpToStr(servAddr.sin_addr.S_addr, szBuffer));
+      DebugPrintf("Incoming connection from %s", IpToStr(servAddr.sin_addr.s_addr, szBuffer));
 
-      if (IsValidServerAddr(servAddr.sin_addr.S_addr))
+      if (IsValidServerAddr(servAddr.sin_addr.s_addr))
       {
          g_dwAcceptedConnections++;
 

@@ -155,6 +155,17 @@ typedef int SOCKET;
 
 
 //
+// Event log severity codes (UNIX only)
+//
+
+#ifndef _WIN32
+#define EVENTLOG_INFORMATION_TYPE   0
+#define EVENTLOG_WARNING_TYPE       1
+#define EVENTLOG_ERROR_TYPE         2
+#endif   /* _WIN32 */
+
+
+//
 // Interface types
 //
 
