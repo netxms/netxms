@@ -264,6 +264,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
          }
       }
       CallEventHandler(NXC_EVENT_LOGIN_RESULT, dwRetCode, NULL);
+      ChangeState(dwRetCode == RCC_SUCCESS ? STATE_IDLE : STATE_DISCONNECTED);
    }
    else
    {

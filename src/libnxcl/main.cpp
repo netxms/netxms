@@ -96,9 +96,11 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Invalid user ID",
       "Invalid argument",
       "Duplicate DCI",
-      "Invalid DCI ID"
+      "Invalid DCI ID",
+      "Out of memory",
+      "Input/Output error"
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_DCI_ID)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_IO_ERROR)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

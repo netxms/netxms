@@ -104,6 +104,10 @@ SOURCE=.\datacoll.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\epp.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\eventdb.cpp
 # End Source File
 # Begin Source File
@@ -113,6 +117,10 @@ SOURCE=.\events.cpp
 # Begin Source File
 
 SOURCE=.\main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mib.cpp
 # End Source File
 # Begin Source File
 

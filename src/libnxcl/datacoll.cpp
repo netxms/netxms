@@ -301,7 +301,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
             pResponce->GetVariableBinary(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
             pResponce->GetVariableBinary(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
             for(i = 0; i < dwNumMaps; i++)
-               pItem->pThresholdList[pdwMapIndex[i]].dwId = pdwMapId[i];
+               pItem->pThresholdList[ntohl(pdwMapIndex[i])].dwId = ntohl(pdwMapId[i]);
             free(pdwMapId);
             free(pdwMapIndex);
          }

@@ -175,12 +175,14 @@ src/libnetxms/tools.cpp -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/comm.cpp -text
 src/libnxcl/datacoll.cpp -text
+src/libnxcl/epp.cpp -text
 src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text
 src/libnxcl/main.cpp -text
+src/libnxcl/mib.cpp -text
 src/libnxcl/misc.cpp -text
 src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
