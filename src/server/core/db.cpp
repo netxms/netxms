@@ -30,9 +30,9 @@
 char g_szDbDriver[MAX_PATH] = "";
 char g_szDbDrvParams[MAX_PATH] = "";
 char g_szDbServer[MAX_PATH] = "127.0.0.1";
-char g_szDbLogin[MAX_DB_LOGIN] = "root";
+char g_szDbLogin[MAX_DB_LOGIN] = "netxms";
 char g_szDbPassword[MAX_DB_PASSWORD] = "";
-char g_szDbName[MAX_DB_NAME] = "nms";
+char g_szDbName[MAX_DB_NAME] = "netxms_db";
 
 
 //
@@ -166,6 +166,7 @@ BOOL DBQuery(DB_HANDLE hConn, char *szQuery)
    BOOL bResult;
 
    bResult = m_fpDrvQuery(hConn, szQuery);
+   DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", bResult ? "Successful" : "Failed", szQuery);
    if ((!bResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return bResult;
@@ -181,6 +182,7 @@ DB_RESULT DBSelect(DB_HANDLE hConn, char *szQuery)
    DB_RESULT hResult;
    
    hResult = m_fpDrvSelect(hConn, szQuery);
+   DbgPrintf(AF_DEBUG_SQL, "%s sync query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
    if ((!hResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
@@ -271,6 +273,7 @@ DB_ASYNC_RESULT DBAsyncSelect(DB_HANDLE hConn, char *szQuery)
    DB_RESULT hResult;
    
    hResult = m_fpDrvAsyncSelect(hConn, szQuery);
+   DbgPrintf(AF_DEBUG_SQL, "%s async query: \"%s\"", (hResult != NULL) ? "Successful" : "Failed", szQuery);
    if ((!hResult) && (g_dwFlags & AF_LOG_SQL_ERRORS))
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;

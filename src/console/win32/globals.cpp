@@ -127,7 +127,7 @@ COLORREF g_statusColorTable[9] =
 
 char *g_pszItemOrigin[] = { "Internal", "Agent", "SNMP" };
 char *g_pszItemOriginLong[] = { "Internal", "NetXMS Agent", "SNMP Agent" };
-char *g_pszItemDataType[] = { "Integer", "Int64", "String", "Float" };
+char *g_pszItemDataType[] = { "Integer", "Unsigned Integer", "Int64", "Unsigned Int64", "String", "Float" };
 char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
 char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
 char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", "greater or equal", "greater", "not equal", "like", "not like" };

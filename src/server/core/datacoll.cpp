@@ -86,12 +86,12 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       }
       else     /* pNode == NULL */
       {
-         DbgPrintf(AF_DEBUG_DC, "*** DataCollector: Attempt to collect information for non-existing node.\n");
+         DbgPrintf(AF_DEBUG_DC, "*** DataCollector: Attempt to collect information for non-existing node.");
       }
    }
 
    free(pBuffer);
-   DbgPrintf(AF_DEBUG_DC, "Data collector thread terminated\n");
+   DbgPrintf(AF_DEBUG_DC, "Data collector thread terminated");
    return THREAD_OK;
 }
 
@@ -122,7 +122,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 
       dwElapsed = (DWORD)(GetCurrentTimeMs() - qwStart);
    }
-   DbgPrintf(AF_DEBUG_DC, "Item poller thread terminated\n");
+   DbgPrintf(AF_DEBUG_DC, "Item poller thread terminated");
    return THREAD_OK;
 }
 

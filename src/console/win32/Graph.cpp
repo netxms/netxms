@@ -7,8 +7,8 @@
 #include <math.h>
 
 #define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? strtod(row->value.szString, NULL) : \
-                            ((dt == DCI_DT_INTEGER) ? row->value.dwInt32 : \
-                             ((dt == DCI_DT_INT64) ? row->value.qwInt64 : \
+                            (((dt == DCI_DT_INT) || (dt == DCI_DT_UINT)) ? row->value.dwInt32 : \
+                             (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? row->value.qwInt64 : \
                               ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
                              ) \
                             ) \

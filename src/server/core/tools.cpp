@@ -270,7 +270,7 @@ BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
    BYTE *pBuffer = NULL;
    struct stat fs;
 
-   DbgPrintf(AF_DEBUG_MISC, "Loading file \"%s\" into memory\n", pszFileName);
+   DbgPrintf(AF_DEBUG_MISC, "Loading file \"%s\" into memory", pszFileName);
    fd = open(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
@@ -285,7 +285,7 @@ BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
                iNumBytes = min(16384, fs.st_size - iBufPos);
                if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
                {
-                  DbgPrintf(AF_DEBUG_MISC, "File read operation failed\n");
+                  DbgPrintf(AF_DEBUG_MISC, "File read operation failed");
                   free(pBuffer);
                   pBuffer = NULL;
                   break;

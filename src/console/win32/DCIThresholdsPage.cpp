@@ -124,11 +124,17 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
 
    switch(m_pItem->iDataType)
    {
-      case DCI_DT_INTEGER:
-         sprintf(szValue, "%d", m_pItem->pThresholdList[dwIndex].value.dwInt32);
+      case DCI_DT_INT:
+         sprintf(szValue, "%ld", m_pItem->pThresholdList[dwIndex].value.dwInt32);
+         break;
+      case DCI_DT_UINT:
+         sprintf(szValue, "%lu", m_pItem->pThresholdList[dwIndex].value.dwInt32);
          break;
       case DCI_DT_INT64:
-         sprintf(szValue, "%64I", m_pItem->pThresholdList[dwIndex].value.qwInt64);
+         sprintf(szValue, "%I64d", m_pItem->pThresholdList[dwIndex].value.qwInt64);
+         break;
+      case DCI_DT_UINT64:
+         sprintf(szValue, "%I64u", m_pItem->pThresholdList[dwIndex].value.qwInt64);
          break;
       case DCI_DT_FLOAT:
          sprintf(szValue, "%f", m_pItem->pThresholdList[dwIndex].value.dFloat);
@@ -165,12 +171,20 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    dlg.m_dwEventId = pThreshold->dwEvent;
    switch(m_pItem->iDataType)
    {
-      case DCI_DT_INTEGER:
+      case DCI_DT_INT:
          sprintf(szBuffer, "%d", pThreshold->value.dwInt32);
          dlg.m_strValue = szBuffer;
          break;
+      case DCI_DT_UINT:
+         sprintf(szBuffer, "%u", pThreshold->value.dwInt32);
+         dlg.m_strValue = szBuffer;
+         break;
       case DCI_DT_INT64:
-         sprintf(szBuffer, "%64I", pThreshold->value.qwInt64);
+         sprintf(szBuffer, "%I64d", pThreshold->value.qwInt64);
+         dlg.m_strValue = szBuffer;
+         break;
+      case DCI_DT_UINT64:
+         sprintf(szBuffer, "%I64u", pThreshold->value.qwInt64);
          dlg.m_strValue = szBuffer;
          break;
       case DCI_DT_FLOAT:
@@ -189,10 +203,16 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->dwEvent = dlg.m_dwEventId;
       switch(m_pItem->iDataType)
       {
-         case DCI_DT_INTEGER:
+         case DCI_DT_INT:
             pThreshold->value.dwInt32 = strtol((LPCTSTR)dlg.m_strValue, NULL, 0);
             break;
+         case DCI_DT_UINT:
+            pThreshold->value.dwInt32 = strtoul((LPCTSTR)dlg.m_strValue, NULL, 0);
+            break;
          case DCI_DT_INT64:
+            /* TODO: add conversion for 64 bit integers */
+            break;
+         case DCI_DT_UINT64:
             /* TODO: add conversion for 64 bit integers */
             break;
          case DCI_DT_FLOAT:

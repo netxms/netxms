@@ -134,6 +134,6 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
       MutexUnlock(g_hMutexNodeIndex);
    }
 
-   DbgPrintf(AF_DEBUG_DISCOVERY, "Discovery thread terminated\n");
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Discovery thread terminated");
    return THREAD_OK;
 }

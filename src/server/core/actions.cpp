@@ -213,7 +213,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
    {
       if (pAction->bIsDisabled)
       {
-         DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Action %d (%s) is disabled and will not be executed\n",
+         DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Action %d (%s) is disabled and will not be executed",
                    dwActionId, pAction->szName);
          bSuccess = TRUE;
       }
@@ -225,21 +225,21 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
          switch(pAction->iType)
          {
             case ACTION_EXEC:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing command \"%s\"\n", pszExpandedData);
+               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing command \"%s\"", pszExpandedData);
                bSuccess = ExecCommand(pszExpandedData);
                break;
             case ACTION_SEND_EMAIL:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"\n", 
+               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
                PostMail(pAction->szRcptAddr, pAction->szEmailSubject, pszExpandedData);
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"\n", 
+               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
                break;
             case ACTION_REMOTE:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"\n", 
+               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
                break;
             default:

@@ -66,7 +66,7 @@ void InitLog(void)
       t = time(NULL);
       loc = localtime(&t);
       strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
-      fprintf(m_hLogFile, "\r\n[%s] Log file opened\r\n", szTimeBuf);
+      fprintf(m_hLogFile, "\n[%s] Log file opened\n", szTimeBuf);
       fflush(m_hLogFile);
 
       m_mutexLogAccess = MutexCreate();
@@ -99,7 +99,7 @@ void CloseLog(void)
          t = time(NULL);
          loc = localtime(&t);
          strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
-         fprintf(m_hLogFile, "[%s] Log file closed\r\n", szTimeBuf);
+         fprintf(m_hLogFile, "[%s] Log file closed\n", szTimeBuf);
          fclose(m_hLogFile);
       }
       if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
@@ -281,6 +281,16 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
       if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
                         NULL, msg, 0, (LPTSTR)&lpMsgBuf, 0, strings)>0)
       {
+         char *pCR;
+
+         // Replace trailing CR/LF pair with LF
+         pCR = strchr((char *)lpMsgBuf, '\r');
+         if (pCR != NULL)
+         {
+            *pCR = '\n';
+            pCR++;
+            *pCR = 0;
+         }
          WriteLogToFile((char *)lpMsgBuf);
          LocalFree(lpMsgBuf);
       }
@@ -288,7 +298,7 @@ void WriteLog(DWORD msg, WORD wType, char *format, ...)
       {
          char message[64];
 
-         sprintf(message,"MSG 0x%08X - Unable to find message text\r\n",msg);
+         sprintf(message,"MSG 0x%08X - Unable to find message text\n",msg);
          WriteLogToFile(message);
       }
    }

@@ -102,7 +102,7 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo,
    if (pszCurrentOwnerInfo == NULL)
       pszCurrentOwnerInfo = szBuffer;
 
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Attempting to lock component %d by %d (%s)\n",
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Attempting to lock component %d by %d (%s)",
              dwId, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
    MutexLock(m_hMutexLockerAccess, INFINITE);
    sprintf(szQuery, "SELECT lock_status,owner_info FROM locks WHERE component_id=%ld", dwId);
@@ -150,7 +150,7 @@ void UnlockComponent(DWORD dwId)
    sprintf(szQuery, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=%ld", dwId);
    DBQuery(g_hCoreDB, szQuery);
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component %d unlocked\n", dwId);
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component %d unlocked", dwId);
 }
 
 
@@ -167,5 +167,5 @@ void RemoveAllSessionLocks(DWORD dwSessionId)
                     "WHERE (component_id <> 0) AND (lock_status = %d)", dwSessionId);
    DBQuery(g_hCoreDB, szQuery);
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* All locks for session %d removed\n", dwSessionId);
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* All locks for session %d removed", dwSessionId);
 }

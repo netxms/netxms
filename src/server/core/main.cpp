@@ -185,6 +185,7 @@ BOOL Initialize(void)
       WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
    }
+   DbgPrintf(AF_DEBUG_MISC, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
 
    // Check database version
    iDBVersion = ConfigReadInt("DBFormatVersion", 0);
@@ -207,6 +208,7 @@ BOOL Initialize(void)
 
    // Load global configuration parameters
    LoadGlobalConfig();
+   DbgPrintf(AF_DEBUG_MISC, "Global configuration loaded");
 
    // Check data directory
    if (!CheckDataDir())
@@ -236,6 +238,7 @@ BOOL Initialize(void)
    ObjectsInit();
    if (!LoadObjects())
       return FALSE;
+   DbgPrintf(AF_DEBUG_MISC, "Objects loaded and initialized");
 
    // Initialize and load event actions
    if (!InitActions())
@@ -286,6 +289,7 @@ BOOL Initialize(void)
    if (ConfigReadInt("EnableAdminInterface", 1))
       ThreadCreate(LocalAdminListener, 0, NULL);
 
+   DbgPrintf(AF_DEBUG_MISC, "Server initialization completed");
    return TRUE;
 }
 
@@ -324,14 +328,14 @@ void Shutdown(void)
    ShutdownMailer();
 
    ThreadSleep(3);     // Give other threads a chance to terminate in a safe way
-   DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown\n");
+   DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown");
 
    SaveObjects();
-   DbgPrintf(AF_DEBUG_MISC, "All objects saved to database\n");
+   DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
    SaveUsers();
-   DbgPrintf(AF_DEBUG_MISC, "All users saved to database\n");
+   DbgPrintf(AF_DEBUG_MISC, "All users saved to database");
    StopDBWriter();
-   DbgPrintf(AF_DEBUG_MISC, "Database writer stopped\n");
+   DbgPrintf(AF_DEBUG_MISC, "Database writer stopped");
 
    // Remove database lock
    DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");

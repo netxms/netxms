@@ -54,7 +54,7 @@ static void CleanDeletedObjects(void)
                // No records with that source ID, so we can purge this object
                sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%ld", dwObjectId);
                DBQuery(g_hCoreDB, szQuery);
-               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %ld was purged\n", dwObjectId);
+               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %ld was purged", dwObjectId);
             }
             DBFreeAsyncResult(hAsyncResult);
          }

@@ -82,6 +82,6 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       delete pEvent;
    }
 
-   DbgPrintf(AF_DEBUG_EVENTS, "Event processing thread #%d stopped\n", arg);
+   DbgPrintf(AF_DEBUG_EVENTS, "Event processing thread #%d stopped", arg);
    return THREAD_OK;
 }

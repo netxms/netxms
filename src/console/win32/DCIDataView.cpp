@@ -152,11 +152,17 @@ void CDCIDataView::OnViewRefresh()
             {
                switch(pData->wDataType)
                {
-                  case DCI_DT_INTEGER:
+                  case DCI_DT_INT:
                      sprintf(szBuffer, "%ld", pRow->value.dwInt32);
                      break;
+                  case DCI_DT_UINT:
+                     sprintf(szBuffer, "%lu", pRow->value.dwInt32);
+                     break;
                   case DCI_DT_INT64:
-                     sprintf(szBuffer, "%I64", pRow->value.qwInt64);
+                     sprintf(szBuffer, "%I64d", pRow->value.qwInt64);
+                     break;
+                  case DCI_DT_UINT64:
+                     sprintf(szBuffer, "%I64u", pRow->value.qwInt64);
                      break;
                   case DCI_DT_FLOAT:
                      sprintf(szBuffer, "%f", pRow->value.dFloat);

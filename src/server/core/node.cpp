@@ -636,7 +636,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
-   DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)\n", m_szName, m_dwId);
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
@@ -754,7 +754,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                             "Node configuration was%schanged after poll\r\n"),
                  m_szName, bHasChanges ? _T(" ") : _T(" not "));
    PollerUnlock();
-   DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)\n", m_szName, m_dwId);
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
    if (bHasChanges)
    {

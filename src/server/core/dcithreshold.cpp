@@ -442,7 +442,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
          m_pszValueStr = strdup(pData->value.szString);
          break;
       default:
-         DbgPrintf(AF_DEBUG_DC, "WARNING: Invalid datatype %d in threshold object %d\n", m_iDataType, m_dwId);
+         DbgPrintf(AF_DEBUG_DC, "WARNING: Invalid datatype %d in threshold object %d", m_iDataType, m_dwId);
          break;
    }
 }
