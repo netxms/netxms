@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.11 2005-01-17 23:31:01 alk Exp $ */
+/* $Id: linux.cpp,v 1.12 2005-01-24 19:40:31 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -35,33 +35,59 @@
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE },
-   { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL },
-   { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED },
+   { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
+			DCI_DT_UINT64,	"Free disk space on *" },
+   { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
+			DCI_DT_UINT64,	"Total disk space on *" },
+   { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
+			DCI_DT_UINT64,	"Used disk space on *" },
 
-   { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4 },
-   { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6 },
+   { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
+			DCI_DT_INT,		"IP forwarding status" },
+   { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
+			DCI_DT_INT,		"IPv6 forwarding status" },
 
-   { "Process.Count(*)",             H_ProcessCount,    NULL },
+   { "Process.Count(*)",             H_ProcessCount,    (char *)0,
+			DCI_DT_UINT,	"" },
+   { "System.ProcessCount",          H_ProcessCount,    (char *)1,
+			DCI_DT_UINT,	"" },
 
-   { "System.CPU.LoadAvg",           H_CpuLoad,         NULL },
-   { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL },
-   { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL },
-   { "System.CPU.Usage",             H_CpuUsage,        NULL },
-   { "System.CPU.Usage5",            H_CpuUsage,        NULL },
-   { "System.CPU.Usage15",           H_CpuUsage,        NULL },
-   { "System.Hostname",              H_Hostname,        NULL },
-   { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE },
-   { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL},
-   { "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED },
-   { "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE },
-   { "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL },
-   { "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED },
-   { "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE },
-   { "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL },
-   { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED },
-   { "System.Uname",                 H_Uname,           NULL },
-   { "System.Uptime",                H_Uptime,          NULL },
+   { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
+			DCI_DT_FLOAT,	"" },
+   { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
+			DCI_DT_FLOAT,	"" },
+   { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
+			DCI_DT_FLOAT,	"" },
+/*   { "System.CPU.Usage",             H_CpuUsage,        NULL,
+			DCI_DT_FLOAT,	"" },
+   { "System.CPU.Usage5",            H_CpuUsage,        NULL,
+			DCI_DT_FLOAT,	"" },
+   { "System.CPU.Usage15",           H_CpuUsage,        NULL,
+			DCI_DT_FLOAT,	"" }, */
+   { "System.Hostname",              H_Hostname,        NULL,
+			DCI_DT_FLOAT,	"" },
+   { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
+			DCI_DT_UINT64,	"Free physical memory" },
+   { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,
+			DCI_DT_UINT64,	"Total amount of physical memory" },
+   { "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED,
+			DCI_DT_UINT64,	"Used physical memory" },
+   { "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE,
+			DCI_DT_UINT64,	"Free swap space" },
+   { "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL,
+			DCI_DT_UINT64,	"Total amount of swap space" },
+   { "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED,
+			DCI_DT_UINT64,	"Used swap space" },
+   { "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE,
+			DCI_DT_UINT64,	"Free virtual memory" },
+   { "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL,
+			DCI_DT_UINT64,	"Total amount of virtual memory" },
+   { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
+			DCI_DT_UINT64,	"Used virtual memory" },
+   { "System.Uname",                 H_Uname,           NULL,
+			DCI_DT_STRING,	"" },
+   { "System.Uptime",                H_Uptime,          NULL,
+			DCI_DT_UINT,	"System uptime" },
 
    { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL },
 };
@@ -100,6 +126,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/01/17 23:31:01  alk
+Agent.SourcePackageSupport added
+
 Revision 1.10  2004/12/29 19:42:44  victor
 Linux compatibility fixes
 

@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.2 2005-01-17 23:31:01 alk Exp $ */
+/* $Id: system.cpp,v 1.3 2005-01-24 19:40:31 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -154,10 +154,17 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
    char szArg[128] = {0};
-	int nCount;
+	int nCount = -1;
 
    NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-	nCount = ProcRead(NULL, szArg);
+	if (pArg == NULL)
+	{
+		nCount = ProcRead(NULL, szArg);
+	}
+	else
+	{
+		nCount = ProcRead(NULL, NULL);
+	}
 	if (nCount >= 0)
 	{
 		ret_int(pValue, nCount);
@@ -271,6 +278,9 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/17 23:31:01  alk
+Agent.SourcePackageSupport added
+
 Revision 1.1  2004/10/22 22:08:35  alk
 source restructured;
 implemented:
