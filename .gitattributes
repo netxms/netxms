@@ -146,6 +146,12 @@ src/agent/subagents/ping/Makefile.am -text
 src/agent/subagents/ping/ping.cpp -text
 src/agent/subagents/ping/ping.dsp -text
 src/agent/subagents/ping/ping.dsw -text
+src/agent/subagents/portCheck/Makefile.am -text
+src/agent/subagents/portCheck/main.cpp -text
+src/agent/subagents/portCheck/net.cpp -text
+src/agent/subagents/portCheck/net.h -text
+src/agent/subagents/portCheck/pop3.cpp -text
+src/agent/subagents/portCheck/pop3.h -text
 src/agent/subagents/skeleton/Makefile.am -text
 src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
