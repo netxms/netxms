@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.32 2004-10-18 15:36:37 victor Exp $
+# $Id: configure.ac,v 1.33 2004-10-18 15:56:48 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -182,6 +182,7 @@ AC_PROG_LIBTOOL
 AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
 AC_CHECK_LIB(readline, readline)
 AC_CHECK_LIB(socket, if_nameindex)
+AC_CHECK_LIB(dl, dlopen)
 
 # --------------------------------------------------------------------------
 # Test for SNMP stuff - server only
