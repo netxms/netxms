@@ -354,6 +354,7 @@ typedef struct
 typedef struct
 {
    DWORD dwEventId;
+   DWORD dwSeverity;
    char szName[MAX_EVENT_NAME];
 } NXC_EVENT_NAME;
 

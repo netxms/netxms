@@ -1785,7 +1785,7 @@ void ClientSession::SendEventNames(DWORD dwRqId)
 
    msg.SetCode(CMD_EVENT_NAME_LIST);
    msg.SetId(dwRqId);
-   hResult = DBSelect(g_hCoreDB, "SELECT event_id,name FROM events");
+   hResult = DBSelect(g_hCoreDB, "SELECT event_id,name,severity FROM events");
    if (hResult != NULL)
    {
       DWORD i, dwNumEvents;
@@ -1799,6 +1799,7 @@ void ClientSession::SendEventNames(DWORD dwRqId)
          for(i = 0; i < dwNumEvents; i++)
          {
             pList[i].dwEventId = htonl(DBGetFieldULong(hResult, i, 0));
+            pList[i].dwSeverity = htonl(DBGetFieldLong(hResult, i, 2));
             strcpy(pList[i].szName, DBGetField(hResult, i, 1));
          }
          msg.SetVariable(VID_EVENT_NAME_TABLE, (BYTE *)pList, sizeof(NXC_EVENT_NAME) * dwNumEvents);

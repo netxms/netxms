@@ -310,7 +310,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void)
          pResponce->GetVariableBinary(VID_EVENT_NAME_TABLE, (BYTE *)m_pEventNamesList,
                                       sizeof(NXC_EVENT_NAME) * m_dwNumEvents);
          for(i = 0; i < m_dwNumEvents; i++)
+         {
             m_pEventNamesList[i].dwEventId = ntohl(m_pEventNamesList[i].dwEventId);
+            m_pEventNamesList[i].dwSeverity = ntohl(m_pEventNamesList[i].dwSeverity);
+         }
       }
       delete pResponce;
    }
