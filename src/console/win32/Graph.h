@@ -43,13 +43,25 @@ public:
 protected:
 	//{{AFX_MSG(CGraph)
 	afx_msg void OnPaint();
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnKillFocus(CWnd* pNewWnd);
 	//}}AFX_MSG
+   afx_msg int OnMouseHover(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
+	COLORREF m_rgbLabelTextColor;
+	COLORREF m_rgbLabelBkColor;
+	CPoint m_ptLastHoverPoint;
+	RECT m_rectGraph;
+	RECT m_rectInfo;
+	void DrawInfoRect(POINTS pt);
+	BOOL m_bIsActive;
+	void SetMouseTracking(void);
 	COLORREF m_rgbAxisColor;
 	double m_dCurrMaxValue;
 	double m_dSecondsPerPixel;
-	void DrawLineGraph(CDC &dc, RECT &rect, NXC_DCI_DATA *pData, COLORREF rgbColor);
+	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor);
 	COLORREF m_rgbTextColor;
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;

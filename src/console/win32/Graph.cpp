@@ -35,7 +35,11 @@ CGraph::CGraph()
    m_rgbAxisColor = RGB(127, 127, 127);
    m_rgbTextColor = RGB(255, 255, 255);
    m_rgbLineColors[0] = RGB(0, 255, 0);
+   m_rgbLabelBkColor = RGB(255, 255, 170);
+   m_rgbLabelTextColor = RGB(85, 0, 0);
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
+   m_bIsActive = FALSE;
+   memset(&m_rectInfo, 0, sizeof(RECT));
 }
 
 CGraph::~CGraph()
@@ -51,7 +55,11 @@ CGraph::~CGraph()
 BEGIN_MESSAGE_MAP(CGraph, CWnd)
 	//{{AFX_MSG_MAP(CGraph)
 	ON_WM_PAINT()
+	ON_WM_MOUSEMOVE()
+	ON_WM_SETFOCUS()
+	ON_WM_KILLFOCUS()
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_MOUSEHOVER, OnMouseHover)
 END_MESSAGE_MAP()
 
 
@@ -147,11 +155,12 @@ void CGraph::OnPaint()
    ///////////////////////////////////
 
    // Calculate data rectangle
-   rect.left += iLeftMargin;
-   rect.top += iTopMargin;
-   rect.right -= iRightMargin;
-   rect.bottom -= iBottomMargin;
-   iGraphLen = rect.right - rect.left + 1;   // Actual data area length in pixels
+   memcpy(&m_rectGraph, &rect, sizeof(RECT));
+   m_rectGraph.left += iLeftMargin;
+   m_rectGraph.top += iTopMargin;
+   m_rectGraph.right -= iRightMargin;
+   m_rectGraph.bottom -= iBottomMargin;
+   iGraphLen = m_rectGraph.right - m_rectGraph.left + 1;   // Actual data area length in pixels
    m_dSecondsPerPixel = (double)(m_dwTimeTo - m_dwTimeFrom) / (double)iGraphLen;
 
    // Calculate max graph value
@@ -193,16 +202,13 @@ void CGraph::OnPaint()
 
    // Draw each parameter
    CRgn rgn;
-   rgn.CreateRectRgn(rect.left, rect.top, rect.right, rect.bottom);
+   rgn.CreateRectRgn(m_rectGraph.left, m_rectGraph.top, m_rectGraph.right, m_rectGraph.bottom);
    dc.SelectClipRgn(&rgn);
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
       if (m_pData[i] != NULL)
-         DrawLineGraph(dc, rect, m_pData[i], m_rgbLineColors[i]);
+         DrawLineGraph(dc, m_pData[i], m_rgbLineColors[i]);
    dc.SelectClipRgn(NULL);
    rgn.DeleteObject();
-
-   // Get client area size again
-   GetClientRect(&rect);
 
    // Paint ordinates
    pen.CreatePen(PS_SOLID, 3, m_rgbAxisColor);
@@ -275,7 +281,7 @@ void CGraph::SetData(DWORD dwIndex, NXC_DCI_DATA *pData)
 // Draw single line
 //
 
-void CGraph::DrawLineGraph(CDC &dc, RECT &rect, NXC_DCI_DATA *pData, COLORREF rgbColor)
+void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor)
 {
    DWORD i;
    int x;
@@ -290,20 +296,134 @@ void CGraph::DrawLineGraph(CDC &dc, RECT &rect, NXC_DCI_DATA *pData, COLORREF rg
    pOldPen = dc.SelectObject(&pen);
 
    // Calculate scale factor for values
-   dScale = (double)(rect.bottom - rect.top - (rect.bottom - rect.top) % m_iGridSize) / m_dCurrMaxValue;
+   dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
+               (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) / m_dCurrMaxValue;
 
    // Move to first position
    pRow = pData->pRows;
-   dc.MoveTo(rect.right, (int)(rect.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+   dc.MoveTo(m_rectGraph.right, 
+             (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
    inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
 
    for(i = 1; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
    {
       // Calculate timestamp position on graph
-      x = rect.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
-      dc.LineTo(x, (int)(rect.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+      x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
+      dc.LineTo(x, (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
       inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
    }
 
    dc.SelectObject(pOldPen);
+}
+
+
+//
+// Set mouse tracking parameters
+//
+
+void CGraph::SetMouseTracking()
+{
+   TRACKMOUSEEVENT tme;
+
+   tme.cbSize = sizeof(TRACKMOUSEEVENT);
+   tme.dwFlags = TME_HOVER;
+   tme.hwndTrack = m_hWnd;
+   tme.dwHoverTime = 1000;
+   _TrackMouseEvent(&tme);
+}
+
+
+//
+// WM_MOUSEHOVER message handler
+//
+
+int CGraph::OnMouseHover(WPARAM wParam, LPARAM lParam)
+{
+   POINTS pt;
+   
+   pt = MAKEPOINTS(lParam);
+   m_ptLastHoverPoint = CPoint(pt.x, pt.y);
+   if (PtInRect(&m_rectGraph, m_ptLastHoverPoint))
+      DrawInfoRect(pt);
+   return 0;
+}
+
+
+//
+// WM_MOUSEMOVE message handler
+//
+
+void CGraph::OnMouseMove(UINT nFlags, CPoint point) 
+{
+	CWnd::OnMouseMove(nFlags, point);
+   if ((m_bIsActive) && (m_ptLastHoverPoint != point))
+   {
+      SetMouseTracking();
+      InvalidateRect(&m_rectInfo, FALSE);
+      memset(&m_rectInfo, 0, sizeof(RECT));
+   }
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CGraph::OnSetFocus(CWnd* pOldWnd) 
+{
+	CWnd::OnSetFocus(pOldWnd);
+   m_bIsActive = TRUE;
+   SetMouseTracking();
+}
+
+
+//
+// WM_KILLFOCUS message handler
+//
+
+void CGraph::OnKillFocus(CWnd* pNewWnd) 
+{
+	CWnd::OnKillFocus(pNewWnd);
+   m_bIsActive = FALSE;
+   InvalidateRect(&m_rectInfo, FALSE);
+   memset(&m_rectInfo, 0, sizeof(RECT));
+}
+
+
+//
+// Draw information rectangle at mouse coordinates
+//
+
+void CGraph::DrawInfoRect(POINTS pt)
+{
+   CDC *pDC;
+   CSize size;
+   char szBuffer[256], szTime[32];
+   DWORD dwTimeStamp;
+   double dValue;
+
+   // Prepare text for output
+   dwTimeStamp = m_dwTimeFrom + (DWORD)((pt.x - m_rectGraph.left) * m_dSecondsPerPixel);
+   dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
+               (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) * 
+               (m_rectGraph.bottom - pt.y);
+   sprintf(szBuffer, "%s  %5.3f", FormatTimeStamp(dwTimeStamp, szTime, TS_LONG_TIME), dValue);
+
+   // Prepare for drawing
+   pDC = GetDC();
+   pDC->SetTextColor(m_rgbLabelTextColor);
+   pDC->SetBkColor(m_rgbLabelBkColor);
+
+   // Calculate text size and draw it
+   size = pDC->GetTextExtent(szBuffer, strlen(szBuffer));
+   pDC->TextOut(pt.x, pt.y - size.cy - 1, szBuffer, strlen(szBuffer));
+
+   // Fill rectangle to be invalidated
+   m_rectInfo.left = pt.x;
+   m_rectInfo.top = pt.y - size.cy - 1;
+   m_rectInfo.right = pt.x + size.cx + 1;
+   m_rectInfo.bottom = pt.y;
+
+   // Cleanup
+   ReleaseDC(pDC);
 }
