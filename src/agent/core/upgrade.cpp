@@ -30,9 +30,9 @@
 
 DWORD UpgradeAgent(TCHAR *pszPkgFile)
 {
-#if defined(_WIN32)
-
    TCHAR szCmdLine[1024];
+
+#if defined(_WIN32)
 
    // Start installation
    _sntprintf(szCmdLine, 1024, _T("%s /VERYSILENT"), pszPkgFile);
@@ -41,7 +41,9 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
 #else
 
    chmod(pszPkgFile, 0700);   // Set execute permissions on package file
-   return ExecuteCommand(pszPkgFile, NULL);
+   _sntprintf(szCmdLine, 1024, _T("%s version=") NETXMS_VERSION_STRING
+                               _T(" prefix=") PREFIX, pszPkgFile);
+   return ExecuteCommand(szCmdLine, NULL);
 
 #endif
 }
