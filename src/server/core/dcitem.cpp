@@ -492,7 +492,7 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
    if (m_tLastPoll == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
-   Transform(*pValue);
+   Transform(*pValue, (long)(dwTimeStamp - m_tLastPoll));
    m_prevRawValue = rawValue;
 
    // Save transformed value to database
@@ -523,7 +523,7 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 // Transform received value
 //
 
-void DCItem::Transform(ItemValue &value)
+void DCItem::Transform(ItemValue &value, long nElapsedTime)
 {
    switch(m_iDeltaCalculation)
    {
@@ -554,6 +554,37 @@ void DCItem::Transform(ItemValue &value)
          }
          break;
       case DCM_AVERAGE_PER_SECOND:
+         // Check elapsed time to prevent divide-by-zero exception
+         if (nElapsedTime == 0)
+            nElapsedTime++;
+
+         switch(m_iDataType)
+         {
+            case DCI_DT_INT:
+               value = ((long)value - (long)m_prevRawValue) / nElapsedTime;
+               break;
+            case DCI_DT_UINT:
+               value = ((DWORD)value - (DWORD)m_prevRawValue) / (DWORD)nElapsedTime;
+               break;
+            case DCI_DT_INT64:
+               value = ((INT64)value - (INT64)m_prevRawValue) / (INT64)nElapsedTime;
+               break;
+            case DCI_DT_UINT64:
+               value = ((QWORD)value - (QWORD)m_prevRawValue) / (QWORD)nElapsedTime;
+               break;
+            case DCI_DT_FLOAT:
+               value = ((double)value - (double)m_prevRawValue) / (double)nElapsedTime;
+               break;
+            case DCI_DT_STRING:
+               // I don't see any meaning in "average delta per second" for string
+               // values, so result will be 0 if there are no difference between
+               // two values, and 1 otherwise
+               value = (long)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               break;
+            default:
+               // Delta calculation is not supported for other types
+               break;
+         }
          break;
       case DCM_AVERAGE_PER_MINUTE:
          break;

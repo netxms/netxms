@@ -162,7 +162,7 @@ private:
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
 
-   void Transform(ItemValue &value);
+   void Transform(ItemValue &value, long nElapsedTime);
    void CheckThresholds(ItemValue &value);
    void UpdateCacheSize(void);
 
