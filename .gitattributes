@@ -18,6 +18,7 @@ doc/internals.rtf -text
 images/generic_printer.png -text
 images/interface.png -text
 images/network.png -text
+images/node.png -text
 images/node_group.png -text
 images/service.png -text
 include/Makefile.am -text
