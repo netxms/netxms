@@ -10,6 +10,7 @@
   inside parameter arguments enclosed in quotes
 - Windows console: object tree works correctly for users without rights
   on root objects
+- Windows console: implemented user deletion from access lists
 
 
 *

@@ -213,8 +213,20 @@ void CObjectPropsSecurity::OnAddUser()
 
 void CObjectPropsSecurity::OnDeleteUser() 
 {
-	// TODO: Add your control notification handler code here
-	
+   int iItem;
+
+   if (m_dwCurrAclEntry != INVALID_INDEX)
+   {
+      iItem = m_wndUserList.GetSelectionMark();
+      if (iItem != -1)
+      {
+         m_dwAclSize--;
+         memmove(&m_pAccessList[m_dwCurrAclEntry], &m_pAccessList[m_dwCurrAclEntry + 1],
+                 sizeof(NXC_ACL_ENTRY) * (m_dwAclSize - m_dwCurrAclEntry));
+         m_wndUserList.DeleteItem(iItem);
+         m_bIsModified = TRUE;
+      }
+   }
 }
 
 
@@ -229,44 +241,61 @@ void CObjectPropsSecurity::OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResul
    DWORD i;
 
    if (pNMListView->iItem != -1)
-      if ((pNMListView->uChanged & LVIF_STATE) && (pNMListView->uNewState & LVIS_FOCUSED))
+   {
+      if (pNMListView->uChanged & LVIF_STATE)
       {
-         pUser = NXCFindUserById(g_hSession, m_wndUserList.GetItemData(pNMListView->iItem));
-         if (pUser != NULL)   // It should't be NULL
+         if ((pNMListView->uNewState & LVIS_FOCUSED) && (pNMListView->uNewState & LVIS_SELECTED))
          {
-            // Find user in ACL
-            for(i = 0; i < m_dwAclSize; i++)
-               if (pUser->dwId == m_pAccessList[i].dwUserId)
-                  break;
-
-            if (i != m_dwAclSize)   // Again, just a paranoia check
+            pUser = NXCFindUserById(g_hSession, m_wndUserList.GetItemData(pNMListView->iItem));
+            if (pUser != NULL)   // It should't be NULL
             {
-               DWORD dwRights = m_pAccessList[i].dwAccessRights;
-               
-               // Set checkboxes
-               m_wndCheckRead.SetCheck((dwRights & OBJECT_ACCESS_READ) ? BST_CHECKED : BST_UNCHECKED);
-               m_wndCheckModify.SetCheck((dwRights & OBJECT_ACCESS_MODIFY) ? BST_CHECKED : BST_UNCHECKED);
-               m_wndCheckCreate.SetCheck((dwRights & OBJECT_ACCESS_CREATE) ? BST_CHECKED : BST_UNCHECKED);
-               m_wndCheckDelete.SetCheck((dwRights & OBJECT_ACCESS_DELETE) ? BST_CHECKED : BST_UNCHECKED);
-               m_wndCheckViewAlarms.SetCheck((dwRights & OBJECT_ACCESS_READ_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
-               m_wndCheckAckAlarms.SetCheck((dwRights & OBJECT_ACCESS_ACK_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
-               m_wndCheckAccess.SetCheck((dwRights & OBJECT_ACCESS_CONTROL) ? BST_CHECKED : BST_UNCHECKED);
+               // Find user in ACL
+               for(i = 0; i < m_dwAclSize; i++)
+                  if (pUser->dwId == m_pAccessList[i].dwUserId)
+                     break;
 
-               // Enable checkboxes if they was disabled
-               if (m_dwCurrAclEntry == INVALID_INDEX)
+               if (i != m_dwAclSize)   // Again, just a paranoia check
                {
-                  m_wndCheckRead.EnableWindow(TRUE);
-                  m_wndCheckModify.EnableWindow(TRUE);
-                  m_wndCheckCreate.EnableWindow(TRUE);
-                  m_wndCheckDelete.EnableWindow(TRUE);
-                  m_wndCheckViewAlarms.EnableWindow(TRUE);
-                  m_wndCheckAckAlarms.EnableWindow(TRUE);
-                  m_wndCheckAccess.EnableWindow(TRUE);
+                  DWORD dwRights = m_pAccessList[i].dwAccessRights;
+               
+                  // Set checkboxes
+                  m_wndCheckRead.SetCheck((dwRights & OBJECT_ACCESS_READ) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckModify.SetCheck((dwRights & OBJECT_ACCESS_MODIFY) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckCreate.SetCheck((dwRights & OBJECT_ACCESS_CREATE) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckDelete.SetCheck((dwRights & OBJECT_ACCESS_DELETE) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckViewAlarms.SetCheck((dwRights & OBJECT_ACCESS_READ_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckAckAlarms.SetCheck((dwRights & OBJECT_ACCESS_ACK_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckAccess.SetCheck((dwRights & OBJECT_ACCESS_CONTROL) ? BST_CHECKED : BST_UNCHECKED);
+
+                  // Enable checkboxes if they was disabled
+                  if (m_dwCurrAclEntry == INVALID_INDEX)
+                  {
+                     m_wndCheckRead.EnableWindow(TRUE);
+                     m_wndCheckModify.EnableWindow(TRUE);
+                     m_wndCheckCreate.EnableWindow(TRUE);
+                     m_wndCheckDelete.EnableWindow(TRUE);
+                     m_wndCheckViewAlarms.EnableWindow(TRUE);
+                     m_wndCheckAckAlarms.EnableWindow(TRUE);
+                     m_wndCheckAccess.EnableWindow(TRUE);
+                  }
+                  m_dwCurrAclEntry = i;
                }
-               m_dwCurrAclEntry = i;
             }
          }
+         else
+         {
+            // Deselect
+            m_dwCurrAclEntry = INVALID_INDEX;
+            m_wndCheckRead.EnableWindow(FALSE);
+            m_wndCheckModify.EnableWindow(FALSE);
+            m_wndCheckCreate.EnableWindow(FALSE);
+            m_wndCheckDelete.EnableWindow(FALSE);
+            m_wndCheckViewAlarms.EnableWindow(FALSE);
+            m_wndCheckAckAlarms.EnableWindow(FALSE);
+            m_wndCheckAccess.EnableWindow(FALSE);
+         }
       }
+   }
    
 	*pResult = 0;
 }
