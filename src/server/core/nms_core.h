@@ -273,7 +273,8 @@ private:
    }
 
    void DebugPrintf(char *szFormat, ...);
-   void SendAllObjects(void);
+   void Login(CSCPMessage *pMsg);
+   void SendAllObjects(DWORD dwRqId);
    void SendAllEvents(DWORD dwRqId);
    void SendAllConfigVars(void);
    void SendUserDB(DWORD dwRqId);

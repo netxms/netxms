@@ -184,38 +184,10 @@ void ClientSession::ProcessingThread(void)
       switch(pMsg->GetCode())
       {
          case CMD_LOGIN:
-            if (m_iState != STATE_AUTHENTICATED)
-            {
-               BYTE szPassword[SHA_DIGEST_LENGTH];
-               char *pszLogin, szBuffer[16];
-               
-               pszLogin = pMsg->GetVariableStr(VID_LOGIN_NAME);
-               pMsg->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
-
-               if (AuthenticateUser(pszLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
-                  m_iState = STATE_AUTHENTICATED;
-
-               if (m_iState == STATE_AUTHENTICATED)
-               {
-                  sprintf(m_szUserName, "%s@%s", pszLogin, IpToStr(m_dwHostAddr, szBuffer));
-               }
-
-               MemFree(pszLogin);
-
-               // Send reply
-               pReply = new CSCPMessage;
-               pReply->SetCode(CMD_LOGIN_RESP);
-               pReply->SetId(pMsg->GetId());
-               pReply->SetVariable(VID_LOGIN_RESULT, (DWORD)(m_iState == STATE_AUTHENTICATED));
-               SendMessage(pReply);
-               delete pReply;
-            }
-            else
-            {
-            }
+            Login(pMsg);
             break;
          case CMD_GET_OBJECTS:
-            SendAllObjects();
+            SendAllObjects(pMsg->GetId());
             break;
          case CMD_GET_EVENTS:
             SendAllEvents(pMsg->GetId());
@@ -273,6 +245,48 @@ void ClientSession::ProcessingThread(void)
       delete pMsg;
    }
    ConditionSet(m_hCondProcessingThreadStopped);
+}
+
+
+//
+// Authenticate client
+//
+
+void ClientSession::Login(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   BYTE szPassword[SHA_DIGEST_LENGTH];
+   char szLogin[MAX_USER_NAME], szBuffer[32];
+
+   // Prepare responce message
+   msg.SetCode(CMD_LOGIN_RESP);
+   msg.SetId(pRequest->GetId());
+
+   if (m_iState != STATE_AUTHENTICATED)
+   {
+      
+      pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
+      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
+
+      if (AuthenticateUser(szLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
+      {
+         m_iState = STATE_AUTHENTICATED;
+         sprintf(m_szUserName, "%s@%s", szLogin, IpToStr(m_dwHostAddr, szBuffer));
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         DebugPrintf("User %s authenticated\n", m_szUserName);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 
@@ -339,10 +353,17 @@ void ClientSession::SendEventDB(DWORD dwRqId)
 // Send all objects to client
 //
 
-void ClientSession::SendAllObjects(void)
+void ClientSession::SendAllObjects(DWORD dwRqId)
 {
    DWORD i;
    CSCPMessage msg;
+
+   // Send confirmation message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
+   msg.DeleteAllVariables();
 
    MutexLock(m_hMutexSendObjects, INFINITE);
 
