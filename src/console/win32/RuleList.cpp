@@ -546,9 +546,10 @@ int CRuleList::InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD 
    m_pColList[iNewCol].m_dwFlags = dwFlags;
 
    // Insert new item into header control
-   hdi.mask = HDI_TEXT | HDI_WIDTH;
+   hdi.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
    hdi.pszText = pszText;
    hdi.cxy = iWidth;
+   hdi.fmt = HDF_OWNERDRAW;
    m_wndHeader.InsertItem(iNewCol, &hdi);
 
    // Update all existing rows
