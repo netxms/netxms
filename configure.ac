@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.7 2004-05-19 15:50:01 victor Exp $
+# $Id: configure.ac,v 1.8 2004-05-19 19:37:47 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -144,6 +144,7 @@ AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h])
 AC_CHECK_HEADERS([openssl/ssl.h])
 AC_CHECK_HEADERS([readline/readline.h])
+AC_CHECK_HEADERS([byteswap.h])
 
 if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then
 	AC_MSG_ERROR(OpenSSL headers not found.)
@@ -161,9 +162,6 @@ AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
-#AC_CHECK_TYPE(int64_t, AC_DEFINE(HAVE_INT64_T, 1))
-#AC_CHECK_TYPE(uint64_t, AC_DEFINE(HAVE_UINT64_T, 1))
-#AC_CHECK_TYPE(u_int64_t, AC_DEFINE(HAVE_U_INT64_T, 1))
 AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
 
 # --------------------------------------------------------------------------
@@ -172,6 +170,15 @@ AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
 AC_PROG_GCC_TRADITIONAL
 AC_C_CONST
 AC_C_BIGENDIAN
+
+# --------------------------------------------------------------------------
+# macros
+
+AC_CHECK_DECLS([__bswap_64],,,[
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+])
 
 # --------------------------------------------------------------------------
 # library functions
@@ -185,7 +192,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex __bswap_64])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex])
 
 
 # sockets/resolver (probably for solaris)

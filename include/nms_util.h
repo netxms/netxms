@@ -39,6 +39,10 @@
 #include <nms_threads.h>
 #include <time.h>
 
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+
 #define INVALID_INDEX         0xFFFFFFFF
 #define CSCP_TEMP_BUF_SIZE    4096
 
@@ -174,7 +178,7 @@ public:
 
 extern "C"
 {
-#if defined(_WIN32) || !defined(HAVE___BSWAP_64)
+#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
 
