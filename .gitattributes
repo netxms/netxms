@@ -30,6 +30,7 @@ include/nms_util.h -text
 include/nxclapi.h -text
 include/nxcscpapi.h -text
 include/nxevent.h -text
+include/nximage.h -text
 m4/Makefile.am -text
 /reconf -text
 sql/.cvsignore -text
@@ -39,6 +40,7 @@ sql/clear.sql -text
 sql/dbinit.in -text
 sql/drop.sh -text
 sql/events.in -text
+sql/images.in -text
 sql/schema.in -text
 sql/setup.in -text
 src/Makefile.am -text
@@ -236,6 +238,7 @@ src/server/core/events.cpp -text
 src/server/core/evproc.cpp -text
 src/server/core/hk.cpp -text
 src/server/core/id.cpp -text
+src/server/core/image.cpp -text
 src/server/core/interface.cpp -text
 src/server/core/locks.cpp -text
 src/server/core/log.cpp -text

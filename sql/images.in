@@ -1,0 +1,18 @@
+/*
+** Default images
+**
+** ex: syntax=sql
+*/
+
+INSERT INTO images (image_id,name,file_name,file_hash)
+	VALUES (IMG_NETWORK,'Obj.Network','network.png','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name,file_hash)
+	VALUES (IMG_INTERFACE,'Obj.Interface','interface.png','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name,file_hash)
+	VALUES (IMG_CONTAINER_NODE_GROUP,'Obj.NodeGroup','node_group.png','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name,file_hash)
+	VALUES (IMG_NODE_GENERIC,'Obj.Node.Generic','node.png','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name,file_hash)
+	VALUES (IMG_PRINTER_GENERIC,'Obj.Printer.Generic','generic_printer.png','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name,file_hash)
+	VALUES (IMG_CONTAINER_SERVICE,'Obj.Service','service.png','<invalid_hash>');
