@@ -76,7 +76,7 @@ static Queue *m_pMailerQueue = NULL;
 
 int RecvWithTimeout(SOCKET hSocket, char *pszBuffer, int iBufSize)
 {
-   struct fd_set rdfs;
+   fd_set rdfs;
    struct timeval timeout;
 
    // Wait for data
