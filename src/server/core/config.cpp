@@ -242,7 +242,7 @@ BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, char *szDefault)
    if (strlen(szVar) > 127)
       return FALSE;
 
-   sprintf(szQuery, "SELECT value FROM config WHERE name='%s'", szVar);
+   sprintf(szQuery, "SELECT var_value FROM config WHERE var_name='%s'", szVar);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;
@@ -302,7 +302,7 @@ BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
       return FALSE;
 
    // Check for variable existence
-   sprintf(szQuery, "SELECT value FROM config WHERE name='%s'", szVar);
+   sprintf(szQuery, "SELECT var_value FROM config WHERE var_name='%s'", szVar);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -317,9 +317,9 @@ BOOL ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
 
    // Create or update variable value
    if (bVarExist)
-      sprintf(szQuery, "UPDATE config SET value='%s' WHERE name='%s'", szValue, szVar);
+      sprintf(szQuery, "UPDATE config SET var_value='%s' WHERE var_name='%s'", szValue, szVar);
    else
-      sprintf(szQuery, "INSERT INTO config (name,value) VALUES ('%s','%s')", szVar, szValue);
+      sprintf(szQuery, "INSERT INTO config (var_name,var_value) VALUES ('%s','%s')", szVar, szValue);
    return DBQuery(g_hCoreDB, szQuery);
 }
 

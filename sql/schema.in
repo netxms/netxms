@@ -5,9 +5,9 @@
 
 CREATE TABLE config
 (
-	name varchar(63) not null,
-	value varchar(255),
-	PRIMARY KEY(name)
+	var_name varchar(63) not null,
+	var_value varchar(255),
+	PRIMARY KEY(var_name)
 );
 
 
@@ -272,10 +272,10 @@ CREATE TABLE events
 CREATE TABLE event_log
 (
 	event_id integer,
-	timestamp integer,
-	source integer,			// Source object ID
-	severity integer,
-	message varchar(255)
+	event_timestamp integer,
+	event_source integer,			// Source object ID
+	event_severity integer,
+	event_message varchar(255)
 );
 
 
@@ -449,7 +449,7 @@ CREATE TABLE dct_host_map
 CREATE TABLE alarms
 (
 	alarm_id integer not null,	// Unique alarm identifier
-	timestamp integer,
+	alarm_timestamp integer,
 	source_object_id integer,
 	source_event_id integer,
 	message varchar(255),
@@ -469,7 +469,7 @@ CREATE TABLE alarm_notes
 (
 	note_id integer not null,
 	alarm_id integer not null,
-	timestamp integer,
+	alarm_note_timestamp integer,
 	note_text DT_TEXT,
 	PRIMARY KEY(note_id)
 );

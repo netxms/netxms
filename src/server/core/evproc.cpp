@@ -54,7 +54,8 @@ void EventProcessor(void *arg)
          char *pszMsg, szQuery[1024];
 
          pszMsg = EncodeSQLString(pEvent->Message());
-         sprintf(szQuery, "INSERT INTO event_log (event_id,timestamp,source,severity,message) "
+         sprintf(szQuery, "INSERT INTO event_log (event_id,event_timestamp,"
+                          "event_source,event_severity,event_message) "
                           "VALUES (%d,%d,%d,%d,'%s')", pEvent->Id(), pEvent->TimeStamp(),
                  pEvent->SourceId(), pEvent->Severity(), pszMsg);
          free(pszMsg);

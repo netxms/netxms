@@ -678,7 +678,9 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
    MutexLock(m_mutexSendEvents, INFINITE);
 
    // Retrieve events from database
-   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM event_log ORDER BY timestamp");
+   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,event_timestamp,event_source,"
+                                      "event_severity,event_message FROM event_log "
+                                      "ORDER BY event_timestamp");
    if (hResult != NULL)
    {
       // Send events, one per message
@@ -727,7 +729,7 @@ void ClientSession::SendAllConfigVars(void)
       msg.SetCode(CMD_CONFIG_VARIABLE);
 
       // Retrieve configuration variables from database
-      hResult = DBSelect(g_hCoreDB, "SELECT name,value FROM config");
+      hResult = DBSelect(g_hCoreDB, "SELECT var_name,var_value FROM config");
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -1604,7 +1606,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             sprintf(&szCond[iPos], " AND timestamp<=%d", dwTimeTo);
          }
 
-         sprintf(szQuery, "SELECT timestamp,value FROM idata_%d WHERE item_id=%d%s ORDER BY timestamp DESC",
+         sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
                  dwObjectId, dwItemId, szCond);
          hResult = DBAsyncSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)

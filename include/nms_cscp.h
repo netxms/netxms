@@ -245,6 +245,7 @@ typedef struct
 #define CMD_MODIFY_ACTION           0x0050
 #define CMD_CREATE_ACTION           0x0051
 #define CMD_DELETE_ACTION           0x0052
+#define CMD_ACTION_DATA             0x0053
 
 
 //

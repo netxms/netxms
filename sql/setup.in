@@ -4,25 +4,25 @@
 ** ex: syntax=sql
 */
 
-INSERT INTO config (name,value) VALUES ('DBFormatVersion',DB_FORMAT_VERSION);
-INSERT INTO config (name,value) VALUES ('SyncInterval','60');
-INSERT INTO config (name,value) VALUES ('NewNodePollingInterval','60');
-INSERT INTO config (name,value) VALUES ('DiscoveryPollingInterval','900');
-INSERT INTO config (name,value) VALUES ('StatusPollingInterval','30');
-INSERT INTO config (name,value) VALUES ('ConfigurationPollingInterval','3600');
-INSERT INTO config (name,value) VALUES ('ResolveNodeNames','0');
-INSERT INTO config (name,value) VALUES ('NumberOfEventProcessors','1');
-INSERT INTO config (name,value) VALUES ('ClientListenerPort','4701');
-INSERT INTO config (name,value) VALUES ('NumberOfDataCollectors','10');
-INSERT INTO config (name,value) VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,timestamp integer,value varchar(255))');
-INSERT INTO config (name,value) VALUES ('RunNetworkDiscovery','1');
-INSERT INTO config (name,value) VALUES ('EnableAdminInterface','1');
-INSERT INTO config (name,value) VALUES ('EnableAccessControl','1');
-INSERT INTO config (name,value) VALUES ('EnableEventsAccessControl','0');
-INSERT INTO config (name,value) VALUES ('EventLogRetentionTime','5184000'); // Default retention time is 60 days == 5184000 seconds
-INSERT INTO config (name,value) VALUES ('HouseKeepingInterval','3600');
-INSERT INTO config (name,value) VALUES ('DeleteEmptySubnets','1');
-INSERT INTO config (name,value) VALUES ('EnableSNMPTraps','1');
+INSERT INTO config (var_name,var_value) VALUES ('DBFormatVersion',DB_FORMAT_VERSION);
+INSERT INTO config (var_name,var_value) VALUES ('SyncInterval','60');
+INSERT INTO config (var_name,var_value) VALUES ('NewNodePollingInterval','60');
+INSERT INTO config (var_name,var_value) VALUES ('DiscoveryPollingInterval','900');
+INSERT INTO config (var_name,var_value) VALUES ('StatusPollingInterval','30');
+INSERT INTO config (var_name,var_value) VALUES ('ConfigurationPollingInterval','3600');
+INSERT INTO config (var_name,var_value) VALUES ('ResolveNodeNames','0');
+INSERT INTO config (var_name,var_value) VALUES ('NumberOfEventProcessors','1');
+INSERT INTO config (var_name,var_value) VALUES ('ClientListenerPort','4701');
+INSERT INTO config (var_name,var_value) VALUES ('NumberOfDataCollectors','10');
+INSERT INTO config (var_name,var_value) VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer,idata_value varchar(255))');
+INSERT INTO config (var_name,var_value) VALUES ('RunNetworkDiscovery','1');
+INSERT INTO config (var_name,var_value) VALUES ('EnableAdminInterface','1');
+INSERT INTO config (var_name,var_value) VALUES ('EnableAccessControl','1');
+INSERT INTO config (var_name,var_value) VALUES ('EnableEventsAccessControl','0');
+INSERT INTO config (var_name,var_value) VALUES ('EventLogRetentionTime','5184000'); // Default retention time is 60 days == 5184000 seconds
+INSERT INTO config (var_name,var_value) VALUES ('HouseKeepingInterval','3600');
+INSERT INTO config (var_name,var_value) VALUES ('DeleteEmptySubnets','1');
+INSERT INTO config (var_name,var_value) VALUES ('EnableSNMPTraps','1');
 
 
 /*

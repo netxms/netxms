@@ -71,7 +71,7 @@ static void DataCollector(void *pArg)
          switch(dwError)
          {
             case DCE_SUCCESS:
-               sprintf(szQuery, "INSERT INTO idata_%d (item_id,timestamp,value)"
+               sprintf(szQuery, "INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)"
                                 " VALUES (%d,%d,'%s')", pNode->Id(), pItem->Id(), 
                        currTime, pBuffer);
                QueueSQLRequest(szQuery);

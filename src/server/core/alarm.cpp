@@ -80,7 +80,7 @@ BOOL AlarmManager::Init(void)
    DWORD i;
 
    // Load unacknowleged alarms into memory
-   hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,timestamp,source_object_id,source_event_id,"
+   hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,alarm_timestamp,source_object_id,source_event_id,"
                                  "message,severity,alarm_key FROM alarms WHERE is_ack=0");
    if (hResult == NULL)
       return FALSE;
@@ -151,7 +151,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    // Save alarm to database
    pszExpMsg = EncodeSQLString(alarm.szMessage);
    pszExpKey = EncodeSQLString(alarm.szKey);
-   sprintf(szQuery, "INSERT INTO alarms (alarm_id,timestamp,source_object_id,"
+   sprintf(szQuery, "INSERT INTO alarms (alarm_id,alarm_timestamp,source_object_id,"
                     "source_event_id,message,severity,alarm_key,is_ack,ack_by)"
                     " VALUES (%ld,%ld,%ld,%ld,'%s',%d,'%s',%d,%ld)",
            alarm.dwAlarmId, alarm.dwTimeStamp, alarm.dwSourceObject, alarm.dwSourceEvent,
