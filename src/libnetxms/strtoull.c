@@ -27,9 +27,9 @@
  * SUCH DAMAGE.
  */
 
-#if !(HAVE_STRTOULL)
-
 #include "libnetxms.h"
+
+#if !(HAVE_STRTOULL)
 
 #include <sys/types.h>
 

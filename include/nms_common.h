@@ -103,6 +103,7 @@ typedef int socklen_t;
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <fcntl.h>
+#include <errno.h>
 
 typedef int BOOL;
 typedef long int LONG;
@@ -139,6 +140,8 @@ typedef int SOCKET;
 #else    /* not _WIN32 and not _NETWARE */
 
 /*********** UNIX *********************/
+
+#include <errno.h>
 
 #define FS_PATH_SEPARATOR  _T("/")
 
