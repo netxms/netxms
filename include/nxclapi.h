@@ -180,6 +180,7 @@ typedef void * NXC_SESSION;
 #define NXC_EVENT_USER_DB_CHANGED      3
 #define NXC_EVENT_OBJECT_CHANGED       4
 #define NXC_EVENT_NOTIFICATION         5
+#define NXC_EVENT_DEPLOYMENT_STATUS    6
 
 
 //
@@ -860,6 +861,18 @@ typedef struct
 
 
 //
+// Package deployment status information
+//
+
+typedef struct
+{
+   DWORD dwNodeId;
+   DWORD dwStatus;
+   TCHAR *pszErrorMessage;
+} NXC_DEPLOYMENT_STATUS;
+
+
+//
 // Object creation information structure
 //
 
@@ -1056,6 +1069,9 @@ DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INF
                                            TCHAR *pszFullPkgPath);
 DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId);
 DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *pInfo);
+DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
+                                          DWORD dwNumObjects, DWORD *pdwObjectList,
+                                          DWORD *pdwRqId);
 
 #ifdef __cplusplus
 }

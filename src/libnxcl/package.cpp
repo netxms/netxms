@@ -266,3 +266,60 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 
    return dwResult;
 }
+
+
+//
+// Start package deployment
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
+                                          DWORD dwNumObjects, DWORD *pdwObjectList,
+                                          DWORD *pdwRqId)
+{
+   CSCPMessage msg, *pInfo;
+   DWORD dwRqId, dwResult;
+   NXC_DEPLOYMENT_STATUS status;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+   *pdwRqId = dwRqId;
+
+   msg.SetCode(CMD_DEPLOY_PACKAGE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_PACKAGE_ID, dwPkgId);
+   msg.SetVariable(VID_NUM_OBJECTS, dwNumObjects);
+   msg.SetVariableToInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   if (dwResult == RCC_SUCCESS)
+   {
+      while(1)
+      {
+         // Wait up to 10 minutes for notification message from server
+         pInfo = ((NXCL_Session *)hSession)->WaitForMessage(CMD_INSTALLER_INFO, dwRqId, 600000);
+         if (pInfo != NULL)
+         {
+            status.dwStatus = pInfo->GetVariableShort(VID_DEPLOYMENT_STATUS);
+            if (status.dwStatus == DEPLOYMENT_STATUS_FINISHED)
+            {
+               delete pInfo;
+               break;   // Deployment job finished
+            }
+
+            status.dwNodeId = pInfo->GetVariableLong(VID_OBJECT_ID);
+            status.pszErrorMessage = pInfo->GetVariableStr(VID_ERROR_MESSAGE);
+            ((NXCL_Session *)hSession)->CallEventHandler(NXC_EVENT_DEPLOYMENT_STATUS, dwRqId, &status);
+            safe_free(status.pszErrorMessage);
+
+            delete pInfo;
+         }
+         else
+         {
+            dwResult = RCC_TIMEOUT;
+            break;
+         }
+      }
+   }
+
+   return dwResult;
+}
