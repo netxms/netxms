@@ -147,14 +147,6 @@ public:
    void SendToClient(ClientSession *pSession, DWORD dwRqId);
 };
 
-inline void EventPolicy::Lock(BOOL bWrite)
-{
-   if (bWrite)
-      RWLockWriteLock(m_rwlock, INFINITE);
-   else
-      RWLockReadLock(m_rwlock, INFINITE);
-}
-
 
 //
 // Functions

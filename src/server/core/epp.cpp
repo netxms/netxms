@@ -309,9 +309,22 @@ EventPolicy::~EventPolicy()
    DWORD i;
 
    for(i = 0; i < m_dwNumRules; i++)
-      safe_free(m_ppRuleList[i]);
+      delete m_ppRuleList[i];
    safe_free(m_ppRuleList);
    RWLockDestroy(m_rwlock);
+}
+
+
+//
+// Lock event policy for reading or writing
+//
+
+void EventPolicy::Lock(BOOL bWrite)
+{
+   if (bWrite)
+      RWLockWriteLock(m_rwlock, INFINITE);
+   else
+      RWLockReadLock(m_rwlock, INFINITE);
 }
 
 
@@ -354,9 +367,11 @@ void EventPolicy::ProcessEvent(Event *pEvent)
 {
    DWORD i;
 
+   Lock();
    for(i = 0; i < m_dwNumRules; i++)
       if (m_ppRuleList[i]->ProcessEvent(pEvent))
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
+   Unlock();
 }
 
 
@@ -369,6 +384,7 @@ void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
    DWORD i;
    CSCPMessage msg;
 
+   Lock();
    msg.SetCode(CMD_EPP_RECORD);
    msg.SetId(dwRqId);
    for(i = 0; i < m_dwNumRules; i++)
@@ -377,4 +393,5 @@ void EventPolicy::SendToClient(ClientSession *pSession, DWORD dwRqId)
       pSession->SendMessage(&msg);
       msg.DeleteAllVariables();
    }
+   Unlock();
 }

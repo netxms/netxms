@@ -95,7 +95,8 @@ inline void ConditionDestroy(CONDITION hCond)
 
 inline void ConditionSet(CONDITION hCond)
 {
-   PulseEvent(hCond);
+   //PulseEvent(hCond);
+   SetEvent(hCond);
 }
 
 inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
