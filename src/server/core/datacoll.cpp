@@ -28,7 +28,7 @@
 //
 
 static Queue *m_pItemQueue = NULL;
-static DCE_ENVELOPE *m_pItems = NULL;
+static DCI_ENVELOPE *m_pItems = NULL;
 static DWORD m_dwNumItems = 0;
 static MUTEX m_hMutexListAccess;
 
@@ -56,6 +56,9 @@ static void DataCollector(void *pArg)
       {
          switch(pEnvelope->pItem->iSource)
          {
+            case DS_INTERNAL:    // Server internal parameters (like status)
+               dwError = pEnvelope->pNode->GetInternalItem(pEnvelope->pItem->szName, MAX_LINE_SIZE, pBuffer);
+               break;
             case DS_SNMP_AGENT:
                dwError = pEnvelope->pNode->GetItemFromSNMP(pEnvelope->pItem->szName, MAX_LINE_SIZE, pBuffer);
                break;
@@ -116,11 +119,11 @@ void DeleteAllItemsForNode(DWORD dwNodeId)
 {
    DWORD i;
 
-   MutexLock(m_hListAccess, INFINITE);
+   MutexLock(m_hMutexListAccess, INFINITE);
 
    for(i = 0; i < m_dwNumItems; i++)
       if (m_pItems[i].pNode->Id() == dwNodeId)
          m_pItems[i].bDeleted = TRUE;
 
-   MutexUnlock(m_hListAccess);
+   MutexUnlock(m_hMutexListAccess);
 }

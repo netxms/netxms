@@ -261,6 +261,8 @@ BOOL Node::DeleteFromDB(void)
 
    sprintf(szQuery, "DELETE FROM nodes WHERE id=%ld", m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   sprintf(szQuery, "DROP TABLE idata_%ld", m_dwId);
+   DBQuery(g_hCoreDB, szQuery);
    return TRUE;
 }
 
@@ -728,4 +730,25 @@ DWORD Node::GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer)
       }
    }
    return DCE_COMM_ERROR;
+}
+
+
+//
+// Get value for server's internal parameter
+//
+
+DWORD Node::GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer)
+{
+   DWORD dwError = DCE_SUCCESS;
+
+   if (!stricmp(szParam, "status"))
+   {
+      sprintf(szBuffer, "%d", m_iStatus);
+   }
+   else
+   {
+      dwError = DCE_NOT_SUPPORTED;
+   }
+
+   return dwError;
 }

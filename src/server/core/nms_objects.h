@@ -133,8 +133,9 @@ struct DC_ITEM
 // Data sources
 //
 
-#define DS_SNMP_AGENT      1
-#define DS_NATIVE_AGENT    2
+#define DS_INTERNAL        0
+#define DS_NATIVE_AGENT    1
+#define DS_SNMP_AGENT      2
 
 
 //
@@ -376,6 +377,7 @@ public:
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer);
 };
 
 
