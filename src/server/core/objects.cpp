@@ -206,8 +206,21 @@ static void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dw
 void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 {
    ObjectsGlobalLock();
-   if (bNewObject)   // Assign unique ID to new object
+   if (bNewObject)   
+   {
+      // Assign unique ID to new object
       pObject->SetId(m_dwFreeObjectId++);
+
+      // Create table for storing data collection values
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         char szQuery[256], szQueryTemplate[256];
+
+         ConfigReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
+         sprintf(szQuery, szQueryTemplate, pObject->Id());
+         DBQuery(g_hCoreDB, szQuery);
+      }
+   }
    MutexLock(g_hMutexIdIndex, INFINITE);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
    MutexUnlock(g_hMutexIdIndex);

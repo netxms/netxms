@@ -54,6 +54,7 @@
 #include <nms_util.h>
 #include "nms_objects.h"
 #include "nms_users.h"
+#include "nms_dcoll.h"
 #include "messages.h"
 
 
@@ -67,12 +68,12 @@
 #define VERSION_STRING     "1.0.0"
 
 #ifdef _WIN32
-#define DEFAULT_CONFIG_FILE   "C:\\nms.conf"
-#define DEFAULT_LOG_FILE      "C:\\nms.log"
+#define DEFAULT_CONFIG_FILE   "C:\\NetXMS.conf"
+#define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
 #define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #else    /* _WIN32 */
-#define DEFAULT_CONFIG_FILE   "/etc/nms.conf"
-#define DEFAULT_LOG_FILE      "/var/log/nms.log"
+#define DEFAULT_CONFIG_FILE   "/etc/netxms.conf"
+#define DEFAULT_LOG_FILE      "/var/log/netxms.log"
 #define IsStandalone() (1)
 #endif   /* _WIN32 */
 
@@ -268,7 +269,7 @@ BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 void SnmpInit(void);
 BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary, 
-             size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose);
+             size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
 BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
                    void (* pHandler)(DWORD, char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose);

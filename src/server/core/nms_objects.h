@@ -27,6 +27,13 @@
 
 
 //
+// Forward declarations of classes
+//
+
+class AgentConnection;
+
+
+//
 // Global variables used by inline functions
 //
 
@@ -108,6 +115,7 @@ struct DC_ITEM
    int iRetentionTime;     // Retention time in seconds
    BYTE iSource;           // SNMP or native agent?
    BYTE iDataType;
+   BYTE iStatus;           // Item status: active, disabled or not supported
 };
 
 
@@ -127,6 +135,15 @@ struct DC_ITEM
 
 #define DS_SNMP_AGENT      1
 #define DS_NATIVE_AGENT    2
+
+
+//
+// Item status
+//
+
+#define ITEM_STATUS_ACTIVE          0
+#define ITEM_STATUS_DISABLED        1
+#define ITEM_STATUS_NOT_SUPPORTED   2
 
 
 //
@@ -308,6 +325,7 @@ protected:
    MUTEX m_hPollerMutex;
    DWORD m_dwNumItems;     // Number of data collection items
    DC_ITEM *m_pItems;      // Data collection items
+   AgentConnection *m_pAgentConnection;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -354,6 +372,10 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    void LoadItemsFromDB(void);
+
+   BOOL ConnectToAgent(void);
+   DWORD GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer);
 };
 
 

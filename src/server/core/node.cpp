@@ -1,5 +1,5 @@
 /* 
-** Project X - Network Management System
+** NetXMS - Network Management System
 ** Copyright (C) 2003 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -47,6 +47,7 @@ Node::Node()
    m_hPollerMutex = MutexCreate();
    m_dwNumItems = 0;
    m_pItems = NULL;
+   m_pAgentConnection = NULL;
 }
 
 
@@ -76,6 +77,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_hPollerMutex = MutexCreate();
    m_dwNumItems = 0;
    m_pItems = NULL;
+   m_pAgentConnection = NULL;
 }
 
 
@@ -88,6 +90,8 @@ Node::~Node()
    MutexDestroy(m_hPollerMutex);
    if (m_pItems != NULL)
       free(m_pItems);
+   if (m_pAgentConnection != NULL)
+      delete m_pAgentConnection;
 }
 
 
@@ -274,7 +278,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    PollerLock();
 
    // Determine node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
       m_dwFlags |= NF_IS_SNMP;
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
@@ -340,13 +344,8 @@ ARP_CACHE *Node::GetArpCache(void)
    }
    else if (m_dwFlags & NF_IS_NATIVE_AGENT)
    {
-      AgentConnection *pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-      if (pAgentConn->Connect())
-      {
-         pArpCache = pAgentConn->GetArpCache();
-         pAgentConn->Disconnect();
-      }
-      delete pAgentConn;
+      if (ConnectToAgent())
+         pArpCache = m_pAgentConnection->GetArpCache();
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
@@ -527,7 +526,7 @@ void Node::ConfigurationPoll(void)
    PollerLock();
 
    // Check node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
@@ -661,4 +660,72 @@ void Node::LoadItemsFromDB(void)
       }
       DBFreeResult(hResult);
    }
+}
+
+
+//
+// Connect to native agent
+//
+
+BOOL Node::ConnectToAgent(void)
+{
+   // Create new agent connection object if needed
+   if (m_pAgentConnection == NULL)
+      m_pAgentConnection = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+
+   // Check if we already connected
+   if (m_pAgentConnection->Nop() == ERR_SUCCESS)
+      return TRUE;
+
+   // Close current connection or clean up after broken connection
+   m_pAgentConnection->Disconnect();
+   return m_pAgentConnection->Connect();
+}
+
+
+//
+// Get item's value via SNMP
+//
+
+DWORD Node::GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer)
+{
+   return SnmpGet(m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
+                  szBuffer, dwBufSize, FALSE, TRUE) ? DCE_SUCCESS : DCE_COMM_ERROR;
+}
+
+
+//
+// Get item's value via native agent
+//
+
+DWORD Node::GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer)
+{
+   DWORD dwError;
+   DWORD dwTries = 5;
+
+   // Establish connection if needed
+   if (m_pAgentConnection == NULL)
+      if (!ConnectToAgent())
+         return DCE_COMM_ERROR;
+
+   // Get parameter from agent
+   while(dwTries-- > 0)
+   {
+      dwError = m_pAgentConnection->GetParameter(szParam, dwBufSize, szBuffer);
+      switch(dwError)
+      {
+         case ERR_SUCCESS:
+            return DCE_SUCCESS;
+         case ERR_UNKNOWN_PARAMETER:
+            return DCE_NOT_SUPPORTED;
+         case ERR_NOT_CONNECTED:
+         case ERR_CONNECTION_BROKEN:
+            if (!ConnectToAgent())
+               return DCE_COMM_ERROR;
+            break;
+         case ERR_REQUEST_TIMEOUT:
+            break;
+      }
+   }
+   return DCE_COMM_ERROR;
 }

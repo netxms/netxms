@@ -142,6 +142,10 @@ BOOL Initialize(void)
    if (!LoadObjects())
       return FALSE;
 
+   // Initialize data collection subsystem
+   if (!InitDataCollector())
+      return FALSE;
+
    // Initialize watchdog
    WatchdogInit();
 

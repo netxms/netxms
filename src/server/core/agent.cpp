@@ -156,10 +156,13 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
 
 void AgentConnection::Disconnect(void)
 {
-   ExecuteCommand("QUIT");
-   shutdown(m_hSocket, 2);
-   closesocket(m_hSocket);
-   m_hSocket = -1;
+   if (m_hSocket != -1)
+   {
+      ExecuteCommand("QUIT");
+      shutdown(m_hSocket, 2);
+      closesocket(m_hSocket);
+      m_hSocket = -1;
+   }
    DestroyResultData();
 }
 

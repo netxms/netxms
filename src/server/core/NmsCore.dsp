@@ -99,6 +99,10 @@ SOURCE=.\config.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\datacoll.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\db.cpp
 # End Source File
 # Begin Source File
@@ -216,6 +220,10 @@ SOURCE=.\nms_core.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nms_cscp.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nms_dcoll.h
 # End Source File
 # Begin Source File
 
