@@ -2,7 +2,7 @@
 -- System configuration table
 --
 
-CREATE TABLE CONFIG
+CREATE TABLE Config
 (
 	name varchar(64) not null,
 	value varchar(255),
@@ -11,20 +11,35 @@ CREATE TABLE CONFIG
 
 
 --
+-- Nodes to be added
+--
+
+CREATE TABLE NewNodes
+(
+	id integer not null,
+	ip_addr integer not null,
+	ip_netmask integer not null,
+	discovery_flags integer not null
+);
+
+
+--
 -- Nodes information
 --
 
-CREATE TABLE NODES
+CREATE TABLE Nodes
 (
 	id integer not null,
 	name varchar(64),
 	status integer,
-	isDeleted bool not null,
+	is_deleted integer not null,
 	primary_ip integer,
-	isSNMP bool,
-	isNativeAgent bool,
-	isRouter bool,
-	isBridge bool,
+	is_snmp integer,
+	is_agent integer,
+	is_bridge integer,
+	is_router integer,
+	snmp_version integer,
+	discovery_flags integer,
 	PRIMARY KEY(id)
 );
 
@@ -33,12 +48,12 @@ CREATE TABLE NODES
 -- Subnets
 --
 
-CREATE TABLE SUBNETS
+CREATE TABLE Subnets
 (
 	id integer not null,
 	name varchar(64),
 	status integer,
-	isDeleted bool not null,
+	is_deleted integer not null,
 	ip_addr integer,
 	ip_netmask integer,
 	PRIMARY KEY(id)
@@ -49,15 +64,19 @@ CREATE TABLE SUBNETS
 -- Nodes' interfaces
 --
 
-create table INTERFACES
+create table Interfaces
 (
 	id integer not null,
-	node_id integer not null,
 	name varchar(64),
+	status integer,
+        is_deleted integer,
+	node_id integer not null,
 	ip_addr integer,
 	ip_netmask integer,
-	status integer,
-	type integer
+	if_type integer,
+	if_index integer,
+	PRIMARY KEY(id),
+	KEY(node_id)
 );
 
 
@@ -67,8 +86,9 @@ create table INTERFACES
 
 create table NSMAP
 (
-	node_id integer,
-	subnet_id integer
+	subnet_id integer not null,
+	node_id integer not null,
+	PRIMARY KEY (subnet_id)
 );
 
 
