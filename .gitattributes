@@ -72,6 +72,8 @@ images/interface.ico -text
 images/interface.png -text
 images/network.ico -text
 images/network.png -text
+images/network_service.ico -text
+images/network_service.png -text
 images/node.ico -text
 images/node.png -text
 images/node_group.ico -text
