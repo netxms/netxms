@@ -27,6 +27,13 @@
 
 
 //
+// Constants
+//
+
+#define UI_THREAD_WAIT_TIME   300
+
+
+//
 // Request parameters structure
 //
 
@@ -37,6 +44,7 @@ struct RqData
    DWORD dwNumParams;
    void *pArg1;
    void *pArg2;
+   void *pArg3;
 };
 
 
@@ -129,9 +137,56 @@ static DWORD WINAPI RequestThread(void *pArg)
       case 1:
          dwResult = pData->pFunc(pData->pArg1);
          break;
+      case 2:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2);
+         break;
+      case 3:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3);
+         break;
    }
    if (pData->hWnd != NULL)
       PostMessage(pData->hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
+   return dwResult;
+}
+
+
+//
+// Perform request (common code)
+//
+
+static DWORD ExecuteRequest(RqData *pData, char *pszInfoText)
+{
+   HANDLE hThread;
+   DWORD dwThreadId, dwResult;
+
+   hThread = CreateThread(NULL, 0, RequestThread, pData, 0, &dwThreadId);
+   if (hThread != NULL)
+   {
+      CRequestProcessingDlg wndWaitDlg;
+
+      // Wait for request completion
+      if (WaitForSingleObject(hThread, UI_THREAD_WAIT_TIME) == WAIT_TIMEOUT)
+      {
+         // Thread still not finished, open status window
+         SuspendThread(hThread);
+         wndWaitDlg.m_phWnd = &pData->hWnd;
+         wndWaitDlg.m_hThread = hThread;
+         wndWaitDlg.m_strInfoText = pszInfoText;
+         dwResult = (DWORD)wndWaitDlg.DoModal();
+      }
+      else
+      {
+         // Thread is finished, get it's exit code
+         if (!GetExitCodeThread(hThread, &dwResult))
+            dwResult = RCC_SYSTEM_FAILURE;
+      }
+      CloseHandle(hThread);
+   }
+   else
+   {
+      dwResult = RCC_SYSTEM_FAILURE;
+   }
+
    return dwResult;
 }
 
@@ -142,42 +197,12 @@ static DWORD WINAPI RequestThread(void *pArg)
 
 DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText)
 {
-   HANDLE hThread;
    RqData rqData;
-   DWORD dwThreadId, dwResult;
 
    rqData.hWnd = NULL;
    rqData.dwNumParams = 0;
    rqData.pFunc = (DWORD (*)(...))pFunc;
-   hThread = CreateThread(NULL, 0, RequestThread, &rqData, 0, &dwThreadId);
-   if (hThread != NULL)
-   {
-      CRequestProcessingDlg wndWaitDlg;
-
-      // Wait half a second for request completion
-      if (WaitForSingleObject(hThread, 500) == WAIT_TIMEOUT)
-      {
-         // Thread still not finished, open status window
-         SuspendThread(hThread);
-         wndWaitDlg.m_phWnd = &rqData.hWnd;
-         wndWaitDlg.m_hThread = hThread;
-         wndWaitDlg.m_strInfoText = pszInfoText;
-         dwResult = (DWORD)wndWaitDlg.DoModal();
-      }
-      else
-      {
-         // Thread is finished, get it's exit code
-         if (!GetExitCodeThread(hThread, &dwResult))
-            dwResult = RCC_SYSTEM_FAILURE;
-      }
-      CloseHandle(hThread);
-   }
-   else
-   {
-      dwResult = RCC_SYSTEM_FAILURE;
-   }
-
-   return dwResult;
+   return ExecuteRequest(&rqData, pszInfoText);
 }
 
 
@@ -187,41 +212,29 @@ DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText)
 
 DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText)
 {
-   HANDLE hThread;
    RqData rqData;
-   DWORD dwThreadId, dwResult;
 
    rqData.hWnd = NULL;
    rqData.dwNumParams = 1;
    rqData.pArg1 = pArg1;
    rqData.pFunc = (DWORD (*)(...))pFunc;
-   hThread = CreateThread(NULL, 0, RequestThread, &rqData, 0, &dwThreadId);
-   if (hThread != NULL)
-   {
-      CRequestProcessingDlg wndWaitDlg;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
 
-      // Wait half a second for request completion
-      if (WaitForSingleObject(hThread, 500) == WAIT_TIMEOUT)
-      {
-         // Thread still not finished, open status window
-         SuspendThread(hThread);
-         wndWaitDlg.m_phWnd = &rqData.hWnd;
-         wndWaitDlg.m_hThread = hThread;
-         wndWaitDlg.m_strInfoText = pszInfoText;
-         dwResult = (DWORD)wndWaitDlg.DoModal();
-      }
-      else
-      {
-         // Thread is finished, get it's exit code
-         if (!GetExitCodeThread(hThread, &dwResult))
-            dwResult = RCC_SYSTEM_FAILURE;
-      }
-      CloseHandle(hThread);
-   }
-   else
-   {
-      dwResult = RCC_SYSTEM_FAILURE;
-   }
 
-   return dwResult;
+//
+// Perform request with 3 parameter
+//
+
+DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 3;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pArg3 = pArg3;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
 }

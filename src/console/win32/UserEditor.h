@@ -8,6 +8,7 @@
 //
 
 #include "NewUserDlg.h"
+#include "UserPropDlg.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -47,8 +48,13 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnUserCreateGroup();
 	afx_msg void OnUserCreateUser();
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnUserProperties();
 	//}}AFX_MSG
+   afx_msg void OnUserDBChange(int iCode, NXC_USER *pUserInfo);
 	DECLARE_MESSAGE_MAP()
+private:
+	int AddListItem(NXC_USER *pUser);
 };
 
 /////////////////////////////////////////////////////////////////////////////

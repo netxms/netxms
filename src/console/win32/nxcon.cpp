@@ -449,6 +449,9 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       case NXC_EVENT_OBJECT_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
          break;
+      case NXC_EVENT_USER_DB_CHANGED:
+         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_USERDB_CHANGE, dwCode, (LPARAM)pArg);
+         break;
       default:
          break;
    }

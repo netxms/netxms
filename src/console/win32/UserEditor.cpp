@@ -34,7 +34,10 @@ BEGIN_MESSAGE_MAP(CUserEditor, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_COMMAND(ID_USER_CREATE_GROUP, OnUserCreateGroup)
 	ON_COMMAND(ID_USER_CREATE_USER, OnUserCreateUser)
+	ON_WM_SETFOCUS()
+	ON_COMMAND(ID_USER_PROPERTIES, OnUserProperties)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -89,7 +92,7 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS, rect, this, ID_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | LVS_EX_FULLROWSELECT);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -126,6 +129,29 @@ void CUserEditor::OnSize(UINT nType, int cx, int cy)
 
 
 //
+// Add new item to list
+//
+
+int CUserEditor::AddListItem(NXC_USER *pUser)
+{
+   int iItem;
+   char szBuffer[32];
+
+   sprintf(szBuffer, "%08X", pUser->dwId);
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer,
+                 (pUser->dwId == GROUP_EVERYONE) ? 2 : ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
+   if (iItem != -1)
+   {
+      m_wndListCtrl.SetItemData(iItem, pUser->dwId);
+      m_wndListCtrl.SetItemText(iItem, 1, pUser->szName);
+      m_wndListCtrl.SetItemText(iItem, 2, pUser->szFullName);
+      m_wndListCtrl.SetItemText(iItem, 3, pUser->szDescription);
+   }
+   return iItem;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_REFRESH message handler
 //
 
@@ -133,8 +159,6 @@ void CUserEditor::OnViewRefresh()
 {
    NXC_USER *pUserList;
    DWORD i, dwNumUsers;
-   int iItem;
-   char szBuffer[32];
 
    m_wndListCtrl.DeleteAllItems();
    
@@ -142,19 +166,8 @@ void CUserEditor::OnViewRefresh()
    if (NXCGetUserDB(&pUserList, &dwNumUsers))
    {
       for(i = 0; i < dwNumUsers; i++)
-      {
-         sprintf(szBuffer, "%08X", pUserList[i].dwId);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer,
-            (pUserList[i].dwId == GROUP_EVERYONE) ? 2 :
-               ((pUserList[i].dwId & GROUP_FLAG) ? 1 : 0));
-         if (iItem != -1)
-         {
-            m_wndListCtrl.SetItemData(iItem, pUserList[i].dwId);
-            m_wndListCtrl.SetItemText(iItem, 1, pUserList[i].szName);
-            m_wndListCtrl.SetItemText(iItem, 2, pUserList[i].szFullName);
-            m_wndListCtrl.SetItemText(iItem, 3, pUserList[i].szDescription);
-         }
-      }
+         if (!(pUserList[i].wFlags & UF_DELETED))
+            AddListItem(&pUserList[i]);
    }
 }
 
@@ -197,16 +210,41 @@ void CUserEditor::OnUserCreateGroup()
 
 void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bShowProp)
 {
-   DWORD dwResult;
-/*
-   // Send request to server
-   if (bIsGroup)
-      dwResult = theApp.WaitForRequest(NXCCreateUserGroup((char *)pszName), "Creating new group...");
-   else
-      dwResult = theApp.WaitForRequest(NXCCreateUser((char *)pszName), "Creating new user...");
+   DWORD dwResult, dwNewId;
 
+   // Send request to server
+   dwResult = DoRequestArg3(NXCCreateUser, (void *)pszName, (void *)bIsGroup, &dwNewId,
+                            bIsGroup ? "Creating new group..." : "Creating new user...");
    if (dwResult == RCC_SUCCESS)
    {
+      int iItem, iOldItem;
+      LVFINDINFO lvfi;
+
+      // Find related item
+      lvfi.flags = LVFI_PARAM;
+      lvfi.lParam = dwNewId;
+      iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+
+      if (iItem == -1)
+      {
+         NXC_USER user;
+
+         memset(&user, 0, sizeof(NXC_USER));
+         user.dwId = dwNewId;
+         strcpy(user.szName, pszName);
+         iItem = AddListItem(&user);
+      }
+
+      // Select newly created item
+      iOldItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+      if (iOldItem != -1)
+         m_wndListCtrl.SetItemState(iOldItem, 0, LVIS_SELECTED | LVIS_FOCUSED);
+      m_wndListCtrl.EnsureVisible(iItem, FALSE);
+      m_wndListCtrl.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
+                                 LVIS_SELECTED | LVIS_FOCUSED);
+
+      if (bShowProp)
+         PostMessage(WM_COMMAND, ID_USER_PROPERTIES, 0);
    }
    else
    {
@@ -215,5 +253,75 @@ void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bSho
       sprintf(szBuffer, "Error creating %s object: %s", 
               bIsGroup ? "group" : "user", NXCGetErrorText(dwResult));
       MessageBox(szBuffer, "Error", MB_OK | MB_ICONSTOP);
-   }*/
+   }
+}
+
+
+//
+// WM_USERDB_CHANGE message handler
+//
+
+void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
+{
+   int iItem;
+   LVFINDINFO lvfi;
+
+   // Find related item
+   lvfi.flags = LVFI_PARAM;
+   lvfi.lParam = pUserInfo->dwId;
+   iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+
+   // Modify list control
+   switch(iCode)
+   {
+      case USER_DB_CREATE:
+         if (iItem == -1)
+            AddListItem(pUserInfo);
+         break;
+      case USER_DB_MODIFY:
+         break;
+      case USER_DB_DELETE:
+         if (iItem != -1)
+            m_wndListCtrl.DeleteItem(iItem);
+         break;
+   }
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CUserEditor::OnSetFocus(CWnd* pOldWnd) 
+{
+	CMDIChildWnd::OnSetFocus(pOldWnd);
+
+   m_wndListCtrl.SetFocus();
+}
+
+
+//
+// WM_COMMAND::ID_USER_PROPERTIES message handler
+//
+
+void CUserEditor::OnUserProperties() 
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
+   if (iItem != -1)
+   {
+      DWORD dwId;
+
+      dwId = m_wndListCtrl.GetItemData(iItem);
+      if (dwId & GROUP_FLAG)
+      {
+      }
+      else
+      {
+         CUserPropDlg dlg;
+
+         dlg.DoModal();
+      }
+   }
 }

@@ -988,7 +988,10 @@ void CObjectBrowser::UpdateObjectList(NXC_OBJECT *pObject)
             // Check if current item has been changed
             iCurrItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
             if (iItem == iCurrItem)
+            {
                m_wndPreviewPane.Refresh();
+               m_wndListCtrl.EnsureVisible(iItem, FALSE);
+            }
          }
       }
    }

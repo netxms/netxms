@@ -24,6 +24,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//}}AFX_MSG_MAP
    ON_UPDATE_COMMAND_UI(ID_INDICATOR_STATE, OnUpdateState)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -176,4 +177,14 @@ void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(WM_OBJECT_CHANGE, wParam, lParam);
+}
+
+
+//
+// Handler for WM_USERDB_CHANGE message
+//
+
+void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
+{
+   BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam);
 }

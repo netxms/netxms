@@ -53,6 +53,7 @@
 #define IDI_EVERYONE                    166
 #define IDD_SELECT_USER                 167
 #define IDD_NEW_USER                    168
+#define IDD_USER_PROPERTIES             169
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -91,6 +92,14 @@
 #define IDC_CHECK_ACCESS                1035
 #define IDC_CHECK_PROPERTIES            1037
 #define IDC_STATIC_HEADER               1038
+#define IDC_CHECK_DISABLED              1042
+#define IDC_CHECK_PASSWORD              1043
+#define IDC_CHECK_MANAGE_USERS          1044
+#define IDC_CHECK_VIEW_CONFIG           1045
+#define IDC_CHECK_EDIT_CONFIG           1046
+#define IDC_CHECK_DROP_CONN             1047
+#define IDC_CHECK_VIEW_EVENTDB          1048
+#define IDC_CHECK_EDIT_EVENTDB          1049
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -124,9 +133,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_RESOURCE_VALUE        170
 #define _APS_NEXT_COMMAND_VALUE         32808
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1050
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

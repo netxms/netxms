@@ -53,6 +53,7 @@ extern CConsoleApp theApp;
 #define WM_FIND_OBJECT           (WM_USER + 4)
 #define WM_EDITBOX_EVENT         (WM_USER + 5)
 #define WM_SET_INFO_TEXT         (WM_USER + 6)
+#define WM_USERDB_CHANGE         (WM_USER + 7)
 
 
 //
@@ -62,6 +63,7 @@ extern CConsoleApp theApp;
 DWORD DoLogin(void);
 DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText);
 DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText);
+DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText);
 
 
 //

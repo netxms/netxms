@@ -47,8 +47,9 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
    afx_msg void OnUpdateState(CCmdUI *pCmdUI);
-   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
+   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnUserDBChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

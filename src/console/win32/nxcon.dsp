@@ -213,6 +213,10 @@ SOURCE=.\UserEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\UserPropDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\UserSelectDlg.cpp
 # End Source File
 # End Group
@@ -342,6 +346,10 @@ SOURCE=.\ToolBox.h
 # Begin Source File
 
 SOURCE=.\UserEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\UserPropDlg.h
 # End Source File
 # Begin Source File
 

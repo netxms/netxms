@@ -2,25 +2,25 @@
 
 [General Info]
 Version=1
-LastClass=CRequestProcessingDlg
+LastClass=CUserPropDlg
 LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=31
+ClassCount=32
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=36
-Resource1=IDD_PROGRESS (English (U.S.))
+ResourceCount=37
+Resource1=IDD_REQUEST_PROCESSING (English (U.S.))
 Resource2=IDD_OBJECT_NODE_GENERAL
-Resource3=IDD_ABOUTBOX (English (U.S.))
+Resource3=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Resource4=IDM_VIEW_SPECIFIC
-Resource5=IDD_SELECT_USER (English (U.S.))
+Resource5=IDD_ABOUTBOX (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -28,13 +28,13 @@ Class8=CMapFrame
 Class10=CLoginDialog
 Resource6=IDD_LOGIN
 Class11=CProgressDialog
-Resource7=IDD_OBJECT_CAPS (English (U.S.))
+Resource7=IDD_NEW_USER (English (U.S.))
 Class12=CObjectBrowser
 Resource8=IDR_MAINFRAME
 Class13=CObjectPropDlg
 Resource9=IDD_ABOUTBOX
-Resource10=IDD_OBJECT_GENERAL (English (U.S.))
-Resource11=IDD_OBJECT_SECURITY (English (U.S.))
+Resource10=IDA_MDI_DEFAULT (English (U.S.))
+Resource11=IDA_OBJECT_BROWSER (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,9 +42,9 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDD_EDIT_EVENT (English (U.S.))
+Resource17=IDD_OBJECT_GENERAL (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDD_NEW_USER (English (U.S.))
+Resource18=IDD_LOGIN (English (U.S.))
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource20=IDD_SELECT_USER
 Class17=CObjectPreview
@@ -62,22 +62,24 @@ Class25=CObjectPropSheet
 Resource24=IDD_EDIT_EVENT
 Class26=CRequestProcessingDlg
 Resource25=IDD_REQUEST_PROCESSING
-Resource26=IDD_LOGIN (English (U.S.))
-Resource27=IDR_MAINFRAME (English (U.S.))
-Resource28=IDA_MDI_DEFAULT (English (U.S.))
+Resource26=IDD_OBJECT_CAPS (English (U.S.))
+Resource27=IDD_NEW_USER
+Resource28=IDD_PROGRESS (English (U.S.))
 Class27=CObjectPropsGeneral
-Resource29=IDD_OBJECT_NODE_GENERAL (English (U.S.))
+Resource29=IDD_SELECT_USER (English (U.S.))
 Class28=CObjectPropsSecurity
-Resource30=IDD_REQUEST_PROCESSING (English (U.S.))
+Resource30=IDR_MAINFRAME (English (U.S.))
 Resource31=IDD_OBJECT_GENERAL
 Resource32=IDA_MDI_DEFAULT
 Class29=CUserSelectDlg
 Resource33=IDD_PROGRESS
 Class30=CUserEditor
-Resource34=IDA_OBJECT_BROWSER (English (U.S.))
+Resource34=IDD_EDIT_EVENT (English (U.S.))
 Class31=CNewUserDlg
 Resource35=IDA_OBJECT_BROWSER
-Resource36=IDD_NEW_USER
+Resource36=IDD_OBJECT_SECURITY (English (U.S.))
+Class32=CUserPropDlg
+Resource37=IDD_USER_PROPERTIES (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -703,7 +705,7 @@ ImplementationFile=RequestProcessingDlg.cpp
 BaseClass=CDialog
 Filter=D
 VirtualFilter=dWC
-LastObject=IDC_INFO_TEXT
+LastObject=CRequestProcessingDlg
 
 [DLG:IDD_OBJECT_NODE_GENERAL (English (U.S.))]
 Type=1
@@ -878,11 +880,43 @@ VirtualFilter=dWC
 
 [DLG:IDD_NEW_USER]
 Type=1
-Class=?
+Class=CNewUserDlg
 ControlCount=5
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_CHECK_PROPERTIES,button,1342242819
 Control3=IDOK,button,1342242817
 Control4=IDCANCEL,button,1342242816
 Control5=IDC_STATIC_HEADER,static,1342308352
+
+[DLG:IDD_USER_PROPERTIES (English (U.S.))]
+Type=1
+Class=CUserPropDlg
+ControlCount=18
+Control1=IDOK,button,1342242817
+Control2=IDCANCEL,button,1342242816
+Control3=IDC_STATIC,static,1342308352
+Control4=IDC_EDIT_LOGIN,edit,1350631552
+Control5=IDC_STATIC,static,1342308352
+Control6=IDC_EDIT_NAME,edit,1350631552
+Control7=IDC_STATIC,static,1342308352
+Control8=IDC_EDIT_DESCRIPTION,edit,1350631552
+Control9=IDC_STATIC,button,1342177287
+Control10=IDC_CHECK_DISABLED,button,1342242819
+Control11=IDC_CHECK_PASSWORD,button,1342242819
+Control12=IDC_STATIC,button,1342177287
+Control13=IDC_CHECK_MANAGE_USERS,button,1342242819
+Control14=IDC_CHECK_VIEW_CONFIG,button,1342242819
+Control15=IDC_CHECK_EDIT_CONFIG,button,1342242819
+Control16=IDC_CHECK_DROP_CONN,button,1342242819
+Control17=IDC_CHECK_VIEW_EVENTDB,button,1342242819
+Control18=IDC_CHECK_EDIT_EVENTDB,button,1342242819
+
+[CLS:CUserPropDlg]
+Type=0
+HeaderFile=UserPropDlg.h
+ImplementationFile=UserPropDlg.cpp
+BaseClass=CDialog
+Filter=D
+LastObject=CUserPropDlg
+VirtualFilter=dWC
 

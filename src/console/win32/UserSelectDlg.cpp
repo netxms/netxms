@@ -76,13 +76,14 @@ BOOL CUserSelectDlg::OnInitDialog()
    if (NXCGetUserDB(&pUserList, &dwNumUsers))
    {
       for(i = 0; i < dwNumUsers; i++)
-      {
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUserList[i].szName,
-            (pUserList[i].dwId == GROUP_EVERYONE) ? 2 :
-               ((pUserList[i].dwId & GROUP_FLAG) ? 1 : 0));
-         if (iItem != -1)
-            m_wndListCtrl.SetItemData(iItem, pUserList[i].dwId);
-      }
+         if (!(pUserList[i].wFlags & UF_DELETED))
+         {
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUserList[i].szName,
+               (pUserList[i].dwId == GROUP_EVERYONE) ? 2 :
+                  ((pUserList[i].dwId & GROUP_FLAG) ? 1 : 0));
+            if (iItem != -1)
+               m_wndListCtrl.SetItemData(iItem, pUserList[i].dwId);
+         }
    }
 
 	return TRUE;

@@ -431,6 +431,40 @@ BEGIN
     LTEXT           "Login name",IDC_STATIC_HEADER,7,7,113,8
 END
 
+IDD_USER_PROPERTIES DIALOG DISCARDABLE  0, 0, 222, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "User Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,110,162,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,162,50,14
+    LTEXT           "Login name:",IDC_STATIC,7,10,40,8
+    EDITTEXT        IDC_EDIT_LOGIN,53,7,162,14,ES_AUTOHSCROLL
+    LTEXT           "Full name:",IDC_STATIC,7,29,33,8
+    EDITTEXT        IDC_EDIT_NAME,54,26,162,14,ES_AUTOHSCROLL
+    LTEXT           "Description:",IDC_STATIC,7,48,38,8
+    EDITTEXT        IDC_EDIT_DESCRIPTION,54,45,162,14,ES_AUTOHSCROLL
+    GROUPBOX        "Flags",IDC_STATIC,7,63,208,38
+    CONTROL         "&Account disabled",IDC_CHECK_DISABLED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,74,71,10
+    CONTROL         "&User must change password at next logon",
+                    IDC_CHECK_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,86,148,10
+    GROUPBOX        "System Rights",IDC_STATIC,7,106,208,49
+    CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,118,61,10
+    CONTROL         "&View server configuration",IDC_CHECK_VIEW_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,129,95,10
+    CONTROL         "&Edit server configuration",IDC_CHECK_EDIT_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,140,92,10
+    CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,118,91,10
+    CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,129,83,10
+    CONTROL         "Edit event &database",IDC_CHECK_EDIT_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,140,79,10
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -569,6 +603,14 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 50
+    END
+
+    IDD_USER_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
     END
 END
 #endif    // APSTUDIO_INVOKED
