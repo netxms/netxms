@@ -26,6 +26,8 @@
 #include <nms_common.h>
 #include <nms_cscp.h>
 
+#define INVALID_INDEX      0xFFFFFFFF
+
 
 //
 // Class for holding CSCP messages
@@ -55,6 +57,8 @@ public:
 
    DWORD GetId(void) { return m_dwId; }
    void SetId(DWORD dwId) { m_dwId = dwId; }
+
+   BOOL IsVariableExist(char *szName) { return (FindVariable(szName) != INVALID_INDEX) ? TRUE : FALSE; }
 
    void SetVariable(char *szName, DWORD dwValue) { Set(szName, DT_INTEGER, &dwValue); }
    void SetVariable(char *szName, QWORD qwValue) { Set(szName, DT_INT64, &qwValue); }
