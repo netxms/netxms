@@ -25,6 +25,18 @@
 #include "md5.h"
 #include "sha1.h"
 
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
+
+
+//
+// Constants
+//
+
+#define FILE_BLOCK_SIZE    4096
+
 
 //
 // Table for CRC calculation
@@ -112,13 +124,13 @@ DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbyte
 // Calculate MD5 hash for array of bytes
 //
 
-void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, unsigned char *hash)
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, BYTE *hash)
 {
 	md5_state_t state;
 
 	md5_init(&state);
-	md5_append(&state,(const md5_byte_t *)data,nbytes);
-	md5_finish(&state,(md5_byte_t *)hash);
+	md5_append(&state, (const md5_byte_t *)data, nbytes);
+	md5_finish(&state, (md5_byte_t *)hash);
 }
 
 
@@ -126,11 +138,44 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes
 // Calculate SHA1 hash for array of bytes
 //
 
-void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, unsigned char *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, BYTE *hash)
 {
    SHA1_CTX context;
 
    SHA1Init(&context);
    SHA1Update(&context, data, nbytes);
    SHA1Final(hash, &context);
+}
+
+
+//
+// Calculate MD5 hash for given file
+//
+
+BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash)
+{
+   int fd, iSize;
+	md5_state_t state;
+   char szBuffer[FILE_BLOCK_SIZE];
+   BOOL bSuccess = FALSE;
+
+   fd = open(pszFileName, O_RDONLY);
+   if (fd != -1)
+   {
+   	md5_init(&state);
+      while(1)
+      {
+         iSize = read(fd, szBuffer, FILE_BLOCK_SIZE);
+         if (iSize <= 0)
+            break;
+      	md5_append(&state, (const md5_byte_t *)szBuffer, iSize);
+      }
+      close(fd);
+      if (iSize == 0)
+      {
+      	md5_finish(&state, (md5_byte_t *)pHash);
+         bSuccess = TRUE;
+      }
+   }
+   return bSuccess;
 }
