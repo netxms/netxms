@@ -301,6 +301,23 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
          }
          DestroyInterfaceList(pIfList);
       }
+      else
+      {
+         // We cannot get interface list from node for some reasons, create dummy one
+         pInterface = new Interface(m_dwIpAddr, dwNetMask);
+         NetObjInsert(pInterface, TRUE);
+         AddInterface(pInterface);
+
+         // Bind node to appropriate subnet
+         pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
+         if (pSubnet == NULL)
+         {
+            // Create new subnet object
+            pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+            NetObjInsert(pSubnet, TRUE);
+         }
+         pSubnet->AddNode(this);
+      }
    }
    else  // No SNMP, no native agent - create pseudo interface object
    {

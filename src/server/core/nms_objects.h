@@ -54,6 +54,7 @@ struct INTERFACE_INFO
    DWORD dwType;
    DWORD dwIpAddr;
    DWORD dwIpNetMask;
+   int iNumSecondary;      // Number of secondary IP's on this interface
 };
 
 

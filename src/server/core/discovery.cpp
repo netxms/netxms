@@ -218,11 +218,8 @@ printf("Discovery poll on node %s\n",pNode->Name());
             {
                for(DWORD j = 0; j < pArpCache->dwNumEntries; j++)
                {
-char buffer[32];
-printf("Checking for IP address %s\n",IpToStr(pArpCache->pEntries[j].dwIpAddr,buffer));
                   if (FindNodeByIP(pArpCache->pEntries[j].dwIpAddr) == NULL)
                   {
-printf("Address not found in database\n");
                      Interface *pInterface = pNode->FindInterface(pArpCache->pEntries[j].dwIndex,
                                                                   pArpCache->pEntries[j].dwIpAddr);
                      if (pInterface != NULL)
@@ -235,10 +232,6 @@ printf("Address not found in database\n");
                                    dwNewNodeId++, pArpCache->pEntries[j].dwIpAddr,
                                    pInterface->IpNetMask(), DF_DEFAULT);
                            DBQuery(g_hCoreDB, szQuery);
-                        }
-                        else
-                        {
-printf("Broadcast address - rejected\n");
                         }
                   }
                }

@@ -184,6 +184,24 @@ void Main(void)
                   printf("*** Object dump complete ***\n");
                }
                break;
+            case 'i':   // Dump interface index by IP
+            case 'I':
+               {
+                  DWORD i;
+                  char szBuffer[32];
+                  static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
+
+                  for(i = 0; i < g_dwInterfaceAddrIndexSize; i++)
+                  {
+                     printf("%10u %-15s -> %d [0x%08x]\n",
+                            g_pInterfaceIndexByAddr[i].dwKey,
+                            IpToStr(g_pInterfaceIndexByAddr[i].dwKey, szBuffer),
+                            g_pInterfaceIndexByAddr[i].pObject->Id(),
+                            g_pInterfaceIndexByAddr[i].pObject);
+                  }
+                  printf("*** Interface IP index dump complete ***\n");
+               }
+               break;
             case 'a':
                {
                   char szBuffer[32];
@@ -206,8 +224,20 @@ void Main(void)
             case 's':
                {
                   INTERFACE_LIST *iflist;
-                  printf("*** 10.0.0.41 *** \n");
-                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.41"),"public");
+                  printf("*** 10.0.0.1 *** \n");
+                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.1"),"public");
+                  if (iflist != NULL)
+                  {
+                     char addr[32],mask[32];
+                     for(int i=0;i<iflist->iNumEntries;i++)
+                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
+                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
+                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
+                        iflist->pInterfaces[i].szName);
+                     DestroyInterfaceList(iflist);
+                  }
+                  printf("*** 159.148.208.1 *** \n");
+                  iflist=SnmpGetInterfaceList(inet_addr("159.148.208.1"),"public");
                   if (iflist != NULL)
                   {
                      char addr[32],mask[32];
@@ -230,21 +260,9 @@ void Main(void)
                         iflist->pInterfaces[i].szName);
                      DestroyInterfaceList(iflist);
                   }
-                  printf("*** 10.0.0.251 *** \n");
-                  iflist=SnmpGetInterfaceList(inet_addr("10.0.0.251"),"public");
-                  if (iflist != NULL)
-                  {
-                     char addr[32],mask[32];
-                     for(int i=0;i<iflist->iNumEntries;i++)
-                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
-                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
-                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
-                        iflist->pInterfaces[i].szName);
-                     DestroyInterfaceList(iflist);
-                  }
                }
                break;
-            case 'i':
+            case 'l':
                {
                   char buffer[256],addr[32],mask[32];
                   INTERFACE_LIST *iflist;

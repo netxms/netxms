@@ -257,10 +257,14 @@ static void HandlerIndex(DWORD dwAddr, char *szCommunity, variable_list *pVar,vo
 
 static void HandlerIpAddr(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
 {
-   DWORD dwIndex;
+   DWORD dwIndex, dwNetMask;
    oid oidName[MAX_OID_LEN];
 
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
+   oidName[pVar->name_length - 5] = 3;  // Retrieve network mask for this IP
+   if (!SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwNetMask, sizeof(DWORD)))
+      return;
+
    oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
    if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex, sizeof(DWORD)))
    {
@@ -269,14 +273,33 @@ static void HandlerIpAddr(DWORD dwAddr, char *szCommunity, variable_list *pVar,v
       for(i = 0; i < ((INTERFACE_LIST *)pArg)->iNumEntries; i++)
          if (((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIndex == dwIndex)
          {
+            if (((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr != 0)
+            {
+               // This interface entry already filled, so we have additional IP addresses
+               // on a single interface
+               ((INTERFACE_LIST *)pArg)->iNumEntries++;
+               ((INTERFACE_LIST *)pArg)->pInterfaces = (INTERFACE_INFO *)realloc(((INTERFACE_LIST *)pArg)->pInterfaces,
+                     sizeof(INTERFACE_INFO) * ((INTERFACE_LIST *)pArg)->iNumEntries);
+               memcpy(&(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1]), 
+                      &(((INTERFACE_LIST *)pArg)->pInterfaces[i]), sizeof(INTERFACE_INFO));
+               if (strlen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 4)
+               {
+                  char szBuffer[8];
+
+                  sprintf(szBuffer,":%d", ((INTERFACE_LIST *)pArg)->pInterfaces[i].iNumSecondary++);
+                  strcat(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1].szName, szBuffer);
+               }
+               i = ((INTERFACE_LIST *)pArg)->iNumEntries - 1;
+            }
             ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpAddr = *pVar->val.integer;
+            ((INTERFACE_LIST *)pArg)->pInterfaces[i].dwIpNetMask = dwNetMask;
             break;
          }
    }
 }
 
 
-//
+/*//
 // Handler for enumerating IP net masks
 //
 
@@ -298,7 +321,7 @@ static void HandlerNetMask(DWORD dwAddr, char *szCommunity, variable_list *pVar,
             break;
          }
    }
-}
+}*/
 
 
 //
@@ -341,7 +364,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
 
    // Interface IP address'es and netmasks
    SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1", HandlerIpAddr, pIfList);
-   SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.3", HandlerNetMask, pIfList);
+//   SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.3", HandlerNetMask, pIfList);
 
    CleanInterfaceList(pIfList);
 
