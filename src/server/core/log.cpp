@@ -66,7 +66,7 @@ void InitLog(void)
       t = time(NULL);
       loc = localtime(&t);
       strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
-      fprintf(m_hLogFile, "**************************************************************\r\n[%s] Log file opened\r\n", szTimeBuf);
+      fprintf(m_hLogFile, "\r\n[%s] Log file opened\r\n", szTimeBuf);
       fflush(m_hLogFile);
 
       m_mutexLogAccess = MutexCreate();
@@ -91,7 +91,17 @@ void CloseLog(void)
    {
 #endif
       if (m_hLogFile != NULL)
+      {
+         char szTimeBuf[32];
+         struct tm *loc;
+         time_t t;
+
+         t = time(NULL);
+         loc = localtime(&t);
+         strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
+         fprintf(m_hLogFile, "[%s] Log file closed\r\n", szTimeBuf);
          fclose(m_hLogFile);
+      }
       if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
          MutexDestroy(m_mutexLogAccess);
 #ifdef _WIN32

@@ -50,10 +50,20 @@ void DbgTestMutex(MUTEX hMutex, char *szName)
 void DbgPrintf(DWORD dwFlags, char *szFormat, ...)
 {
    va_list args;
+   char szBuffer[1024];
 
-   if ((!(g_dwFlags & dwFlags)) || (! IsStandalone()))
+   if (!(g_dwFlags & dwFlags))
       return;     // Required application flag(s) not set
+
+/*   if (IsStandalone())
+   {
+      va_start(args, szFormat);
+      vprintf(szFormat, args);
+      va_end(args);
+   }*/
+
    va_start(args, szFormat);
-   vprintf(szFormat, args);
+   vsnprintf(szBuffer, 1024, szFormat, args);
    va_end(args);
+   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
 }
