@@ -283,7 +283,7 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hDCEditorMenu);
    SafeFreeResource(m_hDCEditorAccel);
 
-	return CWinApp::ExitInstance();
+   return CWinApp::ExitInstance();
 }
 
 
