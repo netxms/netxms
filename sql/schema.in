@@ -175,7 +175,7 @@ CREATE TABLE network_services
 	ip_port integer,
 	check_request SQL_TEXT,
 	check_responce SQL_TEXT,
-	poll_node_id integer not null,
+	poller_node_id integer not null,
 	image_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
