@@ -1,5 +1,6 @@
 /*
 ** System configuration table
+** ex: syntax=sql
 */
 
 CREATE TABLE config
@@ -142,10 +143,7 @@ CREATE TABLE interfaces
 	ip_netmask integer,
 	if_type integer,
 	if_index integer,
-	PRIMARY KEY(id),
-#ifdef DB_MYSQL
-	KEY(node_id)
-#endif
+	PRIMARY KEY(id)
 );
 
 
@@ -157,9 +155,7 @@ CREATE TABLE nsmap
 (
 	subnet_id integer not null,
 	node_id integer not null,
-#ifdef DB_MYSQL
-	KEY (subnet_id)
-#endif
+	PRIMARY KEY (subnet_id)
 );
 
 
@@ -172,9 +168,7 @@ CREATE TABLE acl
 	object_id integer not null,
 	user_id integer not null,
 	access_rights integer not null,
-#ifdef DB_MYSQL
-	KEY(object_id)
-#endif
+	PRIMARY KEY(object_id)
 );
 
 
@@ -193,10 +187,7 @@ CREATE TABLE items
 	polling_interval integer,
 	retention_time integer,
 	status integer,			// ACTIVE, DISABLED or NOT_SUPPORTED
-	PRIMARY KEY(item_id),
-#ifdef DB_MYSQL
-	KEY(node_id)
-#endif
+	PRIMARY KEY(item_id)
 );
 
 
@@ -227,10 +218,7 @@ CREATE TABLE event_log
 	source integer,			// Source object ID
 	severity integer,
 	message varchar(255),
-#ifdef DB_MYSQL
-	KEY(event_id),
-	KEY(timestamp)
-#endif
+	PRIMARY KEY(event_id)
 );
 
 

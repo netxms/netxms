@@ -1,5 +1,7 @@
 /*
 ** System-defined events
+**
+** ex: syntax=sql
 */
 
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES

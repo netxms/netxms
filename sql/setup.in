@@ -1,5 +1,7 @@
 /*
 ** Default configuration parameters
+**
+** ex: syntax=sql
 */
 
 INSERT INTO config (name,value) VALUES ('SyncInterval','60');

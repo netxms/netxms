@@ -2,6 +2,8 @@
 ** Input file for database initialization script.
 ** This file should be processed by C preprocessor to produce
 ** real initialization script.
+**
+** ex: syntax=c
 */
 
 #if !defined(DB_MSSQL) && !defined(DB_POSTGRESQL) && !defined(DB_MYSQL)
@@ -14,9 +16,13 @@
 
 // Define common macros for uncommon data types
 #ifdef DB_MSSQL
-#define DT_TEXT		text
+# define DT_TEXT		text
 #else
-#define DT_TEXT		blob
+# ifdef DB_POSTGRESQL
+#  define DT_TEXT		varchar // change it to oid?
+# else
+#  define DT_TEXT		blob
+# endif
 #endif
 
 // String concatenation for multi-line texts
