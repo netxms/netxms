@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.3 2004-11-25 08:01:27 victor Exp $ */
+/* $Id: net.cpp,v 1.4 2005-01-05 12:21:24 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -25,12 +25,9 @@
 
 #include <linux/sysctl.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -255,6 +252,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2004/11/25 08:01:27  victor
+Processing of interface list will be stopped on error
+
 Revision 1.2  2004/10/23 22:53:23  alk
 ArpCache: ignore incomplete entries
 

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.47 2005-01-05 10:58:02 victor Exp $
+# $Id: configure.ac,v 1.48 2005-01-05 12:21:18 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -191,7 +191,7 @@ AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/int_types.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
-AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h])
+AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])

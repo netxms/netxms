@@ -31,9 +31,6 @@
 
 #else
 
-#if HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif

@@ -27,10 +27,6 @@
 
 #if defined(_WIN32) && !defined(UNDER_CE)
 # include <io.h>
-#elif !defined(UNDER_CE)
-# include <fcntl.h>
-# include <sys/types.h>
-# include <sys/stat.h>
 #endif
 
 

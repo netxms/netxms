@@ -22,8 +22,6 @@
 
 #include "nxcore.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
 #ifdef _WIN32
 # include <io.h>
 #else

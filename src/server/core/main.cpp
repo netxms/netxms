@@ -33,7 +33,6 @@
 # include <direct.h>
 # include <errno.h> 
 #else
-# include <sys/stat.h>
 # include <signal.h>
 #endif
 

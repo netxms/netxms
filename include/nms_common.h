@@ -102,6 +102,7 @@ typedef int socklen_t;
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
@@ -166,6 +167,10 @@ typedef int SOCKET;
 #include <sys/int_types.h>
 #endif
 
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -186,8 +191,11 @@ typedef int SOCKET;
 #include <netdb.h>
 #endif
 
-#include <dirent.h>
+#if HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+
+#include <dirent.h>
 
 typedef int BOOL;
 typedef long int LONG;
