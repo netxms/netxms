@@ -60,11 +60,40 @@
 
 
 //
-// Modes for NxInitSharedData
+// Token types for configuration loader
 //
 
-#define MODE_SHM     1
-#define MODE_DB      2
+#define CT_LONG         0
+#define CT_STRING       1
+#define CT_STRING_LIST  2
+#define CT_END_OF_LIST  3
+#define CT_BOOLEAN      4
+#define CT_WORD         5
+
+
+//
+// Return codes for NxLoadConfig()
+//
+
+#define NXCFG_ERR_OK       0
+#define NXCFG_ERR_NOFILE   1
+#define NXCFG_ERR_SYNTAX   2
+
+
+//
+// Configuration item template for configuration loader
+//
+
+typedef struct
+{
+   char szToken[64];
+   BYTE iType;
+   BYTE cSeparator;     // Separator character for lists
+   WORD wListElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
+   DWORD dwBufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
+   DWORD dwBufferPos;   // Should be set to 0
+   void *pBuffer;
+} NX_CFG_TEMPLATE;
 
 
 //
@@ -126,6 +155,8 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash);
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
+
+   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
 }
 
 #endif   /* _nms_util_h_ */
