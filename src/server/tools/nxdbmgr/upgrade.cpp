@@ -75,6 +75,60 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V21 to V22
+//
+
+static BOOL H_UpgradeFromV21(void)
+{
+   static TCHAR m_szBatch[] =
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (4009,'DC_HDD_TEMP_WARNING',1,1,"
+		   "'Temperature of hard disk %6 is above warning level of %3 (current: %4)',"
+		   "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+      	"VALUES (4010,'DC_HDD_TEMP_MAJOR',3,1,"
+		   "'Temperature of hard disk %6 is above %3 (current: %4)',"
+		   "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+	      "VALUES (4011,'DC_HDD_TEMP_CRITICAL',4,1,"
+		   "'Temperature of hard disk %6 is above critical level of %3 (current: %4)',"
+		   "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
+		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SMSDriver"), _T("<none>"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("AgentUpgradeWaitTime"), _T("600"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("NumberOfUpgradeThreads"), _T("10"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='22' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V20 to V21
 //
 
@@ -168,10 +222,10 @@ static BOOL H_UpgradeFromV20(void)
       }
    }
 
-   if (!CreateConfigParam(_T("NumberOfStatusPollers"), _T("10"), 0, 1))
+   if (!CreateConfigParam(_T("NumberOfStatusPollers"), _T("10"), 1, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
-   if (!CreateConfigParam(_T("NumberOfConfigurationPollers"), _T("4"), 0, 1))
+   if (!CreateConfigParam(_T("NumberOfConfigurationPollers"), _T("4"), 1, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
    if (!CreateConfigParam(_T("IDataIndexCreationCommand"), _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"), 0, 1))
@@ -616,6 +670,7 @@ static struct
    { 18, H_UpgradeFromV18 },
    { 19, H_UpgradeFromV19 },
    { 20, H_UpgradeFromV20 },
+   { 21, H_UpgradeFromV21 },
    { 0, NULL }
 };
 
