@@ -46,6 +46,8 @@ public:
 
 // Implementation
 protected:
+	void SelectInternalItem(void);
+	void SelectSNMPItem(void);
 
 	// Generated message map functions
 	//{{AFX_MSG(CDCIPropPage)

@@ -21,6 +21,7 @@ class CMIBBrowserDlg : public CDialog
 {
 // Construction
 public:
+	int m_iDataType;
 	BOOL m_bUseInstance;
 	NXC_OBJECT *m_pNode;
 	CMIBBrowserDlg(CWnd* pParent = NULL);   // standard constructor
@@ -66,6 +67,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	int m_iSnmpDataType;
 	BOOL m_bDisableOIDUpdate;
 	void ShowExtControls(BOOL bShow);
 	CSize m_sizeCollapsed;

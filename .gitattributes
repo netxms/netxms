@@ -319,6 +319,8 @@ src/console/win32/GraphPropDlg.cpp -text
 src/console/win32/GraphPropDlg.h -text
 src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
+src/console/win32/InternalItemSelDlg.cpp -text
+src/console/win32/InternalItemSelDlg.h -text
 src/console/win32/LoginDialog.cpp -text
 src/console/win32/LoginDialog.h -text
 src/console/win32/MIBBrowserDlg.cpp -text

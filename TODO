@@ -23,8 +23,7 @@ GENERAL:
 - View and update agent's configuration from server
 - Add diff() method for DCI thresholds
 - Planned outages (maintenance schedule)
-- NxAdm -- status, stop server
-- NxDbMgr -- backup before db recover
+- Add "Last collected values" view for each node
 
 
 SERVER:
@@ -40,7 +39,6 @@ SERVER:
 - On startup, server must read last poll time from database for each DCI
 - Optimize SNMP subsystem
 - Add special handling for HP iLO boards
-- Multiple status pollers
 - Housekeeping for DCI
 - Add logging API for database drivers
 - DCI transformation scripts (probably Perl?)
@@ -58,6 +56,8 @@ SERVER:
 - Bug: after server restart, all empty key and ack_key fields in EPP contains
   strings of one space character instead of empty string, which cause
   very interesting effects with alarms autoacknowlegement
+- NxAdm -- status, stop server
+- NxDbMgr -- backup before db recover
 
 
 CORE AGENT:
@@ -85,8 +85,6 @@ SOLARIS AGENT:
 
 WINDOWS CONSOLE:
 
-- Automatically select data type in DCI configuration dialog based on
-  selected parameter
 - Add parameter selection for native agents in DCI configuration dialog
 - Find good graph creation library
 - Enlarge 16x16 status overlay icons

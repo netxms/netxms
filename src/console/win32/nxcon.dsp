@@ -229,6 +229,10 @@ SOURCE=.\GroupPropDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\InternalItemSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\LoginDialog.cpp
 # End Source File
 # Begin Source File
@@ -515,6 +519,10 @@ SOURCE=.\GraphPropDlg.h
 # Begin Source File
 
 SOURCE=.\GroupPropDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\InternalItemSelDlg.h
 # End Source File
 # Begin Source File
 

@@ -195,6 +195,7 @@ void CMIBBrowserDlg::OnSelchangedTreeMib(NMHDR *pNMHDR, LRESULT *pResult)
    m_wndEditStatus.SetWindowText(CodeToText(pNode->status, g_ctSnmpMibStatus, ""));
    m_wndEditAccess.SetWindowText(CodeToText(pNode->access, g_ctSnmpMibAccess, ""));
    m_wndEditType.SetWindowText(CodeToText(pNode->type, g_ctSnmpMibType, ""));
+   m_iSnmpDataType = pNode->type;   // Store data type of current node
 
    pszTemp = BuildSymbolicOIDString(pNode, m_dwInstance);
    m_wndEditOIDText.SetWindowText(pszTemp);
@@ -415,6 +416,28 @@ void CMIBBrowserDlg::OnOK()
    // set input box text to correct number
    if (!m_bUseInstance)
       m_wndEditInstance.SetWindowText(_T("0"));
+
+   // Convert SNMP data type to NetXMS data type
+   switch(m_iSnmpDataType)
+   {
+      case TYPE_INTEGER:
+      case TYPE_INTEGER32:
+         m_iDataType = DCI_DT_INT;
+         break;
+      case TYPE_COUNTER:
+      case TYPE_GAUGE:
+      case TYPE_TIMETICKS:
+      case TYPE_UINTEGER:
+      case TYPE_UNSIGNED32:
+         m_iDataType = DCI_DT_UINT;
+         break;
+      case TYPE_COUNTER64:
+         m_iDataType = DCI_DT_UINT64;
+         break;
+      default:
+         m_iDataType = DCI_DT_STRING;
+         break;
+   }
 	
 	CDialog::OnOK();
 }

@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "DCIPropPage.h"
 #include "MIBBrowserDlg.h"
+#include "InternalItemSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -82,7 +83,6 @@ BOOL CDCIPropPage::OnInitDialog()
    for(i = 0; i < 3; i++)
       m_wndOriginList.AddString(g_pszItemOriginLong[i]);
    m_wndOriginList.SelectString(-1, g_pszItemOriginLong[m_iOrigin]);
-   m_wndSelectButton.EnableWindow(m_iOrigin == DS_SNMP_AGENT);
 	
    // Add data types
    for(i = 0; i < 6; i++)
@@ -98,6 +98,43 @@ BOOL CDCIPropPage::OnInitDialog()
 //
 
 void CDCIPropPage::OnButtonSelect() 
+{
+   switch(m_iOrigin)
+   {
+      case DS_NATIVE_AGENT:
+         break;
+      case DS_SNMP_AGENT:
+         SelectSNMPItem();
+         break;
+      case DS_INTERNAL:
+         SelectInternalItem();
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// Handler for selection change in origin combo box
+//
+
+void CDCIPropPage::OnSelchangeComboOrigin() 
+{
+   TCHAR szBuffer[256];
+
+   m_wndOriginList.GetWindowText(szBuffer, 256);
+   for(m_iOrigin = 0; m_iOrigin < 2; m_iOrigin++)
+      if (!strcmp(szBuffer, g_pszItemOriginLong[m_iOrigin]))
+         break;
+}
+
+
+//
+// Select SNMP parameter
+//
+
+void CDCIPropPage::SelectSNMPItem()
 {
    CMIBBrowserDlg dlg;
    TCHAR *pDot, szBuffer[1024];
@@ -121,18 +158,26 @@ void CDCIPropPage::OnButtonSelect()
       _stprintf(szBuffer, _T(".%lu"), dlg.m_dwInstance);
       dlg.m_strOID += szBuffer;
       m_wndEditName.SetWindowText(dlg.m_strOID);
+      m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);
+      m_wndEditName.SetFocus();
    }
 }
 
 
 //
-// Handler for selection change in origin combo box
+// Select internal item (like Status)
 //
 
-void CDCIPropPage::OnSelchangeComboOrigin() 
+void CDCIPropPage::SelectInternalItem()
 {
-   char szBuffer[256];
+   CInternalItemSelDlg dlg;
 
-   m_wndOriginList.GetWindowText(szBuffer, 256);
-   m_wndSelectButton.EnableWindow(!strcmp(szBuffer, g_pszItemOriginLong[DS_SNMP_AGENT]));
+   dlg.m_pNode = m_pNode;
+   if (dlg.DoModal() == IDOK)
+   {
+      m_wndEditName.SetWindowText(dlg.m_szItemName);
+      SetDlgItemText(IDC_EDIT_DESCRIPTION, dlg.m_szItemDescription);
+      m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);
+      m_wndEditName.SetFocus();
+   }
 }
