@@ -53,12 +53,12 @@ typedef struct
       {
          WORD wReserved1;
          DWORD dwInteger;
-      };
+      } integer;
       struct
       {
          WORD wReserverd2;
          __int64 qwInt64;
-      };
+      } int64;
       WORD wInt16;
    } data;
 } CSCP_DF;
