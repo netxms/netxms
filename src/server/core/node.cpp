@@ -771,7 +771,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    // Check node's capabilities
    SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
    if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+               szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags, dwNodeType;
 
@@ -816,18 +816,22 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
       
       Lock();
       
-      pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer);
-      if (strcmp(m_szAgentVersion, szBuffer))
+      if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
       {
-         strcpy(m_szAgentVersion, szBuffer);
-         bHasChanges = TRUE;
+         if (strcmp(m_szAgentVersion, szBuffer))
+         {
+            strcpy(m_szAgentVersion, szBuffer);
+            bHasChanges = TRUE;
+         }
       }
 
-      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer);
-      if (strcmp(m_szAgentVersion, szBuffer))
+      if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
       {
-         strcpy(m_szPlatformName, szBuffer);
-         bHasChanges = TRUE;
+         if (strcmp(m_szPlatformName, szBuffer))
+         {
+            strcpy(m_szPlatformName, szBuffer);
+            bHasChanges = TRUE;
+         }
       }
 
       safe_free(m_pParamList);
