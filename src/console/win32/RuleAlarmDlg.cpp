@@ -80,7 +80,7 @@ void CRuleAlarmDlg::EnableControls(BOOL bEnable)
 {
    static int iCtrlList[] = { IDC_EDIT_MESSAGE, IDC_EDIT_KEY, IDC_EDIT_KEYACK,
                               IDC_RADIO_NORMAL, IDC_RADIO_WARNING, IDC_RADIO_MINOR,
-                              IDC_RADIO_MAJOR, IDC_RADIO_CRITICAL, IDC_RADIO_MSG,
+                              IDC_RADIO_MAJOR, IDC_RADIO_CRITICAL, IDC_RADIO_EVENT,
                               IDC_RADIO_NONE, IDC_STATIC_MESSAGE, IDC_STATIC_KEY,
                               IDC_STATIC_KEYACK, IDC_STATIC_ACK, IDC_STATIC_SEVERITY, -1 };
    int i;

@@ -898,8 +898,8 @@ BEGIN
                     87,33,10
     CONTROL         "&Critical",IDC_RADIO_CRITICAL,"Button",
                     BS_AUTORADIOBUTTON,158,97,37,10
-    CONTROL         "&From message",IDC_RADIO_MSG,"Button",
-                    BS_AUTORADIOBUTTON,158,107,61,10
+    CONTROL         "&From event",IDC_RADIO_EVENT,"Button",
+                    BS_AUTORADIOBUTTON,158,107,51,10
     CONTROL         "&None (hidden)",IDC_RADIO_NONE,"Button",
                     BS_AUTORADIOBUTTON,158,117,61,10
     DEFPUSHBUTTON   "OK",IDOK,235,7,50,14

@@ -156,6 +156,7 @@
 #define IDC_RADIO6                      1068
 #define IDC_RADIO_NOT_SUPPORTED         1068
 #define IDC_RADIO_MSG                   1068
+#define IDC_RADIO_EVENT                 1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
