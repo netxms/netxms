@@ -125,11 +125,111 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
 
 //
 // Add custom counter from configuration file
+// Should be in form <parameter name>:<counter path>:<number of samples>:<class>
+// Class can be A (poll every second), B (poll every 5 seconds) or C (poll every 30 seconds)
 //
 
 BOOL AddCounterFromConfig(TCHAR *pszStr)
 {
-   return FALSE;
+   TCHAR *ptr, *eptr, *pszCurrField;
+   TCHAR szParamName[MAX_PARAM_NAME], szCounterPath[MAX_PATH];
+   int iState, iField, iNumSamples, iClass, iPos;
+   WINPERF_COUNTER *pCnt;
+
+   // Parse line
+   pszCurrField = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
+   for(ptr = pszStr, iState = 0, iField = 0, iPos = 0; (iState != -1) && (iState != 255); ptr++)
+   {
+      switch(iState)
+      {
+         case 0:  // Normal text
+            switch(*ptr)
+            {
+               case '\'':
+                  iState = 1;
+                  break;
+               case '"':
+                  iState = 2;
+                  break;
+               case ':':   // New field
+               case 0:
+                  pszCurrField[iPos] = 0;
+                  switch(iField)
+                  {
+                     case 0:  // Parameter name
+                        _tcsncpy(szParamName, pszCurrField, MAX_PARAM_NAME);
+                        break;
+                     case 1:  // Counter path
+                        _tcsncpy(szCounterPath, pszCurrField, MAX_PATH);
+                        break;
+                     case 2:  // Number of samples
+                        iNumSamples = _tcstol(pszCurrField, &eptr, 0);
+                        if (*eptr != 0)
+                           iState = 255;  // Error
+                        break;
+                     case 3:  // Class
+                        _tcsupr(pszCurrField);
+                        iClass = *pszCurrField - _T('A');
+                        if ((iClass < 0) || (iClass > 2))
+                           iState = 255;  // Error
+                        break;
+                     default:
+                        iState = 255;  // Error
+                        break;
+                  }
+                  iField++;
+                  iPos = 0;
+                  if ((iState != 255) && (*ptr == 0))
+                     iState = -1;   // Finish
+                  break;
+               default:
+                  pszCurrField[iPos++] = *ptr;
+                  break;
+            }
+            break;
+         case 1:  // Single quotes
+            switch(*ptr)
+            {
+               case '\'':
+                  iState = 0;
+                  break;
+               case 0:  // Unexpected end of line
+                  iState = 255;
+                  break;
+               default:
+                  pszCurrField[iPos++] = *ptr;
+                  break;
+            }
+            break;
+         case 2:  // Double quotes
+            switch(*ptr)
+            {
+               case '"':
+                  iState = 0;
+                  break;
+               case 0:  // Unexpected end of line
+                  iState = 255;
+                  break;
+               default:
+                  pszCurrField[iPos++] = *ptr;
+                  break;
+            }
+            break;
+         default:
+            break;
+      }
+   }
+   free(pszCurrField);
+
+   // Add new counter if parsing was successful
+   if ((iState == -1) && (iField == 4))
+   {
+      pCnt = AddCounter(szCounterPath, iClass, iNumSamples, COUNTER_TYPE_AUTO);
+      if (pCnt != NULL)
+         AddParameter(szParamName, H_CollectedCounterData, (TCHAR *)pCnt);
+   }
+
+   return ((iState == -1) && (iField == 4));
 }
 
 

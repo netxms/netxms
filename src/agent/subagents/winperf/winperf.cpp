@@ -87,7 +87,7 @@ static LONG H_PdhVersion(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Value of given counter collected by one of the collector threads
 //
 
-static LONG H_CollectedCounterData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+LONG H_CollectedCounterData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
    switch(((WINPERF_COUNTER *)pArg)->wType)
    {
@@ -321,7 +321,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Add new parameter to list
 //
 
-static BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *), TCHAR *pArg)
+BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *), TCHAR *pArg)
 {
    DWORD i;
 
