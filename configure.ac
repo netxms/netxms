@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.59 2005-01-19 13:40:28 victor Exp $
+# $Id: configure.ac,v 1.60 2005-01-24 17:34:21 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -423,8 +423,12 @@ AC_OUTPUT
 
 echo "Updating libtool-1"
 sed 's/-lc_r/-lc_rXXX/' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
+
+echo "Updating libtool-2"
+sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
+
 if test ! "x$BUILD_SERVER" = "xyes" ; then
-   echo "Updating libtool-2"
+   echo "Updating libtool-3"
    $PERL tools/patch_libtool.pl <libtool >libtool.new
    mv libtool.new libtool
    chmod 755 libtool
