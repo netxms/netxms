@@ -147,7 +147,7 @@ void UnlockComponent(DWORD dwId)
    char szQuery[256];
 
    MutexLock(m_hMutexLockerAccess, INFINITE);
-   sprintf(szQuery, "UPDATE locks SET lock_status=-1 WHERE component_id=%ld", dwId);
+   sprintf(szQuery, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=%ld", dwId);
    DBQuery(g_hCoreDB, szQuery);
    MutexUnlock(m_hMutexLockerAccess);
    DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component %d unlocked\n", dwId);

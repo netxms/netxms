@@ -239,6 +239,13 @@ void ClientSession::ProcessingThread(void)
                UnlockComponent(CID_EVENT_DB);
                m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
             }
+            // Send reply
+            pReply = new CSCPMessage;
+            pReply->SetCode(CMD_REQUEST_COMPLETED);
+            pReply->SetId(pMsg->GetId());
+            pReply->SetVariable(VID_RCC, RCC_SUCCESS);
+            SendMessage(pReply);
+            delete pReply;
             break;
          default:
             break;
@@ -260,7 +267,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
    char szBuffer[1024];
 
    // Prepare responce message
-   msg.SetCode(CMD_OPEN_EVENT_DB);
+   msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
    if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
@@ -294,6 +301,10 @@ void ClientSession::SendEventDB(DWORD dwRqId)
          msg.DeleteAllVariables();
       }
       DBFreeAsyncResult(hResult);
+
+      // Send end-of-list indicator
+      msg.SetCode(CMD_EVENT_DB_EOF);
+      SendMessage(&msg);
    }
 }
 
