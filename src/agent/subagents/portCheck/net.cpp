@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.2 2005-01-28 02:50:32 alk Exp $ */
+/* $Id: net.cpp,v 1.3 2005-01-29 21:24:03 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -47,13 +47,20 @@ int NetWrite(int nSocket, char *pBuff, int nSize)
 
 void NetClose(int nSocket)
 {
-	close(nSocket);
+   shutdown(nSocket, SHUT_RDWR);
+	closesocket(nSocket);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/28 02:50:32  alk
+added support for CMD_CHECK_NETWORK_SERVICE
+suported:
+	ssh: host/port req.
+	pop3: host/port/request string req. request string format: "login:password"
+
 Revision 1.1.1.1  2005/01/18 18:38:54  alk
 Initial import
 

@@ -102,6 +102,10 @@ PostBuild_Cmds=copy Debug\portcheck.nsm ..\..\..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\http.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -111,6 +115,10 @@ SOURCE=.\net.cpp
 # Begin Source File
 
 SOURCE=.\pop3.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\smtp.cpp
 # End Source File
 # Begin Source File
 

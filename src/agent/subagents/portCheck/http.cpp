@@ -1,7 +1,9 @@
-/* $Id: http.cpp,v 1.1 2005-01-29 00:21:29 alk Exp $ */
+/* $Id: http.cpp,v 1.2 2005-01-29 21:24:03 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
+/* TODO: WINDOWS COMPATIBILITY */
+#ifndef _WIN32
 #include <regex.h>
 
 #include "main.h"
@@ -88,10 +90,33 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	return nRet;
 }
 
+#else
+
+int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
+		char *szHost, char *szMatch)
+{
+   return 1;
+}
+
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/01/29 00:21:29  alk
++ http checker
+
+request string: "HOST:URI"
+responce string: posix regex, e.g. '^HTTP/1.[01] 200 .*'
+
+requst sent to server:
+---
+GET URI HTTP/1.1\r\n
+Connection: close\r\n
+Host: HOST\r\n\r\n
+---
+
 Revision 1.4  2005/01/28 23:45:01  alk
 SMTP check added, requst string == rcpt to
 

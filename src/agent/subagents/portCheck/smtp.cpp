@@ -9,7 +9,6 @@ LONG H_CheckSMTP(char *pszParam, char *pArg, char *pValue)
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];
 	char szTo[256];
-	int nSd;
 	bool bIsOk = false;
 
    NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
