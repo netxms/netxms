@@ -55,6 +55,7 @@ class CConsoleApp : public CWinApp
 {
 public:
 	CConsoleApp();
+   virtual ~CConsoleApp();
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -77,7 +78,9 @@ protected:
 	HACCEL m_hMDIAccel;
 	BOOL m_bAuthFailed;
 	CProgressDialog m_dlgProgress;
+   DWORD m_dwRqWaitListSize;
    RQ_WAIT_INFO *m_pRqWaitList;
+   MUTEX m_mutexRqWaitList;
 
 public:
 	void RegisterRequest(HREQUEST hRequest, CWnd *pWnd);
@@ -96,6 +99,7 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	void OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode);
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bObjectBrowserActive;

@@ -29,6 +29,8 @@ BEGIN_MESSAGE_MAP(CEventEditor, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CEventEditor)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -77,4 +79,50 @@ void CEventEditor::OnDestroy()
    NXCCloseEventDB();
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_EVENT_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
+}
+
+
+//
+// WM_REQUEST_COMPLETED message handler
+//
+
+LRESULT CEventEditor::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+{
+   if (lParam == RCC_SUCCESS)
+   {
+      DWORD i;
+      char szBuffer[64];
+
+      NXCGetEventDB(&m_ppEventTemplates, &m_dwNumTemplates);
+      for(i = 0; i < m_dwNumTemplates; i++)
+      {
+         sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwCode);
+         m_wndListCtrl.InsertItem(i, szBuffer);
+         m_wndListCtrl.SetItemText(i, 1, m_ppEventTemplates[i]->szName);
+         sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwSeverity);
+         m_wndListCtrl.SetItemText(i, 2, szBuffer);
+         sprintf(szBuffer, "%ld", m_ppEventTemplates[i]->dwFlags);
+         m_wndListCtrl.SetItemText(i, 3, szBuffer);
+         m_wndListCtrl.SetItemText(i, 4, m_ppEventTemplates[i]->pszMessage);
+         m_wndListCtrl.SetItemText(i, 5, m_ppEventTemplates[i]->pszDescription);
+      }
+   }
+   else
+   {
+      MessageBox("Unable to open event configuration database", "Error", MB_ICONSTOP);
+      DestroyWindow();
+   }
+   return 0;
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CEventEditor::OnSize(UINT nType, int cx, int cy) 
+{
+	CMDIChildWnd::OnSize(nType, cx, cy);
+	
+   m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }

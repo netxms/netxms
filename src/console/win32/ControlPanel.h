@@ -31,7 +31,7 @@ public:
 
 // Implementation
 protected:
-	void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT* pResult);
+	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT* pResult);
 	CImageList *m_pImageList;
 	CListCtrl m_wndListCtrl;
 	virtual ~CControlPanel();

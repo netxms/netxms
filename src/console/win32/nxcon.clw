@@ -17,7 +17,7 @@ Class9=CMapView
 
 ResourceCount=20
 Resource1=IDR_CTRLPANEL
-Resource2=IDD_DUMMY (English (U.S.))
+Resource2=IDD_LOGIN (English (U.S.))
 Resource3=IDR_MAPFRAME
 Resource4=IDD_PROGRESS
 Resource5=IDR_EVENTS
@@ -34,17 +34,17 @@ Resource8=IDD_OBJECT_PROPERTIES
 Class13=CObjectPropDlg
 Resource9=IDR_MAINFRAME
 Resource10=IDD_ABOUTBOX
-Resource11=IDD_OBJECT_PROPERTIES (English (U.S.))
-Resource12=IDR_MAPFRAME (English (U.S.))
-Resource13=IDR_OBJECTS (English (U.S.))
-Resource14=IDR_CTRLPANEL (English (U.S.))
-Resource15=IDR_EVENTS (English (U.S.))
-Resource16=IDR_MAINFRAME (English (U.S.))
-Resource17=IDD_ABOUTBOX (English (U.S.))
-Resource18=IDD_LOGIN (English (U.S.))
-Resource19=IDD_PROGRESS (English (U.S.))
+Resource11=IDR_MAINFRAME (English (U.S.))
+Resource12=IDR_CTRLPANEL (English (U.S.))
+Resource13=IDR_EVENTS (English (U.S.))
+Resource14=IDR_MAPFRAME (English (U.S.))
+Resource15=IDR_OBJECTS (English (U.S.))
+Resource16=IDD_DUMMY (English (U.S.))
+Resource17=IDD_OBJECT_PROPERTIES (English (U.S.))
+Resource18=IDD_PROGRESS (English (U.S.))
 Class14=CEventEditor
-Resource20=IDD_DUMMY
+Resource19=IDD_ABOUTBOX (English (U.S.))
+Resource20=IDD_EDIT_EVENT
 
 [CLS:CConsoleApp]
 Type=0
@@ -308,14 +308,6 @@ Filter=D
 VirtualFilter=dWC
 LastObject=CObjectPropDlg
 
-[DLG:IDD_DUMMY]
-Type=1
-Class=?
-ControlCount=3
-Control1=IDOK,button,1342242817
-Control2=IDCANCEL,button,1342242816
-Control3=IDC_TREE_VIEW,SysTreeView32,1350631424
-
 [TB:IDR_MAINFRAME (English (U.S.))]
 Type=1
 Class=?
@@ -339,8 +331,10 @@ Command6=ID_VIEW_CONTROLPANEL
 Command7=ID_VIEW_TOOLBAR
 Command8=ID_VIEW_STATUS_BAR
 Command9=ID_VIEW_REFRESH
-Command10=ID_APP_ABOUT
-CommandCount=10
+Command10=ID_CONTROLPANEL_EVENTS
+Command11=ID_CONTROLPANEL_USERS
+Command12=ID_APP_ABOUT
+CommandCount=12
 
 [MNU:IDR_CTRLPANEL (English (U.S.))]
 Type=1
@@ -486,4 +480,11 @@ ImplementationFile=EventEditor.cpp
 BaseClass=CMDIChildWnd
 Filter=M
 VirtualFilter=mfWC
+
+[DLG:IDD_EDIT_EVENT]
+Type=1
+Class=?
+ControlCount=2
+Control1=IDOK,button,1342242817
+Control2=IDCANCEL,button,1342242816
 

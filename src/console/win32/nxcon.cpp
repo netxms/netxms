@@ -53,7 +53,22 @@ CConsoleApp::CConsoleApp()
    m_bObjectBrowserActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    m_pRqWaitList = NULL;
+   m_dwRqWaitListSize = 0;
+   m_mutexRqWaitList = MutexCreate();
 }
+
+
+//
+// CConsoleApp destruction
+//
+
+CConsoleApp::~CConsoleApp()
+{
+   if (m_pRqWaitList != NULL)
+      MemFree(m_pRqWaitList);
+   MutexDestroy(m_mutexRqWaitList);
+}
+
 
 //
 // The one and only CConsoleApp object
@@ -409,11 +424,17 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 //         Sleep(0);
          break;
       case NXC_EVENT_REQUEST_COMPLETED:
+         OnRequestComplete(dwCode, (DWORD)pArg);
          break;
       default:
          break;
    }
 }
+
+
+//
+// Handler for WM_COMMAND(ID_CONTROLPANEL_EVENTS) message
+//
 
 void CConsoleApp::OnControlpanelEvents() 
 {
@@ -434,5 +455,27 @@ void CConsoleApp::OnControlpanelEvents()
 
 void CConsoleApp::RegisterRequest(HREQUEST hRequest, CWnd *pWnd)
 {
+   m_pRqWaitList = (RQ_WAIT_INFO *)MemReAlloc(m_pRqWaitList, sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize + 1));
+   m_pRqWaitList[m_dwRqWaitListSize].hRequest = hRequest;
+   m_pRqWaitList[m_dwRqWaitListSize].pWnd = pWnd;
+   m_dwRqWaitListSize++;
+}
 
+
+//
+// This method called by client library event handler on NXC_EVENT_REQUEST_COMPLETE
+//
+
+void CConsoleApp::OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwRqWaitListSize; i++)
+      if (m_pRqWaitList[i].hRequest == hRequest)
+      {
+         m_pRqWaitList[i].pWnd->SendMessage(WM_REQUEST_COMPLETED, hRequest, dwRetCode);
+         m_dwRqWaitListSize--;
+         memmove(&m_pRqWaitList[i], &m_pRqWaitList[i + 1], sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize - i));
+         i--;
+      }
 }

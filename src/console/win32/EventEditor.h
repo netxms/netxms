@@ -29,6 +29,9 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwNumTemplates;
+	NXC_EVENT_TEMPLATE ** m_ppEventTemplates;
+	afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
 	CListCtrl m_wndListCtrl;
 	virtual ~CEventEditor();
 
@@ -36,6 +39,7 @@ protected:
 	//{{AFX_MSG(CEventEditor)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
