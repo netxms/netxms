@@ -87,6 +87,8 @@ DCItem::DCItem(const DCItem *pSrc)
       m_ppThresholdList[i] = new Threshold(pSrc->m_ppThresholdList[i]);
       m_ppThresholdList[i]->CreateId();
    }
+
+   UpdateCacheSize();
 }
 
 
@@ -101,6 +103,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
+   DecodeSQLString(m_szName);
    m_iSource = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_iDataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
@@ -217,7 +220,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(void)
 {
-   char *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[1024];
+   TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[1024];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
@@ -234,6 +237,7 @@ BOOL DCItem::SaveToDB(void)
    }
 
    // Prepare and execute query
+   pszEscName = EncodeSQLString(m_szName);
    pszEscFormula = EncodeSQLString(m_pszFormula);
    pszEscDescr = EncodeSQLString(m_szDescription);
    pszEscInstance = EncodeSQLString(m_szInstance);
@@ -242,7 +246,7 @@ BOOL DCItem::SaveToDB(void)
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
                        "transformation,instance) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s','%s')",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                       m_szName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
+                       pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula, pszEscInstance);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%ld,template_id=%ld,name='%s',source=%d,"
@@ -250,10 +254,11 @@ BOOL DCItem::SaveToDB(void)
                        "delta_calculation=%d,transformation='%s',description='%s',"
                        "instance='%s' WHERE item_id=%ld",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                       m_szName, m_iSource, m_iDataType, m_iPollingInterval,
+                       pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
                        pszEscDescr, pszEscInstance, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
+   free(pszEscName);
    free(pszEscFormula);
    free(pszEscDescr);
    free(pszEscInstance);
@@ -305,7 +310,6 @@ void DCItem::CheckThresholds(ItemValue &value)
    DWORD i, iResult;
    ItemValue checkValue;
 
-   Lock();
    for(i = 0; i < m_dwNumThresholds; i++)
    {
       iResult = m_ppThresholdList[i]->Check(value, m_ppValueCache, checkValue);
@@ -327,7 +331,6 @@ void DCItem::CheckThresholds(ItemValue &value)
             break;
       }
    }
-   Unlock();
 }
 
 
@@ -460,6 +463,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    }
       
    safe_free(pNewThresholds);
+   UpdateCacheSize();
    Unlock();
 }
 
@@ -473,10 +477,15 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
    char szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
 
+   Lock();
+
    // Normally m_pNode shouldn't be NULL for polled items,
    // but who knows...
    if (m_pNode == NULL)
+   {
+      Unlock();
       return;
+   }
 
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue(pszOriginalValue);
@@ -497,16 +506,16 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 
    if (m_dwCacheSize > 0)
    {
-      Lock();
       delete m_ppValueCache[m_dwCacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_dwCacheSize - 1));
       m_ppValueCache[0] = pValue;
-      Unlock();
    }
    else
    {
       delete pValue;
    }
+
+   Unlock();
 }
 
 
@@ -535,6 +544,9 @@ void DCItem::Transform(ItemValue &value)
                break;
             case DCI_DT_FLOAT:
                value = (double)value - (double)m_prevRawValue;
+               break;
+            case DCI_DT_STRING:
+               value = (long)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
