@@ -188,7 +188,7 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REARMED, 'SYS_THRESHOLD_REARMED',
-		EVENT_SEVERITY_NORMAL, 0,
+		EVENT_SEVERITY_NORMAL, 1,
 		'Threshold rearmed for data collection item %2 (Parameter: %1)',
 		'Generated when threshold check is rearmed for specific data collection item.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
