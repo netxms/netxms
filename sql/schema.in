@@ -444,7 +444,8 @@ CREATE TABLE alarms
 (
 	alarm_id integer not null,	// Unique alarm identifier
 	timestamp integer,
-	source integer,
+	source_object_id integer,
+	source_event_id integer,
 	message varchar(255),
 	severity integer,
 	alarm_key varchar(255),	// Alarm key (used for auto acknowlegment)

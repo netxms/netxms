@@ -263,6 +263,10 @@ SOURCE=..\include\local_admin.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\netxmsdb.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nms_actions.h
 # End Source File
 # Begin Source File

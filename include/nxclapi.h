@@ -79,39 +79,52 @@ typedef unsigned long HREQUEST;
 // Authentication methods
 //
 
-#define AUTH_NONE          0
-#define AUTH_PLAINTEXT     1
-#define AUTH_MD5_HASH      2
-#define AUTH_SHA1_HASH     3
+#define AUTH_NONE             0
+#define AUTH_PLAINTEXT        1
+#define AUTH_MD5_HASH         2
+#define AUTH_SHA1_HASH        3
 
 
 //
 // Object types
 //
 
-#define OBJECT_GENERIC     0
-#define OBJECT_SUBNET      1
-#define OBJECT_NODE        2
-#define OBJECT_INTERFACE   3
-#define OBJECT_NETWORK     4
-#define OBJECT_CONTAINER   5
-#define OBJECT_ZONE        6
-#define OBJECT_SERVICEROOT 7
+#define OBJECT_GENERIC        0
+#define OBJECT_SUBNET         1
+#define OBJECT_NODE           2
+#define OBJECT_INTERFACE      3
+#define OBJECT_NETWORK        4
+#define OBJECT_CONTAINER      5
+#define OBJECT_ZONE           6
+#define OBJECT_SERVICEROOT    7
 
 
 //
 // Object's status
 //
 
-#define STATUS_NORMAL      0
-#define STATUS_WARNING     1
-#define STATUS_MINOR       2
-#define STATUS_MAJOR       3
-#define STATUS_CRITICAL    4
-#define STATUS_UNKNOWN     5
-#define STATUS_UNMANAGED   6
-#define STATUS_DISABLED    7
-#define STATUS_TESTING     8
+#define STATUS_NORMAL         0
+#define STATUS_WARNING        1
+#define STATUS_MINOR          2
+#define STATUS_MAJOR          3
+#define STATUS_CRITICAL       4
+#define STATUS_UNKNOWN        5
+#define STATUS_UNMANAGED      6
+#define STATUS_DISABLED       7
+#define STATUS_TESTING        8
+
+
+//
+// Event and alarm severity
+//
+
+#define SEVERITY_NORMAL       0
+#define SEVERITY_WARNING      1
+#define SEVERITY_MINOR        2
+#define SEVERITY_MAJOR        3
+#define SEVERITY_CRITICAL     4
+#define SEVERITY_FROM_EVENT   5
+#define SEVERITY_NONE         6
 
 
 //
@@ -163,6 +176,10 @@ typedef unsigned long HREQUEST;
 
 #define NX_NOTIFY_SHUTDOWN          1
 #define NX_NOTIFY_EVENTDB_CHANGED   2
+#define NX_NOTIFY_ALARM_DELETED     3
+#define NX_NOTIFY_NEW_ALARM         4
+#define NX_NOTIFY_NEW_ACK_ALARM     5
+#define NX_NOTIFY_ALARM_ACKNOWLEGED 6
 
 
 //

@@ -747,12 +747,13 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 // Send notification message to server
 //
 
-void ClientSession::Notify(DWORD dwCode)
+void ClientSession::Notify(DWORD dwCode, DWORD dwData)
 {
    CSCPMessage msg;
 
    msg.SetCode(CMD_NOTIFY);
    msg.SetVariable(VID_NOTIFICATION_CODE, dwCode);
+   msg.SetVariable(VID_NOTIFICATION_DATA, dwData);
    SendMessage(&msg);
 }
 

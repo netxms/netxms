@@ -232,12 +232,29 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 void EPRule::GenerateAlarm(Event *pEvent)
 {
    char *pszAckKey;
+   int iSeverity;
 
+   // Acknowlege alarms with key == our ack_key
    pszAckKey = pEvent->ExpandText(m_szAlarmAckKey);
    if (pszAckKey[0] != 0)
       g_alarmMgr.AckByKey(pszAckKey);
    free(pszAckKey);
-   g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, pEvent);
+
+   // Generate new alarm
+   switch(m_iAlarmSeverity)
+   {
+      case SEVERITY_FROM_EVENT:
+         iSeverity = pEvent->Severity();
+         break;
+      case SEVERITY_NONE:
+         iSeverity = SEVERITY_NORMAL;
+         break;
+      default:
+         iSeverity = m_iAlarmSeverity;
+         break;
+   }
+   g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, 
+                       (m_iAlarmSeverity == SEVERITY_NONE), iSeverity, pEvent);
 }
 
 

@@ -171,7 +171,8 @@ static void NetReceiver(void *pArg)
                break;
             case CMD_NOTIFY:
                CallEventHandler(NXC_EVENT_NOTIFICATION, 
-                                pMsg->GetVariableLong(VID_NOTIFICATION_CODE), NULL);
+                                pMsg->GetVariableLong(VID_NOTIFICATION_CODE),
+                                (void *)pMsg->GetVariableLong(VID_NOTIFICATION_DATA));
                break;
             default:
                m_msgWaitQueue.Put(pMsg);

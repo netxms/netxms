@@ -329,6 +329,7 @@ typedef struct
 #define VID_IMAGE_ID_LIST           ((DWORD)89)
 #define VID_CLASS_ID_LIST           ((DWORD)90)
 #define VID_IMAGE_FORMAT            ((DWORD)91)
+#define VID_NOTIFICATION_DATA       ((DWORD)92)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

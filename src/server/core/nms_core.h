@@ -289,7 +289,7 @@ public:
    const char *GetUserName(void) { return m_szUserName; }
 
    void Kill(void);
-   void Notify(DWORD dwCode);
+   void Notify(DWORD dwCode, DWORD dwData = 0);
 
    void OnNewEvent(Event *pEvent);
    void OnObjectChange(NetObj *pObject);

@@ -33,13 +33,24 @@ class AlarmManager
 private:
    DWORD m_dwNumAlarms;
    NXC_ALARM *m_pAlarmList;
+   MUTEX m_mutex;
+   DWORD m_dwNotifyCode;
+   DWORD m_dwNotifyAlarmId;
+
+   void Lock(void) { MutexLock(m_mutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutex); }
+
+   static void SendAlarmNotification(ClientSession *pSession, void *pArg);
+
+   void AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId);
+   void NotifyClients(DWORD dwCode, DWORD dwAlarmId);
 
 public:
    AlarmManager();
    ~AlarmManager();
 
    BOOL Init(void);
-   void NewAlarm(char *pszMsg, char *pszKey, Event *pEvent);
+   void NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeverity, Event *pEvent);
    void AckById(DWORD dwAlarmId, DWORD dwUserId);
    void AckByKey(char *pszKey);
    void DeleteAlarm(DWORD dwAlarmId);
