@@ -166,7 +166,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 13);
    strncpy(m_szCommunityString, DBGetField(hResult, 0, 14), MAX_COMMUNITY_LENGTH);
    strncpy(m_szObjectId, DBGetField(hResult, 0, 15), MAX_OID_LEN * 4);
-   m_dwImageId = DBGetFieldULong(hResult, 0, 16);
+   m_dwImageId = DBGetFieldULong(hResult, 0, 17);
 
    DBFreeResult(hResult);
 
