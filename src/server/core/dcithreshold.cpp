@@ -140,7 +140,7 @@ int Threshold::Check(const char *pszValue)
    {
       const char *pszStr;
       int iInteger;
-      __int64 qwInt64;
+      INT64 qwInt64;
       double dFloat;
    } fvalue;
 

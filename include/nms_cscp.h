@@ -57,7 +57,7 @@ typedef struct
       struct
       {
          WORD wReserverd2;
-         __int64 qwInt64;
+         QWORD qwInt64;
       } int64;
       WORD wInt16;
    } data;

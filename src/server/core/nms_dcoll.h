@@ -112,7 +112,7 @@ private:
    union
    {
       long iInteger;
-      __int64 qwInt64;
+      INT64 qwInt64;
       double dFloat;
    } m_value;
    BYTE m_iFunction;          // Function code

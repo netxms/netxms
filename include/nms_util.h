@@ -174,7 +174,7 @@ public:
 
 extern "C"
 {
-#ifdef _WIN32
+#if defined(_WIN32) || !defined(HAVE___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
 

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.6 2004-05-15 21:04:13 victor Exp $
+# $Id: configure.ac,v 1.7 2004-05-19 15:50:01 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -24,6 +24,12 @@ if test -d /usr/kerberos/include; then
 	CFLAGS="$CFLAGS -I/usr/kerberos/include"
 	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
 fi
+
+if test -d /usr/local/ssl/include; then
+	CFLAGS="$CFLAGS -I/usr/local/ssl/include"
+	CPPFLAGS="$CPPFLAGS -I/usr/local/ssl/include"
+fi
+
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
@@ -125,6 +131,7 @@ AC_CHECK_LIB(crypto, DH_new)
 AC_CHECK_LIB(ssl, SSL_accept)
 AC_CHECK_LIB(termcap, tgetstr)
 AC_CHECK_LIB(readline, readline)
+AC_CHECK_LIB(socket, if_nameindex)
 
 # --------------------------------------------------------------------------
 # checks for headers.
@@ -132,6 +139,7 @@ AC_CHECK_LIB(readline, readline)
 AC_HEADER_STDC
 AC_HEADER_STAT
 AC_HEADER_TIME
+AC_CHECK_HEADERS([sys/int_types.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h])
 AC_CHECK_HEADERS([openssl/ssl.h])
@@ -153,6 +161,11 @@ AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
+#AC_CHECK_TYPE(int64_t, AC_DEFINE(HAVE_INT64_T, 1))
+#AC_CHECK_TYPE(uint64_t, AC_DEFINE(HAVE_UINT64_T, 1))
+#AC_CHECK_TYPE(u_int64_t, AC_DEFINE(HAVE_U_INT64_T, 1))
+AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
+
 # --------------------------------------------------------------------------
 # C/CPP caps
 
@@ -172,7 +185,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex __bswap_64])
 
 
 # sockets/resolver (probably for solaris)

@@ -71,6 +71,10 @@ typedef int socklen_t;
 #include <sys/types.h>
 #endif
 
+#if HAVE_SYS_INT_TYPES_H
+#include <sys/int_types.h>
+#endif
+
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -98,9 +102,20 @@ typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
 typedef void * HMODULE;
-typedef int64_t __int64;
+
+#if HAVE_INT64_T
 typedef int64_t INT64;
+#else
+#error Target system does not have signed 64bit integer type
+#endif
+
+#if HAVE_UINT64_T
+typedef uint64_t QWORD;
+#elif HAVE_U_INT64_T
 typedef u_int64_t QWORD;
+#else
+#error Target system does not have unsigned 64bit integer type
+#endif
 
 
 #define TRUE   1

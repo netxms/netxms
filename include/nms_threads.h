@@ -165,7 +165,7 @@ inline THREAD ThreadCreate(void (*start_address )(void *), int stack_size, void 
 
 inline void ThreadExit(void)
 {
-   pthread_kill(pthread_self(), 15); // 9?
+   pthread_exit(NULL);
 }
 
 inline MUTEX MutexCreate(void)
