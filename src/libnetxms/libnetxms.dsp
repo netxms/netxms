@@ -117,6 +117,14 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\md5.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\sha1.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tools.cpp
 # End Source File
 # End Group
@@ -133,6 +141,10 @@ SOURCE=.\libnetxms.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\md5.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\include\nms_agent.h
 # End Source File
 # Begin Source File
@@ -142,6 +154,10 @@ SOURCE=..\..\include\nms_common.h
 # Begin Source File
 
 SOURCE=..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\sha1.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

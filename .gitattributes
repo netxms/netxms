@@ -144,6 +144,10 @@ src/libnetxms/libnetxms.dsp -text
 src/libnetxms/libnetxms.dsw -text
 src/libnetxms/libnetxms.h -text
 src/libnetxms/main.cpp -text
+src/libnetxms/md5.cpp -text
+src/libnetxms/md5.h -text
+src/libnetxms/sha1.cpp -text
+src/libnetxms/sha1.h -text
 src/libnetxms/tools.cpp -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/comm.cpp -text

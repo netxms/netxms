@@ -22,6 +22,8 @@
 **/
 
 #include "libnetxms.h"
+#include "md5.h"
+#include "sha1.h"
 
 
 //
@@ -103,4 +105,32 @@ DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbyte
       crc=(crc << 8)^crctab[(crc >> 24)^(len & 0xFF)];
 
 	return ~crc;
+}
+
+
+//
+// Calculate MD5 hash for array of bytes
+//
+
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, unsigned char *hash)
+{
+	md5_state_t state;
+
+	md5_init(&state);
+	md5_append(&state,(const md5_byte_t *)data,nbytes);
+	md5_finish(&state,(md5_byte_t *)hash);
+}
+
+
+//
+// Calculate SHA1 hash for array of bytes
+//
+
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, unsigned char *hash)
+{
+   SHA1_CTX context;
+
+   SHA1Init(&context);
+   SHA1Update(&context, data, nbytes);
+   SHA1Final(hash, &context);
 }
