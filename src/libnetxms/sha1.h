@@ -110,9 +110,18 @@ typedef struct {
     unsigned char buffer[64];
 } SHA1_CTX;
 
-void SHA1Init(SHA1_CTX* context);
-void SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len);	/*
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+
+void I_SHA1Init(SHA1_CTX* context);
+void I_SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len);	/*
 JHB */
-void SHA1Final(unsigned char digest[20], SHA1_CTX* context);
+void I_SHA1Final(unsigned char digest[20], SHA1_CTX* context);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif   /* _sha1_h_ */

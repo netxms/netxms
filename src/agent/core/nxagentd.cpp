@@ -38,8 +38,10 @@ void ListenerThread(void *);
 // Valid options for getopt()
 //
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #define VALID_OPTIONS   "c:CdDhIRsSv"
+#elif defined(_NETWARE)
+#define VALID_OPTIONS   "c:CDhv"
 #else
 #define VALID_OPTIONS   "c:CdDhv"
 #endif
@@ -118,7 +120,9 @@ static char m_szHelpText[] =
    "Where valid options are:\n"
    "   -c <file>  : Use configuration file <file> (default " AGENT_DEFAULT_CONFIG ")\n"
    "   -C         : Check configuration file and exit\n"
+#ifndef _NETWARE
    "   -d         : Run as daemon/service\n"
+#endif
    "   -D         : Turn on debug output\n"
    "   -h         : Display help and exit\n"
 #ifdef _WIN32
@@ -306,7 +310,7 @@ void Main(void)
    }
    else
    {
-#ifdef _WIN32
+#if defined(_WIN32)
       printf("Agent running. Press ESC to shutdown.\n");
       while(1)
       {
@@ -315,6 +319,9 @@ void Main(void)
       }
       printf("Agent shutting down...\n");
       Shutdown();
+#elif defined(_NETWARE)
+      printf("Agent running. Type UNLOAD NXAGENTD on the system console for shutdown.\n");
+      ConditionWait(m_hCondShutdown, INFINITE);
 #else
       printf("Agent running. Press Ctrl+C to shutdown.\n");
       ConditionWait(m_hCondShutdown, INFINITE);
@@ -413,12 +420,14 @@ int main(int argc, char *argv[])
                }
             }
 #else    /* _WIN32 */
+#ifndef _NETWARE
             if (g_dwFlags & AF_DAEMON)
                if (daemon(0, 0) == -1)
                {
                   perror("Unable to setup itself as a daemon");
                   iExitCode = 4;
                }
+#endif
             if (iExitCode == 0)
             {
                if (Initialize())

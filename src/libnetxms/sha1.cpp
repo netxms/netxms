@@ -164,7 +164,7 @@ CHAR64LONG16* block;
 
 /* SHA1Init - Initialize new context */
 
-void SHA1Init(SHA1_CTX* context)
+void I_SHA1Init(SHA1_CTX* context)
 {
     /* SHA1 initialization constants */
     context->state[0] = 0x67452301;
@@ -178,7 +178,7 @@ void SHA1Init(SHA1_CTX* context)
 
 /* Run your data through this. */
 
-void SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len)	/* JHB */
+void I_SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len)	/* JHB */
 {
 uint32 i, j;	/* JHB */
 
@@ -206,7 +206,7 @@ uint32 i, j;	/* JHB */
 
 /* Add padding and return the message digest. */
 
-void SHA1Final(unsigned char digest[20], SHA1_CTX* context)
+void I_SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 {
 uint32 i;	/* JHB */
 unsigned char finalcount[8];
@@ -215,11 +215,11 @@ unsigned char finalcount[8];
         finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)]
          >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
     }
-    SHA1Update(context, (unsigned char *)"\200", 1);
+    I_SHA1Update(context, (unsigned char *)"\200", 1);
     while ((context->count[0] & 504) != 448) {
-        SHA1Update(context, (unsigned char *)"\0", 1);
+        I_SHA1Update(context, (unsigned char *)"\0", 1);
     }
-    SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform()
+    I_SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform()
 */
     for (i = 0; i < 20; i++) {
         digest[i] = (unsigned char)

@@ -71,7 +71,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    pszCmdLine[i] = 0;
 
    DebugPrintf("EXEC: Executing \"%s\"", pszCmdLine);
-#ifdef _WIN32
+#if defined(_WIN32)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
 
@@ -92,6 +92,11 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
       CloseHandle(pi.hThread);
       CloseHandle(pi.hProcess);
    }
+#elif defined(_NETWARE)
+   if (system(pszCmdLine) == 0)
+      dwRetCode = ERR_SUCCESS;
+   else
+      dwRetCode = ERR_INTERNAL_ERROR;
 #else
    /* TODO: add UNIX code here */
    dwRetCode = ERR_NOT_IMPLEMENTED;

@@ -21,7 +21,7 @@
   ghost@aladdin.com
 
  */
-/* $Id: md5.h,v 1.2 2004-06-03 10:59:48 victor Exp $ */
+/* $Id: md5.h,v 1.3 2004-08-23 08:15:31 victor Exp $ */
 /*
   Independent implementation of MD5 (RFC 1321).
 
@@ -86,13 +86,13 @@ extern "C"
 #endif
 
 /* Initialize the algorithm. */
-void md5_init(md5_state_t *pms);
+void I_md5_init(md5_state_t *pms);
 
 /* Append a string to the message. */
-void md5_append(md5_state_t *pms, const md5_byte_t *data, int nbytes);
+void I_md5_append(md5_state_t *pms, const md5_byte_t *data, int nbytes);
 
 /* Finish the message and return the digest. */
-void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
+void I_md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

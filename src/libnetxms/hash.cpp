@@ -131,9 +131,9 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes
 {
 	md5_state_t state;
 
-	md5_init(&state);
-	md5_append(&state, (const md5_byte_t *)data, nbytes);
-	md5_finish(&state, (md5_byte_t *)hash);
+	I_md5_init(&state);
+	I_md5_append(&state, (const md5_byte_t *)data, nbytes);
+	I_md5_finish(&state, (md5_byte_t *)hash);
 }
 
 
@@ -145,9 +145,9 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, BYT
 {
    SHA1_CTX context;
 
-   SHA1Init(&context);
-   SHA1Update(&context, data, nbytes);
-   SHA1Final(hash, &context);
+   I_SHA1Init(&context);
+   I_SHA1Update(&context, data, nbytes);
+   I_SHA1Final(hash, &context);
 }
 
 
@@ -165,18 +165,18 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash)
    fd = open(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
-   	md5_init(&state);
+      I_md5_init(&state);
       while(1)
       {
          iSize = read(fd, szBuffer, FILE_BLOCK_SIZE);
          if (iSize <= 0)
             break;
-      	md5_append(&state, (const md5_byte_t *)szBuffer, iSize);
+      	I_md5_append(&state, (const md5_byte_t *)szBuffer, iSize);
       }
       close(fd);
       if (iSize == 0)
       {
-      	md5_finish(&state, (md5_byte_t *)pHash);
+         I_md5_finish(&state, (md5_byte_t *)pHash);
          bSuccess = TRUE;
       }
    }
@@ -198,18 +198,18 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(char *pszFileName, BYTE *pHash)
    fd = open(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
-      SHA1Init(&context);
+      I_SHA1Init(&context);
       while(1)
       {
          iSize = read(fd, szBuffer, FILE_BLOCK_SIZE);
          if (iSize <= 0)
             break;
-         SHA1Update(&context, (BYTE *)szBuffer, iSize);
+         I_SHA1Update(&context, (BYTE *)szBuffer, iSize);
       }
       close(fd);
       if (iSize == 0)
       {
-         SHA1Final(pHash, &context);
+         I_SHA1Final(pHash, &context);
          bSuccess = TRUE;
       }
    }

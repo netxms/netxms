@@ -101,3 +101,22 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 }
 
 #endif   /* _WIN32 */
+
+
+//
+// NetWare library entry point
+//
+
+#ifdef _NETWARE
+
+int _init(void)
+{
+   return 0;
+}
+
+int _fini(void)
+{
+   return 0;
+}
+
+#endif

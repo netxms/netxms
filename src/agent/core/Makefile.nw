@@ -13,6 +13,8 @@ OBJTMP   = nxagentd_r.o
 
 all: $(EXEC)
 
+$(OBJECTS): nxagentd.h Makefile.nw
+
 .cpp.o:
 	$(CC) $(CFLAGS) -o $*.o $<
 

@@ -55,9 +55,12 @@
 // Default files
 //
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #define AGENT_DEFAULT_CONFIG  "C:\\nxagentd.conf"
 #define AGENT_DEFAULT_LOG     "C:\\nxagentd.log"
+#elif defined(_NETWARE)
+#define AGENT_DEFAULT_CONFIG  "SYS:ETC/nxagentd.conf"
+#define AGENT_DEFAULT_LOG     "SYS:ETC/nxagentd.log"
 #else
 #define AGENT_DEFAULT_CONFIG  "/etc/nxagentd.conf"
 #define AGENT_DEFAULT_LOG     "/var/log/nxagentd"

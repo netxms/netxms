@@ -436,7 +436,7 @@ char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, in
 // daemon() implementation for systems which doesn't have one
 //
 
-#if !(HAVE_DAEMON)
+#if !(HAVE_DAEMON) && !defined(_NETWARE)
 
 int daemon(int nochdir, int noclose)
 {

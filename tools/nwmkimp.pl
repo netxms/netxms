@@ -12,16 +12,30 @@ my $inFile = shift || die "Usage : nxmkimp.pl <input_file> <output_file>";
 my $outFile = shift || die "Usage : nxmkimp.pl <input_file> <output_file>";
 
 my $i;
+my $j;
 
 open(OUT, ">$outFile") || die "out: $!";
 
-my @a = `i586-netware-nm $inFile | grep -e " [BGTRD] " | cut -d" " -f3`;
-for ($i = 0; $i < $#a; $i++) 
+my @sym_list = `i586-netware-nm $inFile | grep -e " [BGTRD] " | cut -d" " -f3`;
+my @exp_list;
+
+for ($i = 0, $j = 0; $i <= $#sym_list; $i++) 
 { 
-	chomp $a[$i]; 
-	print OUT " $a[$i],\n"; 
+	chomp $sym_list[$i]; 
+	if ($sym_list[$i] =~ /^main$|^_init$|^_fini$|^__EH_FRAME.*|^g_.*|^I_.*/)
+	{
+	}
+	else
+	{
+		$exp_list[$j++] = $sym_list[$i];
+	}
 } 
-print OUT " $a[$i]";
+
+for ($i = 0; $i < $#exp_list; $i++) 
+{ 
+	print OUT " $exp_list[$i],\n"; 
+} 
+print OUT " $exp_list[$i]\n";
 
 close OUT;
 exit 0;
