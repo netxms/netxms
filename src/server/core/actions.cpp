@@ -318,13 +318,14 @@ DWORD DeleteActionFromDB(DWORD dwActionId)
    for(i = 0; i < m_dwNumActions; i++)
       if (m_pActionList[i].dwId == dwActionId)
       {
+         m_dwUpdateCode = NX_NOTIFY_ACTION_DELETED;
+         EnumerateClientSessions(SendActionDBUpdate, &m_pActionList[i]);
+
          m_dwNumActions--;
+         safe_free(m_pActionList[i].pszData);
          memmove(&m_pActionList[i], &m_pActionList[i + 1], sizeof(NXC_ACTION) * (m_dwNumActions - i));
          sprintf(szQuery, "DELETE FROM actions WHERE action_id=%ld", dwActionId);
          DBQuery(g_hCoreDB, szQuery);
-
-         m_dwUpdateCode = NX_NOTIFY_ACTION_DELETED;
-         EnumerateClientSessions(SendActionDBUpdate, &m_pActionList[i]);
 
          dwResult = RCC_SUCCESS;
          break;

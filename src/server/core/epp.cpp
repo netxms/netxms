@@ -398,6 +398,21 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
 
 
 //
+// Check if given action is used within rule
+//
+
+BOOL EPRule::ActionInUse(DWORD dwActionId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumActions; i++)
+      if (m_pdwActionList[i] == dwActionId)
+         return TRUE;
+   return FALSE;
+}
+
+
+//
 // Event processing policy constructor
 //
 
@@ -543,4 +558,27 @@ void EventPolicy::ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList)
       m_ppRuleList[i]->SetId(i);
    
    Unlock();
+}
+
+
+//
+// Check if given action is used in policy
+//
+
+BOOL EventPolicy::ActionInUse(DWORD dwActionId)
+{
+   BOOL bResult = FALSE;
+   DWORD i;
+
+   ReadLock();
+
+   for(i = 0; i < m_dwNumRules; i++)
+      if (m_ppRuleList[i]->ActionInUse(dwActionId))
+      {
+         bResult = TRUE;
+         break;
+      }
+
+   Unlock();
+   return bResult;
 }

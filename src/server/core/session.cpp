@@ -3096,7 +3096,14 @@ void ClientSession::DeleteAction(CSCPMessage *pRequest)
    {
       // Get Id of action to be deleted
       dwActionId = pRequest->GetVariableLong(VID_ACTION_ID);
-      msg.SetVariable(VID_RCC, DeleteActionFromDB(dwActionId));
+      if (!g_pEventPolicy->ActionInUse(dwActionId))
+      {
+         msg.SetVariable(VID_RCC, DeleteActionFromDB(dwActionId));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACTION_IN_USE);
+      }
    }
 
    // Send responce

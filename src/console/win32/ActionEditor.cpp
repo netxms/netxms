@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(CActionEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ACTION_RENAME, OnUpdateActionRename)
 	ON_COMMAND(ID_ACTION_NEW, OnActionNew)
 	ON_COMMAND(ID_ACTION_PROPERTIES, OnActionProperties)
+	ON_COMMAND(ID_ACTION_DELETE, OnActionDelete)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDoubleClick)
 END_MESSAGE_MAP()
@@ -350,5 +351,64 @@ void CActionEditor::OnActionProperties()
             MessageBox("Internal error: cannot find requested action entry in list", "Internal Error", MB_OK | MB_ICONSTOP);
          }
       }
+   }
+}
+
+
+//
+// Worker function for action deletion
+//
+
+static DWORD DeleteActions(DWORD dwNumActions, DWORD *pdwDeleteList, CListCtrl *pList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+   LVFINDINFO lvfi;
+   int iItem;
+
+   lvfi.flags = LVFI_PARAM;
+   for(i = 0; i < dwNumActions; i++)
+   {
+      dwResult = NXCDeleteAction(g_hSession, pdwDeleteList[i]);
+      if (dwResult == RCC_SUCCESS)
+      {
+         lvfi.lParam = pdwDeleteList[i];
+         iItem = pList->FindItem(&lvfi);
+         if (iItem != -1)
+            pList->DeleteItem(iItem);
+      }
+      else
+      {
+         break;
+      }
+   }
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_ACTION_DELETE message handler
+//
+
+void CActionEditor::OnActionDelete() 
+{
+   int iItem;
+   DWORD i, dwNumItems, *pdwDeleteList, dwResult;
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (dwNumItems > 0)
+   {
+      pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+      iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+      for(i = 0; (i < dwNumItems) && (iItem != -1); i++)
+      {
+         pdwDeleteList[i] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
+      }
+
+      dwResult = DoRequestArg3(DeleteActions, (void *)dwNumItems, pdwDeleteList, 
+                               &m_wndListCtrl, _T("Deleting action(s)..."));
+      if (dwResult != RCC_SUCCESS)
+         theApp.ErrorBox(dwResult, _T("Error deleting action: %s"));
+      free(pdwDeleteList);
    }
 }

@@ -155,9 +155,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Package file already exist on server"),
       _T("Server resource busy"),
       _T("Invalid package ID"),
-      _T("Invalid IP address")
+      _T("Invalid IP address"),
+      _T("Action is used in event processing policy")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_IP_ADDR)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_ACTION_IN_USE)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

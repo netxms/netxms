@@ -400,6 +400,7 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction)
       case NX_NOTIFY_ACTION_DELETED:
          if (pCurrAction != NULL)
          {
+theApp.DebugPrintf("Deleting action %d '%s'",pAction->dwId,pCurrAction->szName);
             for(i = 0; i < g_dwNumActions; i++)
                if (g_pActionList[i].dwId == pAction->dwId)
                {

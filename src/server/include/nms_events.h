@@ -129,6 +129,8 @@ public:
    void SaveToDB(void);
    BOOL ProcessEvent(Event *pEvent);
    void CreateMessage(CSCPMessage *pMsg);
+
+   BOOL ActionInUse(DWORD dwActionId);
 };
 
 
@@ -158,6 +160,8 @@ public:
    void ProcessEvent(Event *pEvent);
    void SendToClient(ClientSession *pSession, DWORD dwRqId);
    void ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList);
+
+   BOOL ActionInUse(DWORD dwActionId);
 };
 
 
