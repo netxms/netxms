@@ -157,6 +157,8 @@ typedef unsigned long HREQUEST;
 #define RCC_SYSTEM_FAILURE          ((DWORD)10)
 #define RCC_INVALID_USER_ID         ((DWORD)11)
 #define RCC_INVALID_ARGUMENT        ((DWORD)12)
+#define RCC_DUPLICATE_DCI           ((DWORD)13)
+#define RCC_INVALID_DCI_ID          ((DWORD)14)
 
 
 //
@@ -409,6 +411,7 @@ typedef struct
    BYTE iSource;
    BYTE iDataType;
    BYTE iStatus;
+   BYTE bModified;   // Modification flag to be used by client. It's not used by library.
 } NXC_DCI;
 
 
@@ -473,6 +476,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList);
+DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(DWORD dwNodeId, DWORD *pdwItemId);
 
 #ifdef __cplusplus
 }

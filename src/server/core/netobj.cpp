@@ -419,6 +419,7 @@ static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
 
 //
 // Mark object as modified and put on client's notification queue
+// We assume that object is locked at the time of function call
 //
 
 void NetObj::Modify(void)

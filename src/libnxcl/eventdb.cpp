@@ -119,7 +119,7 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode;
    DWORD dwRqId;
 
@@ -132,16 +132,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
 
    if (dwRetCode == RCC_SUCCESS)
    {
@@ -169,7 +160,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
 
 static DWORD SetEventInfo(NXC_EVENT_TEMPLATE *pArg)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode = RCC_SUCCESS;
    DWORD dwRqId;
 
@@ -187,17 +178,7 @@ static DWORD SetEventInfo(NXC_EVENT_TEMPLATE *pArg)
    SendMsg(&msg);
    
    // Wait for reply
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
-
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }
 

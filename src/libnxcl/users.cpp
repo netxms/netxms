@@ -150,7 +150,7 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    m_hCondLoadFinished = ConditionCreate(FALSE);
@@ -160,16 +160,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
 
    if (dwRetCode == RCC_SUCCESS)
    {
@@ -276,7 +267,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwN
 
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -286,16 +277,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId)
    msg.SetVariable(VID_USER_ID, dwId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }
 
@@ -306,7 +288,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId)
 
 static DWORD LockUserDB(BOOL bLock)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -315,16 +297,7 @@ static DWORD LockUserDB(BOOL bLock)
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }
 
@@ -355,7 +328,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void)
 
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD i, dwId, dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -384,16 +357,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
    SendMsg(&msg);
 
    // Wait for responce
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }
 
@@ -404,7 +368,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo)
 
 DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
    BYTE hash[SHA_DIGEST_LENGTH];
 
@@ -418,15 +382,6 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword)
    msg.SetVariable(VID_PASSWORD, hash, SHA_DIGEST_LENGTH);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }

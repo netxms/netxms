@@ -134,6 +134,7 @@ void ProcessDCI(CSCPMessage *pMsg);
 
 BOOL SendMsg(CSCPMessage *pMsg);
 CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
+DWORD WaitForRCC(DWORD dwRqId);
 
 void ChangeState(DWORD dwState);
 void DebugPrintf(char *szFormat, ...);

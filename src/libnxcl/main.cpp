@@ -93,9 +93,12 @@ const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       "Object already exist",
       "Communication failure",
       "System failure",
-      "Invalid user ID"
+      "Invalid user ID",
+      "Invalid argument",
+      "Duplicate DCI",
+      "Invalid DCI ID"
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_USER_ID)) ? pszErrorText[dwError] : "Unknown error code";
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_DCI_ID)) ? pszErrorText[dwError] : "Unknown error code";
 }
 
 

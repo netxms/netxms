@@ -841,9 +841,8 @@ BOOL Node::AddItem(DCItem *pItem)
    Lock();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if ((m_ppItems[i]->Id() == pItem->Id()) || 
-          (!stricmp(m_ppItems[i]->Name(), pItem->Name())))
-         break;   // Item with specified name or id already exist
+      if (m_ppItems[i]->Id() == pItem->Id())
+         break;   // Item with specified id already exist
    
    if (i == m_dwNumItems)     // Add new item
    {
@@ -856,6 +855,56 @@ BOOL Node::AddItem(DCItem *pItem)
       Modify();
       bResult = TRUE;
    }
+
+   Unlock();
+   return bResult;
+}
+
+
+//
+// Delete item from node
+//
+
+BOOL Node::DeleteItem(DWORD dwItemId)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   Lock();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_ppItems[i]->Id() == dwItemId)
+      {
+         // Destroy item
+         m_ppItems[i]->DeleteFromDB();
+         delete m_ppItems[i];
+         m_dwNumItems--;
+         memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
+         bResult = TRUE;
+      }
+
+   Unlock();
+   return bResult;
+}
+
+
+//
+// Modify data collection item from CSCP message
+//
+
+BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   Lock();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_ppItems[i]->Id() == dwItemId)
+      {
+         m_ppItems[i]->UpdateFromMessage(pMsg);
+         bResult = TRUE;
+      }
 
    Unlock();
    return bResult;

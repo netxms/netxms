@@ -60,6 +60,7 @@ void ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
             m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
+            m_pItemList->pItems[i].bModified = FALSE;
          }
          break;
       default:
@@ -75,7 +76,7 @@ void ProcessDCI(CSCPMessage *pMsg)
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -91,16 +92,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
 
    if (dwRetCode == RCC_SUCCESS)
    {
@@ -143,7 +135,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
 {
    DWORD dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
 
    if (pItemList != NULL)
    {
@@ -154,19 +146,91 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
       msg.SetVariable(VID_OBJECT_ID, pItemList->dwNodeId);
       SendMsg(&msg);
 
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-      if (pResponce != NULL)
-      {
-         dwRetCode = pResponce->GetVariableLong(VID_RCC);
-         delete pResponce;
-      }
-      else
-      {
-         dwRetCode = RCC_TIMEOUT;
-      }
+      dwRetCode = WaitForRCC(dwRqId);
 
       MemFree(pItemList->pItems);
       MemFree(pItemList);
    }
    return dwRetCode;
+}
+
+
+//
+// Create new data collection item
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(DWORD dwNodeId, DWORD *pdwItemId)
+{
+   DWORD dwRetCode, dwRqId;
+   CSCPMessage msg, *pResponce;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_CREATE_NEW_DCI);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   SendMsg(&msg);
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+         *pdwItemId = pResponce->GetVariableLong(VID_DCI_ID);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
+}
+
+
+//
+// Update data collection item
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_MODIFY_NODE_DCI);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_ID, pItem->dwId);
+   msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)pItem->iDataType);
+   msg.SetVariable(VID_POLLING_INTERVAL, (DWORD)pItem->iPollingInterval);
+   msg.SetVariable(VID_RETENTION_TIME, (DWORD)pItem->iRetentionTime);
+   msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->iSource);
+   msg.SetVariable(VID_DCI_STATUS, (WORD)pItem->iStatus);
+   msg.SetVariable(VID_NAME, pItem->szName);
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
+}
+
+
+//
+// Delete data collection item
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(DWORD dwNodeId, DWORD dwItemId)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_DELETE_NODE_DCI);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_ID, dwItemId);
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
 }

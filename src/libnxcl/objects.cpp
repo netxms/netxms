@@ -260,7 +260,7 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -270,16 +270,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+   dwRetCode = WaitForRCC(dwRqId);
 
    if (dwRetCode == RCC_SUCCESS)
    {
@@ -415,7 +406,7 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName)
 
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -452,17 +443,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
    SendMsg(&msg);
 
    // Wait for reply
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
-
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }
 
@@ -473,7 +454,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
 
 DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManaged)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
@@ -488,16 +469,6 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(DWORD dwObjectId, BOOL bIsManage
    SendMsg(&msg);
 
    // Wait for reply
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
-
+   dwRetCode = WaitForRCC(dwRqId);
    return dwRetCode;
 }

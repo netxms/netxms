@@ -327,9 +327,12 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    BOOL AddItem(DCItem *pItem);
+   BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg);
+   BOOL DeleteItem(DWORD dwItemId);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
+   BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
 
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);

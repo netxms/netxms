@@ -226,3 +226,35 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_iDataType);
    pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
 }
+
+
+//
+// Delete item and collected data from database
+//
+
+void DCItem::DeleteFromDB(void)
+{
+   char szQuery[256];
+
+   sprintf(szQuery, "DELETE FROM items WHERE item_id=%d", m_dwId);
+   QueueSQLRequest(szQuery);
+   sprintf(szQuery, "DELETE FROM idata_%d WHERE item_id=%d", m_pNode->Id(), m_dwId);
+   QueueSQLRequest(szQuery);
+   sprintf(szQuery, "DELETE FROM thresholds WHERE item_id=%d", m_dwId);
+   QueueSQLRequest(szQuery);
+}
+
+
+//
+// Update item from CSCP message
+//
+
+void DCItem::UpdateFromMessage(CSCPMessage *pMsg)
+{
+   pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
+   m_iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
+   m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
+   m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
+   m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
+   m_iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
+}

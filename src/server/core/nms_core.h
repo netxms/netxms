@@ -291,6 +291,7 @@ private:
    void ChangeObjectMgmtStatus(CSCPMessage *pRequest);
    void OpenNodeDCIList(CSCPMessage *pRequest);
    void CloseNodeDCIList(CSCPMessage *pRequest);
+   void ModifyNodeDCI(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

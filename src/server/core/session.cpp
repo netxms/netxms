@@ -296,6 +296,11 @@ void ClientSession::ProcessingThread(void)
          case CMD_UNLOCK_NODE_DCI_LIST:
             CloseNodeDCIList(pMsg);
             break;
+         case CMD_CREATE_NEW_DCI:
+         case CMD_MODIFY_NODE_DCI:
+         case CMD_DELETE_NODE_DCI:
+            ModifyNodeDCI(pMsg);
+            break;
          default:
             break;
       }
@@ -1062,6 +1067,48 @@ void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, N
 }
 
 
+//
+// Change management status for the object
+//
+
+void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwObjectId;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check access rights
+   dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         BOOL bIsManaged;
+
+         bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
+         pObject->SetMgmtStatus(bIsManaged);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
 // 
 // Set user's password
 //
@@ -1224,10 +1271,10 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
 
 
 //
-// Change management status for the object
+// Create, modify, or delete data collection item for node
 //
 
-void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
+void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DWORD dwObjectId;
@@ -1237,25 +1284,68 @@ void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Get object id and check access rights
+   // Get node id and check object class and access rights
    dwObjectId = pRequest->GetVariableLong(VID_OBJECT_ID);
    pObject = FindObjectById(dwObjectId);
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (pObject->Type() == OBJECT_NODE)
       {
-         BOOL bIsManaged;
+         if (((Node *)pObject)->IsLockedBySession(m_dwIndex))
+         {
+            if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+            {
+               DWORD dwItemId;
+               DCItem *pItem;
+               BOOL bSuccess;
 
-         bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
-         pObject->SetMgmtStatus(bIsManaged);
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               switch(pRequest->GetCode())
+               {
+                  case CMD_CREATE_NEW_DCI:
+                     // Create dummy DCI
+                     pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
+                                        DTYPE_INTEGER, 60, 30, (Node *)pObject);
+                     pItem->SetStatus(ITEM_STATUS_DISABLED);
+                     if (((Node *)pObject)->AddItem(pItem))
+                     {
+                        msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                        // Return new item id to client
+                        msg.SetVariable(VID_DCI_ID, pItem->Id());
+                     }
+                     else  // Unable to add item to node
+                     {
+                        delete pItem;
+                        msg.SetVariable(VID_RCC, RCC_DUPLICATE_DCI);
+                     }
+                     break;
+                  case CMD_MODIFY_NODE_DCI:
+                     dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
+                     bSuccess = ((Node *)pObject)->UpdateItem(dwItemId, pRequest);
+                     msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
+                     break;
+                  case CMD_DELETE_NODE_DCI:
+                     dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
+                     bSuccess = ((Node *)pObject)->DeleteItem(dwItemId);
+                     msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
+                     break;
+               }
+            }
+            else  // User doesn't have MODIFY rights on object
+            {
+               msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+            }
+         }
+         else  // Nodes DCI list not locked by this session
+         {
+            msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         }
       }
-      else
+      else     // Object is not a node
       {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
       }
    }
-   else
+   else  // No object with given ID
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }

@@ -131,6 +131,7 @@ public:
 
    BOOL SaveToDB(void);
    BOOL LoadThresholdsFromDB(void);
+   void DeleteFromDB(void);
 
    DWORD Id(void) { return m_dwId; }
    int DataSource(void) { return m_iSource; }
@@ -151,6 +152,7 @@ public:
    void CheckThresholds(const char *pszLastValue);
 
    void CreateMessage(CSCPMessage *pMsg);
+   void UpdateFromMessage(CSCPMessage *pMsg);
 };
 
 

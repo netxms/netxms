@@ -284,3 +284,27 @@ CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut)
 {
    return m_msgWaitQueue.WaitForMessage(dwCode, dwId, dwTimeOut);
 }
+
+
+//
+// Wait for request completion notification and extract result code
+// from recived message
+//
+
+DWORD WaitForRCC(DWORD dwRqId)
+{
+   CSCPMessage *pResponce;
+   DWORD dwRetCode;
+
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
