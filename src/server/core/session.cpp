@@ -827,12 +827,15 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
    }
    else
    {
-      DWORD dwUserId;
+      DWORD dwUserId, dwResult;
 
       dwUserId = pRequest->GetVariableLong(VID_USER_ID);
       if (dwUserId & GROUP_FLAG)
       {
          NMS_USER_GROUP group;
+
+         group.dwId = dwUserId;
+         dwResult = ModifyGroup(&group);
       }
       else
       {
@@ -843,7 +846,10 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_USER_FULL_NAME, user.szFullName, MAX_USER_FULLNAME);
          pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
          user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
+         user.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
+         dwResult = ModifyUser(&user);
       }
+      msg.SetVariable(VID_RCC, dwResult);
    }
 
    // Send responce

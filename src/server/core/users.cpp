@@ -513,3 +513,67 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
 
    return dwResult;
 }
+
+
+//
+// Modify user record
+//
+
+DWORD ModifyUser(NMS_USER *pUserInfo)
+{
+   DWORD i, dwResult = RCC_INVALID_USER_ID;
+
+   MutexLock(m_hMutexUserAccess, INFINITE);
+
+   // Find user to be modified in list
+   for(i = 0; i < g_dwNumUsers; i++)
+      if (g_pUserList[i].dwId == pUserInfo->dwId)
+      {
+         strcpy(g_pUserList[i].szName, pUserInfo->szName);
+         strcpy(g_pUserList[i].szFullName, pUserInfo->szFullName);
+         strcpy(g_pUserList[i].szDescription, pUserInfo->szDescription);
+         
+         // We will not replace system access rights for UID 0
+         if (g_pUserList[i].dwId != 0)
+            g_pUserList[i].wSystemRights = pUserInfo->wSystemRights;
+
+         // Modify UF_DISABLED and UF_CHANGE_PASSWORD flags from pUserInfo
+         // Ignore DISABLED flag for UID 0
+         g_pUserList[i].wFlags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD);
+         if (g_pUserList[i].dwId != 0)
+            g_pUserList[i].wFlags |= pUserInfo->wFlags & UF_CHANGE_PASSWORD;
+         else
+            g_pUserList[i].wFlags |= pUserInfo->wFlags & (UF_DISABLED | UF_CHANGE_PASSWORD);
+
+         // Mark user record as modified and notify clients
+         g_pUserList[i].wFlags |= UF_MODIFIED;
+         SendUserDBUpdate(USER_DB_MODIFY, g_pUserList[i].dwId, &g_pUserList[i], NULL);
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+
+   MutexUnlock(m_hMutexUserAccess);
+   return dwResult;
+}
+
+
+//
+// Modify group record
+//
+
+DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo)
+{
+   DWORD i, dwResult = RCC_INVALID_USER_ID;
+
+   MutexLock(m_hMutexGroupAccess, INFINITE);
+
+   // Find group in list
+   for(i = 0; i < g_dwNumGroups; i++)
+      if (g_pGroupList[i].dwId == pGroupInfo->dwId)
+      {
+         break;
+      }
+
+   MutexUnlock(m_hMutexGroupAccess);
+   return dwResult;
+}
