@@ -9,28 +9,41 @@ if [ "x"$3 = "x" ]; then
 	exit
 fi
 
-[ -r $1 ] || echo "Can't read $1" && exit
+if [ ! -r $1 ]; then
+	echo "Can't read $1"
+	exit
+fi
 
-md5=`which md5`
+md5=`which md5 2>/dev/null`
 if [ $? != 0 ]; then
-	md5=`which md5sum`
+	md5=`which md5sum 2>/dev/null`
 	if [ $? != 0 ]; then
-		md5=`which openssl`
+		md5=`which openssl 2>/dev/null`
 		if [ $? != 0 ]; then
 			echo "Can't calculate MD5, exiting"
 			exit
 		else
 			md5="$md5 md5"
 		fi
-	else
-		md5="$md5 | cut -d' ' -f1"
 	fi
 fi
 
-skip=`echo \`wc -l stub.sh|cut -b1-8\``
+case `uname -s` in
+	Linux)
+		skip=`wc -l stub.sh|cut -d' ' -f1`
+		;;
+	*BSD)
+		skip=`echo \`wc -l stub.sh|cut -b1-8\``
+		;;
+	*)
+		echo unknown system, duh
+		exit;
+		;;
+esac
+
 sed "s,__SKIP__,$skip,g" < stub.sh | sed "s,__COMMAND__,$2,g" > tmp
-hash1=`tail -n+5 tmp | $md5`
-hash2=`cat $1 | $md5`
+hash1=`tail -n+5 tmp | $md5 | cut -b1-32 | tr A-Z a-z`
+hash2=`cat $1 | $md5 | cut -b1-32 | tr A-Z a-z`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
 cat $1 >> $3
