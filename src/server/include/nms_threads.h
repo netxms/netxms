@@ -33,6 +33,7 @@
 
 #define MUTEX  HANDLE
 #define THREAD HANDLE
+#define CONDITION HANDLE
 
 #define INVALID_MUTEX_HANDLE  INVALID_HANDLE_VALUE
 
@@ -79,6 +80,26 @@ inline void MutexLock(MUTEX mutex, DWORD dwTimeOut)
 inline void MutexUnlock(MUTEX mutex)
 {
    ReleaseMutex(mutex);
+}
+
+inline CONDITION ConditionCreate(void)
+{
+   return CreateEvent(NULL, FALSE, FALSE, NULL);
+}
+
+inline void ConditionDestroy(CONDITION hCond)
+{
+   CloseHandle(hCond);
+}
+
+inline void ConditionSet(CONDITION hCond)
+{
+   SetEvent(hCond);
+}
+
+inline void ConditionWait(CONDITION hCond, DWORD dwTimeOut)
+{
+   WaitForSingleObject(hCond, dwTimeOut);
 }
 
 #else    /* _WIN32 */
