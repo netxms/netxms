@@ -48,22 +48,23 @@ typedef struct
    {
       struct
       {
-         WORD wLen;
+         WORD wReserved1;
+         DWORD dwLen;
          char szValue[1];
       } string;
       struct
       {
-         WORD wReserved1;
+         WORD wReserved2;
          DWORD dwInteger;
       } integer;
       struct
       {
-         WORD wReserverd2;
+         WORD wReserverd3;
          QWORD qwInt64;
       } int64;
       struct
       {
-         WORD wReserverd3;
+         WORD wReserverd4;
          double dFloat;
       } fp;
       WORD wInt16;
