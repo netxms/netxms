@@ -34,13 +34,6 @@
 
 
 //
-// Event flags
-//
-
-#define EF_LOG                   0x0001
-
-
-//
 // Event template
 //
 

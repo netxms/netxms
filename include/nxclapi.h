@@ -25,6 +25,7 @@
 #define _nxclapi_h_
 
 #include <nms_common.h>
+#include <nxevent.h>
 
 
 //
