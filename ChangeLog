@@ -5,9 +5,19 @@
 - Added support for System.CPU.Count and System.ProcessList parameters
   under Windows
 - Created our own SNMP library (currently SNMP versions 1 and 2c are
-  supported) 
+  supported). Server is no longer needs net-snmp library. 
 - Component locks moved to RAM from SQL database
 - Added support for SNMP traps
+- Removed access right "View server configuration" as unneeded
+- Windows console: Added sorting to event selection dialog
+- Windows console: Objects in object browser are now sorted with respect
+  to IP addresses when object name is an IP address
+- Windows console: Fixed bug with MDI window position restoration when
+  window is maximized
+- Windows console: Fixed bug with duplication of child window title in
+  parent's title when child is maximized
+- Windows console: Status icons now placed over object icons in
+  object browser
 
 
 *

@@ -25,7 +25,6 @@ SERVER:
 - Recalculate object status after binding change
 - Implement sending of all alarms from database
 - Implement normal mailer shutdown
-- Implement locks table in memory
 - Check if object indexes always locked when used
 - Remove system-dependent code for getting interface list and ARP cache
   from management server. Server should rely on SNMP or native agent for
@@ -55,7 +54,6 @@ WINDOWS CONSOLE:
   selected parameter
 - Add parameter selection for native agents in DCI configuration dialog
 - Find good graph creation library
-- Place status icons on objects in object browser
 
 
 SUBAGENTS:
