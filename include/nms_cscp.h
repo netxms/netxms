@@ -29,6 +29,8 @@
 //
 
 #define SERVER_LISTEN_PORT       4701
+#define MAX_DCI_STRING_VALUE     256
+#define CSCP_HEADER_SIZE         16
 
 
 //
@@ -70,11 +72,42 @@ typedef struct
 
 typedef struct
 {
-   WORD wCode;    // Message (command) code (lower 12 bits) and flags (higher 4 bits)
-   WORD wSize;    // Message size (including header) in bytes
-   DWORD dwId;    // Unique message identifier
-   CSCP_DF df[1]; // Data fields
+   WORD wCode;       // Message (command) code
+   WORD wFlags;      // Message flags
+   DWORD dwSize;     // Message size (including header) in bytes
+   DWORD dwId;       // Unique message identifier
+   DWORD dwNumVars;  // Number of variables in message
+   CSCP_DF df[1];    // Data fields
 } CSCP_MESSAGE;
+
+
+//
+// DCI data header structure
+//
+
+typedef struct
+{
+   DWORD dwItemId;
+   DWORD dwNumRows;
+   DWORD dwDataType;
+} DCI_DATA_HEADER;
+
+
+//
+// DCI data row structure
+//
+
+typedef struct
+{
+   DWORD dwTimeStamp;
+   union
+   {
+      long iInteger;
+      INT64 qInt64;
+      double dFloat;
+      char szString[MAX_DCI_STRING_VALUE];
+   } value;
+} DCI_DATA_ROW;
 
 #pragma pack()
 
@@ -94,7 +127,8 @@ typedef struct
 // Message flags
 //
 
-#define MF_BINARY                   0x1000
+#define MF_BINARY    0x1000
+#define MF_LARGE     0x2000
 
 
 //
@@ -150,6 +184,7 @@ typedef struct
 #define CMD_SET_OBJECT_MGMT_STATUS  0x002F
 #define CMD_CREATE_NEW_DCI          0x0030
 #define CMD_GET_DCI_DATA            0x0031
+#define CMD_DCI_DATA                0x0032
 
 
 //
@@ -236,7 +271,7 @@ typedef struct
 
 inline BOOL IsBinaryMsg(CSCP_MESSAGE *pMsg)
 {
-   return ntohs(pMsg->wCode) & MF_BINARY;
+   return ntohs(pMsg->wFlags) & MF_BINARY;
 }
 
 
