@@ -30,7 +30,6 @@
 
 void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 {
-   NXC_EVENT *pEvent;
    WORD wCode;
 #ifdef UNICODE
    WCHAR *pSrc, *pDst;
@@ -46,36 +45,36 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
       case CMD_EVENT:
          if (pRawMsg != NULL)    // We should receive events as raw data
          {
-            // Allocate new event structure and fill it with values from message
-            pEvent = (NXC_EVENT *)malloc(sizeof(NXC_EVENT));
-            pEvent->dwEventCode = ntohl(((NXC_EVENT *)pRawMsg->df)->dwEventCode);
-            pEvent->qwEventId = ntohq(((NXC_EVENT *)pRawMsg->df)->qwEventId);
-            pEvent->dwSeverity = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSeverity);
-            pEvent->dwSourceId = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSourceId);
-            pEvent->dwTimeStamp = ntohl(((NXC_EVENT *)pRawMsg->df)->dwTimeStamp);
+            NXC_EVENT event;
+
+            // Fill event structure with values from message
+            event.dwEventCode = ntohl(((NXC_EVENT *)pRawMsg->df)->dwEventCode);
+            event.qwEventId = ntohq(((NXC_EVENT *)pRawMsg->df)->qwEventId);
+            event.dwSeverity = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSeverity);
+            event.dwSourceId = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSourceId);
+            event.dwTimeStamp = ntohl(((NXC_EVENT *)pRawMsg->df)->dwTimeStamp);
 
             // Convert bytes in message characters to host byte order
             // and than to single-byte if we building non-unicode library
 #ifdef UNICODE
 #if WORDS_BIGENDIAN
-            memcpy(pEvent->szMessage, ((NXC_EVENT *)pRawMsg->df)->szMessage,
+            memcpy(event.szMessage, ((NXC_EVENT *)pRawMsg->df)->szMessage,
                    MAX_EVENT_MSG_LENGTH * sizeof(WCHAR));
 #else
             for(pSrc = ((NXC_EVENT *)pRawMsg->df)->szMessage, 
-                pDst = pEvent->szMessage; *pSrc != 0; pSrc++, pDst++)
+                pDst = event.szMessage; *pSrc != 0; pSrc++, pDst++)
                *pDst = ntohs(*pSrc);
 #endif
 #else
             SwapWideString((WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage);
             WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                                 (WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage, -1,
-                                pEvent->szMessage, MAX_EVENT_MSG_LENGTH, NULL, NULL);
-            pEvent->szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
+                                event.szMessage, MAX_EVENT_MSG_LENGTH, NULL, NULL);
+            event.szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
 
             // Call client's callback to handle new record
-            // It's up to client to destroy allocated event structure
-            pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, pEvent);
+            pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, &event);
          }
          break;
       default:

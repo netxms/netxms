@@ -918,3 +918,55 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, DWORD d
 
    return dwRetCode;
 }
+
+
+//
+// Check if object has default name formed from IP address
+//
+
+static BOOL ObjectHasDefaultName(NXC_OBJECT *pObject)
+{
+   if (pObject->iClass == OBJECT_SUBNET)
+   {
+      TCHAR szBuffer[64], szIpAddr[32];
+      _stprintf(szBuffer, _T("%s/%d"), IpToStr(pObject->dwIpAddr, szIpAddr),
+                BitsInMask(pObject->subnet.dwIpNetMask));
+      return !_tcscmp(szBuffer, pObject->szName);
+   }
+   else
+   {
+      return ((pObject->dwIpAddr != 0) &&
+              (ntohl(_t_inet_addr(pObject->szName)) == pObject->dwIpAddr));
+   }
+}
+
+
+//
+// Get object name suitable for comparision
+//
+
+void LIBNXCL_EXPORTABLE NXCGetComparableObjectName(NXC_SESSION hSession, DWORD dwObjectId, TCHAR *pszName)
+{
+   NXC_OBJECT *pObject;
+
+   pObject = ((NXCL_Session *)hSession)->FindObjectById(dwObjectId, TRUE);
+   if (pObject != NULL)
+   {
+      // If object has an IP address as name, we sort as numbers
+      // otherwise in alphabetical order
+      if (ObjectHasDefaultName(pObject))
+      {
+         _sntprintf(pszName, MAX_OBJECT_NAME, _T("\x01%03d%03d%03d%03d"),
+                    pObject->dwIpAddr >> 24, (pObject->dwIpAddr >> 16) & 255,
+                    (pObject->dwIpAddr >> 8) & 255, pObject->dwIpAddr & 255);
+      }
+      else
+      {
+         _tcscpy(pszName, pObject->szName);
+      }
+   }
+   else
+   {
+      *pszName = 0;
+   }
+}
