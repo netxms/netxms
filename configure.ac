@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.60 2005-01-24 17:34:21 alk Exp $
+# $Id: configure.ac,v 1.61 2005-01-24 17:48:10 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -182,6 +182,7 @@ AC_SUBST(SUBAGENT_DIRS)
 
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(kstat, kstat_open)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])

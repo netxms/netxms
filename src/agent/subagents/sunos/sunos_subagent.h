@@ -27,6 +27,7 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <fcntl.h>
+#include <kstat.h>
 
 
 //

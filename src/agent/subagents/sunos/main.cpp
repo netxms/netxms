@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
 LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue);
+LONG H_Uname(char *pszParam, char *pArg, char *pValue);
+LONG H_Uptime(char *pszParam, char *pArg, char *pValue);
 
 
 //
@@ -61,15 +63,17 @@ static void UnloadHandler(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Agent.SourcePackageSupport", H_SourcePkg, NULL },
-   { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE },
-   { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL },
-   { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED },
-   { "Process.Count(*)", H_ProcessCount, NULL },
-   { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME },
-   { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF },
-   { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME },
-   { "System.ProcessCount", H_SysProcCount, NULL }
+   { "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, "" },
+   { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, "Free disk space on *" },
+   { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, "Total disk space on *" },
+   { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, "Used disk space on *" },
+   { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, "" },
+   { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
+   { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
+   { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
+   { "System.ProcessCount", H_SysProcCount, NULL, DCI_DT_INT, "Total number of processes" },
+   { "System.Uname", H_Uname, NULL, DCI_DT_STRING, "System uname" },
+   { "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, "System uptime" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
