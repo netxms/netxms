@@ -227,7 +227,7 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SERVICE_TYPE, (WORD)m_iServiceType);
    pMsg->SetVariable(VID_IP_PROTO, m_wProto);
    pMsg->SetVariable(VID_IP_PORT, m_wPort);
-   pMsg->SetVariable(VID_POLL_NODE_ID, (m_pPollNode == NULL) ? 0 : m_pPollNode->Id());
+   pMsg->SetVariable(VID_POLLER_NODE_ID, (m_pPollNode == NULL) ? 0 : m_pPollNode->Id());
    pMsg->SetVariable(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_pszRequest));
    pMsg->SetVariable(VID_SERVICE_RESPONCE, CHECK_NULL_EX(m_pszResponce));
 }
@@ -243,11 +243,11 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
       Lock();
 
    // Polling node
-   if (pRequest->IsVariableExist(VID_POLL_NODE_ID))
+   if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))
    {
       DWORD dwNodeId;
 
-      dwNodeId = pRequest->GetVariableLong(VID_POLL_NODE_ID);
+      dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
       if (dwNodeId == 0)
       {
          m_pPollNode = NULL;
