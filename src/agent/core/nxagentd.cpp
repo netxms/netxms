@@ -615,8 +615,10 @@ int main(int argc, char *argv[])
                   iExitCode = 4;
                }
 				// Setup signal handlers
-				for(int i = 0; i < 32; i++)
-					signal(i, SIG_IGN);
+				//for(int i = 0; i < 32; i++)
+				//	signal(i, SIG_IGN);
+				signal(SIGPIPE, SIG_IGN);
+				signal(SIGINT, OnSignal);
 				signal(SIGTERM, OnSignal);
 				signal(SIGSEGV, OnSignal);
 #endif
