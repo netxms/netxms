@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = include
-SUBDIRS = libnxsrv core dbdrv tools
+SUBDIRS = libnxsrv core netxmsd dbdrv tools

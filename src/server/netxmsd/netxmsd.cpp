@@ -23,6 +23,10 @@
 
 #include "netxmsd.h"
 
+#ifndef _WIN32
+#include <signal.h>
+#endif
+
 
 //
 // Help text

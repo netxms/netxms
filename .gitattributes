@@ -554,6 +554,7 @@ src/server/libnxsrv/main.cpp -text
 src/server/libnxsrv/messages.mc -text
 src/server/libnxsrv/resource.h -text
 src/server/libnxsrv/rwlock.cpp -text
+src/server/netxmsd/Makefile.am -text
 src/server/netxmsd/netxmsd.cpp -text
 src/server/netxmsd/netxmsd.dsp -text
 src/server/netxmsd/netxmsd.dsw -text
