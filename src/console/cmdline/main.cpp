@@ -30,8 +30,6 @@
 //
 
 DWORD g_dwState = STATE_DISCONNECTED;
-CONDITION g_hCondOperationComplete;
-HREQUEST g_hOpenRq;
 
 
 //
@@ -54,25 +52,12 @@ static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
    {
       case NXC_EVENT_STATE_CHANGED:
          g_dwState = dwCode;
-         switch(dwCode)
-         {
-            case STATE_IDLE:
-            case STATE_DISCONNECTED:
-               ConditionSet(g_hCondOperationComplete);
-               break;
-            default:
-               break;
-         }
          break;
       case NXC_EVENT_NEW_ELOG_RECORD:
-         printf("LOG_RECORD: %s\n", ((NXC_EVENT *)pArg)->szMessage);
+         printf("EVENT: %s\n", ((NXC_EVENT *)pArg)->szMessage);
          MemFree(pArg);
          break;
-      case NXC_EVENT_REQUEST_COMPLETED:
-         printf("Request %d completed with code %d\n", dwCode, (DWORD)pArg);
-         break;
       default:
-         printf("Event %d [Code = %d, Arg = 0x%08X]\n", dwEvent, dwCode, pArg);
          break;
    }
 }
@@ -98,78 +83,93 @@ static BOOL PrintObject(NXC_OBJECT *pObject)
 int main(int argc, char *argv[])
 {
    DWORD dwVersion;
-   char szServer[256], szLogin[256], szPassword[256];
-   NXC_EVENT_TEMPLATE **ppEventList;
-   DWORD dwNumEvents;
+   char szServer[256] = "127.0.0.1", szLogin[256] = "", szPassword[256] = "";
+   DWORD dwResult;
+   int i, ch;
+   BOOL bStart = TRUE, bDebug = FALSE;
 
 #ifdef _WIN32
    WSADATA wsaData;
-
    WSAStartup(0x0002, &wsaData);
 #endif
 
-   g_hCondOperationComplete = ConditionCreate();
+   // Parse command line
+   opterr = 1;
+   while((ch = getopt(argc, argv, "dhp:s:u:")) != -1)
+   {
+      switch(ch)
+      {
+         case 'd':   // Debug on
+            bDebug = TRUE;
+            break;
+         case 'h':   // Display help and exit
+            printf("Usage: nxcmd [<options>]\n"
+                   "Valid options are:\n"
+                   "   -d            : Turn on debug output\n"
+                   "   -h            : Display help and exit.\n"
+                   "   -p <password> : Login using specified password\n"
+                   "   -s <server>   : Connect to specified server (default is 127.0.0.1)\n"
+                   "   -u <login>    : Use specified login name\n"
+                   "\n");
+            bStart = FALSE;
+            break;
+         case 'p':   // Password
+            strncpy(szPassword, optarg, 255);
+            break;
+         case 's':   // Server
+            strncpy(szServer, optarg, 255);
+            break;
+         case 'u':   // Login
+            strncpy(szLogin, optarg, 255);
+            break;
+         case '?':
+            bStart = FALSE;
+            break;
+         default:
+            break;
+      }
+   }
+
+   if (!bStart)
+      return 1;
 
    dwVersion = NXCGetVersion();
    printf("Using NetXMS Client Library version %d.%d.%d\n", dwVersion >> 24,
           (dwVersion >> 16) & 255, dwVersion & 0xFFFF);
-   NXCInitialize();
-   NXCSetEventHandler(EventHandler);
-   //NXCSetDebugCallback(DebugCallback);
-
-strcpy(szServer,"10.0.0.7");
-strcpy(szLogin,"admin");
-strcpy(szPassword,"netxms");
-
-   printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
-   NXCConnect(szServer, szLogin, szPassword);
-   ConditionWait(g_hCondOperationComplete, INFINITE);
-   if (g_dwState == STATE_DISCONNECTED)
+   if (!NXCInitialize())
    {
-      printf("Unable to establish connection with the server.\n");
+      printf("Failed to initialize NetXMS client library\n");
       return 1;
    }
-   printf("Connection established.\n");
 
-   // Load oblects from server
-   printf("Loading objects...\n");
-   NXCSyncObjects();
-   ConditionWait(g_hCondOperationComplete, INFINITE);
-   printf("Objects synchronized.\n");
-
-   //NXCEnumerateObjects(PrintObject);
-
-   time_t t = time(0);
-   printf("%s Loading events...\n", ctime(&t));
-   NXCSyncEvents();
-   ConditionWait(g_hCondOperationComplete, INFINITE);
-   t = time(0);
-   printf("%s All events loaded.\n", ctime(&t));
-
-   NXCSetDebugCallback(DebugCallback);
-   printf("Debug mode activated\n");
-
-   g_hOpenRq = NXCOpenEventDB();
-   ConditionWait(g_hCondOperationComplete, INFINITE);
-   printf("Event templates loaded.\n");
-
-   if (NXCGetEventDB(&ppEventList, &dwNumEvents))
+   // Ask login name if not specified on command line
+   if (szLogin[0] == 0)
    {
-      DWORD i;
+      printf("Login: ");
+      gets(szLogin);
+      printf("'%s'\n",szLogin);
+   }
 
-      for(i = 0; i < dwNumEvents; i++)
-         printf("%5d %-24s %s\n", ppEventList[i]->dwCode, ppEventList[i]->szName,
-                ppEventList[i]->pszMessage);
-      printf("%d events total\n", dwNumEvents);
+   NXCSetEventHandler(EventHandler);
+   if (bDebug)
+      NXCSetDebugCallback(DebugCallback);
+
+   printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
+   dwResult = NXCConnect(szServer, szLogin, szPassword);
+   if (dwResult != RCC_SUCCESS)
+   {
+      printf("Unable to connect to server: %s\n", NXCGetErrorText(dwResult));
    }
    else
    {
-      printf("NXCGetEventDB() failed\n");
+      printf("Connection established.\n");
+
+      // Load oblects from server
+      printf("Loading objects...\n");
+      dwResult = NXCSyncObjects();
+
+      //NXCEnumerateObjects(PrintObject);
    }
-   NXCCloseEventDB(FALSE);
-
-   while(1)
-      Sleep(1000);
-
+   
    return 0;
 }
