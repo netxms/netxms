@@ -14,6 +14,7 @@ GENERAL:
 - Cross-platform pinger subagent
 - Change configure script to allow selection of components to build
 - Write README for NetWare
+- SMS-sender interface with drivers for cell-phones/SMPP
 
 
 SERVER:
@@ -36,3 +37,8 @@ WINDOWS CONSOLE:
 - Add custom background erasing code in policy editor for smooth painting
 - Add support for "View -> Refresh" in data collection configurator
   (or, even better, automatic update)
+
+
+SUBAGENTS:
+
+- libperl-driven subagent, allow to run perl scripts w/o forking/executing
