@@ -151,7 +151,7 @@ typedef struct
 #define VID_OBJECT_ID               ((DWORD)3)
 #define VID_OBJECT_NAME             ((DWORD)4)
 #define VID_OBJECT_CLASS            ((DWORD)5)
-#define VID_LOGIN_RESULT            ((DWORD)6)
+//#define VID_LOGIN_RESULT            ((DWORD)6)
 #define VID_PARENT_CNT              ((DWORD)7)
 #define VID_IP_ADDRESS              ((DWORD)8)
 #define VID_IP_NETMASK              ((DWORD)9)

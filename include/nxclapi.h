@@ -369,7 +369,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void);
 const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
-BOOL LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
+DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
 void LIBNXCL_EXPORTABLE NXCDisconnect(void);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
