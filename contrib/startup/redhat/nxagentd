@@ -2,7 +2,7 @@
 #
 # netxmsd This script starts and stops the nxagentd daemon
 #
-# chkconfig: 2345 95 05
+# chkconfig: 2345 90 10
 #
 # description: nxagentd is a NetXMS agent process
 

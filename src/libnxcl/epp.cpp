@@ -196,7 +196,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
 
          msg.SetVariable(VID_FLAGS, pEventPolicy->pRuleList[i].dwFlags);
          msg.SetVariable(VID_RULE_ID, pEventPolicy->pRuleList[i].dwId);
-         msg.SetVariable(VID_COMMENT, VALIDATE_STRING(pEventPolicy->pRuleList[i].pszComment));
+         msg.SetVariable(VID_COMMENT, (TCHAR *)VALIDATE_STRING(pEventPolicy->pRuleList[i].pszComment));
          msg.SetVariable(VID_NUM_ACTIONS, pEventPolicy->pRuleList[i].dwNumActions);
          msg.SetVariableToInt32Array(VID_RULE_ACTIONS,
                                      pEventPolicy->pRuleList[i].dwNumActions,

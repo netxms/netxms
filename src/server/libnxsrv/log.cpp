@@ -21,6 +21,7 @@
 **/
 
 #include "libnxsrv.h"
+#include <stdarg.h>
 
 
 //

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.30 2004-10-15 19:32:50 alk Exp $
+# $Id: configure.ac,v 1.31 2004-10-18 09:43:35 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -143,6 +143,18 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux freebsd sunos"
 )
 
+AC_ARG_WITH(snmp-include-dir,
+       AC_HELP_STRING(
+               [--with-snmp-include-dir],
+               [SNMP include base directory (auto-detects net/ucd-snmp) [[/usr/(local/)include]]]),
+        [snmp_inc_base_dir=$withval])
+
+AC_ARG_WITH(snmp-lib-dir,
+       AC_HELP_STRING(
+               [--with-snmp-lib-dir],
+               [SNMP library directory [[/usr/(local/)lib]]]),
+       [snmp_lib_dir=$withval])
+
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
@@ -170,6 +182,85 @@ AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_
 AC_CHECK_LIB(readline, readline)
 AC_CHECK_LIB(socket, if_nameindex)
 
+
+# --------------------------------------------------------------------------
+# Determine Net-SNMP include path
+if test "x$snmp_inc_base_dir" != "x"; then
+  for i in / /net-snmp /include/net-snmp; do
+    test -f $snmp_inc_base_dir/$i/net-snmp-config.h && SNMP_INCDIR=$snmp_inc_base_dir/$i
+  done
+else
+  for i in /usr/include /usr/local/include; do
+    test -f $i/snmp.h && SNMP_INCDIR=$i
+    test -f $i/net-snmp/net-snmp-config.h && SNMP_INCDIR=$i/net-snmp
+    test -f $i/snmp/snmp.h && SNMP_INCDIR=$i/snmp
+    test -f $i/snmp/include/net-snmp/net-snmp-config.h && SNMP_INCDIR=$i/snmp/include/net-snmp
+  done
+fi
+
+# --------------------------------------------------------------------------
+# Determine Net-SNMP library path
+if test "x$snmp_lib_dir" != "x"; then
+  test -f $snmp_lib_dir/libsnmp.a -o -f $snmp_lib_dir/libsnmp.so && SNMP_LIBDIR=$snmp_lib_dir
+  test -f $snmp_lib_dir/libnetsnmp.a -o -f $snmp_lib_dir/libnetsnmp.so && SNMP_LIBDIR=$snmp_lib_dir
+else
+  for i in /usr/lib /usr/local/lib; do
+    test -f $i/libsnmp.a -o -f $i/libsnmp.so && SNMP_LIBDIR=$i
+    test -f $i/libnetsnmp.a -o -f $i/libnetsnmp.so && SNMP_LIBDIR=$i
+  done
+fi
+
+if test -z "$SNMP_INCDIR"; then
+  if test "x$snmp_inc_base_dir" != "x";then
+    AC_MSG_ERROR(Cannot find SNMP headers under $snmp_inc_base_dir)
+  else
+    AC_MSG_ERROR(Cannot find SNMP headers.  Use --with-snmp-include-dir= to specify non-default path.)
+  fi
+fi
+
+if test -z "$SNMP_LIBDIR"; then
+   if test "x$snmp_lib_dir" != "x";then
+      AC_MSG_ERROR(Cannot find SNMP libraries under $snmp_lib_dir)
+   else
+      AC_MSG_ERROR(Cannot find SNMP libraries.  Use --with-snmp-lib-dir= to specify non-default path.)
+   fi
+fi
+
+LDFLAGS="$LDFLAGS -L$SNMP_LIBDIR"
+CPPFLAGS="$CPPFLAGS -I$SNMP_INCDIR"
+
+
+# --------------------------------------------------------------------------
+# Net/UCD-SNMP includes v3 support and insists on crypto unless 
+# compiled --without-openssl
+SNMP_SSL=no
+AC_MSG_CHECKING([if Net-SNMP needs crypto support])
+AC_TRY_COMPILE([#include <net-snmp-config.h>],
+       [exit(USE_OPENSSL != 1);],
+       [AC_MSG_RESULT(yes)
+        SNMP_SSL=yes ],
+       AC_MSG_RESULT(no))
+   
+if test "$SNMP_SSL" = "yes"; then
+  AC_CHECK_LIB(crypto, CRYPTO_free,,AC_MSG_ERROR(libcrypto not found!))
+fi
+
+# --------------------------------------------------------------------------
+# checks for SNMP libraries
+
+HAVE_NET_SNMP=no
+AC_CHECK_LIB(netsnmp, snmp_timeout,
+       [LIBS="-lnetsnmp $LIBS"
+        AC_DEFINE(HAVE_NET_SNMP, 1, Net-SNMP Version) 
+        HAVE_NET_SNMP=yes ],
+        AC_MSG_RESULT(Cannot find Net-SNMP libraries...checking for UCD-SNMP))
+
+if test "$HAVE_NET_SNMP" = "no"; then
+  AC_CHECK_LIB(snmp, snmp_timeout,,
+       AC_MSG_ERROR(Cannot find SNMP libraries))
+fi
+
+   
 # --------------------------------------------------------------------------
 # checks for headers.
 

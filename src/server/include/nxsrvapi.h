@@ -42,6 +42,7 @@
 #include <nms_agent.h>
 #include <rwlock.h>
 #include <messages.h>
+#include <dbdrv.h>
 
 
 //
