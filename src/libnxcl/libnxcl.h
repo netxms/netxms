@@ -38,7 +38,6 @@
 #include <nms_threads.h>
 #include <nxcscpapi.h>
 #include <string.h>
-#include <openssl/ssl.h>
 
 
 //
@@ -98,8 +97,6 @@ DWORD WaitForRCC(DWORD dwRqId);
 
 void ChangeState(DWORD dwState);
 void DebugPrintf(char *szFormat, ...);
-
-void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 
 
 //

@@ -370,16 +370,16 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
-   BYTE hash[SHA_DIGEST_LENGTH];
+   BYTE hash[SHA1_DIGEST_SIZE];
 
    dwRqId = g_dwMsgId++;
 
-   CreateSHA1Hash(pszNewPassword, hash);
+   CalculateSHA1Hash((BYTE *)pszNewPassword, strlen(pszNewPassword), hash);
 
    msg.SetCode(CMD_SET_PASSWORD);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_USER_ID, dwUserId);
-   msg.SetVariable(VID_PASSWORD, hash, SHA_DIGEST_LENGTH);
+   msg.SetVariable(VID_PASSWORD, hash, SHA1_DIGEST_SIZE);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);

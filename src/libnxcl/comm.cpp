@@ -198,7 +198,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
-   BYTE szPasswordHash[SHA_DIGEST_LENGTH];
+   BYTE szPasswordHash[SHA1_DIGEST_SIZE];
    DWORD dwRetCode = RCC_COMM_FAILURE;
 
    if (g_dwState == STATE_DISCONNECTED)
@@ -237,8 +237,8 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
                msg.SetId(g_dwMsgId++);
                msg.SetCode(CMD_LOGIN);
                msg.SetVariable(VID_LOGIN_NAME, szLogin);
-               CreateSHA1Hash(szPassword, szPasswordHash);
-               msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA_DIGEST_LENGTH);
+               CalculateSHA1Hash((BYTE *)szPassword, strlen(szPassword), szPasswordHash);
+               msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
 
                if (SendMsg(&msg))
                {
