@@ -49,6 +49,7 @@
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include "nms_objects.h"
+#include "nms_events.h"
 #include "messages.h"
 
 
@@ -98,6 +99,32 @@
 #define CORE_EVENT_SOURCE  "NMSCore"
 
 #endif   /* _WIN32 */
+
+
+//
+// Queue
+//
+
+class Queue
+{
+private:
+   MUTEX m_hQueueAccess;
+   void **m_pElements;
+   DWORD m_dwNumElements;
+   DWORD m_dwBufferSize;
+   DWORD m_dwFirst;
+   DWORD m_dwLast;
+
+   void Lock(void) { MutexLock(m_hQueueAccess, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_hQueueAccess); }
+
+public:
+   Queue();
+   ~Queue();
+
+   void Put(void *pObject);
+   void *Get(void);
+};
 
 
 //

@@ -143,6 +143,10 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\queue.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\snmp.cpp
 # End Source File
 # Begin Source File
@@ -180,6 +184,10 @@ SOURCE=..\..\..\include\nms_common.h
 # Begin Source File
 
 SOURCE=.\nms_core.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nms_events.h
 # End Source File
 # Begin Source File
 

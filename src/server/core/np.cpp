@@ -37,9 +37,7 @@ printf("Analyzing new node %s\n",IpToStr(dwIpAddr,buffer));
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
    {
-      char szBuffer[32];
-
-      WriteLog(MSG_NODE_EXIST, EVENTLOG_WARNING_TYPE, "s", IpToStr(dwIpAddr, szBuffer));
+printf("Node %s already exist in database\n", IpToStr(dwIpAddr,buffer));
       return;
    }
 

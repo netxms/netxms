@@ -57,12 +57,6 @@ Unable to establish connection with database
 .
 
 MessageId=
-SymbolicName=MSG_NODE_EXIST
-Language=English
-Attempt to add existing node %1 to database
-.
-
-MessageId=
 SymbolicName=MSG_OBJECT_ID_EXIST
 Language=English
 Attempt to add node with non-unique ID %1 to database

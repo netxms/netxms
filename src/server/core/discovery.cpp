@@ -201,6 +201,7 @@ void DiscoveryThread(void *arg)
    {
       ThreadSleep(30);
 
+printf("* Discovery thread wake up\n");
       CheckForMgmtNode();
 
       // Walk through nodes and poll for ARP tables
@@ -241,5 +242,6 @@ printf("Discovery poll on node %s\n",pNode->Name());
             pNode->SetDiscoveryPollTimeStamp();
          }
       }
+printf("* Discovery thread goes to sleep\n");
    }
 }

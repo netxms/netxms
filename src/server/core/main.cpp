@@ -260,6 +260,18 @@ void Main(void)
                         iflist->pInterfaces[i].szName);
                      DestroyInterfaceList(iflist);
                   }
+                  printf("*** 159.148.208.222 *** \n");
+                  iflist=SnmpGetInterfaceList(inet_addr("159.148.208.222"),"public");
+                  if (iflist != NULL)
+                  {
+                     char addr[32],mask[32];
+                     for(int i=0;i<iflist->iNumEntries;i++)
+                        printf("IF: %d %s %s %s\n",iflist->pInterfaces[i].dwIndex,
+                        IpToStr(iflist->pInterfaces[i].dwIpAddr,addr),
+                        IpToStr(iflist->pInterfaces[i].dwIpNetMask,mask),
+                        iflist->pInterfaces[i].szName);
+                     DestroyInterfaceList(iflist);
+                  }
                }
                break;
             case 'l':
