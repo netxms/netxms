@@ -30,7 +30,10 @@
 #define EXPORT
 #endif   /* _WIN32 */
 
+#include <nms_common.h>
+#include <nms_threads.h>
 #include <dbdrv.h>
 #include <libpq-fe.h>
+#include <string.h>
 
 #endif   /* _pgsqldrv_h_ */
