@@ -61,7 +61,7 @@ void LoadNetXMSModules(void)
       {
          memset(&module, 0, sizeof(NXMODULE));
          dwFlags = DBGetFieldULong(hResult, i, 2);
-         if (!(dwFlags & MF_DISABLED))
+         if (!(dwFlags & MODFLAG_DISABLED))
          {
             char szErrorText[256];
             HMODULE hModule;
