@@ -55,6 +55,8 @@ SERVER:
 - Network service autodiscovery
 - New attribute: disable status/configuration poll
 - Override Net.IP.Forward
+- Looks like object not marked as modified when platform name or agent
+  version changes
 
 
 CORE AGENT:
