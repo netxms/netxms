@@ -39,3 +39,4 @@
 #include "setup.in"
 #include "events.in"
 #include "images.in"
+#include "policy.in"

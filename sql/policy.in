@@ -1,0 +1,20 @@
+/*
+** Default event processing policy
+**
+** ex: syntax=sql
+*/
+
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (0,7944,'Show alarm when node status isn#27t NORMAL',
+		'%m',5,'NODE_STATUS_%i','NODE_STATUS_%i');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (1,7944,'Acknowlege node status alarms when node status changes to NORMAL',
+		'%m',6,'','NODE_STATUS_%i');
+
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_WARNING);
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_MINOR);
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_MAJOR);
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_CRITICAL);
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_UNKNOWN);
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (0,EVENT_NODE_UNMANAGED);
+INSERT INTO policy_event_list (rule_id,event_id) VALUES (1,EVENT_NODE_NORMAL);
