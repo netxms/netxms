@@ -27,6 +27,7 @@
 // Global data
 //
 
+DWORD g_dwFreeItemId = 1;
 DWORD g_dwMgmtNode = 0;
 INDEX *g_pIndexById = NULL;
 DWORD g_dwIdIndexSize = 0;

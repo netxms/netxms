@@ -31,26 +31,28 @@ static char help_text[]="NMS Version " VERSION_STRING " Server\n"
                         "Copyright (c) 2003 SecurityProjects.org\n\n"
                         "Usage: nms_core [<options>] <command>\n\n"
                         "Valid options are:\n"
-                        "   --config <file>  : Set non-default configuration file\n"
-                        "                    : Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   --debug-cscp     : Print client-server communication protocol debug\n"
-                        "                    : information to console (only in standalone mode).\n"
-                        "   --debug-events   : Print events to console (only in standalone mode).\n"
+                        "   --config <file>   : Set non-default configuration file\n"
+                        "                     : Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   --debug-cscp      : Print client-server communication protocol debug\n"
+                        "                     : information to console.\n"
+                        "   --debug-discovery : Print network discovery debug information to console.\n"
+                        "   --debug-events    : Print events to console.\n"
                         "\n"
                         "Valid commands are:\n"
-                        "   check-config     : Check configuration file syntax\n"
+                        "   check-config      : Check configuration file syntax\n"
 #ifdef _WIN32
-                        "   install          : Install Win32 service\n"
-                        "   install-events   : Install Win32 event source\n"
+                        "   install           : Install Win32 service\n"
+                        "   install-events    : Install Win32 event source\n"
 #endif
-                        "   help             : Display help and exit\n"
+                        "   help              : Display help and exit\n"
 #ifdef _WIN32
-                        "   remove           : Remove Win32 service\n"
-                        "   remove-events    : Remove Win32 event source\n"
-                        "   standalone       : Run in standalone mode (not as service)\n"
+                        "   remove            : Remove Win32 service\n"
+                        "   remove-events     : Remove Win32 event source\n"
+                        "   standalone        : Run in standalone mode (not as service)\n"
 #endif
-                        "   version          : Display version and exit\n"
-                        "\n";
+                        "   version           : Display version and exit\n"
+                        "\n"
+                        "NOTE: All debug options will work only in standalone mode.\n\n";
 
 
 //
@@ -198,6 +200,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-cscp"))
       {
          g_dwFlags |= AF_DEBUG_CSCP;
+      }
+      else if (!strcmp(argv[i], "--debug-discovery"))
+      {
+         g_dwFlags |= AF_DEBUG_DISCOVERY;
       }
       else if (!strcmp(argv[i], "check-config"))
       {

@@ -463,6 +463,7 @@ BOOL LoadObjects(void);
 // Global variables
 //
 
+extern DWORD g_dwFreeItemId;
 extern DWORD g_dwMgmtNode;
 extern INDEX *g_pIndexById;
 extern DWORD g_dwIdIndexSize;

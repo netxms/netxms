@@ -35,8 +35,10 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
    {
-char buffer[32];
-printf("Node %s already exist in database\n", IpToStr(dwIpAddr,buffer));
+      char szBuffer[32];
+
+      DbgPrintf(AF_DEBUG_DISCOVERY, "*** PollNode: Node %s already exist in database\n", 
+                IpToStr(dwIpAddr, szBuffer));
       return;
    }
 
@@ -49,6 +51,16 @@ printf("Node %s already exist in database\n", IpToStr(dwIpAddr,buffer));
       ObjectsGlobalUnlock();
       delete pNode;     // Node poll failed, delete it
    }
+
+   // DEBUG
+   DC_ITEM item;
+   item.dwId = g_dwFreeItemId++;
+   item.iDataType = DT_INTEGER;
+   item.iPollingInterval = 60;
+   item.iRetentionTime = 30;
+   item.iSource = DS_INTERNAL;
+   strcpy(item.szName, "Status");
+   pNode->AddItem(&item);
 }
 
 

@@ -40,3 +40,20 @@ void DbgTestMutex(MUTEX hMutex, char *szName)
       printf("locked\n");
    }
 }
+
+
+//
+// Debug printf - write text to stdout if in standalone mode
+// and specific application flag(s) is set
+//
+
+void DbgPrintf(DWORD dwFlags, char *szFormat, ...)
+{
+   va_list args;
+
+   if ((!(g_dwFlags & dwFlags)) || (! IsStandalone()))
+      return;     // Required application flag(s) not set
+   va_start(args, szFormat);
+   vprintf(szFormat, args);
+   va_end(args);
+}

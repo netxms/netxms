@@ -91,6 +91,7 @@
 #define AF_USE_EVENT_LOG   0x0002
 #define AF_DEBUG_EVENTS    0x0004
 #define AF_DEBUG_CSCP      0x0008
+#define AF_DEBUG_DISCOVERY 0x0010
 #define AF_SHUTDOWN        0x8000
 
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
@@ -307,6 +308,7 @@ char *GetSystemErrorText(DWORD error);
 #endif   /* _WIN32 */
 
 void DbgTestMutex(MUTEX hMutex, char *szName);
+void DbgPrintf(DWORD dwFlags, char *szFormat, ...);
 
 
 //
