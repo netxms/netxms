@@ -24,12 +24,70 @@
 
 
 //
+// OID translation structure
+//
+
+struct OID_TABLE
+{
+   TCHAR *pszOid;
+   DWORD dwNodeType;
+   DWORD dwNodeFlags;
+};
+
+
+//
+// Static data
+//
+
+static OID_TABLE *m_pOidTable = NULL;
+static DWORD m_dwOidTableSize = 0;
+
+
+//
 // Initialize SNMP subsystem
 //
 
 void SnmpInit(void)
 {
+   DB_RESULT hResult;
+   DWORD i;
+
    init_mib();
+
+   // Load OID to type translation table
+   hResult = DBSelect(g_hCoreDB, _T("SELECT snmp_oid,node_type,node_flags FROM oid_to_type ORDER BY pair_id"));
+   if (hResult != NULL)
+   {
+      m_dwOidTableSize = DBGetNumRows(hResult);
+      m_pOidTable = (OID_TABLE *)malloc(sizeof(OID_TABLE) * m_dwOidTableSize);
+      for(i = 0; i < m_dwOidTableSize; i++)
+      {
+         m_pOidTable[i].pszOid = _tcsdup(DBGetField(hResult, i, 0));
+         m_pOidTable[i].dwNodeType = DBGetFieldULong(hResult, i, 1);
+         m_pOidTable[i].dwNodeFlags = DBGetFieldULong(hResult, i, 2);
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
+// Determine node type by OID
+//
+
+DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwOidTableSize; i++)
+      if (MatchString(m_pOidTable[i].pszOid, pszOid, TRUE))
+      {
+         if (pdwFlags != NULL)
+            *pdwFlags = m_pOidTable[i].dwNodeFlags;
+         return m_pOidTable[i].dwNodeType;
+      }
+
+   return NODE_TYPE_GENERIC;
 }
 
 
@@ -287,7 +345,7 @@ static void HandlerIndex(DWORD dwAddr, const char *szCommunity, variable_list *p
 // Handler for enumerating IP addresses
 //
 
-static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *pVar,void *pArg)
+static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *pVar, void *pArg)
 {
    DWORD dwIndex, dwNetMask;
    oid oidName[MAX_OID_LEN];
@@ -337,7 +395,7 @@ static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *
 // Get interface list via SNMP
 //
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity, DWORD dwNodeType)
 {
    long i, iNumIf;
    char szOid[128], szBuffer[256];
@@ -386,6 +444,10 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
 
    // Interface IP address'es and netmasks
    SnmpEnumerate(dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1", HandlerIpAddr, pIfList, FALSE);
+
+   // Handle special cases
+   if (dwNodeType == NODE_TYPE_NORTEL_ACCELAR)
+      GetAccelarVLANIfList(dwAddr, szCommunity, pIfList);
 
    CleanInterfaceList(pIfList);
 

@@ -59,11 +59,12 @@ BOOL CObjectPropCaps::OnInitDialog()
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
    // Fill list control with data
-   AddListRecord("isSNMP", (m_pObject->node.dwFlags & NF_IS_SNMP));
-   AddListRecord("isNetXMSAgent", (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT));
-   AddListRecord("isManagementServer", (m_pObject->node.dwFlags & NF_IS_LOCAL_MGMT));
-   AddListRecord("isBridge", (m_pObject->node.dwFlags & NF_IS_BRIDGE));
-   AddListRecord("isRouter", (m_pObject->node.dwFlags & NF_IS_ROUTER));
+   AddListRecord(_T("isSNMP"), (m_pObject->node.dwFlags & NF_IS_SNMP));
+   AddListRecord(_T("isNetXMSAgent"), (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT));
+   AddListRecord(_T("isManagementServer"), (m_pObject->node.dwFlags & NF_IS_LOCAL_MGMT));
+   AddListRecord(_T("isBridge"), (m_pObject->node.dwFlags & NF_IS_BRIDGE));
+   AddListRecord(_T("isRouter"), (m_pObject->node.dwFlags & NF_IS_ROUTER));
+   AddListRecord(_T("nodeType"), CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
 	
 	return TRUE;
 }
@@ -73,11 +74,20 @@ BOOL CObjectPropCaps::OnInitDialog()
 // Add record to list
 //
 
-void CObjectPropCaps::AddListRecord(char *szName, BOOL bValue)
+void CObjectPropCaps::AddListRecord(const TCHAR *pszName, BOOL bValue)
 {
    int iItem;
 
-   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szName);
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pszName);
    if (iItem != -1)
-      m_wndListCtrl.SetItemText(iItem, 1, bValue ? "True" : "False");
+      m_wndListCtrl.SetItemText(iItem, 1, bValue ? _T("True") : _T("False"));
+}
+
+void CObjectPropCaps::AddListRecord(const TCHAR *pszName, const TCHAR *pszValue)
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pszName);
+   if (iItem != -1)
+      m_wndListCtrl.SetItemText(iItem, 1, pszValue);
 }

@@ -176,9 +176,6 @@ BOOL Initialize(void)
    // Create queue for delayed SQL queries
    g_pLazyRequestQueue = new Queue(64, 16);
 
-   // Initialize SNMP stuff
-   SnmpInit();
-
    // Initialize database driver and connect to database
    if (!DBInit())
       return FALSE;
@@ -213,6 +210,9 @@ BOOL Initialize(void)
    // Load global configuration parameters
    LoadGlobalConfig();
    DbgPrintf(AF_DEBUG_MISC, "Global configuration loaded");
+
+   // Initialize SNMP stuff
+   SnmpInit();
 
    // Check data directory
    if (!CheckDataDir())

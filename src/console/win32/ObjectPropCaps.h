@@ -43,7 +43,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	void AddListRecord(char *szName, BOOL bValue);
+	void AddListRecord(const TCHAR *pszName, const TCHAR *pszValue);
+	void AddListRecord(const TCHAR *szName, BOOL bValue);
 };
 
 //{{AFX_INSERT_LOCATION}}

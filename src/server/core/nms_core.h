@@ -391,11 +391,12 @@ BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
                    void *pUserArg, BOOL bVerbose);
 void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize);
 void StrToMac(char *pszStr, BYTE *pBuffer);
+DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
 ARP_CACHE *GetLocalArpCache(void);
 ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity);
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity, DWORD dwNodeType);
 INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 
@@ -431,6 +432,8 @@ void DecodeSQLString(char *pszStr);
 void InitMailer(void);
 void ShutdownMailer(void);
 void PostMail(char *pszRcpt, char *pszSubject, char *pszText);
+
+void GetAccelarVLANIfList(DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
 
 #ifdef _WIN32
 

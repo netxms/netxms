@@ -206,6 +206,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
       case OBJECT_NODE:
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
          pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong(VID_DISCOVERY_FLAGS);
+         pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
          pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);

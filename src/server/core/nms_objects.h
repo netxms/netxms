@@ -24,6 +24,7 @@
 #define _nms_objects_h_
 
 #include <nms_agent.h>
+#include <nxnt.h>
 
 
 //
@@ -257,6 +258,7 @@ protected:
    DWORD m_dwDiscoveryFlags;
    WORD m_wAgentPort;
    WORD m_wAuthMethod;
+   DWORD m_dwNodeType;
    char m_szSharedSecret[MAX_SECRET_LENGTH];
    int m_iStatusPollType;
    int m_iSNMPVersion;

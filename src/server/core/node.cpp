@@ -32,6 +32,7 @@ Node::Node()
 {
    m_dwFlags = 0;
    m_dwDiscoveryFlags = 0;
+   m_dwNodeType = NODE_TYPE_GENERIC;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
@@ -59,6 +60,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
 {
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
+   m_dwNodeType = NODE_TYPE_GENERIC;
    m_dwDiscoveryFlags = dwDiscoveryFlags;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
@@ -108,7 +110,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    sprintf(szQuery, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
                     "is_router,snmp_version,discovery_flags,auth_method,secret,"
                     "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt,"
-                    "image_id,is_deleted FROM nodes WHERE id=%d", dwId);
+                    "image_id,is_deleted,description,node_type FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -146,6 +148,9 @@ BOOL Node::CreateFromDB(DWORD dwId)
    strncpy(m_szObjectId, DBGetField(hResult, 0, 15), MAX_OID_LEN * 4);
    m_dwImageId = DBGetFieldULong(hResult, 0, 17);
    m_bIsDeleted = DBGetFieldLong(hResult, 0, 18);
+   m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 19)));
+   DecodeSQLString(m_pszDescription);
+   m_dwNodeType = DBGetFieldULong(hResult, 0, 20);
 
    DBFreeResult(hResult);
 
@@ -210,7 +215,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 BOOL Node::SaveToDB(void)
 {
-   char szQuery[4096];
+   TCHAR *pszEscDescr, szQuery[4096];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
@@ -229,12 +234,14 @@ BOOL Node::SaveToDB(void)
    }
 
    // Form and execute INSERT or UPDATE query
+   pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
                        "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
                        "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
-                       "snmp_oid,is_local_mgmt,image_id)"
-                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,'%s','%s',%d,%ld)",
+                       "snmp_oid,is_local_mgmt,image_id,description,node_type)"
+                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
+                       "'%s','%s',%d,%ld,'%s',%ld)",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
@@ -242,13 +249,14 @@ BOOL Node::SaveToDB(void)
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
               m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
-              m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId);
+              m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId,
+              pszEscDescr, m_dwNodeType);
    else
       sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip=%d,"
                        "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
                        "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
-                       "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,image_id=%ld"
-                       " WHERE id=%ld",
+                       "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,"
+                       "image_id=%ld,description='%s',node_type=%ld WHERE id=%ld",
               m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
@@ -256,8 +264,10 @@ BOOL Node::SaveToDB(void)
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
-              m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, m_dwId);
+              m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, 
+              pszEscDescr, m_dwNodeType, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
+   free(pszEscDescr);
 
    // Save data collection items
    if (bResult)
@@ -317,7 +327,12 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    // Determine node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
-      m_dwFlags |= NF_IS_SNMP;
+   {
+      DWORD dwNodeFlags;
+
+      m_dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
+      m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
+   }
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod,
                                     m_szSharedSecret);
@@ -336,7 +351,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
       else if (m_dwFlags & NF_IS_NATIVE_AGENT)    // For others prefer native agent
          pIfList = pAgentConn->GetInterfaceList();
       if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
-         pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString);
+         pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString, m_dwNodeType);
 
       if (pIfList != NULL)
       {
@@ -423,7 +438,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
-      pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString);
+      pIfList = SnmpGetInterfaceList(m_dwIpAddr, m_szCommunityString, m_dwNodeType);
    }
 
    return pIfList;
@@ -593,9 +608,20 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
+      DWORD dwNodeFlags, dwNodeType;
+
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
       SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
+
+      // Check node type
+      dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
+      if (m_dwNodeType != dwNodeType)
+      {
+         m_dwFlags |= dwNodeFlags;
+         m_dwNodeType = dwNodeType;
+         SendPollerMsg(dwRqId, _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
+      }
    }
    else
    {
@@ -864,6 +890,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);
    pMsg->SetVariable(VID_COMMUNITY_STRING, m_szCommunityString);
    pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
+   pMsg->SetVariable(VID_NODE_TYPE, m_dwNodeType);
 }
 
 

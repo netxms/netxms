@@ -548,6 +548,7 @@ typedef struct
       {
          DWORD dwFlags;
          DWORD dwDiscoveryFlags;
+         DWORD dwNodeType;
          TCHAR szSharedSecret[MAX_SECRET_LENGTH];
          TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
          TCHAR szObjectId[MAX_OID_LENGTH];

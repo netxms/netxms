@@ -90,6 +90,7 @@ typedef struct
 {
    int iNumEntries;              // Number of entries in pInterfaces
    int iEnumPos;                 // Used by index enumeration handler
+   void *pArg;                   // Can be used by custom enumeration handlers
    INTERFACE_INFO *pInterfaces;  // Interface entries
 } INTERFACE_LIST;
 
