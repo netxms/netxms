@@ -354,7 +354,7 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
 
    // Determine node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE, FALSE))
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
       m_dwFlags |= NF_IS_SNMP;
 
    pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod,
@@ -616,7 +616,7 @@ void Node::ConfigurationPoll(void)
 
    // Check node's capabilities
    if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE, FALSE))
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
    {
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
@@ -749,7 +749,7 @@ BOOL Node::ConnectToAgent(void)
 DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
    return SnmpGet(m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
-                  szBuffer, dwBufSize, FALSE, TRUE, FALSE) ? DCE_SUCCESS : DCE_COMM_ERROR;
+                  szBuffer, dwBufSize, FALSE, TRUE) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 
 
