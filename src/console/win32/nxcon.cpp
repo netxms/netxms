@@ -561,3 +561,48 @@ void CConsoleApp::DebugPrintf(char *szFormat, ...)
       m_pwndDebugWindow->AddMessage(szBuffer);
    }
 }
+
+
+//
+// Edit properties of specific object
+//
+
+void CConsoleApp::ObjectProperties(DWORD dwObjectId)
+{
+	CObjectPropSheet wndPropSheet("Object Properties", GetMainWnd(), 0);
+   CNodePropsGeneral wndNodeGeneral;
+   CObjectPropCaps wndObjectCaps;
+   NXC_OBJECT *pObject;
+   char szBuffer[32];
+
+   pObject = NXCFindObjectById(dwObjectId);
+   if (pObject != NULL)
+   {
+      // Create "General" tab
+      switch(pObject->iClass)
+      {
+         case OBJECT_NODE:
+            wndNodeGeneral.m_dwObjectId = dwObjectId;
+            wndNodeGeneral.m_strName = pObject->szName;
+            wndNodeGeneral.m_strOID = pObject->node.szObjectId;
+            wndNodeGeneral.m_strPrimaryIp = IpToStr(pObject->dwIpAddr, szBuffer);
+            wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
+            wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
+            wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
+            wndPropSheet.AddPage(&wndNodeGeneral);
+            break;
+         default:
+            break;
+      }
+
+      // Create tabs specific for node objects
+      if (pObject->iClass == OBJECT_NODE)
+      {
+         // Create "Capabilities" tab
+         wndObjectCaps.m_pObject = pObject;
+         wndPropSheet.AddPage(&wndObjectCaps);
+      }
+
+      wndPropSheet.DoModal();
+   }
+}

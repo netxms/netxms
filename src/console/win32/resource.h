@@ -42,7 +42,8 @@
 #define IDA_OBJECT_BROWSER              154
 #define IDI_SORT_UP                     156
 #define IDI_SORT_DOWN                   157
-#define IDD_OP_GENERAL                  159
+#define IDD_OBJECT_NODE_GENERAL         159
+#define IDD_OBJECT_CAPS                 160
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -56,6 +57,16 @@
 #define IDC_EDIT_DESCRIPTION            1010
 #define IDC_COMBO_SEVERITY              1011
 #define IDC_CHECK_LOG                   1012
+#define IDC_EDIT_PRIMARY_IP             1015
+#define IDC_SELECT_IP                   1016
+#define IDC_COMBO_AUTH                  1018
+#define IDC_EDIT_SECRET                 1019
+#define IDC_EDIT_PORT                   1020
+#define IDC_EDIT_OID                    1021
+#define IDC_COMBO_SNMP_VERSION          1022
+#define IDC_EDIT_COMMUNITY              1023
+#define IDC_LIST1                       1024
+#define IDC_LIST_CAPS                   1024
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -83,9 +94,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        160
+#define _APS_NEXT_RESOURCE_VALUE        161
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1014
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

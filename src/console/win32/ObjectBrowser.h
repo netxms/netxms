@@ -8,7 +8,6 @@
 //
 
 #include "ObjectPreview.h"
-#include "OPGeneral.h"
 
 
 #define SHOW_OBJECT_PREVIEW      ((DWORD)0x00000001)
@@ -95,6 +94,7 @@ public:
 
 // Implementation
 protected:
+	DWORD GetSelectedObject(void);
 	void ClearListSelection(void);
 	void AddObjectToList(NXC_OBJECT *pObject);
 	CListCtrl m_wndListCtrl;

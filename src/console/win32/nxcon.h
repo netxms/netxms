@@ -34,6 +34,9 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "MapFrame.h"
 #include "DebugFrame.h"
 #include "ProgressDialog.h"	// Added by ClassView
+#include "NodePropsGeneral.h"
+#include "ObjectPropCaps.h"
+#include "ObjectPropSheet.h"
 
 
 //
@@ -115,6 +118,7 @@ private:
 
    // Inline functions
 public:
+	void ObjectProperties(DWORD dwObjectId);
 	void DebugPrintf(char *szFormat, ...);
    void DebugCallback(char *pszMsg)
    {

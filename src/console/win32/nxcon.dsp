@@ -140,6 +140,10 @@ SOURCE=.\MapView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodePropsGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxcon.cpp
 # End Source File
 # Begin Source File
@@ -160,15 +164,15 @@ SOURCE=.\ObjectPreview.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ObjectPropDlg.cpp
+SOURCE=.\ObjectPropCaps.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropSheet.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\ObjectSearchBox.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\OPGeneral.cpp
 # End Source File
 # Begin Source File
 
@@ -241,6 +245,10 @@ SOURCE=..\..\..\include\nms_util.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodePropsGeneral.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nxclapi.h
 # End Source File
 # Begin Source File
@@ -261,15 +269,15 @@ SOURCE=.\ObjectPreview.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ObjectPropDlg.h
+SOURCE=.\ObjectPropCaps.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropSheet.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\ObjectSearchBox.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\OPGeneral.h
 # End Source File
 # Begin Source File
 

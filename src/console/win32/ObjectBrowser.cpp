@@ -907,11 +907,43 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
 
 void CObjectBrowser::OnObjectProperties() 
 {
-	CPropertySheet wndPropSheet;
-   COPGeneral wndPageGeneral;
+   DWORD dwId;
 
-   // Create tabs
-   wndPropSheet.AddPage(&wndPageGeneral);
+   dwId = GetSelectedObject();
+   if (dwId != 0)
+      theApp.ObjectProperties(dwId);
+}
 
-   wndPropSheet.DoModal();
+
+//
+// Get ID of currently selected object
+// Will return 0 if there are no selection
+//
+
+DWORD CObjectBrowser::GetSelectedObject()
+{
+   DWORD dwId = 0;
+
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      HTREEITEM hItem;
+
+      hItem = m_wndTreeCtrl.GetSelectedItem();
+      if (hItem != NULL)
+         dwId = m_wndTreeCtrl.GetItemData(hItem);
+   }
+   else
+   {
+      if (m_wndListCtrl.GetSelectedCount() == 1)
+      {
+         int iItem;
+         NXC_OBJECT *pObject;
+
+         iItem = m_wndListCtrl.GetSelectionMark();
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         if (pObject != NULL)
+            dwId = pObject->dwId;
+      }
+   }
+   return dwId;
 }
