@@ -28,6 +28,22 @@
 
 
 //
+// States
+//
+
+#define STATE_DISCONNECTED    0
+#define STATE_CONNECTING      1
+#define STATE_IDLE            2
+
+
+//
+// Event handler data type
+//
+
+typedef void (* NXC_EVENT_HANDLER)(DWORD dwEvent, DWORD dwCode, void *pArg);
+
+
+//
 // Functions
 //
 
@@ -35,7 +51,13 @@
 extern "C" {
 #endif
 
-DWORD EXPORTABLE NXC_GetVersion(void);
+DWORD EXPORTABLE NXCGetVersion(void);
+BOOL EXPORTABLE NXCInitialize(void);
+void EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
+void EXPORTABLE NXCDisconnect(void);
+void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
+int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
+int EXPORTABLE NXCSyncRequest(DWORD dwOperation, ...);
 
 #ifdef __cplusplus
 }
