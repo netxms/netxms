@@ -33,7 +33,6 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ObjectBrowser.h"
 #include "MapFrame.h"
 #include "DebugFrame.h"
-#include "ProgressDialog.h"	// Added by ClassView
 #include "NodePropsGeneral.h"
 #include "ObjectPropCaps.h"
 #include "ObjectPropSheet.h"
