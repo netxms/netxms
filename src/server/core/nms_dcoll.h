@@ -181,7 +181,7 @@ public:
    BOOL ReadyForPolling(time_t currTime) 
    { 
       return ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) &&
-              (m_tLastPoll + m_iPollingInterval < currTime));
+              (m_tLastPoll + m_iPollingInterval <= currTime));
    }
 
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
