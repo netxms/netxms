@@ -175,7 +175,7 @@ LONG H_KStat(char *pszParam, char *pArg, char *pValue)
 		nInstance = 0;
 	}
 
-	return ReadKStatValue(szModule, nInstance, szName, szStat, pValue);
+	return ReadKStatValue(szModule, nInstance, szName, szStat, pValue, NULL);
 }
 
 
@@ -185,7 +185,7 @@ LONG H_KStat(char *pszParam, char *pArg, char *pValue)
 
 LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
 {
-	return ReadKStatValue("unix", 0, "system_misc", "ncpus", pValue);
+	return ReadKStatValue("unix", 0, "system_misc", "ncpus", pValue, NULL);
 }
 
 
@@ -194,7 +194,7 @@ LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
 //
 
 LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
-                    char *pszStat, char *pValue)
+                    char *pszStat, char *pValue, kstat_named_t *pRawValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -213,33 +213,42 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 				kn = (kstat_named_t *)kstat_data_lookup(kp, pszStat);
 				if (kn != NULL)
 				{
-               switch(kn->data_type)
-               {
-                  case KSTAT_DATA_CHAR:
-                     ret_string(pValue, kn->value.c);
-                     break;
-                  case KSTAT_DATA_INT32:
-                     ret_int(pValue, kn->value.i32);
-                     break;
-                  case KSTAT_DATA_UINT32:
-                     ret_uint(pValue, kn->value.ui32);
-                     break;
-                  case KSTAT_DATA_INT64:
-                     ret_int64(pValue, kn->value.i64);
-                     break;
-                  case KSTAT_DATA_UINT64:
-                     ret_uint64(pValue, kn->value.ui64);
-                     break;
-                  case KSTAT_DATA_FLOAT:
-                     ret_double(pValue, kn->value.f);
-                     break;
-                  case KSTAT_DATA_DOUBLE:
-                     ret_double(pValue, kn->value.d);
-                     break;
-                  default:
-                     ret_int(pValue, 0);
-							break;
+					if (pValue != NULL)
+					{
+	               switch(kn->data_type)
+   	            {
+      	            case KSTAT_DATA_CHAR:
+         	            ret_string(pValue, kn->value.c);
+            	         break;
+               	   case KSTAT_DATA_INT32:
+                  	   ret_int(pValue, kn->value.i32);
+                     	break;
+	                  case KSTAT_DATA_UINT32:
+   	                  ret_uint(pValue, kn->value.ui32);
+      	               break;
+         	         case KSTAT_DATA_INT64:
+            	         ret_int64(pValue, kn->value.i64);
+               	      break;
+                  	case KSTAT_DATA_UINT64:
+    	                 ret_uint64(pValue, kn->value.ui64);
+      	               break;
+         	         case KSTAT_DATA_FLOAT:
+            	         ret_double(pValue, kn->value.f);
+               	      break;
+                  	case KSTAT_DATA_DOUBLE:
+                     	ret_double(pValue, kn->value.d);
+                     	break;
+							default:
+                     	ret_int(pValue, 0);
+								break;
+						}
                }
+
+					if (pRawValue != NULL)
+					{
+						memcpy(pRawValue, kn, sizeof(kstat_named_t));
+					}
+
 					nRet = SYSINFO_RC_SUCCESS;
 				}
 			}
@@ -258,11 +267,29 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
+	kstat_named_t kn;
+	QWORD qwPageSize;
+
+	qwPageSize = sysconf(_SC_PAGESIZE);
 
 	switch((int)pArg)
 	{
 		case MEMINFO_PHYSICAL_TOTAL:
-			ret_uint64(pValue, (QWORD)sysconf(_SC_PAGESIZE) * (QWORD)sysconf(_SC_PHYS_PAGES));
+			ret_uint64(pValue, (QWORD)sysconf(_SC_PHYS_PAGES) * qwPageSize);
+			break;
+		case MEMINFO_PHYSICAL_FREE:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_uint64(pValue, (QWORD)kn.value.ul * qwPageSize);
+			}
+			break;
+		case MEMINFO_PHYSICAL_USED:
+			nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
+			if (nRet == SYSINFO_RC_SUCCESS)
+			{
+				ret_uint64(pValue, (QWORD)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * qwPageSize);
+			}
 			break;
 		default:
 			nRet = SYSINFO_RC_UNSUPPORTED;

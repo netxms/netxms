@@ -85,7 +85,8 @@ typedef struct t_ProcEnt
 //
 
 int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
-LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName, char *pszStat, char *pValue);
+LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
+                    char *pszStat, char *pValue, kstat_named_t *pRawValue);
 
 THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg);
 

@@ -196,7 +196,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 
 LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue)
 {
-	return ReadKStatValue("unix", 0, "system_misc", "nproc", pValue);
+	return ReadKStatValue("unix", 0, "system_misc", "nproc", pValue, NULL);
 }
 
 
