@@ -259,7 +259,15 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                         msg.SetId(pSession->CreateRqId());
                         msg.SetCode(CMD_LOGIN);
                         msg.SetVariable(VID_LOGIN_NAME, pszLogin);
-                        CalculateSHA1Hash((BYTE *)pszPassword, _tcslen(pszPassword), szPasswordHash);
+#ifdef UNICODE
+                        char szMPasswd[64];
+
+	                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+		                     pszPassword, -1, szMPasswd, sizeof(szMPasswd), NULL, NULL);
+                        CalculateSHA1Hash((BYTE *)szMPasswd, strlen(szMPasswd), szPasswordHash);
+#else
+                        CalculateSHA1Hash((BYTE *)pszPassword, strlen(pszPassword), szPasswordHash);
+#endif
                         msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
 
                         if (pSession->SendMsg(&msg))
