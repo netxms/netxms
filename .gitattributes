@@ -91,6 +91,7 @@ images/template_group.png -text
 images/template_root.ico -text
 images/template_root.png -text
 include/Makefile.am -text
+include/ata.h -text
 include/getopt.h -text
 include/netxms-regex.h -text
 include/netxms-version.h -text
@@ -142,6 +143,7 @@ src/agent/core/actions.cpp -text
 src/agent/core/comm.cpp -text
 src/agent/core/exec.cpp -text
 src/agent/core/getparam.cpp -text
+src/agent/core/hddinfo.cpp -text
 src/agent/core/log.cpp -text
 src/agent/core/messages.mc -text
 src/agent/core/netinfo.cpp -text

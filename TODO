@@ -56,11 +56,6 @@ CORE AGENT:
 - Remote config editing
 
 
-WINDOWS AGENT:
-
-- Add support for S.M.A.R.T. (HDD monitoring)
-
-
 LINUX AGENT:
 
 - Return correct interface type in Net.InterfaceList

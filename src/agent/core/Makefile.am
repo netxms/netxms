@@ -4,7 +4,8 @@ EXTRA_DIST = \
     messages.mc \
     nxagentd.rc \
     win32.cpp resource.h \
-	 nxagentd.h
+    nxagentd.h \
+    hddinfo.cpp
 
 INCLUDES=-I@top_srcdir@/include
 

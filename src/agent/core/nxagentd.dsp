@@ -113,6 +113,10 @@ SOURCE=.\getparam.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\hddinfo.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\log.cpp
 # End Source File
 # Begin Source File
@@ -159,6 +163,10 @@ SOURCE=.\win32.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\..\..\include\ata.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\..\..\include\nms_agent.h
