@@ -22,6 +22,7 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 	m_szLogin = _T("");
 	m_szPassword = _T("");
 	m_szServer = _T("");
+	m_iEncryption = -1;
 	//}}AFX_DATA_INIT
 }
 
@@ -36,6 +37,7 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_szPassword, 64);
 	DDX_Text(pDX, IDC_EDIT_SERVER, m_szServer);
 	DDV_MaxChars(pDX, m_szServer, 64);
+	DDX_Radio(pDX, IDC_RADIO_CLEAR, m_iEncryption);
 	//}}AFX_DATA_MAP
 }
 

@@ -174,6 +174,8 @@
 #define IDC_STATIC_TYPE                 1103
 #define IDC_EDIT_TEXT                   1104
 #define IDC_BITMAP                      1105
+#define IDC_RADIO_CLEAR                 1108
+#define IDC_RADIO_BLOWFISH              1109
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -241,7 +243,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        194
 #define _APS_NEXT_COMMAND_VALUE         32864
-#define _APS_NEXT_CONTROL_VALUE         1106
+#define _APS_NEXT_CONTROL_VALUE         1110
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

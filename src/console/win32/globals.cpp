@@ -50,6 +50,14 @@ NXC_IMAGE_LIST *g_pSrvImageList = NULL;
 
 
 //
+// Image lists with object images
+//
+
+CImageList *g_pObjectSmallImageList = NULL;
+CImageList *g_pObjectNormalImageList = NULL;
+
+
+//
 // Global string constants
 //
 

@@ -18,7 +18,7 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** $module: draw.cpp
-** Various drawing functions
+** Various drawing and image functions
 **
 **/
 
@@ -155,4 +155,23 @@ void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom)
 
    // Cleanup
    SelectObject(hDC, hOldPen);
+}
+
+
+//
+// Load PNG image into memory as bitmap
+//
+
+HBITMAP LoadPNG(char *pszFileName, COLORREF *prgbMaskColor, int cx, int cy)
+{
+   CxImage image;
+   HBITMAP hBitmap = NULL;
+
+   if (image.Load(pszFileName, CXIMAGE_FORMAT_PNG))
+   {
+      image.Resample(cx, cy, 2);
+      hBitmap = image.MakeBitmap(AfxGetMainWnd()->GetDC()->m_hDC);
+      *prgbMaskColor = image.RGBQUADtoRGB(image.GetTransColor());
+   }
+   return hBitmap;
 }

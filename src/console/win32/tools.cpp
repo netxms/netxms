@@ -224,3 +224,63 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
    bmp.LoadBitmap(nIDResource);
    pImageList->Add(&bmp, rgbMaskColor);
 }
+
+
+//
+// Find image's index in list by image id
+//
+
+DWORD ImageIdToIndex(DWORD dwImageId)
+{
+   DWORD i;
+
+   for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
+      if (g_pSrvImageList->pImageList[i].dwId == dwImageId)
+         return i;
+   return 0;
+}
+
+
+//
+// Create image list with object images
+//
+
+void CreateObjectImageList(void)
+{
+   HBITMAP hBitmap;
+   DWORD i, dwPos;
+   char szFileName[MAX_PATH];
+   COLORREF rgbMaskColor;
+
+   // Create small (16x16) image list
+   if (g_pObjectSmallImageList != NULL)
+      delete g_pObjectSmallImageList;
+   g_pObjectSmallImageList = new CImageList;
+   g_pObjectSmallImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 8);
+
+   // Create normal (32x32) image list
+   if (g_pObjectNormalImageList != NULL)
+      delete g_pObjectNormalImageList;
+   g_pObjectNormalImageList = new CImageList;
+   g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 8, 8);
+
+   strcpy(szFileName, g_szWorkDir);
+   strcat(szFileName, WORKDIR_IMAGECACHE);
+   strcat(szFileName, "\\");
+   dwPos = strlen(szFileName);
+
+   for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
+   {
+      sprintf(&szFileName[dwPos], "%d.png", g_pSrvImageList->pImageList[i].dwId);
+      
+      // Load 16x16 image
+      hBitmap = LoadPNG(szFileName, &rgbMaskColor, 16, 16);
+      if (hBitmap != NULL)
+         ImageList_AddMasked(g_pObjectSmallImageList->m_hImageList, hBitmap, rgbMaskColor);
+
+      // Load 32x32 image
+      hBitmap = LoadPNG(szFileName, &rgbMaskColor, 32, 32);
+      if (hBitmap != NULL)
+         ImageList_AddMasked(g_pObjectNormalImageList->m_hImageList, hBitmap, rgbMaskColor);
+   }
+}

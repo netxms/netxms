@@ -112,6 +112,15 @@ void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
 
 
 //
+// Image functions
+//
+
+HBITMAP LoadPNG(char *pszFileName, COLORREF *prgbMaskColor, int cx, int cy);
+void CreateObjectImageList(void);
+DWORD ImageIdToIndex(DWORD dwImageId);
+
+
+//
 // Utility functions
 //
 
@@ -158,5 +167,7 @@ extern CODE_TO_TEXT g_ctSnmpMibStatus[];
 extern CODE_TO_TEXT g_ctSnmpMibAccess[];
 extern CODE_TO_TEXT g_ctSnmpMibType[];
 extern NXC_IMAGE_LIST *g_pSrvImageList;
+extern CImageList *g_pObjectSmallImageList;
+extern CImageList *g_pObjectNormalImageList;
 
 #endif

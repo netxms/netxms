@@ -148,6 +148,8 @@ static DWORD WINAPI LoginThread(void *pArg)
       strcpy(szCacheDir, g_szWorkDir);
       strcat(szCacheDir, WORKDIR_IMAGECACHE);
       dwResult = NXCSyncImages(&g_pSrvImageList, szCacheDir);
+      if (dwResult == RCC_SUCCESS)
+         CreateObjectImageList();
    }
 
    // Disconnect if some of post-login operations was failed

@@ -230,13 +230,14 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create image list
    m_pImageList = new CImageList;
-   m_pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   m_pImageList->Create(g_pObjectSmallImageList);
+/*   m_pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_NETMAP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_INTERFACE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_NODE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SUBNET));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_UP));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));*/
    m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
