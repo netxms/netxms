@@ -27,9 +27,6 @@ GENERAL:
 SERVER:
 
 - Recalculate object status after binding change
-- Add internal stats collection:
-	1. Average data collector queue length
-	2. Average database writer queue length
 - Implement sending of all alarms from database
 - Implement normal mailer shutdown
 - Implement locks table in memory
