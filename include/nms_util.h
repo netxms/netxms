@@ -70,6 +70,8 @@ public:
    QWORD GetVariableInt64(char *szName);
    WORD GetVariableShort(char *szName);
    char *GetVariableStr(char *szName);
+
+   void DeleteAllVariables(void);
 };
 
 
