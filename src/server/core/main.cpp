@@ -348,7 +348,7 @@ void Shutdown(void)
    DbgPrintf(AF_DEBUG_MISC, "Database writer stopped");
 
    // Remove database lock
-   DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+   UnlockDB();
 
    // Disconnect from database and unload driver
    if (g_hCoreDB != 0)
@@ -602,7 +602,7 @@ int main(int argc, char *argv[])
          // Remove database lock
          if (g_dwFlags & AF_DB_LOCKED)
          {
-            DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+            UnlockDB();
             DBDisconnect(g_hCoreDB);
          }
          return 3;
@@ -639,7 +639,7 @@ int main(int argc, char *argv[])
       // Remove database lock
       if (g_dwFlags & AF_DB_LOCKED)
       {
-         DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");
+         UnlockDB();
          DBDisconnect(g_hCoreDB);
       }
       return 3;

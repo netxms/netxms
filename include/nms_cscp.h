@@ -257,6 +257,12 @@ typedef struct
 #define CMD_WAKEUP_NODE             0x005C
 #define CMD_DELETE_EVENT_TEMPLATE   0x005D
 #define CMD_GENERATE_EVENT_ID       0x005E
+#define CMD_LOCK_TRAP_CFG           0x005F
+#define CMD_UNLOCK_TRAP_CFG         0x0060
+#define CMD_CREATE_TRAP             0x0061
+#define CMD_MODIFY_TRAP             0x0062
+#define CMD_DELETE_TRAP             0x0063
+#define CMD_LOAD_TRAP_LIST          0x0064
 
 
 //

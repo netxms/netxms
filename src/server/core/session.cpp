@@ -577,6 +577,24 @@ void ClientSession::ProcessingThread(void)
          case CMD_WAKEUP_NODE:
             OnWakeUpNode(pMsg);
             break;
+         case CMD_LOCK_TRAP_CFG:
+            LockTrapCfg(pMsg->GetId(), TRUE);
+            break;
+         case CMD_UNLOCK_TRAP_CFG:
+            LockTrapCfg(pMsg->GetId(), FALSE);
+            break;
+         case CMD_CREATE_TRAP:
+            CreateTrap(pMsg);
+            break;
+         case CMD_MODIFY_TRAP:
+            UpdateTrap(pMsg);
+            break;
+         case CMD_DELETE_TRAP:
+            DeleteTrap(pMsg);
+            break;
+         case CMD_LOAD_TRAP_LIST:
+            SendAllTraps(pMsg->GetId());
+            break;
          default:
             {
                CSCPMessage responce;
@@ -3077,4 +3095,49 @@ void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
 
    // Send responce
    SendMessage(&msg);
+}
+
+
+//
+// Create new trap configuration record
+//
+
+void ClientSession::CreateTrap(CSCPMessage *pRequest)
+{
+}
+
+
+//
+// Update trap configuration record
+//
+
+void ClientSession::UpdateTrap(CSCPMessage *pRequest)
+{
+}
+
+
+//
+// Delete trap configuration record
+//
+
+void ClientSession::DeleteTrap(CSCPMessage *pRequest)
+{
+}
+
+
+//
+// Lock/unlock trap configuration
+//
+
+void ClientSession::LockTrapCfg(DWORD dwRqId, BOOL bLock)
+{
+}
+
+
+//
+// Send all trap configuration records to client
+//
+
+void ClientSession::SendAllTraps(DWORD dwRqId)
+{
 }

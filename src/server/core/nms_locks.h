@@ -24,15 +24,18 @@
 #define _nms_locks_h_
 
 
+#define UNLOCKED           ((DWORD)0xFFFFFFFF)
+
+
 //
 // Component identifiers used for locking
 //
 
-#define CID_NETXMS_INSTANCE   0
-#define CID_EPP               1
-#define CID_USER_DB           2
-#define CID_EVENT_DB          3
-#define CID_ACTION_DB         4
+#define CID_EPP               0
+#define CID_USER_DB           1
+#define CID_EVENT_DB          2
+#define CID_ACTION_DB         3
+#define CID_TRAP_CFG          4
 
 
 //
@@ -45,6 +48,7 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
 BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
 void UnlockComponent(DWORD dwId);
 void RemoveAllSessionLocks(DWORD dwSessionId);
+void UnlockDB(void);
 
 #endif
 

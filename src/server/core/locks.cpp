@@ -24,10 +24,38 @@
 
 
 //
+// Constants
+//
+
+#define MAX_OWNER_INFO     256
+#define NUMBER_OF_LOCKS    5
+
+
+//
+// Lock structure
+//
+
+struct LOCK_INFO
+{
+   DWORD dwLockStatus;
+   TCHAR *pszName;
+   TCHAR szOwnerInfo[MAX_OWNER_INFO];
+};
+
+
+//
 // Static data
 //
 
-static MUTEX m_hMutexLockerAccess;
+static MUTEX m_hMutexLockerAccess = NULL;
+static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
+{
+   { UNLOCKED, _T("Event Processing Policy"), _T("") },
+   { UNLOCKED, _T("User Database"), _T("") },
+   { UNLOCKED, _T("Event Configuration Database"), _T("") },
+   { UNLOCKED, _T("Action Configuration Database"), _T("") },
+   { UNLOCKED, _T("SNMP Trap Configuration"), _T("") }
+};
 
 
 //
@@ -37,48 +65,44 @@ static MUTEX m_hMutexLockerAccess;
 
 BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
 {
-   DB_RESULT hResult;
    BOOL bSuccess = FALSE;
-   DWORD dwStatus;
+   char szBuffer[256];
 
    *pdwIpAddr = UNLOCKED;
    pszInfo[0] = 0;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT lock_status,owner_info FROM locks WHERE component_id=0");
-   if (hResult != NULL)
+   // Check current database lock status
+   ConfigReadStr("DBLockStatus", szBuffer, 256, "ERROR");
+   if (!strcmp(szBuffer, "UNLOCKED"))
    {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         dwStatus = DBGetFieldULong(hResult, 0, 0);
-         if (dwStatus != UNLOCKED)
-         {
-            // Database is locked by someone else, fetch owner info
-            *pdwIpAddr = dwStatus;
-            strcpy(pszInfo, DBGetField(hResult, 0, 1));
-         }
-         else
-         {
-            char szQuery[1024], szSysInfo[512];
-
-            // Lock database
-            GetSysInfoStr(szSysInfo);
-            sprintf(szQuery, "UPDATE locks SET lock_status=%ld,owner_info='%s' WHERE component_id=0",
-                    GetLocalIpAddr(), szSysInfo);
-            DBQuery(g_hCoreDB, szQuery);
-            bSuccess = TRUE;
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Clear all locks and create mutex if we was successfully locked the database
-   if (bSuccess)
-   {
-      DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE COMPONENT_id<>0");
+      IpToStr(GetLocalIpAddr(), szBuffer);
+      ConfigWriteStr("DBLockStatus", szBuffer, FALSE);
+      GetSysInfoStr(szBuffer);
+      ConfigWriteStr("DBLockInfo", szBuffer, TRUE);
       m_hMutexLockerAccess = MutexCreate();
+      bSuccess = TRUE;
+   }
+   else
+   {
+      if (strcmp(szBuffer, "ERROR"))
+      {
+         *pdwIpAddr = ntohl(inet_addr(szBuffer));
+         ConfigReadStr("DBLockInfo", pszInfo, 256, "<error>");
+      }
    }
 
    return bSuccess;
+}
+
+
+//
+// Unlock database
+//
+
+void UnlockDB(void)
+{
+   ConfigWriteStr("DBLockStatus", "UNLOCKED", FALSE);
+   ConfigWriteStr("DBLockInfo", "", FALSE);
 }
 
 
@@ -92,8 +116,7 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
 BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, 
                    DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo)
 {
-   char szQuery[256], szBuffer[256];
-   DB_RESULT hResult;
+   char szBuffer[256];
    BOOL bSuccess = FALSE;
    DWORD dwTemp;
 
@@ -102,36 +125,26 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo,
    if (pszCurrentOwnerInfo == NULL)
       pszCurrentOwnerInfo = szBuffer;
 
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Attempting to lock component %d by %d (%s)",
-             dwId, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
-   MutexLock(m_hMutexLockerAccess, INFINITE);
-   sprintf(szQuery, "SELECT lock_status,owner_info FROM locks WHERE component_id=%ld", dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
+   if (dwId >= NUMBER_OF_LOCKS)
    {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         *pdwCurrentOwner = DBGetFieldULong(hResult, 0, 0);
-         strcpy(pszCurrentOwnerInfo, DBGetField(hResult, 0, 1));
-         DBFreeResult(hResult);
-         if (*pdwCurrentOwner == UNLOCKED)
-         {
-            sprintf(szQuery, "UPDATE locks SET lock_status=%d,owner_info='%s' WHERE component_id=%ld",
-                    dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "", dwId);
-            DBQuery(g_hCoreDB, szQuery);
-            bSuccess = TRUE;
-         }
-      }
-      else
-      {
-         *pdwCurrentOwner = UNLOCKED;
-         strcpy(pszCurrentOwnerInfo, "Unknown component");
-      }
+      *pdwCurrentOwner = UNLOCKED;
+      strcpy(pszCurrentOwnerInfo, "Unknown component");
+      return FALSE;
+   }
+
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Attempting to lock component \"%s\" by %d (%s)",
+             m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
+   MutexLock(m_hMutexLockerAccess, INFINITE);
+   if (m_locks[dwId].dwLockStatus == UNLOCKED)
+   {
+      m_locks[dwId].dwLockStatus = dwLockBy;
+      strncpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
+      bSuccess = TRUE;
    }
    else
    {
-      *pdwCurrentOwner = UNLOCKED;
-      strcpy(pszCurrentOwnerInfo, "SQL query failed");
+      *pdwCurrentOwner = m_locks[dwId].dwLockStatus;
+      strcpy(pszCurrentOwnerInfo, m_locks[dwId].szOwnerInfo);
    }
    MutexUnlock(m_hMutexLockerAccess);
    return bSuccess;
@@ -144,13 +157,11 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo,
 
 void UnlockComponent(DWORD dwId)
 {
-   char szQuery[256];
-
    MutexLock(m_hMutexLockerAccess, INFINITE);
-   sprintf(szQuery, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=%ld", dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   m_locks[dwId].dwLockStatus = UNLOCKED;
+   m_locks[dwId].szOwnerInfo[0] = 0;
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component %d unlocked", dwId);
+   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component \"%s\" unlocked", m_locks[dwId].pszName);
 }
 
 
@@ -160,12 +171,15 @@ void UnlockComponent(DWORD dwId)
 
 void RemoveAllSessionLocks(DWORD dwSessionId)
 {
-   char szQuery[256];
+   DWORD i;
 
    MutexLock(m_hMutexLockerAccess, INFINITE);
-   sprintf(szQuery, "UPDATE locks SET lock_status=-1,owner_info='' "
-                    "WHERE (component_id <> 0) AND (lock_status = %d)", dwSessionId);
-   DBQuery(g_hCoreDB, szQuery);
+   for(i = 0; i < NUMBER_OF_LOCKS; i++)
+      if (m_locks[i].dwLockStatus == dwSessionId)
+      {
+         m_locks[i].dwLockStatus = UNLOCKED;
+         m_locks[i].szOwnerInfo[0] = 0;
+      }
    MutexUnlock(m_hMutexLockerAccess);
    DbgPrintf(AF_DEBUG_LOCKS, "*Locks* All locks for session %d removed", dwSessionId);
 }

@@ -274,8 +274,9 @@ typedef unsigned long HREQUEST;
 #define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
 #define SYSTEM_ACCESS_EPP                 0x0040
 #define SYSTEM_ACCESS_MANAGE_ACTIONS      0x0080
+#define SYSTEM_ACCESS_CONFIGURE_TRAPS     0x0100
 
-#define SYSTEM_ACCESS_FULL                0x00FF
+#define SYSTEM_ACCESS_FULL                0x01FF
 
 
 //

@@ -264,8 +264,7 @@ BOOL ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefa
    char szQuery[256];
    BOOL bSuccess = FALSE;
 
-   strncpy(szBuffer, szDefault, iBufSize - 1);
-   szBuffer[iBufSize - 1] = 0;
+   strncpy(szBuffer, szDefault, iBufSize);
    if (strlen(szVar) > 127)
       return FALSE;
 

@@ -9,6 +9,10 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DBSyntax',DB_SYNTAX,0,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DBLockStatus','UNLOCKED',0,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DBLockInfo','',0,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NewNodePollingInterval','60',1,1);
@@ -73,22 +77,6 @@ INSERT INTO users (id,name,password,access,flags,full_name,description)
 
 INSERT INTO user_groups (id,name,access,flags,description)
    VALUES (-2147483648, 'Everyone', 16, 0, 'Built-in everyone group');
-
-
-/*
-** Component lock table
-*/
-
-INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (CID_NETXMS_INSTANCE,'NetXMS Server Instance',-1,'');
-INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (CID_EPP,'Event Processing Policy',-1,'');
-INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (CID_USER_DB,'User Database',-1,'');
-INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (CID_EVENT_DB,'Event Configuration Database',-1,'');
-INSERT INTO locks (component_id,component_name,lock_status,owner_info)
-   VALUES (CID_ACTION_DB,'Action Configuration Database',-1,'');
 
 
 /*

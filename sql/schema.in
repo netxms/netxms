@@ -14,21 +14,6 @@ CREATE TABLE config
 
 
 /*
-** This table contains information about currently locked tables
-** or subsystems
-*/
-
-CREATE TABLE locks
-(
-	component_id integer not null,
-	component_name varchar(63),
-	lock_status integer not null,
-	owner_info varchar(255),  // Information about current lock owner, may be empty
-	PRIMARY KEY(component_id)
-);
-
-
-/*
 ** Users
 */
 

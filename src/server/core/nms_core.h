@@ -96,8 +96,6 @@
 
 #define MAX_LINE_SIZE         4096
 
-#define UNLOCKED           ((DWORD)0xFFFFFFFF)
-
 #define GROUP_FLAG_BIT     ((DWORD)0x80000000)
 
 typedef void * HSNMPSESSION;
@@ -290,6 +288,11 @@ private:
    void ForcedNodePoll(CSCPMessage *pRequest);
    void OnTrap(CSCPMessage *pRequest);
    void OnWakeUpNode(CSCPMessage *pRequest);
+   void CreateTrap(CSCPMessage *pRequest);
+   void UpdateTrap(CSCPMessage *pRequest);
+   void DeleteTrap(CSCPMessage *pRequest);
+   void LockTrapCfg(DWORD dwRqId, BOOL bLock);
+   void SendAllTraps(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
