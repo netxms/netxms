@@ -1,10 +1,12 @@
-/* $Id: http.cpp,v 1.2 2005-01-29 21:24:03 victor Exp $ */
+/* $Id: http.cpp,v 1.3 2005-01-31 15:29:31 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
-/* TODO: WINDOWS COMPATIBILITY */
-#ifndef _WIN32
+#ifdef _WIN32
+#include <netxms-regex.h>
+#else
 #include <regex.h>
+#endif
 
 #include "main.h"
 #include "net.h"
@@ -66,7 +68,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 				"GET %s HTTP/1.1\r\nConnection: close\r\nHost: %s:%d\r\n\r\n",
 				szURI, szHost, nPort);
 
-		printf("GET:\n|%s|\n", szTmp);
+		//printf("GET:\n|%s|\n", szTmp);
 
 		if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
 		{
@@ -90,20 +92,13 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	return nRet;
 }
 
-#else
-
-int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
-		char *szHost, char *szMatch)
-{
-   return 1;
-}
-
-#endif
-
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/29 21:24:03  victor
+Fixed some Windows compatibility issues
+
 Revision 1.1  2005/01/29 00:21:29  alk
 + http checker
 

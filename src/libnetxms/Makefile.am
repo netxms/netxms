@@ -8,4 +8,5 @@ EXTRA_DIST = \
 	libnetxms.dsp libnetxms.dsw \
 	libnetxms.vcp libnetxms.vcw \
 	Makefile.nw netxms.def \
-	libnetxms.h md5.h sha1.h
+	libnetxms.h md5.h sha1.h \
+	regex.c

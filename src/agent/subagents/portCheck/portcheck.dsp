@@ -138,6 +138,10 @@ SOURCE=.\net.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\..\include\netxms-regex.h"
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\include\nms_agent.h
 # End Source File
 # Begin Source File

@@ -90,6 +90,7 @@ images/template_root.ico -text
 images/template_root.png -text
 include/Makefile.am -text
 include/getopt.h -text
+include/netxms-regex.h -text
 include/netxms-version.h -text
 include/netxmsdb.h -text
 include/nms_agent.h -text
@@ -498,6 +499,7 @@ src/libnetxms/main.cpp -text
 src/libnetxms/md5.cpp -text
 src/libnetxms/md5.h -text
 src/libnetxms/netxms.def -text
+src/libnetxms/regex.c -text
 src/libnetxms/scandir.c -text
 src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text

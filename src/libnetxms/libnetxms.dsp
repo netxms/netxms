@@ -138,6 +138,10 @@ SOURCE=.\md5.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\regex.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\scandir.c
 # End Source File
 # Begin Source File
@@ -175,6 +179,10 @@ SOURCE=.\libnetxms.h
 # Begin Source File
 
 SOURCE=.\md5.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\include\netxms-regex.h"
 # End Source File
 # Begin Source File
 
