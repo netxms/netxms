@@ -28,7 +28,6 @@
 // Static data
 //
 
-static CONDITION m_hCondSyncFinished = NULL;
 static DWORD m_dwNumObjects = 0;
 static INDEX *m_pIndexById = NULL;
 static MUTEX m_mutexIndexAccess;
@@ -228,11 +227,10 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_OBJECT_LIST_END:
-         if (m_hCondSyncFinished != NULL)
-         {
-            qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
-            ConditionSet(m_hCondSyncFinished);
-         }
+         NXCLockObjectIndex();
+         qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
+         NXCUnlockObjectIndex();
+         CompleteSync(RCC_SUCCESS);
          break;
       case CMD_OBJECT:
          DebugPrintf("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d", pMsg->GetVariableLong(VID_OBJECT_ID),
@@ -273,7 +271,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
-   m_hCondSyncFinished = ConditionCreate(FALSE);
+   PrepareForSync();
 
    msg.SetCode(CMD_GET_OBJECTS);
    msg.SetId(dwRqId);
@@ -281,25 +279,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
 
    dwRetCode = WaitForRCC(dwRqId);
 
+   // If request was successful, wait for object list end or for disconnection
    if (dwRetCode == RCC_SUCCESS)
-   {
-      ChangeState(STATE_SYNC_OBJECTS);
+      dwRetCode = WaitForSync(INFINITE);
 
-      // Wait for object list end or for disconnection
-      while(g_dwState != STATE_DISCONNECTED)
-      {
-         if (ConditionWait(m_hCondSyncFinished, 500))
-            break;
-      }
-
-      if (g_dwState != STATE_DISCONNECTED)
-         ChangeState(STATE_IDLE);
-      else
-         dwRetCode = RCC_COMM_FAILURE;
-   }
-
-   ConditionDestroy(m_hCondSyncFinished);
-   m_hCondSyncFinished = NULL;
    return dwRetCode;
 }
 

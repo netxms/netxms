@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(CEventBrowser, CMDIChildWnd)
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -80,7 +81,7 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENTS, this);
 
-   DoRequest(NXCSyncEvents, "Loading events...");
+   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	return 0;
 }
 
@@ -155,4 +156,16 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
 void CEventBrowser::EnableDisplay(BOOL bEnable)
 {
    m_wndListCtrl.ShowWindow(bEnable ? SW_SHOW : SW_HIDE);
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_REFRESH message handler
+//
+
+void CEventBrowser::OnViewRefresh() 
+{
+   EnableDisplay(FALSE);
+   DoRequest(NXCSyncEvents, "Loading events...");
+   EnableDisplay(TRUE);
 }

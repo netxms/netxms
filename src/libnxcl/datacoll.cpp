@@ -28,7 +28,6 @@
 // Static data
 //
 
-static CONDITION m_hCondSyncFinished;
 static NXC_DCI_LIST *m_pItemList = NULL;
 
 
@@ -41,8 +40,7 @@ void ProcessDCI(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_NODE_DCI_LIST_END:
-         if (m_hCondSyncFinished != NULL)
-            ConditionSet(m_hCondSyncFinished);
+         CompleteSync(RCC_SUCCESS);
          break;
       case CMD_NODE_DCI:
          if (m_pItemList != NULL)
@@ -110,8 +108,8 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
+   PrepareForSync();
 
-   m_hCondSyncFinished = ConditionCreate(FALSE);
    m_pItemList = (NXC_DCI_LIST *)MemAlloc(sizeof(NXC_DCI_LIST));
    m_pItemList->dwNodeId = dwNodeId;
    m_pItemList->dwNumItems = 0;
@@ -126,23 +124,14 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
 
    if (dwRetCode == RCC_SUCCESS)
    {
-      ChangeState(STATE_LOAD_DCI);
-
       // Wait for DCI list end or for disconnection
-      while(g_dwState != STATE_DISCONNECTED)
+      dwRetCode = WaitForSync(INFINITE);
+      if (dwRetCode == RCC_SUCCESS)
       {
-         if (ConditionWait(m_hCondSyncFinished, 500))
-            break;
-      }
-
-      if (g_dwState != STATE_DISCONNECTED)
-      {
-         ChangeState(STATE_IDLE);
          *ppItemList = m_pItemList;
       }
       else
       {
-         dwRetCode = RCC_COMM_FAILURE;
          MemFree(m_pItemList);
       }
    }
@@ -152,8 +141,6 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
    }
 
    m_pItemList = NULL;
-   ConditionDestroy(m_hCondSyncFinished);
-   m_hCondSyncFinished = NULL;
    return dwRetCode;
 }
 

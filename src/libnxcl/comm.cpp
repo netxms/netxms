@@ -183,6 +183,7 @@ static void NetReceiver(void *pArg)
       }
    }
 
+   CompleteSync(RCC_COMM_FAILURE);    // Abort active sync operation
    DebugPrintf("Network receiver thread stopped");
    ChangeState(STATE_DISCONNECTED);
    MemFree(pRawMsg);
@@ -268,7 +269,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassw
          }
       }
       CallEventHandler(NXC_EVENT_LOGIN_RESULT, dwRetCode, NULL);
-      ChangeState(dwRetCode == RCC_SUCCESS ? STATE_IDLE : STATE_DISCONNECTED);
+      ChangeState(dwRetCode == RCC_SUCCESS ? STATE_CONNECTED : STATE_DISCONNECTED);
    }
    else
    {

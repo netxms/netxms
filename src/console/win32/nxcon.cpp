@@ -560,23 +560,6 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
    switch(dwEvent)
    {
       case NXC_EVENT_STATE_CHANGED:
-         switch(dwCode)
-         {
-            case STATE_CONNECTING:
-               break;
-            case STATE_IDLE:
-               if ((m_bEventBrowserActive) && (m_dwClientState == STATE_SYNC_EVENTS))
-                  m_pwndEventBrowser->EnableDisplay(TRUE);
-               break;
-            case STATE_DISCONNECTED:
-               break;
-            case STATE_SYNC_EVENTS:
-               if (m_bEventBrowserActive)
-                  m_pwndEventBrowser->EnableDisplay(FALSE);
-               break;
-            default:
-               break;
-         }
          m_dwClientState = dwCode;
          break;
       case NXC_EVENT_NEW_ELOG_RECORD:

@@ -25,13 +25,6 @@
 
 
 //
-// Static data
-//
-
-static CONDITION m_hCondSyncFinished = NULL;
-
-
-//
 // Process events coming from server
 //
 
@@ -45,8 +38,7 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
    switch(wCode)
    {
       case CMD_EVENT_LIST_END:
-         if (m_hCondSyncFinished != NULL)
-            ConditionSet(m_hCondSyncFinished);
+         CompleteSync(RCC_SUCCESS);
          break;
       case CMD_EVENT:
          if (pRawMsg != NULL)    // We should receive events as raw data
@@ -77,46 +69,19 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = g_dwMsgId++;
-
-   m_hCondSyncFinished = ConditionCreate(FALSE);
+   PrepareForSync();
 
    msg.SetCode(CMD_GET_EVENTS);
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
-   if (pResponce != NULL)
-   {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
-
+   dwRetCode = WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
-   {
-      ChangeState(STATE_SYNC_EVENTS);
+      dwRetCode = WaitForSync(INFINITE);
 
-      // Wait for object list end or for disconnection
-      while(g_dwState != STATE_DISCONNECTED)
-      {
-         if (ConditionWait(m_hCondSyncFinished, 500))
-            break;
-      }
-
-      if (g_dwState != STATE_DISCONNECTED)
-         ChangeState(STATE_IDLE);
-      else
-         dwRetCode = RCC_COMM_FAILURE;
-   }
-
-   ConditionDestroy(m_hCondSyncFinished);
-   m_hCondSyncFinished = NULL;
    return dwRetCode;
 }

@@ -95,6 +95,12 @@ CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut);
 CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut);
 DWORD WaitForRCC(DWORD dwRqId);
 
+void InitSyncStuff(void);
+void SyncCleanup(void);
+DWORD WaitForSync(DWORD dwTimeOut);
+void PrepareForSync(void);
+void CompleteSync(DWORD dwRetCode);
+
 void ChangeState(DWORD dwState);
 void DebugPrintf(char *szFormat, ...);
 

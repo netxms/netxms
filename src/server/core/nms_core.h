@@ -166,15 +166,6 @@ typedef void * HSNMPSESSION;
 
 
 //
-// Client session states
-//
-
-#define STATE_CLOSED          0
-#define STATE_CONNECTED       1
-#define STATE_AUTHENTICATED   2
-
-
-//
 // Client session flags
 //
 

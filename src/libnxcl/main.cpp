@@ -40,7 +40,18 @@ DWORD g_dwState = STATE_DISCONNECTED;
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
    ObjectsInit();
+   InitSyncStuff();
    return TRUE;
+}
+
+
+//
+// Shutdown function
+//
+
+void LIBNXCL_EXPORTABLE NXCShutdown(void)
+{
+   SyncCleanup();
 }
 
 

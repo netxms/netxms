@@ -31,7 +31,6 @@
 static DWORD m_dwNumUsers;
 static NXC_USER *m_pUserList = NULL;
 static BOOL m_bUserDBLoaded = FALSE;
-static CONDITION m_hCondLoadFinished = NULL;
 
 
 //
@@ -127,8 +126,7 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_USER_DB_EOF:
-         if (m_hCondLoadFinished != NULL)
-            ConditionSet(m_hCondLoadFinished);
+         CompleteSync(RCC_SUCCESS);
          break;
       case CMD_USER_DATA:
       case CMD_GROUP_DATA:
@@ -153,8 +151,8 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
 
-   m_hCondLoadFinished = ConditionCreate(FALSE);
    dwRqId = g_dwMsgId++;
+   PrepareForSync();
 
    msg.SetCode(CMD_LOAD_USER_DB);
    msg.SetId(dwRqId);
@@ -164,28 +162,11 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
 
    if (dwRetCode == RCC_SUCCESS)
    {
-      ChangeState(STATE_LOAD_USER_DB);
-
-      // Wait for object list end or for disconnection
-      while(g_dwState != STATE_DISCONNECTED)
-      {
-         if (ConditionWait(m_hCondLoadFinished, 500))
-            break;
-      }
-
-      if (g_dwState == STATE_LOAD_USER_DB)
-      {
-         ChangeState(STATE_IDLE);
+      dwRetCode = WaitForSync(INFINITE);
+      if (dwRetCode == RCC_SUCCESS)
          m_bUserDBLoaded = TRUE;
-      }
-      else
-      {
-         dwRetCode = RCC_COMM_FAILURE;
-      }
    }
 
-   ConditionDestroy(m_hCondLoadFinished);
-   m_hCondLoadFinished = NULL;
    return dwRetCode;
 }
 

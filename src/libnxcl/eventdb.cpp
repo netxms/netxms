@@ -28,7 +28,6 @@
 // Static data
 //
 
-static CONDITION m_hCondLoadFinished = NULL;
 static NXC_EVENT_TEMPLATE **m_ppEventTemplates = NULL;
 static DWORD m_dwNumTemplates = 0;
 static BOOL m_bEventDBOpened = FALSE;
@@ -95,8 +94,7 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_EVENT_DB_EOF:
-         if (m_hCondLoadFinished != NULL)
-            ConditionSet(m_hCondLoadFinished);
+         CompleteSync(RCC_SUCCESS);
          break;
       case CMD_EVENT_DB_RECORD:
          // Allocate new event template structure and fill it with values from message
@@ -126,9 +124,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
    DWORD dwRqId;
 
    dwRqId = g_dwMsgId++;
-
-   ChangeState(STATE_LOAD_EVENT_DB);
-   m_hCondLoadFinished = ConditionCreate(FALSE);
+   PrepareForSync();
 
    msg.SetCode(CMD_OPEN_EVENT_DB);
    msg.SetId(dwRqId);
@@ -139,18 +135,10 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
    if (dwRetCode == RCC_SUCCESS)
    {
       // Wait for object list end or for disconnection
-      while(g_dwState != STATE_DISCONNECTED)
-      {
-         if (ConditionWait(m_hCondLoadFinished, 500))
-            break;
-      }
-      m_bEventDBOpened = TRUE;
+      dwRetCode = WaitForSync(INFINITE);
+      if (dwRetCode == RCC_SUCCESS)
+         m_bEventDBOpened = TRUE;
    }
-
-   ConditionDestroy(m_hCondLoadFinished);
-   m_hCondLoadFinished = NULL;
-   if (g_dwState != STATE_DISCONNECTED)
-      ChangeState(STATE_IDLE);
 
    return dwRetCode;
 }

@@ -148,18 +148,13 @@ typedef unsigned long HREQUEST;
 
 
 //
-// States
+// States (used both by client library and server)
 //
 
 #define STATE_DISCONNECTED    0
 #define STATE_CONNECTING      1
-#define STATE_IDLE            2
-#define STATE_SYNC_OBJECTS    3
-#define STATE_SYNC_EVENTS     4
-#define STATE_LOAD_EVENT_DB   5
-#define STATE_LOAD_EPP        6
-#define STATE_LOAD_USER_DB    7
-#define STATE_LOAD_DCI        8
+#define STATE_CONNECTED       2
+#define STATE_AUTHENTICATED   3
 
 
 //
@@ -681,6 +676,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void);
 const char LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
+void LIBNXCL_EXPORTABLE NXCShutdown(void);
+
 DWORD LIBNXCL_EXPORTABLE NXCConnect(char *szServer, char *szLogin, char *szPassword);
 void LIBNXCL_EXPORTABLE NXCDisconnect(void);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);

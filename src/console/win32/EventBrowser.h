@@ -43,6 +43,7 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
