@@ -93,6 +93,7 @@ IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
 IDB_LOGIN               BITMAP  DISCARDABLE     "res\\login.bmp"
 IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
+IDB_PSYM_ANY            BITMAP  DISCARDABLE     "res\\psym_any.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -267,6 +268,18 @@ BEGIN
     END
     POPUP "Policy"
     BEGIN
+        POPUP "&Insert rule"
+        BEGIN
+            MENUITEM "&Above",                      ID_POLICY_INSERTRULE_ABOVE
+
+            MENUITEM "&Below",                      ID_POLICY_INSERTRULE_BELOW
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Top",                        ID_POLICY_INSERTRULE_TOP
+            MENUITEM "&Bottom",                     ID_POLICY_INSERTRULE_BOTTOM
+
+        END
+        MENUITEM SEPARATOR
         MENUITEM "&Add...",                     ID_POLICY_ADD
         MENUITEM "&Delete",                     ID_POLICY_DELETE
         MENUITEM SEPARATOR

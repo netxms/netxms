@@ -541,6 +541,10 @@ SOURCE=.\icons\passwd.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\psym_any.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\RuleManager.ico
 # End Source File
 # Begin Source File

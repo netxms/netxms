@@ -22,6 +22,7 @@ static char THIS_FILE[] = __FILE__;
 #define CELL_TEXT_Y_SPACING   0
 #define CELL_TEXT_X_MARGIN    8
 #define SCROLL_STEP           5
+#define ITEM_IMAGE_SIZE       16
 
 /////////////////////////////////////////////////////////////////////////////
 // Supplementary classes
@@ -86,7 +87,8 @@ RL_Cell::RL_Cell()
 {
    m_iNumLines = 0;
    m_pszTextList = NULL;
-   m_phIconList = NULL;
+   m_piImageList = NULL;
+   m_bHasImages = FALSE;
 }
 
 RL_Cell::~RL_Cell()
@@ -96,19 +98,45 @@ RL_Cell::~RL_Cell()
    for(i = 0; i < m_iNumLines; i++)
       safe_free(m_pszTextList[i]);
     safe_free(m_pszTextList);
-    safe_free(m_phIconList);
+    safe_free(m_piImageList);
 }
 
-RL_Cell::AddLine(char *pszText, HICON hIcon)
+void RL_Cell::Recalc(void)
+{
+   int i;
+
+   // Check if cell has at least one image
+   for(i = 0, m_bHasImages = FALSE; i < m_iNumLines; i++)
+      if (m_piImageList[i] != -1)
+      {
+         m_bHasImages = TRUE;
+         break;
+      }
+}
+
+int RL_Cell::AddLine(char *pszText, int iImage)
 {
    int iPos;
 
    iPos = m_iNumLines++;
    m_pszTextList = (char **)realloc(m_pszTextList, sizeof(char *) * m_iNumLines);
-   m_phIconList = (HICON *)realloc(m_phIconList, sizeof(HICON) * m_iNumLines);
+   m_piImageList = (int *)realloc(m_piImageList, sizeof(int) * m_iNumLines);
    m_pszTextList[iPos] = strdup(pszText);
-   m_phIconList[iPos] = hIcon;
+   m_piImageList[iPos] = iImage;
+   Recalc();
    return iPos;
+}
+
+BOOL RL_Cell::ReplaceLine(int iLine, char *pszText, int iImage)
+{
+   if ((iLine < 0) || (iLine >= m_iNumLines))
+      return FALSE;  // Invalid line number, no changes
+
+   safe_free(m_pszTextList[iLine]);
+   m_pszTextList[iLine] = strdup(pszText);
+   m_piImageList[iLine] = iImage;
+   Recalc();
+   return TRUE;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -116,6 +144,8 @@ RL_Cell::AddLine(char *pszText, HICON hIcon)
 
 CRuleList::CRuleList()
 {
+   m_pImageList = NULL;
+
    m_pColList = NULL;
    m_ppRowList = NULL;
    m_iNumColumns = 0;
@@ -141,6 +171,7 @@ CRuleList::~CRuleList()
 {
    safe_free(m_pColList);
    safe_free(m_ppRowList);
+   delete m_pImageList;
 }
 
 
@@ -204,7 +235,7 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, "Verdana");
    pDC = GetDC();
-   m_iTextHeight = pDC->GetTextExtent("gqhXQ|", 6).cy;
+   m_iTextHeight = max(pDC->GetTextExtent("gqhXQ|", 6).cy, ITEM_IMAGE_SIZE);
    ReleaseDC(pDC);
 
    // Create header
@@ -259,7 +290,7 @@ void CRuleList::OnPaint()
          rect.left = rect.right;
          rect.right += m_pColList[j].m_iWidth;
          dc.SelectObject((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? &brTitle : 
-                           ((m_ppRowList[i]->m_dwFlags & RF_SELECTED) ? &brActive : &brNormal));
+                           ((m_ppRowList[i]->m_dwFlags & RLF_SELECTED) ? &brActive : &brNormal));
          dc.Rectangle(&rect);
          dc.Draw3dRect(&rect, RGB(128, 128, 128), RGB(255, 255, 255));
 
@@ -268,14 +299,19 @@ void CRuleList::OnPaint()
          rcText.top += CELL_TEXT_Y_MARGIN;
          rcText.bottom = rcText.top + m_iTextHeight;
          rcText.left += CELL_TEXT_X_MARGIN;
+         if (m_ppRowList[i]->m_ppCellList[j]->m_bHasImages)
+            rcText.left += ITEM_IMAGE_SIZE;
          rcText.right -= CELL_TEXT_X_MARGIN;
          dc.SetTextColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleTextColor : m_rgbTextColor);
          dc.SetBkColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleBkColor :
-                         ((m_ppRowList[i]->m_dwFlags & RF_SELECTED) ? m_rgbActiveBkColor : m_rgbNormalBkColor));
+                         ((m_ppRowList[i]->m_dwFlags & RLF_SELECTED) ? m_rgbActiveBkColor : m_rgbNormalBkColor));
 
          // Walk through cell's items
          for(iLine = 0; iLine < m_ppRowList[i]->m_ppCellList[j]->m_iNumLines; iLine++)
          {
+            if (m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine] != -1)
+               m_pImageList->Draw(&dc, m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine],
+                                  CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
             dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
                         strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
                         &rcText, DT_SINGLELINE | DT_VCENTER | 
@@ -370,19 +406,32 @@ int CRuleList::InsertRow(int iInsertBefore)
 // Add new item to cell
 //
 
-int CRuleList::AddItem(int iRow, int iColumn, char *pszText, HICON hIcon)
+int CRuleList::AddItem(int iRow, int iColumn, char *pszText, int iImage)
 {
    int iPos;
 
    if ((iRow < 0) || (iRow >= m_iNumRows) || (iColumn < 0) || (iColumn >= m_iNumColumns))
       return -1;
 
-   iPos = m_ppRowList[iRow]->m_ppCellList[iColumn]->AddLine(pszText, hIcon);
+   iPos = m_ppRowList[iRow]->m_ppCellList[iColumn]->AddLine(pszText, iImage);
    m_ppRowList[iRow]->RecalcHeight(m_iTextHeight);
    RecalcHeight();
    UpdateScrollBars();
    InvalidateRect(NULL);
    return iPos;
+}
+
+
+//
+// Replace item in a cell
+//
+
+void CRuleList::ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int iImage)
+{
+   if ((iRow < 0) || (iRow >= m_iNumRows) || (iColumn < 0) || (iColumn >= m_iNumColumns))
+      return;
+   if (m_ppRowList[iRow]->m_ppCellList[iColumn]->ReplaceLine(iItem, pszText, iImage))
+      InvalidateRect(NULL);
 }
 
 
@@ -504,7 +553,7 @@ void CRuleList::ClearSelection(BOOL bRedraw)
    int i;
 
    for(i = 0; i < m_iNumRows; i++)
-      m_ppRowList[i]->m_dwFlags &= ~RF_SELECTED;
+      m_ppRowList[i]->m_dwFlags &= ~RLF_SELECTED;
    if (bRedraw)
       InvalidateRect(NULL, FALSE);
 }
@@ -518,14 +567,35 @@ int CRuleList::RowFromPoint(int x, int y)
 {
    int i, cy;
 
-   if ((x >= m_iTotalWidth) || (y >= m_iTotalHeight + RULE_HEADER_HEIGHT))
+   if ((x >= m_iTotalWidth - m_iXOrg) || (y >= m_iTotalHeight + RULE_HEADER_HEIGHT - m_iYOrg))
       return - 1;
 
-   for(i = 0, cy = RULE_HEADER_HEIGHT; i < m_iNumRows; i++)
+   for(i = 0, cy = RULE_HEADER_HEIGHT - m_iYOrg; i < m_iNumRows; i++)
    {
       if ((y >= cy) && (y < cy + m_ppRowList[i]->m_iHeight))
          return i;
       cy += m_ppRowList[i]->m_iHeight;
+   }
+   return -1;
+}
+
+
+//
+// Get column from given point
+//
+
+int CRuleList::ColumnFromPoint(int x, int y)
+{
+   int i, cx;
+
+   if ((x >= m_iTotalWidth - m_iXOrg) || (y >= m_iTotalHeight + RULE_HEADER_HEIGHT - m_iYOrg))
+      return - 1;
+
+   for(i = 0, cx = -m_iXOrg; i < m_iNumColumns; i++)
+   {
+      if ((x >= cx) && (x < cx + m_pColList[i].m_iWidth))
+         return i;
+      cx += m_pColList[i].m_iWidth;
    }
    return -1;
 }
@@ -724,7 +794,6 @@ BOOL CRuleList::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
    SCROLLINFO si;
 
-   theApp.DebugPrintf("WM_MOUSEWHEEL");
    si.cbSize = sizeof(SCROLLINFO);
    GetScrollInfo(SB_VERT, &si);
    if (si.nMax > 0)  // Vertical scroll bar enabled, do scroll
@@ -741,6 +810,19 @@ BOOL CRuleList::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 void CRuleList::OnRButtonDown(UINT nFlags, CPoint point) 
 {
+   int iRow;
+
+   iRow = RowFromPoint(point.x, point.y);
+   if (iRow != -1)
+   {
+      if (!(m_ppRowList[iRow]->m_dwFlags & RLF_SELECTED))
+      {
+         // Right click on non-selected row
+         ClearSelection(FALSE);
+         m_ppRowList[iRow]->m_dwFlags |= RLF_SELECTED;
+         InvalidateRect(NULL, FALSE);
+      }
+   }
 	CWnd::OnRButtonDown(nFlags, point);
 }
 
@@ -758,7 +840,7 @@ void CRuleList::OnLButtonDown(UINT nFlags, CPoint point)
    {
       if (nFlags & MK_CONTROL)
       {
-         m_ppRowList[iRow]->m_dwFlags |= RF_SELECTED;
+         m_ppRowList[iRow]->m_dwFlags |= RLF_SELECTED;
       }
       else if (nFlags & MK_SHIFT)
       {
@@ -766,7 +848,7 @@ void CRuleList::OnLButtonDown(UINT nFlags, CPoint point)
       else
       {
          ClearSelection(FALSE);
-         m_ppRowList[iRow]->m_dwFlags |= RF_SELECTED;
+         m_ppRowList[iRow]->m_dwFlags |= RLF_SELECTED;
       }
       InvalidateRect(NULL, FALSE);
    }

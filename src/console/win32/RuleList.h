@@ -24,8 +24,8 @@
 // Row flags
 //
 
-#define RF_SELECTED        0x0001
-#define RF_DISABLED        0x0002
+#define RLF_SELECTED       0x0001
+#define RLF_DISABLED       0x0002
 
 
 //
@@ -37,12 +37,15 @@ class RL_Cell
 public:
    int m_iNumLines;
    char **m_pszTextList;
-   HICON *m_phIconList;
+   int *m_piImageList;
+   BOOL m_bHasImages;
 
    RL_Cell();
    ~RL_Cell();
 
-   int AddLine(char *pszText, HICON hIcon);
+   void Recalc(void);
+   int AddLine(char *pszText, int iImage = -1);
+   BOOL ReplaceLine(int iLine, char *pszText, int iImage = -1);
 };
 
 class RL_Row
@@ -94,7 +97,7 @@ public:
 	void ClearSelection(BOOL bRedraw = TRUE);
 	int RowFromPoint(int x, int y);
 	COLORREF m_rgbActiveBkColor;
-	int AddItem(int iRow, int iColumn, char *pszText, HICON hIcon = NULL);
+	int AddItem(int iRow, int iColumn, char *pszText, int iImage = -1);
 	int InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD dwFlags = 0);
 	int InsertRow(int iInsertBefore);
 	BOOL Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, UINT nId);
@@ -121,6 +124,7 @@ protected:
    afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	CImageList *m_pImageList;
 	int m_iYOrg;
 	int m_iXOrg;
 	int m_iEdgeCX;
@@ -143,6 +147,12 @@ private:
 
    RL_COLUMN *m_pColList;
    RL_Row **m_ppRowList;
+
+public:
+	int ColumnFromPoint(int x, int y);
+	void ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int iImage = -1);
+	void SetImageList(CImageList *pImageList) { m_pImageList = pImageList; }
+   int GetNumRows(void) { return m_iNumRows; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -975,7 +975,9 @@ void CConsoleApp::OnControlpanelEventpolicy()
 
 	// create a new MDI child window or open existing
    if (m_bEventPolicyEditorActive)
+   {
       m_pwndEventPolicyEditor->BringWindowToTop();
+   }
    else
    {
       DWORD dwResult;

@@ -79,6 +79,7 @@
 #define IDB_DOWN_ARROW                  179
 #define IDD_THRESHOLD                   180
 #define IDD_MIB_BROWSER                 181
+#define IDB_PSYM_ANY                    183
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -206,6 +207,10 @@
 #define ID_POLICY_DELETE                32843
 #define ID_POLICY_NEGATECELL            32844
 #define ID_TOOLS_ADDNODE                32845
+#define ID_POLICY_INSERTRULE_BELOW      32846
+#define ID_POLICY_INSERTRULE_ABOVE      32847
+#define ID_POLICY_INSERTRULE_TOP        32848
+#define ID_POLICY_INSERTRULE_BOTTOM     32849
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -214,8 +219,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        183
-#define _APS_NEXT_COMMAND_VALUE         32846
+#define _APS_NEXT_RESOURCE_VALUE        184
+#define _APS_NEXT_COMMAND_VALUE         32850
 #define _APS_NEXT_CONTROL_VALUE         1104
 #define _APS_NEXT_SYMED_VALUE           119
 #endif

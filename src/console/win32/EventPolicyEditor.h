@@ -32,6 +32,8 @@ public:
 
 // Implementation
 protected:
+	void UpdateRow(int iRow);
+	void InsertNewRule(int iInsertBefore);
 	CRuleList m_wndRuleList;
 	virtual ~CEventPolicyEditor();
 
@@ -43,8 +45,18 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnPolicyInsertruleTop();
+	afx_msg void OnPolicyInsertruleBottom();
+	afx_msg void OnPolicyInsertruleAbove();
+	afx_msg void OnPolicyInsertruleBelow();
+	afx_msg void OnUpdatePolicyInsertruleBelow(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePolicyInsertruleAbove(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+	int m_iCurrCol;
+	int m_iCurrRow;
+	NXC_EPP *m_pEventPolicy;
 };
 
 /////////////////////////////////////////////////////////////////////////////
