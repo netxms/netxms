@@ -45,6 +45,11 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnClose();
 	afx_msg void OnViewRefresh();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnUpdateTrapDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateTrapEdit(CCmdUI* pCmdUI);
+	afx_msg void OnTrapNew();
+	afx_msg void OnTrapDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

@@ -914,3 +914,14 @@ void CEventPolicyEditor::AddAction()
       Modify();
    }
 }
+
+
+//
+// Modify frame title when policy was modified
+//
+
+void CEventPolicyEditor::ModifyTitle()
+{
+   SetTitle(GetTitle() + _T(" (Modified)")); 
+   OnUpdateFrameTitle(TRUE);
+}

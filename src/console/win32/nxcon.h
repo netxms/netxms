@@ -132,6 +132,10 @@ protected:
 	HACCEL m_hPolicyEditorAccel;  // Accelerator for event policy editor
 	HMENU m_hMapMenu;             // Menu for map view
 	HACCEL m_hMapAccel;           // Accelerator for map view
+	HMENU m_hTrapEditorMenu;      // Menu for trap editor
+	HACCEL m_hTrapEditorAccel;    // Accelerator for trap editor
+	HMENU m_hActionEditorMenu;      // Menu for user editor
+	HACCEL m_hActionEditorAccel;    // Accelerator for user editor
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

@@ -136,6 +136,7 @@ protected:
    afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	COLORREF m_rgbEmptyBkColor;
 	int m_iMouseWheelDelta;
 	COLORREF m_rgbSelectedBkColor;
 	COLORREF m_rgbSelectedTextColor;

@@ -130,6 +130,8 @@
 #define IDI_OVL_STATUS_TESTING          239
 #define IDA_EVENT_EDITOR                240
 #define IDI_TRAP                        241
+#define IDA_ACTION_EDITOR               242
+#define IDA_TRAP_EDITOR                 243
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -363,6 +365,11 @@
 #define ID_EVENT_DELETE                 32896
 #define ID_CONTROLPANEL_SNMPTRAPS       32897
 #define ID_POLICY_SAVE                  32898
+#define ID_TRAP_NEW                     32899
+#define ID_TRAP_EDIT                    32900
+#define ID_TRAP_DELETE                  32901
+#define ID_TRAP_MOVEUP                  32902
+#define ID_TRAP_MOVEDOWN                32903
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -371,8 +378,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        242
-#define _APS_NEXT_COMMAND_VALUE         32899
+#define _APS_NEXT_RESOURCE_VALUE        244
+#define _APS_NEXT_COMMAND_VALUE         32904
 #define _APS_NEXT_CONTROL_VALUE         1181
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

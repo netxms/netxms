@@ -269,6 +269,7 @@ CRuleList::CRuleList()
    m_iCurrItem = -1;
 
    // Default colors
+   m_rgbEmptyBkColor = RGB(255, 255, 255);
    m_rgbActiveBkColor = RGB(255, 255, 255);
    m_rgbNormalBkColor = RGB(206, 206, 206);
    m_rgbTextColor = RGB(0, 0, 0);
@@ -322,8 +323,7 @@ BOOL CRuleList::PreCreateWindow(CREATESTRUCT& cs)
 {
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
-                                         LoadCursor(NULL, IDC_ARROW),
-                                         CreateSolidBrush(RGB(255, 255, 255)), NULL);
+                                         LoadCursor(NULL, IDC_ARROW), 0, NULL);
    cs.style |= WS_HSCROLL | WS_VSCROLL;
 	return CWnd::PreCreateWindow(cs);
 }
@@ -373,7 +373,7 @@ void CRuleList::OnPaint()
    RECT rect, rcClient, rcText;
    int i, j, iLine;
    CFont *pOldFont;
-   CBrush brTitle, brActive, brNormal, brDisabled, *pOldBrush;
+   CBrush brTitle, brActive, brNormal, brDisabled, brEmpty, *pOldBrush;
    CPen pen, *pOldPen;
    COLORREF rgbTextColor, rgbBkColor;
 
@@ -384,6 +384,7 @@ void CRuleList::OnPaint()
    brActive.CreateSolidBrush(m_rgbActiveBkColor);
    brNormal.CreateSolidBrush(m_rgbNormalBkColor);
    brDisabled.CreateSolidBrush(m_rgbDisabledBkColor);
+   brEmpty.CreateSolidBrush(m_rgbEmptyBkColor);
    pen.CreatePen(PS_SOLID, 2, m_rgbCrossColor);
 
    // Setup DC
@@ -505,6 +506,15 @@ void CRuleList::OnPaint()
    rect.bottom++;
    rect.right = m_iTotalWidth + 2;
    dc.DrawEdge(&rect, EDGE_RAISED, BF_BOTTOMRIGHT);
+
+   // Erase remaining free space
+   rect.top = rect.bottom;
+   rect.bottom = rcClient.bottom  + m_iYOrg;
+   dc.FillRect(&rect, &brEmpty);
+   rect.top = 0;
+   rect.left = rect.right;
+   rect.right = rcClient.right + m_iXOrg;
+   dc.FillRect(&rect, &brEmpty);
 
    // Cleanup
    dc.SelectObject(pOldFont);
@@ -861,8 +871,8 @@ void CRuleList::UpdateScrollBars(void)
    si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
    si.nMin = 0;
 
-   iCX = m_iTotalWidth + m_iEdgeCX;
-   iCY = m_iTotalHeight + RULE_HEADER_HEIGHT + m_iEdgeCY;
+   iCX = m_iTotalWidth + m_iEdgeCX - 1;
+   iCY = m_iTotalHeight + RULE_HEADER_HEIGHT + m_iEdgeCY - 2;
 
    // Set scroll bars ranges
    si.nMax = (rect.right < iCX) ? iCX : 0;
@@ -997,8 +1007,8 @@ int CRuleList::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
             iNewPos = (m_iXOrg + SCROLL_STEP < m_iTotalWidth + m_iEdgeCX - rect.right) ? 
                (m_iXOrg + SCROLL_STEP) : (m_iTotalWidth + m_iEdgeCX - rect.right);
          else
-            iNewPos = (m_iYOrg + SCROLL_STEP < m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom - 1) ? 
-               (m_iYOrg + SCROLL_STEP) : (m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom - 1);
+            iNewPos = (m_iYOrg + SCROLL_STEP < m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom) ? 
+               (m_iYOrg + SCROLL_STEP) : (m_iTotalHeight + m_iEdgeCY + RULE_HEADER_HEIGHT - rect.bottom);
          break;
       case SB_WHEELUP:
          if (nScrollBar == SB_HORZ)

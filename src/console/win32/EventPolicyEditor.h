@@ -21,7 +21,7 @@ class CEventPolicyEditor : public CMDIChildWnd
 	DECLARE_DYNCREATE(CEventPolicyEditor)
 protected:
 	CEventPolicyEditor();           // protected constructor used by dynamic creation
-   void Modify(void) { m_bIsModified = TRUE; }
+   void Modify(void) { if (!m_bIsModified) ModifyTitle(); m_bIsModified = TRUE; }
 
 // Attributes
 public:
@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	void ModifyTitle(void);
 	BOOL m_bIsModified;
 	void AddAction(void);
 	int m_iImageAny;

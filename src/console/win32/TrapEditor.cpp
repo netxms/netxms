@@ -38,6 +38,11 @@ BEGIN_MESSAGE_MAP(CTrapEditor, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CONTEXTMENU()
+	ON_UPDATE_COMMAND_UI(ID_TRAP_DELETE, OnUpdateTrapDelete)
+	ON_UPDATE_COMMAND_UI(ID_TRAP_EDIT, OnUpdateTrapEdit)
+	ON_COMMAND(ID_TRAP_NEW, OnTrapNew)
+	ON_COMMAND(ID_TRAP_DELETE, OnTrapDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -189,4 +194,100 @@ void CTrapEditor::UpdateItem(int iItem, DWORD dwIndex)
    m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 2, NXCGetEventName(m_pTrapList[dwIndex].dwEventId));
    m_wndListCtrl.SetItemText(iItem, 3, m_pTrapList[dwIndex].szDescription);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CTrapEditor::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(11);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Update status for menu items
+//
+
+void CTrapEditor::OnUpdateTrapDelete(CCmdUI* pCmdUI) 
+{
+}
+
+void CTrapEditor::OnUpdateTrapEdit(CCmdUI* pCmdUI) 
+{
+}
+
+
+//
+// WM_COMMAND::ID_TRAP_NEW message handler
+//
+
+void CTrapEditor::OnTrapNew() 
+{
+	// TODO: Add your command handler code here
+	
+}
+
+
+//
+// Worker function for trap deletion
+//
+
+static DWORD DeleteTraps(DWORD dwNumTraps, DWORD *pdwDeleteList, CListCtrl *pList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+   LVFINDINFO lvfi;
+   int iItem;
+
+   lvfi.flags = LVFI_PARAM;
+   for(i = 0; i < dwNumTraps; i++)
+   {
+      dwResult = NXCDeleteTrap(pdwDeleteList[i]);
+      if (dwResult == RCC_SUCCESS)
+      {
+         lvfi.lParam = pdwDeleteList[i];
+         iItem = pList->FindItem(&lvfi);
+         if (iItem != -1)
+            pList->DeleteItem(iItem);
+      }
+      else
+      {
+         break;
+      }
+   }
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_TRAP_DELETE message handler
+//
+
+void CTrapEditor::OnTrapDelete() 
+{
+   int iItem;
+   DWORD i, dwNumItems, *pdwDeleteList, dwResult;
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (dwNumItems > 0)
+   {
+      pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+      iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+      for(i = 0; (i < dwNumItems) && (iItem != -1); i++)
+      {
+         pdwDeleteList[i] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
+      }
+
+      dwResult = DoRequestArg3(DeleteTraps, (void *)dwNumItems, pdwDeleteList, 
+                               &m_wndListCtrl, _T("Deleting trap configuration record(s)..."));
+      if (dwResult != RCC_SUCCESS)
+         theApp.ErrorBox(dwResult, _T("Error deleting trap configuration record:\n%s"));
+      free(pdwDeleteList);
+   }
 }

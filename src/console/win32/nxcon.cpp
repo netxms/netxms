@@ -277,6 +277,14 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hEventEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hEventEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 10), "&Event");
 
+   m_hActionEditorMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hActionEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hActionEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 11), "&Action");
+
+   m_hTrapEditorMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 12), "T&rap");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -286,6 +294,8 @@ BOOL CConsoleApp::InitInstance()
 	m_hDCEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hPolicyEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_EPP));
 	m_hMapAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_NETMAP));
+	m_hActionEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ACTION_EDITOR));
+	m_hTrapEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_TRAP_EDITOR));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -329,6 +339,12 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hUserEditorAccel);
    SafeFreeResource(m_hDCEditorMenu);
    SafeFreeResource(m_hDCEditorAccel);
+   SafeFreeResource(m_hEventEditorMenu);
+   SafeFreeResource(m_hEventEditorAccel);
+   SafeFreeResource(m_hActionEditorMenu);
+   SafeFreeResource(m_hActionEditorAccel);
+   SafeFreeResource(m_hTrapEditorMenu);
+   SafeFreeResource(m_hTrapEditorAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -1175,7 +1191,7 @@ void CConsoleApp::OnControlpanelActions()
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR, m_hMDIMenu, m_hMDIAccel);
+		      RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR, m_hActionEditorMenu, m_hActionEditorAccel);
       }
       else
       {
@@ -1206,7 +1222,7 @@ void CConsoleApp::OnControlpanelSnmptraps()
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR, m_hMDIMenu, m_hMDIAccel);
+		      RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR, m_hTrapEditorMenu, m_hTrapEditorAccel);
       }
       else
       {

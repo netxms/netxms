@@ -348,6 +348,23 @@ BEGIN
         MENUITEM "&Edit...\tEnter",             ID_EVENT_EDIT
         MENUITEM "&Delete\tDel",                ID_EVENT_DELETE
     END
+    POPUP "Action"
+    BEGIN
+        MENUITEM "&New...\tCtrl+N",             ID_ACTION_NEW
+        MENUITEM "&Rename",                     ID_ACTION_RENAME
+        MENUITEM "&Delete\tDel",                ID_ACTION_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...\tEnter",       ID_ACTION_PROPERTIES
+    END
+    POPUP "Trap"
+    BEGIN
+        MENUITEM "&New...\tCtrl+N",             ID_TRAP_NEW
+        MENUITEM "&Edit...\tEnter",             ID_TRAP_EDIT
+        MENUITEM "&Delete\tDel",                ID_TRAP_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Move &up\tCtrl+U",            ID_TRAP_MOVEUP
+        MENUITEM "Move do&wn\tCtrl+D",          ID_TRAP_MOVEDOWN
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -525,6 +542,15 @@ BEGIN
         MENUITEM "&Edit...",                    ID_EVENT_EDIT
         MENUITEM "&Delete",                     ID_EVENT_DELETE
     END
+    POPUP "Trap"
+    BEGIN
+        MENUITEM "&New...",                     ID_TRAP_NEW
+        MENUITEM "&Edit...",                    ID_TRAP_EDIT
+        MENUITEM "&Delete",                     ID_TRAP_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Move &up",                    ID_TRAP_MOVEUP
+        MENUITEM "Move do&wn",                  ID_TRAP_MOVEDOWN
+    END
 END
 
 
@@ -610,6 +636,22 @@ BEGIN
     "N",            ID_EVENT_NEW,           VIRTKEY, CONTROL, NOINVERT
     VK_DELETE,      ID_EVENT_DELETE,        VIRTKEY, NOINVERT
     VK_RETURN,      ID_EVENT_EDIT,          VIRTKEY, NOINVERT
+END
+
+IDA_ACTION_EDITOR ACCELERATORS DISCARDABLE 
+BEGIN
+    "N",            ID_ACTION_NEW,          VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_ACTION_DELETE,       VIRTKEY, NOINVERT
+    VK_RETURN,      ID_ACTION_PROPERTIES,   VIRTKEY, NOINVERT
+END
+
+IDA_TRAP_EDITOR ACCELERATORS DISCARDABLE 
+BEGIN
+    "D",            ID_TRAP_MOVEDOWN,       VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_TRAP_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_TRAP_MOVEUP,         VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_TRAP_DELETE,         VIRTKEY, NOINVERT
+    VK_RETURN,      ID_TRAP_EDIT,           VIRTKEY, NOINVERT
 END
 
 
