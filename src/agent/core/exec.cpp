@@ -118,6 +118,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 		char *pCmd[128];
 		int i;
 		char *pTmp;
+		struct stat st;
 
 		pTmp = pszCmdLine;
 		for (i = 0; i < 128; i++)
@@ -136,56 +137,35 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 		}
 		pCmd[i+1] = 0;
 
-		switch ((nPid = fork()))
+		if (stat(pCmd[0], &st) == 0 && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
 		{
-		case -1:
-			perror("fork()");
-			break;
-		case 0: // child
-			close(0);
-			close(1);
-			close(2);
-			execv(pCmd[0], pCmd);
-			// should not be reached
-			//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
-			_exit(127);
-			break;
-		default: // parent
+			switch ((nPid = fork()))
 			{
-				int nStatus;
-				int x;
-				int nCounter = 100; // 1 sec
-
-				//sleep(1);
-				while ((x = waitpid(nPid, &nStatus, WNOHANG)) == 0)
+			case -1:
+				perror("fork()");
+				break;
+			case 0: // child
 				{
-					usleep(1000);
-					if (--nCounter <= 0)
-					{
-						break;;
-					}
+					int sd = open("/dev/null", O_RDWR);
+					if (sd == -1)
+						sd = open("/dev/null", O_RDONLY);
+					close(0);
+					close(1);
+					close(2);
+					dup2(sd, 0);
+					dup2(sd, 1);
+					dup2(sd, 2);
+					close(sd);
+					execv(pCmd[0], pCmd);
+					// should not be reached
+					//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
+					_exit(127);
 				}
-
-				//printf("%d:%d\n", x, nCounter);
-
-				switch (x)
-				{
-				case -1:
-					perror("waitpid");
-					break;
-				case 0:
-      			dwRetCode = ERR_SUCCESS;
-					break;
-				default:
-					if (WIFEXITED(nStatus) && WEXITSTATUS(nStatus) != 127)
-					{
-      				dwRetCode = ERR_SUCCESS;
-						break;
-					}
-					break;
-				}
+				break;
+			default: // parent
+				dwRetCode = ERR_SUCCESS;
+				break;
 			}
-			break;
 		}
 	}
 #endif

@@ -27,9 +27,9 @@
 #elif defined(_NETWARE)
 #include <screen.h>
 #else
-#include <signal.h>
+# include <signal.h>
+# include <sys/wait.h>
 #endif
-
 
 //
 // Externals
@@ -251,7 +251,7 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 
 void OnSignal(int iSignal)
 {
-	WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
+	//WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
 	switch(iSignal)
 	{
 		case SIGTERM:
@@ -261,6 +261,10 @@ void OnSignal(int iSignal)
 		case SIGSEGV:
 			abort();
 			exit(5);
+			break;
+		case SIGCHLD:
+			while (waitpid(-1, NULL, WNOHANG) > 0)
+				;
 			break;
 		default:
 			break;
@@ -626,6 +630,7 @@ int main(int argc, char *argv[])
 				signal(SIGINT, OnSignal);
 				signal(SIGTERM, OnSignal);
 				signal(SIGSEGV, OnSignal);
+				signal(SIGCHLD, OnSignal);
 #endif
             if (iExitCode == 0)
             {
