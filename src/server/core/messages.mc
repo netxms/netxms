@@ -230,4 +230,10 @@ Language=English
 Client session closed due to communication error (%1)
 .
 
+MessageId=
+SymbolicName=MSG_TOO_MANY_SESSIONS
+Language=English
+Too many client sessions open - unable to accept new client connection
+.
+
 ;#endif

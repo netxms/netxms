@@ -1,5 +1,5 @@
 /* 
-** Project X - Network Management System
+** NetXMS - Network Management System
 ** Copyright (C) 2003 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,19 @@
 
 #include "nms_core.h"
 
-#define IsDebugComm() ((g_dwFlags & AF_STANDALONE) && (g_dwFlags & AF_DEBUG_CSCP))
+
+//
+// Constants
+//
+
+#define MAX_CLIENT_SESSIONS   128
+
+
+//
+// Static data
+//
+
+static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
 
 
 //
@@ -34,6 +46,8 @@ ClientSession::ClientSession(SOCKET hSocket)
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
    m_hSocket = hSocket;
+   m_dwIndex = INVALID_INDEX;
+   m_iState = STATE_CONNECTED;
 }
 
 
@@ -43,8 +57,28 @@ ClientSession::ClientSession(SOCKET hSocket)
 
 ClientSession::~ClientSession()
 {
+   shutdown(m_hSocket, 2);
+   closesocket(m_hSocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
+}
+
+
+//
+// Print debug information
+//
+
+void ClientSession::DebugPrintf(char *szFormat, ...)
+{
+   if ((g_dwFlags & AF_STANDALONE) && (g_dwFlags & AF_DEBUG_CSCP))
+   {
+      va_list args;
+
+      printf("*CSCP(%d)* ", m_dwIndex);
+      va_start(args, szFormat);
+      vprintf(szFormat, args);
+      va_end(args);
+   }
 }
 
 
@@ -77,8 +111,7 @@ void ClientSession::ReadThread(void)
       // Check that actual received packet size is equal to encoded in packet
       if (ntohs(pRawMsg->wSize) != iErr)
       {
-         if (IsDebugComm())
-            printf("*CSCP* Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohs(pRawMsg->wSize));
+         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohs(pRawMsg->wSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -124,12 +157,24 @@ void ClientSession::ProcessingThread(void)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
 
-      if (IsDebugComm())
-         printf("*CSCP* Received message with code %d\n", pMsg->GetCode());
-
+      DebugPrintf("Received message with code %d\n", pMsg->GetCode());
       switch(pMsg->GetCode())
       {
          case CMD_LOGIN:
+            if (m_iState != STATE_AUTHENTICATED)
+            {
+               char *pszLogin = pMsg->GetVariableStr("login");
+               char *pszPassword = pMsg->GetVariableStr("password");
+
+               if (AuthenticateUser(pszLogin, pszPassword, &m_dwUserId))
+                  m_iState = STATE_AUTHENTICATED;
+
+               LibUtilDestroyObject(pszLogin);
+               LibUtilDestroyObject(pszPassword);
+            }
+            else
+            {
+            }
             break;
          default:
             break;
@@ -166,6 +211,37 @@ static void WriteThread(void *pArg)
 static void ProcessingThread(void *pArg)
 {
    ((ClientSession *)pArg)->ProcessingThread();
+}
+
+
+//
+// Register new session in list
+//
+
+static BOOL RegisterSession(ClientSession *pSession)
+{
+   DWORD i;
+
+   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] == NULL)
+      {
+         m_pSessionList[i] = pSession;
+         pSession->SetIndex(i);
+         return TRUE;
+      }
+
+   WriteLog(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
+   return FALSE;
+}
+
+
+//
+// Unregister session
+//
+
+static void UnregisterSession(DWORD dwIndex)
+{
+   m_pSessionList[dwIndex] = NULL;
 }
 
 
@@ -236,9 +312,16 @@ void ClientListener(void *)
 
       // Create new session structure and threads
       pSession = new ClientSession(sockClient);
-      ThreadCreate(ReadThread, 0, (void *)pSession);
-      ThreadCreate(WriteThread, 0, (void *)pSession);
-      ThreadCreate(ProcessingThread, 0, (void *)pSession);
+      if (!RegisterSession(pSession))
+      {
+         delete pSession;
+      }
+      else
+      {
+         ThreadCreate(ReadThread, 0, (void *)pSession);
+         ThreadCreate(WriteThread, 0, (void *)pSession);
+         ThreadCreate(ProcessingThread, 0, (void *)pSession);
+      }
    }
 
    closesocket(sock);

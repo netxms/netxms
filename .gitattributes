@@ -30,6 +30,7 @@ src/server/core/netobj.cpp -text
 src/server/core/nms_core.h -text
 src/server/core/nms_events.h -text
 src/server/core/nms_objects.h -text
+src/server/core/nms_users.h -text
 src/server/core/node.cpp -text
 src/server/core/np.cpp -text
 src/server/core/objects.cpp -text
@@ -40,6 +41,7 @@ src/server/core/status.cpp -text
 src/server/core/subnet.cpp -text
 src/server/core/syncer.cpp -text
 src/server/core/tools.cpp -text
+src/server/core/users.cpp -text
 src/server/core/watchdog.cpp -text
 src/server/core/winsrv.cpp -text
 src/server/dbdrv/mysql/mysql.cpp -text

@@ -129,6 +129,10 @@ BOOL Initialize(void)
    pthread_cond_init(&m_hCondShutdown, NULL);
 #endif
 
+   // Load users from database
+   if (!LoadUsers())
+      return FALSE;
+
    // Initialize event handling subsystem
    if (!InitEventSubsystem())
       return FALSE;

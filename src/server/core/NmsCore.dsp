@@ -183,6 +183,10 @@ SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\users.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\watchdog.cpp
 # End Source File
 # Begin Source File
@@ -224,6 +228,10 @@ SOURCE=.\nms_objects.h
 # Begin Source File
 
 SOURCE=..\include\nms_threads.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nms_users.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

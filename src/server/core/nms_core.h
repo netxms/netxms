@@ -53,6 +53,7 @@
 #include <nms_cscp.h>
 #include <nms_util.h>
 #include "nms_objects.h"
+#include "nms_users.h"
 #include "messages.h"
 
 
@@ -100,10 +101,19 @@
 
 #ifdef _WIN32
 
-#define CORE_SERVICE_NAME  "NMSCore"
-#define CORE_EVENT_SOURCE  "NMSCore"
+#define CORE_SERVICE_NAME  "NetXMSCore"
+#define CORE_EVENT_SOURCE  "NetXMSCore"
 
 #endif   /* _WIN32 */
+
+
+//
+// Client session states
+//
+
+#define STATE_CLOSED          0
+#define STATE_CONNECTED       1
+#define STATE_AUTHENTICATED   2
 
 
 //
@@ -188,6 +198,11 @@ private:
    SOCKET m_hSocket;
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
+   DWORD m_dwIndex;
+   int m_iState;
+   DWORD m_dwUserId;
+
+   void DebugPrintf(char *szFormat, ...);
 
 public:
    ClientSession(SOCKET hSocket);
@@ -199,6 +214,9 @@ public:
    void ReadThread(void);
    void WriteThread(void);
    void ProcessingThread(void);
+
+   DWORD GetIndex(void) { return m_dwIndex; }
+   void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
 };
 
 
