@@ -137,7 +137,6 @@
 // Attributes for H_NetIPStats and H_NetInterfacStats
 //
 
-#ifdef _WIN32
 #define NET_IP_FORWARDING        1
 
 #define NET_IF_BYTES_IN          1
@@ -150,7 +149,6 @@
 #define NET_IF_PACKETS_OUT       8
 #define NET_IF_SPEED             9
 #define NET_IF_ADMIN_STATUS      10
-#endif
 
 
 //
