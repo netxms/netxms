@@ -37,4 +37,11 @@
 #define DISK_TOTAL	2
 
 
+//
+// Functions
+//
+
+int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
+
+
 #endif

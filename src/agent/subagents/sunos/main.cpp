@@ -28,20 +28,7 @@
 //
 
 LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
-
-
-static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
-{
-   int i;
-   char szValue[256];
-
-   for(i = 0; i < 10; i++)
-   {
-      sprintf(szValue, "Value %d", i);
-      NxAddResultString(pValue, szValue);
-   }
-   return SYSINFO_RC_SUCCESS;
-}
+LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
 
 
 //
@@ -65,7 +52,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "Skeleton.Enum", H_Enum, NULL }
+   { "Net.InterfaceList", H_NetIfList, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
