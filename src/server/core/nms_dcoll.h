@@ -95,8 +95,10 @@ private:
    char *m_pszValueStr;
    union
    {
-      long iInteger;
-      INT64 qwInt64;
+      long iInt;
+      DWORD dwUInt;
+      INT64 iInt64;
+      QWORD qwUInt64;
       double dFloat;
    } m_value;
    BYTE m_iFunction;          // Function code

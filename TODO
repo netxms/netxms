@@ -22,7 +22,6 @@ GENERAL:
 - Allow converting counters to deltas in data collection
 - Change usage of MultiByteToWideChar() and WideCharToMultiByte() to
   wctomb() and mbtowc()
-- Add forced node polls (status and configuration)
 
 
 SERVER:

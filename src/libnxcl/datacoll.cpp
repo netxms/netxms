@@ -77,10 +77,12 @@ void ProcessDCI(CSCPMessage *pMsg)
                m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
                switch(m_pItemList->pItems[i].iDataType)
                {
-                  case DCI_DT_INTEGER:
+                  case DCI_DT_INT:
+                  case DCI_DT_UINT:
                      m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
                      break;
                   case DCI_DT_INT64:
+                  case DCI_DT_UINT64:
                      m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
                      break;
                   case DCI_DT_FLOAT:
@@ -263,10 +265,12 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
       dct.wOperation = htons(pItem->pThresholdList[i].wOperation);
       switch(pItem->iDataType)
       {
-         case DCI_DT_INTEGER:
+         case DCI_DT_INT:
+         case DCI_DT_UINT:
             dct.value.dwInt32 = htonl(pItem->pThresholdList[i].value.dwInt32);
             break;
          case DCI_DT_INT64:
+         case DCI_DT_UINT64:
             dct.value.qwInt64 = htonq(pItem->pThresholdList[i].value.qwInt64);
             break;
          case DCI_DT_FLOAT:
@@ -422,8 +426,13 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
             pDst->dwTimeStamp = ntohl(pSrc->dwTimeStamp);
             switch((*ppData)->wDataType)
             {
-               case DCI_DT_INTEGER:
+               case DCI_DT_INT:
+               case DCI_DT_UINT:
                   pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
+                  break;
+               case DCI_DT_INT64:
+               case DCI_DT_UINT64:
+                  pDst->value.qwInt64 = ntohq(pSrc->value.qwInt64);
                   break;
                case DCI_DT_FLOAT:
                   pDst->value.dFloat = ntohd(pSrc->value.dFloat);

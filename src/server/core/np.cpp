@@ -60,7 +60,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
       pNode->SetName(pszName);
 
    // DEBUG
-   pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DCI_DT_INTEGER, 60, 30, pNode));
+   pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
    return pNode;
 }
 

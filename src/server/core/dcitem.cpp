@@ -34,7 +34,7 @@ DCItem::DCItem()
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_iBusy = 0;
-   m_iDataType = DCI_DT_INTEGER;
+   m_iDataType = DCI_DT_INT;
    m_iPollingInterval = 3600;
    m_iRetentionTime = 0;
    m_iDeltaCalculation = DCM_ORIGINAL_VALUE;
@@ -456,11 +456,17 @@ void DCItem::Transform(ItemValue &value)
       case DCM_SIMPLE:
          switch(m_iDataType)
          {
-            case DCI_DT_INTEGER:
+            case DCI_DT_INT:
                value = (long)value - (long)m_prevRawValue;
+               break;
+            case DCI_DT_UINT:
+               value = (DWORD)value - (DWORD)m_prevRawValue;
                break;
             case DCI_DT_INT64:
                value = (INT64)value - (INT64)m_prevRawValue;
+               break;
+            case DCI_DT_UINT64:
+               value = (QWORD)value - (QWORD)m_prevRawValue;
                break;
             case DCI_DT_FLOAT:
                value = (double)value - (double)m_prevRawValue;
