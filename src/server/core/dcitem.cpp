@@ -41,6 +41,7 @@ DCItem::DCItem()
    m_szName[0] = 0;
    m_tLastPoll = 0;
    m_pNode = NULL;
+   m_hMutex = MutexCreate();
 }
 
 
@@ -64,6 +65,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Node *pNode)
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_pNode = pNode;
+   m_hMutex = MutexCreate();
 }
 
 
@@ -86,6 +88,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_pNode = pNode;
+   m_hMutex = MutexCreate();
 }
 
 
@@ -100,6 +103,7 @@ DCItem::~DCItem()
    for(i = 0; i < m_dwNumThresholds; i++)
       delete m_ppThresholdList[i];
    safe_free(m_ppThresholdList);
+   MutexDestroy(m_hMutex);
 }
 
 
@@ -150,6 +154,8 @@ BOOL DCItem::SaveToDB(void)
    if (m_pNode == NULL)
       return FALSE;
 
+   Lock();
+
    // Check for object's existence in database
    sprintf(szQuery, "SELECT item_id FROM items WHERE item_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -183,6 +189,7 @@ BOOL DCItem::SaveToDB(void)
          m_ppThresholdList[i]->SaveToDB();
    }
 
+   Unlock();
    return bResult;
 }
 
@@ -195,6 +202,7 @@ void DCItem::CheckThresholds(const char *pszLastValue)
 {
    DWORD i, iResult;
 
+   Lock();
    for(i = 0; i < m_dwNumThresholds; i++)
    {
       iResult = m_ppThresholdList[i]->Check(pszLastValue);
@@ -209,6 +217,7 @@ void DCItem::CheckThresholds(const char *pszLastValue)
             break;
       }
    }
+   Unlock();
 }
 
 
@@ -218,6 +227,10 @@ void DCItem::CheckThresholds(const char *pszLastValue)
 
 void DCItem::CreateMessage(CSCPMessage *pMsg)
 {
+   DCI_THRESHOLD dct;
+   DWORD i, dwId;
+
+   Lock();
    pMsg->SetVariable(VID_DCI_ID, m_dwId);
    pMsg->SetVariable(VID_NAME, m_szName);
    pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
@@ -225,6 +238,13 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_iDataType);
    pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
+   pMsg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)m_dwNumThresholds);
+   for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId++)
+   {
+      m_ppThresholdList[i]->CreateMessage(&dct);
+      pMsg->SetVariable(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
+   }
+   Unlock();
 }
 
 
@@ -249,12 +269,79 @@ void DCItem::DeleteFromDB(void)
 // Update item from CSCP message
 //
 
-void DCItem::UpdateFromMessage(CSCPMessage *pMsg)
+void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+                               DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
+   DWORD i, j, dwNum, dwId;
+   DCI_THRESHOLD *pNewThresholds;
+
+   Lock();
+
    pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
    m_iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
    m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
    m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
    m_iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
+
+   // Update thresholds
+   dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+   pNewThresholds = (DCI_THRESHOLD *)malloc(sizeof(DCI_THRESHOLD) * dwNum);
+   *ppdwMapIndex = (DWORD *)malloc(dwNum * sizeof(DWORD));
+   *ppdwMapId = (DWORD *)malloc(dwNum * sizeof(DWORD));
+   *pdwNumMaps = 0;
+
+   // Read all thresholds from message
+   for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId++)
+   {
+      pMsg->GetVariableBinary(dwId, (BYTE *)&pNewThresholds[i], sizeof(DCI_THRESHOLD));
+      pNewThresholds[i].dwId = ntohl(pNewThresholds[i].dwId);
+   }
+   
+   // Check if some thresholds was deleted
+   for(i = 0; i < m_dwNumThresholds; i++)
+   {
+      for(j = 0; j < dwNum; j++)
+         if (m_ppThresholdList[i]->Id() == pNewThresholds[j].dwId)
+            break;
+      if (j == dwNum)
+      {
+         // No threshold with that id in new list, delete it
+         delete m_ppThresholdList[i];
+         m_dwNumThresholds--;
+         memmove(&m_ppThresholdList[i], &m_ppThresholdList[i + 1], sizeof(Threshold *) * (m_dwNumThresholds - i));
+         i--;
+      }
+   }
+
+   // Add or update thresholds
+   for(i = 0; i < dwNum; i++)
+   {
+      if (pNewThresholds[i].dwId == 0)    // New threshold?
+      {
+         j = m_dwNumThresholds;
+         m_dwNumThresholds++;
+         m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
+         m_ppThresholdList[j] = new Threshold(this);
+         m_ppThresholdList[j]->CreateId();
+
+         // Add index -> id mapping
+         (*ppdwMapIndex)[*pdwNumMaps] = i;
+         (*ppdwMapId)[*pdwNumMaps] = m_ppThresholdList[j]->Id();
+         *pdwNumMaps++;
+      }
+      else
+      {
+         for(j = 0; j < m_dwNumThresholds; j++)
+            if (m_ppThresholdList[j]->Id() == pNewThresholds[i].dwId)
+               break;
+      }
+
+      // j is an index of threshold object to be updated
+      if (j < m_dwNumThresholds)
+         m_ppThresholdList[j]->UpdateFromMessage(&pNewThresholds[i]);
+   }
+      
+   safe_free(pNewThresholds);
+   Unlock();
 }

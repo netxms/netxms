@@ -906,7 +906,8 @@ BOOL Node::DeleteItem(DWORD dwItemId)
 // Modify data collection item from CSCP message
 //
 
-BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg)
+BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+                      DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
    DWORD i;
    BOOL bResult = FALSE;
@@ -916,7 +917,7 @@ BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg)
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == dwItemId)
       {
-         m_ppItems[i]->UpdateFromMessage(pMsg);
+         m_ppItems[i]->UpdateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
          bResult = TRUE;
          break;
       }
@@ -1020,8 +1021,8 @@ void Node::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    DWORD i;
 
    // Prepare message
-   msg.SetCode(CMD_NODE_DCI);
    msg.SetId(dwRqId);
+   msg.SetCode(CMD_NODE_DCI);
 
    // Walk through items list
    for(i = 0; i < m_dwNumItems; i++)

@@ -1307,7 +1307,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
          {
             if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
-               DWORD dwItemId;
+               DWORD i, dwItemId, dwNumMaps, *pdwMapId, *pdwMapIndex;
                DCItem *pItem;
                BOOL bSuccess;
 
@@ -1332,8 +1332,26 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_MODIFY_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Node *)pObject)->UpdateItem(dwItemId, pRequest);
-                     msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
+                     bSuccess = ((Node *)pObject)->UpdateItem(dwItemId, pRequest, &dwNumMaps,
+                                                              &pdwMapIndex, &pdwMapId);
+                     if (bSuccess)
+                     {
+                        msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+                        // Send index to id mapping for newly created thresholds to client
+                        msg.SetVariable(VID_DCI_NUM_MAPS, dwNumMaps);
+                        for(i = 0; i < dwNumMaps; i++)
+                        {
+                           pdwMapId[i] = htonl(pdwMapId[i]);
+                           pdwMapIndex[i] = htonl(pdwMapIndex[i]);
+                        }
+                        msg.SetVariable(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(DWORD) * dwNumMaps);
+                        msg.SetVariable(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(DWORD) * dwNumMaps);
+                     }
+                     else
+                     {
+                        msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+                     }
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);

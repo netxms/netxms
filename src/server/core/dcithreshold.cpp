@@ -90,6 +90,16 @@ Threshold::~Threshold()
 
 
 //
+// Create new unique id for object
+//
+
+void Threshold::CreateId(void)
+{
+   m_dwId = CreateUniqueId(IDG_THRESHOLD); 
+}
+
+
+//
 // Save threshold to database
 //
 
@@ -288,4 +298,68 @@ int Threshold::Check(const char *pszValue)
                 ((!bMatch & m_bIsReached) ? THRESHOLD_REARMED : NO_ACTION);
    m_bIsReached = bMatch;
    return iResult;
+}
+
+
+//
+// Fill DCI_THRESHOLD with object's data ready to send over the network
+//
+
+void Threshold::CreateMessage(DCI_THRESHOLD *pData)
+{
+   pData->dwId = htonl(m_dwId);
+   pData->dwEvent = htonl(m_dwEventCode);
+   pData->wFunction = htons((WORD)m_iFunction);
+   pData->wOperation = htons((WORD)m_iOperation);
+   pData->dwArg1 = htonl(m_iParam1);
+   pData->dwArg2 = htonl(m_iParam2);
+   switch(m_iDataType)
+   {
+      case DT_INTEGER:
+         pData->value.dwInt32 = htonl(m_value.iInteger);
+         break;
+      case DT_INT64:
+         pData->value.qwInt64 = htonq(m_value.qwInt64);
+         break;
+      case DT_FLOAT:
+         pData->value.dFloat = htond(m_value.dFloat);
+         break;
+      case DT_STRING:
+         strcpy(pData->value.szString,  m_pszValueStr);
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// Update threshold object from DCI_THRESHOLD structure
+//
+
+void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
+{
+   m_dwEventCode = ntohl(pData->dwEvent);
+   m_iFunction = (BYTE)ntohs(pData->wFunction);
+   m_iOperation = (BYTE)ntohs(pData->wOperation);
+   m_iParam1 = ntohl(pData->dwArg1);
+   m_iParam2 = ntohl(pData->dwArg2);
+   switch(m_iDataType)
+   {
+      case DT_INTEGER:
+         m_value.iInteger = ntohl(pData->value.dwInt32);
+         break;
+      case DT_INT64:
+         m_value.qwInt64 = ntohq(pData->value.qwInt64);
+         break;
+      case DT_FLOAT:
+         m_value.dFloat = ntohd(pData->value.dFloat);
+         break;
+      case DT_STRING:
+         safe_free(m_pszValueStr);
+         m_pszValueStr = strdup(pData->value.szString);
+         break;
+      default:
+         break;
+   }
 }

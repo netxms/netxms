@@ -327,7 +327,8 @@ public:
    virtual void CalculateCompoundStatus(void);
 
    BOOL AddItem(DCItem *pItem);
-   BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg);
+   BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+                   DWORD **ppdwMapIndex, DWORD **ppdwMapId);
    BOOL DeleteItem(DWORD dwItemId);
    int GetItemType(DWORD dwItemId);
    BOOL LockDCIList(DWORD dwSessionId);

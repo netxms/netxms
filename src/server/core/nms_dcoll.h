@@ -1,6 +1,6 @@
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,12 +91,18 @@ public:
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
    ~Threshold();
 
+   DWORD Id(void) { return m_dwId; }
    DWORD EventCode(void) { return m_dwEventCode; }
    const char *Value(void) { return m_pszValueStr; }
    BOOL IsReached(void) { return m_bIsReached; }
 
    BOOL SaveToDB(void);
    int Check(const char *pszValue);
+
+   void CreateMessage(DCI_THRESHOLD *pData);
+   void UpdateFromMessage(DCI_THRESHOLD *pData);
+
+   void CreateId(void);
 };
 
 
@@ -121,6 +127,10 @@ private:
    DWORD m_dwNumThresholds;
    Threshold **m_ppThresholdList;
    Node *m_pNode;             // Pointer to node object this item related to
+   MUTEX m_hMutex;
+
+   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_hMutex); }
 
 public:
    DCItem();
@@ -152,7 +162,7 @@ public:
    void CheckThresholds(const char *pszLastValue);
 
    void CreateMessage(CSCPMessage *pMsg);
-   void UpdateFromMessage(CSCPMessage *pMsg);
+   void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
 };
 
 
