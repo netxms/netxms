@@ -165,6 +165,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
 	ON_COMMAND(ID_OBJECT_CREATE_CONTAINER, OnObjectCreateContainer)
 	ON_COMMAND(ID_OBJECT_CREATE_NODE, OnObjectCreateNode)
+	ON_COMMAND(ID_OBJECT_DELETE, OnObjectDelete)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_DELETE, OnUpdateObjectDelete)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -324,7 +326,8 @@ void CObjectBrowser::OnViewRefresh()
    NXCLockObjectIndex();
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
-      AddObjectToList(pIndex[i].pObject);
+      if (!pIndex[i].pObject->bIsDeleted)
+         AddObjectToList(pIndex[i].pObject);
    NXCUnlockObjectIndex();
    m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
 }
@@ -1162,6 +1165,11 @@ void CObjectBrowser::OnUpdateObjectManage(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_pCurrentObject != NULL);
 }
 
+void CObjectBrowser::OnUpdateObjectDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
 void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI) 
 {
    if (m_pCurrentObject == NULL)
@@ -1292,4 +1300,31 @@ void CObjectBrowser::OnObjectCreateContainer()
 void CObjectBrowser::OnObjectCreateNode() 
 {
    theApp.CreateNode((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_DELETE message handler
+//
+
+void CObjectBrowser::OnObjectDelete() 
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   {
+      if (m_pCurrentObject != NULL)
+         theApp.DeleteNetXMSObject(m_pCurrentObject);
+   }
+   else
+   {
+      int iItem;
+      NXC_OBJECT *pObject;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+         theApp.DeleteNetXMSObject(pObject);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
 }

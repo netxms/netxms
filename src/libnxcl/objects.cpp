@@ -579,6 +579,30 @@ DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(DWORD dwParentObject, DWORD dwChildObje
 
 
 //
+// Delete object
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(DWORD dwObject)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   // Build request message
+   msg.SetCode(CMD_DELETE_OBJECT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObject);
+
+   // Send request
+   SendMsg(&msg);
+
+   // Wait for reply
+   return WaitForRCC(dwRqId);
+}
+
+
+//
 // Load container categories
 //
 

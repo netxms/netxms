@@ -288,6 +288,7 @@ private:
    void SendEventNames(DWORD dwRqId);
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
+   void DeleteObject(CSCPMessage *pRequest);
    void AcknowlegeAlarm(CSCPMessage *pRequest);
    void CreateAction(CSCPMessage *pRequest);
    void UpdateAction(CSCPMessage *pRequest);

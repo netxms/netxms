@@ -528,6 +528,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_CONTAINER_CAT_LIST:
             SendContainerCategories(pMsg->GetId());
             break;
+         case CMD_DELETE_OBJECT:
+            DeleteObject(pMsg);
+            break;
          default:
             break;
       }
@@ -2218,6 +2221,52 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
 
 
 //
+// Delete object
+//
+
+void ClientSession::DeleteObject(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Find object to be deleted
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      // Check if it is a built-in object, like "Entire Network"
+      if (pObject->Id() >= 10)
+      {
+         // Check access rights
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
+         {
+            pObject->Delete();
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
 // Process changes in alarms
 //
 
@@ -2502,10 +2551,8 @@ void ClientSession::SendAllActions(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       SendMessage(&msg);
       MutexLock(m_mutexSendActions, INFINITE);
-printf("Sending actions...\n");
       SendActionsToClient(this, dwRqId);
       MutexUnlock(m_mutexSendActions);
-printf("Send complete\n");
    }
    else
    {

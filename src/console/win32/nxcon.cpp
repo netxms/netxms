@@ -1229,3 +1229,17 @@ void CConsoleApp::CreateNode(DWORD dwParent)
       CreateObject(&ci);
    }
 }
+
+
+//
+// Delete object on server
+//
+
+void CConsoleApp::DeleteNetXMSObject(NXC_OBJECT *pObject)
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg1(NXCDeleteObject, (void *)pObject->dwId, "Deleting object...");
+   if (dwResult != RCC_SUCCESS)
+      ErrorBox(dwResult, "Unable to delete object: %s");
+}

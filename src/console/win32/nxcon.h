@@ -166,6 +166,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void DeleteNetXMSObject(NXC_OBJECT *pObject);
 	void CreateNode(DWORD dwParent);
 	void CreateContainer(DWORD dwParent);
    NXC_EPP *m_pEventPolicy;
