@@ -99,6 +99,7 @@ class NXCORE_EXPORTABLE NetObj
 {
 protected:
    DWORD m_dwId;
+   DWORD m_dwTimeStamp;    // Last change time stamp
    DWORD m_dwRefCount;     // Number of references. Object can be deleted only when this counter is zero
    char m_szName[MAX_OBJECT_NAME];
    int m_iStatus;

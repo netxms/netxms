@@ -74,6 +74,19 @@ CREATE TABLE user_group_members
 
 
 /*
+** User profiles
+*/
+
+CREATE TABLE user_profiles
+(
+	user_id integer not null,
+	var_name varchar(255) not null,
+	var_value SQL_TEXT,
+	PRIMARY KEY(user_id,var_name)
+) TABLE_TYPE;
+
+
+/*
 ** Nodes to be added
 */
 
@@ -87,15 +100,29 @@ CREATE TABLE new_nodes
 
 
 /*
+** Common object properties
+*/
+
+CREATE TABLE object_properties
+(
+	object_id integer not null,
+	name varchar(63) not null,
+	status integer not null,
+	is_deleted integer not null,
+	image_id integer,
+	last_modified integer not null,
+	inherit_access_rights integer not null,
+	PRIMARY KEY(object_id)
+) TABLE_TYPE;
+
+
+/*
 ** Nodes information
 */
 
 CREATE TABLE nodes
 (
 	id integer not null,
-	name varchar(63),
-	status integer,
-	is_deleted integer not null,
 	primary_ip varchar(15),
 	node_flags integer,
 	snmp_version integer,
@@ -106,7 +133,6 @@ CREATE TABLE nodes
 	secret varchar(64),
 	agent_port integer,
 	status_poll_type integer,
-	image_id integer,
 	description SQL_TEXT,
 	node_type integer,
 	agent_version varchar(63),
@@ -123,12 +149,8 @@ CREATE TABLE nodes
 CREATE TABLE subnets
 (
 	id integer not null,
-	name varchar(63),
-	status integer,
-	is_deleted integer not null,
 	ip_addr varchar(15),
 	ip_netmask varchar(15),
-	image_id integer,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -140,15 +162,11 @@ CREATE TABLE subnets
 CREATE TABLE interfaces
 (
 	id integer not null,
-	name varchar(63),
-	status integer,
-        is_deleted integer,
 	node_id integer not null,
 	ip_addr varchar(15),
 	ip_netmask varchar(15),
 	if_type integer,
 	if_index integer,
-	image_id integer,
 	mac_addr varchar(15),
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -161,9 +179,6 @@ CREATE TABLE interfaces
 CREATE TABLE network_services
 (
 	id integer not null,
-	name varchar(63),
-	status integer,
-        is_deleted integer,
 	node_id integer not null,
 	service_type integer,
 	ip_bind_addr varchar(15),
@@ -172,7 +187,6 @@ CREATE TABLE network_services
 	check_request SQL_TEXT,
 	check_responce SQL_TEXT,
 	poller_node_id integer not null,
-	image_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -184,12 +198,8 @@ CREATE TABLE network_services
 CREATE TABLE containers
 (
 	id integer not null,
-	name varchar(63),
-	status integer,
-	is_deleted integer not null,
 	category integer,
 	description SQL_TEXT,
-	image_id integer,
 	object_class integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -202,9 +212,6 @@ CREATE TABLE containers
 CREATE TABLE templates
 (
 	id integer not null,
-	name varchar(63),
-	is_deleted integer not null,
-	image_id integer,
 	version integer,
 	description SQL_TEXT,
 	PRIMARY KEY(id)
@@ -271,18 +278,6 @@ CREATE TABLE acl
 	user_id integer not null,
 	access_rights integer not null,
 	PRIMARY KEY(object_id,user_id)
-) TABLE_TYPE;
-
-
-/*
-** Objects' access options
-*/
-
-CREATE TABLE access_options
-(
-	object_id integer not null,
-	inherit_rights integer not null,
-	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
 

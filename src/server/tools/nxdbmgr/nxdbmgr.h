@@ -57,6 +57,10 @@ BOOL SQLQuery(TCHAR *pszQuery);
 BOOL SQLBatch(TCHAR *pszBatch);
 BOOL GetYesNo(void);
 
+BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
+int ConfigReadInt(TCHAR *pszVar, int iDefault);
+DWORD ConfigReadULong(TCHAR *pszVar, DWORD dwDefault);
+
 
 //
 // Global variables

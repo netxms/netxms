@@ -179,6 +179,66 @@ BOOL SQLBatch(TCHAR *pszBatch)
 
 
 //
+// Read string value from configuration table
+//
+
+BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bSuccess = FALSE;
+
+   _tcsncpy(pszBuffer, pszDefault, iBufSize);
+   if (_tcslen(pszVar) > 127)
+      return FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
+   hResult = SQLSelect(szQuery);
+   if (hResult == 0)
+      return FALSE;
+
+   if (DBGetNumRows(hResult) > 0)
+   {
+      _tcsncpy(pszBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      bSuccess = TRUE;
+   }
+
+   DBFreeResult(hResult);
+   return bSuccess;
+}
+
+
+//
+// Read integer value from configuration table
+//
+
+int ConfigReadInt(TCHAR *pszVar, int iDefault)
+{
+   TCHAR szBuffer[64];
+
+   if (ConfigReadStr(pszVar, szBuffer, 64, _T("")))
+      return _tcstol(szBuffer, NULL, 0);
+   else
+      return iDefault;
+}
+
+
+//
+// Read unsigned long value from configuration table
+//
+
+DWORD ConfigReadULong(TCHAR *pszVar, DWORD dwDefault)
+{
+   TCHAR szBuffer[64];
+
+   if (ConfigReadStr(pszVar, szBuffer, 64, _T("")))
+      return _tcstoul(szBuffer, NULL, 0);
+   else
+      return dwDefault;
+}
+
+
+//
 // Startup
 //
 

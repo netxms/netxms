@@ -75,6 +75,210 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Move object data from class-specific tables to object_prioperties table
+//
+
+static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[1024] ,szName[MAX_OBJECT_NAME];
+   BOOL bRead = FALSE, bIsDeleted, bIsTemplate;
+   DWORD i, dwStatus, dwImageId;
+   static TCHAR *m_pszTableNames[] = { _T("nodes"), _T("interfaces"), _T("subnets"),
+                                       _T("templates"), _T("network_services"),
+                                       _T("containers"), NULL };
+
+   // Try to read information from nodes table
+   for(i = 0; (!bRead) && (m_pszTableNames[i] != NULL); i++)
+   {
+      bIsTemplate = !_tcscmp(m_pszTableNames[i], _T("templates"));
+      _sntprintf(szQuery, 1024, _T("SELECT name,is_deleted,image_id%s FROM %s WHERE id=%ld"),
+                 bIsTemplate ? _T("") : _T(",status"),
+                 m_pszTableNames[i], dwId);
+      hResult = SQLSelect(szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            _tcsncpy(szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+            bIsDeleted = DBGetFieldLong(hResult, 0, 1) ? TRUE : FALSE;
+            dwImageId = DBGetFieldULong(hResult, 0, 2);
+            dwStatus = bIsTemplate ? STATUS_UNKNOWN : DBGetFieldULong(hResult, 0, 3);
+            bRead = TRUE;
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         if (!g_bIgnoreErrors)
+            return FALSE;
+      }
+   }
+
+   if (bRead)
+   {
+      _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
+                                   "status,is_deleted,image_id,inherit_access_rights,"
+                                   "last_modified) VALUES (%ld,'%s',%d,%d,%ld,%d,0)"),
+                 dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights);
+
+      if (!SQLQuery(szQuery))
+         if (!g_bIgnoreErrors)
+            return FALSE;
+   }
+   else
+   {
+      _tprintf(_T("WARNING: object with ID %ld presented in access control tables but cannot be found in data tables\n"), dwId);
+   }
+
+   return TRUE;
+}
+
+
+//
+// Upgrade from V26 to V27
+//
+
+static BOOL H_UpgradeFromV26(void)
+{
+   DB_RESULT hResult;
+   DWORD i, dwNumObjects, dwId;
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE nodes DROP COLUMN name\n"
+      "ALTER TABLE nodes DROP COLUMN status\n"
+      "ALTER TABLE nodes DROP COLUMN is_deleted\n"
+      "ALTER TABLE nodes DROP COLUMN image_id\n"
+      "ALTER TABLE interfaces DROP COLUMN name\n"
+      "ALTER TABLE interfaces DROP COLUMN status\n"
+      "ALTER TABLE interfaces DROP COLUMN is_deleted\n"
+      "ALTER TABLE interfaces DROP COLUMN image_id\n"
+      "ALTER TABLE subnets DROP COLUMN name\n"
+      "ALTER TABLE subnets DROP COLUMN status\n"
+      "ALTER TABLE subnets DROP COLUMN is_deleted\n"
+      "ALTER TABLE subnets DROP COLUMN image_id\n"
+      "ALTER TABLE network_services DROP COLUMN name\n"
+      "ALTER TABLE network_services DROP COLUMN status\n"
+      "ALTER TABLE network_services DROP COLUMN is_deleted\n"
+      "ALTER TABLE network_services DROP COLUMN image_id\n"
+      "ALTER TABLE containers DROP COLUMN name\n"
+      "ALTER TABLE containers DROP COLUMN status\n"
+      "ALTER TABLE containers DROP COLUMN is_deleted\n"
+      "ALTER TABLE containers DROP COLUMN image_id\n"
+      "ALTER TABLE templates DROP COLUMN name\n"
+      "ALTER TABLE templates DROP COLUMN is_deleted\n"
+      "ALTER TABLE templates DROP COLUMN image_id\n"
+      "DROP TABLE access_options\n"
+      "DELETE FROM config WHERE var_name='TopologyRootObjectName'\n"
+      "DELETE FROM config WHERE var_name='TopologyRootImageId'\n"
+      "DELETE FROM config WHERE var_name='ServiceRootObjectName'\n"
+      "DELETE FROM config WHERE var_name='ServiceRootImageId'\n"
+      "DELETE FROM config WHERE var_name='TemplateRootObjectName'\n"
+      "DELETE FROM config WHERE var_name='TemplateRootImageId'\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE object_properties ("
+	                    "object_id integer not null,"
+	                    "name varchar(63) not null,"
+	                    "status integer not null,"
+	                    "is_deleted integer not null,"
+	                    "image_id integer,"
+	                    "last_modified integer not null,"
+	                    "inherit_access_rights integer not null,"
+	                    "PRIMARY KEY(object_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE user_profiles ("
+	                    "user_id integer not null,"
+	                    "var_name varchar(255) not null,"
+	                    "var_value $SQL:TEXT,"
+	                    "PRIMARY KEY(user_id,var_name))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   // Move data from access_options and class-specific tables to object_properties
+   hResult = SQLSelect(_T("SELECT object_id,inherit_rights FROM access_options"));
+   if (hResult != NULL)
+   {
+      dwNumObjects = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumObjects; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         if (dwId >= 10)   // Id below 10 reserved for built-in objects
+         {
+            if (!MoveObjectData(dwId, DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE))
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+         }
+         else
+         {
+            TCHAR szName[MAX_OBJECT_NAME], szQuery[1024];
+            DWORD dwImageId;
+            BOOL bValidObject = TRUE;
+
+            switch(dwId)
+            {
+               case 1:     // Topology Root
+                  ConfigReadStr(_T("TopologyRootObjectName"), szName, 
+                                MAX_OBJECT_NAME, _T("Entire Network"));
+                  dwImageId = ConfigReadULong(_T("TopologyRootImageId"), 0);
+                  break;
+               case 2:     // Service Root
+                  ConfigReadStr(_T("ServiceRootObjectName"), szName, 
+                                MAX_OBJECT_NAME, _T("All Services"));
+                  dwImageId = ConfigReadULong(_T("ServiceRootImageId"), 0);
+                  break;
+               case 3:     // Template Root
+                  ConfigReadStr(_T("TemplateRootObjectName"), szName, 
+                                MAX_OBJECT_NAME, _T("All Services"));
+                  dwImageId = ConfigReadULong(_T("TemplateRootImageId"), 0);
+                  break;
+               default:
+                  bValidObject = FALSE;
+                  break;
+            }
+
+            if (bValidObject)
+            {
+               _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
+                                            "status,is_deleted,image_id,inherit_access_rights,"
+                                            "last_modified) VALUES (%ld,'%s',5,0,%ld,%d,0)"),
+                          dwId, szName, dwImageId,
+                          DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE);
+
+               if (!SQLQuery(szQuery))
+                  if (!g_bIgnoreErrors)
+                     return FALSE;
+            }
+            else
+            {
+               _tprintf(_T("WARNING: Invalid built-in object ID %d\n"), dwId);
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='27' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V25 to V26
 //
 
@@ -82,7 +286,7 @@ static BOOL H_UpgradeFromV25(void)
 {
    DB_RESULT hResult;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='IDataIndexCreationCommand'"));
+   hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='IDataIndexCreationCommand'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -849,6 +1053,7 @@ static struct
    { 23, H_UpgradeFromV23 },
    { 24, H_UpgradeFromV24 },
    { 25, H_UpgradeFromV25 },
+   { 26, H_UpgradeFromV26 },
    { 0, NULL }
 };
 
