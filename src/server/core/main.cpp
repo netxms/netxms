@@ -310,9 +310,13 @@ void Shutdown(void)
 
    g_pEventQueue->Put(INVALID_POINTER_VALUE);   // Stop event processor
    ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
+   DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown\n");
    SaveObjects();
+   DbgPrintf(AF_DEBUG_MISC, "All objects saved to database\n");
    SaveUsers();
+   DbgPrintf(AF_DEBUG_MISC, "All users saved to database\n");
    StopDBWriter();
+   DbgPrintf(AF_DEBUG_MISC, "Database writer stopped\n");
 
    // Remove database lock
    DBQuery(g_hCoreDB, "UPDATE locks SET lock_status=-1,owner_info='' WHERE component_id=0");

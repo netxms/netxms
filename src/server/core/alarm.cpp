@@ -319,6 +319,7 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
 
    // Send end-of-list indicator
    msg.SetVariable(VID_ALARM_ID, (DWORD)0);
+   pSession->SendMessage(&msg);
 }
 
 

@@ -34,7 +34,7 @@ Queue *g_pLazyRequestQueue = NULL;
 // Static data
 //
 
-static CONDITION m_hCondWriteThreadFinished = NULL;
+static MUTEX m_mutexWriteThreadRunning = NULL;
 
 
 //
@@ -55,7 +55,8 @@ void DBWriteThread(void *pArg)
 {
    char *pQuery;
 
-   m_hCondWriteThreadFinished = ConditionCreate(FALSE);
+   m_mutexWriteThreadRunning = MutexCreate();
+   MutexLock(m_mutexWriteThreadRunning, INFINITE);
    while(1)
    {
       pQuery = (char *)g_pLazyRequestQueue->GetOrBlock();
@@ -65,7 +66,7 @@ void DBWriteThread(void *pArg)
       DBQuery(g_hCoreDB, pQuery);
       free(pQuery);
    }
-   ConditionSet(m_hCondWriteThreadFinished);
+   MutexUnlock(m_mutexWriteThreadRunning);
 }
 
 
@@ -76,9 +77,10 @@ void DBWriteThread(void *pArg)
 void StopDBWriter(void)
 {
    g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
-   if (m_hCondWriteThreadFinished != NULL)
+   if (m_mutexWriteThreadRunning != NULL)
 	{
-      ConditionWait(m_hCondWriteThreadFinished, INFINITE);
-      ConditionDestroy(m_hCondWriteThreadFinished);
+      MutexLock(m_mutexWriteThreadRunning, INFINITE);
+      MutexUnlock(m_mutexWriteThreadRunning);
+      MutexDestroy(m_mutexWriteThreadRunning);
 	}
 }
