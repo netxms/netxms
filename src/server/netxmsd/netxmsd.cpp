@@ -47,6 +47,7 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   --debug-events      : Print events to console.\n"
                         "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
                         "   --debug-locks       : Print debug information about component locking.\n"
+                        "   --debug-objects     : Print object manager debug information.\n"
                         "   --debug-snmp        : Print SNMP debug information.\n"
                         "   --dump-sql          : Dump all SQL queries to log.\n"
 #ifndef _WIN32
@@ -126,6 +127,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-locks"))
       {
          g_dwFlags |= AF_DEBUG_LOCKS;
+      }
+      else if (!strcmp(argv[i], "--debug-objects"))
+      {
+         g_dwFlags |= AF_DEBUG_OBJECTS;
       }
       else if (!strcmp(argv[i], "--debug-housekeeper"))
       {

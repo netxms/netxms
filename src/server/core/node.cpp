@@ -679,8 +679,8 @@ void Node::CalculateCompoundStatus(void)
 
 void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 {
-   DWORD i;
-   NetObj *pPollerNode = NULL;
+   DWORD i, dwPollListSize;
+   NetObj *pPollerNode = NULL, **ppPollList;
 
    PollerLock();
    m_pPollRequestor = pSession;
@@ -710,25 +710,36 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
       pPollerNode->IncRefCount();
    }
 
-   for(i = 0; i < m_dwChildCount; i++)
+   // Create polling list
+   ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_dwChildCount);
+   for(i = 0, dwPollListSize = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
       {
-         switch(m_pChildList[i]->Type())
-         {
-            case OBJECT_INTERFACE:
-               ((Interface *)m_pChildList[i])->StatusPoll(pSession, dwRqId);
-               break;
-            case OBJECT_NETWORKSERVICE:
-               ((NetworkService *)m_pChildList[i])->StatusPoll(pSession, dwRqId, (Node *)pPollerNode);
-               break;
-            default:
-               break;
-         }
+         m_pChildList[i]->IncRefCount();
+         ppPollList[dwPollListSize++] = m_pChildList[i];
       }
+   Unlock();
+
+   // Poll interfaces and services
+   for(i = 0; i < dwPollListSize; i++)
+   {
+      switch(ppPollList[i]->Type())
+      {
+         case OBJECT_INTERFACE:
+            ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId);
+            break;
+         case OBJECT_NETWORKSERVICE:
+            ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId, (Node *)pPollerNode);
+            break;
+         default:
+            break;
+      }
+      ppPollList[i]->DecRefCount();
+   }
+   safe_free(ppPollList);
    
    if (pPollerNode != NULL)
       pPollerNode->DecRefCount();
-   Unlock();
 
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
