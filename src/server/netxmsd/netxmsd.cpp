@@ -33,7 +33,7 @@
 //
 
 static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
-                        "Copyright (c) 2003, 2004 NetXMS Team\n\n"
+                        "Copyright (c) 2003, 2004, 2005 NetXMS Team\n\n"
                         "Usage: netxmsd [<options>] <command>\n\n"
                         "Valid options are:\n"
                         "   --config <file>     : Set non-default configuration file\n"
