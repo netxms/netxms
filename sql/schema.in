@@ -155,6 +155,7 @@ CREATE TABLE nsmap
 (
 	subnet_id integer not null,
 	node_id integer not null,
+	PRIMARY KEY(subnet_id,node_id)
 );
 
 
@@ -167,7 +168,7 @@ CREATE TABLE acl
 	object_id integer not null,
 	user_id integer not null,
 	access_rights integer not null,
-	PRIMARY KEY(object_id)
+	PRIMARY KEY(object_id,user_id)
 );
 
 
@@ -186,6 +187,7 @@ CREATE TABLE items
 	polling_interval integer,
 	retention_time integer,
 	status integer,			// ACTIVE, DISABLED or NOT_SUPPORTED
+	PRIMARY KEY(item_id)
 );
 
 
@@ -201,6 +203,7 @@ CREATE TABLE events
 	flags integer,
 	message varchar(255),		// Message template
 	description DT_TEXT,
+	PRIMARY KEY(event_id)
 );
 
 
@@ -214,8 +217,7 @@ CREATE TABLE event_log
 	timestamp integer,
 	source integer,			// Source object ID
 	severity integer,
-	message varchar(255),
-	PRIMARY KEY(event_id)
+	message varchar(255)
 );
 
 
