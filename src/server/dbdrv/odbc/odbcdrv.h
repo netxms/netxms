@@ -31,6 +31,7 @@
 #endif   /* _WIN32 */
 
 #include <stdio.h>
+#include <string.h>
 #include <dbdrv.h>
 #include <nms_threads.h>
 
