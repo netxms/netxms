@@ -91,6 +91,8 @@ IDI_GRAPH               ICON    DISCARDABLE     "icons\\graph.ico"
 
 IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
 IDB_LOGIN               BITMAP  DISCARDABLE     "res\\login.bmp"
+IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
+IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -610,10 +612,12 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST_THRESHOLDS,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,7,
-                    214,100,WS_EX_CLIENTEDGE
+                    193,100,WS_EX_CLIENTEDGE
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,59,114,50,14
     PUSHBUTTON      "&Modify...",IDC_BUTTON_MODIFY,115,114,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,171,114,50,14
+    PUSHBUTTON      "&U",IDC_BUTTON_MOVEUP,205,7,16,16,BS_BITMAP
+    PUSHBUTTON      "D",IDC_BUTTON_MOVEDOWN,205,27,16,16,BS_BITMAP
 END
 
 

@@ -23,6 +23,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CDCIThresholdsPage)
 	enum { IDD = IDD_DCI_THRESHOLDS };
+	CButton	m_wndButtonDown;
+	CButton	m_wndButtonUp;
 	CListCtrl	m_wndListCtrl;
 	//}}AFX_DATA
 
@@ -36,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	int AddListEntry(DWORD dwIndex);
 	// Generated message map functions
 	//{{AFX_MSG(CDCIThresholdsPage)
 	virtual BOOL OnInitDialog();

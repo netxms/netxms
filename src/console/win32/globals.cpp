@@ -102,4 +102,5 @@ char *g_pszItemOrigin[] = { "Internal", "Agent", "SNMP" };
 char *g_pszItemOriginLong[] = { "Internal", "NetXMS Agent", "SNMP Agent" };
 char *g_pszItemDataType[] = { "Integer", "Int64", "String", "Float" };
 char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
-char *g_pszThresholdOperation[] = { "", "", "" };
+char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
+char *g_pszThresholdFunction[] = { "LAST", "AVG", "DEV" };

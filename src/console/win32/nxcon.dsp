@@ -445,7 +445,19 @@ SOURCE=.\icons\Alarms.ICO
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\bitmap1.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\bmp00001.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\board.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\down_arrow.bmp
 # End Source File
 # Begin Source File
 
@@ -514,6 +526,10 @@ SOURCE=.\res\Toolbar.bmp
 # Begin Source File
 
 SOURCE=.\icons\tree.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\up_arrow.bmp
 # End Source File
 # Begin Source File
 
