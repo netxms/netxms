@@ -53,6 +53,7 @@
 #define MAX_SECRET_LENGTH        64
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
 #define MAX_DB_STRING            256
+#define MAX_PARAM_NAME           256
 
 #ifndef LLONG_MAX
 #define LLONG_MAX    9223372036854775807
