@@ -32,7 +32,7 @@ NetworkService::NetworkService()
 {
    m_iServiceType = NETSRV_HTTP;
    m_pHostNode = NULL;
-   m_pPollNode = NULL;
+   m_dwPollerNode = 0;
    m_wProto = IPPROTO_TCP;
    m_wPort = 80;
    m_pszRequest = NULL;
@@ -48,11 +48,11 @@ NetworkService::NetworkService()
 
 NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
                                TCHAR *pszRequest, TCHAR *pszResponce,
-                               Node *pHostNode, Node *pPollNode)
+                               Node *pHostNode, DWORD dwPollerNode)
 {
    m_iServiceType = iServiceType;
    m_pHostNode = pHostNode;
-   m_pPollNode = pPollNode;
+   m_dwPollerNode = dwPollerNode;
    m_wProto = wProto;
    m_wPort = wPort;
    m_pszRequest = pszRequest;
@@ -99,19 +99,19 @@ BOOL NetworkService::SaveToDB(void)
    if (bNewObject)
       _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,name,status,is_deleted,"
                                     "node_id,service_type,ip_bind_addr,ip_proto,ip_port,"
-                                    "check_request,check_responce,poll_node_id,image_id) VALUES "
+                                    "check_request,check_responce,poller_node_id,image_id) VALUES "
                                     "(%ld,'%s',%d,%d,%ld,%d,'%s',%d,%d,'%s','%s',%ld,%ld)"),
                  m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponce, (m_pPollNode == NULL) ? 0 : m_pPollNode->Id(), m_dwImageId);
+                 pszEscResponce, m_dwPollerNode, m_dwImageId);
    else
       _sntprintf(szQuery, 16384, _T("UPDATE network_services SET name='%s',status=%d,"
                                     "is_deleted=%d,node_id=%ld,service_type=%d,ip_bind_addr='%s',"
                                     "ip_proto=%d,ip_port=%d,check_request='%s',"
-                                    "check_responce='%s',poll_node_id=%ld,image_id=%ld WHERE id=%ld"),
+                                    "check_responce='%s',poller_node_id=%ld,image_id=%ld WHERE id=%ld"),
                  m_szName, m_iStatus, m_bIsDeleted, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponce, (m_pPollNode == NULL) ? 0 : m_pPollNode->Id(), m_dwImageId, m_dwId);
+                 pszEscResponce, m_dwPollerNode, m_dwImageId, m_dwId);
    free(pszEscRequest);
    free(pszEscResponce);
    DBQuery(g_hCoreDB, szQuery);
@@ -134,7 +134,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
-   DWORD dwHostNodeId, dwPollNodeId;
+   DWORD dwHostNodeId;
    NetObj *pObject;
    BOOL bResult = FALSE;
 
@@ -142,7 +142,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 
    _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,node_id,service_type,"
                                "ip_bind_addr,ip_proto,ip_port,check_request,check_responce,"
-                               "poll_node_id,image_id FROM network_services WHERE id=%ld"), dwId);
+                               "poller_node_id,image_id FROM network_services WHERE id=%ld"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -159,7 +159,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       m_wPort = (WORD)DBGetFieldULong(hResult, 0, 7);
       m_pszRequest = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 8)));
       m_pszResponce = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 9)));
-      dwPollNodeId = DBGetFieldULong(hResult, 0, 10);
+      m_dwPollerNode = DBGetFieldULong(hResult, 0, 10);
       m_dwImageId = DBGetFieldULong(hResult, 0, 11);
 
       // Link service to node
@@ -183,23 +183,19 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
             bResult = TRUE;
          }
 
-         // Find polling node
-         if ((dwPollNodeId != 0) && bResult)
+         // Check that polling node ID is valid
+         if ((m_dwPollerNode != 0) && bResult)
          {
-            pObject = FindObjectById(dwPollNodeId);
+            pObject = FindObjectById(m_dwPollerNode);
             if (pObject == NULL)
             {
-               WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwPollNodeId);
+               WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, m_dwPollerNode);
                bResult = FALSE;
             }
             else if (pObject->Type() != OBJECT_NODE)
             {
-               WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwPollNodeId);
+               WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_dwPollerNode);
                bResult = FALSE;
-            }
-            else
-            {
-               m_pPollNode = (Node *)pObject;
             }
          }
       }
@@ -247,7 +243,7 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SERVICE_TYPE, (WORD)m_iServiceType);
    pMsg->SetVariable(VID_IP_PROTO, m_wProto);
    pMsg->SetVariable(VID_IP_PORT, m_wPort);
-   pMsg->SetVariable(VID_POLLER_NODE_ID, (m_pPollNode == NULL) ? 0 : m_pPollNode->Id());
+   pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
    pMsg->SetVariable(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_pszRequest));
    pMsg->SetVariable(VID_SERVICE_RESPONCE, CHECK_NULL_EX(m_pszResponce));
 }
@@ -270,7 +266,7 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
       dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
       if (dwNodeId == 0)
       {
-         m_pPollNode = NULL;
+         m_dwPollerNode = 0;
       }
       else
       {
@@ -281,7 +277,7 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
          {
             if (pObject->Type() == OBJECT_NODE)
             {
-               m_pPollNode = (Node *)pObject;
+               m_dwPollerNode = dwNodeId;
             }
             else
             {
@@ -338,6 +334,7 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
 void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode)
 {
    int iOldStatus = m_iStatus;
+   Node *pNode;
 
    m_pPollRequestor = pSession;
    if (m_pHostNode == NULL)
@@ -349,6 +346,46 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
    SendPollerMsg(dwRqId, "   Starting status poll on network service %s\r\n"
                          "      Current status is %s\r\n",
                  m_szName, g_pszStatusName[m_iStatus]);
+
+   if (m_dwPollerNode != 0)
+   {
+      pNode = (Node *)FindObjectById(m_dwPollerNode);
+      if (pNode != NULL)
+         pNode->IncRefCount();
+      else
+         pNode = pPollerNode;
+   }
+   else
+   {
+      pNode = pPollerNode;
+   }
+
+   if (pNode != NULL)
+   {
+      TCHAR szBuffer[16];
+      DWORD dwStatus;
+
+      SendPollerMsg(dwRqId, "      Polling service from node %s [%s]\r\n",
+                    pNode->Name(), IpToStr(pNode->IpAddr(), szBuffer));
+      if (pNode->CheckNetworkService(&dwStatus, 
+                                     (m_dwIpAddr == 0) ? m_pHostNode->IpAddr() : m_dwIpAddr,
+                                     m_iServiceType, m_wPort, m_wProto, 
+                                     m_pszRequest, m_pszResponce) == ERR_SUCCESS)
+      {
+         m_iStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
+         SendPollerMsg(dwRqId, "      Agent reports service status [%d]\r\n", dwStatus);
+      }
+      else
+      {
+         SendPollerMsg(dwRqId, "      Unable to check service status due to agent or communication error\r\n");
+         m_iStatus = STATUS_UNKNOWN;
+      }
+   }
+   else
+   {
+      SendPollerMsg(dwRqId, "      Unable to find node object for poll\r\n");
+      m_iStatus = STATUS_UNKNOWN;
+   }
 
    if (m_iStatus != iOldStatus)
    {

@@ -271,8 +271,8 @@ class NetworkService : public NetObj
 protected:
    int m_iServiceType;   // SSH, POP3, etc.
    Node *m_pHostNode;    // Pointer to node object which hosts this service
-   Node *m_pPollNode;    // Pointer to node object which is used for polling
-                         // If NULL, m_pHostNode->m_pPollNode will be used
+   DWORD m_dwPollerNode; // ID of node object which is used for polling
+                         // If 0, m_pHostNode->m_dwPollerNode will be used
    WORD m_wProto;        // Protocol (TCP, UDP, etc.)
    WORD m_wPort;         // TCP or UDP port number
    TCHAR *m_pszRequest;  // Service-specific request
@@ -282,7 +282,7 @@ public:
    NetworkService();
    NetworkService(int iServiceType, WORD wProto, WORD wPort,
                   TCHAR *pszRequest, TCHAR *pszResponce,
-                  Node *pHostNode = NULL, Node *pPollNode = NULL);
+                  Node *pHostNode = NULL, DWORD dwPollerNode = 0);
    virtual ~NetworkService();
 
    virtual int Type(void) { return OBJECT_NETWORKSERVICE; }
@@ -328,7 +328,7 @@ protected:
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    AgentConnection *m_pAgentConnection;
-   Node *m_pPollerNode;      // Node used for network service polling
+   DWORD m_dwPollerNode;      // Node used for network service polling
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -397,7 +397,8 @@ public:
    DWORD WakeUp(void);
 
    void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
-   Node *GetPollerNode(void) { return m_pPollerNode; }
+   DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
+                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponce = NULL);
 };
 
 

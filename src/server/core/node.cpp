@@ -53,6 +53,7 @@ Node::Node()
    m_szPlatformName[0] = 0;
    m_dwNumParams = 0;
    m_pParamList = NULL;
+   m_dwPollerNode = 0;
 }
 
 
@@ -88,6 +89,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_szPlatformName[0] = 0;
    m_dwNumParams = 0;
    m_pParamList = NULL;
+   m_dwPollerNode = 0;
 }
 
 
@@ -122,7 +124,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "is_router,snmp_version,discovery_flags,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt,"
                             "image_id,is_deleted,description,node_type,agent_version,"
-                            "platform_name FROM nodes WHERE id=%d", dwId);
+                            "platform_name,poller_node_id FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -167,6 +169,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    DecodeSQLString(m_szAgentVersion);
    _tcsncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 22)), MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
+   m_dwPollerNode = DBGetFieldULong(hResult, 0, 23);
 
    DBFreeResult(hResult);
 
@@ -260,9 +263,9 @@ BOOL Node::SaveToDB(void)
                "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
                "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
                "snmp_oid,is_local_mgmt,image_id,description,node_type,"
-               "agent_version,platform_name)"
+               "agent_version,platform_name,poller_node_id)"
                " VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,"
-               "'%s','%s',%d,%ld,'%s',%ld,'%s','%s')",
+               "'%s','%s',%d,%ld,'%s',%ld,'%s','%s',%ld)",
                m_dwId, m_szName, m_iStatus, m_bIsDeleted, 
                IpToStr(m_dwIpAddr, szIpAddr),
                m_dwFlags & NF_IS_SNMP ? 1 : 0,
@@ -272,7 +275,7 @@ BOOL Node::SaveToDB(void)
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
                m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
                m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId,
-               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform);
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, m_dwPollerNode);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip='%s',"
@@ -280,7 +283,7 @@ BOOL Node::SaveToDB(void)
                "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
                "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,"
                "image_id=%ld,description='%s',node_type=%ld,agent_version='%s',"
-               "platform_name='%s' WHERE id=%ld",
+               "platform_name='%s',poller_node_id=%ld WHERE id=%ld",
                m_szName, m_iStatus, m_bIsDeleted, 
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags & NF_IS_SNMP ? 1 : 0,
@@ -290,7 +293,8 @@ BOOL Node::SaveToDB(void)
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
                m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, 
-               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, m_dwId);
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform,
+               m_dwPollerNode, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscDescr);
    free(pszEscVersion);
@@ -667,11 +671,36 @@ void Node::CalculateCompoundStatus(void)
 void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 {
    DWORD i;
+   NetObj *pPollerNode = NULL;
 
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
    Lock();
+
+   // Find service poller node object
+   if (m_dwPollerNode != 0)
+   {
+      pPollerNode = FindObjectById(m_dwPollerNode);
+      if (pPollerNode != NULL)
+      {
+         if (pPollerNode->Type() != OBJECT_NODE)
+            pPollerNode = NULL;
+      }
+   }
+
+   // If nothing found, use management server
+   if (pPollerNode == NULL)
+   {
+      pPollerNode = FindObjectById(g_dwMgmtNode);
+      if (pPollerNode != NULL)
+         pPollerNode->IncRefCount();
+   }
+   else
+   {
+      pPollerNode->IncRefCount();
+   }
+
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
       {
@@ -681,13 +710,17 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
                ((Interface *)m_pChildList[i])->StatusPoll(pSession, dwRqId);
                break;
             case OBJECT_NETWORKSERVICE:
-               ((NetworkService *)m_pChildList[i])->StatusPoll(pSession, dwRqId, m_pPollerNode);
+               ((NetworkService *)m_pChildList[i])->StatusPoll(pSession, dwRqId, (Node *)pPollerNode);
                break;
             default:
                break;
          }
       }
+   
+   if (pPollerNode != NULL)
+      pPollerNode->DecRefCount();
    Unlock();
+
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
    SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n"
@@ -1102,6 +1135,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_iSNMPVersion);
    pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
+   pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
 }
 
 
@@ -1133,6 +1167,30 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       }
 
       m_dwIpAddr = dwIpAddr;
+   }
+
+   // Poller node ID
+   if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))
+   {
+      DWORD dwNodeId;
+      NetObj *pObject;
+      
+      dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
+      pObject = FindObjectById(dwNodeId);
+
+      // Check if received id is a valid node id
+      if (pObject == NULL)
+      {
+         Unlock();
+         return RCC_INVALID_OBJECT_ID;
+      }
+      if (pObject->Type() != OBJECT_NODE)
+      {
+         Unlock();
+         return RCC_INVALID_OBJECT_ID;
+      }
+
+      m_dwPollerNode = dwNodeId;
    }
 
    // Change listen port of native agent
@@ -1266,4 +1324,48 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
       pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)0);
    }
    Unlock();
+}
+
+
+//
+// Check status of network service
+//
+
+DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType,
+                                WORD wPort, WORD wProto, TCHAR *pszRequest,
+                                TCHAR *pszResponce)
+{
+   DWORD dwError;
+   DWORD dwTries = 3;
+
+   AgentLock();
+
+   // Establish connection if needed
+   if (m_pAgentConnection == NULL)
+      if (!ConnectToAgent())
+      {
+         AgentUnlock();
+         return ERR_NOT_CONNECTED;
+      }
+
+   // Try to check service via agent
+   while(dwTries-- > 0)
+   {
+      dwError = m_pAgentConnection->CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
+                           wPort, wProto, pszRequest, pszResponce);
+      if ((dwError == ERR_NOT_CONNECTED) ||
+          (dwError == ERR_CONNECTION_BROKEN))
+      {
+         if (!ConnectToAgent())
+            break;
+      }
+      else
+      {
+         if (dwError != ERR_REQUEST_TIMEOUT)
+            break;
+      }
+   }
+
+   AgentUnlock();
+   return dwError;
 }

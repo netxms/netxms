@@ -116,3 +116,15 @@ void CNodePropsPolling::OnSelectPoller()
       SetModified();
    }
 }
+
+
+//
+// Handler for "OK" button
+//
+
+void CNodePropsPolling::OnOK() 
+{
+	CPropertyPage::OnOK();
+
+   m_pUpdate->dwPollerNode = m_dwPollerNode;
+}
