@@ -321,6 +321,18 @@ SOURCE=.\icons\setup.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\sort_up.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\sort_up.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\sortdown.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\Toolbar.bmp
 # End Source File
 # Begin Source File

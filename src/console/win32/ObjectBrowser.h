@@ -19,16 +19,32 @@
 // Sorting modes
 //
 
-#define OBJECT_SORT_BY_ID        1
-#define OBJECT_SORT_BY_NAME      2
-#define OBJECT_SORT_BY_CLASS     3
-#define OBJECT_SORT_BY_STATUS    4
-#define OBJECT_SORT_BY_IP        5
-#define OBJECT_SORT_BY_MASK      6
-#define OBJECT_SORT_BY_IFINDEX   7
-#define OBJECT_SORT_BY_IFTYPE    8
-#define OBJECT_SORT_BY_CAPS      9
-#define OBJECT_SORT_BY_OID       10
+#define OBJECT_SORT_BY_ID        0
+#define OBJECT_SORT_BY_NAME      1
+#define OBJECT_SORT_BY_CLASS     2
+#define OBJECT_SORT_BY_STATUS    3
+#define OBJECT_SORT_BY_IP        4
+#define OBJECT_SORT_BY_MASK      5
+#define OBJECT_SORT_BY_IFINDEX   6
+#define OBJECT_SORT_BY_IFTYPE    7
+#define OBJECT_SORT_BY_CAPS      8
+#define OBJECT_SORT_BY_OID       9
+
+
+//
+// Sorting directions
+//
+
+#define SORT_ASCENDING           0
+#define SORT_DESCENDING          1
+
+
+//
+// Extract components from m_dwSortMode
+//
+
+#define SortMode(x) ((x) & 0xFF)
+#define SortDir(x) (((x) >> 8) & 0xFF)
 
 
 //
@@ -68,7 +84,6 @@ public:
 
 // Operations
 public:
-	NXC_OBJECT * GetObjectFromListItem(int iItem);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -105,6 +120,7 @@ protected:
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnObjectViewViewaslist();
 	afx_msg void OnObjectViewViewastree();
+	afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

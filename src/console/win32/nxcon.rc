@@ -77,6 +77,8 @@ IDI_INTERFACE           ICON    DISCARDABLE     "icons\\board.ico"
 IDI_NODE                ICON    DISCARDABLE     "icons\\node.ico"
 IDI_SUBNET              ICON    DISCARDABLE     "icons\\icon1.ico"
 IDI_TREE                ICON    DISCARDABLE     "icons\\tree.ico"
+IDI_SORT_UP             ICON    DISCARDABLE     "icons\\sort_up.ico"
+IDI_SORT_DOWN           ICON    DISCARDABLE     "icons\\sortdown.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -16,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define PREVIEW_PANE_WIDTH    230
+#define PREVIEW_PANE_WIDTH    200
 
 
 //
@@ -31,28 +31,84 @@ static int CompareTreeHashItems(const void *p1, const void *p2)
 
 
 //
+// Get netmask value depending on object's class
+//
+
+static DWORD GetObjectNetMask(NXC_OBJECT *pObject)
+{
+   DWORD dwMask;
+
+   switch(pObject->iClass)
+   {
+      case OBJECT_SUBNET:
+         dwMask = ntohl(pObject->subnet.dwIpNetMask);
+         break;
+      case OBJECT_INTERFACE:
+         dwMask = ntohl(pObject->iface.dwIpNetMask);
+         break;
+      default:
+         dwMask = 0;
+         break;
+   }
+   return dwMask;
+}
+
+
+//
 // Compare two list view items
 //
 
 static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-   NXC_OBJECT *pObject1, *pObject2;
    CObjectBrowser *pBrowser = (CObjectBrowser *)lParamSort;
+   char *pszStr1, *pszStr2;
+   DWORD dwNum1, dwNum2;
    int iResult;
 
-   pObject1 = pBrowser->GetObjectFromListItem(lParam1);
-   pObject2 = pBrowser->GetObjectFromListItem(lParam2);
-
-   switch(pBrowser->GetSortMode())
+   switch(SortMode(lParamSort))
    {
       case OBJECT_SORT_BY_ID:
+         iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->dwId, ((NXC_OBJECT *)lParam2)->dwId);
+         break;
+      case OBJECT_SORT_BY_NAME:
+         iResult = stricmp(((NXC_OBJECT *)lParam1)->szName, ((NXC_OBJECT *)lParam2)->szName);
+         break;
+      case OBJECT_SORT_BY_CLASS:
+         iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->iClass, ((NXC_OBJECT *)lParam2)->iClass);
+         break;
+      case OBJECT_SORT_BY_STATUS:
+         iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->iStatus, ((NXC_OBJECT *)lParam2)->iStatus);
+         break;
+      case OBJECT_SORT_BY_IP:
+         dwNum1 = ntohl(((NXC_OBJECT *)lParam1)->dwIpAddr);
+         dwNum2 = ntohl(((NXC_OBJECT *)lParam2)->dwIpAddr);
+         iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
+         break;
+      case OBJECT_SORT_BY_MASK:
+         dwNum1 = GetObjectNetMask((NXC_OBJECT *)lParam1);
+         dwNum2 = GetObjectNetMask((NXC_OBJECT *)lParam2);
+         iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
+         break;
+      case OBJECT_SORT_BY_IFINDEX:
+         dwNum1 = (((NXC_OBJECT *)lParam1)->iClass == OBJECT_INTERFACE) ? 
+                     ((NXC_OBJECT *)lParam1)->iface.dwIfIndex : 0;
+         dwNum2 = (((NXC_OBJECT *)lParam2)->iClass == OBJECT_INTERFACE) ? 
+                     ((NXC_OBJECT *)lParam2)->iface.dwIfIndex : 0;
+         iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
+         break;
+      case OBJECT_SORT_BY_OID:
+         pszStr1 = (((NXC_OBJECT *)lParam1)->iClass == OBJECT_NODE) ? 
+                        ((NXC_OBJECT *)lParam1)->node.szObjectId : "";
+         pszStr2 = (((NXC_OBJECT *)lParam2)->iClass == OBJECT_NODE) ? 
+                        ((NXC_OBJECT *)lParam2)->node.szObjectId : "";
+         iResult = stricmp(pszStr1, pszStr2);
          break;
       default:
          iResult = 0;
          break;
    }
 
-   return iResult;
+   return (SortDir(lParamSort) == SORT_ASCENDING) ? iResult : -iResult;
 }
 
 
@@ -68,7 +124,7 @@ CObjectBrowser::CObjectBrowser()
    m_dwTreeHashSize = 0;
    m_pTreeHash = NULL;
    m_dwFlags = SHOW_OBJECT_PREVIEW | FOLLOW_OBJECT_UPDATES;
-   m_dwSortMode = OBJECT_SORT_BY_ID;
+   m_dwSortMode = OBJECT_SORT_BY_NAME;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -92,6 +148,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_VIEW, OnRclickTreeView)
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
 
@@ -112,6 +169,7 @@ void CObjectBrowser::OnDestroy()
 int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   LVCOLUMN lvCol;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -139,13 +197,13 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup list view columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 50);
    m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 100);
    m_wndListCtrl.InsertColumn(2, "Class", LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(3, "Status", LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(4, "IP Address", LVCFMT_LEFT, 100);
    m_wndListCtrl.InsertColumn(5, "IP Netmask", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(6, "IFIndex", LVCFMT_LEFT, 50);
+   m_wndListCtrl.InsertColumn(6, "IFIndex", LVCFMT_LEFT, 60);
    m_wndListCtrl.InsertColumn(7, "IFType", LVCFMT_LEFT, 120);
    m_wndListCtrl.InsertColumn(8, "Caps", LVCFMT_LEFT, 40);
    m_wndListCtrl.InsertColumn(9, "Object ID", LVCFMT_LEFT, 150);
@@ -157,8 +215,16 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_INTERFACE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_NODE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SUBNET));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_UP));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));
    m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
+
+   // Mark sorting column in list control
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = 4;
+   m_wndListCtrl.SetColumn(m_dwSortMode, &lvCol);
 
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
       m_wndTreeCtrl.ShowWindow(SW_SHOW);
@@ -231,6 +297,7 @@ void CObjectBrowser::OnViewRefresh()
    }
 
    // Populate object's list
+   m_wndListCtrl.DeleteAllItems();
    NXCLockObjectIndex();
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
@@ -325,11 +392,14 @@ void CObjectBrowser::OnObjectViewShowpreviewpane()
       m_dwFlags &= ~SHOW_OBJECT_PREVIEW;
       m_wndPreviewPane.ShowWindow(SW_HIDE);
       m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER);
+      m_wndListCtrl.SetWindowPos(NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER);
    }
    else
    {
       m_dwFlags |= SHOW_OBJECT_PREVIEW;
       m_wndTreeCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, rect.right - PREVIEW_PANE_WIDTH,
+                                 rect.bottom, SWP_NOZORDER);
+      m_wndListCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, rect.right - PREVIEW_PANE_WIDTH,
                                  rect.bottom, SWP_NOZORDER);
       m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, rect.bottom, SWP_NOZORDER);
       m_wndPreviewPane.ShowWindow(SW_SHOW);
@@ -609,7 +679,7 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, iImageCode[pObject->iClass]);
    if (iItem != -1)
    {
-      m_wndListCtrl.SetItemData(iItem, pObject->dwId);
+      m_wndListCtrl.SetItemData(iItem, (LPARAM)pObject);
 
       m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iItem, 2, g_szObjectClass[pObject->iClass]);
@@ -623,6 +693,7 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
             m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->subnet.dwIpNetMask, szBuffer));
             break;
          case OBJECT_INTERFACE:
+            m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->iface.dwIpNetMask, szBuffer));
             sprintf(szBuffer, "%d", pObject->iface.dwIfIndex);
             m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
             m_wndListCtrl.SetItemText(iItem, 7, pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
@@ -673,13 +744,39 @@ void CObjectBrowser::OnObjectViewViewastree()
 
 
 //
-// Get pointer to object related to specific list view item
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-NXC_OBJECT * CObjectBrowser::GetObjectFromListItem(int iItem)
+void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
 {
-   DWORD dwId;
+   LVCOLUMN lvCol;
+   int iColumn;
 
-   dwId = m_wndListCtrl.GetItemData(iItem);
-   return NXCFindObjectById(dwId);
+   // Unmark old sorting column
+   iColumn = SortMode(m_dwSortMode);
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(iColumn, &lvCol);
+
+   // Change current sort mode and resort list
+   if (iColumn == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_dwSortMode = iColumn | 
+         (((SortDir(m_dwSortMode) == SORT_ASCENDING) ? SORT_DESCENDING : SORT_ASCENDING) << 8);
+   }
+   else
+   {
+      // Another sorting column
+      m_dwSortMode = (m_dwSortMode & 0xFFFFFF00) | pNMHDR->iSubItem;
+   }
+   m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (SortDir(m_dwSortMode) == SORT_ASCENDING) ? 4 : 5;
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
 }
