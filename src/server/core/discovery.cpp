@@ -213,24 +213,33 @@ void DiscoveryThread(void *arg)
 
 printf("Discovery poll on node %s\n",pNode->Name());
             // Retrieve and analize node's ARP cache
-            pArpCache = pNode->GetArpCahe();
+            pArpCache = pNode->GetArpCache();
             if (pArpCache != NULL)
             {
                for(DWORD j = 0; j < pArpCache->dwNumEntries; j++)
                {
+char buffer[32];
+printf("Checking for IP address %s\n",IpToStr(pArpCache->pEntries[j].dwIpAddr,buffer));
                   if (FindNodeByIP(pArpCache->pEntries[j].dwIpAddr) == NULL)
                   {
+printf("Address not found in database\n");
                      Interface *pInterface = pNode->FindInterface(pArpCache->pEntries[j].dwIndex,
                                                                   pArpCache->pEntries[j].dwIpAddr);
                      if (pInterface != NULL)
-                     {
-                        char szQuery[256];
+                        if (!IsBroadcastAddress(pArpCache->pEntries[j].dwIpAddr,
+                                                pInterface->IpNetMask()))
+                        {
+                           char szQuery[256];
 
-                        sprintf(szQuery, "INSERT INTO newnodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,%d,%d)",
-                                dwNewNodeId++, pArpCache->pEntries[j].dwIpAddr,
-                                pInterface->IpNetMask(), DF_DEFAULT);
-                        DBQuery(g_hCoreDB, szQuery);
-                     }
+                           sprintf(szQuery, "INSERT INTO newnodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,%d,%d)",
+                                   dwNewNodeId++, pArpCache->pEntries[j].dwIpAddr,
+                                   pInterface->IpNetMask(), DF_DEFAULT);
+                           DBQuery(g_hCoreDB, szQuery);
+                        }
+                        else
+                        {
+printf("Broadcast address - rejected\n");
+                        }
                   }
                }
                DestroyArpCache(pArpCache);

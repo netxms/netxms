@@ -43,6 +43,7 @@ printf("Analyzing new node %s\n",IpToStr(dwIpAddr,buffer));
       return;
    }
 
+printf("Creating new node object\n");
    pNode = new Node(dwIpAddr, 0, dwFlags);
    if (!pNode->NewNodePoll(dwNetMask))
    {

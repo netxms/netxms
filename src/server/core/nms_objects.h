@@ -282,7 +282,7 @@ public:
 
    BOOL NewNodePoll(DWORD dwNetMask);
 
-   ARP_CACHE *GetArpCahe(void);
+   ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
 

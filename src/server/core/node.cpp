@@ -329,10 +329,10 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
 
 
 //
-// Get ARP cahe from node
+// Get ARP cache from node
 //
 
-ARP_CACHE *Node::GetArpCahe(void)
+ARP_CACHE *Node::GetArpCache(void)
 {
    ARP_CACHE *pArpCache = NULL;
 

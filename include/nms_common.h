@@ -110,4 +110,11 @@ typedef struct tagICMPHDR
 } ICMPHDR;
 
 
+//
+// Check if IP address is a broadcast
+//
+
+#define IsBroadcastAddress(addr, mask) (((addr) & (~(mask))) == (~(mask)))
+
+
 #endif   /* _nms_common_h_ */
