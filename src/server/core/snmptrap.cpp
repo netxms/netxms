@@ -41,6 +41,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    struct sockaddr_in addr;
    int iAddrLen, iBytes;
    BYTE *packet;
+   SNMP_Transport *pTransport;
    SNMP_PDU *pdu;
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -65,40 +66,35 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    }
 
    packet = (BYTE *)malloc(MAX_PACKET_LENGTH);
+   pTransport = new SNMP_Transport(hSocket);
 
    // Wait for packets
    while(!ShutdownInProgress())
    {
-      iAddrLen = sizeof(struct sockaddr_in);
-      iBytes = recvfrom(hSocket, (char *)packet, MAX_PACKET_LENGTH, 0, (struct sockaddr *)&addr, &iAddrLen);
-      if (iBytes > 0)
+//      iAddrLen = sizeof(struct sockaddr_in);
+//      iBytes = recvfrom(hSocket, (char *)packet, MAX_PACKET_LENGTH, 0, (struct sockaddr *)&addr, &iAddrLen);
+      iBytes = pTransport->Read(&pdu);
+      if ((iBytes > 0) && (pdu != NULL))
       {
-         printf("SNMP: %d bytes packet received\n", iBytes);
-         pdu = new SNMP_PDU;
-         if (pdu->Parse(packet, iBytes))
+         printf("SNMP: %d bytes PDU received\n", iBytes);
+         printf("SNMP: version=%d community='%s'\nOID: %s\n",
+            pdu->GetVersion(),pdu->GetCommunity(),
+            pdu->GetTrapId() ? pdu->GetTrapId()->GetValueAsText() : "null");
+         printf("     trap type = %d; spec type = %d\n",pdu->GetTrapType(),pdu->GetSpecificTrapType());
+         for(DWORD i = 0; i < pdu->GetNumVariables(); i++)
          {
-            printf("SNMP: version=%d community='%s'\nOID: %s\n",
-               pdu->GetVersion(),pdu->GetCommunity(),
-               pdu->GetTrapId() ? pdu->GetTrapId()->GetValueAsText() : "null");
-            printf("     trap type = %d; spec type = %d\n",pdu->GetTrapType(),pdu->GetSpecificTrapType());
-            for(DWORD i = 0; i < pdu->GetNumVariables(); i++)
-            {
-               SNMP_Variable *var;
-               TCHAR szBuffer[1024];
+            SNMP_Variable *var;
+            TCHAR szBuffer[1024];
 
-               var = pdu->GetVariable(i);
-               printf("%d: %s [%02X] == '%s'\n", i, var->GetName()->GetValueAsText(),
-                  var->GetType(),var->GetValueAsString(szBuffer, 1024));
-            }
-            delete pdu;
+            var = pdu->GetVariable(i);
+            printf("%d: %s [%02X] == '%s'\n", i, var->GetName()->GetValueAsText(),
+               var->GetType(),var->GetValueAsString(szBuffer, 1024));
          }
-         else
-         {
-            printf("SNMP: error parsing PDU\n");
-         }
+         delete pdu;
       }
       else
       {
+         printf("SNMP: error %s PDU\n", iBytes > 0 ? "parsing" : "receiving");
          // Sleep on error
          ThreadSleepMs(100);
       }

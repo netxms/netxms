@@ -47,5 +47,7 @@ typedef struct
 BOOL BER_DecodeIdentifier(BYTE *pRawData, DWORD dwRawSize, DWORD *pdwType, 
                           DWORD *pdwLength, BYTE **pData, DWORD *pdwIdLength);
 BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer);
+DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength, 
+                 BYTE *pBuffer, DWORD dwBufferSize);
 
 #endif   /* _libnxsnmp_h_ */

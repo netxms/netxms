@@ -160,3 +160,19 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
    }
    return bResult;
 }
+
+
+//
+// Encode identifier and content
+// Return value is size of encoded identifier and content in buffer
+// or 0 if there are not enough place in buffer or type is unknown
+//
+
+DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength, 
+                 BYTE *pBuffer, DWORD dwBufferSize)
+{
+   DWORD dwBytes = 0;
+   BYTE *pbCurrPos = pBuffer;
+
+   return dwBytes;
+}

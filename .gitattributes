@@ -432,6 +432,7 @@ src/libnxsnmp/libnxsnmp.h -text
 src/libnxsnmp/main.cpp -text
 src/libnxsnmp/oid.cpp -text
 src/libnxsnmp/pdu.cpp -text
+src/libnxsnmp/transport.cpp -text
 src/libnxsnmp/variable.cpp -text
 src/nxevent/Makefile.am -text
 src/nxevent/nxevent.cpp -text

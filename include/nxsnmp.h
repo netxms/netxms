@@ -180,6 +180,33 @@ public:
 
 
 //
+// SNMP transport
+//
+
+class LIBNXSNMP_EXPORTABLE SNMP_Transport
+{
+private:
+   SOCKET m_hSocket;
+   DWORD m_dwBufferSize;
+   DWORD m_dwBytesInBuffer;
+   DWORD m_dwBufferPos;
+   BYTE *m_pBuffer;
+
+   DWORD PreParsePDU(void);
+   int RecvData(void);
+   void ClearBuffer(void);
+
+public:
+   SNMP_Transport();
+   SNMP_Transport(SOCKET hSocket);
+   ~SNMP_Transport();
+
+   int Read(SNMP_PDU **ppData);
+   int Send(SNMP_PDU *pPDU);
+};
+
+
+//
 // Functions
 //
 
