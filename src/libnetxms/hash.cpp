@@ -28,6 +28,7 @@
 #ifdef _WIN32
 # include <io.h>
 #else
+# include <fcntl.h>
 # include <sys/types.h>
 # include <sys/stat.h>
 #endif

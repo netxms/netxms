@@ -70,7 +70,10 @@ void MsgWaitQueue::Clear(void)
 
    Lock();
    for(i = 0; i < m_dwNumElements; i++)
-      delete m_pElements[i].pMsg;
+      if (m_pElements[i].wIsBinary)
+         MemFree(m_pElements[i].pMsg);
+      else
+         delete (CSCPMessage *)(m_pElements[i].pMsg);
    m_dwNumElements = 0;
    Unlock();
 }
@@ -172,7 +175,7 @@ void MsgWaitQueue::HousekeeperThread(void)
             if (m_pElements[i].wIsBinary)
                MemFree(m_pElements[i].pMsg);
             else
-               delete m_pElements[i].pMsg;
+               delete (CSCPMessage *)(m_pElements[i].pMsg);
             m_dwNumElements--;
             memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));
             i--;

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.13 2004-06-03 09:52:13 victor Exp $
+# $Id: configure.ac,v 1.14 2004-07-01 20:34:16 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -130,9 +130,7 @@ AC_PROG_LIBTOOL
 AC_CHECK_LIB(crypto, DH_new)
 AC_CHECK_LIB(ssl, SSL_accept)
 AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
-AC_CHECK_LIB(readline, readline,
-				 [],
-				 [AC_MSG_ERROR([readline broken])])
+AC_CHECK_LIB(readline, readline)
 AC_CHECK_LIB(socket, if_nameindex)
 
 # --------------------------------------------------------------------------
