@@ -170,8 +170,8 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOGIN:
             if (m_iState != STATE_AUTHENTICATED)
             {
-               char *pszLogin = pMsg->GetVariableStr("login");
-               char *pszPassword = pMsg->GetVariableStr("password");
+               char *pszLogin = pMsg->GetVariableStr(VID_LOGIN_NAME);
+               char *pszPassword = pMsg->GetVariableStr(VID_PASSWORD);
 
                if (AuthenticateUser(pszLogin, pszPassword, &m_dwUserId, &m_dwSystemAccess))
                   m_iState = STATE_AUTHENTICATED;
@@ -183,7 +183,7 @@ void ClientSession::ProcessingThread(void)
                pReply = new CSCPMessage;
                pReply->SetCode(CMD_LOGIN_RESP);
                pReply->SetId(pMsg->GetId());
-               pReply->SetVariable("result", (DWORD)(m_iState == STATE_AUTHENTICATED));
+               pReply->SetVariable(VID_LOGIN_RESULT, (DWORD)(m_iState == STATE_AUTHENTICATED));
                SendMessage(pReply);
                delete pReply;
             }
@@ -247,24 +247,24 @@ void ClientSession::SendAllEvents(void)
    DB_RESULT hResult;
 
    // Prepare message
-   msg.SetCode(CMD_EVENT);
+//   msg.SetCode(CMD_EVENT);
 
    // Retrieve events from database
    hResult = DBSelect(g_hCoreDB, "SELECT event_id,timestamp,source,severity,message FROM EventLog");
    if (hResult != NULL)
    {
       // Send events, one per message
-      dwNumRecords = DBGetNumRows(hResult);
+/*      dwNumRecords = DBGetNumRows(hResult);
       for(i = 0; i < dwNumRecords; i++)
       {
-         msg.SetVariable("id", DBGetFieldULong(hResult, i, 0));
+         msg.SetVariable(VID_EVENT_ID, DBGetFieldULong(hResult, i, 0));
          msg.SetVariable("timestamp", DBGetFieldULong(hResult, i, 1));
          msg.SetVariable("source", DBGetFieldULong(hResult, i, 2));
          msg.SetVariable("severity", DBGetFieldULong(hResult, i, 3));
          msg.SetVariable("message", DBGetField(hResult, i, 4));
          SendMessage(&msg);
          msg.DeleteAllVariables();
-      }
+      }*/
    }
 
    // Send end of list notification
@@ -288,7 +288,7 @@ void ClientSession::SendAllConfigVars(void)
    {
       // Access denied
       msg.SetCode(CMD_CONFIG_VARLIST_END);
-      msg.SetVariable("error", (DWORD)1);
+      msg.SetVariable(VID_ERROR, (DWORD)1);
       SendMessage(&msg);
    }
    else
@@ -304,8 +304,8 @@ void ClientSession::SendAllConfigVars(void)
          dwNumRecords = DBGetNumRows(hResult);
          for(i = 0; i < dwNumRecords; i++)
          {
-            msg.SetVariable("name", DBGetField(hResult, i, 0));
-            msg.SetVariable("value", DBGetField(hResult, i, 1));
+            msg.SetVariable(VID_NAME, DBGetField(hResult, i, 0));
+            msg.SetVariable(VID_VALUE, DBGetField(hResult, i, 1));
             SendMessage(&msg);
             msg.DeleteAllVariables();
          }
@@ -313,7 +313,7 @@ void ClientSession::SendAllConfigVars(void)
 
       // Send end of list notification
       msg.SetCode(CMD_CONFIG_VARLIST_END);
-      msg.SetVariable("error", (DWORD)0);
+      msg.SetVariable(VID_ERROR, (DWORD)0);
       SendMessage(&msg);
    }
 }

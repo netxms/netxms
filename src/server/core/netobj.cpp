@@ -379,18 +379,14 @@ BOOL NetObj::SaveACLToDB(void)
 
 void NetObj::CreateMessage(CSCPMessage *pMsg)
 {
-   DWORD i;
-   char szBuffer[32];
+   DWORD i, dwId;
 
-   pMsg->SetVariable("class", (WORD)Type());
-   pMsg->SetVariable("id", m_dwId);
-   pMsg->SetVariable("name", m_szName);
-   pMsg->SetVariable("status", (WORD)m_iStatus);
-   pMsg->SetVariable("ipaddr", m_dwIpAddr);
-   pMsg->SetVariable("parent_cnt", m_dwParentCount);
-   for(i = 0; i < m_dwParentCount; i++)
-   {
-      sprintf(szBuffer, "parent.%d", i);
-      pMsg->SetVariable(szBuffer, m_pParentList[i]->Id());
-   }
+   pMsg->SetVariable(VID_OBJECT_CLASS, (WORD)Type());
+   pMsg->SetVariable(VID_OBJECT_ID, m_dwId);
+   pMsg->SetVariable(VID_OBJECT_NAME, m_szName);
+   pMsg->SetVariable(VID_OBJECT_STATUS, (WORD)m_iStatus);
+   pMsg->SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
+   pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
+   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
+      pMsg->SetVariable(dwId, m_pParentList[i]->Id());
 }

@@ -48,13 +48,13 @@ void ProcessEvent(CSCPMessage *pMsg)
       case CMD_EVENT:
          // Allocate new event structure and fill it with values from message
          pEvent = (NXC_EVENT *)MemAlloc(sizeof(NXC_EVENT));
-
+/*
          pEvent->dwEventId = pMsg->GetVariableLong("id");
          pEvent->dwSeverity = pMsg->GetVariableLong("severity");
          pEvent->dwSourceId = pMsg->GetVariableLong("source");
          pEvent->dwTimeStamp = pMsg->GetVariableLong("timestamp");
          pMsg->GetVariableStr("message", pEvent->szMessage, MAX_EVENT_MSG_LENGTH);
-
+*/
          // Call client's callback to handle new record
          // It's up to client to destroy allocated event structure
          CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, pEvent);

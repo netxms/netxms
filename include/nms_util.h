@@ -55,9 +55,9 @@ private:
    DWORD m_dwNumVar;    // Number of variables
    CSCP_DF **m_ppVarList;   // List of variables
 
-   void Set(char *szName, BYTE bType, void *pValue);
-   void *Get(char *szName, BYTE bType);
-   DWORD FindVariable(char *szName);
+   void Set(DWORD dwVarId, BYTE bType, void *pValue);
+   void *Get(DWORD dwVarId, BYTE bType);
+   DWORD FindVariable(DWORD dwVarId);
 
 public:
    CSCPMessage();
@@ -72,17 +72,17 @@ public:
    DWORD GetId(void) { return m_dwId; }
    void SetId(DWORD dwId) { m_dwId = dwId; }
 
-   BOOL IsVariableExist(char *szName) { return (FindVariable(szName) != INVALID_INDEX) ? TRUE : FALSE; }
+   BOOL IsVariableExist(DWORD dwVarId) { return (FindVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
 
-   void SetVariable(char *szName, WORD wValue) { Set(szName, DT_INT16, &wValue); }
-   void SetVariable(char *szName, DWORD dwValue) { Set(szName, DT_INTEGER, &dwValue); }
-   void SetVariable(char *szName, QWORD qwValue) { Set(szName, DT_INT64, &qwValue); }
-   void SetVariable(char *szName, char *szValue) { Set(szName, DT_STRING, szValue); }
+   void SetVariable(DWORD dwVarId, WORD wValue) { Set(dwVarId, DT_INT16, &wValue); }
+   void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, DT_INTEGER, &dwValue); }
+   void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, DT_INT64, &qwValue); }
+   void SetVariable(DWORD dwVarId, char *szValue) { Set(dwVarId, DT_STRING, szValue); }
 
-   DWORD GetVariableLong(char *szName);
-   QWORD GetVariableInt64(char *szName);
-   WORD GetVariableShort(char *szName);
-   char *GetVariableStr(char *szName, char *szBuffer = NULL, DWORD dwBufSize = 0);
+   DWORD GetVariableLong(DWORD dwVarId);
+   QWORD GetVariableInt64(DWORD dwVarId);
+   WORD GetVariableShort(DWORD dwVarId);
+   char *GetVariableStr(DWORD dwVarId, char *szBuffer = NULL, DWORD dwBufSize = 0);
 
    void DeleteAllVariables(void);
 };

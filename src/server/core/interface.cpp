@@ -221,7 +221,7 @@ void Interface::StatusPoll(void)
 void Interface::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
-   pMsg->SetVariable("if_index", m_dwIfIndex);
-   pMsg->SetVariable("if_type", m_dwIfType);
-   pMsg->SetVariable("netmask", m_dwIpNetMask);
+   pMsg->SetVariable(VID_IF_INDEX, m_dwIfIndex);
+   pMsg->SetVariable(VID_IF_TYPE, m_dwIfType);
+   pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
 }

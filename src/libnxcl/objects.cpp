@@ -100,56 +100,44 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject;
-   char *pStr, szBuffer[32];
-   DWORD i;
+   DWORD i, dwId;
 
    // Allocate memory for new object structure
    pObject = (NXC_OBJECT *)MemAlloc(sizeof(NXC_OBJECT));
    memset(pObject, 0, sizeof(NXC_OBJECT));
 
    // Common attributes
-   pObject->dwId = pMsg->GetVariableLong("id");
-   pObject->iClass = pMsg->GetVariableShort("class");
-   pStr = pMsg->GetVariableStr("name");
-   strcpy(pObject->szName, pStr);
-   MemFree(pStr);
-   pObject->iStatus = pMsg->GetVariableShort("status");
-   pObject->dwIpAddr = pMsg->GetVariableLong("ipaddr");
+   pObject->dwId = pMsg->GetVariableLong(VID_OBJECT_ID);
+   pObject->iClass = pMsg->GetVariableShort(VID_OBJECT_CLASS);
+   pMsg->GetVariableStr(VID_OBJECT_NAME, pObject->szName, MAX_OBJECT_NAME);
+   pObject->iStatus = pMsg->GetVariableShort(VID_OBJECT_STATUS);
+   pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
 
    // Parents
-   pObject->dwNumParents = pMsg->GetVariableLong("parent_cnt");
+   pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
    pObject->pdwParentList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumParents);
-   for(i = 0; i < pObject->dwNumParents; i++)
-   {
-      sprintf(szBuffer, "parent.%d", i);
-      pObject->pdwParentList[i] = pMsg->GetVariableLong(szBuffer);
-   }
+   for(i = 0, dwId = VID_PARENT_ID_BASE; i < pObject->dwNumParents; i++, dwId++)
+      pObject->pdwParentList[i] = pMsg->GetVariableLong(dwId);
 
    // Class-specific attributes
    switch(pObject->iClass)
    {
       case OBJECT_INTERFACE:
-         pObject->iface.dwIpNetMask = pMsg->GetVariableLong("netmask");
-         pObject->iface.dwIfIndex = pMsg->GetVariableLong("if_index");
-         pObject->iface.dwIfType = pMsg->GetVariableLong("if_type");
+         pObject->iface.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
+         pObject->iface.dwIfIndex = pMsg->GetVariableLong(VID_IF_INDEX);
+         pObject->iface.dwIfType = pMsg->GetVariableLong(VID_IF_TYPE);
          break;
       case OBJECT_NODE:
-         pObject->node.dwFlags = pMsg->GetVariableLong("flags");
-         pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong("dflags");
-         pObject->node.wAgentPort = pMsg->GetVariableShort("agent_port");
-         pObject->node.wAuthMethod = pMsg->GetVariableShort("auth_method");
-         pStr = pMsg->GetVariableStr("shared_secret");
-         strncpy(pObject->node.szSharedSecret, pStr, MAX_SECRET_LENGTH - 1);
-         MemFree(pStr);
-         pStr = pMsg->GetVariableStr("community");
-         strncpy(pObject->node.szCommunityString, pStr, MAX_COMMUNITY_LENGTH - 1);
-         MemFree(pStr);
-         pStr = pMsg->GetVariableStr("oid");
-         strncpy(pObject->node.szObjectId, pStr, MAX_OID_LENGTH - 1);
-         MemFree(pStr);
+         pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
+         pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong(VID_DISCOVERY_FLAGS);
+         pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
+         pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
+         pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
+         pMsg->GetVariableStr(VID_COMMUNITY_STRING, pObject->node.szCommunityString, MAX_COMMUNITY_LENGTH);
+         pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
          break;
       case OBJECT_SUBNET:
-         pObject->subnet.dwIpNetMask = pMsg->GetVariableLong("netmask");
+         pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
          break;
       default:
          break;
@@ -227,8 +215,8 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          }
          break;
       case CMD_OBJECT:
-         DebugPrintf("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d", pMsg->GetVariableLong("id"),
-                     pMsg->GetVariableStr("name"), pMsg->GetVariableShort("class"));
+         DebugPrintf("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d", pMsg->GetVariableLong(VID_OBJECT_ID),
+                     pMsg->GetVariableStr(VID_OBJECT_NAME), pMsg->GetVariableShort(VID_OBJECT_CLASS));
       
          // Create new object from message and add it to list
          pObject = NewObjectFromMsg(pMsg);

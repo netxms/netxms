@@ -161,5 +161,5 @@ BOOL Subnet::DeleteFromDB(void)
 void Subnet::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
-   pMsg->SetVariable("netmask", m_dwIpNetMask);
+   pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
 }

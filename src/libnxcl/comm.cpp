@@ -181,8 +181,8 @@ BOOL Connect(void)
    // Prepare login message
    msg.SetId(m_dwMsgId++);
    msg.SetCode(CMD_LOGIN);
-   msg.SetVariable("login", m_szLogin);
-   msg.SetVariable("password", m_szPassword);
+   msg.SetVariable(VID_LOGIN_NAME, m_szLogin);
+   msg.SetVariable(VID_PASSWORD, m_szPassword);
 
    if (!SendMsg(&msg))
    {
@@ -203,7 +203,7 @@ BOOL Connect(void)
       return FALSE;
    }
 
-   bSuccess = pResp->GetVariableLong("result");
+   bSuccess = pResp->GetVariableLong(VID_LOGIN_RESULT);
    delete pResp;
 
    CallEventHandler(NXC_EVENT_LOGIN_RESULT, bSuccess, NULL);
