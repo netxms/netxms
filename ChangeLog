@@ -4,6 +4,7 @@
 
 - Added support for System.CPU.Count and System.ProcessList parameters
   under Windows
+- Created our own SNMP library
 
 
 *

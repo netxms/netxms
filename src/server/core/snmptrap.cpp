@@ -71,12 +71,13 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Wait for packets
    while(!ShutdownInProgress())
    {
-//      iAddrLen = sizeof(struct sockaddr_in);
-//      iBytes = recvfrom(hSocket, (char *)packet, MAX_PACKET_LENGTH, 0, (struct sockaddr *)&addr, &iAddrLen);
-      iBytes = pTransport->Read(&pdu);
+      iAddrLen = sizeof(struct sockaddr_in);
+      iBytes = pTransport->Read(&pdu, INFINITE, (struct sockaddr *)&addr, &iAddrLen);
       if ((iBytes > 0) && (pdu != NULL))
       {
-         printf("SNMP: %d bytes PDU received\n", iBytes);
+         TCHAR szBuffer[1024];
+
+         printf("SNMP: %d bytes PDU received from %s\n", iBytes, IpToStr(ntohl(addr.sin_addr.s_addr), szBuffer));
          printf("SNMP: version=%d community='%s'\nOID: %s\n",
             pdu->GetVersion(),pdu->GetCommunity(),
             pdu->GetTrapId() ? pdu->GetTrapId()->GetValueAsText() : "null");
@@ -84,7 +85,6 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          for(DWORD i = 0; i < pdu->GetNumVariables(); i++)
          {
             SNMP_Variable *var;
-            TCHAR szBuffer[1024];
 
             var = pdu->GetVariable(i);
             printf("%d: %s [%02X] == '%s'\n", i, var->GetName()->GetValueAsText(),

@@ -61,6 +61,8 @@ SNMP_PDU::SNMP_PDU()
    m_dwErrorCode = 0;
    m_dwErrorIndex = 0;
    m_dwRqId = 0;
+   m_iTrapType = 0;
+   m_iSpecificTrap = 0;
 }
 
 
@@ -79,6 +81,8 @@ SNMP_PDU::SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVe
    m_dwErrorCode = 0;
    m_dwErrorIndex = 0;
    m_dwRqId = dwRqId;
+   m_iTrapType = 0;
+   m_iSpecificTrap = 0;
 }
 
 

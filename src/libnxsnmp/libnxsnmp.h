@@ -28,6 +28,10 @@
 #include <nms_util.h>
 #include <nxsnmp.h>
 
+#ifndef _WIN32
+#include <netdb.h>
+#endif
+
 
 //
 // Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type

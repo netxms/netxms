@@ -82,13 +82,12 @@ typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
-//#define snprintf _snprintf
-//#define vsnprintf _vsnprintf
-
 // Socket compatibility
 #define SHUT_RD      0
 #define SHUT_WR      1
 #define SHUT_RDWR    2
+
+#define getpid() GetCurrentProcessId()
 
 #elif defined(_NETWARE)
 

@@ -74,6 +74,21 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD 
 
 
 //
+// Check if given OID is syntaxically correct
+//
+
+BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(TCHAR *pszText)
+{
+   DWORD dwLength, *pdwBuffer;
+
+   pdwBuffer = (DWORD *)malloc(sizeof(DWORD) * 1024);
+   dwLength = SNMPParseOID(pszText, pdwBuffer, 1024);
+   free(pdwBuffer);
+   return (dwLength > 0);
+}
+
+
+//
 // DLL entry point
 //
 

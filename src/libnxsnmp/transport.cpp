@@ -86,10 +86,23 @@ void SNMP_Transport::ClearBuffer(void)
 // Receive data from socket
 //
 
-int SNMP_Transport::RecvData(void)
+int SNMP_Transport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, int *piAddrSize)
 {
-   return recv(m_hSocket, (char *)&m_pBuffer[m_dwBufferPos + m_dwBytesInBuffer],
-               m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer), 0);
+   if (dwTimeout != INFINITE)
+   {
+      struct fd_set rdfs;
+      struct timeval tv;
+
+      FD_ZERO(&rdfs);
+      FD_SET(m_hSocket, &rdfs);
+      tv.tv_sec = dwTimeout / 1000;
+      tv.tv_usec = (dwTimeout % 1000) * 1000;
+      if (select(1, &rdfs, NULL, NULL, &tv) <= 0)
+         return 0;
+   }
+   return recvfrom(m_hSocket, (char *)&m_pBuffer[m_dwBufferPos + m_dwBytesInBuffer],
+                   m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer), 0,
+                   pSender, piAddrSize);
 }
 
 
@@ -116,14 +129,15 @@ DWORD SNMP_Transport::PreParsePDU(void)
 // Read PDU from socket
 //
 
-int SNMP_Transport::Read(SNMP_PDU **ppData)
+int SNMP_Transport::Read(SNMP_PDU **ppData, DWORD dwTimeout, 
+                         struct sockaddr *pSender, int *piAddrSize)
 {
    int iBytes;
    DWORD dwPDULength;
 
    if (m_dwBytesInBuffer < 2)
    {
-      iBytes = RecvData();
+      iBytes = RecvData(dwTimeout, pSender, piAddrSize);
       if (iBytes <= 0)
       {
          ClearBuffer();
@@ -150,7 +164,7 @@ int SNMP_Transport::Read(SNMP_PDU **ppData)
    // Read entire PDU into buffer
    while(m_dwBytesInBuffer < dwPDULength)
    {
-      iBytes = RecvData();
+      iBytes = RecvData(dwTimeout, pSender, piAddrSize);
       if (iBytes <= 0)
       {
          ClearBuffer();
@@ -195,4 +209,108 @@ int SNMP_Transport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, int iAddrSize)
    }
 
    return nBytes;
+}
+
+
+//
+// Create UDP transport connected to given host
+// Will try to resolve host name if it's not null, otherwise
+// IP address will be used
+//
+
+BOOL SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
+{
+   struct sockaddr_in addr;
+   BOOL bResult = FALSE;
+
+   // Fill in remote address structure
+   memset(&addr, 0, sizeof(struct sockaddr_in));
+   addr.sin_family = AF_INET;
+   addr.sin_port = htons(wPort);
+
+   // Resolve hostname
+   if (pszHostName != NULL)
+   {
+      struct hostent *hs;
+
+      hs = gethostbyname(pszHostName);
+      if (hs != NULL)
+      {
+         memcpy(&addr.sin_addr.s_addr, hs->h_addr, sizeof(DWORD));
+      }
+      else
+      {
+         addr.sin_addr.s_addr = inet_addr(pszHostName);
+      }
+   }
+   else
+   {
+      addr.sin_addr.s_addr = dwHostAddr;
+   }
+
+   // Create and connect socket
+   if ((addr.sin_addr.s_addr != INADDR_ANY) && 
+       (addr.sin_addr.s_addr != INADDR_NONE))
+   {
+      m_hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+      if (m_hSocket != -1)
+      {
+         // Pseudo-connect socket
+         if (connect(m_hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == 0)
+         {
+            bResult = TRUE;
+         }
+         else
+         {
+            closesocket(m_hSocket);
+            m_hSocket = -1;
+         }
+      }
+   }
+
+   return bResult;
+}
+
+
+//
+// Send a request and wait for respone
+// with respect for timeouts and retransmissions
+//
+
+DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponce, 
+                                DWORD dwTimeout, DWORD dwNumRetries)
+{
+   DWORD dwResult = SNMP_ERR_SUCCESS;
+   int iBytes;
+
+   if ((pRequest == NULL) || (ppResponce == NULL) || (dwNumRetries == 0))
+      return SNMP_ERR_PARAM;
+
+   *ppResponce = NULL;
+   if (Send(pRequest) <= 0)
+      return SNMP_ERR_COMM;
+
+   while(dwNumRetries-- > 0)
+   {
+      iBytes = Read(ppResponce, dwTimeout);
+      if (iBytes > 0)
+      {
+         if (*ppResponce != NULL)
+         {
+            if ((*ppResponce)->GetRequestId() == pRequest->GetRequestId())
+               break;
+            dwResult = SNMP_ERR_TIMEOUT;
+         }
+         else
+         {
+            dwResult = SNMP_ERR_PARSE;
+         }
+      }
+      else
+      {
+         dwResult = (iBytes == 0) ? SNMP_ERR_TIMEOUT : SNMP_ERR_COMM;
+      }
+   }
+
+   return dwResult;
 }

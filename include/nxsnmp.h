@@ -35,6 +35,18 @@
 
 
 //
+// libnxsnmp error codes
+//
+
+#define SNMP_ERR_SUCCESS   0
+#define SNMP_ERR_TIMEOUT   1
+#define SNMP_ERR_PARAM     2
+#define SNMP_ERR_SOCKET    3
+#define SNMP_ERR_COMM      4
+#define SNMP_ERR_PARSE     5
+
+
+//
 // SNMP versions
 //
 
@@ -182,6 +194,9 @@ public:
    const char *GetCommunity(void) { return m_pszCommunity; }
    DWORD GetVersion(void) { return m_dwVersion; }
 
+   DWORD GetRequestId(void) { return m_dwRqId; }
+   void SetRequestId(DWORD dwId) { m_dwRqId = dwId; }
+
    void BindVariable(SNMP_Variable *pVar);
 };
 
@@ -200,7 +215,7 @@ private:
    BYTE *m_pBuffer;
 
    DWORD PreParsePDU(void);
-   int RecvData(void);
+   int RecvData(DWORD dwTimeout, struct sockaddr *pSender, int *piAddrSize);
    void ClearBuffer(void);
 
 public:
@@ -208,8 +223,13 @@ public:
    SNMP_Transport(SOCKET hSocket);
    ~SNMP_Transport();
 
-   int Read(SNMP_PDU **ppData);
+   int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
+            struct sockaddr *pSender = NULL, int *piAddrSize = NULL);
    int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, int iAddrLen = 0);
+   DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponce, 
+                   DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
+
+   BOOL CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = 161);
 };
 
 
@@ -219,6 +239,7 @@ public:
 
 void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
+BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(TCHAR *pszText);
 
 
 #endif
