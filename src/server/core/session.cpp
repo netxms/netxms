@@ -354,7 +354,7 @@ void ClientSession::ProcessingThread(void)
 void ClientSession::Login(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   BYTE szPassword[SHA_DIGEST_LENGTH];
+   BYTE szPassword[SHA1_DIGEST_SIZE];
    char szLogin[MAX_USER_NAME], szBuffer[32];
 
    // Prepare responce message
@@ -365,7 +365,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
    {
       
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
+      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA1_DIGEST_SIZE);
 
       if (AuthenticateUser(szLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
       {
@@ -1202,9 +1202,9 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
        (dwUserId == m_dwUserId))     // User can change password for itself
    {
       DWORD dwResult;
-      BYTE szPassword[SHA_DIGEST_LENGTH];
+      BYTE szPassword[SHA1_DIGEST_SIZE];
 
-      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
+      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA1_DIGEST_SIZE);
       dwResult = SetUserPassword(dwUserId, szPassword);
       msg.SetVariable(VID_RCC, dwResult);
    }

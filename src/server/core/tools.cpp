@@ -257,20 +257,6 @@ BOOL ExecCommand(char *pszCommand)
 
 
 //
-// Generate SHA1 hash for text string
-//
-
-void CreateSHA1Hash(char *pszSource, BYTE *pBuffer)
-{
-   EVP_MD_CTX ctx;
-
-   EVP_MD_CTX_init(&ctx);
-   EVP_Digest(pszSource, (unsigned long)strlen(pszSource), pBuffer, NULL, EVP_sha1(), NULL);
-   EVP_MD_CTX_cleanup(&ctx);
-}
-
-
-//
 // Load file into memory
 //
 

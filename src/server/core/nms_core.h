@@ -54,8 +54,6 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
-#include <openssl/ssl.h>
-
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include <nms_cscp.h>
@@ -388,8 +386,6 @@ BOOL ExecCommand(char *pszCommand);
 
 BOOL InitIdTable(void);
 DWORD CreateUniqueId(int iGroup);
-
-void CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 
 BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
 

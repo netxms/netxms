@@ -169,10 +169,6 @@ BOOL Initialize(void)
    WSAStartup(0x0002, &wsaData);
 #endif
 
-   // Initialize SSL library
-   SSL_library_init();
-   SSL_load_error_strings();
-
    // Create queue for delayed SQL queries
    g_pLazyRequestQueue = new Queue(64, 16);
 

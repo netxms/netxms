@@ -32,7 +32,7 @@ typedef struct
 {
    DWORD dwId;
    char szName[MAX_USER_NAME];
-   BYTE szPassword[SHA_DIGEST_LENGTH];
+   BYTE szPassword[SHA1_DIGEST_SIZE];
    WORD wSystemRights;      // System-wide user's rights
    WORD wFlags;
    char szFullName[MAX_USER_FULLNAME];

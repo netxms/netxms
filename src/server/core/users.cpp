@@ -72,10 +72,10 @@ BOOL LoadUsers(void)
    {
       g_pUserList[i].dwId = DBGetFieldULong(hResult, i, 0);
       strncpy(g_pUserList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
-      if (StrToBin(DBGetField(hResult, i, 2), g_pUserList[i].szPassword, SHA_DIGEST_LENGTH) != SHA_DIGEST_LENGTH)
+      if (StrToBin(DBGetField(hResult, i, 2), g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
       {
          WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
-         CreateSHA1Hash("netxms", g_pUserList[i].szPassword);
+         CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
       }
       if (g_pUserList[i].dwId == 0)
          g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;    // Ignore database value for superuser
@@ -103,7 +103,7 @@ BOOL LoadUsers(void)
       g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;
       g_pUserList[i].szFullName[0] = 0;
       strcpy(g_pUserList[i].szDescription, "Built-in system administrator account");
-      CreateSHA1Hash("netxms", g_pUserList[i].szPassword);
+      CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
       WriteLog(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
@@ -166,7 +166,7 @@ BOOL LoadUsers(void)
 void SaveUsers(void)
 {
    DWORD i;
-   char szQuery[1024], szPassword[SHA_DIGEST_LENGTH * 2 + 1];
+   char szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1];
 
    // Save users
    MutexLock(m_hMutexUserAccess, INFINITE);
@@ -202,7 +202,7 @@ void SaveUsers(void)
          }
 
          // Create or update record in database
-         BinToStr(g_pUserList[i].szPassword, SHA_DIGEST_LENGTH, szPassword);
+         BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',access=%d,flags=%d,"
                              "full_name='%s',description='%s' WHERE id=%d",
@@ -304,7 +304,7 @@ BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSy
    MutexLock(m_hMutexUserAccess, INFINITE);
    for(i = 0; i < g_dwNumUsers; i++)
       if (!strcmp(szName, g_pUserList[i].szName) &&
-          !memcmp(szPassword, g_pUserList[i].szPassword, SHA_DIGEST_LENGTH) &&
+          !memcmp(szPassword, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) &&
           !(g_pUserList[i].wFlags & UF_DELETED) && !(g_pUserList[i].wFlags & UF_DISABLED))
       {
          *pdwId = g_pUserList[i].dwId;
@@ -654,7 +654,7 @@ DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword)
    for(i = 0; i < g_dwNumUsers; i++)
       if (g_pUserList[i].dwId == dwId)
       {
-         memcpy(g_pUserList[i].szPassword, pszPassword, SHA_DIGEST_LENGTH);
+         memcpy(g_pUserList[i].szPassword, pszPassword, SHA1_DIGEST_SIZE);
          dwResult = RCC_SUCCESS;
          break;
       }
