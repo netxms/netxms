@@ -76,6 +76,8 @@ EXTRA_DIST = \
 	ThresholdDlg.cpp ThresholdDlg.h \
 	ToolBox.cpp ToolBox.h \
 	tools.cpp \
+	TrapEditor.cpp TrapEditor.h \
+	TrapEditDlg.cpp TrapEditDlg.h \
 	UserEditor.cpp UserEditor.h \
 	UserPropDlg.cpp UserPropDlg.h \
 	UserSelectDlg.cpp UserSelectDlg.h

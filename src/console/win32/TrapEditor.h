@@ -33,7 +33,7 @@ public:
 // Implementation
 protected:
 	void UpdateItem(int iItem, DWORD dwIndex);
-	void AddItem(DWORD dwIndex);
+	int AddItem(DWORD dwIndex);
 	CListCtrl m_wndListCtrl;
 	virtual ~CTrapEditor();
 
@@ -50,6 +50,7 @@ protected:
 	afx_msg void OnUpdateTrapEdit(CCmdUI* pCmdUI);
 	afx_msg void OnTrapNew();
 	afx_msg void OnTrapDelete();
+	afx_msg void OnTrapEdit();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

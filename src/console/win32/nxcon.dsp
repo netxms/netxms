@@ -358,6 +358,10 @@ SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TrapEditDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\TrapEditor.cpp
 # End Source File
 # Begin Source File
@@ -550,6 +554,10 @@ SOURCE=.\nxcon.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxsnmp.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectBrowser.h
 # End Source File
 # Begin Source File
@@ -631,6 +639,10 @@ SOURCE=.\ThresholdDlg.h
 # Begin Source File
 
 SOURCE=.\ToolBox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TrapEditDlg.h
 # End Source File
 # Begin Source File
 

@@ -314,6 +314,8 @@ src/console/win32/ThresholdDlg.cpp -text
 src/console/win32/ThresholdDlg.h -text
 src/console/win32/ToolBox.cpp -text
 src/console/win32/ToolBox.h -text
+src/console/win32/TrapEditDlg.cpp -text
+src/console/win32/TrapEditDlg.h -text
 src/console/win32/TrapEditor.cpp -text
 src/console/win32/TrapEditor.h -text
 src/console/win32/UserEditor.cpp -text

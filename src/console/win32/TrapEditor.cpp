@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "TrapEditor.h"
+#include "TrapEditDlg.h"
 #include <nxsnmp.h>
 
 #ifdef _DEBUG
@@ -43,6 +44,7 @@ BEGIN_MESSAGE_MAP(CTrapEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_TRAP_EDIT, OnUpdateTrapEdit)
 	ON_COMMAND(ID_TRAP_NEW, OnTrapNew)
 	ON_COMMAND(ID_TRAP_DELETE, OnTrapDelete)
+	ON_COMMAND(ID_TRAP_EDIT, OnTrapEdit)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -166,7 +168,7 @@ void CTrapEditor::OnViewRefresh()
 // Add new item to list
 //
 
-void CTrapEditor::AddItem(DWORD dwIndex)
+int CTrapEditor::AddItem(DWORD dwIndex)
 {
    TCHAR szBuffer[32];
    int iItem;
@@ -178,6 +180,7 @@ void CTrapEditor::AddItem(DWORD dwIndex)
       m_wndListCtrl.SetItemData(iItem, m_pTrapList[dwIndex].dwId);
       UpdateItem(iItem, dwIndex);
    }
+   return iItem;
 }
 
 
@@ -216,10 +219,12 @@ void CTrapEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 
 void CTrapEditor::OnUpdateTrapDelete(CCmdUI* pCmdUI) 
 {
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
 void CTrapEditor::OnUpdateTrapEdit(CCmdUI* pCmdUI) 
 {
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
 }
 
 
@@ -229,8 +234,23 @@ void CTrapEditor::OnUpdateTrapEdit(CCmdUI* pCmdUI)
 
 void CTrapEditor::OnTrapNew() 
 {
-	// TODO: Add your command handler code here
-	
+   DWORD dwResult, dwTrapId;
+
+   dwResult = DoRequestArg1(NXCCreateTrap, &dwTrapId, _T("Creating trap configuration record..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      m_pTrapList = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapList, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
+      memset(&m_pTrapList[m_dwNumTraps], 0, sizeof(NXC_TRAP_CFG_ENTRY));
+      m_pTrapList[m_dwNumTraps].dwId = dwTrapId;
+      m_pTrapList[m_dwNumTraps].dwEventId = EVENT_SNMP_UNMATCHED_TRAP;
+      m_dwNumTraps++;
+      SelectListViewItem(&m_wndListCtrl, AddItem(m_dwNumTraps - 1));
+      PostMessage(WM_COMMAND, ID_TRAP_EDIT);
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Error creating trap configuration:\n%s"));
+   }
 }
 
 
@@ -289,5 +309,64 @@ void CTrapEditor::OnTrapDelete()
       if (dwResult != RCC_SUCCESS)
          theApp.ErrorBox(dwResult, _T("Error deleting trap configuration record:\n%s"));
       free(pdwDeleteList);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_TRAP_EDIT message handler
+//
+
+void CTrapEditor::OnTrapEdit() 
+{
+   CTrapEditDlg dlg;
+   int iItem;
+   DWORD i, dwIndex, dwTrapId;
+
+   if (m_wndListCtrl.GetSelectedCount() == 1)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+      if (iItem != -1)
+      {
+         dwTrapId = m_wndListCtrl.GetItemData(iItem);
+         for(dwIndex = 0; dwIndex < m_dwNumTraps; dwIndex++)
+            if (m_pTrapList[dwIndex].dwId == dwTrapId)
+               break;
+         if (dwIndex < m_dwNumTraps)
+         {
+            // Copy existing record to dialog object for editing
+            memcpy(&dlg.m_trap, &m_pTrapList[dwIndex], sizeof(NXC_TRAP_CFG_ENTRY));
+            dlg.m_trap.pdwObjectId = 
+               (DWORD *)nx_memdup(m_pTrapList[dwIndex].pdwObjectId, 
+                                  sizeof(DWORD) * m_pTrapList[dwIndex].dwOidLen);
+            dlg.m_trap.pMaps = 
+               (NXC_OID_MAP *)nx_memdup(m_pTrapList[dwIndex].pMaps, 
+                                        sizeof(NXC_OID_MAP) * m_pTrapList[dwIndex].dwNumMaps);
+            for(i = 0; i < m_pTrapList[dwIndex].dwNumMaps; i++)
+            {
+               dlg.m_trap.pMaps[i].pdwObjectId = 
+                  (DWORD *)nx_memdup(m_pTrapList[dwIndex].pMaps[i].pdwObjectId, 
+                                     sizeof(DWORD) * m_pTrapList[dwIndex].pMaps[i].dwOidLen);
+            }
+
+            // Run dialog and update record list on success
+            if (dlg.DoModal() == IDOK)
+            {
+               // Clean existing configuration record
+               for(i = 0; i < m_pTrapList[dwIndex].dwNumMaps; i++)
+                  safe_free(m_pTrapList[dwIndex].pMaps[i].pdwObjectId);
+               safe_free(m_pTrapList[dwIndex].pMaps);
+               safe_free(m_pTrapList[dwIndex].pdwObjectId);
+
+               // Copy updated record over existing
+               memcpy(&m_pTrapList[dwIndex], &dlg.m_trap, sizeof(NXC_TRAP_CFG_ENTRY));
+
+               // Prevent memory blocks from freeing by dialog destructor
+               dlg.m_trap.pdwObjectId = NULL;
+               dlg.m_trap.dwNumMaps = 0;
+               dlg.m_trap.pMaps = NULL;
+            }
+         }
+      }
    }
 }
