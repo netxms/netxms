@@ -162,9 +162,13 @@ inline THREAD ThreadCreate(void (*start_address )(void *), int stack_size, void 
 {
 	THREAD id;
 
-	if (pthread_create(&id, NULL, (void *(*)(void *))start_address, args) == 0) {
+	if (pthread_create(&id, NULL, (void *(*)(void *))start_address, args) == 0) 
+   {
+      pthread_detach(id);
 		return id;
-	} else {
+	} 
+   else 
+   {
 		return 0;
 	}
 }

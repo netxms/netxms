@@ -21,7 +21,6 @@ GENERAL:
   and unsigned integer 64 bits
 - Allow converting counters to deltas in data collection
 - Implement ThreadWait
-- Detach threads after start because normally noone calls pthread_join
 
 
 SERVER:

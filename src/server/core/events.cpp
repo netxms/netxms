@@ -288,7 +288,19 @@ char *Event::ExpandText(char *szTemplate)
                pCurr--;
                break;   // Abnormal loop termination
             }
-            pText[dwPos++] = *pCurr;
+            switch(*pCurr)
+            {
+               case 't':
+                  pText[dwPos++] = '\t';
+                  break;
+               case 'n':
+                  pText[dwPos++] = 0x0D;
+                  pText[dwPos++] = 0x0A;
+                  break;
+               default:
+                  pText[dwPos++] = *pCurr;
+                  break;
+            }
             break;
          default:
             pText[dwPos++] = *pCurr;
