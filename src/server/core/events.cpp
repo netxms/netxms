@@ -324,7 +324,7 @@ static BOOL LoadEvents(void)
    DWORD i;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT id,severity,flags,message,description FROM events ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT event_id,severity,flags,message,description FROM events ORDER BY event_id");
    if (hResult != NULL)
    {
       m_dwNumTemplates = DBGetNumRows(hResult);

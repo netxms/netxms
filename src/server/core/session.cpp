@@ -300,7 +300,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
       msg.SetCode(CMD_EVENT_DB_RECORD);
       msg.SetId(dwRqId);
 
-      hResult = DBAsyncSelect(g_hCoreDB, "SELECT id,name,severity,flags,message,description FROM events");
+      hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,name,severity,flags,message,description FROM events");
       while(DBFetch(hResult))
       {
          msg.SetVariable(VID_EVENT_ID, DBGetFieldAsyncULong(hResult, 0));
@@ -555,17 +555,17 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
          }
 
          // Prepare and execute SQL query
-         pszName = msg.GetVariableStr(VID_NAME);
-         pszMessage = msg.GetVariableStr(VID_MESSAGE);
-         pszDescription = msg.GetVariableStr(VID_DESCRIPTION);
+         pszName = pRequest->GetVariableStr(VID_NAME);
+         pszMessage = pRequest->GetVariableStr(VID_MESSAGE);
+         pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
          if (bEventExist)
             sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
-                    pszName, msg.GetVariableLong(VID_SEVERITY), msg.GetVariableLong(VID_FLAGS),
+                    pszName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
                     pszMessage, pszDescription, dwEventId);
          else
             sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
-                    dwEventId, pszName, msg.GetVariableLong(VID_SEVERITY),
-                    msg.GetVariableLong(VID_FLAGS), pszMessage, pszDescription);
+                    dwEventId, pszName, pRequest->GetVariableLong(VID_SEVERITY),
+                    pRequest->GetVariableLong(VID_FLAGS), pszMessage, pszDescription);
          if (DBQuery(g_hCoreDB, szQuery))
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
