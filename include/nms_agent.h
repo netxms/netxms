@@ -119,7 +119,7 @@ typedef struct
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0xAD000109)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0xAD00010C)
 
 class CSCPMessage;
 
@@ -129,7 +129,8 @@ typedef struct
    TCHAR szName[MAX_SUBAGENT_NAME];
    TCHAR szVersion[16];
    void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
-   BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg);
+   BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
+                            CSCPMessage *pResponce);
    DWORD dwNumParameters;
    NETXMS_SUBAGENT_PARAM *pParamList;
    DWORD dwNumEnums;
