@@ -265,7 +265,6 @@ protected:
    Node *m_pHostNode;    // Pointer to node object which hosts this service
    Node *m_pPollNode;    // Pointer to node object which is used for polling
                          // If NULL, m_pHostNode->m_pPollNode will be used
-   DWORD m_dwIpBindAddr; // IP address this service listen on, or 0.0.0.0 for all interfaces
    WORD m_wProto;        // Protocol (TCP, UDP, etc.)
    WORD m_wPort;         // TCP or UDP port number
    TCHAR *m_pszRequest;  // Service-specific request

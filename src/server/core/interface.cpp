@@ -83,14 +83,14 @@ Interface::~Interface()
 
 BOOL Interface::CreateFromDB(DWORD dwId)
 {
-   char szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
    DWORD dwNodeId;
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id,"
-                    "image_id,is_deleted,mac_addr FROM interfaces WHERE id=%d", dwId);
+   _sntprintf(szQuery, 256, _T("SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id,"
+                               "image_id,is_deleted,mac_addr FROM interfaces WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
