@@ -147,11 +147,11 @@ void AgentConnection::ReceiverThread(void)
    MutexLock(m_mutexReceiverThreadRunning, INFINITE);
 
    // Initialize raw message receiving function
-   pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
+   pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    RecvCSCPMessage(0, NULL, pMsgBuffer, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)MemAlloc(RECEIVER_BUFFER_SIZE);
+   pRawMsg = (CSCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
 
    // Message receiving loop
    while(1)
@@ -192,8 +192,8 @@ void AgentConnection::ReceiverThread(void)
    // Close socket and mark connection as disconnected
    Disconnect();
 
-   MemFree(pRawMsg);
-   MemFree(pMsgBuffer);
+   free(pRawMsg);
+   free(pMsgBuffer);
 
    MutexUnlock(m_mutexReceiverThreadRunning);
 }
@@ -305,8 +305,8 @@ void AgentConnection::DestroyResultData(void)
    {
       for(i = 0; i < m_dwNumDataLines; i++)
          if (m_ppDataLines[i] != NULL)
-            MemFree(m_ppDataLines[i]);
-      MemFree(m_ppDataLines);
+            free(m_ppDataLines[i]);
+      free(m_ppDataLines);
       m_ppDataLines = NULL;
    }
    m_dwNumDataLines = 0;
@@ -325,9 +325,9 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 
    if (GetList("InterfaceList") == ERR_SUCCESS)
    {
-      pIfList = (INTERFACE_LIST *)MemAlloc(sizeof(INTERFACE_LIST));
+      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
       pIfList->iNumEntries = m_dwNumDataLines;
-      pIfList->pInterfaces = (INTERFACE_INFO *)MemAlloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
       memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
       for(i = 0; i < m_dwNumDataLines; i++)
       {
@@ -377,7 +377,9 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
          strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
       }
 
+      Lock();
       DestroyResultData();
+      Unlock();
    }
 
    return pIfList;
@@ -441,9 +443,9 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
    if (GetList("ArpCache") == ERR_SUCCESS)
    {
       // Create empty structure
-      pArpCache = (ARP_CACHE *)MemAlloc(sizeof(ARP_CACHE));
+      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
       pArpCache->dwNumEntries = m_dwNumDataLines;
-      pArpCache->pEntries = (ARP_ENTRY *)MemAlloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
+      pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
       memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
 
       szByte[2] = 0;
@@ -538,7 +540,7 @@ BOOL AgentConnection::SendMessage(CSCPMessage *pMsg)
 
    pRawMsg = pMsg->CreateMessage();
    bResult = (send(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
-   MemFree(pRawMsg);
+   free(pRawMsg);
    return bResult;
 }
 
@@ -578,7 +580,7 @@ DWORD AgentConnection::GetList(char *pszParam)
             if (dwRetCode == ERR_SUCCESS)
             {
                m_dwNumDataLines = pResponce->GetVariableLong(VID_NUM_STRINGS);
-               m_ppDataLines = (char **)MemAlloc(sizeof(char *) * m_dwNumDataLines);
+               m_ppDataLines = (char **)malloc(sizeof(char *) * m_dwNumDataLines);
                for(i = 0; i < m_dwNumDataLines; i++)
                   m_ppDataLines[i] = pResponce->GetVariableStr(VID_ENUM_VALUE_BASE + i);
             }

@@ -583,7 +583,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_bEventBrowserActive)
             m_pwndEventBrowser->AddEvent((NXC_EVENT *)pArg);
-         MemFree(pArg);
+         free(pArg);
          break;
       case NXC_EVENT_OBJECT_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);

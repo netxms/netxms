@@ -138,12 +138,7 @@ extern "C"
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
 
-   void LIBNETXMS_EXPORTABLE *MemAlloc(DWORD dwSize);
-   void LIBNETXMS_EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
-   void LIBNETXMS_EXPORTABLE MemFree(void *pBlock);
-
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
-   char LIBNETXMS_EXPORTABLE *nx_strdup(const char *pSrc);
 
    void LIBNETXMS_EXPORTABLE StrStrip(char *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);

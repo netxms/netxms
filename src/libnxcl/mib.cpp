@@ -46,15 +46,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList)
    pResponce = WaitForMessage(CMD_MIB_LIST, dwRqId, 2000);
    if (pResponce != NULL)
    {
-      *ppMibList = (NXC_MIB_LIST *)MemAlloc(sizeof(NXC_MIB_LIST));
+      *ppMibList = (NXC_MIB_LIST *)malloc(sizeof(NXC_MIB_LIST));
       (*ppMibList)->dwNumFiles = pResponce->GetVariableLong(VID_NUM_MIBS);
-      (*ppMibList)->ppszName = (char **)MemAlloc(sizeof(char *) * (*ppMibList)->dwNumFiles);
-      (*ppMibList)->ppHash = (BYTE **)MemAlloc(sizeof(BYTE *) * (*ppMibList)->dwNumFiles);
+      (*ppMibList)->ppszName = (char **)malloc(sizeof(char *) * (*ppMibList)->dwNumFiles);
+      (*ppMibList)->ppHash = (BYTE **)malloc(sizeof(BYTE *) * (*ppMibList)->dwNumFiles);
       for(i = 0, dwId1 = VID_MIB_NAME_BASE, dwId2 = VID_MIB_HASH_BASE; 
           i < (*ppMibList)->dwNumFiles; i++, dwId1++, dwId2++)
       {
          (*ppMibList)->ppszName[i] = pResponce->GetVariableStr(dwId1);
-         (*ppMibList)->ppHash[i] = (BYTE *)MemAlloc(MD5_DIGEST_SIZE);
+         (*ppMibList)->ppHash[i] = (BYTE *)malloc(MD5_DIGEST_SIZE);
          pResponce->GetVariableBinary(dwId2, (*ppMibList)->ppHash[i], MD5_DIGEST_SIZE);
       }
       delete pResponce;
@@ -79,12 +79,12 @@ void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList)
 
    for(i = 0; i < pMibList->dwNumFiles; i++)
    {
-      MemFree(pMibList->ppHash[i]);
-      MemFree(pMibList->ppszName[i]);
+      safe_free(pMibList->ppHash[i]);
+      safe_free(pMibList->ppszName[i]);
    }
-   MemFree(pMibList->ppHash);
-   MemFree(pMibList->ppszName);
-   MemFree(pMibList);
+   safe_free(pMibList->ppHash);
+   safe_free(pMibList->ppszName);
+   free(pMibList);
 }
 
 
@@ -114,7 +114,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir)
       if (dwRetCode == RCC_SUCCESS)
       {
          dwFileSize = pResponce->GetVariableLong(VID_MIB_FILE_SIZE);
-         pBuffer = (BYTE *)MemAlloc(dwFileSize);
+         pBuffer = (BYTE *)malloc(dwFileSize);
          if (pBuffer != NULL)
          {
             pResponce->GetVariableBinary(VID_MIB_FILE, pBuffer, dwFileSize);
@@ -135,7 +135,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir)
             {
                dwRetCode = RCC_IO_ERROR;
             }
-            MemFree(pBuffer);
+            free(pBuffer);
          }
          else
          {

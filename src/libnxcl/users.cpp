@@ -52,7 +52,7 @@ static void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
       DWORD i, dwId;
 
       pUser->dwNumMembers = pMsg->GetVariableLong(VID_NUM_MEMBERS);
-      pUser->pdwMemberList = (DWORD *)MemReAlloc(pUser->pdwMemberList, sizeof(DWORD) * pUser->dwNumMembers);
+      pUser->pdwMemberList = (DWORD *)realloc(pUser->pdwMemberList, sizeof(DWORD) * pUser->dwNumMembers);
       for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUser->dwNumMembers; i++, dwId++)
          pUser->pdwMemberList[i] = pMsg->GetVariableLong(dwId);
    }
@@ -83,7 +83,7 @@ void ProcessUserDBUpdate(CSCPMessage *pMsg)
          if (pUser == NULL)
          {
             // No user with this id, create one
-            m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
+            m_pUserList = (NXC_USER *)realloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
             memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
 
             // Process common fields
@@ -97,7 +97,7 @@ void ProcessUserDBUpdate(CSCPMessage *pMsg)
          if (pUser == NULL)
          {
             // No user with this id, create one
-            m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
+            m_pUserList = (NXC_USER *)realloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
             memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
             pUser = &m_pUserList[m_dwNumUsers];
             m_dwNumUsers++;
@@ -130,7 +130,7 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
          break;
       case CMD_USER_DATA:
       case CMD_GROUP_DATA:
-         m_pUserList = (NXC_USER *)MemReAlloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
+         m_pUserList = (NXC_USER *)realloc(m_pUserList, sizeof(NXC_USER) * (m_dwNumUsers + 1));
          memset(&m_pUserList[m_dwNumUsers], 0, sizeof(NXC_USER));
          UpdateUserFromMessage(pMsg, &m_pUserList[m_dwNumUsers]);
          m_dwNumUsers++;

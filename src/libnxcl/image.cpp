@@ -55,7 +55,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir, WO
       if (dwRetCode == RCC_SUCCESS)
       {
          dwFileSize = pResponce->GetVariableLong(VID_IMAGE_FILE_SIZE);
-         pBuffer = (BYTE *)MemAlloc(dwFileSize);
+         pBuffer = (BYTE *)malloc(dwFileSize);
          if (pBuffer != NULL)
          {
             pResponce->GetVariableBinary(VID_IMAGE_FILE, pBuffer, dwFileSize);
@@ -77,7 +77,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, char *pszCacheDir, WO
             {
                dwRetCode = RCC_IO_ERROR;
             }
-            MemFree(pBuffer);
+            free(pBuffer);
          }
          else
          {
@@ -138,11 +138,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, char *pszCa
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *ppImageList = (NXC_IMAGE_LIST *)MemAlloc(sizeof(NXC_IMAGE_LIST));
+         *ppImageList = (NXC_IMAGE_LIST *)malloc(sizeof(NXC_IMAGE_LIST));
          (*ppImageList)->dwNumImages = pResponce->GetVariableLong(VID_NUM_IMAGES);
          if ((*ppImageList)->dwNumImages > 0)
          {
-            (*ppImageList)->pImageList = (NXC_IMAGE *)MemAlloc(sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
+            (*ppImageList)->pImageList = (NXC_IMAGE *)malloc(sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
             pResponce->GetVariableBinary(VID_IMAGE_LIST, (BYTE *)(*ppImageList)->pImageList, 
                                          sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
             for(i = 0; i < (*ppImageList)->dwNumImages; i++)
@@ -181,8 +181,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList)
 {
    if (pImageList != NULL)
    {
-      MemFree(pImageList->pImageList);
-      MemFree(pImageList);
+      safe_free(pImageList->pImageList);
+      free(pImageList);
    }
 }
 
@@ -210,8 +210,8 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize,
       if (dwRetCode == RCC_SUCCESS)
       {
          *pdwListSize = pResponce->GetVariableLong(VID_NUM_IMAGES);
-         *ppdwClassId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
-         *ppdwImageId = (DWORD *)MemAlloc(sizeof(DWORD) * *pdwListSize);
+         *ppdwClassId = (DWORD *)malloc(sizeof(DWORD) * *pdwListSize);
+         *ppdwImageId = (DWORD *)malloc(sizeof(DWORD) * *pdwListSize);
          pResponce->GetVariableInt32Array(VID_CLASS_ID_LIST, *pdwListSize, *ppdwClassId);
          pResponce->GetVariableInt32Array(VID_IMAGE_ID_LIST, *pdwListSize, *ppdwImageId);
       }

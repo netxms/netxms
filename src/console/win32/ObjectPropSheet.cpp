@@ -38,7 +38,7 @@ CObjectPropSheet::~CObjectPropSheet()
 {
    // Access list can be allocated if we have changed it in "Security" tab
    // Otherwise it will be NULL because of memset() in constructor
-   MemFree(m_update.pAccessList);
+   safe_free(m_update.pAccessList);
 }
 
 

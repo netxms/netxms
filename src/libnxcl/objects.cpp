@@ -96,7 +96,7 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
    DebugPrintf("AddObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
    NXCLockObjectIndex();
-   m_pIndexById = (INDEX *)MemReAlloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
+   m_pIndexById = (INDEX *)realloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
    m_pIndexById[m_dwNumObjects].pObject = pObject;
    m_dwNumObjects++;
@@ -114,12 +114,12 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
    DebugPrintf("ReplaceObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
    if (pObject->iClass == OBJECT_CONTAINER)
-      MemFree(pObject->container.pszDescription);
-   MemFree(pObject->pdwChildList);
-   MemFree(pObject->pdwParentList);
-   MemFree(pObject->pAccessList);
+      safe_free(pObject->container.pszDescription);
+   safe_free(pObject->pdwChildList);
+   safe_free(pObject->pdwParentList);
+   safe_free(pObject->pAccessList);
    memcpy(pObject, pNewObject, sizeof(NXC_OBJECT));
-   MemFree(pNewObject);
+   free(pNewObject);
 }
 
 
@@ -131,11 +131,11 @@ static void DestroyObject(NXC_OBJECT *pObject)
 {
    DebugPrintf("DestroyObject(id:%ld, name:\"%s\")", pObject->dwId, pObject->szName);
    if (pObject->iClass == OBJECT_CONTAINER)
-      MemFree(pObject->container.pszDescription);
-   MemFree(pObject->pdwChildList);
-   MemFree(pObject->pdwParentList);
-   MemFree(pObject->pAccessList);
-   MemFree(pObject);
+      safe_free(pObject->container.pszDescription);
+   safe_free(pObject->pdwChildList);
+   safe_free(pObject->pdwParentList);
+   safe_free(pObject->pAccessList);
+   free(pObject);
 }
 
 
@@ -149,7 +149,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    DWORD i, dwId1, dwId2;
 
    // Allocate memory for new object structure
-   pObject = (NXC_OBJECT *)MemAlloc(sizeof(NXC_OBJECT));
+   pObject = (NXC_OBJECT *)malloc(sizeof(NXC_OBJECT));
    memset(pObject, 0, sizeof(NXC_OBJECT));
 
    // Common attributes
@@ -163,20 +163,20 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
-   pObject->pdwParentList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumParents);
+   pObject->pdwParentList = (DWORD *)malloc(sizeof(DWORD) * pObject->dwNumParents);
    for(i = 0, dwId1 = VID_PARENT_ID_BASE; i < pObject->dwNumParents; i++, dwId1++)
       pObject->pdwParentList[i] = pMsg->GetVariableLong(dwId1);
 
    // Childs
    pObject->dwNumChilds = pMsg->GetVariableLong(VID_CHILD_CNT);
-   pObject->pdwChildList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumChilds);
+   pObject->pdwChildList = (DWORD *)malloc(sizeof(DWORD) * pObject->dwNumChilds);
    for(i = 0, dwId1 = VID_CHILD_ID_BASE; i < pObject->dwNumChilds; i++, dwId1++)
       pObject->pdwChildList[i] = pMsg->GetVariableLong(dwId1);
 
    // Access control
    pObject->bInheritRights = pMsg->GetVariableShort(VID_INHERIT_RIGHTS);
    pObject->dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
-   pObject->pAccessList = (NXC_ACL_ENTRY *)MemAlloc(sizeof(NXC_ACL_ENTRY) * pObject->dwAclSize);
+   pObject->pAccessList = (NXC_ACL_ENTRY *)malloc(sizeof(NXC_ACL_ENTRY) * pObject->dwAclSize);
    for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE; 
        i < pObject->dwAclSize; i++, dwId1++, dwId2++)
    {

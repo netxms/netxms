@@ -229,10 +229,10 @@ void ClientSession::WriteThread(void)
       DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
       if (send(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
       {
-         MemFree(pMsg);
+         safe_free(pMsg);
          break;
       }
-      MemFree(pMsg);
+      safe_free(pMsg);
    }
    MutexUnlock(m_mutexWriteThreadRunning);
 }
@@ -831,7 +831,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
             pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
             pszEscDescr = EncodeSQLString(pszDescription);
-            MemFree(pszDescription);
+            safe_free(pszDescription);
 
             if (bEventExist)
             {
@@ -2016,7 +2016,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                         pObject = new Container(szObjectName, 
                                                 pRequest->GetVariableLong(VID_CATEGORY),
                                                 pDescription);
-                        MemFree(pDescription);
+                        safe_free(pDescription);
                         NetObjInsert(pObject, TRUE);
                         break;
                   }

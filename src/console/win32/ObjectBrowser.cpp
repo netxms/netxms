@@ -640,7 +640,7 @@ restart_parent_check:;
             }
 
          // Destroy copy of object's parents list
-         MemFree(pdwParentList);
+         safe_free(pdwParentList);
       }
       else
       {

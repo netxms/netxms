@@ -216,5 +216,5 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    pWnd = theApp.GetAlarmBrowser();
    if (pWnd != NULL)
       pWnd->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
-   MemFree((void *)lParam);
+   free((void *)lParam);
 }

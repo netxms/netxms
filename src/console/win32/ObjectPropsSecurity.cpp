@@ -27,7 +27,7 @@ CObjectPropsSecurity::CObjectPropsSecurity() : CPropertyPage(CObjectPropsSecurit
 
 CObjectPropsSecurity::~CObjectPropsSecurity()
 {
-   MemFree(m_pAccessList);
+   safe_free(m_pAccessList);
 }
 
 void CObjectPropsSecurity::DoDataExchange(CDataExchange* pDX)
@@ -182,7 +182,7 @@ void CObjectPropsSecurity::OnAddUser()
          NXC_USER *pUser;
 
          // Create new entry in ACL
-         m_pAccessList = (NXC_ACL_ENTRY *)MemReAlloc(m_pAccessList, sizeof(NXC_ACL_ENTRY) * (m_dwAclSize + 1));
+         m_pAccessList = (NXC_ACL_ENTRY *)realloc(m_pAccessList, sizeof(NXC_ACL_ENTRY) * (m_dwAclSize + 1));
          m_pAccessList[m_dwAclSize].dwUserId = wndSelectDlg.m_dwUserId;
          m_pAccessList[m_dwAclSize].dwAccessRights = OBJECT_ACCESS_READ;
          m_dwAclSize++;

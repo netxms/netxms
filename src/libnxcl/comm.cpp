@@ -63,7 +63,7 @@ BOOL SendMsg(CSCPMessage *pMsg)
    DebugPrintf("SendMsg(\"%s\", id:%ld)", CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    bResult = SendRawMsg(pRawMsg);
-   MemFree(pRawMsg);
+   free(pRawMsg);
    return bResult;
 }
 
@@ -82,11 +82,11 @@ static void NetReceiver(void *pArg)
    char szBuffer[128];
 
    // Initialize raw message receiving function
-   pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
+   pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    RecvCSCPMessage(0, NULL, pMsgBuffer, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)MemAlloc(m_dwReceiverBufferSize);
+   pRawMsg = (CSCP_MESSAGE *)malloc(m_dwReceiverBufferSize);
 
    // Message receiving loop
    while(1)
@@ -190,8 +190,8 @@ static void NetReceiver(void *pArg)
    CompleteSync(RCC_COMM_FAILURE);    // Abort active sync operation
    DebugPrintf("Network receiver thread stopped");
    ChangeState(STATE_DISCONNECTED);
-   MemFree(pRawMsg);
-   MemFree(pMsgBuffer);
+   free(pRawMsg);
+   free(pMsgBuffer);
 
    // Close socket
    shutdown(m_hSocket, SHUT_WR);

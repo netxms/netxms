@@ -71,31 +71,6 @@ char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer)
 
 
 //
-// Our memory allocation wrappers
-// We need them primary because of Windows CLIB behavior:
-// every module has it's own memory block list, so if memory block
-// was allocated in DLL by malloc(), call to free() for this block in
-// main program will cause crash.
-//
-
-void LIBNETXMS_EXPORTABLE *MemAlloc(DWORD dwSize)
-{
-   return malloc(dwSize);
-}
-
-void LIBNETXMS_EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize)
-{
-   return realloc(pBlock, dwNewSize);
-}
-
-void LIBNETXMS_EXPORTABLE MemFree(void *pBlock)
-{
-   if (pBlock != NULL)
-      free(pBlock);
-}
-
-
-//
 // Duplicate memory block
 //
 
@@ -103,23 +78,9 @@ void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
 {
    void *pNewData;
 
-   pNewData = MemAlloc(dwSize);
+   pNewData = malloc(dwSize);
    memcpy(pNewData, pData, dwSize);
    return pNewData;
-}
-
-
-//
-// Duplicate string using MemAlloc()
-//
-
-char LIBNETXMS_EXPORTABLE *nx_strdup(const char *pSrc)
-{
-   char *pDest;
-
-   pDest = (char *)MemAlloc(strlen(pSrc) + 1);
-   strcpy(pDest, pSrc);
-   return pDest;
 }
 
 
@@ -233,8 +194,8 @@ void LIBNETXMS_EXPORTABLE StrStrip(char *str)
 
 void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, char *pszString)
 {
-   pList->ppStringList = (char **)MemReAlloc(pList->ppStringList, sizeof(char *) * (pList->dwNumStrings + 1));
-   pList->ppStringList[pList->dwNumStrings] = nx_strdup(pszString);
+   pList->ppStringList = (char **)realloc(pList->ppStringList, sizeof(char *) * (pList->dwNumStrings + 1));
+   pList->ppStringList[pList->dwNumStrings] = strdup(pszString);
    pList->dwNumStrings++;
 }
 

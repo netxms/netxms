@@ -76,8 +76,8 @@ void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList)
    if (pIfList != NULL)
    {
       if (pIfList->pInterfaces != NULL)
-         MemFree(pIfList->pInterfaces);
-      MemFree(pIfList);
+         free(pIfList->pInterfaces);
+      free(pIfList);
    }
 }
 
@@ -91,8 +91,8 @@ void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache)
    if (pArpCache != NULL)
    {
       if (pArpCache->pEntries != NULL)
-         MemFree(pArpCache->pEntries);
-      MemFree(pArpCache);
+         free(pArpCache->pEntries);
+      free(pArpCache);
    }
 }
 

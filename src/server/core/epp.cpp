@@ -52,7 +52,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
-   m_pszComment = nx_strdup(DBGetField(hResult, iRow, 2));
+   m_pszComment = strdup(DBGetField(hResult, iRow, 2));
    DecodeSQLString(m_pszComment);
    strcpy(m_szAlarmMessage, DBGetField(hResult, iRow, 3));
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
@@ -99,7 +99,7 @@ EPRule::~EPRule()
    safe_free(m_pdwSourceList);
    safe_free(m_pdwEventList);
    safe_free(m_pdwActionList);
-   MemFree(m_pszComment);
+   safe_free(m_pszComment);
 }
 
 

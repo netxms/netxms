@@ -50,7 +50,7 @@ void ProcessDCI(CSCPMessage *pMsg)
 
             i = m_pItemList->dwNumItems;
             m_pItemList->dwNumItems++;
-            m_pItemList->pItems = (NXC_DCI *)MemReAlloc(m_pItemList->pItems, 
+            m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems, 
                                           sizeof(NXC_DCI) * m_pItemList->dwNumItems);
             m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
             m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
@@ -61,7 +61,7 @@ void ProcessDCI(CSCPMessage *pMsg)
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
             m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
             m_pItemList->pItems[i].pThresholdList = 
-               (NXC_DCI_THRESHOLD *)MemAlloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
+               (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
             for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
             {
                pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
@@ -110,7 +110,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
    dwRqId = g_dwMsgId++;
    PrepareForSync();
 
-   m_pItemList = (NXC_DCI_LIST *)MemAlloc(sizeof(NXC_DCI_LIST));
+   m_pItemList = (NXC_DCI_LIST *)malloc(sizeof(NXC_DCI_LIST));
    m_pItemList->dwNodeId = dwNodeId;
    m_pItemList->dwNumItems = 0;
    m_pItemList->pItems = NULL;
@@ -132,12 +132,12 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppIte
       }
       else
       {
-         MemFree(m_pItemList);
+         free(m_pItemList);
       }
    }
    else
    {
-      MemFree(m_pItemList);
+      free(m_pItemList);
    }
 
    m_pItemList = NULL;
@@ -166,9 +166,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
       dwRetCode = WaitForRCC(dwRqId);
 
       for(i = 0; i < pItemList->dwNumItems; i++)
-         MemFree(pItemList->pItems[i].pThresholdList);
-      MemFree(pItemList->pItems);
-      MemFree(pItemList);
+         free(pItemList->pItems[i].pThresholdList);
+      safe_free(pItemList->pItems);
+      free(pItemList);
    }
    return dwRetCode;
 }
@@ -199,7 +199,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItem
          *pdwItemId = pResponce->GetVariableLong(VID_DCI_ID);
 
          // Create new entry in list
-         pItemList->pItems = (NXC_DCI *)MemReAlloc(pItemList->pItems, 
+         pItemList->pItems = (NXC_DCI *)realloc(pItemList->pItems, 
                                                    sizeof(NXC_DCI) * (pItemList->dwNumItems + 1));
          memset(&pItemList->pItems[pItemList->dwNumItems], 0, sizeof(NXC_DCI));
          pItemList->pItems[pItemList->dwNumItems].dwId = *pdwItemId;
@@ -329,7 +329,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
          if (dwResult == RCC_SUCCESS)
          {
             // Item was successfully deleted on server, delete it from our list
-            MemFree(pItemList->pItems[i].pThresholdList);
+            safe_free(pItemList->pItems[i].pThresholdList);
             pItemList->dwNumItems--;
             memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1], 
                     sizeof(NXC_DCI) * (pItemList->dwNumItems - i));
@@ -393,14 +393,14 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
          pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
 
          // Allocate memory for results and initialize header
-         *ppData = (NXC_DCI_DATA *)MemAlloc(sizeof(NXC_DCI_DATA));
+         *ppData = (NXC_DCI_DATA *)malloc(sizeof(NXC_DCI_DATA));
          (*ppData)->dwNumRows = ntohl(pHdr->dwNumRows);
          (*ppData)->dwNodeId = dwNodeId;
          (*ppData)->dwItemId = dwItemId;
          (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
          (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
          (*ppData)->pRows = ((*ppData)->dwNumRows > 0 ? 
-               (NXC_DCI_ROW *)MemAlloc((*ppData)->dwNumRows * (*ppData)->wRowSize) : NULL);
+               (NXC_DCI_ROW *)malloc((*ppData)->dwNumRows * (*ppData)->wRowSize) : NULL);
 
          // Convert and copy values from message to rows in result
          pSrc = (DCI_DATA_ROW *)(((char *)pHdr) + sizeof(DCI_DATA_HEADER));
@@ -426,7 +426,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
          }
 
          // Destroy message
-         MemFree(pRawMsg);
+         free(pRawMsg);
       }
       else
       {
@@ -446,8 +446,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyDCIData(NXC_DCI_DATA *pData)
 {
    if (pData != NULL)
    {
-      MemFree(pData->pRows);
-      MemFree(pData);
+      safe_free(pData->pRows);
+      free(pData);
    }
 }
 
@@ -474,7 +474,7 @@ DWORD LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOLD
    DWORD dwIndex;
 
    dwIndex = pItem->dwNumThresholds++;
-   pItem->pThresholdList = (NXC_DCI_THRESHOLD *)MemReAlloc(pItem->pThresholdList,
+   pItem->pThresholdList = (NXC_DCI_THRESHOLD *)realloc(pItem->pThresholdList,
                                     sizeof(NXC_DCI_THRESHOLD) * pItem->dwNumThresholds);
    memcpy(&pItem->pThresholdList[dwIndex], pThreshold, sizeof(NXC_DCI_THRESHOLD));
    return dwIndex;

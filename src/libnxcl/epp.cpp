@@ -34,13 +34,13 @@ void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 
    for(i = 0; i < pEventPolicy->dwNumRules; i++)
    {
-      MemFree(pEventPolicy->pRuleList[i].pszComment);
-      MemFree(pEventPolicy->pRuleList[i].pdwActionList);
-      MemFree(pEventPolicy->pRuleList[i].pdwSourceList);
-      MemFree(pEventPolicy->pRuleList[i].pdwEventList);
+      safe_free(pEventPolicy->pRuleList[i].pszComment);
+      safe_free(pEventPolicy->pRuleList[i].pdwActionList);
+      safe_free(pEventPolicy->pRuleList[i].pdwSourceList);
+      safe_free(pEventPolicy->pRuleList[i].pdwEventList);
    }
-   MemFree(pEventPolicy->pRuleList);
-   MemFree(pEventPolicy);
+   safe_free(pEventPolicy->pRuleList);
+   free(pEventPolicy);
 }
 
 
@@ -68,10 +68,10 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
       if (dwRetCode == RCC_SUCCESS)
       {
          // Prepare event policy structure
-         *ppEventPolicy = (NXC_EPP *)MemAlloc(sizeof(NXC_EPP));
+         *ppEventPolicy = (NXC_EPP *)malloc(sizeof(NXC_EPP));
          (*ppEventPolicy)->dwNumRules = pResponce->GetVariableLong(VID_NUM_RULES);
          (*ppEventPolicy)->pRuleList = 
-            (NXC_EPP_RULE *)MemAlloc(sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
+            (NXC_EPP_RULE *)malloc(sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
          memset((*ppEventPolicy)->pRuleList, 0, sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
          delete pResponce;
 
@@ -88,7 +88,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
                (*ppEventPolicy)->pRuleList[i].dwNumActions = 
                   pResponce->GetVariableLong(VID_NUM_ACTIONS);
                (*ppEventPolicy)->pRuleList[i].pdwActionList = 
-                  (DWORD *)MemAlloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
+                  (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
                pResponce->GetVariableInt32Array(VID_RULE_ACTIONS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumActions,
                                                 (*ppEventPolicy)->pRuleList[i].pdwActionList);
@@ -96,7 +96,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
                (*ppEventPolicy)->pRuleList[i].dwNumEvents = 
                   pResponce->GetVariableLong(VID_NUM_EVENTS);
                (*ppEventPolicy)->pRuleList[i].pdwEventList = 
-                  (DWORD *)MemAlloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
+                  (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
                pResponce->GetVariableInt32Array(VID_RULE_EVENTS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumEvents,
                                                 (*ppEventPolicy)->pRuleList[i].pdwEventList);
@@ -104,7 +104,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
                (*ppEventPolicy)->pRuleList[i].dwNumSources = 
                   pResponce->GetVariableLong(VID_NUM_SOURCES);
                (*ppEventPolicy)->pRuleList[i].pdwSourceList = 
-                  (DWORD *)MemAlloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
+                  (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
                pResponce->GetVariableInt32Array(VID_RULE_SOURCES, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumSources,
                                                 (*ppEventPolicy)->pRuleList[i].pdwSourceList);
@@ -233,10 +233,10 @@ void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule)
 {
    if (dwRule < pEventPolicy->dwNumRules)
    {
-      MemFree(pEventPolicy->pRuleList[dwRule].pdwActionList);
-      MemFree(pEventPolicy->pRuleList[dwRule].pdwEventList);
-      MemFree(pEventPolicy->pRuleList[dwRule].pdwSourceList);
-      MemFree(pEventPolicy->pRuleList[dwRule].pszComment);
+      safe_free(pEventPolicy->pRuleList[dwRule].pdwActionList);
+      safe_free(pEventPolicy->pRuleList[dwRule].pdwEventList);
+      safe_free(pEventPolicy->pRuleList[dwRule].pdwSourceList);
+      safe_free(pEventPolicy->pRuleList[dwRule].pszComment);
       pEventPolicy->dwNumRules--;
       memmove(&pEventPolicy->pRuleList[dwRule], &pEventPolicy->pRuleList[dwRule + 1],
               sizeof(NXC_EPP_RULE) * (pEventPolicy->dwNumRules - dwRule));

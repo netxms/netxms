@@ -251,7 +251,7 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
 
    // Extend rule list
    m_pEventPolicy->dwNumRules++;
-   m_pEventPolicy->pRuleList = (NXC_EPP_RULE *)MemReAlloc(m_pEventPolicy->pRuleList,
+   m_pEventPolicy->pRuleList = (NXC_EPP_RULE *)realloc(m_pEventPolicy->pRuleList,
          sizeof(NXC_EPP_RULE) * m_pEventPolicy->dwNumRules);
    if (iPos < (int)m_pEventPolicy->dwNumRules - 1)
       memmove(&m_pEventPolicy->pRuleList[iPos + 1], &m_pEventPolicy->pRuleList[iPos],
@@ -555,7 +555,7 @@ void CEventPolicyEditor::AddSource(void)
             // New object, add it to source list
             m_pEventPolicy->pRuleList[iRow].dwNumSources++;
             m_pEventPolicy->pRuleList[iRow].pdwSourceList = 
-               (DWORD *)MemReAlloc(m_pEventPolicy->pRuleList[iRow].pdwSourceList,
+               (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwSourceList,
                   sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumSources);
             m_pEventPolicy->pRuleList[iRow].pdwSourceList[j] = dlg.m_pdwObjectList[i];
          }
@@ -589,7 +589,7 @@ void CEventPolicyEditor::AddEvent(void)
             // New object, add it to source list
             m_pEventPolicy->pRuleList[iRow].dwNumEvents++;
             m_pEventPolicy->pRuleList[iRow].pdwEventList = 
-               (DWORD *)MemReAlloc(m_pEventPolicy->pRuleList[iRow].pdwEventList,
+               (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwEventList,
                   sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumEvents);
             m_pEventPolicy->pRuleList[iRow].pdwEventList[j] = dlg.m_pdwEventList[i];
          }
@@ -798,8 +798,8 @@ void CEventPolicyEditor::EditComment(int iRow)
       dlg.m_strText = m_pEventPolicy->pRuleList[iRow].pszComment;
    if (dlg.DoModal() == IDOK)
    {
-      MemFree(m_pEventPolicy->pRuleList[iRow].pszComment);
-      m_pEventPolicy->pRuleList[iRow].pszComment = nx_strdup((LPCTSTR)dlg.m_strText);
+      safe_free(m_pEventPolicy->pRuleList[iRow].pszComment);
+      m_pEventPolicy->pRuleList[iRow].pszComment = strdup((LPCTSTR)dlg.m_strText);
       UpdateRow(iRow);
    }
 }

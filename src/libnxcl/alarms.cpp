@@ -84,7 +84,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms,
          dwAlarmId = pResponce->GetVariableLong(VID_ALARM_ID);
          if (dwAlarmId != 0)  // 0 is end of list indicator
          {
-            pList = (NXC_ALARM *)MemReAlloc(pList, sizeof(NXC_ALARM) * (dwNumAlarms + 1));
+            pList = (NXC_ALARM *)realloc(pList, sizeof(NXC_ALARM) * (dwNumAlarms + 1));
             pList[dwNumAlarms].dwAlarmId = dwAlarmId;
             AlarmFromMsg(pResponce, &pList[dwNumAlarms]);
             dwNumAlarms++;
@@ -107,7 +107,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms,
    }
    else
    {
-      MemFree(pList);
+      safe_free(pList);
       *ppAlarmList = NULL;
       *pdwNumAlarms = 0;
    }

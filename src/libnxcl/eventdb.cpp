@@ -45,11 +45,11 @@ static void DestroyEventDB(void)
 
    for(i = 0; i < m_dwNumTemplates; i++)
    {
-      MemFree(m_ppEventTemplates[i]->pszDescription);
-      MemFree(m_ppEventTemplates[i]->pszMessage);
-      MemFree(m_ppEventTemplates[i]);
+      safe_free(m_ppEventTemplates[i]->pszDescription);
+      safe_free(m_ppEventTemplates[i]->pszMessage);
+      free(m_ppEventTemplates[i]);
    }
-   MemFree(m_ppEventTemplates);
+   safe_free(m_ppEventTemplates);
    m_dwNumTemplates = 0;
    m_ppEventTemplates = NULL;
 }
@@ -64,8 +64,8 @@ NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
    NXC_EVENT_TEMPLATE *pDst;
 
    pDst = (NXC_EVENT_TEMPLATE *)nx_memdup(pSrc, sizeof(NXC_EVENT_TEMPLATE));
-   pDst->pszDescription = nx_strdup(pSrc->pszDescription);
-   pDst->pszMessage = nx_strdup(pSrc->pszMessage);
+   pDst->pszDescription = strdup(pSrc->pszDescription);
+   pDst->pszMessage = strdup(pSrc->pszMessage);
    return pDst;
 }
 
@@ -76,7 +76,7 @@ NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
 
 static void AddEventTemplate(NXC_EVENT_TEMPLATE *pEventTemplate)
 {
-   m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)MemReAlloc(m_ppEventTemplates, 
+   m_ppEventTemplates = (NXC_EVENT_TEMPLATE **)realloc(m_ppEventTemplates, 
       sizeof(NXC_EVENT_TEMPLATE *) * (m_dwNumTemplates + 1));
    m_ppEventTemplates[m_dwNumTemplates] = pEventTemplate;
    m_dwNumTemplates++;
@@ -98,7 +98,7 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
          break;
       case CMD_EVENT_DB_RECORD:
          // Allocate new event template structure and fill it with values from message
-         pEventTemplate = (NXC_EVENT_TEMPLATE *)MemAlloc(sizeof(NXC_EVENT_TEMPLATE));
+         pEventTemplate = (NXC_EVENT_TEMPLATE *)malloc(sizeof(NXC_EVENT_TEMPLATE));
          pEventTemplate->dwCode = pMsg->GetVariableLong(VID_EVENT_ID);
          pEventTemplate->dwSeverity = pMsg->GetVariableLong(VID_SEVERITY);
          pEventTemplate->dwFlags = pMsg->GetVariableLong(VID_FLAGS);
@@ -260,14 +260,14 @@ void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD
    if ((dwMask & EM_MESSAGE) && (pszMessage != NULL))
    {
       if (pEvent->pszMessage != NULL)
-         MemFree(pEvent->pszMessage);
-      pEvent->pszMessage = nx_strdup(pszMessage);
+         free(pEvent->pszMessage);
+      pEvent->pszMessage = strdup(pszMessage);
    }
    if ((dwMask & EM_DESCRIPTION) && (pszDescription != NULL))
    {
       if (pEvent->pszDescription != NULL)
-         MemFree(pEvent->pszDescription);
-      pEvent->pszDescription = nx_strdup(pszDescription);
+         free(pEvent->pszDescription);
+      pEvent->pszDescription = strdup(pszDescription);
    }
    pEvent->dwFlags |= EF_MODIFIED;
 }
@@ -292,9 +292,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void)
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         MemFree(m_pEventNamesList);
+         safe_free(m_pEventNamesList);
          m_dwNumEvents = pResponce->GetVariableLong(VID_NUM_EVENTS);
-         m_pEventNamesList = (NXC_EVENT_NAME *)MemAlloc(sizeof(NXC_EVENT_NAME) * m_dwNumEvents);
+         m_pEventNamesList = (NXC_EVENT_NAME *)malloc(sizeof(NXC_EVENT_NAME) * m_dwNumEvents);
          pResponce->GetVariableBinary(VID_EVENT_NAME_TABLE, (BYTE *)m_pEventNamesList,
                                       sizeof(NXC_EVENT_NAME) * m_dwNumEvents);
          for(i = 0; i < m_dwNumEvents; i++)

@@ -154,7 +154,7 @@ void CAlarmBrowser::OnViewRefresh()
    {
       for(i = 0; i < dwNumAlarms; i++)
          AddAlarm(&pAlarmList[i]);
-      MemFree(pAlarmList);
+      safe_free(pAlarmList);
    }
    else
    {

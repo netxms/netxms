@@ -44,7 +44,7 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
          if (pRawMsg != NULL)    // We should receive events as raw data
          {
             // Allocate new event structure and fill it with values from message
-            pEvent = (NXC_EVENT *)MemAlloc(sizeof(NXC_EVENT));
+            pEvent = (NXC_EVENT *)malloc(sizeof(NXC_EVENT));
             memcpy(pEvent, pRawMsg->df, sizeof(NXC_EVENT));
             pEvent->dwEventId = ntohl(pEvent->dwEventId);
             pEvent->dwSeverity = ntohl(pEvent->dwSeverity);

@@ -137,10 +137,10 @@ void CommSession::WriteThread(void)
       DebugPrintf("Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
       if (send(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
       {
-         MemFree(pMsg);
+         free(pMsg);
          break;
       }
-      MemFree(pMsg);
+      free(pMsg);
    }
    MutexUnlock(m_mutexWriteThreadRunning);
 }
@@ -317,8 +317,8 @@ void CommSession::GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    }
 
    for(i = 0; i < value.dwNumStrings; i++)
-      MemFree(value.ppStringList[i]);
-   MemFree(value.ppStringList);
+      safe_free(value.ppStringList[i]);
+   safe_free(value.ppStringList);
 }
 
 
@@ -335,7 +335,7 @@ void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
    // Get action name and arguments
    pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
    args.dwNumStrings = pRequest->GetVariableLong(VID_NUM_ARGS);
-   args.ppStringList = (char **)MemAlloc(sizeof(char *) * args.dwNumStrings);
+   args.ppStringList = (char **)malloc(sizeof(char *) * args.dwNumStrings);
    for(i = 0; i < args.dwNumStrings; i++)
       args.ppStringList[i] = pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i);
 
@@ -345,6 +345,6 @@ void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
    // Cleanup
    for(i = 0; i < args.dwNumStrings; i++)
-      MemFree(args.ppStringList[i]);
-   MemFree(args.ppStringList);
+      safe_free(args.ppStringList[i]);
+   safe_free(args.ppStringList);
 }

@@ -169,8 +169,8 @@ static DWORD WINAPI LoginThread(void *pArg)
             g_pDefImgList[i].dwImageId = pdwImageId[i];
             g_pDefImgList[i].iImageIndex = ImageIdToIndex(pdwImageId[i]);
          }
-         MemFree(pdwClassId);
-         MemFree(pdwImageId);
+         safe_free(pdwClassId);
+         safe_free(pdwImageId);
       }
    }
 
