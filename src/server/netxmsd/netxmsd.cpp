@@ -278,10 +278,12 @@ int main(int argc, char *argv[])
    }
 
    // Setup signal handlers
-   for(i = 0; i < 32; i++)
-      signal(i, SIG_IGN);
+   //for(i = 0; i < 32; i++)
+      //signal(i, SIG_IGN);
+   signal(SIGINT, SIG_IGN);
    signal(SIGTERM, OnSignal);
    signal(SIGSEGV, OnSignal);
+   signal(SIGCHLD, OnSignal);
 
    // Initialize server
    if (!Initialize())

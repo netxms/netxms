@@ -260,7 +260,6 @@ void OnSignal(int iSignal)
 			break;
 		case SIGSEGV:
 			abort();
-			exit(5);
 			break;
 		case SIGCHLD:
 			while (waitpid(-1, NULL, WNOHANG) > 0)

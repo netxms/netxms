@@ -212,8 +212,62 @@ BOOL ExecCommand(char *pszCommand)
       CloseHandle(pi.hProcess);
    }
 #else
-   /* TODO: add UNIX code here */
 	bSuccess = FALSE;
+	{
+		int nPid;
+		char *pCmd[128];
+		int i;
+		char *pTmp;
+		struct stat st;
+
+		pTmp = pszCommand;
+		for (i = 0; i < 128; i++)
+		{
+			pCmd[i] = pTmp;
+			pTmp = strchr(pTmp, ' ');
+			if (pTmp != NULL)
+			{
+				*pTmp = 0;
+				pTmp++;
+			}
+			else
+			{
+				break;
+			}
+		}
+		pCmd[i+1] = 0;
+
+		if (stat(pCmd[0], &st) == 0 && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+		{
+			switch ((nPid = fork()))
+			{
+			case -1:
+				perror("fork()");
+				break;
+			case 0: // child
+				{
+					int sd = open("/dev/null", O_RDWR);
+					if (sd == -1)
+						sd = open("/dev/null", O_RDONLY);
+					close(0);
+					close(1);
+					close(2);
+					dup2(sd, 0);
+					dup2(sd, 1);
+					dup2(sd, 2);
+					close(sd);
+					execv(pCmd[0], pCmd);
+					// should not be reached
+					//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
+					_exit(127);
+				}
+				break;
+			default: // parent
+				bSuccess = TRUE;
+				break;
+			}
+		}
+	}
 #endif
 
    return bSuccess;

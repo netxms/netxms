@@ -34,6 +34,7 @@
 # include <errno.h> 
 #else
 # include <signal.h>
+# include <sys/wait.h>
 #endif
 
 
@@ -499,7 +500,7 @@ static BOOL ProcessCommand(char *pszCmdLine)
 
 void NXCORE_EXPORTABLE OnSignal(int iSignal)
 {
-   WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
+   //WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
    switch(iSignal)
    {
       case SIGTERM:
@@ -507,8 +508,11 @@ void NXCORE_EXPORTABLE OnSignal(int iSignal)
             ConditionSet(m_hEventShutdown);
          break;
       case SIGSEGV:
-         exit(5);
+         abort();
          break;
+		case SIGCHLD:
+			while (waitpid(-1, NULL, WNOHANG) > 0)
+				;
       default:
          break;
    }

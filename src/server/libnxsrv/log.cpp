@@ -70,11 +70,18 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
       time_t t;
 
       m_hLogFile = fopen(pszLogFile, "a");
-      t = time(NULL);
-      loc = localtime(&t);
-      strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
-      fprintf(m_hLogFile, "\n[%s] Log file opened\n", szTimeBuf);
-      fflush(m_hLogFile);
+		if (m_hLogFile != NULL)
+		{
+			t = time(NULL);
+			loc = localtime(&t);
+			strftime(szTimeBuf, 32, "%d-%b-%Y %H:%M:%S", loc);
+			fprintf(m_hLogFile, "\n[%s] Log file opened\n", szTimeBuf);
+			fflush(m_hLogFile);
+		}
+		else
+		{
+			fprintf(stderr, "*** Can't open logfile (%s)\n", pszLogFile);
+		}
 
       m_mutexLogAccess = MutexCreate();
 #ifdef _WIN32
@@ -127,18 +134,23 @@ static void WriteLogToFile(char *szMessage)
    time_t t;
    struct tm *loc;
 
-   // Prevent simultaneous write to log file
-   MutexLock(m_mutexLogAccess, INFINITE);
+	// Prevent simultaneous write to log file
+	MutexLock(m_mutexLogAccess, INFINITE);
 
-   t = time(NULL);
-   loc = localtime(&t);
-   strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
-   fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
-   fflush(m_hLogFile);
-   if (m_bPrintToScreen)
-      printf("%s %s", szBuffer, szMessage);
+	t = time(NULL);
+	loc = localtime(&t);
+	strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
+	if (m_hLogFile != NULL)
+	{
+		fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
+		fflush(m_hLogFile);
+	}
+	if (m_bPrintToScreen)
+	{
+		printf("%s %s", szBuffer, szMessage);
+	}
 
-   MutexUnlock(m_mutexLogAccess);
+	MutexUnlock(m_mutexLogAccess);
 }
 
 
