@@ -31,6 +31,7 @@
 #endif   /* _WIN32 */
 
 #include <dbdrv.h>
+#include <nms_threads.h>
 #include <mysql.h>
 
 #endif   /* _mysqldrv_h_ */

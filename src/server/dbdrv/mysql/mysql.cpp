@@ -24,12 +24,30 @@
 
 
 //
+// Static data
+//
+
+static MUTEX m_hQueryLock;
+
+
+//
 // Initialize driver
 //
 
 extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 {
+   m_hQueryLock = MutexCreate();
    return TRUE;
+}
+
+
+//
+// Unload handler
+//
+
+extern "C" void EXPORT DrvUnload(void)
+{
+   MutexDestroy(m_hQueryLock);
 }
 
 
@@ -78,7 +96,12 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 
 extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 {
-   return (mysql_query((MYSQL *)hConn, szQuery) == 0);
+   BOOL bResult;
+
+   MutexLock(m_hQueryLock, INFINITE);
+   bResult = (mysql_query((MYSQL *)hConn, szQuery) == 0);
+   MutexUnlock(m_hQueryLock);
+   return bResult;
 }
 
 
@@ -88,10 +111,13 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 
 extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
 {
-   if (mysql_query((MYSQL *)hConn, szQuery) != 0)
-      return FALSE;
+   DB_RESULT dwResult = 0;
 
-   return (DB_RESULT)mysql_store_result((MYSQL *)hConn);
+   MutexLock(m_hQueryLock, INFINITE);
+   if (mysql_query((MYSQL *)hConn, szQuery) == 0)
+      dwResult = (DB_RESULT)mysql_store_result((MYSQL *)hConn);
+   MutexUnlock(m_hQueryLock);
+   return dwResult;
 }
 
 
