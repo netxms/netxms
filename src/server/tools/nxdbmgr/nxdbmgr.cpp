@@ -28,6 +28,7 @@
 //
 
 DB_HANDLE g_hCoreDB;
+BOOL g_bIgnoreErrors = FALSE;
 
 
 //
@@ -49,6 +50,30 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 
 
 //
+// Execute SQL query and print error message on screen if query failed
+//
+
+BOOL SQLQuery(TCHAR *pszQuery)
+{
+   BOOL bResult;
+
+   bResult = DBQuery(g_hCoreDB, pszQuery);
+   if (!bResult)
+   {
+#ifdef _WIN32
+      _tprintf(_T("SQL query failed:\n"));
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
+      _tprintf(_T("%s\n"), pszQuery);
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+#else
+      _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
+#endif
+   }
+   return bResult;
+}
+
+
+//
 // Startup
 //
 
@@ -62,7 +87,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:fhv")) != -1)
+   while((ch = getopt(argc, argv, "c:fhvX")) != -1)
    {
       switch(ch)
       {
@@ -76,6 +101,7 @@ int main(int argc, char *argv[])
                         "   -f           : Force repair - do not ask for confirmation.\n"
                         "   -h           : Display help and exit.\n"
                         "   -v           : Display version and exit.\n"
+                        "   -X           : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
                         "\n"));
             bStart = FALSE;
             break;
@@ -87,6 +113,9 @@ int main(int argc, char *argv[])
             break;
          case 'f':
             bForce = TRUE;
+            break;
+         case 'X':
+            g_bIgnoreErrors = TRUE;
             break;
          case '?':
             bStart = FALSE;

@@ -41,8 +41,16 @@ static BOOL SQLBatch(TCHAR *pszBatch)
          break;
       if (!DBQuery(g_hCoreDB, pszQuery))
       {
+#ifdef _WIN32
+         _tprintf(_T("SQL query failed:\n"));
+         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
+         _tprintf(_T("%s\n"), pszQuery);
+         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+#else
          _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
-         return FALSE;
+#endif
+         if (!g_bIgnoreErrors)
+            return FALSE;
       }
       ptr++;
       pszQuery = ptr;
@@ -58,6 +66,7 @@ static BOOL SQLBatch(TCHAR *pszBatch)
 static BOOL H_UpgradeFromV14(void)
 {
    static TCHAR m_szBatch[] = 
+      "ALTER TABLE items ADD COLUMN instance varchar(255)\n"
       "INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES "
          "('SMTPServer','localhost',1,0)\n"
       "INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES "
@@ -68,13 +77,20 @@ static BOOL H_UpgradeFromV14(void)
          "'Custom data collection threshold event.#0D#0AParameters:#0D#0A"
 		   "   1) Parameter name#0D#0A   2) Item description#0D#0A"
          "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
-         "   5) Data collection item ID#0D#0A   6) Parameter#27s argument')\n"
+         "   5) Data collection item ID#0D#0A   6) Instance')\n"
+      "UPDATE events SET "
+         "description='   1) Parameter name#0D#0A   2) Item description#0D#0A"
+         "   3) Threshold value#0D#0A   4) Actual value#0D#0A"
+         "   5) Data collection item ID#0D#0A   6) Instance' WHERE "
+         "event_id=17 OR (event_id>=4000 AND event_id<5000)\n"
       "<END>";
 
    if (!SQLBatch(m_szBatch))
-      return FALSE;
-   if (!DBQuery(g_hCoreDB, _T("UPDATE CONFIG SET var_value='15' WHERE var_name='DBFormatVersion'")))
-      return FALSE;
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   if (!SQLQuery(_T("UPDATE CONFIG SET var_value='15' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
    return TRUE;
 }
 

@@ -35,6 +35,7 @@
 
 void CheckDatabase(BOOL bForce);
 void UpgradeDatabase(void);
+BOOL SQLQuery(TCHAR *pszQuery);
 
 
 //
@@ -42,6 +43,7 @@ void UpgradeDatabase(void);
 //
 
 extern DB_HANDLE g_hCoreDB;
+extern BOOL g_bIgnoreErrors;
 
 
 #endif

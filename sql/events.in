@@ -5,7 +5,7 @@
 */
 
 #define THRESHOLD_EVENT_PARAMS \
-	'   1) Parameter name#0D#0A   2) Item description#0D#0A   3) Threshold value#0D#0A   4) Actual value#0D#0A   5) Data collection item ID#0D#0A   6) Parameter#27s argument'
+	'   1) Parameter name#0D#0A   2) Item description#0D#0A   3) Threshold value#0D#0A   4) Actual value#0D#0A   5) Data collection item ID#0D#0A   6) Instance'
 
 
 /*
