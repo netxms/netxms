@@ -38,6 +38,7 @@ typedef struct
    Queue *pQueue;  // Used internally by deployment manager
    TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
    TCHAR szPkgFile[MAX_PATH];
+   TCHAR szVersion[MAX_AGENT_VERSION_LEN];
 } DT_STARTUP_INFO;
 
 
