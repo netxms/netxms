@@ -1690,7 +1690,8 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                 (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((Template *)pDestination)->LockDCIList(m_dwIndex))
+               if ((pDestination->Id() == pSource->Id()) ||
+                   (((Template *)pDestination)->LockDCIList(m_dwIndex)))
                {
                   DWORD i, *pdwItemList, dwNumItems;
                   const DCItem *pSrcItem;
@@ -1726,7 +1727,8 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
 
                   // Cleanup
                   free(pdwItemList);
-                  ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
+                  if (pDestination->Id() != pSource->Id())
+                     ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
                }
                else  // Destination's DCI list already locked by someone else

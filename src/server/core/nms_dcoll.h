@@ -143,6 +143,7 @@ private:
    DWORD m_dwId;
    char m_szName[MAX_ITEM_NAME];
    char m_szDescription[MAX_DB_STRING];
+   char m_szInstance[MAX_DB_STRING];
    time_t m_tLastPoll;        // Last poll time
    int m_iPollingInterval;    // Polling interval in seconds
    int m_iRetentionTime;      // Retention time in seconds

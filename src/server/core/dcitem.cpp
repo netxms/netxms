@@ -42,6 +42,7 @@ DCItem::DCItem()
    m_iStatus = ITEM_STATUS_NOT_SUPPORTED;
    m_szName[0] = 0;
    m_szDescription[0] = 0;
+   m_szInstance[0] = 0;
    m_tLastPoll = 0;
    m_pszFormula = _tcsdup(_T(""));
    m_pNode = NULL;
@@ -70,6 +71,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_iStatus = pSrc->m_iStatus;
    _tcscpy(m_szName, pSrc->m_szName);
    _tcscpy(m_szDescription, pSrc->m_szDescription);
+   _tcscpy(m_szInstance, pSrc->m_szInstance);
    m_tLastPoll = 0;
    m_pszFormula = _tcsdup(pSrc->m_pszFormula);
    m_pNode = NULL;
@@ -92,7 +94,7 @@ DCItem::DCItem(const DCItem *pSrc)
 // Constructor for creating DCItem from database
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
-// delta_calculation,transformation,template_id,description
+// delta_calculation,transformation,template_id,description,instance
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -109,6 +111,8 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
    DecodeSQLString(m_szDescription);
+   strncpy(m_szInstance, DBGetField(hResult, iRow, 11), MAX_DB_STRING);
+   DecodeSQLString(m_szInstance);
    m_iBusy = 0;
    m_tLastPoll = 0;
    m_dwNumThresholds = 0;
@@ -135,6 +139,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
       strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
    else
       strcpy(m_szDescription, m_szName);
+   m_szInstance[0] = 0;
    m_iSource = iSource;
    m_iDataType = iDataType;
    m_iPollingInterval = iPollingInterval;
@@ -210,7 +215,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(void)
 {
-   char *pszEscFormula, *pszEscDescr, szQuery[1024];
+   char *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[1024];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
@@ -229,25 +234,27 @@ BOOL DCItem::SaveToDB(void)
    // Prepare and execute query
    pszEscFormula = EncodeSQLString(m_pszFormula);
    pszEscDescr = EncodeSQLString(m_szDescription);
+   pszEscInstance = EncodeSQLString(m_szInstance);
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s')",
+                       "transformation,instance) VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,%d,'%s')",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        m_szName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
-                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula);
+                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula, pszEscInstance);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%ld,template_id=%ld,name='%s',source=%d,"
                        "datatype=%d,polling_interval=%ld,retention_time=%ld,status=%d,"
-                       "delta_calculation=%d,transformation='%s',description='%s' "
-                       "WHERE item_id=%ld",
+                       "delta_calculation=%d,transformation='%s',description='%s',"
+                       "instance='%s' WHERE item_id=%ld",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        m_szName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
-                       pszEscDescr, m_dwId);
+                       pszEscDescr, pszEscInstance, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscFormula);
    free(pszEscDescr);
+   free(pszEscInstance);
 
    // Save thresholds
    if (bResult)
@@ -302,9 +309,9 @@ void DCItem::CheckThresholds(ItemValue &value)
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssi", m_szName,
+            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssis", m_szName,
                       m_szDescription, m_ppThresholdList[i]->Value(), 
-                      (const char *)value, m_dwId);
+                      (const char *)value, m_dwId, m_szInstance);
             i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
@@ -334,6 +341,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_ID, m_dwId);
    pMsg->SetVariable(VID_NAME, m_szName);
    pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
+   pMsg->SetVariable(VID_INSTANCE, m_szInstance);
    pMsg->SetVariable(VID_POLLING_INTERVAL, (DWORD)m_iPollingInterval);
    pMsg->SetVariable(VID_RETENTION_TIME, (DWORD)m_iRetentionTime);
    pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
@@ -383,6 +391,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 
    pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
    pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_INSTANCE, m_szInstance, MAX_DB_STRING);
    m_iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
    m_iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
    m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
