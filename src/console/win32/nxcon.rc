@@ -106,6 +106,8 @@ IDI_OVL_STATUS_UNMANAGED ICON    DISCARDABLE     "icons\\ovl_status_unmanaged.ic
 IDI_OVL_STATUS_DISABLED ICON    DISCARDABLE     "icons\\ovl_status_disabled.ico"
 IDI_OVL_STATUS_TESTING  ICON    DISCARDABLE     "icons\\ovl_status_testing.ico"
 IDI_TRAP                ICON    DISCARDABLE     "icons\\trap.ico"
+IDI_PACKAGE             ICON    DISCARDABLE     "icons\\package.ico"
+IDI_DATABASE            ICON    DISCARDABLE     "icons\\database.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -303,10 +305,11 @@ BEGIN
     POPUP "Control Panel"
     BEGIN
         MENUITEM "&Actions",                    ID_CONTROLPANEL_ACTIONS
+        MENUITEM "Agent Pac&kages",             ID_CONTROLPANEL_AGENTPKG
         MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
-        MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
+        MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
     END
     POPUP "&Object (map)"
     BEGIN

@@ -162,6 +162,7 @@ public:
 	afx_msg void OnControlpanelActions();
 	afx_msg void OnToolsAddnode();
 	afx_msg void OnControlpanelSnmptraps();
+	afx_msg void OnControlpanelAgentpkg();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

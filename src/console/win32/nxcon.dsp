@@ -321,6 +321,10 @@ SOURCE=.\ObjectSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\PackageMgr.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PasswordChangeDlg.cpp
 # End Source File
 # Begin Source File
@@ -618,6 +622,10 @@ SOURCE=.\ObjectSelDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\PackageMgr.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PasswordChangeDlg.h
 # End Source File
 # Begin Source File
@@ -715,6 +723,10 @@ SOURCE=.\res\bmp00001.bmp
 # Begin Source File
 
 SOURCE=.\icons\connect.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\database.ico
 # End Source File
 # Begin Source File
 
@@ -823,6 +835,10 @@ SOURCE=.\icons\ovl_status_unmanaged.ico
 # Begin Source File
 
 SOURCE=.\icons\ovl_status_warning.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\package.ico
 # End Source File
 # Begin Source File
 

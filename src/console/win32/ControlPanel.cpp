@@ -61,7 +61,9 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create list view
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_ICON | LVS_AUTOARRANGE | LVS_SINGLESEL, rect, this, ID_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_ICON | 
+                        LVS_AUTOARRANGE | LVS_SORTASCENDING | LVS_SINGLESEL,
+                        rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -73,6 +75,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LOG));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EXEC));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_TRAP));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_DATABASE));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -81,6 +84,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("Events", 2, ID_CONTROLPANEL_EVENTS);
    AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
    AddItem("SNMP Traps", 4, ID_CONTROLPANEL_SNMPTRAPS);
+   AddItem("Agent Packages", 5, ID_CONTROLPANEL_AGENTPKG);
 
    theApp.OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;

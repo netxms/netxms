@@ -60,6 +60,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_ACTIONS, OnControlpanelActions)
 	ON_COMMAND(ID_TOOLS_ADDNODE, OnToolsAddnode)
 	ON_COMMAND(ID_CONTROLPANEL_SNMPTRAPS, OnControlpanelSnmptraps)
+	ON_COMMAND(ID_CONTROLPANEL_AGENTPKG, OnControlpanelAgentpkg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1219,6 +1220,39 @@ void CConsoleApp::OnControlpanelSnmptraps()
       else
       {
          ErrorBox(dwResult, "Unable to lock SNMP trap configuration database:\n%s");
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_AGENTPKG message handler
+//
+
+void CConsoleApp::OnControlpanelAgentpkg() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bPackageMgrActive)
+   {
+      m_pwndPackageMgr->BringWindowToTop();
+   }
+   else
+   {
+      DWORD dwResult, dwNumPackages;
+      NXC_PACKAGE_INFO *pPkgList;
+
+      dwResult = DoRequestArg1(NXCGetPackageList, g_hSession, &dwNumPackages, &pPkgList,
+                               "Loading package database...");
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(
+		      RUNTIME_CLASS(CPackageMgr), IDR_PACKAGE_MGR, m_hTrapEditorMenu, m_hTrapEditorAccel);
+      }
+      else
+      {
+         ErrorBox(dwResult, "Unable to load package database:\n%s");
       }
    }
 }

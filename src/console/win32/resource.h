@@ -137,6 +137,8 @@
 #define IDD_EDIT_TRAP_ARG               246
 #define IDA_GRAPH                       247
 #define IDD_GRAPH_PROPERTIES            248
+#define IDI_PACKAGE                     249
+#define IDI_DATABASE                    250
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -419,6 +421,7 @@
 #define ID_GRAPH_AUTOSCALE              32904
 #define ID_GRAPH_PROPERTIES             32905
 #define ID_GRAPH_FREEZE                 32906
+#define ID_CONTROLPANEL_AGENTPKG        32907
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -427,8 +430,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        249
-#define _APS_NEXT_COMMAND_VALUE         32907
+#define _APS_NEXT_RESOURCE_VALUE        251
+#define _APS_NEXT_COMMAND_VALUE         32908
 #define _APS_NEXT_CONTROL_VALUE         1213
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

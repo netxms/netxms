@@ -354,6 +354,7 @@ src/console/win32/icons/ack.ico -text
 src/console/win32/icons/active.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/connect.ico -text
+src/console/win32/icons/database.ico -text
 src/console/win32/icons/datacoll.ico -text
 src/console/win32/icons/dctemplate.ico -text
 src/console/win32/icons/disabled.ico -text
@@ -369,6 +370,7 @@ src/console/win32/icons/ovl_status_testing.ico -text
 src/console/win32/icons/ovl_status_unknown.ico -text
 src/console/win32/icons/ovl_status_unmanaged.ico -text
 src/console/win32/icons/ovl_status_warning.ico -text
+src/console/win32/icons/package.ico -text
 src/console/win32/icons/passwd.ico -text
 src/console/win32/icons/question.ico -text
 src/console/win32/icons/rexec.ico -text
