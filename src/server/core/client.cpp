@@ -48,6 +48,7 @@ ClientSession::ClientSession(SOCKET hSocket)
    m_hSocket = hSocket;
    m_dwIndex = INVALID_INDEX;
    m_iState = STATE_CONNECTED;
+   m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
 }
 
 
@@ -61,6 +62,8 @@ ClientSession::~ClientSession()
    closesocket(m_hSocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
+   if (m_pMsgBuffer != NULL)
+      free(m_pMsgBuffer);
 }
 
 
@@ -102,10 +105,13 @@ void ClientSession::ReadThread(void)
    CSCPMessage *pMsg;
    int iErr;
 
+   // Initialize raw message receiving function
+   RecvCSCPMessage(0, NULL, m_pMsgBuffer);
+
    pRawMsg = (CSCP_MESSAGE *)malloc(65536);
    while(1)
    {
-      if ((iErr = recv(m_hSocket, (char *)pRawMsg, 65536, 0)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer)) <= 0)
          break;
 
       // Check that actual received packet size is equal to encoded in packet
@@ -136,7 +142,6 @@ void ClientSession::WriteThread(void)
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
-printf("We have message to send in write queue\n");
       if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
       {
          LibUtilDestroyObject(pMsg);

@@ -24,6 +24,7 @@
 #define _nms_objects_h_
 
 #include <nms_agent.h>
+#include <nxclapi.h>
 
 
 //
@@ -47,11 +48,9 @@ extern DWORD g_dwConfigurationPollingInterval;
 // Constants
 //
 
-#define MAX_OBJECT_NAME       64
 #define MAX_ITEM_NAME         256
 #define MAX_INTERFACES        4096
 #define INVALID_INDEX         0xFFFFFFFF
-#define MAX_COMMUNITY_LENGTH  32
 
 
 //

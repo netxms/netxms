@@ -174,6 +174,7 @@ private:
    DWORD m_dwIndex;
    int m_iState;
    DWORD m_dwUserId;
+   CSCP_BUFFER *m_pMsgBuffer;
 
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
