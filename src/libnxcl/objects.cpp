@@ -25,29 +25,10 @@
 
 
 //
-// Static data
-//
-
-static DWORD m_dwNumObjects = 0;
-static INDEX *m_pIndexById = NULL;
-static MUTEX m_mutexIndexAccess;
-
-
-//
-// Initialize object handling module
-//
-
-void ObjectsInit(void)
-{
-   m_mutexIndexAccess = MutexCreate();
-}
-
-
-//
 // Destroy object
 //
 
-static void DestroyObject(NXC_OBJECT *pObject)
+void DestroyObject(NXC_OBJECT *pObject)
 {
    DebugPrintf(_T("DestroyObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
@@ -66,24 +47,6 @@ static void DestroyObject(NXC_OBJECT *pObject)
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
    free(pObject);
-}
-
-
-//
-// Destroy all objects
-//
-
-void DestroyAllObjects(void)
-{
-   DWORD i;
-
-   MutexLock(m_mutexIndexAccess, INFINITE);
-   for(i = 0; i < m_dwNumObjects; i++)
-      DestroyObject(m_pIndexById[i].pObject);
-   m_dwNumObjects = 0;
-   free(m_pIndexById);
-   m_pIndexById = NULL;
-   MutexUnlock(m_mutexIndexAccess);
 }
 
 

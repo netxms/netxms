@@ -28,18 +28,18 @@
 // Lock/unlock trap configuration database
 //
 
-static DWORD LockTrapCfg(BOOL bLock)
+static DWORD LockTrapCfg(NXCL_Session *pSession, BOOL bLock)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = pSession->CreateRqId();
 
    msg.SetCode(bLock ? CMD_LOCK_TRAP_CFG : CMD_UNLOCK_TRAP_CFG);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   pSession->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return pSession->WaitForRCC(dwRqId);
 }
 
 
@@ -47,9 +47,9 @@ static DWORD LockTrapCfg(BOOL bLock)
 // Client interface: lock action configuration database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(void)
+DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession)
 {
-   return LockTrapCfg(TRUE);
+   return LockTrapCfg((NXCL_Session *)hSession, TRUE);
 }
 
 
@@ -57,9 +57,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(void)
 // Client interface: unlock action configuration database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(void)
+DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(NXC_SESSION hSession)
 {
-   return LockTrapCfg(FALSE);
+   return LockTrapCfg((NXCL_Session *)hSession, FALSE);
 }
 
 
@@ -93,24 +93,24 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 // Load trap configuration from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(DWORD *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList)
+DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, DWORD *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumTraps = 0, dwTrapId = 0;
    NXC_TRAP_CFG_ENTRY *pList = NULL;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_LOAD_TRAP_CFG);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwRetCode = WaitForRCC(dwRqId);
+   dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
    {
       do
       {
-         pResponce = WaitForMessage(CMD_TRAP_CFG_RECORD, dwRqId, g_dwCommandTimeout);
+         pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_TRAP_CFG_RECORD, dwRqId);
          if (pResponce != NULL)
          {
             dwTrapId = pResponce->GetVariableLong(VID_TRAP_ID);
@@ -176,19 +176,19 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY 
 // Delete trap configuration record by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(DWORD dwTrapId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_DELETE_TRAP);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_TRAP_ID, dwTrapId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -196,18 +196,18 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(DWORD dwTrapId)
 // Create new trap configuration record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(DWORD *pdwTrapId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwResult;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_CREATE_TRAP);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwResult = pResponce->GetVariableLong(VID_RCC);
@@ -228,12 +228,12 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(DWORD *pdwTrapId)
 // Update trap configuration record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_TRAP_CFG_ENTRY *pTrap)
+DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap)
 {
    CSCPMessage msg;
    DWORD i, dwRqId, dwId1, dwId2, dwId3;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_MODIFY_TRAP);
    msg.SetId(dwRqId);
@@ -250,7 +250,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_TRAP_CFG_ENTRY *pTrap)
       msg.SetVariableToInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
       msg.SetVariable(dwId3, pTrap->pMaps[i].szDescription);
    }
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

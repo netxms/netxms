@@ -58,30 +58,74 @@ typedef struct
 
 
 //
+// Session class
+//
+
+class NXCL_Session
+{
+   friend THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession);
+
+   // Attributes
+private:
+   DWORD m_dwMsgId;
+   DWORD m_dwState;
+   DWORD m_dwNumObjects;
+   INDEX *m_pIndexById;
+   MUTEX m_mutexIndexAccess;
+   SOCKET m_hSocket;
+   MsgWaitQueue m_msgWaitQueue;
+   DWORD m_dwReceiverBufferSize;
+
+public:
+   DWORD m_dwCommandTimeout;
+   NXC_EVENT_HANDLER m_pEventHandler;
+
+   // Methods
+private:
+   void DestroyAllObjects(void);
+
+public:
+   NXCL_Session();
+   ~NXCL_Session();
+
+   void Attach(SOCKET hSocket) { m_hSocket = hSocket; }
+   void Disconnect(void);
+
+   BOOL SendMsg(CSCPMessage *pMsg);
+   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
+   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
+   DWORD WaitForRCC(DWORD dwRqId);
+   DWORD CreateRqId(void) { return m_dwMsgId++; }
+
+   void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
+};
+
+inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+   if (m_pEventHandler != NULL)
+      m_pEventHandler(this, dwEvent, dwCode, pArg);
+}
+
+
+//
 // Functions
 //
 
-void ObjectsInit(void);
-void DestroyAllObjects(void);
+void DestroyObject(NXC_OBJECT *pObject);
 
 void InitEventDB(void);
 void ShutdownEventDB(void);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
 
-void ProcessAlarmUpdate(CSCPMessage *pMsg);
-void ProcessObjectUpdate(CSCPMessage *pMsg);
-void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
-void ProcessActionUpdate(CSCPMessage *pMsg);
+void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
+void ProcessObjectUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
+void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
+void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 
 void ProcessUserDBRecord(CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);
 
 void ProcessDCI(CSCPMessage *pMsg);
-
-BOOL SendMsg(CSCPMessage *pMsg);
-CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut);
-CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut);
-DWORD WaitForRCC(DWORD dwRqId);
 
 void InitSyncStuff(void);
 void SyncCleanup(void);
@@ -89,7 +133,6 @@ DWORD WaitForSync(DWORD dwTimeOut);
 void PrepareForSync(void);
 void CompleteSync(DWORD dwRetCode);
 
-void ChangeState(DWORD dwState);
 void DebugPrintf(TCHAR *szFormat, ...);
 
 
@@ -97,21 +140,7 @@ void DebugPrintf(TCHAR *szFormat, ...);
 // Global variables
 //
 
-extern NXC_EVENT_HANDLER g_pEventHandler;
 extern NXC_DEBUG_CALLBACK g_pDebugCallBack;
-extern DWORD g_dwState;
-extern DWORD g_dwMsgId;
-extern DWORD g_dwCommandTimeout;
 
-
-//
-// Call client's event handler
-//
-
-inline void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
-{
-   if (g_pEventHandler != NULL)
-      g_pEventHandler(dwEvent, dwCode, pArg);
-}
 
 #endif   /* _libnxcl_h_ */

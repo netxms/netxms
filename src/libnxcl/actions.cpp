@@ -43,7 +43,7 @@ static void ActionFromMsg(CSCPMessage *pMsg, NXC_ACTION *pAction)
 // Process CMD_ACTION_DB_UPDATE message
 //
 
-void ProcessActionUpdate(CSCPMessage *pMsg)
+void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_ACTION action;
    DWORD dwCode;
@@ -52,7 +52,7 @@ void ProcessActionUpdate(CSCPMessage *pMsg)
    action.dwId = pMsg->GetVariableLong(VID_ACTION_ID);
    if (dwCode != NX_NOTIFY_ACTION_DELETED)
       ActionFromMsg(pMsg, &action);
-   CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &action);
+   pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &action);
 }
 
 
@@ -60,24 +60,24 @@ void ProcessActionUpdate(CSCPMessage *pMsg)
 // Load all actions from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadActions(DWORD *pdwNumActions, NXC_ACTION **ppActionList)
+DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActions, NXC_ACTION **ppActionList)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumActions = 0, dwActionId = 0;
    NXC_ACTION *pList = NULL;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_LOAD_ACTIONS);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwRetCode = WaitForRCC(dwRqId);
+   dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
    {
       do
       {
-         pResponce = WaitForMessage(CMD_ACTION_DATA, dwRqId, g_dwCommandTimeout);
+         pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ACTION_DATA, dwRqId);
          if (pResponce != NULL)
          {
             dwActionId = pResponce->GetVariableLong(VID_ACTION_ID);
@@ -120,18 +120,18 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(DWORD *pdwNumActions, NXC_ACTION **ppAct
 // Lock/unlock action configuration database
 //
 
-static DWORD LockActionDB(BOOL bLock)
+static DWORD LockActionDB(NXCL_Session *pSession, BOOL bLock)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = pSession->CreateRqId();
 
    msg.SetCode(bLock ? CMD_LOCK_ACTION_DB : CMD_UNLOCK_ACTION_DB);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   pSession->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return pSession->WaitForRCC(dwRqId);
 }
 
 
@@ -139,9 +139,9 @@ static DWORD LockActionDB(BOOL bLock)
 // Client interface: lock action configuration database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(void)
+DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(NXC_SESSION hSession)
 {
-   return LockActionDB(TRUE);
+   return LockActionDB((NXCL_Session *)hSession, TRUE);
 }
 
 
@@ -149,9 +149,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(void)
 // Client interface: unlock action configuration database
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(void)
+DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(NXC_SESSION hSession)
 {
-   return LockActionDB(FALSE);
+   return LockActionDB((NXCL_Session *)hSession, FALSE);
 }
 
 
@@ -159,19 +159,19 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(void)
 // Create new action on server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCreateAction(TCHAR *pszName, DWORD *pdwNewId)
+DWORD LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, DWORD *pdwNewId)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode, dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_CREATE_ACTION);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ACTION_NAME, pszName);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -191,19 +191,19 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateAction(TCHAR *pszName, DWORD *pdwNewId)
 // Delete action by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(DWORD dwActionId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, DWORD dwActionId)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_DELETE_ACTION);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ACTION_ID, dwActionId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -211,12 +211,12 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(DWORD dwActionId)
 // Modify action record
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_ACTION *pAction)
+DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_SESSION hSession, NXC_ACTION *pAction)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Fill in request
    msg.SetCode(CMD_MODIFY_ACTION);
@@ -229,8 +229,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_ACTION *pAction)
    msg.SetVariable(VID_ACTION_NAME, pAction->szName);
    msg.SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
 
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for responce
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

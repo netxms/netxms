@@ -48,20 +48,20 @@ void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 // Open and load to client event processing policy
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
+DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy)
 {
    CSCPMessage msg, *pResponce;
    DWORD i, dwRqId, dwRetCode;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
    msg.SetCode(CMD_OPEN_EPP);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -78,7 +78,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
          // Receive policy rules, each in separate message
          for(i = 0; i < (*ppEventPolicy)->dwNumRules; i++)
          {
-            pResponce = WaitForMessage(CMD_EPP_RECORD, dwRqId, g_dwCommandTimeout);
+            pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_EPP_RECORD, dwRqId);
             if (pResponce != NULL)
             {
                (*ppEventPolicy)->pRuleList[i].dwFlags = pResponce->GetVariableLong(VID_FLAGS);
@@ -150,20 +150,20 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
 // Close event policy (without saving)
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(void)
+DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
    msg.SetCode(CMD_CLOSE_EPP);
    msg.SetId(dwRqId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -171,12 +171,12 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(void)
 // Save (and install) new event policy
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
+DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy)
 {
    CSCPMessage msg;
    DWORD i, dwRqId, dwRetCode;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
    msg.SetCode(CMD_SAVE_EPP);
@@ -184,8 +184,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
    msg.SetVariable(VID_NUM_RULES, pEventPolicy->dwNumRules);
 
    // Send message and wait for responce
-   SendMsg(&msg);
-   dwRetCode = WaitForRCC(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
    {
       // Send all event policy records, one per message
@@ -214,12 +214,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
          msg.SetVariable(VID_ALARM_MESSAGE, pEventPolicy->pRuleList[i].szAlarmMessage);
          msg.SetVariable(VID_ALARM_SEVERITY, pEventPolicy->pRuleList[i].wAlarmSeverity);
 
-         SendMsg(&msg);
+         ((NXCL_Session *)hSession)->SendMsg(&msg);
       }
 
       // Wait for final confirmation if we have sent some rules
       if (pEventPolicy->dwNumRules > 0)
-         dwRetCode = WaitForRCC(dwRqId);
+         dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    }
    return dwRetCode;
 }

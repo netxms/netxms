@@ -28,10 +28,7 @@
 // Global variables
 //
 
-NXC_EVENT_HANDLER g_pEventHandler = NULL;
 NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
-DWORD g_dwState = STATE_DISCONNECTED;
-DWORD g_dwCommandTimeout = 10000;    // Default timeout is 10 seconds
 
 
 //
@@ -40,9 +37,6 @@ DWORD g_dwCommandTimeout = 10000;    // Default timeout is 10 seconds
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
-   ObjectsInit();
-   InitSyncStuff();
-   InitEventDB();
    return TRUE;
 }
 
@@ -53,8 +47,6 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 
 void LIBNXCL_EXPORTABLE NXCShutdown(void)
 {
-   SyncCleanup();
-   ShutdownEventDB();
 }
 
 
@@ -72,9 +64,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void)
 // Set event handler
 //
 
-void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler)
+void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler)
 {
-   g_pEventHandler = pHandler;
+   ((NXCL_Session *)hSession)->m_pEventHandler = pHandler;
 }
 
 
@@ -92,10 +84,10 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 // Set command timeout
 //
 
-void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(DWORD dwTimeout)
+void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout)
 {
    if ((dwTimeout >= 1000) && (dwTimeout <= 60000))
-      g_dwCommandTimeout = dwTimeout;
+      ((NXCL_Session *)hSession)->m_dwCommandTimeout = dwTimeout;
 }
 
 

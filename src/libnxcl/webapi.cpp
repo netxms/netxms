@@ -28,17 +28,17 @@
 // Attach current session to existing WEB session
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCAttachWebSession(QWORD qwSID)
+DWORD LIBNXCL_EXPORTABLE NXCAttachWebSession(NXC_SESSION hSession, QWORD qwSID)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_WEBAPI_ATTACH);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_WEBAPI_SID, qwSID);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

@@ -40,17 +40,6 @@ static DWORD m_dwSyncExitCode;
 
 
 //
-// Change library state and notify client
-//
-
-void ChangeState(DWORD dwState)
-{
-   g_dwState = dwState;
-   CallEventHandler(NXC_EVENT_STATE_CHANGED, dwState, NULL);
-}
-
-
-//
 // Print debug messages
 //
 

@@ -46,7 +46,7 @@ static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 // Process CMD_ALARM_UPDATE message
 //
 
-void ProcessAlarmUpdate(CSCPMessage *pMsg)
+void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_ALARM alarm;
    DWORD dwCode;
@@ -54,7 +54,7 @@ void ProcessAlarmUpdate(CSCPMessage *pMsg)
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
    AlarmFromMsg(pMsg, &alarm);
-   CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
+   pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
 
 
@@ -62,23 +62,23 @@ void ProcessAlarmUpdate(CSCPMessage *pMsg)
 // Load all alarms from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms, 
-                                          NXC_ALARM **ppAlarmList)
+DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck,
+                                          DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
    NXC_ALARM *pList = NULL;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_GET_ALL_ALARMS);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IS_ACK, (WORD)bIncludeAck);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    do
    {
-      pResponce = WaitForMessage(CMD_ALARM_DATA, dwRqId, g_dwCommandTimeout);
+      pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ALARM_DATA, dwRqId);
       if (pResponce != NULL)
       {
          dwAlarmId = pResponce->GetVariableLong(VID_ALARM_ID);
@@ -120,19 +120,19 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms,
 // Acknowlege alarm by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(DWORD dwAlarmId)
+DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_ACK_ALARM);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ALARM_ID, dwAlarmId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
 
@@ -140,17 +140,17 @@ DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(DWORD dwAlarmId)
 // Delete alarm by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(DWORD dwAlarmId)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 {
    CSCPMessage msg;
    DWORD dwRqId;
 
-   dwRqId = g_dwMsgId++;
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_DELETE_ALARM);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ALARM_ID, dwAlarmId);
-   SendMsg(&msg);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

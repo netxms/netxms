@@ -149,6 +149,10 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\session.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\snmptrap.cpp
 # End Source File
 # Begin Source File
