@@ -22,6 +22,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nms_util.h>
 #include <nxclapi.h>
 
 
@@ -30,6 +31,7 @@
 //
 
 #define MAX_LINE_SIZE      4096
+#define NXGET_VERSION      "0"
 
 
 //
@@ -44,6 +46,7 @@ static WORD m_wPort = AGENT_LISTEN_PORT;
 static DWORD m_dwNumDataLines = 0;
 static char **m_ppDataLines = NULL;
 static char m_szNetBuffer[MAX_LINE_SIZE * 2];
+static BOOL m_bVerbose = TRUE;
 
 
 //
@@ -269,7 +272,7 @@ DWORD GetParameter(const char *szParam, DWORD dwBufSize, char *szBuffer)
 // Connect to agent
 //
 
-BOOL Connect(BOOL bVerbose)
+BOOL Connect(void)
 {
    struct sockaddr_in sa;
    char szBuffer[256], szSignature[32];
@@ -283,7 +286,8 @@ BOOL Connect(BOOL bVerbose)
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
    if (m_hSocket == -1)
    {
-      fprintf(stderr, "Unable to create socket\n");
+      if (m_bVerbose)
+         printf("Unable to create socket\n");
       goto connect_cleanup;
    }
 
@@ -296,8 +300,8 @@ BOOL Connect(BOOL bVerbose)
    // Connect to server
    if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
-      if (bVerbose)
-         fprintf(stderr, "Unable to establish connection with the agent\n");
+      if (m_bVerbose)
+         printf("Unable to establish connection with the agent\n");
       goto connect_cleanup;
    }
 
@@ -305,15 +309,16 @@ BOOL Connect(BOOL bVerbose)
    iError = RecvLine(255, szBuffer);
    if (iError <= 0)
    {
-      if (bVerbose)
-         fprintf(stderr, "Communication failed\n");
+      if (m_bVerbose)
+         printf("Communication failed\n");
       goto connect_cleanup;
    }
 
    sprintf(szSignature, "+%d NMS_Agent_09180431", AGENT_PROTOCOL_VERSION);
    if (memcmp(szBuffer, szSignature, strlen(szSignature)))
    {
-      fprintf(stderr, "Invalid HELLO packet received from agent\n");
+      if (m_bVerbose)
+         printf("Invalid HELLO packet received from agent\n");
       goto connect_cleanup;
    }
 
@@ -325,7 +330,8 @@ BOOL Connect(BOOL bVerbose)
    // Test connectivity
    if (ExecuteCommand("NOP") != ERR_SUCCESS)
    {
-      fprintf(stderr, "Communication with agent failed\n");
+      if (m_bVerbose)
+         printf("Communication with agent failed\n");
       goto connect_cleanup;
    }
 
@@ -368,30 +374,117 @@ void Disconnect(void)
 
 int main(int argc, char *argv[])
 {
-   char szBuffer[1024];
+   char *eptr, szBuffer[1024];
    DWORD dwError;
+   BOOL bStart = TRUE;
+   int i, ch, iExitCode = 3;
 
    // Parse command line
-   if (argc < 3)
+   opterr = 1;
+   while((ch = getopt(argc, argv, "a:hp:qs:v")) != -1)
    {
-      printf("Usage: nxget <host> <parameter>\n");
-      return 1;
+      switch(ch)
+      {
+         case 'h':   // Display help and exit
+            printf("Usage: nxget [options] <host> <parameter>\n\n"
+                   "Valid options are:\n"
+                   "   -a <auth>   : Authentication method. Valid methods are \"none\", \"plain-text\",\n"
+                   "                 \"md5\" and \"sha1\". Default is \"none\".\n"
+                   "   -h          : Display help and exit.\n"
+                   "   -p <port>   : Specify agent's port number. Default is %d.\n"
+                   "   -q          : Quiet mode.\n"
+                   "   -s <secret> : Specify shared secret for authentication.\n"
+                   "   -v          : Display version and exit.\n"
+                   "\n", m_wPort);
+            bStart = FALSE;
+            break;
+         case 'p':   // Port number
+            i = strtol(optarg, &eptr, 0);
+            if ((*eptr != 0) || (i < 0) || (i > 65535))
+            {
+               printf("Invalid port number \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               m_wPort = (WORD)i;
+            }
+            break;
+         case 'q':   // Quiet mode
+            m_bVerbose = FALSE;
+            break;
+         case 's':   // Shared secret
+            strncpy(m_szSecret, optarg, MAX_SECRET_LENGTH - 1);
+            break;
+         case 'v':   // Print version and exit
+            printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "." NXGET_VERSION "\n");
+            bStart = FALSE;
+            break;
+         case '?':
+            bStart = FALSE;
+            break;
+         default:
+            break;
+      }
    }
 
-   // Initialize WinSock
-#ifdef _WIN32
-   WSADATA wsaData;
+   if (bStart)
+   {
+      if (argc - optind < 2)
+      {
+         printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
+      }
+      else
+      {
+         struct hostent *hs;
 
-   WSAStartup(2, &wsaData);
+         // Initialize WinSock
+#ifdef _WIN32
+         WSADATA wsaData;
+
+         WSAStartup(2, &wsaData);
 #endif
 
-   // Connect to agent
-   m_dwAddr = inet_addr(argv[1]);
-   if (Connect(TRUE))
-   {
-      dwError = GetParameter(argv[2], 1024, szBuffer);
-      Disconnect();
-      puts(szBuffer);
+         // Resolve hostname
+         hs = gethostbyname(argv[optind]);
+         if (hs != NULL)
+         {
+            memcpy(&m_dwAddr, hs->h_addr, sizeof(DWORD));
+         }
+         else
+         {
+            m_dwAddr = inet_addr(argv[optind]);
+         }
+         if ((m_dwAddr == 0) || (m_dwAddr == INADDR_NONE))
+         {
+            fprintf(stderr, "Invalid host name or address specified\n");
+         }
+         else
+         {
+            // Connect to agent
+            if (Connect())
+            {
+               dwError = GetParameter(argv[optind + 1], 1024, szBuffer);
+               Disconnect();
+               if (dwError == ERR_SUCCESS)
+               {
+                  puts(szBuffer);
+                  iExitCode = 0;
+               }
+               else
+               {
+                  if (m_bVerbose)
+                     printf("Error %lu\n", dwError);
+                  iExitCode = 1;
+               }
+            }
+            else
+            {
+               iExitCode = 2;
+            }
+         }
+      }
    }
-   return 0;
+
+   return iExitCode;
 }
