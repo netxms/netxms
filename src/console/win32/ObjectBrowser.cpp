@@ -766,16 +766,24 @@ void CObjectBrowser::OnObjectViewViewaslist()
 
 void CObjectBrowser::OnObjectViewViewastree() 
 {
-   HTREEITEM hItem;
+   HTREEITEM hItem = NULL;
 
+MessageBox("p1");
    m_dwFlags |= VIEW_OBJECTS_AS_TREE;
+MessageBox("p2");
    m_wndTreeCtrl.ShowWindow(SW_SHOW);
+MessageBox("p3");
    m_wndListCtrl.ShowWindow(SW_HIDE);
+MessageBox("p4");
 
    // Display currenly selected item in preview pane
+MessageBox("p5");
    hItem = m_wndTreeCtrl.GetSelectedItem();
+MessageBox("p6");
    m_pCurrentObject = (hItem == NULL) ? NULL : NXCFindObjectById(m_wndTreeCtrl.GetItemData(hItem));
+MessageBox("p7");
    m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
+MessageBox("p8");
 }
 
 

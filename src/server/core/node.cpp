@@ -455,6 +455,7 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
    DWORD i;
    Interface *pInterface;
 
+   Lock();
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
@@ -462,8 +463,12 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
          if (pInterface->IfIndex() == dwIndex)
             if ((pInterface->IpAddr() & pInterface->IpNetMask()) ==
                 (dwHostAddr & pInterface->IpNetMask()))
+            {
+               Unlock();
                return pInterface;
+            }
       }
+   Unlock();
    return NULL;
 }
 
@@ -477,6 +482,48 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 {
    Interface *pInterface;
    Subnet *pSubnet;
+
+   // Find subnet to place interface object to
+   if (dwIpAddr != 0)
+   {
+      pSubnet = FindSubnetForNode(dwIpAddr);
+      if (pSubnet == NULL)
+      {
+         // Check if netmask is 0 (detect), and if yes, create
+         // new subnet with class mask
+         if (dwNetMask == 0)
+         {
+            DWORD dwAddr = ntohl(dwIpAddr);
+            if (dwAddr < 0x80000000)
+               dwNetMask = htonl(0xFF000000);   // Class A
+            else if (dwAddr < 0xC0000000)
+               dwNetMask = htonl(0xFFFF0000);   // Class B
+            else if (dwAddr < 0xE0000000)
+               dwNetMask = htonl(0xFFFFFF00);   // Class C
+            else
+            {
+               // Multicast address??
+               DbgPrintf(AF_DEBUG_DISCOVERY, 
+                         "Attempt to create interface object with multicast address %s", 
+                         IpToStr(dwIpAddr));
+               dwIpAddr = 0;
+            }
+         }
+
+         // Create new subnet object
+         pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask);
+         NetObjInsert(pSubnet, TRUE);
+         g_pEntireNet->AddSubnet(pSubnet);
+      }
+      else
+      {
+         // Set correct netmask if we was asked for it
+         if (dwNetMask == 0)
+         {
+            dwNetMask = pSubnet->IpNetMask();
+         }
+      }
+   }
 
    // Create interface object
    if (szName != NULL)
@@ -496,14 +543,6 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    // Bind node to appropriate subnet
    if (pInterface->IpAddr() != 0)   // Do not link non-IP interfaces to 0.0.0.0 subnet
    {
-      pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-      if (pSubnet == NULL)
-      {
-         // Create new subnet object
-         pSubnet = new Subnet(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
-         NetObjInsert(pSubnet, TRUE);
-         g_pEntireNet->AddSubnet(pSubnet);
-      }
       pSubnet->AddNode(this);
    }
 }
