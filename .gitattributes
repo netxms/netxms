@@ -310,6 +310,7 @@ src/server/core/dcitem.cpp -text
 src/server/core/dcithreshold.cpp -text
 src/server/core/debug.cpp -text
 src/server/core/discovery.cpp -text
+src/server/core/email.cpp -text
 src/server/core/entirenet.cpp -text
 src/server/core/epp.cpp -text
 src/server/core/events.cpp -text

@@ -147,6 +147,10 @@ SOURCE=.\discovery.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\email.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\entirenet.cpp
 # End Source File
 # Begin Source File

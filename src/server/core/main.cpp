@@ -223,6 +223,9 @@ BOOL Initialize(void)
    if (!InitIdTable())
       return FALSE;
 
+   // Initialize mailer
+   InitMailer();
+
    // Load users from database
    if (!LoadUsers())
    {
@@ -319,7 +322,9 @@ void Shutdown(void)
    for(i = 0; i < dwNumThreads; i++)
       g_pEventQueue->Put(INVALID_POINTER_VALUE);
 
-   ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
+   ShutdownMailer();
+
+   ThreadSleep(3);     // Give other threads a chance to terminate in a safe way
    DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown\n");
 
    SaveObjects();

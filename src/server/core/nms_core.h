@@ -410,6 +410,10 @@ void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId);
 char *EncodeSQLString(const char *pszIn);
 void DecodeSQLString(char *pszStr);
 
+void InitMailer(void);
+void ShutdownMailer(void);
+void PostMail(char *pszRcpt, char *pszSubject, char *pszText);
+
 #ifdef _WIN32
 
 void InitService(void);

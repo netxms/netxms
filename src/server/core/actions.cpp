@@ -231,6 +231,8 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
             case ACTION_SEND_EMAIL:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"\n", 
                          pAction->szRcptAddr, pszExpandedData);
+               PostMail(pAction->szRcptAddr, pAction->szEmailSubject, pszExpandedData);
+               bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"\n", 

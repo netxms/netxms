@@ -215,3 +215,15 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'Parameters:#0D#0A' CONCAT
 		'   1) Thread name'
 	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SMTP_FAILURE, 'NX_SMTP_FAILURE', 
+		EVENT_SEVERITY_WARNING, 1,
+		'Unable to send e-mail to <%3>: %2',
+		'Generated when server is unable to send e-mail.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Error code#0D#0A' CONCAT
+		'   2) Error text#0D#0A' CONCAT
+		'   3) Recipient address#0D#0A' CONCAT
+		'   4) Mail subject'
+	);
