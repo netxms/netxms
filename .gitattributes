@@ -66,6 +66,7 @@ m4/Makefile.am -text
 netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
+/netxms.dsw -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text

@@ -1,0 +1,377 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "libnetxms"=.\src\libnetxms\libnetxms.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libnxcl"=.\src\libnxcl\libnxcl.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libnxcscp"=.\src\libnxcscp\libnxcscp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libnxsrv"=.\src\server\libnxsrv\libnxsrv.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mssql"=.\src\server\dbdrv\mssql\mssql.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mysql"=.\src\server\dbdrv\mysql\mysql.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "netxmsd"=.\src\server\core\netxmsd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxaction"=.\src\server\tools\nxaction\nxaction.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxadm"=.\src\server\tools\nxadm\nxadm.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxagentd"=.\src\agent\core\nxagentd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxav"=.\src\console\nxav\nxav.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxcon"=.\src\console\win32\nxcon.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxdbmgr"=.\src\server\tools\nxdbmgr\nxdbmgr.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxevent"=.\src\nxevent\nxevent.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxget"=.\src\server\tools\nxget\nxget.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "odbc"=.\src\server\dbdrv\odbc\odbc.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "pgsql"=.\src\server\dbdrv\pgsql\pgsql.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ping"=.\src\agent\subagents\ping\ping.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "skeleton"=.\src\agent\subagents\skeleton\skeleton.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "winperf"=.\src\agent\subagents\winperf\winperf.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
