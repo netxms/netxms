@@ -182,7 +182,7 @@ void CEventEditor::OnClose()
       switch(iAction)
       {
          case IDYES:
-            dwResult = theApp.WaitForRequest(NXCCloseEventDB(TRUE), szClosingMessage);
+            dwResult = DoRequestArg1(NXCCloseEventDB, (void *)TRUE, szClosingMessage);
             if (dwResult == RCC_SUCCESS)
             {
          	   CMDIChildWnd::OnClose();
@@ -197,7 +197,7 @@ void CEventEditor::OnClose()
             }
             break;
          case IDNO:
-            theApp.WaitForRequest(NXCCloseEventDB(FALSE), szClosingMessage);
+            dwResult = DoRequestArg1(NXCCloseEventDB, (void *)FALSE, szClosingMessage);
       	   CMDIChildWnd::OnClose();
             break;
          case IDCANCEL:
@@ -206,7 +206,7 @@ void CEventEditor::OnClose()
    }
    else
    {
-      theApp.WaitForRequest(NXCCloseEventDB(FALSE), szClosingMessage);
+      dwResult = DoRequestArg1(NXCCloseEventDB, (void *)FALSE, szClosingMessage);
 	   CMDIChildWnd::OnClose();
    }
 }

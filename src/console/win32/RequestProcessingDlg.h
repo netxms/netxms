@@ -15,12 +15,14 @@ class CRequestProcessingDlg : public CDialog
 {
 // Construction
 public:
-	HREQUEST m_hRequest;
+	HWND *m_phWnd;
+	HANDLE m_hThread;
 	CRequestProcessingDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CRequestProcessingDlg)
 	enum { IDD = IDD_REQUEST_PROCESSING };
+	CStatic	m_wndInfoText;
 	CString	m_strInfoText;
 	//}}AFX_DATA
 
@@ -40,6 +42,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
    afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnSetInfoText(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

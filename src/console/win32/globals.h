@@ -52,6 +52,16 @@ extern CConsoleApp theApp;
 #define WM_OBJECT_CHANGE         (WM_USER + 3)
 #define WM_FIND_OBJECT           (WM_USER + 4)
 #define WM_EDITBOX_EVENT         (WM_USER + 5)
+#define WM_SET_INFO_TEXT         (WM_USER + 6)
+
+
+//
+// Functions
+//
+
+DWORD DoLogin(void);
+DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText);
+DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText);
 
 
 //

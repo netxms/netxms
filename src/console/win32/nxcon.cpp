@@ -66,9 +66,6 @@ CConsoleApp::CConsoleApp()
    m_bObjectBrowserActive = FALSE;
    m_bDebugWindowActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
-   m_pRqWaitList = NULL;
-   m_dwRqWaitListSize = 0;
-   m_mutexRqWaitList = MutexCreate();
 }
 
 
@@ -78,9 +75,6 @@ CConsoleApp::CConsoleApp()
 
 CConsoleApp::~CConsoleApp()
 {
-   if (m_pRqWaitList != NULL)
-      MemFree(m_pRqWaitList);
-   MutexDestroy(m_mutexRqWaitList);
 }
 
 
@@ -366,17 +360,17 @@ void CConsoleApp::OnViewMap()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window
-//	pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMDIMenu, m_hMDIAccel);
-pFrame->BroadcastMessage(WM_OBJECT_CHANGE, 1, 0);
+	pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMDIMenu, m_hMDIAccel);
 }
 
 void CConsoleApp::OnConnectToServer() 
 {
 	CLoginDialog dlgLogin;
+   DWORD dwResult;
 
    dlgLogin.m_szServer = g_szServer;
    dlgLogin.m_szLogin = g_szLogin;
-   while(1)
+   do
    {
       if (dlgLogin.DoModal() != IDOK)
       {
@@ -392,28 +386,16 @@ void CConsoleApp::OnConnectToServer()
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
 
       // Initiate connection
-      m_bAuthFailed = FALSE;
-      if (NXCConnect(g_szServer, g_szLogin, g_szPassword))
+      dwResult = DoLogin();
+      if (dwResult != RCC_SUCCESS)
       {
-         m_dlgProgress.m_szStatusText = "Connecting to server...";
-         if (m_dlgProgress.DoModal() == IDOK)
-         {
-            // Now we are connected, request data sync
-            NXCSyncObjects();
-            NXCLoadUserDB();
-            break;
-         }
-         else
-            m_pMainWnd->MessageBox(m_bAuthFailed ? "Client authentication failed (invalid login name or password)" :
-                                                   "Unable to establish connection with the server", 
-                                   "Connection error", MB_OK | MB_ICONSTOP);
-      }
-      else
-      {
-         m_pMainWnd->MessageBox("Unable to initiate connection to server", 
-                                "Connection error", MB_OK | MB_ICONSTOP);
+         char szBuffer[256];
+
+         sprintf(szBuffer, "Unable to connect: %s", NXCGetErrorText(dwResult));
+         m_pMainWnd->MessageBox(szBuffer, "Connection error", MB_OK | MB_ICONSTOP);
       }
    }
+   while(dwResult != RCC_SUCCESS);
 }
 
 void CConsoleApp::OnViewObjectbrowser() 
@@ -435,7 +417,6 @@ void CConsoleApp::OnViewObjectbrowser()
 
 void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 {
-   static BOOL bNowConnecting = FALSE;
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
    switch(dwEvent)
@@ -444,23 +425,12 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          switch(dwCode)
          {
             case STATE_CONNECTING:
-               bNowConnecting = TRUE;
                break;
             case STATE_IDLE:
-               if (bNowConnecting)
-               {
-                  m_dlgProgress.Terminate(IDOK);
-                  bNowConnecting = FALSE;
-               }
                if ((m_bEventBrowserActive) && (m_dwClientState == STATE_SYNC_EVENTS))
                   m_pwndEventBrowser->EnableDisplay(TRUE);
                break;
             case STATE_DISCONNECTED:
-               if (bNowConnecting)
-               {
-                  m_dlgProgress.Terminate(IDCANCEL);
-                  bNowConnecting = FALSE;
-               }
                break;
             case STATE_SYNC_EVENTS:
                if (m_bEventBrowserActive)
@@ -471,17 +441,10 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          }
          m_dwClientState = dwCode;
          break;
-      case NXC_EVENT_LOGIN_RESULT:
-         if (dwCode == 0)
-            m_bAuthFailed = TRUE;
-         break;
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_bEventBrowserActive)
             m_pwndEventBrowser->AddEvent((NXC_EVENT *)pArg);
          MemFree(pArg);
-         break;
-      case NXC_EVENT_REQUEST_COMPLETED:
-         OnRequestComplete(dwCode, (DWORD)pArg);
          break;
       case NXC_EVENT_OBJECT_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
@@ -507,7 +470,7 @@ void CConsoleApp::OnControlpanelEvents()
    {
       DWORD dwResult;
 
-      dwResult = WaitForRequest(NXCOpenEventDB(), "Opening event configuration database...");
+      dwResult = DoRequest(NXCOpenEventDB, "Opening event configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -539,7 +502,7 @@ void CConsoleApp::OnControlpanelUsers()
    {
       DWORD dwResult;
 
-      dwResult = WaitForRequest(NXCLockUserDB(), "Locking user database...");
+      dwResult = DoRequest(NXCLockUserDB, "Locking user database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
@@ -553,42 +516,6 @@ void CConsoleApp::OnControlpanelUsers()
          GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
       }
    }
-}
-
-
-//
-// Register callback for request completion
-//
-
-void CConsoleApp::RegisterRequest(HREQUEST hRequest, CWnd *pWnd)
-{
-   MutexLock(m_mutexRqWaitList, INFINITE);
-   m_pRqWaitList = (RQ_WAIT_INFO *)MemReAlloc(m_pRqWaitList, sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize + 1));
-   m_pRqWaitList[m_dwRqWaitListSize].hRequest = hRequest;
-   m_pRqWaitList[m_dwRqWaitListSize].pWnd = pWnd;
-   m_dwRqWaitListSize++;
-   MutexUnlock(m_mutexRqWaitList);
-}
-
-
-//
-// This method called by client library event handler on NXC_EVENT_REQUEST_COMPLETE
-//
-
-void CConsoleApp::OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode)
-{
-   DWORD i;
-
-   MutexLock(m_mutexRqWaitList, INFINITE);
-   for(i = 0; i < m_dwRqWaitListSize; i++)
-      if (m_pRqWaitList[i].hRequest == hRequest)
-      {
-         m_pRqWaitList[i].pWnd->SendMessage(WM_REQUEST_COMPLETED, hRequest, dwRetCode);
-         m_dwRqWaitListSize--;
-         memmove(&m_pRqWaitList[i], &m_pRqWaitList[i + 1], sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize - i));
-         i--;
-      }
-   MutexUnlock(m_mutexRqWaitList);
 }
 
 
@@ -684,21 +611,4 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       if (wndPropSheet.DoModal() == IDOK)
          wndPropSheet.SaveObjectChanges();
    }
-}
-
-
-//
-// Wait for specific request
-//
-
-DWORD CConsoleApp::WaitForRequest(HREQUEST hRequest, char *pszMessage)
-{
-   CRequestProcessingDlg wndWaitDlg;
-
-   wndWaitDlg.m_hRequest = hRequest;
-   if (pszMessage != NULL)
-      wndWaitDlg.m_strInfoText = pszMessage;
-   else
-      wndWaitDlg.m_strInfoText = "Processing request...";
-   return (DWORD)wndWaitDlg.DoModal();
 }

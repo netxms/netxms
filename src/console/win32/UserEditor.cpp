@@ -57,7 +57,7 @@ BOOL CUserEditor::PreCreateWindow(CREATESTRUCT& cs)
 
 void CUserEditor::OnClose() 
 {
-   theApp.WaitForRequest(NXCUnlockUserDB());
+   DoRequest(NXCUnlockUserDB, "Unlocking user database...");
 	CMDIChildWnd::OnClose();
 }
 
@@ -198,7 +198,7 @@ void CUserEditor::OnUserCreateGroup()
 void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bShowProp)
 {
    DWORD dwResult;
-
+/*
    // Send request to server
    if (bIsGroup)
       dwResult = theApp.WaitForRequest(NXCCreateUserGroup((char *)pszName), "Creating new group...");
@@ -215,5 +215,5 @@ void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bSho
       sprintf(szBuffer, "Error creating %s object: %s", 
               bIsGroup ? "group" : "user", NXCGetErrorText(dwResult));
       MessageBox(szBuffer, "Error", MB_OK | MB_ICONSTOP);
-   }
+   }*/
 }

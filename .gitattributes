@@ -95,6 +95,7 @@ src/console/win32/UserEditor.cpp -text
 src/console/win32/UserEditor.h -text
 src/console/win32/UserSelectDlg.cpp -text
 src/console/win32/UserSelectDlg.h -text
+src/console/win32/comm.cpp -text
 src/console/win32/globals.cpp -text
 src/console/win32/globals.h -text
 src/console/win32/icons/Alarms.ICO -text

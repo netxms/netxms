@@ -83,12 +83,6 @@ protected:
 	CWnd *m_pwndCtrlPanel;
    CDebugFrame *m_pwndDebugWindow;
 
-   BOOL m_bAuthFailed;
-	CProgressDialog m_dlgProgress;
-   DWORD m_dwRqWaitListSize;
-   RQ_WAIT_INFO *m_pRqWaitList;
-   MUTEX m_mutexRqWaitList;
-
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
 	HMENU m_hEventBrowserMenu;    // Menu for event browser
@@ -99,7 +93,6 @@ protected:
 	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
 	
 public:
-	void RegisterRequest(HREQUEST hRequest, CWnd *pWnd);
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	void OnViewDestroy(DWORD dwView, CWnd *pWnd);
 	void OnViewCreate(DWORD dwView, CWnd *pWnd);
@@ -117,7 +110,6 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
-	void OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode);
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bUserEditorActive;
@@ -127,7 +119,6 @@ private:
 
    // Inline functions
 public:
-	DWORD WaitForRequest(HREQUEST hRequest, char *pszMessage = NULL);
 	void ObjectProperties(DWORD dwObjectId);
 	void DebugPrintf(char *szFormat, ...);
    void DebugCallback(char *pszMsg)

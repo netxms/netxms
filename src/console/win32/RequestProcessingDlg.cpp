@@ -21,6 +21,7 @@ CRequestProcessingDlg::CRequestProcessingDlg(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CRequestProcessingDlg)
 	m_strInfoText = _T("");
 	//}}AFX_DATA_INIT
+   m_hThread = NULL;
 }
 
 
@@ -28,6 +29,7 @@ void CRequestProcessingDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CRequestProcessingDlg)
+	DDX_Control(pDX, IDC_INFO_TEXT, m_wndInfoText);
 	DDX_Text(pDX, IDC_INFO_TEXT, m_strInfoText);
 	DDV_MaxChars(pDX, m_strInfoText, 255);
 	//}}AFX_DATA_MAP
@@ -38,6 +40,7 @@ BEGIN_MESSAGE_MAP(CRequestProcessingDlg, CDialog)
 	//{{AFX_MSG_MAP(CRequestProcessingDlg)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_MESSAGE(WM_SET_INFO_TEXT, OnSetInfoText)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -51,8 +54,21 @@ END_MESSAGE_MAP()
 BOOL CRequestProcessingDlg::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-	
-   theApp.RegisterRequest(m_hRequest, this);
+
+   *m_phWnd = m_hWnd;
+   // Check if our worker thread already finished
+   if (WaitForSingleObject(m_hThread, 0) == WAIT_OBJECT_0)
+   {
+      DWORD dwResult = RCC_SYSTEM_FAILURE;
+
+      // Finished, get it's exit code and close status window
+      GetExitCodeThread(m_hThread, &dwResult);
+      PostMessage(WM_REQUEST_COMPLETED, 0, dwResult);
+   }
+   else
+   {
+      ResumeThread(m_hThread);
+   }
 
 	return TRUE;
 }
@@ -64,6 +80,15 @@ BOOL CRequestProcessingDlg::OnInitDialog()
 
 void CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
-   if (wParam == m_hRequest)
-      EndDialog(lParam);
+   EndDialog(lParam);
+}
+
+
+//
+// WM_SET_INFO_TEXT message handler
+//
+
+void CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
+{
+   m_wndInfoText.SetWindowText((LPCTSTR)lParam);
 }

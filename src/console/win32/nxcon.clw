@@ -2,7 +2,7 @@
 
 [General Info]
 Version=1
-LastClass=CNewUserDlg
+LastClass=CRequestProcessingDlg
 LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
@@ -15,9 +15,9 @@ Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=35
+ResourceCount=36
 Resource1=IDD_PROGRESS (English (U.S.))
-Resource2=IDA_MDI_DEFAULT
+Resource2=IDD_OBJECT_NODE_GENERAL
 Resource3=IDD_ABOUTBOX (English (U.S.))
 Resource4=IDM_VIEW_SPECIFIC
 Resource5=IDD_SELECT_USER (English (U.S.))
@@ -26,13 +26,13 @@ Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_OBJECT_SECURITY
+Resource6=IDD_LOGIN
 Class11=CProgressDialog
 Resource7=IDD_OBJECT_CAPS (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDD_OBJECT_NODE_GENERAL
+Resource8=IDR_MAINFRAME
 Class13=CObjectPropDlg
-Resource9=IDD_OBJECT_GENERAL
+Resource9=IDD_ABOUTBOX
 Resource10=IDD_OBJECT_GENERAL (English (U.S.))
 Resource11=IDD_OBJECT_SECURITY (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
@@ -44,24 +44,24 @@ Class14=CEventEditor
 Class15=CEditEventDlg
 Resource17=IDD_EDIT_EVENT (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDD_REQUEST_PROCESSING
+Resource18=IDD_NEW_USER (English (U.S.))
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
-Resource20=IDD_EDIT_EVENT
+Resource20=IDD_SELECT_USER
 Class17=CObjectPreview
 Resource21=IDM_VIEW_SPECIFIC (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
-Resource22=IDA_OBJECT_BROWSER
+Resource22=IDD_OBJECT_CAPS
 Class21=CEditBox
 Class22=COPGeneral
 Class23=CNodePropsGeneral
-Resource23=IDD_PROGRESS
+Resource23=IDD_OBJECT_SECURITY
 Class24=CObjectPropCaps
 Class25=CObjectPropSheet
-Resource24=IDR_MAINFRAME
+Resource24=IDD_EDIT_EVENT
 Class26=CRequestProcessingDlg
-Resource25=IDD_ABOUTBOX
+Resource25=IDD_REQUEST_PROCESSING
 Resource26=IDD_LOGIN (English (U.S.))
 Resource27=IDR_MAINFRAME (English (U.S.))
 Resource28=IDA_MDI_DEFAULT (English (U.S.))
@@ -69,14 +69,15 @@ Class27=CObjectPropsGeneral
 Resource29=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Class28=CObjectPropsSecurity
 Resource30=IDD_REQUEST_PROCESSING (English (U.S.))
-Resource31=IDD_LOGIN
-Resource32=IDD_OBJECT_CAPS
+Resource31=IDD_OBJECT_GENERAL
+Resource32=IDA_MDI_DEFAULT
 Class29=CUserSelectDlg
-Resource33=IDD_SELECT_USER
+Resource33=IDD_PROGRESS
 Class30=CUserEditor
 Resource34=IDA_OBJECT_BROWSER (English (U.S.))
 Class31=CNewUserDlg
-Resource35=IDD_NEW_USER (English (U.S.))
+Resource35=IDA_OBJECT_BROWSER
+Resource36=IDD_NEW_USER
 
 [CLS:CConsoleApp]
 Type=0
@@ -491,7 +492,12 @@ Command10=ID_OBJECT_FIND
 Command11=ID_OBJECT_RENAME
 Command12=ID_OBJECT_DELETE
 Command13=ID_OBJECT_PROPERTIES
-CommandCount=13
+Command14=ID_USER_CREATE_USER
+Command15=ID_USER_CREATE_GROUP
+Command16=ID_USER_DELETE
+Command17=ID_USER_SETPASSWORD
+Command18=ID_USER_PROPERTIES
+CommandCount=18
 
 [ACL:IDA_MDI_DEFAULT]
 Type=1
@@ -697,7 +703,7 @@ ImplementationFile=RequestProcessingDlg.cpp
 BaseClass=CDialog
 Filter=D
 VirtualFilter=dWC
-LastObject=CRequestProcessingDlg
+LastObject=IDC_INFO_TEXT
 
 [DLG:IDD_OBJECT_NODE_GENERAL (English (U.S.))]
 Type=1
@@ -800,19 +806,20 @@ Control6=IDC_EDIT_NAME,edit,1350631552
 [DLG:IDD_OBJECT_SECURITY]
 Type=1
 Class=CObjectPropsSecurity
-ControlCount=12
+ControlCount=13
 Control1=IDC_LIST_USERS,SysListView32,1342259485
 Control2=IDC_CHECK_READ,button,1342242819
 Control3=IDC_CHECK_MODIFY,button,1342242819
 Control4=IDC_CHECK_CREATE,button,1342242819
 Control5=IDC_CHECK_DELETE,button,1342242819
 Control6=IDC_CHECK_MOVE,button,1342242819
-Control7=IDC_ADD_USER,button,1342242816
-Control8=IDC_DELETE_USER,button,1342242816
-Control9=IDC_CHECK_INHERIT_RIGHTS,button,1342242819
-Control10=IDC_STATIC,button,1342177287
+Control7=IDC_CHECK_ACCESS,button,1342242819
+Control8=IDC_ADD_USER,button,1342242816
+Control9=IDC_DELETE_USER,button,1342242816
+Control10=IDC_CHECK_INHERIT_RIGHTS,button,1342242819
 Control11=IDC_STATIC,button,1342177287
 Control12=IDC_STATIC,button,1342177287
+Control13=IDC_STATIC,button,1342177287
 
 [DLG:IDD_SELECT_USER]
 Type=1
@@ -868,4 +875,14 @@ BaseClass=CDialog
 Filter=D
 LastObject=CNewUserDlg
 VirtualFilter=dWC
+
+[DLG:IDD_NEW_USER]
+Type=1
+Class=?
+ControlCount=5
+Control1=IDC_EDIT_NAME,edit,1350631552
+Control2=IDC_CHECK_PROPERTIES,button,1342242819
+Control3=IDOK,button,1342242817
+Control4=IDCANCEL,button,1342242816
+Control5=IDC_STATIC_HEADER,static,1342308352
 

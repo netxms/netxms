@@ -74,7 +74,7 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENTS, this);
 
-   NXCSyncEvents();
+   DoRequest(NXCSyncEvents, "Loading events...");
 	return 0;
 }
 
