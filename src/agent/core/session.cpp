@@ -213,6 +213,7 @@ void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
    else
    {
       char szSecret[MAX_SECRET_LENGTH];
+      BYTE hash[32];
       WORD wAuthMethod;
 
       wAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
@@ -228,6 +229,34 @@ void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             else
             {
                WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "PLAIN");
+               pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
+            }
+            break;
+         case AUTH_MD5_HASH:
+            pRequest->GetVariableBinary(VID_SHARED_SECRET, (BYTE *)szSecret, MD5_DIGEST_SIZE);
+            CalculateMD5Hash((BYTE *)g_szSharedSecret, strlen(g_szSharedSecret), hash);
+            if (!memcmp(szSecret, hash, MD5_DIGEST_SIZE))
+            {
+               m_bIsAuthenticated = TRUE;
+               pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "MD5");
+               pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
+            }
+            break;
+         case AUTH_SHA1_HASH:
+            pRequest->GetVariableBinary(VID_SHARED_SECRET, (BYTE *)szSecret, SHA1_DIGEST_SIZE);
+            CalculateSHA1Hash((BYTE *)g_szSharedSecret, strlen(g_szSharedSecret), hash);
+            if (!memcmp(szSecret, hash, SHA1_DIGEST_SIZE))
+            {
+               m_bIsAuthenticated = TRUE;
+               pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "SHA1");
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;

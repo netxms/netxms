@@ -25,6 +25,49 @@
 
 
 //
+// Agent result codes
+//
+
+static struct
+{
+   int iCode;
+   char *pszText;
+} m_agentErrors[] =
+{
+   { ERR_SUCCESS, "Success" },
+   { ERR_UNKNOWN_COMMAND, "Unknown command" },
+   { ERR_AUTH_REQUIRED, "Authentication required" },
+   { ERR_UNKNOWN_PARAMETER, "Unknown parameter" },
+   { ERR_REQUEST_TIMEOUT, "Request timeout" },
+   { ERR_AUTH_FAILED, "Authentication failed" },
+   { ERR_ALREADY_AUTHENTICATED, "Already authenticated" },
+   { ERR_AUTH_NOT_REQUIRED, "Authentication not required" },
+   { ERR_INTERNAL_ERROR, "Internal error" },
+   { ERR_NOT_IMPLEMENTED, "Not implemented" },
+   { ERR_OUT_OF_RESOURCES, "Out of resources" },
+   { ERR_NOT_CONNECTED, "Not connected" },
+   { ERR_CONNECTION_BROKEN, "Connection broken" },
+   { ERR_BAD_RESPONCE, "Bad responce" },
+   { -1, NULL }
+};
+
+
+//
+// Resolve agent's error code to text
+//
+
+const char LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
+{
+   int i;
+
+   for(i = 0; m_agentErrors[i].pszText != NULL; i++)
+      if (iError == m_agentErrors[i].iCode)
+         return m_agentErrors[i].pszText;
+   return "Unknown error code";
+}
+
+
+//
 // Destroy interface list created by discovery functions
 //
 

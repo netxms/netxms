@@ -1,0 +1,5 @@
+Current ToDo List:
+
+- Fix bugs in ConditionWait()
+- Add read/write locking implementation
+- Remove dependencies on OpenSSL

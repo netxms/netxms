@@ -57,7 +57,7 @@ AgentConnection::AgentConnection()
    m_dwNumDataLines = 0;
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
-   m_dwRequestId = 0;
+   m_dwRequestId = 1;
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
 }
 
@@ -80,7 +80,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, char
    m_dwNumDataLines = 0;
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
-   m_dwRequestId = 0;
+   m_dwRequestId = 1;
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
 }
 
@@ -183,6 +183,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    struct sockaddr_in sa;
    char szBuffer[256];
    BOOL bSuccess = FALSE;
+   DWORD dwError;
 
    // Create socket
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -210,18 +211,18 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    ThreadCreate(ReceiverThreadStarter, 0, this);
 
    // Authenticate itself to agent
-   switch(m_iAuthMethod)
+   if ((dwError = Authenticate()) != ERR_SUCCESS)
    {
-      case AUTH_PLAINTEXT:
-         break;
-      default:
-         break;
+      PrintMsg("Authentication to agent %s failed (%s)", IpToStr(m_dwAddr, szBuffer),
+               AgentErrorCodeToText(dwError));
+      goto connect_cleanup;
    }
 
    // Test connectivity
-   if (Nop() != ERR_SUCCESS)
+   if ((dwError = Nop()) != ERR_SUCCESS)
    {
-      PrintMsg("Communication with agent %s failed", IpToStr(m_dwAddr, szBuffer));
+      PrintMsg("Communication with agent %s failed (%s)", IpToStr(m_dwAddr, szBuffer),
+               AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
 
@@ -442,4 +443,44 @@ DWORD AgentConnection::GetList(char *pszParam)
    }
 
    return dwRetCode;
+}
+
+
+//
+// Authenticate to agent
+//
+
+DWORD AgentConnection::Authenticate(void)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+   BYTE hash[32];
+
+   if (m_iAuthMethod == AUTH_NONE)
+      return ERR_SUCCESS;  // No authentication required
+
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_AUTHENTICATE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_AUTH_METHOD, (WORD)m_iAuthMethod);
+   switch(m_iAuthMethod)
+   {
+      case AUTH_PLAINTEXT:
+         msg.SetVariable(VID_SHARED_SECRET, m_szSecret);
+         break;
+      case AUTH_MD5_HASH:
+         CalculateMD5Hash((BYTE *)m_szSecret, strlen(m_szSecret), hash);
+         msg.SetVariable(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
+         break;
+      case AUTH_SHA1_HASH:
+         CalculateSHA1Hash((BYTE *)m_szSecret, strlen(m_szSecret), hash);
+         msg.SetVariable(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
+         break;
+      default:
+         break;
+   }
+   if (SendMessage(&msg))
+      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
 }

@@ -48,26 +48,30 @@
 
 static DWORD m_dwAddr;
 static int m_iAuthMethod = AUTH_NONE;
-static char m_szSecret[MAX_SECRET_LENGTH] = "";
-static WORD m_wPort = AGENT_LISTEN_PORT;
 static BOOL m_bVerbose = TRUE;
-static DWORD m_dwTimeout = 3000;
 
 
 //
 // Get single parameter
 //
 
-static int Get(AgentConnection *pConn, char *pszParam)
+static int Get(AgentConnection *pConn, char *pszParam, BOOL bShowName)
 {
    DWORD dwError;
    char szBuffer[1024];
 
    dwError = pConn->GetParameter(pszParam, 1024, szBuffer);
    if (dwError == ERR_SUCCESS)
-      printf("%s\n", szBuffer);
+   {
+      if (bShowName)
+         printf("%s = %s\n", pszParam, szBuffer);
+      else
+         printf("%s\n", szBuffer);
+   }
    else
-      printf("Error %d\n", dwError);
+   {
+      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+   }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
@@ -89,7 +93,7 @@ static int List(AgentConnection *pConn, char *pszParam)
    }
    else
    {
-      printf("Error %d\n", dwError);
+      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
    }
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
@@ -102,12 +106,16 @@ static int List(AgentConnection *pConn, char *pszParam)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE;
-   int i, ch, iExitCode = 3, iCommand = CMD_GET;
+   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE;
+   int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
+   int iAuthMethod = AUTH_NONE;
+   WORD wPort = AGENT_LISTEN_PORT;
+   DWORD dwTimeout = 3000;
+   char szSecret[MAX_SECRET_LENGTH] = "";
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hlp:qs:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:bi:hlnp:qs:vw:")) != -1)
    {
       switch(ch)
       {
@@ -116,18 +124,54 @@ int main(int argc, char *argv[])
                    "Valid options are:\n"
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
+                   "   -b           : Batch mode - get all parameters listed on command line.\n"
                    "   -h           : Display help and exit.\n"
+                   "   -i <seconds> : Get specified parameter continously with given interval.\n"
                    "   -l           : Get list of values for enum parameter.\n"
+                   "   -n           : Show parameter's name in result\n"
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
                    "   -q           : Quiet mode.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
                    "   -v           : Display version and exit.\n"
                    "   -w <seconds> : Specify command timeout (default is 3 seconds)\n"
-                   "\n", m_wPort);
+                   "\n", wPort);
             bStart = FALSE;
+            break;
+         case 'a':   // Auth method
+            if (!strcmp(optarg, "none"))
+               iAuthMethod = AUTH_NONE;
+            else if (!strcmp(optarg, "plain"))
+               iAuthMethod = AUTH_PLAINTEXT;
+            else if (!strcmp(optarg, "md5"))
+               iAuthMethod = AUTH_MD5_HASH;
+            else if (!strcmp(optarg, "sha1"))
+               iAuthMethod = AUTH_SHA1_HASH;
+            else
+            {
+               printf("Invalid authentication method \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            break;
+         case 'b':   // Batch mode
+            bBatchMode = TRUE;
+            break;
+         case 'i':   // Interval
+            i = strtol(optarg, &eptr, 0);
+            if ((*eptr != 0) || (i <= 0))
+            {
+               printf("Invalid interval \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               iInterval = i;
+            }
             break;
          case 'l':
             iCommand = CMD_LIST;
+            break;
+         case 'n':   // Show names
+            bShowNames = TRUE;
             break;
          case 'p':   // Port number
             i = strtol(optarg, &eptr, 0);
@@ -138,14 +182,14 @@ int main(int argc, char *argv[])
             }
             else
             {
-               m_wPort = (WORD)i;
+               wPort = (WORD)i;
             }
             break;
          case 'q':   // Quiet mode
             m_bVerbose = FALSE;
             break;
          case 's':   // Shared secret
-            strncpy(m_szSecret, optarg, MAX_SECRET_LENGTH - 1);
+            strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
          case 'v':   // Print version and exit
             printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "." NXGET_VERSION "\n");
@@ -160,7 +204,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               m_dwTimeout = (DWORD)i;
+               dwTimeout = (DWORD)i;
             }
             break;
          case '?':
@@ -171,47 +215,60 @@ int main(int argc, char *argv[])
       }
    }
 
+   // Check parameter correctness
+   if (argc - optind < 2)
+   {
+      printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
+      bStart = FALSE;
+   }
+   else if ((iAuthMethod != AUTH_NONE) && (szSecret[0] == 0))
+   {
+      printf("Shared secret not specified or empty\n");
+      bStart = FALSE;
+   }
+
+   // If everything is ok, start communications
    if (bStart)
    {
-      if (argc - optind < 2)
+      struct hostent *hs;
+
+      // Initialize WinSock
+#ifdef _WIN32
+      WSADATA wsaData;
+
+      WSAStartup(2, &wsaData);
+#endif
+
+      // Resolve hostname
+      hs = gethostbyname(argv[optind]);
+      if (hs != NULL)
       {
-         printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
+         memcpy(&m_dwAddr, hs->h_addr, sizeof(DWORD));
       }
       else
       {
-         struct hostent *hs;
+         m_dwAddr = inet_addr(argv[optind]);
+      }
+      if ((m_dwAddr == 0) || (m_dwAddr == INADDR_NONE))
+      {
+         fprintf(stderr, "Invalid host name or address specified\n");
+      }
+      else
+      {
+         AgentConnection conn(m_dwAddr, wPort, iAuthMethod, szSecret);
 
-         // Initialize WinSock
-#ifdef _WIN32
-         WSADATA wsaData;
-
-         WSAStartup(2, &wsaData);
-#endif
-
-         // Resolve hostname
-         hs = gethostbyname(argv[optind]);
-         if (hs != NULL)
+         if (conn.Connect(m_bVerbose))
          {
-            memcpy(&m_dwAddr, hs->h_addr, sizeof(DWORD));
-         }
-         else
-         {
-            m_dwAddr = inet_addr(argv[optind]);
-         }
-         if ((m_dwAddr == 0) || (m_dwAddr == INADDR_NONE))
-         {
-            fprintf(stderr, "Invalid host name or address specified\n");
-         }
-         else
-         {
-            AgentConnection conn(m_dwAddr);
-
-            if (conn.Connect(m_bVerbose))
+            do
             {
                switch(iCommand)
                {
                   case CMD_GET:
-                     iExitCode = Get(&conn, argv[optind + 1]);
+                     iPos = optind + 1;
+                     do
+                     {
+                        iExitCode = Get(&conn, argv[iPos++], bShowNames);
+                     } while((iExitCode == 0) && (bBatchMode) && (iPos < argc));
                      break;
                   case CMD_LIST:
                      iExitCode = List(&conn, argv[optind + 1]);
@@ -219,12 +276,14 @@ int main(int argc, char *argv[])
                   default:
                      break;
                }
-               conn.Disconnect();
+               ThreadSleep(iInterval);
             }
-            else
-            {
-               iExitCode = 2;
-            }
+            while(iInterval > 0);
+            conn.Disconnect();
+         }
+         else
+         {
+            iExitCode = 2;
          }
       }
    }

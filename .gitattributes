@@ -9,6 +9,7 @@
 /README -text
 /README.in -text
 /THANKS -text
+/TODO -text
 /configure.ac -text
 contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text

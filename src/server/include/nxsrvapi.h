@@ -119,6 +119,7 @@ protected:
    BOOL SendMessage(CSCPMessage *pMsg);
    CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
    DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
+   DWORD Authenticate(void);
 
    virtual void PrintMsg(char *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
@@ -148,6 +149,7 @@ public:
 
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
+const char LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
 
 #endif   /* _nxsrvapi_h_ */
