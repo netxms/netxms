@@ -6,6 +6,7 @@ include/nms_agent.h -text
 include/nms_common.h -text
 include/nms_cscp.h -text
 include/nms_util.h -text
+include/nxclapi.h -text
 sql/clear.sql -text
 sql/events.sql -text
 sql/schema.sql -text
