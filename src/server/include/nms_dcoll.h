@@ -208,7 +208,8 @@ public:
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
    void ChangeBinding(DWORD dwNewId, Template *pNode);
-   void SetTemplateId(DWORD dwId) { m_dwTemplateId = dwId; }
+   void SetTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
+         { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
    void NewValue(DWORD dwTimeStamp, const char *pszValue);
 

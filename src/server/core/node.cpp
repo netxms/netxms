@@ -1620,6 +1620,8 @@ BOOL Node::ApplyTemplateItem(DCItem *pItem)
 
    Lock();
 
+   DbgPrintf(AF_DEBUG_DC, "Applying item \"%s\" to node \"%s\"", pItem->Name(), m_szName);
+
    // Check if that template item exists
    for(i = 0; i < m_dwNumItems; i++)
       if ((m_ppItems[i]->TemplateId() == pItem->TemplateId()) &&
@@ -1644,4 +1646,39 @@ BOOL Node::ApplyTemplateItem(DCItem *pItem)
 
    Unlock();
    return bResult;
+}
+
+
+//
+// Clean deleted template items from node's DCI list
+// Arguments is template id and list of valid template item ids.
+// all items related to given template and not presented in list should be deleted.
+//
+
+void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList)
+{
+   DWORD i, j, dwNumDeleted, *pdwDeleteList;
+
+   pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
+   dwNumDeleted = 0;
+
+   Lock();
+
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_ppItems[i]->TemplateId() == dwTemplateId)
+      {
+         for(j = 0; j < dwNumItems; j++)
+            if (m_ppItems[i]->TemplateItemId() == pdwItemList[j])
+               break;
+
+         // Delete DCI if it's not in list
+         if (j == dwNumItems)
+            pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
+      }
+
+   Unlock();
+
+   for(i = 0; i < dwNumDeleted; i++)
+      DeleteItem(pdwDeleteList[i]);
+   free(pdwDeleteList);
 }

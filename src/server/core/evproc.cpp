@@ -57,16 +57,16 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          char *pszMsg, szQuery[1024];
 
          pszMsg = EncodeSQLString(pEvent->Message());
-         sprintf(szQuery, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
-                          "event_source,event_severity,event_message,root_event_id) "
+         snprintf(szQuery, 1024, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
+                                 "event_source,event_severity,event_message,root_event_id) "
 #ifdef _WIN32
-                          "VALUES (%I64d,%d,%d,%d,%d,'%s',%I64d)", 
+                                 "VALUES (%I64d,%d,%d,%d,%d,'%s',%I64d)", 
 #else
-                          "VALUES (%lld,%d,%d,%d,%d,'%s',%lld)", 
+                                 "VALUES (%lld,%d,%d,%d,%d,'%s',%lld)", 
 #endif
-                 pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
-                 pEvent->SourceId(), pEvent->Severity(), pszMsg,
-                 pEvent->GetRootId());
+                  pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
+                  pEvent->SourceId(), pEvent->Severity(), pszMsg,
+                  pEvent->GetRootId());
          free(pszMsg);
          DBQuery(g_hCoreDB, szQuery);
       }

@@ -1526,3 +1526,38 @@ void CConsoleApp::CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId,
 		delete pWnd;
 	}
 }
+
+
+//
+// Apply template worker function
+//
+
+static DWORD ApplyTemplateToNodes(DWORD dwTemplateId, DWORD dwNumNodes, DWORD *pdwNodeList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   for(i = 0; (i < dwNumNodes) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = NXCApplyTemplate(g_hSession, dwTemplateId, pdwNodeList[i]);
+   return dwResult;
+}
+
+
+//
+// Apply template object to node(s)
+//
+
+void CConsoleApp::ApplyTemplate(NXC_OBJECT *pObject)
+{
+   CObjectSelDlg dlg;
+   DWORD dwResult;
+
+   dlg.m_dwAllowedClasses = SCL_NODE;
+   if (dlg.DoModal() == IDOK)
+   {
+      dwResult = DoRequestArg3(ApplyTemplateToNodes, (void *)pObject->dwId,
+                               (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList,
+                               _T("Applying template..."));
+      if (dwResult != RCC_SUCCESS)
+         ErrorBox(dwResult, _T("Error applying template: %s"));
+   }
+}

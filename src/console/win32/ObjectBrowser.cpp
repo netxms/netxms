@@ -179,6 +179,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_SERVICE, OnObjectCreateService)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
 	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_APPLY, OnUpdateObjectApply)
+	ON_COMMAND(ID_OBJECT_APPLY, OnObjectApply)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1261,6 +1263,22 @@ void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI)
    }
 }
 
+void CObjectBrowser::OnUpdateObjectApply(CCmdUI* pCmdUI) 
+{
+   if (m_pCurrentObject == NULL)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+         pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_TEMPLATE);
+      else
+         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_TEMPLATE) &&
+                        (m_wndListCtrl.GetSelectedCount() == 1));
+   }
+}
+
 void CObjectBrowser::OnUpdateObjectPollStatus(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(CurrObjectIsNode());
@@ -1702,4 +1720,15 @@ void CObjectBrowser::OnObjectLastdcivalues()
          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_APPLY message handler
+//
+
+void CObjectBrowser::OnObjectApply() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ApplyTemplate(m_pCurrentObject);
 }

@@ -395,8 +395,9 @@ void ClientSession::ReadThread(void)
    {
       pObject = FindObjectById(m_pOpenDCIList[i]);
       if (pObject != NULL)
-         if (pObject->Type() == OBJECT_NODE)
-            ((Node *)pObject)->UnlockDCIList(m_dwIndex);
+         if ((pObject->Type() == OBJECT_NODE) ||
+             (pObject->Type() == OBJECT_TEMPLATE))
+            ((Template *)pObject)->UnlockDCIList(m_dwIndex);
    }
 
    // Waiting while reference count becomes 0
@@ -1253,6 +1254,7 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
          DecodeSQLString(szBuffer);
          MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBuffer, -1, 
                              (WCHAR *)event.szMessage, MAX_EVENT_MSG_LENGTH);
+         ((WCHAR *)event.szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
          SwapWideString((WCHAR *)event.szMessage);
          m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, sizeof(NXC_EVENT), &event, NULL));
@@ -4158,30 +4160,45 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
       if ((pSource->Type() == OBJECT_TEMPLATE) && 
           (pDestination->Type() == OBJECT_NODE))
       {
-         if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
+         BOOL bLockSucceed = FALSE;
+
+         // Acquire DCI lock if needed
+         if (!((Template *)pSource)->IsLockedBySession(m_dwIndex))
+         {
+            bLockSucceed = ((Template *)pSource)->LockDCIList(m_dwIndex);
+         }
+         else
+         {
+            bLockSucceed = TRUE;
+         }
+
+         if (bLockSucceed)
          {
             // Check access rights
             if ((pSource->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
                 (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((Template *)pDestination)->LockDCIList(m_dwIndex))
+               if (((Node *)pDestination)->LockDCIList(m_dwIndex))
                {
-                  DWORD i, dwNumItems;
-                  const DCItem *pSrcItem;
-                  DCItem *pDstItem;
+                  DWORD i, dwNumItems, *pdwItemList;
+                  DCItem *pSrcItem, *pDstItem;
                   int iErrors = 0;
 
                   dwNumItems = ((Template *)pSource)->GetItemCount();
+                  pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+                  DbgPrintf(AF_DEBUG_DC, "Apply %d items from template \"%s\" to node \"%s\"",
+                            dwNumItems, pSource->Name(), pDestination->Name());
 
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
                   {
                      pSrcItem = ((Template *)pSource)->GetItemByIndex(i);
+                     pdwItemList[i] = pSrcItem->Id();
                      if (pSrcItem != NULL)
                      {
                         pDstItem = new DCItem(pSrcItem);
-                        pDstItem->SetTemplateId(pSource->Id());
+                        pDstItem->SetTemplateId(pSource->Id(), pSrcItem->Id());
                         pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
                                                 (Template *)pDestination);
                         if (!((Node *)pDestination)->ApplyTemplateItem(pDstItem))
@@ -4196,7 +4213,12 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
                      }
                   }
 
+                  // Clean items deleted from template
+                  ((Node *)pDestination)->CleanDeletedTemplateItems(pSource->Id(),
+                                                                    dwNumItems, pdwItemList);
+
                   // Cleanup
+                  free(pdwItemList);
                   ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
                }
@@ -4209,10 +4231,12 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
             {
                msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
             }
+
+            ((Template *)pSource)->UnlockDCIList(m_dwIndex);
          }
          else  // Source node DCI list not locked by this session
          {
-            msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
          }
       }
       else     // Object(s) is not a node

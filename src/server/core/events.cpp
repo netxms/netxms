@@ -340,6 +340,7 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
 #else
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL(m_pszMessageText), -1, 
                        (WCHAR *)pEventData->szMessage, MAX_EVENT_MSG_LENGTH);
+   ((WCHAR *)pEventData->szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
    SwapWideString((WCHAR *)pEventData->szMessage);
 }

@@ -241,11 +241,13 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
 
             // Resolve GUID to network connection name
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
+            wGUID[255] = 0;
             dwSize = 256;
             if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
             {
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
                                    wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
+               szAdapterName[MAX_OBJECT_NAME - 1] = 0;
             }
             else
             {

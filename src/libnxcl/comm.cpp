@@ -185,6 +185,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
 		pszServer, -1, szMHost, sizeof(szMHost), NULL, NULL);
+   szMHost[63] = 0;
 	pServer = szMHost;
 #else
 	pServer = pszServer;

@@ -112,6 +112,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_iStatus = (BYTE)DBGetFieldLong(hResult, iRow, 6);
    m_iDeltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
    m_pszFormula = strdup(DBGetField(hResult, iRow, 8));
+   DecodeSQLString(m_pszFormula);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
    DecodeSQLString(m_szDescription);

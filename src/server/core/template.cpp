@@ -74,6 +74,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    DB_RESULT hResult;
    DWORD i, dwNumNodes, dwNodeId;
    NetObj *pObject;
+   BOOL bResult = TRUE;
 
    _stprintf(szQuery, _T("SELECT id,name,is_deleted,image_id,version,description FROM templates WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -98,8 +99,12 @@ BOOL Template::CreateFromDB(DWORD dwId)
 
    DBFreeResult(hResult);
 
-   // Load access list
+   // Load DCI and access list
    LoadACLFromDB();
+   LoadItemsFromDB();
+   for(i = 0; i < (int)m_dwNumItems; i++)
+      if (!m_ppItems[i]->LoadThresholdsFromDB())
+         bResult = FALSE;
 
    // Load related nodes list
    if (!m_bIsDeleted)
@@ -134,7 +139,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
       }
    }
 
-   return TRUE;
+   return bResult;
 }
 
 
@@ -183,6 +188,10 @@ BOOL Template::SaveToDB(void)
       sprintf(szQuery, "INSERT INTO dct_node_map (template_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
       DBQuery(g_hCoreDB, szQuery);
    }
+
+   // Save data collection items
+   for(i = 0; i < m_dwNumItems; i++)
+      m_ppItems[i]->SaveToDB();
 
    // Save access list
    SaveACLToDB();
@@ -476,7 +485,7 @@ int Template::GetItemType(DWORD dwItemId)
 // Get item by it's id
 //
 
-const DCItem *Template::GetItemById(DWORD dwItemId)
+DCItem *Template::GetItemById(DWORD dwItemId)
 {
    DWORD i;
    DCItem *pItem = NULL;
@@ -499,7 +508,7 @@ const DCItem *Template::GetItemById(DWORD dwItemId)
 // Get item by it's index
 //
 
-const DCItem *Template::GetItemByIndex(DWORD dwIndex)
+DCItem *Template::GetItemByIndex(DWORD dwIndex)
 {
    DCItem *pItem = NULL;
 

@@ -70,6 +70,7 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
             WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                                 (WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage, -1,
                                 pEvent->szMessage, MAX_EVENT_MSG_LENGTH, NULL, NULL);
+            pEvent->szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
 
             // Call client's callback to handle new record

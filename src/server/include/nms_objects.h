@@ -263,8 +263,8 @@ public:
    BOOL DeleteItem(DWORD dwItemId);
    BOOL SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int GetItemType(DWORD dwItemId);
-   const DCItem *GetItemById(DWORD dwItemId);
-   const DCItem *GetItemByIndex(DWORD dwIndex);
+   DCItem *GetItemById(DWORD dwItemId);
+   DCItem *GetItemByIndex(DWORD dwIndex);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
@@ -449,6 +449,7 @@ public:
    DWORD GetLastValues(CSCPMessage *pMsg);
    void CleanDCIData(void);
    BOOL ApplyTemplateItem(DCItem *pItem);
+   void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
 
    AgentConnection *CreateAgentConnection(void);
 
