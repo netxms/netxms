@@ -98,6 +98,7 @@ src/server/core/NmsCore.dsw -text
 src/server/core/acl.cpp -text
 src/server/core/actions.cpp -text
 src/server/core/admin.cpp -text
+src/server/core/agent.cpp -text
 src/server/core/client.cpp -text
 src/server/core/config.cpp -text
 src/server/core/core.rc -text
