@@ -254,6 +254,7 @@ typedef void * NXC_SESSION;
 #define RCC_PACKAGE_FILE_EXIST      ((DWORD)34)
 #define RCC_RESOURCE_BUSY           ((DWORD)35)
 #define RCC_INVALID_PACKAGE_ID      ((DWORD)36)
+#define RCC_INVALID_IP_ADDR         ((DWORD)37)
 
 
 //

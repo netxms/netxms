@@ -291,7 +291,7 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);

@@ -822,7 +822,6 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CObjectPropsPresentation wndObjectPresentation;
    CNodePropsPolling wndNodePolling;
    NXC_OBJECT *pObject;
-   char szBuffer[32];
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
    if (pObject != NULL)
@@ -834,7 +833,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodeGeneral.m_dwObjectId = dwObjectId;
             wndNodeGeneral.m_strName = pObject->szName;
             wndNodeGeneral.m_strOID = pObject->node.szObjectId;
-            wndNodeGeneral.m_strPrimaryIp = IpToStr(pObject->dwIpAddr, szBuffer);
+            wndNodeGeneral.m_dwIpAddr = pObject->dwIpAddr;
             wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
             wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
             wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;

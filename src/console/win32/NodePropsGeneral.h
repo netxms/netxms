@@ -16,6 +16,7 @@ class CNodePropsGeneral : public CPropertyPage
 
 // Construction
 public:
+	DWORD m_dwIpAddr;
 	CNodePropsGeneral();
 	~CNodePropsGeneral();
 
@@ -27,7 +28,6 @@ public:
 	CString	m_strName;
 	CString	m_strOID;
 	int		m_iAgentPort;
-	CString	m_strPrimaryIp;
 	CString	m_strSecret;
 	CString	m_strCommunity;
 	int		m_iAuthType;

@@ -329,3 +329,33 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
+
+
+//
+// Perform status poll on network service
+//
+
+void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode)
+{
+   int iOldStatus = m_iStatus;
+
+   m_pPollRequestor = pSession;
+   if (m_pHostNode == NULL)
+   {
+      m_iStatus = STATUS_UNKNOWN;
+      return;     // Status without host node, which is VERY strange
+   }
+
+   SendPollerMsg(dwRqId, "   Starting status poll on network service %s\r\n"
+                         "      Current status is %s\r\n",
+                 m_szName, g_pszStatusName[m_iStatus]);
+
+   if (m_iStatus != iOldStatus)
+   {
+      SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_pszStatusName[m_iStatus]);
+      PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : EVENT_SERVICE_DOWN,
+                m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
+      Modify();
+   }
+   SendPollerMsg(dwRqId, "   Finished status poll on network service %s\r\n", m_szName);
+}

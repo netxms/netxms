@@ -32,7 +32,6 @@ CNodePropsGeneral::CNodePropsGeneral() : CPropertyPage(CNodePropsGeneral::IDD)
 	m_strName = _T("");
 	m_strOID = _T("");
 	m_iAgentPort = 0;
-	m_strPrimaryIp = _T("");
 	m_strSecret = _T("");
 	m_strCommunity = _T("");
 	m_iAuthType = -1;
@@ -55,7 +54,6 @@ void CNodePropsGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_OID, m_strOID);
 	DDX_Text(pDX, IDC_EDIT_PORT, m_iAgentPort);
 	DDV_MinMaxInt(pDX, m_iAgentPort, 1, 65535);
-	DDX_Text(pDX, IDC_EDIT_PRIMARY_IP, m_strPrimaryIp);
 	DDX_Text(pDX, IDC_EDIT_SECRET, m_strSecret);
 	DDV_MaxChars(pDX, m_strSecret, 63);
 	DDX_Text(pDX, IDC_EDIT_COMMUNITY, m_strCommunity);
@@ -85,11 +83,14 @@ END_MESSAGE_MAP()
 BOOL CNodePropsGeneral::OnInitDialog() 
 {
    int i;
+   TCHAR szBuffer[16];
 
 	CPropertyPage::OnInitDialog();
 
    m_pUpdate = ((CObjectPropSheet *)GetParent())->GetUpdateStruct();
 	
+   SetDlgItemText(IDC_EDIT_PRIMARY_IP, IpToStr(m_dwIpAddr, szBuffer));
+
    // Initialize dropdown lists
    for(i = 0; i < 4; i++)
       m_wndAuthList.AddString(m_pszAuthStrings[i]);
@@ -163,6 +164,7 @@ void CNodePropsGeneral::OnOK()
    m_pUpdate->pszCommunity = (char *)((LPCTSTR)m_strCommunity);
    m_pUpdate->pszSecret = (char *)((LPCTSTR)m_strSecret);
    m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
+   m_pUpdate->dwIpAddr = m_dwIpAddr;
 
    // Authentication type
    m_wndAuthList.GetWindowText(szBuffer, 255);
@@ -181,4 +183,24 @@ void CNodePropsGeneral::OnOK()
 
 void CNodePropsGeneral::OnSelectIp() 
 {
+   CObjectSelDlg dlg;
+   NXC_OBJECT *pObject;
+
+   dlg.m_bSelectAddress = TRUE;
+   dlg.m_bSingleSelection = TRUE;
+   dlg.m_bAllowEmptySelection = FALSE;
+   dlg.m_dwParentObject = m_dwObjectId;
+   if (dlg.DoModal() == IDOK)
+   {
+      pObject = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[0]);
+      if (pObject != NULL)
+      {
+         TCHAR szBuffer[16];
+
+         m_dwIpAddr = pObject->dwIpAddr;
+         SetDlgItemText(IDC_EDIT_PRIMARY_IP, IpToStr(m_dwIpAddr, szBuffer));
+      }
+      m_pUpdate->dwFlags |= OBJ_UPDATE_IP_ADDR;
+      SetModified();
+   }
 }

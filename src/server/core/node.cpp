@@ -671,10 +671,23 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
+   Lock();
    for(i = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
-          (m_pChildList[i]->Status() != STATUS_UNMANAGED))
-         ((Interface *)m_pChildList[i])->StatusPoll(pSession, dwRqId);
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+      {
+         switch(m_pChildList[i]->Type())
+         {
+            case OBJECT_INTERFACE:
+               ((Interface *)m_pChildList[i])->StatusPoll(pSession, dwRqId);
+               break;
+            case OBJECT_NETWORKSERVICE:
+               ((NetworkService *)m_pChildList[i])->StatusPoll(pSession, dwRqId, m_pPollerNode);
+               break;
+            default:
+               break;
+         }
+      }
+   Unlock();
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
    SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n"
@@ -1100,6 +1113,27 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       Lock();
+
+   // Change primary IP address
+   if (pRequest->IsVariableExist(VID_IP_ADDRESS))
+   {
+      DWORD i, dwIpAddr;
+      
+      dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+
+      // Check if received IP address is one of node's interface addresses
+      for(i = 0; i < m_dwChildCount; i++)
+         if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+             (m_pChildList[i]->IpAddr() == dwIpAddr))
+            break;
+      if (i == m_dwChildCount)
+      {
+         Unlock();
+         return RCC_INVALID_IP_ADDR;
+      }
+
+      m_dwIpAddr = dwIpAddr;
+   }
 
    // Change listen port of native agent
    if (pRequest->IsVariableExist(VID_AGENT_PORT))

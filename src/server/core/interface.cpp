@@ -283,7 +283,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    {
       SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
-                GetParent()->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
+                pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
                 m_dwIfIndex);
       Modify();
    }

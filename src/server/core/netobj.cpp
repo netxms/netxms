@@ -308,6 +308,7 @@ void NetObj::CalculateCompoundStatus(void)
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
+      Lock();
       /* TODO: probably status calculation algorithm should be changed */
       for(i = 0, iSum = 0, iCount = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->Status() < STATUS_UNKNOWN)
@@ -319,12 +320,15 @@ void NetObj::CalculateCompoundStatus(void)
          m_iStatus = iSum / iCount;
       else
          m_iStatus = STATUS_UNKNOWN;
+      Unlock();
 
       // Cause parent object(s) to recalculate it's status
       if (iOldStatus != m_iStatus)
       {
+         Lock();
          for(i = 0; i < m_dwParentCount; i++)
             m_pParentList[i]->CalculateCompoundStatus();
+         Unlock();
          Modify();
       }
    }
