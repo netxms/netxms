@@ -1,4 +1,11 @@
 *
+* 0.1.13
+*
+
+- Fixed bug which cause server to hang when deleting unreacheable node
+
+
+*
 * 0.1.12
 *
 
