@@ -23,10 +23,26 @@
 #ifndef _nms_common_h_
 #define _nms_common_h_
 
+//
+// Version constants 
+//
+
 #define NETXMS_VERSION_MAJOR      1
 #define NETXMS_VERSION_MINOR      0
 #define NETXMS_VERSION_RELEASE    0
 #define NETXMS_VERSION_STRING     "1.0.0"
+
+
+//
+// Common constants
+//
+
+#define MAX_SECRET_LENGTH        64
+
+
+//
+// Platform dependent includes and defines
+//
 
 #ifdef _WIN32
 
