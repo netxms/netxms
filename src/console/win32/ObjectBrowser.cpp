@@ -705,8 +705,8 @@ void CObjectBrowser::OnObjectViewViewaslist()
 
    // Display currenly selected item in preview pane
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
-   m_wndPreviewPane.SetCurrentObject(iItem == -1 ? NULL :
-                                       (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem));
+   m_pCurrentObject = (iItem == -1) ? NULL : (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+   m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
 }
 
 
@@ -717,7 +717,6 @@ void CObjectBrowser::OnObjectViewViewaslist()
 void CObjectBrowser::OnObjectViewViewastree() 
 {
    HTREEITEM hItem;
-   NXC_OBJECT *pObject;
 
    m_dwFlags |= VIEW_OBJECTS_AS_TREE;
    m_wndTreeCtrl.ShowWindow(SW_SHOW);
@@ -725,8 +724,8 @@ void CObjectBrowser::OnObjectViewViewastree()
 
    // Display currenly selected item in preview pane
    hItem = m_wndTreeCtrl.GetSelectedItem();
-   pObject = (hItem == NULL) ? NULL : NXCFindObjectById(m_wndTreeCtrl.GetItemData(hItem));
-   m_wndPreviewPane.SetCurrentObject(pObject);
+   m_pCurrentObject = (hItem == NULL) ? NULL : NXCFindObjectById(m_wndTreeCtrl.GetItemData(hItem));
+   m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
 }
 
 
@@ -1149,6 +1148,6 @@ void CObjectBrowser::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
 
 void CObjectBrowser::OnObjectDatacollection() 
 {
-	// TODO: Add your command handler code here
-	
+   if (m_pCurrentObject != NULL)
+      theApp.StartObjectDCEditor(m_pCurrentObject);
 }

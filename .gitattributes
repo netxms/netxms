@@ -67,10 +67,14 @@ src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
 src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
+src/console/win32/NetSummaryFrame.cpp -text
+src/console/win32/NetSummaryFrame.h -text
 src/console/win32/NewUserDlg.cpp -text
 src/console/win32/NewUserDlg.h -text
 src/console/win32/NodePropsGeneral.cpp -text
 src/console/win32/NodePropsGeneral.h -text
+src/console/win32/NodeSummary.cpp -text
+src/console/win32/NodeSummary.h -text
 src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
 src/console/win32/ObjectInfoBox.cpp -text
@@ -102,6 +106,7 @@ src/console/win32/UserPropDlg.h -text
 src/console/win32/UserSelectDlg.cpp -text
 src/console/win32/UserSelectDlg.h -text
 src/console/win32/comm.cpp -text
+src/console/win32/draw.cpp -text
 src/console/win32/globals.cpp -text
 src/console/win32/globals.h -text
 src/console/win32/icons/Alarms.ICO -text

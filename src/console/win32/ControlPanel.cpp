@@ -87,7 +87,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertItem(CP_ITEM_USERS, "Users", 0);
    m_wndListCtrl.InsertItem(CP_ITEM_EVENTS, "Events", 2);
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_CTRLPANEL, this);
+   theApp.OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;
 }
 
@@ -98,7 +98,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CControlPanel::OnDestroy() 
 {
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_CTRLPANEL, this);
+   theApp.OnViewDestroy(IDR_CTRLPANEL, this);
 	CMDIChildWnd::OnDestroy();
 }
 

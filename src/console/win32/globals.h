@@ -68,6 +68,13 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *ps
 
 
 //
+// Drawing functions
+//
+
+void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors);
+
+
+//
 // Variables
 //
 

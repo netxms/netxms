@@ -40,6 +40,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ObjectPropsGeneral.h"
 #include "ObjectPropsSecurity.h"
 #include "UserEditor.h"
+#include "NetSummaryFrame.h"
 
 
 //
@@ -82,6 +83,7 @@ protected:
 	CWnd* m_pwndObjectBrowser;
 	CWnd *m_pwndCtrlPanel;
    CDebugFrame *m_pwndDebugWindow;
+   CNetSummaryFrame *m_pwndNetSummary;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -107,6 +109,7 @@ public:
 	afx_msg void OnControlpanelEvents();
 	afx_msg void OnViewDebug();
 	afx_msg void OnControlpanelUsers();
+	afx_msg void OnViewNetworksummary();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -116,9 +119,11 @@ private:
 	BOOL m_bObjectBrowserActive;
 	BOOL m_bCtrlPanelActive;
    BOOL m_bDebugWindowActive;
+   BOOL m_bNetSummaryActive;
 
    // Inline functions
 public:
+	void StartObjectDCEditor(NXC_OBJECT *pObject);
 	CMenu * GetContextMenu(int iIndex);
 	void ObjectProperties(DWORD dwObjectId);
 	void DebugPrintf(char *szFormat, ...);

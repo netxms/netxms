@@ -133,6 +133,7 @@ BEGIN
         MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
         MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
         MENUITEM "Event Processing &Policy\tF4", ID_VIEW_EPP
+        MENUITEM "&Network Summary\tF7",        ID_VIEW_NETWORKSUMMARY
         MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
         MENUITEM "&Debug",                      ID_VIEW_DEBUG
@@ -247,6 +248,7 @@ BEGIN
     VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_F7,          ID_VIEW_NETWORKSUMMARY, VIRTKEY, NOINVERT
     VK_F8,          ID_VIEW_EVENTS,         VIRTKEY, NOINVERT
     VK_F9,          ID_VIEW_CONTROLPANEL,   VIRTKEY, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
@@ -710,6 +712,7 @@ BEGIN
     IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
+    IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

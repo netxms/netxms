@@ -49,6 +49,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTS, OnControlpanelEvents)
 	ON_COMMAND(ID_VIEW_DEBUG, OnViewDebug)
 	ON_COMMAND(ID_CONTROLPANEL_USERS, OnControlpanelUsers)
+	ON_COMMAND(ID_VIEW_NETWORKSUMMARY, OnViewNetworksummary)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -65,6 +66,7 @@ CConsoleApp::CConsoleApp()
    m_bUserEditorActive = FALSE;
    m_bObjectBrowserActive = FALSE;
    m_bDebugWindowActive = FALSE;
+   m_bNetSummaryActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
 }
 
@@ -309,6 +311,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
          m_pwndDebugWindow = (CDebugFrame *)pWnd;
          NXCSetDebugCallback(ClientDebugCallback);
          break;
+      case IDR_NETWORK_SUMMARY:
+         m_bNetSummaryActive = TRUE;
+         m_pwndNetSummary = (CNetSummaryFrame *)pWnd;
+         break;
       default:
          break;
    }
@@ -341,6 +347,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd)
       case IDR_DEBUG_WINDOW:
          m_bDebugWindowActive = FALSE;
          NXCSetDebugCallback(NULL);
+         break;
+      case IDR_NETWORK_SUMMARY:
+         m_bNetSummaryActive = FALSE;
          break;
       default:
          break;
@@ -628,4 +637,31 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 CMenu *CConsoleApp::GetContextMenu(int iIndex)
 {
    return m_ctxMenu.GetSubMenu(iIndex);
+}
+
+
+//
+// Start data collection editor for specific object
+//
+
+void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
+{
+
+}
+
+
+//
+// Show network summary view
+//
+
+void CConsoleApp::OnViewNetworksummary() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bNetSummaryActive)
+      m_pwndNetSummary->BringWindowToTop();
+   else
+	   pFrame->CreateNewChild(
+		   RUNTIME_CLASS(CNetSummaryFrame), IDR_NETWORK_SUMMARY, m_hMDIMenu, m_hMDIAccel);	
 }

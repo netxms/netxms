@@ -108,6 +108,10 @@ SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\draw.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EditBox.cpp
 # End Source File
 # Begin Source File
@@ -148,11 +152,19 @@ SOURCE=.\MapView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NetSummaryFrame.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NewUserDlg.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\NodePropsGeneral.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\NodeSummary.cpp
 # End Source File
 # Begin Source File
 
@@ -277,6 +289,10 @@ SOURCE=.\MapView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\NetSummaryFrame.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\NewUserDlg.h
 # End Source File
 # Begin Source File
@@ -290,6 +306,10 @@ SOURCE=..\..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=.\NodePropsGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NodeSummary.h
 # End Source File
 # Begin Source File
 

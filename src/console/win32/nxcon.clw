@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CPasswordChangeDlg
-LastTemplate=CDialog
+LastClass=CNetSummaryFrame
+LastTemplate=CMDIChildWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=34
+ClassCount=36
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -17,22 +17,22 @@ Class9=CMapView
 
 ResourceCount=43
 Resource1=IDD_EDIT_EVENT (English (U.S.))
-Resource2=IDD_GROUP_PROPERTIES
+Resource2=IDD_USER_PROPERTIES
 Resource3=IDD_LOGIN (English (U.S.))
-Resource4=IDA_MDI_DEFAULT
+Resource4=IDR_MAINFRAME
 Resource5=IDD_OBJECT_SECURITY (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_ABOUTBOX
+Resource6=IDA_OBJECT_BROWSER
 Class11=CProgressDialog
 Resource7=IDR_MAINFRAME (English (U.S.))
 Class12=CObjectBrowser
 Resource8=IDD_SET_PASSWORD (English (U.S.))
 Class13=CObjectPropDlg
-Resource9=IDD_OBJECT_SECURITY
+Resource9=IDD_GROUP_PROPERTIES
 Resource10=IDD_USER_PROPERTIES (English (U.S.))
 Resource11=IDD_GROUP_PROPERTIES (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
@@ -46,47 +46,49 @@ Resource17=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Class16=CDebugFrame
 Resource18=IDA_MDI_DEFAULT (English (U.S.))
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
-Resource20=IDD_EDIT_EVENT
+Resource20=IDD_LOGIN
 Class17=CObjectPreview
 Resource21=IDM_VIEW_SPECIFIC (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
-Resource22=IDR_MAINFRAME
+Resource22=IDD_OBJECT_GENERAL
 Class21=CEditBox
 Class22=COPGeneral
 Class23=CNodePropsGeneral
-Resource23=IDD_LOGIN
+Resource23=IDD_ABOUTBOX
 Class24=CObjectPropCaps
 Class25=CObjectPropSheet
-Resource24=IDD_USER_PROPERTIES
+Resource24=IDD_NEW_USER
 Class26=CRequestProcessingDlg
 Resource25=IDM_CONTEXT
 Resource26=IDD_PROGRESS (English (U.S.))
-Resource27=IDD_OBJECT_NODE_GENERAL
+Resource27=IDD_EDIT_EVENT
 Resource28=IDA_OBJECT_BROWSER (English (U.S.))
 Class27=CObjectPropsGeneral
 Resource29=IDD_OBJECT_GENERAL (English (U.S.))
 Class28=CObjectPropsSecurity
 Resource30=IDD_NEW_USER (English (U.S.))
 Resource31=IDD_REQUEST_PROCESSING (English (U.S.))
-Resource32=IDD_REQUEST_PROCESSING
+Resource32=IDD_OBJECT_CAPS
 Class29=CUserSelectDlg
-Resource33=IDD_NEW_USER
+Resource33=IDD_SELECT_USER
 Class30=CUserEditor
 Resource34=IDD_ABOUTBOX (English (U.S.))
 Class31=CNewUserDlg
-Resource35=IDD_OBJECT_GENERAL
+Resource35=IDD_REQUEST_PROCESSING
 Resource36=IDM_CONTEXT (English (U.S.))
 Class32=CUserPropDlg
 Resource37=IDD_SELECT_USER (English (U.S.))
-Resource38=IDD_OBJECT_CAPS
+Resource38=IDD_OBJECT_NODE_GENERAL
 Class33=CGroupPropDlg
 Resource39=IDM_VIEW_SPECIFIC
-Resource40=IDD_SELECT_USER
-Resource41=IDA_OBJECT_BROWSER
+Resource40=IDD_OBJECT_SECURITY
+Resource41=IDA_MDI_DEFAULT
 Resource42=IDD_OBJECT_CAPS (English (U.S.))
 Class34=CPasswordChangeDlg
+Class35=CNodeSummary
+Class36=CNetSummaryFrame
 Resource43=IDD_SET_PASSWORD
 
 [CLS:CConsoleApp]
@@ -145,16 +147,17 @@ Command5=ID_APP_EXIT
 Command6=ID_VIEW_MAP
 Command7=ID_VIEW_OBJECTBROWSER
 Command8=ID_VIEW_EPP
-Command9=ID_VIEW_EVENTS
-Command10=ID_VIEW_CONTROLPANEL
-Command11=ID_VIEW_DEBUG
-Command12=ID_VIEW_TOOLBAR
-Command13=ID_VIEW_STATUS_BAR
-Command14=ID_VIEW_REFRESH
-Command15=ID_CONTROLPANEL_EVENTS
-Command16=ID_CONTROLPANEL_USERS
-Command17=ID_APP_ABOUT
-CommandCount=17
+Command9=ID_VIEW_NETWORKSUMMARY
+Command10=ID_VIEW_EVENTS
+Command11=ID_VIEW_CONTROLPANEL
+Command12=ID_VIEW_DEBUG
+Command13=ID_VIEW_TOOLBAR
+Command14=ID_VIEW_STATUS_BAR
+Command15=ID_VIEW_REFRESH
+Command16=ID_CONTROLPANEL_EVENTS
+Command17=ID_CONTROLPANEL_USERS
+Command18=ID_APP_ABOUT
+CommandCount=18
 
 [TB:IDR_MAINFRAME]
 Type=1
@@ -179,13 +182,14 @@ Command6=ID_VIEW_MAP
 Command7=ID_VIEW_OBJECTBROWSER
 Command8=ID_NEXT_PANE
 Command9=ID_PREV_PANE
-Command10=ID_VIEW_EVENTS
-Command11=ID_VIEW_CONTROLPANEL
-Command12=ID_EDIT_COPY
-Command13=ID_EDIT_PASTE
-Command14=ID_EDIT_CUT
-Command15=ID_EDIT_UNDO
-CommandCount=15
+Command10=ID_VIEW_NETWORKSUMMARY
+Command11=ID_VIEW_EVENTS
+Command12=ID_VIEW_CONTROLPANEL
+Command13=ID_EDIT_COPY
+Command14=ID_EDIT_PASTE
+Command15=ID_EDIT_CUT
+Command16=ID_EDIT_UNDO
+CommandCount=16
 
 [CLS:CControlPanel]
 Type=0
@@ -1051,7 +1055,7 @@ LastObject=CPasswordChangeDlg
 
 [DLG:IDD_SET_PASSWORD]
 Type=1
-Class=?
+Class=CPasswordChangeDlg
 ControlCount=7
 Control1=IDC_EDIT_PASSWD1,edit,1342242976
 Control2=IDC_EDIT_PASSWD2,edit,1342242976
@@ -1060,4 +1064,20 @@ Control4=IDCANCEL,button,1342242816
 Control5=IDC_STATIC,static,1342308352
 Control6=IDC_STATIC,static,1342308352
 Control7=IDC_STATIC,static,1342177283
+
+[CLS:CNodeSummary]
+Type=0
+HeaderFile=NodeSummary.h
+ImplementationFile=NodeSummary.cpp
+BaseClass=CWnd
+Filter=W
+VirtualFilter=WC
+
+[CLS:CNetSummaryFrame]
+Type=0
+HeaderFile=NetSummaryFrame.h
+ImplementationFile=NetSummaryFrame.cpp
+BaseClass=CMDIChildWnd
+Filter=M
+VirtualFilter=mfWC
 
