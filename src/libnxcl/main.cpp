@@ -37,6 +37,7 @@ void RequestProcessor(void *pArg);
 
 NXC_EVENT_HANDLER g_pEventHandler = NULL;
 DWORD g_dwState = STATE_IDLE;
+Queue *g_pRequestQueue = NULL;
 
 
 //
@@ -45,6 +46,9 @@ DWORD g_dwState = STATE_IDLE;
 
 BOOL EXPORTABLE NXCInitialize(void)
 {
+   g_pRequestQueue = new Queue;
+   if (g_pRequestQueue == NULL)
+      return FALSE;
    ThreadCreate(RequestProcessor, 0, NULL);
    return TRUE;
 }

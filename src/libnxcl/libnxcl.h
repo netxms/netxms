@@ -39,11 +39,49 @@
 
 
 //
+// Constants
+//
+
+#define MAX_SERVER_NAME    64
+#define MAX_LOGIN_NAME     64
+#define MAX_PASSWORD_LEN   64
+
+
+//
+// Request codes
+//
+
+#define RQ_CONNECT         1
+
+
+//
+// Request structure
+//
+
+typedef struct
+{
+   DWORD dwCode;
+   void *pArg;
+   BOOL bDynamicArg;
+} REQUEST;
+
+
+//
+// Functions
+//
+
+void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
+void ChangeState(DWORD dwState);
+BOOL Connect(void);
+
+
+//
 // Global variables
 //
 
 extern NXC_EVENT_HANDLER g_pEventHandler;
 extern DWORD g_dwState;
+extern Queue *g_pRequestQueue;
 
 
 //
