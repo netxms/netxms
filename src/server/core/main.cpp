@@ -32,6 +32,7 @@
 
 void HouseKeeper(void *arg);
 void DiscoveryThread(void *arg);
+void Syncer(void *arg);
 
 
 //
@@ -75,9 +76,13 @@ BOOL Initialize(void)
    m_hEventShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
 #endif
 
+   // Initialize objects
+   ObjectsInit();
+
    // Start threads
    ThreadCreate(HouseKeeper, 0, NULL);
    ThreadCreate(DiscoveryThread, 0, NULL);
+   ThreadCreate(Syncer, 0, NULL);
 
    return TRUE;
 }

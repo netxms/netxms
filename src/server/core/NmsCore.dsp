@@ -114,6 +114,14 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\objects.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\syncer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File

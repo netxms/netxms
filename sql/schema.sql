@@ -19,22 +19,13 @@ CREATE TABLE NODES
 	id integer not null,
 	name varchar(64),
 	status integer,
+	isDeleted bool not null,
 	primary_ip integer,
 	isSNMP bool,
 	isNativeAgent bool,
 	isRouter bool,
 	isBridge bool,
 	PRIMARY KEY(id)
-);
-
-
---
--- New nodes list
---
-
-CREATE TABLE NEWNODES
-(
-	ip integer not null
 );
 
 
@@ -47,6 +38,7 @@ CREATE TABLE SUBNETS
 	id integer not null,
 	name varchar(64),
 	status integer,
+	isDeleted bool not null,
 	ip_addr integer,
 	ip_netmask integer,
 	PRIMARY KEY(id)

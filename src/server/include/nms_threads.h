@@ -41,6 +41,11 @@
 // Inline functions
 //
 
+inline void ThreadSleep(int iSeconds)
+{
+   Sleep((DWORD)iSeconds * 1000);
+}
+
 inline THREAD ThreadCreate(void (__cdecl *start_address )(void *), int stack_size, void *args)
 {
    return (THREAD)_beginthread(start_address, stack_size, args);
@@ -72,6 +77,56 @@ inline void MutexUnlock(MUTEX mutex)
 }
 
 #else    /* _WIN32 */
+
+#include <pthread.h>
+
+//
+// Related datatypes and constants
+//
+
+typedef MUTEX * pthread_mutex_t;
+#define THREAD HANDLE
+
+#define INVALID_MUTEX_HANDLE  NULL
+
+
+//
+// Inline functions
+//
+
+inline void ThreadSleep(int iSeconds)
+{
+   sleep(iSeconds);
+}
+
+inline MUTEX MutexCreate(void)
+{
+   MUTEX mutex;
+
+   mutex = (MUTEX)malloc(sizeof(pthread_mutex_t));
+   if (mutex != NULL)
+      pthread_mutex_init(mutex, NULL);
+   return mutex;
+}
+
+inline void MutexDestroy(MUTEX mutex)
+{
+   if (mutex != NULL)
+   {
+      pthread_mutex_destroy(mutex);
+      free(mutex);
+   }
+}
+
+inline void MutexLock(MUTEX mutex, DWORD dwTimeOut)
+{
+}
+
+inline void MutexUnlock(MUTEX mutex)
+{
+   if (mutex != NULL)
+      pthread_mutex_unlock(mutex);
+}
 
 #endif   /* _WIN32 */
 
