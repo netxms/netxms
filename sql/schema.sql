@@ -136,8 +136,8 @@ CREATE TABLE Events
 (
 	id integer not null,
 	severity integer,
+	flags integer,
 	message varchar(255),		-- Message template
-	retention_time integer,
 	description blob,
 	PRIMARY KEY(id)
 );
@@ -147,14 +147,15 @@ CREATE TABLE Events
 -- Event log
 --
 
-CREATE TABLE ELOG
+CREATE TABLE EventLog
 (
 	event_id integer,
 	timestamp integer,
-	source integer,			-- Source node ID
+	source integer,			-- Source object ID
 	severity integer,
-	isProcessed bool,
-	message varchar(255)
+	message varchar(255),
+	KEY(event_id),
+	KEY(timestamp)
 );
 
 
