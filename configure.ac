@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.50 2005-01-10 11:44:00 victor Exp $
+# $Id: configure.ac,v 1.51 2005-01-10 12:04:39 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -8,6 +8,19 @@ AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 
+
+# --------------------------------------------------------------------------
+# checks for programs.
+
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_INSTALL
+
+AC_LIBTOOL_DLOPEN
+AC_PROG_LIBTOOL
+
+
 # --------------------------------------------------------------------------
 # disable C++ exceptions
 CFLAGS="$CFLAGS -fno-exceptions"
@@ -15,6 +28,7 @@ CPPFLAGS="$CPPFLAGS -fno-exceptions"
 LDFLAGS="-nodefaultlibs $LDFLAGS"
 
 AC_CHECK_LIB(c_r, pthread_create, [], [LDFLAGS="$LDFLAGS -lc"])
+
 
 # --------------------------------------------------------------------------
 # misc
@@ -158,18 +172,6 @@ AC_ARG_WITH(dist,
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
-
-
-# --------------------------------------------------------------------------
-# checks for programs.
-
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_INSTALL
-
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
 
 # --------------------------------------------------------------------------
 # checks for libs.
