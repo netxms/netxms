@@ -12,6 +12,8 @@
 - Added internal parameters AgentStatus and ChildStatus(*)
 - Fixed issue #0000018 (incorrect aliases handling by FreeBSD subagent)
 - Some GUI improvements
+- Parameters Net.Interface.AdminStatus(*) and Net.Interface.Link(*) added
+  to FreeBSD subagent
 
 
 *
