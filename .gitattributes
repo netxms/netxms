@@ -7,6 +7,7 @@ sql/schema.sql -text
 sql/setup.sql -text
 src/server/core/NmsCore.dsp -text
 src/server/core/NmsCore.dsw -text
+src/server/core/agent.cpp -text
 src/server/core/config.cpp -text
 src/server/core/core.rc -text
 src/server/core/db.cpp -text
