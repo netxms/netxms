@@ -477,9 +477,6 @@ DWORD AgentConnection::Nop(void)
    CSCPMessage msg;
    DWORD dwRqId;
 
-   if (!m_bIsConnected)
-      return ERR_NOT_CONNECTED;
-
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_KEEPALIVE);
    msg.SetId(dwRqId);
@@ -598,9 +595,6 @@ DWORD AgentConnection::Authenticate(void)
    CSCPMessage msg;
    DWORD dwRqId;
    BYTE hash[32];
-
-   if (!m_bIsConnected)
-      return ERR_NOT_CONNECTED;
 
    if (m_iAuthMethod == AUTH_NONE)
       return ERR_SUCCESS;  // No authentication required
