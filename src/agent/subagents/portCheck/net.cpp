@@ -1,11 +1,11 @@
-/* $Id: net.cpp,v 1.1.1.1 2005-01-18 18:38:54 alk Exp $ */
+/* $Id: net.cpp,v 1.2 2005-01-28 02:50:32 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 
 #include "net.h"
 
-int NetConnectTCP(char *szHost, unsigned short nPort)
+int NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
 {
 	int nSocket;
 
@@ -16,7 +16,14 @@ int NetConnectTCP(char *szHost, unsigned short nPort)
 
 		sa.sin_family = AF_INET;
 		sa.sin_port = htons(nPort);
-		sa.sin_addr.s_addr = inet_addr(szHost);
+		if (szHost != NULL)
+		{
+			sa.sin_addr.s_addr = inet_addr(szHost);
+		}
+		else
+		{
+			sa.sin_addr.s_addr = htonl(dwAddr);
+		}
 		
 		if (connect(nSocket, (struct sockaddr*)&sa, sizeof(sa)) < 0)
 		{
@@ -47,5 +54,11 @@ void NetClose(int nSocket)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1.1.1  2005/01/18 18:38:54  alk
+Initial import
+
+implemented:
+	ServiceCheck.POP3(host, user, password) - connect to host:110 and try to login
+
 
 */

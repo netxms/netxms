@@ -1,9 +1,11 @@
-/* $Id: pop3.cpp,v 1.1.1.1 2005-01-18 18:38:54 alk Exp $ */
+/* $Id: pop3.cpp,v 1.2 2005-01-28 02:50:32 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 
+#include "main.h"
 #include "net.h"
+#include "pop3.h"
 
 LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 {
@@ -23,11 +25,30 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	nSd = NetConnectTCP(szHost, 110);
+	if (CheckPOP3(szHost, 0, 110, szUser, szPassword) == 0)
+	{
+		ret_int(pValue, 1);
+	}
+	else
+	{
+		ret_int(pValue, 0);
+	}
+
+	return nRet;
+}
+
+int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass)
+{
+	int nRet = 0;
+	int nSd;
+
+	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
 	{
 		char szBuff[512];
 		char szTmp[128];
+
+		nRet = PC_ERR_HANDSHAKE;
 
 #define CHECK_OK ((NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
 				&& (strncmp(szBuff, "+OK", 3) == 0))
@@ -39,12 +60,12 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 			{
 				if (CHECK_OK)
 				{
-					snprintf(szTmp, sizeof(szTmp), "PASS %s\r\n", szPassword);
+					snprintf(szTmp, sizeof(szTmp), "PASS %s\r\n", szPass);
 					if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
 					{
 						if (CHECK_OK)
 						{
-							bIsOk = true;
+							nRet = PC_ERR_NONE;
 						}
 					}
 				}
@@ -53,7 +74,10 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 
 		NetClose(nSd);
 	}
-	ret_int(pValue, bIsOk ? 1 : 0);
+	else
+	{
+		nRet = PC_ERR_CONNECT;
+	}
 
 	return nRet;
 }
@@ -62,5 +86,11 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1.1.1  2005/01/18 18:38:54  alk
+Initial import
+
+implemented:
+	ServiceCheck.POP3(host, user, password) - connect to host:110 and try to login
+
 
 */
