@@ -26,14 +26,14 @@ INSERT INTO config (name,value) VALUES ('EnableSNMPTraps','1');
 ** Default users
 */
 
-INSERT INTO users (id,name,password,access,flags)
+INSERT INTO users (id,name,password,access,flags,full_name,description)
    VALUES (0,'admin',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', // Default password: netxms
-           65535, 8
+           65535,8,'','Built-in system administrator account'
           );
-INSERT INTO users (id,name,password,access,flags)
+INSERT INTO users (id,name,password,access,flags,full_name,description)
    VALUES (1,'guest','DA39A3EE5E6B4B0D3255BFEF95601890AFD80709', // Default password is empty
-           0, 0
+           0,0,'','Default guest user'
           );
 
 
@@ -41,8 +41,8 @@ INSERT INTO users (id,name,password,access,flags)
 ** Special "Everyone" user group
 */
 
-INSERT INTO user_groups (id,name,access,flags)
-   VALUES (-2147483648, 'Everyone', 16, 0);
+INSERT INTO user_groups (id,name,access,flags,description)
+   VALUES (-2147483648, 'Everyone', 16, 0, 'Built-in everyone group');
 
 
 /*

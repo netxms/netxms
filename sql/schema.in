@@ -36,6 +36,8 @@ CREATE TABLE users
 	password varchar(48),
 	access integer,
 	flags integer,
+	full_name varchar(127),
+	description varchar(255),
 	PRIMARY KEY(id)
 );
 
@@ -50,6 +52,7 @@ CREATE TABLE user_groups
 	name varchar(64) not null,
 	access integer,
 	flags integer,
+	description varchar(255),
 	PRIMARY KEY(id)
 );
 
