@@ -28,22 +28,63 @@
 // Process async user request
 //
 
-int EXPORTABLE NXCRequest(DWORD dwOperation, ...)
+HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
 {
+   HREQUEST hRequest;
+
    switch(dwOperation)
    {
       case NXC_OP_SYNC_OBJECTS:
-         CreateRequest(RQ_SYNC_OBJECTS, NULL, FALSE);
+         hRequest = CreateRequest(RQ_SYNC_OBJECTS, NULL, FALSE);
          break;
       case NXC_OP_SYNC_EVENTS:
-         CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
+         hRequest = CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
          break;
       case NXC_OP_OPEN_EVENT_DB:
-         CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
+         hRequest = CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
          break;
       default:
-         return -1;
+         hRequest = INVALID_REQUEST_HANDLE;
+         break;
    }
 
-   return 0;
+   return hRequest;
+}
+
+
+//
+// Client request processor
+//
+
+void RequestProcessor(void *pArg)
+{
+   REQUEST *pRequest;
+
+   while(1)
+   {
+      pRequest = (REQUEST *)g_pRequestQueue->GetOrBlock();
+      switch(pRequest->dwCode)
+      {
+         case RQ_CONNECT:
+            if (Connect())
+               ChangeState(STATE_IDLE);
+            else
+               ChangeState(STATE_DISCONNECTED);
+            break;
+         case RQ_SYNC_OBJECTS:
+            SyncObjects();
+            break;
+         case RQ_SYNC_EVENTS:
+            SyncEvents();
+            break;
+         case RQ_OPEN_EVENT_DB:
+            OpenEventDB();
+            break;
+         default:
+            CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
+            break;
+      }
+      CallEventHandler(NXC_EVENT_REQUEST_COMPLETED, pRequest->dwHandle, NULL);
+      MemFree(pRequest);
+   }
 }

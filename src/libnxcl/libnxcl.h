@@ -78,6 +78,7 @@ typedef struct
    DWORD dwCode;
    void *pArg;
    BOOL bDynamicArg;
+   HREQUEST dwHandle;
 } REQUEST;
 
 
@@ -126,7 +127,7 @@ public:
 // Functions
 //
 
-void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
+HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg);
 void ChangeState(DWORD dwState);
 BOOL Connect(void);
 void ProcessObjectUpdate(CSCPMessage *pMsg);

@@ -100,10 +100,6 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\eventdb.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\events.cpp
 # End Source File
 # Begin Source File
@@ -125,10 +121,6 @@ SOURCE=.\objects.cpp
 # Begin Source File
 
 SOURCE=.\request.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\rqproc.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"

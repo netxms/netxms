@@ -39,7 +39,7 @@ void ChangeState(DWORD dwState)
 // Create request for processing
 //
 
-void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
+HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
 {
    REQUEST *pRequest;
 
@@ -47,7 +47,9 @@ void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
    pRequest->dwCode = dwCode;
    pRequest->pArg = pArg;
    pRequest->bDynamicArg = bDynamicArg;
+   pRequest->dwHandle = g_dwRequestId++;
    g_pRequestQueue->Put(pRequest);
+   return pRequest->dwHandle;
 }
 
 

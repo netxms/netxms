@@ -39,6 +39,7 @@ NXC_EVENT_HANDLER g_pEventHandler = NULL;
 NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 DWORD g_dwState = STATE_DISCONNECTED;
 Queue *g_pRequestQueue = NULL;
+DWORD g_dwRequestId;
 
 
 //
@@ -47,6 +48,7 @@ Queue *g_pRequestQueue = NULL;
 
 BOOL EXPORTABLE NXCInitialize(void)
 {
+   g_dwRequestId = 1;
    g_pRequestQueue = new Queue;
    if (g_pRequestQueue == NULL)
       return FALSE;
