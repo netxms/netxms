@@ -21,6 +21,7 @@ public:
 
 // Operations
 public:
+	void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -31,6 +32,7 @@ public:
 
 // Implementation
 protected:
+	int FindAlarmRecord(DWORD dwAlarmId);
 	CFont m_fontNormal;
 	void AddAlarm(NXC_ALARM *pAlarm);
 	BOOL m_bShowAllAlarms;

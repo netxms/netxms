@@ -171,6 +171,7 @@ public:
       if (m_bDebugWindowActive)
          m_pwndDebugWindow->AddMessage(pszMsg);
    }
+   CAlarmBrowser *GetAlarmBrowser(void) { return m_bAlarmBrowserActive ? m_pwndAlarmBrowser : NULL; }
 };
 
 

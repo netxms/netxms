@@ -594,6 +594,12 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case NX_NOTIFY_EVENTDB_CHANGED:
                m_pMainWnd->PostMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0);
                break;
+            case NX_NOTIFY_NEW_ALARM:
+            case NX_NOTIFY_ALARM_DELETED:
+            case NX_NOTIFY_ALARM_ACKNOWLEGED:
+               m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
+                                       (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
+               break;
             default:
                break;
          }

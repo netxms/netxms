@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
    ON_MESSAGE(WM_STATE_CHANGE, OnStateChange)
+   ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -201,4 +202,19 @@ void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
       m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, NULL);
       m_wndStatusBar.GetStatusBarCtrl().SetText("", 1, 0);
    }
+}
+
+
+//
+// WM_ALARM_UPDATE message handler
+//
+
+void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
+{
+   CAlarmBrowser *pWnd;
+
+   pWnd = theApp.GetAlarmBrowser();
+   if (pWnd != NULL)
+      pWnd->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+   MemFree((void *)lParam);
 }

@@ -80,7 +80,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
-   m_wndListCtrl.SetFont(&m_fontNormal, FALSE);
+   //m_wndListCtrl.SetFont(&m_fontNormal, FALSE);
 
    // Create image list
    m_pImageList = CreateEventImageList();
@@ -184,4 +184,48 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
       m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
       m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? "X" : "");
    }
+}
+
+
+//
+// Process alarm updates
+//
+
+void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
+{
+   int iItem;
+
+   iItem = FindAlarmRecord(pAlarm->dwAlarmId);
+   switch(dwCode)
+   {
+      case NX_NOTIFY_NEW_ALARM:
+         if ((iItem == -1) && ((m_bShowAllAlarms) || (pAlarm->wIsAck == 0)))
+            AddAlarm(pAlarm);
+         break;
+      case NX_NOTIFY_ALARM_ACKNOWLEGED:
+         if ((iItem != -1) && (!m_bShowAllAlarms))
+            m_wndListCtrl.DeleteItem(iItem);
+         break;
+      case NX_NOTIFY_ALARM_DELETED:
+         if (iItem != -1)
+            m_wndListCtrl.DeleteItem(iItem);
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// Find alarm record in list control by alarm id
+// Will return record index or -1 if no records exist
+//
+
+int CAlarmBrowser::FindAlarmRecord(DWORD dwAlarmId)
+{
+   LVFINDINFO lvfi;
+
+   lvfi.flags = LVFI_PARAM;
+   lvfi.lParam = dwAlarmId;
+   return m_wndListCtrl.FindItem(&lvfi);
 }
