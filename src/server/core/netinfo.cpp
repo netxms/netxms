@@ -48,6 +48,42 @@
 
 
 //
+// Convert string representation of MAC address to binary form
+//
+
+static void StrToMac(char *pszStr, BYTE *pBuffer)
+{
+   DWORD byte1, byte2, byte3, byte4, byte5, byte6;
+
+   memset(pBuffer, 6, 0);
+   if (sscanf(pszStr, "%x:%x:%x:%x:%x:%x", &byte1, &byte2, &byte3, 
+              &byte4, &byte5, &byte6) == 6)
+   {
+      pBuffer[0] = (BYTE)byte1;
+      pBuffer[1] = (BYTE)byte2;
+      pBuffer[2] = (BYTE)byte3;
+      pBuffer[3] = (BYTE)byte4;
+      pBuffer[4] = (BYTE)byte5;
+      pBuffer[5] = (BYTE)byte6;
+   }
+}
+
+
+//
+// Get interface index from name
+//
+
+static DWORD InterfaceIndexFromName(char *pszIfName)
+{
+#if HAVE_IF_NAMETOINDEX
+   return if_nametoindex(pszIfName);
+#else
+   return 0;   // By default, return 0, which means error
+#endif
+}
+
+
+//
 // Get local ARP cache
 //
 
@@ -88,8 +124,49 @@ ARP_CACHE *GetLocalArpCache(void)
 
    free(sysArpCache);
 #else
-   /* TODO: Add UNIX code here */
-   printf("CODE NOT IMPLEMENTED\n");
+   FILE *fp;
+   char szBuffer[256], szIpAddr[256], szMacAddr[256], szIfName[256];
+   char *pNext;
+   DWORD i;
+
+   fp = fopen("/proc/net/arp", "r");
+   if (fp != NULL)
+   {
+      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+      pArpCache->dwNumEntries = 0;
+      pArpCache->pEntries = NULL;
+
+      fgets(szBuffer, 255, fp);  // Skip first line
+
+      while(1)
+      {
+         fgets(szBuffer, 255, fp);
+         if (feof(fp))
+            break;
+
+         // Remove newline character
+         pNext = strchr(szBuffer, '\n');
+         if (pNext != NULL)
+            *pNext = 0;
+
+         // Field #1 is IP address, #4 is MAC address and #6 is device
+         pNext = ExtractWord(szBuffer, szIpAddr);
+         pNext = ExtractWord(pNext, szMacAddr);
+         pNext = ExtractWord(pNext, szMacAddr);
+         pNext = ExtractWord(pNext, szMacAddr);
+         pNext = ExtractWord(pNext, szIfName);
+         pNext = ExtractWord(pNext, szIfName);
+
+         // Create new entry in ARP_CACHE structure
+         i = pArpCache->dwNumEntries++;
+         pArpCache->pEntries = (ARP_ENTRY *)realloc(pArpCache->pEntries,
+                                 sizeof(ARP_ENTRY) * pArpCache->dwNumEntries);
+         pArpCache->pEntries[i].dwIndex = InterfaceIndexFromName(szIfName);
+         pArpCache->pEntries[i].dwIpAddr = inet_addr(szIpAddr);
+         StrToMac(szMacAddr, pArpCache->pEntries[i].bMacAddr);
+      }
+      fclose(fp);
+   }
 #endif
 
    return pArpCache;

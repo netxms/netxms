@@ -22,6 +22,12 @@
 
 #include "nms_core.h"
 
+#if !defined(_WIN32) && HAVE_READLINE_READLINE_H
+#include <readline/readline.h>
+#include <readline/history.h>
+#define USE_READLINE 1
+#endif
+
 
 //
 // Thread functions
@@ -359,22 +365,50 @@ void Main(void)
       printf("\nNetXMS Server V" NETXMS_VERSION_STRING " Ready\n"
              "Enter \"help\" for command list or \"down\" for server shutdown\n"
              "System Console\n\n");
+
+#if USE_READLINE
+      // Initialize readline library if we use it
+      rl_bind_key('\t', rl_insert);
+#endif
       
       while(1)
       {
+#if USE_READLINE
+         ptr = readline("netxmsd: ");
+#else
          printf("netxmsd: ");
          fflush(stdout);
          fgets(szCommand, 255, stdin);
          ptr = strchr(szCommand, '\n');
          if (ptr != NULL)
             *ptr = 0;
-         StrStrip(szCommand);
+         ptr = szCommand;
+#endif
 
-         if (szCommand[0] != 0)
-            if (ProcessCommand(szCommand))
-               break;
+         if (ptr != NULL)
+         {
+            StrStrip(ptr);
+            if (*ptr != 0)
+            {
+               if (ProcessCommand(ptr))
+                  break;
+#if USE_READLINE
+               add_history(ptr);
+#endif
+            }
+#if USE_READLINE
+            free(ptr);
+#endif
+         }
+         else
+         {
+            printf("\n");
+         }
       }
 
+#if USE_READLINE
+      free(ptr);
+#endif
       Shutdown();
    }
    else
