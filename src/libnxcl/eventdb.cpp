@@ -28,7 +28,7 @@
 // Static data
 //
 
-static CONDITION m_hCondLoadFinished;
+static CONDITION m_hCondLoadFinished = NULL;
 static NXC_EVENT_TEMPLATE **m_ppEventTemplates = NULL;
 static DWORD m_dwNumTemplates = 0;
 static BOOL m_bEventDBOpened = FALSE;
@@ -93,7 +93,7 @@ void ProcessEventDBRecord(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_EVENT_DB_EOF:
-         if (g_dwState == STATE_LOAD_EVENT_DB)
+         if (m_hCondLoadFinished != NULL)
             ConditionSet(m_hCondLoadFinished);
          break;
       case CMD_EVENT_DB_RECORD:
@@ -155,6 +155,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void)
    }
 
    ConditionDestroy(m_hCondLoadFinished);
+   m_hCondLoadFinished = NULL;
    if (g_dwState != STATE_DISCONNECTED)
       ChangeState(STATE_IDLE);
 

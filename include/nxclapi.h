@@ -57,6 +57,8 @@ typedef unsigned long HREQUEST;
 #define MAX_USER_NAME            64
 #define MAX_USER_FULLNAME        128
 #define MAX_USER_DESCR           256
+#define MAX_ITEM_NAME            256
+#define MAX_STRING_VALUE         256
 #define GROUP_FLAG               ((DWORD)0x80000000)
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
@@ -127,6 +129,7 @@ typedef unsigned long HREQUEST;
 #define STATE_LOAD_EVENT_DB   5
 #define STATE_LOAD_EPP        6
 #define STATE_LOAD_USER_DB    7
+#define STATE_LOAD_DCI        8
 
 
 //
@@ -152,6 +155,7 @@ typedef unsigned long HREQUEST;
 #define RCC_COMM_FAILURE            ((DWORD)9)
 #define RCC_SYSTEM_FAILURE          ((DWORD)10)
 #define RCC_INVALID_USER_ID         ((DWORD)11)
+#define RCC_INVALID_ARGUMENT        ((DWORD)12)
 
 
 //
@@ -227,10 +231,52 @@ typedef unsigned long HREQUEST;
 
 
 //
-// Custom data types
+// Data types
 //
 
-typedef unsigned long HREQUEST;
+#define DTYPE_INTEGER   0
+#define DTYPE_INT64     1
+#define DTYPE_STRING    2
+#define DTYPE_FLOAT     3
+
+
+//
+// Data sources
+//
+
+#define DS_INTERNAL        0
+#define DS_NATIVE_AGENT    1
+#define DS_SNMP_AGENT      2
+
+
+//
+// Item status
+//
+
+#define ITEM_STATUS_ACTIVE          0
+#define ITEM_STATUS_DISABLED        1
+#define ITEM_STATUS_NOT_SUPPORTED   2
+
+
+//
+// Event log record structure
+//
+
+typedef struct
+{
+   DWORD dwTimeStamp;
+   DWORD dwEventId;
+   DWORD dwSourceId;
+   DWORD dwSeverity;
+   char  szMessage[MAX_EVENT_MSG_LENGTH];
+} NXC_EVENT;
+
+
+/********************************************************************
+ * Following part of this file shouldn't be included by server code *
+ ********************************************************************/
+
+#ifndef LIBNXCL_NO_DECLARATIONS
 
 
 //
@@ -254,20 +300,6 @@ typedef struct
    char *pszMessage;
    char *pszDescription;
 } NXC_EVENT_TEMPLATE;
-
-
-//
-// Event log record structure
-//
-
-typedef struct
-{
-   DWORD dwTimeStamp;
-   DWORD dwEventId;
-   DWORD dwSourceId;
-   DWORD dwSeverity;
-   char  szMessage[MAX_EVENT_MSG_LENGTH];
-} NXC_EVENT;
 
 
 //
@@ -364,6 +396,34 @@ typedef struct
 
 
 //
+// Data collection item structure
+//
+
+typedef struct
+{
+   DWORD dwId;
+   char szName[MAX_ITEM_NAME];
+   int iPollingInterval;
+   int iRetentionTime;
+   BYTE iSource;
+   BYTE iDataType;
+   BYTE iStatus;
+} NXC_DCI;
+
+
+//
+// Node's data collection list information
+//
+
+typedef struct
+{
+   DWORD dwNodeId;
+   DWORD dwNumItems;
+   NXC_DCI *pItems;
+} NXC_DCI_LIST;
+
+
+//
 // Functions
 //
 
@@ -409,8 +469,13 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo);
 DWORD LIBNXCL_EXPORTABLE NXCSetPassword(DWORD dwUserId, char *pszNewPassword);
 
+DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
+DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList);
+
 #ifdef __cplusplus
 }
 #endif
+
+#endif   /* LIBNXCL_NO_DECLARATIONS */
 
 #endif   /* _nxclapi_h_ */

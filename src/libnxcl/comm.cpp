@@ -152,6 +152,10 @@ static void NetReceiver(void *pArg)
             case CMD_USER_DB_UPDATE:
                ProcessUserDBUpdate(pMsg);
                break;
+            case CMD_NODE_DCI:
+            case CMD_NODE_DCI_LIST_END:
+               ProcessDCI(pMsg);
+               break;
             default:
                m_msgWaitQueue.Put(pMsg);
                bMsgNotNeeded = FALSE;

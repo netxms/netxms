@@ -130,6 +130,8 @@ void ProcessEventDBRecord(CSCPMessage *pMsg);
 void ProcessUserDBRecord(CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);
 
+void ProcessDCI(CSCPMessage *pMsg);
+
 BOOL SendMsg(CSCPMessage *pMsg);
 CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
 

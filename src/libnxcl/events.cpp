@@ -28,7 +28,7 @@
 // Static data
 //
 
-static CONDITION m_hCondSyncFinished;
+static CONDITION m_hCondSyncFinished = NULL;
 
 
 //
@@ -45,7 +45,7 @@ void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
    switch(wCode)
    {
       case CMD_EVENT_LIST_END:
-         if (g_dwState == STATE_SYNC_EVENTS)
+         if (m_hCondSyncFinished != NULL)
             ConditionSet(m_hCondSyncFinished);
          break;
       case CMD_EVENT:
@@ -117,5 +117,6 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
    }
 
    ConditionDestroy(m_hCondSyncFinished);
+   m_hCondSyncFinished = NULL;
    return dwRetCode;
 }
