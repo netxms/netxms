@@ -34,24 +34,6 @@
 
 
 //
-// Threshold functions and operations
-//
-
-#define F_LAST       0
-#define F_AVERAGE    1
-#define F_DEVIATION  2
-
-#define OP_LE        0
-#define OP_LE_EQ     1
-#define OP_EQ        2
-#define OP_GT_EQ     3
-#define OP_GT        4
-#define OP_NE        5
-#define OP_LIKE      6
-#define OP_NOTLIKE   7
-
-
-//
 // Threshold check results
 //
 
