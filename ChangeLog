@@ -32,6 +32,7 @@
 - Windows console: when searching object in object browser, '*' characters
   assumed at the beginning and the end of search string
 - Added parameter File.Count(*) to core agent
+- Added possibility to change status of many DCIs status at once
 
 
 *
