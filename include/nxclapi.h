@@ -235,6 +235,7 @@ typedef void * NXC_SESSION;
 #define RCC_INVALID_TRAP_ID         ((DWORD)29)
 #define RCC_DCI_NOT_SUPPORTED       ((DWORD)30)
 #define RCC_VERSION_MISMATCH        ((DWORD)31)
+#define RCC_NPI_PARSING_FAILED      ((DWORD)32)
 
 
 //
@@ -984,6 +985,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
 DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, TCHAR *pszPkgFile, 
                                            DWORD *pdwPkgId);
 DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId);
+DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *pInfo);
 
 #ifdef __cplusplus
 }

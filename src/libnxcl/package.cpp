@@ -151,3 +151,39 @@ DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, TCHAR *pszPkgFi
 {
    return 0;
 }
+
+
+//
+// Parse NPI file
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *pInfo)
+{
+   FILE *fp;
+   DWORD dwResult = RCC_SUCCESS;
+   TCHAR szBuffer[256], *ptr;
+
+   fp = fopen(pszInfoFile, "r");
+   if (fp != NULL)
+   {
+      while(1)
+      {
+         fgets(szBuffer, 256, fp);
+         if (feof(fp))
+            break;
+         ptr = _tcschr(szBuffer, _T('\n'));
+         if (ptr != NULL)
+            *ptr = 0;
+         StrStrip(szBuffer);
+         if ((szBuffer[0] == _T('#')) || (szBuffer[0] == 0))
+            continue;   // Empty line or comment
+      }
+      fclose(fp);
+   }
+   else
+   {
+      dwResult = RCC_IO_ERROR;
+   }
+
+   return dwResult;
+}

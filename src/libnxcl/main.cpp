@@ -149,9 +149,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Command not implemented"),
       _T("Invalid trap configuration record ID"),
       _T("Requested data collection item is not supported by agent"),
-      _T("Client and server versions mismatch")
+      _T("Client and server versions mismatch"),
+      _T("Error parsing package information file")
    };
-   return ((dwError >= 0) && (dwError <= RCC_VERSION_MISMATCH)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_NPI_PARSING_FAILED)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 
