@@ -431,6 +431,8 @@ public:
    void QueueItemsForPolling(Queue *pPollerQueue);
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
 
+   AgentConnection *CreateAgentConnection(void);
+
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void WriteParamListToMessage(CSCPMessage *pMsg);

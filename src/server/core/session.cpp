@@ -3914,6 +3914,8 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
    DWORD i, j, dwNumObjects, *pdwObjectList, dwNumNodes, dwPkgId;
    Node **ppNodeList;
    NetObj *pObject;
+   TCHAR szQuery[256], szPkgFile[MAX_PATH], szPlatform[MAX_PLATFORM_NAME_LEN];
+   DB_RESULT hResult;
    BOOL bSuccess = TRUE;
    MUTEX hMutex;
 
@@ -3930,51 +3932,65 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
       dwPkgId = pRequest->GetVariableLong(VID_PACKAGE_ID);
       if (IsValidPackageId(dwPkgId))
       {
-         // Create list of nodes to be upgraded
-         dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
-         pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
-         pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
-         for(i = 0; i < dwNumObjects; i++)
+         // Read package information
+         _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+         hResult = DBSelect(g_hCoreDB, szQuery);
+         if ((hResult != NULL) && (DBGetNumRows(hResult) > 0))
          {
-            pObject = FindObjectById(pdwObjectList[i]);
-            if (pObject != NULL)
+            _tcsncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
+            _tcsncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
+
+            // Create list of nodes to be upgraded
+            dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
+            pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
+            pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+            for(i = 0; i < dwNumObjects; i++)
             {
-               if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               pObject = FindObjectById(pdwObjectList[i]);
+               if (pObject != NULL)
                {
-                  if (pObject->Type() == OBJECT_NODE)
+                  if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
                   {
-                     // Check if this node already in the list
-                     for(j = 0; j < dwNumNodes; j++)
-                        if (ppNodeList[j]->Id() == pdwObjectList[i])
-                           break;
-                     if (j == dwNumNodes)
+                     if (pObject->Type() == OBJECT_NODE)
                      {
-                        pObject->IncRefCount();
-                        ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
-                        ppNodeList[dwNumNodes] = (Node *)pObject;
-                        dwNumNodes++;
+                        // Check if this node already in the list
+                        for(j = 0; j < dwNumNodes; j++)
+                           if (ppNodeList[j]->Id() == pdwObjectList[i])
+                              break;
+                        if (j == dwNumNodes)
+                        {
+                           pObject->IncRefCount();
+                           ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
+                           ppNodeList[dwNumNodes] = (Node *)pObject;
+                           dwNumNodes++;
+                        }
+                     }
+                     else
+                     {
+                        pObject->AddChildNodesToList(&dwNumNodes, &ppNodeList, m_dwUserId);
                      }
                   }
                   else
                   {
-                     pObject->AddChildNodesToList(&dwNumNodes, &ppNodeList, m_dwUserId);
+                     msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                     bSuccess = FALSE;
+                     break;
                   }
                }
                else
                {
-                  msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                  msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
                   bSuccess = FALSE;
                   break;
                }
             }
-            else
-            {
-               msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-               bSuccess = FALSE;
-               break;
-            }
+            safe_free(pdwObjectList);
          }
-         safe_free(pdwObjectList);
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            bSuccess = FALSE;
+         }
       }
       else
       {
@@ -3996,6 +4012,9 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          pInfo->pSession = this;
          pInfo->mutex = hMutex;
          pInfo->dwRqId = pRequest->GetId();
+         pInfo->dwPackageId = dwPkgId;
+         _tcscpy(pInfo->szPkgFile, szPkgFile);
+         _tcscpy(pInfo->szPlatform, szPlatform);
 
          ThreadCreate(DeploymentManager, 0, pInfo);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);

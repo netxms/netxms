@@ -34,7 +34,10 @@ typedef struct
    Node **ppNodeList;
    ClientSession *pSession;
    DWORD dwRqId;
+   DWORD dwPackageId;
    Queue *pQueue;  // Used internally by deployment manager
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
+   TCHAR szPkgFile[MAX_PATH];
 } DT_STARTUP_INFO;
 
 

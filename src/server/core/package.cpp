@@ -146,8 +146,9 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
    Node *pNode;
    CSCPMessage msg;
-   BOOL bSuccess = TRUE;
-   //AgentConnection *pAgentConn;
+   BOOL bSuccess = FALSE;
+   AgentConnection *pAgentConn;
+   char *pszErrorMsg = "";
 
    // Prepare notification message
    msg.SetCode(CMD_INSTALLER_INFO);
@@ -161,16 +162,57 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
          break;   // Queue is empty, exit
 
       // Create agent connection
+      pAgentConn = pNode->CreateAgentConnection();
+      if (pAgentConn != NULL)
+      {
+         BOOL bCheckOK = FALSE;
+         char szBuffer[256];
 
-      // Change deployment status to "File Transfer"
-      msg.SetVariable(VID_OBJECT_ID, pNode->Id());
-      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
-      pStartup->pSession->SendMessage(&msg);
+         // Check if package can be deployed on target node
+         if (!stricmp(pStartup->szPlatform, "src"))
+         {
+            // Source package, check if target node
+            // supports source packages
+            if (pAgentConn->GetParameter("Agent.SourcePackageSupport", 32, szBuffer) == ERR_SUCCESS)
+            {
+               bCheckOK = (strtol(szBuffer, NULL, 0) != 0);
+            }
+         }
+         else
+         {
+            // Binary package, check target platform
+            if (pAgentConn->GetParameter("System.PlatformName", 256, szBuffer) == ERR_SUCCESS)
+            {
+               bCheckOK = !stricmp(szBuffer, pStartup->szPlatform);
+            }
+         }
+
+         if (bCheckOK)
+         {
+            // Change deployment status to "File Transfer"
+            msg.SetVariable(VID_OBJECT_ID, pNode->Id());
+            msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
+            pStartup->pSession->SendMessage(&msg);
+
+            //!pAgentConn->UploadFile(szBuffer);
+         }
+         else
+         {
+            pszErrorMsg = "Package is not compatible with target machine";
+         }
+
+         delete pAgentConn;
+      }
+      else
+      {
+         pszErrorMsg = "Unable to connect to agent";
+      }
 
       // Finish node processing
       msg.SetVariable(VID_OBJECT_ID, pNode->Id());
       msg.SetVariable(VID_DEPLOYMENT_STATUS, 
          bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
+      msg.SetVariable(VID_ERROR_MESSAGE, pszErrorMsg);
       pStartup->pSession->SendMessage(&msg);
       pNode->DecRefCount();
    }

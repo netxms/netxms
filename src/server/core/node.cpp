@@ -1435,3 +1435,24 @@ void Node::CheckOSPFSupport(void)
       }
    }
 }
+
+
+//
+// Create ready to use agent connection
+//
+
+AgentConnection *Node::CreateAgentConnection(void)
+{
+   AgentConnection *pConn;
+
+   if (!(g_dwFlags & NF_IS_NATIVE_AGENT))
+      return NULL;
+
+   pConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   if (!pConn->Connect())
+   {
+      delete pConn;
+      pConn = NULL;
+   }
+   return pConn;
+}

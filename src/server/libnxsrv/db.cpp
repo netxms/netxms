@@ -304,6 +304,8 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
 
 int LIBNXSRV_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
 {
+   if (hResult == NULL)
+      return 0;
    return m_fpDrvGetNumRows(hResult);
 }
 
@@ -314,7 +316,8 @@ int LIBNXSRV_EXPORTABLE DBGetNumRows(DB_RESULT hResult)
 
 void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 {
-   m_fpDrvFreeResult(hResult);
+   if (hResult != NULL)
+      m_fpDrvFreeResult(hResult);
 }
 
 
