@@ -94,6 +94,35 @@ static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 
 
 //
+// Replace object's data in list
+//
+
+static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
+{
+   if (pObject->pdwChildList != NULL)
+      MemFree(pObject->pdwChildList);
+   if (pObject->pdwParentList != NULL)
+      MemFree(pObject->pdwParentList);
+   memcpy(pObject, pNewObject, sizeof(NXC_OBJECT));
+   MemFree(pNewObject);
+}
+
+
+//
+// Destroy object
+//
+
+static void DestroyObject(NXC_OBJECT *pObject)
+{
+   if (pObject->pdwChildList != NULL)
+      MemFree(pObject->pdwChildList);
+   if (pObject->pdwParentList != NULL)
+      MemFree(pObject->pdwParentList);
+   MemFree(pObject);
+}
+
+
+//
 // Create new object from message
 //
 
@@ -202,7 +231,7 @@ static void LinkAllObjects(void)
 
 void ProcessObjectUpdate(CSCPMessage *pMsg)
 {
-   NXC_OBJECT *pObject;
+   NXC_OBJECT *pObject, *pNewObject;
 
    switch(pMsg->GetCode())
    {
@@ -223,6 +252,12 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
          AddObject(pObject, FALSE);
          break;
       case CMD_OBJECT_UPDATE:
+         pNewObject = NewObjectFromMsg(pMsg);
+         pObject = NXCFindObjectById(pNewObject->dwId);
+         if (pObject == NULL)
+            AddObject(pNewObject, TRUE);
+         else
+            ReplaceObject(pObject, pNewObject);
          break;
       default:
          break;
