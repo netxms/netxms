@@ -199,6 +199,7 @@ void ListenerThread(void *)
       if (IsValidServerAddr(servAddr.sin_addr.s_addr))
       {
          g_dwAcceptedConnections++;
+         DebugPrintf("Connection from %s accepted", szBuffer);
 
          // Create new session structure and threads
          pSession = new CommSession(hClientSocket, servAddr.sin_addr.s_addr);
@@ -218,6 +219,7 @@ void ListenerThread(void *)
          g_dwRejectedConnections++;
          shutdown(hClientSocket, 2);
          closesocket(hClientSocket);
+         DebugPrintf("Connection from %s rejected", szBuffer);
       }
    }
 

@@ -223,8 +223,10 @@ BOOL Initialize(void)
       pEnd = strchr(pItem, ',');
       if (pEnd != NULL)
          *pEnd = 0;
+      StrStrip(pItem);
       g_dwServerAddr[g_dwServerCount] = inet_addr(pItem);
-      if (g_dwServerAddr[g_dwServerCount] == INADDR_NONE)
+      if ((g_dwServerAddr[g_dwServerCount] == INADDR_NONE) ||
+          (g_dwServerAddr[g_dwServerCount] == INADDR_ANY))
       {
          if (!(g_dwFlags & AF_DAEMON))
             printf("Invalid server address '%s'\n", pItem);
@@ -241,6 +243,7 @@ BOOL Initialize(void)
       pEnd = strchr(pItem, '\n');
       if (pEnd != NULL)
          *pEnd = 0;
+      StrStrip(pItem);
       LoadSubAgent(pItem);
    }
 
