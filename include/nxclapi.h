@@ -104,6 +104,7 @@ typedef unsigned long HREQUEST;
 #define NXC_EVENT_ERROR                2
 #define NXC_EVENT_LOGIN_RESULT         3
 #define NXC_EVENT_NEW_ELOG_RECORD      4
+#define NXC_EVENT_USER_DB_CHANGED      5
 #define NXC_EVENT_OBJECT_CHANGED       6
 
 
@@ -399,6 +400,8 @@ NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
 DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwNewId);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
 
 #ifdef __cplusplus
 }
