@@ -78,22 +78,29 @@ A million repetitions of "a"
 #ifndef _sha1_h_
 #define _sha1_h_
 
-#include <stdio.h>
 #include <string.h>
 
-#ifndef  i386   /* For ALPHA  (SAK) */
-#define LITTLE_ENDIAN 
-typedef          long int int64;
-typedef unsigned long int uint64;
-typedef          int int32;
+#ifdef _WIN32
+
+typedef unsigned long uint32;
+
+#define LITTLE_ENDIAN
+
+#else
+
+#if SIZEOF_LONG == 4
+typedef unsigned long uint32;
+#elif SIZEOF_INT == 4
 typedef unsigned int uint32;
-#else  /*i386*/
-#define LITTLE_ENDIAN 
-typedef          long long int int64;
-typedef unsigned long long int uint64;
-typedef          long int int32;
-typedef unsigned long int uint32;
-#endif /*i386*/
+#endif
+
+#if WORDS_BIGENDIAN
+#undef LITTLE_ENDIAN
+#else
+#define LITTLE_ENDIAN
+#endif
+
+#endif   /* _WIN32 */
 
 typedef struct {
     uint32 state[5];

@@ -21,7 +21,7 @@
   ghost@aladdin.com
 
  */
-/* $Id: md5.h,v 1.1 2004-06-03 10:42:15 victor Exp $ */
+/* $Id: md5.h,v 1.2 2004-06-03 10:59:48 victor Exp $ */
 /*
   Independent implementation of MD5 (RFC 1321).
 
@@ -60,7 +60,15 @@
  * efficiently on either one than if ARCH_IS_BIG_ENDIAN is defined.
  */
 
-#define MD5_DIGEST_SIZE 16
+
+#ifndef ARCH_IS_BIG_ENDIAN
+#if WORDS_BIGENDIAN
+#define ARCH_IS_BIG_ENDIAN 1
+#else
+#define ARCH_IS_BIG_ENDIAN 0
+#endif
+#endif
+
 
 typedef unsigned char md5_byte_t; /* 8-bit byte */
 typedef unsigned int md5_word_t; /* 32-bit word */

@@ -77,6 +77,7 @@ A million repetitions of "a"
 
 /* #define SHA1HANDSOFF  */
 
+#include <config.h>
 #include "sha1.h"
 
 /* #include <process.h> */	/* prototype for exit() - JHB */

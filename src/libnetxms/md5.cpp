@@ -21,7 +21,7 @@
   ghost@aladdin.com
 
  */
-/* $Id: md5.cpp,v 1.1 2004-06-03 10:42:15 victor Exp $ */
+/* $Id: md5.cpp,v 1.2 2004-06-03 10:59:48 victor Exp $ */
 /*
   Independent implementation of MD5 (RFC 1321).
 
@@ -51,6 +51,7 @@
   1999-05-03 lpd Original version.
  */
 
+#include <config.h>
 #include "md5.h"
 #include <string.h>
 
