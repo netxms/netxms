@@ -104,7 +104,6 @@ typedef unsigned long HREQUEST;
 #define NXC_EVENT_ERROR                2
 #define NXC_EVENT_LOGIN_RESULT         3
 #define NXC_EVENT_NEW_ELOG_RECORD      4
-#define NXC_EVENT_REQUEST_COMPLETED    5
 #define NXC_EVENT_OBJECT_CHANGED       6
 
 
@@ -130,22 +129,6 @@ typedef unsigned long HREQUEST;
 
 
 //
-// Operations
-//
-
-#define NXC_OP_SYNC_OBJECTS      1
-#define NXC_OP_SYNC_EVENTS       2
-#define NXC_OP_OPEN_EVENT_DB     3
-#define NXC_OP_CLOSE_EVENT_DB    4
-#define NXC_OP_SET_EVENT_INFO    5
-#define NXC_OP_MODIFY_OBJECT     6
-#define NXC_OP_LOAD_USER_DB      7
-#define NXC_OP_CREATE_USER       8
-#define NXC_OP_DELETE_USER       9
-#define NXC_OP_LOCK_USER_DB      10
-
-
-//
 // Notification codes
 //
 
@@ -165,6 +148,7 @@ typedef unsigned long HREQUEST;
 #define RCC_DB_FAILURE              ((DWORD)6)
 #define RCC_INVALID_OBJECT_ID       ((DWORD)7)
 #define RCC_ALREADY_EXIST           ((DWORD)8)
+#define RCC_COMM_FAILURE            ((DWORD)9)
 
 
 //
@@ -391,6 +375,7 @@ void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 HREQUEST LIBNXCL_EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(char *pszName);
 void LIBNXCL_EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
@@ -398,54 +383,22 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCGetRootObject(void);
 void LIBNXCL_EXPORTABLE *NXCGetObjectIndex(DWORD *pdwNumObjects);
 void LIBNXCL_EXPORTABLE NXCLockObjectIndex(void);
 void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(void);
+DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
 
+DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
+DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
+DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventDB(NXC_EVENT_TEMPLATE ***pppTemplateList, DWORD *pdwNumRecords);
 void LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_EVENT_TEMPLATE *pEvent, DWORD dwMask, 
                                        DWORD dwSeverity, DWORD dwFlags, const char *pszName,
                                        const char *pszMessage, const char *pszDescription);
 
+DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
 NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
 
 #ifdef __cplusplus
 }
 #endif
-
-
-//
-// Inline functions
-//
-
-#ifdef __cplusplus
-
-#ifndef __libnxcl_inline_c__
-inline DWORD NXCSyncObjects(void) { return NXCRequest(NXC_OP_SYNC_OBJECTS); }
-inline DWORD NXCSyncEvents(void) { return NXCRequest(NXC_OP_SYNC_EVENTS); }
-inline DWORD NXCOpenEventDB(void) { return NXCRequest(NXC_OP_OPEN_EVENT_DB); }
-inline DWORD NXCCloseEventDB(BOOL bSaveChanges) { return NXCRequest(NXC_OP_CLOSE_EVENT_DB, bSaveChanges); }
-inline DWORD NXCModifyObject(NXC_OBJECT_UPDATE *pData) { return NXCRequest(NXC_OP_MODIFY_OBJECT, pData); }
-inline DWORD NXCLoadUserDB(void) { return NXCRequest(NXC_OP_LOAD_USER_DB); }
-inline DWORD NXCCreateUser(char *pszName) { return NXCRequest(NXC_OP_CREATE_USER, FALSE, pszName); }
-inline DWORD NXCCreateUserGroup(char *pszName) { return NXCRequest(NXC_OP_CREATE_USER, TRUE, pszName); }
-inline DWORD NXCDeleteUser(DWORD dwId) { return NXCRequest(NXC_OP_DELETE_USER, dwId); }
-inline DWORD NXCLockUserDB(void) { return NXCRequest(NXC_OP_LOCK_USER_DB, TRUE); }
-inline DWORD NXCUnlockUserDB(void) { return NXCRequest(NXC_OP_LOCK_USER_DB, FALSE); }
-#endif   /* __libnxcl_inline_c__ */
-
-#else    /* __cplusplus */
-
-DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void);
-DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void);
-DWORD LIBNXCL_EXPORTABLE NXCOpenEventDB(void);
-DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges);
-DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pData);
-DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void);
-DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName);
-DWORD LIBNXCL_EXPORTABLE NXCCreateUserGroup(char *pszName);
-DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
-DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void);
-DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
-
-#endif   /* __cplusplus */
 
 #endif   /* _nxclapi_h_ */

@@ -75,65 +75,6 @@
 
 
 //
-// Temporary buffer structure for RecvCSCPMessage() function
-//
-
-typedef struct
-{
-   DWORD dwBufSize;
-   DWORD dwBufPos;
-   char szBuffer[CSCP_TEMP_BUF_SIZE];
-} CSCP_BUFFER;
-
-
-//
-// Class for holding CSCP messages
-//
-
-class LIBNETXMS_EXPORTABLE CSCPMessage
-{
-private:
-   WORD m_wCode;
-   DWORD m_dwId;
-   DWORD m_dwNumVar;    // Number of variables
-   CSCP_DF **m_ppVarList;   // List of variables
-
-   void Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
-   void *Get(DWORD dwVarId, BYTE bType);
-   DWORD FindVariable(DWORD dwVarId);
-
-public:
-   CSCPMessage();
-   CSCPMessage(CSCP_MESSAGE *pMsg);
-   ~CSCPMessage();
-
-   CSCP_MESSAGE *CreateMessage(void);
-
-   WORD GetCode(void) { return m_wCode; }
-   void SetCode(WORD wCode) { m_wCode = wCode; }
-
-   DWORD GetId(void) { return m_dwId; }
-   void SetId(DWORD dwId) { m_dwId = dwId; }
-
-   BOOL IsVariableExist(DWORD dwVarId) { return (FindVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
-
-   void SetVariable(DWORD dwVarId, WORD wValue) { Set(dwVarId, DT_INT16, &wValue); }
-   void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, DT_INTEGER, &dwValue); }
-   void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, DT_INT64, &qwValue); }
-   void SetVariable(DWORD dwVarId, char *szValue) { Set(dwVarId, DT_STRING, szValue); }
-   void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, DT_BINARY, pValue, dwSize); }
-
-   DWORD GetVariableLong(DWORD dwVarId);
-   QWORD GetVariableInt64(DWORD dwVarId);
-   WORD GetVariableShort(DWORD dwVarId);
-   char *GetVariableStr(DWORD dwVarId, char *szBuffer = NULL, DWORD dwBufSize = 0);
-   DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);
-
-   void DeleteAllVariables(void);
-};
-
-
-//
 // Queue class
 //
 
@@ -188,9 +129,6 @@ extern "C"
    
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
 
-   int LIBNETXMS_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
-   CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
-   
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
 
@@ -208,11 +146,6 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
-
-#ifndef _WIN32
-   BOOL LIBNETXMS_EXPORTABLE NxInitSharedData(int iMode, int iSize);
-   void LIBNETXMS_EXPORTABLE NxDestroySharedData(void);
-#endif   /* _WIN32 */
 }
 
 #endif   /* _nms_util_h_ */
