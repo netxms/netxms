@@ -36,6 +36,7 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -106,4 +107,15 @@ void CDataCollectionEditor::OnClose()
    }
 	
 	CMDIChildWnd::OnClose();
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CDataCollectionEditor::OnSize(UINT nType, int cx, int cy) 
+{
+	CMDIChildWnd::OnSize(nType, cx, cy);
+   m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }
