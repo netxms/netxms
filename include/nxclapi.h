@@ -50,6 +50,15 @@
 #define STATE_DISCONNECTED    0
 #define STATE_CONNECTING      1
 #define STATE_IDLE            2
+#define STATE_SYNC_OBJECTS    3
+#define STATE_SYNC_EVENTS     4
+
+
+//
+// Operations
+//
+
+#define NXC_OP_SYNC_OBJECTS   1
 
 
 //
@@ -78,6 +87,13 @@ int EXPORTABLE NXCSyncRequest(DWORD dwOperation, ...);
 #ifdef __cplusplus
 }
 #endif
+
+
+//
+// Macros
+//
+
+#define NXCSyncObjects() NXCRequest(NXC_OP_SYNC_OBJECTS)
 
 
 #endif   /* _nxclapi_h_ */
