@@ -36,7 +36,7 @@ static Queue *m_pItemQueue = NULL;
 
 static void DataCollector(void *pArg)
 {
-   DCI_ENVELOPE *pEnvelope;
+   DCItem *pItem;
    Node *pNode;
    DWORD dwError;
    time_t currTime;
@@ -46,50 +46,52 @@ static void DataCollector(void *pArg)
 
    while(!ShutdownInProgress())
    {
-      pEnvelope = (DCI_ENVELOPE *)m_pItemQueue->GetOrBlock();
-      pNode = (Node *)FindObjectById(pEnvelope->dwNodeId);
+      pItem = (DCItem *)m_pItemQueue->GetOrBlock();
+      pNode = pItem->RelatedNode();
       if (pNode != NULL)
       {
-         switch(pEnvelope->pItem->DataSource())
+         switch(pItem->DataSource())
          {
             case DS_INTERNAL:    // Server internal parameters (like status)
-               dwError = pNode->GetInternalItem(pEnvelope->pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetInternalItem(pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_SNMP_AGENT:
-               dwError = pNode->GetItemFromSNMP(pEnvelope->pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromSNMP(pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_NATIVE_AGENT:
-               dwError = pNode->GetItemFromAgent(pEnvelope->pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromAgent(pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
          }
 
          // Update item's last poll time
          currTime = time(NULL);
-         pEnvelope->pItem->SetLastPollTime(currTime);
+         pItem->SetLastPollTime(currTime);
 
          // Store received value into database or handle error
          switch(dwError)
          {
             case DCE_SUCCESS:
                sprintf(szQuery, "INSERT INTO idata_%d (item_id,timestamp,value)"
-                                " VALUES (%d,%d,'%s')", pEnvelope->dwNodeId,
-                       pEnvelope->pItem->Id(), currTime, pBuffer);
+                                " VALUES (%d,%d,'%s')", pNode->Id(), pItem->Id(), 
+                       currTime, pBuffer);
                QueueSQLRequest(szQuery);
-               pEnvelope->pItem->CheckThresholds(pBuffer);
+               pItem->CheckThresholds(pBuffer);
                break;
             case DCE_COMM_ERROR:
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status
-               pEnvelope->pItem->SetStatus(ITEM_STATUS_NOT_SUPPORTED);
+               pItem->SetStatus(ITEM_STATUS_NOT_SUPPORTED);
                break;
          }
+
+         // Clear busy flag so item can be polled again
+         pItem->SetBusyFlag(FALSE);
       }
       else     /* pNode == NULL */
       {
          DbgPrintf(AF_DEBUG_DC, "*** DataCollector: Attempt to collect information for non-existing node.\n");
       }
-      free(pEnvelope);
    }
 }
 

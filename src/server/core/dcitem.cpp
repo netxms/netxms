@@ -104,17 +104,6 @@ DCItem::~DCItem()
 
 
 //
-// Set last poll time and clear busy flag
-//
-
-void DCItem::SetLastPollTime(time_t tLastPoll)
-{
-   m_tLastPoll = tLastPoll;
-   m_iBusy = 0;
-}
-
-
-//
 // Load data collection items thresholds from database
 //
 

@@ -100,6 +100,8 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_EVENTS_ACCESS_CONTROL;
    if (ConfigReadInt("DeleteEmptySubnets", 1))
       g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
+   if (ConfigReadInt("EnableSNMPTraps", 1))
+      g_dwFlags |= AF_ENABLE_SNMP_TRAPD;
 }
 
 

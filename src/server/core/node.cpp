@@ -815,16 +815,8 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    {
       if (m_ppItems[i]->ReadyForPolling(currTime))
       {
-         DCI_ENVELOPE *pEnv;
-
-         // Create envelope for item
-         pEnv = (DCI_ENVELOPE *)malloc(sizeof(DCI_ENVELOPE));
-         pEnv->dwNodeId = m_dwId;
-         pEnv->pItem = m_ppItems[i];
          m_ppItems[i]->SetBusyFlag(TRUE);
-
-         // Put request into queue
-         pPollerQueue->Put(pEnv);
+         pPollerQueue->Put(m_ppItems[i]);
       }
    }
    Unlock();

@@ -172,6 +172,7 @@ public:
    int DataSource(void) { return m_iSource; }
    int DataType(void) { return m_iDataType; }
    const char *Name(void) { return m_szName; }
+   Node *RelatedNode(void) { return m_pNode; }
 
    BOOL ReadyForPolling(time_t currTime) 
    { 
@@ -179,23 +180,12 @@ public:
               (m_tLastPoll + m_iPollingInterval < currTime));
    }
 
-   void SetLastPollTime(time_t tLastPoll);
+   void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
 
    void CheckThresholds(const char *pszLastValue);
 };
-
-
-//
-// Data collection item envelope structure
-//
-
-typedef struct
-{
-   DWORD dwNodeId;
-   DCItem *pItem;
-} DCI_ENVELOPE;
 
 
 //

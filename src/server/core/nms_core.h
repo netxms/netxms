@@ -114,6 +114,7 @@
 #define AF_ENABLE_EVENTS_ACCESS_CONTROL   0x00000008
 #define AF_LOG_SQL_ERRORS                 0x00000010
 #define AF_DELETE_EMPTY_SUBNETS           0x00000020
+#define AF_ENABLE_SNMP_TRAPD              0x00000040
 #define AF_DEBUG_EVENTS                   0x00000100
 #define AF_DEBUG_CSCP                     0x00000200
 #define AF_DEBUG_DISCOVERY                0x00000400

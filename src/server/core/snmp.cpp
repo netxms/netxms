@@ -169,7 +169,7 @@ BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const 
       }
    }
 
-   // Destroy response PDU if neede
+   // Destroy response PDU if needed
    if (response)
       snmp_free_pdu(response);
 
