@@ -2,9 +2,12 @@
 * 0.1.10
 *
 
-- Added centralized agent upgrade
+- Support for centralized upgrade added to agents
+- Implemented agent packages upload to server from console
 - New parameters added to Solaris subagent
 - Alarm deletion implemented
+- Implemented all delta calculation methods for DCI
+- Implemented thresholds for average values
 
 
 *
