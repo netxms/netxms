@@ -25,6 +25,9 @@
 #define IDR_DCI_HISTORY_GRAPH           113
 #define ID_RULE_LIST                    114
 #define ID_HEADER_CTRL                  115
+#define ID_VSCROLL                      116
+#define ID_HSCROLL                      117
+#define ID_SIZEBOX                      118
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -212,6 +215,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        183
 #define _APS_NEXT_COMMAND_VALUE         32842
 #define _APS_NEXT_CONTROL_VALUE         1104
-#define _APS_NEXT_SYMED_VALUE           116
+#define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

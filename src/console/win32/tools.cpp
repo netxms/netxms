@@ -51,8 +51,8 @@ CSize GetWindowSize(CWnd *pWnd)
    CSize size;
 
    pWnd->GetWindowRect(&rect);
-   size.cx = rect.right - rect.left + 1;
-   size.cy = rect.bottom - rect.top + 1;
+   size.cx = rect.right - rect.left;
+   size.cy = rect.bottom - rect.top;
    return size;
 }
 

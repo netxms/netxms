@@ -44,7 +44,7 @@ void CRuleHeader::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
    HDITEM hdi;
    TCHAR lpBuffer[256];
    COLORREF rgbOldTextColor, rgbOldBkColor;
-   RECT rcText, rcBorder;
+   RECT rcText;
    CPen pen;
    CBrush brush;
    HGDIOBJ hOldPen, hOldBrush;
@@ -57,23 +57,16 @@ void CRuleHeader::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 
    // Calculate text rectangle
    memcpy(&rcText, &lpDrawItemStruct->rcItem, sizeof(RECT));
-   rcText.left += 2;
-   rcText.right -= 2;
+   rcText.left++;
+   rcText.top++;
+   rcText.right--;
+   rcText.bottom--;
    if (rcText.right < rcText.left)
       rcText.right = rcText.left;
 
    // Draw frame.
-   DrawEdge(lpDrawItemStruct->hDC, &lpDrawItemStruct->rcItem, 
-            BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_RECT);
-   if (lpDrawItemStruct->itemID == (UINT)(GetItemCount() - 1))
-   {
-      rcBorder.left = lpDrawItemStruct->rcItem.right;
-      rcBorder.top = lpDrawItemStruct->rcItem.top;
-      rcBorder.right = rcBorder.left + 1;
-      rcBorder.bottom = lpDrawItemStruct->rcItem.bottom;
-      DrawEdge(lpDrawItemStruct->hDC, &rcBorder, 
-               BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_LEFT);
-   }
+   Draw3dRect(lpDrawItemStruct->hDC, &lpDrawItemStruct->rcItem,
+              RGB(128, 128, 128), RGB(255, 255, 255));
 
    // Draw the items text
    pen.CreatePen(PS_SOLID, 1, m_rgbBkColor);
@@ -101,3 +94,13 @@ BOOL CRuleHeader::OnEraseBkgnd(CDC* pDC)
    return TRUE;
 }
 
+
+//
+// Set title colors
+//
+
+void CRuleHeader::SetColors(COLORREF rgbTextColor, COLORREF rgbBkColor)
+{
+   m_rgbTextColor = rgbTextColor;
+   m_rgbBkColor = rgbBkColor;
+}

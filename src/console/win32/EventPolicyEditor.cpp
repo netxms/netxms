@@ -67,21 +67,35 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.Create(WS_CHILD | WS_VISIBLE, rect, this, ID_RULE_LIST);
 
    // Setup columns
-   m_wndRuleList.InsertColumn(0, "Rule", 50);
+   m_wndRuleList.InsertColumn(0, "No.", 35, CF_CENTER | CF_TITLE_COLOR);
    m_wndRuleList.InsertColumn(1, "Source", 120);
    m_wndRuleList.InsertColumn(2, "Event", 120);
    m_wndRuleList.InsertColumn(3, "Severity", 80);
    m_wndRuleList.InsertColumn(4, "Action", 150);
+   m_wndRuleList.InsertColumn(5, "Comments", 200);
 
    // Debug
-   m_wndRuleList.InsertRow(0);
-   m_wndRuleList.InsertRow(0);
-   m_wndRuleList.InsertRow(0);
-   m_wndRuleList.InsertRow(0);
-   m_wndRuleList.InsertRow(0);
-   m_wndRuleList.InsertRow(0);
-   m_wndRuleList.InsertRow(0);
-
+   char szBuffer[256];
+   for(int i = 0; i < 7; i++)
+   {
+      m_wndRuleList.InsertRow(i);
+      sprintf(szBuffer, "%d", i);
+      m_wndRuleList.AddItem(i, 0, szBuffer);
+      if (i == 2)
+      {
+         m_wndRuleList.AddItem(i, 1, "10.0.0.2");
+         m_wndRuleList.AddItem(i, 1, "10.0.0.10");
+      }
+      if (i == 3)
+      {
+         m_wndRuleList.AddItem(i, 1, "10.0.0.0/16");
+         m_wndRuleList.AddItem(i, 2, "NX_NODE_NORMAL");
+         m_wndRuleList.AddItem(i, 2, "NX_NODE_WARNING");
+         m_wndRuleList.AddItem(i, 2, "NX_NODE_MINOR");
+         m_wndRuleList.AddItem(i, 3, "hIlQgq|");
+         m_wndRuleList.AddItem(i, 3, "hIlQhqg");
+      }
+   }
    theApp.OnViewCreate(IDR_EPP_EDITOR, this);
 	return 0;
 }

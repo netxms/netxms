@@ -126,3 +126,33 @@ void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLO
    dc.SelectObject(pOldPen);
    free(piSize);
 }
+
+
+//
+// Draw 3D rectangle
+//
+
+void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom)
+{
+   CPen pen;
+   HGDIOBJ hOldPen;
+
+   // Draw left and top sides
+   pen.CreatePen(PS_SOLID, 1, rgbTop);
+   hOldPen = SelectObject(hDC, pen.m_hObject);
+   MoveToEx(hDC, pRect->right - 1, pRect->top, NULL);
+   LineTo(hDC, pRect->left, pRect->top);
+   LineTo(hDC, pRect->left, pRect->bottom);
+   SelectObject(hDC, hOldPen);
+   pen.DeleteObject();
+
+   // Draw right and bottom sides
+   pen.CreatePen(PS_SOLID, 1, rgbBottom);
+   hOldPen = SelectObject(hDC, pen.m_hObject);
+   MoveToEx(hDC, pRect->left + 1, pRect->bottom, NULL);
+   LineTo(hDC, pRect->right, pRect->bottom);
+   LineTo(hDC, pRect->right, pRect->top);
+
+   // Cleanup
+   SelectObject(hDC, hOldPen);
+}

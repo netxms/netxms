@@ -32,6 +32,7 @@ public:
 
 // Implementation
 public:
+	void SetColors(COLORREF rgbTextColor, COLORREF rgbBkColor);
 	virtual ~CRuleHeader();
 
 	// Generated message map functions
