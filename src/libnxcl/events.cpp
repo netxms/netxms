@@ -85,3 +85,27 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(void)
 
    return dwRetCode;
 }
+
+
+//
+// Send event to server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSendEvent(DWORD dwEventCode, int iNumArgs, TCHAR **pArgList)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+   int i;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_TRAP);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_EVENT_ID, dwEventCode);
+   msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
+   for(i = 0; i < iNumArgs; i++)
+      msg.SetVariable(VID_EVENT_ARG_BASE + i, pArgList[i]);
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
+}

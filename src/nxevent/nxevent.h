@@ -26,5 +26,6 @@
 
 #include <nms_common.h>
 #include <getopt.h>
+#include <nxclapi.h>
 
 #endif

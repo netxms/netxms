@@ -394,6 +394,10 @@ typedef struct
 #define VID_MIB_HASH_BASE           ((DWORD)0x00007000)
 #define VID_MIB_HASH_LAST           ((DWORD)0x00007FFF)
 
+// Variable range for event argument list
+#define VID_EVENT_ARG_BASE          ((DWORD)0x00008000)
+#define VID_EVENT_ARG_LAST          ((DWORD)0x00008FFF)
+
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,
 // we reserver a two range ids for this variables.
