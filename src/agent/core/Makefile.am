@@ -9,7 +9,7 @@ EXTRA_DIST = \
 INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxagentd
-nxagentd_SOURCES = messages.c actions.cpp comm.cpp exec.cpp getparam.cpp log.cpp nxagentd.cpp session.cpp subagent.cpp sysinfo.cpp tools.cpp
+nxagentd_SOURCES = messages.c actions.cpp comm.cpp exec.cpp getparam.cpp log.cpp nxagentd.cpp session.cpp subagent.cpp sysinfo.cpp tools.cpp upgrade.cpp
 nxagentd_LDADD = @PTHREAD_LIBS@ ../../libnetxms/libnetxms.la ../../libnxcscp/libnxcscp.la
 
 messages.c: messages.h

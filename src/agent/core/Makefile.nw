@@ -6,7 +6,7 @@
 include ../../../netware/Makefile.inc
 
 OBJECTS  = messages.o actions.o comm.o exec.o getparam.o log.o nxagentd.o \
-	   session.o subagent.o sysinfo.o tools.o
+	   session.o subagent.o sysinfo.o tools.o upgrade.o
 EXEC     = nxagentd.nlm
 DEF      = nxagentd.def
 OBJTMP   = nxagentd_r.o
