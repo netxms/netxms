@@ -80,36 +80,6 @@ void CleanInterfaceList(INTERFACE_LIST *pIfList)
 
 
 //
-// Destroy interface list created by discovery functions
-//
-
-void DestroyInterfaceList(INTERFACE_LIST *pIfList)
-{
-   if (pIfList != NULL)
-   {
-      if (pIfList->pInterfaces != NULL)
-         free(pIfList->pInterfaces);
-      free(pIfList);
-   }
-}
-
-
-//
-// Destroy ARP cache created by discovery functions
-//
-
-void DestroyArpCache(ARP_CACHE *pArpCache)
-{
-   if (pArpCache != NULL)
-   {
-      if (pArpCache->pEntries != NULL)
-         free(pArpCache->pEntries);
-      free(pArpCache);
-   }
-}
-
-
-//
 // Convert byte array to text representation
 //
 

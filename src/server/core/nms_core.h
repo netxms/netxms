@@ -361,14 +361,14 @@ BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
                    void (* pHandler)(DWORD, const char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose);
 
-INTERFACE_LIST *GetLocalInterfaceList(void);
+ARP_CACHE *GetLocalArpCache(void);
+void DestroyArpCache(ARP_CACHE *pArpCache);
+ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
+
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity);
+INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 void DestroyInterfaceList(INTERFACE_LIST *pIfList);
-
-ARP_CACHE *GetLocalArpCache(void);
-ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
-void DestroyArpCache(ARP_CACHE *pArpCache);
 
 void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName);

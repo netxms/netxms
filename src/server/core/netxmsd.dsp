@@ -1,10 +1,10 @@
-# Microsoft Developer Studio Project File - Name="NmsCore" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="netxmsd" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=NmsCore - Win32 Debug
+CFG=netxmsd - Win32 Release
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=NmsCore - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "netxmsd.mak" CFG="netxmsd - Win32 Debug"
+!MESSAGE NMAKE /f "netxmsd.mak" CFG="netxmsd - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -184,6 +184,10 @@ SOURCE=.\log.cpp
 # Begin Source File
 
 SOURCE=.\main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\netinfo.cpp
 # End Source File
 # Begin Source File
 

@@ -159,6 +159,7 @@ src/server/core/locks.cpp -text
 src/server/core/log.cpp -text
 src/server/core/main.cpp -text
 src/server/core/messages.mc -text
+src/server/core/netinfo.cpp -text
 src/server/core/netobj.cpp -text
 src/server/core/netxmsd.dsp -text
 src/server/core/netxmsd.dsw -text

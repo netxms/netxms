@@ -87,30 +87,30 @@ extern DWORD g_dwConfigurationPollingInterval;
 // Single ARP cache entry
 //
 
-struct ARP_ENTRY
+typedef struct
 {
    DWORD dwIndex;       // Interface index
    DWORD dwIpAddr;
    BYTE bMacAddr[6];
-};
+} ARP_ENTRY;
 
 
 //
 // ARP cache structure used by discovery functions and AgentConnection class
 //
 
-struct ARP_CACHE
+typedef struct
 {
    DWORD dwNumEntries;
    ARP_ENTRY *pEntries;
-};
+} ARP_CACHE;
 
 
 //
 // Interface information structure used by discovery functions and AgentConnection class
 //
 
-struct INTERFACE_INFO
+typedef struct
 {
    char szName[MAX_OBJECT_NAME];
    DWORD dwIndex;
@@ -118,19 +118,19 @@ struct INTERFACE_INFO
    DWORD dwIpAddr;
    DWORD dwIpNetMask;
    int iNumSecondary;      // Number of secondary IP's on this interface
-};
+} INTERFACE_INFO;
 
 
 //
 // Interface list used by discovery functions and AgentConnection class
 //
 
-struct INTERFACE_LIST
+typedef struct
 {
    int iNumEntries;              // Number of entries in pInterfaces
    int iEnumPos;                 // Used by index enumeration handler
    INTERFACE_INFO *pInterfaces;  // Interface entries
-};
+} INTERFACE_LIST;
 
 
 //
