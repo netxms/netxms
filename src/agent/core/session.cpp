@@ -41,8 +41,8 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hSocket = hSocket;
    m_dwIndex = INVALID_INDEX;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   m_hCondWriteThreadStopped = ConditionCreate(FALSE);
-   m_hCondProcessingThreadStopped = ConditionCreate(FALSE);
+   m_mutexWriteThreadRunning = MutexCreate();
+   m_mutexProcessingThreadRunning = MutexCreate();
    m_dwHostAddr = dwHostAddr;
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
 }
@@ -59,8 +59,8 @@ CommSession::~CommSession()
    delete m_pSendQueue;
    delete m_pMessageQueue;
    safe_free(m_pMsgBuffer);
-   ConditionDestroy(m_hCondWriteThreadStopped);
-   ConditionDestroy(m_hCondProcessingThreadStopped);
+   MutexDestroy(m_mutexWriteThreadRunning);
+   MutexDestroy(m_mutexProcessingThreadRunning);
 }
 
 
@@ -108,8 +108,11 @@ void CommSession::ReadThread(void)
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
-   ConditionWait(m_hCondWriteThreadStopped, INFINITE);
-   ConditionWait(m_hCondProcessingThreadStopped, INFINITE);
+   MutexLock(m_mutexWriteThreadRunning, INFINITE);
+   MutexUnlock(m_mutexWriteThreadRunning);
+ 
+   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
+   MutexUnlock(m_mutexProcessingThreadRunning);
 
    DebugPrintf("Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
 }
@@ -124,6 +127,7 @@ void CommSession::WriteThread(void)
    CSCP_MESSAGE *pMsg;
    char szBuffer[128];
 
+   MutexLock(m_mutexWriteThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
@@ -138,7 +142,7 @@ void CommSession::WriteThread(void)
       }
       MemFree(pMsg);
    }
-   ConditionSet(m_hCondWriteThreadStopped);
+   MutexUnlock(m_mutexWriteThreadRunning);
 }
 
 
@@ -152,6 +156,7 @@ void CommSession::ProcessingThread(void)
    char szBuffer[128];
    CSCPMessage msg;
 
+   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
@@ -198,7 +203,7 @@ void CommSession::ProcessingThread(void)
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
-   ConditionSet(m_hCondProcessingThreadStopped);
+   MutexUnlock(m_mutexProcessingThreadRunning);
 }
 
 

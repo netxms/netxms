@@ -189,8 +189,8 @@ private:
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
    CSCP_BUFFER *m_pMsgBuffer;
-   CONDITION m_hCondWriteThreadStopped;
-   CONDITION m_hCondProcessingThreadStopped;
+   MUTEX m_mutexWriteThreadRunning;
+   MUTEX m_mutexProcessingThreadRunning;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    DWORD m_dwIndex;
    BOOL m_bIsAuthenticated;
