@@ -37,6 +37,19 @@ void UnregisterSession(DWORD dwIndex);
 
 
 //
+// Node poller start data
+//
+
+typedef struct
+{
+   ClientSession *pSession;
+   Node *pNode;
+   int iPollType;
+   DWORD dwRqId;
+} POLLER_START_DATA;
+
+
+//
 // Fill CSCP message with user data
 //
 
@@ -121,6 +134,21 @@ THREAD_RESULT THREAD_CALL ClientSession::UpdateThreadStarter(void *pArg)
 
 
 //
+// Forced node poll thread starter
+//
+
+THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
+{
+   ((POLLER_START_DATA *)pArg)->pSession->PollerThread(
+      ((POLLER_START_DATA *)pArg)->pNode,
+      ((POLLER_START_DATA *)pArg)->iPollType,
+      ((POLLER_START_DATA *)pArg)->dwRqId);
+   free(pArg);
+   return THREAD_OK;
+}
+
+
+//
 // Client session class constructor
 //
 
@@ -140,6 +168,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
+   m_mutexPollerInit = MutexCreate();
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
    strcpy(m_szUserName, "<not logged in>");
@@ -166,6 +195,7 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
+   MutexDestroy(m_mutexPollerInit);
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
@@ -2599,16 +2629,19 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
 void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
+   POLLER_START_DATA *pData;
    NetObj *pObject;
-   int iPollType;
+
+   pData = (POLLER_START_DATA *)malloc(sizeof(POLLER_START_DATA));
+   MutexLock(m_mutexPollerInit, INFINITE);
 
    // Prepare responce message
-   m_dwPollRqId = pRequest->GetId();
+   pData->dwRqId = pRequest->GetId();
    msg.SetCode(CMD_POLLING_INFO);
-   msg.SetId(m_dwPollRqId);
+   msg.SetId(pData->dwRqId);
 
    // Get polling type
-   iPollType = pRequest->GetVariableShort(VID_POLL_TYPE);
+   pData->iPollType = pRequest->GetVariableShort(VID_POLL_TYPE);
 
    // Find object to be deleted
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
@@ -2616,17 +2649,17 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
    {
       // We can do polls only for node objects
       if ((pObject->Type() == OBJECT_NODE) &&
-          ((iPollType == POLL_STATUS) || (iPollType == POLL_CONFIGURATION)))
+          ((pData->iPollType == POLL_STATUS) || (pData->iPollType == POLL_CONFIGURATION)))
       {
          // Check access rights
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             ((Node *)pObject)->IncRefCount();
 
-            ((Node *)pObject)->StatusPoll(this);
-            
-            ((Node *)pObject)->DecRefCount();
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            pData->pNode = (Node *)pObject;
+            ThreadCreate(PollerThreadStarter, 0, pData);
+            msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
+            msg.SetVariable(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
          }
          else
          {
@@ -2645,6 +2678,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 
    // Send responce
    SendMessage(&msg);
+   MutexUnlock(m_mutexPollerInit);
 }
 
 
@@ -2652,13 +2686,35 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 // Send message fro poller to client
 //
 
-void ClientSession::SendPollerMsg(TCHAR *pszMsg)
+void ClientSession::SendPollerMsg(DWORD dwRqId, TCHAR *pszMsg)
 {
    CSCPMessage msg;
 
    msg.SetCode(CMD_POLLING_INFO);
-   msg.SetId(m_dwPollRqId);
+   msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
    msg.SetVariable(VID_POLLER_MESSAGE, pszMsg);
+   SendMessage(&msg);
+}
+
+
+//
+// Node poller thread
+//
+
+void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Wait while parent thread finishes initialization
+   MutexLock(m_mutexPollerInit, INFINITE);
+   MutexUnlock(m_mutexPollerInit);
+
+   pNode->StatusPoll(this, dwRqId);
+   pNode->DecRefCount();
+
+   msg.SetCode(CMD_POLLING_INFO);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
    SendMessage(&msg);
 }

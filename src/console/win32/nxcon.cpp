@@ -8,6 +8,7 @@
 #include "LoginDialog.h"
 #include "CreateContainerDlg.h"
 #include "CreateNodeDlg.h"
+#include "NodePoller.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1251,9 +1252,15 @@ void CConsoleApp::DeleteNetXMSObject(NXC_OBJECT *pObject)
 
 void CConsoleApp::PollNode(DWORD dwObjectId, int iPollType)
 {
-   DWORD dwResult;
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CNodePoller *pWnd;
 
-   dwResult = DoNodePoll(dwObjectId, iPollType);
-   if (dwResult != RCC_SUCCESS)
-      ErrorBox(dwResult, _T("Error polling node: %s"));
+	pWnd = (CNodePoller *)pFrame->CreateNewChild(
+		RUNTIME_CLASS(CNodePoller), IDR_NODE_POLLER, m_hMDIMenu, m_hMDIAccel);
+   if (pWnd != NULL)
+   {
+      pWnd->m_dwObjectId = dwObjectId;
+      pWnd->m_iPollType = iPollType;
+      pWnd->PostMessage(WM_COMMAND, ID_POLL_RESTART, 0);
+   }
 }

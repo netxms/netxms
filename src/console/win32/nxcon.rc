@@ -414,6 +414,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_ACTION_PROPERTIES
     END
+    POPUP "Poll"
+    BEGIN
+        MENUITEM "&Restart",                    ID_POLL_RESTART
+    END
 END
 
 
@@ -1109,21 +1113,6 @@ BEGIN
     PUSHBUTTON      "&Create...",IDC_BUTTON_CREATE,171,68,50,14
 END
 
-IDD_POLL_NODE DIALOGEX 0, 0, 297, 181
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
-CAPTION "Poll Node"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "Progress1",IDC_POLL_PROGRESS,"msctls_progress32",0x0,7,
-                    17,283,8,WS_EX_CLIENTEDGE
-    LTEXT           "Operation progress",IDC_STATIC,7,7,60,8
-    LTEXT           "Messages",IDC_STATIC,7,30,33,8
-    EDITTEXT        IDC_EDIT_MSG,7,42,283,111,ES_MULTILINE | ES_AUTOVSCROLL | 
-                    ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
-    PUSHBUTTON      "Close",IDCANCEL,123,160,50,14
-END
-
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1415,14 +1404,6 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 128
     END
-
-    IDD_POLL_NODE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 290
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 174
-    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1542,6 +1523,7 @@ BEGIN
     IDR_OBJECTS             "\nObject Browser\nObject Browser"
     IDR_DEBUG_WINDOW        "\nDebug Log\nDebug Log"
     IDR_ACTION_EDITOR       "\nAction Configuration\nAction Configuration"
+    IDR_NODE_POLLER         "\nPoll Node\nPoll Node"
 END
 
 STRINGTABLE DISCARDABLE 

@@ -232,6 +232,7 @@ private:
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
+   MUTEX m_mutexPollerInit;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
@@ -239,17 +240,18 @@ private:
    DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
    DWORD m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
-   DWORD m_dwPollRqId;        // Request ID for forced poll request
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL UpdateThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL PollerThreadStarter(void *);
 
    void ReadThread(void);
    void WriteThread(void);
    void ProcessingThread(void);
    void UpdateThread(void);
+   void PollerThread(Node *pNode, int iPollType, DWORD dwRqId);
 
    BOOL CheckSysAccessRights(DWORD dwRequiredAccess) 
    { 
@@ -305,7 +307,7 @@ public:
    void Run(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
-   void SendPollerMsg(TCHAR *pszMsg);
+   void SendPollerMsg(DWORD dwRqId, TCHAR *pszMsg);
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }

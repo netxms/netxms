@@ -54,6 +54,7 @@
 #define IDA_MDI_DEFAULT                 153
 #define IDR_ACTION_EDITOR               153
 #define IDA_OBJECT_BROWSER              154
+#define IDR_NODE_POLLER                 154
 #define IDI_SORT_UP                     156
 #define IDI_SORT_DOWN                   157
 #define IDD_OBJECT_NODE_GENERAL         159
@@ -325,6 +326,7 @@
 #define ID_OBJECT_POLL_STATUS           32876
 #define ID_OBJECT_POLL_CONFIGURATION    32877
 #define ID_CONTROLPANEL_DCT             32880
+#define ID_POLL_RESTART                 32881
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -334,7 +336,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        229
-#define _APS_NEXT_COMMAND_VALUE         32881
+#define _APS_NEXT_COMMAND_VALUE         32882
 #define _APS_NEXT_CONTROL_VALUE         1172
 #define _APS_NEXT_SYMED_VALUE           119
 #endif

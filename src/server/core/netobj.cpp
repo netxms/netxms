@@ -645,7 +645,7 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
 // This method is used by Node and Interface class objects
 //
 
-void NetObj::SendPollerMsg(TCHAR *pszFormat, ...)
+void NetObj::SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...)
 {
    if (m_pPollRequestor != NULL)
    {
@@ -655,6 +655,6 @@ void NetObj::SendPollerMsg(TCHAR *pszFormat, ...)
       va_start(args, pszFormat);
       _vsntprintf(szBuffer, 1024, pszFormat, args);
       va_end(args);
-      m_pPollRequestor->SendPollerMsg(szBuffer);
+      m_pPollRequestor->SendPollerMsg(dwRqId, szBuffer);
    }
 }

@@ -219,7 +219,7 @@ BOOL Interface::DeleteFromDB(void)
 // Perform status poll on interface
 //
 
-void Interface::StatusPoll(ClientSession *pSession)
+void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 {
    int iOldStatus = m_iStatus;
    DWORD dwPingStatus;
@@ -231,8 +231,8 @@ void Interface::StatusPoll(ClientSession *pSession)
       return;     // Interface has no IP address, we cannot check it
    }
 
-   SendPollerMsg("   Starting status poll on interface %s\r\n"
-                 "   Current interface status is %s\r\n",
+   SendPollerMsg(dwRqId, "   Starting status poll on interface %s\r\n"
+                         "   Current interface status is %s\r\n",
                  m_szName, g_pszStatusName[m_iStatus]);
    dwPingStatus = IcmpPing(m_dwIpAddr, 3, 1500, NULL);
    if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
@@ -240,13 +240,13 @@ void Interface::StatusPoll(ClientSession *pSession)
    m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
    if (m_iStatus != iOldStatus)
    {
-      SendPollerMsg("   Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
+      SendPollerMsg(dwRqId, "   Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
                 GetParent()->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
                 m_dwIfIndex);
       Modify();
    }
-   SendPollerMsg("   Finished status poll on interface %s\r\n", m_szName);
+   SendPollerMsg(dwRqId, "   Finished status poll on interface %s\r\n", m_szName);
 }
 
 

@@ -46,7 +46,7 @@ THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
          if (pNode->ReadyForStatusPoll())
          {
-            pNode->StatusPoll(NULL);
+            pNode->StatusPoll(NULL, 0);
             WatchdogNotify(dwWatchdogId);
          }
       }

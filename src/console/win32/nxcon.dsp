@@ -241,6 +241,10 @@ SOURCE=.\NewUserDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodePoller.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NodePropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -298,10 +302,6 @@ SOURCE=.\ObjectSelDlg.cpp
 # Begin Source File
 
 SOURCE=.\PasswordChangeDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PollNodeDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -502,6 +502,10 @@ SOURCE=..\..\..\include\nms_util.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodePoller.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\NodePropsGeneral.h
 # End Source File
 # Begin Source File
@@ -559,10 +563,6 @@ SOURCE=.\ObjectSelDlg.h
 # Begin Source File
 
 SOURCE=.\PasswordChangeDlg.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PollNodeDlg.h
 # End Source File
 # Begin Source File
 

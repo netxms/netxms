@@ -105,7 +105,7 @@ protected:
    BOOL LoadACLFromDB(void);
    BOOL SaveACLToDB(void);
 
-   void SendPollerMsg(TCHAR *pszFormat, ...);
+   void SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...);
 
 public:
    NetObj();
@@ -187,7 +187,7 @@ public:
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD IfIndex(void) { return m_dwIfIndex; }
 
-   void StatusPoll(ClientSession *pSession);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId);
    virtual void CreateMessage(CSCPMessage *pMsg);
 };
 
@@ -262,7 +262,7 @@ public:
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
-   void StatusPoll(ClientSession *pSession);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId);
    void ConfigurationPoll(void);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);

@@ -166,6 +166,8 @@ src/console/win32/NewActionDlg.cpp -text
 src/console/win32/NewActionDlg.h -text
 src/console/win32/NewUserDlg.cpp -text
 src/console/win32/NewUserDlg.h -text
+src/console/win32/NodePoller.cpp -text
+src/console/win32/NodePoller.h -text
 src/console/win32/NodePropsGeneral.cpp -text
 src/console/win32/NodePropsGeneral.h -text
 src/console/win32/NodeSummary.cpp -text
