@@ -100,6 +100,60 @@ public:
 
 
 //
+// Message waiting queue element structure
+//
+
+typedef struct
+{
+   WORD wCode;       // Message code
+   WORD wIsBinary;   // 1 for binary (raw) messages
+   DWORD dwId;       // Message ID
+   DWORD dwTTL;      // Message time-to-live in milliseconds
+   void *pMsg;       // Pointer to message, either to CSCPMessage object or raw message
+} WAIT_QUEUE_ELEMENT;
+
+
+//
+// Message waiting queue class
+//
+
+class LIBNXCSCP_EXPORTABLE MsgWaitQueue
+{
+   friend void MWQThreadStarter(void *);
+
+private:
+   MUTEX m_hMutex;
+   CONDITION m_hStopCondition;
+   DWORD m_dwMsgHoldTime;
+   DWORD m_dwNumElements;
+   WAIT_QUEUE_ELEMENT *m_pElements;
+
+   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_hMutex); }
+   void HousekeeperThread(void);
+   void *WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
+
+public:
+   MsgWaitQueue();
+   ~MsgWaitQueue();
+
+   void Put(CSCPMessage *pMsg);
+   void Put(CSCP_MESSAGE *pMsg);
+   CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+   {
+      return (CSCPMessage *)WaitForMessageInternal(0, wCode, dwId, dwTimeOut);
+   }
+   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
+   {
+      return (CSCP_MESSAGE *)WaitForMessageInternal(1, wCode, dwId, dwTimeOut);
+   }
+   
+   void Clear(void);
+   void SetHoldTime(DWORD dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
+};
+
+
+//
 // Functions
 //
 

@@ -226,6 +226,10 @@ typedef struct
 #define CMD_LOAD_IMAGE_FILE         0x003D
 #define CMD_IMAGE_LIST              0x003E
 #define CMD_IMAGE_FILE              0x003F
+#define CMD_AUTHENTICATE            0x0040
+#define CMD_GET_PARAMETER           0x0041
+#define CMD_GET_LIST                0x0042
+#define CMD_TRAP                    0x0043
 
 
 //
@@ -316,6 +320,7 @@ typedef struct
 #define VID_IMAGE_LIST              ((DWORD)82)
 #define VID_IMAGE_FILE_SIZE         ((DWORD)83)
 #define VID_IMAGE_FILE              ((DWORD)84)
+#define VID_PARAMETER               ((DWORD)85)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

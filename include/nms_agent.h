@@ -34,7 +34,7 @@
 //
 
 #define AGENT_LISTEN_PORT        4700
-#define AGENT_PROTOCOL_VERSION   1
+#define AGENT_PROTOCOL_VERSION   2
 #define MAX_PARAM_NAME           256
 #define MAX_RESULT_LENGTH        256
 #define MAX_CMD_LEN              256
@@ -45,20 +45,20 @@
 // Error codes
 //
 
-#define ERR_SUCCESS                 0
-#define ERR_UNKNOWN_COMMAND         400
-#define ERR_AUTH_REQUIRED           401
-#define ERR_UNKNOWN_PARAMETER       404
-#define ERR_REQUEST_TIMEOUT         408
-#define ERR_AUTH_FAILED             440
-#define ERR_ALREADY_AUTHENTICATED   441
-#define ERR_AUTH_NOT_REQUIRED       442
-#define ERR_INTERNAL_ERROR          500
-#define ERR_NOT_IMPLEMENTED         501
-#define ERR_OUT_OF_RESOURCES        503
-#define ERR_NOT_CONNECTED           900
-#define ERR_CONNECTION_BROKEN       901
-#define ERR_BAD_RESPONCE            902
+#define ERR_SUCCESS                 ((DWORD)0)
+#define ERR_UNKNOWN_COMMAND         ((DWORD)400)
+#define ERR_AUTH_REQUIRED           ((DWORD)401)
+#define ERR_UNKNOWN_PARAMETER       ((DWORD)404)
+#define ERR_REQUEST_TIMEOUT         ((DWORD)408)
+#define ERR_AUTH_FAILED             ((DWORD)440)
+#define ERR_ALREADY_AUTHENTICATED   ((DWORD)441)
+#define ERR_AUTH_NOT_REQUIRED       ((DWORD)442)
+#define ERR_INTERNAL_ERROR          ((DWORD)500)
+#define ERR_NOT_IMPLEMENTED         ((DWORD)501)
+#define ERR_OUT_OF_RESOURCES        ((DWORD)503)
+#define ERR_NOT_CONNECTED           ((DWORD)900)
+#define ERR_CONNECTION_BROKEN       ((DWORD)901)
+#define ERR_BAD_RESPONCE            ((DWORD)902)
 
 
 //

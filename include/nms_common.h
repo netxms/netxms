@@ -59,6 +59,8 @@ typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
+#define vsnprintf _vsnprintf
+
 #else    /* not _WIN32 */
 
 #define FS_PATH_SEPARATOR  "/"
