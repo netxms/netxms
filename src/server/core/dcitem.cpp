@@ -238,7 +238,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_iSource);
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_iDataType);
    pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
-   pMsg->SetVariable(VID_NUM_THRESHOLDS, (DWORD)m_dwNumThresholds);
+   pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId++)
    {
       m_ppThresholdList[i]->CreateMessage(&dct);
