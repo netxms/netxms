@@ -174,6 +174,8 @@ extern "C"
    void LIBNETXMS_EXPORTABLE strupr(char *in);
 #endif
    
+   INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
+
    int LIBNETXMS_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
    CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
    

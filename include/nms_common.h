@@ -53,6 +53,7 @@
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
+typedef int socklen_t;
 
 #else
 
