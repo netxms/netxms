@@ -58,7 +58,7 @@ static DWORD m_dwTimeout = 3000;
 // Get single parameter
 //
 
-static void Get(AgentConnection *pConn, char *pszParam)
+static int Get(AgentConnection *pConn, char *pszParam)
 {
    DWORD dwError;
    char szBuffer[1024];
@@ -68,6 +68,7 @@ static void Get(AgentConnection *pConn, char *pszParam)
       printf("%s\n", szBuffer);
    else
       printf("Error %d\n", dwError);
+   return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
 
@@ -75,7 +76,7 @@ static void Get(AgentConnection *pConn, char *pszParam)
 // Get list of values for enum parameters
 //
 
-static void List(AgentConnection *pConn, char *pszParam)
+static int List(AgentConnection *pConn, char *pszParam)
 {
    DWORD i, dwNumLines, dwError;
 
@@ -90,6 +91,7 @@ static void List(AgentConnection *pConn, char *pszParam)
    {
       printf("Error %d\n", dwError);
    }
+   return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
 
@@ -209,15 +211,19 @@ int main(int argc, char *argv[])
                switch(iCommand)
                {
                   case CMD_GET:
-                     Get(&conn, argv[optind + 1]);
+                     iExitCode = Get(&conn, argv[optind + 1]);
                      break;
                   case CMD_LIST:
-                     List(&conn, argv[optind + 1]);
+                     iExitCode = List(&conn, argv[optind + 1]);
                      break;
                   default:
                      break;
                }
                conn.Disconnect();
+            }
+            else
+            {
+               iExitCode = 2;
             }
          }
       }
