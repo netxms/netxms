@@ -386,4 +386,10 @@ Language=English
 DEBUG: %1
 .
 
+MessageId=
+SymbolicName=MSG_SIGNAL_RECEIVED
+Language=English
+Signal %1 received
+.
+
 ;#endif

@@ -34,6 +34,7 @@
 # include <errno.h> 
 #else
 # include <sys/stat.h>
+# include <signal.h>
 #endif
 
 
@@ -453,6 +454,22 @@ static BOOL ProcessCommand(char *pszCmdLine)
 
 
 //
+// Signal handler for UNIX platforms
+//
+
+#ifndef _WIN32
+
+void OnSignal(int iSignal)
+{
+   WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
+   if (!IsStandalone())
+      ConditionSet(m_hEventShutdown);
+}
+
+#endif
+
+
+//
 // Common main()
 //
 
@@ -516,6 +533,10 @@ void Main(void)
    else
    {
 		ConditionWait(m_hEventShutdown, INFINITE);
+      // On Win32, Shutdown() will be called by service control handler
+#ifndef _WIN32
+      Shutdown();
+#endif
    }
 }
 
@@ -526,6 +547,10 @@ void Main(void)
 
 int main(int argc, char *argv[])
 {
+#ifndef _WIN32
+   int i;
+#endif
+
    if (!ParseCommandLine(argc, argv))
       return 1;
 
@@ -557,30 +582,23 @@ int main(int argc, char *argv[])
       }
       Main();
    }
-#else    /* _WIN32 */
+#else    /* not _WIN32 */
    if (!IsStandalone())
    {
-#if HAVE_DAEMON
       if (daemon(0, 0) == -1)
       {
          perror("Call to daemon() failed");
          return 2;
       }
-#else
-      pid_t pid;
-
-      pid = fork();
-      if (pid == -1)
-      {
-         perror("Call to fork() failed");
-         return 2;
-      }
-      if (pid != 0)   // Parent process?
-         return 0;
-
-      /* TODO: add full daemon initialization */
-#endif
    }
+
+   // Setup signal handlers
+   for(i = 0; i < 32; i++)
+      signal(i, SIG_IGN);
+   signal(SIGTERM, OnSignal);
+   signal(SIGSEGV, OnSignal);
+
+   // Initialize server
    if (!Initialize())
    {
       // Remove database lock
@@ -591,6 +609,8 @@ int main(int argc, char *argv[])
       }
       return 3;
    }
+
+   // Everything is OK, start common main loop
    Main();
 #endif   /* _WIN32 */
    return 0;
