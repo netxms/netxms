@@ -109,7 +109,7 @@ typedef void * HSNMPSESSION;
 #define IDG_CONTAINER_CAT     1
 #define IDG_EVENT             2
 #define IDG_ITEM              3
-//#define IDG_DCT               4
+#define IDG_SNMP_TRAP         4
 #define IDG_IMAGE             5
 #define IDG_ACTION            6
 #define IDG_EVENT_GROUP       7
@@ -159,6 +159,7 @@ typedef void * HSNMPSESSION;
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
 #define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
+#define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 
 
 //
@@ -400,6 +401,8 @@ void ShutdownMailer(void);
 void PostMail(char *pszRcpt, char *pszSubject, char *pszText);
 
 void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
+
+void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
 
 #ifdef _WIN32
 

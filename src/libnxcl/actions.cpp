@@ -25,7 +25,7 @@
 
 
 //
-// Fill alarm record from message
+// Fill action record from message
 //
 
 static void ActionFromMsg(CSCPMessage *pMsg, NXC_ACTION *pAction)

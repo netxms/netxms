@@ -49,7 +49,7 @@ static char *m_pszGroupNames[] =
    "Container Categories",
    "Events",
    "Data Collection Items",
-   "<unused>",
+   "SNMP Trap",
    "Images",
    "Actions",
    "Event Groups",
@@ -145,6 +145,15 @@ BOOL InitIdTable(void)
    {
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_ITEM] = max(1, DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available SNMP trap configuration record id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(trap_id) FROM snmp_trap_cfg");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_SNMP_TRAP] = max(m_dwFreeIdTable[IDG_SNMP_TRAP], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

@@ -11,6 +11,7 @@
 #endif // _MSC_VER > 1000
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
+#define _WINSOCKAPI_    /* Prevent inclusion of winsock.h in windows.h */
 
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
@@ -20,6 +21,7 @@
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
+#include <winsock2.h>
 #include <afxsock.h>		// MFC socket extensions
 
 #define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */

@@ -262,7 +262,8 @@ typedef struct
 #define CMD_CREATE_TRAP             0x0061
 #define CMD_MODIFY_TRAP             0x0062
 #define CMD_DELETE_TRAP             0x0063
-#define CMD_LOAD_TRAP_LIST          0x0064
+#define CMD_LOAD_TRAP_CFG           0x0064
+#define CMD_TRAP_CFG_RECORD         0x0065
 
 
 //
@@ -385,6 +386,10 @@ typedef struct
 #define VID_TEMPLATE_VERSION        ((DWORD)114)
 #define VID_NODE_TYPE               ((DWORD)115)
 #define VID_INSTANCE                ((DWORD)116)
+#define VID_TRAP_ID                 ((DWORD)117)
+#define VID_TRAP_OID                ((DWORD)118)
+#define VID_TRAP_OID_LEN            ((DWORD)119)
+#define VID_TRAP_NUM_MAPS           ((DWORD)120)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -409,6 +414,12 @@ typedef struct
 // Variable range for event argument list
 #define VID_EVENT_ARG_BASE          ((DWORD)0x00008000)
 #define VID_EVENT_ARG_LAST          ((DWORD)0x00008FFF)
+
+// Variable range for trap parameter list
+#define VID_TRAP_PLEN_BASE          ((DWORD)0x00009000)
+#define VID_TRAP_PLEN_LAST          ((DWORD)0x000097FF)
+#define VID_TRAP_PNAME_BASE         ((DWORD)0x00009800)
+#define VID_TRAP_PNAME_LAST         ((DWORD)0x00009FFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,

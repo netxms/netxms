@@ -24,19 +24,12 @@
 #ifndef _libnxcl_h_
 #define _libnxcl_h_
 
-#include <stdio.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#else    /* _WIN32 */
-#include <fcntl.h>
-#endif   /* _WIN32 */
-
 #include <nms_common.h>
 #include <nxclapi.h>
 #include <nms_util.h>
 #include <nms_threads.h>
 #include <nxcscpapi.h>
+#include <stdio.h>
 #include <string.h>
 
 

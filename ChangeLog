@@ -4,7 +4,10 @@
 
 - Added support for System.CPU.Count and System.ProcessList parameters
   under Windows
-- Created our own SNMP library
+- Created our own SNMP library (currently SNMP versions 1 and 2c are
+  supported) 
+- Component locks moved to RAM from SQL database
+- Added support for SNMP traps
 
 
 *

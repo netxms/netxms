@@ -468,6 +468,32 @@ typedef struct
 } NXC_IMAGE_LIST;
 
 
+//
+// Trap parameter mapping entry
+//
+
+struct NXC_OID
+{
+   DWORD *pdwObjectId;     // Trap OID
+   DWORD dwOidLen;         // Trap OID length
+};
+
+
+//
+// Trap configuration entry
+//
+
+struct NXC_TRAP_CFG_ENTRY
+{
+   DWORD dwId;             // Entry ID
+   DWORD *pdwObjectId;     // Trap OID
+   DWORD dwOidLen;         // Trap OID length
+   DWORD dwEventId;        // Event ID
+   DWORD dwNumMaps;        // Number of parameter mappings
+   NXC_OID *pMaps;
+};
+
+
 /********************************************************************
  * Following part of this file shouldn't be included by server code *
  ********************************************************************/
@@ -909,6 +935,12 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCreateAction(TCHAR *pszName, DWORD *pdwNewId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_ACTION *pAction);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(DWORD dwActionId);
+
+DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(void);
+DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(void);
+DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(DWORD *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList);
+void LIBNXCL_EXPORTABLE NXCDestroyTrapList(DWORD dwNumTraps, NXC_TRAP_CFG_ENTRY *pTrapList);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(DWORD dwTrapId);
 
 #ifdef __cplusplus
 }

@@ -592,7 +592,7 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_TRAP:
             DeleteTrap(pMsg);
             break;
-         case CMD_LOAD_TRAP_LIST:
+         case CMD_LOAD_TRAP_CFG:
             SendAllTraps(pMsg->GetId());
             break;
          default:
@@ -3131,6 +3131,46 @@ void ClientSession::DeleteTrap(CSCPMessage *pRequest)
 
 void ClientSession::LockTrapCfg(DWORD dwRqId, BOOL bLock)
 {
+   CSCPMessage msg;
+   char szBuffer[256];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+   {
+      if (bLock)
+      {
+         if (!LockComponent(CID_TRAP_CFG, m_dwIndex, m_szUserName, NULL, szBuffer))
+         {
+            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+            msg.SetVariable(VID_LOCKED_BY, szBuffer);
+         }
+         else
+         {
+            m_dwFlags |= CSF_TRAP_CFG_LOCKED;
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+      }
+      else
+      {
+         if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
+         {
+            UnlockComponent(CID_TRAP_CFG);
+            m_dwFlags &= ~CSF_TRAP_CFG_LOCKED;
+         }
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+   }
+   else
+   {
+      // Current user has no rights for trap management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 
@@ -3140,4 +3180,34 @@ void ClientSession::LockTrapCfg(DWORD dwRqId, BOOL bLock)
 
 void ClientSession::SendAllTraps(DWORD dwRqId)
 {
+   CSCPMessage msg;
+   BOOL bSuccess = FALSE;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+   {
+      if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         SendMessage(&msg);
+         bSuccess = TRUE;
+         SendTrapsToClient(this, dwRqId);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
+      // Current user has no rights for trap management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   if (!bSuccess)
+      SendMessage(&msg);
 }
