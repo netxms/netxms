@@ -2,10 +2,11 @@
 -- System configuration table
 --
 
-create table CONFIG
+CREATE TABLE CONFIG
 (
-	name varchar(64),
-	value varchar(255)
+	name varchar(64) not null,
+	value varchar(255),
+	PRIMARY KEY(name)
 );
 
 
@@ -13,16 +14,27 @@ create table CONFIG
 -- Nodes information
 --
 
-create table NODES
+CREATE TABLE NODES
 (
-	id integer autoincrement,
+	id integer not null,
 	name varchar(64),
 	status integer,
 	primary_ip integer,
 	isSNMP bool,
 	isNativeAgent bool,
 	isRouter bool,
-	isBridge bool
+	isBridge bool,
+	PRIMARY KEY(id)
+);
+
+
+--
+-- New nodes list
+--
+
+CREATE TABLE NEWNODES
+(
+	ip integer not null
 );
 
 
@@ -30,13 +42,14 @@ create table NODES
 -- Subnets
 --
 
-create table SUBNETS
+CREATE TABLE SUBNETS
 (
-	id integer autoincrement,
+	id integer not null,
 	name varchar(64),
 	status integer,
 	ip_addr integer,
-	ip_netmask integer
+	ip_netmask integer,
+	PRIMARY KEY(id)
 );
 
 
@@ -46,7 +59,7 @@ create table SUBNETS
 
 create table INTERFACES
 (
-	id integer autoincrement,
+	id integer not null,
 	node_id integer not null,
 	name varchar(64),
 	ip_addr integer,
@@ -73,7 +86,7 @@ create table NSMAP
 
 create table ITEMS
 (
-	id integer autoincrement,
+	id integer not null,
 	node_id integer,
 	name varchar(255),
 	description varchar(255),
@@ -92,7 +105,6 @@ create table IDATA
 	item_id integer not null,
 	timestamp integer,
 	val_integer integer,
-	val_float ??,
 	val_string varchar(255)
 );
 
@@ -103,7 +115,7 @@ create table IDATA
 
 create table EVENTS
 (
-	id integer autoincrement,
+	id integer not null,
 	severity integer,
 	message varchar(255),		-- Message template
 	retention_time integer,
@@ -115,7 +127,7 @@ create table EVENTS
 -- Event log
 --
 
-create table ELOG
+CREATE TABLE ELOG
 (
 	event_id integer,
 	timestamp integer,
@@ -130,11 +142,12 @@ create table ELOG
 -- Actions on events
 --
 
-create table ACTIONS
+CREATE TABLE ACTIONS
 (
-	id integer autoincrement,
+	id integer not null,
 	type integer,
-	command varchar(255)
+	command varchar(255),
+	PRIMARY KEY(id)
 );
 
 
