@@ -73,6 +73,7 @@
 #define IDD_DCI_THRESHOLDS              177
 #define IDB_UP_ARROW                    178
 #define IDB_DOWN_ARROW                  179
+#define IDD_THRESHOLD                   180
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -136,6 +137,13 @@
 #define IDC_BUTTON_MODIFY               1074
 #define IDC_BUTTON_MOVEUP               1076
 #define IDC_BUTTON_MOVEDOWN             1077
+#define IDC_COMBO_FUNCTION              1078
+#define IDC_EDIT_ARG1                   1079
+#define IDC_COMBO_OPERATION             1080
+#define IDC_EDIT_VALUE                  1081
+#define IDC_STATIC_FOR                  1083
+#define IDC_STATIC_SAMPLES              1084
+#define IDC_STATIC_COMPARE              1085
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -181,9 +189,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        180
+#define _APS_NEXT_RESOURCE_VALUE        181
 #define _APS_NEXT_COMMAND_VALUE         32840
-#define _APS_NEXT_CONTROL_VALUE         1078
+#define _APS_NEXT_CONTROL_VALUE         1086
 #define _APS_NEXT_SYMED_VALUE           114
 #endif
 #endif

@@ -105,4 +105,6 @@ char *g_pszItemOriginLong[] = { "Internal", "NetXMS Agent", "SNMP Agent" };
 char *g_pszItemDataType[] = { "Integer", "Int64", "String", "Float" };
 char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
 char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
+char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", "greater or equal", "greater", "not equal", "like", "not like" };
 char *g_pszThresholdFunction[] = { "LAST", "AVG", "DEV" };
+char *g_pszThresholdFunctionLong[] = { "last polled value", "average value", "mean deviation" };

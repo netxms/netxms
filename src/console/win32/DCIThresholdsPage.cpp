@@ -39,6 +39,7 @@ void CDCIThresholdsPage::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDCIThresholdsPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCIThresholdsPage)
+	ON_BN_CLICKED(IDC_BUTTON_ADD, OnButtonAdd)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -118,4 +119,86 @@ int CDCIThresholdsPage::AddListEntry(DWORD dwIndex)
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
 
    return iItem;
+}
+
+
+//
+// Edit threshold
+//
+
+BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
+{
+   CThresholdDlg dlg;
+   BOOL bResult = FALSE;
+   char szBuffer[32];
+
+   dlg.m_iFunction = pThreshold->wFunction;
+   dlg.m_iOperation = pThreshold->wOperation;
+   dlg.m_dwArg1 = pThreshold->dwArg1;
+   switch(m_pItem->iDataType)
+   {
+      case DTYPE_INTEGER:
+         sprintf(szBuffer, "%d", pThreshold->value.dwInt32);
+         dlg.m_strValue = szBuffer;
+         break;
+      case DTYPE_INT64:
+         sprintf(szBuffer, "%64I", pThreshold->value.qwInt64);
+         dlg.m_strValue = szBuffer;
+         break;
+      case DTYPE_FLOAT:
+         sprintf(szBuffer, "%f", pThreshold->value.dFloat);
+         dlg.m_strValue = szBuffer;
+         break;
+      case DTYPE_STRING:
+         dlg.m_strValue = pThreshold->value.szString;
+         break;
+   }
+   if (dlg.DoModal() == IDOK)
+   {
+      pThreshold->dwArg1 = dlg.m_dwArg1;
+      pThreshold->wFunction = (WORD)dlg.m_iFunction;
+      pThreshold->wOperation = (WORD)dlg.m_iOperation;
+      switch(m_pItem->iDataType)
+      {
+         case DTYPE_INTEGER:
+            pThreshold->value.dwInt32 = strtol((LPCTSTR)dlg.m_strValue, NULL, 0);
+            break;
+         case DTYPE_INT64:
+            /* TODO: add conversion for 64 bit integers */
+            break;
+         case DTYPE_FLOAT:
+            pThreshold->value.dFloat = strtod((LPCTSTR)dlg.m_strValue, NULL);
+            break;
+         case DTYPE_STRING:
+            strcpy(pThreshold->value.szString, (LPCTSTR)dlg.m_strValue);
+            break;
+      }
+      bResult = TRUE;
+   }
+
+   return bResult;
+}
+
+
+//
+// WM_COMMAND::IDC_BUTTON_ADD message handler
+//
+
+void CDCIThresholdsPage::OnButtonAdd() 
+{
+   NXC_DCI_THRESHOLD dct;
+
+   // Create default threshold structure
+   memset(&dct, 0, sizeof(NXC_DCI_THRESHOLD));
+   dct.dwArg1 = 1;
+   dct.dwEvent = EVENT_THRESHOLD_REACHED;
+
+   // Call threshold configuration dialog
+   if (EditThreshold(&dct))
+   {
+      DWORD dwIndex;
+
+      dwIndex = NXCAddThresholdToItem(m_pItem, &dct);
+      AddListEntry(dwIndex);
+   }
 }

@@ -7,6 +7,8 @@
 // DCIThresholdsPage.h : header file
 //
 
+#include "ThresholdDlg.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CDCIThresholdsPage dialog
 
@@ -38,10 +40,12 @@ public:
 
 // Implementation
 protected:
+	BOOL EditThreshold(NXC_DCI_THRESHOLD *pThreshold);
 	int AddListEntry(DWORD dwIndex);
 	// Generated message map functions
 	//{{AFX_MSG(CDCIThresholdsPage)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonAdd();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

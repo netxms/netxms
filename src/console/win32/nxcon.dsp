@@ -245,6 +245,10 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ThresholdDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ToolBox.cpp
 # End Source File
 # Begin Source File
@@ -418,6 +422,10 @@ SOURCE=.\Resource.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ThresholdDlg.h
 # End Source File
 # Begin Source File
 

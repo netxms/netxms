@@ -109,6 +109,8 @@ extern char *g_pszItemOriginLong[];
 extern char *g_pszItemDataType[];
 extern char *g_pszItemStatus[];
 extern char *g_pszThresholdOperation[];
+extern char *g_pszThresholdOperationLong[];
 extern char *g_pszThresholdFunction[];
+extern char *g_pszThresholdFunctionLong[];
 
 #endif
