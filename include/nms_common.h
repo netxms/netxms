@@ -181,6 +181,7 @@ typedef int SOCKET;
 #endif
 
 #include <dirent.h>
+#include <fcntl.h>
 
 typedef int BOOL;
 typedef long int LONG;

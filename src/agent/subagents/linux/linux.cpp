@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.9 2004-10-22 22:08:34 alk Exp $ */
+/* $Id: linux.cpp,v 1.10 2004-12-29 19:42:44 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -76,7 +76,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
 	"Linux",
 	NETXMS_VERSION_STRING,
-	NULL,
+	NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -98,6 +98,16 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2004/10/22 22:08:34  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 Revision 1.8  2004/10/16 06:32:04  victor
 Parameter name System.CPU.Procload changed to System.CPU.LoadAvg
 

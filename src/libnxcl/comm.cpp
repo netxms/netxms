@@ -28,7 +28,7 @@
 // Network receiver thread
 //
 
-static THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
+THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 {
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
