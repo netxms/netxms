@@ -30,6 +30,16 @@
 #define INVALID_INDEX         0xFFFFFFFF
 #define CSCP_TEMP_BUF_SIZE    4096
 
+#ifdef _WIN32
+#ifdef LIBNMSUTIL_EXPORTS
+#define LIBNMSUTIL_EXPORTABLE __declspec(dllexport)
+#else
+#define LIBNMSUTIL_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define LIBNMSUTILS_EXPORTABLE
+#endif
+
 
 //
 // Temporary buffer structure for RecvCSCPMessage() function
@@ -47,7 +57,7 @@ typedef struct
 // Class for holding CSCP messages
 //
 
-class EXPORTABLE CSCPMessage
+class LIBNMSUTIL_EXPORTABLE CSCPMessage
 {
 private:
    WORD m_wCode;
@@ -94,7 +104,7 @@ public:
 // Queue class
 //
 
-class EXPORTABLE Queue
+class LIBNMSUTIL_EXPORTABLE Queue
 {
 private:
    MUTEX m_hQueueAccess;
@@ -136,25 +146,25 @@ public:
 extern "C"
 {
 #ifdef _WIN32
-   QWORD EXPORTABLE __bswap_64(QWORD qwVal);
+   QWORD LIBNMSUTIL_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
    
-   int EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
-   CSCP_MESSAGE EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
+   int LIBNMSUTIL_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
+   CSCP_MESSAGE LIBNMSUTIL_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, DWORD dwDataSize, void *pData, CSCP_MESSAGE *pBuffer);
    
-   int EXPORTABLE BitsInMask(DWORD dwMask);
-   char EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
+   int LIBNMSUTIL_EXPORTABLE BitsInMask(DWORD dwMask);
+   char LIBNMSUTIL_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
 
-   void EXPORTABLE *MemAlloc(DWORD dwSize);
-   void EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
-   void EXPORTABLE MemFree(void *pBlock);
+   void LIBNMSUTIL_EXPORTABLE *MemAlloc(DWORD dwSize);
+   void LIBNMSUTIL_EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
+   void LIBNMSUTIL_EXPORTABLE MemFree(void *pBlock);
 
-   void EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
-   char EXPORTABLE *nx_strdup(const char *pSrc);
+   void LIBNMSUTIL_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
+   char LIBNMSUTIL_EXPORTABLE *nx_strdup(const char *pSrc);
 
-   void EXPORTABLE CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
+   void LIBNMSUTIL_EXPORTABLE CreateSHA1Hash(char *pszSource, BYTE *pBuffer);
 
-   BOOL EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
+   BOOL LIBNMSUTIL_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
 }
 
 #endif   /* _nms_util_h_ */

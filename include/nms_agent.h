@@ -133,7 +133,7 @@ inline void ret_double(char *rbuf, double value)
    sprintf(rbuf, "%f\r\n", value);
 }
 
-inline void ret_int64(char *rbuf, __int64 value)
+inline void ret_int64(char *rbuf, INT64 value)
 {
 #ifdef _WIN32
    sprintf(rbuf, "%I64d\r\n", value);
@@ -142,7 +142,7 @@ inline void ret_int64(char *rbuf, __int64 value)
 #endif   /* _WIN32 */
 }
 
-inline void ret_uint64(char *rbuf, unsigned __int64 value)
+inline void ret_uint64(char *rbuf, QWORD value)
 {
 #ifdef _WIN32
    sprintf(rbuf, "%I64u\r\n", value);
@@ -158,8 +158,8 @@ void LIBNXAGENT_EXPORTABLE ret_string(char *rbuf, char *value)
 void LIBNXAGENT_EXPORTABLE ret_int(char *rbuf, long value)
 void LIBNXAGENT_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
 void LIBNXAGENT_EXPORTABLE ret_double(char *rbuf, double value)
-void LIBNXAGENT_EXPORTABLE ret_int64(char *rbuf, __int64 value)
-void LIBNXAGENT_EXPORTABLE ret_uint64(char *rbuf, unsigned __int64 value)
+void LIBNXAGENT_EXPORTABLE ret_int64(char *rbuf, INT64 value)
+void LIBNXAGENT_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
 
 #endif   /* __cplusplus */
 

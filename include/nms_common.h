@@ -53,12 +53,7 @@
 #include <windows.h>
 
 typedef unsigned __int64 QWORD;
-
-#ifdef _USRDLL
-#define EXPORTABLE __declspec(dllexport)
-#else    /* _USRDLL */
-#define EXPORTABLE __declspec(dllimport)
-#endif   /* _USRDLL */
+typedef __int64 INT64;
 
 #else
 
@@ -80,8 +75,6 @@ typedef u_int64_t QWORD;
 
 #define TRUE   1
 #define FALSE  0
-
-#define EXPORTABLE
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
