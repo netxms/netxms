@@ -31,6 +31,45 @@
 
 
 //
+// Process trap
+//
+
+static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
+{
+   DWORD i, dwOriginAddr, dwBufPos, dwBufSize;
+   TCHAR *pszTrapArgs, szBuffer[512];
+   SNMP_Variable *pVar;
+   Node *pNode;
+
+   dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
+   DbgPrintf(AF_DEBUG_SNMP, "Received SNMP trap %s from %s\n", 
+             pdu->GetTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
+
+   // Match IP address to object
+   pNode = FindNodeByIP(dwOriginAddr);
+   if (pNode != NULL)
+   {
+      // Build trap's parameters string
+      dwBufSize = pdu->GetNumVariables() * 4096;
+      pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
+      for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+      {
+         pVar = pdu->GetVariable(i);
+         dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
+                                (i == 0) ? _T("") : _T("; "),
+                                pVar->GetName()->GetValueAsText(), 
+                                pVar->GetValueAsString(szBuffer, 512));
+      }
+
+      // Generate default event for unmatched traps
+      PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
+                pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
+      free(pszTrapArgs);
+   }
+}
+
+
+//
 // SNMP trap receiver thread
 //
 
@@ -39,7 +78,6 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    SOCKET hSocket;
    struct sockaddr_in addr;
    int iAddrLen, iBytes;
-   BYTE *packet;
    SNMP_Transport *pTransport;
    SNMP_PDU *pdu;
 
@@ -64,41 +102,27 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       return THREAD_OK;
    }
 
-   packet = (BYTE *)malloc(MAX_PACKET_LENGTH);
    pTransport = new SNMP_Transport(hSocket);
+   DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver started"));
 
    // Wait for packets
    while(!ShutdownInProgress())
    {
       iAddrLen = sizeof(struct sockaddr_in);
-      iBytes = pTransport->Read(&pdu, INFINITE, (struct sockaddr *)&addr, &iAddrLen);
+      iBytes = pTransport->Read(&pdu, 2000, (struct sockaddr *)&addr, &iAddrLen);
       if ((iBytes > 0) && (pdu != NULL))
       {
-         TCHAR szBuffer[1024];
-
-         printf("SNMP: %d bytes PDU received from %s\n", iBytes, IpToStr(ntohl(addr.sin_addr.s_addr), szBuffer));
-         printf("SNMP: version=%d community='%s'\nOID: %s\n",
-            pdu->GetVersion(),pdu->GetCommunity(),
-            pdu->GetTrapId() ? pdu->GetTrapId()->GetValueAsText() : "null");
-         printf("     trap type = %d; spec type = %d\n",pdu->GetTrapType(),pdu->GetSpecificTrapType());
-         for(DWORD i = 0; i < pdu->GetNumVariables(); i++)
-         {
-            SNMP_Variable *var;
-
-            var = pdu->GetVariable(i);
-            printf("%d: %s [%02X] == '%s'\n", i, var->GetName()->GetValueAsText(),
-               var->GetType(),var->GetValueAsString(szBuffer, 1024));
-         }
+         if (pdu->GetCommand() == SNMP_TRAP)
+            ProcessTrap(pdu, &addr);
          delete pdu;
       }
       else
       {
-         printf("SNMP: error %s PDU\n", iBytes > 0 ? "parsing" : "receiving");
          // Sleep on error
          ThreadSleepMs(100);
       }
    }
 
-   free(packet);
+   DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver terminated"));
    return THREAD_OK;
 }

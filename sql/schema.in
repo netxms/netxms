@@ -518,3 +518,30 @@ CREATE TABLE oid_to_type
 	node_flags integer not null,
 	PRIMARY KEY(pair_id)
 );
+
+
+/*
+** SNMP trap configuration
+*/
+
+CREATE TABLE snmp_trap_cfg
+(
+	trap_id integer not null,
+	snmp_oid varchar(255) not null,
+	event_id integer not null,
+	sequence integer not null,
+	PRIMARY KEY(trap_id)
+);
+
+
+/*
+** SNMP trap parameters mapping
+*/
+
+CREATE TABLE snmp_trap_pmap
+(
+	trap_id integer not null,
+	parameter integer not null,
+	snmp_oid varchar(255),
+	PRIMARY KEY(trap_id,parameter)
+);

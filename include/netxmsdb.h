@@ -23,6 +23,6 @@
 #ifndef _netxms_db_h
 #define _netxms_db_h
 
-#define DB_FORMAT_VERSION	16
+#define DB_FORMAT_VERSION	17
 
 #endif

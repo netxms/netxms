@@ -194,6 +194,7 @@ public:
    BOOL Parse(BYTE *pRawData, DWORD dwRawLength);
    DWORD Encode(BYTE **ppBuffer);
 
+   DWORD GetCommand(void) { return m_dwCommand; }
    SNMP_ObjectId *GetTrapId(void) { return m_pEnterprise; }
    int GetTrapType(void) { return m_iTrapType; }
    int GetSpecificTrapType(void) { return m_iSpecificTrap; }

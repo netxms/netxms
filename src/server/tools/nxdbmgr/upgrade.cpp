@@ -24,6 +24,83 @@
 
 
 //
+// Create configuration parameter if it doesn't exist
+//
+
+static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int iNeedRestart)
+{
+   TCHAR szQuery[1024];
+   DB_RESULT hResult;
+   BOOL bVarExist = FALSE, bResult = TRUE;
+
+   // Check for variable existence
+   _stprintf(szQuery, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszName);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bVarExist = TRUE;
+      DBFreeResult(hResult);
+   }
+
+   if (!bVarExist)
+   {
+      _stprintf(szQuery, _T("INSERT INTO config (var_name,var_value,is_visible,"
+                            "need_server_restart) VALUES ('%s','%s',%d,%d)"), 
+                pszName, pszValue, iVisible, iNeedRestart);
+      bResult = SQLQuery(szQuery);
+   }
+   return bResult;
+}
+
+
+//
+// Upgrade from V16 to V17
+//
+
+static BOOL H_UpgradeFromV16(void)
+{
+   static TCHAR m_szBatch[] =
+      "CREATE TABLE snmp_trap_cfg (trap_id integer not null,snmp_oid varchar(255) not null,"
+	      "event_id integer not null,sequence integer not null,PRIMARY KEY(trap_id))\n"
+      "CREATE TABLE snmp_trap_pmap (trap_id integer not null,parameter integer not null,"
+         "snmp_oid varchar(255),PRIMARY KEY(trap_id,parameter))\n"
+      "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
+	      "(500, 'SNMP_UNMATCHED_TRAP',	0, 1,	'SNMP trap received: %1 (Parameters: %2)',"
+		   "'Generated when system receives an SNMP trap without match in trap "
+         "configuration table#0D#0AParameters:#0D#0A   1) SNMP trap OID#0D#0A"
+		   "   2) Trap parameters')\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("EnableSNMPTraps"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SMSDriver"), _T("<none>"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SMTPServer"), _T("localhost"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SMTPFromAddr"), _T("netxms@localhost"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='17' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V15 to V16
 //
 
@@ -134,6 +211,7 @@ static struct
 {
    { 14, H_UpgradeFromV14 },
    { 15, H_UpgradeFromV15 },
+   { 16, H_UpgradeFromV16 },
    { 0, NULL }
 };
 

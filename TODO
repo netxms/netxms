@@ -34,6 +34,7 @@ SERVER:
   use just index locking
 - Check what happens if DCI copied while being polled
 - On startup, server must read last poll time from database for each DCI
+- Optimize SNMP subsystem
 
 
 CORE AGENT:

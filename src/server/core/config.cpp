@@ -42,6 +42,7 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   --debug-events      : Print events to console.\n"
                         "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
                         "   --debug-locks       : Print debug information about component locking.\n"
+                        "   --debug-snmp        : Print SNMP debug information.\n"
                         "   --dump-sql          : Dump all SQL queries to log.\n"
 #ifndef _WIN32
                         "   --pid-file <file>   : Specify pid file.\n"
@@ -170,6 +171,10 @@ BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-actions"))
       {
          g_dwFlags |= AF_DEBUG_ACTIONS;
+      }
+      else if (!strcmp(argv[i], "--debug-snmp"))
+      {
+         g_dwFlags |= AF_DEBUG_SNMP;
       }
       else if (!strcmp(argv[i], "--dump-sql"))
       {

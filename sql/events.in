@@ -264,6 +264,22 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 
 
 /*
+** SNMP traps
+*/
+
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_SNMP_UNMATCHED_TRAP, 'SNMP_UNMATCHED_TRAP',
+		EVENT_SEVERITY_NORMAL, 1,
+		'SNMP trap received: %1 (Parameters: %2)',
+		'Generated when system receives an SNMP trap without match in trap configuration table#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) SNMP trap OID#0D#0A' CONCAT
+		'   2) Trap parameters'
+	);
+
+
+/*
 ** Following is a set of predefined events for thresholds
 ** These events can occupy ID space 4000 ... 4999
 */
