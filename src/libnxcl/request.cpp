@@ -67,10 +67,10 @@ HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
             hRequest = CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
             break;
          case NXC_OP_OPEN_EVENT_DB:
-            hRequest = CreateRequest(RQ_OPEN_EVENT_DB, (void *)va_arg(args, BOOL), FALSE);
+            hRequest = CreateRequest(RQ_OPEN_EVENT_DB, NULL, FALSE);
             break;
          case NXC_OP_CLOSE_EVENT_DB:
-            hRequest = CreateRequest(RQ_CLOSE_EVENT_DB, NULL, FALSE);
+            hRequest = CreateRequest(RQ_CLOSE_EVENT_DB, (void *)va_arg(args, BOOL), FALSE);
             break;
          case NXC_OP_SET_EVENT_INFO:
             hRequest = CreateRequest(RQ_SET_EVENT_INFO, 
@@ -124,7 +124,8 @@ void RequestProcessor(void *pArg)
             dwRetCode = CloseEventDB(pRequest->dwHandle, (BOOL)pRequest->pArg);
             break;
          case RQ_SET_EVENT_INFO:
-            dwRetCode = SetEventInfo(pRequest->dwHandle, (NXC_EVENT_TEMPLATE *)pRequest->pArg);
+            dwRetCode = SetEventInfo(pRequest->dwHandle, (NXC_EVENT_TEMPLATE *)pRequest->pArg, 
+                                     pRequest->bDynamicArg);
             break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");

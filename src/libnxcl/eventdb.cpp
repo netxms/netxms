@@ -35,6 +35,26 @@ static BOOL m_bEventDBOpened = FALSE;
 
 
 //
+// Destroy event template database
+//
+
+static void DestroyEventDB(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumTemplates; i++)
+   {
+      MemFree(m_ppEventTemplates[i]->pszDescription);
+      MemFree(m_ppEventTemplates[i]->pszMessage);
+      MemFree(m_ppEventTemplates[i]);
+   }
+   MemFree(m_ppEventTemplates);
+   m_dwNumTemplates = 0;
+   m_ppEventTemplates = NULL;
+}
+
+
+//
 // Duplicate event template
 //
 
@@ -146,7 +166,7 @@ DWORD OpenEventDB(DWORD dwRqId)
 DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRetCode;
+   DWORD dwRetCode = RCC_SUCCESS;
 
    // Go through event templates and save modified events
    if (bSaveChanges)
@@ -157,7 +177,7 @@ DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
          if (m_ppEventTemplates[i]->dwFlags & EF_MODIFIED)
          {
             m_ppEventTemplates[i]->dwFlags &= ~EF_MODIFIED;
-            dwRetCode = SetEventInfo(g_dwRequestId++, m_ppEventTemplates[i]);
+            dwRetCode = SetEventInfo(g_dwRequestId++, m_ppEventTemplates[i], FALSE);
             if (dwRetCode != RCC_SUCCESS)
                break;
          }
@@ -174,6 +194,9 @@ DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
          dwRetCode = pResponce->GetVariableLong(VID_RCC);
       else
          dwRetCode = RCC_TIMEOUT;
+
+      m_bEventDBOpened = FALSE;
+      DestroyEventDB();
    }
 
    return dwRetCode;
@@ -184,7 +207,7 @@ DWORD CloseEventDB(DWORD dwRqId, BOOL bSaveChanges)
 // Set event information
 //
 
-DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg)
+DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg, BOOL bDynamicArg)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRetCode = RCC_SUCCESS;
@@ -209,8 +232,11 @@ DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg)
 
    // Free dynamic string because request processor will only destroy
    // memory block at pArg
-   MemFree(pArg->pszDescription);
-   MemFree(pArg->pszMessage);
+   if (bDynamicArg)
+   {
+      MemFree(pArg->pszDescription);
+      MemFree(pArg->pszMessage);
+   }
 
    return dwRetCode;
 }
