@@ -1,0 +1,8 @@
+<dct>
+	<title>Generic Object</title>
+	<version>1.0</version>
+	<copyright>Copyright (c) 2004 NetXMS Development Group</copyright>
+	<items>
+		<item source="0" dt="0" retention="30" poll="60" name="Status" description="Object's status"/>
+	</items>
+</dct>
