@@ -299,8 +299,8 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_strName = pItem->szName;
 
    // Setup "Transformation" page
-   pgTransform.m_iDeltaProc = 0;
-   pgTransform.m_strFormula = "";
+   pgTransform.m_iDeltaProc = pItem->iDeltaCalculation;
+   pgTransform.m_strFormula = CHECK_NULL_EX(pItem->pszFormula);
 
    // Setup "Thresholds" page
    pgThresholds.m_pItem = pItem;
@@ -319,6 +319,9 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       pItem->iRetentionTime = pgCollection.m_iRetentionTime;
       pItem->iStatus = pgCollection.m_iStatus;
       strcpy(pItem->szName, (LPCTSTR)pgCollection.m_strName);
+      pItem->iDeltaCalculation = pgTransform.m_iDeltaProc;
+      safe_free(pItem->pszFormula);
+      pItem->pszFormula = strdup((LPCTSTR)pgTransform.m_strFormula);
       bSuccess = TRUE;
    }
    return bSuccess;

@@ -58,6 +58,8 @@ void ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);
             m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
             m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
+            m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
+            m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
             m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
             m_pItemList->pItems[i].pThresholdList = 
@@ -166,7 +168,10 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList)
       dwRetCode = WaitForRCC(dwRqId);
 
       for(i = 0; i < pItemList->dwNumItems; i++)
-         free(pItemList->pItems[i].pThresholdList);
+      {
+         safe_free(pItemList->pItems[i].pThresholdList);
+         safe_free(pItemList->pItems[i].pszFormula);
+      }
       safe_free(pItemList->pItems);
       free(pItemList);
    }
@@ -206,6 +211,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItem
          pItemList->pItems[pItemList->dwNumItems].iStatus = ITEM_STATUS_ACTIVE;
          pItemList->pItems[pItemList->dwNumItems].iPollingInterval = 60;
          pItemList->pItems[pItemList->dwNumItems].iRetentionTime = 30;
+         pItemList->pItems[pItemList->dwNumItems].iDeltaCalculation = DCM_ORIGINAL_VALUE;
          pItemList->dwNumItems++;
       }
       delete pResponce;
@@ -239,8 +245,10 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
    msg.SetVariable(VID_POLLING_INTERVAL, (DWORD)pItem->iPollingInterval);
    msg.SetVariable(VID_RETENTION_TIME, (DWORD)pItem->iRetentionTime);
    msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->iSource);
+   msg.SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)pItem->iDeltaCalculation);
    msg.SetVariable(VID_DCI_STATUS, (WORD)pItem->iStatus);
    msg.SetVariable(VID_NAME, pItem->szName);
+   msg.SetVariable(VID_DCI_FORMULA, pItem->pszFormula);
    msg.SetVariable(VID_NUM_THRESHOLDS, pItem->dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < pItem->dwNumThresholds; i++, dwId++)
    {
@@ -330,6 +338,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
          {
             // Item was successfully deleted on server, delete it from our list
             safe_free(pItemList->pItems[i].pThresholdList);
+            safe_free(pItemList->pItems[i].pszFormula);
             pItemList->dwNumItems--;
             memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1], 
                     sizeof(NXC_DCI) * (pItemList->dwNumItems - i));

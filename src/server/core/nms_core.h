@@ -116,7 +116,7 @@ typedef void * HSNMPSESSION;
 #define IDG_EVENT             2
 #define IDG_ITEM              3
 #define IDG_DCT               4
-#define IDG_DCT_ITEM          5
+#define IDG_IMAGE             5
 #define IDG_ACTION            6
 #define IDG_EVENT_GROUP       7
 #define IDG_THRESHOLD         8
@@ -124,7 +124,6 @@ typedef void * HSNMPSESSION;
 #define IDG_USER_GROUP        10
 #define IDG_ALARM             11
 #define IDG_ALARM_NOTE        12
-#define IDG_IMAGE             13
 
 
 //

@@ -11,6 +11,21 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Delta calculation methods
+//
+
+static char *m_pszMethodList[] =
+{
+   "None - Keep original value",
+   "Simple delta",
+   "Average delta per second",
+   "Average delta per minute",
+   NULL
+};
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CDCITransformPage property page
 
@@ -42,9 +57,22 @@ void CDCITransformPage::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDCITransformPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCITransformPage)
-		// NOTE: the ClassWizard will add message map macros here
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CDCITransformPage message handlers
+
+BOOL CDCITransformPage::OnInitDialog() 
+{
+   int i;
+
+	CPropertyPage::OnInitDialog();
+
+   // Fill in delta calculation methods list
+   for(i = 0; m_pszMethodList[i] != NULL; i++)
+      m_wndDeltaList.AddString(m_pszMethodList[i]);
+   m_wndDeltaList.SelectString(-1, m_pszMethodList[m_iDeltaProc]);
+	
+	return TRUE;
+}

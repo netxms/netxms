@@ -406,7 +406,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 {
    char szQuery[MAX_LINE_SIZE + 128];
-   ItemValue *pValue;
+   ItemValue rawValue, *pValue;
 
    // Normally m_pNode shouldn't be NULL for polled items,
    // but who knows...
@@ -415,8 +415,11 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 
    // Create new ItemValue object and transform it as needed
    pValue = new ItemValue(pszOriginalValue);
-   m_prevRawValue = *pValue;
+   if (m_tLastPoll == 0)
+      m_prevRawValue = *pValue;  // Delta should be zero for first poll
+   rawValue = *pValue;
    Transform(*pValue);
+   m_prevRawValue = rawValue;
 
    // Save transformed value to database
    sprintf(szQuery, "INSERT INTO idata_%ld (item_id,idata_timestamp,idata_value)"
@@ -426,6 +429,10 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 
    // Check thresholds and add value to cache
    CheckThresholds(*pValue);
+
+   /* TODO: add value to cache */
+   // Temporary:
+   delete pValue;
 }
 
 
@@ -435,6 +442,7 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 
 void DCItem::Transform(ItemValue &value)
 {
+printf("Transforming: %s @%d\n",value.String(), m_iDeltaCalculation);
    switch(m_iDeltaCalculation)
    {
       case DCM_SIMPLE:

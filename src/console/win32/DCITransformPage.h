@@ -39,7 +39,7 @@ public:
 protected:
 	// Generated message map functions
 	//{{AFX_MSG(CDCITransformPage)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -63,9 +63,8 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                break;
          }
 
-         // Update item's last poll time
+         // Get polling time
          currTime = time(NULL);
-         pItem->SetLastPollTime(currTime);
 
          // Transform and store received value into database or handle error
          switch(dwError)
@@ -81,7 +80,8 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                break;
          }
 
-         // Clear busy flag so item can be polled again
+         // Update item's last poll time and clear busy flag so item can be polled again
+         pItem->SetLastPollTime(currTime);
          pItem->SetBusyFlag(FALSE);
       }
       else     /* pNode == NULL */
