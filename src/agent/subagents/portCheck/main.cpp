@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.5 2005-01-28 23:19:35 alk Exp $ */
+/* $Id: main.cpp,v 1.6 2005-01-28 23:45:01 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -52,7 +52,7 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 	case NETSRV_POP3:
 		{
 			char *pUser, *pPass;
-			nRet = 0;
+			nRet = PC_ERR_BAD_PARAMS;
 
 			pUser = szRequest;
 			pPass = strchr(szRequest, ':');
@@ -63,20 +63,24 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 
 				nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass);
 
-				pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
-			}
-			else
-			{
-				pResponce->SetVariable(VID_RCC, ERR_UNKNOWN_PARAMETER);
 			}
 
+			pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
 			pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 		}
 		break;
 	case NETSRV_SMTP:
-		/*nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass);
-		pResponce->SetVariable(VID_RCC, nRet);*/
-		bHandled = FALSE;
+		nRet = PC_ERR_BAD_PARAMS;
+
+		if (szRequest[0] != 0)
+		{
+			nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest);
+			pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
+			pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+		}
+
+		pResponce->SetVariable(VID_RCC, ERR_SUCCESS);
+		pResponce->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 		break;
 	case NETSRV_FTP:
 		bHandled = FALSE;
@@ -134,6 +138,9 @@ extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInf
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/01/28 23:19:35  alk
+VID_SERVICE_STATUS set
+
 Revision 1.4  2005/01/28 12:56:46  victor
 Make it compile on WIndows
 

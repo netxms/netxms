@@ -1,4 +1,4 @@
-/* $Id: pop3.cpp,v 1.3 2005-01-28 23:19:36 alk Exp $ */
+/* $Id: pop3.cpp,v 1.4 2005-01-28 23:45:01 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -26,11 +26,11 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 
 	if (CheckPOP3(szHost, 0, 110, szUser, szPassword) == 0)
 	{
-		ret_int(pValue, 1);
+		ret_int(pValue, 0);
 	}
 	else
 	{
-		ret_int(pValue, 0);
+		ret_int(pValue, 1);
 	}
 
 	return nRet;
@@ -85,6 +85,9 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/28 23:19:36  alk
+VID_SERVICE_STATUS set
+
 Revision 1.2  2005/01/28 02:50:32  alk
 added support for CMD_CHECK_NETWORK_SERVICE
 suported:
