@@ -1,7 +1,10 @@
-Current ToDo List:
+ Current NetXMS ToDo List
+**************************
+
+
+GENERAL:
 
 - Fix bugs in ConditionWait()
-- Add read/write locking implementation
 - Finish Linux subagent
 - FreeBSD subagent
 - Solaris subagent
@@ -10,3 +13,9 @@ Current ToDo List:
 - Performance subagent for Windows (winperf)
 - Cross-platform pinger subagent
 - Change configure script to allow select components to build
+
+
+SERVER:
+
+- Recalculate object status after binding change
+- Add read/write locking implementation

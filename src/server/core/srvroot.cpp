@@ -57,6 +57,7 @@ BOOL ServiceRoot::SaveToDB(void)
 
    // Save name
    ConfigWriteStr("ServiceRootObjectName", m_szName, TRUE);
+   ConfigWriteULong("ServiceRootImageId", m_dwImageId, TRUE);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
@@ -85,6 +86,7 @@ void ServiceRoot::LoadFromDB(void)
 {
    Lock();
    ConfigReadStr("ServiceRootObjectName", m_szName, MAX_OBJECT_NAME, "All Services");
+   m_dwImageId = ConfigReadULong("ServiceRootImageId", IMG_DEFAULT);
    LoadACLFromDB();
    Unlock();
 }

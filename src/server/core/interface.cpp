@@ -87,7 +87,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id"
+   sprintf(szQuery, "SELECT id,name,status,ip_addr,ip_netmask,if_type,if_index,node_id,image_id"
                     " FROM interfaces WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
@@ -103,6 +103,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwIfType = DBGetFieldULong(hResult, 0, 5);
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 6);
       dwNodeId = DBGetFieldULong(hResult, 0, 7);
+      m_dwImageId = DBGetFieldULong(hResult, 0, 8);
 
       // Link interface to node
       pObject = FindObjectById(dwNodeId);
@@ -163,12 +164,17 @@ BOOL Interface::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO interfaces (id,name,status,is_deleted,ip_addr,ip_netmask,node_id,if_type,if_index) "
-                       "VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d)",
-              m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId, m_dwIfType, m_dwIfIndex);
+      sprintf(szQuery, "INSERT INTO interfaces (id,name,status,is_deleted,ip_addr,"
+                       "ip_netmask,node_id,if_type,if_index,image_id) "
+                       "VALUES (%ld,'%s',%d,%d,%ld,%ld,%ld,%ld,%ld,%ld)",
+              m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId,
+              m_dwIfType, m_dwIfIndex, m_dwImageId);
    else
-      sprintf(szQuery, "UPDATE interfaces SET name='%s',status=%d,is_deleted=%d,ip_addr=%d,ip_netmask=%d,node_id=%d,if_type=%d,if_index=%d WHERE id=%d",
-              m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId, m_dwIfType, m_dwIfIndex, m_dwId);
+      sprintf(szQuery, "UPDATE interfaces SET name='%s',status=%d,is_deleted=%d,"
+                       "ip_addr=%ld,ip_netmask=%ld,node_id=%ld,if_type=%ld,"
+                       "if_index=%ld,image_id=%ld WHERE id=%ld",
+              m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, m_dwIpNetMask, dwNodeId,
+              m_dwIfType, m_dwIfIndex, m_dwImageId, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Save access list

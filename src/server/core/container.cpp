@@ -85,7 +85,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    DB_RESULT hResult;
    DWORD i;
 
-   sprintf(szQuery, "SELECT id,name,status,category,description FROM containers WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT id,name,status,category,description,image_id FROM containers WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -102,6 +102,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    m_iStatus = DBGetFieldLong(hResult, 0, 2);
    m_dwCategory = DBGetFieldULong(hResult, 0, 3);
    m_pszDescription = strdup(CHECK_NULL(DBGetField(hResult, 0, 4)));
+   m_dwImageId = DBGetFieldULong(hResult, 0, 5);
 
    DBFreeResult(hResult);
 
@@ -153,15 +154,15 @@ BOOL Container::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO containers (id,name,status,is_deleted,category,description)"
-                       " VALUES (%ld,'%s',%d,%d,%ld,'%s')",
+      sprintf(szQuery, "INSERT INTO containers (id,name,status,is_deleted,category,description,image_id)"
+                       " VALUES (%ld,'%s',%d,%d,%ld,'%s',%ld)",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwCategory,
-              CHECK_NULL(m_pszDescription));
+              CHECK_NULL(m_pszDescription), m_dwImageId);
    else
       sprintf(szQuery, "UPDATE containers SET name='%s',status=%d,is_deleted=%d,category=%ld,"
-                       "description='%s' WHERE id=%ld",
+                       "description='%s',image_id=%ld WHERE id=%ld",
               m_szName, m_iStatus, m_bIsDeleted, m_dwCategory, 
-              CHECK_NULL(m_pszDescription), m_dwId);
+              CHECK_NULL(m_pszDescription), m_dwImageId, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update members list

@@ -447,6 +447,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
       msg.SetVariable(VID_SHARED_SECRET, pUpdate->pszSecret);
    if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_COMMUNITY)
       msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
+   if (pUpdate->dwFlags & OBJ_UPDATE_IMAGE)
+      msg.SetVariable(VID_IMAGE_ID, pUpdate->dwImage);
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
    {
       DWORD i, dwId1, dwId2;

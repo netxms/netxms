@@ -21,15 +21,6 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
-// Image codes
-//
-
-#define IMG_ANY      0
-#define IMG_NODE     1
-#define IMG_SUBNET   2
-
-
-//
 // Column numbers
 //
 
@@ -50,10 +41,12 @@ IMPLEMENT_DYNCREATE(CEventPolicyEditor, CMDIChildWnd)
 CEventPolicyEditor::CEventPolicyEditor()
 {
    m_pEventPolicy = theApp.m_pEventPolicy;
+   m_pImageList = NULL;
 }
 
 CEventPolicyEditor::~CEventPolicyEditor()
 {
+   delete m_pImageList;
 }
 
 
@@ -110,23 +103,21 @@ BOOL CEventPolicyEditor::PreCreateWindow(CREATESTRUCT& cs)
 int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   CImageList *pImageList;
    CBitmap bmp;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
    // Create image list for rule list control
-   pImageList = new CImageList;
-   pImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 4);
-   LoadBitmapIntoList(pImageList, IDB_PSYM_ANY, PSYM_MASK_COLOR);
-   LoadBitmapIntoList(pImageList, IDB_PSYM_NODE, PSYM_MASK_COLOR);
-   LoadBitmapIntoList(pImageList, IDB_PSYM_SUBNET, PSYM_MASK_COLOR);
+   m_pImageList = new CImageList;
+   m_pImageList->Create(g_pObjectSmallImageList);
+   m_iImageAny = m_pImageList->GetImageCount();
+   LoadBitmapIntoList(m_pImageList, IDB_ANY, PSYM_MASK_COLOR);
 	
    // Create rule list control
    GetClientRect(&rect);
    m_wndRuleList.Create(WS_CHILD | WS_VISIBLE, rect, this, ID_RULE_LIST);
-   m_wndRuleList.SetImageList(pImageList);
+   m_wndRuleList.SetImageList(m_pImageList);
 
    // Setup columns
    m_wndRuleList.InsertColumn(0, "No.", 35, CF_CENTER | CF_TITLE_COLOR | CF_NON_SELECTABLE);
@@ -270,7 +261,6 @@ void CEventPolicyEditor::UpdateRow(int iRow)
 {
    char szBuffer[256];
    DWORD i;
-   int iImage;
 
    // Rule number
    sprintf(szBuffer, "%d", iRow + 1);
@@ -283,7 +273,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, COL_SOURCE);
    if (m_pEventPolicy->pRuleList[iRow].dwNumSources == 0)
    {
-      m_wndRuleList.AddItem(iRow, COL_SOURCE, "Any", IMG_ANY);
+      m_wndRuleList.AddItem(iRow, COL_SOURCE, "Any", m_iImageAny);
    }
    else
    {
@@ -293,21 +283,8 @@ void CEventPolicyEditor::UpdateRow(int iRow)
       {
          pObject = NXCFindObjectById(m_pEventPolicy->pRuleList[iRow].pdwSourceList[i]);
          if (pObject != NULL)
-         {
-            switch(pObject->iClass)
-            {
-               case OBJECT_NODE:
-                  iImage = IMG_NODE;
-                  break;
-               case OBJECT_SUBNET:
-                  iImage = IMG_SUBNET;
-                  break;
-               default:
-                  iImage = -1;
-                  break;
-            }
-            m_wndRuleList.AddItem(iRow, COL_SOURCE, pObject->szName, iImage);
-         }
+            m_wndRuleList.AddItem(iRow, COL_SOURCE, pObject->szName, 
+                                  GetObjectImageIndex(pObject));
       }
    }
    
@@ -315,7 +292,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, 2);
    if (m_pEventPolicy->pRuleList[iRow].dwNumEvents == 0)
    {
-      m_wndRuleList.AddItem(iRow, 2, "Any", IMG_ANY);
+      m_wndRuleList.AddItem(iRow, 2, "Any", m_iImageAny);
    }
    else
    {
@@ -328,7 +305,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, 3);
    if ((m_pEventPolicy->pRuleList[iRow].dwFlags & ANY_SEVERITY) == ANY_SEVERITY)
    {
-      m_wndRuleList.AddItem(iRow, 3, "Any", IMG_ANY);
+      m_wndRuleList.AddItem(iRow, 3, "Any", m_iImageAny);
    }
    else
    {
@@ -585,7 +562,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                        sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumSources - iItem));
                if (m_pEventPolicy->pRuleList[iRow].dwNumSources == 0)
                {
-                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", IMG_ANY);
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", m_iImageAny);
                   m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
                }
                else
@@ -603,7 +580,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                        sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumEvents - iItem));
                if (m_pEventPolicy->pRuleList[iRow].dwNumEvents == 0)
                {
-                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", IMG_ANY);
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", m_iImageAny);
                   m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
                }
                else

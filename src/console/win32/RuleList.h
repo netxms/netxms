@@ -113,7 +113,7 @@ protected:
 	void InvalidateRow(int iRow);
 	void InvalidateList(void);
 	void OnMouseButtonDown(UINT nFlags, CPoint point);
-	void OnScroll(void);
+	void OnScroll(BOOL bRedrawHeader);
 	int CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos);
 	void UpdateScrollBars(void);
 	CRuleHeader m_wndHeader;

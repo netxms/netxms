@@ -85,7 +85,7 @@ protected:
    BOOL m_bIsDeleted;
    MUTEX m_hMutex;
    DWORD m_dwIpAddr;       // Every object should have an IP address
-   DWORD m_dwImage;        // Custom image id or 0 if object has default image
+   DWORD m_dwImageId;      // Custom image id or 0 if object has default image
 
    DWORD m_dwChildCount;   // Number of child objects
    NetObj **m_pChildList;  // Array of pointers to child objects

@@ -219,7 +219,8 @@ typedef unsigned long HREQUEST;
 #define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x10)
 #define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x20)
 #define OBJ_UPDATE_ACL              ((DWORD)0x40)
-#define OBJ_UPDATE_ALL              ((DWORD)0x7F)
+#define OBJ_UPDATE_IMAGE            ((DWORD)0x80)
+#define OBJ_UPDATE_ALL              ((DWORD)0xFF)
 
 
 //
@@ -487,6 +488,7 @@ typedef struct
    int iSnmpVersion;
    char *pszCommunity;
    BOOL bInheritRights;
+   DWORD dwImage;
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
 } NXC_OBJECT_UPDATE;

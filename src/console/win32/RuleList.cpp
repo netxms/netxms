@@ -19,7 +19,7 @@ static char THIS_FILE[] = __FILE__;
 #define RULE_HEADER_HEIGHT    30
 #define EMPTY_ROW_HEIGHT      20
 #define CELL_TEXT_Y_MARGIN    5
-#define CELL_TEXT_Y_SPACING   0
+#define CELL_TEXT_Y_SPACING   4
 #define CELL_TEXT_X_MARGIN    8
 #define SCROLL_STEP           30
 #define ITEM_IMAGE_SIZE       16
@@ -229,7 +229,6 @@ CRuleList::~CRuleList()
 {
    safe_free(m_pColList);
    safe_free(m_ppRowList);
-   delete m_pImageList;
 }
 
 
@@ -373,7 +372,7 @@ void CRuleList::OnPaint()
             rcText.bottom = rcText.top + m_iTextHeight;
             rcText.left += CELL_TEXT_X_MARGIN;
             if (m_ppRowList[i]->m_ppCellList[j]->m_bHasImages)
-               rcText.left += ITEM_IMAGE_SIZE;
+               rcText.left += ITEM_IMAGE_SIZE + 2;
             rcText.right -= CELL_TEXT_X_MARGIN;
             dc.SetTextColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleTextColor : 
                               m_rgbTextColor);
@@ -675,7 +674,9 @@ int CRuleList::RowFromPoint(int x, int y, int *piRowStart)
 {
    int i, cy;
 
-   if ((x >= m_iTotalWidth - m_iXOrg) || (y >= m_iTotalHeight + RULE_HEADER_HEIGHT - m_iYOrg))
+   if ((x >= m_iTotalWidth - m_iXOrg) || 
+       (y >= m_iTotalHeight + RULE_HEADER_HEIGHT - m_iYOrg) ||
+       (y <= RULE_HEADER_HEIGHT - m_iYOrg))
       return - 1;
 
    for(i = 0, cy = RULE_HEADER_HEIGHT - m_iYOrg; i < m_iNumRows; i++)
@@ -820,7 +821,7 @@ void CRuleList::UpdateScrollBars(void)
    SetScrollInfo(SB_VERT, &si);
 
    if (bUpdateWindow)
-      OnScroll();
+      OnScroll(FALSE);
 }
 
 
@@ -840,7 +841,7 @@ void CRuleList::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
    {
       SetScrollPos(SB_VERT, iNewPos);
       m_iYOrg = iNewPos;
-      OnScroll();
+      OnScroll(FALSE);
    }
 }
 
@@ -861,7 +862,7 @@ void CRuleList::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
    {
       SetScrollPos(SB_HORZ, iNewPos);
       m_iXOrg = iNewPos;
-      OnScroll();
+      OnScroll(TRUE);
    }
 }
 
@@ -937,9 +938,10 @@ int CRuleList::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
 // Update window on scroll
 //
 
-void CRuleList::OnScroll()
+void CRuleList::OnScroll(BOOL bRedrawHeader)
 {
-   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW);
+   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, 0, 0, 
+                            SWP_NOSIZE | SWP_NOZORDER | (bRedrawHeader ? 0 : SWP_NOREDRAW));
    InvalidateList();
 }
 

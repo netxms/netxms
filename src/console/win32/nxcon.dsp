@@ -236,6 +236,10 @@ SOURCE=.\ObjectPropSheet.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsPresentation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropsSecurity.cpp
 # End Source File
 # Begin Source File
@@ -441,6 +445,10 @@ SOURCE=.\ObjectPropSheet.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsPresentation.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropsSecurity.h
 # End Source File
 # Begin Source File
@@ -510,6 +518,10 @@ SOURCE=.\icons\alarm.ico
 # Begin Source File
 
 SOURCE=.\icons\Alarms.ICO
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\any.bmp
 # End Source File
 # Begin Source File
 

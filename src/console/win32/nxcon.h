@@ -39,6 +39,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "RequestProcessingDlg.h"
 #include "ObjectPropsGeneral.h"
 #include "ObjectPropsSecurity.h"
+#include "ObjectPropsPresentation.h"
 #include "UserEditor.h"
 #include "NetSummaryFrame.h"
 #include "DataCollectionEditor.h"

@@ -271,8 +271,14 @@ void CreateObjectImageList(void)
    for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
    {
       sprintf(&szFileName[dwPos], "%08x.ico", g_pSrvImageList->pImageList[i].dwId);
-      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+      
+      // Load and add 16x16 image
+      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
       g_pObjectSmallImageList->Add(hIcon);
+      DestroyIcon(hIcon);
+
+      // Load and add 32x32 image
+      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
       g_pObjectNormalImageList->Add(hIcon);
       DestroyIcon(hIcon);
    }

@@ -716,6 +716,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CObjectPropsGeneral wndObjectGeneral;
    CObjectPropCaps wndObjectCaps;
    CObjectPropsSecurity wndObjectSecurity;
+   CObjectPropsPresentation wndObjectPresentation;
    NXC_OBJECT *pObject;
    char szBuffer[32];
 
@@ -755,6 +756,11 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       wndObjectSecurity.m_pObject = pObject;
       wndObjectSecurity.m_bInheritRights = pObject->bInheritRights;
       wndPropSheet.AddPage(&wndObjectSecurity);
+
+      // Create "Presentation" tab
+      wndObjectPresentation.m_dwImageId = pObject->dwImage;
+      wndObjectPresentation.m_bUseDefaultImage = (pObject->dwImage == IMG_DEFAULT);
+      wndPropSheet.AddPage(&wndObjectPresentation);
 
       wndPropSheet.SetObject(pObject);
       if (wndPropSheet.DoModal() == IDOK)

@@ -37,6 +37,8 @@ public:
 
 // Implementation
 protected:
+	int m_iImageAny;
+	CImageList *m_pImageList;
 	void AddEvent(void);
 	void EditComment(int iRow);
 	void EditAlarm(int iRow);

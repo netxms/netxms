@@ -92,10 +92,7 @@ IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
 IDB_LOGIN               BITMAP  DISCARDABLE     "res\\login.bmp"
 IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
-IDB_PSYM_ANY            BITMAP  DISCARDABLE     "res\\psym_any.bmp"
-IDB_PSYM_MINOR          BITMAP  DISCARDABLE     "res\\psym_minor.bmp"
-IDB_PSYM_NODE           BITMAP  DISCARDABLE     "res\\psym_node.bmp"
-IDB_PSYM_SUBNET         BITMAP  DISCARDABLE     "res\\psym_subnet.bmp"
+IDB_ANY                 BITMAP  DISCARDABLE     "res\\any.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -157,7 +154,7 @@ BEGIN
     POPUP "&Tools"
     BEGIN
         MENUITEM "&MIB Browser\tAlt+M",         ID_TOOLS_MIBBROWSER
-        MENUITEM "&Add node...\tF11",           ID_TOOLS_ADDNODE
+        MENUITEM "&Add node (wizard)...\tF11",  ID_TOOLS_ADDNODE
     END
     POPUP "&Help"
     BEGIN
@@ -846,6 +843,19 @@ BEGIN
                     WS_TABSTOP,7,7,137,132,WS_EX_CLIENTEDGE
 END
 
+IDD_OBJECT_PRESENTATION DIALOG DISCARDABLE  0, 0, 292, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Presentation"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Use class default image for this object",
+                    IDC_CHECK_DEFAULT_IMAGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,17,135,10
+    ICON            "",IDC_STATIC_ICON,13,33,20,20,WS_BORDER
+    PUSHBUTTON      "&Select image...",ID_SELECT_IMAGE,49,38,61,14
+    GROUPBOX        "Object's image",IDC_STATIC,7,7,278,53
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1056,6 +1066,14 @@ BEGIN
         RIGHTMARGIN, 200
         TOPMARGIN, 7
         BOTTOMMARGIN, 139
+    END
+
+    IDD_OBJECT_PRESENTATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
     END
 END
 #endif    // APSTUDIO_INVOKED

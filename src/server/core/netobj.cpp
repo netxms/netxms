@@ -42,7 +42,7 @@ NetObj::NetObj()
    m_pParentList = NULL;
    m_pAccessList = new AccessList;
    m_bInheritAccessRights = TRUE;
-   m_dwImage = IMG_DEFAULT;    // Default image
+   m_dwImageId = IMG_DEFAULT;    // Default image
 }
 
 
@@ -438,7 +438,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pChildList[i]->Id());
    pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
-   pMsg->SetVariable(VID_IMAGE_ID, m_dwImage);
+   pMsg->SetVariable(VID_IMAGE_ID, m_dwImageId);
    m_pAccessList->CreateMessage(pMsg);
 }
 
@@ -480,6 +480,10 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change object's name
    if (pRequest->IsVariableExist(VID_OBJECT_NAME))
       pRequest->GetVariableStr(VID_OBJECT_NAME, m_szName, MAX_OBJECT_NAME);
+
+   // Change object's image (icon)
+   if (pRequest->IsVariableExist(VID_IMAGE_ID))
+      m_dwImageId = pRequest->GetVariableLong(VID_IMAGE_ID);
 
    // Change object's ACL
    if (pRequest->IsVariableExist(VID_ACL_SIZE))
@@ -604,21 +608,31 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
 
    Lock();
 
+   // Check for our own ID
+   if (m_dwId == dwObjectId)
+      bResult = TRUE;
+
    // First, walk through our own child list
-   for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Id() == dwObjectId)
-      {
-         bResult = TRUE;
-         break;
-      }
+   if (!bResult)
+   {
+      for(i = 0; i < m_dwChildCount; i++)
+         if (m_pChildList[i]->Id() == dwObjectId)
+         {
+            bResult = TRUE;
+            break;
+         }
+   }
 
    // If given object is not in child list, check if it is indirect child
-   for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->IsChild(dwObjectId))
-      {
-         bResult = TRUE;
-         break;
-      }
+   if (!bResult)
+   {
+      for(i = 0; i < m_dwChildCount; i++)
+         if (m_pChildList[i]->IsChild(dwObjectId))
+         {
+            bResult = TRUE;
+            break;
+         }
+   }
 
    Unlock();
    return bResult;

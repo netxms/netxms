@@ -129,8 +129,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    sprintf(szQuery, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
                     "is_router,snmp_version,discovery_flags,auth_method,secret,"
-                    "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt "
-                    "FROM nodes WHERE id=%d", dwId);
+                    "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt,"
+                    "image_id FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -166,6 +166,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 13);
    strncpy(m_szCommunityString, DBGetField(hResult, 0, 14), MAX_COMMUNITY_LENGTH);
    strncpy(m_szObjectId, DBGetField(hResult, 0, 15), MAX_OID_LEN * 4);
+   m_dwImageId = DBGetFieldULong(hResult, 0, 16);
 
    DBFreeResult(hResult);
 
@@ -277,8 +278,8 @@ BOOL Node::SaveToDB(void)
       sprintf(szQuery, "INSERT INTO nodes (id,name,status,is_deleted,primary_ip,"
                        "is_snmp,is_agent,is_bridge,is_router,snmp_version,community,"
                        "discovery_flags,status_poll_type,agent_port,auth_method,secret,"
-                       "snmp_oid,is_local_mgmt)"
-                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,'%s','%s',%d)",
+                       "snmp_oid,is_local_mgmt,image_id)"
+                       " VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,%d,%d,%d,'%s','%s',%d,%ld)",
               m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
@@ -286,12 +287,13 @@ BOOL Node::SaveToDB(void)
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
               m_wAgentPort,m_wAuthMethod,m_szSharedSecret, m_szObjectId,
-              m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0);
+              m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId);
    else
       sprintf(szQuery, "UPDATE nodes SET name='%s',status=%d,is_deleted=%d,primary_ip=%d,"
                        "is_snmp=%d,is_agent=%d,is_bridge=%d,is_router=%d,snmp_version=%d,"
                        "community='%s',discovery_flags=%d,status_poll_type=%d,agent_port=%d,"
-                       "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d WHERE id=%d",
+                       "auth_method=%d,secret='%s',snmp_oid='%s',is_local_mgmt=%d,image_id=%ld"
+                       " WHERE id=%ld",
               m_szName, m_iStatus, m_bIsDeleted, m_dwIpAddr, 
               m_dwFlags & NF_IS_SNMP ? 1 : 0,
               m_dwFlags & NF_IS_NATIVE_AGENT ? 1 : 0,
@@ -299,7 +301,7 @@ BOOL Node::SaveToDB(void)
               m_dwFlags & NF_IS_ROUTER ? 1 : 0,
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
-              m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwId);
+              m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwImageId, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
 
    // Save data collection items

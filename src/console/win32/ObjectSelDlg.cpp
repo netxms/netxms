@@ -66,12 +66,7 @@ BOOL CObjectSelDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
    // Prepare image list
-   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 4);
-   bmp.LoadBitmap(IDB_PSYM_NODE);
-   m_imageList.Add(&bmp, PSYM_MASK_COLOR);
-   bmp.DeleteObject();
-   bmp.LoadBitmap(IDB_PSYM_SUBNET);
-   m_imageList.Add(&bmp, PSYM_MASK_COLOR);
+   m_imageList.Create(g_pObjectSmallImageList);
 	
    // Setup list control
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
@@ -86,10 +81,13 @@ BOOL CObjectSelDlg::OnInitDialog()
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(&dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
       if ((pIndex[i].pObject->iClass == OBJECT_NODE) ||
-          (pIndex[i].pObject->iClass == OBJECT_SUBNET))
+          (pIndex[i].pObject->iClass == OBJECT_SUBNET) ||
+          (pIndex[i].pObject->iClass == OBJECT_NETWORK) ||
+          (pIndex[i].pObject->iClass == OBJECT_CONTAINER) ||
+          (pIndex[i].pObject->iClass == OBJECT_SERVICEROOT))
       {
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pIndex[i].pObject->szName,
-                     (pIndex[i].pObject->iClass == OBJECT_NODE) ? 0 : 1);
+                                          GetObjectImageIndex(pIndex[i].pObject));
          m_wndListCtrl.SetItemText(iItem, 1, g_szObjectClass[pIndex[i].pObject->iClass]);
          m_wndListCtrl.SetItemData(iItem, pIndex[i].pObject->dwId);
       }
