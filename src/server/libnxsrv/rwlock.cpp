@@ -22,6 +22,7 @@
 **/
 
 #include "libnxsrv.h"
+#include <assert.h>
 
 
 //
@@ -72,6 +73,7 @@ void LIBNXSRV_EXPORTABLE RWLockDestroy(RWLOCK hLock)
          pthread_cond_destroy(&hLock->m_condRead);
          pthread_cond_destroy(&hLock->m_condWrite);
 #endif
+         free(hLock);
       }
    }
 }
@@ -128,7 +130,6 @@ BOOL LIBNXSRV_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
       }
    } while((!bResult) && (!bTimeOut));
 
-printf("RWLockReadLock() == %d\n", bResult);
    ReleaseMutex(hLock->m_mutex);
 #else
    // Acquire access to handle
@@ -235,7 +236,6 @@ BOOL LIBNXSRV_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
       }
    } while((!bResult) && (!bTimeOut));
 
-printf("RWLockWriteLock() == %d\n", bResult);
    ReleaseMutex(hLock->m_mutex);
 #else
    if (pthread_mutex_lock(&hLock->m_mutex) != 0)
@@ -321,7 +321,7 @@ void LIBNXSRV_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 #ifdef _WIN32
          SetEvent(hLock->m_condWrite);
 #else
-         pthread_cond_signal(&hLock->m_condWrite, &hLock->m_mutex);
+         pthread_cond_signal(&hLock->m_condWrite);
 #endif
    }
    else if (hLock->m_dwWaitReaders > 0)
@@ -329,11 +329,9 @@ void LIBNXSRV_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 #ifdef _WIN32
       SetEvent(hLock->m_condRead);
 #else
-      pthread_cond_broadcast(&hLock->m_condRead, &hLock->m_mutex);
+      pthread_cond_broadcast(&hLock->m_condRead);
 #endif
    }
-
-printf("RWLockUnlock()\n");
 
 #ifdef _WIN32
    ReleaseMutex(hLock->m_mutex);

@@ -127,7 +127,7 @@ struct __rwlock_data
    HANDLE m_condRead;
    HANDLE m_condWrite;
 #else
-   pthread_mutex_t mutex;
+   pthread_mutex_t m_mutex;
    pthread_cond_t m_condRead;
    pthread_cond_t m_condWrite;
 #endif
