@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.61 2005-01-24 17:48:10 victor Exp $
+# $Id: configure.ac,v 1.62 2005-02-02 13:35:02 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -378,7 +378,6 @@ AC_CONFIG_FILES([
 	m4/Makefile
 	netware/Makefile
 	sql/Makefile
-	sql/upgrade/Makefile
 	src/Makefile
 	src/libnetxms/Makefile
 	src/libnxcscp/Makefile
