@@ -132,8 +132,6 @@ static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       return SYSINFO_RC_UNSUPPORTED;
 
    bUseTwoSamples = _tcstol(szBuffer, NULL, 0) ? TRUE : FALSE;
-printf("PARAM1=%s\n", szCounter);
-printf("PARAM2=%s\n", szBuffer);
 
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
    {
