@@ -67,7 +67,6 @@ doc/client_library.doc -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
 doc/snmp.txt -text
-/gpl.txt -text
 images/Makefile.am -text
 images/generic_printer.ico -text
 images/generic_printer.png -text

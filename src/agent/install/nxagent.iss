@@ -16,7 +16,7 @@ OutputBaseFilename=nxagent-0.1.14
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
-LicenseFile=..\..\..\gpl.txt
+LicenseFile=..\..\..\copying
 
 [Files]
 Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
