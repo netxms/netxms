@@ -114,6 +114,8 @@ src/console/win32/PasswordChangeDlg.cpp -text
 src/console/win32/PasswordChangeDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
 src/console/win32/RequestProcessingDlg.h -text
+src/console/win32/RuleCommentDlg.cpp -text
+src/console/win32/RuleCommentDlg.h -text
 src/console/win32/RuleHeader.cpp -text
 src/console/win32/RuleHeader.h -text
 src/console/win32/RuleList.cpp -text

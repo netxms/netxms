@@ -9,6 +9,7 @@
 //
 
 #include "ObjectSelDlg.h"
+#include "RuleCommentDlg.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -35,6 +36,9 @@ public:
 
 // Implementation
 protected:
+	void EditComment(int iRow);
+	void EditAlarm(int iRow);
+	void EditSeverity(int iRow);
 	void AddSource(void);
 	void EnableSelectedRows(BOOL bEnable);
 	void UpdateRow(int iRow);
@@ -67,6 +71,7 @@ protected:
 	afx_msg void OnPolicyDelete();
 	afx_msg void OnUpdatePolicyDelete(CCmdUI* pCmdUI);
 	afx_msg void OnPolicyDeleterule();
+	afx_msg void OnPolicyEdit();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

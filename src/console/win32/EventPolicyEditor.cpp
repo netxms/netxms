@@ -82,6 +82,7 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_COMMAND(ID_POLICY_DELETE, OnPolicyDelete)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_DELETE, OnUpdatePolicyDelete)
 	ON_COMMAND(ID_POLICY_DELETERULE, OnPolicyDeleterule)
+	ON_COMMAND(ID_POLICY_EDIT, OnPolicyEdit)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -193,10 +194,10 @@ void CEventPolicyEditor::OnContextMenu(CWnd* pWnd, CPoint point)
    {
       case 1:     // Source
       case 2:     // Event
-      case 3:     // Severity
       case 5:     // Action
          iMenu = 4;
          break;
+      case 3:     // Severity
       case 4:     // Alarm
       case 6:     // Comment
          iMenu = 5;
@@ -600,5 +601,71 @@ void CEventPolicyEditor::OnPolicyDeleterule()
          m_wndRuleList.ReplaceItem(i, 0, 0, szBuffer);
       }
       iRow = m_wndRuleList.GetNextRow(iRow - 1, RLF_SELECTED);
+   }
+}
+
+
+//
+// Edit current cell
+//
+
+void CEventPolicyEditor::OnPolicyEdit() 
+{
+   int iRow, iColumn;
+
+   iRow = m_wndRuleList.GetCurrentRow();
+   iColumn = m_wndRuleList.GetCurrentColumn();
+   if (iRow != -1)
+      switch(iColumn)
+      {
+         case COL_SEVERITY:
+            EditSeverity(iRow);
+            break;
+         case COL_ALARM:
+            EditAlarm(iRow);
+            break;
+         case COL_COMMENT:
+            EditComment(iRow);
+            break;
+         default:
+            break;
+      }
+}
+
+
+//
+// Edit severity cell
+//
+
+void CEventPolicyEditor::EditSeverity(int iRow)
+{
+
+}
+
+
+//
+// Edit alarm cell
+//
+
+void CEventPolicyEditor::EditAlarm(int iRow)
+{
+
+}
+
+
+//
+// Edit comment cell
+//
+
+void CEventPolicyEditor::EditComment(int iRow)
+{
+   CRuleCommentDlg dlg;
+
+   if (m_pEventPolicy->pRuleList[iRow].pszComment != NULL)
+      dlg.m_strText = m_pEventPolicy->pRuleList[iRow].pszComment;
+   if (dlg.DoModal() == IDOK)
+   {
+      MemFree(m_pEventPolicy->pRuleList[iRow].pszComment);
+      m_pEventPolicy->pRuleList[iRow].pszComment = nx_strdup((LPCTSTR)dlg.m_strText);
    }
 }

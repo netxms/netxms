@@ -85,6 +85,7 @@
 #define IDB_PSYM_NODE                   186
 #define IDB_PSYM_SUBNET                 187
 #define IDA_EPP                         188
+#define IDD_EDIT_RULE_COMMENT           189
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -168,6 +169,7 @@
 #define IDC_STATIC_STATUS               1101
 #define IDC_STATIC_ACCESS               1102
 #define IDC_STATIC_TYPE                 1103
+#define IDC_EDIT_TEXT                   1104
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -229,9 +231,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        189
+#define _APS_NEXT_RESOURCE_VALUE        190
 #define _APS_NEXT_COMMAND_VALUE         32855
-#define _APS_NEXT_CONTROL_VALUE         1104
+#define _APS_NEXT_CONTROL_VALUE         1105
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif
