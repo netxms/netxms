@@ -217,7 +217,7 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
    {
       while(1)
       {
-         fgets(szBuffer, 256, fp);
+         _fgetts(szBuffer, 256, fp);
          if (feof(fp))
             break;
          ptr = _tcschr(szBuffer, _T('\n'));

@@ -1077,6 +1077,7 @@ DEP_CPP_ACTIO=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_ACTIO=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -1089,6 +1090,9 @@ DEP_CPP_ACTIO=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_ACTIO=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -1492,6 +1496,7 @@ DEP_CPP_ALARM=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_ALARM=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -1504,6 +1509,9 @@ DEP_CPP_ALARM=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_ALARM=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -1907,6 +1915,7 @@ DEP_CPP_COMM_=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_COMM_=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -1919,6 +1928,9 @@ DEP_CPP_COMM_=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_COMM_=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -2322,6 +2334,7 @@ DEP_CPP_DATAC=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_DATAC=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -2334,6 +2347,9 @@ DEP_CPP_DATAC=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_DATAC=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -2737,6 +2753,7 @@ DEP_CPP_EPP_C=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_EPP_C=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -2749,6 +2766,9 @@ DEP_CPP_EPP_C=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_EPP_C=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -3152,6 +3172,7 @@ DEP_CPP_EVENT=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_EVENT=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -3164,6 +3185,9 @@ DEP_CPP_EVENT=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_EVENT=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -3567,6 +3591,7 @@ DEP_CPP_EVENTS=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_EVENTS=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -3579,6 +3604,9 @@ DEP_CPP_EVENTS=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_EVENTS=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -3982,6 +4010,7 @@ DEP_CPP_IMAGE=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_IMAGE=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -3994,6 +4023,9 @@ DEP_CPP_IMAGE=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_IMAGE=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -4397,6 +4429,7 @@ DEP_CPP_MAIN_=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_MAIN_=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -4409,6 +4442,9 @@ DEP_CPP_MAIN_=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_MAIN_=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -4812,6 +4848,7 @@ DEP_CPP_MIB_C=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_MIB_C=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -4824,6 +4861,9 @@ DEP_CPP_MIB_C=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_MIB_C=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -5016,421 +5056,6 @@ DEP_CPP_MIB_C=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Debug"
 
 DEP_CPP_MIB_C=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\misc.cpp
-
-!IF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Debug"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Release"
-
-DEP_CPP_MISC_=\
-	"..\..\include\getopt.h"\
-	"..\..\include\netxms-version.h"\
-	"..\..\include\nms_common.h"\
-	"..\..\include\nms_cscp.h"\
-	"..\..\include\nms_threads.h"\
-	"..\..\include\nms_util.h"\
-	"..\..\include\nxclapi.h"\
-	"..\..\include\nxcscpapi.h"\
-	"..\..\include\nxevent.h"\
-	"..\..\include\nximage.h"\
-	"..\..\include\unicode.h"\
-	".\libnxcl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Debug"
-
-DEP_CPP_MISC_=\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -5642,6 +5267,7 @@ DEP_CPP_OBJEC=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_OBJEC=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -5654,6 +5280,9 @@ DEP_CPP_OBJEC=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_OBJEC=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
@@ -5865,6 +5494,1539 @@ DEP_CPP_OBJEC=\
 # End Source File
 # Begin Source File
 
+SOURCE=.\package.cpp
+
+!IF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Release"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Debug"
+
+DEP_CPP_PACKA=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_PACKA=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\session.cpp
+
+!IF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Release"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Debug"
+
+DEP_CPP_SESSI=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SESSI=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\snmptrap.cpp
+
+!IF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH4) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE SH3) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSIV_FP) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE MIPS16) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4T) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Release"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE x86) Debug"
+
+DEP_CPP_SNMPT=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcscpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\unicode.h"\
+	".\libnxcl.h"\
+	
+NODEP_CPP_SNMPT=\
+	"..\..\..\..\usr\include\pthread.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\users.cpp
 
 !IF  "$(CFG)" == "libnxcl - Win32 (WCE MIPSII_FP) Release"
@@ -6057,6 +7219,7 @@ DEP_CPP_USERS=\
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE emulator) Debug"
 
 DEP_CPP_USERS=\
+	"..\..\include\config-netware.h"\
 	"..\..\include\getopt.h"\
 	"..\..\include\netxms-version.h"\
 	"..\..\include\nms_common.h"\
@@ -6069,6 +7232,9 @@ DEP_CPP_USERS=\
 	"..\..\include\nximage.h"\
 	"..\..\include\unicode.h"\
 	".\libnxcl.h"\
+	
+NODEP_CPP_USERS=\
+	"..\..\..\..\usr\include\pthread.h"\
 	
 
 !ELSEIF  "$(CFG)" == "libnxcl - Win32 (WCE ARMV4I) Release"

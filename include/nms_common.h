@@ -80,10 +80,10 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#include <process.h>
-#include <sys/stat.h>
 
 #ifndef UNDER_CE
+#include <sys/stat.h>
+#include <process.h>
 #include <io.h>
 #include <fcntl.h>
 #endif
