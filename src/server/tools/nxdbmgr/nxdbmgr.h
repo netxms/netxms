@@ -30,11 +30,29 @@
 
 
 //
+// Database syntax codes
+//
+
+#define DB_SYNTAX_MYSQL    0
+#define DB_SYNTAX_PGSQL    1
+#define DB_SYNTAX_MSSQL    2
+
+
+//
+// Non-standard data type codes
+//
+
+#define SQL_TYPE_TEXT      0
+#define SQL_TYPE_INT64     1
+
+
+//
 // Functions
 //
 
 void CheckDatabase(BOOL bForce);
 void UpgradeDatabase(void);
+DB_RESULT SQLSelect(TCHAR *pszQuery);
 BOOL SQLQuery(TCHAR *pszQuery);
 BOOL SQLBatch(TCHAR *pszBatch);
 
@@ -45,6 +63,8 @@ BOOL SQLBatch(TCHAR *pszBatch);
 
 extern DB_HANDLE g_hCoreDB;
 extern BOOL g_bIgnoreErrors;
+extern int g_iSyntax;
+extern TCHAR *g_pszSqlType[][2];
 
 
 #endif

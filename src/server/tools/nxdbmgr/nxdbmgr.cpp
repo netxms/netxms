@@ -29,6 +29,13 @@
 
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
+int g_iSyntax;
+TCHAR *g_pszSqlType[3][2] = 
+{
+   { _T("blob"), _T("bigint") },     // MySQL
+   { _T("varchar"), _T("bigint") },  // PostgreSQL
+   { _T("text"), _T("bigint") }      // Microsoft SQL
+};
 
 
 //
@@ -47,6 +54,30 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "LogFile", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
+
+
+//
+// Execute SQL SELECT query and print error message on screen if query failed
+//
+
+DB_RESULT SQLSelect(TCHAR *pszQuery)
+{
+   DB_RESULT hResult;
+
+   hResult = DBSelect(g_hCoreDB, pszQuery);
+   if (hResult == NULL)
+   {
+#ifdef _WIN32
+      _tprintf(_T("SQL query failed:\n"));
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
+      _tprintf(_T("%s\n"), pszQuery);
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+#else
+      _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
+#endif
+   }
+   return hResult;
+}
 
 
 //
@@ -117,7 +148,8 @@ int main(int argc, char *argv[])
 {
    BOOL bStart = TRUE, bForce = FALSE;
    int ch;
-   TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
+   TCHAR szSyntaxId[16], szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
+   DB_RESULT hResult;
 
    printf("NetXMS Database Manager Version " NETXMS_VERSION_STRING "\n\n");
 
@@ -197,6 +229,48 @@ int main(int argc, char *argv[])
                g_szDbServer, g_szDbLogin);
       DBUnloadDriver();
       return 4;
+   }
+
+   // Get database syntax
+   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         _tcsncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
+      }
+      else
+      {
+         _tcscpy(szSyntaxId, _T("UNKNOWN"));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      _tprintf(_T("Unable to determine database syntax\n"));
+      DBDisconnect(g_hCoreDB);
+      DBUnloadDriver();
+      return 5;
+   }
+
+   if (!_tcscmp(szSyntaxId, _T("MYSQL")))
+   {
+      g_iSyntax = DB_SYNTAX_MYSQL;
+   }
+   else if (!_tcscmp(szSyntaxId, _T("PGSQL")))
+   {
+      g_iSyntax = DB_SYNTAX_PGSQL;
+   }
+   else if (!_tcscmp(szSyntaxId, _T("MSSQL")))
+   {
+      g_iSyntax = DB_SYNTAX_MSSQL;
+   }
+   else
+   {
+      _tprintf(_T("Unknown database syntax %s\n"), szSyntaxId);
+      DBDisconnect(g_hCoreDB);
+      DBUnloadDriver();
+      return 6;
    }
 
    // Do requested operation

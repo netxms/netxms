@@ -55,6 +55,105 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V17 to V18
+//
+
+static BOOL H_UpgradeFromV17(void)
+{
+   static TCHAR m_szBatch[] =
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
+         "message,description) SELECT event_id,name,severity,flags,"
+         "message,description FROM events\n"
+      "DROP TABLE events\n"
+      "DROP TABLE event_group_members\n"
+      "CREATE TABLE event_group_members (group_id integer not null,"
+	      "event_code integer not null,	PRIMARY KEY(group_id,event_code))\n"
+      "ALTER TABLE alarms ADD source_event_code integer\n"
+      "UPDATE alarms SET source_event_code=source_event_id\n"
+      "ALTER TABLE alarms DROP COLUMN source_event_id\n"
+      "ALTER TABLE alarms ADD source_event_id bigint\n"
+      "UPDATE alarms SET source_event_id=0\n"
+      "ALTER TABLE snmp_trap_cfg ADD event_code integer not null default 0\n"
+      "UPDATE snmp_trap_cfg SET event_code=event_id\n"
+      "ALTER TABLE snmp_trap_cfg DROP COLUMN event_id\n"
+      "DROP TABLE event_log\n"
+      "CREATE TABLE event_log (event_id bigint not null,event_code integer,"
+	      "event_timestamp integer,event_source integer,event_severity integer,"
+	      "event_message varchar(255),root_event_id bigint default 0,"
+	      "PRIMARY KEY(event_id))\n"
+      "<END>";
+   TCHAR szQuery[4096];
+   DB_RESULT hResult;
+
+   hResult = SQLSelect(_T("SELECT rule_id,event_id FROM policy_event_list"));
+   if (hResult != NULL)
+   {
+      DWORD i, dwNumRows;
+
+      if (!SQLQuery(_T("DROP TABLE policy_event_list")))
+      {
+         if (!g_bIgnoreErrors)
+         {
+            DBFreeResult(hResult);
+            return FALSE;
+         }
+      }
+
+      if (!SQLQuery(_T("CREATE TABLE policy_event_list ("
+                       "rule_id integer not null,"
+                       "event_code integer not null,"
+                       "PRIMARY KEY(rule_id,event_code))")))
+      {
+         if (!g_bIgnoreErrors)
+         {
+            DBFreeResult(hResult);
+            return FALSE;
+         }
+      }
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         _sntprintf(szQuery, 4096, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%ld,%ld)"),
+                    DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
+         if (!SQLQuery(szQuery))
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+      }
+
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   _sntprintf(szQuery, 4096, 
+      _T("CREATE TABLE event_cfg (event_code integer not null,"
+	      "event_name varchar(63) not null,severity integer,flags integer,"
+	      "message varchar(255),description %s,PRIMARY KEY(event_code))"),
+              g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   if (!SQLQuery(szQuery))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='18' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V16 to V17
 //
 
@@ -203,7 +302,7 @@ static BOOL H_UpgradeFromV15(void)
 static BOOL H_UpgradeFromV14(void)
 {
    static TCHAR m_szBatch[] =
-      "ALTER TABLE items ADD COLUMN instance varchar(255)\n"
+      "ALTER TABLE items ADD instance varchar(255)\n"
       "UPDATE items SET instance=''\n"
       "INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES "
          "('SMTPServer','localhost',1,0)\n"
@@ -261,6 +360,7 @@ static struct
    { 14, H_UpgradeFromV14 },
    { 15, H_UpgradeFromV15 },
    { 16, H_UpgradeFromV16 },
+   { 17, H_UpgradeFromV17 },
    { 0, NULL }
 };
 
