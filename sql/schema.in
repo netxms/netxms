@@ -202,13 +202,13 @@ CREATE TABLE Items
 
 CREATE TABLE Events
 (
-	id integer not null,
+	event_id integer not null,
 	name varchar(64) not null,	// Short event name
 	severity integer,
 	flags integer,
 	message varchar(255),		// Message template
 	description DT_TEXT,
-	PRIMARY KEY(id)
+	PRIMARY KEY(event_id)
 );
 
 
@@ -343,4 +343,20 @@ CREATE TABLE DeletedObjects
 	ip_addr integer,
 	ip_netmask integer,
 	PRIMARY KEY(object_id)
+);
+
+
+/*
+** Threshold checking rules
+*/
+
+CREATE TABLE Thresholds
+(
+	threshold_id integer not null,
+	item_id integer not null,
+	fire_value varchar(255),
+	rearm_value varchar(255),
+	check_function varchar(255),
+	event_code integer,
+	PRIMARY KEY(threshold_id)
 );
