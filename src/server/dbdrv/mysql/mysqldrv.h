@@ -34,4 +34,18 @@
 #include <nms_threads.h>
 #include <mysql.h>
 
+
+//
+// Structure of asynchronous SELECT result
+//
+
+typedef struct
+{
+   MYSQL_RES *pHandle;
+   MYSQL_ROW pCurrRow;
+   BOOL bNoMoreRows;
+   int iNumCols;
+   DWORD *pdwColLengths;
+} MYSQL_ASYNC_RESULT;
+
 #endif   /* _mysqldrv_h_ */

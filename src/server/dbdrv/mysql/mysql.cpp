@@ -111,13 +111,13 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 
 extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
 {
-   DB_RESULT dwResult = 0;
+   DB_RESULT pResult = NULL;
 
    MutexLock(m_hQueryLock, INFINITE);
    if (mysql_query((MYSQL *)hConn, szQuery) == 0)
-      dwResult = (DB_RESULT)mysql_store_result((MYSQL *)hConn);
+      pResult = (DB_RESULT)mysql_store_result((MYSQL *)hConn);
    MutexUnlock(m_hQueryLock);
-   return dwResult;
+   return pResult;
 }
 
 
@@ -154,6 +154,139 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 {
    mysql_free_result((MYSQL_RES *)hResult);
+}
+
+
+//
+// Perform asynchronous SELECT query
+//
+
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
+{
+   MYSQL_ASYNC_RESULT *pResult = NULL;
+
+   MutexLock(m_hQueryLock, INFINITE);
+   if (mysql_query((MYSQL *)hConn, szQuery) == 0)
+   {
+      pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
+      pResult->pHandle = mysql_use_result((MYSQL *)hConn);
+      if (pResult->pHandle != NULL)
+      {
+         pResult->bNoMoreRows = FALSE;
+         pResult->iNumCols = mysql_num_fields(pResult->pHandle);
+         pResult->pCurrRow = NULL;
+         pResult->pdwColLengths = (DWORD *)malloc(sizeof(DWORD) * pResult->iNumCols);
+      }
+      else
+      {
+         free(pResult);
+         pResult = NULL;
+      }
+   }
+   if (pResult == NULL)
+      MutexUnlock(m_hQueryLock);
+   return pResult;
+}
+
+
+//
+// Fetch next result line from asynchronous SELECT results
+//
+
+extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+{
+   BOOL bResult = TRUE;
+   
+   if (hResult == NULL)
+   {
+      bResult = FALSE;
+   }
+   else
+   {
+      // Try to fetch next row from server
+      ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow = mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
+      if (((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL)
+      {
+         ((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows = TRUE;
+         bResult = FALSE;
+         MutexUnlock(m_hQueryLock);
+      }
+      else
+      {
+         DWORD *pLen;
+
+         // Get column lengths for current row
+         pLen = mysql_fetch_lengths(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
+         if (pLen != NULL)
+         {
+            memcpy(((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths, pLen, 
+                   sizeof(DWORD) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
+         }
+         else
+         {
+            memset(((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths, 0, 
+                   sizeof(DWORD) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
+         }
+      }
+   }
+   return bResult;
+}
+
+
+//
+// Get field from current row in async query result
+//
+
+extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+{
+   int iLen;
+
+   // Check if we have valid result handle
+   if (hResult == NULL)
+      return NULL;
+
+   // Check if there are valid fetched row
+   if ((((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows) ||
+       (((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL))
+      return NULL;
+
+   // Check if column number is valid
+   if ((iColumn < 0) || (iColumn >= ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols))
+      return NULL;
+
+   // Now get column data
+   iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths[iColumn], iBufSize - 1);
+   if (iLen > 0)
+      memcpy(pBuffer, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn], iLen);
+   pBuffer[iLen] = 0;
+   
+   return pBuffer;
+}
+
+
+//
+// Destroy result of async query
+//
+
+extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+{
+   if (hResult != NULL)
+   {
+      // Check if all result rows fetchef
+      if (!((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows)
+      {
+         // Fetch remaining rows
+         while(mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) != NULL);
+
+         // Now we are ready for next query, so unlock query mutex
+         MutexUnlock(m_hQueryLock);
+      }
+
+      // Free allocated memory
+      if (((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths != NULL)
+         free(((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths);
+      free(hResult);
+   }
 }
 
 
