@@ -15,6 +15,13 @@
 #define DT_TEXT		blob
 #endif
 
+// String concatenation for multi-line texts
+#ifdef DB_MSSQL
+#define CONCAT +
+#else
+#define CONCAT
+#endif
+
 // Actual SQL queries
 #include "schema.in"
 #include "setup.in"

@@ -45,7 +45,9 @@ CREATE TABLE UserGroupMembers
 (
 	group_id integer not null,
 	user_id integer not null,
+#ifdef DB_MYSQL
 	KEY(group_id)
+#endif
 );
 
 
@@ -123,7 +125,9 @@ CREATE TABLE Interfaces
 	if_type integer,
 	if_index integer,
 	PRIMARY KEY(id),
+#ifdef DB_MYSQL
 	KEY(node_id)
+#endif
 );
 
 
@@ -135,7 +139,9 @@ CREATE TABLE nsmap
 (
 	subnet_id integer not null,
 	node_id integer not null,
+#ifdef DB_MYSQL
 	KEY (subnet_id)
+#endif
 );
 
 
@@ -148,7 +154,9 @@ CREATE TABLE acl
 	object_id integer not null,
 	user_id integer not null,
 	access_rights integer not null,
+#ifdef DB_MYSQL
 	KEY(object_id)
+#endif
 );
 
 
@@ -167,7 +175,9 @@ CREATE TABLE Items
 	polling_interval integer,
 	retention_time integer,
 	PRIMARY KEY(id),
+#ifdef DB_MYSQL
 	KEY(node_id)
+#endif
 );
 
 
@@ -197,8 +207,10 @@ CREATE TABLE EventLog
 	source integer,			// Source object ID
 	severity integer,
 	message varchar(255),
+#ifdef DB_MYSQL
 	KEY(event_id),
 	KEY(timestamp)
+#endif
 );
 
 
@@ -247,8 +259,10 @@ CREATE TABLE NodeGroupMembers
 (
 	group_id integer not null,
 	node_id integer not null,
+#ifdef DB_MYSQL
 	KEY(group_id),
 	KEY(node_id)
+#endif
 );
 
 
@@ -260,8 +274,10 @@ CREATE TABLE EventGroupMembers
 (
 	group_id integer not null,
 	event_id integer not null,
+#ifdef DB_MYSQL
 	KEY(group_id),
 	KEY(event_id)
+#endif
 );
 
 
@@ -281,7 +297,9 @@ CREATE TABLE PolicySourceList
 	rule_id integer not null,
 	source_type integer not null,
 	object_id integer not null,
+#ifdef DB_MYSQL
 	KEY(rule_id)
+#endif
 );
 
 CREATE TABLE PolicyEventList
@@ -289,5 +307,7 @@ CREATE TABLE PolicyEventList
 	rule_id integer not null,
 	is_group integer not null,
 	event_id integer not null,
+#ifdef DB_MYSQL
 	KEY(rule_id)
+#endif
 );
