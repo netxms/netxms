@@ -22,12 +22,12 @@
 
 #include "nxagentd.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <conio.h>
-#endif
-
-#ifdef _NETWARE
+#elif defined(_NETWARE)
 #include <screen.h>
+#else
+#include <signal.h>
 #endif
 
 
@@ -241,6 +241,33 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 {
    WriteLog(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
 }
+
+
+//
+// Signal handler for UNIX platforms
+//
+
+#ifndef _WIN32
+
+void OnSignal(int iSignal)
+{
+	WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
+	switch(iSignal)
+	{
+		case SIGTERM:
+		case SIGINT:
+			ConditionSet(m_hCondShutdown);
+			break;
+		case SIGSEGV:
+			exit(5);
+			break;
+		default:
+			break;
+	}
+}
+
+#endif
+
 
 
 //
@@ -587,6 +614,11 @@ int main(int argc, char *argv[])
                   perror("Unable to setup itself as a daemon");
                   iExitCode = 4;
                }
+				// Setup signal handlers
+				for(int i = 0; i < 32; i++)
+					signal(i, SIG_IGN);
+				signal(SIGTERM, OnSignal);
+				signal(SIGSEGV, OnSignal);
 #endif
             if (iExitCode == 0)
             {

@@ -164,4 +164,10 @@ Language=English
 Unable to create temporary file to hold process output: %1
 .
 
+MessageId=
+SymbolicName=MSG_SIGNAL_RECEIVED
+Language=English
+Signal %1 received
+.
+
 ;#endif

@@ -53,22 +53,15 @@ static int ProcFilter(const struct dirent *pEnt)
 
 //
 // Read process list from /proc filesystem
+// Returns only processes with names matched to pszPattern
+// (currently with strcmp) ot, if pszPattern is NULL, all
+// processes in the system.
 //
 
-static int ProcRead(PROC_ENT **pEnt, char *szPatern)
+static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
-	char *pPatern;
-
-	if (szPatern != NULL)
-	{
-		pPatern = szPatern;
-	}
-	else
-	{
-		pPatern = "";
-	}
 
 	nFound = -1;
 	if (pEnt != NULL)
@@ -112,7 +105,7 @@ static int ProcRead(PROC_ENT **pEnt, char *szPatern)
 
 				if (read(hFile, &psi, sizeof(psinfo_t)) == sizeof(psinfo_t))
 				{
-					if (strstr(psi.pr_fname, pPatern) != NULL)
+					if ((pszPattern == NULL) || (!strcmp(psi.pr_fname, CHECK_NULL_EX(pszPattern))))
 					{
 						if (pEnt != NULL)
 						{
@@ -145,7 +138,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	int i, nProc;
 	char szBuffer[256];
 
-	nProc = ProcRead(&pList, "");
+	nProc = ProcRead(&pList, NULL);
 	if (nProc != -1)
 	{
 		for(i = 0; i < nProc; i++)
@@ -177,6 +170,26 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 
    NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 	nCount = ProcRead(NULL, szArg);
+	if (nCount >= 0)
+	{
+		ret_int(pValue, nCount);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for System.ProcessCount parameter
+//
+
+LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	int nCount;
+
+	nCount = ProcRead(NULL, NULL);
 	if (nCount >= 0)
 	{
 		ret_int(pValue, nCount);

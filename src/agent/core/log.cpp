@@ -122,7 +122,10 @@ static void WriteLogToFile(char *szMessage)
    loc = localtime(&t);
    strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
    if (m_hLogFile != NULL)
+	{
       fprintf(m_hLogFile, "%s %s", szBuffer, szMessage);
+		fflush(m_hLogFile);
+	}
    if (!(g_dwFlags & AF_DAEMON))
       printf("%s %s", szBuffer, szMessage);
 

@@ -30,7 +30,9 @@
 LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue);
+LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue);
 
 
 //
@@ -51,7 +53,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE },
    { "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL },
    { "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED },
-   { "Process.Count(*)", H_ProcessCount, NULL }
+   { "Process.Count(*)", H_ProcessCount, NULL },
+   { "System.ProcessCount", H_SysProcCount, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
