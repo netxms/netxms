@@ -38,6 +38,7 @@
 
 #define ACTION_EXEC           1
 #define ACTION_SEND_EMAIL     2
+#define ACTION_REMOTE         3
 
 
 //

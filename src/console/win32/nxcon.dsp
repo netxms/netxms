@@ -260,6 +260,10 @@ SOURCE=.\RequestProcessingDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RuleAlarmDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RuleCommentDlg.cpp
 # End Source File
 # Begin Source File
@@ -474,6 +478,10 @@ SOURCE=.\RequestProcessingDlg.h
 # Begin Source File
 
 SOURCE=.\Resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RuleAlarmDlg.h
 # End Source File
 # Begin Source File
 

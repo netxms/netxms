@@ -90,6 +90,7 @@
 #define IDB_ANY                         201
 #define IDD_OBJECT_PRESENTATION         202
 #define IDD_EDIT_RULE_SEVERITY          203
+#define IDD_EDIT_RULE_ALARM             204
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -151,6 +152,7 @@
 #define IDC_RADIO_DISABLED              1067
 #define IDC_RADIO6                      1068
 #define IDC_RADIO_NOT_SUPPORTED         1068
+#define IDC_RADIO_MSG                   1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
@@ -186,6 +188,16 @@
 #define IDC_CHECK_MINOR                 1115
 #define IDC_CHECK_MAJOR                 1116
 #define IDC_CHECK_CRITICAL              1117
+#define IDC_BUTTON_ALL                  1118
+#define IDC_EDIT_KEY                    1121
+#define IDC_EDIT_KEYACK                 1122
+#define IDC_RADIO_NORMAL                1127
+#define IDC_RADIO_WARNING               1128
+#define IDC_RADIO_MINOR                 1129
+#define IDC_RADIO_MAJOR                 1130
+#define IDC_RADIO_CRITICAL              1131
+#define IDC_RADIO_NONE                  1132
+#define IDC_CHECK_ALARM                 1133
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -251,9 +263,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        204
+#define _APS_NEXT_RESOURCE_VALUE        205
 #define _APS_NEXT_COMMAND_VALUE         32864
-#define _APS_NEXT_CONTROL_VALUE         1118
+#define _APS_NEXT_CONTROL_VALUE         1134
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

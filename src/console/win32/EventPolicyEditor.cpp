@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "EventPolicyEditor.h"
 #include "RuleSeverityDlg.h"
+#include "RuleAlarmDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -706,7 +707,11 @@ void CEventPolicyEditor::EditSeverity(int iRow)
 
 void CEventPolicyEditor::EditAlarm(int iRow)
 {
+   CRuleAlarmDlg dlg;
 
+   if (dlg.DoModal())
+   {
+   }
 }
 
 

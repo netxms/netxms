@@ -865,13 +865,47 @@ BEGIN
                     WS_TABSTOP,13,33,43,10
     CONTROL         "&Minor",IDC_CHECK_MINOR,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,13,47,33,10
-    CONTROL         "M&ajor",IDC_CHECK_MAJOR,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Majo&r",IDC_CHECK_MAJOR,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,13,61,33,10
     CONTROL         "&Critical",IDC_CHECK_CRITICAL,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,13,75,37,10
     DEFPUSHBUTTON   "OK",IDOK,72,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,72,24,50,14
     GROUPBOX        "Severity",IDC_STATIC,7,7,58,83
+    PUSHBUTTON      "&All",IDC_BUTTON_ALL,72,42,50,14
+END
+
+IDD_EDIT_RULE_ALARM DIALOG DISCARDABLE  0, 0, 292, 138
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarm Configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Generate alarm if current rule match",IDC_CHECK_ALARM,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,128,10
+    EDITTEXT        IDC_EDIT_MESSAGE,7,29,221,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_KEY,13,72,126,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_KEYACK,13,109,126,14,ES_AUTOHSCROLL
+    CONTROL         "&Normal",IDC_RADIO_NORMAL,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,158,57,38,10
+    CONTROL         "&Warning",IDC_RADIO_WARNING,"Button",BS_AUTORADIOBUTTON,
+                    158,67,43,10
+    CONTROL         "&Minor",IDC_RADIO_MINOR,"Button",BS_AUTORADIOBUTTON,158,
+                    77,33,10
+    CONTROL         "Majo&r",IDC_RADIO_MAJOR,"Button",BS_AUTORADIOBUTTON,158,
+                    87,33,10
+    CONTROL         "&Critical",IDC_RADIO_CRITICAL,"Button",
+                    BS_AUTORADIOBUTTON,158,97,37,10
+    CONTROL         "&From message",IDC_RADIO_MSG,"Button",
+                    BS_AUTORADIOBUTTON,158,107,61,10
+    CONTROL         "&None (hidden)",IDC_RADIO_NONE,"Button",
+                    BS_AUTORADIOBUTTON,158,117,61,10
+    DEFPUSHBUTTON   "OK",IDOK,235,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,235,24,50,14
+    LTEXT           "Message",IDC_STATIC,7,19,30,8
+    LTEXT           "This alarm's key",IDC_STATIC,13,61,51,8
+    LTEXT           "Acknowlege all alarms with key",IDC_STATIC,13,98,99,8
+    GROUPBOX        "Auto acknowlege",IDC_STATIC,7,48,140,84
+    GROUPBOX        "Severity",IDC_STATIC,152,48,76,84
 END
 
 
@@ -1100,6 +1134,14 @@ BEGIN
         RIGHTMARGIN, 122
         TOPMARGIN, 7
         BOTTOMMARGIN, 90
+    END
+
+    IDD_EDIT_RULE_ALARM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 131
     END
 END
 #endif    // APSTUDIO_INVOKED

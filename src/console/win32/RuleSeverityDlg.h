@@ -19,6 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CRuleSeverityDlg)
 	enum { IDD = IDD_EDIT_RULE_SEVERITY };
+	CButton	m_wndOkButton;
 	BOOL	m_bCritical;
 	BOOL	m_bMajor;
 	BOOL	m_bMinor;
@@ -36,10 +37,16 @@ public:
 
 // Implementation
 protected:
+	void OnCheckBox(void);
 
 	// Generated message map functions
 	//{{AFX_MSG(CRuleSeverityDlg)
-		// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnButtonAll();
+	afx_msg void OnCheckCritical();
+	afx_msg void OnCheckMajor();
+	afx_msg void OnCheckMinor();
+	afx_msg void OnCheckNormal();
+	afx_msg void OnCheckWarning();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

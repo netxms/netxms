@@ -192,9 +192,24 @@ BOOL RL_Cell::DeleteLine(int iLine)
 
 void RL_Cell::SetText(char *pszText)
 {
+   int iLen;
+
+   ASSERT(pszText != NULL);
    safe_free(m_pszText);
-   m_pszText = strdup(pszText);
-   ASSERT(m_pszText != NULL);
+   iLen = strlen(pszText);
+   m_pszText = (char *)malloc(iLen + 3);
+   strcpy(m_pszText, pszText);
+
+   // Text should end with CR/LF pair for proper cell size calculation
+   if (iLen < 2)
+   {
+      strcpy(&m_pszText[iLen], "\r\n");
+   }
+   else
+   {
+      if (memcmp(&m_pszText[iLen - 2], "\r\n", 2))
+         strcpy(&m_pszText[iLen], "\r\n");
+   }
 }
 
 int RL_Cell::CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont *pFont)
