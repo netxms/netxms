@@ -68,6 +68,7 @@
 #define CT_END_OF_LIST  3
 #define CT_BOOLEAN      4
 #define CT_WORD         5
+#define CT_IGNORE       6
 
 
 //

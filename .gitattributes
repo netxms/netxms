@@ -503,6 +503,13 @@ src/server/tools/nxadm/nxadm.cpp -text
 src/server/tools/nxadm/nxadm.dsp -text
 src/server/tools/nxadm/nxadm.dsw -text
 src/server/tools/nxadm/nxadm.h -text
+src/server/tools/nxdbmgr/Makefile.am -text
+src/server/tools/nxdbmgr/check.cpp -text
+src/server/tools/nxdbmgr/nxdbmgr.cpp -text
+src/server/tools/nxdbmgr/nxdbmgr.dsp -text
+src/server/tools/nxdbmgr/nxdbmgr.dsw -text
+src/server/tools/nxdbmgr/nxdbmgr.h -text
+src/server/tools/nxdbmgr/upgrade.cpp -text
 src/server/tools/nxget/Makefile.am -text
 src/server/tools/nxget/nxget.cpp -text
 src/server/tools/nxget/nxget.dsp -text

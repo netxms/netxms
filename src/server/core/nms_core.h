@@ -76,7 +76,6 @@
 #ifdef _WIN32
 
 #define DEFAULT_SHELL         "cmd.exe"
-#define DEFAULT_CONFIG_FILE   "C:\\NetXMS.conf"
 #define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
 #define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
 
@@ -86,7 +85,6 @@
 #else    /* _WIN32 */
 
 #define DEFAULT_SHELL         "/bin/sh"
-#define DEFAULT_CONFIG_FILE   "/etc/netxmsd.conf"
 #define DEFAULT_LOG_FILE      "/var/log/netxmsd.log"
 #define DEFAULT_DATA_DIR      "/var/netxms"
 

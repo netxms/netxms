@@ -46,6 +46,17 @@
 
 
 //
+// Default files
+//
+
+#ifdef _WIN32
+#define DEFAULT_CONFIG_FILE   _T("C:\\NetXMS.conf")
+#else
+#define DEFAULT_CONFIG_FILE   _T("/etc/netxmsd.conf")
+#endif
+
+
+//
 // DB-related constants
 //
 

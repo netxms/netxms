@@ -140,6 +140,8 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
                            ((TCHAR *)pTemplateList[i].pBuffer)[pTemplateList[i].dwBufferPos++] = pTemplateList[i].cSeparator;
                      }
                      break;
+                  case CT_IGNORE:
+                     break;
                   default:
                      break;
                }
