@@ -689,3 +689,34 @@ void NetObj::SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...)
       m_pPollRequestor->SendPollerMsg(dwRqId, szBuffer);
    }
 }
+
+
+//
+// Add child node objects (direct and indirect childs) to list
+//
+
+void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD dwUserId)
+{
+   DWORD i;
+
+   Lock();
+
+   // Walk through our own child list
+   for(i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Type() == OBJECT_NODE)
+      {
+         m_pChildList[i]->IncRefCount();
+         *pppNodeList = (Node **)realloc(*pppNodeList, sizeof(Node *) * (*pdwNumNodes + 1));
+         (*pppNodeList)[*pdwNumNodes] = (Node *)m_pChildList[i];
+         (*pdwNumNodes)++;
+      }
+      else
+      {
+         if (m_pChildList[i]->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ))
+            m_pChildList[i]->AddChildNodesToList(pdwNumNodes, pppNodeList, dwUserId);
+      }
+   }
+
+   Unlock();
+}

@@ -426,6 +426,8 @@ typedef struct
 #define VID_POLLER_NODE_ID          ((DWORD)135)
 #define VID_SERVICE_STATUS          ((DWORD)136)
 #define VID_NUM_PARAMETERS          ((DWORD)137)
+#define VID_NUM_OBJECTS             ((DWORD)138)
+#define VID_OBJECT_LIST             ((DWORD)139)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

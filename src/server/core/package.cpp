@@ -54,6 +54,27 @@ BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
 
 
 //
+// Check if given package ID is valid
+//
+
+BOOL IsValidPackageId(DWORD dwPkgId)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bResult = FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT pkg_name FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      bResult = (DBGetNumRows(hResult) > 0);
+      DBFreeResult(hResult);
+   }
+   return bResult;
+}
+
+
+//
 // Check if package file with given name exist
 //
 
@@ -113,4 +134,26 @@ DWORD UninstallPackage(DWORD dwPkgId)
       dwResult = RCC_DB_FAILURE;
    }
    return dwResult;
+}
+
+
+//
+// Package deployment thread
+//
+
+THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
+{
+   DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
+
+   // Wait for parent initialization completion
+   MutexLock(pStartup->mutex, INFINITE);
+   MutexUnlock(pStartup->mutex);
+
+
+   // Cleanup
+   MutexDestroy(pStartup->mutex);
+   safe_free(pStartup->ppNodeList);
+   free(pStartup);
+
+   return THREAD_OK;
 }

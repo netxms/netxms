@@ -722,6 +722,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_PARAMETER_LIST:
             SendParametersList(pMsg);
             break;
+         case CMD_DEPLOY_PACKAGE:
+            DeployPackage(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -3898,4 +3901,114 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
 
    // Send responce
    SendMessage(&msg);
+}
+
+
+//
+// Deplay package to node(s)
+//
+
+void ClientSession::DeployPackage(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD i, dwNumObjects, *pdwObjectList, dwNumNodes, dwPkgId;
+   Node **ppNodeList;
+   NetObj *pObject;
+   BOOL bSuccess = TRUE;
+   MUTEX hMutex;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   {
+      dwNumNodes = 0;
+      ppNodeList = NULL;
+
+      // Get package ID
+      dwPkgId = pRequest->GetVariableLong(VID_PACKAGE_ID);
+      if (IsValidPackageId(dwPkgId))
+      {
+         // Create list of nodes to be upgraded
+         dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
+         pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
+         pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+         for(i = 0; i < dwNumObjects; i++)
+         {
+            pObject = FindObjectById(pdwObjectList[i]);
+            if (pObject != NULL)
+            {
+               if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               {
+                  if (pObject->Type() == OBJECT_NODE)
+                  {
+                     pObject->IncRefCount();
+                     ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
+                     ppNodeList[dwNumNodes] = (Node *)pObject;
+                     dwNumNodes++;
+                  }
+                  else
+                  {
+                     pObject->AddChildNodesToList(&dwNumNodes, &ppNodeList, m_dwUserId);
+                  }
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                  bSuccess = FALSE;
+                  break;
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+               bSuccess = FALSE;
+               break;
+            }
+         }
+         safe_free(pdwObjectList);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_PACKAGE_ID);
+         bSuccess = FALSE;
+      }
+
+      // On success, start upgrade thread
+      if (bSuccess)
+      {
+         DT_STARTUP_INFO *pInfo;
+
+         hMutex = MutexCreate();
+         MutexLock(hMutex, INFINITE);
+
+         pInfo = (DT_STARTUP_INFO *)malloc(sizeof(DT_STARTUP_INFO));
+         pInfo->dwNumNodes = dwNumNodes;
+         pInfo->ppNodeList = ppNodeList;
+         pInfo->pSession = this;
+         pInfo->mutex = hMutex;
+
+         ThreadCreate(DeploymentThread, 0, pInfo);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         for(i = 0; i < dwNumNodes; i++)
+            ppNodeList[i]->DecRefCount();
+         safe_free(ppNodeList);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      bSuccess = FALSE;
+   }
+
+   // Send responce
+   SendMessage(&msg);
+
+   // Allow deployment thread to run
+   if (bSuccess)
+      MutexUnlock(hMutex);
 }

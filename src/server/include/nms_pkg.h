@@ -24,12 +24,27 @@
 #define _nms_pkg_h_
 
 //
+// Deployment thread startup info
+//
+
+typedef struct
+{
+   MUTEX mutex;    // Synchronization mutex
+   DWORD dwNumNodes;
+   Node **ppNodeList;
+   ClientSession *pSession;
+} DT_STARTUP_INFO;
+
+
+//
 // Package functions
 //
 
 BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
 BOOL IsPackageFileExist(TCHAR *pszFileName);
+BOOL IsValidPackageId(DWORD dwPkgId);
 DWORD UninstallPackage(DWORD dwPkgId);
+THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg);
 
 
 #endif   /* _nms_pkg_h_ */

@@ -83,6 +83,8 @@ extern DWORD g_dwConfigurationPollingInterval;
 // Base class for network objects
 //
 
+class NXCORE_EXPORTABLE Node;
+
 class NXCORE_EXPORTABLE NetObj
 {
 protected:
@@ -167,6 +169,8 @@ public:
    DWORD GetUserRights(DWORD dwUserId);
    BOOL CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
    void DropUserAccess(DWORD dwUserId);
+
+   void AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD dwUserId);
 
    // Debug methods
    const char *ParentList(char *szBuffer);
@@ -258,8 +262,6 @@ public:
 //
 // Interface class
 //
-
-class NXCORE_EXPORTABLE Node;
 
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
