@@ -3,6 +3,7 @@
 *
 
 - Created performance subagent for Windows (winperf.nsm)
+- Added SNMP OID to node type translation
 - Added support for Nortel Networks Passport routing switches
 
 
