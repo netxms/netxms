@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: inline.cpp
+** $module: icmp.cpp
 **
 **/
 
@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define PING_SIZE    64
+#define PING_SIZE    62
 
 
 //
@@ -37,7 +37,7 @@
 struct ECHOREQUEST
 {
    ICMPHDR m_icmpHdr;
-   BYTE m_cData[PING_SIZE];
+   BYTE m_cData[PING_SIZE - 1];
 };
 
 
@@ -132,7 +132,6 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
    // Fill in request structure
    request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
    request.m_icmpHdr.m_cCode = 0;
-   request.m_icmpHdr.m_wChecksum = 0;
    request.m_icmpHdr.m_wId = 0x1020;
    request.m_icmpHdr.m_wSeq = 0;
 
@@ -140,6 +139,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
    while(iNumRetries--)
    {
       request.m_icmpHdr.m_wSeq++;
+      request.m_icmpHdr.m_wChecksum = 0;
       request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
       if (sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == sizeof(ECHOREQUEST))
       {
