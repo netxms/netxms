@@ -44,6 +44,8 @@ SERVER:
 - Housekeeping for DCI
 - Add logging API for database drivers
 - DCI transformation scripts (probably Perl?)
+- Add database unlocking after server crash into nxdbmgr
+- Event correlation
 
 
 CORE AGENT:
@@ -54,10 +56,18 @@ CORE AGENT:
 LINUX AGENT:
 
 - Return correct interface type in Net.InterfaceList
+- Implement Net.IP.NextHop and Net.IP.RoutingTable
+
 
 FREEBSD AGENT:
 
 - Return correct interface type in Net.InterfaceList
+- Implement Net.IP.NextHop and Net.IP.RoutingTable
+
+
+SOLARIS AGENT:
+
+- Implement Net.IP.NextHop and Net.IP.RoutingTable
 
 
 WINDOWS CONSOLE:
