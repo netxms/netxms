@@ -2,8 +2,6 @@
 # Makefile for SQL scripts
 #
 
-SUBDIRS=upgrade
-
 sqldir=$(pkgdatadir)/sql
 
 sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql
