@@ -433,6 +433,7 @@ typedef struct
 #define VID_OBJECT_LIST             ((DWORD)139)
 #define VID_DEPLOYMENT_STATUS       ((DWORD)140)
 #define VID_ERROR_MESSAGE           ((DWORD)141)
+#define VID_SERVER_ID               ((DWORD)142)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

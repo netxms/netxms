@@ -809,6 +809,7 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
    // Fill message with server info
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
+   msg.SetVariable(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
    msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (DWORD)0);
 
    // Send responce

@@ -70,6 +70,7 @@ DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
+QWORD g_qwServerId;
 
 
 //
@@ -189,6 +190,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    DWORD dwAddr;
    char szInfo[256];
 
+   srand(time(NULL));
    InitLog(g_dwFlags & AF_USE_EVENT_LOG, g_szLogFile, g_dwFlags & AF_STANDALONE);
 
 #ifdef _WIN32
@@ -238,6 +240,21 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    else
    {
       g_dwDBSyntax = DB_SYNTAX_GENERIC;
+   }
+
+   // Read server ID
+   ConfigReadStr("ServerID", szInfo, 256, "");
+   StrStrip(szInfo);
+   if (szInfo[0] != 0)
+   {
+      StrToBin(szInfo, (BYTE *)&g_qwServerId, sizeof(QWORD));
+   }
+   else
+   {
+      // Generate new ID
+      g_qwServerId = (((QWORD)time(NULL)) << 32) | rand();
+      BinToStr((BYTE *)&g_qwServerId, sizeof(QWORD), szInfo);
+      ConfigWriteStr("ServerID", szInfo, TRUE);
    }
 
    // Initialize locks

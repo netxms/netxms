@@ -123,6 +123,7 @@ private:
 public:
    DWORD m_dwCommandTimeout;
    NXC_EVENT_HANDLER m_pEventHandler;
+   BYTE m_bsServerId[8];
 
    // Methods
 private:

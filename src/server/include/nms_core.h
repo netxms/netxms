@@ -502,6 +502,7 @@ extern char NXCORE_EXPORTABLE g_szLogFile[];
 extern char NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
 extern char g_szDataDir[];
+extern QWORD g_qwServerId;
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;

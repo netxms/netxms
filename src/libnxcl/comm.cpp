@@ -243,6 +243,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                   {
                      TCHAR szServerVersion[64];
 
+                     pResp->GetVariableBinary(VID_SERVER_ID, pSession->m_bsServerId, 8);
                      pResp->GetVariableStr(VID_SERVER_VERSION, szServerVersion, 64);
                      if (_tcsncmp(szServerVersion, NETXMS_VERSION_STRING, 64))
                         dwRetCode = RCC_VERSION_MISMATCH;
