@@ -100,6 +100,29 @@ static int List(AgentConnection *pConn, char *pszParam)
 
 
 //
+// Check network service state
+//
+
+static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServiceAddr,
+                        WORD wProto, WORD wPort, char *pszRequest, char *pszResponce)
+{
+   DWORD dwStatus, dwError;
+
+   dwError = pConn->CheckNetworkService(&dwStatus, dwServiceAddr, iServiceType, wPort,
+                                        wProto, pszRequest, pszResponce);
+   if (dwError == ERR_SUCCESS)
+   {
+      printf("Service status: %d\n", dwStatus);
+   }
+   else
+   {
+      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+   }
+   return (dwError == ERR_SUCCESS) ? 0 : 1;
+}
+
+
+//
 // Startup
 //
 
@@ -108,10 +131,10 @@ int main(int argc, char *argv[])
    char *eptr;
    BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE;
    int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
-   int iAuthMethod = AUTH_NONE;
-   WORD wPort = AGENT_LISTEN_PORT;
-   DWORD dwTimeout = 3000;
-   char szSecret[MAX_SECRET_LENGTH] = "";
+   int iAuthMethod = AUTH_NONE, iServiceType = NETSRV_SSH;
+   WORD wAgentPort = AGENT_LISTEN_PORT, wServicePort = 0, wServiceProto = 0;
+   DWORD dwTimeout = 3000, dwServiceAddr = 0;
+   char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "", szResponce[MAX_DB_STRING] = "";
 
    // Parse command line
    opterr = 1;
@@ -120,7 +143,7 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxget [<options>] <host> <parameter>\n"
+            printf("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n"
                    "Valid options are:\n"
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
@@ -137,9 +160,10 @@ int main(int argc, char *argv[])
                    "   -s <secret>  : Specify shared secret for authentication.\n"
                    "   -S <addr>    : Check state of network service at given address.\n"
                    "   -t <type>    : Set type of service to be checked.\n"
+                   "   -T <proto>   : Protocol number to be used for service check.\n"
                    "   -v           : Display version and exit.\n"
                    "   -w <seconds> : Specify command timeout (default is 3 seconds).\n"
-                   "\n", wPort);
+                   "\n", wAgentPort);
             bStart = FALSE;
             break;
          case 'a':   // Auth method
@@ -178,7 +202,8 @@ int main(int argc, char *argv[])
          case 'n':   // Show names
             bShowNames = TRUE;
             break;
-         case 'p':   // Port number
+         case 'p':   // Agent's port number
+         case 'P':   // Port number for service check
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
@@ -187,14 +212,52 @@ int main(int argc, char *argv[])
             }
             else
             {
-               wPort = (WORD)i;
+               if (ch == 'p')
+                  wAgentPort = (WORD)i;
+               else
+                  wServicePort = (WORD)i;
             }
             break;
          case 'q':   // Quiet mode
             m_bVerbose = FALSE;
             break;
+         case 'r':   // Service check request string
+            strncpy(szRequest, optarg, MAX_DB_STRING);
+            break;
+         case 'R':   // Service check responce string
+            strncpy(szResponce, optarg, MAX_DB_STRING);
+            break;
          case 's':   // Shared secret
-            strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
+            strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
+            break;
+         case 'S':   // Check service
+            iCommand = CMD_CHECK_SERVICE;
+            dwServiceAddr = ntohl(inet_addr(optarg));
+            if ((dwServiceAddr == INADDR_NONE) || (dwServiceAddr == INADDR_ANY))
+            {
+               printf("Invalid IP address \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            break;
+         case 't':   // Service type
+            iServiceType = strtol(optarg, &eptr, 0);
+            if (*eptr != 0)
+            {
+               printf("Invalid service type \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            break;
+         case 'T':   // Protocol number for service check
+            i = strtol(optarg, &eptr, 0);
+            if ((*eptr != 0) || (i < 0) || (i > 65535))
+            {
+               printf("Invalid protocol number \"%s\"\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               wServiceProto = (WORD)i;
+            }
             break;
          case 'v':   // Print version and exit
             printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "\n");
@@ -223,7 +286,7 @@ int main(int argc, char *argv[])
    // Check parameter correctness
    if (bStart)
    {
-      if (argc - optind < 2)
+      if (argc - optind < ((iCommand == CMD_CHECK_SERVICE) ? 1 : 2))
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
          bStart = FALSE;
@@ -261,7 +324,7 @@ int main(int argc, char *argv[])
          }
          else
          {
-            AgentConnection conn(m_dwAddr, wPort, iAuthMethod, szSecret);
+            AgentConnection conn(m_dwAddr, wAgentPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
             if (conn.Connect(m_bVerbose))
@@ -279,6 +342,10 @@ int main(int argc, char *argv[])
                         break;
                      case CMD_LIST:
                         iExitCode = List(&conn, argv[optind + 1]);
+                        break;
+                     case CMD_CHECK_SERVICE:
+                        iExitCode = CheckService(&conn, iServiceType, dwServiceAddr,
+                                                 wServiceProto, wServicePort, szRequest, szResponce);
                         break;
                      default:
                         break;
