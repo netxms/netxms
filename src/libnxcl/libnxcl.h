@@ -117,6 +117,7 @@ extern NXC_EVENT_HANDLER g_pEventHandler;
 extern NXC_DEBUG_CALLBACK g_pDebugCallBack;
 extern DWORD g_dwState;
 extern DWORD g_dwMsgId;
+extern DWORD g_dwCommandTimeout;
 
 
 //

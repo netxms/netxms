@@ -43,7 +43,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList)
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_MIB_LIST, dwRqId, 2000);
+   pResponce = WaitForMessage(CMD_MIB_LIST, dwRqId, g_dwCommandTimeout * 2);
    if (pResponce != NULL)
    {
       *ppMibList = (NXC_MIB_LIST *)malloc(sizeof(NXC_MIB_LIST));
@@ -107,7 +107,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(TCHAR *pszName, TCHAR *pszDestDir)
    msg.SetVariable(VID_MIB_NAME, pszName);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_MIB, dwRqId, 10000);
+   // Loading file can take time, so timeout is 60 sec. instead of default
+   pResponce = WaitForMessage(CMD_MIB, dwRqId, 60000);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

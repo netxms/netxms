@@ -31,6 +31,7 @@
 NXC_EVENT_HANDLER g_pEventHandler = NULL;
 NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 DWORD g_dwState = STATE_DISCONNECTED;
+DWORD g_dwCommandTimeout = 3000;    // Default timeout is 3 seconds
 
 
 //
@@ -86,7 +87,18 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
 
 
 //
-// Ge text for error
+// Set command timeout
+//
+
+void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(DWORD dwTimeout)
+{
+   if ((dwTimeout >= 1000) && (dwTimeout <= 60000))
+      g_dwCommandTimeout = dwTimeout;
+}
+
+
+//
+// Get text for error
 //
 
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)

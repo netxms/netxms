@@ -27,17 +27,44 @@
 // Test mutex state and print to stdout
 //
 
-void DbgTestMutex(MUTEX hMutex, char *szName)
+void DbgTestMutex(MUTEX hMutex, TCHAR *szName)
 {
-   printf("  %s: ", szName);
+   _tprintf(_T("  %s: "), szName);
    if (MutexLock(hMutex, 100))
    {
-      printf("unlocked\n");
+      _tprintf(_T("unlocked\n"));
       MutexUnlock(hMutex);
    }
    else
    {
-      printf("locked\n");
+      _tprintf(_T("locked\n"));
+   }
+}
+
+
+//
+// Test read/write lock state and print to stdout
+//
+
+void DbgTestRWLock(RWLOCK hLock, TCHAR *szName)
+{
+   _tprintf(_T("  %s: "), szName);
+   if (RWLockWriteLock(hLock, 100))
+   {
+      _tprintf(_T("unlocked\n"));
+      RWLockUnlock(hLock);
+   }
+   else
+   {
+      if (RWLockReadLock(hLock, 100))
+      {
+         _tprintf(_T("locked for reading\n"));
+         RWLockUnlock(hLock);
+      }
+      else
+      {
+         _tprintf(_T("locked for writing\n"));
+      }
    }
 }
 
@@ -47,23 +74,16 @@ void DbgTestMutex(MUTEX hMutex, char *szName)
 // and specific application flag(s) is set
 //
 
-void DbgPrintf(DWORD dwFlags, char *szFormat, ...)
+void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...)
 {
    va_list args;
-   char szBuffer[1024];
+   TCHAR szBuffer[1024];
 
    if (!(g_dwFlags & dwFlags))
       return;     // Required application flag(s) not set
 
-/*   if (IsStandalone())
-   {
-      va_start(args, szFormat);
-      vprintf(szFormat, args);
-      va_end(args);
-   }*/
-
    va_start(args, szFormat);
-   vsnprintf(szBuffer, 1024, szFormat, args);
+   _vsntprintf(szBuffer, 1024, szFormat, args);
    va_end(args);
-   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
+   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, _T("s"), szBuffer);
 }

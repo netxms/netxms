@@ -48,7 +48,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
    NetObjInsert(pNode, TRUE);
    if (!pNode->NewNodePoll(dwNetMask))
    {
-      DbgPrintf(AF_DEBUG_DISCOVERY, "Node::NewNodePoll(%s)failed", 
+      DbgPrintf(AF_DEBUG_DISCOVERY, "Node::NewNodePoll(%s) failed", 
                 IpToStr(dwIpAddr, szIpAddr1));
       ObjectsGlobalLock();
       NetObjDelete(pNode);
@@ -60,7 +60,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
       pNode->SetName(pszName);
 
    // DEBUG
-   pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
+   pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
    return pNode;
 }
 

@@ -94,7 +94,7 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
       CheckForMgmtNode();
 
       // Walk through nodes and poll for ARP tables
-      MutexLock(g_hMutexNodeIndex, INFINITE);
+      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
       for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
       {
          pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
@@ -131,7 +131,7 @@ THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
             pNode->SetDiscoveryPollTimeStamp();
          }
       }
-      MutexUnlock(g_hMutexNodeIndex);
+      RWLockUnlock(g_rwlockNodeIndex);
    }
 
    DbgPrintf(AF_DEBUG_DISCOVERY, "Discovery thread terminated");

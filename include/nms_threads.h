@@ -33,9 +33,9 @@
 // Related datatypes and constants
 //
 
-#define MUTEX  HANDLE
-#define THREAD HANDLE
-#define CONDITION HANDLE
+typedef HANDLE MUTEX;
+typedef HANDLE THREAD;
+typedef HANDLE CONDITION;
 
 #define INVALID_MUTEX_HANDLE        INVALID_HANDLE_VALUE
 #define INVALID_CONDITION_HANDLE    INVALID_HANDLE_VALUE

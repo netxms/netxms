@@ -61,7 +61,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
    SendMsg(&msg);
 
    // Wait for reply
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -78,7 +78,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy)
          // Receive policy rules, each in separate message
          for(i = 0; i < (*ppEventPolicy)->dwNumRules; i++)
          {
-            pResponce = WaitForMessage(CMD_EPP_RECORD, dwRqId, 2000);
+            pResponce = WaitForMessage(CMD_EPP_RECORD, dwRqId, g_dwCommandTimeout);
             if (pResponce != NULL)
             {
                (*ppEventPolicy)->pRuleList[i].dwFlags = pResponce->GetVariableLong(VID_FLAGS);

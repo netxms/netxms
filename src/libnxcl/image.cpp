@@ -48,7 +48,8 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(DWORD dwImageId, TCHAR *pszCacheDir, W
    msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_IMAGE_FILE, dwRqId, 30000);
+   // Loading  file can take time, so we use 60 sec. timeout instead of default
+   pResponce = WaitForMessage(CMD_IMAGE_FILE, dwRqId, 60000);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -135,7 +136,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_IMAGE_LIST **ppImageList, TCHAR *pszC
    msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_IMAGE_LIST, dwRqId, 5000);
+   pResponce = WaitForMessage(CMD_IMAGE_LIST, dwRqId, g_dwCommandTimeout * 2);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -206,7 +207,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize,
    msg.SetId(dwRqId);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId, 3000);
+   pResponce = WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId, g_dwCommandTimeout);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

@@ -226,7 +226,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdw
    msg.SetVariable(VID_IS_GROUP, (WORD)bIsGroup);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

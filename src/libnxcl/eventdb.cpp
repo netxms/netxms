@@ -209,7 +209,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseEventDB(BOOL bSaveChanges)
       msg.SetCode(CMD_CLOSE_EVENT_DB);
       msg.SetId(dwRqId);
       SendMsg(&msg);
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
       if (pResponce != NULL)
       {
          dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -286,7 +286,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadEventNames(void)
    msg.SetCode(CMD_GET_EVENT_NAMES);
    msg.SetId(dwRqId);
    SendMsg(&msg);
-   pResponce = WaitForMessage(CMD_EVENT_NAME_LIST, dwRqId, 3000);
+   pResponce = WaitForMessage(CMD_EVENT_NAME_LIST, dwRqId, g_dwCommandTimeout);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

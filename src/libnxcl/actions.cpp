@@ -74,7 +74,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(DWORD *pdwNumActions, NXC_ACTION **ppAct
 
    do
    {
-      pResponce = WaitForMessage(CMD_ACTION_DATA, dwRqId, 2000);
+      pResponce = WaitForMessage(CMD_ACTION_DATA, dwRqId, g_dwCommandTimeout);
       if (pResponce != NULL)
       {
          dwActionId = pResponce->GetVariableLong(VID_ACTION_ID);
@@ -167,7 +167,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateAction(TCHAR *pszName, DWORD *pdwNewId)
    msg.SetVariable(VID_ACTION_NAME, pszName);
    SendMsg(&msg);
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

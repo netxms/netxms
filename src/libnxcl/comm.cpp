@@ -274,7 +274,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin, TCHAR *szPa
                if (SendMsg(&msg))
                {
                   // Receive responce message
-                  pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), 2000);
+                  pResp = m_msgWaitQueue.WaitForMessage(CMD_LOGIN_RESP, msg.GetId(), g_dwCommandTimeout);
                   if (pResp != NULL)
                   {
                      dwRetCode = pResp->GetVariableLong(VID_RCC);
@@ -355,7 +355,7 @@ DWORD WaitForRCC(DWORD dwRqId)
    CSCPMessage *pResponce;
    DWORD dwRetCode;
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, g_dwCommandTimeout);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

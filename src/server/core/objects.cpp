@@ -42,10 +42,10 @@ INDEX *g_pInterfaceIndexByAddr = NULL;
 DWORD g_dwInterfaceAddrIndexSize = 0;
 
 MUTEX g_hMutexObjectAccess;
-MUTEX g_hMutexIdIndex;
-MUTEX g_hMutexNodeIndex;
-MUTEX g_hMutexSubnetIndex;
-MUTEX g_hMutexInterfaceIndex;
+RWLOCK g_rwlockIdIndex;
+RWLOCK g_rwlockNodeIndex;
+RWLOCK g_rwlockSubnetIndex;
+RWLOCK g_rwlockInterfaceIndex;
 
 DWORD g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
@@ -64,10 +64,10 @@ char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
 void ObjectsInit(void)
 {
    g_hMutexObjectAccess = MutexCreate();
-   g_hMutexIdIndex = MutexCreate();
-   g_hMutexNodeIndex = MutexCreate();
-   g_hMutexSubnetIndex = MutexCreate();
-   g_hMutexInterfaceIndex = MutexCreate();
+   g_rwlockIdIndex = RWLockCreate();
+   g_rwlockNodeIndex = RWLockCreate();
+   g_rwlockSubnetIndex = RWLockCreate();
+   g_rwlockInterfaceIndex = RWLockCreate();
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
@@ -202,9 +202,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          DBQuery(g_hCoreDB, szQuery);
       }
    }
-   MutexLock(g_hMutexIdIndex, INFINITE);
+   RWLockWriteLock(g_rwlockIdIndex, INFINITE);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
-   MutexUnlock(g_hMutexIdIndex);
+   RWLockUnlock(g_rwlockIdIndex);
    if ((pObject->IpAddr() != 0) && (!pObject->IsDeleted()))
    {
       switch(pObject->Type())
@@ -215,23 +215,23 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_SERVICEROOT:
             break;
          case OBJECT_SUBNET:
-            MutexLock(g_hMutexSubnetIndex, INFINITE);
+            RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
             AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
-            MutexUnlock(g_hMutexSubnetIndex);
+            RWLockUnlock(g_rwlockSubnetIndex);
             if (bNewObject)
                PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
             break;
          case OBJECT_NODE:
-            MutexLock(g_hMutexNodeIndex, INFINITE);
+            RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
             AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
-            MutexUnlock(g_hMutexNodeIndex);
+            RWLockUnlock(g_rwlockNodeIndex);
             if (bNewObject)
                PostEvent(EVENT_NODE_ADDED, pObject->Id(), NULL);
             break;
          case OBJECT_INTERFACE:
-            MutexLock(g_hMutexInterfaceIndex, INFINITE);
+            RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
             AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
-            MutexUnlock(g_hMutexInterfaceIndex);
+            RWLockUnlock(g_rwlockInterfaceIndex);
             break;
          default:
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -260,19 +260,19 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          case OBJECT_SERVICEROOT:
             break;
          case OBJECT_SUBNET:
-            MutexLock(g_hMutexSubnetIndex, INFINITE);
+            RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
             DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
-            MutexUnlock(g_hMutexSubnetIndex);
+            RWLockUnlock(g_rwlockSubnetIndex);
             break;
          case OBJECT_NODE:
-            MutexLock(g_hMutexNodeIndex, INFINITE);
+            RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
             DeleteObjectFromIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr());
-            MutexUnlock(g_hMutexNodeIndex);
+            RWLockUnlock(g_rwlockNodeIndex);
             break;
          case OBJECT_INTERFACE:
-            MutexLock(g_hMutexInterfaceIndex, INFINITE);
+            RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
             DeleteObjectFromIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr());
-            MutexUnlock(g_hMutexInterfaceIndex);
+            RWLockUnlock(g_rwlockInterfaceIndex);
             break;
          default:
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -316,9 +316,9 @@ void NetObjDelete(NetObj *pObject)
    DBQuery(g_hCoreDB, szQuery);
 
    // Delete object from index by ID
-   MutexLock(g_hMutexIdIndex, INFINITE);
+   RWLockWriteLock(g_rwlockIdIndex, INFINITE);
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
-   MutexUnlock(g_hMutexIdIndex);
+   RWLockUnlock(g_rwlockIdIndex);
             
    delete pObject;
 }
@@ -336,10 +336,10 @@ Node *FindNodeByIP(DWORD dwAddr)
    if ((g_pInterfaceIndexByAddr == NULL) || (dwAddr == 0))
       return NULL;
 
-   MutexLock(g_hMutexInterfaceIndex, INFINITE);
+   RWLockReadLock(g_rwlockInterfaceIndex, INFINITE);
    dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
    pNode = (dwPos == INVALID_INDEX) ? NULL : (Node *)g_pInterfaceIndexByAddr[dwPos].pObject->GetParent();
-   MutexUnlock(g_hMutexInterfaceIndex);
+   RWLockUnlock(g_rwlockInterfaceIndex);
    return pNode;
 }
 
@@ -356,10 +356,35 @@ Subnet *FindSubnetByIP(DWORD dwAddr)
    if ((g_pSubnetIndexByAddr == NULL) || (dwAddr == 0))
       return NULL;
 
-   MutexLock(g_hMutexSubnetIndex, INFINITE);
+   RWLockReadLock(g_rwlockSubnetIndex, INFINITE);
    dwPos = SearchIndex(g_pSubnetIndexByAddr, g_dwSubnetAddrIndexSize, dwAddr);
    pSubnet = (dwPos == INVALID_INDEX) ? NULL : (Subnet *)g_pSubnetIndexByAddr[dwPos].pObject;
-   MutexUnlock(g_hMutexSubnetIndex);
+   RWLockUnlock(g_rwlockSubnetIndex);
+   return pSubnet;
+}
+
+
+//
+// Find subnet for given IP address
+//
+
+Subnet *FindSubnetForNode(DWORD dwNodeAddr)
+{
+   DWORD i;
+   Subnet *pSubnet = NULL;
+
+   if ((g_pSubnetIndexByAddr == NULL) || (dwNodeAddr == 0))
+      return NULL;
+
+   RWLockReadLock(g_rwlockSubnetIndex, INFINITE);
+   for(i = 0; i < g_dwSubnetAddrIndexSize; i++)
+      if ((dwNodeAddr & ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->IpNetMask()) == 
+               ((Subnet *)g_pSubnetIndexByAddr[i].pObject)->IpAddr())
+      {
+         pSubnet = (Subnet *)g_pSubnetIndexByAddr[i].pObject;
+         break;
+      }
+   RWLockUnlock(g_rwlockSubnetIndex);
    return pSubnet;
 }
 
@@ -376,10 +401,10 @@ NetObj *FindObjectById(DWORD dwId)
    if (g_pIndexById == NULL)
       return NULL;
 
-   MutexLock(g_hMutexIdIndex, INFINITE);
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
    dwPos = SearchIndex(g_pIndexById, g_dwIdIndexSize, dwId);
    pObject = (dwPos == INVALID_INDEX) ? NULL : g_pIndexById[dwPos].pObject;
-   MutexUnlock(g_hMutexIdIndex);
+   RWLockUnlock(g_rwlockIdIndex);
    return pObject;
 }
 
@@ -395,14 +420,14 @@ DWORD FindLocalMgmtNode(void)
    if (g_pNodeIndexByAddr == NULL)
       return 0;
 
-   MutexLock(g_hMutexNodeIndex, INFINITE);
+   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
    for(i = 0; i < g_dwNodeAddrIndexSize; i++)
       if (((Node *)g_pNodeIndexByAddr[i].pObject)->Flags() & NF_IS_LOCAL_MGMT)
       {
          dwId = g_pNodeIndexByAddr[i].pObject->Id();
          break;
       }
-   MutexUnlock(g_hMutexNodeIndex);
+   RWLockUnlock(g_rwlockNodeIndex);
    return dwId;
 }
 
@@ -617,8 +642,10 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
    ObjectsGlobalLock();
 
    // Walk through all objects
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
       g_pIndexById[i].pObject->DropUserAccess(dwUserId);
+   RWLockUnlock(g_rwlockIdIndex);
 
    ObjectsGlobalUnlock();
 }
@@ -635,7 +662,7 @@ void DumpObjects(void)
    CONTAINER_CATEGORY *pCat;
 
    pBuffer = (char *)malloc(128000);
-   MutexLock(g_hMutexIdIndex, INFINITE);
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
       printf("Object ID %d \"%s\"\n"
@@ -674,7 +701,7 @@ void DumpObjects(void)
             break;
       }
    }
-   MutexUnlock(g_hMutexIdIndex);
+   RWLockUnlock(g_rwlockIdIndex);
    free(pBuffer);
 }
 

@@ -442,10 +442,10 @@ static BOOL ProcessCommand(char *pszCmdLine)
    else if (IsCommand("MUTEX", szBuffer, 2))
    {
       printf("Mutex status:\n");
-      DbgTestMutex(g_hMutexIdIndex, "g_hMutexIdIndex");
-      DbgTestMutex(g_hMutexNodeIndex, "g_hMutexNodeIndex");
-      DbgTestMutex(g_hMutexSubnetIndex, "g_hMutexSubnetIndex");
-      DbgTestMutex(g_hMutexInterfaceIndex, "g_hMutexInterfaceIndex");
+      DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex");
+      DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex");
+      DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex");
+      DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex");
       DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
       printf("\n");
    }

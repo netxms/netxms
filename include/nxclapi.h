@@ -816,6 +816,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
 void LIBNXCL_EXPORTABLE NXCShutdown(void);
+void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(DWORD dwTimeout);
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin, TCHAR *szPassword);
 void LIBNXCL_EXPORTABLE NXCDisconnect(void);

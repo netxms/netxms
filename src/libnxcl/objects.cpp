@@ -548,8 +548,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DW
    // Send request
    SendMsg(&msg);
 
-   // Wait for responce
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 60000);
+   // Wait for responce. Creating node object can include polling,
+   // which can take a minute or even more in worst cases
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
@@ -658,7 +659,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_CC_LIST **ppList)
 
    do
    {
-      pResponce = WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId, 2000);
+      pResponce = WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId, g_dwCommandTimeout);
       if (pResponce != NULL)
       {
          dwCatId = pResponce->GetVariableLong(VID_CATEGORY_ID);

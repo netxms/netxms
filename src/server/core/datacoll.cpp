@@ -114,11 +114,11 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
          break;      // Shutdown has arrived
       WatchdogNotify(dwWatchdogId);
 
-      MutexLock(g_hMutexNodeIndex, INFINITE);
+      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
       qwStart = GetCurrentTimeMs();
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
          ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(m_pItemQueue);
-      MutexUnlock(g_hMutexNodeIndex);
+      RWLockUnlock(g_rwlockNodeIndex);
 
       dwElapsed = (DWORD)(GetCurrentTimeMs() - qwStart);
    }

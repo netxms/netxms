@@ -449,8 +449,9 @@ char *GetSystemErrorText(DWORD error);
 
 #endif   /* _WIN32 */
 
-void DbgTestMutex(MUTEX hMutex, char *szName);
-void DbgPrintf(DWORD dwFlags, char *szFormat, ...);
+void DbgTestMutex(MUTEX hMutex, TCHAR *szName);
+void DbgTestRWLock(RWLOCK hLock, TCHAR *szName);
+void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...);
 void DumpSessions(void);
 
 

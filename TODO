@@ -27,7 +27,6 @@ GENERAL:
 SERVER:
 
 - Recalculate object status after binding change
-- Change object index lock type from mutex to read/write lock
 - Add internal stats collection:
 	1. Average data collector queue length
 	2. Average database writer queue length
@@ -41,6 +40,8 @@ SERVER:
   this functionality.
 - Change node into subnet placement algorithm
 - Add incorect netmask detection
+- Chech if ObjectGlobalLock()/ObjectGlobalUnlock() really needed or we can
+  use just index locking
 
 
 CORE AGENT:

@@ -1,10 +1,19 @@
 *
+* 0.1.5
+*
+
+- Object access mutexes changed to read/write locks in server to 
+  improve performance
+
+
+*
 * 0.1.4
 *
 
 - Created performance subagent for Windows (winperf.nsm)
 - Added SNMP OID to node type translation
 - Added support for Nortel Networks Passport routing switches
+- "configure" script improved
 
 
 *

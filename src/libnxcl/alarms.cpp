@@ -77,7 +77,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms,
 
    do
    {
-      pResponce = WaitForMessage(CMD_ALARM_DATA, dwRqId, 2000);
+      pResponce = WaitForMessage(CMD_ALARM_DATA, dwRqId, g_dwCommandTimeout);
       if (pResponce != NULL)
       {
          dwAlarmId = pResponce->GetVariableLong(VID_ALARM_ID);
