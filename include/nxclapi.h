@@ -246,15 +246,16 @@ typedef unsigned long HREQUEST;
 // Mask bits (flags) for NXCModifyObject()
 //
 
-#define OBJ_UPDATE_NAME             ((DWORD)0x01)
-#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x02)
-#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x04)
-#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x08)
-#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x10)
-#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x20)
-#define OBJ_UPDATE_ACL              ((DWORD)0x40)
-#define OBJ_UPDATE_IMAGE            ((DWORD)0x80)
-#define OBJ_UPDATE_ALL              ((DWORD)0xFF)
+#define OBJ_UPDATE_NAME             ((DWORD)0x0001)
+#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x0002)
+#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x0004)
+#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x0008)
+#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x0010)
+#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x0020)
+#define OBJ_UPDATE_ACL              ((DWORD)0x0040)
+#define OBJ_UPDATE_IMAGE            ((DWORD)0x0080)
+#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x0100)
+#define OBJ_UPDATE_ALL              ((DWORD)0x01FF)
 
 
 //
@@ -552,6 +553,7 @@ typedef struct
          TCHAR szObjectId[MAX_OID_LENGTH];
          WORD wAgentPort;     // Listening TCP port for native agent
          WORD wAuthMethod;    // Native agent's authentication method
+         TCHAR *pszDescription;
       } node;
       struct
       {
@@ -562,6 +564,11 @@ typedef struct
          DWORD dwCategory;
          TCHAR *pszDescription;
       } container;
+      struct
+      {
+         DWORD dwVersion;
+         TCHAR *pszDescription;
+      } dct;
    };
 } NXC_OBJECT;
 
@@ -575,6 +582,7 @@ typedef struct
    DWORD dwObjectId;
    DWORD dwFlags;
    TCHAR *pszName;
+   TCHAR *pszDescription;
    int iAgentPort;
    int iAuthType;
    TCHAR *pszSecret;

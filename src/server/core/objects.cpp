@@ -666,6 +666,12 @@ void DumpObjects(void)
             printf("   Category: %s\n   Description: %s\n", pCat ? pCat->szName : "<unknown>",
                    ((Container *)g_pIndexById[i].pObject)->Description());
             break;
+         case OBJECT_TEMPLATE:
+            printf("   Version: %d.%d\n   Description: %s\n", 
+                   ((Template *)(g_pIndexById[i].pObject))->VersionMajor(),
+                   ((Template *)(g_pIndexById[i].pObject))->VersionMinor(),
+                   ((Template *)(g_pIndexById[i].pObject))->Description());
+            break;
       }
    }
    MutexUnlock(g_hMutexIdIndex);

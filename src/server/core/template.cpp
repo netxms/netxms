@@ -32,6 +32,8 @@ Template::Template()
    m_dwNumItems = 0;
    m_ppItems = NULL;
    m_dwDCILockStatus = INVALID_INDEX;
+   m_pszDescription = NULL;
+   m_dwVersion = 0x00010000;  // Initial version is 1.0
 }
 
 
@@ -42,6 +44,7 @@ Template::Template()
 Template::~Template()
 {
    DestroyItems();
+   safe_free(m_pszDescription);
 }
 
 
@@ -67,12 +70,12 @@ void Template::DestroyItems(void)
 
 BOOL Template::CreateFromDB(DWORD dwId)
 {
-   char szQuery[256];
+   TCHAR *pszStr, szQuery[256];
    DB_RESULT hResult;
    DWORD i, dwNumNodes, dwNodeId;
    NetObj *pObject;
 
-   sprintf(szQuery, "SELECT id,name,is_deleted,image_id FROM templates WHERE id=%d", dwId);
+   _stprintf(szQuery, _T("SELECT id,name,is_deleted,image_id,version,description FROM templates WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -88,6 +91,10 @@ BOOL Template::CreateFromDB(DWORD dwId)
    strncpy(m_szName, DBGetField(hResult, 0, 1), MAX_OBJECT_NAME);
    m_bIsDeleted = DBGetFieldLong(hResult, 0, 2);
    m_dwImageId = DBGetFieldULong(hResult, 0, 3);
+   m_dwVersion = DBGetFieldULong(hResult, 0, 4);
+   pszStr = DBGetField(hResult, 0, 5);
+   m_pszDescription = _tcsdup(CHECK_NULL_EX(pszStr));
+   DecodeSQLString(m_pszDescription);
 
    DBFreeResult(hResult);
 
@@ -97,7 +104,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    // Load related nodes list
    if (!m_bIsDeleted)
    {
-      sprintf(szQuery, "SELECT node_id FROM dct_node_map WHERE template_id=%d", m_dwId);
+      _stprintf(szQuery, _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -137,7 +144,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
 
 BOOL Template::SaveToDB(void)
 {
-   char szQuery[1024];
+   TCHAR *pszEscDescr, szQuery[1024];
    DB_RESULT hResult;
    DWORD i;
    BOOL bNewObject = TRUE;
@@ -146,7 +153,7 @@ BOOL Template::SaveToDB(void)
    Lock();
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM templates WHERE id=%ld", m_dwId);
+   _stprintf(szQuery, _T("SELECT id FROM templates WHERE id=%ld"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {
@@ -156,13 +163,17 @@ BOOL Template::SaveToDB(void)
    }
 
    // Form and execute INSERT or UPDATE query
+   pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO templates (id,name,is_deleted,image_id) VALUES (%ld,'%s',%d,%ld)",
-              m_dwId, m_szName, m_bIsDeleted, m_dwImageId);
+      sprintf(szQuery, "INSERT INTO templates (id,name,is_deleted,image_id,version,"
+                       "description) VALUES (%ld,'%s',%d,%ld,%ld,'%s')",
+              m_dwId, m_szName, m_bIsDeleted, m_dwImageId, m_dwVersion, pszEscDescr);
    else
-      sprintf(szQuery, "UPDATE templates SET name='%s',is_deleted=%d,image_id=%ld WHERE id=%ld",
-              m_szName, m_bIsDeleted, m_dwImageId, m_dwId);
+      sprintf(szQuery, "UPDATE templates SET name='%s',is_deleted=%d,image_id=%ld,"
+                       "version=%ld,description='%s' WHERE id=%ld",
+              m_szName, m_bIsDeleted, m_dwImageId, m_dwVersion, pszEscDescr, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   free(pszEscDescr);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
@@ -346,6 +357,7 @@ BOOL Template::LockDCIList(DWORD dwSessionId)
    if (m_dwDCILockStatus == INVALID_INDEX)
    {
       m_dwDCILockStatus = dwSessionId;
+      m_bDCIListModified = FALSE;
       bSuccess = TRUE;
    }
    Unlock();
@@ -365,6 +377,12 @@ BOOL Template::UnlockDCIList(DWORD dwSessionId)
    if (m_dwDCILockStatus == dwSessionId)
    {
       m_dwDCILockStatus = INVALID_INDEX;
+      if (m_bDCIListModified && (Type() == OBJECT_TEMPLATE))
+      {
+         m_dwVersion++;
+         Modify();
+      }
+      m_bDCIListModified = FALSE;
       bSuccess = TRUE;
    }
    Unlock();
@@ -452,4 +470,40 @@ const DCItem *Template::GetItemById(DWORD dwItemId)
 void Template::CalculateCompoundStatus(void)
 {
    m_iStatus = STATUS_UNMANAGED;
+}
+
+
+//
+// Create CSCP message with object's data
+//
+
+void Template::CreateMessage(CSCPMessage *pMsg)
+{
+   NetObj::CreateMessage(pMsg);
+   pMsg->SetVariable(VID_TEMPLATE_VERSION, m_dwVersion);
+   pMsg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_pszDescription));
+}
+
+
+//
+// Modify object from message
+//
+
+DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      Lock();
+
+   // Change template version
+   if (pRequest->IsVariableExist(VID_TEMPLATE_VERSION))
+      m_dwVersion = pRequest->GetVariableLong(VID_TEMPLATE_VERSION);
+
+   // Change description
+   if (pRequest->IsVariableExist(VID_DESCRIPTION))
+   {
+      safe_free(m_pszDescription);
+      m_pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
+   }
+
+   return NetObj::ModifyFromMessage(pRequest, TRUE);
 }

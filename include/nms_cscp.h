@@ -373,6 +373,7 @@ typedef struct
 #define VID_NUM_ITEMS               ((DWORD)111)
 #define VID_ITEM_LIST               ((DWORD)112)
 #define VID_MAC_ADDR                ((DWORD)113)
+#define VID_TEMPLATE_VERSION        ((DWORD)114)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

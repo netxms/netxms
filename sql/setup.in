@@ -7,6 +7,8 @@
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DBFormatVersion',DB_FORMAT_VERSION,0,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DBSyntax',DB_SYNTAX,0,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NewNodePollingInterval','60',1,1);

@@ -172,6 +172,9 @@ protected:
    DWORD m_dwNumItems;     // Number of data collection items
    DCItem **m_ppItems;     // Data collection items
    DWORD m_dwDCILockStatus;
+   DWORD m_dwVersion;
+   TCHAR *m_pszDescription;
+   BOOL m_bDCIListModified;
 
    void LoadItemsFromDB(void);
    void DestroyItems(void);
@@ -186,7 +189,14 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
    virtual void CalculateCompoundStatus(void);
+
+   int VersionMajor(void) { return m_dwVersion >> 16; }
+   int VersionMinor(void) { return m_dwVersion & 0xFFFF; }
+   const TCHAR *Description(void) { return CHECK_NULL(m_pszDescription); }
 
    BOOL AddItem(DCItem *pItem);
    BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
@@ -196,6 +206,7 @@ public:
    const DCItem *GetItemById(DWORD dwItemId);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
+   void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
 };
@@ -468,7 +479,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
 
    DWORD Category(void) { return m_dwCategory; }
-   const char *Description(void) { return CHECK_NULL(m_pszDescription); }
+   const TCHAR *Description(void) { return CHECK_NULL(m_pszDescription); }
 
    void LinkChildObjects(void);
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }

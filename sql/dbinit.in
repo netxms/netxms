@@ -17,14 +17,22 @@
 #include <netxmsdb.h>
 
 // Define common macros for uncommon data types
-#ifdef DB_MSSQL
-# define DT_TEXT		text
+// and database syntax type
+#if defined(DB_MSSQL)
+
+#define DB_SYNTAX	'MSSQL'
+#define DT_TEXT		text
+
+#elif defined(DB_POSTGRESQL)
+
+#define DB_SYNTAX	'PGSQL'
+#define DT_TEXT		varchar // change it to oid?
+
 #else
-# ifdef DB_POSTGRESQL
-#  define DT_TEXT		varchar // change it to oid?
-# else
-#  define DT_TEXT		blob
-# endif
+
+#define DB_SYNTAX	'MYSQL'
+#define DT_TEXT		blob
+
 #endif
 
 // String concatenation for multi-line texts

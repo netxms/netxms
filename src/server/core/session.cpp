@@ -1630,6 +1630,8 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
+               if (bSuccess)
+                  ((Template *)pObject)->SetDCIModificationFlag();
             }
             else  // User doesn't have MODIFY rights on object
             {

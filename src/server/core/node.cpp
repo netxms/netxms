@@ -856,7 +856,7 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
 
 void Node::CreateMessage(CSCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
+   Template::CreateMessage(pMsg);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_DISCOVERY_FLAGS, m_dwDiscoveryFlags);
    pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
@@ -892,5 +892,5 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_COMMUNITY_STRING))
       pRequest->GetVariableStr(VID_COMMUNITY_STRING, m_szCommunityString, MAX_COMMUNITY_LENGTH);
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return Template::ModifyFromMessage(pRequest, TRUE);
 }

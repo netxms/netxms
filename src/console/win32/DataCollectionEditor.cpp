@@ -53,6 +53,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_COMMAND(ID_ITEM_GRAPH, OnItemGraph)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_GRAPH, OnUpdateItemGraph)
 	ON_COMMAND(ID_ITEM_COPY, OnItemCopy)
+	ON_COMMAND(ID_FILE_EXPORT, OnFileExport)
+	ON_UPDATE_COMMAND_UI(ID_FILE_EXPORT, OnUpdateFileExport)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
@@ -379,6 +381,17 @@ void CDataCollectionEditor::OnUpdateItemGraph(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
 }
 
+void CDataCollectionEditor::OnUpdateFileExport(CCmdUI* pCmdUI) 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = NXCFindObjectById(m_pItemList->dwNodeId);
+   if (pObject != NULL)
+      pCmdUI->Enable(pObject->iClass == OBJECT_TEMPLATE);
+   else
+      pCmdUI->Enable(FALSE);
+}
+
 
 //
 // Clear list view selection and select specified item
@@ -545,5 +558,23 @@ void CDataCollectionEditor::OnItemCopy()
 
       // Cleanup
       free(pdwItemList);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_FILE_EXPORT message handler
+//
+
+void CDataCollectionEditor::OnFileExport() 
+{
+   CFileDialog dlg(FALSE);
+
+   dlg.m_ofn.lpstrDefExt = _T("dct");
+   dlg.m_ofn.Flags |= OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+   dlg.m_ofn.lpstrFilter = _T("Data Collection Templates (*.dct)\0*.dct\0XML Files (*.xml)\0*.xml\0All Files (*.*)\0*.*\0");
+   if (dlg.DoModal() == IDOK)
+   {
+      MessageBox(dlg.m_ofn.lpstrFile,"FILE");
    }
 }

@@ -130,8 +130,18 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 static void DestroyObject(NXC_OBJECT *pObject)
 {
    DebugPrintf(_T("DestroyObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
-   if (pObject->iClass == OBJECT_CONTAINER)
-      safe_free(pObject->container.pszDescription);
+   switch(pObject->iClass)
+   {
+      case OBJECT_CONTAINER:
+         safe_free(pObject->container.pszDescription);
+         break;
+      case OBJECT_NODE:
+         safe_free(pObject->node.pszDescription);
+         break;
+      case OBJECT_TEMPLATE:
+         safe_free(pObject->dct.pszDescription);
+         break;
+   }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
@@ -201,6 +211,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
          pMsg->GetVariableStr(VID_COMMUNITY_STRING, pObject->node.szCommunityString, MAX_COMMUNITY_LENGTH);
          pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
+         pObject->node.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
@@ -208,6 +219,10 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
       case OBJECT_CONTAINER:
          pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
          pObject->container.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
+         break;
+      case OBJECT_TEMPLATE:
+         pObject->dct.dwVersion = pMsg->GetVariableLong(VID_TEMPLATE_VERSION);
+         pObject->dct.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          break;
       default:
          break;
@@ -446,6 +461,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_OBJECT_UPDATE *pUpdate)
       msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
    if (pUpdate->dwFlags & OBJ_UPDATE_IMAGE)
       msg.SetVariable(VID_IMAGE_ID, pUpdate->dwImage);
+   if (pUpdate->dwFlags & OBJ_UPDATE_DESCRIPTION)
+      msg.SetVariable(VID_DESCRIPTION, pUpdate->pszDescription);
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
    {
       DWORD i, dwId1, dwId2;
