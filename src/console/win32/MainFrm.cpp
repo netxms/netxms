@@ -188,3 +188,4 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam);
 }
+

@@ -47,6 +47,8 @@ src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
+src/console/win32/DCIDataView.cpp -text
+src/console/win32/DCIDataView.h -text
 src/console/win32/DCIPropDlg.cpp -text
 src/console/win32/DCIPropDlg.h -text
 src/console/win32/DataCollectionEditor.cpp -text
@@ -139,6 +141,7 @@ src/console/win32/res/login.bmp -text
 src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
+src/console/win32/tools.cpp -text
 src/console/win32starter/nxcstart.cpp -text
 src/console/win32starter/nxcstart.dsp -text
 src/console/win32starter/nxcstart.dsw -text

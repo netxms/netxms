@@ -16,6 +16,10 @@
 #define ID_FIND_OBJECT                  108
 #define IDR_EDIT_DCI                    108
 #define IDR_DC_EDITOR                   108
+#define IDR_DCI_DATA_VIEW               109
+#define ID_INDICATOR_NUM_ROWS           109
+#define ID_INDICATOR_CURR_ROW           110
+#define IDC_STATUS_BAR                  111
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -158,6 +162,8 @@
 #define ID_ITEM_EDIT                    32828
 #define ID_ITEM_ACTIVATE                32829
 #define ID_ITEM_DISABLE                 32830
+#define ID_ITEM_SHOWDATA                32836
+#define ID_ITEM_GRAPH                   32837
 
 // Next default values for new objects
 // 
@@ -165,8 +171,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        175
-#define _APS_NEXT_COMMAND_VALUE         32836
+#define _APS_NEXT_COMMAND_VALUE         32840
 #define _APS_NEXT_CONTROL_VALUE         1071
-#define _APS_NEXT_SYMED_VALUE           109
+#define _APS_NEXT_SYMED_VALUE           112
 #endif
 #endif

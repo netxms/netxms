@@ -1408,6 +1408,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          dwTimeFrom = pRequest->GetVariableLong(VID_TIME_FROM);
          dwTimeTo = pRequest->GetVariableLong(VID_TIME_TO);
 
+         szCond[0] = 0;
          if (dwTimeFrom != 0)
          {
             sprintf(szCond, " AND timestamp>=%d", dwTimeFrom);
@@ -1453,7 +1454,10 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                switch(iType)
                {
                   case DTYPE_INTEGER:
-                     pCurr->value.dwInteger = htonl(DBGetFieldAsyncULong(hResult, 0));
+                     pCurr->value.dwInteger = htonl(DBGetFieldAsyncULong(hResult, 1));
+                     break;
+                  case DTYPE_FLOAT:
+                     pCurr->value.dFloat = htond(DBGetFieldAsyncDouble(hResult, 1));
                      break;
                   case DTYPE_STRING:
                      DBGetFieldAsync(hResult, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
@@ -1462,6 +1466,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);
             }
             DBFreeAsyncResult(hResult);
+            pData->dwNumRows = htonl(dwNumRows);
 
             // Prepare and send raw message with fetched data
             m_pSendQueue->Put(

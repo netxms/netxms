@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CDCIPropDlg
-LastTemplate=CDialog
+LastClass=CDCIDataView
+LastTemplate=CMDIChildWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=38
+ClassCount=39
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -16,11 +16,11 @@ Class7=CEventBrowser
 Class9=CMapView
 
 ResourceCount=45
-Resource1=IDD_GROUP_PROPERTIES (English (U.S.))
+Resource1=IDD_SELECT_USER (English (U.S.))
 Resource2=IDD_GROUP_PROPERTIES
-Resource3=IDD_SET_PASSWORD (English (U.S.))
+Resource3=IDD_NEW_USER (English (U.S.))
 Resource4=IDR_MAINFRAME
-Resource5=IDD_EDIT_EVENT (English (U.S.))
+Resource5=IDA_OBJECT_BROWSER (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -30,11 +30,11 @@ Resource6=IDA_OBJECT_BROWSER
 Class11=CProgressDialog
 Resource7=IDD_ABOUTBOX
 Class12=CObjectBrowser
-Resource8=IDD_SELECT_USER (English (U.S.))
+Resource8=IDD_REQUEST_PROCESSING (English (U.S.))
 Class13=CObjectPropDlg
 Resource9=IDD_SET_PASSWORD
-Resource10=IDD_OBJECT_CAPS (English (U.S.))
-Resource11=IDD_OBJECT_SECURITY (English (U.S.))
+Resource10=IDD_LOGIN (English (U.S.))
+Resource11=IDD_OBJECT_CAPS (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,13 +42,13 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDA_MDI_DEFAULT (English (U.S.))
+Resource17=IDM_VIEW_SPECIFIC (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDM_CONTEXT (English (U.S.))
+Resource18=IDD_GROUP_PROPERTIES (English (U.S.))
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource20=IDD_LOGIN
 Class17=CObjectPreview
-Resource21=IDM_VIEW_SPECIFIC (English (U.S.))
+Resource21=IDM_CONTEXT (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
@@ -56,7 +56,7 @@ Resource22=IDD_OBJECT_SECURITY
 Class21=CEditBox
 Class22=COPGeneral
 Class23=CNodePropsGeneral
-Resource23=IDD_NEW_USER (English (U.S.))
+Resource23=IDD_OBJECT_GENERAL (English (U.S.))
 Class24=CObjectPropCaps
 Class25=CObjectPropSheet
 Resource24=IDD_USER_PROPERTIES
@@ -64,36 +64,37 @@ Class26=CRequestProcessingDlg
 Resource25=IDA_MDI_DEFAULT
 Resource26=IDD_PROGRESS (English (U.S.))
 Resource27=IDD_EDIT_EVENT
-Resource28=IDD_USER_PROPERTIES (English (U.S.))
+Resource28=IDD_OBJECT_SECURITY (English (U.S.))
 Class27=CObjectPropsGeneral
-Resource29=IDD_LOGIN (English (U.S.))
+Resource29=IDA_MDI_DEFAULT (English (U.S.))
 Class28=CObjectPropsSecurity
-Resource30=IDD_REQUEST_PROCESSING (English (U.S.))
-Resource31=IDD_ABOUTBOX (English (U.S.))
+Resource30=IDD_EDIT_EVENT (English (U.S.))
+Resource31=IDR_MAINFRAME (English (U.S.))
 Resource32=IDD_REQUEST_PROCESSING
 Class29=CUserSelectDlg
 Resource33=IDD_NEW_USER
 Class30=CUserEditor
-Resource34=IDR_MAINFRAME (English (U.S.))
+Resource34=IDD_DCI_PROPERTIES
 Class31=CNewUserDlg
 Resource35=IDD_OBJECT_GENERAL
 Resource36=IDD_OBJECT_NODE_GENERAL
 Class32=CUserPropDlg
-Resource37=IDD_OBJECT_NODE_GENERAL (English (U.S.))
+Resource37=IDD_ABOUTBOX (English (U.S.))
 Resource38=IDD_OBJECT_CAPS
 Class33=CGroupPropDlg
 Resource39=IDM_CONTEXT
 Resource40=IDD_SELECT_USER
 Resource41=IDM_VIEW_SPECIFIC
-Resource42=IDA_OBJECT_BROWSER (English (U.S.))
+Resource42=IDD_SET_PASSWORD (English (U.S.))
 Class34=CPasswordChangeDlg
 Class35=CNodeSummary
 Class36=CNetSummaryFrame
 Class37=CDataCollectionEditor
-Resource43=IDD_OBJECT_GENERAL (English (U.S.))
+Resource43=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Class38=CDCIPropDlg
-Resource44=IDD_DCI_PROPERTIES (English (U.S.))
-Resource45=IDD_DCI_PROPERTIES
+Resource44=IDD_USER_PROPERTIES (English (U.S.))
+Class39=CDCIDataView
+Resource45=IDD_DCI_PROPERTIES (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -563,7 +564,9 @@ Command23=ID_ITEM_EDIT
 Command24=ID_ITEM_DELETE
 Command25=ID_ITEM_ACTIVATE
 Command26=ID_ITEM_DISABLE
-CommandCount=26
+Command27=ID_ITEM_SHOWDATA
+Command28=ID_ITEM_GRAPH
+CommandCount=28
 
 [ACL:IDA_MDI_DEFAULT (English (U.S.))]
 Type=1
@@ -1069,7 +1072,9 @@ Command14=ID_ITEM_EDIT
 Command15=ID_ITEM_DELETE
 Command16=ID_ITEM_ACTIVATE
 Command17=ID_ITEM_DISABLE
-CommandCount=17
+Command18=ID_ITEM_SHOWDATA
+Command19=ID_ITEM_GRAPH
+CommandCount=19
 
 [DLG:IDD_SET_PASSWORD (English (U.S.))]
 Type=1
@@ -1166,7 +1171,7 @@ VirtualFilter=dWC
 
 [DLG:IDD_DCI_PROPERTIES]
 Type=1
-Class=?
+Class=CDCIPropDlg
 ControlCount=21
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_BUTTON_SELECT,button,1342242816
@@ -1189,4 +1194,12 @@ Control18=IDC_STATIC,button,1342177287
 Control19=IDC_STATIC,static,1342308352
 Control20=IDC_STATIC,static,1342308352
 Control21=IDC_STATIC,static,1342308352
+
+[CLS:CDCIDataView]
+Type=0
+HeaderFile=DCIDataView.h
+ImplementationFile=DCIDataView.cpp
+BaseClass=CMDIChildWnd
+Filter=M
+VirtualFilter=mfWC
 

@@ -47,6 +47,24 @@ QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal)
 
 
 //
+// Swap bytes in double
+//
+
+double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
+{
+   double dResult;
+   BYTE *sptr = (BYTE *)&dVal;
+   BYTE *dptr = (BYTE *)&dResult + 7;
+   int i;
+
+   for(i = 0; i < 8; i++, sptr++, dptr--)
+      *dptr = *sptr;
+
+   return dResult;
+}
+
+
+//
 // strupr() implementation for non-windows platforms
 //
 

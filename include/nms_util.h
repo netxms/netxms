@@ -84,9 +84,13 @@
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define htonq(x) __bswap_64(x)
 #define ntohq(x) __bswap_64(x)
+#define htond(x) __bswap_double(x)
+#define ntohd(x) __bswap_double(x)
 #else
 #define htonq(x) (x)
 #define ntohq(x) (x)
+#define htond(x) (x)
+#define ntohd(x) (x)
 #endif
 
 extern "C"
@@ -94,6 +98,7 @@ extern "C"
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
+   double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
 
 #ifndef _WIN32
    void LIBNETXMS_EXPORTABLE strupr(char *in);

@@ -210,6 +210,19 @@ long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 
 
 //
+// Get field's value as double
+//
+
+double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
+{
+   char *szVal;
+
+   szVal = DBGetField(hResult, iRow, iColumn);
+   return szVal == NULL ? 0 : strtod(szVal, NULL);
+}
+
+
+//
 // Get number of rows in result
 //
 
@@ -291,6 +304,18 @@ long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
    char szBuffer[64];
    
    return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtol(szBuffer, NULL, 10);
+}
+
+
+//
+// Get field's value as signed long from asynchronous SELECT result
+//
+
+double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
+{
+   char szBuffer[64];
+   
+   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtod(szBuffer, NULL);
 }
 
 

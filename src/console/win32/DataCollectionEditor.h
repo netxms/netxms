@@ -54,6 +54,8 @@ protected:
 	afx_msg void OnUpdateItemEdit(CCmdUI* pCmdUI);
 	afx_msg void OnItemDelete();
 	afx_msg void OnUpdateItemDelete(CCmdUI* pCmdUI);
+	afx_msg void OnItemShowdata();
+	afx_msg void OnUpdateItemShowdata(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()

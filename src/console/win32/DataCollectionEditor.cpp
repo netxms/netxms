@@ -45,6 +45,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_EDIT, OnUpdateItemEdit)
 	ON_COMMAND(ID_ITEM_DELETE, OnItemDelete)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_DELETE, OnUpdateItemDelete)
+	ON_COMMAND(ID_ITEM_SHOWDATA, OnItemShowdata)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_SHOWDATA, OnUpdateItemShowdata)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
@@ -73,7 +75,7 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
-                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+                                  LVS_EX_FULLROWSELECT);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
@@ -325,6 +327,11 @@ void CDataCollectionEditor::OnUpdateItemDelete(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
+void CDataCollectionEditor::OnUpdateItemShowdata(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
 
 //
 // Clear list view selection and select specified item
@@ -388,4 +395,30 @@ void CDataCollectionEditor::OnItemDelete()
 void CDataCollectionEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_ITEM_EDIT, 0);
+}
+
+
+//
+// Show collected data for specific item
+//
+
+void CDataCollectionEditor::OnItemShowdata() 
+{
+   int iItem;
+   DWORD dwItemId, dwIndex;
+   char szBuffer[384];
+   NXC_OBJECT *pObject;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   while(iItem != -1)
+   {
+      dwItemId = m_wndListCtrl.GetItemData(iItem);
+      dwIndex = NXCItemIndex(m_pItemList, dwItemId);
+      pObject = NXCFindObjectById(m_pItemList->dwNodeId);
+      sprintf(szBuffer, "%s - %s:%s", pObject->szName, 
+              g_pszItemOrigin[m_pItemList->pItems[dwIndex].iSource],
+              m_pItemList->pItems[dwIndex].szName);
+      theApp.ShowDCIData(m_pItemList->dwNodeId, dwItemId, szBuffer);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
 }

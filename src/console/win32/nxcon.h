@@ -42,6 +42,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "UserEditor.h"
 #include "NetSummaryFrame.h"
 #include "DataCollectionEditor.h"
+#include "DCIDataView.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -75,6 +76,7 @@ public:
 	public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -120,6 +122,7 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL m_bCtrlPressed;
 	BOOL m_bEventBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bUserEditorActive;
@@ -131,6 +134,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName);
 	void ErrorBox(DWORD dwError, char *pszMessage = NULL, char *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);

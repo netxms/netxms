@@ -254,4 +254,11 @@ typedef struct tagICMPHDR
 
 #define COMPARE_NUMBERS(n1,n2) (((n1) < (n2)) ? -1 : (((n1) > (n2)) ? 1 : 0))
 
+
+//
+// Increment pointer to given number of bytes
+//
+
+#define inc_ptr(ptr, step, ptype) ptr = (ptype *)(((char *)ptr) + step)
+
 #endif   /* _nms_common_h_ */

@@ -212,6 +212,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Activate\tAlt+A",            ID_ITEM_ACTIVATE
         MENUITEM "D&isable\tAlt+D",             ID_ITEM_DISABLE
+        MENUITEM SEPARATOR
+        MENUITEM "&Show data\tCtrl+S",          ID_ITEM_SHOWDATA
+        MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
     END
 END
 
@@ -250,6 +253,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Activate",                   ID_ITEM_ACTIVATE
         MENUITEM "D&isable",                    ID_ITEM_DISABLE
+        MENUITEM SEPARATOR
+        MENUITEM "&Show data",                  ID_ITEM_SHOWDATA
+        MENUITEM "&Graph",                      ID_ITEM_GRAPH
     END
 END
 
@@ -778,6 +784,7 @@ BEGIN
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
     IDR_DC_EDITOR           "\nData Collection Configuration\nData Collection Configuration"
+    IDR_DCI_DATA_VIEW       "\nCollected Data\nCollected Data"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

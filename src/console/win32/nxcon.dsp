@@ -108,6 +108,10 @@ SOURCE=.\DataCollectionEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DCIDataView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DCIPropDlg.cpp
 # End Source File
 # Begin Source File
@@ -233,6 +237,10 @@ SOURCE=.\ToolBox.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\tools.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\UserEditor.cpp
 # End Source File
 # Begin Source File
@@ -254,6 +262,10 @@ SOURCE=.\ControlPanel.h
 # Begin Source File
 
 SOURCE=.\DataCollectionEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DCIDataView.h
 # End Source File
 # Begin Source File
 

@@ -65,13 +65,23 @@ DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText);
 DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText);
 DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText);
 DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText);
+DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, void *pArg6, char *pszInfoText);
 
 
 //
-// Drawing functions
+// Window and drawing functions
 //
 
 void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors);
+
+
+//
+// Utility functions
+//
+
+char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer);
+CSize GetWindowSize(CWnd *pWnd);
 
 
 //

@@ -45,6 +45,9 @@ struct RqData
    void *pArg1;
    void *pArg2;
    void *pArg3;
+   void *pArg4;
+   void *pArg5;
+   void *pArg6;
 };
 
 
@@ -142,6 +145,9 @@ static DWORD WINAPI RequestThread(void *pArg)
          break;
       case 3:
          dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3);
+         break;
+      case 6:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, pData->pArg4, pData->pArg5, pData->pArg6);
          break;
    }
    if (pData->hWnd != NULL)
@@ -252,6 +258,28 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *ps
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
    rqData.pArg3 = pArg3;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Perform request with 6 parameter
+//
+
+DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, void *pArg6, char *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 6;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pArg3 = pArg3;
+   rqData.pArg4 = pArg4;
+   rqData.pArg5 = pArg5;
+   rqData.pArg6 = pArg6;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
 }

@@ -320,7 +320,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
          (*ppData)->dwItemId = dwItemId;
          (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
          (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
-         (*ppData)->pRows = (NXC_DCI_ROW *)MemAlloc((*ppData)->dwNumRows * (*ppData)->wRowSize);
+         (*ppData)->pRows = ((*ppData)->dwNumRows > 0 ? 
+               (NXC_DCI_ROW *)MemAlloc((*ppData)->dwNumRows * (*ppData)->wRowSize) : NULL);
 
          // Convert and copy values from message to rows in result
          pSrc = (DCI_DATA_ROW *)(((char *)pHdr) + sizeof(DCI_DATA_HEADER));
@@ -332,6 +333,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
             {
                case DTYPE_INTEGER:
                   pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
+                  break;
+               case DTYPE_FLOAT:
+                  pDst->value.dFloat = ntohd(pSrc->value.dFloat);
                   break;
                case DTYPE_STRING:
                   strcpy(pDst->value.szString, pSrc->value.szString);
@@ -361,8 +365,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
 
 void LIBNXCL_EXPORTABLE NXCDestroyDCIData(NXC_DCI_DATA *pData)
 {
-   MemFree(pData->pRows);
-   MemFree(pData);
+   if (pData != NULL)
+   {
+      MemFree(pData->pRows);
+      MemFree(pData);
+   }
 }
 
 

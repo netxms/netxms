@@ -69,6 +69,7 @@ CConsoleApp::CConsoleApp()
    m_bNetSummaryActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
+   m_bCtrlPressed = FALSE;
 }
 
 
@@ -807,4 +808,83 @@ void CConsoleApp::ErrorBox(DWORD dwError, char *pszMessage, char *pszTitle)
    sprintf(szBuffer, (pszMessage != NULL) ? pszMessage : "Error: %s", 
            NXCGetErrorText(dwError));
    m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : "Error", MB_ICONSTOP);
+}
+
+
+//
+// Show window with DCI's data
+//
+
+void CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName)
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CCreateContext context;
+   CDCIDataView *pWnd;
+
+   pWnd = new CDCIDataView(dwNodeId, dwItemId);
+
+   // load the frame
+	context.m_pCurrentFrame = pFrame;
+
+	if (pWnd->LoadFrame(IDR_DCI_DATA_VIEW, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, &context))
+   {
+	   CString strFullString, strTitle;
+
+	   if (strFullString.LoadString(IDR_DCI_DATA_VIEW))
+		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
+
+      // add node name to title
+      strTitle += " - [";
+      strTitle += pszItemName;
+      strTitle += "]";
+
+	   // set the handles and redraw the frame and parent
+	   pWnd->SetHandles(m_hMDIMenu, m_hMDIAccel);
+	   pWnd->SetTitle(strTitle);
+	   pWnd->InitialUpdateFrame(NULL, TRUE);
+   }
+   else
+	{
+		delete pWnd;
+	}
+}
+
+
+//
+// Intercept messages before they are dispatched
+//
+
+BOOL CConsoleApp::PreTranslateMessage(MSG* pMsg) 
+{
+   BOOL bProcessed = FALSE;
+
+   switch(pMsg->message)
+   {
+      case WM_KEYDOWN:
+         switch(pMsg->wParam)
+         {
+            case VK_CONTROL:
+               m_bCtrlPressed = TRUE;
+               break;
+            case VK_TAB:
+               if (m_bCtrlPressed)
+               {
+                  m_pMainWnd->MessageBox("Ctrl+TAB");
+                  bProcessed = TRUE;
+               }
+               break;
+         }
+         break;
+      case WM_KEYUP:
+         switch(pMsg->wParam)
+         {
+            case VK_CONTROL:
+               m_bCtrlPressed = FALSE;
+               break;
+         }
+         break;
+      default:
+         break;
+   }
+   return bProcessed ? TRUE : CWinApp::PreTranslateMessage(pMsg);
 }

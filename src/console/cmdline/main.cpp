@@ -147,7 +147,8 @@ int main(int argc, char *argv[])
    {
       printf("Login [admin]: ");
       gets(szLogin);
-      printf("'%s'\n",szLogin);
+      if (szLogin[0] == 0)
+         strcpy(szLogin, "admin");
    }
 
    // Ask for password if needed
@@ -170,7 +171,21 @@ int main(int argc, char *argv[])
    }
    else
    {
+      NXC_DCI_DATA *pData;
+
       printf("Connection established.\n");
+
+      dwResult = NXCGetDCIData(5, 143, 100, 0, 0, &pData);
+      if (dwResult == RCC_SUCCESS)
+      {
+         printf("data receieved\n");
+         NXCDestroyDCIData(pData);
+      }
+      else
+      {
+         printf("ERROR: %s\n", NXCGetErrorText(dwResult));
+      }
+
       CommandLoop();
       NXCDisconnect();
    }

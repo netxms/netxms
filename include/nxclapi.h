@@ -430,6 +430,8 @@ typedef struct
 // Row structure
 //
 
+#pragma pack(1)
+
 typedef struct
 {
    DWORD dwTimeStamp;
@@ -441,6 +443,8 @@ typedef struct
       char szString[MAX_STRING_VALUE];
    } value;
 } NXC_DCI_ROW;
+
+#pragma pack()
 
 
 //
