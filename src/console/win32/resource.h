@@ -308,6 +308,27 @@
 #define IDC_STATIC_REFRESH              1208
 #define IDC_STATIC_SECONDS              1209
 #define IDC_CB_BACKGROUND               1211
+#define IDC_CB_AXIS                     1212
+#define IDC_CB_GRID                     1213
+#define IDC_CB_TEXT                     1214
+#define IDC_CB_LABELBK                  1215
+#define IDC_CB_LABEL                    1216
+#define IDC_CB_ITEM1                    1217
+#define IDC_CB_ITEM5                    1218
+#define IDC_CB_ITEM2                    1219
+#define IDC_CB_ITEM6                    1220
+#define IDC_CB_ITEM3                    1221
+#define IDC_CB_ITEM7                    1222
+#define IDC_CB_ITEM4                    1223
+#define IDC_CB_ITEM8                    1224
+#define IDC_CB_ITEM9                    1225
+#define IDC_CB_ITEM13                   1226
+#define IDC_CB_ITEM10                   1227
+#define IDC_CB_ITEM14                   1228
+#define IDC_CB_ITEM11                   1229
+#define IDC_CB_ITEM15                   1230
+#define IDC_CB_ITEM12                   1231
+#define IDC_CB_ITEM16                   1232
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -408,7 +429,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        249
 #define _APS_NEXT_COMMAND_VALUE         32907
-#define _APS_NEXT_CONTROL_VALUE         1212
+#define _APS_NEXT_CONTROL_VALUE         1213
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

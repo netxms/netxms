@@ -21,6 +21,13 @@ public:
 
 // Attributes
 public:
+	COLORREF m_rgbLabelTextColor;
+	COLORREF m_rgbLabelBkColor;
+	COLORREF m_rgbLineColors[MAX_GRAPH_ITEMS];
+	COLORREF m_rgbGridColor;
+	COLORREF m_rgbBkColor;
+	COLORREF m_rgbAxisColor;
+	COLORREF m_rgbTextColor;
 
 // Operations
 public:
@@ -50,24 +57,17 @@ protected:
    afx_msg int OnMouseHover(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
-	COLORREF m_rgbLabelTextColor;
-	COLORREF m_rgbLabelBkColor;
 	CPoint m_ptLastHoverPoint;
 	RECT m_rectGraph;
 	RECT m_rectInfo;
 	void DrawInfoRect(POINTS pt);
 	BOOL m_bIsActive;
 	void SetMouseTracking(void);
-	COLORREF m_rgbAxisColor;
 	double m_dCurrMaxValue;
 	double m_dSecondsPerPixel;
 	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor);
-	COLORREF m_rgbTextColor;
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
-	COLORREF m_rgbLineColors[MAX_GRAPH_ITEMS];
-	COLORREF m_rgbGridColor;
-	COLORREF m_rgbBkColor;
 	DWORD m_dwNumItems;
 	double m_dMaxValue;
 	int m_iGridSize;

@@ -113,6 +113,10 @@ SOURCE=.\AlarmBrowser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ColorSelector.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
@@ -399,6 +403,10 @@ SOURCE=.\ActionSelDlg.h
 # Begin Source File
 
 SOURCE=.\AlarmBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ColorSelector.h
 # End Source File
 # Begin Source File
 

@@ -164,8 +164,27 @@ BOOL CGraphFrame::PreCreateWindow(CREATESTRUCT& cs)
 void CGraphFrame::OnGraphProperties() 
 {
    CGraphPropDlg dlg;
+   int i;
 
+   dlg.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
+   dlg.m_rgbBackground = m_wndGraph.m_rgbBkColor;
+   dlg.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
+   dlg.m_rgbLabelBkgnd = m_wndGraph.m_rgbLabelBkColor;
+   dlg.m_rgbLabelText = m_wndGraph.m_rgbLabelTextColor;
+   dlg.m_rgbText = m_wndGraph.m_rgbTextColor;
+   for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+      dlg.m_rgbItems[i] = m_wndGraph.m_rgbLineColors[i];
    if (dlg.DoModal() == IDOK)
    {
+      m_wndGraph.m_rgbAxisColor = dlg.m_rgbAxisLines;
+      m_wndGraph.m_rgbBkColor = dlg.m_rgbBackground;
+      m_wndGraph.m_rgbGridColor = dlg.m_rgbGridLines;
+      m_wndGraph.m_rgbLabelBkColor = dlg.m_rgbLabelBkgnd;
+      m_wndGraph.m_rgbLabelTextColor = dlg.m_rgbLabelText;
+      m_wndGraph.m_rgbTextColor = dlg.m_rgbText;
+      for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+         m_wndGraph.m_rgbLineColors[i] = dlg.m_rgbItems[i];
+
+      m_wndGraph.InvalidateRect(NULL, FALSE);
    }
 }
