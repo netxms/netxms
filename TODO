@@ -12,14 +12,14 @@ GENERAL:
 - HP-UX subagent
 - Performance subagent for Windows (winperf)
 - Cross-platform pinger subagent
-- Change configure script to allow select components to build
+- Change configure script to allow selection of components to build
 - Write README for NetWare
 
 
 SERVER:
 
 - Recalculate object status after binding change
-- Add read/write locking implementation
+- Change object index lock type from mutex to read/write lock
 
 
 CORE AGENT:
