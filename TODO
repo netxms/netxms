@@ -46,6 +46,8 @@ SERVER:
 - DCI transformation scripts (probably Perl?)
 - Add database unlocking after server crash into nxdbmgr
 - Event correlation
+- Internal parameters for service checks
+- "Proxy agent for service checks" attribure for node objects
 
 
 CORE AGENT:
