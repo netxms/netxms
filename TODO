@@ -15,6 +15,8 @@ GENERAL:
 - Change configure script to allow selection of components to build
 - Write README for NetWare
 - SMS-sender interface with drivers for cell-phones/SMPP
+- Add check for read/write locks support to configure script
+- Implement daemon() function for platforms without it
 
 
 SERVER:
@@ -25,6 +27,7 @@ SERVER:
 	1. Average data collector queue length
 	2. Average database writer queue length
 - Implement sending of all alarms from database
+- Add signal handlers for UNIX
 
 
 CORE AGENT:
