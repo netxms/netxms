@@ -25,6 +25,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nms_threads.h>
 #include <nms_agent.h>
 #include <nms_cscp.h>
 #include <stdio.h>
@@ -48,7 +49,7 @@
 #else
 #define DEBUG_SUFFIX
 #endif
-#define AGENT_VERSION_STRING  NETXMS_VERSION_STRING ".1-alpha1" DEBUG_SUFFIX
+#define AGENT_VERSION_STRING  NETXMS_VERSION_STRING DEBUG_SUFFIX
 
 
 //

@@ -219,6 +219,25 @@ DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
 
 
 //
+// Get field's value as unsigned 64-bit int
+//
+
+QWORD DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn)
+{
+   INT64 iVal;
+   QWORD qwVal;
+   char *szVal;
+
+   szVal = DBGetField(hResult, iRow, iColumn);
+   if (szVal == NULL)
+      return 0;
+   iVal = strtoll(szVal, NULL, 10);
+   memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+   return qwVal;
+}
+
+
+//
 // Get field's value as signed long
 //
 
@@ -228,6 +247,19 @@ long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 
    szVal = DBGetField(hResult, iRow, iColumn);
    return szVal == NULL ? 0 : strtol(szVal, NULL, 10);
+}
+
+
+//
+// Get field's value as signed 64-bit int
+//
+
+INT64 DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn)
+{
+   char *szVal;
+
+   szVal = DBGetField(hResult, iRow, iColumn);
+   return szVal == NULL ? 0 : strtoll(szVal, NULL, 10);
 }
 
 
@@ -319,6 +351,24 @@ DWORD DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
 
 
 //
+// Get field's value as unsigned 64-bit int from asynchronous SELECT result
+//
+
+QWORD DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn)
+{
+   INT64 iVal;
+   QWORD qwVal;
+   char szBuffer[64];
+
+   if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
+      return 0;
+   iVal = strtoll(szBuffer, NULL, 10);
+   memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
+   return qwVal;
+}
+
+
+//
 // Get field's value as signed long from asynchronous SELECT result
 //
 
@@ -327,6 +377,18 @@ long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
    char szBuffer[64];
    
    return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtol(szBuffer, NULL, 10);
+}
+
+
+//
+// Get field's value as signed 64-bit int from asynchronous SELECT result
+//
+
+INT64 DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn)
+{
+   char szBuffer[64];
+   
+   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtoll(szBuffer, NULL, 10);
 }
 
 

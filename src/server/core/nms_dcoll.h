@@ -135,7 +135,7 @@ public:
 // Data collection item class
 //
 
-class Node;
+class Template;
 
 class DCItem
 {
@@ -154,7 +154,7 @@ private:
    DWORD m_dwTemplateId;      // Related template's id
    DWORD m_dwNumThresholds;
    Threshold **m_ppThresholdList;
-   Node *m_pNode;             // Pointer to node object this item related to
+   Template *m_pNode;             // Pointer to node or template object this item related to
    char *m_pszFormula;        // Transformation formula
    MUTEX m_hMutex;
    DWORD m_dwCacheSize;       // Number of items in cache
@@ -170,9 +170,9 @@ private:
 public:
    DCItem();
    DCItem(const DCItem *pItem);
-   DCItem(DB_RESULT hResult, int iRow, Node *pNode);
+   DCItem(DB_RESULT hResult, int iRow, Template *pNode);
    DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
-          int iPollingInterval, int iRetentionTime, Node *pNode);
+          int iPollingInterval, int iRetentionTime, Template *pNode);
    ~DCItem();
 
    BOOL SaveToDB(void);
@@ -183,7 +183,7 @@ public:
    int DataSource(void) { return m_iSource; }
    int DataType(void) { return m_iDataType; }
    const char *Name(void) { return m_szName; }
-   Node *RelatedNode(void) { return m_pNode; }
+   Template *RelatedNode(void) { return m_pNode; }
 
    BOOL ReadyForPolling(time_t currTime) 
    { 

@@ -68,6 +68,7 @@ typedef unsigned long HREQUEST;
 #define OBJECT_STATUS_COUNT      9
 #define MAX_RCPT_ADDR_LEN        256
 #define MAX_EMAIL_SUBJECT_LEN    256
+#define MAC_ADDR_LENGTH          6
 
 
 //
@@ -108,6 +109,8 @@ typedef unsigned long HREQUEST;
 #define OBJECT_CONTAINER      5
 #define OBJECT_ZONE           6
 #define OBJECT_SERVICEROOT    7
+#define OBJECT_TEMPLATE       8
+#define OBJECT_TEMPLATE_GROUP 9
 
 
 //
@@ -537,6 +540,7 @@ typedef struct
          DWORD dwIpNetMask;   // Ip netmask.
          DWORD dwIfIndex;     // Interface index.
          DWORD dwIfType;      // Interface type
+         BYTE bMacAddr[MAC_ADDR_LENGTH];
       } iface;
       struct
       {

@@ -44,12 +44,11 @@ ItemValue::ItemValue()
 
 ItemValue::ItemValue(const char *pszValue)
 {
-   /* TODO: add 64-bit conversion !!! */
    strncpy(m_szString, pszValue, MAX_DB_STRING);
    m_iInt32 = strtol(m_szString, NULL, 0);
-   m_iInt64 = 0;
+   m_iInt64 = strtoll(m_szString, NULL, 0);
    m_dwInt32 = strtoul(m_szString, NULL, 0);
-   m_qwInt64 = 0;
+   m_qwInt64 = strtoull(m_szString, NULL, 0);
    m_dFloat = strtod(m_szString, NULL);
 }
 

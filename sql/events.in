@@ -234,6 +234,19 @@ INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
 		'   3) Recipient address#0D#0A' CONCAT
 		'   4) Mail subject'
 	);
+INSERT INTO events (event_id,name,severity,flags,message,description) VALUES
+	(
+		EVENT_MAC_ADDR_CHANGED, 'SYS_MAC_ADDR_CHANGED', 
+		EVENT_SEVERITY_WARNING, 1,
+		'MAC address for interface %3 changed from %4 to %5',
+		'Generated when server detects change of interface#27s MAC address.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface index#0D#0A' CONCAT
+		'   3) Interface name#0D#0A' CONCAT
+		'   4) Old MAC address#0D#0A' CONCAT
+		'   5) New MAC address'
+	);
 
 
 /*

@@ -95,7 +95,7 @@ DCItem::DCItem(const DCItem *pSrc)
 // delta_calculation,transformation,template_id,description
 //
 
-DCItem::DCItem(DB_RESULT hResult, int iRow, Node *pNode)
+DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
@@ -125,7 +125,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Node *pNode)
 //
 
 DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
-               int iPollingInterval, int iRetentionTime, Node *pNode)
+               int iPollingInterval, int iRetentionTime, Template *pNode)
 {
    m_dwId = dwId;
    m_dwTemplateId = 0;

@@ -148,6 +148,11 @@ void CObjectInfoBox::OnPaint()
                                  "Unknown" : g_szInterfaceTypes[m_pCurrObject->iface.dwIfType]);
             dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
             cy += step;
+
+            strcpy(szBuffer, "MAC: ");
+            BinToStr(m_pCurrObject->iface.bMacAddr, MAC_ADDR_LENGTH, &szBuffer[5]);
+            dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+            cy += step;
             break;
          default:
             break;

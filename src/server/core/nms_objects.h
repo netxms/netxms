@@ -163,6 +163,43 @@ public:
 
 
 //
+// Node template class
+//
+
+class Template : public NetObj
+{
+protected:
+   DWORD m_dwNumItems;     // Number of data collection items
+   DCItem **m_ppItems;     // Data collection items
+   DWORD m_dwDCILockStatus;
+
+   void LoadItemsFromDB(void);
+   void DestroyItems(void);
+
+public:
+   Template();
+   virtual ~Template();
+
+   virtual int Type(void) { return OBJECT_NODE; }
+
+   virtual BOOL SaveToDB(void);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   BOOL AddItem(DCItem *pItem);
+   BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+                   DWORD **ppdwMapIndex, DWORD **ppdwMapId);
+   BOOL DeleteItem(DWORD dwItemId);
+   int GetItemType(DWORD dwItemId);
+   const DCItem *GetItemById(DWORD dwItemId);
+   BOOL LockDCIList(DWORD dwSessionId);
+   BOOL UnlockDCIList(DWORD dwSessionId);
+   void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
+   BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
+};
+
+
+//
 // Interface class
 //
 
@@ -172,6 +209,7 @@ protected:
    DWORD m_dwIfIndex;
    DWORD m_dwIfType;
    DWORD m_dwIpNetMask;
+   BYTE m_bMacAddr[MAC_ADDR_LENGTH];
 
 public:
    Interface();
@@ -184,8 +222,11 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
+   void SetMacAddr(BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
+
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD IfIndex(void) { return m_dwIfIndex; }
+   const BYTE *MacAddr(void) { return m_bMacAddr; }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId);
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -196,7 +237,7 @@ public:
 // Node
 //
 
-class Node : public NetObj
+class Node : public Template
 {
 protected:
    DWORD m_dwFlags;
@@ -215,9 +256,6 @@ protected:
    int m_iNativeAgentFails;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
-   DWORD m_dwNumItems;     // Number of data collection items
-   DCItem **m_ppItems;     // Data collection items
-   DWORD m_dwDCILockStatus;
    AgentConnection *m_pAgentConnection;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
@@ -225,9 +263,6 @@ protected:
 
    void AgentLock(void) { MutexLock(m_hAgentAccessMutex, INFINITE); }
    void AgentUnlock(void) { MutexUnlock(m_hAgentAccessMutex); }
-
-   void LoadItemsFromDB(void);
-   void DestroyItems(void);
 
 public:
    Node();
@@ -247,12 +282,13 @@ public:
    BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
    BOOL IsBridge(void) { return m_dwFlags & NF_IS_BRIDGE ? TRUE : FALSE; }
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
-   BOOL IsLocalManagenet(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
+   BOOL IsLocalManagement(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
    const char *ObjectId(void) { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, char *szName = NULL, DWORD dwIndex = 0, DWORD dwType = 0);
+   void CreateNewInterface(DWORD dwAddr, DWORD dwNetMask, char *szName = NULL, 
+                           DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL);
    void DeleteInterface(Interface *pInterface);
 
    BOOL NewNodePoll(DWORD dwNetMask);
@@ -269,17 +305,6 @@ public:
    BOOL ReadyForDiscoveryPoll(void);
 
    virtual void CalculateCompoundStatus(void);
-
-   BOOL AddItem(DCItem *pItem);
-   BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
-                   DWORD **ppdwMapIndex, DWORD **ppdwMapId);
-   BOOL DeleteItem(DWORD dwItemId);
-   int GetItemType(DWORD dwItemId);
-   const DCItem *GetItemById(DWORD dwItemId);
-   BOOL LockDCIList(DWORD dwSessionId);
-   BOOL UnlockDCIList(DWORD dwSessionId);
-   void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
-   BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
 
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
@@ -414,6 +439,21 @@ public:
 
    void LinkChildObjects(void);
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+};
+
+
+//
+// Template group object
+//
+
+class TemplateGroup : public Container
+{
+public:
+   TemplateGroup() : Container() { }
+   TemplateGroup(char *pszName, char *pszDescription) : Container(pszName, 0, pszDescription) { }
+   virtual ~TemplateGroup() { }
+
+   virtual int Type(void) { return OBJECT_TEMPLATE_GROUP; }
 };
 
 

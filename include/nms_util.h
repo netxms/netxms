@@ -36,7 +36,6 @@
 
 #include <nms_common.h>
 #include <nms_cscp.h>
-#include <nms_threads.h>
 #include <time.h>
 
 #if HAVE_BYTESWAP_H
@@ -139,8 +138,10 @@ inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 #define ntohd(x) (x)
 #endif
 
+#ifdef __cplusplus
 extern "C"
 {
+#endif
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
@@ -156,6 +157,9 @@ extern "C"
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
+
+   void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, char *pStr);
+   DWORD LIBNETXMS_EXPORTABLE StrToBin(char *pStr, BYTE *pData, DWORD dwSize);
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
@@ -198,6 +202,16 @@ extern "C"
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 #endif
+
+#if !(HAVE_STRTOLL)
+   INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
+#endif
+#if !(HAVE_STRTOULL)
+   QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+#endif
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif   /* _nms_util_h_ */

@@ -51,7 +51,7 @@ typedef struct
 {
    DWORD dwIndex;       // Interface index
    DWORD dwIpAddr;
-   BYTE bMacAddr[6];
+   BYTE bMacAddr[MAC_ADDR_LENGTH];
 } ARP_ENTRY;
 
 
@@ -77,6 +77,7 @@ typedef struct
    DWORD dwType;
    DWORD dwIpAddr;
    DWORD dwIpNetMask;
+   BYTE bMacAddr[MAC_ADDR_LENGTH];
    int iNumSecondary;      // Number of secondary IP's on this interface
 } INTERFACE_INFO;
 

@@ -47,7 +47,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    while(!ShutdownInProgress())
    {
       pItem = (DCItem *)m_pItemQueue->GetOrBlock();
-      pNode = pItem->RelatedNode();
+      pNode = (Node *)pItem->RelatedNode();
       if (pNode != NULL)
       {
          switch(pItem->DataSource())

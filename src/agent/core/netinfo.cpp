@@ -76,6 +76,7 @@ LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
    IP_ADAPTER_INFO *pBuffer, *pInfo;
    LONG iResult = SYSINFO_RC_SUCCESS;
    char szAdapterName[MAX_OBJECT_NAME], szBuffer[256];
+   char szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
    IP_ADDR_STRING *pAddr;
 
    if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
@@ -110,13 +111,15 @@ LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
             strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
          }
 
+         BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
+
          // Compose result string for each ip address
          for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
-            sprintf(szBuffer, "%d %s/%d %d %s", pInfo->Index, 
+            sprintf(szBuffer, "%d %s/%d %d %s %s", pInfo->Index, 
                     pAddr->IpAddress.String, 
                     BitsInMask(inet_addr(pAddr->IpMask.String)),
-                    pInfo->Type, szAdapterName);
+                    pInfo->Type, szMacAddr, szAdapterName);
             NxAddResultString(value, szBuffer);
          }
       }

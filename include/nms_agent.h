@@ -175,12 +175,12 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* LIBNETXMS_INLINE */
 #else    /* __cplusplus */
 
-void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value)
-void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value)
-void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value)
-void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value)
-void LIBNETXMS_EXPORTABLE ret_int64(TCHAR *rbuf, INT64 value)
-void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value)
+void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value);
+void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value);
+void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value);
+void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value);
+void LIBNETXMS_EXPORTABLE ret_int64(TCHAR *rbuf, INT64 value);
+void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value);
 
 #endif   /* __cplusplus */
 

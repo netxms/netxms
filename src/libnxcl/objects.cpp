@@ -191,6 +191,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->iface.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
          pObject->iface.dwIfIndex = pMsg->GetVariableLong(VID_IF_INDEX);
          pObject->iface.dwIfType = pMsg->GetVariableLong(VID_IF_TYPE);
+         pMsg->GetVariableBinary(VID_MAC_ADDR, pObject->iface.bMacAddr, MAC_ADDR_LENGTH);
          break;
       case OBJECT_NODE:
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);

@@ -571,7 +571,8 @@ void DumpObjects(void)
    char *pBuffer;
    CONTAINER_CATEGORY *pCat;
    static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface",
-                             "Network", "Container", "Zone", "ServiceRoot" };
+                             "Network", "Container", "Zone", "ServiceRoot",
+                             "Template", "TemplateGroup" };
 
    pBuffer = (char *)malloc(128000);
    MutexLock(g_hMutexIdIndex, INFINITE);
@@ -593,7 +594,7 @@ void DumpObjects(void)
             printf("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
                    ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
                    ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
-                   ((Node *)(g_pIndexById[i].pObject))->IsLocalManagenet(),
+                   ((Node *)(g_pIndexById[i].pObject))->IsLocalManagement(),
                    ((Node *)(g_pIndexById[i].pObject))->ObjectId());
             break;
          case OBJECT_SUBNET:

@@ -243,6 +243,10 @@ SOURCE=.\syncer.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\template.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
@@ -268,6 +272,10 @@ SOURCE=..\include\dbdrv.h
 # Begin Source File
 
 SOURCE=..\include\local_admin.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\include\netxms-version.h"
 # End Source File
 # Begin Source File
 
@@ -344,6 +352,10 @@ SOURCE=..\..\..\include\nximage.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxqueue.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\nxsrvapi.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

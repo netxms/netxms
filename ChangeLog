@@ -1,0 +1,16 @@
+*
+* 0.1.3
+*
+
+- Added 64-bit string-to-binary conversion
+- Added MAC address property to interface objects
+- Added Template and TemplateGroup object classes
+
+
+*
+* 0.1.2
+*
+
+- Added possibility for copying DCIs from one node to other(s)
+- Added server's startup script for RedHat Linux
+- Numerous bug fixes

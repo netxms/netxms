@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nms_threads.h>
 
 
 //

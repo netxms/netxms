@@ -340,7 +340,7 @@ static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
 {
    long i, iNumIf;
-   char szOid[128];
+   char szOid[128], szBuffer[256];
    INTERFACE_LIST *pIfList = NULL;
 
    // Get number of interfaces
@@ -374,6 +374,14 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
                    &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
                    FALSE, FALSE))
          continue;
+
+      // MAC address
+      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.6.%d", pIfList->pInterfaces[i].dwIndex);
+      memset(szBuffer, 0, MAC_ADDR_LENGTH);
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0,
+                   szBuffer, 256, FALSE, TRUE))
+         continue;
+      memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
    }
 
    // Interface IP address'es and netmasks

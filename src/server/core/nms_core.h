@@ -363,12 +363,16 @@ DB_ASYNC_RESULT DBAsyncSelect(DB_HANDLE hConn, char *szQuery);
 BOOL DBFetch(DB_ASYNC_RESULT hResult);
 char *DBGetField(DB_RESULT hResult, int iRow, int iColumn);
 long DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn);
-double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
 DWORD DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn);
+INT64 DBGetFieldQuad(DB_RESULT hResult, int iRow, int iColumn);
+QWORD DBGetFieldUQuad(DB_RESULT hResult, int iRow, int iColumn);
+double DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn);
 char *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize);
 long DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn);
-double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn);
 DWORD DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn);
+INT64 DBGetFieldAsyncQuad(DB_RESULT hResult, int iColumn);
+QWORD DBGetFieldAsyncUQuad(DB_ASYNC_RESULT hResult, int iColumn);
+double DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn);
 int DBGetNumRows(DB_RESULT hResult);
 void DBFreeResult(DB_RESULT hResult);
 void DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
@@ -386,6 +390,7 @@ BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
                    void (* pHandler)(DWORD, const char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose);
 void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize);
+void StrToMac(char *pszStr, BYTE *pBuffer);
 
 ARP_CACHE *GetLocalArpCache(void);
 ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
@@ -404,9 +409,6 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
 
 void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NotifyClient(ClientSession *pSession, void *pArg);
-
-void BinToStr(BYTE *pData, DWORD dwSize, char *pStr);
-DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize);
 
 void GetSysInfoStr(char *pszBuffer);
 DWORD GetLocalIpAddr(void);

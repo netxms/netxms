@@ -65,7 +65,8 @@ CImageList *g_pObjectNormalImageList = NULL;
 
 char *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
 char *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
-char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", "Container", "Zone", "ServiceRoot" };
+char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", 
+                            "Container", "Zone", "ServiceRoot", "Template", "TemplateGroup" };
 char *g_szActionType[] = { "Execute", "Remote", "E-Mail", "SMS" };
 char *g_szInterfaceTypes[] = {
    "Unknown",

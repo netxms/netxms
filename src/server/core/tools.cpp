@@ -90,45 +90,6 @@ void CleanInterfaceList(INTERFACE_LIST *pIfList)
 
 
 //
-// Convert byte array to text representation
-//
-
-void BinToStr(BYTE *pData, DWORD dwSize, char *pStr)
-{
-   DWORD i;
-   char *pCurr;
-
-   for(i = 0, pCurr = pStr; i < dwSize; i++)
-   {
-      *pCurr++ = bin2hex(pData[i] >> 4);
-      *pCurr++ = bin2hex(pData[i] & 15);
-   }
-   *pCurr = 0;
-}
-
-
-//
-// Convert string of hexadecimal digits to byte array
-//
-
-DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize)
-{
-   DWORD i;
-   char *pCurr;
-
-   memset(pData, 0, dwSize);
-   for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
-   {
-      pData[i] = hex2bin(*pCurr) << 4;
-      pCurr++;
-      pData[i] |= hex2bin(*pCurr);
-      pCurr++;
-   }
-   return i;
-}
-
-
-//
 // Get system information string
 //
 

@@ -24,6 +24,8 @@
 #ifndef _nxcscpapi_h_
 #define _nxcscpapi_h_
 
+#include <nms_threads.h>
+
 
 #ifdef _WIN32
 #ifdef LIBNXCSCP_EXPORTS

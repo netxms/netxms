@@ -113,10 +113,10 @@ void Threshold::UpdateBinaryValueFromString(void)
          m_value.dwUInt = strtoul(m_pszValueStr, NULL, 0);
          break;
       case DCI_DT_INT64:
-         /* TODO: add 64-bit string to binary conversion */
+         m_value.iInt64 = strtoll(m_pszValueStr, NULL, 0);
          break;
       case DCI_DT_UINT64:
-         /* TODO: add 64-bit string to binary conversion */
+         m_value.qwUInt64 = strtoull(m_pszValueStr, NULL, 0);
          break;
       case DCI_DT_FLOAT:
          m_value.dFloat = strtod(m_pszValueStr, NULL);

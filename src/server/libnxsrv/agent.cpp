@@ -380,6 +380,15 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
             pBuf = pChar + 1;
          }
 
+         // MAC address
+         pChar = _tcschr(pBuf, ' ');
+         if (pChar != NULL)
+         {
+            *pChar = 0;
+            StrToBin(pBuf, pIfList->pInterfaces[i].bMacAddr, MAC_ADDR_LENGTH);
+            pBuf = pChar + 1;
+         }
+
          // Name
          _tcsncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
       }

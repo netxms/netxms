@@ -57,7 +57,7 @@
 // Convert string representation of MAC address to binary form
 //
 
-static void StrToMac(char *pszStr, BYTE *pBuffer)
+void StrToMac(char *pszStr, BYTE *pBuffer)
 {
    DWORD byte1, byte2, byte3, byte4, byte5, byte6;
 

@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.25 2004-09-22 17:38:01 victor Exp $
+# $Id: configure.ac,v 1.26 2004-09-30 14:33:20 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.1.0], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.1.3], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -204,7 +204,8 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
+AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r])
 
 # --------------------------------------------------------------------------

@@ -372,6 +372,7 @@ typedef struct
 #define VID_DESTINATION_OBJECT_ID   ((DWORD)110)
 #define VID_NUM_ITEMS               ((DWORD)111)
 #define VID_ITEM_LIST               ((DWORD)112)
+#define VID_MAC_ADDR                ((DWORD)113)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -414,10 +415,14 @@ typedef struct
 // Inline functions
 //
 
+#ifdef __cplusplus
+
 inline BOOL IsBinaryMsg(CSCP_MESSAGE *pMsg)
 {
    return ntohs(pMsg->wFlags) & MF_BINARY;
 }
+
+#endif
 
 
 #endif   /* _nms_cscp_h_ */

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 //
 
 Node::Node()
-     :NetObj()
+     :Template()
 {
    m_dwFlags = 0;
    m_dwDiscoveryFlags = 0;
@@ -46,10 +46,7 @@ Node::Node()
    m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
-   m_dwNumItems = 0;
-   m_ppItems = NULL;
    m_pAgentConnection = NULL;
-   m_dwDCILockStatus = INVALID_INDEX;
 }
 
 
@@ -58,7 +55,7 @@ Node::Node()
 //
 
 Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
-     :NetObj()
+     :Template()
 {
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
@@ -78,10 +75,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
-   m_dwNumItems = 0;
-   m_ppItems = NULL;
    m_pAgentConnection = NULL;
-   m_dwDCILockStatus = INVALID_INDEX;
 }
 
 
@@ -93,25 +87,8 @@ Node::~Node()
 {
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
-   DestroyItems();
    if (m_pAgentConnection != NULL)
       delete m_pAgentConnection;
-}
-
-
-//
-// Destroy all related data collection items
-//
-
-void Node::DestroyItems(void)
-{
-   DWORD i;
-
-   for(i = 0; i < m_dwNumItems; i++)
-      delete m_ppItems[i];
-   safe_free(m_ppItems);
-   m_dwNumItems = 0;
-   m_ppItems = NULL;
 }
 
 
@@ -228,37 +205,6 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 
 //
-// Load data collection items from database
-//
-
-void Node::LoadItemsFromDB(void)
-{
-   char szQuery[256];
-   DB_RESULT hResult;
-
-   sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
-                    "status,delta_calculation,transformation,template_id,description "
-                    "FROM items WHERE node_id=%d", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-
-   if (hResult != 0)
-   {
-      int i, iRows;
-
-      iRows = DBGetNumRows(hResult);
-      if (iRows > 0)
-      {
-         m_dwNumItems = iRows;
-         m_ppItems = (DCItem **)malloc(sizeof(DCItem *) * iRows);
-         for(i = 0; i < iRows; i++)
-            m_ppItems[i] = new DCItem(hResult, i, this);
-      }
-      DBFreeResult(hResult);
-   }
-}
-
-
-//
 // Save object to database
 //
 
@@ -342,7 +288,7 @@ BOOL Node::DeleteFromDB(void)
    char szQuery[256];
    BOOL bSuccess;
 
-   bSuccess = NetObj::DeleteFromDB();
+   bSuccess = Template::DeleteFromDB();
    if (bSuccess)
    {
       sprintf(szQuery, "DELETE FROM nodes WHERE id=%ld", m_dwId);
@@ -399,7 +345,8 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
                                pIfList->pInterfaces[i].dwIpNetMask,
                                pIfList->pInterfaces[i].szName,
                                pIfList->pInterfaces[i].dwIndex,
-                               pIfList->pInterfaces[i].dwType);
+                               pIfList->pInterfaces[i].dwType,
+                               pIfList->pInterfaces[i].bMacAddr);
          DestroyInterfaceList(pIfList);
       }
       else
@@ -510,7 +457,8 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
 // Create new interface
 //
 
-void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName, DWORD dwIndex, DWORD dwType)
+void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName, 
+                              DWORD dwIndex, DWORD dwType, BYTE *pbMacAddr)
 {
    Interface *pInterface;
    Subnet *pSubnet;
@@ -520,6 +468,8 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName, DWO
       pInterface = new Interface(szName, dwIndex, dwIpAddr, dwNetMask, dwType);
    else
       pInterface = new Interface(dwIpAddr, dwNetMask);
+   if (pbMacAddr != NULL)
+      pInterface->SetMacAddr(pbMacAddr);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
@@ -718,7 +668,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
             }
          }
 
-      // Add new interfaces
+      // Add new interfaces and check configuration of existing
       for(j = 0; j < pIfList->iNumEntries; j++)
       {
          for(i = 0; i < m_dwChildCount; i++)
@@ -729,7 +679,21 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
                    (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
                    (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
+               {
+                  // Existing interface, check configuration
+                  if (memcmp(pIfList->pInterfaces[j].bMacAddr, pInterface->MacAddr(), MAC_ADDR_LENGTH))
+                  {
+                     char szOldMac[16], szNewMac[16];
+
+                     BinToStr((BYTE *)pInterface->MacAddr(), MAC_ADDR_LENGTH, szOldMac);
+                     BinToStr(pIfList->pInterfaces[j].bMacAddr, MAC_ADDR_LENGTH, szNewMac);
+                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "ddsss",
+                               pInterface->Id(), pInterface->IfIndex(),
+                               pInterface->Name(), szOldMac, szNewMac);
+                     pInterface->SetMacAddr(pIfList->pInterfaces[j].bMacAddr);
+                  }
                   break;
+               }
             }
          if (i == m_dwChildCount)
          {
@@ -740,7 +704,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                                pIfList->pInterfaces[j].dwIpNetMask,
                                pIfList->pInterfaces[j].szName,
                                pIfList->pInterfaces[j].dwIndex,
-                               pIfList->pInterfaces[j].dwType);
+                               pIfList->pInterfaces[j].dwType,
+                               pIfList->pInterfaces[j].bMacAddr);
             bHasChanges = TRUE;
          }
       }
@@ -886,92 +851,6 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
 
 
 //
-// Add item to node
-//
-
-BOOL Node::AddItem(DCItem *pItem)
-{
-   DWORD i;
-   BOOL bResult = FALSE;
-
-   Lock();
-   // Check if that item exists
-   for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == pItem->Id())
-         break;   // Item with specified id already exist
-   
-   if (i == m_dwNumItems)     // Add new item
-   {
-      m_dwNumItems++;
-      m_ppItems = (DCItem **)realloc(m_ppItems, sizeof(DCItem *) * m_dwNumItems);
-      m_ppItems[i] = pItem;
-      m_ppItems[i]->SetLastPollTime(0);    // Cause item to be polled immediatelly
-      m_ppItems[i]->SetStatus(ITEM_STATUS_ACTIVE);
-      m_ppItems[i]->SetBusyFlag(FALSE);
-      Modify();
-      bResult = TRUE;
-   }
-
-   Unlock();
-   return bResult;
-}
-
-
-//
-// Delete item from node
-//
-
-BOOL Node::DeleteItem(DWORD dwItemId)
-{
-   DWORD i;
-   BOOL bResult = FALSE;
-
-   Lock();
-   // Check if that item exists
-   for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
-      {
-         // Destroy item
-         m_ppItems[i]->DeleteFromDB();
-         delete m_ppItems[i];
-         m_dwNumItems--;
-         memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
-         bResult = TRUE;
-         break;
-      }
-
-   Unlock();
-   return bResult;
-}
-
-
-//
-// Modify data collection item from CSCP message
-//
-
-BOOL Node::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
-                      DWORD **ppdwMapIndex, DWORD **ppdwMapId)
-{
-   DWORD i;
-   BOOL bResult = FALSE;
-
-   Lock();
-   // Check if that item exists
-   for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
-      {
-         m_ppItems[i]->UpdateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
-         bResult = TRUE;
-         m_bIsModified = TRUE;
-         break;
-      }
-
-   Unlock();
-   return bResult;
-}
-
-
-//
 // Create CSCP message with object's data
 //
 
@@ -1014,115 +893,4 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       pRequest->GetVariableStr(VID_COMMUNITY_STRING, m_szCommunityString, MAX_COMMUNITY_LENGTH);
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
-}
-
-
-//
-// Lock data collection items list
-//
-
-BOOL Node::LockDCIList(DWORD dwSessionId)
-{
-   BOOL bSuccess = FALSE;
-
-   Lock();
-   if (m_dwDCILockStatus == INVALID_INDEX)
-   {
-      m_dwDCILockStatus = dwSessionId;
-      bSuccess = TRUE;
-   }
-   Unlock();
-   return bSuccess;
-}
-
-
-//
-// Unlock data collection items list
-//
-
-BOOL Node::UnlockDCIList(DWORD dwSessionId)
-{
-   BOOL bSuccess = FALSE;
-
-   Lock();
-   if (m_dwDCILockStatus == dwSessionId)
-   {
-      m_dwDCILockStatus = INVALID_INDEX;
-      bSuccess = TRUE;
-   }
-   Unlock();
-   return bSuccess;
-}
-
-
-//
-// Send DCI list to client
-//
-
-void Node::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
-{
-   CSCPMessage msg;
-   DWORD i;
-
-   // Prepare message
-   msg.SetId(dwRqId);
-   msg.SetCode(CMD_NODE_DCI);
-
-   // Walk through items list
-   for(i = 0; i < m_dwNumItems; i++)
-   {
-      m_ppItems[i]->CreateMessage(&msg);
-      pSession->SendMessage(&msg);
-      msg.DeleteAllVariables();
-   }
-
-   // Send end-of-list indicator
-   msg.SetCode(CMD_NODE_DCI_LIST_END);
-   pSession->SendMessage(&msg);
-}
-
-
-//
-// Get DCI item's type
-//
-
-int Node::GetItemType(DWORD dwItemId)
-{
-   DWORD i;
-   int iType = -1;
-
-   Lock();
-   // Check if that item exists
-   for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
-      {
-         iType = m_ppItems[i]->DataType();
-         break;
-      }
-
-   Unlock();
-   return iType;
-}
-
-
-//
-// Get item by it's id
-//
-
-const DCItem *Node::GetItemById(DWORD dwItemId)
-{
-   DWORD i;
-   DCItem *pItem = NULL;
-
-   Lock();
-   // Check if that item exists
-   for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
-      {
-         pItem = m_ppItems[i];
-         break;
-      }
-
-   Unlock();
-   return pItem;
 }

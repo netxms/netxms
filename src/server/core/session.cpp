@@ -1841,8 +1841,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                      break;
                   case DCI_DT_INT64:
                   case DCI_DT_UINT64:
-                     /* TODO: add 64-bit conversion */
-                     pCurr->value.qwInt64 = htonl(DBGetFieldAsyncULong(hResult, 1));
+                     pCurr->value.qwInt64 = htonq(DBGetFieldAsyncUQuad(hResult, 1));
                      break;
                   case DCI_DT_FLOAT:
                      pCurr->value.dFloat = htond(DBGetFieldAsyncDouble(hResult, 1));

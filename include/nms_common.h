@@ -35,6 +35,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include <netxms-version.h>
 
@@ -46,6 +47,18 @@
 #define MAX_SECRET_LENGTH        64
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
 #define MAX_DB_STRING            256
+
+#ifndef LLONG_MAX
+#define LLONG_MAX    9223372036854775807
+#endif
+
+#ifndef LLONG_MIN
+#define LLONG_MIN    (-LLONG_MAX - 1)
+#endif
+
+#ifndef ULLONG_MAX
+#define ULLONG_MAX   18446744073709551615
+#endif
 
 
 //
