@@ -160,6 +160,10 @@ SOURCE=.\ObjectPropDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectSearchBox.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ProgressDialog.cpp
 # End Source File
 # Begin Source File
@@ -217,6 +221,10 @@ SOURCE=.\MapView.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nms_common.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nms_util.h
 # End Source File
 # Begin Source File
@@ -242,6 +250,10 @@ SOURCE=.\ObjectPreview.h
 # Begin Source File
 
 SOURCE=.\ObjectPropDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectSearchBox.h
 # End Source File
 # Begin Source File
 

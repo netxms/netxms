@@ -7,8 +7,8 @@
 // ObjectPreview.h : header file
 //
 
-#include "ToolBox.h"
 #include "ObjectInfoBox.h"
+#include "ObjectSearchBox.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -25,6 +25,7 @@ public:
 
 protected:
    CObjectInfoBox m_wndObjectPreview;
+   CObjectSearchBox m_wndObjectSearch;
 
 // Operations
 public:
@@ -48,6 +49,7 @@ public:
 protected:
 	//{{AFX_MSG(CObjectPreview)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnPaint();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

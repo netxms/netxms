@@ -29,6 +29,7 @@ public:
 
 // Implementation
 public:
+	void BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam);
 	virtual ~CMainFrame();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -46,6 +47,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
    afx_msg void OnUpdateState(CCmdUI *pCmdUI);
+   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -352,7 +352,8 @@ void CConsoleApp::OnViewMap()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window
-	pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMDIMenu, m_hMDIAccel);
+//	pFrame->CreateNewChild(RUNTIME_CLASS(CMapFrame), IDR_MAPFRAME, m_hMDIMenu, m_hMDIAccel);
+pFrame->BroadcastMessage(WM_OBJECT_CHANGE, 1, 0);
 }
 
 void CConsoleApp::OnConnectToServer() 
@@ -463,10 +464,12 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          if (m_bEventBrowserActive)
             m_pwndEventBrowser->AddEvent((NXC_EVENT *)pArg);
          MemFree(pArg);
-//         Sleep(0);
          break;
       case NXC_EVENT_REQUEST_COMPLETED:
          OnRequestComplete(dwCode, (DWORD)pArg);
+         break;
+      case NXC_EVENT_OBJECT_CHANGED:
+         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
          break;
       default:
          break;
@@ -537,4 +540,24 @@ void CConsoleApp::OnViewDebug()
    else
 	   pFrame->CreateNewChild(
 		   RUNTIME_CLASS(CDebugFrame), IDR_DEBUG_WINDOW, m_hMDIMenu, m_hMDIAccel);	
+}
+
+
+//
+// Print debug information
+//
+
+void CConsoleApp::DebugPrintf(char *szFormat, ...)
+{
+   if (m_bDebugWindowActive)
+   {
+      char szBuffer[1024];
+      va_list args;
+
+      va_start(args, szFormat);
+      vsprintf(szBuffer, szFormat, args);
+      va_end(args);
+
+      m_pwndDebugWindow->AddMessage(szBuffer);
+   }
 }

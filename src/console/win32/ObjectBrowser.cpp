@@ -16,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define PREVIEW_PANE_WIDTH    200
+#define PREVIEW_PANE_WIDTH    230
 
 
 //
@@ -47,6 +47,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_WM_GETMINMAXINFO()
 	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
+   ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -174,6 +175,9 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
       if (pChildObject != NULL)
          AddObjectToTree(pChildObject, hItem);
    }
+
+   // Sort childs
+   m_wndTreeCtrl.SortChildren(hItem);
 }
 
 BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs) 
@@ -197,8 +201,8 @@ void CObjectBrowser::OnRclickTreeView(NMHDR* pNMHDR, LRESULT* pResult)
 void CObjectBrowser::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
 {
 	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
-   lpMMI->ptMinTrackSize.x = 300;
-   lpMMI->ptMinTrackSize.y = 100;
+   lpMMI->ptMinTrackSize.x = 350;
+   lpMMI->ptMinTrackSize.y = 250;
 }
 
 
@@ -239,4 +243,21 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt)
 
    pObject = NXCFindObjectById(lpnmt->itemNew.lParam);
    m_wndPreviewPane.SetCurrentObject(pObject);
+}
+
+
+//
+// WM_OBJECT_CHANGE message handler
+//
+
+void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
+{
+   NXC_OBJECT *pObject = (NXC_OBJECT *)lParam;
+
+   if (pObject->bIsDeleted)
+   {
+   }
+   else
+   {
+   }
 }

@@ -48,6 +48,7 @@ protected:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	afx_msg void OnObjectViewShowpreviewpane();
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt);
+   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

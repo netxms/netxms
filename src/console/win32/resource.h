@@ -10,6 +10,8 @@
 #define IDR_EVENT_EDITOR                104
 #define IDC_PREVIEW_PANE                105
 #define IDC_TOOLBOX_OBJECT_DETAILS      106
+#define IDC_EDIT_SEARCH_STRING          107
+#define ID_FIND_OBJECT                  108
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -81,6 +83,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        155
 #define _APS_NEXT_COMMAND_VALUE         32801
 #define _APS_NEXT_CONTROL_VALUE         1013
-#define _APS_NEXT_SYMED_VALUE           107
+#define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

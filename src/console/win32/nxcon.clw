@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CObjectInfoBox
+LastClass=CObjectSearchBox
 LastTemplate=generic CWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=19
+ClassCount=20
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
@@ -17,10 +17,10 @@ Class9=CMapView
 
 ResourceCount=23
 Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
-Resource2=IDR_MAINFRAME (English (U.S.))
+Resource2=IDD_EDIT_EVENT
 Resource3=IDD_LOGIN
 Resource4=IDA_MDI_DEFAULT
-Resource5=IDA_OBJECT_BROWSER
+Resource5=IDA_MDI_DEFAULT (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -28,13 +28,13 @@ Class8=CMapFrame
 Class10=CLoginDialog
 Resource6=IDD_OBJECT_PROPERTIES
 Class11=CProgressDialog
-Resource7=IDD_PROGRESS (English (U.S.))
+Resource7=IDD_LOGIN (English (U.S.))
 Class12=CObjectBrowser
 Resource8=IDD_ABOUTBOX
 Class13=CObjectPropDlg
 Resource9=IDM_VIEW_SPECIFIC
 Resource10=IDR_MAINFRAME
-Resource11=IDD_ABOUTBOX (English (U.S.))
+Resource11=IDA_OBJECT_BROWSER
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -45,14 +45,15 @@ Class15=CEditEventDlg
 Resource17=IDA_OBJECT_BROWSER (English (U.K.))
 Class16=CDebugFrame
 Resource18=IDD_PROGRESS
-Resource19=IDA_MDI_DEFAULT (English (U.S.))
-Resource20=IDD_OBJECT_PROPERTIES (English (U.S.))
+Resource19=IDR_MAINFRAME (English (U.S.))
+Resource20=IDD_PROGRESS (English (U.S.))
 Class17=CObjectPreview
-Resource21=IDD_LOGIN (English (U.S.))
+Resource21=IDD_ABOUTBOX (English (U.S.))
 Class18=CToolBox
-Resource22=IDD_EDIT_EVENT (English (U.S.))
+Resource22=IDD_OBJECT_PROPERTIES (English (U.S.))
 Class19=CObjectInfoBox
-Resource23=IDD_EDIT_EVENT
+Class20=CObjectSearchBox
+Resource23=IDD_EDIT_EVENT (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -565,6 +566,13 @@ CommandCount=3
 Type=0
 HeaderFile=ObjectInfoBox.h
 ImplementationFile=ObjectInfoBox.cpp
+BaseClass=CToolBox
+Filter=W
+
+[CLS:CObjectSearchBox]
+Type=0
+HeaderFile=ObjectSearchBox.h
+ImplementationFile=ObjectSearchBox.cpp
 BaseClass=CToolBox
 Filter=W
 

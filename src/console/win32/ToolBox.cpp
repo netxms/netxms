@@ -74,10 +74,15 @@ void CToolBox::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp)
    }
    else
    {
-      lpncsp->rgrc[0].left++;
-      lpncsp->rgrc[0].right--;
-      lpncsp->rgrc[0].top += 21;
-      lpncsp->rgrc[0].bottom--;
+      int iBorderWidth = 0;
+
+      if (GetWindowLong(m_hWnd, GWL_STYLE) & WS_BORDER)
+         iBorderWidth++;
+
+      lpncsp->rgrc[0].left += iBorderWidth;
+      lpncsp->rgrc[0].right -= iBorderWidth;
+      lpncsp->rgrc[0].top += 19 + iBorderWidth;
+      lpncsp->rgrc[0].bottom -= iBorderWidth;
    }
 }
 
@@ -90,6 +95,10 @@ void CToolBox::OnNcPaint()
 {
    CDC *dc;
    RECT rect;
+   int iBorderWidth = 0;
+
+   // Get device context for entire window
+   dc = GetWindowDC();
 
    // Calculate coordinates of lower right window corner
    GetWindowRect(&rect);
@@ -97,12 +106,16 @@ void CToolBox::OnNcPaint()
    rect.right -= rect.left;
 
    // Draw border
-   dc = GetWindowDC();
-   dc->Draw3dRect(0, 0, rect.right, rect.bottom, TOOLBOX_TITLE_COLOR, TOOLBOX_TITLE_COLOR);
+   if (GetWindowLong(m_hWnd, GWL_STYLE) & WS_BORDER)
+   {
+      dc->Draw3dRect(0, 0, rect.right, rect.bottom, TOOLBOX_TITLE_COLOR, TOOLBOX_TITLE_COLOR);
+      iBorderWidth++;
+   }
 
    // Draw title
    dc->SelectObject(&m_fontTitle);
-   dc->FillSolidRect(1, 1, rect.right - 2, 20, TOOLBOX_TITLE_COLOR);
+   dc->FillSolidRect(iBorderWidth, iBorderWidth, rect.right - (iBorderWidth * 2), 
+                     19, TOOLBOX_TITLE_COLOR);
    dc->SetTextColor(RGB(255, 255, 255));
    dc->SetBkColor(TOOLBOX_TITLE_COLOR);
    dc->TextOut(5, 3, m_szTitle, strlen(m_szTitle));
@@ -122,9 +135,9 @@ int CToolBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
    m_fontTitle.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
 	
 	return 0;
 }

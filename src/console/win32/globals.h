@@ -40,6 +40,7 @@ extern CConsoleApp theApp;
 #define MAX_SERVER_NAME_LEN   64
 #define MAX_LOGIN_NAME_LEN    64
 #define MAX_PASSWORD_LEN      64
+#define MAX_INTERFACE_TYPE    32
 
 
 //
@@ -48,6 +49,7 @@ extern CConsoleApp theApp;
 
 #define WM_REQUEST_COMPLETED     (WM_USER + 1)
 #define WM_CLOSE_STATUS_DLG      (WM_USER + 2)
+#define WM_OBJECT_CHANGE         (WM_USER + 3)
 
 
 //
@@ -69,5 +71,6 @@ extern char *g_szStatusTextSmall[];
 extern DWORD g_dwFlags;
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
+extern char *g_szInterfaceTypes[];
 
 #endif

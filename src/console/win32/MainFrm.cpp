@@ -23,6 +23,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
    ON_UPDATE_COMMAND_UI(ID_INDICATOR_STATE, OnUpdateState)
+   ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -144,4 +145,32 @@ void CMainFrame::OnUpdateState(CCmdUI *pCmdUI)
    };
    pCmdUI->Enable();
    pCmdUI->SetText(pszStateText[theApp.GetClientState()]);
+}
+
+
+//
+// Broadcast message to all MDI child windows
+//
+
+void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+   CWnd *pWnd;
+
+   pWnd = MDIGetActive();
+   while(pWnd != NULL)
+   {
+      pWnd->PostMessage(msg, wParam, lParam);
+      pWnd = pWnd->GetNextWindow();
+   }
+   theApp.DebugPrintf("CMainFrame::BroadcastMessage(%d, %d, %d)", msg, wParam, lParam);
+}
+
+
+//
+// Handler for WM_OBJECT_CHANGE message
+//
+
+void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
+{
+   BroadcastMessage(WM_OBJECT_CHANGE, wParam, lParam);
 }

@@ -115,6 +115,7 @@ private:
 
    // Inline functions
 public:
+	void DebugPrintf(char *szFormat, ...);
    void DebugCallback(char *pszMsg)
    {
       if (m_bDebugWindowActive)

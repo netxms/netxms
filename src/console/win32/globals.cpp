@@ -42,6 +42,40 @@ char g_szPassword[MAX_PASSWORD_LEN] = "";
 char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED" };
 char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged" };
 char *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", "Location", "Zone" };
+char *g_szInterfaceTypes[] = {
+   "Unknown",
+   "Other",
+   "Regular 1822",
+   "HDH 1822",
+   "DDN X.25",
+   "RFC877 X.25",
+   "Ethernet CSMA/CD",
+   "ISO 802.3 CSMA/CD",
+   "ISO 802.4 Token Bus",
+   "ISO 802.5 Token Ring",
+   "ISO 802.6 MAN",
+   "StarLan",
+   "PROTEON 10 Mbps",
+   "PROTEON 80 Mbps",
+   "Hyper Channel",
+   "FDDI",
+   "LAPB",
+   "SDLC",
+   "DS1",
+   "E1",
+   "ISDN BRI",
+   "ISDN PRI",
+   "Proprietary Serial Pt-to-Pt",
+   "PPP",
+   "Software Loopback",
+   "EON (CLNP over IP)",
+   "Ethernet 3 Mbps",
+   "NSIP (XNS over IP)",
+   "SLIP",
+   "DS3",
+   "SMDS",
+   "Frame Relay"
+};
 
 
 //

@@ -50,6 +50,8 @@ src/console/win32/ObjectPreview.cpp -text
 src/console/win32/ObjectPreview.h -text
 src/console/win32/ObjectPropDlg.cpp -text
 src/console/win32/ObjectPropDlg.h -text
+src/console/win32/ObjectSearchBox.cpp -text
+src/console/win32/ObjectSearchBox.h -text
 src/console/win32/ProgressDialog.cpp -text
 src/console/win32/ProgressDialog.h -text
 src/console/win32/StdAfx.cpp -text

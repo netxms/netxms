@@ -35,6 +35,7 @@ CObjectPreview::~CObjectPreview()
 BEGIN_MESSAGE_MAP(CObjectPreview, CWnd)
 	//{{AFX_MSG_MAP(CObjectPreview)
 	ON_WM_CREATE()
+	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -72,8 +73,14 @@ int CObjectPreview::OnCreate(LPCREATESTRUCT lpCreateStruct)
    rect.left += TOOLBOX_X_MARGIN;
    rect.right -= TOOLBOX_X_MARGIN * 2;
    rect.top += TOOLBOX_Y_MARGIN;
-   rect.bottom = 250;
-   m_wndObjectPreview.Create("Object Details", WS_CHILD | WS_VISIBLE, rect, this, IDC_TOOLBOX_OBJECT_DETAILS);
+   rect.bottom = 100;
+   m_wndObjectSearch.Create("Search", WS_CHILD | WS_VISIBLE,
+                             rect, this, IDC_TOOLBOX_OBJECT_DETAILS);
+
+   rect.top = rect.bottom + TOOLBOX_X_MARGIN;
+   rect.bottom = rect.top + 250;
+   m_wndObjectPreview.Create("Object Details", WS_CHILD | WS_VISIBLE,
+                             rect, this, IDC_TOOLBOX_OBJECT_DETAILS);
 
 	return 0;
 }
@@ -86,4 +93,21 @@ int CObjectPreview::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CObjectPreview::SetCurrentObject(NXC_OBJECT *pObject)
 {
    m_wndObjectPreview.SetCurrentObject(pObject);
+}
+
+void CObjectPreview::OnPaint() 
+{
+   CPaintDC dc(this); // device context for painting
+   RECT rect;
+   CPen pen;
+
+   pen.CreatePen(PS_SOLID, 0, RGB(127, 127, 127));
+   dc.SelectObject(&pen);
+
+   GetClientRect(&rect);
+   
+   dc.MoveTo(rect.right - 1, 0);
+   dc.LineTo(rect.right - 1, rect.bottom);
+
+   pen.DeleteObject();
 }
