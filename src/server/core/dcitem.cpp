@@ -442,7 +442,6 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 
 void DCItem::Transform(ItemValue &value)
 {
-printf("Transforming: %s @%d\n",value.String(), m_iDeltaCalculation);
    switch(m_iDeltaCalculation)
    {
       case DCM_SIMPLE:
