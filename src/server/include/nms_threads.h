@@ -43,7 +43,12 @@
 
 inline void ThreadSleep(int iSeconds)
 {
-   Sleep((DWORD)iSeconds * 1000);
+   Sleep((DWORD)iSeconds * 1000);   // Convert to milliseconds
+}
+
+inline void ThreadSleepMs(DWORD dwMilliseconds)
+{
+   Sleep(dwMilliseconds);
 }
 
 inline THREAD ThreadCreate(void (__cdecl *start_address )(void *), int stack_size, void *args)
@@ -97,6 +102,11 @@ typedef MUTEX * pthread_mutex_t;
 inline void ThreadSleep(int iSeconds)
 {
    sleep(iSeconds);
+}
+
+inline void ThreadSleepMs(DWORD dwMilliseconds)
+{
+   usleep(dwMilliseconds * 1000);   // Convert to microseconds
 }
 
 inline MUTEX MutexCreate(void)
