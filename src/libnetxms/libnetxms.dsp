@@ -138,6 +138,10 @@ SOURCE=.\md5.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\scandir.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\sha1.cpp
 # End Source File
 # Begin Source File

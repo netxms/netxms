@@ -128,7 +128,7 @@ inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 
 #ifdef _WIN32
 
-typedef struct direct
+typedef struct dirent
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
    int             d_namlen;       /* Name length */
@@ -141,7 +141,7 @@ typedef struct _dir_struc
    char           *curr;   /* Current position */
    long            size;   /* Size of string table */
    long            nfiles; /* number if filenames in table */
-   struct direct   dirstr; /* Directory structure to return */
+   struct dirent   dirstr; /* Directory structure to return */
 } DIR;
 
 #endif   /* _WIN32 */
@@ -242,8 +242,15 @@ extern "C"
 
 #ifdef _WIN32
     DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
-    struct direct LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
+    struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
     int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
+#endif
+
+#if defined(_WIN32) || !(HAVE_SCANDIR)
+   int LIBNETXMS_EXPORTABLE scandir(const char *dir, struct dirent ***namelist,
+               int (*select)(const struct dirent *),
+               int (*compar)(const struct dirent **, const struct dirent **));
+   int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
 #endif
 
 #ifdef __cplusplus

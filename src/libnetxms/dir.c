@@ -140,7 +140,7 @@ DIR *opendir(const char *filename)
  * Readdir just returns the current string pointer and bumps the
  * * string pointer to the nDllExport entry.
  */
-struct direct *readdir(DIR * dirp)
+struct dirent *readdir(DIR * dirp)
 {
     int             len;
     static int      dummy = 0;
