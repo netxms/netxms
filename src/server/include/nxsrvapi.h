@@ -112,7 +112,8 @@ private:
    char **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
    BOOL m_bIsConnected;
-   MUTEX m_hMutex;
+   MUTEX m_mutexDataLock;
+   MUTEX m_mutexReceiverThreadRunning;
 
    void ReceiverThread(void);
    static void ReceiverThreadStarter(void *);
@@ -127,8 +128,8 @@ protected:
    virtual void PrintMsg(char *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
 
-   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_hMutex); }
+   void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutexDataLock); }
 
 public:
    AgentConnection();

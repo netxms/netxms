@@ -60,7 +60,8 @@ AgentConnection::AgentConnection()
    m_dwRequestId = 1;
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
    m_bIsConnected = FALSE;
-   m_hMutex = MutexCreate();
+   m_mutexDataLock = MutexCreate();
+   m_mutexReceiverThreadRunning = MutexCreate();
 }
 
 
@@ -85,7 +86,8 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, char
    m_dwRequestId = 1;
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
    m_bIsConnected = FALSE;
-   m_hMutex = MutexCreate();
+   m_mutexDataLock = MutexCreate();
+   m_mutexReceiverThreadRunning = MutexCreate();
 }
 
 
@@ -95,11 +97,22 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, char
 
 AgentConnection::~AgentConnection()
 {
+   // Destroy socket
    if (m_hSocket != -1)
       closesocket(m_hSocket);
+
+   // Wait for receiver thread termination
+   MutexLock(m_mutexReceiverThreadRunning, INFINITE);
+   MutexUnlock(m_mutexReceiverThreadRunning);
+
+   Lock();
    DestroyResultData();
+   Unlock();
+
    delete m_pMsgWaitQueue;
-   MutexDestroy(m_hMutex);
+
+   MutexDestroy(m_mutexDataLock);
+   MutexDestroy(m_mutexReceiverThreadRunning);
 }
 
 
@@ -130,6 +143,8 @@ void AgentConnection::ReceiverThread(void)
    CSCP_BUFFER *pMsgBuffer;
    int iErr;
    char szBuffer[128];
+
+   MutexLock(m_mutexReceiverThreadRunning, INFINITE);
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
@@ -179,6 +194,8 @@ void AgentConnection::ReceiverThread(void)
 
    MemFree(pRawMsg);
    MemFree(pMsgBuffer);
+
+   MutexUnlock(m_mutexReceiverThreadRunning);
 }
 
 
