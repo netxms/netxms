@@ -135,7 +135,6 @@ BEGIN
     BEGIN
         MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
         MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
-        MENUITEM "Event Processing &Policy\tF4", ID_VIEW_EPP
         MENUITEM "&Network Summary\tF7",        ID_VIEW_NETWORKSUMMARY
         MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
@@ -149,12 +148,12 @@ BEGIN
     POPUP "Control Panel"
     BEGIN
         MENUITEM "&Events\tCtrl+F2",            ID_CONTROLPANEL_EVENTS
-        MENUITEM "Event &Policy",               ID_CONTROLPANEL_EVENTPOLICY
+        MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Users\tCtrl+F3",             ID_CONTROLPANEL_USERS
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&MIB Browser",                ID_TOOLS_MIBBROWSER
+        MENUITEM "&MIB Browser\tAlt+M",         ID_TOOLS_MIBBROWSER
     END
     POPUP "&Help"
     BEGIN
@@ -276,12 +275,14 @@ END
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_TOOLS_MIBBROWSER,    VIRTKEY, ALT, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
     VK_F2,          ID_VIEW_MAP,            VIRTKEY, NOINVERT
     VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
+    VK_F4,          ID_CONTROLPANEL_EVENTPOLICY, VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_F7,          ID_VIEW_NETWORKSUMMARY, VIRTKEY, NOINVERT

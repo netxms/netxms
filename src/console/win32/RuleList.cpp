@@ -107,6 +107,9 @@ BEGIN_MESSAGE_MAP(CRuleList, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
+   ON_NOTIFY(HDN_BEGINTRACK, ID_HEADER_CTRL, OnHeaderBeginTrack)
+   ON_NOTIFY(HDN_TRACK, ID_HEADER_CTRL, OnHeaderTrack)
+   ON_NOTIFY(HDN_ENDTRACK, ID_HEADER_CTRL, OnHeaderEndTrack)
 END_MESSAGE_MAP()
 
 
@@ -145,9 +148,15 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
+   // Create font for elements
+   m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                          VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+
    GetClientRect(&rect);
    rect.bottom = RULE_HEADER_HEIGHT;
-   m_wndHeader.Create(WS_CHILD | WS_VISIBLE, rect, this, ID_HEADER_CTRL);
+   m_wndHeader.Create(WS_CHILD | WS_VISIBLE | CCS_NODIVIDER | HDS_HORZ, rect, this, ID_HEADER_CTRL);
 	return 0;
 }
 
@@ -160,8 +169,12 @@ void CRuleList::OnPaint()
 {
    RECT rect, rcClient;
    int i, j;
+   CFont *pOldFont;
 
 	CPaintDC dc(this); // device context for painting
+
+   // Setup DC
+   pOldFont = dc.SelectObject(&m_fontNormal);
 	
    // Calculate drawing rect
    GetClientRect(&rcClient);
@@ -176,7 +189,6 @@ void CRuleList::OnPaint()
       {
          rect.left = rect.right;
          rect.right += m_pColList[j].m_iWidth;
-theApp.DebugPrintf("l=%d t=%d r=%d b=%d",rect.left,rect.top,rect.right,rect.bottom);
          dc.DrawEdge(&rect, BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_RECT);
 char szBuffer[256];
 sprintf(szBuffer,"%d %d", i,j);
@@ -191,6 +203,9 @@ sprintf(szBuffer,"%d %d", i,j);
    rect.bottom++;
    rect.right += 2;
    dc.DrawEdge(&rect, BDR_SUNKENOUTER | BDR_SUNKENINNER, BF_TOP);
+
+   // Cleanup
+   dc.SelectObject(pOldFont);
 }
 
 
@@ -227,6 +242,7 @@ int CRuleList::InsertColumn(int iInsertBefore, char *pszText, int iWidth)
       m_ppRowList[i]->InsertCell(iNewCol);
    
    RecalcWidth();
+   m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth + 2, RULE_HEADER_HEIGHT, SWP_NOZORDER);
    return iNewCol;
 }
 
@@ -293,5 +309,82 @@ void CRuleList::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
 
-   m_wndHeader.SetWindowPos(NULL, 0, 0, cx, RULE_HEADER_HEIGHT, SWP_NOZORDER);
+   m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth + 2, RULE_HEADER_HEIGHT, SWP_NOZORDER);
+}
+
+
+//
+// Process HDN_BEGINTRACK notification from header control
+//
+
+void CRuleList::OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
+{
+   theApp.DebugPrintf("HDN_BEGINTRACK %d %d", pHdrInfo->iItem, pHdrInfo->pitem->cxy);
+   *pResult = 0;
+}
+
+
+//
+// Process HDN_TRACK notification from header control
+//
+
+void CRuleList::OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
+{
+   int x, sx;
+
+   // Draw line at old and new column width
+   sx = GetColumnStartPos(pHdrInfo->iItem);
+   x = sx + m_pColList[pHdrInfo->iItem].m_iWidth;
+   DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
+   x = sx + pHdrInfo->pitem->cxy;
+   DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
+
+   // New column width
+   m_pColList[pHdrInfo->iItem].m_iWidth = pHdrInfo->pitem->cxy;
+
+   *pResult = 0;
+}
+
+
+//
+// Process HDN_ENDTRACK notification from header control
+//
+
+void CRuleList::OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
+{
+   RecalcWidth();
+   m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth + 2, RULE_HEADER_HEIGHT, SWP_NOZORDER);
+   InvalidateRect(NULL);
+}
+
+
+//
+// Get start X position for column
+//
+
+int CRuleList::GetColumnStartPos(int iColumn)
+{
+   int i, x;
+
+   for(i = 0, x = 0; i < iColumn; i++)
+      x += m_pColList[i].m_iWidth;
+   return x;
+}
+
+
+//
+// Draw shadow line
+//
+
+void CRuleList::DrawShadowLine(int x1, int y1, int x2, int y2)
+{
+   CDC *pDC;
+   int iDrawMode;
+
+   pDC = GetDC();
+   iDrawMode = pDC->SetROP2(R2_NOT);
+   pDC->MoveTo(x1, y1);
+   pDC->LineTo(x2, y2);
+   pDC->SetROP2(iDrawMode);
+   ReleaseDC(pDC);
 }

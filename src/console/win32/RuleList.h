@@ -72,16 +72,22 @@ public:
 
 	// Generated message map functions
 protected:
-	void RecalcHeight(void);
 	CRuleHeader m_wndHeader;
 	//{{AFX_MSG(CRuleList)
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
+   afx_msg void OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
+   afx_msg void OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
+   afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	CFont m_fontNormal;
+	void DrawShadowLine(int x1, int y1, int x2, int y2);
+	int GetColumnStartPos(int iColumn);
 	void RecalcWidth(void);
+	void RecalcHeight(void);
 	int m_iNumRows;
    int m_iNumColumns;
    int m_iTotalHeight;

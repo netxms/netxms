@@ -100,3 +100,4 @@ BOOL CRuleHeader::OnEraseBkgnd(CDC* pDC)
 {
    return TRUE;
 }
+
