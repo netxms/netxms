@@ -152,4 +152,16 @@ Language=English
 Subagent "%1" has invalid magic number - probably it was compiled for different agent version
 .
 
+MessageId=
+SymbolicName=MSG_ADD_EXT_PARAM_FAILED
+Language=English
+Unable to add external parameter "%1"
+.
+
+MessageId=
+SymbolicName=MSG_CREATE_TMP_FILE_FAILED
+Language=English
+Unable to create temporary file to hold process output: %1
+.
+
 ;#endif

@@ -35,6 +35,7 @@ LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue);
 
 #ifdef _WIN32
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
@@ -267,6 +268,30 @@ void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *
    m_pEnumList[m_iNumEnums].fpHandler = fpHandler;
    m_pEnumList[m_iNumEnums].pArg = pArg;
    m_iNumEnums++;
+}
+
+
+//
+// Add external parameter
+//
+
+BOOL AddExternalParameter(char *pszCfgLine)
+{
+   char *pszCmdLine;
+
+   pszCmdLine = strchr(pszCfgLine, ':');
+   if (pszCmdLine == NULL)
+      return FALSE;
+
+   *pszCmdLine = 0;
+   pszCmdLine++;
+   StrStrip(pszCfgLine);
+   StrStrip(pszCmdLine);
+   if ((*pszCfgLine == 0) || (*pszCmdLine == 0))
+      return FALSE;
+
+   AddParameter(pszCfgLine, H_ExternalParameter, strdup(pszCmdLine));
+   return TRUE;
 }
 
 

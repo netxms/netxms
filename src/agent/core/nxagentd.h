@@ -260,6 +260,7 @@ void DebugPrintf(char *pszFormat, ...);
 BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg);
 void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg);
+BOOL AddExternalParameter(char *pszCfgLine);
 DWORD GetParameterValue(char *pszParam, char *pszValue);
 DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
 

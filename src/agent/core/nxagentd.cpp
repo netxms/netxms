@@ -320,6 +320,21 @@ BOOL Initialize(void)
       free(m_pszActionList);
    }
 
+   // Parse external parameters list
+   if (m_pszExtParamList != NULL)
+   {
+      for(pItem = m_pszExtParamList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddExternalParameter(pItem))
+            WriteLog(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszExtParamList);
+   }
+
    // Agent start time
    g_dwAgentStartTime = time(NULL);
 

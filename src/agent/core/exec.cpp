@@ -81,7 +81,9 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    si.dwFlags = 0;
 
    // Create new process
-   if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi))
+   if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, 
+                      CREATE_NO_WINDOW | DETACHED_PROCESS,
+                      NULL, NULL, &si, &pi))
    {
       WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
       dwRetCode = ERR_INTERNAL_ERROR;
@@ -109,19 +111,14 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 }
 
 
-/*
+
 //
-// Handler function for custom (user-defined) parameters
+// Handler function for external (user-defined) parameters
 //
 
-LONG H_CustomParameter(char *pszCmd, char *pszArg, char *pValue)
+LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
 {
    char *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH], *sptr;
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-   SECURITY_ATTRIBUTES sa;
-   HANDLE hOutput;
-   DWORD dwBytes;
    int i, iSize, iStatus;
 
    // Substitute $1 .. $9 with actual arguments
@@ -135,7 +132,7 @@ LONG H_CustomParameter(char *pszCmd, char *pszArg, char *pValue)
             break;   // Single $ character at the end of line
          if ((*sptr >= '1') && (*sptr <= '9'))
          {
-            if (GetParameterArg(pszCmd, *sptr - '0', szBuffer, 1024))
+            if (NxGetParameterArg(pszCmd, *sptr - '0', szBuffer, 1024))
             {
                int iArgLength;
 
@@ -158,6 +155,13 @@ LONG H_CustomParameter(char *pszCmd, char *pszArg, char *pValue)
       }
    pszCmdLine[i] = 0;
 
+#if defined(_WIN32)
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+   SECURITY_ATTRIBUTES sa;
+   HANDLE hOutput;
+   DWORD dwBytes;
+
    // Create temporary file to hold process output
    GetTempPath(MAX_PATH - 1, szBuffer);
    GetTempFileName(szBuffer, "nx", 0, szTempFile);
@@ -177,7 +181,8 @@ LONG H_CustomParameter(char *pszCmd, char *pszArg, char *pValue)
       si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
       // Create new process
-      if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW | DETACHED_PROCESS,
+      if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE, 
+                        CREATE_NO_WINDOW | DETACHED_PROCESS,
                         NULL, NULL, &si, &pi))
       {
          // Wait for process termination and close all handles
@@ -189,18 +194,17 @@ LONG H_CustomParameter(char *pszCmd, char *pszArg, char *pValue)
          SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
 
          // Read process output
-         ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 3, &dwBytes, NULL);
+         ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
          pValue[dwBytes] = 0;
          sptr = strchr(pValue, '\n');
          if (sptr != NULL)
             *sptr = 0;
-         strcat(pValue, "\r\n");
          iStatus = SYSINFO_RC_SUCCESS;
       }
       else
       {
          WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
-         iStatus = SYSINFO_RC_UNSUPPORTED;
+         iStatus = SYSINFO_RC_ERROR;
       }
 
       // Remove temporary file
@@ -212,8 +216,11 @@ LONG H_CustomParameter(char *pszCmd, char *pszArg, char *pValue)
       WriteLog(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
       iStatus = SYSINFO_RC_ERROR;
    }
+#else
+   /* TODO: add NetWare and UNIX code here */
+   iStatus = SYSINFO_RC_UNSUPPORTED;
+#endif
 
    free(pszCmdLine);
    return iStatus;
 }
-*/
