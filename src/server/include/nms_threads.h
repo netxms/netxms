@@ -72,9 +72,9 @@ inline void MutexDestroy(MUTEX mutex)
    CloseHandle(mutex);
 }
 
-inline void MutexLock(MUTEX mutex, DWORD dwTimeOut)
+inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 {
-   WaitForSingleObject(mutex, dwTimeOut);
+   return WaitForSingleObject(mutex, dwTimeOut) == WAIT_OBJECT_0;
 }
 
 inline void MutexUnlock(MUTEX mutex)
