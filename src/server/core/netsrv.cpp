@@ -396,3 +396,21 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
    }
    SendPollerMsg(dwRqId, "   Finished status poll on network service %s\r\n", m_szName);
 }
+
+
+//
+// Handler for object deletion
+//
+
+void NetworkService::OnObjectDelete(DWORD dwObjectId)
+{
+   Lock();
+   if (dwObjectId == m_dwPollerNode)
+   {
+      // If deleted object is our poller node, change it to default
+      m_dwPollerNode = 0;
+      Modify();
+      DbgPrintf(AF_DEBUG_MISC, _T("Service \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
+   }
+   Unlock();
+}

@@ -92,7 +92,8 @@ protected:
    int m_iStatus;
    BOOL m_bIsModified;
    BOOL m_bIsDeleted;
-   MUTEX m_hMutex;
+   MUTEX m_hMutex;         // Generic object access mutex
+   MUTEX m_mutexRefCount;  // Reference counter access mutex
    DWORD m_dwIpAddr;       // Every object should have an IP address
    DWORD m_dwImageId;      // Custom image id or 0 if object has default image
    ClientSession *m_pPollRequestor;
@@ -116,6 +117,8 @@ protected:
 
    void SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...);
 
+   virtual void OnObjectDelete(DWORD dwObjectId);
+
 public:
    NetObj();
    virtual ~NetObj();
@@ -132,9 +135,9 @@ public:
    BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
    BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
 
-   DWORD RefCount(void) { return m_dwRefCount; }
-   void IncRefCount(void) { Lock(); m_dwRefCount++; Unlock(); }
-   void DecRefCount(void) { Lock(); if (m_dwRefCount > 0) m_dwRefCount--; Unlock(); }
+   DWORD RefCount(void);
+   void IncRefCount(void);
+   void DecRefCount(void);
 
    BOOL IsChild(DWORD dwObjectId);
 
@@ -144,7 +147,7 @@ public:
    void DeleteChild(NetObj *pObject);  // Delete reference to child object
    void DeleteParent(NetObj *pObject); // Delete reference to parent object
 
-   void Delete(void);                  // Prepare object for deletion
+   void Delete(BOOL bIndexLocked);     // Prepare object for deletion
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);
@@ -169,6 +172,36 @@ public:
    const char *ParentList(char *szBuffer);
    const char *ChildList(char *szBuffer);
 };
+
+
+//
+// Inline functions of NetObj class
+//
+
+inline DWORD NetObj::RefCount(void)
+{ 
+   DWORD dwRefCount;
+
+   MutexLock(m_mutexRefCount, INFINITE);
+   dwRefCount = m_dwRefCount;
+   MutexUnlock(m_mutexRefCount);
+   return dwRefCount; 
+}
+
+inline void NetObj::IncRefCount(void)
+{ 
+   MutexLock(m_mutexRefCount, INFINITE);
+   m_dwRefCount++;
+   MutexUnlock(m_mutexRefCount);
+}
+
+inline void NetObj::DecRefCount(void)
+{ 
+   MutexLock(m_mutexRefCount, INFINITE);
+   if (m_dwRefCount > 0) 
+      m_dwRefCount--; 
+   MutexUnlock(m_mutexRefCount);
+}
 
 
 //
@@ -278,6 +311,8 @@ protected:
    TCHAR *m_pszRequest;  // Service-specific request
    TCHAR *m_pszResponce; // Service-specific expected responce
 
+   virtual void OnObjectDelete(DWORD dwObjectId);
+
 public:
    NetworkService();
    NetworkService(int iServiceType, WORD wProto, WORD wPort,
@@ -335,6 +370,8 @@ protected:
 
    void AgentLock(void) { MutexLock(m_hAgentAccessMutex, INFINITE); }
    void AgentUnlock(void) { MutexUnlock(m_hAgentAccessMutex); }
+
+   virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
    Node();

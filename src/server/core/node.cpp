@@ -638,12 +638,12 @@ void Node::DeleteInterface(Interface *pInterface)
             if ((pSubnet->IsEmpty()) && (g_dwFlags & AF_DELETE_EMPTY_SUBNETS))
             {
                PostEvent(EVENT_SUBNET_DELETED, pSubnet->Id(), NULL);
-               pSubnet->Delete();
+               pSubnet->Delete(FALSE);
             }
          }
       }
    }
-   pInterface->Delete();
+   pInterface->Delete(FALSE);
 }
 
 
@@ -1368,4 +1368,22 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
 
    AgentUnlock();
    return dwError;
+}
+
+
+//
+// Handler for object deletion
+//
+
+void Node::OnObjectDelete(DWORD dwObjectId)
+{
+   Lock();
+   if (dwObjectId == m_dwPollerNode)
+   {
+      // If deleted object is our poller node, change it to default
+      m_dwPollerNode = 0;
+      Modify();
+      DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
+   }
+   Unlock();
 }

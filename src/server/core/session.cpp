@@ -2790,7 +2790,7 @@ void ClientSession::DeleteObject(CSCPMessage *pRequest)
          // Check access rights
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
-            pObject->Delete();
+            pObject->Delete(FALSE);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else

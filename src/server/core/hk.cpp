@@ -81,7 +81,7 @@ static void DeleteEmptySubnets(void)
          if (g_pIndexById[i].pObject->IsEmpty())
          {
             PostEvent(EVENT_SUBNET_DELETED, g_pIndexById[i].pObject->Id(), NULL);
-            g_pIndexById[i].pObject->Delete();
+            g_pIndexById[i].pObject->Delete(TRUE);
          }
       }
 
