@@ -24,11 +24,63 @@
 
 
 //
+// Poller state structure
+//
+
+struct __poller_state
+{
+   int iType;
+   time_t timestamp;
+   char szMsg[128];
+};
+
+
+//
 // Global data
 //
 
 Queue g_statusPollQueue;
 Queue g_configPollQueue;
+
+
+//
+// Static data
+//
+
+static __poller_state *m_pPollerState = NULL;
+static int m_iNumPollers = 0;
+
+
+//
+// Set poller's state
+//
+
+static void SetPollerState(int nIdx, char *pszMsg)
+{
+   strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
+   m_pPollerState[nIdx].timestamp = time(NULL);
+}
+
+
+//
+// Display current poller threads state
+//
+
+void ShowPollerState(CONSOLE_CTX pCtx)
+{
+   int i;
+   char szTime[64];
+   struct tm *ltm;
+
+   ConsolePrintf(pCtx, "PT  TIME                   STATE\n");
+   for(i = 0; i < m_iNumPollers; i++)
+   {
+      ltm = localtime(&m_pPollerState[i].timestamp);
+      strftime(szTime, 64, "%d/%b/%Y %H:%M:%S", ltm);
+      ConsolePrintf(pCtx, "%c   %s   %s\n", m_pPollerState[i].iType, szTime, m_pPollerState[i].szMsg);
+   }
+   ConsolePrintf(pCtx, "\n");
+}
 
 
 //
@@ -38,16 +90,27 @@ Queue g_configPollQueue;
 static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
    Node *pNode;
+   char szBuffer[MAX_OBJECT_NAME + 64];
 
+   // Initialize state info
+   m_pPollerState[(int)arg].iType = 'S';
+   SetPollerState((int)arg, "init");
+
+   // Main loop
    while(!ShutdownInProgress())
    {
+      SetPollerState((int)arg, "wait");
       pNode = (Node *)g_statusPollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+               pNode->Name(), pNode->Id());
+      SetPollerState((int)arg, szBuffer);
       pNode->StatusPoll(NULL, 0);
       pNode->DecRefCount();
    }
+   SetPollerState((int)arg, "finished");
    return THREAD_OK;
 }
 
@@ -59,16 +122,27 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 {
    Node *pNode;
+   char szBuffer[MAX_OBJECT_NAME + 64];
 
+   // Initialize state info
+   m_pPollerState[(int)arg].iType = 'C';
+   SetPollerState((int)arg, "init");
+
+   // Main loop
    while(!ShutdownInProgress())
    {
+      SetPollerState((int)arg, "wait");
       pNode = (Node *)g_configPollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+               pNode->Name(), pNode->Id());
+      SetPollerState((int)arg, szBuffer);
       pNode->ConfigurationPoll(NULL, 0);
       pNode->DecRefCount();
    }
+   SetPollerState((int)arg, "finished");
    return THREAD_OK;
 }
 
@@ -83,15 +157,21 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
    DWORD dwWatchdogId;
    int i, iNumStatusPollers, iNumConfigPollers;
 
-   // Start status pollers
+   // Read configuration
    iNumStatusPollers = ConfigReadInt("NumberOfStatusPollers", 10);
+   iNumConfigPollers = ConfigReadInt("NumberOfConfigurationPollers", 4);
+   m_iNumPollers = iNumStatusPollers + iNumConfigPollers;
+
+   // Prepare static data
+   m_pPollerState = (__poller_state *)malloc(sizeof(__poller_state) * m_iNumPollers);
+
+   // Start status pollers
    for(i = 0; i < iNumStatusPollers; i++)
-      ThreadCreate(StatusPoller, 0, NULL);
+      ThreadCreate(StatusPoller, 0, (void *)i);
 
    // Start configuration pollers
-   iNumConfigPollers = ConfigReadInt("NumberOfConfigurationPollers", 4);
    for(i = 0; i < iNumConfigPollers; i++)
-      ThreadCreate(ConfigurationPoller, 0, NULL);
+      ThreadCreate(ConfigurationPoller, 0, (void *)(i + iNumStatusPollers));
 
    dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
 
@@ -130,6 +210,9 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       g_statusPollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumConfigPollers; i++)
       g_configPollQueue.Put(INVALID_POINTER_VALUE);
+
+   m_iNumPollers = 0;
+   safe_free(m_pPollerState);
 
    return THREAD_OK;
 }

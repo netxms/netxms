@@ -101,18 +101,18 @@ void WatchdogNotify(DWORD dwId)
 // Print current thread status
 //
 
-void WatchdogPrintStatus(void)
+void WatchdogPrintStatus(CONSOLE_CTX pCtx)
 {
    DWORD i;
 
    if (!IsStandalone())
       return;
 
-   printf("%-48s Interval Status\n----------------------------------------------------------------------------\n", "Thread");
+   ConsolePrintf(pCtx, "%-48s Interval Status\n----------------------------------------------------------------------------\n", "Thread");
    MutexLock(m_mutexWatchdogAccess, INFINITE);
    for(i = 0; i < m_dwNumThreads; i++)
-      printf("%-48s %-8ld %s\n", m_threadInfo[i].szName, m_threadInfo[i].tNotifyInterval,
-             m_threadInfo[i].bNotResponding ? "Not responding" : "Running");
+      ConsolePrintf(pCtx, "%-48s %-8ld %s\n", m_threadInfo[i].szName, m_threadInfo[i].tNotifyInterval,
+                    m_threadInfo[i].bNotResponding ? "Not responding" : "Running");
    MutexUnlock(m_mutexWatchdogAccess);
 }
 

@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nxcscpapi.h>
 #include <local_admin.h>
 
 
@@ -36,12 +37,8 @@
 
 BOOL Connect(void);
 void Disconnect(void);
-BOOL SendString(char *szString);
-int RecvString(char *pBuffer, int iBufSize);
-BOOL SendCommand(WORD wCmd);
-WORD RecvResponce(void);
-BOOL RecvDWord(DWORD *pBuffer);
-BOOL SendDWord(DWORD dwValue);
+void SendMsg(CSCPMessage *pMsg);
+CSCPMessage *RecvMsg(void);
 
 
 //
@@ -49,5 +46,6 @@ BOOL SendDWord(DWORD dwValue);
 //
 
 extern SOCKET g_hSocket;
+extern DWORD g_dwRqId;
 
 #endif

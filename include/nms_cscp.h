@@ -290,6 +290,8 @@ typedef struct
 #define CMD_GET_USER_VARIABLE       0x007C
 #define CMD_ENUM_USER_VARIABLES     0x007D
 #define CMD_DELETE_USER_VARIABLE    0x007E
+#define CMD_ADM_MESSAGE             0x007F
+#define CMD_ADM_REQUEST             0x0080
 
 
 //
@@ -440,6 +442,7 @@ typedef struct
 #define VID_SERVER_ID               ((DWORD)142)
 #define VID_SEARCH_PATTERN          ((DWORD)143)
 #define VID_NUM_VARIABLES           ((DWORD)144)
+#define VID_COMMAND                 ((DWORD)145)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

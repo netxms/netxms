@@ -30,170 +30,64 @@
 
 static void Help(void)
 {
-   printf("NetXMS Administartor Tool  Version 1.0\n"
-          "Copyright (c) 2004 NetXMS Development Team\n\n"
-          "Usage: nxadm <command> [<command-specific arguments>]\n\n"
-          "Possible commands are:\n"
-          "   cfg   : Manage configuration variables\n"
-          "   flags : Manage application flags\n"
-          "   help  : Get more specific help\n"
-          "\n");
+   printf("NetXMS Administartor Tool  Version " NETXMS_VERSION_STRING "\n"
+          "Copyright (c) 2004, 2005 NetXMS Development Team\n\n"
+          "Usage: nxadm -c <command>\n"
+          "       nxadm -i\n"
+          "       nxadm -h\n\n"
+          "Options:\n"
+          "   -c  Execute given command and disconnect\n"
+          "   -i  Go to interactive mode\n"
+          "   -h  Dispaly help and exit\n\n");
 }
 
 
 //
-// Handler for "cfg" command
+// Execute command
 //
 
-static int H_Config(int argc, char *argv[])
+static BOOL ExecCommand(TCHAR *pszCmd)
 {
-   int iError = 2;   // Default is communication error
+   CSCPMessage msg, *pResponce;
+   BOOL bConnClosed = FALSE;
+   WORD wCode;
+   TCHAR *pszText;
 
-   if (argc == 0)
-   {
-      printf("Usage: nxadm cfg <command>\n\n"
-             "Valid commands are:\n"
-             "   list              : Enumerate all configuration variables\n"
-             "   get <var>         : Get value of specific variable\n"
-             "   set <var> <value> : Set value of specific variable\n");
-      return 1;
-   }
+   msg.SetCode(CMD_ADM_REQUEST);
+   msg.SetId(g_dwRqId++);
+   msg.SetVariable(VID_COMMAND, pszCmd);
+   SendMsg(&msg);
 
-   if (!stricmp(argv[0], "get"))
+   while(1)
    {
-      if (argc == 1)
+      pResponce = RecvMsg();
+      if (pResponce == NULL)
       {
-         printf("ERROR: Variable name missing\n");
-         iError = 1;
+         printf("Connection closed\n");
+         bConnClosed = TRUE;
+         break;
       }
-      else
+
+      wCode = pResponce->GetCode();
+      switch(wCode)
       {
-         if (SendCommand(LA_CMD_GET_CONFIG))
-            if (SendString(argv[1]))
+         case CMD_ADM_MESSAGE:
+            pszText = pResponce->GetVariableStr(VID_MESSAGE);
+            if (pszText != NULL)
             {
-               int iCode;
-               char szBuffer[256];
-
-               iCode = RecvString(szBuffer, 256);
-               switch(iCode)
-               {
-                  case 0:     // OK
-                     printf("%s\n", szBuffer);
-                     iError = 0;
-                     break;
-                  case 1:
-                     printf("ERROR: Variable %s doesn't exist\n", argv[1]);
-                     iError = 3;
-                     break;
-                  default:
-                     break;
-               }
+               fputs(pszText, stdout);
+               free(pszText);
             }
+            break;
+         default:
+            break;
       }
-   }
-   else if (!stricmp(argv[0], "set"))
-   {
-      if (argc < 3)
-      {
-         printf("ERROR: Variable name or value missing\n");
-         iError = 1;
-      }
-      else
-      {
-         if (SendCommand(LA_CMD_SET_CONFIG))
-            if (SendString(argv[1]))
-               if (SendString(argv[2]))
-               {
-                  if (RecvResponce() == LA_RESP_SUCCESS)
-                  {
-                     printf("Successful\n");
-                     iError = 0;
-                  }
-                  else
-                  {
-                     printf("ERROR: Server was unable to set configuration variable\n");
-                     iError = 3;
-                  }
-               }
-      }
-   }
-   else
-   {
-      printf("ERROR: Invalid command syntax\n");
-      iError = 1;
-   }
-   if (iError == 2)
-      printf("ERROR: Client-server communication failed\n");
-   return iError;
-}
-
-
-//
-// Handler for "flags" command
-//
-
-static int H_Flags(int argc, char *argv[])
-{
-   int iError = 2;   // Default is communication error
-
-   if (argc == 0)
-   {
-      printf("Usage: nxadm flags <command>\n\n"
-             "Valid commands are:\n"
-             "   get        : Get current application flags value\n"
-             "   set<value> : Set application flags\n");
-      return 1;
+      delete pResponce;
+      if (wCode == CMD_REQUEST_COMPLETED)
+         break;
    }
 
-   if (!stricmp(argv[0], "get"))
-   {
-      DWORD dwFlags;
-
-      if (SendCommand(LA_CMD_GET_FLAGS))
-         if (RecvDWord(&dwFlags))
-         {
-            printf("Current flags: 0x%08X\n", dwFlags);
-            iError = 0;
-         }
-   }
-   else if (!stricmp(argv[0], "set"))
-   {
-      if (argc == 1)
-      {
-         printf("ERROR: New flags value missing\n");
-         iError = 1;
-      }
-      else
-      {
-         DWORD dwFlags;
-         char *eptr;
-
-         dwFlags = strtoul(argv[1], &eptr, 0);
-         if (*eptr != 0)
-         {
-            printf("ERROR: Invalid numeric format\n");
-            iError = 1;
-         }
-         else
-         {
-            if (SendCommand(LA_CMD_SET_FLAGS))
-               if (SendDWord(dwFlags))
-                  if (RecvResponce() == LA_RESP_SUCCESS)
-                  {
-                     printf("Successful\n");
-                     iError = 0;
-                  }
-         }
-      }
-   }
-   else
-   {
-      printf("ERROR: Invalid command syntax\n");
-      iError = 1;
-   }
-   if (iError == 2)
-      printf("ERROR: Client-server communication failed\n");
-   return iError;
+   return bConnClosed;
 }
 
 
@@ -203,46 +97,60 @@ static int H_Flags(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-   int iError;
-   static struct
-   {
-      char szName[16];
-      int (* pHandler)(int, char *[]);
-   } cmdList[] = 
-   {
-      { "cfg", H_Config },
-      { "flags", H_Flags },
-      { "", NULL }
-   };
+   int iError, ch;
+   BOOL bStart = TRUE;
+   TCHAR *pszCmd;
+
+#ifdef _WIN32
+   WSADATA wsaData;
+
+   WSAStartup(0x0002, &wsaData);
+#endif
 
    if (argc > 1)
    {
-#ifdef _WIN32
-      WSADATA wsaData;
-
-      WSAStartup(0x0002, &wsaData);
-#endif
-
-      if (Connect())
+      // Parse command line
+      opterr = 1;
+      while((ch = getopt(argc, argv, "c:ih")) != -1)
       {
-         int i;
-
-         for(i = 0; cmdList[i].pHandler != NULL; i++)
-            if (!stricmp(cmdList[i].szName, argv[1]))
-            {
-               iError = cmdList[i].pHandler(argc - 2, &argv[2]);
-               break;
-            }
-         if (cmdList[i].pHandler == NULL)
+         switch(ch)
          {
-            Help();
-            iError = 1;
+            case 'h':
+               Help();
+               bStart = FALSE;
+               break;
+            case 'c':
+               pszCmd = optarg;
+               break;
+            case 'i':
+               pszCmd = NULL;
+               break;
+            case '?':
+               bStart = FALSE;
+               break;
+            default:
+               break;
          }
-         Disconnect();
       }
-      else
+
+      if (bStart)
       {
-         iError = 2;
+         if (Connect())
+         {
+            if (pszCmd == NULL)
+            {
+            }
+            else
+            {
+               ExecCommand(pszCmd);
+            }
+            Disconnect();
+            iError = 0;
+         }
+         else
+         {
+            iError = 2;
+         }
       }
    }
    else

@@ -659,7 +659,7 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
 // Dump objects to console in standalone mode
 //
 
-void DumpObjects(void)
+void DumpObjects(CONSOLE_CTX pCtx)
 {
    DWORD i;
    char *pBuffer;
@@ -669,40 +669,40 @@ void DumpObjects(void)
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
-      printf("Object ID %d \"%s\"\n"
-             "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n",
-             g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
-             g_szClassName[g_pIndexById[i].pObject->Type()],
-             IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
-             g_pszStatusName[g_pIndexById[i].pObject->Status()],
-             g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
-      printf("   Parents: <%s>\n   Childs: <%s>\n", 
-             g_pIndexById[i].pObject->ParentList(pBuffer),
-             g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
-      printf("   Last change: %s\n", g_pIndexById[i].pObject->TimeStampAsText());
+      ConsolePrintf(pCtx, "Object ID %d \"%s\"\n"
+                          "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n",
+                    g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
+                    g_szClassName[g_pIndexById[i].pObject->Type()],
+                    IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
+                    g_pszStatusName[g_pIndexById[i].pObject->Status()],
+                    g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
+      ConsolePrintf(pCtx, "   Parents: <%s>\n   Childs: <%s>\n", 
+                    g_pIndexById[i].pObject->ParentList(pBuffer),
+                    g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
+      ConsolePrintf(pCtx, "   Last change: %s\n", g_pIndexById[i].pObject->TimeStampAsText());
       switch(g_pIndexById[i].pObject->Type())
       {
          case OBJECT_NODE:
-            printf("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
-                   ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
-                   ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
-                   ((Node *)(g_pIndexById[i].pObject))->IsLocalManagement(),
-                   ((Node *)(g_pIndexById[i].pObject))->ObjectId());
+            ConsolePrintf(pCtx, "   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
+                          ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
+                          ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
+                          ((Node *)(g_pIndexById[i].pObject))->IsLocalManagement(),
+                          ((Node *)(g_pIndexById[i].pObject))->ObjectId());
             break;
          case OBJECT_SUBNET:
-            printf("   Network mask: %s\n", 
-                   IpToStr(((Subnet *)g_pIndexById[i].pObject)->IpNetMask(), pBuffer));
+            ConsolePrintf(pCtx, "   Network mask: %s\n", 
+                          IpToStr(((Subnet *)g_pIndexById[i].pObject)->IpNetMask(), pBuffer));
             break;
          case OBJECT_CONTAINER:
             pCat = FindContainerCategory(((Container *)g_pIndexById[i].pObject)->Category());
-            printf("   Category: %s\n   Description: %s\n", pCat ? pCat->szName : "<unknown>",
-                   ((Container *)g_pIndexById[i].pObject)->Description());
+            ConsolePrintf(pCtx, "   Category: %s\n   Description: %s\n", pCat ? pCat->szName : "<unknown>",
+                          ((Container *)g_pIndexById[i].pObject)->Description());
             break;
          case OBJECT_TEMPLATE:
-            printf("   Version: %d.%d\n   Description: %s\n", 
-                   ((Template *)(g_pIndexById[i].pObject))->VersionMajor(),
-                   ((Template *)(g_pIndexById[i].pObject))->VersionMinor(),
-                   ((Template *)(g_pIndexById[i].pObject))->Description());
+            ConsolePrintf(pCtx, "   Version: %d.%d\n   Description: %s\n", 
+                          ((Template *)(g_pIndexById[i].pObject))->VersionMajor(),
+                          ((Template *)(g_pIndexById[i].pObject))->VersionMinor(),
+                          ((Template *)(g_pIndexById[i].pObject))->Description());
             break;
       }
    }

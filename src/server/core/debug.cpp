@@ -27,17 +27,17 @@
 // Test mutex state and print to stdout
 //
 
-void DbgTestMutex(MUTEX hMutex, TCHAR *szName)
+void DbgTestMutex(MUTEX hMutex, TCHAR *szName, CONSOLE_CTX pCtx)
 {
-   _tprintf(_T("  %s: "), szName);
+   ConsolePrintf(pCtx, _T("  %s: "), szName);
    if (MutexLock(hMutex, 100))
    {
-      _tprintf(_T("unlocked\n"));
+      ConsolePrintf(pCtx, _T("unlocked\n"));
       MutexUnlock(hMutex);
    }
    else
    {
-      _tprintf(_T("locked\n"));
+      ConsolePrintf(pCtx, _T("locked\n"));
    }
 }
 
@@ -46,24 +46,24 @@ void DbgTestMutex(MUTEX hMutex, TCHAR *szName)
 // Test read/write lock state and print to stdout
 //
 
-void DbgTestRWLock(RWLOCK hLock, TCHAR *szName)
+void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx)
 {
-   _tprintf(_T("  %s: "), szName);
+   ConsolePrintf(pCtx, _T("  %s: "), szName);
    if (RWLockWriteLock(hLock, 100))
    {
-      _tprintf(_T("unlocked\n"));
+      ConsolePrintf(pCtx, _T("unlocked\n"));
       RWLockUnlock(hLock);
    }
    else
    {
       if (RWLockReadLock(hLock, 100))
       {
-         _tprintf(_T("locked for reading\n"));
+         ConsolePrintf(pCtx, _T("locked for reading\n"));
          RWLockUnlock(hLock);
       }
       else
       {
-         _tprintf(_T("locked for writing\n"));
+         ConsolePrintf(pCtx, _T("locked for writing\n"));
       }
    }
 }
@@ -86,4 +86,32 @@ void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...)
    _vsntprintf(szBuffer, 1024, szFormat, args);
    va_end(args);
    WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, _T("s"), szBuffer);
+}
+
+
+//
+// Print message to console, either local or remote
+//
+
+void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...)
+{
+   va_list args;
+
+   va_start(args, pszFormat);
+   if (pCtx->hSocket == -1)
+   {
+      vprintf(pszFormat, args);
+   }
+   else
+   {
+      CSCP_MESSAGE *pRawMsg;
+      TCHAR szBuffer[1024];
+
+      _vsntprintf(szBuffer, 1024, pszFormat, args);
+      pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
+      pRawMsg = pCtx->pMsg->CreateMessage();
+      SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);
+      free(pRawMsg);
+   }
+   va_end(args);
 }

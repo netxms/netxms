@@ -463,7 +463,7 @@ static BOOL IsCommand(char *pszTemplate, char *pszString, int iMinChars)
 // Return TRUE if command was "down"
 //
 
-static BOOL ProcessCommand(char *pszCmdLine)
+BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 {
    char *pArg;
    char szBuffer[256];
@@ -476,57 +476,64 @@ static BOOL ProcessCommand(char *pszCmdLine)
    {
       bExitCode = TRUE;
    }
-   else if (IsCommand("DUMP", szBuffer, 2))
+   else if (IsCommand("SHOW", szBuffer, 2))
    {
       // Get argument
       pArg = ExtractWord(pArg, szBuffer);
 
       if (IsCommand("OBJECTS", szBuffer, 1))
       {
-         DumpObjects();
+         DumpObjects(pCtx);
+      }
+      else if (IsCommand("POLLERS", szBuffer, 1))
+      {
+         ShowPollerState(pCtx);
       }
       else if (IsCommand("SESSIONS", szBuffer, 1))
       {
-         DumpSessions();
+         DumpSessions(pCtx);
       }
       else if (IsCommand("USERS", szBuffer, 1))
       {
-         DumpUsers();
+         DumpUsers(pCtx);
+      }
+      else if (IsCommand("MUTEX", szBuffer, 1))
+      {
+         ConsolePrintf(pCtx, "Mutex status:\n");
+         DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex", pCtx);
+         DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex", pCtx);
+         DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex", pCtx);
+         DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex", pCtx);
+         ConsolePrintf(pCtx, "\n");
+      }
+      else if (IsCommand("WATCHDOG", szBuffer, 1))
+      {
+         WatchdogPrintStatus(pCtx);
+         ConsolePrintf(pCtx, "\n");
       }
       else
       {
-         printf("ERROR: Invalid command argument\n\n");
+         ConsolePrintf(pCtx, "ERROR: Invalid SHOW subcommand\n\n");
       }
    }
-   else if (IsCommand("HELP", szBuffer, 2))
+   else if (IsCommand("HELP", szBuffer, 2) || IsCommand("?", szBuffer, 1))
    {
-      printf("Valid commands are:\n"
-             "   down          - Down NetXMS server\n"
-             "   dump objects  - Dump network objects to screen\n"
-             "   dump sessions - Dump active client sessions to screen\n"
-             "   dump users    - Dump users to screen\n"
-             "   mutex         - Display mutex status\n"
-             "   wd            - Display watchdog information\n"
-             "\nAlmost all commands can be abbreviated to 2 or 3 characters\n"
-             "\n");
-   }
-   else if (IsCommand("MUTEX", szBuffer, 2))
-   {
-      printf("Mutex status:\n");
-      DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex");
-      DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex");
-      DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex");
-      DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex");
-      printf("\n");
-   }
-   else if (IsCommand("WD", szBuffer, 2))
-   {
-      WatchdogPrintStatus();
-      printf("\n");
+      ConsolePrintf(pCtx, "Valid commands are:\n"
+                          "   down          - Down NetXMS server\n"
+                          "   exit          - Exit from remote session\n"
+                          "   help          - Display this help\n"
+                          "   show mutex    - Display mutex status\n"
+                          "   show objects  - Dump network objects to screen\n"
+                          "   show pollers  - Show poller threads state information\n"
+                          "   show sessions - Show active client sessions\n"
+                          "   show users    - Show users\n"
+                          "   show watchdog - Display watchdog information\n"
+                          "\nAlmost all commands can be abbreviated to 2 or 3 characters\n"
+                          "\n");
    }
    else
    {
-      printf("INVALID COMMAND\n\n");
+      ConsolePrintf(pCtx, "INVALID COMMAND\n\n");
    }
    
    return bExitCode;
@@ -573,7 +580,10 @@ void NXCORE_EXPORTABLE Main(void)
    if (IsStandalone())
    {
       char *ptr, szCommand[256];
+      struct __console_ctx ctx;
 
+      ctx.hSocket = -1;
+      ctx.pMsg = NULL;
       printf("\nNetXMS Server V" NETXMS_VERSION_STRING " Ready\n"
              "Enter \"help\" for command list or \"down\" for server shutdown\n"
              "System Console\n\n");
@@ -606,7 +616,7 @@ void NXCORE_EXPORTABLE Main(void)
             StrStrip(ptr);
             if (*ptr != 0)
             {
-               if (ProcessCommand(ptr))
+               if (ProcessConsoleCommand(ptr, &ctx))
                   break;
 #if USE_READLINE
                add_history(ptr);

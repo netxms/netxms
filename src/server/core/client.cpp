@@ -206,24 +206,24 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
 // Dump client sessions to screen
 //
 
-void DumpSessions(void)
+void DumpSessions(CONSOLE_CTX pCtx)
 {
    int i, iCount;
    TCHAR szBuffer[256];
    static TCHAR *pszStateName[] = { "init", "idle", "processing" };
 
-   printf("ID  STATE                    USER\n");
+   ConsolePrintf(pCtx, "ID  STATE                    USER\n");
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
       {
-         printf("%-3d %-24s %s\n", i, 
-                (m_pSessionList[i]->GetState() != SESSION_STATE_PROCESSING) ?
-                     pszStateName[m_pSessionList[i]->GetState()] :
-                     CSCPMessageCodeName(m_pSessionList[i]->GetCurrentCmd(), szBuffer),
-                m_pSessionList[i]->GetUserName());
+         ConsolePrintf(pCtx, "%-3d %-24s %s\n", i, 
+                       (m_pSessionList[i]->GetState() != SESSION_STATE_PROCESSING) ?
+                         pszStateName[m_pSessionList[i]->GetState()] :
+                         CSCPMessageCodeName(m_pSessionList[i]->GetCurrentCmd(), szBuffer),
+                       m_pSessionList[i]->GetUserName());
          iCount++;
       }
-   printf("\n%d active session%s\n\n", iCount, iCount == 1 ? "" : "s");
+   ConsolePrintf(pCtx, "\n%d active session%s\n\n", iCount, iCount == 1 ? "" : "s");
 }
 
 

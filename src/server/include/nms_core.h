@@ -33,7 +33,6 @@
 #define NXCORE_EXPORTABLE
 #endif
 
-
 #define LIBNXCL_NO_DECLARATIONS  1
 
 #include <nms_common.h>
@@ -62,8 +61,10 @@
 #define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
 #endif   /* _WIN32 */
 
-//#include <net-snmp/net-snmp-config.h>
-//#include <net-snmp/net-snmp-includes.h>
+
+//
+// Common includes
+//
 
 #include <nms_threads.h>
 #include <dbdrv.h>
@@ -75,6 +76,25 @@
 #include <nxqueue.h>
 #include <nxsnmp.h>
 #include <nxmodule.h>
+
+
+//
+// Console context
+//
+
+struct __console_ctx
+{
+   SOCKET hSocket;
+   CSCPMessage *pMsg;
+};
+
+typedef __console_ctx * CONSOLE_CTX;
+
+
+//
+// Server includes
+//
+
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nms_objects.h"
@@ -406,6 +426,9 @@ void NXCORE_EXPORTABLE ShutdownDB(void);
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
+void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...);
+BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
+
 void SaveObjects(void);
 
 void QueueSQLRequest(char *szQuery);
@@ -435,7 +458,7 @@ int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity
 void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval);
 void WatchdogNotify(DWORD dwId);
-void WatchdogPrintStatus(void);
+void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode(void);
 NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszName);
@@ -489,10 +512,11 @@ void NXCORE_EXPORTABLE OnSignal(int iSignal);
 
 #endif   /* _WIN32 */
 
-void DbgTestMutex(MUTEX hMutex, TCHAR *szName);
-void DbgTestRWLock(RWLOCK hLock, TCHAR *szName);
+void DbgTestMutex(MUTEX hMutex, TCHAR *szName, CONSOLE_CTX pCtx);
+void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx);
 void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...);
-void DumpSessions(void);
+void DumpSessions(CONSOLE_CTX pCtx);
+void ShowPollerState(CONSOLE_CTX pCtx);
 
 
 //

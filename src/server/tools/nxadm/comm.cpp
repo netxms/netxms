@@ -25,10 +25,27 @@
 
 
 //
+// Constants
+//
+
+#define MAX_MSG_SIZE    32768
+
+
+//
 // Global data
 //
 
 SOCKET g_hSocket = -1;
+DWORD g_dwRqId = 1;
+
+
+//
+// Static data
+//
+
+static CSCP_MESSAGE *m_pRawMsg;
+static CSCP_BUFFER *m_pRecvBuffer;
+
 
 
 //
@@ -62,6 +79,11 @@ BOOL Connect(void)
       return FALSE;
    }
 
+   // Initialize receiver
+   m_pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
+   m_pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   RecvCSCPMessage(0, NULL, m_pRecvBuffer, 0);
+
    return TRUE;
 }
 
@@ -82,84 +104,33 @@ void Disconnect(void)
 
 
 //
-// Send command to server
+// Send message to server
 //
 
-BOOL SendCommand(WORD wCmd)
+void SendMsg(CSCPMessage *pMsg)
 {
-   return SendEx(g_hSocket, (char *)&wCmd, sizeof(WORD), 0) == sizeof(WORD);
+   CSCP_MESSAGE *pRawMsg;
+
+   pRawMsg = pMsg->CreateMessage();
+   SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);
+   free(pRawMsg);
 }
 
 
 //
-// Receive responce from server
+// Receive message
 //
 
-WORD RecvResponce(void)
-{
-   WORD wResp;
-
-   return (recv(g_hSocket, (char *)&wResp, sizeof(WORD), 0) == sizeof(WORD)) ? wResp : LA_RESP_ERROR;
-}
-
-
-//
-// Send string to server
-//
-
-BOOL SendString(char *szString)
-{
-   WORD wLen;
-
-   wLen = strlen(szString);
-   if (SendEx(g_hSocket, (char *)&wLen, sizeof(WORD), 0) != 2)
-      return FALSE;
-
-   return SendEx(g_hSocket, szString, wLen, 0) == wLen;
-}
-
-
-//
-// Receive string from client
-//
-
-int RecvString(char *pBuffer, int iBufSize)
+CSCPMessage *RecvMsg(void)
 {
    int iError;
-   WORD wSize = 0;
 
-   // Receive string length
-   iError = recv(g_hSocket, (char *)&wSize, 2, 0);
+   do
+   {
+      iError = RecvCSCPMessage(g_hSocket, m_pRawMsg, m_pRecvBuffer, MAX_MSG_SIZE);
+      if (iError <= 0)
+         return NULL;   // Communication error or closed connection
+   } while(iError == 1);
 
-   if (wSize == 0xFFFF)
-      return 1;   // Server responds with an error instead of string
-
-   if ((iError != 2) || (wSize > iBufSize - 1))
-      return -1;  // Comm error
-
-   iError = recv(g_hSocket, pBuffer, wSize, 0);
-   if (iError != wSize)
-      return -1;
-   pBuffer[iError] = 0;
-   return 0;
-}
-
-
-//
-// Receive double word from server
-//
-
-BOOL RecvDWord(DWORD *pBuffer)
-{
-   return recv(g_hSocket, (char *)pBuffer, sizeof(DWORD), 0) == sizeof(DWORD);
-}
-
-
-//
-// Send double word to server
-//
-
-BOOL SendDWord(DWORD dwValue)
-{
-   return SendEx(g_hSocket, (char *)&dwValue, sizeof(DWORD), 0) == sizeof(DWORD);
+   return new CSCPMessage(m_pRawMsg);
 }

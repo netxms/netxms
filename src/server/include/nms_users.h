@@ -105,7 +105,7 @@ void SaveUsers(void);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
-void DumpUsers(void);
+void DumpUsers(CONSOLE_CTX pCtx);
 DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD DeleteUserFromDB(DWORD dwId);
 DWORD ModifyUser(NMS_USER *pUserInfo);

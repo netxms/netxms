@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.7 2005-02-02 22:32:16 alk Exp $ */
+/* $Id: admin.cpp,v 1.8 2005-04-06 16:16:25 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -27,58 +27,10 @@
 
 
 //
-// Send success or error notification
+// Constants
 //
 
-#define SEND_ERROR() \
-   { \
-      wCmd = LA_RESP_ERROR; \
-      SendEx(sock, (char *)&wCmd, sizeof(WORD), 0); \
-   }
-#define SEND_SUCCESS() \
-   { \
-      wCmd = LA_RESP_SUCCESS; \
-      SendEx(sock, (char *)&wCmd, sizeof(WORD), 0); \
-   }
-
-
-
-//
-// Receive string from client
-//
-
-static BOOL RecvString(SOCKET sock, char *pBuffer, int iBufSize)
-{
-   int iError;
-   WORD wSize = 0;
-
-   // Receive string length
-   iError = recv(sock, (char *)&wSize, 2, 0);
-   if ((iError != 2) || (wSize > iBufSize - 1))
-      return FALSE;
-
-   iError = recv(sock, pBuffer, wSize, 0);
-   if (iError != wSize)
-      return FALSE;
-   pBuffer[iError] = 0;
-   return TRUE;
-}
-
-
-//
-// Send string to client
-//
-
-static BOOL SendString(SOCKET sock, char *szString)
-{
-   WORD wLen;
-
-   wLen = strlen(szString);
-   if (SendEx(sock, (char *)&wLen, sizeof(WORD), 0) != 2)
-      return FALSE;
-
-   return SendEx(sock, szString, wLen, 0) == wLen;
-}
+#define MAX_MSG_SIZE       32768
 
 
 //
@@ -88,89 +40,46 @@ static BOOL SendString(SOCKET sock, char *szString)
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
    SOCKET sock = (SOCKET)pArg;
-   WORD wCmd;
    int iError;
-   char szBuffer[256];
-   DWORD dwTemp;
+   CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
+   CSCP_BUFFER *pRecvBuffer;
+   CSCPMessage *pRequest, responce;
+   TCHAR szCmd[256];
+   struct __console_ctx ctx;
+
+   pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
+   pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   RecvCSCPMessage(0, NULL, pRecvBuffer, 0);
+   ctx.hSocket = sock;
+   ctx.pMsg = &responce;
 
    while(1)
    {
-      iError = recv(sock, (char *)&wCmd, sizeof(WORD), 0);
-      if (iError != 2)
+      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE);
+      if (iError <= 0)
          break;   // Communication error or closed connection
 
-      switch(wCmd)
+      if (iError == 1)
+         continue;   // Too big message
+
+      pRequest = new CSCPMessage(pRawMsg);
+      pRequest->GetVariableStr(VID_COMMAND, szCmd, 256);
+
+      responce.SetCode(CMD_ADM_MESSAGE);
+      responce.SetId(pRequest->GetId());
+      if (ProcessConsoleCommand(szCmd, &ctx))
       {
-         case LA_CMD_LIST_CONFIG:
-            SEND_ERROR();
-            break;
-         case LA_CMD_GET_CONFIG:
-            // Receive variable name
-            if (RecvString(sock, szBuffer, 256))
-            {
-               char szValue[256];
-
-               if (ConfigReadStr(szBuffer, szValue, 255, ""))
-                  SendString(sock, szValue);
-               else
-                  SEND_ERROR();
-            }
-            else
-            {
-               goto close_connection;
-            }
-            break;
-         case LA_CMD_SET_CONFIG:
-            // Receive variable name
-            if (RecvString(sock, szBuffer, 256))
-            {
-               char szValue[256];
-
-               // Receive new value
-               if (RecvString(sock, szValue, 256))
-               {
-                  if (ConfigWriteStr(szBuffer, szValue, TRUE))
-                  {
-                     SEND_SUCCESS();
-                  }
-                  else
-                  {
-                     SEND_ERROR();
-                  }
-               }
-               else
-               {
-                  goto close_connection;
-               }
-            }
-            else
-            {
-               goto close_connection;
-            }
-            break;
-         case LA_CMD_GET_FLAGS:
-            // Send value of application flags
-            SendEx(sock, (char *)&g_dwFlags, sizeof(DWORD), 0);
-            break;
-         case LA_CMD_SET_FLAGS:
-            iError = recv(sock, (char *)&dwTemp, sizeof(DWORD), 0);
-            if (iError == sizeof(DWORD))
-            {
-               dwTemp &= ~AF_STANDALONE;    // Standalone flag shouldn't be changed
-               g_dwFlags = dwTemp | (g_dwFlags & AF_STANDALONE);
-               SEND_SUCCESS();
-            }
-            else
-            {
-               goto close_connection;
-            }
-            break;
-         default:
-            break;
+         /* TODO: add shutdown code here */
       }
+
+      responce.SetCode(CMD_REQUEST_COMPLETED);
+      pRawMsgOut = responce.CreateMessage();
+      SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
+      
+      free(pRawMsgOut);
+      delete pRequest;
    }
 
-close_connection:
    shutdown(sock, 2);
    closesocket(sock);
    return THREAD_OK;
@@ -254,6 +163,11 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/02/02 22:32:16  alk
+condTimedWait fixed
+file transfers fixed
+agent upgrade script fixed
+
 Revision 1.6  2005/01/18 15:51:42  alk
 + sockets reuse (*nix only)
 

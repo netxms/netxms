@@ -699,7 +699,7 @@ DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
 
 BOOL LoadObjects(void);
-void DumpObjects(void);
+void DumpObjects(CONSOLE_CTX pCtx);
 
 void DeleteUserFromAllObjects(DWORD dwUserId);
 

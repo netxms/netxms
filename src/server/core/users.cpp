@@ -423,15 +423,15 @@ BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 // Dump user list to stdout
 //
 
-void DumpUsers(void)
+void DumpUsers(CONSOLE_CTX pCtx)
 {
    DWORD i;
 
-   printf("Login name           System rights\n"
-          "----------------------------------\n");
+   ConsolePrintf(pCtx, "Login name           System rights\n"
+                       "----------------------------------\n");
    for(i = 0; i < g_dwNumUsers; i++)
-      printf("%-20s 0x%08X\n", g_pUserList[i].szName, g_pUserList[i].wSystemRights);
-   printf("\n");
+      ConsolePrintf(pCtx, "%-20s 0x%08X\n", g_pUserList[i].szName, g_pUserList[i].wSystemRights);
+   ConsolePrintf(pCtx, "\n");
 }
 
 
