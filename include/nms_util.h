@@ -54,6 +54,14 @@
 
 
 //
+// Modes for NxInitSharedData
+//
+
+#define MODE_SHM     1
+#define MODE_DB      2
+
+
+//
 // getopt() prototype if needed
 //
 
@@ -195,6 +203,11 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
+
+#ifndef _WIN32
+   BOOL LIBNETXMS_EXPORTABLE NxInitSharedData(int iMode, int iSize);
+   void LIBNETXMS_EXPORTABLE NxDestroySharedData(void);
+#endif   /* _WIN32 */
 }
 
 #endif   /* _nms_util_h_ */

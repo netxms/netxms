@@ -1,6 +1,6 @@
-SRC=cscp.cpp main.cpp queue.cpp tools.cpp hash.cpp inline.cpp icmp.cpp
+SRC=cscp.cpp main.cpp queue.cpp tools.cpp hash.cpp inline.cpp icmp.cpp shvar.cpp
 #OBJ=$(SRC:C/.cpp/.o/)
-OBJ=cscp.o main.o queue.o tools.o hash.o inline.o icmp.o
+OBJ=cscp.o main.o queue.o tools.o hash.o inline.o icmp.o shvar.o
 #DST=libnetxms.a
 DST=libnetxms.so
 
