@@ -1,6 +1,6 @@
 #!c:/apps/perl/bin/pelr -w
 
-# $Id: mc.pl,v 1.1 2003-10-09 16:03:43 alk Exp $
+# $Id: mc.pl,v 1.2 2004-04-26 14:51:00 victor Exp $
 
 ###############################################################################
 #
@@ -115,7 +115,7 @@ for (my $i = 0; $i < $keys[0]; $i++) {
 	}
 }
 
-print OUTS "}\n";
+print OUTS "};\n";
 
 close IN;
 close OUTH;
