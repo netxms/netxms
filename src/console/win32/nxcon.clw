@@ -2,50 +2,49 @@
 
 [General Info]
 Version=1
-LastClass=CEditEventDlg
-LastTemplate=CDialog
+LastClass=CDebugFrame
+LastTemplate=CMDIChildWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=15
+ClassCount=16
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=20
-Resource1=IDR_EVENTS
+ResourceCount=18
+Resource1=IDD_PROGRESS (English (U.S.))
 Resource2=IDD_LOGIN (English (U.S.))
-Resource3=IDR_OBJECTS
-Resource4=IDD_OBJECT_PROPERTIES
-Resource5=IDR_MAPFRAME
+Resource3=IDD_OBJECT_PROPERTIES
+Resource4=IDD_ABOUTBOX
+Resource5=IDD_OBJECT_PROPERTIES (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
 Class8=CMapFrame
 Class10=CLoginDialog
-Resource6=IDD_PROGRESS
+Resource6=IDA_MDI_DEFAULT
 Class11=CProgressDialog
-Resource7=IDR_CTRLPANEL
+Resource7=IDD_ABOUTBOX (English (U.S.))
 Class12=CObjectBrowser
-Resource8=IDR_MAINFRAME
+Resource8=IDD_PROGRESS
 Class13=CObjectPropDlg
-Resource9=IDD_ABOUTBOX
-Resource10=IDD_LOGIN
+Resource9=IDM_VIEW_SPECIFIC
+Resource10=IDR_MAINFRAME
 Resource11=IDR_MAINFRAME (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
 Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
-Resource17=IDD_OBJECT_PROPERTIES (English (U.S.))
-Resource18=IDD_PROGRESS (English (U.S.))
 Class14=CEventEditor
-Resource19=IDD_ABOUTBOX (English (U.S.))
 Class15=CEditEventDlg
-Resource20=IDD_EDIT_EVENT
+Resource17=IDD_LOGIN
+Class16=CDebugFrame
+Resource18=IDD_EDIT_EVENT
 
 [CLS:CConsoleApp]
 Type=0
@@ -101,13 +100,14 @@ Command3=ID_VIEW_MAP
 Command4=ID_VIEW_OBJECTBROWSER
 Command5=ID_VIEW_EVENTS
 Command6=ID_VIEW_CONTROLPANEL
-Command7=ID_VIEW_TOOLBAR
-Command8=ID_VIEW_STATUS_BAR
-Command9=ID_VIEW_REFRESH
-Command10=ID_CONTROLPANEL_EVENTS
-Command11=ID_CONTROLPANEL_USERS
-Command12=ID_APP_ABOUT
-CommandCount=12
+Command7=ID_VIEW_DEBUG
+Command8=ID_VIEW_TOOLBAR
+Command9=ID_VIEW_STATUS_BAR
+Command10=ID_VIEW_REFRESH
+Command11=ID_CONTROLPANEL_EVENTS
+Command12=ID_CONTROLPANEL_USERS
+Command13=ID_APP_ABOUT
+CommandCount=13
 
 [TB:IDR_MAINFRAME]
 Type=1
@@ -147,24 +147,6 @@ BaseClass=CMDIChildWnd
 Filter=M
 VirtualFilter=mfWC
 
-[MNU:IDR_CTRLPANEL]
-Type=1
-Class=?
-Command1=ID_FILE_NEW
-Command2=ID_FILE_CLOSE
-Command3=ID_APP_EXIT
-Command4=ID_VIEW_MAP
-Command5=ID_VIEW_OBJECTBROWSER
-Command6=ID_VIEW_EVENTS
-Command7=ID_VIEW_CONTROLPANEL
-Command8=ID_VIEW_TOOLBAR
-Command9=ID_VIEW_STATUS_BAR
-Command10=ID_WINDOW_CASCADE
-Command11=ID_WINDOW_TILE_HORZ
-Command12=ID_WINDOW_ARRANGE
-Command13=ID_APP_ABOUT
-CommandCount=13
-
 [CLS:CEventBrowser]
 Type=0
 HeaderFile=EventBrowser.h
@@ -172,24 +154,6 @@ ImplementationFile=EventBrowser.cpp
 BaseClass=CMDIChildWnd
 Filter=W
 VirtualFilter=mfWC
-
-[MNU:IDR_EVENTS]
-Type=1
-Class=?
-Command1=ID_FILE_NEW
-Command2=ID_FILE_CLOSE
-Command3=ID_APP_EXIT
-Command4=ID_VIEW_MAP
-Command5=ID_VIEW_OBJECTBROWSER
-Command6=ID_VIEW_EVENTS
-Command7=ID_VIEW_CONTROLPANEL
-Command8=ID_VIEW_TOOLBAR
-Command9=ID_VIEW_STATUS_BAR
-Command10=ID_WINDOW_CASCADE
-Command11=ID_WINDOW_TILE_HORZ
-Command12=ID_WINDOW_ARRANGE
-Command13=ID_APP_ABOUT
-CommandCount=13
 
 [CLS:CMapFrame]
 Type=0
@@ -207,24 +171,6 @@ BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
 LastObject=CMapView
-
-[MNU:IDR_MAPFRAME]
-Type=1
-Class=?
-Command1=ID_FILE_NEW
-Command2=ID_FILE_CLOSE
-Command3=ID_APP_EXIT
-Command4=ID_VIEW_MAP
-Command5=ID_VIEW_OBJECTBROWSER
-Command6=ID_VIEW_EVENTS
-Command7=ID_VIEW_CONTROLPANEL
-Command8=ID_VIEW_TOOLBAR
-Command9=ID_VIEW_STATUS_BAR
-Command10=ID_WINDOW_CASCADE
-Command11=ID_WINDOW_TILE_HORZ
-Command12=ID_WINDOW_ARRANGE
-Command13=ID_APP_ABOUT
-CommandCount=13
 
 [DLG:IDD_LOGIN]
 Type=1
@@ -266,24 +212,6 @@ BaseClass=CDialog
 Filter=D
 VirtualFilter=dWC
 LastObject=IDC_STATIC_TEXT
-
-[MNU:IDR_OBJECTS]
-Type=1
-Class=?
-Command1=ID_FILE_NEW
-Command2=ID_FILE_CLOSE
-Command3=ID_APP_EXIT
-Command4=ID_VIEW_MAP
-Command5=ID_VIEW_OBJECTBROWSER
-Command6=ID_VIEW_EVENTS
-Command7=ID_VIEW_CONTROLPANEL
-Command8=ID_VIEW_TOOLBAR
-Command9=ID_VIEW_STATUS_BAR
-Command10=ID_WINDOW_CASCADE
-Command11=ID_WINDOW_TILE_HORZ
-Command12=ID_WINDOW_ARRANGE
-Command13=ID_APP_ABOUT
-CommandCount=13
 
 [CLS:CObjectBrowser]
 Type=0
@@ -509,4 +437,28 @@ BaseClass=CDialog
 Filter=D
 LastObject=CEditEventDlg
 VirtualFilter=dWC
+
+[MNU:IDM_VIEW_SPECIFIC]
+Type=1
+Class=?
+Command1=ID_WINDOW_CASCADE
+Command2=ID_WINDOW_TILE_VERT
+Command3=ID_WINDOW_ARRANGE
+Command4=ID_EVENTS_DETAILS
+Command5=ID_EVENTS_GOTOSOURCE
+CommandCount=5
+
+[ACL:IDA_MDI_DEFAULT]
+Type=1
+Class=?
+Command1=ID_VIEW_REFRESH
+CommandCount=1
+
+[CLS:CDebugFrame]
+Type=0
+HeaderFile=DebugFrame.h
+ImplementationFile=DebugFrame.cpp
+BaseClass=CMDIChildWnd
+Filter=M
+VirtualFilter=mfWC
 

@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnxcl.lib libnmsutil.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnmsutil\Release"
+# ADD LINK32 libnxcl.lib libnetxms.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release"
 
 !ELSEIF  "$(CFG)" == "nxcon - Win32 Debug"
 
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnxcl.lib libnmsutil.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnmsutil\Debug"
+# ADD LINK32 libnxcl.lib libnetxms.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
@@ -97,6 +97,10 @@ PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
 # Begin Source File
 
 SOURCE=.\ControlPanel.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
 
@@ -162,6 +166,10 @@ SOURCE=.\StdAfx.cpp
 # Begin Source File
 
 SOURCE=.\ControlPanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DebugFrame.h
 # End Source File
 # Begin Source File
 

@@ -25,6 +25,16 @@ static void ClientEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
 
 //
+// Wrapper for client library debug callback
+//
+
+static void ClientDebugCallback(char *pszMsg)
+{
+   theApp.DebugCallback(pszMsg);
+}
+
+
+//
 // CConsoleApp
 //
 
@@ -37,6 +47,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONNECT_TO_SERVER, OnConnectToServer)
 	ON_COMMAND(ID_VIEW_OBJECTBROWSER, OnViewObjectbrowser)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTS, OnControlpanelEvents)
+	ON_COMMAND(ID_VIEW_DEBUG, OnViewDebug)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -51,6 +62,7 @@ CConsoleApp::CConsoleApp()
    m_bEventBrowserActive = FALSE;
    m_bEventEditorActive = FALSE;
    m_bObjectBrowserActive = FALSE;
+   m_bDebugWindowActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    m_pRqWaitList = NULL;
    m_dwRqWaitListSize = 0;
@@ -86,6 +98,7 @@ BOOL CConsoleApp::InitInstance()
    BOOL bSetWindowPos;
    DWORD dwBytes;
    BYTE *pData;
+   HMENU hMenu;
 
 	if (!AfxSocketInit())
 	{
@@ -126,10 +139,20 @@ BOOL CConsoleApp::InitInstance()
 	if (!pFrame->LoadFrame(IDR_MAINFRAME))
 		return FALSE;
 
-	// try to load shared MDI menus and accelerator table
-	HINSTANCE hInst = AfxGetResourceHandle();
-	m_hCtrlPanelMenu  = ::LoadMenu(hInst, MAKEINTRESOURCE(IDR_CTRLPANEL));
-	m_hCtrlPanelAccel = ::LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_CTRLPANEL));
+	// Load shared MDI menus and accelerator table
+	HINSTANCE hInstance = AfxGetResourceHandle();
+
+	hMenu  = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDM_VIEW_SPECIFIC));
+
+   m_hMDIMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hMDIMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+
+   m_hEventBrowserMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
+   InsertMenu(m_hEventBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hEventBrowserMenu, 3, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
+
+	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 
    // Load configuration from registry
    dwBytes = sizeof(WINDOWPLACEMENT);
@@ -160,9 +183,14 @@ BOOL CConsoleApp::InitInstance()
 
 int CConsoleApp::ExitInstance() 
 {
+   NXCSetDebugCallback(NULL);
+   NXCDisconnect();
+
    // Free resources
-   SafeFreeResource(m_hCtrlPanelMenu);
-   SafeFreeResource(m_hCtrlPanelAccel);
+   SafeFreeResource(m_hMDIMenu);
+   SafeFreeResource(m_hMDIAccel);
+   SafeFreeResource(m_hEventBrowserMenu);
+   SafeFreeResource(m_hEventBrowserAccel);
 
 	return CWinApp::ExitInstance();
 }
@@ -234,7 +262,7 @@ void CConsoleApp::OnViewControlpanel()
       m_pwndCtrlPanel->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CControlPanel), IDR_CTRLPANEL, m_hCtrlPanelMenu, m_hCtrlPanelAccel);	
+		   RUNTIME_CLASS(CControlPanel), IDR_CTRLPANEL, m_hMDIMenu, m_hMDIAccel);	
 }
 
 
@@ -262,6 +290,11 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd)
          m_bEventEditorActive = TRUE;
          m_pwndEventEditor = (CEventEditor *)pWnd;
          break;
+      case IDR_DEBUG_WINDOW:
+         m_bDebugWindowActive = TRUE;
+         m_pwndDebugWindow = (CDebugFrame *)pWnd;
+         NXCSetDebugCallback(ClientDebugCallback);
+         break;
       default:
          break;
    }
@@ -288,6 +321,10 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd)
       case IDR_EVENT_EDITOR:
          m_bEventEditorActive = FALSE;
          break;
+      case IDR_DEBUG_WINDOW:
+         m_bDebugWindowActive = FALSE;
+         NXCSetDebugCallback(NULL);
+         break;
       default:
          break;
    }
@@ -302,7 +339,7 @@ void CConsoleApp::OnViewEvents()
       m_pwndEventBrowser->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CEventBrowser), IDR_EVENTS, m_hCtrlPanelMenu, m_hCtrlPanelAccel);	
+		   RUNTIME_CLASS(CEventBrowser), IDR_EVENTS, m_hEventBrowserMenu, m_hEventBrowserAccel);
 }
 
 void CConsoleApp::OnViewMap() 
@@ -367,7 +404,7 @@ void CConsoleApp::OnViewObjectbrowser()
       m_pwndObjectBrowser->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CObjectBrowser), IDR_OBJECTS, m_hCtrlPanelMenu, m_hCtrlPanelAccel);	
+		   RUNTIME_CLASS(CObjectBrowser), IDR_OBJECTS, m_hMDIMenu, m_hMDIAccel);	
 }
 
 
@@ -445,7 +482,7 @@ void CConsoleApp::OnControlpanelEvents()
       m_pwndEventEditor->BringWindowToTop();
    else
 	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CEventEditor), IDR_OBJECTS, m_hCtrlPanelMenu, m_hCtrlPanelAccel);	
+		   RUNTIME_CLASS(CEventEditor), IDR_OBJECTS, m_hMDIMenu, m_hMDIAccel);	
 }
 
 
@@ -478,4 +515,21 @@ void CConsoleApp::OnRequestComplete(HREQUEST hRequest, DWORD dwRetCode)
          memmove(&m_pRqWaitList[i], &m_pRqWaitList[i + 1], sizeof(RQ_WAIT_INFO) * (m_dwRqWaitListSize - i));
          i--;
       }
+}
+
+
+//
+// Handler for WM_COMMAND::ID_VIEW_DEBUG message
+//
+
+void CConsoleApp::OnViewDebug() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bDebugWindowActive)
+      m_pwndDebugWindow->BringWindowToTop();
+   else
+	   pFrame->CreateNewChild(
+		   RUNTIME_CLASS(CDebugFrame), IDR_DEBUG_WINDOW, m_hMDIMenu, m_hMDIAccel);	
 }

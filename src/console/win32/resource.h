@@ -32,6 +32,9 @@
 #define IDD_OBJECT_PROPERTIES           149
 #define IDD_DUMMY                       150
 #define IDD_EDIT_EVENT                  151
+#define IDM_VIEW_SPECIFIC               152
+#define IDR_DEBUG_WINDOW                152
+#define IDA_MDI_DEFAULT                 153
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -52,14 +55,17 @@
 #define ID_VIEW_REFRESH                 32783
 #define ID_CONTROLPANEL_EVENTS          32784
 #define ID_CONTROLPANEL_USERS           32785
+#define ID_EVENTS_DETAILS               32786
+#define ID_EVENTS_GOTOSOURCE            32787
+#define ID_VIEW_DEBUG                   32788
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        152
-#define _APS_NEXT_COMMAND_VALUE         32786
+#define _APS_NEXT_RESOURCE_VALUE        154
+#define _APS_NEXT_COMMAND_VALUE         32789
 #define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

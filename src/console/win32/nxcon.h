@@ -32,6 +32,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "EventEditor.h"
 #include "ObjectBrowser.h"
 #include "MapFrame.h"
+#include "DebugFrame.h"
 #include "ProgressDialog.h"	// Added by ClassView
 
 
@@ -72,10 +73,11 @@ protected:
    CEventEditor *m_pwndEventEditor;
 	CWnd* m_pwndObjectBrowser;
 	CWnd *m_pwndCtrlPanel;
-	HMENU m_hCtrlPanelMenu;
-	HACCEL m_hCtrlPanelAccel;
-	HMENU m_hMDIMenu;
-	HACCEL m_hMDIAccel;
+   CDebugFrame *m_pwndDebugWindow;
+	HMENU m_hMDIMenu;             // Default menu for MDI
+	HACCEL m_hMDIAccel;           // Default accelerator for MDI
+	HMENU m_hEventBrowserMenu;    // Menu for event browser
+	HACCEL m_hEventBrowserAccel;  // Accelerator for event browser
 	BOOL m_bAuthFailed;
 	CProgressDialog m_dlgProgress;
    DWORD m_dwRqWaitListSize;
@@ -96,6 +98,7 @@ public:
 	afx_msg void OnConnectToServer();
 	afx_msg void OnViewObjectbrowser();
 	afx_msg void OnControlpanelEvents();
+	afx_msg void OnViewDebug();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -104,6 +107,15 @@ private:
 	BOOL m_bEventEditorActive;
 	BOOL m_bObjectBrowserActive;
 	BOOL m_bCtrlPanelActive;
+   BOOL m_bDebugWindowActive;
+
+   // Inline functions
+public:
+   void DebugCallback(char *pszMsg)
+   {
+      if (m_bDebugWindowActive)
+         m_pwndDebugWindow->AddMessage(pszMsg);
+   }
 };
 
 

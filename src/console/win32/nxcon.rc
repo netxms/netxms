@@ -124,6 +124,7 @@ BEGIN
         MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
         MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
+        MENUITEM "&Debug",                      ID_VIEW_DEBUG
         MENUITEM SEPARATOR
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
@@ -141,127 +142,18 @@ BEGIN
     END
 END
 
-IDR_CTRLPANEL MENU DISCARDABLE 
+IDM_VIEW_SPECIFIC MENU DISCARDABLE 
 BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
-        MENUITEM "&Close",                      ID_FILE_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
-        MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
-        MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
-        MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
-        MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-    END
-    POPUP "&Window"
+    POPUP "Window"
     BEGIN
         MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
-        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_VERT
         MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
     END
-    POPUP "&Help"
+    POPUP "Events"
     BEGIN
-        MENUITEM "&About nxcon...",             ID_APP_ABOUT
-    END
-END
-
-IDR_EVENTS MENU DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
-        MENUITEM "&Close",                      ID_FILE_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
-        MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
-        MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
-        MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
-        MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
-        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
-        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About nxcon...",             ID_APP_ABOUT
-    END
-END
-
-IDR_MAPFRAME MENU DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
-        MENUITEM "&Close",                      ID_FILE_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
-        MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
-        MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
-        MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
-        MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
-        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
-        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About nxcon...",             ID_APP_ABOUT
-    END
-END
-
-IDR_OBJECTS MENU DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
-        MENUITEM "&Close",                      ID_FILE_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Map...\tF2",                 ID_VIEW_MAP
-        MENUITEM "&Object browser\tF3",         ID_VIEW_OBJECTBROWSER
-        MENUITEM "&Events\tF8",                 ID_VIEW_EVENTS
-        MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
-        MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
-        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
-        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About nxcon...",             ID_APP_ABOUT
+        MENUITEM "&Details...\tEnter",          ID_EVENTS_DETAILS
+        MENUITEM "&Go to source",               ID_EVENTS_GOTOSOURCE
     END
 END
 
@@ -287,6 +179,11 @@ BEGIN
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+IDA_MDI_DEFAULT ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
 END
 
 
@@ -571,6 +468,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDR_OBJECTS             "\nObject Browser\nObject Browser"
+    IDR_DEBUG_WINDOW        "\nDebug Log\nDebug Log"
 END
 
 #endif    // English (U.S.) resources
