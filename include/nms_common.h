@@ -207,4 +207,11 @@ typedef struct tagICMPHDR
 #define stricmp strcasecmp
 #endif
 
+
+//
+// Compare two numbers and return -1, 0, or 1
+//
+
+#define COMPARE_NUMBERS(n1,n2) (((n1) < (n2)) ? -1 : (((n1) > (n2)) ? 1 : 0))
+
 #endif   /* _nms_common_h_ */
