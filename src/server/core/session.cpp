@@ -236,6 +236,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_CLOSE_EVENT_DB:
             if (m_dwFlags & CSF_EVENT_DB_LOCKED)
             {
+               // Check if event configuration DB has been modified
+               if (m_dwFlags & CSF_EVENT_DB_MODIFIED)
+
                UnlockComponent(CID_EVENT_DB);
                m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
             }
@@ -273,7 +276,12 @@ void ClientSession::SendEventDB(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+   if (!CheckSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB))
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      SendMessage(&msg);
+   }
+   else if (!LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
    {
       msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
       msg.SetVariable(VID_LOCKED_BY, szBuffer);
@@ -282,6 +290,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
    else
    {
       m_dwFlags |= CSF_EVENT_DB_LOCKED;
+      m_dwFlags &= ~CSF_EVENT_DB_MODIFIED;
 
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       SendMessage(&msg);
@@ -545,20 +554,27 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
             DBFreeResult(hResult);
          }
 
-         // Prepare SQL query
+         // Prepare and execute SQL query
          pszName = msg.GetVariableStr(VID_NAME);
          pszMessage = msg.GetVariableStr(VID_MESSAGE);
          pszDescription = msg.GetVariableStr(VID_DESCRIPTION);
          if (bEventExist)
             sprintf(szQuery, "UPDATE events SET name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_id=%ld",
                     pszName, msg.GetVariableLong(VID_SEVERITY), msg.GetVariableLong(VID_FLAGS),
-                    pszMessage, pszDescription);
+                    pszMessage, pszDescription, dwEventId);
          else
-            sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES ",
+            sprintf(szQuery, "INSERT INTO events SET event_id,name,severity,flags,message,description VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
+                    dwEventId, pszName, msg.GetVariableLong(VID_SEVERITY),
+                    msg.GetVariableLong(VID_FLAGS), pszMessage, pszDescription);
          if (DBQuery(g_hCoreDB, szQuery))
+         {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            m_dwFlags |= CSF_EVENT_DB_MODIFIED;
+         }
          else
+         {
             msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
 
          MemFree(pszName);
          MemFree(pszMessage);

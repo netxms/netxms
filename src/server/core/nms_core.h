@@ -129,8 +129,9 @@
 // Client session flags
 //
 
-#define CSF_EVENT_DB_LOCKED   0x0001
-#define CSF_EPP_LOCKED        0x0002
+#define CSF_EVENT_DB_LOCKED      ((DWORD)0x0001)
+#define CSF_EPP_LOCKED           ((DWORD)0x0002)
+#define CSF_EVENT_DB_MODIFIED    ((DWORD)0x0004)
 
 
 //

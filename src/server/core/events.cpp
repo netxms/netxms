@@ -38,6 +38,7 @@ EventPolicy *g_pEventPolicy = NULL;
 
 static DWORD m_dwNumTemplates = 0;
 static EVENT_TEMPLATE *m_pEventTemplates = NULL;
+static MUTEX m_mutexTemplateAccess;
 
 
 //
@@ -262,19 +263,15 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
 
 
 //
-// Inilialize event handling subsystem
+// Load events from database
 //
 
-BOOL InitEventSubsystem(void)
+static BOOL LoadEvents(void)
 {
    DB_RESULT hResult;
    DWORD i;
    BOOL bSuccess = FALSE;
 
-   // Create event queue
-   g_pEventQueue = new Queue;
-
-   // Load events from database
    hResult = DBSelect(g_hCoreDB, "SELECT id,severity,flags,message,description FROM events ORDER BY id");
    if (hResult != NULL)
    {
@@ -290,13 +287,7 @@ BOOL InitEventSubsystem(void)
       }
 
       DBFreeResult(hResult);
-
-      // Create and initialize event processing policy
-      g_pEventPolicy = new EventPolicy;
-      if (g_pEventPolicy->LoadFromDB())
-         bSuccess = TRUE;
-      else
-         WriteLog(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      bSuccess = TRUE;
    }
    else
    {
@@ -304,6 +295,54 @@ BOOL InitEventSubsystem(void)
    }
 
    return bSuccess;
+}
+
+
+//
+// Inilialize event handling subsystem
+//
+
+BOOL InitEventSubsystem(void)
+{
+   BOOL bSuccess;
+
+   // Create template access mutex
+   m_mutexTemplateAccess = MutexCreate();
+
+   // Create event queue
+   g_pEventQueue = new Queue;
+
+   // Load events from database
+   bSuccess = LoadEvents();
+
+   // Create and initialize event processing policy
+   if (bSuccess)
+   {
+      g_pEventPolicy = new EventPolicy;
+      if (!g_pEventPolicy->LoadFromDB())
+      {
+         bSuccess = FALSE;
+         WriteLog(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      }
+   }
+
+   return bSuccess;
+}
+
+
+//
+// Reload event templates from database
+//
+
+void ReloadEvents(void)
+{
+   MutexLock(m_mutexTemplateAccess, INFINITE);
+   if (m_pEventTemplates != NULL)
+      free(m_pEventTemplates);
+   m_dwNumTemplates = 0;
+   m_pEventTemplates = NULL;
+   LoadEvents();
+   MutexUnlock(m_mutexTemplateAccess);
 }
 
 
@@ -359,6 +398,8 @@ BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...)
    Event *pEvent;
    va_list args;
 
+   MutexLock(m_mutexTemplateAccess, INFINITE);
+
    // Find event template
    if (m_dwNumTemplates == 0)    // No event templates at all?
       return FALSE;
@@ -370,6 +411,8 @@ BOOL PostEvent(DWORD dwEventId, DWORD dwSourceId, char *szFormat, ...)
    va_start(args, szFormat);
    pEvent = new Event(pEventTemplate, dwSourceId, szFormat, args);
    va_end(args);
+
+   MutexUnlock(m_mutexTemplateAccess);
 
    // Add new event to queue
    g_pEventQueue->Put(pEvent);
