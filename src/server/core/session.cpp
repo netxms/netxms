@@ -1726,11 +1726,19 @@ void ClientSession::SaveEPP(CSCPMessage *pRequest)
       if (m_dwFlags & CSF_EPP_LOCKED)
       {
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         m_dwFlags |= CSF_EPP_UPLOAD;
          m_dwNumRecordsToUpload = pRequest->GetVariableLong(VID_NUM_RULES);
          m_dwRecordsUploaded = 0;
-         m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
-         memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
+         if (m_dwNumRecordsToUpload == 0)
+         {
+            g_pEventPolicy->ReplacePolicy(0, NULL);
+            g_pEventPolicy->SaveToDB();
+         }
+         else
+         {
+            m_dwFlags |= CSF_EPP_UPLOAD;
+            m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
+            memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
+         }
          DebugPrintf("Accepted EPP upload request for %d rules\n", m_dwNumRecordsToUpload);
       }
       else
@@ -1778,6 +1786,7 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
             DebugPrintf("Replacing event processing policy with a new one at %p (%d rules)\n",
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
             g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
+            g_pEventPolicy->SaveToDB();
             m_ppEPPRuleList = NULL;
             
             // ... and send final confirmation

@@ -53,6 +53,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
    m_pszComment = nx_strdup(DBGetField(hResult, iRow, 2));
+   DecodeSQLString(m_pszComment);
    strcpy(m_szAlarmMessage, DBGetField(hResult, iRow, 3));
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
    strcpy(m_szAlarmKey, DBGetField(hResult, iRow, 5));
@@ -245,7 +246,7 @@ BOOL EPRule::LoadFromDB(void)
    DWORD i;
    
    // Load rule's sources
-   sprintf(szQuery, "SELECT object_id FROM PolicySourceList WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT object_id FROM policy_source_list WHERE rule_id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -293,6 +294,51 @@ BOOL EPRule::LoadFromDB(void)
    }
 
    return bSuccess;
+}
+
+
+//
+// Save rule to database
+//
+
+void EPRule::SaveToDB(void)
+{
+   char *pszComment, szQuery[4096];
+   DWORD i;
+
+   // General attributes
+   pszComment = EncodeSQLString(m_pszComment);
+   sprintf(szQuery, "INSERT INTO event_policy (rule_id,flags,comments,alarm_message,"
+                    "alarm_severity,alarm_key,alarm_ack_key) "
+                    "VALUES (%ld,%ld,'%s','%s',%d,'%s','%s')",
+           m_dwId, m_dwFlags, pszComment, m_szAlarmMessage, m_iAlarmSeverity,
+           m_szAlarmKey, m_szAlarmAckKey);
+   free(pszComment);
+   DBQuery(g_hCoreDB, szQuery);
+
+   // Actions
+   for(i = 0; i < m_dwNumActions; i++)
+   {
+      sprintf(szQuery, "INSERT INTO policy_action_list (rule_id,action_id) VALUES (%ld,%ld)",
+              m_dwId, m_pdwActionList[i]);
+      DBQuery(g_hCoreDB, szQuery);
+   }
+
+   // Events
+   for(i = 0; i < m_dwNumEvents; i++)
+   {
+      sprintf(szQuery, "INSERT INTO policy_event_list (rule_id,event_id) VALUES (%ld,%ld)",
+              m_dwId, m_pdwEventList[i]);
+      DBQuery(g_hCoreDB, szQuery);
+   }
+
+   // Sources
+   for(i = 0; i < m_dwNumSources; i++)
+   {
+      sprintf(szQuery, "INSERT INTO policy_source_list (rule_id,object_id) VALUES (%ld,%ld)",
+              m_dwId, m_pdwSourceList[i]);
+      DBQuery(g_hCoreDB, szQuery);
+   }
 }
 
 
@@ -384,6 +430,25 @@ BOOL EventPolicy::LoadFromDB(void)
    }
 
    return bSuccess;
+}
+
+
+//
+// Save event processing policy to database
+//
+
+void EventPolicy::SaveToDB(void)
+{
+   DWORD i;
+
+   ReadLock();
+   DBQuery(g_hCoreDB, "DELETE FROM event_policy");
+   DBQuery(g_hCoreDB, "DELETE FROM policy_action_list");
+   DBQuery(g_hCoreDB, "DELETE FROM policy_event_list");
+   DBQuery(g_hCoreDB, "DELETE FROM policy_source_list");
+   for(i = 0; i < m_dwNumRules; i++)
+      m_ppRuleList[i]->SaveToDB();
+   Unlock();
 }
 
 

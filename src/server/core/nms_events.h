@@ -119,6 +119,7 @@ public:
 
    DWORD Id(void) { return m_dwId; }
    BOOL LoadFromDB(void);
+   void SaveToDB(void);
    BOOL ProcessEvent(Event *pEvent);
    void CreateMessage(CSCPMessage *pMsg);
 };
@@ -146,6 +147,7 @@ public:
 
    DWORD NumRules(void) { return m_dwNumRules; }
    BOOL LoadFromDB(void);
+   void SaveToDB(void);
    void ProcessEvent(Event *pEvent);
    void SendToClient(ClientSession *pSession, DWORD dwRqId);
    void ReplacePolicy(DWORD dwNumRules, EPRule **ppRuleList);

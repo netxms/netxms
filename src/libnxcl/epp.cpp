@@ -217,8 +217,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy)
          SendMsg(&msg);
       }
 
-      // Wait for final confirmation
-      dwRetCode = WaitForRCC(dwRqId);
+      // Wait for final confirmation if we have sent some rules
+      if (pEventPolicy->dwNumRules > 0)
+         dwRetCode = WaitForRCC(dwRqId);
    }
    return dwRetCode;
 }
