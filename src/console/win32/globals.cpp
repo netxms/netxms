@@ -77,15 +77,20 @@ CImageList *g_pObjectNormalImageList = NULL;
 // Global string constants
 //
 
-TCHAR *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
-TCHAR *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
+TCHAR *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR",
+                            "CRITICAL", "UNKNOWN", "UNMANAGED",
+                            "DISABLED", "TESTING" };
+TCHAR *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major",
+                                 "Critical", "Unknown", "Unmanaged",
+                                 "Disabled", "Testing" };
 TCHAR *g_szObjectClass[] = { "Generic", "Subnet", "Node", "Interface", "Network", 
                              "Container", "Zone", "ServiceRoot", "Template", 
-                             "TemplateGroup", "TemplateRoot" };
-TCHAR *g_szActionType[] = { "Execute", "Remote", "E-Mail", "SMS" };
+                             "TemplateGroup", "TemplateRoot", "NetworkService" };
+TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS") };
 TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP"),
                              _T("FTP"), _T("HTTP"), NULL };
-TCHAR *g_szInterfaceTypes[] = {
+TCHAR *g_szInterfaceTypes[] = 
+{
    "Unknown",
    "Other",
    "Regular 1822",

@@ -47,6 +47,10 @@ void CCreateNetSrvDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCreateNetSrvDlg, CCreateObjectDlg)
 	//{{AFX_MSG_MAP(CCreateNetSrvDlg)
 	ON_CBN_SELCHANGE(IDC_COMBO_TYPES, OnSelchangeComboTypes)
+	ON_BN_CLICKED(IDC_RADIO_TCP, OnRadioTcp)
+	ON_BN_CLICKED(IDC_RADIO_UDP, OnRadioUdp)
+	ON_BN_CLICKED(IDC_RADIO_ICMP, OnRadioIcmp)
+	ON_BN_CLICKED(IDC_RADIO_OTHER, OnRadioOther)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -88,6 +92,14 @@ void CCreateNetSrvDlg::OnOK()
 void CCreateNetSrvDlg::OnSelchangeComboTypes() 
 {
    GetServiceType();
+   if (m_iServiceType != NETSRV_CUSTOM)
+   {
+      SetDlgItemText(IDC_EDIT_PROTO, _T("6"));
+      SendDlgItemMessage(IDC_RADIO_TCP, BM_SETCHECK, BST_CHECKED, 0);
+      SendDlgItemMessage(IDC_RADIO_UDP, BM_SETCHECK, BST_UNCHECKED, 0);
+      SendDlgItemMessage(IDC_RADIO_ICMP, BM_SETCHECK, BST_UNCHECKED, 0);
+      SendDlgItemMessage(IDC_RADIO_OTHER, BM_SETCHECK, BST_UNCHECKED, 0);
+   }
    SetProtocolCtrls();
 }
 
@@ -105,7 +117,8 @@ void CCreateNetSrvDlg::SetProtocolCtrls()
    EnableDlgItem(this, IDC_RADIO_UDP, bEnable);
    EnableDlgItem(this, IDC_RADIO_ICMP, bEnable);
    EnableDlgItem(this, IDC_RADIO_OTHER, bEnable);
-   EnableDlgItem(this, IDC_EDIT_PROTO, bEnable);
+   EnableDlgItem(this, IDC_EDIT_PROTO, 
+                 SendDlgItemMessage(IDC_RADIO_OTHER, BM_GETCHECK) == BST_CHECKED);
 }
 
 
@@ -122,4 +135,32 @@ void CCreateNetSrvDlg::GetServiceType()
    for(m_iServiceType = 0; g_szServiceType[m_iServiceType] != NULL; m_iServiceType++)
       if (!_tcscmp(szBuffer, g_szServiceType[m_iServiceType]))
          break;
+}
+
+
+//
+// Handle radio button clicks
+//
+
+void CCreateNetSrvDlg::OnRadioTcp() 
+{
+   SetDlgItemText(IDC_EDIT_PROTO, _T("6"));
+   EnableDlgItem(this, IDC_EDIT_PROTO, FALSE);
+}
+
+void CCreateNetSrvDlg::OnRadioUdp() 
+{
+   SetDlgItemText(IDC_EDIT_PROTO, _T("17"));
+   EnableDlgItem(this, IDC_EDIT_PROTO, FALSE);
+}
+
+void CCreateNetSrvDlg::OnRadioIcmp() 
+{
+   SetDlgItemText(IDC_EDIT_PROTO, _T("1"));
+   EnableDlgItem(this, IDC_EDIT_PROTO, FALSE);
+}
+
+void CCreateNetSrvDlg::OnRadioOther() 
+{
+   EnableDlgItem(this, IDC_EDIT_PROTO, TRUE);
 }

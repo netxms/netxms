@@ -275,13 +275,13 @@ void CreateObjectImageList(void)
    if (g_pObjectSmallImageList != NULL)
       delete g_pObjectSmallImageList;
    g_pObjectSmallImageList = new CImageList;
-   g_pObjectSmallImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 8);
+   g_pObjectSmallImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 8);
 
    // Create normal (32x32) image list
    if (g_pObjectNormalImageList != NULL)
       delete g_pObjectNormalImageList;
    g_pObjectNormalImageList = new CImageList;
-   g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 8, 8);
+   g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 16, 8);
 
    strcpy(szFileName, g_szWorkDir);
    strcat(szFileName, WORKDIR_IMAGECACHE);

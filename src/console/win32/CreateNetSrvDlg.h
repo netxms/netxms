@@ -49,6 +49,10 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnSelchangeComboTypes();
+	afx_msg void OnRadioTcp();
+	afx_msg void OnRadioUdp();
+	afx_msg void OnRadioIcmp();
+	afx_msg void OnRadioOther();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
