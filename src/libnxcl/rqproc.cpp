@@ -46,6 +46,9 @@ void RequestProcessor(void *pArg)
          case RQ_SYNC_OBJECTS:
             SyncObjects();
             break;
+         case RQ_SYNC_EVENTS:
+            SyncEvents();
+            break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
             break;

@@ -54,8 +54,7 @@ MsgWaitQueue::~MsgWaitQueue()
 {
    ConditionSet(m_hStopCondition);
    Clear();
-   if (m_pElements != NULL)
-      free(m_pElements);
+   MemFree(m_pElements);
    MutexDestroy(m_hMutex);
    ConditionDestroy(m_hStopCondition);
 }
@@ -84,7 +83,7 @@ void MsgWaitQueue::Clear(void)
 void MsgWaitQueue::Put(CSCPMessage *pMsg)
 {
    Lock();
-   m_pElements = (WAIT_QUEUE_ELEMENT *)realloc(m_pElements, 
+   m_pElements = (WAIT_QUEUE_ELEMENT *)MemReAlloc(m_pElements, 
                               sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
    m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
    m_pElements[m_dwNumElements].pMsg = pMsg;

@@ -35,6 +35,9 @@ int EXPORTABLE NXCRequest(DWORD dwOperation, ...)
       case NXC_OP_SYNC_OBJECTS:
          CreateRequest(RQ_SYNC_OBJECTS, NULL, FALSE);
          break;
+      case NXC_OP_SYNC_EVENTS:
+         CreateRequest(RQ_SYNC_EVENTS, NULL, FALSE);
+         break;
       default:
          return -1;
    }

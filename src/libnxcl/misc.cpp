@@ -43,7 +43,7 @@ void CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
 {
    REQUEST *pRequest;
 
-   pRequest = (REQUEST *)malloc(sizeof(REQUEST));
+   pRequest = (REQUEST *)MemAlloc(sizeof(REQUEST));
    pRequest->dwCode = dwCode;
    pRequest->pArg = pArg;
    pRequest->bDynamicArg = bDynamicArg;
@@ -63,10 +63,10 @@ void DebugPrintf(char *szFormat, ...)
    if (g_pDebugCallBack == NULL)
       return;
 
-   pBuffer = (char *)malloc(4096);
+   pBuffer = (char *)MemAlloc(4096);
    va_start(args, szFormat);
    vsprintf(pBuffer, szFormat, args);
    va_end(args);
    g_pDebugCallBack(pBuffer);
-   free(pBuffer);
+   MemFree(pBuffer);
 }

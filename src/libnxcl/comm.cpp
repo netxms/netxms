@@ -57,7 +57,7 @@ BOOL SendMsg(CSCPMessage *pMsg)
 
    pRawMsg = pMsg->CreateMessage();
    bResult = SendRawMsg(pRawMsg);
-   LibUtilDestroyObject(pRawMsg);
+   MemFree(pRawMsg);
    return bResult;
 }
 
@@ -74,11 +74,11 @@ static void NetReceiver(void *pArg)
    int iErr;
 
    // Initialize raw message receiving function
-   pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   pMsgBuffer = (CSCP_BUFFER *)MemAlloc(sizeof(CSCP_BUFFER));
    RecvCSCPMessage(0, NULL, pMsgBuffer);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)malloc(65536);
+   pRawMsg = (CSCP_MESSAGE *)MemAlloc(65536);
 
    // Message receiving loop
    while(1)
@@ -109,6 +109,11 @@ static void NetReceiver(void *pArg)
             ProcessObjectUpdate(pMsg);
             delete pMsg;
             break;
+         case CMD_EVENT:         // Event information
+         case CMD_EVENT_LIST_END:
+            ProcessEvent(pMsg);
+            delete pMsg;
+            break;
          default:
             m_msgWaitQueue.Put(pMsg);
             break;
@@ -116,8 +121,8 @@ static void NetReceiver(void *pArg)
    }
 
    ChangeState(STATE_DISCONNECTED);
-   free(pRawMsg);
-   free(pMsgBuffer);
+   MemFree(pRawMsg);
+   MemFree(pMsgBuffer);
 }
 
 

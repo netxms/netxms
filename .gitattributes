@@ -19,6 +19,7 @@ src/console/cmdline/nxcmd.dsp -text
 src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
 src/libnxcl/comm.cpp -text
+src/libnxcl/events.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text

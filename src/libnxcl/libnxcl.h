@@ -129,6 +129,8 @@ void ChangeState(DWORD dwState);
 BOOL Connect(void);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void SyncObjects(void);
+void SyncEvents(void);
+void ProcessEvent(CSCPMessage *pMsg);
 BOOL SendMsg(CSCPMessage *pMsg);
 void DebugPrintf(char *szFormat, ...);
 

@@ -84,7 +84,7 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 
 static void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
-   m_pIndexById = (INDEX *)realloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
+   m_pIndexById = (INDEX *)MemReAlloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
    m_pIndexById[m_dwNumObjects].pObject = pObject;
    m_dwNumObjects++;
@@ -104,7 +104,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    DWORD i;
 
    // Allocate memory for new object structure
-   pObject = (NXC_OBJECT *)malloc(sizeof(NXC_OBJECT));
+   pObject = (NXC_OBJECT *)MemAlloc(sizeof(NXC_OBJECT));
    memset(pObject, 0, sizeof(NXC_OBJECT));
 
    // Common attributes
@@ -112,13 +112,13 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iClass = pMsg->GetVariableShort("class");
    pStr = pMsg->GetVariableStr("name");
    strcpy(pObject->szName, pStr);
-   LibUtilDestroyObject(pStr);
+   MemFree(pStr);
    pObject->iStatus = pMsg->GetVariableShort("status");
    pObject->dwIpAddr = pMsg->GetVariableLong("ipaddr");
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong("parent_cnt");
-   pObject->pdwParentList = (DWORD *)malloc(sizeof(DWORD) * pObject->dwNumParents);
+   pObject->pdwParentList = (DWORD *)MemAlloc(sizeof(DWORD) * pObject->dwNumParents);
    for(i = 0; i < pObject->dwNumParents; i++)
    {
       sprintf(szBuffer, "parent.%d", i);
@@ -140,13 +140,13 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.wAuthMethod = pMsg->GetVariableShort("auth_method");
          pStr = pMsg->GetVariableStr("shared_secret");
          strncpy(pObject->node.szSharedSecret, pStr, MAX_SECRET_LENGTH - 1);
-         LibUtilDestroyObject(pStr);
+         MemFree(pStr);
          pStr = pMsg->GetVariableStr("community");
          strncpy(pObject->node.szCommunityString, pStr, MAX_COMMUNITY_LENGTH - 1);
-         LibUtilDestroyObject(pStr);
+         MemFree(pStr);
          pStr = pMsg->GetVariableStr("oid");
          strncpy(pObject->node.szObjectId, pStr, MAX_OID_LENGTH - 1);
-         LibUtilDestroyObject(pStr);
+         MemFree(pStr);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong("netmask");
@@ -181,7 +181,7 @@ static void LinkObject(NXC_OBJECT *pObject)
          if (j == pParent->dwNumChilds)
          {
             pParent->dwNumChilds++;
-            pParent->pdwChildList = (DWORD *)realloc(pParent->pdwChildList, 
+            pParent->pdwChildList = (DWORD *)MemReAlloc(pParent->pdwChildList, 
                                                      sizeof(DWORD) * pParent->dwNumChilds);
             pParent->pdwChildList[j] = pObject->dwId;
          }

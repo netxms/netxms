@@ -100,6 +100,10 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\events.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
