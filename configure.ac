@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.20 2004-08-17 09:09:10 victor Exp $
+# $Id: configure.ac,v 1.21 2004-08-17 10:24:15 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -266,6 +266,24 @@ AC_SUBST(PTHREAD_LIBS)
 AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
 # --------------------------------------------------------------------------
+# OS type
+case `uname -s` in
+	Linux)
+		SUBAGENT_DIRS="linux"
+		;;
+	FreeBSD)
+		SUBAGENT_DIRS="freebsd"
+		;;
+	SunOS)
+		SUBAGENT_DIRS="sunos"
+		;;
+	*)
+		# unknown
+		;;
+esac
+AC_SUBST(SUBAGENT_DIRS)
+
+# --------------------------------------------------------------------------
 
 # shared libs versions
 #
@@ -330,6 +348,7 @@ AC_CONFIG_FILES([
    src/agent/core/Makefile
    src/agent/subagents/Makefile
    src/agent/subagents/skeleton/Makefile
+   src/agent/subagents/linux/Makefile
 ])
 
 AC_OUTPUT

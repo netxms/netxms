@@ -1,0 +1,97 @@
+/* $Id: linux.cpp,v 1.1 2004-08-17 10:24:18 alk Exp $ */
+
+/* 
+** NetXMS subagent for GNU/Linux
+** Copyright (C) 2004 Alex Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** $module: linux.cpp
+**
+**/
+
+#include <nms_common.h>
+#include <nms_agent.h>
+
+
+//
+// Hanlder functions
+//
+
+static LONG H_Version(char *pszParam, char *pArg, char *pValue)
+{
+   ret_uint(pValue, 0x01000000);
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
+{
+   char szArg[256];
+
+   NxGetParameterArg(pszParam, 1, szArg, 255);
+   ret_string(pValue, szArg);
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+   int i;
+   char szValue[256];
+
+   for(i = 0; i < 10; i++)
+   {
+      sprintf(szValue, "Value %d", i);
+      NxAddResultString(pValue, szValue);
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Subagent information
+//
+
+static NETXMS_SUBAGENT_PARAM m_parameters[] =
+{
+   { "Skeleton.Version", H_Version, NULL },
+   { "Skeleton.Echo(*)", H_Echo, NULL }
+};
+static NETXMS_SUBAGENT_ENUM m_enums[] =
+{
+   { "Skeleton.Enum", H_Enum, NULL }
+};
+static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters, 1, m_enums };
+
+
+//
+// Entry point for NetXMS agent
+//
+
+extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+{
+   *ppInfo = &m_info;
+
+   return TRUE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/
