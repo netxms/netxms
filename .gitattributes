@@ -67,6 +67,7 @@ doc/client_library.doc -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
 doc/snmp.txt -text
+/gpl.txt -text
 images/Makefile.am -text
 images/generic_printer.ico -text
 images/generic_printer.png -text
@@ -160,6 +161,7 @@ src/agent/core/sysinfo.cpp -text
 src/agent/core/tools.cpp -text
 src/agent/core/upgrade.cpp -text
 src/agent/core/win32.cpp -text
+src/agent/install/Makefile.am -text
 src/agent/install/nxagent.iss -text
 src/agent/subagents/Makefile.am -text
 src/agent/subagents/freebsd/Makefile.am -text
@@ -598,6 +600,7 @@ src/server/core/objects.cpp -text
 src/server/core/package.cpp -text
 src/server/core/rootobj.cpp -text
 src/server/core/session.cpp -text
+src/server/core/sms.cpp -text
 src/server/core/snmp.cpp -text
 src/server/core/snmptrap.cpp -text
 src/server/core/status.cpp -text

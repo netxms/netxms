@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.67 2005-02-17 18:13:12 victor Exp $
+# $Id: configure.ac,v 1.68 2005-02-17 20:46:05 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -414,6 +414,7 @@ AC_CONFIG_FILES([
 	src/server/libnxsrv/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
+	src/agent/install/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/sunos/Makefile
