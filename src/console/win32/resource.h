@@ -152,6 +152,7 @@
 #define IDI_RUNNING                     260
 #define IDI_PENDING                     261
 #define IDD_OBJECT_RELATIONS            262
+#define IDI_TIPS                        264
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -366,6 +367,7 @@
 #define IDC_EDIT_IPADDR                 1233
 #define IDC_BUTTON_UNBIND_PARENT        1236
 #define IDC_BUTTON_UNBIND_CHILD         1237
+#define IDC_STATIC_VERSION              1237
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -473,9 +475,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        263
+#define _APS_NEXT_RESOURCE_VALUE        265
 #define _APS_NEXT_COMMAND_VALUE         32916
-#define _APS_NEXT_CONTROL_VALUE         1237
+#define _APS_NEXT_CONTROL_VALUE         1238
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

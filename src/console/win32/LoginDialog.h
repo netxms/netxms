@@ -15,6 +15,7 @@ class CLoginDialog : public CDialog
 // Construction
 public:
 	CLoginDialog(CWnd* pParent = NULL);   // standard constructor
+   virtual ~CLoginDialog();
 
 // Dialog Data
 	//{{AFX_DATA(CLoginDialog)
@@ -35,10 +36,13 @@ public:
 
 // Implementation
 protected:
+	CFont m_font;
+	HBRUSH m_hNullBrush;
 
 	// Generated message map functions
 	//{{AFX_MSG(CLoginDialog)
 	virtual BOOL OnInitDialog();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

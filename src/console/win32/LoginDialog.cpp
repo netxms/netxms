@@ -18,12 +18,24 @@ static char THIS_FILE[] = __FILE__;
 CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CLoginDialog::IDD, pParent)
 {
+   LOGBRUSH lb;
+
 	//{{AFX_DATA_INIT(CLoginDialog)
 	m_szLogin = _T("");
 	m_szPassword = _T("");
 	m_szServer = _T("");
 	m_iEncryption = -1;
 	//}}AFX_DATA_INIT
+
+   lb.lbColor = 0;
+   lb.lbStyle = BS_NULL;
+   lb.lbHatch = 0;
+   m_hNullBrush = CreateBrushIndirect(&lb);
+}
+
+CLoginDialog::~CLoginDialog()
+{
+   DeleteObject(m_hNullBrush);
 }
 
 
@@ -44,6 +56,7 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CLoginDialog, CDialog)
 	//{{AFX_MSG_MAP(CLoginDialog)
+	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -58,6 +71,14 @@ END_MESSAGE_MAP()
 BOOL CLoginDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
+
+   if (m_font.m_hObject == NULL)
+      m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                        0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                        VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+
+   SetDlgItemText(IDC_STATIC_VERSION, _T("Ver. ") NETXMS_VERSION_STRING);
 	
    if (m_szLogin.IsEmpty() || m_szServer.IsEmpty())
 		return TRUE;
@@ -65,4 +86,27 @@ BOOL CLoginDialog::OnInitDialog()
    // Server and login already entered, change focus to password field
    ::SetFocus(::GetDlgItem(m_hWnd, IDC_EDIT_PASSWORD));
    return FALSE;
+}
+
+
+//
+// WM_CTLCOLOR message handler
+//
+
+HBRUSH CLoginDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) 
+{
+   if (pWnd->GetDlgCtrlID() == IDC_STATIC_VERSION)
+   {
+      pDC->SelectObject(&m_font);
+      pDC->SetTextColor(RGB(255, 255, 255));
+      pDC->SetBkColor(RGB(43, 60, 142));
+      //pDC->SetBkMode(TRANSPARENT);
+      return m_hNullBrush;
+   }
+   else
+   {
+	   HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+	   
+	   return hbr;
+   }
 }

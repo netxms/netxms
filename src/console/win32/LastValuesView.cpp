@@ -65,8 +65,9 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create image list
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
    m_imageList.Add(theApp.LoadIcon(IDI_ACTIVE));
-   m_imageList.Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
+   m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
    m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));
+   m_imageList.Add(theApp.LoadIcon(IDI_TIPS));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
 
@@ -85,7 +86,8 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
    m_wndListCtrl.InsertColumn(1, "Description", LVCFMT_LEFT, 250);
    m_wndListCtrl.InsertColumn(2, "Value", LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, 100);
-   m_wndListCtrl.InsertColumn(3, "Timestamp", LVCFMT_LEFT, 124);
+   m_wndListCtrl.InsertColumn(3, "Changed", LVCFMT_LEFT, 26);
+   m_wndListCtrl.InsertColumn(4, "Timestamp", LVCFMT_LEFT, 124);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
 
@@ -170,7 +172,7 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
 
    // Set or clear modification flag
    m_wndListCtrl.GetItemText(iItem, 2, szOldValue, 1024);
-   m_wndListCtrl.GetItemText(iItem, 3, szOldTimeStamp, 64);
+   m_wndListCtrl.GetItemText(iItem, 4, szOldTimeStamp, 64);
    item.mask = LVIF_IMAGE;
    item.iItem = iItem;
    item.iSubItem = 0;
@@ -179,14 +181,16 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
        ((item.iImage == 1) && (!_tcscmp(szTimeStamp, szOldTimeStamp))))
    {
       item.iImage = 1;  // Should be shown in red
+      m_wndListCtrl.SetItemText(iItem, 3, "X");
    }
    else
    {
       item.iImage = -1;
+      m_wndListCtrl.SetItemText(iItem, 3, " ");
    }
    m_wndListCtrl.SetItem(&item);
 
    m_wndListCtrl.SetItemText(iItem, 1, pValue->szDescription);
    m_wndListCtrl.SetItemText(iItem, 2, pValue->szValue);
-   m_wndListCtrl.SetItemText(iItem, 3, szTimeStamp);
+   m_wndListCtrl.SetItemText(iItem, 4, szTimeStamp);
 }

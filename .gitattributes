@@ -457,6 +457,7 @@ src/console/win32/icons/SeverityMajor.ico -text
 src/console/win32/icons/SeverityMinor.ico -text
 src/console/win32/icons/SeverityNormal.ico -text
 src/console/win32/icons/SeverityWarning.ico -text
+src/console/win32/icons/Tips.ico -text
 src/console/win32/icons/ack.ico -text
 src/console/win32/icons/active.ico -text
 src/console/win32/icons/alarm.ico -text
