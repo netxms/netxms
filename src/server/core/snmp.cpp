@@ -68,8 +68,10 @@ void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize)
 // binary representation from oidBinary and iOidLen
 //
 
-BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const oid *oidBinary,
-             size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult)
+BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr,
+             const oid *oidBinary, size_t iOidLen, void *pValue,
+             DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult,
+             BOOL bRecursiveCall)
 {
    struct snmp_session session, *sptr;
    struct snmp_pdu *pdu, *response;
@@ -80,7 +82,8 @@ BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const 
    char szNodeName[32];
    BOOL bResult = TRUE;
 
-   MutexLock(m_hMutexSnmp, INFINITE);
+   if (!bRecursiveCall)
+      MutexLock(m_hMutexSnmp, INFINITE);
 
    // Open SNMP session
    snmp_sess_init(&session);
@@ -93,89 +96,94 @@ BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const 
    if(sptr == NULL)
    {
       WriteLog(MSG_SNMP_OPEN_FAILED, EVENTLOG_ERROR_TYPE, NULL);
-      MutexUnlock(m_hMutexSnmp);
-      return FALSE;
-   }
-
-   // Create PDU and send request
-   pdu = snmp_pdu_create(SNMP_MSG_GET);
-   if (szOidStr != NULL)
-   {
-      if (read_objid(szOidStr, oidName, &iNameLen) == 0)
-      {
-         WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
-         MutexUnlock(m_hMutexSnmp);
-         return FALSE;
-      }
+      bResult = FALSE;
    }
    else
    {
-      memcpy(oidName, oidBinary, iOidLen * sizeof(oid));
-      iNameLen = iOidLen;
-   }
-
-   snmp_add_null_var(pdu, oidName, iNameLen);
-   iStatus = snmp_synch_response(sptr, pdu, &response);
-
-   // Analyze response
-   if ((iStatus == STAT_SUCCESS) && (response->errstat == SNMP_ERR_NOERROR))
-   {
-      for(pVar = response->variables; pVar != NULL; pVar = pVar->next_variable)
+      // Create PDU and send request
+      pdu = snmp_pdu_create(SNMP_MSG_GET);
+      if (szOidStr != NULL)
       {
-         switch(pVar->type)
+         if (read_objid(szOidStr, oidName, &iNameLen) == 0)
          {
-            case ASN_INTEGER:
-            case ASN_UINTEGER:
-            case ASN_COUNTER:
-            case ASN_GAUGE:
-               if (bStringResult)
-                  sprintf((char *)pValue, "%ld", *pVar->val.integer);
-               else
-                  *((long *)pValue) = *pVar->val.integer;
-               break;
-            case ASN_IPADDRESS:
-               if (bStringResult)
-                  IpToStr(*pVar->val.integer, (char *)pValue);
-               else
-                  *((long *)pValue) = *pVar->val.integer;
-               break;
-            case ASN_OCTET_STR:
-               memcpy(pValue, pVar->val.string, min(pVar->val_len, dwBufferSize - 1));
-               ((char *)pValue)[min(pVar->val_len, dwBufferSize - 1)] = 0;
-               break;
-            case ASN_OBJECT_ID:
-               OidToStr(pVar->val.objid, pVar->val_len / sizeof(oid), (char *)pValue, dwBufferSize);
-               break;
-            default:
-               WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "d", pVar->type);
-               bResult = FALSE;
-               break;
+            WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
+            bResult = FALSE;
          }
-      }
-   }
-   else
-   {
-      if (iStatus == STAT_SUCCESS)
-      {
-         if (bVerbose)
-            WriteLog(MSG_SNMP_BAD_PACKET, EVENTLOG_ERROR_TYPE, "s", snmp_errstring(response->errstat));
-         bResult = FALSE;
       }
       else
       {
-         if (bVerbose)
-            WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", iStatus);
-         bResult = FALSE;
+         memcpy(oidName, oidBinary, iOidLen * sizeof(oid));
+         iNameLen = iOidLen;
       }
+
+      if (bResult)   // Still no errors
+      {
+         snmp_add_null_var(pdu, oidName, iNameLen);
+         iStatus = snmp_synch_response(sptr, pdu, &response);
+
+         // Analyze response
+         if ((iStatus == STAT_SUCCESS) && (response->errstat == SNMP_ERR_NOERROR))
+         {
+            for(pVar = response->variables; pVar != NULL; pVar = pVar->next_variable)
+            {
+               switch(pVar->type)
+               {
+                  case ASN_INTEGER:
+                  case ASN_UINTEGER:
+                  case ASN_COUNTER:
+                  case ASN_GAUGE:
+                     if (bStringResult)
+                        sprintf((char *)pValue, "%ld", *pVar->val.integer);
+                     else
+                        *((long *)pValue) = *pVar->val.integer;
+                     break;
+                  case ASN_IPADDRESS:
+                     if (bStringResult)
+                        IpToStr(*pVar->val.integer, (char *)pValue);
+                     else
+                        *((long *)pValue) = *pVar->val.integer;
+                     break;
+                  case ASN_OCTET_STR:
+                     memcpy(pValue, pVar->val.string, min(pVar->val_len, dwBufferSize - 1));
+                     ((char *)pValue)[min(pVar->val_len, dwBufferSize - 1)] = 0;
+                     break;
+                  case ASN_OBJECT_ID:
+                     OidToStr(pVar->val.objid, pVar->val_len / sizeof(oid), (char *)pValue, dwBufferSize);
+                     break;
+                  default:
+                     WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "d", pVar->type);
+                     bResult = FALSE;
+                     break;
+               }
+            }
+         }
+         else
+         {
+            if (iStatus == STAT_SUCCESS)
+            {
+               if (bVerbose)
+                  WriteLog(MSG_SNMP_BAD_PACKET, EVENTLOG_ERROR_TYPE, "s", snmp_errstring(response->errstat));
+               bResult = FALSE;
+            }
+            else
+            {
+               if (bVerbose)
+                  WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", iStatus);
+               bResult = FALSE;
+            }
+         }
+
+         // Destroy response PDU if needed
+         if (response)
+            snmp_free_pdu(response);
+      }
+
+      // Close session and cleanup
+      snmp_close(sptr);
    }
 
-   // Destroy response PDU if needed
-   if (response)
-      snmp_free_pdu(response);
-
-   // Close session and cleanup
-   snmp_close(sptr);
-   MutexUnlock(m_hMutexSnmp);
+   if (!bRecursiveCall)
+      MutexUnlock(m_hMutexSnmp);
    return bResult;
 }
 
@@ -303,11 +311,13 @@ static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *
 
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
    oidName[pVar->name_length - 5] = 3;  // Retrieve network mask for this IP
-   if (!SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwNetMask, sizeof(DWORD), FALSE, FALSE))
+   if (!SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length,
+                &dwNetMask, sizeof(DWORD), FALSE, FALSE, TRUE))
       return;
 
    oidName[pVar->name_length - 5] = 2;  // Retrieve interface index for this IP
-   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex, sizeof(DWORD), FALSE, FALSE))
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length,
+               &dwIndex, sizeof(DWORD), FALSE, FALSE, TRUE))
    {
       int i;
 
@@ -351,7 +361,8 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
    INTERFACE_LIST *pIfList = NULL;
 
    // Get number of interfaces
-   if (!SnmpGet(dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0, &iNumIf, sizeof(long), FALSE, FALSE))
+   if (!SnmpGet(dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
+                &iNumIf, sizeof(long), FALSE, FALSE, FALSE))
       return NULL;
 
    // Create empty list
@@ -369,12 +380,16 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
    {
       // Interface name
       sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME, FALSE, FALSE))
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0,
+                   pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME,
+                   FALSE, FALSE, FALSE))
          continue;
 
       // Interface type
       sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
-      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0, &pIfList->pInterfaces[i].dwType, sizeof(DWORD), FALSE, FALSE))
+      if (!SnmpGet(dwAddr, szCommunity, szOid, NULL, 0,
+                   &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
+                   FALSE, FALSE, FALSE))
          continue;
    }
 
@@ -400,10 +415,12 @@ static void HandlerArp(DWORD dwAddr, const char *szCommunity, variable_list *pVa
    memcpy(oidName, pVar->name, pVar->name_length * sizeof(oid));
 
    oidName[pVar->name_length - 6] = 1;  // Retrieve interface index
-   SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex, sizeof(DWORD), FALSE, FALSE);
+   SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, &dwIndex,
+           sizeof(DWORD), FALSE, FALSE, TRUE);
 
    oidName[pVar->name_length - 6] = 2;  // Retrieve MAC address for this IP
-   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, bMac, 64, FALSE, FALSE))
+   if (SnmpGet(dwAddr, szCommunity, NULL, oidName, pVar->name_length, bMac,
+               64, FALSE, FALSE, TRUE))
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,

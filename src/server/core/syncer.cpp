@@ -67,6 +67,7 @@ void Syncer(void *arg)
 
    // Read configuration
    iSyncInterval = ConfigReadInt("SyncInterval", 60);
+   DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread started, sync_interval = %d\n", iSyncInterval);
 
    // Main syncer loop
    while(!ShutdownInProgress())
@@ -75,4 +76,5 @@ void Syncer(void *arg)
          break;   // Shutdown time has arrived
       SaveObjects();
    }
+   DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread terminated\n");
 }

@@ -348,15 +348,18 @@ BOOL Node::NewNodePoll(DWORD dwNetMask)
    PollerLock();
 
    // Determine node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE, FALSE))
       m_dwFlags |= NF_IS_SNMP;
 
-   pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   pAgentConn = new AgentConnection(m_dwIpAddr, m_wAgentPort, m_wAuthMethod,
+                                    m_szSharedSecret);
    if (pAgentConn->Connect())
       m_dwFlags |= NF_IS_NATIVE_AGENT;
 
    // Get interface list
-   if ((m_dwFlags & NF_IS_SNMP) || (m_dwFlags & NF_IS_NATIVE_AGENT)  || (m_dwFlags & NF_IS_LOCAL_MGMT))
+   if ((m_dwFlags & NF_IS_SNMP) || (m_dwFlags & NF_IS_NATIVE_AGENT) ||
+       (m_dwFlags & NF_IS_LOCAL_MGMT))
    {
       INTERFACE_LIST *pIfList = NULL;
       int i;
@@ -605,7 +608,8 @@ void Node::ConfigurationPoll(void)
    PollerLock();
 
    // Check node's capabilities
-   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE))
+   if (SnmpGet(m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
+               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE, FALSE))
    {
       m_dwFlags |= NF_IS_SNMP;
       m_iSnmpAgentFails = 0;
@@ -726,7 +730,7 @@ BOOL Node::ConnectToAgent(void)
 DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
    return SnmpGet(m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
-                  szBuffer, dwBufSize, FALSE, TRUE) ? DCE_SUCCESS : DCE_COMM_ERROR;
+                  szBuffer, dwBufSize, FALSE, TRUE, FALSE) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 
 

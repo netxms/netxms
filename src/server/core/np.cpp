@@ -30,15 +30,16 @@
 static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 {
    Node *pNode;
+   char szIpAddr1[32], szIpAddr2[32];
 
+   DbgPrintf(AF_DEBUG_DISCOVERY, "PollNode(%s,%s)\n",  
+             IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2));
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
    {
-      char szBuffer[32];
-
-      DbgPrintf(AF_DEBUG_DISCOVERY, "*** PollNode: Node %s already exist in database\n", 
-                IpToStr(dwIpAddr, szBuffer));
+      DbgPrintf(AF_DEBUG_DISCOVERY, "PollNode: Node %s already exist in database\n", 
+                IpToStr(dwIpAddr, szIpAddr1));
       return;
    }
 
@@ -46,6 +47,8 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    NetObjInsert(pNode, TRUE);
    if (!pNode->NewNodePoll(dwNetMask))
    {
+      DbgPrintf(AF_DEBUG_DISCOVERY, "Node::NewNodePoll(%s)failed\n", 
+                IpToStr(dwIpAddr, szIpAddr1));
       ObjectsGlobalLock();
       NetObjDelete(pNode);
       ObjectsGlobalUnlock();
@@ -70,6 +73,7 @@ void NodePoller(void *arg)
    // Read configuration and initialize
    iPollInterval = ConfigReadInt("NewNodePollingInterval", 60);
    dwWatchdogId = WatchdogAddThread("Node Poller");
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller started with poll interval %d seconds\n", iPollInterval);
 
    while(!ShutdownInProgress())
    {
@@ -103,4 +107,5 @@ void NodePoller(void *arg)
          DBFreeResult(hResult);
       }
    }
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller thread terminated\n");
 }

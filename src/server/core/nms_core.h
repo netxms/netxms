@@ -353,8 +353,10 @@ void QueueSQLRequest(char *szQuery);
 void StopDBWriter(void);
 
 void SnmpInit(void);
-BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const oid *oidBinary, 
-             size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
+BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr,
+             const oid *oidBinary, size_t iOidLen, void *pValue,
+             DWORD dwBufferSize, BOOL bVerbose,
+             BOOL bStringResult, BOOL bRecursiveCall);
 BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
                    void (* pHandler)(DWORD, const char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose);
