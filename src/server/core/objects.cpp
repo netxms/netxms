@@ -491,6 +491,30 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load network services
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM network_services");
+   if (hResult != 0)
+   {
+      NetworkService *pService;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pService = new NetworkService;
+         if (pService->CreateFromDB(dwId))
+         {
+            NetObjInsert(pService, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pService;
+            WriteLog(MSG_NETSRV_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load templates
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
    if (hResult != 0)

@@ -84,7 +84,7 @@ BOOL NetworkService::SaveToDB(void)
    Lock();
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM interfaces WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM network_services WHERE id=%ld", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
    {

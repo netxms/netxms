@@ -452,4 +452,10 @@ Language=English
 Initialization of server module "%1" failed
 .
 
+MessageId=
+SymbolicName=MSG_NETSRV_LOAD_FAILED
+Language=English
+Failed to load network service object with id %1 from database
+.
+
 ;#endif
