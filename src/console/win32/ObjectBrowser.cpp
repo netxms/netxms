@@ -548,8 +548,9 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
    DWORD dwIndex;
 
    dwIndex = SearchTreeHash(m_pTreeHash, m_dwTreeHashSize, dwObjectId);
-   while((dwIndex > 0) && (m_pTreeHash[dwIndex - 1].dwObjectId == dwObjectId))
-      dwIndex--;
+   if (dwIndex != INVALID_INDEX)
+      while((dwIndex > 0) && (m_pTreeHash[dwIndex - 1].dwObjectId == dwObjectId))
+         dwIndex--;
    return dwIndex;
 }
 
