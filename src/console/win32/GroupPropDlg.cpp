@@ -30,6 +30,8 @@ CGroupPropDlg::CGroupPropDlg(CWnd* pParent /*=NULL*/)
 	m_bManageEPP = FALSE;
 	m_bManageConfig = FALSE;
 	m_bConfigureTraps = FALSE;
+	m_bManagePkg = FALSE;
+	m_bDeleteAlarms = FALSE;
 	//}}AFX_DATA_INIT
 
    m_pdwMembers = NULL;
@@ -58,6 +60,8 @@ void CGroupPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_MANAGE_EPP, m_bManageEPP);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_CONFIG, m_bManageConfig);
 	DDX_Check(pDX, IDC_CHECK_SNMP_TRAPS, m_bConfigureTraps);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_PKG, m_bManagePkg);
+	DDX_Check(pDX, IDC_CHECK_DELETE_ALARMS, m_bDeleteAlarms);
 	//}}AFX_DATA_MAP
 }
 

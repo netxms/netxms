@@ -4,6 +4,7 @@
 
 - Added centralized agent upgrade
 - New parameters added to Solaris subagent
+- Alarm deletion implemented
 
 
 *

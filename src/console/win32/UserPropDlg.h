@@ -33,6 +33,8 @@ public:
 	BOOL	m_bManageEPP;
 	BOOL	m_bManageConfig;
 	BOOL	m_bConfigureTraps;
+	BOOL	m_bDeleteAlarms;
+	BOOL	m_bManagePkg;
 	//}}AFX_DATA
 
 

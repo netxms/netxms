@@ -263,7 +263,9 @@
 #define IDC_CHECK_MANAGE_EPP            1141
 #define IDC_CHECK_MANAGE_ACTIONS        1142
 #define IDC_CHECK_EXPAND                1143
+#define IDC_CHECK_MANAGE_PKG            1143
 #define IDC_CHECK_GRID                  1144
+#define IDC_CHECK_DELETE_ALARMS         1144
 #define IDC_RADIO_EXEC                  1147
 #define IDC_RADIO_REXEC                 1148
 #define IDC_RADIO_EMAIL                 1149
@@ -426,6 +428,7 @@
 #define ID_CONTROLPANEL_AGENTPKG        32907
 #define ID_PACKAGE_INSTALL              32908
 #define ID_PACKAGE_REMOVE               32909
+#define ID_PACKAGE_DEPLOY               32910
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -435,7 +438,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        252
-#define _APS_NEXT_COMMAND_VALUE         32910
+#define _APS_NEXT_COMMAND_VALUE         32911
 #define _APS_NEXT_CONTROL_VALUE         1213
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

@@ -32,6 +32,8 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	m_bManageEPP = FALSE;
 	m_bManageConfig = FALSE;
 	m_bConfigureTraps = FALSE;
+	m_bDeleteAlarms = FALSE;
+	m_bManagePkg = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -56,6 +58,8 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_MANAGE_EPP, m_bManageEPP);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_CONFIG, m_bManageConfig);
 	DDX_Check(pDX, IDC_CHECK_SNMP_TRAPS, m_bConfigureTraps);
+	DDX_Check(pDX, IDC_CHECK_DELETE_ALARMS, m_bDeleteAlarms);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_PKG, m_bManagePkg);
 	//}}AFX_DATA_MAP
 }
 

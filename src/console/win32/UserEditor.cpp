@@ -363,6 +363,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
             dlg.m_bManageActions = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
             dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
+            dlg.m_bDeleteAlarms = (pUser->wSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
+            dlg.m_bManagePkg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -376,7 +378,9 @@ void CUserEditor::OnUserProperties()
                                         (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
                                         (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
-                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0);
+                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
+                                        (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
+                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0);
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
                if (userInfo.dwNumMembers > 0)
                {
@@ -404,6 +408,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
             dlg.m_bManageActions = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
             dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
+            dlg.m_bDeleteAlarms = (pUser->wSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
+            dlg.m_bManagePkg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -419,7 +425,9 @@ void CUserEditor::OnUserProperties()
                                         (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
                                         (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
-                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0);
+                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
+                                        (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
+                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0);
                bModify = TRUE;
             }
          }
