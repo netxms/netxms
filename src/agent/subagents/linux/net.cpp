@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.2 2004-10-23 22:53:23 alk Exp $ */
+/* $Id: net.cpp,v 1.3 2004-11-25 08:01:27 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -210,13 +210,16 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				{
 					if (ioctl(nFd, SIOCGIFHWADDR, &irq) == 0)
 					{
-						szMacAddr[0] = 0;
 						for (int z = 0; z < 6; z++)
 						{
 							sprintf(&szMacAddr[z << 1], "%02X",
 									(unsigned char)irq.ifr_hwaddr.sa_data[z]);
 						}
 					}
+               else
+               {
+					   nRet = SYSINFO_RC_ERROR;
+               }
 				}
 				else
 				{
@@ -234,6 +237,10 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 							pIndex[i].if_name);
 					NxAddResultString(pValue, szOut);
 				}
+            else
+            {
+               break;   // Stop enumerating interfaces on error
+            }
 			}
 
 			close(nFd);
@@ -248,6 +255,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2004/10/23 22:53:23  alk
+ArpCache: ignore incomplete entries
+
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:
