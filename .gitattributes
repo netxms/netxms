@@ -161,4 +161,7 @@ src/server/tools/nxadm/nxadm.cpp -text
 src/server/tools/nxadm/nxadm.dsp -text
 src/server/tools/nxadm/nxadm.dsw -text
 src/server/tools/nxadm/nxadm.h -text
+src/server/tools/nxget/nxget.cpp -text
+src/server/tools/nxget/nxget.dsp -text
+src/server/tools/nxget/nxget.dsw -text
 tools/mc.pl -text
