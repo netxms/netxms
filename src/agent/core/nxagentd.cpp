@@ -331,6 +331,9 @@ int main(int argc, char *argv[])
 {
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    char szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
+#ifdef _WIN32
+   char szModuleName[MAX_PATH];
+#endif
    
    // Parse command line
    opterr = 1;
@@ -387,6 +390,10 @@ int main(int argc, char *argv[])
       case ACTION_RUN_AGENT:
          if (NxLoadConfig(szConfigFile, cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
+            if ((!stricmp(g_szLogFile, "{syslog}")) || 
+                (!stricmp(g_szLogFile, "{eventlog}")))
+               g_dwFlags |= AF_USE_SYSLOG;
+
 #ifdef _WIN32
             if (g_dwFlags & AF_DAEMON)
             {
@@ -445,7 +452,8 @@ int main(int argc, char *argv[])
          break;
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
-         InstallService(NULL, szConfigFile);
+         GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
+         InstallService(szModuleName, szConfigFile);
          break;
       case ACTION_REMOVE_SERVICE:
          RemoveService();
