@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.7 2004-10-06 13:23:32 victor Exp $ */
+/* $Id: linux.cpp,v 1.8 2004-10-16 06:32:04 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -310,9 +310,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Disk.Total(*)",                H_DiskInfo,         (char *)DISK_TOTAL },
    { "Disk.Used(*)",                 H_DiskInfo,         (char *)DISK_USED },
 
-   { "System.CPU.Procload",          H_CpuLoad,          NULL },
-   { "System.CPU.Procload5",         H_CpuLoad,          NULL },
-   { "System.CPU.Procload15",        H_CpuLoad,          NULL },
+   { "System.CPU.LoadAvg",           H_CpuLoad,          NULL },
+   { "System.CPU.LoadAvg5",          H_CpuLoad,          NULL },
+   { "System.CPU.LoadAvg15",         H_CpuLoad,          NULL },
 
    { "System.CPU.Usage",             H_CpuUsage,         NULL },
    { "System.CPU.Usage5",            H_CpuUsage,         NULL },
@@ -363,6 +363,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2004/10/06 13:23:32  victor
+Necessary changes to build everything on Linux
+
 Revision 1.6  2004/08/26 23:51:26  alk
 cosmetic changes
 
