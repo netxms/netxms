@@ -141,7 +141,7 @@ void CMainFrame::OnViewRefresh()
                            "<table width=\"98%%\" align=center cellspacing=0 cellpadding=2 border=1>\n"
                            "<tr bgcolor=#9AAABA><td><b>Severity</b></td>"
                            "<td><b>Source</b></td><td><b>Message</b></td>"
-                           "<td><b>Timestamp</b></td><td width=40><b>Ack</b></td></tr>");
+                           "<td><b>Timestamp</b></td><td width=40 align=center><b>Ack</b></td></tr>");
       dwRetCode = DoRequestArg3(NXCLoadAllAlarms, (void *)FALSE, &dwNumAlarms, 
                                 &pAlarmList, _T("Loading alarms..."));
       if (dwRetCode == RCC_SUCCESS)
@@ -177,10 +177,9 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine)
    pObject = NXCFindObjectById(pAlarm->dwSourceObject);
    ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
    strftime(szBuffer, 64, "%d-%b-%Y %H:%M:%S", ptm);
-   fprintf(m_pHtmlFile, "<tr bgcolor=%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+   fprintf(m_pHtmlFile, "<tr bgcolor=%s><td align=center>%s</td><td>%s</td><td>%s</td><td>%s</td><td align=center>&nbsp</td></tr>\n",
            bColoredLine ? "#EFEFEF" : "#FFFFFF",
            g_szStatusTextSmall[pAlarm->wSeverity], pObject->szName,
            pAlarm->szMessage, szBuffer);
    //m_iNumAlarms[pAlarm->wSeverity]++;
 }
-
