@@ -472,10 +472,11 @@ typedef struct
 // Trap parameter mapping entry
 //
 
-struct NXC_OID
+struct NXC_OID_MAP
 {
    DWORD *pdwObjectId;     // Trap OID
    DWORD dwOidLen;         // Trap OID length
+   TCHAR szDescription[MAX_DB_STRING];
 };
 
 
@@ -490,7 +491,8 @@ struct NXC_TRAP_CFG_ENTRY
    DWORD dwOidLen;         // Trap OID length
    DWORD dwEventId;        // Event ID
    DWORD dwNumMaps;        // Number of parameter mappings
-   NXC_OID *pMaps;
+   NXC_OID_MAP *pMaps;
+   TCHAR szDescription[MAX_DB_STRING];
 };
 
 

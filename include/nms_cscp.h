@@ -417,9 +417,11 @@ typedef struct
 
 // Variable range for trap parameter list
 #define VID_TRAP_PLEN_BASE          ((DWORD)0x00009000)
-#define VID_TRAP_PLEN_LAST          ((DWORD)0x000097FF)
-#define VID_TRAP_PNAME_BASE         ((DWORD)0x00009800)
-#define VID_TRAP_PNAME_LAST         ((DWORD)0x00009FFF)
+#define VID_TRAP_PLEN_LAST          ((DWORD)0x000093FF)
+#define VID_TRAP_PNAME_BASE         ((DWORD)0x00009400)
+#define VID_TRAP_PNAME_LAST         ((DWORD)0x000097FF)
+#define VID_TRAP_PDESCR_BASE        ((DWORD)0x00009800)
+#define VID_TRAP_PDESCR_LAST        ((DWORD)0x00009BFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,
