@@ -31,6 +31,8 @@ images/node_group.ico -text
 images/node_group.png -text
 images/service.ico -text
 images/service.png -text
+images/subnet.ico -text
+images/subnet.png -text
 include/Makefile.am -text
 include/getopt.h -text
 include/nms_agent.h -text
