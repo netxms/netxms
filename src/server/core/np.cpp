@@ -31,12 +31,11 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 {
    Node *pNode;
 
-char buffer[32];
-printf("Analyzing new node %s\n",IpToStr(dwIpAddr,buffer));
    // Check for node existence
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
    {
+char buffer[32];
 printf("Node %s already exist in database\n", IpToStr(dwIpAddr,buffer));
       return;
    }
