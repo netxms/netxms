@@ -181,7 +181,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, "Total amount of virtual memory" },
    { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, "Used virtual memory" },
    { "System.ProcessCount", H_ProcCount, NULL, DCI_DT_INT, "Total number of processes" },
-   { "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, "State of * service" },
+   { "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, "State of {instance} service" },
    { "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_INT, "Total number of threads" },
    { "System.Uname", H_SystemUname, NULL, DCI_DT_STRING, "System uname" },
 #endif
