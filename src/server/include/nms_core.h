@@ -455,10 +455,18 @@ DWORD DeleteTrap(DWORD dwId);
 #ifdef _WIN32
 
 char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error);
+#define SetSocketReuseFlag(sd)
+}
 
 #else
 
 void NXCORE_EXPORTABLE OnSignal(int iSignal);
+
+#define SetSocketReuseFlag(sd) { \
+	int nVal = 1; \
+	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
+			(socklen_t)sizeof(nVal)); \
+}
 
 #endif   /* _WIN32 */
 

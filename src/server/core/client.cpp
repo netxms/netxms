@@ -97,6 +97,8 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
       return THREAD_OK;
    }
 
+	SetSocketReuseFlag(sock);
+
    // Create session list access mutex
    m_hSessionListAccess = MutexCreate();
 

@@ -270,6 +270,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       return THREAD_OK;
    }
 
+	SetSocketReuseFlag(hSocket);
+
    // Fill in local address structure
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;

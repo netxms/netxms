@@ -40,6 +40,17 @@
 #include <nxclapi.h>
 
 
+#ifdef _WIN32
+# define SetSocketReuseFlag(sd)
+#else
+# define SetSocketReuseFlag(sd) { \
+	int nVal = 1; \
+	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
+			(socklen_t)sizeof(nVal)); \
+}
+#endif
+
+
 //
 // Version
 //

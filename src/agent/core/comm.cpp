@@ -122,6 +122,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       exit(1);
    }
 
+	SetSocketReuseFlag(hSocket);
+
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;

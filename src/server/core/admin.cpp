@@ -1,3 +1,5 @@
+/* $Id: admin.cpp,v 1.6 2005-01-18 15:51:42 alk Exp $ */
+
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -193,6 +195,8 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
       return THREAD_OK;
    }
 
+	SetSocketReuseFlag(sock);
+
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
@@ -245,3 +249,10 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    closesocket(sock);
    return THREAD_OK;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/
