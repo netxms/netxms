@@ -33,7 +33,7 @@
 
 #include <dbdrv.h>
 #include <nms_threads.h>
-#include <mysql/mysql.h>
+#include <mysql.h>
 
 
 //
