@@ -293,8 +293,8 @@ void ClientSession::UpdateThread(void)
             msg.SetId(0);
             msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
             msg.SetVariable(VID_ACTION_ID, ((NXC_ACTION *)pUpdate->pData)->dwId);
-//            if (pUpdate->dwCode != NX_NOTIFY_ACTION_DELETED)
-//               FillActionInfoMessage(&msg, (NXC_ACTION *)pUpdate->pData);
+            if (pUpdate->dwCode != NX_NOTIFY_ACTION_DELETED)
+               FillActionInfoMessage(&msg, (NXC_ACTION *)pUpdate->pData);
             SendMessage(&msg);
             MutexUnlock(m_mutexSendActions);
             msg.DeleteAllVariables();
@@ -461,6 +461,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_DELETE_ACTION:
             DeleteAction(pMsg);
+            break;
+         case CMD_LOAD_ACTIONS:
+            SendAllActions(pMsg->GetId());
             break;
          default:
             break;
@@ -2412,5 +2415,35 @@ void ClientSession::OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
          pUpdate->pData = nx_memdup(pAction, sizeof(NXC_ACTION));
          m_pUpdateQueue->Put(pUpdate);
       }
+   }
+}
+
+
+//
+// Send all actions to client
+//
+
+void ClientSession::SendAllActions(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   // Check user rights
+   if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) ||
+       (m_dwSystemAccess & SYSTEM_ACCESS_EPP))
+   {
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      SendMessage(&msg);
+      MutexLock(m_mutexSendActions, INFINITE);
+      SendActionsToClient(this, dwRqId);
+      MutexUnlock(m_mutexSendActions);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      SendMessage(&msg);
    }
 }

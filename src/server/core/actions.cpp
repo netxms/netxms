@@ -188,6 +188,17 @@ static int CompareId(const void *key, const void *elem)
 
 
 //
+// Compare action id for qsort()
+//
+
+static int CompareElements(const void *p1, const void *p2)
+{
+   return ((NXC_ACTION *)p1)->dwId < ((NXC_ACTION *)p2)->dwId ? -1 : 
+            (((NXC_ACTION *)p1)->dwId > ((NXC_ACTION *)p2)->dwId ? 1 : 0);
+}
+
+
+//
 // Execute action on specific event
 //
 
@@ -272,6 +283,8 @@ DWORD CreateNewAction(char *pszName, DWORD *pdwId)
       m_pActionList[i].szRcptAddr[0] = 0;
       m_pActionList[i].pszData = NULL;
 
+      qsort(m_pActionList, m_dwNumActions, sizeof(NXC_ACTION), CompareElements);
+
       SaveActionToDB(&m_pActionList[i]);
       m_dwUpdateCode = NX_NOTIFY_ACTION_CREATED;
       EnumerateClientSessions(SendActionDBUpdate, &m_pActionList[i]);
@@ -349,4 +362,49 @@ DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
 
    RWLockUnlock(m_rwlockActionListAccess);
    return dwResult;
+}
+
+
+//
+// Fill CSCP message with action's data
+//
+
+void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
+{
+   pMsg->SetVariable(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);
+   pMsg->SetVariable(VID_ACTION_TYPE, (WORD)pAction->iType);
+   pMsg->SetVariable(VID_ACTION_DATA, pAction->pszData);
+   pMsg->SetVariable(VID_EMAIL_SUBJECT, pAction->szEmailSubject);
+   pMsg->SetVariable(VID_ACTION_NAME, pAction->szName);
+   pMsg->SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
+}
+
+
+//
+// Send all actions to client
+//
+
+void SendActionsToClient(ClientSession *pSession, DWORD dwRqId)
+{
+   DWORD i;
+   CSCPMessage msg;
+
+   // Prepare message
+   msg.SetCode(CMD_ACTION_DATA);
+   msg.SetId(dwRqId);
+
+   RWLockReadLock(m_rwlockActionListAccess, INFINITE);
+
+   for(i = 0; i < m_dwNumActions; i++)
+   {
+      msg.SetVariable(VID_ACTION_ID, m_pActionList[i].dwId);
+      FillActionInfoMessage(&msg, &m_pActionList[i]);
+      msg.DeleteAllVariables();
+   }
+
+   RWLockUnlock(m_rwlockActionListAccess);
+
+   // Send end-of-list flag
+   msg.SetVariable(VID_ACTION_ID, (DWORD)0);
+   pSession->SendMessage(&msg);
 }

@@ -283,6 +283,7 @@ private:
    void UpdateAction(CSCPMessage *pRequest);
    void DeleteAction(CSCPMessage *pRequest);
    void LockActionDB(DWORD dwRqId, BOOL bLock);
+   void SendAllActions(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -34,5 +34,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent);
 DWORD CreateNewAction(char *pszName, DWORD *pdwId);
 DWORD DeleteActionFromDB(DWORD dwActionId);
 DWORD ModifyActionFromMessage(CSCPMessage *pMsg);
+void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction);
+void SendActionsToClient(ClientSession *pSession, DWORD dwRqId);
 
 #endif   /* _nms_actions_ */
