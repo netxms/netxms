@@ -295,7 +295,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL },
    { _T("PDH.Version"), H_PdhVersion, NULL },
-   { _T("System.Threads"), H_CounterAlias, _T("(\\System\\Threads)") },
+   { _T("System.ThreadCount"), H_CounterAlias, _T("(\\System\\Threads)") },
    { _T("System.Uptime"), H_CounterAlias, _T("(\\System\\System Up Time)") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
