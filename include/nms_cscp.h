@@ -231,6 +231,8 @@ typedef struct
 #define CMD_GET_LIST                0x0042
 #define CMD_TRAP                    0x0043
 #define CMD_ACTION                  0x0044
+#define CMD_GET_DEFAULT_IMAGE_LIST  0x0045
+#define CMD_DEFAULT_IMAGE_LIST      0x0046
 
 
 //
@@ -325,6 +327,8 @@ typedef struct
 #define VID_NUM_STRINGS             ((DWORD)86)
 #define VID_ACTION_NAME             ((DWORD)87)
 #define VID_NUM_ARGS                ((DWORD)88)
+#define VID_IMAGE_ID_LIST           ((DWORD)89)
+#define VID_CLASS_ID_LIST           ((DWORD)90)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

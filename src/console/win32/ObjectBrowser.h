@@ -146,6 +146,7 @@ protected:
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
+	int m_iLastObjectImage;
 	void UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject);
 	void UpdateObjectList(NXC_OBJECT *pObject);
 	DWORD m_dwSortMode;

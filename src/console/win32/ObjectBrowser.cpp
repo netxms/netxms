@@ -235,16 +235,17 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_NETMAP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_INTERFACE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_NODE));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SUBNET));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SUBNET));*/
+   m_iLastObjectImage = m_pImageList->GetImageCount();
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_UP));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));*/
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));
    m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Mark sorting column in list control
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = 4;
+   lvCol.iImage = m_iLastObjectImage;
    m_wndListCtrl.SetColumn(m_dwSortMode, &lvCol);
 
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
@@ -772,7 +773,7 @@ void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult
    // Mark new sorting column
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = (SortDir(m_dwSortMode) == SORT_ASCENDING) ? 4 : 5;
+   lvCol.iImage = (SortDir(m_dwSortMode) == SORT_ASCENDING) ? m_iLastObjectImage : (m_iLastObjectImage + 1);
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
    *pResult = 0;
