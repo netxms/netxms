@@ -23,6 +23,8 @@ GENERAL:
 - View and update agent's configuration from server
 - Add diff() method for DCI thresholds
 - Planned outages (maintenance schedule)
+- NxAdm -- status, stop server
+- NxDbMgr -- backup before db recover
 
 
 SERVER:
@@ -48,11 +50,17 @@ SERVER:
 - Event correlation
 - Internal parameters for service checks
 - "Proxy agent for service checks" attribure for node objects
+- Gather list of supported parameters from agent in configuration poller
+- Implement reconnect in all database drivers
+- Network service autodiscovery
+- New attribute: disable status/configuration poll
+- Override Net.IP.Forward
 
 
 CORE AGENT:
 
 - Check shutdown procedure on different platforms
+- Remote config editing
 
 
 LINUX AGENT:
@@ -84,6 +92,8 @@ WINDOWS CONSOLE:
 - Play sound on new alarms
 - Add sorting to all list views
 - Add "Copy value to clipboard" to "Collected data" window
+- Event Processing Policy: Edit with doubleclick
+- Event Processing Policy: Disable record with doubleclick on leftmost field (number)
 
 
 SUBAGENTS:
