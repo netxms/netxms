@@ -141,4 +141,5 @@ void CInternalItemSelDlg::OnButtonGet()
       dlg.m_iOrigin = DS_INTERNAL;
       dlg.DoModal();
    }
+   m_wndListCtrl.SetFocus();
 }

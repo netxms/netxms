@@ -46,7 +46,6 @@ SERVER:
 - Event correlation
 - Internal parameters for service checks
 - "Proxy agent for service checks" attribure for node objects
-- Gather list of supported parameters from agent in configuration poller
 - Implement reconnect in all database drivers
 - Network service autodiscovery
 - New attribute: disable status/configuration poll
@@ -85,7 +84,6 @@ SOLARIS AGENT:
 
 WINDOWS CONSOLE:
 
-- Add parameter selection for native agents in DCI configuration dialog
 - Find good graph creation library
 - Enlarge 16x16 status overlay icons
 - Add primary IP address selection 

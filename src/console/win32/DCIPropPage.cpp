@@ -6,6 +6,7 @@
 #include "DCIPropPage.h"
 #include "MIBBrowserDlg.h"
 #include "InternalItemSelDlg.h"
+#include "AgentParamSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,8 +33,14 @@ CDCIPropPage::CDCIPropPage()
 	//}}AFX_DATA_INIT
    
    m_pNode = NULL;
+   m_pParamList = NULL;
+   m_dwNumParams = 0;
 }
 
+CDCIPropPage::~CDCIPropPage()
+{
+   safe_free(m_pParamList);
+}
 
 void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 {
@@ -102,6 +109,7 @@ void CDCIPropPage::OnButtonSelect()
    switch(m_iOrigin)
    {
       case DS_NATIVE_AGENT:
+         SelectAgentItem();
          break;
       case DS_SNMP_AGENT:
          SelectSNMPItem();
@@ -134,7 +142,7 @@ void CDCIPropPage::OnSelchangeComboOrigin()
 // Select SNMP parameter
 //
 
-void CDCIPropPage::SelectSNMPItem()
+void CDCIPropPage::SelectSNMPItem(void)
 {
    CMIBBrowserDlg dlg;
    TCHAR *pDot, szBuffer[1024];
@@ -168,7 +176,7 @@ void CDCIPropPage::SelectSNMPItem()
 // Select internal item (like Status)
 //
 
-void CDCIPropPage::SelectInternalItem()
+void CDCIPropPage::SelectInternalItem(void)
 {
    CInternalItemSelDlg dlg;
 
@@ -179,5 +187,47 @@ void CDCIPropPage::SelectInternalItem()
       SetDlgItemText(IDC_EDIT_DESCRIPTION, dlg.m_szItemDescription);
       m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);
       m_wndEditName.SetFocus();
+   }
+}
+
+
+//
+// Select agent item
+//
+
+void CDCIPropPage::SelectAgentItem(void)
+{
+   DWORD dwResult;
+
+   // Fetch list of items supported by current node from server
+   if (m_pParamList == NULL)
+   {
+      dwResult = DoRequestArg4(NXCGetSupportedParameters, g_hSession, 
+                               (void *)m_pNode->dwId, &m_dwNumParams, &m_pParamList,
+                               _T("Downloading supported parameters list..."));
+      if (dwResult != RCC_SUCCESS)
+         theApp.ErrorBox(dwResult, _T("Error retrieving supported parameters list: %s"));
+   }
+   else
+   {
+      dwResult = RCC_SUCCESS;
+   }
+
+   // If everything is OK, display selection dialog
+   if (dwResult == RCC_SUCCESS)
+   {
+      CAgentParamSelDlg dlg;
+
+      dlg.m_pNode = m_pNode;
+      dlg.m_dwNumParams = m_dwNumParams;
+      dlg.m_pParamList = m_pParamList;
+      if (dlg.DoModal() == IDOK)
+      {
+         m_wndEditName.SetWindowText(m_pParamList[dlg.m_dwSelectionIndex].szName);
+         SetDlgItemText(IDC_EDIT_DESCRIPTION,
+                        m_pParamList[dlg.m_dwSelectionIndex].szDescription);
+         m_wndTypeList.SelectString(-1, g_pszItemDataType[m_pParamList[dlg.m_dwSelectionIndex].iDataType]);
+         m_wndEditName.SetFocus();
+      }
    }
 }

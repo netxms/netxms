@@ -109,6 +109,10 @@ SOURCE=.\ActionSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AgentParamSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AlarmBrowser.cpp
 # End Source File
 # Begin Source File
@@ -407,6 +411,10 @@ SOURCE=.\ActionEditor.h
 # Begin Source File
 
 SOURCE=.\ActionSelDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\AgentParamSelDlg.h
 # End Source File
 # Begin Source File
 

@@ -19,6 +19,7 @@ class CDCIPropPage : public CPropertyPage
 public:
 	NXC_OBJECT *m_pNode;
 	CDCIPropPage();   // standard constructor
+   virtual ~CDCIPropPage();
 
 // Dialog Data
 	//{{AFX_DATA(CDCIPropPage)
@@ -46,6 +47,9 @@ public:
 
 // Implementation
 protected:
+	NXC_AGENT_PARAM *m_pParamList;
+	DWORD m_dwNumParams;
+	void SelectAgentItem(void);
 	void SelectInternalItem(void);
 	void SelectSNMPItem(void);
 

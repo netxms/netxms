@@ -845,3 +845,54 @@ DWORD LIBNXCL_EXPORTABLE NXCWakeUpNode(NXC_SESSION hSession, DWORD dwObjectId)
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Retrieve list of supported agent parameters
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, DWORD dwNodeId,
+                                                   DWORD *pdwNumParams, 
+                                                   NXC_AGENT_PARAM **ppParamList)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD i, dwId, dwRqId, dwRetCode;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   *pdwNumParams = 0;
+   *ppParamList = NULL;
+
+   // Build request message
+   msg.SetCode(CMD_GET_PARAMETER_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   // Wait for responce
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         *pdwNumParams = pResponce->GetVariableLong(VID_NUM_PARAMETERS);
+         *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * *pdwNumParams);
+         for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
+         {
+            pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
+            pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
+            (*ppParamList)[i].iDataType = (int)pResponce->GetVariableShort(dwId++);
+         }
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
+}
