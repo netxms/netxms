@@ -192,27 +192,6 @@ struct DC_ITEM
 
 
 //
-// Authentication method
-//
-
-#define AUTH_NONE          0
-#define AUTH_PLAINTEXT     1
-#define AUTH_MD5_HASH      2
-#define AUTH_SHA1_HASH     3
-
-
-//
-// Object types
-//
-
-#define OBJECT_GENERIC     0
-#define OBJECT_SUBNET      1
-#define OBJECT_NODE        2
-#define OBJECT_INTERFACE   3
-#define OBJECT_NETWORK     4
-
-
-//
 // Base class for network objects
 //
 
