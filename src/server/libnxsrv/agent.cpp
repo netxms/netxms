@@ -36,9 +36,10 @@
 // Receiver thread starter
 //
 
-void AgentConnection::ReceiverThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL AgentConnection::ReceiverThreadStarter(void *pArg)
 {
    ((AgentConnection *)pArg)->ReceiverThread();
+   return THREAD_OK;
 }
 
 
@@ -61,7 +62,7 @@ AgentConnection::AgentConnection()
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
    m_bIsConnected = FALSE;
    m_mutexDataLock = MutexCreate();
-   m_mutexReceiverThreadRunning = MutexCreate();
+   m_hReceiverThread = INVALID_THREAD_HANDLE;
 }
 
 
@@ -87,7 +88,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, char
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
    m_bIsConnected = FALSE;
    m_mutexDataLock = MutexCreate();
-   m_mutexReceiverThreadRunning = MutexCreate();
+   m_hReceiverThread = INVALID_THREAD_HANDLE;
 }
 
 
@@ -102,8 +103,7 @@ AgentConnection::~AgentConnection()
       closesocket(m_hSocket);
 
    // Wait for receiver thread termination
-   MutexLock(m_mutexReceiverThreadRunning, INFINITE);
-   MutexUnlock(m_mutexReceiverThreadRunning);
+   ThreadJoin(m_hReceiverThread);
 
    Lock();
    DestroyResultData();
@@ -112,7 +112,6 @@ AgentConnection::~AgentConnection()
    delete m_pMsgWaitQueue;
 
    MutexDestroy(m_mutexDataLock);
-   MutexDestroy(m_mutexReceiverThreadRunning);
 }
 
 
@@ -143,8 +142,6 @@ void AgentConnection::ReceiverThread(void)
    CSCP_BUFFER *pMsgBuffer;
    int iErr;
    char szBuffer[128];
-
-   MutexLock(m_mutexReceiverThreadRunning, INFINITE);
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -194,8 +191,6 @@ void AgentConnection::ReceiverThread(void)
 
    free(pRawMsg);
    free(pMsgBuffer);
-
-   MutexUnlock(m_mutexReceiverThreadRunning);
 }
 
 
@@ -213,6 +208,10 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    // Check if already connected
    if ((m_bIsConnected) || (m_hSocket != -1))
       return FALSE;
+
+   // Wait for receiver thread from previous connection, if any
+   ThreadJoin(m_hReceiverThread);
+   m_hReceiverThread = INVALID_THREAD_HANDLE;
 
    // Create socket
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -237,7 +236,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    }
 
    // Start receiver thread
-   ThreadCreate(ReceiverThreadStarter, 0, this);
+   m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
 
    // Authenticate itself to agent
    if ((dwError = Authenticate()) != ERR_SUCCESS)

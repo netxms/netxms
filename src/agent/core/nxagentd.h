@@ -209,8 +209,8 @@ private:
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
    CSCP_BUFFER *m_pMsgBuffer;
-   MUTEX m_mutexWriteThreadRunning;
-   MUTEX m_mutexProcessingThreadRunning;
+   THREAD m_hWriteThread;
+   THREAD m_hProcessingThread;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    DWORD m_dwIndex;
    BOOL m_bIsAuthenticated;
@@ -220,13 +220,19 @@ private:
    void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
 
+   void ReadThread(void);
+   void WriteThread(void);
+   void ProcessingThread(void);
+
+   static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
+
 public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr);
    ~CommSession();
 
-   void ReadThread(void);
-   void WriteThread(void);
-   void ProcessingThread(void);
+   void Run(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
 

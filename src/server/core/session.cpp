@@ -30,6 +30,13 @@
 
 
 //
+// Externals
+//
+
+void UnregisterSession(DWORD dwIndex);
+
+
+//
 // Fill CSCP message with user data
 //
 
@@ -64,6 +71,56 @@ static void FillGroupInfoMessage(CSCPMessage *pMsg, NMS_USER_GROUP *pGroup)
 
 
 //
+// Client communication read thread starter
+//
+
+THREAD_RESULT THREAD_CALL ClientSession::ReadThreadStarter(void *pArg)
+{
+   ((ClientSession *)pArg)->ReadThread();
+
+   // When ClientSession::ReadThread exits, all other session
+   // threads are already stopped, so we can safely destroy
+   // session object
+   UnregisterSession(((ClientSession *)pArg)->GetIndex());
+   delete (ClientSession *)pArg;
+   return THREAD_OK;
+}
+
+
+//
+// Client communication write thread starter
+//
+
+THREAD_RESULT THREAD_CALL ClientSession::WriteThreadStarter(void *pArg)
+{
+   ((ClientSession *)pArg)->WriteThread();
+   return THREAD_OK;
+}
+
+
+//
+// Received message processing thread starter
+//
+
+THREAD_RESULT THREAD_CALL ClientSession::ProcessingThreadStarter(void *pArg)
+{
+   ((ClientSession *)pArg)->ProcessingThread();
+   return THREAD_OK;
+}
+
+
+//
+// Information update processing thread starter
+//
+
+THREAD_RESULT THREAD_CALL ClientSession::UpdateThreadStarter(void *pArg)
+{
+   ((ClientSession *)pArg)->UpdateThread();
+   return THREAD_OK;
+}
+
+
+//
 // Client session class constructor
 //
 
@@ -76,9 +133,9 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwIndex = INVALID_INDEX;
    m_iState = STATE_CONNECTED;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   m_mutexWriteThreadRunning = MutexCreate();
-   m_mutexProcessingThreadRunning = MutexCreate();
-   m_mutexUpdateThreadRunning = MutexCreate();
+   m_hWriteThread = INVALID_THREAD_HANDLE;
+   m_hProcessingThread = INVALID_THREAD_HANDLE;
+   m_hUpdateThread = INVALID_THREAD_HANDLE;
    m_mutexSendEvents = MutexCreate();
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
@@ -105,9 +162,6 @@ ClientSession::~ClientSession()
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
    safe_free(m_pMsgBuffer);
-   MutexDestroy(m_mutexWriteThreadRunning);
-   MutexDestroy(m_mutexProcessingThreadRunning);
-   MutexDestroy(m_mutexUpdateThreadRunning);
    MutexDestroy(m_mutexSendEvents);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
@@ -122,6 +176,19 @@ ClientSession::~ClientSession()
             delete m_ppEPPRuleList[i];
       free(m_ppEPPRuleList);
    }
+}
+
+
+//
+// Start all threads
+//
+
+void ClientSession::Run(void)
+{
+   m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
+   m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
+   m_hUpdateThread = ThreadCreateEx(UpdateThreadStarter, 0, this);
+   ThreadCreate(ReadThreadStarter, 0, this);
 }
 
 
@@ -192,14 +259,9 @@ void ClientSession::ReadThread(void)
    m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
-   MutexLock(m_mutexWriteThreadRunning, INFINITE);
-   MutexUnlock(m_mutexWriteThreadRunning);
-
-   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
-   MutexUnlock(m_mutexProcessingThreadRunning);
-
-   MutexLock(m_mutexUpdateThreadRunning, INFINITE);
-   MutexUnlock(m_mutexUpdateThreadRunning);
+   ThreadJoin(m_hWriteThread);
+   ThreadJoin(m_hProcessingThread);
+   ThreadJoin(m_hUpdateThread);
 
    // Remove all locks created by this session
    RemoveAllSessionLocks(m_dwIndex);
@@ -224,7 +286,6 @@ void ClientSession::WriteThread(void)
    CSCP_MESSAGE *pMsg;
    char szBuffer[128];
 
-   MutexLock(m_mutexWriteThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
@@ -239,7 +300,6 @@ void ClientSession::WriteThread(void)
       }
       safe_free(pMsg);
    }
-   MutexUnlock(m_mutexWriteThreadRunning);
 }
 
 
@@ -252,7 +312,6 @@ void ClientSession::UpdateThread(void)
    UPDATE_INFO *pUpdate;
    CSCPMessage msg;
 
-   MutexLock(m_mutexUpdateThreadRunning, INFINITE);
    while(1)
    {
       pUpdate = (UPDATE_INFO *)m_pUpdateQueue->GetOrBlock();
@@ -309,7 +368,6 @@ void ClientSession::UpdateThread(void)
 
       free(pUpdate);
    }
-   MutexUnlock(m_mutexUpdateThreadRunning);
 }
 
 
@@ -322,7 +380,6 @@ void ClientSession::ProcessingThread(void)
    CSCPMessage *pMsg;
    char szBuffer[128];
 
-   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
@@ -476,7 +533,6 @@ void ClientSession::ProcessingThread(void)
       }
       delete pMsg;
    }
-   MutexUnlock(m_mutexProcessingThreadRunning);
 }
 
 
@@ -2446,8 +2502,10 @@ void ClientSession::SendAllActions(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       SendMessage(&msg);
       MutexLock(m_mutexSendActions, INFINITE);
+printf("Sending actions...\n");
       SendActionsToClient(this, dwRqId);
       MutexUnlock(m_mutexSendActions);
+printf("Send complete\n");
    }
    else
    {

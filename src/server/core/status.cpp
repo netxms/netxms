@@ -27,7 +27,7 @@
 // Status poll thread
 //
 
-void StatusPoller(void *arg)
+THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
    Node *pNode;
    DWORD dwWatchdogId;
@@ -51,6 +51,7 @@ void StatusPoller(void *arg)
          }
       }
    }
+   return THREAD_OK;
 }
 
 
@@ -58,7 +59,7 @@ void StatusPoller(void *arg)
 // Configuration poll thread
 //
 
-void ConfigurationPoller(void *arg)
+THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 {
    Node *pNode;
    DWORD dwWatchdogId;
@@ -82,4 +83,5 @@ void ConfigurationPoller(void *arg)
          }
       }
    }
+   return THREAD_OK;
 }

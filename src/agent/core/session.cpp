@@ -24,10 +24,56 @@
 
 
 //
+// Externals
+//
+
+void UnregisterSession(DWORD dwIndex);
+
+
+//
 // Constants
 //
 
 #define RAW_MSG_SIZE    262144
+
+
+//
+// Client communication read thread
+//
+
+THREAD_RESULT THREAD_CALL CommSession::ReadThreadStarter(void *pArg)
+{
+   ((CommSession *)pArg)->ReadThread();
+
+   // When CommSession::ReadThread exits, all other session
+   // threads are already stopped, so we can safely destroy
+   // session object
+   UnregisterSession(((CommSession *)pArg)->GetIndex());
+   delete (CommSession *)pArg;
+   return THREAD_OK;
+}
+
+
+//
+// Client communication write thread
+//
+
+THREAD_RESULT THREAD_CALL CommSession::WriteThreadStarter(void *pArg)
+{
+   ((CommSession *)pArg)->WriteThread();
+   return THREAD_OK;
+}
+
+
+//
+// Received message processing thread
+//
+
+THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
+{
+   ((CommSession *)pArg)->ProcessingThread();
+   return THREAD_OK;
+}
 
 
 //
@@ -41,8 +87,8 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hSocket = hSocket;
    m_dwIndex = INVALID_INDEX;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   m_mutexWriteThreadRunning = MutexCreate();
-   m_mutexProcessingThreadRunning = MutexCreate();
+   m_hWriteThread = INVALID_THREAD_HANDLE;
+   m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_dwHostAddr = dwHostAddr;
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
 }
@@ -59,8 +105,18 @@ CommSession::~CommSession()
    delete m_pSendQueue;
    delete m_pMessageQueue;
    safe_free(m_pMsgBuffer);
-   MutexDestroy(m_mutexWriteThreadRunning);
-   MutexDestroy(m_mutexProcessingThreadRunning);
+}
+
+
+//
+// Start all threads
+//
+
+void CommSession::Run(void)
+{
+   m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
+   m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
+   ThreadCreate(ReadThreadStarter, 0, this);
 }
 
 
@@ -108,11 +164,8 @@ void CommSession::ReadThread(void)
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
-   MutexLock(m_mutexWriteThreadRunning, INFINITE);
-   MutexUnlock(m_mutexWriteThreadRunning);
- 
-   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
-   MutexUnlock(m_mutexProcessingThreadRunning);
+   ThreadJoin(m_hWriteThread);
+   ThreadJoin(m_hProcessingThread);
 
    DebugPrintf("Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
 }
@@ -127,7 +180,6 @@ void CommSession::WriteThread(void)
    CSCP_MESSAGE *pMsg;
    char szBuffer[128];
 
-   MutexLock(m_mutexWriteThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
@@ -142,7 +194,6 @@ void CommSession::WriteThread(void)
       }
       free(pMsg);
    }
-   MutexUnlock(m_mutexWriteThreadRunning);
 }
 
 
@@ -156,7 +207,6 @@ void CommSession::ProcessingThread(void)
    char szBuffer[128];
    CSCPMessage msg;
 
-   MutexLock(m_mutexProcessingThreadRunning, INFINITE);
    while(1)
    {
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
@@ -203,7 +253,6 @@ void CommSession::ProcessingThread(void)
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
-   MutexUnlock(m_mutexProcessingThreadRunning);
 }
 
 

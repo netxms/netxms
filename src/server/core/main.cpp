@@ -41,17 +41,16 @@
 // Thread functions
 //
 
-void HouseKeeper(void *pArg);
-void DiscoveryThread(void *pArg);
-void Syncer(void *pArg);
-void NodePoller(void *pArg);
-void StatusPoller(void *pArg);
-void ConfigurationPoller(void *pArg);
-void EventProcessor(void *pArg);
-void WatchdogThread(void *pArg);
-void ClientListener(void *pArg);
-void LocalAdminListener(void *pArg);
-void DBWriteThread(void *pArg);
+THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg);
+THREAD_RESULT THREAD_CALL DiscoveryThread(void *pArg);
+THREAD_RESULT THREAD_CALL Syncer(void *pArg);
+THREAD_RESULT THREAD_CALL NodePoller(void *pArg);
+THREAD_RESULT THREAD_CALL StatusPoller(void *pArg);
+THREAD_RESULT THREAD_CALL ConfigurationPoller(void *pArg);
+THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
+THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
+THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
+THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 
 
 //
@@ -281,7 +280,7 @@ BOOL Initialize(void)
       ThreadCreate(EventProcessor, 0, (void *)(i + 1));
 
    // Start database "lazy" write thread
-   ThreadCreate(DBWriteThread, 0, NULL);
+   StartDBWriter();
 
    // Start local administartive interface listener if required
    if (ConfigReadInt("EnableAdminInterface", 1))

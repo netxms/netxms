@@ -75,7 +75,7 @@ void CheckForMgmtNode(void)
 // Network discovery thread
 //
 
-void DiscoveryThread(void *arg)
+THREAD_RESULT THREAD_CALL DiscoveryThread(void *arg)
 {
    DWORD dwNewNodeId = 1, dwWatchdogId;
    Node *pNode;
@@ -135,4 +135,5 @@ void DiscoveryThread(void *arg)
    }
 
    DbgPrintf(AF_DEBUG_DISCOVERY, "Discovery thread terminated\n");
+   return THREAD_OK;
 }

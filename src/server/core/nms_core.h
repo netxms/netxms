@@ -226,9 +226,9 @@ private:
    DWORD m_dwSystemAccess;    // User's system access rights
    DWORD m_dwFlags;           // Session flags
    CSCP_BUFFER *m_pMsgBuffer;
-   MUTEX m_mutexWriteThreadRunning;
-   MUTEX m_mutexProcessingThreadRunning;
-   MUTEX m_mutexUpdateThreadRunning;
+   THREAD m_hWriteThread;
+   THREAD m_hProcessingThread;
+   THREAD m_hUpdateThread;
    MUTEX m_mutexSendEvents;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
@@ -240,6 +240,16 @@ private:
    DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
    DWORD m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
+
+   static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL UpdateThreadStarter(void *);
+
+   void ReadThread(void);
+   void WriteThread(void);
+   void ProcessingThread(void);
+   void UpdateThread(void);
 
    BOOL CheckSysAccessRights(DWORD dwRequiredAccess) 
    { 
@@ -290,10 +300,7 @@ public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
    ~ClientSession();
 
-   void ReadThread(void);
-   void WriteThread(void);
-   void ProcessingThread(void);
-   void UpdateThread(void);
+   void Run(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
 
@@ -361,6 +368,7 @@ void DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
 void DBUnloadDriver(void);
 
 void QueueSQLRequest(char *szQuery);
+void StartDBWriter(void);
 void StopDBWriter(void);
 
 void SnmpInit(void);

@@ -90,7 +90,7 @@ static void DeleteEmptySubnets(void)
 // Housekeeper thread
 //
 
-void HouseKeeper(void *pArg)
+THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
    char szQuery[256];
@@ -121,4 +121,5 @@ void HouseKeeper(void *pArg)
       // Remove deleted objects which are no longer referenced
       CleanDeletedObjects();
    }
+   return THREAD_OK;
 }

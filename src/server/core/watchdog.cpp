@@ -121,7 +121,7 @@ void WatchdogPrintStatus(void)
 // Watchdog thread
 //
 
-void WatchdogThread(void *arg)
+THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
    DWORD i;
    time_t currTime;
@@ -148,4 +148,5 @@ void WatchdogThread(void *arg)
    MutexDestroy(m_mutexWatchdogAccess);
    m_mutexWatchdogAccess = NULL;
    DbgPrintf(AF_DEBUG_MISC, "Watchdog thread terminated\n");
+   return THREAD_OK;
 }

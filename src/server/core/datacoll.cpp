@@ -34,7 +34,7 @@ static Queue *m_pItemQueue = NULL;
 // Data collector
 //
 
-static void DataCollector(void *pArg)
+static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 {
    DCItem *pItem;
    Node *pNode;
@@ -96,6 +96,7 @@ static void DataCollector(void *pArg)
 
    free(pBuffer);
    DbgPrintf(AF_DEBUG_DC, "Data collector thread terminated\n");
+   return THREAD_OK;
 }
 
 
@@ -104,7 +105,7 @@ static void DataCollector(void *pArg)
 // data collector queue when data polling required
 //
 
-static void ItemPoller(void *pArg)
+static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
    DWORD i, dwElapsed, dwWatchdogId;
    INT64 qwStart;
@@ -126,6 +127,7 @@ static void ItemPoller(void *pArg)
       dwElapsed = (DWORD)(GetCurrentTimeMs() - qwStart);
    }
    DbgPrintf(AF_DEBUG_DC, "Item poller thread terminated\n");
+   return THREAD_OK;
 }
 
 
@@ -133,7 +135,7 @@ static void ItemPoller(void *pArg)
 // Statistics collection thread
 //
 
-static void StatCollector(void *pArg)
+static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
    while(!ShutdownInProgress())
    {
@@ -146,6 +148,7 @@ static void StatCollector(void *pArg)
 //         printf("*** DB Writer Queue size: %d ***\n", g_pLazyRequestQueue->Size());
       }
    }
+   return THREAD_OK;
 }
 
 

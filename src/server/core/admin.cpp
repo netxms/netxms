@@ -83,7 +83,7 @@ static BOOL SendString(SOCKET sock, char *szString)
 // Request processing thread
 //
 
-static void ProcessingThread(void *pArg)
+static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
    SOCKET sock = (SOCKET)pArg;
    WORD wCmd;
@@ -171,6 +171,7 @@ static void ProcessingThread(void *pArg)
 close_connection:
    shutdown(sock, 2);
    closesocket(sock);
+   return THREAD_OK;
 }
 
 
@@ -178,7 +179,7 @@ close_connection:
 // Local administrative interface listener thread
 //
 
-void LocalAdminListener(void *pArg)
+THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 {
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
@@ -189,7 +190,7 @@ void LocalAdminListener(void *pArg)
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
       WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "LocalAdminListener");
-      return;
+      return THREAD_OK;
    }
 
    // Fill in local address structure
@@ -240,4 +241,5 @@ void LocalAdminListener(void *pArg)
    }
 
    closesocket(sock);
+   return THREAD_OK;
 }

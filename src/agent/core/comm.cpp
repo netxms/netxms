@@ -90,7 +90,7 @@ static BOOL RegisterSession(CommSession *pSession)
 // Unregister session
 //
 
-static void UnregisterSession(DWORD dwIndex)
+void UnregisterSession(DWORD dwIndex)
 {
    MutexLock(m_hSessionListAccess, INFINITE);
    m_pSessionList[dwIndex] = NULL;
@@ -99,46 +99,10 @@ static void UnregisterSession(DWORD dwIndex)
 
 
 //
-// Client communication read thread
-//
-
-static void ReadThread(void *pArg)
-{
-   ((CommSession *)pArg)->ReadThread();
-
-   // When CommSession::ReadThread exits, all other session
-   // threads are already stopped, so we can safely destroy
-   // session object
-   UnregisterSession(((CommSession *)pArg)->GetIndex());
-   delete (CommSession *)pArg;
-}
-
-
-//
-// Client communication write thread
-//
-
-static void WriteThread(void *pArg)
-{
-   ((CommSession *)pArg)->WriteThread();
-}
-
-
-//
-// Received message processing thread
-//
-
-static void ProcessingThread(void *pArg)
-{
-   ((CommSession *)pArg)->ProcessingThread();
-}
-
-
-//
 // TCP/IP Listener
 //
 
-void ListenerThread(void *)
+THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
    SOCKET hSocket, hClientSocket;
    struct sockaddr_in servAddr;
@@ -209,9 +173,7 @@ void ListenerThread(void *)
          }
          else
          {
-            ThreadCreate(ReadThread, 0, (void *)pSession);
-            ThreadCreate(WriteThread, 0, (void *)pSession);
-            ThreadCreate(ProcessingThread, 0, (void *)pSession);
+            pSession->Run();
          }
       }
       else     // Unauthorized connection
@@ -224,4 +186,5 @@ void ListenerThread(void *)
    }
 
    MutexDestroy(m_hSessionListAccess);
+   return THREAD_OK;
 }

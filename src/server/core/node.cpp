@@ -723,6 +723,7 @@ void Node::ConfigurationPoll(void)
 
    m_tLastConfigurationPoll = time(NULL);
    PollerUnlock();
+   DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)\n", m_szName, m_dwId);
 
    if (bHasChanges)
    {

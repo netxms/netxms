@@ -72,7 +72,7 @@ BOOL SendMsg(CSCPMessage *pMsg)
 // Network receiver thread
 //
 
-static void NetReceiver(void *pArg)
+static THREAD_RESULT THREAD_CALL NetReceiver(void *pArg)
 {
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
@@ -201,6 +201,7 @@ static void NetReceiver(void *pArg)
    while(recv(m_hSocket, szBuffer, 128, 0) > 0);
    shutdown(m_hSocket, SHUT_RD);
    closesocket(m_hSocket);
+   return THREAD_OK;
 }
 
 

@@ -64,8 +64,7 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
       // Check if it's a section name
       if (szBuffer[0] == '*')
       {
-         if (!stricmp(&szBuffer[1], pszSection))
-            bActiveSection = TRUE;
+         bActiveSection = !stricmp(&szBuffer[1], pszSection);
       }
       else
       {

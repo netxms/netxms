@@ -66,7 +66,7 @@ static BOOL RegisterSession(ClientSession *pSession)
 // Unregister session
 //
 
-static void UnregisterSession(DWORD dwIndex)
+void UnregisterSession(DWORD dwIndex)
 {
    MutexLock(m_hSessionListAccess, INFINITE);
    m_pSessionList[dwIndex] = NULL;
@@ -75,56 +75,10 @@ static void UnregisterSession(DWORD dwIndex)
 
 
 //
-// Client communication read thread
-//
-
-static void ReadThread(void *pArg)
-{
-   ((ClientSession *)pArg)->ReadThread();
-
-   // When ClientSession::ReadThread exits, all other session
-   // threads are already stopped, so we can safely destroy
-   // session object
-   UnregisterSession(((ClientSession *)pArg)->GetIndex());
-   delete (ClientSession *)pArg;
-}
-
-
-//
-// Client communication write thread
-//
-
-static void WriteThread(void *pArg)
-{
-   ((ClientSession *)pArg)->WriteThread();
-}
-
-
-//
-// Received message processing thread
-//
-
-static void ProcessingThread(void *pArg)
-{
-   ((ClientSession *)pArg)->ProcessingThread();
-}
-
-
-//
-// Information update processing thread
-//
-
-static void UpdateThread(void *pArg)
-{
-   ((ClientSession *)pArg)->UpdateThread();
-}
-
-
-//
 // Listener thread
 //
 
-void ClientListener(void *)
+THREAD_RESULT THREAD_CALL ClientListener(void *)
 {
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
@@ -140,7 +94,7 @@ void ClientListener(void *)
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
       WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "ClientListener");
-      return;
+      return THREAD_OK;
    }
 
    // Create session list access mutex
@@ -197,14 +151,12 @@ void ClientListener(void *)
       }
       else
       {
-         ThreadCreate(ReadThread, 0, (void *)pSession);
-         ThreadCreate(WriteThread, 0, (void *)pSession);
-         ThreadCreate(ProcessingThread, 0, (void *)pSession);
-         ThreadCreate(UpdateThread, 0, (void *)pSession);
+         pSession->Run();
       }
    }
 
    closesocket(sock);
+   return THREAD_OK;
 }
 
 

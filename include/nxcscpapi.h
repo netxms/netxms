@@ -129,19 +129,19 @@ class LIBNXCSCP_EXPORTABLE MsgWaitQueue
 {
 private:
    MUTEX m_hMutexDataAccess;
-   MUTEX m_hMutexIsRunning;
    CONDITION m_hStopCondition;
    DWORD m_dwMsgHoldTime;
    DWORD m_dwNumElements;
    WAIT_QUEUE_ELEMENT *m_pElements;
    BOOL m_bIsRunning;
+   THREAD m_hHkThread;
 
    void Lock(void) { MutexLock(m_hMutexDataAccess, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutexDataAccess); }
    void HousekeeperThread(void);
    void *WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
    
-   static void MWQThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL MWQThreadStarter(void *);
 
 public:
    MsgWaitQueue();

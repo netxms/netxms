@@ -267,7 +267,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 // Mailer thread
 //
 
-static void MailerThread(void *pArg)
+static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 {
    MAIL_ENVELOPE *pEnvelope;
    DWORD dwResult;
@@ -293,6 +293,7 @@ static void MailerThread(void *pArg)
       free(pEnvelope->pszText);
       free(pEnvelope);
    }
+   return THREAD_OK;
 }
 
 

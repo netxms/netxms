@@ -35,7 +35,7 @@
 // Externals
 //
 
-void ListenerThread(void *);
+THREAD_RESULT THREAD_CALL ListenerThread(void *);
 
 
 //

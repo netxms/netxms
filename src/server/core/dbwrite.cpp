@@ -34,7 +34,7 @@ Queue *g_pLazyRequestQueue = NULL;
 // Static data
 //
 
-static MUTEX m_mutexWriteThreadRunning = NULL;
+static THREAD m_hWriteThread = INVALID_THREAD_HANDLE;
 
 
 //
@@ -51,12 +51,10 @@ void QueueSQLRequest(char *szQuery)
 // Database "lazy" write thread
 //
 
-void DBWriteThread(void *pArg)
+static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
 {
    char *pQuery;
 
-   m_mutexWriteThreadRunning = MutexCreate();
-   MutexLock(m_mutexWriteThreadRunning, INFINITE);
    while(1)
    {
       pQuery = (char *)g_pLazyRequestQueue->GetOrBlock();
@@ -66,7 +64,17 @@ void DBWriteThread(void *pArg)
       DBQuery(g_hCoreDB, pQuery);
       free(pQuery);
    }
-   MutexUnlock(m_mutexWriteThreadRunning);
+   return THREAD_OK;
+}
+
+
+//
+// Start writer thread
+//
+
+void StartDBWriter(void)
+{
+   m_hWriteThread = ThreadCreateEx(DBWriteThread, 0, NULL);
 }
 
 
@@ -77,10 +85,5 @@ void DBWriteThread(void *pArg)
 void StopDBWriter(void)
 {
    g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
-   if (m_mutexWriteThreadRunning != NULL)
-	{
-      MutexLock(m_mutexWriteThreadRunning, INFINITE);
-      MutexUnlock(m_mutexWriteThreadRunning);
-      MutexDestroy(m_mutexWriteThreadRunning);
-	}
+   ThreadJoin(m_hWriteThread);
 }

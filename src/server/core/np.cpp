@@ -67,7 +67,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
 // Node poller thread (poll new nodes and put them into the database)
 //
 
-void NodePoller(void *arg)
+THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 {
    DB_RESULT hResult;
    int iPollInterval;
@@ -111,4 +111,5 @@ void NodePoller(void *arg)
       }
    }
    DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller thread terminated\n");
+   return THREAD_OK;
 }

@@ -38,7 +38,7 @@ static void BroadcastEvent(ClientSession *pSession, void *pArg)
 // Event processing thread
 //
 
-void EventProcessor(void *arg)
+THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
    Event *pEvent;
 
@@ -83,4 +83,5 @@ void EventProcessor(void *arg)
    }
 
    DbgPrintf(AF_DEBUG_EVENTS, "Event processing thread #%d stopped\n", arg);
+   return THREAD_OK;
 }

@@ -500,7 +500,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_OBJECT_CREATE_INFO *pCreateInfo, DW
    {
       case OBJECT_NODE:
          msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
-         msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwNetMask);
+         msg.SetVariable(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
          break;
       case OBJECT_CONTAINER:
          msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);

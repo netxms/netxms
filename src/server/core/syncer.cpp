@@ -61,7 +61,7 @@ void SaveObjects(void)
 // Syncer thread
 //
 
-void Syncer(void *arg)
+THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
    int iSyncInterval;
    DWORD dwWatchdogId;
@@ -81,4 +81,5 @@ void Syncer(void *arg)
       SaveUsers();
    }
    DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread terminated\n");
+   return THREAD_OK;
 }

@@ -113,10 +113,10 @@ private:
    MsgWaitQueue *m_pMsgWaitQueue;
    BOOL m_bIsConnected;
    MUTEX m_mutexDataLock;
-   MUTEX m_mutexReceiverThreadRunning;
+   THREAD m_hReceiverThread;
 
    void ReceiverThread(void);
-   static void ReceiverThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
 
 protected:
    void DestroyResultData(void);

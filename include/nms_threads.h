@@ -37,6 +37,12 @@
 
 #define INVALID_MUTEX_HANDLE        INVALID_HANDLE_VALUE
 #define INVALID_CONDITION_HANDLE    INVALID_HANDLE_VALUE
+#define INVALID_THREAD_HANDLE       (NULL)
+
+typedef unsigned int THREAD_RESULT;
+
+#define THREAD_OK       0
+#define THREAD_CALL     __stdcall
 
 
 //
@@ -53,14 +59,36 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
    Sleep(dwMilliseconds);
 }
 
-inline THREAD ThreadCreate(void (__cdecl *start_address )(void *), int stack_size, void *args)
+inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
 {
-   return (THREAD)_beginthread(start_address, stack_size, args);
+   HANDLE hThread;
+   unsigned int dwThreadId;
+
+   hThread = (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
+   if (hThread != NULL)
+      CloseHandle(hThread);
+   return (hThread != NULL);
+}
+
+inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+{
+   unsigned int dwThreadId;
+
+   return (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
 }
 
 inline void ThreadExit(void)
 {
    _endthread();
+}
+
+inline void ThreadJoin(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+   {
+      WaitForSingleObject(hThread, INFINITE);
+      CloseHandle(hThread);
+   }
 }
 
 inline MUTEX MutexCreate(void)
@@ -129,10 +157,17 @@ typedef struct condition_t * CONDITION;
 
 #define INVALID_MUTEX_HANDLE        (NULL)
 #define INVALID_CONDITION_HANDLE    (NULL)
+#define INVALID_THREAD_HANDLE       0
 
 #ifndef INFINITE
 # define INFINITE 0
 #endif
+
+typedef void *THREAD_RESULT;
+
+#define THREAD_OK       ((void *)0)
+#define THREAD_CALL
+
 
 //
 // Inline functions
@@ -158,24 +193,44 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
    usleep(dwMilliseconds * 1000);   // Convert to microseconds
 }
 
-inline THREAD ThreadCreate(void (*start_address )(void *), int stack_size, void *args)
+inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
 {
 	THREAD id;
 
-	if (pthread_create(&id, NULL, (void *(*)(void *))start_address, args) == 0) 
+	if (pthread_create(&id, NULL, start_address, args) == 0) 
    {
       pthread_detach(id);
+		return TRUE;
+	} 
+   else 
+   {
+		return FALSE;
+	}
+}
+
+inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+{
+	THREAD id;
+
+	if pthread_create(&id, NULL, start_address, args) == 0) 
+   {
 		return id;
 	} 
    else 
    {
-		return 0;
+		return INVALID_THREAD_HANDLE;
 	}
 }
 
 inline void ThreadExit(void)
 {
    pthread_exit(NULL);
+}
+
+inline void ThreadJoin(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+      pthread_join(hThread);
 }
 
 inline MUTEX MutexCreate(void)
