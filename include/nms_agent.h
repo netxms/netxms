@@ -100,6 +100,8 @@ typedef struct
    TCHAR szName[MAX_PARAM_NAME];
    LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *);
    TCHAR *pArg;
+   int iDataType;
+   TCHAR szDescription[MAX_DB_STRING];
 } NETXMS_SUBAGENT_PARAM;
 
 

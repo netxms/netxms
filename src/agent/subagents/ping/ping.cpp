@@ -76,7 +76,7 @@ static void UnloadHandler(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("Icmp.Ping(*)"), H_IcmpPing, NULL }
+   { _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, "ICMP ping responce time for *" }
 };
 //static NETXMS_SUBAGENT_ENUM m_enums[] =
 //{

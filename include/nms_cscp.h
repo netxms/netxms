@@ -281,6 +281,7 @@ typedef struct
 #define CMD_CHECK_NETWORK_SERVICE   0x0073
 #define CMD_GET_AGENT_CONFIG        0x0074
 #define CMD_UPDATE_AGENT_CONFIG     0x0075
+#define CMD_GET_PARAMETER_LIST      0x0076
 
 
 //
@@ -423,6 +424,7 @@ typedef struct
 #define VID_SERVICE_RESPONCE        ((DWORD)134)
 #define VID_POLLER_NODE_ID          ((DWORD)135)
 #define VID_SERVICE_STATUS          ((DWORD)136)
+#define VID_NUM_PARAMETERS          ((DWORD)137)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -471,6 +473,9 @@ typedef struct
 
 // Base value for agent's action arguments
 #define VID_ACTION_ARG_BASE         ((DWORD)0x10000000)
+
+// Base value for agent's parameter list
+#define VID_PARAM_LIST_BASE         ((DWORD)0x10000000)
 
 
 //

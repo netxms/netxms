@@ -62,7 +62,7 @@ LONG H_CPUCount(char *cmd, char *arg, char *value);
 // Static data
 //
 
-static AGENT_PARAM *m_pParamList = NULL;
+static NETXMS_SUBAGENT_PARAM *m_pParamList = NULL;
 static int m_iNumParams = 0;
 static NETXMS_SUBAGENT_ENUM *m_pEnumList = NULL;
 static int m_iNumEnums = 0;
@@ -115,7 +115,7 @@ static LONG H_ParamList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
    int i;
 
    for(i = 0; i < m_iNumParams; i++)
-      NxAddResultString(value, m_pParamList[i].name);
+      NxAddResultString(value, m_pParamList[i].szName);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -138,70 +138,70 @@ static LONG H_EnumList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 // Standard agent's parameters
 //
 
-static AGENT_PARAM m_stdParams[] =
+static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 {
 #ifdef _WIN32
-   { "Disk.Free(*)", H_DiskInfo, NULL },
-   { "Disk.Total(*)", H_DiskInfo, NULL },
-   { "Disk.Used(*)", H_DiskInfo, NULL },
-   { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS },
-   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN },
-   { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_OUT },
-   { "Net.Interface.Description(*)", H_NetInterfaceStats, (char *)NET_IF_DESCR },
-   { "Net.Interface.InErrors(*)", H_NetInterfaceStats, (char *)NET_IF_IN_ERRORS },
-   { "Net.Interface.Link(*)", H_NetInterfaceStats, (char *)NET_IF_LINK },
-   { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, (char *)NET_IF_OUT_ERRORS },
-   { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_IN },
-   { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_OUT },
-   { "Net.Interface.Speed(*)", H_NetInterfaceStats, (char *)NET_IF_SPEED },
-   { "Net.IP.Forwarding", H_NetIPStats, (char *)NET_IP_FORWARDING },
-   { "Process.Count(*)", H_ProcCountSpecific, NULL },
-   { "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ },
-   { "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B },
-   { "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP },
-   { "Process.IO.ReadB(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_B },
-   { "Process.IO.ReadOp(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_OP },
-   { "Process.IO.WriteB(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_B },
-   { "Process.IO.WriteOp(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_OP },
-   { "Process.KernelTime(*)", H_ProcInfo, (char *)PROCINFO_KTIME },
-   { "Process.PageFaults(*)", H_ProcInfo, (char *)PROCINFO_PF },
-   { "Process.UserObj(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ },
-   { "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME },
-   { "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE },
-   { "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET },
-   { "System.CPU.Count", H_CPUCount, NULL },
-   { "System.Hostname", H_HostName, NULL },
-   { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE },
-   { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL },
-   { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED },
-   { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE },
-   { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL },
-   { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED },
-   { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE },
-   { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL },
-   { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED },
-   { "System.ProcessCount", H_ProcCount, NULL },
-   { "System.ServiceState(*)", H_ServiceState, NULL },
-   { "System.ThreadCount", H_ThreadCount, NULL },
-   { "System.Uname", H_SystemUname, NULL },
+   { "Disk.Free(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Free disk space on *" },
+   { "Disk.Total(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Total disk space on *" },
+   { "Disk.Used(*)", H_DiskInfo, NULL, DCI_DT_INT64, "Used disk space on *" },
+   { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS, DCI_DT_INT, "Administrative status of *" },
+   { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN, DCI_DT_UINT, "" },
+   { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_OUT, DCI_DT_UINT, "" },
+   { "Net.Interface.Description(*)", H_NetInterfaceStats, (char *)NET_IF_DESCR, DCI_DT_STRING, "" },
+   { "Net.Interface.InErrors(*)", H_NetInterfaceStats, (char *)NET_IF_IN_ERRORS, DCI_DT_UINT, "" },
+   { "Net.Interface.Link(*)", H_NetInterfaceStats, (char *)NET_IF_LINK, DCI_DT_INT, "" },
+   { "Net.Interface.OutErrors(*)", H_NetInterfaceStats, (char *)NET_IF_OUT_ERRORS, DCI_DT_UINT, "" },
+   { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_IN, DCI_DT_UINT, "" },
+   { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, (char *)NET_IF_PACKETS_OUT, DCI_DT_UINT, "" },
+   { "Net.Interface.Speed(*)", H_NetInterfaceStats, (char *)NET_IF_SPEED, DCI_DT_UINT, "" },
+   { "Net.IP.Forwarding", H_NetIPStats, (char *)NET_IP_FORWARDING, DCI_DT_INT, "IP forwarding status" },
+   { "Process.Count(*)", H_ProcCountSpecific, NULL, DCI_DT_UINT, "" },
+   { "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, "" },
+   { "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B, DCI_DT_UINT64, "" },
+   { "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP, DCI_DT_UINT64, "" },
+   { "Process.IO.ReadB(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_B, DCI_DT_UINT64, "" },
+   { "Process.IO.ReadOp(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, "" },
+   { "Process.IO.WriteB(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_B, DCI_DT_UINT64, "" },
+   { "Process.IO.WriteOp(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, "" },
+   { "Process.KernelTime(*)", H_ProcInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
+   { "Process.PageFaults(*)", H_ProcInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
+   { "Process.UserObj(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ, DCI_DT_UINT64, "" },
+   { "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
+   { "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, "" },
+   { "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, "" },
+   { "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, "Number of CPU in the system" },
+   { "System.Hostname", H_HostName, NULL, DCI_DT_STRING, "Host name" },
+   { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Free physical memory" },
+   { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
+   { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
+   { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, "Free swap space" },
+   { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, "Total amount of swap space" },
+   { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, "Used swap space" },
+   { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, "Free virtual memory" },
+   { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, "Total amount of virtual memory" },
+   { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, "Used virtual memory" },
+   { "System.ProcessCount", H_ProcCount, NULL, DCI_DT_INT, "Total number of processes" },
+   { "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, "State of * service" },
+   { "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_INT, "Total number of threads" },
+   { "System.Uname", H_SystemUname, NULL, DCI_DT_STRING, "System uname" },
 #endif
-   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections },
-   { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors },
-   { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures },
-   { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests },
-   { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests },
-   { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections },
-   { "Agent.SourcePackageSupport", H_StringConstant, "0" },
-   { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests },
-   { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests },
-   { "Agent.Uptime", H_AgentUptime, NULL },
-   { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING },
-   { "File.Count(*)", H_FileCount, NULL },
-   { "File.Hash.CRC32(*)", H_CRC32, NULL },
-   { "File.Hash.MD5(*)", H_MD5Hash, NULL },
-   { "File.Hash.SHA1(*)", H_SHA1Hash, NULL },
-   { "File.Size(*)", H_FileSize, NULL },
-   { "System.PlatformName", H_PlatformName, NULL }
+   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, "" },
+   { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors, DCI_DT_UINT, "" },
+   { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, "" },
+   { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, "" },
+   { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, "" },
+   { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections, DCI_DT_UINT, "" },
+   { "Agent.SourcePackageSupport", H_StringConstant, "0", DCI_DT_INT, "" },
+   { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests, DCI_DT_UINT, "" },
+   { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests, DCI_DT_UINT, "" },
+   { "Agent.Uptime", H_AgentUptime, NULL, DCI_DT_UINT, "Agent's uptime" },
+   { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, "Agent's version" },
+   { "File.Count(*)", H_FileCount, NULL, DCI_DT_UINT, "" },
+   { "File.Hash.CRC32(*)", H_CRC32, NULL, DCI_DT_UINT, "" },
+   { "File.Hash.MD5(*)", H_MD5Hash, NULL, DCI_DT_STRING, "" },
+   { "File.Hash.SHA1(*)", H_SHA1Hash, NULL, DCI_DT_STRING, "" },
+   { "File.Size(*)", H_FileSize, NULL, DCI_DT_UINT64, "" },
+   { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, "" }
 };
 
 
@@ -232,11 +232,11 @@ BOOL InitParameterList(void)
    if ((m_pParamList != NULL) || (m_pEnumList != NULL))
       return FALSE;
 
-   m_iNumParams = sizeof(m_stdParams) / sizeof(AGENT_PARAM);
-   m_pParamList = (AGENT_PARAM *)malloc(sizeof(AGENT_PARAM) * m_iNumParams);
+   m_iNumParams = sizeof(m_stdParams) / sizeof(NETXMS_SUBAGENT_PARAM);
+   m_pParamList = (NETXMS_SUBAGENT_PARAM *)malloc(sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
    if (m_pParamList == NULL)
       return FALSE;
-   memcpy(m_pParamList, m_stdParams, sizeof(AGENT_PARAM) * m_iNumParams);
+   memcpy(m_pParamList, m_stdParams, sizeof(NETXMS_SUBAGENT_PARAM) * m_iNumParams);
 
    m_iNumEnums = sizeof(m_stdEnums) / sizeof(NETXMS_SUBAGENT_ENUM);
    m_pEnumList = (NETXMS_SUBAGENT_ENUM *)malloc(sizeof(NETXMS_SUBAGENT_ENUM) * m_iNumEnums);
@@ -258,31 +258,32 @@ void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char 
 
    // Search for existing parameter
    for(i = 0; i < m_iNumParams; i++)
-      if (!stricmp(m_pParamList[i].name, pszName))
+      if (!stricmp(m_pParamList[i].szName, pszName))
          break;
    if (i < m_iNumParams)
    {
       // Replace existing handler
-      m_pParamList[i].handler = fpHandler;
+      m_pParamList[i].fpHandler = fpHandler;
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
       if (!strcmp(pszName, "System.PlatformName"))
       {
-         m_pParamList[i].arg = g_szPlatformSuffix;
+         m_pParamList[i].pArg = g_szPlatformSuffix;
       }
       else
       {
-         m_pParamList[i].arg = pArg;
+         m_pParamList[i].pArg = pArg;
       }
    }
    else
    {
       // Add new parameter
-      m_pParamList = (AGENT_PARAM *)realloc(m_pParamList, sizeof(AGENT_PARAM) * (m_iNumParams + 1));
-      strncpy(m_pParamList[m_iNumParams].name, pszName, MAX_PARAM_NAME - 1);
-      m_pParamList[m_iNumParams].handler = fpHandler;
-      m_pParamList[m_iNumParams].arg = pArg;
+      m_pParamList = (NETXMS_SUBAGENT_PARAM *)realloc(m_pParamList, sizeof(NETXMS_SUBAGENT_PARAM) * (m_iNumParams + 1));
+      strncpy(m_pParamList[m_iNumParams].szName, pszName, MAX_PARAM_NAME - 1);
+      m_pParamList[m_iNumParams].fpHandler = fpHandler;
+      m_pParamList[m_iNumParams].pArg = pArg;
+      m_pParamList[m_iNumParams].szDescription[0] = 0;
       m_iNumParams++;
    }
 }
@@ -353,9 +354,9 @@ DWORD GetParameterValue(char *pszParam, char *pszValue)
 
    DebugPrintf("Requesting parameter \"%s\"", pszParam);
    for(i = 0; i < m_iNumParams; i++)
-      if (MatchString(m_pParamList[i].name, pszParam, FALSE))
+      if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
       {
-         rc = m_pParamList[i].handler(pszParam, m_pParamList[i].arg, pszValue);
+         rc = m_pParamList[i].fpHandler(pszParam, m_pParamList[i].pArg, pszValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -429,4 +430,23 @@ DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue)
       m_dwUnsupportedRequests++;
    }
    return dwErrorCode;
+}
+
+
+//
+// Put complete list of supported parameters into CSCP message
+//
+
+void GetParameterList(CSCPMessage *pMsg)
+{
+   int i;
+   DWORD dwId;
+
+   pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)m_iNumParams);
+   for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_iNumParams; i++)
+   {
+      pMsg->SetVariable(dwId++, m_pParamList[i].szName);
+      pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
+      pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
+   }
 }

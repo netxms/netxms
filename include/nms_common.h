@@ -422,4 +422,17 @@ typedef struct tagICMPHDR
 
 #define inc_ptr(ptr, step, ptype) ptr = (ptype *)(((char *)ptr) + step)
 
+
+//
+// DCI (data collection item) data types
+//
+
+#define DCI_DT_INT         0
+#define DCI_DT_UINT        1
+#define DCI_DT_INT64       2
+#define DCI_DT_UINT64      3
+#define DCI_DT_STRING      4
+#define DCI_DT_FLOAT       5
+
+
 #endif   /* _nms_common_h_ */

@@ -191,18 +191,6 @@ typedef struct
 
 
 //
-// Parameter definition structure
-//
-
-struct AGENT_PARAM
-{
-   char name[MAX_PARAM_NAME];              // Parameter's name (wildcard)
-   LONG (* handler)(char *,char *,char *); // Handler
-   char *arg;                              // Optional argument passsed to the handler function
-};
-
-
-//
 // Loaded subagent information
 //
 
@@ -296,6 +284,7 @@ void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *
 BOOL AddExternalParameter(char *pszCfgLine);
 DWORD GetParameterValue(char *pszParam, char *pszValue);
 DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
+void GetParameterList(CSCPMessage *pMsg);
 
 BOOL LoadSubAgent(char *szModuleName);
 void UnloadAllSubAgents(void);

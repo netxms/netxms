@@ -303,6 +303,10 @@ void CommSession::ProcessingThread(void)
             case CMD_UPGRADE_AGENT:
                msg.SetVariable(VID_RCC, Upgrade(pMsg));
                break;
+            case CMD_GET_PARAMETER_LIST:
+               msg.SetVariable(VID_RCC, ERR_SUCCESS);
+               GetParameterList(&msg);
+               break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))
