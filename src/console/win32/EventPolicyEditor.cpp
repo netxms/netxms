@@ -113,6 +113,12 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Create(g_pObjectSmallImageList);
    m_iImageAny = m_pImageList->GetImageCount();
    LoadBitmapIntoList(m_pImageList, IDB_ANY, PSYM_MASK_COLOR);
+   m_iImageSeverityBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MINOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_MAJOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
 	
    // Create rule list control
    GetClientRect(&rect);
@@ -298,7 +304,8 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    {
       for(i = 0; i < m_pEventPolicy->pRuleList[iRow].dwNumEvents; i++)
          m_wndRuleList.AddItem(iRow, COL_EVENT, 
-                               (char *)NXCGetEventName(m_pEventPolicy->pRuleList[iRow].pdwEventList[i]), -1);
+                               (char *)NXCGetEventName(m_pEventPolicy->pRuleList[iRow].pdwEventList[i]),
+                               m_iImageSeverityBase + NXCGetEventSeverity(m_pEventPolicy->pRuleList[iRow].pdwEventList[i]));
    }
 
    // Severity

@@ -45,7 +45,6 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
-	HICON m_hIconList[8];
 	NXC_OBJECT *m_pCurrObject;
 };
 

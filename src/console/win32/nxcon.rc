@@ -71,9 +71,6 @@ IDI_SETUP               ICON    DISCARDABLE     "icons\\setup.ico"
 IDI_USER_GROUP          ICON    DISCARDABLE     "icons\\users.ico"
 IDI_RULEMGR             ICON    DISCARDABLE     "icons\\RuleManager.ico"
 IDI_NETMAP              ICON    DISCARDABLE     "icons\\NetMap.ICO"
-IDI_INTERFACE           ICON    DISCARDABLE     "icons\\board.ico"
-IDI_NODE                ICON    DISCARDABLE     "icons\\node.ico"
-IDI_SUBNET              ICON    DISCARDABLE     "icons\\icon1.ico"
 IDI_TREE                ICON    DISCARDABLE     "icons\\tree.ico"
 IDI_SORT_UP             ICON    DISCARDABLE     "icons\\sort_up.ico"
 IDI_SORT_DOWN           ICON    DISCARDABLE     "icons\\sortdown.ico"
@@ -82,6 +79,7 @@ IDI_EVERYONE            ICON    DISCARDABLE     "icons\\EARTH.ICO"
 IDI_PASSWORD            ICON    DISCARDABLE     "icons\\passwd.ico"
 IDI_GRAPH               ICON    DISCARDABLE     "icons\\graph.ico"
 IDI_LOG                 ICON    DISCARDABLE     "icons\\log.ico"
+IDI_ALARM               ICON    DISCARDABLE     "icons\\alarm.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -834,7 +832,7 @@ END
 IDD_SELECT_EVENT DIALOGEX 0, 0, 260, 146
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select Event"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,203,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,203,24,50,14
@@ -1230,7 +1228,6 @@ IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "icons\\SeverityCritical.ico"
 IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "icons\\SeverityMajor.ico"
 IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "icons\\SeverityMinor.ico"
 IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "icons\\SeverityNormal.ico"
-IDI_ALARM               ICON    DISCARDABLE     "icons\\alarm.ico"
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 

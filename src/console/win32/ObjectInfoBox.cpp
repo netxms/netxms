@@ -25,7 +25,6 @@ static char THIS_FILE[] = __FILE__;
 CObjectInfoBox::CObjectInfoBox()
 {
    m_pCurrObject = NULL;
-   memset(m_hIconList, 0, sizeof(HICON) * 8);
 }
 
 CObjectInfoBox::~CObjectInfoBox()
@@ -183,15 +182,6 @@ int CObjectInfoBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
 	
-   // Load icons for different object classes
-   m_hIconList[1] = theApp.LoadIcon(IDI_SUBNET);      // Subnet
-   m_hIconList[2] = theApp.LoadIcon(IDI_NODE);        // Node
-   m_hIconList[3] = theApp.LoadIcon(IDI_INTERFACE);   // Interface
-   m_hIconList[4] = theApp.LoadIcon(IDI_NETMAP);      // Network
-   m_hIconList[5] = NULL;                             // Container
-   m_hIconList[6] = NULL;                             // Zone
-   m_hIconList[7] = m_hIconList[4];                   // Service root
-
 	return 0;
 }
 

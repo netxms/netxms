@@ -44,9 +44,6 @@
 #define IDB_LOGIN                       142
 #define IDD_PROGRESS                    143
 #define IDR_OBJECTS                     144
-#define IDI_INTERFACE                   145
-#define IDI_NODE                        146
-#define IDI_SUBNET                      147
 #define IDI_TREE                        148
 #define IDD_OBJECT_PROPERTIES           149
 #define IDD_DUMMY                       150

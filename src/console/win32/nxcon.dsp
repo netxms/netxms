@@ -517,10 +517,6 @@ SOURCE=.\icons\alarm.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icons\Alarms.ICO
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\any.bmp
 # End Source File
 # Begin Source File
@@ -530,10 +526,6 @@ SOURCE=.\res\bitmap1.bmp
 # Begin Source File
 
 SOURCE=.\res\bmp00001.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\icons\board.ico
 # End Source File
 # Begin Source File
 
@@ -550,10 +542,6 @@ SOURCE=.\icons\event.ico
 # Begin Source File
 
 SOURCE=.\icons\graph.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icons\icon1.ico
 # End Source File
 # Begin Source File
 
@@ -581,10 +569,6 @@ SOURCE=.\icons\netxms.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icons\node.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\nxcon.ico
 # End Source File
 # Begin Source File
@@ -598,18 +582,6 @@ SOURCE=.\icons\passwd.ico
 # Begin Source File
 
 SOURCE=.\res\psym_any.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\psym_minor.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\psym_node.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\psym_subnet.bmp
 # End Source File
 # Begin Source File
 

@@ -79,6 +79,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	int m_iImageSeverityBase;
 	NXC_EPP *m_pEventPolicy;
 };
 

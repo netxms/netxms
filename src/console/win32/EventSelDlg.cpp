@@ -80,7 +80,7 @@ BOOL CEventSelDlg::OnInitDialog()
       for(i = 0; i < dwListSize; i++)
       {
          sprintf(szBuffer, "%u", pList[i].dwEventId);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
+         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pList[i].dwSeverity);
          m_wndListCtrl.SetItemText(iItem, 1, pList[i].szName);
          m_wndListCtrl.SetItemData(iItem, pList[i].dwEventId);
       }
