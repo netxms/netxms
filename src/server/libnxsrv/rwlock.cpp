@@ -35,9 +35,15 @@ RWLOCK LIBNXSRV_EXPORTABLE RWLockCreate(void)
    hLock = (RWLOCK)malloc(sizeof(struct __rwlock_data));
    if (hLock != NULL)
    {
-      hLock->m_mutex = MutexCreate();
-      hLock->m_condRead = ConditionCreate(TRUE);
-      hLock->m_condWrite = ConditionCreate(FALSE);
+#ifdef _WIN32
+      hLock->m_mutex = CreateMutex(NULL, FALSE, NULL);
+      hLock->m_condRead = CreateEvent(NULL, TRUE, FALSE, NULL);
+      hLock->m_condWrite = CreateEvent(NULL, FALSE, FALSE, NULL);
+#else
+      pthread_mutex_init(&hLock->m_mutex, NULL);
+      pthread_cond_init(&hLock->m_condRead, NULL);
+      pthread_cond_init(&hLock->m_condWrite, NULL);
+#endif
       hLock->m_dwWaitReaders = 0;
       hLock->m_dwWaitWriters = 0;
       hLock->m_iRefCount = 0;
@@ -57,9 +63,15 @@ void LIBNXSRV_EXPORTABLE RWLockDestroy(RWLOCK hLock)
    {
       if (hLock->m_iRefCount == 0)
       {
-         MutexDestroy(hLock->m_mutex);
-         ConditionDestroy(hLock->m_condRead);
-         ConditionDestroy(hLock->m_condWrite);
+#ifdef _WIN32
+         CloseHandle(hLock->m_mutex);
+         CloseHandle(hLock->m_condRead);
+         CloseHandle(hLock->m_condWrite);
+#else
+         pthread_mutex_destroy(&hLock->m_mutex);
+         pthread_cond_destroy(&hLock->m_condRead);
+         pthread_cond_destroy(&hLock->m_condWrite);
+#endif
       }
    }
 }
@@ -72,6 +84,101 @@ void LIBNXSRV_EXPORTABLE RWLockDestroy(RWLOCK hLock)
 BOOL LIBNXSRV_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 {
    BOOL bResult = FALSE;
+   int retcode;
+
+   // Check if handle is valid
+   if (hLock == NULL)
+      return FALSE;
+
+#ifdef _WIN32
+   DWORD dwStart, dwElapsed;
+   BOOL bTimeOut = FALSE;
+
+   // Acquire access to handle
+   WaitForSingleObject(hLock->m_mutex, INFINITE);
+
+   do
+   {
+      if ((hLock->m_iRefCount == -1) || (hLock->m_dwWaitWriters > 0))
+      {
+         // Object is locked for writing or somebody wish to lock it for writing
+         hLock->m_dwWaitReaders++;
+         ReleaseMutex(hLock->m_mutex);
+         dwStart = GetTickCount();
+         retcode = WaitForSingleObject(hLock->m_condRead, dwTimeOut);
+         dwElapsed = GetTickCount() - dwStart;
+         WaitForSingleObject(hLock->m_mutex, INFINITE);   // Re-acquire mutex
+         hLock->m_dwWaitReaders--;
+         if (retcode == WAIT_TIMEOUT)
+         {
+            bTimeOut = TRUE;
+         }
+         else
+         {
+            if (dwTimeOut != INFINITE)
+            {
+               dwTimeOut -= min(dwElapsed, dwTimeOut);
+            }
+         }
+      }
+      else
+      {
+         hLock->m_iRefCount++;
+         bResult = TRUE;
+      }
+   } while((!bResult) && (!bTimeOut));
+
+printf("RWLockReadLock() == %d\n", bResult);
+   ReleaseMutex(hLock->m_mutex);
+#else
+   // Acquire access to handle
+   if (pthread_mutex_lock(&hLock->m_mutex) != 0)
+      return FALSE;     // Problem with mutex
+
+   if ((hLock->m_iRefCount == -1) || (hLock->m_dwWaitWriters > 0))
+   {
+      // Object is locked for writing or somebody wish to lock it for writing
+      hLock->m_dwWaitReaders++;
+
+      if (dwTimeOut == INFINITE)
+      {
+         retcode = pthread_cond_wait(&hLock->m_condRead, &hLock->m_mutex);
+      }
+      else
+      {
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+		   struct timespec timeout;
+
+		   timeout.tv_sec = dwTimeOut / 1000;
+		   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
+		   retcode = pthread_cond_reltimedwait_np(&hLock->m_condRead, &hLock->m_mutex, &timeout);
+#else
+		   struct timeval now;
+		   struct timespec timeout;
+
+		   gettimeofday(&now, NULL);
+		   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
+		   timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
+		   retcode = pthread_cond_timedwait(&hLock->m_condRead, &hLock->m_mutex, &timeout);
+#endif
+      }
+
+      hLock->m_dwWaitReaders--;
+      if (retcode == 0)
+      {
+         assert(hLock->m_iRefCount != -1);
+         hLock->m_iRefCount++;
+         bResult = TRUE;
+      }
+   }
+   else
+   {
+      hLock->m_iRefCount++;
+      bResult = TRUE;
+   }
+
+   pthread_mutex_unlock(&hLock->m_mutex);
+#endif
 
    return bResult;
 }
@@ -84,6 +191,100 @@ BOOL LIBNXSRV_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 BOOL LIBNXSRV_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
 {
    BOOL bResult = FALSE;
+   int retcode;
+
+   // Check if handle is valid
+   if (hLock == NULL)
+      return FALSE;
+
+#ifdef _WIN32
+   DWORD dwStart, dwElapsed;
+   BOOL bTimeOut = FALSE;
+
+   WaitForSingleObject(hLock->m_mutex, INFINITE);
+   // Reset reader event because it can be set by previous Unlock() call
+   ResetEvent(hLock->m_condRead);
+
+   do
+   {
+      if (hLock->m_iRefCount != 0)
+      {
+         hLock->m_dwWaitWriters++;
+         ReleaseMutex(hLock->m_mutex);
+         dwStart = GetTickCount();
+         retcode = WaitForSingleObject(hLock->m_condWrite, dwTimeOut);
+         dwElapsed = GetTickCount() - dwStart;
+         WaitForSingleObject(hLock->m_mutex, INFINITE);   // Re-acquire mutex
+         hLock->m_dwWaitWriters--;
+         if (retcode == WAIT_TIMEOUT)
+         {
+            bTimeOut = TRUE;
+         }
+         else
+         {
+            if (dwTimeOut != INFINITE)
+            {
+               dwTimeOut -= min(dwElapsed, dwTimeOut);
+            }
+         }
+      }
+      else
+      {
+         hLock->m_iRefCount--;
+         bResult = TRUE;
+      }
+   } while((!bResult) && (!bTimeOut));
+
+printf("RWLockWriteLock() == %d\n", bResult);
+   ReleaseMutex(hLock->m_mutex);
+#else
+   if (pthread_mutex_lock(&hLock->m_mutex) != 0)
+      return FALSE;     // Problem with mutex
+
+   if (hLock->m_iRefCount != 0)
+   {
+      // Object is locked, wait for unlock
+      hLock->m_dwWaitWriters++;
+
+      if (dwTimeOut == INFINITE)
+      {
+         retcode = pthread_cond_wait(&hLock->m_condWrite, &hLock->m_mutex);
+      }
+      else
+      {
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+		   struct timespec timeout;
+
+		   timeout.tv_sec = dwTimeOut / 1000;
+		   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
+		   retcode = pthread_cond_reltimedwait_np(&hLock->m_condWrite, &hLock->m_mutex, &timeout);
+#else
+		   struct timeval now;
+		   struct timespec timeout;
+
+		   gettimeofday(&now, NULL);
+		   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
+		   timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
+		   retcode = pthread_cond_timedwait(&hLock->m_condWrite, &hLock->m_mutex, &timeout);
+#endif
+      }
+
+      hLock->m_dwWaitWriters--;
+      if (retcode == 0)
+      {
+         assert(hLock->m_iRefCount == 0);
+         hLock->m_iRefCount--;
+         bResult = TRUE;
+      }
+   }
+   else
+   {
+      hLock->m_iRefCount--;
+      bResult = TRUE;
+   }
+
+   pthread_mutex_unlock(&hLock->m_mutex);
+#endif
 
    return bResult;
 }
@@ -100,8 +301,12 @@ void LIBNXSRV_EXPORTABLE RWLockUnlock(RWLOCK hLock)
       return;
 
    // Acquire access to handle
-   if (!MutexLock(hLock->m_mutex, INFINITE))
+#ifdef _WIN32
+   WaitForSingleObject(hLock->m_mutex, INFINITE);
+#else
+   if (pthread_mutex_lock(&hLock->m_mutex) != 0)
       return;     // Problem with mutex
+#endif
 
    // Remove lock
    if (hLock->m_iRefCount > 0)
@@ -113,12 +318,26 @@ void LIBNXSRV_EXPORTABLE RWLockUnlock(RWLOCK hLock)
    if (hLock->m_dwWaitWriters > 0)
    {
       if (hLock->m_iRefCount == 0)
-         ConditionSet(hLock->m_condWrite);
+#ifdef _WIN32
+         SetEvent(hLock->m_condWrite);
+#else
+         pthread_cond_signal(&hLock->m_condWrite, &hLock->m_mutex);
+#endif
    }
    else if (hLock->m_dwWaitReaders > 0)
    {
-      ConditionSet(hLock->m_condRead);
+#ifdef _WIN32
+      SetEvent(hLock->m_condRead);
+#else
+      pthread_cond_broadcast(&hLock->m_condRead, &hLock->m_mutex);
+#endif
    }
 
-   MutexUnlock(hLock->m_mutex);
+printf("RWLockUnlock()\n");
+
+#ifdef _WIN32
+   ReleaseMutex(hLock->m_mutex);
+#else
+   pthread_mutex_unlock(&hLock->m_mutex);
+#endif
 }
