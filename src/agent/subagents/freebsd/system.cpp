@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.1 2005-01-17 17:14:32 alk Exp $ */
+/* $Id: system.cpp,v 1.2 2005-01-17 23:25:47 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -233,10 +233,23 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
+//
+// stub
+//
+LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
+{
+	ret_int(pValue, 1);
+	return SYSINFO_RC_SUCCESS;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/01/17 17:14:32  alk
+freebsd agent, incomplete (but working)
+
 Revision 1.1  2004/10/22 22:08:35  alk
 source restructured;
 implemented:
