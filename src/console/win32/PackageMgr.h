@@ -50,6 +50,8 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnUpdatePackageRemove(CCmdUI* pCmdUI);
 	afx_msg void OnPackageRemove();
+	afx_msg void OnPackageDeploy();
+	afx_msg void OnUpdatePackageDeploy(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

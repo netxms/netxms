@@ -424,6 +424,26 @@ void Node::NewNodePoll(DWORD dwNetMask)
                                pIfList->pInterfaces[i].dwIndex,
                                pIfList->pInterfaces[i].dwType,
                                pIfList->pInterfaces[i].bMacAddr);
+
+         // Check if address we are using to communicate with node
+         // is configured on one of node's interfaces
+         for(i = 0; i < pIfList->iNumEntries; i++)
+            if (pIfList->pInterfaces[i].dwIpAddr == m_dwIpAddr)
+               break;
+
+         if (i == pIfList->iNumEntries)
+         {
+            char szBuffer[MAX_OBJECT_NAME];
+
+            // Node is behind NAT
+            m_dwFlags |= NF_BEHIND_NAT;
+
+            // Create pseudo interface for NAT
+            ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
+            CreateNewInterface(m_dwIpAddr, 0, szBuffer,
+                               0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
+         }
+
          DestroyInterfaceList(pIfList);
       }
       else
@@ -875,21 +895,24 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
          {
             Interface *pInterface = (Interface *)m_pChildList[i];
 
-            for(j = 0; j < pIfList->iNumEntries; j++)
-               if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
-                   (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
-                   (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
-                  break;
-            if (j == pIfList->iNumEntries)
+            if (pInterface->IfType() != IFTYPE_NETXMS_NAT_ADAPTER)
             {
-               // No such interface in current configuration, delete it
-               SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
-                             pInterface->Name());
-               PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
-                         pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
-               DeleteInterface(pInterface);
-               i = 0xFFFFFFFF;   // Restart loop
-               bHasChanges = TRUE;
+               for(j = 0; j < pIfList->iNumEntries; j++)
+                  if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
+                      (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
+                      (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
+                     break;
+               if (j == pIfList->iNumEntries)
+               {
+                  // No such interface in current configuration, delete it
+                  SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
+                                pInterface->Name());
+                  PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
+                            pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
+                  DeleteInterface(pInterface);
+                  i = 0xFFFFFFFF;   // Restart loop
+                  bHasChanges = TRUE;
+               }
             }
          }
 
@@ -932,6 +955,38 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
                                pIfList->pInterfaces[j].dwType,
                                pIfList->pInterfaces[j].bMacAddr);
             bHasChanges = TRUE;
+         }
+      }
+
+      // Check if address we are using to communicate with node
+      // is configured on one of node's interfaces
+      for(i = 0; i < (DWORD)pIfList->iNumEntries; i++)
+         if (pIfList->pInterfaces[i].dwIpAddr == m_dwIpAddr)
+            break;
+
+      if (i == (DWORD)pIfList->iNumEntries)
+      {
+         // Node is behind NAT
+         m_dwFlags |= NF_BEHIND_NAT;
+
+         // Check if we already have NAT interface
+         Lock();
+         for(i = 0; i < m_dwChildCount; i++)
+            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+            {
+               if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
+                  break;
+            }
+         Unlock();
+
+         if (i == m_dwChildCount)
+         {
+            char szBuffer[MAX_OBJECT_NAME];
+
+            // Create pseudo interface for NAT
+            ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
+            CreateNewInterface(m_dwIpAddr, 0, szBuffer,
+                               0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
          }
       }
 
@@ -1332,6 +1387,7 @@ int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
             {
                iStatus = STATUS_UNKNOWN;
             }
+            break;
          default:
             iStatus = STATUS_UNKNOWN;
             break;

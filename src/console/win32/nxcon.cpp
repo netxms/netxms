@@ -15,6 +15,7 @@
 #include "MIBBrowserDlg.h"
 #include "NetSrvPropsGeneral.h"
 #include "NodePropsPolling.h"
+#include "DeploymentView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1514,4 +1515,17 @@ void CConsoleApp::WakeUpNode(DWORD dwObjectId)
    else
       m_pMainWnd->MessageBox(_T("Wake-On-LAN magic packet was successfully sent to node"),
                              _T("Information"), MB_ICONINFORMATION | MB_OK);
+}
+
+
+//
+// Deploy package to nodes
+//
+
+void CConsoleApp::DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObjectList)
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	pFrame->CreateNewChild(
+		RUNTIME_CLASS(CDeploymentView), IDR_PACKAGE_MGR, m_hMDIMenu, m_hMDIAccel);
 }

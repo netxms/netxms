@@ -314,6 +314,8 @@ typedef int SOCKET;
 #define IFTYPE_SMDS                 31
 #define IFTYPE_FRAME_RELAY          32
 
+#define IFTYPE_NETXMS_NAT_ADAPTER   65535
+
 
 //
 // IP Header -- RFC 791

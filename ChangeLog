@@ -3,6 +3,11 @@
 *
 
 - Parameters System.Memory.* behaves correctly under Windows
+- Fixed bug in loading of NetworkService objects from database
+- Fixed bug in interface status detection via NetXMS agent
+- Added support for NAT'ed nodes (correct interface polling, etc.)
+- Backslash (\) character is no longer works as escape character
+  inside parameter arguments enclosed in quotes
 
 
 *

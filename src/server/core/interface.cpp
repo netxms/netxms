@@ -245,26 +245,31 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
                  m_szName, g_pszStatusName[m_iStatus]);
 
    // Poll interface using different methods
-   if (pNode->Flags() & NF_IS_NATIVE_AGENT)
+   if (m_dwIfType != IFTYPE_NETXMS_NAT_ADAPTER)
    {
-      SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
-      m_iStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
-      if (m_iStatus != STATUS_UNKNOWN)
-         bNeedPoll = FALSE;
-   }
+      if (pNode->Flags() & NF_IS_NATIVE_AGENT)
+      {
+         SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
+         m_iStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
+         if (m_iStatus != STATUS_UNKNOWN)
+            bNeedPoll = FALSE;
+      }
    
-   if ((pNode->Flags() & NF_IS_SNMP) && bNeedPoll)
-   {
-      SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
-      m_iStatus = pNode->GetInterfaceStatusFromSNMP(m_dwIfIndex);
-      if (m_iStatus != STATUS_UNKNOWN)
-         bNeedPoll = FALSE;
+      if ((pNode->Flags() & NF_IS_SNMP) && bNeedPoll)
+      {
+         SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
+         m_iStatus = pNode->GetInterfaceStatusFromSNMP(m_dwIfIndex);
+         if (m_iStatus != STATUS_UNKNOWN)
+            bNeedPoll = FALSE;
+      }
    }
    
    if (bNeedPoll)
    {
       // Use ICMP ping as a last option
-      if (m_dwIpAddr != 0)
+      if ((m_dwIpAddr != 0) && 
+           ((!(pNode->Flags() & NF_BEHIND_NAT)) || 
+            (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
       {
          SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
          dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL);

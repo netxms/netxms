@@ -75,6 +75,39 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V20 to V21
+//
+
+static BOOL H_UpgradeFromV20(void)
+{
+   DB_RESULT hResult;
+
+   if (!SQLQuery(_T("ALTER TABLE nodes ADD node_flags integer")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   // Convert "is_xxx" fields into one "node_flags" field
+   hResult = SQLSelect(_T("SELECT id,is_snmp,is_agent,is_bridge,is_router,"
+                          "is_local_mgmt,is_ospf FROM nodes"));
+   if (hResult != NULL)
+   {
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='21' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V19 to V20
 //
 
@@ -503,6 +536,7 @@ static struct
    { 17, H_UpgradeFromV17 },
    { 18, H_UpgradeFromV18 },
    { 19, H_UpgradeFromV19 },
+   { 20, H_UpgradeFromV20 },
    { 0, NULL }
 };
 

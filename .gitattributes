@@ -310,6 +310,8 @@ src/console/win32/DataQueryDlg.cpp -text
 src/console/win32/DataQueryDlg.h -text
 src/console/win32/DebugFrame.cpp -text
 src/console/win32/DebugFrame.h -text
+src/console/win32/DeploymentView.cpp -text
+src/console/win32/DeploymentView.h -text
 src/console/win32/EditActionDlg.cpp -text
 src/console/win32/EditActionDlg.h -text
 src/console/win32/EditBox.cpp -text

@@ -158,7 +158,9 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       m_wProto = (WORD)DBGetFieldULong(hResult, 0, 6);
       m_wPort = (WORD)DBGetFieldULong(hResult, 0, 7);
       m_pszRequest = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 8)));
+      DecodeSQLString(m_pszRequest);
       m_pszResponce = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 9)));
+      DecodeSQLString(m_pszResponce);
       m_dwPollerNode = DBGetFieldULong(hResult, 0, 10);
       m_dwImageId = DBGetFieldULong(hResult, 0, 11);
 

@@ -288,6 +288,7 @@ public:
 
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD IfIndex(void) { return m_dwIfIndex; }
+   DWORD IfType(void) { return m_dwIfType; }
    const BYTE *MacAddr(void) { return m_bMacAddr; }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId);

@@ -157,6 +157,7 @@ typedef void * NXC_SESSION;
 #define NF_IS_LOCAL_MGMT   0x0010
 #define NF_IS_PRINTER      0x0020
 #define NF_IS_OSPF         0x0040
+#define NF_BEHIND_NAT      0x0080
 
 
 //

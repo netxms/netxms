@@ -305,7 +305,7 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg,
                case _T('"'):
                   state = 0;     // Normal
                   break;
-               case _T('\\'):        // Escape
+/*               case _T('\\'):        // Escape
                   ptr2++;
                   if ((currIndex == index) && (pos < maxSize - 1))
                      arg[pos++] = *ptr2;
@@ -314,7 +314,7 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg,
                      bResult = FALSE;
                      state = -1;
                   }
-                  break;
+                  break;*/
                case 0:
                   state = -1;    // Finish processing
                   bResult = FALSE;  // Set error flag
@@ -330,7 +330,7 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg,
                case _T('\''):
                   state = 0;     // Normal
                   break;
-               case _T('\\'):        // Escape
+/*               case _T('\\'):        // Escape
                   ptr2++;
                   if ((currIndex == index) && (pos < maxSize - 1))
                      arg[pos++] = *ptr2;
@@ -339,7 +339,7 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg,
                      bResult = FALSE;
                      state = -1;
                   }
-                  break;
+                  break;*/
                case 0:
                   state = -1;    // Finish processing
                   bResult = FALSE;  // Set error flag

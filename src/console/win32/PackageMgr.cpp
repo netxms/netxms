@@ -40,6 +40,8 @@ BEGIN_MESSAGE_MAP(CPackageMgr, CMDIChildWnd)
 	ON_WM_CONTEXTMENU()
 	ON_UPDATE_COMMAND_UI(ID_PACKAGE_REMOVE, OnUpdatePackageRemove)
 	ON_COMMAND(ID_PACKAGE_REMOVE, OnPackageRemove)
+	ON_COMMAND(ID_PACKAGE_DEPLOY, OnPackageDeploy)
+	ON_UPDATE_COMMAND_UI(ID_PACKAGE_DEPLOY, OnUpdatePackageDeploy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -272,6 +274,11 @@ void CPackageMgr::OnUpdatePackageRemove(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
+void CPackageMgr::OnUpdatePackageDeploy(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
 
 //
 // Worker function for package deletion
@@ -328,5 +335,29 @@ void CPackageMgr::OnPackageRemove()
       if (dwResult != RCC_SUCCESS)
          theApp.ErrorBox(dwResult, _T("Error removing package:\n%s"));
       free(pdwDeleteList);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_PACKAGE_DEPLOY message handler
+//
+
+void CPackageMgr::OnPackageDeploy() 
+{
+   int iItem;
+
+   iItem = m_wndListCtrl.GetSelectionMark();
+   if (iItem != -1)
+   {
+      CObjectSelDlg dlg;
+
+      dlg.m_bAllowEmptySelection = FALSE;
+      dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_NETWORK | SCL_SERVICEROOT;
+      if (dlg.DoModal() == IDOK)
+      {
+         theApp.DeployPackage(m_wndListCtrl.GetItemData(iItem), dlg.m_dwNumObjects,
+                              dlg.m_pdwObjectList);
+      }
    }
 }

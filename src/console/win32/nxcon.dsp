@@ -185,6 +185,10 @@ SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DeploymentView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\draw.cpp
 # End Source File
 # Begin Source File
@@ -499,6 +503,10 @@ SOURCE=.\DCITransformPage.h
 # Begin Source File
 
 SOURCE=.\DebugFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DeploymentView.h
 # End Source File
 # Begin Source File
 
