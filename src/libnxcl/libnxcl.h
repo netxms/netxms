@@ -67,6 +67,47 @@ typedef struct
 
 
 //
+// Message waiting queue element structure
+//
+
+typedef struct
+{
+   CSCPMessage *pMsg;
+   DWORD dwTTL;
+} WAIT_QUEUE_ELEMENT;
+
+
+//
+// Message waiting queue class
+//
+
+class MsgWaitQueue
+{
+   friend void MWQThreadStarter(void *);
+private:
+   MUTEX m_hMutex;
+   CONDITION m_hStopCondition;
+   DWORD m_dwMsgHoldTime;
+   DWORD m_dwNumElements;
+   WAIT_QUEUE_ELEMENT *m_pElements;
+
+   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_hMutex); }
+   void HousekeeperThread(void);
+
+public:
+   MsgWaitQueue();
+   ~MsgWaitQueue();
+
+   void Put(CSCPMessage *pMsg);
+   CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);
+   
+   void Clear(void);
+   void SetHoldTime(DWORD dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
+};
+
+
+//
 // Functions
 //
 

@@ -36,7 +36,7 @@ void RequestProcessor(void *pArg);
 //
 
 NXC_EVENT_HANDLER g_pEventHandler = NULL;
-DWORD g_dwState = STATE_IDLE;
+DWORD g_dwState = STATE_DISCONNECTED;
 Queue *g_pRequestQueue = NULL;
 
 
