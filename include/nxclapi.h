@@ -157,6 +157,9 @@ void EXPORTABLE NXCSetEventHandler(NXC_EVENT_HANDLER pHandler);
 void EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 int EXPORTABLE NXCRequest(DWORD dwOperation, ...);
 
+NXC_OBJECT EXPORTABLE *NXCFindObjectById(DWORD dwId);
+void EXPORTABLE NXCEnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
+
 #ifdef __cplusplus
 }
 #endif

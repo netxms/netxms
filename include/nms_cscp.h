@@ -89,6 +89,7 @@ typedef struct
 #define CMD_DELETE_OBJECT     7
 #define CMD_UPDATE_OBJECT     8
 #define CMD_OBJECT_LIST_END   9
+#define CMD_OBJECT_UPDATE     10
 
 
 #endif   /* _nms_cscp_h_ */

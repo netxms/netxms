@@ -70,6 +70,19 @@ static void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
 
 //
+// Print object
+//
+
+static BOOL PrintObject(NXC_OBJECT *pObject)
+{
+   static char *pszObjectClass[] = { "generic", "subnet", "node", "interface", "network" };
+   printf("%4d %s \"%s\"\n", pObject->dwId, pszObjectClass[pObject->iClass],
+          pObject->szName);
+   return TRUE;
+}
+
+
+//
 // main()
 //
 
@@ -91,7 +104,7 @@ int main(int argc, char *argv[])
           (dwVersion >> 16) & 255, dwVersion & 0xFFFF);
    NXCInitialize();
    NXCSetEventHandler(EventHandler);
-   NXCSetDebugCallback(DebugCallback);
+   //NXCSetDebugCallback(DebugCallback);
 
 strcpy(szServer,"eagle");
 strcpy(szLogin,"admin");
@@ -111,6 +124,8 @@ szPassword[0]=0;
    NXCSyncObjects();
    ConditionWait(g_hCondOperationComplete, INFINITE);
    printf("Objects synchronized.\n");
+
+   NXCEnumerateObjects(PrintObject);
 
    return 0;
 }
