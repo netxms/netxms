@@ -31,23 +31,23 @@
 static struct
 {
    int iCode;
-   char *pszText;
+   TCHAR *pszText;
 } m_agentErrors[] =
 {
-   { ERR_SUCCESS, "Success" },
-   { ERR_UNKNOWN_COMMAND, "Unknown command" },
-   { ERR_AUTH_REQUIRED, "Authentication required" },
-   { ERR_UNKNOWN_PARAMETER, "Unknown parameter" },
-   { ERR_REQUEST_TIMEOUT, "Request timeout" },
-   { ERR_AUTH_FAILED, "Authentication failed" },
-   { ERR_ALREADY_AUTHENTICATED, "Already authenticated" },
-   { ERR_AUTH_NOT_REQUIRED, "Authentication not required" },
-   { ERR_INTERNAL_ERROR, "Internal error" },
-   { ERR_NOT_IMPLEMENTED, "Not implemented" },
-   { ERR_OUT_OF_RESOURCES, "Out of resources" },
-   { ERR_NOT_CONNECTED, "Not connected" },
-   { ERR_CONNECTION_BROKEN, "Connection broken" },
-   { ERR_BAD_RESPONCE, "Bad responce" },
+   { ERR_SUCCESS, _T("Success") },
+   { ERR_UNKNOWN_COMMAND, _T("Unknown command") },
+   { ERR_AUTH_REQUIRED, _T("Authentication required") },
+   { ERR_UNKNOWN_PARAMETER, _T("Unknown parameter") },
+   { ERR_REQUEST_TIMEOUT, _T("Request timeout") },
+   { ERR_AUTH_FAILED, _T("Authentication failed") },
+   { ERR_ALREADY_AUTHENTICATED, _T("Already authenticated") },
+   { ERR_AUTH_NOT_REQUIRED, _T("Authentication not required") },
+   { ERR_INTERNAL_ERROR, _T("Internal error") },
+   { ERR_NOT_IMPLEMENTED, _T("Not implemented") },
+   { ERR_OUT_OF_RESOURCES, _T("Out of resources") },
+   { ERR_NOT_CONNECTED, _T("Not connected") },
+   { ERR_CONNECTION_BROKEN, _T("Connection broken") },
+   { ERR_BAD_RESPONCE, _T("Bad responce") },
    { -1, NULL }
 };
 
@@ -56,14 +56,14 @@ static struct
 // Resolve agent's error code to text
 //
 
-const char LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
+const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
 {
    int i;
 
    for(i = 0; m_agentErrors[i].pszText != NULL; i++)
       if (iError == m_agentErrors[i].iCode)
          return m_agentErrors[i].pszText;
-   return "Unknown error code";
+   return _T("Unknown error code");
 }
 
 

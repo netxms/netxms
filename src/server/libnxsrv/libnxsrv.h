@@ -24,7 +24,7 @@
 #ifndef _libnxsrv_h_
 #define _libnxsrv_h_
 
-#include <stdio.h>
+#include <nms_common.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -34,7 +34,6 @@
 #include <ctype.h>
 #endif   /* _WIN32 */
 
-#include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <nms_threads.h>

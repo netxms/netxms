@@ -73,4 +73,11 @@
 #endif
 
 
+#ifdef UNICODE
+#define _t_inet_addr    inet_addr_w
+#else
+#define _t_inet_addr    inet_addr
+#endif
+
+
 #endif   /* _unicode_h_ */

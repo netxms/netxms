@@ -70,15 +70,24 @@ AgentConnection::AgentConnection()
 // Normal constructor for AgentConnection
 //
 
-AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, char *szSecret)
+AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHAR *pszSecret)
 {
    m_dwAddr = dwAddr;
    m_wPort = wPort;
    m_iAuthMethod = iAuthMethod;
-   if (szSecret != NULL)
-      strncpy(m_szSecret, szSecret, MAX_SECRET_LENGTH);
+   if (pszSecret != NULL)
+   {
+#ifdef UNICODE
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                          pszSecret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
+#else
+      strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH);
+#endif
+   }
    else
+   {
       m_szSecret[0] = 0;
+   }
    m_hSocket = -1;
    m_tLastCommandTime = 0;
    m_dwNumDataLines = 0;
@@ -120,14 +129,14 @@ AgentConnection::~AgentConnection()
 // derived classes. Default implementation will print message to stdout.
 //
 
-void AgentConnection::PrintMsg(char *pszFormat, ...)
+void AgentConnection::PrintMsg(TCHAR *pszFormat, ...)
 {
    va_list args;
 
    va_start(args, pszFormat);
-   vprintf(pszFormat, args);
+   _vtprintf(pszFormat, args);
    va_end(args);
-   printf("\n");
+   _tprintf(_T("\n"));
 }
 
 
@@ -141,7 +150,7 @@ void AgentConnection::ReceiverThread(void)
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
    int iErr;
-   char szBuffer[128];
+   TCHAR szBuffer[128];
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -160,7 +169,7 @@ void AgentConnection::ReceiverThread(void)
       // Check if we get too large message
       if (iErr == 1)
       {
-         PrintMsg("Received too large message %s (%ld bytes)", 
+         PrintMsg(_T("Received too large message %s (%ld bytes)"), 
                   CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;
@@ -169,7 +178,7 @@ void AgentConnection::ReceiverThread(void)
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         PrintMsg("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]", ntohl(pRawMsg->dwSize), iErr);
+         PrintMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), iErr);
          continue;   // Bad packet, wait for next
       }
 
@@ -201,7 +210,7 @@ void AgentConnection::ReceiverThread(void)
 BOOL AgentConnection::Connect(BOOL bVerbose)
 {
    struct sockaddr_in sa;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
    DWORD dwError;
 
@@ -217,7 +226,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
    if (m_hSocket == -1)
    {
-      PrintMsg("Call to socket() failed");
+      PrintMsg(_T("Call to socket() failed"));
       goto connect_cleanup;
    }
 
@@ -231,7 +240,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
       if (bVerbose)
-         PrintMsg("Cannot establish connection with agent %s", IpToStr(m_dwAddr, szBuffer));
+         PrintMsg(_T("Cannot establish connection with agent %s"), IpToStr(m_dwAddr, szBuffer));
       goto connect_cleanup;
    }
 
@@ -241,7 +250,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    // Authenticate itself to agent
    if ((dwError = Authenticate()) != ERR_SUCCESS)
    {
-      PrintMsg("Authentication to agent %s failed (%s)", IpToStr(m_dwAddr, szBuffer),
+      PrintMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(m_dwAddr, szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -249,7 +258,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    // Test connectivity
    if ((dwError = Nop()) != ERR_SUCCESS)
    {
-      PrintMsg("Communication with agent %s failed (%s)", IpToStr(m_dwAddr, szBuffer),
+      PrintMsg(_T("Communication with agent %s failed (%s)"), IpToStr(m_dwAddr, szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -320,9 +329,9 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 {
    INTERFACE_LIST *pIfList = NULL;
    DWORD i;
-   char *pChar, *pBuf;
+   TCHAR *pChar, *pBuf;
 
-   if (GetList("Net.InterfaceList") == ERR_SUCCESS)
+   if (GetList(_T("Net.InterfaceList")) == ERR_SUCCESS)
    {
       pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
       pIfList->iNumEntries = m_dwNumDataLines;
@@ -333,22 +342,22 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
          pBuf = m_ppDataLines[i];
 
          // Index
-         pChar = strchr(pBuf, ' ');
+         pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+            pIfList->pInterfaces[i].dwIndex = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
          // Address and mask
-         pChar = strchr(pBuf, ' ');
+         pChar = _tcschr(pBuf, _T(' '));
          if (pChar != NULL)
          {
-            char *pSlash;
+            TCHAR *pSlash;
 
             *pChar = 0;
-            pSlash = strchr(pBuf, '/');
+            pSlash = _tcschr(pBuf, _T('/'));
             if (pSlash != NULL)
             {
                *pSlash = 0;
@@ -356,24 +365,24 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
             }
             else     // Just a paranoia protection, should'n happen if agent working correctly
             {
-               pSlash = "24";
+               pSlash = _T("24");
             }
-            pIfList->pInterfaces[i].dwIpAddr = inet_addr(pBuf);
-            pIfList->pInterfaces[i].dwIpNetMask = htonl(~(0xFFFFFFFF >> strtoul(pSlash, NULL, 10)));
+            pIfList->pInterfaces[i].dwIpAddr = _t_inet_addr(pBuf);
+            pIfList->pInterfaces[i].dwIpNetMask = htonl(~(0xFFFFFFFF >> _tcstoul(pSlash, NULL, 10)));
             pBuf = pChar + 1;
          }
 
          // Interface type
-         pChar = strchr(pBuf, ' ');
+         pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+            pIfList->pInterfaces[i].dwIndex = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
          // Name
-         strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+         _tcsncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
       }
 
       Lock();
@@ -389,7 +398,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 // Get parameter value
 //
 
-DWORD AgentConnection::GetParameter(char *pszParam, DWORD dwBufSize, char *pszBuffer)
+DWORD AgentConnection::GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
 {
    CSCPMessage msg, *pResponce;
    DWORD dwRqId, dwRetCode;
@@ -436,10 +445,10 @@ DWORD AgentConnection::GetParameter(char *pszParam, DWORD dwBufSize, char *pszBu
 ARP_CACHE *AgentConnection::GetArpCache(void)
 {
    ARP_CACHE *pArpCache = NULL;
-   char szByte[4], *pBuf, *pChar;
+   TCHAR szByte[4], *pBuf, *pChar;
    DWORD i, j;
 
-   if (GetList("Net.ArpCache") == ERR_SUCCESS)
+   if (GetList(_T("Net.ArpCache")) == ERR_SUCCESS)
    {
       // Create empty structure
       pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
@@ -456,28 +465,28 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
       for(i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
-         if (strlen(pBuf) < 20)     // Invalid line
+         if (_tcslen(pBuf) < 20)     // Invalid line
             continue;
 
          // MAC address
          for(j = 0; j < 6; j++)
          {
-            memcpy(szByte, pBuf, 2);
-            pArpCache->pEntries[i].bMacAddr[j] = (BYTE)strtol(szByte, NULL, 16);
+            memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
+            pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
             pBuf+=2;
          }
 
          // IP address
          while(*pBuf == ' ')
             pBuf++;
-         pChar = strchr(pBuf, ' ');
+         pChar = _tcschr(pBuf, _T(' '));
          if (pChar != NULL)
             *pChar = 0;
-         pArpCache->pEntries[i].dwIpAddr = inet_addr(pBuf);
+         pArpCache->pEntries[i].dwIpAddr = _t_inet_addr(pBuf);
 
          // Interface index
          if (pChar != NULL)
-            pArpCache->pEntries[i].dwIndex = strtoul(pChar + 1, NULL, 10);
+            pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
       }
 
       DestroyResultData();
@@ -558,7 +567,7 @@ void AgentConnection::OnTrap(CSCPMessage *pMsg)
 // Get list of values
 //
 
-DWORD AgentConnection::GetList(char *pszParam)
+DWORD AgentConnection::GetList(TCHAR *pszParam)
 {
    CSCPMessage msg, *pResponce;
    DWORD i, dwRqId, dwRetCode;
@@ -579,7 +588,7 @@ DWORD AgentConnection::GetList(char *pszParam)
             if (dwRetCode == ERR_SUCCESS)
             {
                m_dwNumDataLines = pResponce->GetVariableLong(VID_NUM_STRINGS);
-               m_ppDataLines = (char **)malloc(sizeof(char *) * m_dwNumDataLines);
+               m_ppDataLines = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumDataLines);
                for(i = 0; i < m_dwNumDataLines; i++)
                   m_ppDataLines[i] = pResponce->GetVariableStr(VID_ENUM_VALUE_BASE + i);
             }
@@ -613,6 +622,9 @@ DWORD AgentConnection::Authenticate(void)
    CSCPMessage msg;
    DWORD dwRqId;
    BYTE hash[32];
+#ifdef UNICODE
+   WCHAR szBuffer[MAX_SECRET_LENGTH];
+#endif
 
    if (m_iAuthMethod == AUTH_NONE)
       return ERR_SUCCESS;  // No authentication required
@@ -624,7 +636,12 @@ DWORD AgentConnection::Authenticate(void)
    switch(m_iAuthMethod)
    {
       case AUTH_PLAINTEXT:
+#ifdef UNICODE
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_szSecret, -1, szBuffer, MAX_SECRET_LENGTH);
+         msg.SetVariable(VID_SHARED_SECRET, szBuffer);
+#else
          msg.SetVariable(VID_SHARED_SECRET, m_szSecret);
+#endif
          break;
       case AUTH_MD5_HASH:
          CalculateMD5Hash((BYTE *)m_szSecret, strlen(m_szSecret), hash);
@@ -648,7 +665,7 @@ DWORD AgentConnection::Authenticate(void)
 // Execute action on agent
 //
 
-DWORD AgentConnection::ExecAction(char *pszAction, int argc, char **argv)
+DWORD AgentConnection::ExecAction(TCHAR *pszAction, int argc, TCHAR **argv)
 {
    CSCPMessage msg;
    DWORD dwRqId;

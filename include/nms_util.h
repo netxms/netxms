@@ -185,6 +185,8 @@ extern "C"
    int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
 #endif
 
+   DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr);
+
 #ifndef _WIN32
    int LIBNETXMS_EXPORTABLE wcslen(WCHAR *pStr);
    int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR *pWideCharStr, 

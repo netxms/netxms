@@ -72,7 +72,7 @@ typedef struct
 
 typedef struct
 {
-   char szName[MAX_OBJECT_NAME];
+   TCHAR szName[MAX_OBJECT_NAME];
    DWORD dwIndex;
    DWORD dwType;
    DWORD dwIpAddr;
@@ -109,7 +109,7 @@ private:
    DWORD m_dwNumDataLines;
    DWORD m_dwRequestId;
    DWORD m_dwCommandTimeout;
-   char **m_ppDataLines;
+   TCHAR **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
    BOOL m_bIsConnected;
    MUTEX m_mutexDataLock;
@@ -125,7 +125,7 @@ protected:
    DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
    DWORD Authenticate(void);
 
-   virtual void PrintMsg(char *pszFormat, ...);
+   virtual void PrintMsg(TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
@@ -133,7 +133,7 @@ protected:
 
 public:
    AgentConnection();
-   AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, char *szSecret = NULL);
+   AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, TCHAR *szSecret = NULL);
    ~AgentConnection();
 
    BOOL Connect(BOOL bVerbose = FALSE);
@@ -142,13 +142,13 @@ public:
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
-   DWORD GetParameter(char *pszParam, DWORD dwBufSize, char *pszBuffer);
-   DWORD GetList(char *pszParam);
+   DWORD GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
+   DWORD GetList(TCHAR *pszParam);
    DWORD Nop(void);
-   DWORD ExecAction(char *pszAction, int argc, char **argv);
+   DWORD ExecAction(TCHAR *pszAction, int argc, TCHAR **argv);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
-   const char *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : "(error)"; }
+   const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
    void SetCommandTimeout(DWORD dwTimeout) { if (dwTimeout > 500) m_dwCommandTimeout = dwTimeout; }
 };
@@ -160,7 +160,7 @@ public:
 
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
-const char LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
+const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
 
 #endif   /* _nxsrvapi_h_ */

@@ -84,4 +84,18 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char 
    return iSize;
 }
 
-#endif
+#endif   /* _WIN32 */
+
+
+//
+// UNICODE version of inet_addr()
+//
+
+DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr)
+{
+   char szBuffer[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                       pszAddr, -1, szBuffer, 256, NULL, NULL);
+   return inet_addr(szBuffer);
+}
