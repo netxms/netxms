@@ -427,6 +427,38 @@ typedef struct
 
 
 //
+// Row structure
+//
+
+typedef struct
+{
+   DWORD dwTimeStamp;
+   union
+   {
+      DWORD dwInt32;
+      QWORD qwInt64;
+      double dFloat;
+      char szString[MAX_STRING_VALUE];
+   } value;
+} NXC_DCI_ROW;
+
+
+//
+// DCI's collected data
+//
+
+typedef struct
+{
+   DWORD dwNodeId;      // Owner's node id
+   DWORD dwItemId;      // Item id
+   DWORD dwNumRows;     // Number of rows in set
+   WORD wDataType;      // Data type (integer, string, etc.)
+   WORD wRowSize;       // Size of single row in bytes
+   NXC_DCI_ROW *pRows;  // Array of rows
+} NXC_DCI_DATA;
+
+
+//
 // Functions
 //
 
@@ -479,6 +511,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItem
 DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId);
 DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId);
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwMaxRows,
+                                       DWORD dwTimeFrom, DWORD dwTimeTo, NXC_DCI_DATA **ppData);
 
 #ifdef __cplusplus
 }

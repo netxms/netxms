@@ -104,8 +104,8 @@ extern "C" {
 #endif
 
 int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
-CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, 
-                                                        DWORD dwDataSize, void *pData, 
+CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
+                                                        DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
 char LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, char *pszBuffer);
    

@@ -71,6 +71,13 @@
 
 
 //
+// Connection handle
+//
+
+typedef void *HCONN;
+
+
+//
 // Subagent's parameter information
 //
 

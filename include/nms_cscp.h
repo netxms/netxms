@@ -127,8 +127,7 @@ typedef struct
 // Message flags
 //
 
-#define MF_BINARY    0x1000
-#define MF_LARGE     0x2000
+#define MF_BINARY    0x0001
 
 
 //
@@ -243,6 +242,7 @@ typedef struct
 #define VID_MAX_ROWS                ((DWORD)50)
 #define VID_TIME_FROM               ((DWORD)51)
 #define VID_TIME_TO                 ((DWORD)52)
+#define VID_DCI_DATA                ((DWORD)53)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
