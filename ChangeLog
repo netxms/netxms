@@ -12,6 +12,7 @@
   on root objects
 - Windows console: implemented user deletion from access lists
 - Implemented action delete
+- Windows agent deployment packages now built with InnoSetup
 
 
 *
