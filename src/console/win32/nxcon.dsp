@@ -549,6 +549,14 @@ SOURCE=.\icons\NetMap.ICO
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\network.BMP
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\network.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\node.ico
 # End Source File
 # Begin Source File

@@ -17,6 +17,7 @@ doc/Makefile.am -text
 doc/internals.rtf -text
 images/generic_printer.png -text svneol=unset#application/octet-stream
 images/interface.png -text svneol=unset#application/octet-stream
+images/network.png -text svneol=unset#application/octet-stream
 images/node_group.png -text svneol=unset#application/octet-stream
 include/Makefile.am -text
 include/getopt.h -text
