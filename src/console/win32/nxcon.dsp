@@ -557,6 +557,10 @@ SOURCE=.\icons\network.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\netxms.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\node.ico
 # End Source File
 # Begin Source File
