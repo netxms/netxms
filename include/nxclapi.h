@@ -191,6 +191,8 @@ typedef unsigned long HREQUEST;
 #define SYSTEM_ACCESS_VIEW_EVENT_DB       0x0010
 #define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
 
+#define SYSTEM_ACCESS_FULL                0x003F
+
 
 //
 // Object access rights
@@ -403,6 +405,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void);
 DWORD LIBNXCL_EXPORTABLE NXCCreateUser(char *pszName, BOOL bIsGroup, DWORD *pdwNewId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(DWORD dwId);
+DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_USER *pUserInfo);
 
 #ifdef __cplusplus
 }
