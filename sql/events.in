@@ -301,6 +301,17 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   2) Service object ID#0D0A' CONCAT
 		'   3) Service type'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_SERVICE_UNKNOWN, 'SYS_SERVICE_UNKNOWN',
+		EVENT_SEVERITY_WARNING, 1,
+		'Status of network service "%1" is unknown',
+		'Generated when management server is unable to determine state of the network service due to agent or server-to-agent communication failure.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Service name#0D0A' CONCAT
+		'   2) Service object ID#0D0A' CONCAT
+		'   3) Service type'
+	);
 
 
 /*

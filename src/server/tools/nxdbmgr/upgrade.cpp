@@ -34,6 +34,7 @@ static BOOL CreateTable(TCHAR *pszQuery)
 
    pszBuffer = (TCHAR *)malloc(_tcslen(pszQuery) * sizeof(TCHAR) + 256);
    _tcscpy(pszBuffer, pszQuery);
+   TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
    if (g_iSyntax == DB_SYNTAX_MYSQL)
       _tcscat(pszBuffer, _T(" type=InnoDB"));
    bResult = SQLQuery(pszBuffer);
@@ -70,6 +71,77 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
       bResult = SQLQuery(szQuery);
    }
    return bResult;
+}
+
+
+//
+// Upgrade from V19 to V20
+//
+
+static BOOL H_UpgradeFromV19(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE nodes ADD poller_node_id integer\n"
+      "UPDATE nodes SET poller_node_id=0\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)"
+         " VALUES (28,'SYS_NODE_DOWN',4,1,'Node down',"
+		   "'Generated when node is not responding to management server.#0D#0A"
+		   "Parameters:#0D#0A   No event-specific parameters')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)"
+         " VALUES (29,'SYS_NODE_UP',0,1,'Node up',"
+		   "'Generated when communication with the node re-established.#0D#0A"
+		   "Parameters:#0D#0A   No event-specific parameters')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)"
+         " VALUES (25,'SYS_SERVICE_DOWN',3,1,'Network service #22%1#22 is not responding',"
+		   "'Generated when network service is not responding to management server as "
+         "expected.#0D#0AParameters:#0D#0A   1) Service name#0D0A"
+		   "   2) Service object ID#0D0A   3) Service type')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)"
+         " VALUES (26,'SYS_SERVICE_UP',0,1,"
+         "'Network service #22%1#22 returned to operational state',"
+		   "'Generated when network service responds as expected after failure.#0D#0A"  
+         "Parameters:#0D#0A   1) Service name#0D0A"
+		   "   2) Service object ID#0D0A   3) Service type')\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)"
+         " VALUES (27,'SYS_SERVICE_UNKNOWN',1,1,"
+		   "'Status of network service #22%1#22 is unknown',"
+		   "'Generated when management server is unable to determine state of the network "
+         "service due to agent or server-to-agent communication failure.#0D#0A"
+         "Parameters:#0D#0A   1) Service name#0D0A"
+		   "   2) Service object ID#0D0A   3) Service type')\n"
+      "INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,"
+         "file_hash_ico) VALUES (12,'Obj.NetworkService','network_service.png',"
+         "'<invalid_hash>','network_service.ico','<invalid_hash>')\n"
+      "INSERT INTO default_images (object_class,image_id) VALUES (11,12)\n"
+      "<END>";
+   
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE network_services ("
+	                    "id integer not null,"
+	                    "name varchar(63),"
+	                    "status integer,"
+                       "is_deleted integer,"
+	                    "node_id integer not null,"
+	                    "service_type integer,"
+	                    "ip_bind_addr varchar(15),"
+	                    "ip_proto integer,"
+	                    "ip_port integer,"
+	                    "check_request $SQL:TEXT,"
+	                    "check_responce $SQL:TEXT,"
+	                    "poller_node_id integer not null,"
+	                    "image_id integer not null,"
+	                    "PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='20' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -429,6 +501,7 @@ static struct
    { 16, H_UpgradeFromV16 },
    { 17, H_UpgradeFromV17 },
    { 18, H_UpgradeFromV18 },
+   { 19, H_UpgradeFromV19 },
    { 0, NULL }
 };
 
