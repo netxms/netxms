@@ -120,7 +120,7 @@ static BOOL H_UpgradeFromV20(void)
                dwFlags |= m_dwFlag[j];
          _sntprintf(szQuery, 256, _T("UPDATE nodes SET node_flags=%ld WHERE id=%ld"),
                     dwFlags, DBGetFieldULong(hResult, i, 0));
-         if (!SQLQuery(m_szBatch))
+         if (!SQLQuery(szQuery))
             if (!g_bIgnoreErrors)
             {
                DBFreeResult(hResult);
