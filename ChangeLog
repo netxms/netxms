@@ -4,6 +4,7 @@
 
 - Added more customized events for threshold violation
 - Added ability to send Wake-On-LAN packets to managed nodes
+- Fixed serious bug in DCI copy
 
 
 *
