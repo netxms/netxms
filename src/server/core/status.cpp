@@ -110,13 +110,13 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
          if (pNode->ReadyForConfigurationPoll())
          {
             pNode->IncRefCount();
-            pNode->LockForStatusPoll();
+            pNode->LockForConfigurationPoll();
             g_configPollQueue.Put(pNode);
          }
          if (pNode->ReadyForStatusPoll())
          {
             pNode->IncRefCount();
-            pNode->LockForConfigurationPoll();
+            pNode->LockForStatusPoll();
             g_statusPollQueue.Put(pNode);
          }
       }
