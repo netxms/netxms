@@ -23,6 +23,10 @@
 #include "libnetxms.h"
 #include <nms_threads.h>
 
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
+
 
 //
 // Constants
@@ -144,20 +148,34 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
       request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
       if (sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == sizeof(ECHOREQUEST))
       {
+#if HAVE_POLL
+         struct pollfd fds;
+#else
          struct timeval timeout;
          fd_set rdfs;
+#endif
          socklen_t iAddrLen;
          struct sockaddr_in saSrc;
 
          // Wait for responce
          for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
          {
+#if HAVE_POLL
+            fds.fd = sock;
+            fds.events = POLLIN;
+            fds.revents = POLLIN;
+#else
 	         FD_ZERO(&rdfs);
 	         FD_SET(sock, &rdfs);
 	         timeout.tv_sec = dwTimeLeft / 1000;
 	         timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
+#endif
             qwStartTime = GetCurrentTimeMs();
-	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) != 0)
+#if HAVE_POLL
+	         if (poll(&fds, 1, dwTimeLeft) > 0)
+#else
+	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) > 0)
+#endif
             {
                dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
@@ -190,7 +208,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                   }
                }
             }
-            else     // select() ended on timeout
+            else     // select() or poll() ended on timeout
             {
                dwTimeLeft = 0;
             }

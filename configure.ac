@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.73 2005-03-17 07:59:28 victor Exp $
+# $Id: configure.ac,v 1.74 2005-03-27 08:54:47 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -204,7 +204,7 @@ AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/int_types.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
-AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h])
+AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])
@@ -264,7 +264,7 @@ AC_FUNC_VPRINTF
 
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
-AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname])
+AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 
 # sockets/resolver (probably for solaris)
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
