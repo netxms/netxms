@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
                    "   -b           : Batch mode - get all parameters listed on command line.\n"
                    "   -h           : Display help and exit.\n"
-                   "   -i <seconds> : Get specified parameter continously with given interval.\n"
+                   "   -i <seconds> : Get specified parameter(s) continously with given interval.\n"
                    "   -l           : Get list of values for enum parameter.\n"
                    "   -n           : Show parameter's name in result\n"
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               dwTimeout = (DWORD)i;
+               dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
             }
             break;
          case '?':
@@ -216,74 +216,77 @@ int main(int argc, char *argv[])
    }
 
    // Check parameter correctness
-   if (argc - optind < 2)
-   {
-      printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
-      bStart = FALSE;
-   }
-   else if ((iAuthMethod != AUTH_NONE) && (szSecret[0] == 0))
-   {
-      printf("Shared secret not specified or empty\n");
-      bStart = FALSE;
-   }
-
-   // If everything is ok, start communications
    if (bStart)
    {
-      struct hostent *hs;
+      if (argc - optind < 2)
+      {
+         printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
+         bStart = FALSE;
+      }
+      else if ((iAuthMethod != AUTH_NONE) && (szSecret[0] == 0))
+      {
+         printf("Shared secret not specified or empty\n");
+         bStart = FALSE;
+      }
 
-      // Initialize WinSock
+      // If everything is ok, start communications
+      if (bStart)
+      {
+         struct hostent *hs;
+
+         // Initialize WinSock
 #ifdef _WIN32
-      WSADATA wsaData;
-
-      WSAStartup(2, &wsaData);
+         WSADATA wsaData;
+         WSAStartup(2, &wsaData);
 #endif
 
-      // Resolve hostname
-      hs = gethostbyname(argv[optind]);
-      if (hs != NULL)
-      {
-         memcpy(&m_dwAddr, hs->h_addr, sizeof(DWORD));
-      }
-      else
-      {
-         m_dwAddr = inet_addr(argv[optind]);
-      }
-      if ((m_dwAddr == 0) || (m_dwAddr == INADDR_NONE))
-      {
-         fprintf(stderr, "Invalid host name or address specified\n");
-      }
-      else
-      {
-         AgentConnection conn(m_dwAddr, wPort, iAuthMethod, szSecret);
-
-         if (conn.Connect(m_bVerbose))
+         // Resolve hostname
+         hs = gethostbyname(argv[optind]);
+         if (hs != NULL)
          {
-            do
-            {
-               switch(iCommand)
-               {
-                  case CMD_GET:
-                     iPos = optind + 1;
-                     do
-                     {
-                        iExitCode = Get(&conn, argv[iPos++], bShowNames);
-                     } while((iExitCode == 0) && (bBatchMode) && (iPos < argc));
-                     break;
-                  case CMD_LIST:
-                     iExitCode = List(&conn, argv[optind + 1]);
-                     break;
-                  default:
-                     break;
-               }
-               ThreadSleep(iInterval);
-            }
-            while(iInterval > 0);
-            conn.Disconnect();
+            memcpy(&m_dwAddr, hs->h_addr, sizeof(DWORD));
          }
          else
          {
-            iExitCode = 2;
+            m_dwAddr = inet_addr(argv[optind]);
+         }
+         if ((m_dwAddr == 0) || (m_dwAddr == INADDR_NONE))
+         {
+            fprintf(stderr, "Invalid host name or address specified\n");
+         }
+         else
+         {
+            AgentConnection conn(m_dwAddr, wPort, iAuthMethod, szSecret);
+
+            conn.SetCommandTimeout(dwTimeout);
+            if (conn.Connect(m_bVerbose))
+            {
+               do
+               {
+                  switch(iCommand)
+                  {
+                     case CMD_GET:
+                        iPos = optind + 1;
+                        do
+                        {
+                           iExitCode = Get(&conn, argv[iPos++], bShowNames);
+                        } while((iExitCode == 0) && (bBatchMode) && (iPos < argc));
+                        break;
+                     case CMD_LIST:
+                        iExitCode = List(&conn, argv[optind + 1]);
+                        break;
+                     default:
+                        break;
+                  }
+                  ThreadSleep(iInterval);
+               }
+               while(iInterval > 0);
+               conn.Disconnect();
+            }
+            else
+            {
+               iExitCode = 2;
+            }
          }
       }
    }

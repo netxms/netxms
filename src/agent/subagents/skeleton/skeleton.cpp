@@ -25,9 +25,9 @@
 #include <nms_agent.h>
 
 #ifdef _WIN32
-#define EXPORTABLE __declspec(dllexport) __cdecl
+#define SKELETON_EXPORTABLE __declspec(dllexport) __cdecl
 #else
-#define EXPORTABLE
+#define SKELETON_EXPORTABLE
 #endif
 
 
@@ -45,8 +45,21 @@ static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
 {
    char szArg[256];
 
-   GetParameterArg(pszParam, 1, szArg, 255);
+   NxGetParameterArg(pszParam, 1, szArg, 255);
    ret_string(pValue, szArg);
+   return SYSINFO_RC_SUCCESS;
+}
+
+static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+   int i;
+   char szValue[256];
+
+   for(i = 0; i < 10; i++)
+   {
+      sprintf(szValue, "Value %d", i);
+      NxAddResultString(pValue, szValue);
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -60,14 +73,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Skeleton.Version", H_Version, NULL },
    { "Skeleton.Echo(*)", H_Echo, NULL }
 };
-static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters };
+static NETXMS_SUBAGENT_ENUM m_enums[] =
+{
+   { "Skeleton.Enum", H_Enum, NULL }
+};
+static NETXMS_SUBAGENT_INFO m_info = { 0x01000000, 2, m_parameters, 1, m_enums };
 
 
 //
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 {
    *ppInfo = &m_info;
    return TRUE;

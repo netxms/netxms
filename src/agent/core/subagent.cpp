@@ -69,6 +69,12 @@ BOOL LoadSubAgent(char *szModuleName)
                             pInfo->pParamList[i].fpHandler,
                             pInfo->pParamList[i].pArg);
 
+            // Add enums provided by this subagent to common list
+            for(i = 0; i < pInfo->dwNumEnums; i++)
+               AddEnum(pInfo->pEnumList[i].szName, 
+                       pInfo->pEnumList[i].fpHandler,
+                       pInfo->pEnumList[i].pArg);
+
             WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
                      "s", szModuleName);
             bSuccess = TRUE;
@@ -107,7 +113,7 @@ LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
-      snprintf(szBuffer, MAX_PATH + 32, "0x%08X %s\r\n", m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+      snprintf(szBuffer, MAX_PATH + 32, "0x%08X %s", m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
       NxAddResultString(value, szBuffer);
    }
    return SYSINFO_RC_SUCCESS;

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.17 2004-08-09 11:35:01 victor Exp $
+# $Id: configure.ac,v 1.18 2004-08-10 14:48:38 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -324,6 +324,7 @@ AC_CONFIG_FILES([
    src/agent/Makefile
    src/agent/core/Makefile
    src/agent/subagents/Makefile
+   src/agent/subagents/skeleton/Makefile
 ])
 
 AC_OUTPUT

@@ -140,6 +140,8 @@ public:
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const char *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : "(error)"; }
+
+   void SetCommandTimeout(DWORD dwTimeout) { if (dwTimeout > 500) m_dwCommandTimeout = dwTimeout; }
 };
 
 

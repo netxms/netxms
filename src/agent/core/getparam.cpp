@@ -236,6 +236,20 @@ void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *
 
 
 //
+// Add enum to list
+//
+
+void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg)
+{
+   m_pEnumList = (NETXMS_SUBAGENT_ENUM *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_ENUM) * (m_iNumEnums + 1));
+   strncpy(m_pEnumList[m_iNumEnums].szName, szName, MAX_PARAM_NAME - 1);
+   m_pEnumList[m_iNumEnums].fpHandler = fpHandler;
+   m_pEnumList[m_iNumEnums].pArg = pArg;
+   m_iNumEnums++;
+}
+
+
+//
 // Get parameter's value
 //
 
