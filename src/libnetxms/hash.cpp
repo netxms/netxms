@@ -25,9 +25,9 @@
 #include "md5.h"
 #include "sha1.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(UNDER_CE)
 # include <io.h>
-#else
+#elif !defined(UNDER_CE)
 # include <fcntl.h>
 # include <sys/types.h>
 # include <sys/stat.h>
@@ -155,25 +155,26 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, BYT
 // Calculate MD5 hash for given file
 //
 
-BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash)
+BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
 {
-   int fd, iSize;
+	int iSize;
 	md5_state_t state;
-   char szBuffer[FILE_BLOCK_SIZE];
-   BOOL bSuccess = FALSE;
+	char szBuffer[FILE_BLOCK_SIZE];
+	BOOL bSuccess = FALSE;
+	FILE *fileHandle;
 
-   fd = open(pszFileName, O_RDONLY | O_BINARY);
-   if (fd != -1)
+   fileHandle = _tfopen(pszFileName, _T("rb"));
+   if (fileHandle != NULL)
    {
       I_md5_init(&state);
       while(1)
       {
-         iSize = read(fd, szBuffer, FILE_BLOCK_SIZE);
+         iSize = fread(szBuffer, FILE_BLOCK_SIZE, 1, fileHandle);
          if (iSize <= 0)
             break;
       	I_md5_append(&state, (const md5_byte_t *)szBuffer, iSize);
       }
-      close(fd);
+      fclose(fileHandle);
       if (iSize == 0)
       {
          I_md5_finish(&state, (md5_byte_t *)pHash);
@@ -188,25 +189,26 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(char *pszFileName, BYTE *pHash)
 // Calculate SHA1 hash for given file
 //
 
-BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(char *pszFileName, BYTE *pHash)
+BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
 {
-   int fd, iSize;
+   int iSize;
+   FILE *fileHandle;
    SHA1_CTX context;
    char szBuffer[FILE_BLOCK_SIZE];
    BOOL bSuccess = FALSE;
 
-   fd = open(pszFileName, O_RDONLY | O_BINARY);
-   if (fd != -1)
+   fileHandle = _tfopen(pszFileName, _T("rb"));
+   if (fileHandle != NULL)
    {
       I_SHA1Init(&context);
       while(1)
       {
-         iSize = read(fd, szBuffer, FILE_BLOCK_SIZE);
+         iSize = fread(szBuffer, FILE_BLOCK_SIZE, 1, fileHandle);
          if (iSize <= 0)
             break;
          I_SHA1Update(&context, (BYTE *)szBuffer, iSize);
       }
-      close(fd);
+      fclose(fileHandle);
       if (iSize == 0)
       {
          I_SHA1Final(pHash, &context);

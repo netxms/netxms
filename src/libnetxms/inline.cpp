@@ -28,40 +28,40 @@
 // Functions defined as inline for C++ programs
 //
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_string(char *rbuf, char *value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value)
 {
-   strncpy(rbuf, value, MAX_RESULT_LENGTH);
+   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_int(char *rbuf, long value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value)
 {
-   sprintf(rbuf, "%ld", value);
+   _stprintf(rbuf, _T("%ld"), value);
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value)
 {
-   sprintf(rbuf, "%lu", value);
+   _stprintf(rbuf, _T("%lu"), value);
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_double(char *rbuf, double value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value)
 {
-   sprintf(rbuf, "%f", value);
+   _stprintf(rbuf, _T("%f"), value);
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_int64(char *rbuf, INT64 value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_int64(TCHAR *rbuf, INT64 value)
 {
 #ifdef _WIN32
-   sprintf(rbuf, "%I64d", value);
+   _stprintf(rbuf, _T("%I64d"), value);
 #else    /* _WIN32 */
-   sprintf(rbuf, "%lld", value);
+   _stprintf(rbuf, _T("%lld"), value);
 #endif   /* _WIN32 */
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value)
 {
 #ifdef _WIN32
-   sprintf(rbuf, "%I64u", value);
+   _stprintf(rbuf, _T("%I64u"), value);
 #else    /* _WIN32 */
-   sprintf(rbuf, "%llu", value);
+   _stprintf(rbuf, _T("%llu"), value);
 #endif   /* _WIN32 */
 }

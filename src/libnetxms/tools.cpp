@@ -22,7 +22,7 @@
 
 #include "libnetxms.h"
 
-#ifndef _WIN32
+#if !defined(_WIN32) || !defined(UNDER_CE)
 #include <sys/time.h>
 #endif
 
@@ -53,17 +53,17 @@ int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask)
 // Convert IP address from binary form (network bytes order) to string
 //
 
-char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer)
+TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
 {
-   static char szInternalBuffer[32];
-   char *szBufPtr;
+   static TCHAR szInternalBuffer[32];
+   TCHAR *szBufPtr;
 
    szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
 #if WORDS_BIGENDIAN
-   sprintf(szBufPtr, "%ld.%ld.%ld.%ld", dwAddr >> 24, (dwAddr >> 16) & 255,
+   _stprintf(szBufPtr, _T("%ld.%ld.%ld.%ld"), dwAddr >> 24, (dwAddr >> 16) & 255,
            (dwAddr >> 8) & 255, dwAddr & 255);
 #else
-   sprintf(szBufPtr, "%ld.%ld.%ld.%ld", dwAddr & 255, (dwAddr >> 8) & 255,
+   _stprintf(szBufPtr, _T("%ld.%ld.%ld.%ld"), dwAddr & 255, (dwAddr >> 8) & 255,
            (dwAddr >> 16) & 255, dwAddr >> 24);
 #endif
    return szBufPtr;
@@ -88,19 +88,19 @@ void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize)
 // Match string against pattern with * and ? metasymbols
 //
 
-static BOOL MatchStringEngine(const char *pattern, const char *string)
+static BOOL MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
 {
-   const char *SPtr,*MPtr,*BPtr;
+   const TCHAR *SPtr,*MPtr,*BPtr;
 
    SPtr = string;
    MPtr = pattern;
 
-   while(*MPtr!=0)
+   while(*MPtr != 0)
    {
       switch(*MPtr)
       {
-         case '?':
-            if (*SPtr!=0)
+         case _T('?'):
+            if (*SPtr != 0)
             {
                SPtr++;
                MPtr++;
@@ -108,12 +108,12 @@ static BOOL MatchStringEngine(const char *pattern, const char *string)
             else
                return FALSE;
             break;
-         case '*':
-            while(*MPtr=='*')
+         case _T('*'):
+            while(*MPtr == _T('*'))
                MPtr++;
             if (*MPtr==0)
 	            return TRUE;
-            if (*MPtr=='?')      // Handle "*?" case
+            if (*MPtr==_T('?'))      // Handle "*?" case
             {
                if (*SPtr!=0)
                   SPtr++;
@@ -122,15 +122,15 @@ static BOOL MatchStringEngine(const char *pattern, const char *string)
                break;
             }
             BPtr=MPtr;           // Text block begins here
-            while((*MPtr!=0)&&(*MPtr!='?')&&(*MPtr!='*'))
+            while((*MPtr!=0)&&(*MPtr!=_T('?'))&&(*MPtr!=_T('*')))
                MPtr++;     // Find the end of text block
             while(1)
             {
                while((*SPtr!=0)&&(*SPtr!=*BPtr))
                   SPtr++;
-               if (strlen(SPtr)<(size_t)(MPtr-BPtr))
+               if (_tcslen(SPtr)<((size_t)(MPtr-BPtr)) * sizeof(TCHAR))
                   return FALSE;  // Length of remained text less than remaining pattern
-               if (!memcmp(BPtr,SPtr,MPtr-BPtr))
+               if (!memcmp(BPtr,SPtr,(MPtr-BPtr) * sizeof(TCHAR)))
                   break;
                SPtr++;
             }
@@ -151,19 +151,21 @@ static BOOL MatchStringEngine(const char *pattern, const char *string)
    return *SPtr==0 ? TRUE : FALSE;
 }
 
-BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase)
+BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern,
+									  const TCHAR *string,
+									  BOOL matchCase)
 {
    if (matchCase)
       return MatchStringEngine(pattern, string);
    else
    {
-      char *tp, *ts;
+      TCHAR *tp, *ts;
       BOOL bResult;
 
-      tp = strdup(pattern);
-      ts = strdup(string);
-      strupr(tp);
-      strupr(ts);
+      tp = _tcsdup(pattern);
+      ts = _tcsdup(string);
+      _tcsupr(tp);
+      _tcsupr(ts);
       bResult = MatchStringEngine(tp, ts);
       free(tp);
       free(ts);
@@ -176,14 +178,14 @@ BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, B
 // Strip whitespaces and tabs off the string
 //
 
-void LIBNETXMS_EXPORTABLE StrStrip(char *str)
+void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *str)
 {
    int i;
 
-   for(i=0;(str[i]!=0)&&((str[i]==' ')||(str[i]=='\t'));i++);
+   for(i=0;(str[i]!=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i++);
    if (i>0)
-      memmove(str,&str[i],strlen(&str[i])+1);
-   for(i=strlen(str)-1;(i>=0)&&((str[i]==' ')||(str[i]=='\t'));i--);
+      memmove(str,&str[i],(_tcslen(&str[i])+1) * sizeof(TCHAR));
+   for(i=_tcslen(str)-1;(i>=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i--);
    str[i+1]=0;
 }
 
@@ -192,10 +194,11 @@ void LIBNETXMS_EXPORTABLE StrStrip(char *str)
 // Add string to enumeration result set
 //
 
-void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, char *pszString)
+void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, TCHAR *pszString)
 {
-   pList->ppStringList = (char **)realloc(pList->ppStringList, sizeof(char *) * (pList->dwNumStrings + 1));
-   pList->ppStringList[pList->dwNumStrings] = strdup(pszString);
+	// FIXME
+   pList->ppStringList = (TCHAR **)realloc(pList->ppStringList, sizeof(TCHAR *) * (pList->dwNumStrings + 1));
+   pList->ppStringList[pList->dwNumStrings] = _tcsdup(pszString);
    pList->dwNumStrings++;
 }
 
@@ -205,14 +208,14 @@ void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, char *psz
 // Returns FALSE on processing error
 //
 
-BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize)
+BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg, int maxSize)
 {
-   char *ptr1, *ptr2;
+   TCHAR *ptr1, *ptr2;
    int state, currIndex, pos;
    BOOL bResult = TRUE;
 
    arg[0] = 0;    // Default is empty string
-   ptr1 = strchr(param,'(');
+   ptr1 = _tcschr(param, _T('('));
    if (ptr1 == NULL)
       return TRUE;  // No arguments at all
    for(ptr2 = ptr1 + 1, currIndex = 1, state = 0, pos = 0; state != -1; ptr2++)
@@ -222,18 +225,18 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, i
          case 0:  // Normal
             switch(*ptr2)
             {
-               case ')':
+               case _T(')'):
                   if (currIndex == index)
                      arg[pos] = 0;
                   state = -1;    // Finish processing
                   break;
-               case '"':
+               case _T('"'):
                   state = 1;     // String
                   break;
-               case '\'':        // String, type 2
+               case _T('\''):        // String, type 2
                   state = 2;
                   break;
-               case ',':
+               case _T(','):
                   if (currIndex == index)
                   {
                      arg[pos] = 0;
@@ -256,10 +259,10 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, i
          case 1:  // String in ""
             switch(*ptr2)
             {
-               case '"':
+               case _T('"'):
                   state = 0;     // Normal
                   break;
-               case '\\':        // Escape
+               case _T('\\'):        // Escape
                   ptr2++;
                   if ((currIndex == index) && (pos < maxSize - 1))
                      arg[pos++] = *ptr2;
@@ -281,10 +284,10 @@ BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, i
          case 2:  // String in ''
             switch(*ptr2)
             {
-               case '\'':
+               case _T('\''):
                   state = 0;     // Normal
                   break;
-               case '\\':        // Escape
+               case _T('\\'):        // Escape
                   ptr2++;
                   if ((currIndex == index) && (pos < maxSize - 1))
                      arg[pos++] = *ptr2;
@@ -348,13 +351,13 @@ INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void)
 // of line reached.
 //
 
-char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer)
+TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer)
 {
-   char *ptr,*bptr;
+   TCHAR *ptr,*bptr;
 
-   for(ptr=line;(*ptr==' ')||(*ptr=='\t');ptr++);  // Skip initial spaces
+   for(ptr=line;(*ptr==_T(' '))||(*ptr==_T('\t'));ptr++);  // Skip initial spaces
    // Copy word to buffer
-   for(bptr=buffer;(*ptr!=' ')&&(*ptr!='\t')&&(*ptr!=0);ptr++,bptr++)
+   for(bptr=buffer;(*ptr!=_T(' '))&&(*ptr!=_T('\t'))&&(*ptr!=0);ptr++,bptr++)
       *bptr=*ptr;
    *bptr=0;
    return ptr;
@@ -366,26 +369,26 @@ char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer)
 // (Windows only)
 //
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
-char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, int iBufSize)
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize)
 {
-   char *msgBuf;
+   TCHAR *msgBuf;
 
    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                      FORMAT_MESSAGE_FROM_SYSTEM | 
                      FORMAT_MESSAGE_IGNORE_INSERTS,
                      NULL, dwError,
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                     (LPSTR)&msgBuf, 0, NULL) > 0)
+                     (LPTSTR)&msgBuf, 0, NULL) > 0)
    {
-      msgBuf[strcspn(msgBuf, "\r\n")] = 0;
-      strncpy(pszBuffer, msgBuf, iBufSize);
+      msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
+      _tcsncpy(pszBuffer, msgBuf, iBufSize);
       LocalFree(msgBuf);
    }
    else
    {
-      sprintf(pszBuffer, "MSG 0x%08X - Unable to find message text", dwError);
+      _stprintf(pszBuffer, _T("MSG 0x%08X - Unable to find message text"), dwError);
    }
    return pszBuffer;
 }
@@ -411,8 +414,8 @@ int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 // Check if given name is a valid object name
 //
 
-BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(char *pszName)
+BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName)
 {
-   static char szValidCharacters[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./";
-   return (pszName[0] != 0) && (strspn(pszName, szValidCharacters) == strlen(pszName));
+   static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./");
+   return (pszName[0] != 0) && (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName));
 }

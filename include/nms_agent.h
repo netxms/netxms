@@ -85,7 +85,7 @@ typedef void *HCONN;
 typedef struct
 {
    DWORD dwNumStrings;
-   char **ppStringList;
+   TCHAR **ppStringList;
 } NETXMS_VALUES_LIST;
 
 
@@ -95,9 +95,9 @@ typedef struct
 
 typedef struct
 {
-   char szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(char *, char *, char *);
-   char *pArg;
+   TCHAR szName[MAX_PARAM_NAME];
+   LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *);
+   TCHAR *pArg;
 } NETXMS_SUBAGENT_PARAM;
 
 
@@ -107,9 +107,9 @@ typedef struct
 
 typedef struct
 {
-   char szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(char *, char *, NETXMS_VALUES_LIST *);
-   char *pArg;
+   TCHAR szName[MAX_PARAM_NAME];
+   LONG (* fpHandler)(TCHAR *, TCHAR *, NETXMS_VALUES_LIST *);
+   TCHAR *pArg;
 } NETXMS_SUBAGENT_ENUM;
 
 
@@ -119,7 +119,7 @@ typedef struct
 
 typedef struct
 {
-   char szName[MAX_SUBAGENT_NAME];
+   TCHAR szName[MAX_SUBAGENT_NAME];
    DWORD dwVersion;
    void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
    DWORD dwNumParameters;
@@ -136,53 +136,53 @@ typedef struct
 #ifdef __cplusplus
 #ifndef LIBNETXMS_INLINE
 
-inline void ret_string(char *rbuf, char *value)
+inline void ret_string(TCHAR *rbuf, TCHAR *value)
 {
-   strncpy(rbuf, value, MAX_RESULT_LENGTH);
+   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
-inline void ret_int(char *rbuf, long value)
+inline void ret_int(TCHAR *rbuf, long value)
 {
-   sprintf(rbuf, "%ld", value);
+   _stprintf(rbuf, _T("%ld"), value);
 }
 
-inline void ret_uint(char *rbuf, unsigned long value)
+inline void ret_uint(TCHAR *rbuf, unsigned long value)
 {
-   sprintf(rbuf, "%lu", value);
+   _stprintf(rbuf, _T("%lu"), value);
 }
 
-inline void ret_double(char *rbuf, double value)
+inline void ret_double(TCHAR *rbuf, double value)
 {
-   sprintf(rbuf, "%f", value);
+   _stprintf(rbuf, _T("%f"), value);
 }
 
-inline void ret_int64(char *rbuf, INT64 value)
+inline void ret_int64(TCHAR *rbuf, INT64 value)
 {
 #ifdef _WIN32
-   sprintf(rbuf, "%I64d", value);
+   _stprintf(rbuf, _T("%I64d"), value);
 #else    /* _WIN32 */
-   sprintf(rbuf, "%lld", value);
+   _stprintf(rbuf, _T("%lld"), value);
 #endif   /* _WIN32 */
 }
 
-inline void ret_uint64(char *rbuf, QWORD value)
+inline void ret_uint64(TCHAR *rbuf, QWORD value)
 {
 #ifdef _WIN32
-   sprintf(rbuf, "%I64u", value);
+   _stprintf(rbuf, _T("%I64u"), value);
 #else    /* _WIN32 */
-   sprintf(rbuf, "%llu", value);
+   _stprintf(rbuf, _T("%llu"), value);
 #endif   /* _WIN32 */
 }
 
 #endif   /* LIBNETXMS_INLINE */
 #else    /* __cplusplus */
 
-void LIBNETXMS_EXPORTABLE ret_string(char *rbuf, char *value)
-void LIBNETXMS_EXPORTABLE ret_int(char *rbuf, long value)
-void LIBNETXMS_EXPORTABLE ret_uint(char *rbuf, unsigned long value)
-void LIBNETXMS_EXPORTABLE ret_double(char *rbuf, double value)
-void LIBNETXMS_EXPORTABLE ret_int64(char *rbuf, INT64 value)
-void LIBNETXMS_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
+void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value)
+void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value)
+void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value)
+void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value)
+void LIBNETXMS_EXPORTABLE ret_int64(TCHAR *rbuf, INT64 value)
+void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value)
 
 #endif   /* __cplusplus */
 
@@ -195,8 +195,8 @@ void LIBNETXMS_EXPORTABLE ret_uint64(char *rbuf, QWORD value)
 extern "C" {
 #endif
 
-BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(char *param, int index, char *arg, int maxSize);
-void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, char *pszString);
+BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg, int maxSize);
+void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, TCHAR *pszString);
 
 #ifdef __cplusplus
 }

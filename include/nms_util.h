@@ -86,7 +86,7 @@
 
 typedef struct
 {
-   char szToken[64];
+   TCHAR szToken[64];
    BYTE iType;
    BYTE cSeparator;     // Separator character for lists
    WORD wListElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
@@ -130,20 +130,20 @@ extern "C"
    double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
-   void LIBNETXMS_EXPORTABLE strupr(char *in);
+   void LIBNETXMS_EXPORTABLE strupr(TCHAR *in);
 #endif
    
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
 
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
-   char LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
+   TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
 
-   void LIBNETXMS_EXPORTABLE StrStrip(char *pszStr);
-   BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
-   char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer);
-   BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(char *pszName);
+   void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
+   BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
+   TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
+   BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName);
    
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, unsigned char *hash);
@@ -153,15 +153,15 @@ extern "C"
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT);
 
-   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection, 
+   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection, 
                                            NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
 
-   HMODULE LIBNETXMS_EXPORTABLE DLOpen(char *szLibName, char *pszErrorText);
+   HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText);
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
-   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, char *szSymbol, char *pszErrorText);
+   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, TCHAR *szSymbol, TCHAR *pszErrorText);
 
 #ifdef _WIN32
-   char LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, char *pszBuffer, int iBufSize);
+   TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
 #endif
 
 #if !(HAVE_DAEMON)

@@ -48,21 +48,50 @@
 // Platform dependent includes and defines
 //
 
-#if defined(_WIN32)
+#ifdef UNDER_CE
+inline unsigned long _beginthreadex(void *security,
+									unsigned stack_size,
+									unsigned (__stdcall *start_address)(void *),
+									void *arglist, unsigned initflag, 
+									unsigned *thrdaddr)
+{
+	return (unsigned long)CreateThread((LPSECURITY_ATTRIBUTES)security,
+		(DWORD)stack_size,
+		(LPTHREAD_START_ROUTINE)start_address,
+		(LPVOID)arglist,
+		(DWORD)initflag | CREATE_SUSPENDED,
+		(LPDWORD)thrdaddr);
+}
+
+inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
+{
+	SYSTEMTIME sysTime;
+	
+	GetSystemTime(&sysTime);
+	SystemTimeToFileTime(&sysTime, pFt);
+}
+
+#endif // UNDER_CE
+
+#if defined(_WIN32) || defined(UNDER_CE)
 
 /********** WINDOWS ********************/
 
-#define FS_PATH_SEPARATOR  "\\"
+#define FS_PATH_SEPARATOR  _T("\\")
 
 #include <windows.h>
-#include <fcntl.h>
+#ifndef UNDER_CE
+# include <fcntl.h>
+#else
+# include <winsock2.h>
+#endif
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
+//#define snprintf _snprintf
+//#define vsnprintf _vsnprintf
 
 // Socket compatibility
 #define SHUT_RD      0
@@ -119,7 +148,7 @@ typedef int SOCKET;
 
 /*********** UNIX *********************/
 
-#define FS_PATH_SEPARATOR  "/"
+#define FS_PATH_SEPARATOR  _T("/")
 
 #include <config.h>
 
@@ -312,8 +341,8 @@ typedef struct tagICMPHDR
 // Check if given string is NULL and always return valid pointer
 //
 
-#define CHECK_NULL(x)      ((x) == NULL ? ((char *)"(null)") : (x))
-#define CHECK_NULL_EX(x)   ((x) == NULL ? ((char *)"") : (x))
+#define CHECK_NULL(x)      ((x) == NULL ? ((TCHAR *)_T("(null)")) : (x))
+#define CHECK_NULL_EX(x)   ((x) == NULL ? ((TCHAR *)_T("")) : (x))
 
 
 //

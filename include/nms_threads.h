@@ -25,7 +25,9 @@
 
 #ifdef _WIN32
 
-#include <process.h>
+#ifndef UNDER_CE
+# include <process.h>
+#endif
 
 //
 // Related datatypes and constants
@@ -79,7 +81,11 @@ inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *)
 
 inline void ThreadExit(void)
 {
+#ifndef UNDER_CE
    _endthread();
+#else
+   ExitThread(0);
+#endif
 }
 
 inline void ThreadJoin(THREAD hThread)

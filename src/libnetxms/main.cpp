@@ -95,10 +95,12 @@ void LIBNETXMS_EXPORTABLE strupr(char *in)
 
 #ifdef _WIN32
 
+#ifndef UNDER_CE // FIXME
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    return TRUE;
 }
+#endif // UNDER_CE
 
 #endif   /* _WIN32 */
 

@@ -32,7 +32,7 @@
 // Load DLL/shared library
 //
 
-HMODULE LIBNETXMS_EXPORTABLE DLOpen(char *szLibName, char *pszErrorText)
+HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
 {
    HMODULE hModule;
 
@@ -67,7 +67,9 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 // Get symbol address from library
 //
 
-void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, char *szSymbol, char *pszErrorText)
+void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
+										   TCHAR *szSymbol,
+										   TCHAR *pszErrorText)
 {
    void *pAddr;
 

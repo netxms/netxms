@@ -28,19 +28,21 @@
 // Universal configuration loader
 //
 
-DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
+DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
                                         NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint)
 {
    FILE *cfg;
-   char *ptr, *eptr, szBuffer[4096];
+   TCHAR *ptr, *eptr, szBuffer[4096];
    int i, iSourceLine = 0, iErrors = 0;
    BOOL bActiveSection = (pszSection[0] == 0);
 
-   cfg = fopen(pszFileName, "r");
+   cfg = _tfopen(pszFileName, _T("r"));
    if (cfg == NULL)
    {
       if (bPrint)
-         printf("Unable to open configuration file: %s\n", strerror(errno));
+#ifndef UNDER_CE
+         _tprintf(_T("Unable to open configuration file: %s\n"), _tcserror(errno));
+#endif // UNDER_CE
       return NXCFG_ERR_NOFILE;
    }
 
@@ -48,12 +50,12 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
    {
       // Read line from file
       szBuffer[0] = 0;
-      fgets(szBuffer, 4095, cfg);
+      _fgetts(szBuffer, 4095, cfg);
       iSourceLine++;
-      ptr = strchr(szBuffer, '\n');
+      ptr = _tcschr(szBuffer, _T('\n'));
       if (ptr != NULL)
          *ptr = 0;
-      ptr = strchr(szBuffer, '#');
+      ptr = _tcschr(szBuffer, _T('#'));
       if (ptr != NULL)
          *ptr = 0;
 
@@ -62,9 +64,9 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
          continue;
 
       // Check if it's a section name
-      if (szBuffer[0] == '*')
+      if (szBuffer[0] == _T('*'))
       {
-         bActiveSection = !stricmp(&szBuffer[1], pszSection);
+         bActiveSection = !_tcsicmp(&szBuffer[1], pszSection);
       }
       else
       {
@@ -72,12 +74,12 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
             continue;
 
          // Divide on two parts at = sign
-         ptr = strchr(szBuffer, '=');
+         ptr = _tcschr(szBuffer, '=');
          if (ptr == NULL)
          {
             iErrors++;
             if (bPrint)
-               printf("Syntax error in configuration file at line %d\n", iSourceLine);
+               _tprintf(_T("Syntax error in configuration file at line %d\n"), iSourceLine);
             continue;
          }
          *ptr = 0;
@@ -87,31 +89,32 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
 
          // Find corresponding token in template list
          for(i = 0; pTemplateList[i].iType != CT_END_OF_LIST; i++)
-            if (!stricmp(pTemplateList[i].szToken, szBuffer))
+            if (!_tcsicmp(pTemplateList[i].szToken, szBuffer))
             {
                switch(pTemplateList[i].iType)
                {
                   case CT_LONG:
-                     *((long *)pTemplateList[i].pBuffer) = strtol(ptr, &eptr, 0);
+                     *((long *)pTemplateList[i].pBuffer) = _tcstol(ptr, &eptr, 0);
                      if (*eptr != 0)
                      {
                         iErrors++;
                         if (bPrint)
-                           printf("Invalid number '%s' in configuration file at line %d\n", ptr, iSourceLine);
+                           _tprintf(_T("Invalid number '%s' in configuration file at line %d\n"), ptr, iSourceLine);
                      }
                      break;
                   case CT_WORD:
-                     *((WORD *)pTemplateList[i].pBuffer) = (WORD)strtoul(ptr, &eptr, 0);
+                     *((WORD *)pTemplateList[i].pBuffer) = (WORD)_tcstoul(ptr, &eptr, 0);
                      if (*eptr != 0)
                      {
                         iErrors++;
                         if (bPrint)
-                           printf("Invalid number '%s' in configuration file at line %d\n", ptr, iSourceLine);
+                           _tprintf(_T("Invalid number '%s' in configuration file at line %d\n"),
+						              ptr, iSourceLine);
                      }
                      break;
                   case CT_BOOLEAN:
-                     if (!stricmp(ptr, "yes") || !stricmp(ptr, "true") ||
-                         !stricmp(ptr, "on") || !stricmp(ptr, "1"))
+                     if (!_tcsicmp(ptr, _T("yes")) || !_tcsicmp(ptr, _T("true")) ||
+                         !_tcsicmp(ptr, _T("on")) || !_tcsicmp(ptr, _T("1")))
                      {
                         *((DWORD *)pTemplateList[i].pBuffer) |= pTemplateList[i].dwBufferSize;
                      }
@@ -121,16 +124,16 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
                      }
                      break;
                   case CT_STRING:
-                     strncpy((char *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
+                     _tcsncpy((TCHAR *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
                      break;
                   case CT_STRING_LIST:
                      if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
                      {
-                        strncpy((char *)pTemplateList[i].pBuffer + pTemplateList[i].dwBufferPos, 
+                        _tcsncpy((TCHAR *)pTemplateList[i].pBuffer + pTemplateList[i].dwBufferPos, 
                                 ptr, pTemplateList[i].dwBufferSize - pTemplateList[i].dwBufferPos - 1);
-                        pTemplateList[i].dwBufferPos += strlen(ptr);
+                        pTemplateList[i].dwBufferPos += _tcslen(ptr);
                         if (pTemplateList[i].dwBufferPos < pTemplateList[i].dwBufferSize)
-                           ((char *)pTemplateList[i].pBuffer)[pTemplateList[i].dwBufferPos++] = pTemplateList[i].cSeparator;
+                           ((TCHAR *)pTemplateList[i].pBuffer)[pTemplateList[i].dwBufferPos++] = pTemplateList[i].cSeparator;
                      }
                      break;
                   default:
@@ -144,14 +147,14 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(char *pszFileName, char *pszSection,
          {
             iErrors++;
             if (bPrint)
-               printf("Invalid keyword %s in configuration file at line %d\n", szBuffer, iSourceLine);
+               _tprintf(_T("Invalid keyword %s in configuration file at line %d\n"), szBuffer, iSourceLine);
          }
       }
    }
    fclose(cfg);
 
    if ((!iErrors) && (bPrint))
-      printf("Configuration file OK\n");
+      _tprintf(_T("Configuration file OK\n"));
 
    return (iErrors > 0) ? NXCFG_ERR_SYNTAX : NXCFG_ERR_OK;
 }
