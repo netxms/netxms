@@ -118,6 +118,17 @@ static BOOL LoadTrapCfg(void)
 
 
 //
+// Initialize trap handling
+//
+
+void InitTraps(void)
+{
+   m_mutexTrapCfgAccess = MutexCreate();
+   LoadTrapCfg();
+}
+
+
+//
 // Generate event for matched trap
 //
 
@@ -183,6 +194,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    if (pNode != NULL)
    {
       // Find if we have this trap in our list
+      MutexLock(m_mutexTrapCfgAccess, INFINITE);
       for(i = 0; i < m_dwNumTraps; i++)
       {
          iResult = pdu->GetTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
@@ -214,6 +226,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
                    pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
          free(pszTrapArgs);
       }
+      MutexUnlock(m_mutexTrapCfgAccess);
    }
 }
 
@@ -229,8 +242,6 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    int iAddrLen, iBytes;
    SNMP_Transport *pTransport;
    SNMP_PDU *pdu;
-
-   LoadTrapCfg();
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)
@@ -292,6 +303,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
    msg.SetCode(CMD_TRAP_CFG_RECORD);
    msg.SetId(dwRqId);
 
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
    for(i = 0; i < m_dwNumTraps; i++)
    {
       msg.SetVariable(VID_TRAP_ID, m_pTrapCfg[i].dwId);
@@ -310,7 +322,48 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
       pSession->SendMessage(&msg);
       msg.DeleteAllVariables();
    }
+   MutexUnlock(m_mutexTrapCfgAccess);
 
    msg.SetVariable(VID_TRAP_ID, (DWORD)0);
    pSession->SendMessage(&msg);
+}
+
+
+//
+// Delete trap configuration record
+//
+
+DWORD DeleteTrap(DWORD dwId)
+{
+   DWORD i, j, dwResult = RCC_INVALID_TRAP_ID;
+   TCHAR szQuery[256];
+
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   
+   for(i = 0; i < m_dwNumTraps; i++)
+   {
+      if (m_pTrapCfg[i].dwId == dwId)
+      {
+         // Free allocated resources
+         for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+            safe_free(m_pTrapCfg[i].pMaps[j].pdwObjectId);
+         safe_free(m_pTrapCfg[i].pMaps);
+         safe_free(m_pTrapCfg[i].pdwObjectId);
+
+         // Remove trap entry from list
+         m_dwNumTraps--;
+         memmove(&m_pTrapCfg[i], &m_pTrapCfg[i + 1], sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps - i));
+
+         // Remove trap entry from database
+         _stprintf(szQuery, _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%ld"), dwId);
+         QueueSQLRequest(szQuery);
+         _stprintf(szQuery, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%ld"), dwId);
+         QueueSQLRequest(szQuery);
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+   }
+
+   MutexUnlock(m_mutexTrapCfgAccess);
+   return dwResult;
 }

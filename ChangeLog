@@ -18,6 +18,7 @@
   parent's title when child is maximized
 - Windows console: Status icons now placed over object icons in
   object browser
+- Windows console: Policy editor drawing code improved
 
 
 *

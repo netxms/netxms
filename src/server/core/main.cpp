@@ -289,6 +289,7 @@ BOOL Initialize(void)
       ThreadCreate(EventProcessor, 0, (void *)(i + 1));
 
    // Start SNMP trapper
+   InitTraps();
    if (ConfigReadInt("EnableSNMPTraps", 1))
       ThreadCreate(SNMPTrapReceiver, 0, NULL);
 

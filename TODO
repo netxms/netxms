@@ -49,7 +49,6 @@ LINUX AGENT:
 
 WINDOWS CONSOLE:
 
-- Add custom background erasing code in policy editor for smooth painting
 - Automatically select data type in DCI configuration dialog based on
   selected parameter
 - Add parameter selection for native agents in DCI configuration dialog

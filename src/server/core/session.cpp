@@ -3122,6 +3122,34 @@ void ClientSession::UpdateTrap(CSCPMessage *pRequest)
 
 void ClientSession::DeleteTrap(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+   DWORD dwTrapId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check access rights
+   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+   {
+      if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
+      {
+         dwTrapId = pRequest->GetVariableLong(VID_TRAP_ID);
+         msg.SetVariable(VID_RCC, ::DeleteTrap(dwTrapId));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
+      // Current user has no rights for trap management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 

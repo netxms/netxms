@@ -232,6 +232,7 @@ typedef unsigned long HREQUEST;
 #define RCC_NO_WOL_INTERFACES       ((DWORD)26)
 #define RCC_NO_MAC_ADDRESS          ((DWORD)27)
 #define RCC_NOT_IMPLEMENTED         ((DWORD)28)
+#define RCC_INVALID_TRAP_ID         ((DWORD)29)
 
 
 //

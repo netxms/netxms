@@ -402,7 +402,9 @@ void PostMail(char *pszRcpt, char *pszSubject, char *pszText);
 
 void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
 
+void InitTraps(void);
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
+DWORD DeleteTrap(DWORD dwId);
 
 #ifdef _WIN32
 
