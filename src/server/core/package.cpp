@@ -67,3 +67,50 @@ BOOL IsPackageFileExist(TCHAR *pszFileName)
    _tcscat(szFullPath, pszFileName);
    return (_taccess(szFullPath, 0) == 0);
 }
+
+
+//
+// Uninstall (remove) package from server
+//
+
+DWORD UninstallPackage(DWORD dwPkgId)
+{
+   TCHAR szQuery[256], szFileName[MAX_PATH];
+   DB_RESULT hResult;
+   DWORD dwResult;
+
+   _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         // Delete file from directory
+         _tcscpy(szFileName, g_szDataDir);
+         _tcscat(szFileName, DDIR_PACKAGES);
+         _tcscat(szFileName, FS_PATH_SEPARATOR);
+         _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0)));
+         if (_tunlink(szFileName) == 0)
+         {
+            // Delete record from database
+            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+            DBQuery(g_hCoreDB, szQuery);
+            dwResult = RCC_SUCCESS;
+         }
+         else
+         {
+            dwResult = RCC_IO_ERROR;
+         }
+      }
+      else
+      {
+         dwResult = RCC_INVALID_PACKAGE_ID;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      dwResult = RCC_DB_FAILURE;
+   }
+   return dwResult;
+}

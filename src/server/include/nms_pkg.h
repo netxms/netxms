@@ -29,6 +29,7 @@
 
 BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform);
 BOOL IsPackageFileExist(TCHAR *pszFileName);
+DWORD UninstallPackage(DWORD dwPkgId);
 
 
 #endif   /* _nms_pkg_h_ */

@@ -48,6 +48,8 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnPackageInstall();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnUpdatePackageRemove(CCmdUI* pCmdUI);
+	afx_msg void OnPackageRemove();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

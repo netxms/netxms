@@ -240,6 +240,7 @@ typedef void * NXC_SESSION;
 #define RCC_DUPLICATE_PACKAGE       ((DWORD)33)
 #define RCC_PACKAGE_FILE_EXIST      ((DWORD)34)
 #define RCC_RESOURCE_BUSY           ((DWORD)35)
+#define RCC_INVALID_PACKAGE_ID      ((DWORD)36)
 
 
 //

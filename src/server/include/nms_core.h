@@ -333,6 +333,7 @@ private:
    void LockPackageDB(DWORD dwRqId, BOOL bLock);
    void SendAllPackages(DWORD dwRqId);
    void InstallPackage(CSCPMessage *pRequest);
+   void RemovePackage(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -153,9 +153,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Error parsing package information file"),
       _T("Package with specified properties already installed on server"),
       _T("Package file already exist on server"),
-      _T("Server resource busy")
+      _T("Server resource busy"),
+      _T("Invalid package ID")
    };
-   return ((dwError >= 0) && (dwError <= RCC_RESOURCE_BUSY)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_PACKAGE_ID)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

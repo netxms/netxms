@@ -716,6 +716,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_INSTALL_PACKAGE:
             InstallPackage(pMsg);
             break;
+         case CMD_REMOVE_PACKAGE:
+            RemovePackage(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -3791,6 +3794,42 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
          {
             msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
          }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
+      // Current user has no rights for package management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Remove package from server
+//
+
+void ClientSession::RemovePackage(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwPkgId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   {
+      if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
+      {
+         dwPkgId = pRequest->GetVariableLong(VID_PACKAGE_ID);
+         msg.SetVariable(VID_RCC, UninstallPackage(dwPkgId));
       }
       else
       {

@@ -38,6 +38,8 @@ BEGIN_MESSAGE_MAP(CPackageMgr, CMDIChildWnd)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_PACKAGE_INSTALL, OnPackageInstall)
 	ON_WM_CONTEXTMENU()
+	ON_UPDATE_COMMAND_UI(ID_PACKAGE_REMOVE, OnUpdatePackageRemove)
+	ON_COMMAND(ID_PACKAGE_REMOVE, OnPackageRemove)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -181,6 +183,7 @@ void CPackageMgr::AddListItem(NXC_PACKAGE_INFO *pInfo, BOOL bSelect)
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
    if (iItem != -1)
    {
+      m_wndListCtrl.SetItemData(iItem, pInfo->dwId);
       m_wndListCtrl.SetItemText(iItem, 1, pInfo->szName);
       m_wndListCtrl.SetItemText(iItem, 2, pInfo->szVersion);
       m_wndListCtrl.SetItemText(iItem, 3, pInfo->szPlatform);
@@ -257,4 +260,73 @@ void CPackageMgr::OnContextMenu(CWnd* pWnd, CPoint point)
 
    pMenu = theApp.GetContextMenu(13);
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// OnUpdate... handlers
+//
+
+void CPackageMgr::OnUpdatePackageRemove(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+
+//
+// Worker function for package deletion
+//
+
+static DWORD RemovePackages(DWORD dwNumPackages, DWORD *pdwDeleteList, CListCtrl *pList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+   LVFINDINFO lvfi;
+   int iItem;
+
+   lvfi.flags = LVFI_PARAM;
+   for(i = 0; i < dwNumPackages; i++)
+   {
+      dwResult = NXCRemovePackage(g_hSession, pdwDeleteList[i]);
+      if (dwResult == RCC_SUCCESS)
+      {
+         lvfi.lParam = pdwDeleteList[i];
+         iItem = pList->FindItem(&lvfi);
+         if (iItem != -1)
+            pList->DeleteItem(iItem);
+      }
+      else
+      {
+         break;
+      }
+   }
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_PACKAGE_REMOVE message handler
+//
+
+void CPackageMgr::OnPackageRemove() 
+{
+   int iItem;
+   DWORD i, dwNumItems, *pdwDeleteList, dwResult;
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (dwNumItems > 0)
+   {
+      pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+      iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+      for(i = 0; (i < dwNumItems) && (iItem != -1); i++)
+      {
+         pdwDeleteList[i] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
+      }
+
+      dwResult = DoRequestArg3(RemovePackages, (void *)dwNumItems, pdwDeleteList, 
+                               &m_wndListCtrl, _T("Deleting package(s)..."));
+      if (dwResult != RCC_SUCCESS)
+         theApp.ErrorBox(dwResult, _T("Error removing package:\n%s"));
+      free(pdwDeleteList);
+   }
 }

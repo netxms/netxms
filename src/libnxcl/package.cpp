@@ -140,7 +140,7 @@ DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId)
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_PACKAGE_LIST);
+   msg.SetCode(CMD_REMOVE_PACKAGE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_PACKAGE_ID, dwPkgId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
