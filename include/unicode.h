@@ -46,7 +46,11 @@
 #include <wchar.h>
 #endif
 
+#if HAVE_WCHAR_T
+#define WCHAR     wchar_t
+#else
 #define WCHAR     unsigned short
+#endif
 
 #ifdef UNICODE
 

@@ -23,6 +23,14 @@
 #ifndef _nms_common_h_
 #define _nms_common_h_
 
+#ifndef _WIN32
+#ifdef _NETWARE
+// include config-netware.h here
+#else
+#include <config.h>
+#endif
+#endif
+
 #include <unicode.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -127,8 +135,6 @@ typedef int SOCKET;
 /*********** UNIX *********************/
 
 #define FS_PATH_SEPARATOR  _T("/")
-
-#include <config.h>
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
