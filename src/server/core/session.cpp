@@ -273,6 +273,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_UNLOCK_USER_DB:
             LockUserDB(pMsg->GetId(), FALSE);
             break;
+         case CMD_SET_PASSWORD:
+            SetPassword(pMsg);
+            break;
          default:
             break;
       }
@@ -1036,4 +1039,41 @@ void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, N
 
       SendMessage(&msg);
    }
+}
+
+
+// 
+// Set user's password
+//
+
+void ClientSession::SetPassword(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwUserId;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   dwUserId = pRequest->GetVariableLong(VID_USER_ID);
+
+   if (((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
+        !((dwUserId == 0) && (m_dwUserId != 0))) ||   // Only administrator can change password for UID 0
+       (dwUserId == m_dwUserId))     // User can change password for itself
+   {
+      DWORD dwResult;
+      BYTE szPassword[SHA_DIGEST_LENGTH];
+
+      pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
+      dwResult = SetUserPassword(dwUserId, szPassword);
+      msg.SetVariable(VID_RCC, dwResult);
+   }
+   else
+   {
+      // Current user has no rights to change password for specific user
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }

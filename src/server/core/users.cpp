@@ -638,3 +638,27 @@ DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo)
    MutexUnlock(m_hMutexGroupAccess);
    return dwResult;
 }
+
+
+//
+// Set user's password
+//
+
+DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword)
+{
+   DWORD i, dwResult = RCC_INVALID_USER_ID;
+
+   MutexLock(m_hMutexUserAccess, INFINITE);
+
+   // Find user
+   for(i = 0; i < g_dwNumUsers; i++)
+      if (g_pUserList[i].dwId == dwId)
+      {
+         memcpy(g_pUserList[i].szPassword, pszPassword, SHA_DIGEST_LENGTH);
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+
+   MutexUnlock(m_hMutexUserAccess);
+   return dwResult;
+}

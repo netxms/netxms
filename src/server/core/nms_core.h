@@ -281,6 +281,7 @@ private:
    void CreateUser(CSCPMessage *pMsg);
    void UpdateUser(CSCPMessage *pMsg);
    void DeleteUser(CSCPMessage *pMsg);
+   void SetPassword(CSCPMessage *pRequest);
    void LockUserDB(DWORD dwRqId, BOOL bLock);
    void SetConfigVariable(CSCPMessage *pMsg);
    void SendEventDB(DWORD dwRqId);

@@ -110,6 +110,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD DeleteUserFromDB(DWORD dwId);
 DWORD ModifyUser(NMS_USER *pUserInfo);
 DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo);
+DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword);
 void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pUserGroup);
 
 
