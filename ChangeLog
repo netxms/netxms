@@ -7,6 +7,8 @@
 - Server internal synchronization mechanisms improved to increase
   stability and performance
 - Fixed deadlock sometimes caused by retrieving DCI collected data
+- Added parameters System.Hostname, System.Uname and System.Uptime to
+  Solaris subagent
 
 
 *
