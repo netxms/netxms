@@ -117,6 +117,7 @@ typedef struct
 #define CMD_CONFIG_VARIABLE         0x000F
 #define CMD_CONFIG_VARLIST_END      0x0010
 #define CMD_DELETE_CONFIG_VARIABLE  0x0011
+#define CMD_NOTIFY                  0x0012
 
 
 //
@@ -145,6 +146,7 @@ typedef struct
 #define VID_NAME                    20
 #define VID_VALUE                   21
 #define VID_ERROR                   22
+#define VID_NOTIFICATION_CODE       23
 
 
 // Object information can contain variable number of parent objects' ids.

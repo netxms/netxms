@@ -95,6 +95,13 @@
 
 
 //
+// Notification codes
+//
+
+#define NX_NOTIFY_SHUTDOWN    1
+
+
+//
 // Callbacks data types
 //
 
