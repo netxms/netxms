@@ -27,7 +27,6 @@
 // Global data
 //
 
-DWORD g_dwFreeItemId = 1;
 DWORD g_dwMgmtNode = 0;
 INDEX *g_pIndexById = NULL;
 DWORD g_dwIdIndexSize = 0;
@@ -44,13 +43,6 @@ MUTEX g_hMutexIdIndex;
 MUTEX g_hMutexNodeIndex;
 MUTEX g_hMutexSubnetIndex;
 MUTEX g_hMutexInterfaceIndex;
-
-
-//
-// Static data
-//
-
-static DWORD m_dwFreeObjectId = 2;
 
 
 //
@@ -178,7 +170,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    if (bNewObject)   
    {
       // Assign unique ID to new object
-      pObject->SetId(m_dwFreeObjectId++);
+      pObject->SetId(CreateUniqueId(IDG_NETWORK_OBJECT));
 
       // Create table for storing data collection values
       if (pObject->Type() == OBJECT_NODE)
@@ -474,9 +466,6 @@ BOOL LoadObjects(void)
 
    // Recalculate status for "Entire Net" object
    g_pEntireNet->CalculateCompoundStatus();
-
-   // Set first available node ID
-   m_dwFreeObjectId = g_pIndexById[g_dwIdIndexSize - 1].dwKey + 1;
 
    return TRUE;
 }

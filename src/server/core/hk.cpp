@@ -65,6 +65,28 @@ static void CleanDeletedObjects(void)
 
 
 //
+// Delete empty subnets
+//
+
+static void DeleteEmptySubnets(void)
+{
+   DWORD i;
+
+   ObjectsGlobalLock();
+
+   // Walk through subnets and delete empty ones
+   for(i = 0; i < g_dwSubnetAddrIndexSize; i++)
+      if (g_pSubnetIndexByAddr[i].pObject->IsEmpty())
+      {
+         PostEvent(EVENT_SUBNET_DELETED, g_pSubnetIndexByAddr[i].pObject->Id(), NULL);
+         g_pSubnetIndexByAddr[i].pObject->Delete();
+      }
+
+   ObjectsGlobalUnlock();
+}
+
+
+//
 // Housekeeper thread
 //
 
@@ -91,6 +113,10 @@ void HouseKeeper(void *pArg)
          sprintf(szQuery, "DELETE FROM EventLog WHERE timestamp<%ld", currTime - dwEventLogRetentionTime);
          DBQuery(g_hCoreDB, szQuery);
       }
+
+      // Delete empty subnets if needed
+      if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
+         DeleteEmptySubnets();
 
       // Remove deleted objects which are no longer referenced
       CleanDeletedObjects();

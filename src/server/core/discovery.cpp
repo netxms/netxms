@@ -183,6 +183,11 @@ void CheckForMgmtNode(void)
             ObjectsGlobalUnlock();
             delete pNode;     // Node poll failed, delete it
          }
+         else
+         {
+            /* DEBUG */
+            pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DTYPE_INTEGER, 60, 30, pNode));
+         }
       }
       DestroyInterfaceList(pIfList);
    }

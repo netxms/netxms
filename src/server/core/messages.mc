@@ -284,4 +284,16 @@ Language=English
 Unable to create process "%1": %2
 .
 
+MessageId=
+SymbolicName=MSG_NO_UNIQUE_ID
+Language=English
+Unable to assign unique ID to object in group "%1". You should perform database optimization to fix that.
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_DTYPE
+Language=English
+Internal error: invalid DTYPE %1 in %2
+.
+
 ;#endif

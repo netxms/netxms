@@ -68,7 +68,7 @@ void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize)
 // binary representation from oidBinary and iOidLen
 //
 
-BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
+BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const oid *oidBinary,
              size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult)
 {
    struct snmp_session session, *sptr;
@@ -184,8 +184,8 @@ BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary,
 // Enumerate multiple values by walking throgh MIB, starting at given root
 //
 
-BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
-                   void (* pHandler)(DWORD, char *, variable_list *, void *), 
+BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
+                   void (* pHandler)(DWORD, const char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose)
 {
    struct snmp_session session, *sptr;
@@ -284,7 +284,7 @@ BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
 // Handler for enumerating indexes
 //
 
-static void HandlerIndex(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+static void HandlerIndex(DWORD dwAddr, const char *szCommunity, variable_list *pVar,void *pArg)
 {
    if (((INTERFACE_LIST *)pArg)->iEnumPos < ((INTERFACE_LIST *)pArg)->iNumEntries)
       ((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iEnumPos].dwIndex = *pVar->val.integer;
@@ -296,7 +296,7 @@ static void HandlerIndex(DWORD dwAddr, char *szCommunity, variable_list *pVar,vo
 // Handler for enumerating IP addresses
 //
 
-static void HandlerIpAddr(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+static void HandlerIpAddr(DWORD dwAddr, const char *szCommunity, variable_list *pVar,void *pArg)
 {
    DWORD dwIndex, dwNetMask;
    oid oidName[MAX_OID_LEN];
@@ -344,7 +344,7 @@ static void HandlerIpAddr(DWORD dwAddr, char *szCommunity, variable_list *pVar,v
 // Get interface list via SNMP
 //
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity)
 {
    long i, iNumIf;
    char szOid[128];
@@ -391,7 +391,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity)
 // Handler for ARP enumeration
 //
 
-static void HandlerArp(DWORD dwAddr, char *szCommunity, variable_list *pVar,void *pArg)
+static void HandlerArp(DWORD dwAddr, const char *szCommunity, variable_list *pVar,void *pArg)
 {
    oid oidName[MAX_OID_LEN];
    BYTE bMac[64];
@@ -419,7 +419,7 @@ static void HandlerArp(DWORD dwAddr, char *szCommunity, variable_list *pVar,void
 // Get ARP cache via SNMP
 //
 
-ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, char *szCommunity)
+ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity)
 {
    ARP_CACHE *pArpCache;
 

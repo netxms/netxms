@@ -50,22 +50,22 @@ static void DataCollector(void *pArg)
       pNode = (Node *)FindObjectById(pEnvelope->dwNodeId);
       if (pNode != NULL)
       {
-         switch(pEnvelope->iDataSource)
+         switch(pEnvelope->pItem->DataSource())
          {
             case DS_INTERNAL:    // Server internal parameters (like status)
-               dwError = pNode->GetInternalItem(pEnvelope->szItemName, MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetInternalItem(pEnvelope->pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_SNMP_AGENT:
-               dwError = pNode->GetItemFromSNMP(pEnvelope->szItemName, MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromSNMP(pEnvelope->pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_NATIVE_AGENT:
-               dwError = pNode->GetItemFromAgent(pEnvelope->szItemName, MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromAgent(pEnvelope->pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
          }
 
          // Update item's last poll time
          currTime = time(NULL);
-         pNode->SetItemLastPollTime(pEnvelope->dwItemId, currTime);
+         pEnvelope->pItem->SetLastPollTime(currTime);
 
          // Store received value into database or handle error
          switch(dwError)
@@ -73,14 +73,15 @@ static void DataCollector(void *pArg)
             case DCE_SUCCESS:
                sprintf(szQuery, "INSERT INTO idata_%d (item_id,timestamp,value)"
                                 " VALUES (%d,%d,'%s')", pEnvelope->dwNodeId,
-                       pEnvelope->dwItemId, currTime, pBuffer);
+                       pEnvelope->pItem->Id(), currTime, pBuffer);
                QueueSQLRequest(szQuery);
+               pEnvelope->pItem->CheckThresholds(pBuffer);
                break;
             case DCE_COMM_ERROR:
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status
-               pNode->SetItemStatus(pEnvelope->dwItemId, ITEM_STATUS_NOT_SUPPORTED);
+               pEnvelope->pItem->SetStatus(ITEM_STATUS_NOT_SUPPORTED);
                break;
          }
       }

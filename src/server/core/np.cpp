@@ -53,14 +53,7 @@ static void PollNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags)
    }
 
    // DEBUG
-   DC_ITEM item;
-   item.dwId = g_dwFreeItemId++;
-   item.iDataType = DT_INTEGER;
-   item.iPollingInterval = 60;
-   item.iRetentionTime = 30;
-   item.iSource = DS_INTERNAL;
-   strcpy(item.szName, "Status");
-   pNode->AddItem(&item);
+   pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", DS_INTERNAL, DTYPE_INTEGER, 60, 30, pNode));
 }
 
 

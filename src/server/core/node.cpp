@@ -45,8 +45,9 @@ Node::Node()
    m_iSnmpAgentFails = 0;
    m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
+   m_hAgentAccessMutex = MutexCreate();
    m_dwNumItems = 0;
-   m_pItems = NULL;
+   m_ppItems = NULL;
    m_pAgentConnection = NULL;
 }
 
@@ -75,8 +76,9 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_iSnmpAgentFails = 0;
    m_iNativeAgentFails = 0;
    m_hPollerMutex = MutexCreate();
+   m_hAgentAccessMutex = MutexCreate();
    m_dwNumItems = 0;
-   m_pItems = NULL;
+   m_ppItems = NULL;
    m_pAgentConnection = NULL;
 }
 
@@ -88,10 +90,26 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
 Node::~Node()
 {
    MutexDestroy(m_hPollerMutex);
-   if (m_pItems != NULL)
-      free(m_pItems);
+   MutexDestroy(m_hAgentAccessMutex);
+   DestroyItems();
    if (m_pAgentConnection != NULL)
       delete m_pAgentConnection;
+}
+
+
+//
+// Destroy all related data collection items
+//
+
+void Node::DestroyItems(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumItems; i++)
+      delete m_ppItems[i];
+   safe_free(m_ppItems);
+   m_dwNumItems = 0;
+   m_ppItems = NULL;
 }
 
 
@@ -109,7 +127,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    sprintf(szQuery, "SELECT id,name,status,primary_ip,is_snmp,is_agent,is_bridge,"
                     "is_router,snmp_version,discovery_flags,auth_method,secret,"
-                    "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt FROM nodes WHERE id=%d", dwId);
+                    "agent_port,status_poll_type,community,snmp_oid,is_local_mgmt "
+                    "FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -187,7 +206,43 @@ BOOL Node::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
    LoadItemsFromDB();
    LoadACLFromDB();
+
+   // Walk through all items in the node and load appropriate thresholds
+   for(i = 0; i < (int)m_dwNumItems; i++)
+      if (!m_ppItems[i]->LoadThresholdsFromDB())
+         bResult = FALSE;
+
    return bResult;
+}
+
+
+//
+// Load data collection items from database
+//
+
+void Node::LoadItemsFromDB(void)
+{
+   char szQuery[256];
+   DB_RESULT hResult;
+
+   sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
+                    "status FROM items WHERE node_id=%d", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+
+   if (hResult != 0)
+   {
+      int i, iRows;
+
+      iRows = DBGetNumRows(hResult);
+      if (iRows > 0)
+      {
+         m_dwNumItems = iRows;
+         m_ppItems = (DCItem **)malloc(sizeof(DCItem *) * iRows);
+         for(i = 0; i < iRows; i++)
+            m_ppItems[i] = new DCItem(hResult, i, this);
+      }
+      DBFreeResult(hResult);
+   }
 }
 
 
@@ -200,6 +255,7 @@ BOOL Node::SaveToDB(void)
    char szQuery[4096];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
+   BOOL bResult;
 
    // Lock object's access
    Lock();
@@ -242,13 +298,22 @@ BOOL Node::SaveToDB(void)
               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
               m_szObjectId, m_dwFlags & NF_IS_LOCAL_MGMT ? 1 : 0, m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   bResult = DBQuery(g_hCoreDB, szQuery);
+
+   // Save data collection items
+   if (bResult)
+   {
+      DWORD i;
+
+      for(i = 0; i < m_dwNumItems; i++)
+         m_ppItems[i]->SaveToDB();
+   }
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
    Unlock();
 
-   return TRUE;
+   return bResult;
 }
 
 
@@ -349,8 +414,10 @@ ARP_CACHE *Node::GetArpCache(void)
    }
    else if (m_dwFlags & NF_IS_NATIVE_AGENT)
    {
+      AgentLock();
       if (ConnectToAgent())
          pArpCache = m_pAgentConnection->GetArpCache();
+      AgentUnlock();
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
@@ -474,9 +541,16 @@ void Node::DeleteInterface(Interface *pInterface)
       {
          // Last interface in subnet, should unlink node
          Subnet *pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-         if (pSubnet != NULL)
-            pSubnet->DeleteChild(this);
          DeleteParent(pSubnet);
+         if (pSubnet != NULL)
+         {
+            pSubnet->DeleteChild(this);
+            if ((pSubnet->IsEmpty()) && (g_dwFlags & AF_DELETE_EMPTY_SUBNETS))
+            {
+               PostEvent(EVENT_SUBNET_DELETED, pSubnet->Id(), NULL);
+               pSubnet->Delete();
+            }
+         }
       }
    }
    pInterface->Delete();
@@ -626,51 +700,6 @@ void Node::ConfigurationPoll(void)
 
 
 //
-// Load data collection items from database
-//
-
-void Node::LoadItemsFromDB(void)
-{
-   char szQuery[256];
-   DB_RESULT hResult;
-
-   if (m_pItems != NULL)
-   {
-      free(m_pItems);
-      m_pItems = NULL;
-   }
-   m_dwNumItems = NULL;
-
-   sprintf(szQuery, "SELECT id,name,source,datatype,polling_interval,retention_time FROM items WHERE node_id=%d", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-
-   if (hResult != 0)
-   {
-      int i, iRows;
-
-      iRows = DBGetNumRows(hResult);
-      if (iRows > 0)
-      {
-         m_dwNumItems = iRows;
-         m_pItems = (DC_ITEM *)malloc(sizeof(DC_ITEM) * iRows);
-         for(i = 0; i < iRows; i++)
-         {
-            m_pItems[i].dwId = DBGetFieldULong(hResult, i, 0);
-            strcpy(m_pItems[i].szName, DBGetField(hResult, i, 1));
-            m_pItems[i].iSource = (BYTE)DBGetFieldLong(hResult, i, 2);
-            m_pItems[i].iDataType = (BYTE)DBGetFieldLong(hResult, i, 3);
-            m_pItems[i].iPollingInterval = DBGetFieldLong(hResult, i, 4);
-            m_pItems[i].iRetentionTime = DBGetFieldLong(hResult, i, 5);
-            m_pItems[i].tLastPoll = 0;
-            m_pItems[i].iBusy = 0;
-         }
-      }
-      DBFreeResult(hResult);
-   }
-}
-
-
-//
 // Connect to native agent
 //
 
@@ -694,7 +723,7 @@ BOOL Node::ConnectToAgent(void)
 // Get item's value via SNMP
 //
 
-DWORD Node::GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
    return SnmpGet(m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
                   szBuffer, dwBufSize, FALSE, TRUE) ? DCE_SUCCESS : DCE_COMM_ERROR;
@@ -705,15 +734,17 @@ DWORD Node::GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer)
 // Get item's value via native agent
 //
 
-DWORD Node::GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
-   DWORD dwError;
+   DWORD dwError, dwResult = DCE_COMM_ERROR;
    DWORD dwTries = 5;
+
+   AgentLock();
 
    // Establish connection if needed
    if (m_pAgentConnection == NULL)
       if (!ConnectToAgent())
-         return DCE_COMM_ERROR;
+         goto end_loop;
 
    // Get parameter from agent
    while(dwTries-- > 0)
@@ -722,19 +753,24 @@ DWORD Node::GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer)
       switch(dwError)
       {
          case ERR_SUCCESS:
-            return DCE_SUCCESS;
+            dwResult = DCE_SUCCESS;
+            goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
-            return DCE_NOT_SUPPORTED;
+            dwResult = DCE_NOT_SUPPORTED;
+            goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
             if (!ConnectToAgent())
-               return DCE_COMM_ERROR;
+               goto end_loop;
             break;
          case ERR_REQUEST_TIMEOUT:
             break;
       }
    }
-   return DCE_COMM_ERROR;
+
+end_loop:
+   AgentUnlock();
+   return dwResult;
 }
 
 
@@ -742,7 +778,7 @@ DWORD Node::GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer)
 // Get value for server's internal parameter
 //
 
-DWORD Node::GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
    DWORD dwError = DCE_SUCCESS;
 
@@ -752,7 +788,7 @@ DWORD Node::GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer)
    }
    else if (!memicmp(szParam, "debug.", 6))
    {
-      strcpy(szBuffer, "0");
+      sprintf(szBuffer, "%ld", time(NULL) % 7);
    }
    else
    {
@@ -777,69 +813,18 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    Lock();
    for(i = 0; i < m_dwNumItems; i++)
    {
-      if ((m_pItems[i].iStatus == ITEM_STATUS_ACTIVE) && 
-          (m_pItems[i].tLastPoll + m_pItems[i].iPollingInterval < currTime) &&
-          (m_pItems[i].iBusy == 0))
+      if (m_ppItems[i]->ReadyForPolling(currTime))
       {
          DCI_ENVELOPE *pEnv;
 
          // Create envelope for item
          pEnv = (DCI_ENVELOPE *)malloc(sizeof(DCI_ENVELOPE));
-         pEnv->dwItemId = m_pItems[i].dwId;
          pEnv->dwNodeId = m_dwId;
-         pEnv->iDataSource = m_pItems[i].iSource;
-         strcpy(pEnv->szItemName, m_pItems[i].szName);
+         pEnv->pItem = m_ppItems[i];
+         m_ppItems[i]->SetBusyFlag(TRUE);
 
          // Put request into queue
          pPollerQueue->Put(pEnv);
-         m_pItems[i].iBusy = 1;
-      }
-   }
-   Unlock();
-}
-
-
-//
-// Set item's status
-//
-
-void Node::SetItemStatus(DWORD dwItemId, int iStatus)
-{
-   DWORD i;
-
-   Lock();
-   for(i = 0; i < m_dwNumItems; i++)
-   {
-      if (m_pItems[i].dwId == dwItemId)
-      {
-         if (m_pItems[i].iStatus != iStatus)
-         {
-            m_pItems[i].iStatus = iStatus;
-            m_bIsModified = TRUE;
-         }
-         break;
-      }
-   }
-   Unlock();
-}
-
-
-//
-// Set item's last poll time
-//
-
-void Node::SetItemLastPollTime(DWORD dwItemId, time_t tLastPoll)
-{
-   DWORD i;
-
-   Lock();
-   for(i = 0; i < m_dwNumItems; i++)
-   {
-      if (m_pItems[i].dwId == dwItemId)
-      {
-         m_pItems[i].tLastPoll = tLastPoll;
-         m_pItems[i].iBusy = 0;
-         break;
       }
    }
    Unlock();
@@ -850,7 +835,7 @@ void Node::SetItemLastPollTime(DWORD dwItemId, time_t tLastPoll)
 // Add item to node
 //
 
-BOOL Node::AddItem(DC_ITEM *pItem)
+BOOL Node::AddItem(DCItem *pItem)
 {
    DWORD i;
    BOOL bResult = FALSE;
@@ -858,18 +843,18 @@ BOOL Node::AddItem(DC_ITEM *pItem)
    Lock();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if ((m_pItems[i].dwId == pItem->dwId) || 
-          (!stricmp(m_pItems[i].szName, pItem->szName)))
+      if ((m_ppItems[i]->Id() == pItem->Id()) || 
+          (!stricmp(m_ppItems[i]->Name(), pItem->Name())))
          break;   // Item with specified name or id already exist
    
    if (i == m_dwNumItems)     // Add new item
    {
       m_dwNumItems++;
-      m_pItems = (DC_ITEM *)realloc(m_pItems, sizeof(DC_ITEM) * m_dwNumItems);
-      memcpy(&m_pItems[i], pItem, sizeof(DC_ITEM));
-      m_pItems[i].tLastPoll = 0;    // Cause item to be polled immediatelly
-      m_pItems[i].iStatus = ITEM_STATUS_ACTIVE;
-      m_pItems[i].iBusy = 0;
+      m_ppItems = (DCItem **)realloc(m_ppItems, sizeof(DCItem *) * m_dwNumItems);
+      m_ppItems[i] = pItem;
+      m_ppItems[i]->SetLastPollTime(0);    // Cause item to be polled immediatelly
+      m_ppItems[i]->SetStatus(ITEM_STATUS_ACTIVE);
+      m_ppItems[i]->SetBusyFlag(FALSE);
       m_bIsModified = TRUE;
       bResult = TRUE;
    }

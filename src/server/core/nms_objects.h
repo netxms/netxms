@@ -48,7 +48,6 @@ extern DWORD g_dwConfigurationPollingInterval;
 // Constants
 //
 
-#define MAX_ITEM_NAME         256
 #define MAX_INTERFACES        4096
 #define INVALID_INDEX         0xFFFFFFFF
 
@@ -101,52 +100,6 @@ struct ARP_CACHE
    DWORD dwNumEntries;
    ARP_ENTRY *pEntries;
 };
-
-
-//
-// Data collection item structure
-//
-
-struct DC_ITEM
-{
-   DWORD dwId;
-   char szName[MAX_ITEM_NAME];
-   time_t tLastPoll;       // Last poll time
-   int iPollingInterval;   // Polling interval in seconds
-   int iRetentionTime;     // Retention time in seconds
-   BYTE iSource;           // SNMP or native agent?
-   BYTE iDataType;
-   BYTE iStatus;           // Item status: active, disabled or not supported
-   BYTE iBusy;             // 1 when item is queued for polling, 0 if not
-};
-
-
-//
-// Data types
-//
-
-#define DTYPE_INTEGER   0
-#define DTYPE_INT64     1
-#define DTYPE_STRING    2
-#define DTYPE_FLOAT     3
-
-
-//
-// Data sources
-//
-
-#define DS_INTERNAL        0
-#define DS_NATIVE_AGENT    1
-#define DS_SNMP_AGENT      2
-
-
-//
-// Item status
-//
-
-#define ITEM_STATUS_ACTIVE          0
-#define ITEM_STATUS_DISABLED        1
-#define ITEM_STATUS_NOT_SUPPORTED   2
 
 
 //
@@ -235,6 +188,7 @@ public:
    BOOL IsModified(void) { return m_bIsModified; }
    BOOL IsDeleted(void) { return m_bIsDeleted; }
    BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
+   BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
 
    void AddChild(NetObj *pObject);     // Add reference to child object
    void AddParent(NetObj *pObject);    // Add reference to parent object
@@ -314,12 +268,19 @@ protected:
    int m_iSnmpAgentFails;
    int m_iNativeAgentFails;
    MUTEX m_hPollerMutex;
+   MUTEX m_hAgentAccessMutex;
    DWORD m_dwNumItems;     // Number of data collection items
-   DC_ITEM *m_pItems;      // Data collection items
+   DCItem **m_ppItems;     // Data collection items
    AgentConnection *m_pAgentConnection;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
+
+   void AgentLock(void) { MutexLock(m_hAgentAccessMutex, INFINITE); }
+   void AgentUnlock(void) { MutexUnlock(m_hAgentAccessMutex); }
+
+   void LoadItemsFromDB(void);
+   void DestroyItems(void);
 
 public:
    Node();
@@ -362,15 +323,12 @@ public:
 
    virtual void CalculateCompoundStatus(void);
 
-   void LoadItemsFromDB(void);
-   BOOL AddItem(DC_ITEM *pItem);
-   void SetItemStatus(DWORD dwItemId, int iStatus);
-   void SetItemLastPollTime(DWORD dwItemId, time_t tPollTime);
+   BOOL AddItem(DCItem *pItem);
 
    BOOL ConnectToAgent(void);
-   DWORD GetItemFromSNMP(char *szParam, DWORD dwBufSize, char *szBuffer);
-   DWORD GetItemFromAgent(char *szParam, DWORD dwBufSize, char *szBuffer);
-   DWORD GetInternalItem(char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
    void QueueItemsForPolling(Queue *pPollerQueue);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -456,7 +414,6 @@ BOOL LoadObjects(void);
 // Global variables
 //
 
-extern DWORD g_dwFreeItemId;
 extern DWORD g_dwMgmtNode;
 extern INDEX *g_pIndexById;
 extern DWORD g_dwIdIndexSize;

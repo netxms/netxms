@@ -92,6 +92,8 @@ src/server/core/core.rc -text
 src/server/core/datacoll.cpp -text
 src/server/core/db.cpp -text
 src/server/core/dbwrite.cpp -text
+src/server/core/dcitem.cpp -text
+src/server/core/dcithreshold.cpp -text
 src/server/core/debug.cpp -text
 src/server/core/discovery.cpp -text
 src/server/core/dload.cpp -text
@@ -100,6 +102,7 @@ src/server/core/epp.cpp -text
 src/server/core/events.cpp -text
 src/server/core/evproc.cpp -text
 src/server/core/hk.cpp -text
+src/server/core/id.cpp -text
 src/server/core/interface.cpp -text
 src/server/core/locks.cpp -text
 src/server/core/log.cpp -text

@@ -55,8 +55,8 @@
 #include <nms_cscp.h>
 #include <nms_util.h>
 #include "nms_users.h"
-#include "nms_objects.h"
 #include "nms_dcoll.h"
+#include "nms_objects.h"
 #include "messages.h"
 #include "nms_locks.h"
 
@@ -90,6 +90,21 @@
 
 
 //
+// Unique identifier group codes
+//
+
+#define IDG_NETWORK_OBJECT    0
+#define IDG_NETOBJ_GROUP      1
+#define IDG_EVENT             2
+#define IDG_ITEM              3
+#define IDG_DCT               4
+#define IDG_DCT_ITEM          5
+#define IDG_ACTION            6
+#define IDG_EVENT_GROUP       7
+#define IDG_THRESHOLD         8
+
+
+//
 // Application flags
 //
 
@@ -98,6 +113,7 @@
 #define AF_ENABLE_ACCESS_CONTROL          0x00000004
 #define AF_ENABLE_EVENTS_ACCESS_CONTROL   0x00000008
 #define AF_LOG_SQL_ERRORS                 0x00000010
+#define AF_DELETE_EMPTY_SUBNETS           0x00000020
 #define AF_DEBUG_EVENTS                   0x00000100
 #define AF_DEBUG_CSCP                     0x00000200
 #define AF_DEBUG_DISCOVERY                0x00000400
@@ -190,7 +206,7 @@ public:
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    DWORD Nop(void) { return ExecuteCommand("NOP"); }
-   DWORD GetParameter(char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetParameter(const char *szParam, DWORD dwBufSize, char *szBuffer);
 };
 
 
@@ -327,19 +343,19 @@ void StopDBWriter(void);
 BOOL IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout);
 
 void SnmpInit(void);
-BOOL SnmpGet(DWORD dwAddr, char *szCommunity, char *szOidStr, oid *oidBinary, 
+BOOL SnmpGet(DWORD dwAddr, const char *szCommunity, const char *szOidStr, const oid *oidBinary, 
              size_t iOidLen, void *pValue, DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
-BOOL SnmpEnumerate(DWORD dwAddr, char *szCommunity, char *szRootOid,
-                   void (* pHandler)(DWORD, char *, variable_list *, void *), 
+BOOL SnmpEnumerate(DWORD dwAddr, const char *szCommunity, const char *szRootOid,
+                   void (* pHandler)(DWORD, const char *, variable_list *, void *), 
                    void *pUserArg, BOOL bVerbose);
 
 INTERFACE_LIST *GetLocalInterfaceList(void);
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, char *szCommunity);
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwAddr, const char *szCommunity);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 void DestroyInterfaceList(INTERFACE_LIST *pIfList);
 
 ARP_CACHE *GetLocalArpCache(void);
-ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, char *szCommunity);
+ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
 void DestroyArpCache(ARP_CACHE *pArpCache);
 
 void WatchdogInit(void);
@@ -358,6 +374,9 @@ void GetSysInfoStr(char *pszBuffer);
 DWORD GetLocalIpAddr(void);
 
 BOOL ExecCommand(char *pszCommand);
+
+BOOL InitIdTable(void);
+DWORD CreateUniqueId(int iGroup);
 
 #ifdef _WIN32
 

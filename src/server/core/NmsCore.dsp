@@ -127,6 +127,14 @@ SOURCE=.\dbwrite.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\dcitem.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\dcithreshold.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\debug.cpp
 # End Source File
 # Begin Source File
@@ -156,6 +164,10 @@ SOURCE=.\evproc.cpp
 # Begin Source File
 
 SOURCE=.\hk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\id.cpp
 # End Source File
 # Begin Source File
 

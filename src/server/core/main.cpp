@@ -98,6 +98,8 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_ACCESS_CONTROL;
    if (ConfigReadInt("EnableEventsAccessControl", 1))
       g_dwFlags |= AF_ENABLE_EVENTS_ACCESS_CONTROL;
+   if (ConfigReadInt("DeleteEmptySubnets", 1))
+      g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
 }
 
 
@@ -157,6 +159,10 @@ BOOL Initialize(void)
 #else
    pthread_cond_init(&m_hCondShutdown, NULL);
 #endif
+
+   // Setup unique identifiers table
+   if (!InitIdTable())
+      return FALSE;
 
    // Load users from database
    if (!LoadUsers())
@@ -364,29 +370,6 @@ void Main(void)
                         i + 1000, htonl(0x0A800001 + i), DF_DEFAULT);
                      DBQuery(g_hCoreDB, szQuery);
                   }
-               }
-               break;
-            case 'c':   // Create test items
-            case 'C':
-               {
-                  DWORD i, j;
-                  DC_ITEM item;
-
-                  item.dwId = 20000;
-                  item.iDataType = DT_INTEGER;
-                  item.iPollingInterval = 60;
-                  item.iRetentionTime = 30;
-                  item.iSource = DS_INTERNAL;
-                  for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-                  {
-                     for(j = 1; j <= 100; j++)
-                     {
-                        sprintf(item.szName, "Debug.%d", j);
-                        ((Node *)g_pNodeIndexByAddr[i].pObject)->AddItem(&item);
-                        item.dwId++;
-                     }
-                  }
-                  printf("*** Done ***\n");
                }
                break;
             case 'u':      // Dump users

@@ -81,6 +81,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    struct sockaddr_in sa;
    char szBuffer[256], szSignature[32];
    int iError;
+   BOOL bSuccess = FALSE;
 
    // Initialize line receive buffer
    m_szNetBuffer[0] = 0;
@@ -90,7 +91,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    if (m_hSocket == -1)
    {
       WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "AgentConnection::Connect()");
-      return FALSE;
+      goto connect_cleanup;
    }
 
    // Fill in address structure
@@ -104,9 +105,7 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    {
       if (bVerbose)
          WriteLog(MSG_AGENT_CONNECT_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
+      goto connect_cleanup;
    }
 
    // Retrieve agent hello
@@ -115,20 +114,14 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    {
       if (bVerbose)
          WriteLog(MSG_AGENT_CONNECT_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
+      goto connect_cleanup;
    }
 
    sprintf(szSignature, "+%d NMS_Agent_09180431", AGENT_PROTOCOL_VERSION);
    if (memcmp(szBuffer, szSignature, strlen(szSignature)))
    {
       WriteLog(MSG_AGENT_BAD_HELLO, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
+      goto connect_cleanup;
    }
 
    // Authenticate itself to agent
@@ -140,13 +133,22 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    if (ExecuteCommand("NOP") != ERR_SUCCESS)
    {
       WriteLog(MSG_AGENT_COMM_FAILED, EVENTLOG_ERROR_TYPE, "s", IpToStr(m_dwAddr, szBuffer));
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
-      return FALSE;
+      goto connect_cleanup;
    }
 
-   return TRUE;
+   bSuccess = TRUE;
+
+connect_cleanup:
+   if (!bSuccess)
+   {
+      if (m_hSocket != -1)
+      {
+         shutdown(m_hSocket, 2);
+         closesocket(m_hSocket);
+         m_hSocket = -1;
+      }
+   }
+   return bSuccess;
 }
 
 
@@ -371,68 +373,68 @@ void AgentConnection::AddDataLine(char *szLine)
 
 INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 {
-   INTERFACE_LIST *pIfList;
+   INTERFACE_LIST *pIfList = NULL;
    DWORD i;
    char *pChar, *pBuf;
 
-   if (ExecuteCommand("IFLIST", TRUE, TRUE) != ERR_SUCCESS)
-      return NULL;
-
-   pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-   pIfList->iNumEntries = m_dwNumDataLines;
-   pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
-   memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
-   for(i = 0; i < m_dwNumDataLines; i++)
+   if (ExecuteCommand("IFLIST", TRUE, TRUE) == ERR_SUCCESS)
    {
-      pBuf = m_ppDataLines[i];
-
-      // Index
-      pChar = strchr(pBuf, ' ');
-      if (pChar != NULL)
+      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+      pIfList->iNumEntries = m_dwNumDataLines;
+      pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+      for(i = 0; i < m_dwNumDataLines; i++)
       {
-         *pChar = 0;
-         pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
-         pBuf = pChar + 1;
-      }
+         pBuf = m_ppDataLines[i];
 
-      // Address and mask
-      pChar = strchr(pBuf, ' ');
-      if (pChar != NULL)
-      {
-         char *pSlash;
-
-         *pChar = 0;
-         pSlash = strchr(pBuf, '/');
-         if (pSlash != NULL)
+         // Index
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
          {
-            *pSlash = 0;
-            pSlash++;
+            *pChar = 0;
+            pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+            pBuf = pChar + 1;
          }
-         else     // Just a paranoia protection, should'n happen if agent working correctly
+
+         // Address and mask
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
          {
-            pSlash = "24";
+            char *pSlash;
+
+            *pChar = 0;
+            pSlash = strchr(pBuf, '/');
+            if (pSlash != NULL)
+            {
+               *pSlash = 0;
+               pSlash++;
+            }
+            else     // Just a paranoia protection, should'n happen if agent working correctly
+            {
+               pSlash = "24";
+            }
+            pIfList->pInterfaces[i].dwIpAddr = inet_addr(pBuf);
+            pIfList->pInterfaces[i].dwIpNetMask = htonl(~(0xFFFFFFFF >> strtoul(pSlash, NULL, 10)));
+            pBuf = pChar + 1;
          }
-         pIfList->pInterfaces[i].dwIpAddr = inet_addr(pBuf);
-         pIfList->pInterfaces[i].dwIpNetMask = htonl(~(0xFFFFFFFF >> strtoul(pSlash, NULL, 10)));
-         pBuf = pChar + 1;
+
+         // Interface type
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
+         {
+            *pChar = 0;
+            pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
+            pBuf = pChar + 1;
+         }
+
+         // Name
+         strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
       }
 
-      // Interface type
-      pChar = strchr(pBuf, ' ');
-      if (pChar != NULL)
-      {
-         *pChar = 0;
-         pIfList->pInterfaces[i].dwIndex = strtoul(pBuf, NULL, 10);
-         pBuf = pChar + 1;
-      }
+      DestroyResultData();
 
-      // Name
-      strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+      CleanInterfaceList(pIfList);
    }
-
-   DestroyResultData();
-
-   CleanInterfaceList(pIfList);
 
    return pIfList;
 }
@@ -442,21 +444,21 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 // Get parameter value
 //
 
-DWORD AgentConnection::GetParameter(char *szParam, DWORD dwBufSize, char *szBuffer)
+DWORD AgentConnection::GetParameter(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
    char szRequest[256];
    DWORD dwError;
 
    sprintf(szRequest, "GET %s", szParam);
    dwError = ExecuteCommand(szRequest, TRUE);
-   if (dwError != ERR_SUCCESS)
-      return dwError;
+   if (dwError == ERR_SUCCESS)
+   {
+      szBuffer[dwBufSize - 1] = 0;
+      strncpy(szBuffer, m_ppDataLines[0], dwBufSize - 1);
+      DestroyResultData();
+   }
 
-   szBuffer[dwBufSize - 1] = 0;
-   strncpy(szBuffer, m_ppDataLines[0], dwBufSize - 1);
-   DestroyResultData();
-
-   return ERR_SUCCESS;
+   return dwError;
 }
 
 
@@ -466,52 +468,52 @@ DWORD AgentConnection::GetParameter(char *szParam, DWORD dwBufSize, char *szBuff
 
 ARP_CACHE *AgentConnection::GetArpCache(void)
 {
-   ARP_CACHE *pArpCache;
+   ARP_CACHE *pArpCache = NULL;
    char szByte[4], *pBuf, *pChar;
    DWORD i, j;
 
-   if (ExecuteCommand("ARP", TRUE, TRUE) != ERR_SUCCESS)
-      return NULL;
-
-   // Create empty structure
-   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-   pArpCache->dwNumEntries = m_dwNumDataLines;
-   pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
-   memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
-
-   szByte[2] = 0;
-
-   // Parse data lines
-   // Each line has form of XXXXXXXXXXXX a.b.c.d
-   // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
-   // and a.b.c.d is an IP address in decimal dotted notation
-   for(i = 0; i < m_dwNumDataLines; i++)
+   if (ExecuteCommand("ARP", TRUE, TRUE) == ERR_SUCCESS)
    {
-      pBuf = m_ppDataLines[i];
-      if (strlen(pBuf) < 20)     // Invalid line
-         continue;
+      // Create empty structure
+      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+      pArpCache->dwNumEntries = m_dwNumDataLines;
+      pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
+      memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
 
-      // MAC address
-      for(j = 0; j < 6; j++)
+      szByte[2] = 0;
+
+      // Parse data lines
+      // Each line has form of XXXXXXXXXXXX a.b.c.d
+      // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
+      // and a.b.c.d is an IP address in decimal dotted notation
+      for(i = 0; i < m_dwNumDataLines; i++)
       {
-         memcpy(szByte, pBuf, 2);
-         pArpCache->pEntries[i].bMacAddr[j] = (BYTE)strtol(szByte, NULL, 16);
-         pBuf+=2;
+         pBuf = m_ppDataLines[i];
+         if (strlen(pBuf) < 20)     // Invalid line
+            continue;
+
+         // MAC address
+         for(j = 0; j < 6; j++)
+         {
+            memcpy(szByte, pBuf, 2);
+            pArpCache->pEntries[i].bMacAddr[j] = (BYTE)strtol(szByte, NULL, 16);
+            pBuf+=2;
+         }
+
+         // IP address
+         while(*pBuf == ' ')
+            pBuf++;
+         pChar = strchr(pBuf, ' ');
+         if (pChar != NULL)
+            *pChar = 0;
+         pArpCache->pEntries[i].dwIpAddr = inet_addr(pBuf);
+
+         // Interface index
+         if (pChar != NULL)
+            pArpCache->pEntries[i].dwIndex = strtoul(pChar + 1, NULL, 10);
       }
 
-      // IP address
-      while(*pBuf == ' ')
-         pBuf++;
-      pChar = strchr(pBuf, ' ');
-      if (pChar != NULL)
-         *pChar = 0;
-      pArpCache->pEntries[i].dwIpAddr = inet_addr(pBuf);
-
-      // Interface index
-      if (pChar != NULL)
-         pArpCache->pEntries[i].dwIndex = strtoul(pChar + 1, NULL, 10);
+      DestroyResultData();
    }
-
-   DestroyResultData();
    return pArpCache;
 }
