@@ -31,7 +31,7 @@
 static DWORD m_dwNumUsers;
 static NXC_USER *m_pUserList = NULL;
 static BOOL m_bUserDBLoaded = FALSE;
-static CONDITION m_hCondLoadFinished;
+static CONDITION m_hCondLoadFinished = NULL;
 
 
 //
@@ -43,7 +43,7 @@ void ProcessUserDBRecord(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_USER_DB_EOF:
-         if (g_dwState == STATE_LOAD_USER_DB)
+         if (m_hCondLoadFinished != NULL)
             ConditionSet(m_hCondLoadFinished);
          break;
       case CMD_USER_DATA:
@@ -121,7 +121,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
             break;
       }
 
-      if (g_dwState != STATE_DISCONNECTED)
+      if (g_dwState == STATE_LOAD_USER_DB)
       {
          ChangeState(STATE_IDLE);
          m_bUserDBLoaded = TRUE;
@@ -133,6 +133,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(void)
    }
 
    ConditionDestroy(m_hCondLoadFinished);
+   m_hCondLoadFinished = NULL;
    return dwRetCode;
 }
 
@@ -236,10 +237,12 @@ DWORD DeleteUser(DWORD dwRqId, DWORD dwId)
 // Lock/unlock user database
 //
 
-DWORD LockUserDB(DWORD dwRqId, BOOL bLock)
+static DWORD LockUserDB(BOOL bLock)
 {
    CSCPMessage msg, *pResponce;
-   DWORD dwRetCode;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = g_dwMsgId++;
 
    msg.SetCode(bLock ? CMD_LOCK_USER_DB : CMD_UNLOCK_USER_DB);
    msg.SetId(dwRqId);
@@ -256,4 +259,24 @@ DWORD LockUserDB(DWORD dwRqId, BOOL bLock)
       dwRetCode = RCC_TIMEOUT;
    }
    return dwRetCode;
+}
+
+
+//
+// Client interface: lock user database
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(void)
+{
+   return LockUserDB(TRUE);
+}
+
+
+//
+// Client interface: unlock user database
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(void)
+{
+   return LockUserDB(FALSE);
 }

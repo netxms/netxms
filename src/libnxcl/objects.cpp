@@ -28,7 +28,7 @@
 // Static data
 //
 
-static CONDITION m_hCondSyncFinished;
+static CONDITION m_hCondSyncFinished = NULL;
 static DWORD m_dwNumObjects = 0;
 static INDEX *m_pIndexById = NULL;
 static MUTEX m_mutexIndexAccess;
@@ -219,7 +219,7 @@ void ProcessObjectUpdate(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_OBJECT_LIST_END:
-         if (g_dwState == STATE_SYNC_OBJECTS)
+         if (m_hCondSyncFinished != NULL)
          {
             qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
             ConditionSet(m_hCondSyncFinished);
@@ -299,6 +299,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(void)
    }
 
    ConditionDestroy(m_hCondSyncFinished);
+   m_hCondSyncFinished = NULL;
    return dwRetCode;
 }
 

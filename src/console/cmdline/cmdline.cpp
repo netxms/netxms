@@ -62,6 +62,11 @@ void CommandLoop(void)
    // Load oblects from server
    printf("Loading objects...\n");
    dwResult = NXCSyncObjects();
+   if (dwResult == RCC_SUCCESS)
+   {
+      printf("Loading user database...\n");
+      dwResult = NXCLoadUserDB();
+   }
 
    while(1)
    {
