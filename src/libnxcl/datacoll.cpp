@@ -360,6 +360,29 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId)
 
 
 //
+// Set status for multiple DCIs
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetDCIStatus(DWORD dwNodeId, DWORD dwNumItems, 
+                                         DWORD *pdwItemList, int iStatus)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = g_dwMsgId++;
+
+   msg.SetCode(CMD_SET_DCI_STATUS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_STATUS, (WORD)iStatus);
+   msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
+   msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+   SendMsg(&msg);
+   return WaitForRCC(dwRqId);
+}
+
+
+//
 // Find item in list by id and return it's index
 //
 

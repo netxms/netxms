@@ -896,6 +896,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_DCI_LIST *pItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_DCI_LIST *pItemList, DWORD *pdwItemId);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_DCI_LIST *pItemList, DWORD dwItemId);
+DWORD LIBNXCL_EXPORTABLE NXCSetDCIStatus(DWORD dwNodeId, DWORD dwNumItems, 
+                                         DWORD *pdwItemList, int iStatus);
 DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(DWORD dwSrcNodeId, DWORD dwDstNodeId, 
                                     DWORD dwNumItems, DWORD *pdwItemList);
 DWORD LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, DWORD dwItemId);

@@ -1877,6 +1877,18 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
          {
             if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
+               DWORD dwNumItems, *pdwItemList;
+               int iStatus;
+
+               iStatus = pRequest->GetVariableShort(VID_DCI_STATUS);
+               dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
+               pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+               pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+               if (((Template *)pObject)->SetItemStatus(dwNumItems, pdwItemList, iStatus))
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               else
+                  msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+               free(pdwItemList);
             }
             else  // User doesn't have MODIFY rights on object
             {

@@ -346,6 +346,33 @@ BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps,
 
 
 //
+// Set status for group of DCIs
+//
+
+BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
+{
+   DWORD i, j;
+   BOOL bResult = TRUE;
+
+   Lock();
+   for(i = 0; i < dwNumItems; i++)
+   {
+      for(j = 0; j < m_dwNumItems; j++)
+      {
+         if (m_ppItems[j]->Id() == pdwItemList[i])
+         {
+            m_ppItems[j]->SetStatus(iStatus);
+         }
+      }
+      if (j == m_dwNumItems)
+         bResult = FALSE;     // Invalid DCI ID provided
+   }
+   Unlock();
+   return bResult;
+}
+
+
+//
 // Lock data collection items list
 //
 

@@ -203,6 +203,7 @@ public:
    BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                    DWORD **ppdwMapIndex, DWORD **ppdwMapId);
    BOOL DeleteItem(DWORD dwItemId);
+   BOOL SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int GetItemType(DWORD dwItemId);
    const DCItem *GetItemById(DWORD dwItemId);
    BOOL LockDCIList(DWORD dwSessionId);
