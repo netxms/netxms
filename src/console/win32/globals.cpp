@@ -39,6 +39,7 @@ char g_szPassword[MAX_PASSWORD_LEN] = "";
 // Global configurable parameters
 //
 
+DWORD g_dwOptions = 0;
 char g_szWorkDir[MAX_PATH] = "";
 
 

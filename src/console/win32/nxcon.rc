@@ -145,18 +145,12 @@ BEGIN
         MENUITEM "&Alarms\tF8",                 ID_VIEW_ALARMS
         MENUITEM "&Event Log\tCtrl+F8",         ID_VIEW_EVENTS
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
-        MENUITEM "&Debug",                      ID_VIEW_DEBUG
+        MENUITEM "&Debug\tCtrl+Shift+F12",      ID_VIEW_DEBUG
         MENUITEM SEPARATOR
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
-    END
-    POPUP "Control Panel"
-    BEGIN
-        MENUITEM "&Events\tCtrl+F2",            ID_CONTROLPANEL_EVENTS
-        MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
-        MENUITEM "&Users\tCtrl+F3",             ID_CONTROLPANEL_USERS
     END
     POPUP "&Tools"
     BEGIN
@@ -271,6 +265,13 @@ BEGIN
     POPUP "Hidden"
     BEGIN
         MENUITEM "Update event names list",     ID_UPDATE_EVENT_LIST
+    END
+    POPUP "Control Panel"
+    BEGIN
+        MENUITEM "&Actions",                    ID_CONTROLPANEL_ACTIONS
+        MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
+        MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
+        MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
     END
 END
 
@@ -403,6 +404,8 @@ BEGIN
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
     VK_F11,         ID_TOOLS_ADDNODE,       VIRTKEY, NOINVERT
+    VK_F12,         ID_VIEW_DEBUG,          VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
     VK_F2,          ID_VIEW_MAP,            VIRTKEY, NOINVERT
     VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
     VK_F4,          ID_CONTROLPANEL_EVENTPOLICY, VIRTKEY, NOINVERT
@@ -947,6 +950,18 @@ BEGIN
     GROUPBOX        "Severity",IDC_STATIC_SEVERITY,152,48,76,84
 END
 
+IDD_CP_GENERAL DIALOG DISCARDABLE  0, 0, 230, 117
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Interface options",IDC_STATIC,7,7,216,37
+    CONTROL         "&Expand Control Panel",IDC_CHECK_EXPAND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,17,84,10
+    CONTROL         "Show &grid in list views",IDC_CHECK_GRID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,28,85,10
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1181,6 +1196,14 @@ BEGIN
         RIGHTMARGIN, 285
         TOPMARGIN, 7
         BOTTOMMARGIN, 131
+    END
+
+    IDD_CP_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 223
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 110
     END
 END
 #endif    // APSTUDIO_INVOKED

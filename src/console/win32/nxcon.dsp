@@ -109,6 +109,10 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ConsolePropsGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ControlPanel.cpp
 # End Source File
 # Begin Source File
@@ -323,6 +327,10 @@ SOURCE=.\UserSelectDlg.cpp
 # Begin Source File
 
 SOURCE=.\AlarmBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ConsolePropsGeneral.h
 # End Source File
 # Begin Source File
 

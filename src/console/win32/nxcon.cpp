@@ -18,7 +18,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define LAST_APP_MENU   4
+#define LAST_APP_MENU   3
 
 
 //
@@ -60,6 +60,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_MIBBROWSER, OnToolsMibbrowser)
 	ON_COMMAND(ID_CONTROLPANEL_EVENTPOLICY, OnControlpanelEventpolicy)
 	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
+	ON_COMMAND(ID_FILE_SETTINGS, OnFileSettings)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -193,6 +194,14 @@ BOOL CConsoleApp::InitInstance()
 	// Change the registry key under which our settings are stored.
 	SetRegistryKey(_T("NetXMS"));
 
+   // Load configuration from registry
+   dwBytes = sizeof(WINDOWPLACEMENT);
+   bSetWindowPos = GetProfileBinary(_T("General"), _T("WindowPlacement"), 
+                                    &pData, (UINT *)&dwBytes);
+   g_dwOptions = GetProfileInt(_T("General"), _T("Options"), 0);
+   strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
+   strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+
    // Create mutex for action list access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);
 
@@ -213,6 +222,13 @@ BOOL CConsoleApp::InitInstance()
 	HINSTANCE hInstance = AfxGetResourceHandle();
 
 	hMenu  = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDM_VIEW_SPECIFIC));
+
+   // Modify application menu as needed
+   if (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL)
+   {
+      pFrame->GetMenu()->RemoveMenu(ID_VIEW_CONTROLPANEL, MF_BYCOMMAND);
+      pFrame->GetMenu()->InsertMenu(ID_VIEW_DEBUG, MF_BYCOMMAND | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 8), "&Control panel");
+   }
 
    m_hMDIMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
    InsertMenu(m_hMDIMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
@@ -249,13 +265,6 @@ BOOL CConsoleApp::InitInstance()
 	m_hDCEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hPolicyEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_EPP));
 
-   // Load configuration from registry
-   dwBytes = sizeof(WINDOWPLACEMENT);
-   bSetWindowPos = GetProfileBinary(_T("General"), _T("WindowPlacement"), 
-                                    &pData, (UINT *)&dwBytes);
-   strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
-   strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
-
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
    {
@@ -282,6 +291,9 @@ int CConsoleApp::ExitInstance()
    NXCSetDebugCallback(NULL);
    NXCDisconnect();
    NXCShutdown();
+
+   // Save configuration
+   WriteProfileInt(_T("General"), _T("Options"), g_dwOptions);
 
    // Free resources
    SafeFreeResource(m_hMDIMenu);
@@ -1055,4 +1067,33 @@ void CConsoleApp::OnViewAlarms()
    else
 	   pFrame->CreateNewChild(
 		   RUNTIME_CLASS(CAlarmBrowser), IDR_ALARMS, m_hAlarmBrowserMenu, m_hAlarmBrowserAccel);
+}
+
+
+//
+// WM_COMMAND::ID_FILE_SETTINGS message handler
+//
+
+void CConsoleApp::OnFileSettings() 
+{
+	CPropertySheet wndPropSheet("Settings", GetMainWnd(), 0);
+   CConsolePropsGeneral wndGeneral;
+
+   // "General" page
+   wndGeneral.m_bExpandCtrlPanel = (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL) ? TRUE : FALSE;
+   wndGeneral.m_bShowGrid = (g_dwOptions & UI_OPT_SHOW_GRID) ? TRUE : FALSE;
+   wndPropSheet.AddPage(&wndGeneral);
+
+   if (wndPropSheet.DoModal() == IDOK)
+   {
+      if (wndGeneral.m_bExpandCtrlPanel)
+         g_dwOptions |= UI_OPT_EXPAND_CTRLPANEL;
+      else
+         g_dwOptions &= ~UI_OPT_EXPAND_CTRLPANEL;
+
+      if (wndGeneral.m_bShowGrid)
+         g_dwOptions |= UI_OPT_SHOW_GRID;
+      else
+         g_dwOptions &= ~UI_OPT_SHOW_GRID;
+   }
 }

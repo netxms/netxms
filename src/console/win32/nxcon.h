@@ -48,6 +48,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "MIBBrowserDlg.h"
 #include "EventPolicyEditor.h"
 #include "AlarmBrowser.h"
+#include "ConsolePropsGeneral.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -142,6 +143,7 @@ public:
 	afx_msg void OnToolsMibbrowser();
 	afx_msg void OnControlpanelEventpolicy();
 	afx_msg void OnViewAlarms();
+	afx_msg void OnFileSettings();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

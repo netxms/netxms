@@ -101,6 +101,7 @@
 #define IDI_SMS                         213
 #define IDI_EXEC                        214
 #define IDI_REXEC                       215
+#define IDD_CP_GENERAL                  216
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -218,6 +219,8 @@
 #define IDC_CHECK_ACK_ALARMS            1140
 #define IDC_CHECK_MANAGE_EPP            1141
 #define IDC_CHECK_MANAGE_ACTIONS        1142
+#define IDC_CHECK_EXPAND                1143
+#define IDC_CHECK_GRID                  1144
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -279,6 +282,7 @@
 #define ID_ALARM_ACKNOWLEGE             32865
 #define ID_ALARM_DELETE                 32866
 #define ID_ALARM_GOTOSOURCE             32867
+#define ID_CONTROLPANEL_ACTIONS         32871
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -287,9 +291,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        216
-#define _APS_NEXT_COMMAND_VALUE         32871
-#define _APS_NEXT_CONTROL_VALUE         1143
+#define _APS_NEXT_RESOURCE_VALUE        217
+#define _APS_NEXT_COMMAND_VALUE         32872
+#define _APS_NEXT_CONTROL_VALUE         1145
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

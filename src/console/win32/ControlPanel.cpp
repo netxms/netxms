@@ -13,15 +13,6 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
-// Control panel items
-//
-
-#define CP_ITEM_EPP     0
-#define CP_ITEM_USERS   1
-#define CP_ITEM_EVENTS  2
-
-
-//
 // CControlPanel
 //
 
@@ -77,15 +68,17 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create an image list and assign it to list control
    m_pImageList = new CImageList;
    m_pImageList->Create(32, 32, ILC_COLOR8 | ILC_MASK, 8, 8);
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USERS));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_RULEMGR));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LOG));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EXEC));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
-   m_wndListCtrl.InsertItem(CP_ITEM_EPP, "Event Processing Policy", 1);
-   m_wndListCtrl.InsertItem(CP_ITEM_USERS, "Users", 0);
-   m_wndListCtrl.InsertItem(CP_ITEM_EVENTS, "Events", 2);
+   AddItem("Event Processing Policy", 1, ID_CONTROLPANEL_EVENTPOLICY);
+   AddItem("Users", 0, ID_CONTROLPANEL_USERS);
+   AddItem("Events", 2, ID_CONTROLPANEL_EVENTS);
+   AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
 
    theApp.OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;
@@ -133,18 +126,25 @@ void CControlPanel::OnSetFocus(CWnd* pOldWnd)
 
 void CControlPanel::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
 {
-   switch(pInfo->iItem)
+   if (pInfo->iItem != -1)
    {
-      case CP_ITEM_EPP:
-         PostMessage(WM_COMMAND, ID_CONTROLPANEL_EVENTPOLICY, 0);
-         break;
-      case CP_ITEM_EVENTS:
-         PostMessage(WM_COMMAND, ID_CONTROLPANEL_EVENTS, 0);
-         break;
-      case CP_ITEM_USERS:
-         PostMessage(WM_COMMAND, ID_CONTROLPANEL_USERS, 0);
-         break;
-      default:
-         break;
+      WPARAM wParam;
+
+      wParam = m_wndListCtrl.GetItemData(pInfo->iItem);
+      if (wParam != 0)
+         PostMessage(WM_COMMAND, wParam, 0);
    }
+}
+
+
+//
+// Add new item to list
+//
+
+void CControlPanel::AddItem(char *pszName, int iImage, WPARAM wParam)
+{
+   int iIndex;
+
+   iIndex = m_wndListCtrl.InsertItem(0x7FFFFFFF, pszName, iImage);
+   m_wndListCtrl.SetItemData(iIndex, wParam);
 }

@@ -44,6 +44,14 @@ extern CConsoleApp theApp;
 
 
 //
+// User interface options
+//
+
+#define UI_OPT_EXPAND_CTRLPANEL  0x0001
+#define UI_OPT_SHOW_GRID         0x0002
+
+
+//
 // Transparent color for images in rule list
 //
 
@@ -161,6 +169,7 @@ char *BuildSymbolicOIDString(struct tree *pNode);
 // Variables
 //
 
+extern DWORD g_dwOptions;
 extern char g_szServer[];
 extern char g_szLogin[];
 extern char g_szPassword[];
