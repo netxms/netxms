@@ -69,12 +69,10 @@
 #define DEFAULT_SHELL         "cmd.exe"
 #define DEFAULT_CONFIG_FILE   "C:\\NetXMS.conf"
 #define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
-#define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #else    /* _WIN32 */
 #define DEFAULT_SHELL         "/bin/sh"
 #define DEFAULT_CONFIG_FILE   "/etc/netxms.conf"
 #define DEFAULT_LOG_FILE      "/var/log/netxms.log"
-#define IsStandalone() (1)
 #endif   /* _WIN32 */
 
 #define MAX_DB_LOGIN          64
@@ -136,6 +134,7 @@
 #define AF_DEBUG_ALL                      0x0000FF00
 #define AF_SHUTDOWN                       0x80000000
 
+#define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
 
 
