@@ -3911,7 +3911,7 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
 void ClientSession::DeployPackage(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD i, dwNumObjects, *pdwObjectList, dwNumNodes, dwPkgId;
+   DWORD i, j, dwNumObjects, *pdwObjectList, dwNumNodes, dwPkgId;
    Node **ppNodeList;
    NetObj *pObject;
    BOOL bSuccess = TRUE;
@@ -3943,10 +3943,17 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                {
                   if (pObject->Type() == OBJECT_NODE)
                   {
-                     pObject->IncRefCount();
-                     ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
-                     ppNodeList[dwNumNodes] = (Node *)pObject;
-                     dwNumNodes++;
+                     // Check if this node already in the list
+                     for(j = 0; j < dwNumNodes; j++)
+                        if (ppNodeList[j]->Id() == pdwObjectList[i])
+                           break;
+                     if (j == dwNumNodes)
+                     {
+                        pObject->IncRefCount();
+                        ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
+                        ppNodeList[dwNumNodes] = (Node *)pObject;
+                        dwNumNodes++;
+                     }
                   }
                   else
                   {
@@ -3988,6 +3995,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          pInfo->ppNodeList = ppNodeList;
          pInfo->pSession = this;
          pInfo->mutex = hMutex;
+         pInfo->dwRqId = pRequest->GetId();
 
          ThreadCreate(DeploymentThread, 0, pInfo);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);

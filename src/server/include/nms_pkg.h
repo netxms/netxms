@@ -33,6 +33,7 @@ typedef struct
    DWORD dwNumNodes;
    Node **ppNodeList;
    ClientSession *pSession;
+   DWORD dwRqId;
 } DT_STARTUP_INFO;
 
 

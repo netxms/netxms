@@ -283,6 +283,7 @@ typedef struct
 #define CMD_UPDATE_AGENT_CONFIG     0x0075
 #define CMD_GET_PARAMETER_LIST      0x0076
 #define CMD_DEPLOY_PACKAGE          0x0077
+#define CMD_INSTALLER_INFO          0x0078
 
 
 //

@@ -144,11 +144,19 @@ DWORD UninstallPackage(DWORD dwPkgId)
 THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 {
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
+   DWORD i, dwNumThreads;
 
    // Wait for parent initialization completion
    MutexLock(pStartup->mutex, INFINITE);
    MutexUnlock(pStartup->mutex);
 
+   // Read number of upgrade threads
+   dwNumThreads = ConfigReadInt(_T("NumberOfUpgradeThreads"), 10);
+
+   // Send initial status for each node
+   for(i = 0; i < pStartup->dwNumNodes; i++)
+   {
+   }
 
    // Cleanup
    MutexDestroy(pStartup->mutex);
