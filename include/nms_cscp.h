@@ -237,6 +237,7 @@ typedef struct
 #define CMD_ACK_ALARM               0x0048
 #define CMD_ALARM_UPDATE            0x0049
 #define CMD_ALARM_DATA              0x004A
+#define CMD_DELETE_ALARM            0x004B
 
 
 //

@@ -207,6 +207,7 @@ typedef unsigned long HREQUEST;
 #define RCC_OBJECT_CREATION_FAILED  ((DWORD)18)
 #define RCC_OBJECT_LOOP             ((DWORD)19)
 #define RCC_INVALID_OBJECT_NAME     ((DWORD)20)
+#define RCC_INVALID_ALARM_ID        ((DWORD)21)
 
 
 //
@@ -788,7 +789,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
 DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(DWORD *pdwListSize,
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId);
 
-DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms, NXC_ALARM *ppAlarmList);
+DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(BOOL bIncludeAck, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList);
+DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(DWORD dwAlarmId);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(DWORD dwAlarmId);
 
 #ifdef __cplusplus
 }
