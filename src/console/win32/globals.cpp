@@ -191,3 +191,12 @@ CODE_TO_TEXT g_ctSnmpMibType[] =
 
 DWORD g_dwDefImgListSize = 0;
 DEF_IMG *g_pDefImgList = NULL;
+
+
+//
+// Action list
+//
+
+DWORD g_dwNumActions = 0;
+NXC_ACTION *g_pActionList = NULL;
+HANDLE g_mutexActionListAccess = INVALID_HANDLE_VALUE;

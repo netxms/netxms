@@ -186,5 +186,23 @@ extern CImageList *g_pObjectSmallImageList;
 extern CImageList *g_pObjectNormalImageList;
 extern DWORD g_dwDefImgListSize;
 extern DEF_IMG *g_pDefImgList;
+extern DWORD g_dwNumActions;
+extern NXC_ACTION *g_pActionList;
+extern HANDLE g_mutexActionListAccess;
+
+
+//
+// Lock/unlock access to action list
+//
+
+inline void LockActions(void)
+{
+   WaitForSingleObject(g_mutexActionListAccess, INFINITE);
+}
+
+inline void UnlockActions(void)
+{
+   ReleaseMutex(g_mutexActionListAccess);
+}
 
 #endif

@@ -193,9 +193,11 @@ BOOL CConsoleApp::InitInstance()
 	// Change the registry key under which our settings are stored.
 	SetRegistryKey(_T("NetXMS"));
 
+   // Create mutex for action list access
+   g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);
+
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
-
 	CMDIFrameWnd* pFrame = new CMainFrame;
 	m_pMainWnd = pFrame;
 
@@ -292,6 +294,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hUserEditorAccel);
    SafeFreeResource(m_hDCEditorMenu);
    SafeFreeResource(m_hDCEditorAccel);
+
+   CloseHandle(g_mutexActionListAccess);
 
    return CWinApp::ExitInstance();
 }

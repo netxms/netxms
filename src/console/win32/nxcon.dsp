@@ -570,11 +570,19 @@ SOURCE=.\res\down_arrow.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=".\icons\e-mail.ico"
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\EARTH.ICO
 # End Source File
 # Begin Source File
 
 SOURCE=.\icons\event.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\exec.ico
 # End Source File
 # Begin Source File
 
@@ -630,6 +638,10 @@ SOURCE=.\icons\question.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\rexec.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\RuleManager.ico
 # End Source File
 # Begin Source File
@@ -655,6 +667,10 @@ SOURCE=.\icons\SeverityNormal.ico
 # Begin Source File
 
 SOURCE=.\icons\SeverityWarning.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\sms.ico
 # End Source File
 # Begin Source File
 

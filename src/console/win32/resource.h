@@ -97,6 +97,10 @@
 #define IDI_ACK                         208
 #define IDI_CONNECT                     209
 #define IDA_ALARM_BROWSER               211
+#define IDI_EMAIL                       212
+#define IDI_SMS                         213
+#define IDI_EXEC                        214
+#define IDI_REXEC                       215
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -283,7 +287,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        212
+#define _APS_NEXT_RESOURCE_VALUE        216
 #define _APS_NEXT_COMMAND_VALUE         32871
 #define _APS_NEXT_CONTROL_VALUE         1143
 #define _APS_NEXT_SYMED_VALUE           119

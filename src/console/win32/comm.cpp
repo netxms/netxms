@@ -118,6 +118,12 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    if (dwResult == RCC_SUCCESS)
    {
+      SetInfoText(hWnd, "Loading action configuration...");
+      dwResult = NXCLoadActions(&g_dwNumActions, &g_pActionList);
+   }
+
+   if (dwResult == RCC_SUCCESS)
+   {
       NXC_MIB_LIST *pMibList;
       DWORD i;
 

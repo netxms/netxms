@@ -125,6 +125,11 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_CRITICAL));
    m_pImageList->Add(theApp.LoadIcon(IDI_UNKNOWN));
    m_pImageList->Add(theApp.LoadIcon(IDI_ACK));
+   m_iImageActionsBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_EXEC));
+   m_pImageList->Add(theApp.LoadIcon(IDI_REXEC));
+   m_pImageList->Add(theApp.LoadIcon(IDI_EMAIL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SMS));
 	
    // Create rule list control
    GetClientRect(&rect);
@@ -362,6 +367,9 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, COL_ACTION);
    if (m_pEventPolicy->pRuleList[iRow].dwNumActions > 0)
    {
+      LockActions();
+
+      UnlockActions();
    }
    else
    {

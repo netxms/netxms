@@ -212,11 +212,14 @@ src/console/win32/icons/ack.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/connect.ico -text
 src/console/win32/icons/e-mail.ico -text
+src/console/win32/icons/exec.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/passwd.ico -text
 src/console/win32/icons/question.ico -text
+src/console/win32/icons/rexec.ico -text
 src/console/win32/icons/setup.ico -text
+src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
 src/console/win32/icons/tree.ico -text

@@ -83,6 +83,10 @@ IDI_ALARM               ICON    DISCARDABLE     "icons\\alarm.ico"
 IDI_UNKNOWN             ICON    DISCARDABLE     "icons\\question.ico"
 IDI_ACK                 ICON    DISCARDABLE     "icons\\ack.ico"
 IDI_CONNECT             ICON    DISCARDABLE     "icons\\connect.ico"
+IDI_EMAIL               ICON    DISCARDABLE     "icons\\e-mail.ico"
+IDI_SMS                 ICON    DISCARDABLE     "icons\\sms.ico"
+IDI_EXEC                ICON    DISCARDABLE     "icons\\exec.ico"
+IDI_REXEC               ICON    DISCARDABLE     "icons\\rexec.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -685,7 +689,7 @@ END
 IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 258
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL

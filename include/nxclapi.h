@@ -357,10 +357,10 @@ typedef unsigned long HREQUEST;
 // Action types
 //
 
-#define ACTION_EXEC           1
+#define ACTION_EXEC           0
+#define ACTION_REMOTE         1
 #define ACTION_SEND_EMAIL     2
-#define ACTION_REMOTE         3
-#define ACTION_SEND_SMS       4
+#define ACTION_SEND_SMS       3
 
 
 //
