@@ -275,6 +275,8 @@ typedef struct
 #define CMD_PACKAGE_INFO            0x006D
 #define CMD_REMOVE_PACKAGE          0x006E
 #define CMD_INSTALL_PACKAGE         0x006F
+#define CMD_LOCK_PACKAGE_DB         0x0070
+#define CMD_UNLOCK_PACKAGE_DB       0x0071
 
 
 //

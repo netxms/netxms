@@ -617,6 +617,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_QUERY_PARAMETER:
             QueryParameter(pMsg);
             break;
+         case CMD_LOCK_PACKAGE_DB:
+            LockPackageDB(pMsg->GetId(), TRUE);
+            break;
+         case CMD_UNLOCK_PACKAGE_DB:
+            LockPackageDB(pMsg->GetId(), FALSE);
+            break;
          case CMD_GET_PACKAGE_LIST:
             SendAllPackages(pMsg->GetId());
             break;
@@ -3459,6 +3465,55 @@ void ClientSession::SendAllTraps(DWORD dwRqId)
 
 
 //
+// Lock/unlock package database
+//
+
+void ClientSession::LockPackageDB(DWORD dwRqId, BOOL bLock)
+{
+   CSCPMessage msg;
+   char szBuffer[256];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
+   {
+      if (bLock)
+      {
+         if (!LockComponent(CID_PACKAGE_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+         {
+            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+            msg.SetVariable(VID_LOCKED_BY, szBuffer);
+         }
+         else
+         {
+            m_dwFlags |= CSF_PACKAGE_DB_LOCKED;
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+      }
+      else
+      {
+         if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
+         {
+            UnlockComponent(CID_PACKAGE_DB);
+            m_dwFlags &= ~CSF_PACKAGE_DB_LOCKED;
+         }
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+   }
+   else
+   {
+      // Current user has no rights for trap management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
 // Send list of all installed packages to client
 //
 
@@ -3475,34 +3530,41 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      hResult = DBAsyncSelect(g_hCoreDB, "SELECT pkg_id,version,platform,pkg_file FROM agent_pkg");
-      if (hResult != NULL)
+      if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
       {
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         SendMessage(&msg);
-         bSuccess = TRUE;
-
-         msg.SetCode(CMD_PACKAGE_INFO);
-         msg.DeleteAllVariables();
-
-         while(DBFetch(hResult))
+         hResult = DBAsyncSelect(g_hCoreDB, "SELECT pkg_id,version,platform,pkg_file FROM agent_pkg");
+         if (hResult != NULL)
          {
-            msg.SetVariable(VID_PACKAGE_ID, DBGetFieldAsyncULong(hResult, 0));
-            msg.SetVariable(VID_PACKAGE_VERSION, DBGetFieldAsync(hResult, 1, szBuffer, MAX_DB_STRING));
-            msg.SetVariable(VID_PLATFORM_NAME, DBGetFieldAsync(hResult, 2, szBuffer, MAX_DB_STRING));
-            msg.SetVariable(VID_FILE_NAME, DBGetFieldAsync(hResult, 3, szBuffer, MAX_DB_STRING));
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
             SendMessage(&msg);
+            bSuccess = TRUE;
+
+            msg.SetCode(CMD_PACKAGE_INFO);
             msg.DeleteAllVariables();
+
+            while(DBFetch(hResult))
+            {
+               msg.SetVariable(VID_PACKAGE_ID, DBGetFieldAsyncULong(hResult, 0));
+               msg.SetVariable(VID_PACKAGE_VERSION, DBGetFieldAsync(hResult, 1, szBuffer, MAX_DB_STRING));
+               msg.SetVariable(VID_PLATFORM_NAME, DBGetFieldAsync(hResult, 2, szBuffer, MAX_DB_STRING));
+               msg.SetVariable(VID_FILE_NAME, DBGetFieldAsync(hResult, 3, szBuffer, MAX_DB_STRING));
+               SendMessage(&msg);
+               msg.DeleteAllVariables();
+            }
+
+            msg.SetVariable(VID_PACKAGE_ID, (DWORD)0);
+            SendMessage(&msg);
+
+            DBFreeAsyncResult(hResult);
          }
-
-         msg.SetVariable(VID_PACKAGE_ID, (DWORD)0);
-         SendMessage(&msg);
-
-         DBFreeAsyncResult(hResult);
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       }
    }
    else

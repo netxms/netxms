@@ -7,7 +7,7 @@ GENERAL:
 - Fix bugs in ConditionWait()
 - Finish Linux subagent
 - FreeBSD subagent
-- Solaris subagent
+- Finish Solaris subagent
 - AIX subagent
 - HP-UX subagent
 - Cross-platform pinger subagent
@@ -21,7 +21,6 @@ GENERAL:
 - Rewrite event management in a way to eliminate the need to unlock
   event configuration to allow sending of new events
 - View and update agent's configuration from server
-- Centralized agents upgrade
 - Add diff() method for DCI thresholds
 
 

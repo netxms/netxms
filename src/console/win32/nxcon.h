@@ -50,6 +50,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ConsolePropsGeneral.h"
 #include "ActionEditor.h"
 #include "TrapEditor.h"
+#include "PackageMgr.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -113,6 +114,7 @@ protected:
    CDebugFrame *m_pwndDebugWindow;
    CNetSummaryFrame *m_pwndNetSummary;
    CEventPolicyEditor *m_pwndEventPolicyEditor;
+   CPackageMgr *m_pwndPackageMgr;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -138,6 +140,8 @@ protected:
 	HACCEL m_hActionEditorAccel;  // Accelerator for user editor
 	HMENU m_hGraphMenu;           // Menu for history and real-time graphs
 	HACCEL m_hGraphAccel;         // Accelerator for history and real-time graphs
+	HMENU m_hPackageMgrMenu;      // Menu for package manager
+	HACCEL m_hPackageMgrAccel;    // Accelerator for package manager
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
@@ -177,6 +181,7 @@ private:
    BOOL m_bDebugWindowActive;
    BOOL m_bNetSummaryActive;
    BOOL m_bEventPolicyEditorActive;
+   BOOL m_bPackageMgrActive;
 
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 

@@ -372,6 +372,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Properties...\tAlt+P",       ID_GRAPH_PROPERTIES
     END
+    POPUP "Package"
+    BEGIN
+        MENUITEM "&Install...\tCtrl+I",         ID_PACKAGE_INSTALL
+        MENUITEM "&Remove\tCtrl+R",             ID_PACKAGE_REMOVE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -562,6 +567,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_GRAPH_PROPERTIES
     END
+    POPUP "Package"
+    BEGIN
+        MENUITEM "&Install...",                 ID_PACKAGE_INSTALL
+        MENUITEM "&Remove",                     ID_PACKAGE_REMOVE
+    END
 END
 
 
@@ -670,6 +680,12 @@ BEGIN
     "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, ALT, NOINVERT
     "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, ALT, NOINVERT
     VK_PAUSE,       ID_GRAPH_FREEZE,        VIRTKEY, NOINVERT
+END
+
+IDA_PACKAGE_MGR ACCELERATORS DISCARDABLE 
+BEGIN
+    "I",            ID_PACKAGE_INSTALL,     VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_PACKAGE_REMOVE,      VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -1929,6 +1945,7 @@ BEGIN
     IDR_ACTION_EDITOR       "\nAction Configuration\nAction Configuration"
     IDR_NODE_POLLER         "\nPoll Node\nPoll Node"
     IDR_TRAP_EDITOR         "\nSNMP Trap Configuration\nSNMP Trap Configuration"
+    IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
 END
 
 STRINGTABLE DISCARDABLE 

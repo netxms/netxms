@@ -46,14 +46,7 @@ static void Prompt(DWORD dwLastError)
 
 static BOOL ProcessCommand(char *pszCmdLine, DWORD *pdwResult)
 {
-   if (pszCmdLine[0] == 'a')
-   {
-      *pdwResult = NXCAttachWebSession(g_hSession, 22);
-   }
-   else
-   {
-      *pdwResult = RCC_SUCCESS;
-   }
+   *pdwResult = RCC_SUCCESS;
    return FALSE;
 }
 

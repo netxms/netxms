@@ -44,7 +44,7 @@ static DWORD LockTrapCfg(NXCL_Session *pSession, BOOL bLock)
 
 
 //
-// Client interface: lock action configuration database
+// Client interface: lock trap configuration database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession)
@@ -54,7 +54,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession)
 
 
 //
-// Client interface: unlock action configuration database
+// Client interface: unlock trap configuration database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(NXC_SESSION hSession)

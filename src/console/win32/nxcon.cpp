@@ -82,6 +82,7 @@ CConsoleApp::CConsoleApp()
    m_bDebugWindowActive = FALSE;
    m_bNetSummaryActive = FALSE;
    m_bEventPolicyEditorActive = FALSE;
+   m_bPackageMgrActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
 }
@@ -279,6 +280,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hGraphMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hGraphMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 13), "&Graph");
 
+   m_hPackageMgrMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 14), "&Package");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -291,6 +296,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hActionEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ACTION_EDITOR));
 	m_hTrapEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_TRAP_EDITOR));
 	m_hGraphAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_GRAPH));
+	m_hPackageMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_PACKAGE_MGR));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -493,6 +499,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bEventPolicyEditorActive = TRUE;
          m_pwndEventPolicyEditor = (CEventPolicyEditor *)pWnd;
          break;
+      case IDR_PACKAGE_MGR:
+         m_bPackageMgrActive = TRUE;
+         m_pwndPackageMgr = (CPackageMgr *)pWnd;
+         break;
       default:
          break;
    }
@@ -552,6 +562,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_EPP_EDITOR:
          m_bEventPolicyEditorActive = FALSE;
+         break;
+      case IDR_PACKAGE_MGR:
+         m_bPackageMgrActive = FALSE;
          break;
       default:
          break;
@@ -1240,19 +1253,17 @@ void CConsoleApp::OnControlpanelAgentpkg()
    }
    else
    {
-      DWORD dwResult, dwNumPackages;
-      NXC_PACKAGE_INFO *pPkgList;
+      DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCGetPackageList, g_hSession, &dwNumPackages, &pPkgList,
-                               "Loading package database...");
+      dwResult = DoRequestArg1(NXCLockPackageDB, g_hSession, "Locking package database...");
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CPackageMgr), IDR_PACKAGE_MGR, m_hTrapEditorMenu, m_hTrapEditorAccel);
+		      RUNTIME_CLASS(CPackageMgr), IDR_PACKAGE_MGR, m_hPackageMgrMenu, m_hPackageMgrAccel);
       }
       else
       {
-         ErrorBox(dwResult, "Unable to load package database:\n%s");
+         ErrorBox(dwResult, "Unable to lock package database:\n%s");
       }
    }
 }

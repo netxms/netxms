@@ -25,6 +25,45 @@
 
 
 //
+// Lock/unlock package database
+//
+
+static DWORD LockPackageDB(NXCL_Session *pSession, BOOL bLock)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = pSession->CreateRqId();
+
+   msg.SetCode(bLock ? CMD_LOCK_PACKAGE_DB : CMD_UNLOCK_PACKAGE_DB);
+   msg.SetId(dwRqId);
+   pSession->SendMsg(&msg);
+
+   return pSession->WaitForRCC(dwRqId);
+}
+
+
+//
+// Client interface: lock package database
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession)
+{
+   return LockPackageDB((NXCL_Session *)hSession, TRUE);
+}
+
+
+//
+// Client interface: unlock package database
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession)
+{
+   return LockPackageDB((NXCL_Session *)hSession, FALSE);
+}
+
+
+//
 // Retrieve package list from server
 //
 

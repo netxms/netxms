@@ -57,6 +57,8 @@
 #define IDR_NODE_POLLER                 154
 #define IDR_TRAP_EDITOR                 155
 #define IDI_SORT_UP                     156
+#define IDR_PACKAGE_MGR                 156
+#define IDA_PACKAGE_MGR                 156
 #define IDI_SORT_DOWN                   157
 #define IDD_OBJECT_NODE_GENERAL         159
 #define IDD_OBJECT_CAPS                 160
@@ -422,6 +424,8 @@
 #define ID_GRAPH_PROPERTIES             32905
 #define ID_GRAPH_FREEZE                 32906
 #define ID_CONTROLPANEL_AGENTPKG        32907
+#define ID_PACKAGE_INSTALL              32908
+#define ID_PACKAGE_REMOVE               32909
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -430,8 +434,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        251
-#define _APS_NEXT_COMMAND_VALUE         32908
+#define _APS_NEXT_RESOURCE_VALUE        252
+#define _APS_NEXT_COMMAND_VALUE         32910
 #define _APS_NEXT_CONTROL_VALUE         1213
 #define _APS_NEXT_SYMED_VALUE           120
 #endif

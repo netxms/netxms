@@ -36,6 +36,7 @@
 #define CID_EVENT_DB          2
 #define CID_ACTION_DB         3
 #define CID_TRAP_CFG          4
+#define CID_PACKAGE_DB        5
 
 
 //

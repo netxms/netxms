@@ -28,7 +28,7 @@
 //
 
 #define MAX_OWNER_INFO     256
-#define NUMBER_OF_LOCKS    5
+#define NUMBER_OF_LOCKS    6
 
 
 //
@@ -54,7 +54,8 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
    { UNLOCKED, _T("User Database"), _T("") },
    { UNLOCKED, _T("Event Configuration Database"), _T("") },
    { UNLOCKED, _T("Action Configuration Database"), _T("") },
-   { UNLOCKED, _T("SNMP Trap Configuration"), _T("") }
+   { UNLOCKED, _T("SNMP Trap Configuration"), _T("") },
+   { UNLOCKED, _T("Package Database"), _T("") }
 };
 
 

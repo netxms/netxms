@@ -175,6 +175,7 @@ typedef void * HSNMPSESSION;
 #define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
+#define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0100)
 
 
 //
@@ -321,6 +322,7 @@ private:
    void EditTrap(int iOperation, CSCPMessage *pRequest);
    void LockTrapCfg(DWORD dwRqId, BOOL bLock);
    void SendAllTraps(DWORD dwRqId);
+   void LockPackageDB(DWORD dwRqId, BOOL bLock);
    void SendAllPackages(DWORD dwRqId);
 
 public:
