@@ -23,6 +23,10 @@
 #ifndef _WIN32
 #include "libnetxms.h"
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+
 
 //
 // Static data

@@ -55,7 +55,7 @@ void DBWriteThread(void *pArg)
 {
    char *pQuery;
 
-   m_hCondWriteThreadFinished = ConditionCreate();
+   m_hCondWriteThreadFinished = ConditionCreate(FALSE);
    while(1)
    {
       pQuery = (char *)g_pLazyRequestQueue->GetOrBlock();
@@ -77,5 +77,8 @@ void StopDBWriter(void)
 {
    g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
    if (m_hCondWriteThreadFinished != NULL)
+	{
       ConditionWait(m_hCondWriteThreadFinished, INFINITE);
+      ConditionDestroy(m_hCondWriteThreadFinished);
+	}
 }

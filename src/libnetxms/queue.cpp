@@ -30,7 +30,7 @@
 Queue::Queue(DWORD dwInitialSize, DWORD dwBufferIncrement)
 {
    m_hQueueAccess = MutexCreate();
-   m_hConditionNotEmpty = ConditionCreate();
+   m_hConditionNotEmpty = ConditionCreate(FALSE);
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;

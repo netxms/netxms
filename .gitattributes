@@ -1,8 +1,20 @@
 * text=auto !eol
+/AUTHORS -text
+/COPYING -text
+/ChangeLog -text
+/INSTALL -text
+/Makefile.am -text
+/NEWS -text
+/README -text
+/README.in -text
+/THANKS -text
+/configure.ac -text
 contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text
 contrib/logo.jpg -text
+doc/Makefile.am -text
 doc/internals.rtf -text
+include/Makefile.am -text
 include/getopt.h -text
 include/nms_agent.h -text
 include/nms_common.h -text
@@ -11,12 +23,15 @@ include/nms_threads.h -text
 include/nms_util.h -text
 include/nxclapi.h -text
 include/nxevent.h -text
+m4/Makefile.am -text
 sql/Makefile -text
+sql/Makefile.am -text
 sql/clear.sql -text
 sql/dbinit.in -text
 sql/events.in -text
 sql/schema.in -text
 sql/setup.in -text
+src/Makefile.am -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
@@ -83,6 +98,7 @@ src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
 src/libnetxms/Makefile -text
+src/libnetxms/Makefile.am -text
 src/libnetxms/cscp.cpp -text
 src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text
@@ -108,7 +124,9 @@ src/libnxcl/misc.cpp -text
 src/libnxcl/msgwq.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/request.cpp -text
+src/server/Makefile.am -text
 src/server/core/Makefile -text
+src/server/core/Makefile.am -text
 src/server/core/acl.cpp -text
 src/server/core/actions.cpp -text
 src/server/core/admin.cpp -text

@@ -36,9 +36,9 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwIndex = INVALID_INDEX;
    m_iState = STATE_CONNECTED;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   m_hCondWriteThreadStopped = ConditionCreate();
-   m_hCondProcessingThreadStopped = ConditionCreate();
-   m_hCondUpdateThreadStopped = ConditionCreate();
+   m_hCondWriteThreadStopped = ConditionCreate(FALSE);
+   m_hCondProcessingThreadStopped = ConditionCreate(FALSE);
+   m_hCondUpdateThreadStopped = ConditionCreate(FALSE);
    m_hMutexSendEvents = MutexCreate();
    m_hMutexSendObjects = MutexCreate();
    m_dwFlags = 0;

@@ -63,11 +63,7 @@ DWORD g_dwConfigurationPollingInterval;
 // Static data
 //
 
-#ifdef _WIN32
-static HANDLE m_hEventShutdown = INVALID_HANDLE_VALUE;
-#else    /* _WIN32 */
-static pthread_cond_t m_hCondShutdown;
-#endif
+static CONDITION m_hEventShutdown;
 
 
 //
@@ -77,11 +73,7 @@ static pthread_cond_t m_hCondShutdown;
 
 BOOL SleepAndCheckForShutdown(int iSeconds)
 {
-#ifdef _WIN32
-   return WaitForSingleObject(m_hEventShutdown, iSeconds * 1000) == WAIT_OBJECT_0;
-#else    /* _WIN32 */
-   /* TODO: Implement UNIX code */
-#endif
+   return ConditionWait(m_hEventShutdown, iSeconds * 1000);
 }
 
 
@@ -156,11 +148,7 @@ BOOL Initialize(void)
    LoadGlobalConfig();
 
    // Create synchronization stuff
-#ifdef _WIN32
-   m_hEventShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
-#else
-   pthread_cond_init(&m_hCondShutdown, NULL);
-#endif
+   m_hEventShutdown = ConditionCreate(TRUE);
 
    // Setup unique identifiers table
    if (!InitIdTable())
@@ -245,11 +233,7 @@ void Shutdown(void)
 
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
-#ifdef _WIN32
-   SetEvent(m_hEventShutdown);
-#else    /* _WIN32 */
-   pthread_cond_broadcast(&m_hCondShutdown);
-#endif
+   ConditionSet(m_hEventShutdown);
 
    g_pEventQueue->Put(INVALID_POINTER_VALUE);   // Stop event processor
    ThreadSleep(5);     // Give other threads a chance to terminate in a safe way
@@ -278,7 +262,6 @@ void Main(void)
 {
    WriteLog(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
-#ifdef _WIN32
    if (IsStandalone())
    {
       int ch;
@@ -286,14 +269,15 @@ void Main(void)
       printf("\n*** NMS Server operational. Press ESC to terminate. ***\n");
       while(1)
       {
+#ifdef _WIN32
          ch = getch();
          if (ch == 0)
             ch = -getch();
 
          if (ch == 27)
             break;
-
 #ifdef _DEBUG
+
          switch(ch)
          {
             case 't':   // Thread status
@@ -385,18 +369,16 @@ void Main(void)
             default:
                break;
          }
-#endif
+#endif // _DEBUG
+#endif // _WIN32
       }
 
       Shutdown();
    }
    else
    {
-      WaitForSingleObject(m_hEventShutdown, INFINITE);
+		ConditionWait(m_hEventShutdown, INFINITE);
    }
-#else    /* _WIN32 */
-   /* TODO: insert UNIX main thread code here */
-#endif
 }
 
 
