@@ -107,9 +107,8 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHA
 
 AgentConnection::~AgentConnection()
 {
-   // Destroy socket
-   if (m_hSocket != -1)
-      closesocket(m_hSocket);
+   // Disconnect from peer
+   Disconnect();
 
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
