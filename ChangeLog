@@ -4,6 +4,10 @@
 
 - Object access mutexes changed to read/write locks in server to 
   improve performance
+- Algorithm of placing nodes into subnets improved
+- System no longer needs network mask when creating new node manually
+- Detection of incorrect network masks on interfaces added
+- Windows console: fixed bug in object browser which cause console to crash
 
 
 *
@@ -33,3 +37,11 @@
 - Added possibility for copying DCIs from one node to other(s)
 - Added server's startup script for RedHat Linux
 - Numerous bug fixes
+
+
+*
+* 0.1.1
+*
+
+- First version number given to system: a lot of things works, and lot
+  of things have to be done.

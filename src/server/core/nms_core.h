@@ -393,6 +393,8 @@ void OidToStr(oid *pOid, int iOidLen, char *szBuffer, DWORD dwBufferSize);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
+void InitLocalNetInfo(void);
+
 ARP_CACHE *GetLocalArpCache(void);
 ARP_CACHE *SnmpGetArpCache(DWORD dwAddr, const char *szCommunity);
 

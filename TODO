@@ -31,15 +31,12 @@ SERVER:
 	1. Average data collector queue length
 	2. Average database writer queue length
 - Implement sending of all alarms from database
-- Add signal handlers for UNIX
 - Implement normal mailer shutdown
 - Implement locks table in memory
 - Check if object indexes always locked when used
 - Remove system-dependent code for getting interface list and ARP cache
   from management server. Server should rely on SNMP or native agent for
   this functionality.
-- Change node into subnet placement algorithm
-- Add incorect netmask detection
 - Chech if ObjectGlobalLock()/ObjectGlobalUnlock() really needed or we can
   use just index locking
 

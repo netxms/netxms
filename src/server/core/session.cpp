@@ -2213,22 +2213,32 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
    NetObj *pObject, *pParent;
    int iClass;
    char *pDescription, szObjectName[MAX_OBJECT_NAME];
+   DWORD dwIpAddr;
+   BOOL bParentAlwaysValid = FALSE;
 
    // Prepare responce message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
+   iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
+
    // Find parent object
    pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
-   if (pParent != NULL)
+   if ((pParent == NULL) && (iClass == OBJECT_NODE))
+   {
+      dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+      pParent = FindSubnetForNode(dwIpAddr);
+      bParentAlwaysValid = TRUE;
+   }
+   if ((pParent != NULL) || (iClass == OBJECT_NODE))
    {
       // User should have create access to parent object
-      if (pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
+      if ((pParent != NULL) ? 
+            pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
+            g_pEntireNet->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
-         iClass = pRequest->GetVariableShort(VID_OBJECT_CLASS);
-
          // Parent object should be of valid type
-         if (IsValidParentClass(iClass, pParent->Type()))
+         if (bParentAlwaysValid || IsValidParentClass(iClass, (pParent != NULL) ? pParent->Type() : -1))
          {
             pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
             if (IsValidObjectName(szObjectName))
@@ -2237,8 +2247,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                switch(iClass)
                {
                   case OBJECT_NODE:
-                     pObject = PollNewNode(pRequest->GetVariableLong(VID_IP_ADDRESS),
-                                           pRequest->GetVariableLong(VID_IP_NETMASK),
+                     pObject = PollNewNode(dwIpAddr, pRequest->GetVariableLong(VID_IP_NETMASK),
                                            DF_DEFAULT, szObjectName);
                      break;
                   case OBJECT_CONTAINER:

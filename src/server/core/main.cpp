@@ -173,6 +173,8 @@ BOOL Initialize(void)
    WSAStartup(0x0002, &wsaData);
 #endif
 
+   InitLocalNetInfo();
+
    // Create queue for delayed SQL queries
    g_pLazyRequestQueue = new Queue(64, 16);
 
@@ -276,10 +278,9 @@ BOOL Initialize(void)
    ThreadCreate(ClientListener, 0, NULL);
 
    // Start network discovery thread if required
+   CheckForMgmtNode();
    if (ConfigReadInt("RunNetworkDiscovery", 1))
       ThreadCreate(DiscoveryThread, 0, NULL);
-   else
-      CheckForMgmtNode();
 
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);

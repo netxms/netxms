@@ -54,6 +54,34 @@
 
 
 //
+// Static data
+//
+
+#ifdef _WIN32
+static DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
+#endif
+
+
+//
+// Initialize
+//
+
+void InitLocalNetInfo(void)
+{
+#ifdef _WIN32
+   HMODULE hModule;
+
+   hModule = LoadLibrary("NETMAN.DLL");
+   if (hModule != NULL)
+   {
+      imp_HrLanConnectionNameFromGuidOrPath = 
+         (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
+   }
+#endif
+}
+
+
+//
 // Convert string representation of MAC address to binary form
 //
 
@@ -93,7 +121,7 @@ static DWORD InterfaceIndexFromName(char *pszIfName)
 // Get local ARP cache
 //
 
-ARP_CACHE *GetLocalArpCache(void)
+static ARP_CACHE *SysGetLocalArpCache(void)
 {
    ARP_CACHE *pArpCache = NULL;
 
@@ -180,61 +208,79 @@ ARP_CACHE *GetLocalArpCache(void)
 
 
 //
-// Get local interface list
+// Get local interface list (built-in system dependent code)
 //
 
-INTERFACE_LIST *GetLocalInterfaceList(void)
+static INTERFACE_LIST *SysGetLocalIfList(void)
 {
    INTERFACE_LIST *pIfList;
 
 #ifdef _WIN32
-   MIB_IPADDRTABLE *ifTable;
-   MIB_IFROW ifRow;
-   DWORD i, dwSize, dwError, dwIfType;
-   char szIfName[32], *pszIfName;
+   DWORD dwSize;
+   IP_ADAPTER_INFO *pBuffer, *pInfo;
+   char szAdapterName[MAX_OBJECT_NAME];
+   char szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
+   IP_ADDR_STRING *pAddr;
 
-   ifTable = (MIB_IPADDRTABLE *)malloc(SIZEOF_IPADDRTABLE(256));
-   if (ifTable == NULL)
-      return NULL;
-
-   dwSize = SIZEOF_IPADDRTABLE(256);
-   dwError = GetIpAddrTable(ifTable, &dwSize, FALSE);
-   if (dwError != NO_ERROR)
+   if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
    {
-      WriteLog(MSG_GETIPADDRTABLE_FAILED, EVENTLOG_ERROR_TYPE, "e", NULL);
-      free(ifTable);
       return NULL;
    }
 
-   // Allocate and initialize interface list structure
-   pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-   pIfList->iNumEntries = ifTable->dwNumEntries;
-   pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * ifTable->dwNumEntries);
-   memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * ifTable->dwNumEntries);
-
-   // Fill in our interface list
-   for(i = 0; i < ifTable->dwNumEntries; i++)
+   pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
+   if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
    {
-      ifRow.dwIndex = ifTable->table[i].dwIndex;
-      if (GetIfEntry(&ifRow) == NO_ERROR)
+      // Allocate and initialize interface list structure
+      pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+      pIfList->iNumEntries = 0;
+      pIfList->pInterfaces = NULL;
+
+      for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
       {
-         dwIfType = ifRow.dwType;
-         pszIfName = (char *)ifRow.bDescr;
+         // Get network connection name from adapter name, if possible
+         if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
+         {
+            WORD wGUID[256], wName[256];
+
+            // Resolve GUID to network connection name
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
+            dwSize = 256;
+            if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
+            {
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                                   wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
+            }
+            else
+            {
+               strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            }
+         }
+         else
+         {
+            // We don't have a GUID resolving function, use GUID as name
+            strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+         }
+
+         BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
+
+         // Compose result for each ip address
+         for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
+         {
+            pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces,
+                                          sizeof(INTERFACE_INFO) * (pIfList->iNumEntries + 1));
+            _tcsncpy(pIfList->pInterfaces[pIfList->iNumEntries].szName, szAdapterName, MAX_OBJECT_NAME);
+            memcpy(pIfList->pInterfaces[pIfList->iNumEntries].bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIndex = pInfo->Index;
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = inet_addr(pAddr->IpAddress.String);
+            pIfList->pInterfaces[pIfList->iNumEntries].dwIpNetMask = inet_addr(pAddr->IpMask.String);
+            pIfList->pInterfaces[pIfList->iNumEntries].dwType = pInfo->Type;
+            pIfList->pInterfaces[pIfList->iNumEntries].iNumSecondary = 0;
+            pIfList->iNumEntries++;
+         }
       }
-      else
-      {
-         dwIfType = IFTYPE_OTHER;
-         sprintf(szIfName, "IF-UNKNOWN-%d", ifTable->table[i].dwIndex);
-         pszIfName = szIfName;
-      }
-      pIfList->pInterfaces[i].dwIndex = ifTable->table[i].dwIndex;
-      pIfList->pInterfaces[i].dwIpAddr = ifTable->table[i].dwAddr;
-      pIfList->pInterfaces[i].dwIpNetMask = ifTable->table[i].dwMask;
-      pIfList->pInterfaces[i].dwType = dwIfType;
-      strncpy(pIfList->pInterfaces[i].szName, pszIfName, MAX_OBJECT_NAME - 1);
    }
 
-   free(ifTable);
+   free(pBuffer);
 
 #else
 
@@ -327,7 +373,54 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
 
 #endif
 
-   CleanInterfaceList(pIfList);
+   return pIfList;
+}
 
+
+//
+// Get local ARP cache
+//
+
+ARP_CACHE *GetLocalArpCache(void)
+{
+   ARP_CACHE *pArpCache = NULL;
+   AgentConnection conn(inet_addr("127.0.0.1"));
+
+   // Try to get local interface list from agent via loopback address
+   if (conn.Connect())
+   {
+      pArpCache = conn.GetArpCache();
+      conn.Disconnect();
+   }
+
+   // Use built-in code as last resort
+   if (pArpCache == NULL)
+      pArpCache = SysGetLocalArpCache();
+
+   return pArpCache;
+}
+
+
+//
+// Get local interface list
+//
+
+INTERFACE_LIST *GetLocalInterfaceList(void)
+{
+   INTERFACE_LIST *pIfList = NULL;
+   AgentConnection conn(inet_addr("127.0.0.1"));
+
+   // Try to get local interface list from agent via loopback address
+   if (conn.Connect())
+   {
+      pIfList = conn.GetInterfaceList();
+      conn.Disconnect();
+   }
+
+   // Use built-in code as last resort
+   if (pIfList == NULL)
+      pIfList = SysGetLocalIfList();
+
+   CleanInterfaceList(pIfList);
    return pIfList;
 }
