@@ -121,6 +121,7 @@ void ClientSession::ReadThread(void)
    }
    if (iErr < 0)
       WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
+   free(pRawMsg);
 }
 
 
@@ -135,9 +136,9 @@ void ClientSession::WriteThread(void)
    while(1)
    {
       pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
-      if (send(m_hSocket, (const char *)pMsg, pMsg->wSize, 0) <= 0)
+      if (send(m_hSocket, (const char *)pMsg, ntohs(pMsg->wSize), 0) <= 0)
       {
-         free(pMsg);
+         LibUtilDestroyObject(pMsg);
          break;
       }
       LibUtilDestroyObject(pMsg);
