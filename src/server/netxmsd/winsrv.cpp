@@ -22,7 +22,7 @@
 
 #include "netxmsd.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 //
 // Static data
