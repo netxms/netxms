@@ -30,6 +30,12 @@
 #include <pdh.h>
 #include <pdhmsg.h>
 
+#ifdef _DEBUG
+#define DEBUG_SUFFIX    "-debug"
+#else
+#define DEBUG_SUFFIX    ""
+#endif
+
 
 //
 // Counter types

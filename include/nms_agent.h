@@ -115,10 +115,13 @@ typedef struct
 // Subagent initialization structure
 //
 
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x0E782501)
+
 typedef struct
 {
+   DWORD dwMagic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR szName[MAX_SUBAGENT_NAME];
-   DWORD dwVersion;
+   TCHAR szVersion[16];
    void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
    DWORD dwNumParameters;
    NETXMS_SUBAGENT_PARAM *pParamList;

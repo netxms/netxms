@@ -146,4 +146,10 @@ Language=English
 %1
 .
 
+MessageId=
+SymbolicName=MSG_SUBAGENT_BAD_MAGIC
+Language=English
+Subagent "%1" has invalid magic number - probably it was compiled for different agent version
+.
+
 ;#endif

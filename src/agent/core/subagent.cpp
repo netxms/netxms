@@ -78,31 +78,41 @@ BOOL LoadSubAgent(char *szModuleName)
 
          if (SubAgentInit(&pInfo, g_szConfigFile))
          {
-            DWORD i;
+            // Check if information structure is valid
+            if (pInfo->dwMagic == NETXMS_SUBAGENT_INFO_MAGIC)
+            {
+               DWORD i;
 
-            // Add subagent to subagent's list
-            m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
-                                                  sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
-            m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-            strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, szModuleName, MAX_PATH - 1);
-            m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
-            m_dwNumSubAgents++;
+               // Add subagent to subagent's list
+               m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
+                                                     sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
+               m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
+               strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, szModuleName, MAX_PATH - 1);
+               m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
+               m_dwNumSubAgents++;
 
-            // Add parameters provided by this subagent to common list
-            for(i = 0; i < pInfo->dwNumParameters; i++)
-               AddParameter(pInfo->pParamList[i].szName, 
-                            pInfo->pParamList[i].fpHandler,
-                            pInfo->pParamList[i].pArg);
+               // Add parameters provided by this subagent to common list
+               for(i = 0; i < pInfo->dwNumParameters; i++)
+                  AddParameter(pInfo->pParamList[i].szName, 
+                               pInfo->pParamList[i].fpHandler,
+                               pInfo->pParamList[i].pArg);
 
-            // Add enums provided by this subagent to common list
-            for(i = 0; i < pInfo->dwNumEnums; i++)
-               AddEnum(pInfo->pEnumList[i].szName, 
-                       pInfo->pEnumList[i].fpHandler,
-                       pInfo->pEnumList[i].pArg);
+               // Add enums provided by this subagent to common list
+               for(i = 0; i < pInfo->dwNumEnums; i++)
+                  AddEnum(pInfo->pEnumList[i].szName, 
+                          pInfo->pEnumList[i].fpHandler,
+                          pInfo->pEnumList[i].pArg);
 
-            WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
-                     "s", szModuleName);
-            bSuccess = TRUE;
+               WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
+                        "s", szModuleName);
+               bSuccess = TRUE;
+            }
+            else
+            {
+               WriteLog(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
+                        "s", szModuleName);
+               DLClose(hModule);
+            }
          }
          else
          {
@@ -157,8 +167,9 @@ LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
-      _sntprintf(szBuffer, MAX_PATH + 32, "%s 0x%08X %s", m_pSubAgentList[i].pInfo->szName,
-               m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"), 
+                 m_pSubAgentList[i].pInfo->szName, m_pSubAgentList[i].pInfo->szVersion,
+                 m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
       NxAddResultString(value, szBuffer);
    }
    return SYSINFO_RC_SUCCESS;

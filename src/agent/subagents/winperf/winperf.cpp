@@ -267,6 +267,17 @@ static LONG H_PdhObjectItems(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *p
 
 
 //
+// Value of specific performance parameter, which is mapped one-to-one to
+// performance counter. Actually, it's an alias for PDH.CounterValue(xxx) parameter.
+//
+
+static LONG H_CounterAlias(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+{
+   return H_PdhCounterValue(pArg, NULL, pValue);
+}
+
+
+//
 // Handler for subagent unload
 //
 
@@ -285,7 +296,9 @@ static void OnUnload(void)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL },
-   { _T("PDH.Version"), H_PdhVersion, NULL }
+   { _T("PDH.Version"), H_PdhVersion, NULL },
+   { _T("System.Threads"), H_CounterAlias, _T("(\\System\\Threads)") },
+   { _T("System.Uptime"), H_CounterAlias, _T("(\\System\\System Up Time)") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -296,7 +309,8 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	"WinPerf", 0x01000000, OnUnload,
+   NETXMS_SUBAGENT_INFO_MAGIC,
+	_T("WinPerf"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX), OnUnload,
 	0, NULL,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	m_enums
