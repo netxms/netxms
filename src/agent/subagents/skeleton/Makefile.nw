@@ -1,0 +1,23 @@
+#
+# Makefile for building NetXMS Skeleton Subagent for Novell NetWare platform
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+include ../../../../netware/Makefile.inc
+
+OBJECTS  = skeleton.o
+EXEC     = skeleton.nsm
+DEF      = skeleton.def
+
+all: $(EXEC)
+
+$(OBJECTS): Makefile.nw
+
+.cpp.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+$(EXEC): $(OBJECTS) $(DEF)
+	$(LINK) $(LDFLAGS) -T $(DEF)
+
+clean:
+	rm -f *.o $(EXEC)

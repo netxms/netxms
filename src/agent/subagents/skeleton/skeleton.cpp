@@ -1,4 +1,4 @@
-/* 
+/*
 ** Skeleton NetXMS subagent
 ** Copyright (C) 2004 Victor Kirhenshtein
 **
@@ -92,7 +92,11 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
+#ifdef _NETWARE
+extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit_SKELETON(NETXMS_SUBAGENT_INFO **ppInfo)
+#else
 extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+#endif
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -108,6 +112,25 @@ extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    return TRUE;
+}
+
+#endif
+
+
+//
+// NetWare library entry point
+//
+
+#ifdef _NETWARE
+
+int _init(void)
+{
+   return 0;
+}
+
+int _fini(void)
+{
+   return 0;
 }
 
 #endif

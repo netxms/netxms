@@ -85,6 +85,7 @@ src/agent/subagents/Makefile.am -text
 src/agent/subagents/linux/Makefile.am -text
 src/agent/subagents/linux/linux.cpp -text
 src/agent/subagents/skeleton/Makefile.am -text
+src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text

@@ -22,6 +22,10 @@
 
 #include "nxagentd.h"
 
+#ifdef _NETWARE
+#include <fsio.h>
+#endif
+
 
 //
 // Static data
@@ -46,7 +50,28 @@ BOOL LoadSubAgent(char *szModuleName)
    {
       BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **);
 
+      // Under NetWare, we have slightly different subagent
+      // initialization procedure. Because normally two NLMs
+      // cannot export symbols with identical names, we cannot 
+      // simply export NxSubAgentInit in each subagent. Instead,
+      // agent expect to find symbol called NxSubAgentInit_<module_file_name>
+      // in every subagent. Note that module file name should
+      // be in capital letters.
+#ifdef _NETWARE
+      char *pExt, szFileName[MAX_PATH], szEntryPoint[MAX_PATH];
+      int iElem, iFlags;
+
+      deconstruct(szModuleName, NULL, NULL, NULL, szFileName, NULL, &iElem, &iFlags);
+      pExt = strrchr(szFileName, '.');
+      if (pExt != NULL)
+         *pExt = 0;
+      strupr(szFileName);
+      sprintf(szEntryPoint, "NxSubAgentInit_%s", szFileName);
+      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
+#else
       SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **))DLGetSymbolAddr(hModule, "NxSubAgentInit", szErrorText);
+#endif
+
       if (SubAgentInit != NULL)
       {
          NETXMS_SUBAGENT_INFO *pInfo;

@@ -26,6 +26,10 @@
 #include <conio.h>
 #endif
 
+#ifdef _NETWARE
+#include <screen.h>
+#endif
+
 
 //
 // Externals
@@ -342,6 +346,10 @@ int main(int argc, char *argv[])
    char szModuleName[MAX_PATH];
 #endif
    
+#ifdef _NETWARE
+   setscreenmode(SCR_AUTOCLOSE_ON_EXIT | SCR_COLOR_ATTRS);
+#endif
+
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
@@ -477,6 +485,12 @@ int main(int argc, char *argv[])
       default:
          break;
    }
+
+#ifdef _NETWARE
+   if ((iExitCode != 0) || (iAction == ACTION_NONE) || 
+       (iAction == ACTION_CHECK_CONFIG))
+      setscreenmode(SCR_NO_MODE);
+#endif
 
    return iExitCode;
 }
