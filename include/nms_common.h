@@ -30,6 +30,7 @@ typedef unsigned long DWORD;
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
+typedef void * HMODULE;
 
 #define TRUE   1
 #define FALSE  0
