@@ -8,5 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = reconf configure include netxms.dsw gpl.txt
+EXTRA_DIST = reconf configure include netxms.dsw
 SUBDIRS = m4 contrib src doc sql images tools netware
