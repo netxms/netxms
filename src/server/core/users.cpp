@@ -224,7 +224,7 @@ void SaveUsers(void)
 // int pdwId.
 //
 
-BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId)
+BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId, DWORD *pdwSystemRights)
 {
    DWORD i;
    BOOL bResult = FALSE;
@@ -236,6 +236,7 @@ BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId)
           !(m_pUserList[i].wFlags & UF_DELETED))
       {
          *pdwId = m_pUserList[i].dwId;
+         *pdwSystemRights = (DWORD)m_pUserList[i].wSystemRights;
          bResult = TRUE;
          break;
       }

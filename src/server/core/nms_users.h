@@ -38,7 +38,10 @@
 // Global rights
 //
 
-#define SYSTEM_ACCESS_MANAGE_USERS  0x0001
+#define SYSTEM_ACCESS_MANAGE_USERS        0x0001
+#define SYSTEM_ACCESS_VIEW_CONFIG         0x0002
+#define SYSTEM_ACCESS_EDIT_CONFIG         0x0004
+#define SYSTEM_ACCESS_DROP_CONNECTIONS    0x0008
 
 
 //
@@ -135,7 +138,7 @@ void SaveUsers(void);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 void DeleteUserFromGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
-BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId);
+BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
 
 
 //

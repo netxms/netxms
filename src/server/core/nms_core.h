@@ -175,10 +175,14 @@ private:
    DWORD m_dwIndex;
    int m_iState;
    DWORD m_dwUserId;
+   DWORD m_dwSystemAccess;    // User's system access rights
    CSCP_BUFFER *m_pMsgBuffer;
 
    void DebugPrintf(char *szFormat, ...);
    void SendAllObjects(void);
+   void SendAllEvents(void);
+   void SendAllConfigVars(void);
+   void SetConfigVariable(CSCPMessage *pMsg);
 
 public:
    ClientSession(SOCKET hSocket);
