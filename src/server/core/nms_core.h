@@ -264,6 +264,8 @@ private:
    MUTEX m_hMutexSendObjects;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    char m_szUserName[256];    // String in form login_name@host
+   DWORD m_dwOpenDCIListSize; // Number of open DCI lists
+   DWORD *m_pOpenDCIList;     // List of nodes with DCI lists open
 
    BOOL CheckSysAccessRights(DWORD dwRequiredAccess) 
    { 

@@ -79,6 +79,8 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwHostAddr = dwHostAddr;
    strcpy(m_szUserName, "<not logged in>");
    m_dwUserId = INVALID_INDEX;
+   m_dwOpenDCIListSize = 0;
+   m_pOpenDCIList = NULL;
 }
 
 
@@ -93,13 +95,13 @@ ClientSession::~ClientSession()
    delete m_pSendQueue;
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
-   if (m_pMsgBuffer != NULL)
-      free(m_pMsgBuffer);
+   safe_free(m_pMsgBuffer);
    ConditionDestroy(m_hCondWriteThreadStopped);
    ConditionDestroy(m_hCondProcessingThreadStopped);
    ConditionDestroy(m_hCondUpdateThreadStopped);
    MutexDestroy(m_hMutexSendEvents);
    MutexDestroy(m_hMutexSendObjects);
+   safe_free(m_pOpenDCIList);
 }
 
 
@@ -130,6 +132,8 @@ void ClientSession::ReadThread(void)
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
    int iErr;
+   DWORD i;
+   NetObj *pObject;
 
    // Initialize raw message receiving function
    RecvCSCPMessage(0, NULL, m_pMsgBuffer);
@@ -165,6 +169,13 @@ void ClientSession::ReadThread(void)
 
    // Remove all locks created by this session
    RemoveAllSessionLocks(m_dwIndex);
+   for(i = 0; i < m_dwOpenDCIListSize; i++)
+   {
+      pObject = FindObjectById(m_pOpenDCIList[i]);
+      if (pObject != NULL)
+         if (pObject->Type() == OBJECT_NODE)
+            ((Node *)pObject)->UnlockDCIList(m_dwIndex);
+   }
 }
 
 
@@ -1115,6 +1126,14 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
             // Try to lock DCI list
             bSuccess = ((Node *)pObject)->LockDCIList(m_dwIndex);
             msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_COMPONENT_LOCKED);
+
+            // Modify list of open nodes DCI lists
+            if (bSuccess)
+            {
+               m_pOpenDCIList = (DWORD *)realloc(m_pOpenDCIList, sizeof(DWORD) * (m_dwOpenDCIListSize + 1));
+               m_pOpenDCIList[m_dwOpenDCIListSize] = dwObjectId;
+               m_dwOpenDCIListSize++;
+            }
          }
          else
          {
@@ -1168,6 +1187,21 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
             // Try to unlock DCI list
             bSuccess = ((Node *)pObject)->UnlockDCIList(m_dwIndex);
             msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_OUT_OF_STATE_REQUEST);
+
+            // Modify list of open nodes DCI lists
+            if (bSuccess)
+            {
+               DWORD i;
+
+               for(i = 0; i < m_dwOpenDCIListSize; i++)
+                  if (m_pOpenDCIList[i] == dwObjectId)
+                  {
+                     m_dwOpenDCIListSize--;
+                     memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1],
+                             sizeof(DWORD) * (m_dwOpenDCIListSize - i));
+                     break;
+                  }
+            }
          }
          else
          {
