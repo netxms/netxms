@@ -34,6 +34,7 @@
 #define MAX_OBJECT_NAME       64
 #define MAX_COMMUNITY_LENGTH  32
 #define MAX_OID_LENGTH        1024
+#define MAX_EVENT_MSG_LENGTH  256
 
 
 //
@@ -64,6 +65,7 @@
 #define NXC_EVENT_STATE_CHANGED     1
 #define NXC_EVENT_ERROR             2
 #define NXC_EVENT_LOGIN_RESULT      3
+#define NXC_EVENT_NEW_ELOG_RECORD   4
 
 
 //
@@ -98,6 +100,20 @@
 
 typedef void (* NXC_EVENT_HANDLER)(DWORD dwEvent, DWORD dwCode, void *pArg);
 typedef void (* NXC_DEBUG_CALLBACK)(char *pMsg);
+
+
+//
+// Event log record structure
+//
+
+typedef struct
+{
+   DWORD dwTimeStamp;
+   DWORD dwEventId;
+   DWORD dwSourceId;
+   DWORD dwSeverity;
+   char  szMessage[MAX_EVENT_MSG_LENGTH];
+} NXC_EVENT;
 
 
 //
@@ -171,6 +187,7 @@ NXC_OBJECT EXPORTABLE *NXCGetRootObject(void);
 //
 
 #define NXCSyncObjects() NXCRequest(NXC_OP_SYNC_OBJECTS)
+#define NXCSyncEvents() NXCRequest(NXC_OP_SYNC_EVENTS)
 
 
 #endif   /* _nxclapi_h_ */

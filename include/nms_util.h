@@ -82,7 +82,7 @@ public:
    DWORD GetVariableLong(char *szName);
    QWORD GetVariableInt64(char *szName);
    WORD GetVariableShort(char *szName);
-   char *GetVariableStr(char *szName);
+   char *GetVariableStr(char *szName, char *szBuffer = NULL, DWORD dwBufSize = 0);
 
    void DeleteAllVariables(void);
 };
@@ -133,11 +133,15 @@ public:
 
 extern "C"
 {
-   void EXPORTABLE LibUtilDestroyObject(void *pObject);
    QWORD EXPORTABLE __bswap_64(QWORD qwVal);
    int EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, CSCP_BUFFER *pBuffer);
+   
    int EXPORTABLE BitsInMask(DWORD dwMask);
    char EXPORTABLE *IpToStr(DWORD dwAddr, char *szBuffer);
+
+   void EXPORTABLE *MemAlloc(DWORD dwSize);
+   void EXPORTABLE *MemReAlloc(void *pBlock, DWORD dwNewSize);
+   void EXPORTABLE MemFree(void *pBlock);
 }
 
 #endif   /* _nms_util_h_ */
