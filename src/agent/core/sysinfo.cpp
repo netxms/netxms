@@ -173,9 +173,8 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
 
 LONG H_CRC32(char *cmd, char *arg, char *value)
 {
-   char szFileName[MAX_PATH], szHashText[sizeof(DWORD) * 2 + 1];
-   DWORD dwCRC32;
-   DWORD i;
+   char szFileName[MAX_PATH];
+   DWORD i, dwCRC32;
 
    if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
@@ -183,9 +182,7 @@ LONG H_CRC32(char *cmd, char *arg, char *value)
    if (!CalculateFileCRC32(szFileName, &dwCRC32))
       return SYSINFO_RC_UNSUPPORTED;
 
-	sprintf(szHashText, "%08x", dwCRC32);
-
-   ret_string(value, szHashText);
+   ret_uint(value, dwCRC32);
    return SYSINFO_RC_SUCCESS;
 }
 

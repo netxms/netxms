@@ -197,9 +197,9 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Agent.Uptime", H_AgentUptime, NULL, DCI_DT_UINT, "Agent's uptime" },
    { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, "Agent's version" },
    { "File.Count(*)", H_FileCount, NULL, DCI_DT_UINT, "" },
-   { "File.Hash.CRC32(*)", H_CRC32, NULL, DCI_DT_UINT, "" },
-   { "File.Hash.MD5(*)", H_MD5Hash, NULL, DCI_DT_STRING, "" },
-   { "File.Hash.SHA1(*)", H_SHA1Hash, NULL, DCI_DT_STRING, "" },
+   { "File.Hash.CRC32(*)", H_CRC32, NULL, DCI_DT_UINT, "CRC32 checksum of *" },
+   { "File.Hash.MD5(*)", H_MD5Hash, NULL, DCI_DT_STRING, "MD5 has of *" },
+   { "File.Hash.SHA1(*)", H_SHA1Hash, NULL, DCI_DT_STRING, "SHA1 hash of *" },
    { "File.Size(*)", H_FileSize, NULL, DCI_DT_UINT64, "" },
    { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, "" }
 };
