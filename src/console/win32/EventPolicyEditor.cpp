@@ -31,6 +31,8 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
 	ON_WM_SIZE()
+	ON_WM_CONTEXTMENU()
+	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -137,4 +139,29 @@ void CEventPolicyEditor::OnSize(UINT nType, int cx, int cy)
 	CMDIChildWnd::OnSize(nType, cx, cy);
 	
    m_wndRuleList.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CEventPolicyEditor::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(3);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CEventPolicyEditor::OnSetFocus(CWnd* pOldWnd) 
+{
+	CMDIChildWnd::OnSetFocus(pOldWnd);
+
+   m_wndRuleList.SetFocus();
 }

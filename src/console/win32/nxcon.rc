@@ -154,6 +154,7 @@ BEGIN
     POPUP "&Tools"
     BEGIN
         MENUITEM "&MIB Browser\tAlt+M",         ID_TOOLS_MIBBROWSER
+        MENUITEM "&Add node...\tF11",           ID_TOOLS_ADDNODE
     END
     POPUP "&Help"
     BEGIN
@@ -264,6 +265,13 @@ BEGIN
         MENUITEM "&Show data",                  ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
     END
+    POPUP "Policy"
+    BEGIN
+        MENUITEM "&Add...",                     ID_POLICY_ADD
+        MENUITEM "&Delete",                     ID_POLICY_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Negate cell",                ID_POLICY_NEGATECELL
+    END
 END
 
 
@@ -280,6 +288,7 @@ BEGIN
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F11,         ID_TOOLS_ADDNODE,       VIRTKEY, NOINVERT
     VK_F2,          ID_VIEW_MAP,            VIRTKEY, NOINVERT
     VK_F3,          ID_VIEW_OBJECTBROWSER,  VIRTKEY, NOINVERT
     VK_F4,          ID_CONTROLPANEL_EVENTPOLICY, VIRTKEY, NOINVERT

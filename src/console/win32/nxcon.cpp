@@ -988,7 +988,7 @@ void CConsoleApp::OnControlpanelEventpolicy()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to lock user database:\n%s");
+         ErrorBox(dwResult, "Unable to load event processing policy:\n%s");
       }
    }
 }

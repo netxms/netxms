@@ -153,6 +153,7 @@ BEGIN_MESSAGE_MAP(CRuleList, CWnd)
 	ON_WM_VSCROLL()
 	ON_WM_HSCROLL()
 	ON_WM_MOUSEWHEEL()
+	ON_WM_RBUTTONDOWN()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(HDN_BEGINTRACK, ID_HEADER_CTRL, OnHeaderBeginTrack)
    ON_NOTIFY(HDN_TRACK, ID_HEADER_CTRL, OnHeaderTrack)
@@ -531,38 +532,6 @@ int CRuleList::RowFromPoint(int x, int y)
 
 
 //
-// WM_LBUTTONDOWN message handler
-//
-
-void CRuleList::OnLButtonDown(UINT nFlags, CPoint point) 
-{
-   int iRow;
-
-   iRow = RowFromPoint(point.x, point.y);
-   if (iRow != -1)
-   {
-      if (nFlags & MK_CONTROL)
-      {
-         m_ppRowList[iRow]->m_dwFlags |= RF_SELECTED;
-      }
-      else if (nFlags & MK_SHIFT)
-      {
-      }
-      else
-      {
-         ClearSelection(FALSE);
-         m_ppRowList[iRow]->m_dwFlags |= RF_SELECTED;
-      }
-      InvalidateRect(NULL, FALSE);
-   }
-   else
-   {
-      ClearSelection();
-   }
-}
-
-
-//
 // WM_SIZE message handler
 //
 
@@ -742,7 +711,7 @@ int CRuleList::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
 
 void CRuleList::OnScroll()
 {
-   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, -m_iYOrg, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
    InvalidateRect(NULL, FALSE);
 }
 
@@ -762,5 +731,47 @@ BOOL CRuleList::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
    {
       theApp.DebugPrintf("zDelta=%d", zDelta);
    }
-   return 0;
+   return TRUE;
+}
+
+
+//
+// WM_RBUTTONDOWN message handler
+//
+
+void CRuleList::OnRButtonDown(UINT nFlags, CPoint point) 
+{
+	CWnd::OnRButtonDown(nFlags, point);
+}
+
+
+//
+// WM_LBUTTONDOWN message handler
+//
+
+void CRuleList::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+   int iRow;
+
+   iRow = RowFromPoint(point.x, point.y);
+   if (iRow != -1)
+   {
+      if (nFlags & MK_CONTROL)
+      {
+         m_ppRowList[iRow]->m_dwFlags |= RF_SELECTED;
+      }
+      else if (nFlags & MK_SHIFT)
+      {
+      }
+      else
+      {
+         ClearSelection(FALSE);
+         m_ppRowList[iRow]->m_dwFlags |= RF_SELECTED;
+      }
+      InvalidateRect(NULL, FALSE);
+   }
+   else
+   {
+      ClearSelection();
+   }
 }

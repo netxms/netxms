@@ -202,6 +202,10 @@
 #define ID_ITEM_GRAPH                   32837
 #define ID_TOOLS_MIBBROWSER             32840
 #define ID_CONTROLPANEL_EVENTPOLICY     32841
+#define ID_POLICY_ADD                   32842
+#define ID_POLICY_DELETE                32843
+#define ID_POLICY_NEGATECELL            32844
+#define ID_TOOLS_ADDNODE                32845
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -211,7 +215,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        183
-#define _APS_NEXT_COMMAND_VALUE         32842
+#define _APS_NEXT_COMMAND_VALUE         32846
 #define _APS_NEXT_CONTROL_VALUE         1104
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
