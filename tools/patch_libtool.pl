@@ -8,6 +8,7 @@ while(<>)
    {
       $line = "postdeps=\"\"";
    }
+   $line =~ s/-lc_r/-lc_rXXX/;
    print "$line\n";
 }
 
