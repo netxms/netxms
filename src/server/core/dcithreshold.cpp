@@ -64,13 +64,13 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 
    switch(m_iDataType)
    {
-      case DTYPE_INTEGER:
+      case DCI_DT_INTEGER:
          m_value.iInteger = strtol(m_pszValueStr, NULL, 0);
          break;
-      case DTYPE_INT64:
+      case DCI_DT_INT64:
          /* TODO: add 64-bit string to binary conversion */
          break;
-      case DTYPE_FLOAT:
+      case DCI_DT_FLOAT:
          m_value.dFloat = strtod(m_pszValueStr, NULL);
          break;
       default:
@@ -162,16 +162,16 @@ int Threshold::Check(const char *pszValue)
       case F_LAST:         // Check last value only
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                fvalue.iInteger = strtol(pszValue, NULL, 0);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                /* TODO: add 64-bit conversion code */
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                fvalue.dFloat = strtod(pszValue, NULL);
                break;
-            case DTYPE_STRING:
+            case DCI_DT_STRING:
                fvalue.pszStr = pszValue;
                break;
             default:
@@ -195,13 +195,13 @@ int Threshold::Check(const char *pszValue)
       case OP_LE:    // Less
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                bMatch = (fvalue.iInteger < m_value.iInteger);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                bMatch = (fvalue.qwInt64 < m_value.qwInt64);
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                bMatch = (fvalue.dFloat < m_value.dFloat);
                break;
          }
@@ -209,13 +209,13 @@ int Threshold::Check(const char *pszValue)
       case OP_LE_EQ: // Less or equal
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                bMatch = (fvalue.iInteger <= m_value.iInteger);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                bMatch = (fvalue.qwInt64 <= m_value.qwInt64);
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                bMatch = (fvalue.dFloat <= m_value.dFloat);
                break;
          }
@@ -223,16 +223,16 @@ int Threshold::Check(const char *pszValue)
       case OP_EQ:    // Equal
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                bMatch = (fvalue.iInteger == m_value.iInteger);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                bMatch = (fvalue.qwInt64 == m_value.qwInt64);
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                bMatch = (fvalue.dFloat == m_value.dFloat);
                break;
-            case DTYPE_STRING:
+            case DCI_DT_STRING:
                bMatch = !strcmp(fvalue.pszStr, m_pszValueStr);
                break;
          }
@@ -240,13 +240,13 @@ int Threshold::Check(const char *pszValue)
       case OP_GT_EQ: // Greater or equal
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                bMatch = (fvalue.iInteger >= m_value.iInteger);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                bMatch = (fvalue.qwInt64 >= m_value.qwInt64);
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                bMatch = (fvalue.dFloat >= m_value.dFloat);
                break;
          }
@@ -254,13 +254,13 @@ int Threshold::Check(const char *pszValue)
       case OP_GT:    // Greater
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                bMatch = (fvalue.iInteger > m_value.iInteger);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                bMatch = (fvalue.qwInt64 > m_value.qwInt64);
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                bMatch = (fvalue.dFloat > m_value.dFloat);
                break;
          }
@@ -268,28 +268,28 @@ int Threshold::Check(const char *pszValue)
       case OP_NE:    // Not equal
          switch(m_iDataType)
          {
-            case DTYPE_INTEGER:
+            case DCI_DT_INTEGER:
                bMatch = (fvalue.iInteger != m_value.iInteger);
                break;
-            case DTYPE_INT64:
+            case DCI_DT_INT64:
                bMatch = (fvalue.qwInt64 != m_value.qwInt64);
                break;
-            case DTYPE_FLOAT:
+            case DCI_DT_FLOAT:
                bMatch = (fvalue.dFloat != m_value.dFloat);
                break;
-            case DTYPE_STRING:
+            case DCI_DT_STRING:
                bMatch = strcmp(fvalue.pszStr, m_pszValueStr);
                break;
          }
          break;
       case OP_LIKE:
          // This operation can be performed only on strings
-         if (m_iDataType == DTYPE_STRING)
+         if (m_iDataType == DCI_DT_STRING)
             bMatch = MatchString(m_pszValueStr, fvalue.pszStr, TRUE);
          break;
       case OP_NOTLIKE:
          // This operation can be performed only on strings
-         if (m_iDataType == DTYPE_STRING)
+         if (m_iDataType == DCI_DT_STRING)
             bMatch = !MatchString(m_pszValueStr, fvalue.pszStr, TRUE);
          break;
       default:
@@ -317,16 +317,16 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
    pData->dwArg2 = htonl(m_iParam2);
    switch(m_iDataType)
    {
-      case DTYPE_INTEGER:
+      case DCI_DT_INTEGER:
          pData->value.dwInt32 = htonl(m_value.iInteger);
          break;
-      case DTYPE_INT64:
+      case DCI_DT_INT64:
          pData->value.qwInt64 = htonq(m_value.qwInt64);
          break;
-      case DTYPE_FLOAT:
+      case DCI_DT_FLOAT:
          pData->value.dFloat = htond(m_value.dFloat);
          break;
-      case DTYPE_STRING:
+      case DCI_DT_STRING:
          strcpy(pData->value.szString,  m_pszValueStr);
          break;
       default:
@@ -349,12 +349,12 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
    safe_free(m_pszValueStr);
    switch(m_iDataType)
    {
-      case DTYPE_INTEGER:
+      case DCI_DT_INTEGER:
          m_value.iInteger = ntohl(pData->value.dwInt32);
          m_pszValueStr = (char *)malloc(32);
          sprintf(m_pszValueStr, "%ld", m_value.iInteger);
          break;
-      case DTYPE_INT64:
+      case DCI_DT_INT64:
          m_value.qwInt64 = ntohq(pData->value.qwInt64);
          m_pszValueStr = (char *)malloc(32);
 #ifdef _WIN32
@@ -363,12 +363,12 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
          sprintf(m_pszValueStr, "%lld", m_value.qwInt64);
 #endif
          break;
-      case DTYPE_FLOAT:
+      case DCI_DT_FLOAT:
          m_value.dFloat = ntohd(pData->value.dFloat);
          m_pszValueStr = (char *)malloc(32);
          sprintf(m_pszValueStr, "%f", m_value.dFloat);
          break;
-      case DTYPE_STRING:
+      case DCI_DT_STRING:
          m_pszValueStr = strdup(pData->value.szString);
          break;
       default:

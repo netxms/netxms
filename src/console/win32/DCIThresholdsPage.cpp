@@ -124,16 +124,16 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
 
    switch(m_pItem->iDataType)
    {
-      case DTYPE_INTEGER:
+      case DCI_DT_INTEGER:
          sprintf(szValue, "%d", m_pItem->pThresholdList[dwIndex].value.dwInt32);
          break;
-      case DTYPE_INT64:
+      case DCI_DT_INT64:
          sprintf(szValue, "%64I", m_pItem->pThresholdList[dwIndex].value.qwInt64);
          break;
-      case DTYPE_FLOAT:
+      case DCI_DT_FLOAT:
          sprintf(szValue, "%f", m_pItem->pThresholdList[dwIndex].value.dFloat);
          break;
-      case DTYPE_STRING:
+      case DCI_DT_STRING:
          sprintf(szValue, "\"%s\"", m_pItem->pThresholdList[dwIndex].value.szString);
          break;
    }
@@ -165,19 +165,19 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    dlg.m_dwArg1 = pThreshold->dwArg1;
    switch(m_pItem->iDataType)
    {
-      case DTYPE_INTEGER:
+      case DCI_DT_INTEGER:
          sprintf(szBuffer, "%d", pThreshold->value.dwInt32);
          dlg.m_strValue = szBuffer;
          break;
-      case DTYPE_INT64:
+      case DCI_DT_INT64:
          sprintf(szBuffer, "%64I", pThreshold->value.qwInt64);
          dlg.m_strValue = szBuffer;
          break;
-      case DTYPE_FLOAT:
+      case DCI_DT_FLOAT:
          sprintf(szBuffer, "%f", pThreshold->value.dFloat);
          dlg.m_strValue = szBuffer;
          break;
-      case DTYPE_STRING:
+      case DCI_DT_STRING:
          dlg.m_strValue = pThreshold->value.szString;
          break;
    }
@@ -188,16 +188,16 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->wOperation = (WORD)dlg.m_iOperation;
       switch(m_pItem->iDataType)
       {
-         case DTYPE_INTEGER:
+         case DCI_DT_INTEGER:
             pThreshold->value.dwInt32 = strtol((LPCTSTR)dlg.m_strValue, NULL, 0);
             break;
-         case DTYPE_INT64:
+         case DCI_DT_INT64:
             /* TODO: add conversion for 64 bit integers */
             break;
-         case DTYPE_FLOAT:
+         case DCI_DT_FLOAT:
             pThreshold->value.dFloat = strtod((LPCTSTR)dlg.m_strValue, NULL);
             break;
-         case DTYPE_STRING:
+         case DCI_DT_STRING:
             strcpy(pThreshold->value.szString, (LPCTSTR)dlg.m_strValue);
             break;
       }

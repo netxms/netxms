@@ -33,7 +33,7 @@ DCItem::DCItem()
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
    m_iBusy = 0;
-   m_iDataType = DTYPE_INTEGER;
+   m_iDataType = DCI_DT_INTEGER;
    m_iPollingInterval = 3600;
    m_iRetentionTime = 0;
    m_iSource = DS_INTERNAL;

@@ -288,10 +288,10 @@ typedef unsigned long HREQUEST;
 // Data types
 //
 
-#define DTYPE_INTEGER   0
-#define DTYPE_INT64     1
-#define DTYPE_STRING    2
-#define DTYPE_FLOAT     3
+#define DCI_DT_INTEGER     0
+#define DCI_DT_INT64       1
+#define DCI_DT_STRING      2
+#define DCI_DT_FLOAT       3
 
 
 //

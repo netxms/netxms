@@ -1461,7 +1461,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                   case CMD_CREATE_NEW_DCI:
                      // Create dummy DCI
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
-                                        DTYPE_INTEGER, 60, 30, (Node *)pObject);
+                                        DCI_DT_INTEGER, 60, 30, (Node *)pObject);
                      pItem->SetStatus(ITEM_STATUS_DISABLED);
                      if (((Node *)pObject)->AddItem(pItem))
                      {
@@ -1618,13 +1618,13 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                pCurr->dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 0));
                switch(iType)
                {
-                  case DTYPE_INTEGER:
+                  case DCI_DT_INTEGER:
                      pCurr->value.dwInteger = htonl(DBGetFieldAsyncULong(hResult, 1));
                      break;
-                  case DTYPE_FLOAT:
+                  case DCI_DT_FLOAT:
                      pCurr->value.dFloat = htond(DBGetFieldAsyncDouble(hResult, 1));
                      break;
-                  case DTYPE_STRING:
+                  case DCI_DT_STRING:
                      DBGetFieldAsync(hResult, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
                      break;
                }

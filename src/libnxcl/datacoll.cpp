@@ -73,16 +73,16 @@ void ProcessDCI(CSCPMessage *pMsg)
                m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
                switch(m_pItemList->pItems[i].iDataType)
                {
-                  case DT_INTEGER:
+                  case DCI_DT_INTEGER:
                      m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
                      break;
-                  case DT_INT64:
+                  case DCI_DT_INT64:
                      m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
                      break;
-                  case DT_FLOAT:
+                  case DCI_DT_FLOAT:
                      m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
                      break;
-                  case DT_STRING:
+                  case DCI_DT_STRING:
                      strcpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
                      break;
                   default:
@@ -252,16 +252,16 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(DWORD dwNodeId, NXC_DCI *pItem)
       dct.wOperation = htons(pItem->pThresholdList[i].wOperation);
       switch(pItem->iDataType)
       {
-         case DT_INTEGER:
+         case DCI_DT_INTEGER:
             dct.value.dwInt32 = htonl(pItem->pThresholdList[i].value.dwInt32);
             break;
-         case DT_INT64:
+         case DCI_DT_INT64:
             dct.value.qwInt64 = htonq(pItem->pThresholdList[i].value.qwInt64);
             break;
-         case DT_FLOAT:
+         case DCI_DT_FLOAT:
             dct.value.dFloat = htond(pItem->pThresholdList[i].value.dFloat);
             break;
-         case DT_STRING:
+         case DCI_DT_STRING:
             strcpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
             break;
          default:
@@ -410,13 +410,13 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwM
             pDst->dwTimeStamp = ntohl(pSrc->dwTimeStamp);
             switch((*ppData)->wDataType)
             {
-               case DTYPE_INTEGER:
+               case DCI_DT_INTEGER:
                   pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
                   break;
-               case DTYPE_FLOAT:
+               case DCI_DT_FLOAT:
                   pDst->value.dFloat = ntohd(pSrc->value.dFloat);
                   break;
-               case DTYPE_STRING:
+               case DCI_DT_STRING:
                   strcpy(pDst->value.szString, pSrc->value.szString);
                   break;
             }

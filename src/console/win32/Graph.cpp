@@ -6,10 +6,10 @@
 #include "Graph.h"
 #include <math.h>
 
-#define ROW_DATA(row, dt)  ((dt == DTYPE_STRING) ? strtod(row->value.szString, NULL) : \
-                            ((dt == DTYPE_INTEGER) ? row->value.dwInt32 : \
-                             ((dt == DTYPE_INT64) ? row->value.qwInt64 : \
-                              ((dt == DTYPE_FLOAT) ? row->value.dFloat : 0) \
+#define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? strtod(row->value.szString, NULL) : \
+                            ((dt == DCI_DT_INTEGER) ? row->value.dwInt32 : \
+                             ((dt == DCI_DT_INT64) ? row->value.qwInt64 : \
+                              ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
                              ) \
                             ) \
                            )

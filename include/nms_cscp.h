@@ -144,12 +144,12 @@ typedef struct
 // Data types
 //
 
-#define DT_INTEGER   0
-#define DT_STRING    1
-#define DT_INT64     2
-#define DT_INT16     3
-#define DT_BINARY    4
-#define DT_FLOAT     5
+#define CSCP_DT_INTEGER    0
+#define CSCP_DT_STRING     1
+#define CSCP_DT_INT64      2
+#define CSCP_DT_INT16      3
+#define CSCP_DT_BINARY     4
+#define CSCP_DT_FLOAT      5
 
 
 //

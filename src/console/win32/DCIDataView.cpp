@@ -144,7 +144,7 @@ void CDCIDataView::OnViewRefresh()
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
          if (iItem != -1)
          {
-            if (pData->wDataType == DTYPE_STRING)
+            if (pData->wDataType == DCI_DT_STRING)
             {
                m_wndListCtrl.SetItemText(iItem, 1, pRow->value.szString);
             }
@@ -152,13 +152,13 @@ void CDCIDataView::OnViewRefresh()
             {
                switch(pData->wDataType)
                {
-                  case DTYPE_INTEGER:
+                  case DCI_DT_INTEGER:
                      sprintf(szBuffer, "%ld", pRow->value.dwInt32);
                      break;
-                  case DTYPE_INT64:
+                  case DCI_DT_INT64:
                      sprintf(szBuffer, "%I64", pRow->value.qwInt64);
                      break;
-                  case DTYPE_FLOAT:
+                  case DCI_DT_FLOAT:
                      sprintf(szBuffer, "%f", pRow->value.dFloat);
                      break;
                   default:
