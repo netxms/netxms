@@ -153,4 +153,18 @@ typedef struct ata_smart_values
 } ATA_SMART_VALUES; 
 #pragma pack()
 
+
+//
+// Default values for SMART registers
+//
+
+#ifndef SMART_CYL_LOW
+#define SMART_CYL_LOW   0xC2
+#endif
+
+#ifndef SMART_CYL_HI
+#define SMART_CYL_HI    0x4F
+#endif
+
+
 #endif

@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.14 2005-02-21 20:16:05 victor Exp $ */
+/* $Id: linux.cpp,v 1.15 2005-02-24 17:38:49 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -29,6 +29,14 @@
 #include "system.h"
 #include "disk.h"
 
+
+//
+// Externals
+//
+
+LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue);
+
+
 //
 // Subagent information
 //
@@ -46,6 +54,13 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
 			DCI_DT_INT,		"IPv6 forwarding status" },
+
+   { "PhysicalDisk.SmartAttr(*)",    H_PhysicalDiskInfo, "A",
+			DCI_DT_STRING,	"" },
+   { "PhysicalDisk.SmartStatus(*)",  H_PhysicalDiskInfo, "S",
+			DCI_DT_INT,		"Status of hard disk {instance} reported by SMART" },
+   { "PhysicalDisk.Temperature(*)",  H_PhysicalDiskInfo, "T",
+			DCI_DT_INT,		"Temperature of hard disk {instance}" },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
 			DCI_DT_UINT,	"Number of {instance} processes" },
@@ -127,6 +142,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/02/21 20:16:05  victor
+Fixes in parameter data types and descriptions
+
 Revision 1.13  2005/01/24 19:46:50  alk
 SourcePackageSupport; return type/comment addded
 
