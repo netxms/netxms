@@ -140,6 +140,9 @@ src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
 src/agent/subagents/sunos/Makefile.am -text
+src/agent/subagents/sunos/disk.cpp -text
+src/agent/subagents/sunos/main.cpp -text
+src/agent/subagents/sunos/sunos_subagent.h -text
 src/agent/subagents/winperf/Makefile.am -text
 src/agent/subagents/winperf/collect.cpp -text
 src/agent/subagents/winperf/tools.cpp -text

@@ -279,6 +279,7 @@ DWORD GetParameterValue(char *pszParam, char *pszValue)
    int i, rc;
    DWORD dwErrorCode;
 
+   DebugPrintf("Requesting parameter \"%s\"", pszParam);
    for(i = 0; i < m_iNumParams; i++)
       if (MatchString(m_pParamList[i].name, pszParam, FALSE))
       {
@@ -323,6 +324,7 @@ DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue)
    int i, rc;
    DWORD dwErrorCode;
 
+   DebugPrintf("Requesting enum \"%s\"", pszParam);
    for(i = 0; i < m_iNumEnums; i++)
       if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
       {
