@@ -152,6 +152,7 @@ typedef void * HSNMPSESSION;
 #define AF_DEBUG_HOUSEKEEPER              0x00001000
 #define AF_DEBUG_LOCKS                    0x00002000
 #define AF_DEBUG_ACTIONS                  0x00004000
+#define AF_DEBUG_MISC                     0x00008000
 #define AF_DEBUG_ALL                      0x0000FF00
 #define AF_SHUTDOWN                       0x80000000
 

@@ -258,21 +258,31 @@ void CreateSHA1Hash(char *pszSource, BYTE *pBuffer)
 
 BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
 {
-   int fd;
+   int fd, iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;
    struct stat fs;
 
-   fd = open(pszFileName, O_RDONLY);
+   DbgPrintf(AF_DEBUG_MISC, "Loading file \"%s\" into memory\n", pszFileName);
+   fd = open(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
       if (fstat(fd, &fs) != -1)
       {
          pBuffer = (BYTE *)malloc(fs.st_size + 1);
-         *pdwFileSize = fs.st_size;
-         if (read(fd, pBuffer, fs.st_size) != fs.st_size)
+         if (pBuffer != NULL)
          {
-            free(pBuffer);
-            pBuffer = NULL;
+            *pdwFileSize = fs.st_size;
+            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
+            {
+               iNumBytes = min(16384, fs.st_size - iBufPos);
+               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+               {
+                  DbgPrintf(AF_DEBUG_MISC, "File read operation failed\n");
+                  free(pBuffer);
+                  pBuffer = NULL;
+                  break;
+               }
+            }
          }
       }
       close(fd);

@@ -95,7 +95,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList)
 
 DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir)
 {
-   DWORD dwRqId, dwRetCode, dwFileSize;
+   DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
    CSCPMessage msg, *pResponce;
    BYTE *pBuffer;
    char cLastChar, szFileName[MAX_PATH];
@@ -122,10 +122,14 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir)
             cLastChar = pszDestDir[strlen(pszDestDir) - 1];
             sprintf(szFileName, "%s%s%s", pszDestDir, 
                     (cLastChar == '\\') || (cLastChar == '/') ? "" : "/", pszName);
-            fd = open(szFileName, O_CREAT | O_WRONLY, 0644);
+            fd = open(szFileName, O_CREAT | O_WRONLY | O_BINARY, 0644);
             if (fd != -1)
             {
-               write(fd, pBuffer, dwFileSize);
+               for(i = 0; i < dwFileSize; i += dwNumBytes)
+               {
+                  dwNumBytes = min(16384, dwFileSize - i);
+                  write(fd, &pBuffer[i], dwNumBytes);
+               }
                close(fd);
             }
             else
