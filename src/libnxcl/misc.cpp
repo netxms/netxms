@@ -36,24 +36,6 @@ void ChangeState(DWORD dwState)
 
 
 //
-// Create request for processing
-//
-
-HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
-{
-   REQUEST *pRequest;
-
-   pRequest = (REQUEST *)MemAlloc(sizeof(REQUEST));
-   pRequest->dwCode = dwCode;
-   pRequest->pArg = pArg;
-   pRequest->bDynamicArg = bDynamicArg;
-   pRequest->dwHandle = g_dwRequestId++;
-   g_pRequestQueue->Put(pRequest);
-   return pRequest->dwHandle;
-}
-
-
-//
 // Print debug messages
 //
 

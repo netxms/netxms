@@ -35,6 +35,21 @@ static BOOL m_bEventDBOpened = FALSE;
 
 
 //
+// Duplicate event template
+//
+
+NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc)
+{
+   NXC_EVENT_TEMPLATE *pDst;
+
+   pDst = (NXC_EVENT_TEMPLATE *)nx_memdup(pSrc, sizeof(NXC_EVENT_TEMPLATE));
+   pDst->pszDescription = nx_strdup(pSrc->pszDescription);
+   pDst->pszMessage = nx_strdup(pSrc->pszMessage);
+   return pDst;
+}
+
+
+//
 // Add template to list
 //
 
@@ -141,6 +156,42 @@ DWORD CloseEventDB(DWORD dwRqId)
       dwRetCode = pResponce->GetVariableLong(VID_RCC);
    else
       dwRetCode = RCC_TIMEOUT;
+   return dwRetCode;
+}
+
+
+//
+// Set event information
+//
+
+DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRetCode = RCC_SUCCESS;
+
+   // Prepare message
+   msg.SetCode(CMD_SET_EVENT_INFO);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_EVENT_ID, pArg->dwCode);
+   msg.SetVariable(VID_SEVERITY, pArg->dwSeverity);
+   msg.SetVariable(VID_FLAGS, pArg->dwFlags);
+   msg.SetVariable(VID_NAME, pArg->szName);
+   msg.SetVariable(VID_MESSAGE, pArg->pszMessage);
+   msg.SetVariable(VID_DESCRIPTION, pArg->pszDescription);
+   SendMsg(&msg);
+   
+   // Wait for reply
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 2000);
+   if (pResponce != NULL)
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+   else
+      dwRetCode = RCC_TIMEOUT;
+
+   // Free dynamic string because request processor will only destroy
+   // memory block at pArg
+   MemFree(pArg->pszDescription);
+   MemFree(pArg->pszMessage);
+
    return dwRetCode;
 }
 

@@ -57,6 +57,7 @@
 #define RQ_SYNC_EVENTS     3
 #define RQ_OPEN_EVENT_DB   4
 #define RQ_CLOSE_EVENT_DB  5
+#define RQ_SET_EVENT_INFO  6
 
 
 //
@@ -133,9 +134,12 @@ void SyncObjects(void);
 void SyncEvents(void);
 DWORD OpenEventDB(DWORD dwRqId);
 DWORD CloseEventDB(DWORD dwRqId);
+DWORD SetEventInfo(DWORD dwRqId, NXC_EVENT_TEMPLATE *pArg);
 void ProcessObjectUpdate(CSCPMessage *pMsg);
 void ProcessEvent(CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
 void ProcessEventDBRecord(CSCPMessage *pMsg);
+
+NXC_EVENT_TEMPLATE *DuplicateEventTemplate(NXC_EVENT_TEMPLATE *pSrc);
 
 BOOL SendMsg(CSCPMessage *pMsg);
 CSCPMessage *WaitForMessage(DWORD dwCode, DWORD dwId, DWORD dwTimeOut);

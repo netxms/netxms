@@ -25,12 +25,31 @@
 
 
 //
+// Create request for processing
+//
+
+HREQUEST CreateRequest(DWORD dwCode, void *pArg, BOOL bDynamicArg)
+{
+   REQUEST *pRequest;
+
+   pRequest = (REQUEST *)MemAlloc(sizeof(REQUEST));
+   pRequest->dwCode = dwCode;
+   pRequest->pArg = pArg;
+   pRequest->bDynamicArg = bDynamicArg;
+   pRequest->dwHandle = g_dwRequestId++;
+   g_pRequestQueue->Put(pRequest);
+   return pRequest->dwHandle;
+}
+
+
+//
 // Process async user request
 //
 
 HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
 {
    HREQUEST hRequest;
+   va_list args;
 
    if (g_dwState == STATE_DISCONNECTED)
    {
@@ -51,6 +70,12 @@ HREQUEST EXPORTABLE NXCRequest(DWORD dwOperation, ...)
             break;
          case NXC_OP_CLOSE_EVENT_DB:
             hRequest = CreateRequest(RQ_CLOSE_EVENT_DB, NULL, FALSE);
+            break;
+         case NXC_OP_SET_EVENT_INFO:
+            va_start(args, dwOperation);
+            hRequest = CreateRequest(RQ_SET_EVENT_INFO, 
+                                     DuplicateEventTemplate(va_arg(args, NXC_EVENT_TEMPLATE *)), TRUE);
+            va_end(args);
             break;
          default:
             hRequest = INVALID_REQUEST_HANDLE;
@@ -98,12 +123,17 @@ void RequestProcessor(void *pArg)
          case RQ_CLOSE_EVENT_DB:
             dwRetCode = CloseEventDB(pRequest->dwHandle);
             break;
+         case RQ_SET_EVENT_INFO:
+            dwRetCode = SetEventInfo(pRequest->dwHandle, (NXC_EVENT_TEMPLATE *)pRequest->pArg);
+            break;
          default:
             CallEventHandler(NXC_EVENT_ERROR, NXC_ERR_INTERNAL, "Internal error");
             dwRetCode = RCC_INVALID_REQUEST;
             break;
       }
       CallEventHandler(NXC_EVENT_REQUEST_COMPLETED, pRequest->dwHandle, (void *)dwRetCode);
+      if (pRequest->bDynamicArg)
+         MemFree(pRequest->pArg);
       MemFree(pRequest);
    }
 }
