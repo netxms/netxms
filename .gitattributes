@@ -38,6 +38,7 @@ src/Makefile.am -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
+src/console/cmdline/cmdline.cpp -text
 src/console/cmdline/main.cpp -text
 src/console/cmdline/nxcmd.dsp -text
 src/console/cmdline/nxcmd.dsw -text

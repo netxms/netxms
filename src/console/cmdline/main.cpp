@@ -22,7 +22,6 @@
 **/
 
 #include "nxcmd.h"
-#include <time.h>
 
 
 //
@@ -85,8 +84,8 @@ int main(int argc, char *argv[])
    DWORD dwVersion;
    char szServer[256] = "127.0.0.1", szLogin[256] = "", szPassword[256] = "";
    DWORD dwResult;
-   int i, ch;
-   BOOL bStart = TRUE, bDebug = FALSE;
+   int ch;
+   BOOL bStart = TRUE, bDebug = FALSE, bPasswordProvided = FALSE;
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -115,6 +114,7 @@ int main(int argc, char *argv[])
             break;
          case 'p':   // Password
             strncpy(szPassword, optarg, 255);
+            bPasswordProvided = TRUE;
             break;
          case 's':   // Server
             strncpy(szServer, optarg, 255);
@@ -145,9 +145,17 @@ int main(int argc, char *argv[])
    // Ask login name if not specified on command line
    if (szLogin[0] == 0)
    {
-      printf("Login: ");
+      printf("Login [admin]: ");
       gets(szLogin);
       printf("'%s'\n",szLogin);
+   }
+
+   // Ask for password if needed
+   if ((szPassword[0] == 0) && (!bPasswordProvided))
+   {
+      printf("Password: ");
+      gets(szPassword);
+      printf("'%s'\n",szPassword);
    }
 
    NXCSetEventHandler(EventHandler);
@@ -163,13 +171,9 @@ int main(int argc, char *argv[])
    else
    {
       printf("Connection established.\n");
-
-      // Load oblects from server
-      printf("Loading objects...\n");
-      dwResult = NXCSyncObjects();
-
-      //NXCEnumerateObjects(PrintObject);
+      CommandLoop();
+      NXCDisconnect();
    }
-   
+
    return 0;
 }
