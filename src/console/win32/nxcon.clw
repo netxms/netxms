@@ -2,25 +2,25 @@
 
 [General Info]
 Version=1
-LastClass=CRequestProcessingDlg
-LastTemplate=CDialog
+LastClass=CObjectPropsSecurity
+LastTemplate=CPropertyPage
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=26
+ClassCount=28
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=25
+ResourceCount=30
 Resource1=IDM_VIEW_SPECIFIC (English (U.S.))
 Resource2=IDD_OBJECT_NODE_GENERAL
-Resource3=IDD_EDIT_EVENT (English (U.S.))
+Resource3=IDD_ABOUTBOX (English (U.S.))
 Resource4=IDM_VIEW_SPECIFIC
-Resource5=IDD_PROGRESS (English (U.S.))
+Resource5=IDA_OBJECT_BROWSER (English (U.S.))
 Class2=CChildView
 Class5=CAboutDlg
 Class6=CControlPanel
@@ -28,13 +28,13 @@ Class8=CMapFrame
 Class10=CLoginDialog
 Resource6=IDD_PROGRESS
 Class11=CProgressDialog
-Resource7=IDA_MDI_DEFAULT (English (U.S.))
+Resource7=IDD_REQUEST_PROCESSING (English (U.S.))
 Class12=CObjectBrowser
 Resource8=IDA_MDI_DEFAULT
 Class13=CObjectPropDlg
 Resource9=IDD_LOGIN
-Resource10=IDD_LOGIN (English (U.S.))
-Resource11=IDD_ABOUTBOX (English (U.S.))
+Resource10=IDA_MDI_DEFAULT (English (U.S.))
+Resource11=IDR_MAINFRAME (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,13 +42,13 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDA_OBJECT_BROWSER (English (U.S.))
+Resource17=IDD_OBJECT_GENERAL (English (U.S.))
 Class16=CDebugFrame
 Resource18=IDD_ABOUTBOX
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource20=IDA_OBJECT_BROWSER
 Class17=CObjectPreview
-Resource21=IDR_MAINFRAME (English (U.S.))
+Resource21=IDD_OBJECT_CAPS (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
@@ -62,6 +62,13 @@ Class25=CObjectPropSheet
 Resource24=IDD_EDIT_EVENT
 Class26=CRequestProcessingDlg
 Resource25=IDD_REQUEST_PROCESSING
+Resource26=IDD_EDIT_EVENT (English (U.S.))
+Resource27=IDD_LOGIN (English (U.S.))
+Resource28=IDD_PROGRESS (English (U.S.))
+Class27=CObjectPropsGeneral
+Resource29=IDD_OBJECT_NODE_GENERAL (English (U.S.))
+Class28=CObjectPropsSecurity
+Resource30=IDD_OBJECT_SECURITY (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -501,13 +508,14 @@ Command3=ID_WINDOW_ARRANGE
 Command4=ID_EVENTS_DETAILS
 Command5=ID_EVENTS_GOTOSOURCE
 Command6=ID_OBJECT_VIEW_SHOWPREVIEWPANE
-Command7=ID_OBJECT_VIEW_VIEWASTREE
-Command8=ID_OBJECT_VIEW_VIEWASLIST
-Command9=ID_OBJECT_FIND
-Command10=ID_OBJECT_RENAME
-Command11=ID_OBJECT_DELETE
-Command12=ID_OBJECT_PROPERTIES
-CommandCount=12
+Command7=ID_OBJECT_VIEW_SELECTION
+Command8=ID_OBJECT_VIEW_VIEWASTREE
+Command9=ID_OBJECT_VIEW_VIEWASLIST
+Command10=ID_OBJECT_FIND
+Command11=ID_OBJECT_RENAME
+Command12=ID_OBJECT_DELETE
+Command13=ID_OBJECT_PROPERTIES
+CommandCount=13
 
 [ACL:IDA_MDI_DEFAULT (English (U.S.))]
 Type=1
@@ -579,11 +587,12 @@ Filter=W
 Type=1
 Class=?
 Command1=ID_OBJECT_FIND
-Command2=ID_OBJECT_VIEW_VIEWASLIST
-Command3=ID_OBJECT_VIEW_SHOWPREVIEWPANE
-Command4=ID_OBJECT_VIEW_VIEWASTREE
-Command5=ID_VIEW_REFRESH
-CommandCount=5
+Command2=ID_OBJECT_VIEW_SELECTION
+Command3=ID_OBJECT_VIEW_VIEWASLIST
+Command4=ID_OBJECT_VIEW_SHOWPREVIEWPANE
+Command5=ID_OBJECT_VIEW_VIEWASTREE
+Command6=ID_VIEW_REFRESH
+CommandCount=6
 
 [CLS:CEditBox]
 Type=0
@@ -676,4 +685,89 @@ BaseClass=CDialog
 Filter=D
 VirtualFilter=dWC
 LastObject=CRequestProcessingDlg
+
+[DLG:IDD_OBJECT_NODE_GENERAL (English (U.S.))]
+Type=1
+Class=CNodePropsGeneral
+ControlCount=22
+Control1=IDC_STATIC,static,1342308352
+Control2=IDC_EDIT_ID,edit,1350633600
+Control3=IDC_STATIC,static,1342308352
+Control4=IDC_STATIC,static,1342308352
+Control5=IDC_EDIT_NAME,edit,1350631552
+Control6=IDC_EDIT_PRIMARY_IP,edit,1350633600
+Control7=IDC_SELECT_IP,button,1342242816
+Control8=IDC_STATIC,static,1342308352
+Control9=IDC_EDIT_OID,edit,1350633600
+Control10=IDC_STATIC,static,1342308352
+Control11=IDC_COMBO_AUTH,combobox,1344340227
+Control12=IDC_STATIC,static,1342308352
+Control13=IDC_EDIT_SECRET,edit,1350631552
+Control14=IDC_STATIC,static,1342308352
+Control15=IDC_EDIT_PORT,edit,1350639744
+Control16=IDC_STATIC,static,1342308352
+Control17=IDC_COMBO_SNMP_VERSION,combobox,1344340227
+Control18=IDC_STATIC,static,1342308352
+Control19=IDC_EDIT_COMMUNITY,edit,1350631552
+Control20=IDC_STATIC,button,1342177287
+Control21=IDC_STATIC,button,1342177287
+Control22=IDC_STATIC,button,1342177287
+
+[DLG:IDD_OBJECT_CAPS (English (U.S.))]
+Type=1
+Class=CObjectPropCaps
+ControlCount=1
+Control1=IDC_LIST_CAPS,SysListView32,1342275613
+
+[DLG:IDD_REQUEST_PROCESSING (English (U.S.))]
+Type=1
+Class=CRequestProcessingDlg
+ControlCount=2
+Control1=IDC_STATIC,static,1342177283
+Control2=IDC_INFO_TEXT,static,1342308352
+
+[DLG:IDD_OBJECT_GENERAL (English (U.S.))]
+Type=1
+Class=CObjectPropsGeneral
+ControlCount=6
+Control1=IDC_STATIC,static,1342308352
+Control2=IDC_EDIT_ID,edit,1350633600
+Control3=IDC_STATIC,static,1342308352
+Control4=IDC_EDIT_CLASS,edit,1350633600
+Control5=IDC_STATIC,static,1342308352
+Control6=IDC_EDIT_NAME,edit,1350631552
+
+[CLS:CObjectPropsGeneral]
+Type=0
+HeaderFile=ObjectPropsGeneral.h
+ImplementationFile=ObjectPropsGeneral.cpp
+BaseClass=CPropertyPage
+Filter=D
+LastObject=CObjectPropsGeneral
+VirtualFilter=idWC
+
+[DLG:IDD_OBJECT_SECURITY (English (U.S.))]
+Type=1
+Class=CObjectPropsSecurity
+ControlCount=12
+Control1=IDC_LIST_USERS,SysListView32,1342259485
+Control2=IDC_CHECK_READ,button,1342242819
+Control3=IDC_CHECK_MODIFY,button,1342242819
+Control4=IDC_CHECK_WRITE,button,1342242819
+Control5=IDC_CHECK_DELETE,button,1342242819
+Control6=IDC_CHECK_MOVE,button,1342242819
+Control7=IDC_ADD_USER,button,1342242816
+Control8=IDC_DELETE_USER,button,1342242816
+Control9=IDC_CHECK_INHERIT_RIGHTS,button,1342242819
+Control10=IDC_STATIC,button,1342177287
+Control11=IDC_STATIC,button,1342177287
+Control12=IDC_STATIC,button,1342177287
+
+[CLS:CObjectPropsSecurity]
+Type=0
+HeaderFile=ObjectPropsSecurity.h
+ImplementationFile=ObjectPropsSecurity.cpp
+BaseClass=CPropertyPage
+Filter=D
+VirtualFilter=idWC
 

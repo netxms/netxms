@@ -36,6 +36,9 @@ CObjectPropSheet::CObjectPropSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iS
 
 CObjectPropSheet::~CObjectPropSheet()
 {
+   // Access list can be allocated if we have changed it in "Security" tab
+   // Otherwise it will be NULL because of memset() in constructor
+   MemFree(m_update.pAccessList);
 }
 
 

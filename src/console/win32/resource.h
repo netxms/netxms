@@ -45,6 +45,8 @@
 #define IDD_OBJECT_NODE_GENERAL         159
 #define IDD_OBJECT_CAPS                 160
 #define IDD_REQUEST_PROCESSING          162
+#define IDD_OBJECT_GENERAL              163
+#define IDD_OBJECT_SECURITY             164
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -68,7 +70,17 @@
 #define IDC_EDIT_COMMUNITY              1023
 #define IDC_LIST1                       1024
 #define IDC_LIST_CAPS                   1024
+#define IDC_LIST_USERS                  1024
 #define IDC_INFO_TEXT                   1025
+#define IDC_EDIT_CLASS                  1026
+#define IDC_CHECK_READ                  1027
+#define IDC_CHECK_MODIFY                1028
+#define IDC_CHECK_WRITE                 1029
+#define IDC_CHECK_DELETE                1030
+#define IDC_CHECK_MOVE                  1031
+#define IDC_CHECK_INHERIT_RIGHTS        1032
+#define IDC_ADD_USER                    1033
+#define IDC_DELETE_USER                 1034
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -97,9 +109,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        163
+#define _APS_NEXT_RESOURCE_VALUE        165
 #define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1026
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

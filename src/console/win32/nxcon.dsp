@@ -168,7 +168,15 @@ SOURCE=.\ObjectPropCaps.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropSheet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropsSecurity.cpp
 # End Source File
 # Begin Source File
 
@@ -277,7 +285,15 @@ SOURCE=.\ObjectPropCaps.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsGeneral.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropSheet.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropsSecurity.h
 # End Source File
 # Begin Source File
 

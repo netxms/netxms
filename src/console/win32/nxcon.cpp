@@ -386,6 +386,7 @@ void CConsoleApp::OnConnectToServer()
          {
             // Now we are connected, request data sync
             NXCSyncObjects();
+            NXCLoadUserDB();
             break;
          }
          else
@@ -575,7 +576,9 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 {
 	CObjectPropSheet wndPropSheet("Object Properties", GetMainWnd(), 0);
    CNodePropsGeneral wndNodeGeneral;
+   CObjectPropsGeneral wndObjectGeneral;
    CObjectPropCaps wndObjectCaps;
+   CObjectPropsSecurity wndObjectSecurity;
    NXC_OBJECT *pObject;
    char szBuffer[32];
 
@@ -583,21 +586,24 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    if (pObject != NULL)
    {
       // Create "General" tab
-      switch(pObject->iClass)
+      if (pObject->iClass == OBJECT_NODE)
       {
-         case OBJECT_NODE:
-            wndNodeGeneral.m_dwObjectId = dwObjectId;
-            wndNodeGeneral.m_strName = pObject->szName;
-            wndNodeGeneral.m_strOID = pObject->node.szObjectId;
-            wndNodeGeneral.m_strPrimaryIp = IpToStr(pObject->dwIpAddr, szBuffer);
-            wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
-            wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
-            wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
-            wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
-            wndPropSheet.AddPage(&wndNodeGeneral);
-            break;
-         default:
-            break;
+         wndNodeGeneral.m_dwObjectId = dwObjectId;
+         wndNodeGeneral.m_strName = pObject->szName;
+         wndNodeGeneral.m_strOID = pObject->node.szObjectId;
+         wndNodeGeneral.m_strPrimaryIp = IpToStr(pObject->dwIpAddr, szBuffer);
+         wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
+         wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
+         wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
+         wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
+         wndPropSheet.AddPage(&wndNodeGeneral);
+      }
+      else
+      {
+         wndObjectGeneral.m_dwObjectId = dwObjectId;
+         wndObjectGeneral.m_strClass = g_szObjectClass[pObject->iClass];
+         wndObjectGeneral.m_strName = pObject->szName;
+         wndPropSheet.AddPage(&wndObjectGeneral);
       }
 
       // Create tabs specific for node objects
@@ -609,6 +615,9 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       }
 
       // Create "Security" tab
+      wndObjectSecurity.m_pObject = pObject;
+      wndObjectSecurity.m_bInheritRights = pObject->bInheritRights;
+      wndPropSheet.AddPage(&wndObjectSecurity);
 
       wndPropSheet.SetObject(pObject);
       if (wndPropSheet.DoModal() == IDOK)

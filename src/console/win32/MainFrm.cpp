@@ -141,7 +141,10 @@ void CMainFrame::OnUpdateState(CCmdUI *pCmdUI)
       "Connecting to server...",
       "Idle",
       "Loading objects...",
-      "Loading events..."
+      "Loading events...",
+      "Loading event configuration...",
+      "Loading event policy...",
+      "Loading user database..."
    };
    pCmdUI->Enable();
    pCmdUI->SetText(pszStateText[theApp.GetClientState()]);

@@ -347,6 +347,48 @@ BEGIN
     LTEXT           "Processing request...",IDC_INFO_TEXT,35,15,188,8
 END
 
+IDD_OBJECT_GENERAL DIALOG DISCARDABLE  0, 0, 292, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Object ID",IDC_STATIC,7,10,31,8
+    EDITTEXT        IDC_EDIT_ID,42,7,40,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Class",IDC_STATIC,7,31,18,8
+    EDITTEXT        IDC_EDIT_CLASS,42,28,40,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Name",IDC_STATIC,7,52,20,8
+    EDITTEXT        IDC_EDIT_NAME,42,49,243,14,ES_AUTOHSCROLL
+END
+
+IDD_OBJECT_SECURITY DIALOGEX 0, 0, 292, 170
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Security"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_USERS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_AUTOARRANGE | LVS_NOCOLUMNHEADER | WS_TABSTOP,12,17,
+                    163,122,WS_EX_CLIENTEDGE
+    CONTROL         "&Read",IDC_CHECK_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,196,21,33,10
+    CONTROL         "&Modify",IDC_CHECK_MODIFY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,196,34,37,10
+    CONTROL         "&Create child objects",IDC_CHECK_WRITE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,196,47,78,10
+    CONTROL         "&Delete",IDC_CHECK_DELETE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,196,60,37,10
+    CONTROL         "M&ove",IDC_CHECK_MOVE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,196,73,34,10
+    PUSHBUTTON      "&Add user...",IDC_ADD_USER,197,105,79,14
+    PUSHBUTTON      "Delete &user",IDC_DELETE_USER,197,124,79,14
+    CONTROL         "&Inherit access rights from parent object(s)",
+                    IDC_CHECK_INHERIT_RIGHTS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,150,278,10
+    GROUPBOX        "Access Rights",IDC_STATIC,188,7,97,83
+    GROUPBOX        "Users and Groups",IDC_STATIC,7,7,173,137
+    GROUPBOX        "Actions",IDC_STATIC,188,94,97,50
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -453,6 +495,22 @@ BEGIN
         RIGHTMARGIN, 223
         TOPMARGIN, 7
         BOTTOMMARGIN, 31
+    END
+
+    IDD_OBJECT_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_OBJECT_SECURITY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -38,6 +38,8 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ObjectPropCaps.h"
 #include "ObjectPropSheet.h"
 #include "RequestProcessingDlg.h"
+#include "ObjectPropsGeneral.h"
+#include "ObjectPropsSecurity.h"
 
 
 //
