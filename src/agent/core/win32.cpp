@@ -141,22 +141,22 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value)
          case MEMINFO_PHYSICAL_USED:
             ret_uint64(value, mse.ullTotalPhys - mse.ullAvailPhys);
             break;
-         case MEMINFO_SWAP_FREE:
+         case MEMINFO_VIRTUAL_FREE:
             ret_uint64(value, mse.ullAvailPageFile);
             break;
-         case MEMINFO_SWAP_TOTAL:
+         case MEMINFO_VIRTUAL_TOTAL:
             ret_uint64(value, mse.ullTotalPageFile);
             break;
-         case MEMINFO_SWAP_USED:
+         case MEMINFO_VIRTUAL_USED:
             ret_uint64(value, mse.ullTotalPageFile - mse.ullAvailPageFile);
             break;
-         case MEMINFO_VIRTUAL_FREE:
+         case MEMINFO_SWAP_FREE:
             ret_uint64(value, mse.ullAvailVirtual);
             break;
-         case MEMINFO_VIRTUAL_TOTAL:
+         case MEMINFO_SWAP_TOTAL:
             ret_uint64(value, mse.ullTotalVirtual);
             break;
-         case MEMINFO_VIRTUAL_USED:
+         case MEMINFO_SWAP_USED:
             ret_uint64(value, mse.ullTotalVirtual - mse.ullAvailVirtual);
             break;
          default:
