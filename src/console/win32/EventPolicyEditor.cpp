@@ -45,6 +45,7 @@ CEventPolicyEditor::CEventPolicyEditor()
 {
    m_pEventPolicy = theApp.m_pEventPolicy;
    m_pImageList = NULL;
+   m_bIsModified = TRUE;
 }
 
 CEventPolicyEditor::~CEventPolicyEditor()
@@ -177,14 +178,28 @@ void CEventPolicyEditor::OnDestroy()
 void CEventPolicyEditor::OnClose() 
 {
    DWORD dwResult;
+   int iAnswer = IDNO;
 
-   dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
-   if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
-	dwResult = DoRequest(NXCCloseEventPolicy, "Unlocking event processing policy...");
-   if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, "Error unlocking event processing policy: %s");
-	CMDIChildWnd::OnClose();
+   if (m_bIsModified)
+   {
+      iAnswer = MessageBox(_T("Event processing policy was modified. Do you want to save changes?"),
+                           _T("Confirmation"), MB_YESNOCANCEL | MB_ICONQUESTION);
+
+      if (iAnswer == IDYES)
+      {
+         dwResult = DoRequestArg1(NXCSaveEventPolicy, m_pEventPolicy, "Saving event processing policy...");
+         if (dwResult != RCC_SUCCESS)
+            theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
+      }
+   }
+
+   if (iAnswer != IDCANCEL)
+   {
+	   dwResult = DoRequest(NXCCloseEventPolicy, _T("Unlocking event processing policy..."));
+      if (dwResult != RCC_SUCCESS)
+         theApp.ErrorBox(dwResult, _T("Error unlocking event processing policy: %s"));
+	   CMDIChildWnd::OnClose();
+   }
 }
 
 
@@ -579,6 +594,7 @@ void CEventPolicyEditor::AddSource(void)
                (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwSourceList,
                   sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumSources);
             m_pEventPolicy->pRuleList[iRow].pdwSourceList[j] = dlg.m_pdwObjectList[i];
+            Modify();
          }
       }
       UpdateRow(iRow);
@@ -613,6 +629,7 @@ void CEventPolicyEditor::AddEvent(void)
                (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwEventList,
                   sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumEvents);
             m_pEventPolicy->pRuleList[iRow].pdwEventList[j] = dlg.m_pdwEventList[i];
+            Modify();
          }
       }
       UpdateRow(iRow);
@@ -776,6 +793,7 @@ void CEventPolicyEditor::EditSeverity(int iRow)
 
       m_pEventPolicy->pRuleList[iRow].dwFlags &= ~(ANY_SEVERITY);
       m_pEventPolicy->pRuleList[iRow].dwFlags |= dwSeverity;
+      Modify();
       UpdateRow(iRow);
    }
 }
@@ -818,6 +836,7 @@ void CEventPolicyEditor::EditAlarm(int iRow)
       {
          m_pEventPolicy->pRuleList[iRow].dwFlags &= ~RF_GENERATE_ALARM;
       }
+      Modify();
       UpdateRow(iRow);
    }
 }
@@ -837,6 +856,7 @@ void CEventPolicyEditor::EditComment(int iRow)
    {
       safe_free(m_pEventPolicy->pRuleList[iRow].pszComment);
       m_pEventPolicy->pRuleList[iRow].pszComment = strdup((LPCTSTR)dlg.m_strText);
+      Modify();
       UpdateRow(iRow);
    }
 }
@@ -869,6 +889,7 @@ void CEventPolicyEditor::AddAction()
                (DWORD *)realloc(m_pEventPolicy->pRuleList[iRow].pdwActionList,
                   sizeof(DWORD) * m_pEventPolicy->pRuleList[iRow].dwNumActions);
             m_pEventPolicy->pRuleList[iRow].pdwActionList[j] = dlg.m_pdwActionList[i];
+            Modify();
          }
       }
       UpdateRow(iRow);
