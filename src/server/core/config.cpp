@@ -27,9 +27,9 @@
 // Help text
 //
 
-static char help_text[]="NMS Version " NETXMS_VERSION_STRING " Server\n"
+static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "Copyright (c) 2003 SecurityProjects.org\n\n"
-                        "Usage: nms_core [<options>] <command>\n\n"
+                        "Usage: netxmsd [<options>] <command>\n\n"
                         "Valid options are:\n"
                         "   --config <file>     : Set non-default configuration file\n"
                         "                       : Default is " DEFAULT_CONFIG_FILE "\n"

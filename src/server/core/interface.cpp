@@ -204,7 +204,7 @@ void Interface::StatusPoll(void)
       return;     // Interface has no IP address, we cannot check it
    }
 
-   dwPingStatus = IcmpPing(m_dwIpAddr, 3, 1500);
+   dwPingStatus = IcmpPing(m_dwIpAddr, 3, 1500, NULL);
    if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
       WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
    m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;

@@ -88,7 +88,18 @@
 
 #define GROUP_FLAG_BIT     ((DWORD)0x80000000)
 
-#define CHECK_NULL(x)      ((x) == NULL ? "(null)" : (x))
+#define CHECK_NULL(x)      ((x) == NULL ? ((char *)"(null)") : (x))
+
+
+//
+// Event log severity codes (UNIX only)
+//
+
+#ifndef _WIN32
+#define EVENTLOG_INFORMATION_TYPE   0
+#define EVENTLOG_WARNING_TYPE       1
+#define EVENTLOG_ERROR_TYPE         2
+#endif   /* _WIN32 */
 
 
 //

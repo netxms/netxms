@@ -412,10 +412,7 @@ int main(int argc, char *argv[])
    if (!LoadConfig())
       return 1;
 
-#ifndef _WIN32
-   /* TODO: insert fork() here */
-#endif   /* ! _WIN32 */
-
+#ifdef _WIN32
    if (!IsStandalone())
    {
       InitService();
@@ -425,9 +422,22 @@ int main(int argc, char *argv[])
       if (!Initialize())
       {
          printf("NMS Core initialization failed\n");
-         return 1;
+         return 3;
       }
       Main();
    }
+#else    /* _WIN32 */
+   if (!IsStandalone())
+   {
+      if (daemon(0, 0) == -1)
+      {
+         perror("Call to daemon() failed");
+         return 2;
+      }
+   }
+   if (!Initialize())
+      return 3;
+   Main();
+#endif   /* _WIN32 */
    return 0;
 }

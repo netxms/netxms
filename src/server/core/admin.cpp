@@ -182,7 +182,8 @@ void LocalAdminListener(void *pArg)
 {
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
-   int iSize, errorCount = 0;
+   int errorCount = 0;
+   socklen_t iSize;
 
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)

@@ -103,7 +103,8 @@ static void DataCollector(void *pArg)
 
 static void ItemPoller(void *pArg)
 {
-   DWORD i, dwStart, dwElapsed, dwWatchdogId;
+   DWORD i, dwElapsed, dwWatchdogId;
+   INT64 qwStart;
 
    dwWatchdogId = WatchdogAddThread("Item Poller");
 
@@ -114,12 +115,12 @@ static void ItemPoller(void *pArg)
       WatchdogNotify(dwWatchdogId);
 
       MutexLock(g_hMutexNodeIndex, INFINITE);
-      dwStart = GetTickCount();
+      qwStart = GetCurrentTimeMs();
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
          ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(m_pItemQueue);
       MutexUnlock(g_hMutexNodeIndex);
 
-      dwElapsed = GetTickCount() - dwStart;
+      dwElapsed = (DWORD)(GetCurrentTimeMs() - qwStart);
       DbgPrintf(AF_DEBUG_DC, "*** ItemPoller: Time elapsed == %lu milliseconds ***\n", dwElapsed);
    }
 }

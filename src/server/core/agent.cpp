@@ -177,7 +177,7 @@ int AgentConnection::RecvLine(int iBufSize, char *szBuffer)
 {
    char *pChar;
 	struct timeval timeout;
-	FD_SET rdfs;
+	fd_set rdfs;
    int iSize;
 
    pChar = strchr(m_szNetBuffer, '\r');
@@ -246,7 +246,7 @@ DWORD AgentConnection::ExecuteCommand(char *szCmd, BOOL bExpectData, BOOL bMulti
    char szBuffer[MAX_LINE_SIZE];
    int iError;
 	struct timeval timeout;
-	FD_SET rdfs;
+	fd_set rdfs;
 
    if (m_hSocket == -1)
       return ERR_NOT_CONNECTED;
@@ -284,7 +284,7 @@ DWORD AgentConnection::ExecuteCommand(char *szCmd, BOOL bExpectData, BOOL bMulti
    }
 
    // Check for error
-   if (memicmp(szBuffer, "+OK", 3))
+   if (memcmp(szBuffer, "+OK", 3))
    {
       if (szBuffer[0] == '-')
       {

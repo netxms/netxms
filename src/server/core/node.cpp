@@ -786,10 +786,6 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    {
       sprintf(szBuffer, "%d", m_iStatus);
    }
-   else if (!memicmp(szParam, "debug.", 6))
-   {
-      sprintf(szBuffer, "%ld", time(NULL) % 7);
-   }
    else
    {
       dwError = DCE_NOT_SUPPORTED;

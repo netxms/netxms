@@ -128,7 +128,8 @@ void ClientListener(void *)
 {
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
-   int iSize, errorCount = 0;
+   int errorCount = 0;
+   socklen_t iSize;
    WORD wListenPort;
    ClientSession *pSession;
 
@@ -189,7 +190,7 @@ void ClientListener(void *)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      pSession = new ClientSession(sockClient, servAddr.sin_addr.S_un.S_addr);
+      pSession = new ClientSession(sockClient, servAddr.sin_addr.s_addr);
       if (!RegisterSession(pSession))
       {
          delete pSession;
