@@ -16,3 +16,21 @@ INSERT INTO images (image_id,name,file_name,file_hash)
 	VALUES (IMG_PRINTER_GENERIC,'Obj.Printer.Generic','generic_printer.png','<invalid_hash>');
 INSERT INTO images (image_id,name,file_name,file_hash)
 	VALUES (IMG_CONTAINER_SERVICE,'Obj.Service','service.png','<invalid_hash>');
+
+
+/*
+** Default images for object classes
+*/
+
+INSERT INTO default_images (object_class,image_id)
+	VALUES (1, IMG_SUBNET)
+INSERT INTO default_images (object_class,image_id)
+	VALUES (2, IMG_NODE_GENERIC)
+INSERT INTO default_images (object_class,image_id)
+	VALUES (3, IMG_INTERFACE)
+INSERT INTO default_images (object_class,image_id)
+	VALUES (4, IMG_NETWORK)
+INSERT INTO default_images (object_class,image_id)
+	VALUES (5, IMG_CONTAINER_NODE_GROUP)
+INSERT INTO default_images (object_class,image_id)
+	VALUES (7, IMG_NETWORK)

@@ -108,6 +108,7 @@ CREATE TABLE nodes
 	agent_port integer,
 	status_poll_type integer,
 	inherit_access_rights integer,
+	image_id integer,
 	PRIMARY KEY(id)
 );
 
@@ -124,6 +125,7 @@ CREATE TABLE subnets
 	is_deleted integer not null,
 	ip_addr integer,
 	ip_netmask integer,
+	image_id integer,
 	PRIMARY KEY(id)
 );
 
@@ -143,6 +145,7 @@ CREATE TABLE interfaces
 	ip_netmask integer,
 	if_type integer,
 	if_index integer,
+	image_id integer,
 	PRIMARY KEY(id)
 );
 
@@ -159,6 +162,7 @@ CREATE TABLE containers
 	is_deleted integer not null,
 	category integer,
 	description TEXT,
+	image_id integer,
 	PRIMARY KEY(id)
 );
 
@@ -476,4 +480,16 @@ CREATE TABLE images
 	file_name varchar(255),
 	file_hash varchar(32),
 	PRIMARY KEY(image_id)
+);
+
+
+/*
+** Default images for various object classes
+*/
+
+CREATE TABLE default_images
+(
+	object_class integer not null,
+	image_id integer not null,
+	PRIMARY KEY(object_class)
 );
