@@ -97,7 +97,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
                (*ppList)[*pdwNumPackages].dwId = dwPkgId;
                pResponce->GetVariableStr(VID_PACKAGE_NAME, 
                                          (*ppList)[*pdwNumPackages].szName, 
-                                         MAX_PACKAGE_NAME);
+                                         MAX_PACKAGE_NAME_LEN);
                pResponce->GetVariableStr(VID_FILE_NAME, 
                                          (*ppList)[*pdwNumPackages].szFileName, 
                                          MAX_DB_STRING);
