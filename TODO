@@ -11,7 +11,6 @@ GENERAL:
 - HP-UX subagent
 - Cross-platform pinger subagent
 - Write README for NetWare
-- SMS-sender interface with drivers for cell-phones/SMPP
 - Add check for read/write locks support to configure script
 - Allow converting counters to deltas in data collection
 - Add ability to clear collected DCI data
@@ -22,7 +21,6 @@ GENERAL:
 - View and update agent's configuration from server
 - Add diff() method for DCI thresholds
 - Planned outages (maintenance schedule)
-- Add "Last collected values" view for each node
 
 
 SERVER:
