@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.14 2004-07-01 20:34:16 victor Exp $
+# $Id: configure.ac,v 1.15 2004-07-26 19:35:12 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -147,6 +147,7 @@ AC_CHECK_HEADERS([openssl/ssl.h])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])
 AC_CHECK_HEADERS([sys/mman.h])
+AC_CHECK_HEADERS([sys/utsname.h])
 
 if test "x$ac_cv_header_openssl_ssl_h" != "xyes" ; then
 	AC_MSG_ERROR(OpenSSL headers not found.)

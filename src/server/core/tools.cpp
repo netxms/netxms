@@ -26,6 +26,10 @@
 #include <sys/stat.h>
 #ifdef _WIN32
 # include <io.h>
+#else
+# ifdef HAVE_SYS_UTSNAME_H
+#  include <sys/utsname.h>
+# endif
 #endif
 
 
@@ -167,8 +171,22 @@ void GetSysInfoStr(char *pszBuffer)
    sprintf(pszBuffer, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
 #else
    /* TODO: add UNIX code here */
+# ifdef HAVE_SYS_UTSNAME_H
+	struct utsname uName;
+	if (uname(&uName) == 0)
+	{
+		sprintf(pszBuffer, "%s %s Release %d", uName.nodename, uName.sysname, uName.release);
+	}
+	else
+	{
+		// size=512 was taken from locks.cpp
+		strerror_r(errno, pszBuffer, 512);
+	}
+# else
    printf("GetSysInfoStr: code not implemented\n");
    strcpy(pszBuffer, "UNIX");
+# endif // HAVE_SYS_UTSNAME_H
+
 #endif
 }
 
