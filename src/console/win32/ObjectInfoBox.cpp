@@ -70,7 +70,6 @@ void CObjectInfoBox::OnPaint()
 
       // Draw icon and objet's name right to it
       dc.FillSolidRect(X_MARGIN - 1, Y_MARGIN - 1, 34, 34, g_statusColorTable[m_pCurrObject->iStatus]);
-      //dc.DrawIcon(X_MARGIN, Y_MARGIN, m_hIconList[m_pCurrObject->iClass]);
       dwImageIndex = GetObjectImageIndex(m_pCurrObject);
       g_pObjectNormalImageList->Draw(&dc, dwImageIndex, CPoint(X_MARGIN, Y_MARGIN), ILD_TRANSPARENT);
       dc.SelectObject(m_fontNormal);

@@ -272,6 +272,10 @@ SOURCE=.\RuleList.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RuleSeverityDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -482,6 +486,10 @@ SOURCE=.\RuleHeader.h
 # Begin Source File
 
 SOURCE=.\RuleList.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RuleSeverityDlg.h
 # End Source File
 # Begin Source File
 

@@ -349,3 +349,18 @@ const char LIBNXCL_EXPORTABLE *NXCGetEventName(DWORD dwId)
          return m_pEventNamesList[i].szName;
    return "<unknown>";
 }
+
+
+//
+// Get severity for given event id. Will return -1 for unknown id.
+//
+
+int LIBNXCL_EXPORTABLE NXCGetEventSeverity(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumEvents; i++)
+      if (m_pEventNamesList[i].dwEventId == dwId)
+         return (int)(m_pEventNamesList[i].dwSeverity);
+   return -1;
+}

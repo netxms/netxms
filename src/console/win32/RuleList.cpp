@@ -74,15 +74,15 @@ void RL_Row::InsertCell(int iPos)
 
 }
 
-void RL_Row::RecalcHeight(int iTextHeight)
+void RL_Row::RecalcHeight(int iTextHeight, RL_COLUMN *pColInfo, CFont *pFont)
 {
    int i, iCellHeight;
 
    for(i = 0, m_iHeight = 0; i < m_iNumCells; i++)
    {
-      iCellHeight = (m_ppCellList[i]->m_iNumLines == 0) ? EMPTY_ROW_HEIGHT :
-                     (CELL_TEXT_Y_MARGIN * 2 + m_ppCellList[i]->m_iNumLines * iTextHeight +
-                        (m_ppCellList[i]->m_iNumLines - 1) * CELL_TEXT_Y_SPACING);
+      iCellHeight = m_ppCellList[i]->CalculateHeight(iTextHeight, pColInfo[i].m_iWidth, 
+                                                     pColInfo[i].m_dwFlags & CF_TEXTBOX,
+                                                     pFont);
       if (iCellHeight > m_iHeight)
          m_iHeight = iCellHeight;
    }
@@ -100,6 +100,7 @@ RL_Cell::RL_Cell()
    m_pSelectFlags = NULL;
    m_bHasImages = FALSE;
    m_bSelectable = TRUE;
+   m_pszText = NULL;
 }
 
 RL_Cell::~RL_Cell()
@@ -111,6 +112,7 @@ RL_Cell::~RL_Cell()
    safe_free(m_pszTextList);
    safe_free(m_piImageList);
    safe_free(m_pSelectFlags);
+   safe_free(m_pszText);
 }
 
 void RL_Cell::Recalc(void)
@@ -186,6 +188,44 @@ BOOL RL_Cell::DeleteLine(int iLine)
    memmove(&m_pSelectFlags[iLine], &m_pSelectFlags[iLine + 1], sizeof(BYTE) * (m_iNumLines - iLine));
    Recalc();
    return TRUE;
+}
+
+void RL_Cell::SetText(char *pszText)
+{
+   safe_free(m_pszText);
+   m_pszText = strdup(pszText);
+   ASSERT(m_pszText != NULL);
+}
+
+int RL_Cell::CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont *pFont)
+{
+   int iHeight;
+
+   if (bIsTextBox)
+   {
+      RECT rect;
+      CDC *pDC;
+      CFont *pOldFont;
+
+      rect.left = CELL_TEXT_Y_MARGIN;
+      rect.right = iWidth - CELL_TEXT_Y_MARGIN;
+      rect.top = 0;
+      rect.bottom = 0;
+
+      pDC = theApp.m_pMainWnd->GetDC();
+      pOldFont = pDC->SelectObject(pFont);
+      pDC->DrawText(m_pszText, strlen(m_pszText), &rect, DT_WORDBREAK | DT_CALCRECT);
+      pDC->SelectObject(pOldFont);
+      theApp.m_pMainWnd->ReleaseDC(pDC);
+      iHeight = rect.bottom;
+   }
+   else
+   {
+      iHeight = (m_iNumLines == 0) ? EMPTY_ROW_HEIGHT :
+                 (CELL_TEXT_Y_MARGIN * 2 + m_iNumLines * iTextHeight +
+                    (m_iNumLines - 1) * CELL_TEXT_Y_SPACING);
+   }
+   return iHeight;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -316,7 +356,7 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CRuleList::OnPaint() 
 {
    RECT rect, rcClient, rcText;
-   int i, j, iLine, iCellHeight;
+   int i, j, iLine;
    CFont *pOldFont;
    CBrush brTitle, brActive, brNormal, brDisabled, *pOldBrush;
    CPen pen, *pOldPen;
@@ -362,18 +402,8 @@ void CRuleList::OnPaint()
             dc.Rectangle(&rect);
             dc.Draw3dRect(&rect, RGB(128, 128, 128), RGB(255, 255, 255));
 
-            iCellHeight = (m_ppRowList[i]->m_ppCellList[j]->m_iNumLines == 0) ? EMPTY_ROW_HEIGHT :
-                           (CELL_TEXT_Y_MARGIN * 2 + m_ppRowList[i]->m_ppCellList[j]->m_iNumLines * m_iTextHeight +
-                              (m_ppRowList[i]->m_ppCellList[j]->m_iNumLines - 1) * CELL_TEXT_Y_SPACING);
-                     
             // Prepare for drawing cell text
             memcpy(&rcText, &rect, sizeof(RECT));
-            rcText.top += CELL_TEXT_Y_MARGIN + ((rect.bottom - rect.top) - iCellHeight) / 2;
-            rcText.bottom = rcText.top + m_iTextHeight;
-            rcText.left += CELL_TEXT_X_MARGIN;
-            if (m_ppRowList[i]->m_ppCellList[j]->m_bHasImages)
-               rcText.left += ITEM_IMAGE_SIZE + 2;
-            rcText.right -= CELL_TEXT_X_MARGIN;
             dc.SetTextColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleTextColor : 
                               m_rgbTextColor);
             dc.SetBkColor((m_pColList[j].m_dwFlags & CF_TITLE_COLOR) ? m_rgbTitleBkColor :
@@ -381,33 +411,63 @@ void CRuleList::OnPaint()
                                ((m_ppRowList[i]->m_dwFlags & RLF_DISABLED) ? m_rgbDisabledBkColor : 
                                   m_rgbNormalBkColor)));
 
-            // Walk through cell's items
-            for(iLine = 0; iLine < m_ppRowList[i]->m_ppCellList[j]->m_iNumLines; iLine++)
+            // Different drawing depend on CF_TEXTBOX flag
+            if (m_pColList[j].m_dwFlags & CF_TEXTBOX)
             {
-               // Change text colors if current item is selected
-               if (m_ppRowList[i]->m_ppCellList[j]->m_pSelectFlags[iLine])
-               {
-                  rgbTextColor = dc.SetTextColor(m_rgbSelectedTextColor);
-                  rgbBkColor = dc.SetBkColor(m_rgbSelectedBkColor);
-               }
+               // This cell has single multiline text item without image
+               memcpy(&rcText, &rect, sizeof(RECT));
+               rcText.top += CELL_TEXT_Y_MARGIN;
+               rcText.bottom -= CELL_TEXT_Y_MARGIN;
+               rcText.left += CELL_TEXT_X_MARGIN;
+               rcText.right -= CELL_TEXT_X_MARGIN;
 
-               if (m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine] != -1)
-                  m_pImageList->Draw(&dc, m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine],
-                                     CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
-               dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
-                           strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
-                           &rcText, DT_SINGLELINE | DT_VCENTER | 
-                                       (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
-               
-               // Restore colors
-               if (m_ppRowList[i]->m_ppCellList[j]->m_pSelectFlags[iLine])
-               {
-                  dc.SetTextColor(rgbTextColor);
-                  dc.SetBkColor(rgbBkColor);
-               }
+               dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszText,
+                           strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszText),
+                           &rcText, DT_WORDBREAK | (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
+            }
+            else  // Multiline cell
+            {
+               int iCellHeight;
 
-               rcText.top = rcText.bottom + CELL_TEXT_Y_SPACING;
+               iCellHeight = (m_ppRowList[i]->m_ppCellList[j]->m_iNumLines == 0) ? EMPTY_ROW_HEIGHT :
+                              (CELL_TEXT_Y_MARGIN * 2 + m_ppRowList[i]->m_ppCellList[j]->m_iNumLines * m_iTextHeight +
+                                 (m_ppRowList[i]->m_ppCellList[j]->m_iNumLines - 1) * CELL_TEXT_Y_SPACING);
+            
+               rcText.top += CELL_TEXT_Y_MARGIN + ((rect.bottom - rect.top) - iCellHeight) / 2;
                rcText.bottom = rcText.top + m_iTextHeight;
+               rcText.left += CELL_TEXT_X_MARGIN;
+               if (m_ppRowList[i]->m_ppCellList[j]->m_bHasImages)
+                  rcText.left += ITEM_IMAGE_SIZE + 3;
+               rcText.right -= CELL_TEXT_X_MARGIN;
+
+               // Walk through cell's items
+               for(iLine = 0; iLine < m_ppRowList[i]->m_ppCellList[j]->m_iNumLines; iLine++)
+               {
+                  // Change text colors if current item is selected
+                  if (m_ppRowList[i]->m_ppCellList[j]->m_pSelectFlags[iLine])
+                  {
+                     rgbTextColor = dc.SetTextColor(m_rgbSelectedTextColor);
+                     rgbBkColor = dc.SetBkColor(m_rgbSelectedBkColor);
+                  }
+
+                  if (m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine] != -1)
+                     m_pImageList->Draw(&dc, m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine],
+                                        CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
+                  dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
+                              strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
+                              &rcText, DT_SINGLELINE | DT_VCENTER | 
+                                          (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
+               
+                  // Restore colors
+                  if (m_ppRowList[i]->m_ppCellList[j]->m_pSelectFlags[iLine])
+                  {
+                     dc.SetTextColor(rgbTextColor);
+                     dc.SetBkColor(rgbBkColor);
+                  }
+
+                  rcText.top = rcText.bottom + CELL_TEXT_Y_SPACING;
+                  rcText.bottom = rcText.top + m_iTextHeight;
+               }
             }
 
             if ((m_ppRowList[i]->m_dwFlags & RLF_DISABLED) && 
@@ -497,10 +557,17 @@ int CRuleList::InsertRow(int iInsertBefore)
    m_iNumRows++;
    m_ppRowList[iNewRow] = new RL_Row(m_iNumColumns);
 
-   // Set non-selectable flag on cells
+   // Do necssary changes on new cells
    for(i = 0; i < m_iNumColumns; i++)
+   {
+      // Set non-selectable flag on cells
       if (m_pColList[i].m_dwFlags & CF_NON_SELECTABLE)
          m_ppRowList[iNewRow]->m_ppCellList[i]->m_bSelectable = FALSE;
+
+      // Set empty text for text box columns
+      if (m_pColList[i].m_dwFlags & CF_TEXTBOX)
+         m_ppRowList[iNewRow]->m_ppCellList[i]->SetText("");
+   }
 
    RecalcHeight();
    UpdateScrollBars();
@@ -520,8 +587,11 @@ int CRuleList::AddItem(int iRow, int iColumn, char *pszText, int iImage)
    if ((iRow < 0) || (iRow >= m_iNumRows) || (iColumn < 0) || (iColumn >= m_iNumColumns))
       return -1;
 
+   if (m_pColList[iColumn].m_dwFlags & CF_TEXTBOX)
+      return -1;  // SetCellText() should be used for text box columns
+
    iPos = m_ppRowList[iRow]->m_ppCellList[iColumn]->AddLine(pszText, iImage);
-   m_ppRowList[iRow]->RecalcHeight(m_iTextHeight);
+   m_ppRowList[iRow]->RecalcHeight(m_iTextHeight, m_pColList, &m_fontNormal);
    RecalcHeight();
    UpdateScrollBars();
    InvalidateList();
@@ -537,6 +607,8 @@ void CRuleList::ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int
 {
    if ((iRow < 0) || (iRow >= m_iNumRows) || (iColumn < 0) || (iColumn >= m_iNumColumns))
       return;
+   if (m_pColList[iColumn].m_dwFlags & CF_TEXTBOX)
+      return;  // SetCellText() should be used for text box columns
    if (m_ppRowList[iRow]->m_ppCellList[iColumn]->ReplaceLine(iItem, pszText, iImage))
       InvalidateRow(iRow);
 }
@@ -1121,6 +1193,8 @@ void CRuleList::ClearCell(int iRow, int iCell)
 {
    if ((iRow < 0) || (iRow >= m_iNumRows) || (iCell < 0) || (iCell >= m_iNumColumns))
       return;
+   if (m_pColList[iCell].m_dwFlags & CF_TEXTBOX)
+      return;  // SetCellText() should be used for text box columns
    m_ppRowList[iRow]->m_ppCellList[iCell]->Clear();
 }
 
@@ -1176,6 +1250,9 @@ void CRuleList::InvalidateRow(int iRow)
 
 void CRuleList::DeleteItem(int iRow, int iCell, int iItem)
 {
+   if (m_pColList[iCell].m_dwFlags & CF_TEXTBOX)
+      return;  // SetCellText() should be used for text box columns
+
    if ((iRow >= 0) && (iRow < m_iNumRows) &&
        (iCell >= 0) && (iCell < m_iNumColumns))
    {
@@ -1189,7 +1266,7 @@ void CRuleList::DeleteItem(int iRow, int iCell, int iItem)
                if (iItem < m_iCurrItem)
                   m_iCurrItem--;
          }
-         m_ppRowList[iRow]->RecalcHeight(m_iTextHeight);
+         m_ppRowList[iRow]->RecalcHeight(m_iTextHeight, m_pColList, &m_fontNormal);
          RecalcHeight();
          UpdateScrollBars();
          InvalidateRect(NULL);
@@ -1237,4 +1314,21 @@ BOOL CRuleList::DeleteRow(int iRow)
       bResult = TRUE;
    }
    return bResult;
+}
+
+
+//
+// Set text for textbox cells
+//
+
+void CRuleList::SetCellText(int iRow, int iColumn, char *pszText)
+{
+   if (m_pColList[iColumn].m_dwFlags & CF_TEXTBOX)
+   {
+      m_ppRowList[iRow]->m_ppCellList[iColumn]->SetText(pszText != NULL ? pszText : "");
+      m_ppRowList[iRow]->RecalcHeight(m_iTextHeight, m_pColList, &m_fontNormal);
+      RecalcHeight();
+      UpdateScrollBars();
+      InvalidateRect(NULL);
+   }
 }

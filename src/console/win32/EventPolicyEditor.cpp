@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "EventPolicyEditor.h"
+#include "RuleSeverityDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -129,10 +130,10 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.InsertColumn(0, "No.", 35, CF_CENTER | CF_TITLE_COLOR | CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(1, "Source", 150);
    m_wndRuleList.InsertColumn(2, "Event", 150);
-   m_wndRuleList.InsertColumn(3, "Severity", 80);
+   m_wndRuleList.InsertColumn(3, "Severity", 80, CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(4, "Alarm", 150);
    m_wndRuleList.InsertColumn(5, "Action", 150);
-   m_wndRuleList.InsertColumn(6, "Comments", 200, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(6, "Comments", 200, CF_TEXTBOX | CF_NON_SELECTABLE);
 
    theApp.OnViewCreate(IDR_EPP_EDITOR, this);
 	return 0;
@@ -295,10 +296,10 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    }
    
    // Event list
-   m_wndRuleList.ClearCell(iRow, 2);
+   m_wndRuleList.ClearCell(iRow, COL_EVENT);
    if (m_pEventPolicy->pRuleList[iRow].dwNumEvents == 0)
    {
-      m_wndRuleList.AddItem(iRow, 2, "Any", m_iImageAny);
+      m_wndRuleList.AddItem(iRow, COL_EVENT, "Any", m_iImageAny);
    }
    else
    {
@@ -309,20 +310,29 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    }
 
    // Severity
-   m_wndRuleList.ClearCell(iRow, 3);
+   m_wndRuleList.ClearCell(iRow, COL_SEVERITY);
    if ((m_pEventPolicy->pRuleList[iRow].dwFlags & ANY_SEVERITY) == ANY_SEVERITY)
    {
-      m_wndRuleList.AddItem(iRow, 3, "Any", m_iImageAny);
+      m_wndRuleList.AddItem(iRow, COL_SEVERITY, "Any", m_iImageAny);
    }
    else
    {
+      DWORD dwMask;
+
+      for(i = 0, dwMask = RF_SEVERITY_INFO; i < 5; i++, dwMask <<= 1)
+         if (m_pEventPolicy->pRuleList[iRow].dwFlags & dwMask)
+            m_wndRuleList.AddItem(iRow, COL_SEVERITY, g_szStatusTextSmall[i], 
+                                  m_iImageSeverityBase + i);
    }
+
+   // Comment
+   m_wndRuleList.SetCellText(iRow, COL_COMMENT, m_pEventPolicy->pRuleList[iRow].pszComment);
 
    // Enable/disable selection
    m_wndRuleList.EnableCellSelection(iRow, COL_SOURCE, m_pEventPolicy->pRuleList[iRow].dwNumSources != 0);
    m_wndRuleList.EnableCellSelection(iRow, COL_EVENT, m_pEventPolicy->pRuleList[iRow].dwNumEvents != 0);
-   m_wndRuleList.EnableCellSelection(iRow, COL_SEVERITY, (m_pEventPolicy->pRuleList[iRow].dwFlags & ANY_SEVERITY) != ANY_SEVERITY);
 }
+
 
 //
 // WM_COMMAND::ID_POLICY_INSERTRULE_TOP message handler
@@ -661,7 +671,32 @@ void CEventPolicyEditor::OnPolicyEdit()
 
 void CEventPolicyEditor::EditSeverity(int iRow)
 {
+   CRuleSeverityDlg dlg;
 
+   dlg.m_bNormal = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_SEVERITY_INFO) ? TRUE : FALSE;
+   dlg.m_bWarning = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_SEVERITY_WARNING) ? TRUE : FALSE;
+   dlg.m_bMinor = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_SEVERITY_MINOR) ? TRUE : FALSE;
+   dlg.m_bMajor = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_SEVERITY_MAJOR) ? TRUE : FALSE;
+   dlg.m_bCritical = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_SEVERITY_CRITICAL) ? TRUE : FALSE;
+   if (dlg.DoModal() == IDOK)
+   {
+      DWORD dwSeverity = 0;
+
+      if (dlg.m_bNormal)
+         dwSeverity |= RF_SEVERITY_INFO;
+      if (dlg.m_bWarning)
+         dwSeverity |= RF_SEVERITY_WARNING;
+      if (dlg.m_bMinor)
+         dwSeverity |= RF_SEVERITY_MINOR;
+      if (dlg.m_bMajor)
+         dwSeverity |= RF_SEVERITY_MAJOR;
+      if (dlg.m_bCritical)
+         dwSeverity |= RF_SEVERITY_CRITICAL;
+
+      m_pEventPolicy->pRuleList[iRow].dwFlags &= ~(ANY_SEVERITY);
+      m_pEventPolicy->pRuleList[iRow].dwFlags |= dwSeverity;
+      UpdateRow(iRow);
+   }
 }
 
 
@@ -689,5 +724,6 @@ void CEventPolicyEditor::EditComment(int iRow)
    {
       MemFree(m_pEventPolicy->pRuleList[iRow].pszComment);
       m_pEventPolicy->pRuleList[iRow].pszComment = nx_strdup((LPCTSTR)dlg.m_strText);
+      UpdateRow(iRow);
    }
 }

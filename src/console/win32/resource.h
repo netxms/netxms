@@ -89,6 +89,7 @@
 #define IDI_LOG                         199
 #define IDB_ANY                         201
 #define IDD_OBJECT_PRESENTATION         202
+#define IDD_EDIT_RULE_SEVERITY          203
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
 #define IDC_EDIT_PASSWORD               1002
@@ -180,6 +181,11 @@
 #define IDC_CHECK_DEFAULT_IMAGE         1110
 #define IDC_STATIC_ICON                 1111
 #define ID_SELECT_IMAGE                 1112
+#define IDC_CHECK_NORMAL                1113
+#define IDC_CHECK_WARNING               1114
+#define IDC_CHECK_MINOR                 1115
+#define IDC_CHECK_MAJOR                 1116
+#define IDC_CHECK_CRITICAL              1117
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -245,9 +251,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        203
+#define _APS_NEXT_RESOURCE_VALUE        204
 #define _APS_NEXT_COMMAND_VALUE         32864
-#define _APS_NEXT_CONTROL_VALUE         1113
+#define _APS_NEXT_CONTROL_VALUE         1118
 #define _APS_NEXT_SYMED_VALUE           119
 #endif
 #endif

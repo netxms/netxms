@@ -854,6 +854,26 @@ BEGIN
     GROUPBOX        "Object's image",IDC_STATIC,7,7,278,53
 END
 
+IDD_EDIT_RULE_SEVERITY DIALOG DISCARDABLE  0, 0, 129, 97
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Severity"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Normal",IDC_CHECK_NORMAL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,19,38,10
+    CONTROL         "&Warning",IDC_CHECK_WARNING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,33,43,10
+    CONTROL         "&Minor",IDC_CHECK_MINOR,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,47,33,10
+    CONTROL         "M&ajor",IDC_CHECK_MAJOR,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,61,33,10
+    CONTROL         "&Critical",IDC_CHECK_CRITICAL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,75,37,10
+    DEFPUSHBUTTON   "OK",IDOK,72,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,72,24,50,14
+    GROUPBOX        "Severity",IDC_STATIC,7,7,58,83
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -1072,6 +1092,14 @@ BEGIN
         RIGHTMARGIN, 285
         TOPMARGIN, 7
         BOTTOMMARGIN, 163
+    END
+
+    IDD_EDIT_RULE_SEVERITY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 122
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 90
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -19,6 +19,7 @@
 #define CF_CENTER          0x0001
 #define CF_TITLE_COLOR     0x0002
 #define CF_NON_SELECTABLE  0x0004
+#define CF_TEXTBOX         0x0008
 
 
 //
@@ -33,6 +34,13 @@
 // Supplementary classes
 //
 
+struct RL_COLUMN
+{
+   char m_szName[MAX_COLUMN_NAME];
+   int m_iWidth;
+   DWORD m_dwFlags;
+};
+
 class RL_Cell
 {
 public:
@@ -42,16 +50,19 @@ public:
    BYTE *m_pSelectFlags;
    BOOL m_bHasImages;
    BOOL m_bSelectable;
+   char *m_pszText;    // Text for CF_TEXTBOX cells
 
    RL_Cell();
    ~RL_Cell();
 
    void Recalc(void);
+   int CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont *pFont);
    int AddLine(char *pszText, int iImage = -1);
    BOOL ReplaceLine(int iLine, char *pszText, int iImage = -1);
    BOOL DeleteLine(int iLine);
    void Clear(void);
    void ClearSelection(void);
+   void SetText(char *pszText);
 };
 
 class RL_Row
@@ -66,14 +77,7 @@ public:
    ~RL_Row();
 
    void InsertCell(int iPos);
-   void RecalcHeight(int iTextHeight);
-};
-
-struct RL_COLUMN
-{
-   char m_szName[MAX_COLUMN_NAME];
-   int m_iWidth;
-   DWORD m_dwFlags;
+   void RecalcHeight(int iTextHeight, RL_COLUMN *pColInfo, CFont *pFont);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -165,6 +169,7 @@ private:
    RL_Row **m_ppRowList;
 
 public:
+	void SetCellText(int iRow, int iColumn, char *pszText);
 	BOOL DeleteRow(int iRow);
 	BOOL EnableCellSelection(int iRow, int iCell, BOOL bEnable);
 	void DeleteItem(int iRow, int iCell, int iItem);

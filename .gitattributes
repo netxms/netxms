@@ -178,6 +178,8 @@ src/console/win32/RuleHeader.cpp -text
 src/console/win32/RuleHeader.h -text
 src/console/win32/RuleList.cpp -text
 src/console/win32/RuleList.h -text
+src/console/win32/RuleSeverityDlg.cpp -text
+src/console/win32/RuleSeverityDlg.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/ThresholdDlg.cpp -text
