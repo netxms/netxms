@@ -35,7 +35,9 @@
 //
 
 #define MAX_LINE_SIZE      4096
-#define NXGET_VERSION      "0"
+#define NXGET_VERSION      "1"
+#define TRACE_IN           0
+#define TRACE_OUT          1
 
 
 //
@@ -51,13 +53,26 @@ static DWORD m_dwNumDataLines = 0;
 static char **m_ppDataLines = NULL;
 static char m_szNetBuffer[MAX_LINE_SIZE * 2];
 static BOOL m_bVerbose = TRUE;
+static BOOL m_bTrace = FALSE;
+
+
+//
+// Print protocol trace information
+//
+
+static void Trace(int iDirection, char *pszLine)
+{
+   static char *pszDir[] = { "<<<", ">>>" };
+   if (m_bTrace)
+      printf("%s %s\n", pszDir[iDirection], pszLine);
+}
 
 
 //
 // Destroy command execuion results data
 //
 
-void DestroyResultData(void)
+static void DestroyResultData(void)
 {
    DWORD i;
 
@@ -168,6 +183,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
       return ERR_NOT_CONNECTED;
 
    // Send command
+   Trace(TRACE_OUT, szCmd);
    sprintf(szBuffer, "%s\r\n", szCmd);
    iError = send(m_hSocket, szBuffer, strlen(szBuffer), 0);
    if (iError != (int)strlen(szBuffer))
@@ -198,6 +214,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
       m_hSocket = -1;
       return ERR_CONNECTION_BROKEN;
    }
+   Trace(TRACE_IN, szBuffer);
 
    // Check for error
    if (memcmp(szBuffer, "+OK", 3))
@@ -229,6 +246,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
       iError = RecvLine(MAX_LINE_SIZE, szBuffer);
       if (iError <= 0)
          return ERR_CONNECTION_BROKEN;
+      Trace(TRACE_IN, szBuffer);
 
       if (bMultiLineData)
       {
@@ -238,6 +256,7 @@ DWORD ExecuteCommand(char *szCmd, BOOL bExpectData = FALSE, BOOL bMultiLineData 
             iError = RecvLine(MAX_LINE_SIZE, szBuffer);
             if (iError <= 0)
                return ERR_CONNECTION_BROKEN;
+            Trace(TRACE_IN, szBuffer);
          }
       }
       else
@@ -317,6 +336,7 @@ BOOL Connect(void)
          printf("Communication failed\n");
       goto connect_cleanup;
    }
+   Trace(TRACE_IN, szBuffer);
 
    sprintf(szSignature, "+%d NMS_Agent_09180431", AGENT_PROTOCOL_VERSION);
    if (memcmp(szBuffer, szSignature, strlen(szSignature)))
@@ -385,7 +405,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hp:qs:v")) != -1)
+   while((ch = getopt(argc, argv, "a:hp:qs:tv")) != -1)
    {
       switch(ch)
       {
@@ -398,6 +418,7 @@ int main(int argc, char *argv[])
                    "   -p <port>   : Specify agent's port number. Default is %d.\n"
                    "   -q          : Quiet mode.\n"
                    "   -s <secret> : Specify shared secret for authentication.\n"
+                   "   -t          : Turn on protocol trace\n"
                    "   -v          : Display version and exit.\n"
                    "\n", m_wPort);
             bStart = FALSE;
@@ -419,6 +440,9 @@ int main(int argc, char *argv[])
             break;
          case 's':   // Shared secret
             strncpy(m_szSecret, optarg, MAX_SECRET_LENGTH - 1);
+            break;
+         case 't':   // Protocol trace
+            m_bTrace = TRUE;
             break;
          case 'v':   // Print version and exit
             printf("NetXMS GET command-line utility Version " NETXMS_VERSION_STRING "." NXGET_VERSION "\n");
