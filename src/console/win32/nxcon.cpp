@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
 	ON_COMMAND(ID_FILE_SETTINGS, OnFileSettings)
 	ON_COMMAND(ID_CONTROLPANEL_ACTIONS, OnControlpanelActions)
+	ON_COMMAND(ID_TOOLS_ADDNODE, OnToolsAddnode)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -243,31 +244,31 @@ BOOL CConsoleApp::InitInstance()
 
    m_hEventBrowserMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
+   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
 
    m_hObjectBrowserMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
+   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
 
    m_hUserEditorMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hUserEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
+   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
 
    m_hDCEditorMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
 
    m_hPolicyEditorMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 5), "&Policy");
+   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 5), "&Policy");
 
    m_hAlarmBrowserMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 6), "&Alarm");
+   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 6), "&Alarm");
 
    m_hMapMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hMapMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hMapMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 9), "&Object");
+   InsertMenu(m_hMapMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 9), "&Object");
 
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
@@ -1205,6 +1206,10 @@ void CConsoleApp::CreateContainer(DWORD dwParent)
    CCreateContainerDlg dlg;
 
    dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
+          (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
+         dlg.m_pParentObject = NULL;
    if (dlg.DoModal() == IDOK)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
@@ -1227,13 +1232,17 @@ void CConsoleApp::CreateNode(DWORD dwParent)
    CCreateNodeDlg dlg;
 
    dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
+          (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
+         dlg.m_pParentObject = NULL;
    if (dlg.DoModal() == IDOK)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_NODE;
       ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
-      ci.cs.node.dwNetMask = dlg.m_dwNetMask;
+      ci.cs.node.dwNetMask = 0;
       CreateObject(&ci);
    }
 }
@@ -1249,6 +1258,10 @@ void CConsoleApp::CreateTemplate(DWORD dwParent)
    CCreateTemplateDlg dlg;
 
    dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if ((dlg.m_pParentObject->iClass != OBJECT_TEMPLATEGROUP) &&
+          (dlg.m_pParentObject->iClass != OBJECT_TEMPLATEROOT))
+         dlg.m_pParentObject = NULL;
    if (dlg.DoModal() == IDOK)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
@@ -1269,6 +1282,10 @@ void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
    CCreateTGDlg dlg;
 
    dlg.m_pParentObject = NXCFindObjectById(dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if ((dlg.m_pParentObject->iClass != OBJECT_TEMPLATEGROUP) &&
+          (dlg.m_pParentObject->iClass != OBJECT_TEMPLATEROOT))
+         dlg.m_pParentObject = NULL;
    if (dlg.DoModal() == IDOK)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
@@ -1311,4 +1328,14 @@ void CConsoleApp::PollNode(DWORD dwObjectId, int iPollType)
       pWnd->m_iPollType = iPollType;
       pWnd->PostMessage(WM_COMMAND, ID_POLL_RESTART, 0);
    }
+}
+
+
+//
+// WM_COMMAND::ID_TOOLS_ADDNODE message handler
+//
+
+void CConsoleApp::OnToolsAddnode() 
+{
+   CreateNode(0);
 }

@@ -19,7 +19,6 @@ CCreateNodeDlg::CCreateNodeDlg(CWnd* pParent /*=NULL*/)
 	: CCreateObjectDlg(CCreateNodeDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CCreateNodeDlg)
-		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 }
 
@@ -28,7 +27,7 @@ void CCreateNodeDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CCreateObjectDlg::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CCreateNodeDlg)
-	DDX_Control(pDX, IDC_IP_MASK, m_wndIPMask);
+	DDX_Control(pDX, IDC_EDIT_NAME, m_wndObjectName);
 	DDX_Control(pDX, IDC_IP_ADDR, m_wndIPAddr);
 	//}}AFX_DATA_MAP
 }
@@ -36,6 +35,7 @@ void CCreateNodeDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CCreateNodeDlg, CCreateObjectDlg)
 	//{{AFX_MSG_MAP(CCreateNodeDlg)
+	ON_BN_CLICKED(IDC_BUTTON_RESOLVE, OnButtonResolve)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -51,8 +51,38 @@ void CCreateNodeDlg::OnOK()
 {
    m_wndIPAddr.GetAddress(m_dwIpAddr);
    m_dwIpAddr = htonl(m_dwIpAddr);
-   m_wndIPMask.GetAddress(m_dwNetMask);
-   m_dwNetMask = htonl(m_dwNetMask);
 	
 	CCreateObjectDlg::OnOK();
+}
+
+
+//
+// "Resolve" button handler
+//
+
+void CCreateNodeDlg::OnButtonResolve() 
+{
+   TCHAR szHostName[256];
+   struct hostent *hs;
+   DWORD dwAddr = INADDR_NONE;
+
+   m_wndObjectName.GetWindowText(szHostName, 256);
+   hs = gethostbyname(szHostName);
+   if (hs != NULL)
+   {
+      memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+   }
+   else
+   {
+      dwAddr = inet_addr(szHostName);
+   }
+
+   if (dwAddr != INADDR_NONE)
+   {
+      m_wndIPAddr.SetAddress(ntohl(dwAddr));
+   }
+   else
+   {
+      MessageBox(_T("Unable to resolve host name!"), _T("Error"), MB_OK | MB_ICONSTOP);
+   }
 }

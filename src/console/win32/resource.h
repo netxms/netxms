@@ -270,6 +270,8 @@
 #define IDC_POLL_PROGRESS               1169
 #define IDC_EDIT_MSG                    1170
 #define IDC_CHECK_SAVE                  1172
+#define IDC_BUTTON_RESOLVE              1173
+#define IDC_BUTTON_NONE                 1174
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -355,7 +357,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        240
 #define _APS_NEXT_COMMAND_VALUE         32889
-#define _APS_NEXT_CONTROL_VALUE         1173
+#define _APS_NEXT_CONTROL_VALUE         1175
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

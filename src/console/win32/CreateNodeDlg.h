@@ -17,14 +17,13 @@ class CCreateNodeDlg : public CCreateObjectDlg
 {
 // Construction
 public:
-	DWORD m_dwNetMask;
 	DWORD m_dwIpAddr;
 	CCreateNodeDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CCreateNodeDlg)
 	enum { IDD = IDD_CREATE_NODE };
-	CIPAddressCtrl	m_wndIPMask;
+	CEdit	m_wndObjectName;
 	CIPAddressCtrl	m_wndIPAddr;
 	//}}AFX_DATA
 
@@ -42,6 +41,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CCreateNodeDlg)
 	virtual void OnOK();
+	afx_msg void OnButtonResolve();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -151,6 +151,7 @@ public:
 	afx_msg void OnViewAlarms();
 	afx_msg void OnFileSettings();
 	afx_msg void OnControlpanelActions();
+	afx_msg void OnToolsAddnode();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

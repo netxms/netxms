@@ -72,6 +72,7 @@ sql/schema.in -text
 sql/setup.in -text
 sql/upgrade/00100011.nxdb -text
 sql/upgrade/00110012.nxdb -text
+sql/upgrade/00120013.nxdb -text
 sql/upgrade/common.nxdb -text
 src/Makefile.am -text
 src/PPC_libs.vcw -text
