@@ -1,6 +1,17 @@
 *
+* 0.1.12
+*
+
+- Added new object class - NetworkService, for simplified network service
+  health checking
+
+
+*
 * 0.1.11
 *
+
+- Fixed incorrect behavior of Process.Count() parameter under Linux and
+  FreeBSD
 
 
 *

@@ -98,7 +98,8 @@ WINDOWS CONSOLE:
 - Add sorting to all list views
 - Add "Copy value to clipboard" to "Collected data" window
 - Event Processing Policy: Edit with doubleclick
-- Event Processing Policy: Disable record with doubleclick on leftmost field (number)
+- Event Processing Policy: Disable record with doubleclick on leftmost
+  field (number)
 
 
 SUBAGENTS:
