@@ -1,0 +1,363 @@
+-- SECTION 1: Top Level Definitions
+
+SYNOPTICS-ROOT-MIB DEFINITIONS ::= BEGIN
+
+
+-- SynOptics Root MIB Release 1.7.2
+-- Revision 8/27/99
+
+-- Copyright 1996 - 99 Nortel Networks, Inc.
+-- All rights reserved.
+-- This Nortel Networks SNMP Management Information Base Specification
+-- (Specification) embodies Nortel Networks' confidential and
+-- proprietary intellectual property. Nortel Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Nortel Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+
+-- Imports
+
+IMPORTS
+	enterprises
+		FROM RFC1155-SMI;
+
+-- Textual Conventions
+
+SnpxBackplaneType ::= INTEGER {
+	other(1),		-- none of the following
+	eth(2),			-- ethernet
+	ethTok(3),		-- ethernet and tokenring
+	ethFddi(4),		-- ethernet and FDDI
+	ethTokFddi(5),		-- ethernet, tokenring, and FDDI
+	ethTokRed(6),		-- ethernet and tokenring with
+				--   redundant powersupply
+	ethTokFddiRed(7),	-- ethernet, tokenring, and FDDI
+				--   with redundant powersupply
+	tok(8),			-- tokenring
+        enetTrFastEnet(9),      -- ethernet, tokenring, and fast ethernet
+        enetFastEnet(10),       -- ethernet and fast ethernet
+        enetTrFastEnetRed(11),  -- ethernet, tokenring, and fast ethernet
+                                -- with redundant powersupply
+	enetFastGigEnet(12)	-- ethernet, fast, and gigabit ethernet
+	}
+-- This type is used to specify a concentrator backplane.
+
+
+SnpxChassisType ::= INTEGER {
+	other(1),		-- none of the following
+	m3000(2),		-- product 3000
+	m3030(3),		-- product 3030
+	m2310(4),		-- product 2310
+	m2810(5),		-- product 2810
+	m2912(6),		-- product 2912
+	m2914(7),		-- product 2914
+	m271x(8),		-- product 271x
+	m2813(9),		-- product 2813
+	m2814(10),		-- product 2814
+	m2915(11),		-- product 2915
+	m5000(12),		-- product 5000
+	m2813SA(13),		-- product 2813SA
+	m2814SA(14),		-- product 2814SA
+	m810M(15),		-- product 810M
+	m1032x(16),		-- product EtherCell
+	m5005(17),		-- product 5005
+	mAlcatelEthConc(18),	-- product Alcatel Ethernet workgroup conc.
+	m2715SA(20),		-- product 2715SA
+	m2486(21),		-- product 2486
+	m28xxx(22),		-- product 28000 series
+	m2300x(23),		-- product 23000 series
+	m5DN00x(24),		-- product 5DN00x series
+	mBayStackEth(25),	-- product BayStack Ethernet
+	m2310x(26),		-- product 23100 series
+	mBayStack100Hub(27),	-- product 100Base-T Hub
+	m3000FastEth(28),       -- product 3000 Fast Ethernet
+	mXediaSwitch(29),	-- product Orion switch
+	notUsed(30),            -- not used 
+        m28200EthSwitch(31),    -- product DDS 
+	mCent6Slot(32),         -- product Centillion
+	mCent12Slot(33),        -- product Centillion
+	mCent1Slot(34),         -- product Centillion
+	mBayStack301(35),       -- product BayStack 301
+	mBayStackTr(36),        -- product BayStack TokenRing Hub
+	mFVC10625(37),          -- product FVC Multimedia Switch
+	mSwitchNode(38),        -- product Switch Node
+	mBayStack302(39),       -- product BayStack 302 Switch
+	mBayStack350(40),       -- product BayStack 350 Switch
+	mBayStack150(41),       -- product BayStack 150 Ethernet Hub
+        mCent50N3Slot(42),      -- product Centillion 50N switch
+        mCent50T3Slot(43),      -- product Centillion 50T switch
+        mBayStack303-304(44),   -- product BayStack 303 and 304 Switches
+	mBayStack200(45),       -- product BayStack 200 Ethernet Hub
+	mBayStack250(46),       -- product BayStack 250 10/100 Ethernet Hub
+	mBayStack450(48),       -- product BayStack 450 10/100/1000 Switches
+	mBayStack410(49),       -- product BayStack 410 10/100 Switches
+        mAccelar1200(50),       -- product Accelar 1200 L3 Switch
+        mAccelar1250(51),       -- product Accelar 1250 L3 Switch
+        mAccelar1100(52),       -- product Accelar 1100 L3 Switch
+        mAccelar1150(53),       -- product Accelar 1150 L3 Switch
+        mAccelar1050(54),       -- product Accelar 1050 L3 Switch
+        mAccelar1051(55),       -- product Accelar 1051 L3 Switch
+        mAccelar8610(56),       -- product Accelar 8610 L3 Switch
+        mAccelar8606(57),       -- product Accelar 8606 L3 Switch
+	mAccelar8010(58),       -- product Accelar 8010
+	mAccelar8006(59),       -- product Accelar 8006
+	mBayStack670(60),       -- product BayStack 670 wireless access point
+        mAccelar740(61),        -- product Accelar 740 
+        mAccelar750(62),        -- product Accelar 750 
+	mAccelar790(63),        -- product Accelar 790
+	mBayStack460(64),       -- product BayStack 460 10/100 Switches
+        mAccelar8110(65),       -- product Accelar 8110 L2 Switch
+        mAccelar8106(66),       -- product Accelar 8106 L2 Switch
+	mBayStack3580(67)       -- product BayStack 3580 Gig Switch 
+	}
+-- This type is used to specify a concentrator chassis.
+
+
+-- Top Branches under "synoptics"
+
+synoptics	OBJECT IDENTIFIER ::= { enterprises 45 }
+
+products	OBJECT IDENTIFIER ::= { synoptics 1 }
+temporary 	OBJECT IDENTIFIER ::= { synoptics 2 }
+registration	OBJECT IDENTIFIER ::= { synoptics 3 }
+policy		OBJECT IDENTIFIER ::= { synoptics 4 }
+
+
+-- Branches under "products"
+
+series1000	OBJECT IDENTIFIER ::= { products 1 }
+s3SnmpAgent	OBJECT IDENTIFIER ::= { products 2 }
+series3000	OBJECT IDENTIFIER ::= { products 3 }
+superAgent	OBJECT IDENTIFIER ::= { products 4 }
+specialTraps	OBJECT IDENTIFIER ::= { products 5 }
+series5000	OBJECT IDENTIFIER ::= { products 6 }
+lanSwitch	OBJECT IDENTIFIER ::= { products 7 }
+
+
+-- Branches under "temporary"
+
+-- ieee8023	OBJECT IDENTIFIER ::= { temporary 1 }
+-- proj1(del)	OBJECT IDENTIFIER ::= { temporary 2 }
+-- proj2(sa)	OBJECT IDENTIFIER ::= { temporary 3 }
+-- proj3(lc)	OBJECT IDENTIFIER ::= { temporary 4 }
+-- proj4(pen)	OBJECT IDENTIFIER ::= { temporary 5 }
+-- proj5(phe)	OBJECT IDENTIFIER ::= { temporary 6 }
+-- proj6(fddi)	OBJECT IDENTIFIER ::= { temporary 7 }
+-- proj7(xo)	OBJECT IDENTIFIER ::= { temporary 8 }
+
+-- Branches under "registration" (values for object sysObjectId)
+s3reg-other	OBJECT IDENTIFIER ::= { registration 1 }
+
+
+s3reg-3000	OBJECT IDENTIFIER ::= { registration 2 }
+  s3reg-3000-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-3000 1 }
+  s3reg-3000-trNMM
+		OBJECT IDENTIFIER ::= { s3reg-3000 2 }
+  s3reg-3000-FDDI-NMM
+		OBJECT IDENTIFIER ::= { s3reg-3000 3 }
+  s3reg-3000-FastEthNMM
+		OBJECT IDENTIFIER ::= { s3reg-3000 4 }
+  s3reg-3000-ethSwitchNMM
+		OBJECT IDENTIFIER ::= { s3reg-3000 5 }
+
+
+s3reg-3030	OBJECT IDENTIFIER ::= { registration 3 }
+  s3reg-3030-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-3030 1 }
+  s3reg-3030-trNMM
+		OBJECT IDENTIFIER ::= { s3reg-3030 2 }
+  s3reg-3030-FDDI-NMM
+		OBJECT IDENTIFIER ::= { s3reg-3030 3 }
+  s3reg-3030-ethSwitchNMM
+		OBJECT IDENTIFIER ::= { s3reg-3030 4 } 
+
+
+s3reg-2310	OBJECT IDENTIFIER ::= { registration 4 }
+  s3reg-2310-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-2310 1 }
+  s3reg-2310-trNMM
+		OBJECT IDENTIFIER ::= { s3reg-2310 2 }
+  s3reg-2310-FDDI-NMM
+		OBJECT IDENTIFIER ::= { s3reg-2310 3 }
+
+
+s3reg-332X	OBJECT IDENTIFIER ::= { registration 5 }
+s3reg-332XS	OBJECT IDENTIFIER ::= { registration 6 }
+s3reg-3356	OBJECT IDENTIFIER ::= { registration 7 }
+
+
+s3reg-2810	OBJECT IDENTIFIER ::= { registration 8 }
+  s3reg-2810-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-2810 1 }
+
+
+s3reg-2715	OBJECT IDENTIFIER ::= { registration 9 }
+  s3reg-2715-trNMM
+	OBJECT IDENTIFIER ::= { s3reg-2715 1 }
+
+
+s3reg-291X	OBJECT IDENTIFIER ::= { registration 10 }
+  s3reg-291X-FDDI-NMM
+		OBJECT IDENTIFIER ::= { s3reg-291X 1 }
+
+
+s3reg-3394	OBJECT IDENTIFIER ::= { registration 11 }
+
+s3reg-281X	OBJECT IDENTIFIER ::= { registration 12 }
+  s3reg-281X-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-281X 1 }
+
+
+s5reg-5000	OBJECT IDENTIFIER ::= { registration 13 }
+  s5reg-5000-ethNMM  -- Ethernet NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5000 1 }
+  s5reg-5000-tokNMM  -- Token Ring NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5000 2 }
+  s5reg-5000-fddNMM  -- FDDI NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5000 3 }
+  s5reg-5000-atmNMM  -- ATM NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5000 4 }
+  s5reg-5000-ethSwitchNMM  -- Ethernet Switch NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= {s5reg-5000 5}
+  s5reg-5000-ethFastEthNMM  -- 10/100 Ethernet NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5000 6 }
+  s5reg-5000-eth10-100SwitchNMM  -- 10/100 Ethernet Switch NMM in 5000 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5000 7 }
+
+
+s3reg-281XSA	OBJECT IDENTIFIER ::= { registration 14 }
+  s3reg-281XSA-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-281XSA 1 }
+
+
+lsreg-28xxx	OBJECT IDENTIFIER ::= { registration 15 }
+  lsreg-28xxx-NMM
+		OBJECT IDENTIFIER ::= { lsreg-28xxx 1 }
+
+
+s3reg-8xx	OBJECT IDENTIFIER ::= { registration 16 }
+  s3reg-810M-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-8xx 1 }
+
+
+s5reg-5005	OBJECT IDENTIFIER ::= { registration 17 }
+  s5reg-5005-ethNMM  -- Ethernet NMM in 5005 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5005 1 }
+  s5reg-5005-tokNMM  -- Token Ring NMM in 5005 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5005 2 }
+  s5reg-5005-ethSwitchNMM -- Ethernet Switch NMM in 5005 Chassis
+	        OBJECT IDENTIFIER ::= { s5reg-5005 3 }
+  s5reg-5005-fddNMM  -- FDDI NMM in 5005 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5005 4 }
+  s5reg-5005-ethFastEthNMM  -- 10/100 Ethernet NMM in 5005 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5005 5 }
+  s5reg-5005-eth10-100SwitchNMM -- 10/100 Ethernet Switch NMM in 5005 Chassis
+		OBJECT IDENTIFIER ::= { s5reg-5005 7 }
+
+s3reg-AlcatelConc	OBJECT IDENTIFIER ::= { registration 18 }
+  s3reg-AlcatelEthConc-enetNMM
+		OBJECT IDENTIFIER ::= { s3reg-AlcatelConc 1 }
+
+
+s3reg-271XSA	OBJECT IDENTIFIER ::= { registration 19 }
+  s3reg-271XSA-trNMM	OBJECT IDENTIFIER ::= { s3reg-271XSA 1 }
+
+
+ecreg-1032x	OBJECT IDENTIFIER ::= { registration 20 }
+  s3reg-1032x-NMM	OBJECT IDENTIFIER ::= { ecreg-1032x 1 }
+
+
+sreg-5DN00x	OBJECT IDENTIFIER ::= { registration 21 }
+  sreg-5DN00x-EthNMM	OBJECT IDENTIFIER ::= { sreg-5DN00x 1 } 
+
+
+sreg-BayStackEth	OBJECT IDENTIFIER ::= { registration 22 }
+  sreg-BayStackEth-ethNMM   OBJECT IDENTIFIER ::= { sreg-BayStackEth 1 }
+
+
+sreg-2300x	OBJECT IDENTIFIER ::= { registration 23 }
+  sreg-2300x-NMM	OBJECT IDENTIFIER ::= { sreg-2300x 1 }
+
+
+sreg-2310x	OBJECT IDENTIFIER ::= { registration 24 }
+  sreg-2310x-NMM	OBJECT IDENTIFIER ::= { sreg-2310x 1 }
+
+sreg-Orion	OBJECT IDENTIFIER ::= { registration 25 }
+  sreg-Orion-ethNMM	OBJECT IDENTIFIER ::= { sreg-Orion 1 }
+
+sreg-BayStack100Hub     OBJECT IDENTIFIER ::= { registration 26 }
+  sreg-BayStack100Unit-12Port
+                OBJECT IDENTIFIER ::= { sreg-BayStack100Hub 1 }
+
+sreg-BayStackTr  OBJECT IDENTIFIER ::= { registration 27 }
+   sreg-BayStackTr-trNMM -- BayStackTr NMM in a virtual Chassis
+		 OBJECT IDENTIFIER ::= { sreg-BayStackTr 1 }
+
+lsreg-28200   OBJECT IDENTIFIER ::= { registration 28 }
+   lsreg-28200-ethSwitchNMM -- 28200 Ethernet Switch
+                 OBJECT IDENTIFIER ::= { lsreg-28200 1 }
+
+sreg-BayStack302   OBJECT IDENTIFIER ::= { registration 29 }
+   sreg-BayStack302-9port -- BayStack302 8+1Tx/Fx 10 Mb/s Ethernet Switch 
+                 OBJECT IDENTIFIER ::= { sreg-BayStack302 1 }
+
+sreg-BayStack350   OBJECT IDENTIFIER ::= { registration 30 }
+   sreg-BayStack350-ethSwitchNMM  -- BayStack350 Family 10/100 Adaptive Switches
+                 OBJECT IDENTIFIER ::= { sreg-BayStack350 1 }
+   sreg-BayStack350-24T-ethSwitchNMM  -- BayStack 350-24T and -12T 10/100/1000 Adaptive Switches
+		 OBJECT IDENTIFIER ::= { sreg-BayStack350 2 }
+
+sreg-BayStack150Eth        OBJECT IDENTIFIER ::= { registration 31 }
+  sreg-BayStack150Eth-ethNMM
+		OBJECT IDENTIFIER ::= { sreg-BayStack150Eth 1 }
+   
+sreg-BayStack303-304	OBJECT IDENTIFIER ::= { registration 32 }
+  sreg-BayStack303-304-Sw   -- 12-24 10mb 1 100mb with MDA Switch
+                 OBJECT IDENTIFIER ::= { sreg-BayStack303-304 1 }
+  sreg-BayStack303-24T-Sw   -- 24 10mb 1 100mb with 2 MDA Switch
+                 OBJECT IDENTIFIER ::= { sreg-BayStack303-304 2 }
+
+sreg-BayStack200Eth        OBJECT IDENTIFIER ::= { registration 33 }
+  sreg-BayStack200Eth-ethNMM  --BayStack200 Ethernet Hub
+		OBJECT IDENTIFIER ::= { sreg-BayStack200Eth 1 }
+
+sreg-BayStack250Eth        OBJECT IDENTIFIER ::= { registration 34 }
+  sreg-BayStack250Eth-ethNMM  --BayStack250 10/100 Ethernet Hub
+              OBJECT IDENTIFIER ::= { sreg-BayStack250Eth 1 }
+
+sreg-BayStack450           OBJECT IDENTIFIER ::= { registration 35 }
+  sreg-BayStack450-ethSwitchNMM  --BayStack450 10/100/1000 Ethernet Switch
+              OBJECT IDENTIFIER ::= { sreg-BayStack450 1 }
+
+sreg-BayStack410           OBJECT IDENTIFIER ::= { registration 36 }
+  sreg-BayStack410-24T-ethSwitchNMM  --BayStack 410-24T 10/100 Adaptive Switches
+	      OBJECT IDENTIFIER ::= { sreg-BayStack410 1 }
+
+sreg-BayStackICS           OBJECT IDENTIFIER ::= { registration 37 }
+  sreg-BayStackICS-NMM  --BayStack Integrated Communication Server
+	      OBJECT IDENTIFIER ::= { sreg-BayStackICS 1 }
+
+s5reg-Accelar8010          OBJECT IDENTIFIER ::= { registration 38 }
+  s5reg-Accelar8132TX    --Ethernet Switch 32 port in 8010 Chassis
+	      OBJECT IDENTIFIER ::= { s5reg-Accelar8010 1 }
+  s5reg-Accelar8148TX   --Ethernet Switch 48 port in 8010 Chassis
+ 	      OBJECT IDENTIFIER ::= { s5reg-Accelar8010 2 }
+
+sreg-BayStack670           OBJECT IDENTIFIER ::= { registration 39 }
+   sreg-BayStack670-wirelessLAN  -- BayStack 670 11Mb/s wireless access point
+		    OBJECT IDENTIFIER ::= { sreg-BayStack670 1 }
+
+sreg-BayStack460           OBJECT IDENTIFIER ::= { registration 40 }
+  sreg-BayStack460-24T-ethSwitchNMM  --BayStack 460-24T 10/100 Switches
+	      OBJECT IDENTIFIER ::= { sreg-BayStack460 1 }
+
+sreg-BayStack3580          OBJECT IDENTIFIER ::= { registration 41 }
+  sreg-BayStack3580-16F-gigEthSwitch  --BayStack 3580-16F Gigabit Switch
+	      OBJECT IDENTIFIER ::= { sreg-BayStack3580 1 }
+
+END

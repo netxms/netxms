@@ -1,0 +1,4095 @@
+          -- Version  2.22.1.2, modified  2002-10-29 11:34:15-05
+
+          CDX-6500-COMMON-MIB DEFINITIONS ::= BEGIN
+
+          IMPORTS
+                  mgmt, NetworkAddress, IpAddress, Counter, Gauge,
+                          TimeTicks, OBJECT-TYPE, enterprises
+                      FROM SNMPv2-SMI;
+
+               -- Codex MIB Group definitions
+
+                         codex OBJECT IDENTIFIER ::= { enterprises 449 }
+            cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                       cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+               cdx6500NodeMgmt OBJECT IDENTIFIER ::= { cdx6500 1 }
+            cdx6500NMSNMPGroup OBJECT IDENTIFIER ::= { cdx6500NodeMgmt 1 }
+  cdx6500NMNodeParametersGroup OBJECT IDENTIFIER ::= { cdx6500NodeMgmt 2 }
+     cdx6500NMDiagnosticsGroup OBJECT IDENTIFIER ::= { cdx6500NodeMgmt 3 }
+        cdx6500NMControlsGroup OBJECT IDENTIFIER ::= { cdx6500NodeMgmt 4 }
+            cdx6500NMDLSVGroup OBJECT IDENTIFIER ::= { cdx6500NodeMgmt 5 }
+
+         cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+       cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+   cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+        cdx6500CfgGeneralGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 2 }
+
+             cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+      cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+    cdx6500StatOtherStatsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 2 }
+          cdx6500StatTFTPGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 3 }
+   cdx6500StatNetworkSvcsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 4 }
+   cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 3 }
+  cdx6500PSTLANConnectionGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 6 }
+
+               cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+               cdx6500ContTFTP OBJECT IDENTIFIER ::= { cdx6500Controls 2 }
+           cdx6500statControls OBJECT IDENTIFIER ::= { cdx6500Controls 4 }
+              cdx6500ContFlash OBJECT IDENTIFIER ::= { cdx6500Controls 21 }
+
+        -- Textual conventions
+        Counter16     ::=  INTEGER (0..65535)
+
+        DisplayString ::= OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set.  By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+        -- The purpose of this MIB file is to provide SNMP access to
+        -- the Motorola/Codex 6500 database
+
+        -- the SNMP Agent group
+        -- This group acts as an extension of the MIB-II snmp group. It
+        -- describes managed objects used by the Pegasus SNMP agent that
+        -- are not included in the snmp group.
+
+        cdx6500SNMPPrimUDPChan OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "The primary UDP port used by the SNMP Agent
+                 has a default value of 161."
+        ::= { cdx6500NMSNMPGroup 1 }
+
+        cdx6500SNMPSecUDPChan OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "The secondary UDP port used by the SNMP Agent
+                 has a default value of 162."
+        ::= { cdx6500NMSNMPGroup 2 }
+
+        cdx6500SNMPAgentTimer OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "An internal timer used by the SNMP agent, unit
+                 is a 20 ms tick."
+        ::= { cdx6500NMSNMPGroup 3 }
+
+        cdx6500SNMPTrapEnable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disable       (0),
+                    enable        (1),
+                    newvalDisable (50)
+                    }
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "A control object to disable or enable the SNMP
+                 agent's trap send capability.
+                 newvalDisable : same functionality as 'disable', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMSNMPGroup 4 }
+
+        cdx6500SNMPBootAgent OBJECT-TYPE
+            SYNTAX INTEGER {
+                    boot   (1),
+                    noBoot (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A control object. Setting to value `boot' will cause
+                 the SNMP agent to boot."
+        ::= { cdx6500NMSNMPGroup 5 }
+
+        cdx6500SNMPResetStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A control object, which when set to value `reset',
+                 will cause the SNMP agent to reset all its statistics."
+            ::= { cdx6500NMSNMPGroup 6 }
+
+        cdx6500SNMPLastTrap OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..128))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The interesting information portion of the last trap
+                 PDU issued by the SNMP Agent."
+        ::= { cdx6500NMSNMPGroup 7 }
+
+        cdx6500SNMPGenTrapsType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    rfc                (1),
+                    enterpriseSpecific (2)
+                    }
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "Choice between generic traps as defined in RFC or 
+                 correponding enterprise specific traps to be generated
+                 by the node. This attribute is applicable only when 
+                 generic traps are being generated and there exists a 
+                 corresponding enterprise specific trap."
+        ::= { cdx6500NMSNMPGroup 8 }
+
+        cdx6500SNMPTrapThrottleTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SNMPTrapThrottleEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION 
+                 "Throttling table."
+        ::= { cdx6500NMSNMPGroup 9 }
+
+        cdx6500SNMPTrapThrottleEntry OBJECT-TYPE
+            SYNTAX Cdx6500SNMPTrapThrottleEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entry representing throttling parameters."
+            INDEX {cdx6500SNMPTrapNumber}
+        ::= { cdx6500SNMPTrapThrottleTable 1 }
+
+        Cdx6500SNMPTrapThrottleEntry ::= SEQUENCE {
+            cdx6500SNMPTrapNumber        INTEGER,
+            cdx6500SNMPMaxNumOfTraps     INTEGER,
+            cdx6500SNMPThrottlingPeriod  INTEGER,
+            cdx6500SNMPNewTrapLevel      INTEGER,
+            cdx6500SNMPEntryStatus       INTEGER
+		    }
+
+        cdx6500SNMPTrapNumber  OBJECT-TYPE
+            SYNTAX INTEGER(1000..2147483647)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "Trap number to be throttled."
+	    ::= { cdx6500SNMPTrapThrottleEntry 1 }
+
+        cdx6500SNMPMaxNumOfTraps  OBJECT-TYPE
+            SYNTAX INTEGER(0..65535)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION "Number of traps allowed to be generated in the throttling period."
+            DEFVAL {5}
+        ::= { cdx6500SNMPTrapThrottleEntry 2 }
+
+        cdx6500SNMPThrottlingPeriod  OBJECT-TYPE
+            SYNTAX INTEGER(0..65535)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION "Throttling time period in seconds. Value 0 means trap is not throttled."
+            DEFVAL {60}
+        ::= { cdx6500SNMPTrapThrottleEntry 3 }
+
+        cdx6500SNMPNewTrapLevel  OBJECT-TYPE
+            SYNTAX INTEGER {unchanged(1), high (2), medium(3), low(5)}
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION "New severity level for the trap."
+            DEFVAL {unchanged}
+        ::= { cdx6500SNMPTrapThrottleEntry 4 }
+
+        cdx6500SNMPEntryStatus  OBJECT-TYPE
+            SYNTAX INTEGER {active(1), deleted(2)}
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION "Table row status. 
+                         Setting the value to deleted removes the entry from the table."
+            DEFVAL {active}
+        ::= { cdx6500SNMPTrapThrottleEntry 5 }
+
+        cdx6500SNMPSetControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (1),
+                    on        (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Snmp Set operation control      
+			off : snmp set operation is not allowed
+			on  : snmp set operation is allowed."
+        ::= { cdx6500NMSNMPGroup 10 }
+
+        cdx6500SNMPIpAddress OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "IP address for this node."
+        ::= { cdx6500NMSNMPGroup 11 }
+
+          -- The Node Parameters Group
+          -- contains configuration, inventory, and statistics 
+          -- on a node-wide basis.
+
+        cdx6500NMNPconfig OBJECT IDENTIFIER ::= { cdx6500NMNodeParametersGroup 1 }
+        cdx6500NMNPinvent OBJECT IDENTIFIER ::= { cdx6500NMNodeParametersGroup 2 }
+        cdx6500NMNPstats  OBJECT IDENTIFIER ::= { cdx6500NMNodeParametersGroup 3 }
+
+          -- Node Management Configuration Group
+
+        cdx6500NMNPCnodeName OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter identifies the node with a name, which appears
+                 at the top of control terminal menus and reports. Range is 0
+                 to 8 alphanumeric characters."
+        ::= { cdx6500NMNPconfig 1 }
+
+        cdx6500NMNPCnodeNum OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The node number identifies the node for X.25 routing purposes
+                 to prevent routing loops."
+        ::= { cdx6500NMNPconfig 2 }
+
+        cdx6500NMNPCnodeAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..13))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The node address specifies the main part of the network
+                 address for calls destined within this node: PAD port or 
+                 node resource (for example, control port) calls. Individual
+                 subaddresses specify exact destination."
+        ::= { cdx6500NMNPconfig 3 }
+
+        cdx6500NMNPCchassis OBJECT-TYPE
+            SYNTAX INTEGER {
+                    standalone       (0),
+                    modulus8         (1),
+                    modulus18        (2),
+                    modulus9         (3),
+                    modulus19        (4),
+                    chassis6520      (5),
+                    chassis6560      (6),
+                    newvalStandalone (50)
+                    }
+              ACCESS read-only
+              STATUS mandatory
+              DESCRIPTION
+                  "This parameters identifies the type of chassis that this
+                   node is residing in. This is necessary in order to correctly
+                   interpret the fan and power supply status signals.
+                   newvalStandalone : same functionality as 'standalone', new
+                   enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMNPconfig 4 }
+
+        cdx6500NMNPCdate OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(9))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The node date used for date stamps of events and traps. The
+                 format of the string is yyyymmmdd, year: four digits, month:
+                 first three letters of the month, day: 01..31."
+        ::= { cdx6500NMNPconfig 5 }
+
+        cdx6500NMNPCtime OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(4))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The node time used for time stamps of events and traps. The
+                 format of the string is hhmmss, hour: 00..23, minute 00..59,
+                 second: 00..59."
+        ::= { cdx6500NMNPconfig 6 }
+
+        cdx6500NMNPCportUtil OBJECT-TYPE
+            SYNTAX INTEGER (10..99)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Utilization Threshold (%). This parameter sets the alarm
+                 level for traffic on every port in a node. The traffic is
+                 checked over a 64-second interval to give an average (in
+                 characters per second). This is compared to the port's clock
+                 rate and a utilization factor is produced. If the percent of
+                 utiliaztion exceeds the setting, an alarm is generated. Port
+                 utilization records are kept for each port and the port in
+                 question is noted in the report."
+        ::= { cdx6500NMNPconfig 7 }
+
+        cdx6500NMNPCbuffUtil OBJECT-TYPE
+            SYNTAX INTEGER (10..99)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Buffer Utilization Threshold (%). This parameter sets the
+                 alarm level for data buffers. When data passes through a node,
+                 buffers provide temporary storage. If the number of buffers
+                 used exceeds the specified percentage of available storage, an
+                 alarm is generated."
+        ::= { cdx6500NMNPconfig 8 }
+
+        cdx6500NMNPCcpuUtil OBJECT-TYPE
+            SYNTAX INTEGER (10..99)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "CPU Utilization Threshold (%). If the CPU is not processing
+                 data, it is running diagnostic checks. It is never idle. This
+                 parameter specifies the amount of time spent performing
+                 non-diagnostic functions as a percentage of the total time. If
+                 this percentage exceeds the threshold, an alarm is generated."
+        ::= { cdx6500NMNPconfig 9 }
+
+        cdx6500NMNPCportErr OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Error Threshold. This threshold specifies the number of
+                 port errors (such as parity or framing errors) that can be
+                 detected before a medium severity alarm is generated. For
+                 example, if this parameter is set to 10, an alarm is sent when
+                 10 errors are detected, another alarm is sent when the 20th
+                 error is detected, etc."
+        ::= { cdx6500NMNPconfig 10 }
+
+        cdx6500NMNPCalarmTmr OBJECT-TYPE
+            SYNTAX INTEGER (15..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Alarm Threshold Timer. This parameter prevents a node from
+                 sending threshold alarms too frequently. If a node generates
+                 an alarm the threshold alarm timer is started and the node is
+                 not allowed to generate the same alarm until the timer has
+                 expired. This controls the frequency of alarm reporting."
+        ::= { cdx6500NMNPconfig 11 }
+
+        cdx6500NMNPCmaxRoutHops OBJECT-TYPE
+            SYNTAX INTEGER (2..15)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum Routing Hops.This parameter specifies the maximum
+                 number of nodes a call may pass through before reaching 
+                 its destination."
+        ::= { cdx6500NMNPconfig 12 }
+
+        cdx6500NMNPCctpSubAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the Control Port (CTP) Subaddress.
+                 Calls with network address composed of the node address and
+                 this subaddress will be routed to the control port in this
+                 node. No routing table entry is needed."
+        ::= { cdx6500NMNPconfig 13 }
+
+        cdx6500NMNPCctpIdleTime OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control Port Idle Disconnect Time (minutes). This specifies
+                 how many minutes of inactivity can occur before
+                 the control terminal is automatically disconnected"
+        ::= { cdx6500NMNPconfig 14 }
+
+        cdx6500NMNPCalmDist OBJECT-TYPE
+            SYNTAX INTEGER {
+                    deprecatedObj (1)
+                    }
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "This object has been replaced by cdx6500NMNPCalmDistrib."
+        ::= { cdx6500NMNPconfig 15 }
+
+        cdx6500NMNPCalmMmem OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Alarm Printer Mnemonic. This specifies the mnemonic name for
+                 the destination of alarms sent by the node (if Alarm
+                 Distribution = PRIN). This destination is usually a printer or
+                 a personal computer. To prevent any alarms from being sent,
+                 set this to blank."
+        ::= { cdx6500NMNPconfig 16 }
+
+        cdx6500NMNPCalmSelect OBJECT-TYPE
+            SYNTAX INTEGER {
+                    deprecatedObj (1)
+                    }
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "This object has been replaced by cdx6500NMNPCalmSelection."
+        ::= { cdx6500NMNPconfig 17 }
+
+        cdx6500NMNPCbroadPortSubad OBJECT-TYPE
+            SYNTAX DisplayString (SIZE (0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the broadcast port subaddress for this node.
+                 Calls with network address composed of the node address and
+                 this subaddress will be routed to the broadcast port in this
+                 node. No routing table entry is needed."
+        ::= { cdx6500NMNPconfig 18 }
+
+        cdx6500NMNPCnoBroadNets OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Broadcast Nets. This specifies the number of
+                 Broadcast Networks to which this node can send
+                 broadcast messages. A value of 0 will disable broadcast
+                 functions."
+        ::= { cdx6500NMNPconfig 19 }
+
+        cdx6500NMNPCnoBroadInCh OBJECT-TYPE
+            SYNTAX INTEGER (0..10)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Broadcast Input Channels.  This specifies
+                 the number of simultaneous broadcast messages that can
+                 be received."
+        ::= { cdx6500NMNPconfig 20 }
+
+        cdx6500NMNPCbillMnem OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "When billing records need to be printed, the node will use 
+                 this mnemonic to call and send the records to this 
+                 destination.  This location is usually a printer used to 
+                 print billing records."
+        ::= { cdx6500NMNPconfig 21 }
+
+        cdx6500NMNPCbillThresh OBJECT-TYPE
+            SYNTAX INTEGER (1..99)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "When the number of billing records queued up equals this
+                 threshold, a call will be placed to the logging device to 
+                 dump the billing records."
+        ::= { cdx6500NMNPconfig 22 }
+
+        cdx6500NMNPCmaxBill OBJECT-TYPE
+            SYNTAX INTEGER (0..200)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the maximum number of billing records the node will
+                 be allowed to store to be printed. Billing records created 
+                 after this maximum is reached will be lost."
+        ::= { cdx6500NMNPconfig 23 }
+
+        cdx6500NMNPCbillTimer OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "If billing records have been stored for printing for this 
+                 amount of time (in minutes) without reaching the threshold,
+                 a call will be made so that they can be printed."
+        ::= { cdx6500NMNPconfig 24 }
+
+        cdx6500NMNPCpvcBill OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "At this interval the billing records will be gathered 
+                 and printed for all of the PVC's in the node that have 
+                 billing turned on."
+        ::= { cdx6500NMNPconfig 25 }
+
+        cdx6500NMNPCmaxCalls OBJECT-TYPE
+            SYNTAX INTEGER (1..2000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Limiting the number of calls allowed in the node will
+                 eliminate data loss in extreme traffic conditions."
+        ::= { cdx6500NMNPconfig 26 }
+
+        cdx6500NMNPCpadBulletin OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "PAD Bulletin Message. Specifies the message that
+                 appears when a terminal connects to PAD port and enters
+                 Command Mode. To have no message appear, select blank."
+        ::= { cdx6500NMNPconfig 27 }
+
+        cdx6500NMNPCpadBanner OBJECT-TYPE
+            SYNTAX DisplayString (SIZE (0..63))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "PAD Banner Message. Specifies the message PAD ports
+                 send to attached terminals when they enter Command Mode.
+                 These special characters can be used to display certain
+                 information in the PAD Banner Message.
+                 A               Node address
+                 C               Channel Number
+                 G               Group sub-address
+                 N               Node Name
+                 P               Port Number
+                 S               Sub-address
+                 T               Time
+                 V               Software revision
+                 If the character following the % symbol is not one of
+                 the above, both the % and following character are
+                 discarded. The caret (^) is used as an escape character
+                 to tell the PAD to send control characters. The
+                 character following the caret is converted to a control
+                 character and is sent to the PAD port for output. The
+                 caret is discarded unless it is entered twice (^^)."
+        ::= { cdx6500NMNPconfig 28 }
+
+        cdx6500NMNPCdcpFac OBJECT-TYPE
+            SYNTAX INTEGER (201..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This defines the facility used to carry DCP information 
+                 at call setup and reconnection time in Call Request and 
+                 Call Accept packets through the 6500 network. Change the
+                 value only if it interferes with some other private network
+                 facility."
+        ::= { cdx6500NMNPconfig 29 }
+
+        cdx6500NMNPCtrafficPri OBJECT-TYPE
+            SYNTAX INTEGER {
+                    low       (0),
+                    med       (1),
+                    high      (2),
+                    exp       (3),
+                    newvalLow (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Traffic Priority. This is the default traffic
+                 priority to be used on the node.
+                 newvalLow : same functionality as 'low', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMNPconfig 30 }
+
+        cdx6500NMNPCtrafficStep OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Traffic Priority Step. This specifies the
+                 number of packets to be transmitted for each
+                 lower priority packet transmitted."
+        ::= { cdx6500NMNPconfig 31 }
+
+        cdx6500NMNPCpropProtId OBJECT-TYPE
+            SYNTAX INTEGER (192..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the Codex Proprietary Protocol ID. Its
+                 value is put in the first byte of the Protocol
+                 Identifier field of the CUD in the Call Request 
+                 packets for protocols that have not been assigned
+                 a standardized value by the CCITT."
+        ::= { cdx6500NMNPconfig 32 }
+
+        cdx6500NMNPClanSubAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE (0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Calls with network address composed of the node
+                 address and this subaddress will be routed to a
+                 LAN Connection in this node."
+        ::= { cdx6500NMNPconfig 33 }
+
+        cdx6500NMNPCMaxFrameSize OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The largest datalink level frame that will ever
+                 be received on any link. On WAN links this does
+                 not include space that is reserved internally
+                 for trailers."
+        ::= { cdx6500NMNPconfig 34 }
+
+        cdx6500NMNPCCodexGroupFacility OBJECT-TYPE
+            SYNTAX INTEGER (202..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the facility used in call packets on
+                 Codex 6500 links for passing CODEX PRIVATE
+                 facilities other than Hop Count and DCP
+                 facilities between 4.xx nodes. This should
+                 be the SAME on all nodes in the network. It
+                 need only be changed if it interferes with
+                 some other private network facility."
+--          DEFVAL { 202 }
+        ::= { cdx6500NMNPconfig 35 }
+
+        cdx6500NMNPCalmDistrib OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(3..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Distribution of alarms is controlled by specifying:
+                 NONE - no alarm is sent\r\n\
+                 CTP  - send alarms to Control Port Terminal\r\n\
+                 PRIN - send alarms to Printer Destination\r\n\
+                 Any combination of above specified by summing (e.g. CTP+PRIN)."
+        ::= { cdx6500NMNPconfig 36 }
+
+        cdx6500NMNPCalmSelection OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(3..27))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Alarm type reporting by the node:
+                 NONE - no alarms reported.
+                 HIGH - high severity alarms reported.
+                 MED  - medium severity alarms reported.
+                 LOW  - low severity alarms reported.
+                 CONN - connection events reported.
+                 CODE - alarms from Codex 6000 communication processors
+                        reported.
+                 Any combination of above specified by summing 
+                 (e.g. HIGH+CONN+. . .)."
+        ::= { cdx6500NMNPconfig 37 }
+
+        cdx6500NMNPChopFacility OBJECT-TYPE
+            SYNTAX INTEGER (200..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Hop Count Facility. This is the facility used in call
+                 packets on X.25 links with the INL option for network
+                 routing. This should be the SAME in all nodes in the network.
+                 It need only be changed if it interferes with some other
+                 private network facility."
+        ::= { cdx6500NMNPconfig 38 }
+
+        cdx6500NMNPCnumNccpDevices OBJECT-TYPE
+            SYNTAX INTEGER (1..2000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the number of NCCP devices."
+        ::= { cdx6500NMNPconfig 39 }
+
+        cdx6500NMNPCmaxCallid OBJECT-TYPE
+            SYNTAX INTEGER (0..200)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the maximum number of Call id numbers that go in the
+                 Calling Identifier table. This table can have a maximum of 512
+                 entries. Each entry of 30 digits."
+        ::= { cdx6500NMNPconfig 40 }
+
+         -- Node Inventory Group
+
+        cdx6500NMNPIproductType OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Identifies a general class of feature set for
+                 the product, e.g. 6504PLUS Asynchronous PAD
+                 or 6520 Branch Node"
+        ::= { cdx6500NMNPinvent 1 }
+
+        cdx6500NMNPIsoftwareSrc OBJECT-TYPE
+            SYNTAX INTEGER {
+                    prom           (0),
+                    download       (1),
+                    promLoadingRAM (2),
+                    newvalProm     (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The source of software currently running on the node.
+                 prom           - CPU running from code in PROM.
+                 download       - CPU downloading code into RAM.
+                 promLoadingRAM - CPU running from code in RAM.
+                 newvalProm     - same functionality as 'prom', new
+                                  enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMNPinvent 2 }
+
+        cdx6500NMNPIserialNum OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The serial number of the motherboard."
+        ::= { cdx6500NMNPinvent 3 }
+
+        cdx6500NMNPIpromRevision OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The PROM software revision."
+        ::= { cdx6500NMNPinvent 4 }
+
+        cdx6500NMNPIdlCodeRevision OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The downloaded software revision. Applicable to
+                 6500 platforms."
+        ::= { cdx6500NMNPinvent 5 }
+
+        cdx6500NMNPIdlCodeSource OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The source of downloaded software. Applicable
+                 to 6500 platforms."
+        ::= { cdx6500NMNPinvent 6 }
+
+        cdx6500NMNPIdlCodeSize OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The size of downloaded software in bytes.
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPinvent 7 }
+
+
+        cdx6500NMNPIflashStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enabled       (0),
+                    disabled      (1),
+                    newvalEnabled (50)
+                    }
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The status of use of flash memory. Applicable
+                 only to 6500 platforms.
+                 newvalEnabled : same functionality as 'enabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMNPinvent 8 }
+
+        cdx6500NMNPIflashIdCur OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Name and version of software stored in flash.
+                 This refers to the currently selected bank
+                 of flash when there is an alternate bank of
+                 flash installed."
+        ::= { cdx6500NMNPinvent 9 }
+
+        cdx6500NMNPIflashIdAlt OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Name and version of software contained by the
+                 alternate bank of flash (if installed).
+                 Applicable to 6520 platforms."
+        ::= { cdx6500NMNPinvent 10 }
+
+        cdx6500NMNPIflashSizeCur OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Size of software stored in flash. This refers
+                 to the currently selected bank of flash when
+                 there is an alternate bank of flash installed."
+        ::= { cdx6500NMNPinvent 11 }
+
+        cdx6500NMNPIflashSizeAlt OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Size of software in the alternate bank of flash
+                 (bytes). Applicable to 6520 platforms."
+        ::= { cdx6500NMNPinvent 12 }
+
+        cdx6500NMNPIinventTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500NMNPIinventEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of the node's boards."
+        ::= { cdx6500NMNPinvent 13 }
+
+        cdx6500NMNPIinventEntry OBJECT-TYPE
+            SYNTAX Cdx6500NMNPIinventEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains a board number, board type, number of
+                 ports, status, and serial number."
+            INDEX { cdx6500NMNPIinventBoard }
+        ::= { cdx6500NMNPIinventTable 1}
+
+        Cdx6500NMNPIinventEntry ::=
+            SEQUENCE {
+                cdx6500NMNPIinventBoard
+                    INTEGER,
+                cdx6500NMNPIinventType
+                    DisplayString,
+                cdx6500NMNPIinventPorts
+                    INTEGER,
+                cdx6500NMNPIinventStatus
+                    DisplayString,
+                cdx6500NMNPIinventSerial
+                    DisplayString,
+                cdx6500NMNPIinventAssy 
+                    DisplayString,
+                cdx6500NMNPIinventRev 
+                    DisplayString,
+                cdx6500NMNPIinventDIM1
+                    DisplayString,
+                cdx6500NMNPIinventDIM2
+                    DisplayString
+                }
+
+        cdx6500NMNPIinventBoard OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The board number. This is used to index the boards in a node."
+        ::= { cdx6500NMNPIinventEntry 1 }
+
+        cdx6500NMNPIinventType OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The board type. A description of the type of board."
+        ::= { cdx6500NMNPIinventEntry 2 }
+
+        cdx6500NMNPIinventPorts OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of I/O ports for this board."
+        ::= { cdx6500NMNPIinventEntry 3 }
+
+        cdx6500NMNPIinventStatus OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The status of the board"
+        ::= { cdx6500NMNPIinventEntry 4 }
+
+        cdx6500NMNPIinventSerial OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The serial number of the board"
+        ::= { cdx6500NMNPIinventEntry 5 }
+
+        cdx6500NMNPIinventAssy OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The assembly number of the board"
+        ::= { cdx6500NMNPIinventEntry 6 }
+
+        cdx6500NMNPIinventRev OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The revision level of the board"
+        ::= { cdx6500NMNPIinventEntry 7 }
+
+        cdx6500NMNPIinventDIM1 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The type of interface specified by DIM 1."
+        ::= { cdx6500NMNPIinventEntry 8 }
+
+        cdx6500NMNPIinventDIM2 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The type of interface specified by DIM 2."
+        ::= { cdx6500NMNPIinventEntry 9 }
+
+
+        cdx6500NMNPIinventPortConfigTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500NMNPIinventPortConfigEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of the node's Port Configuration."
+        ::= { cdx6500NMNPinvent 14 }
+
+        cdx6500NMNPIinventPortConfigEntry OBJECT-TYPE
+            SYNTAX Cdx6500NMNPIinventPortConfigEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains a port configuration."
+            INDEX { cdx6500NMNPIinventPortNum }
+        ::= { cdx6500NMNPIinventPortConfigTable 1}
+
+        Cdx6500NMNPIinventPortConfigEntry ::=
+            SEQUENCE {
+                cdx6500NMNPIinventPortNum
+                    INTEGER,
+                cdx6500NMNPIinventPortConfig
+                    DisplayString
+                }
+
+        cdx6500NMNPIinventPortNum OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port  number. This is used to index the ports in a node."
+        ::= { cdx6500NMNPIinventPortConfigEntry 1 }
+
+        cdx6500NMNPIinventPortConfig OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port configuration on each board."
+        ::= { cdx6500NMNPIinventPortConfigEntry 2 }
+
+        -- Node Management Statistics Group
+
+        cdx6500NMNPSevLastOccPower OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The last time the node was turned on."
+        ::= { cdx6500NMNPstats 1 }
+
+        cdx6500NMNPSevLastOccReset OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The last time the reset button was pressed."
+        ::= { cdx6500NMNPstats 2 }
+ 
+        cdx6500NMNPSevLastOccReboot OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The last time the node was rebooted."
+        ::= { cdx6500NMNPstats 3 }
+
+        cdx6500NMNPSevLastOccWDTimer OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The last time the watch dog timer expired."
+        ::= { cdx6500NMNPstats 4 }
+
+        cdx6500NMNPSevLastOccConfig OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The last time the configuration memory was changed or
+                 downloaded."
+        ::= { cdx6500NMNPstats 5 }
+
+        cdx6500NMNPSstatusFan OBJECT-TYPE
+            SYNTAX INTEGER {
+                    notMonitored       (0),
+                    operational        (1),
+                    impaired           (2),
+                    newvalNotMonitored (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The operational status of the cooling fan.
+                 newvalNotMonitored : same functionality as
+                 'notMonitored', new enumeration added for 
+                 RFC1155 compatibility."
+        ::= { cdx6500NMNPstats 6 }
+
+        cdx6500NMNPSstatusPwrSy OBJECT-TYPE
+            SYNTAX INTEGER {
+                    notMonitored       (0),
+                    operational        (1),
+                    impaired           (2),
+                    newvalNotMonitored (50),
+                    notAvailable       (100)
+                    }
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "The operational status of the power supply.
+                 This object is being replaced by cdx6500NMNPSstatusPowerSy.
+                 newvalNotMonitored : same functionality as 'notMonitored',
+                 new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMNPstats 7 }
+
+
+        cdx6500NMNPScmemSizeComp OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Size of compressed configuration memory available (free) in
+                 bytes."
+        ::= { cdx6500NMNPstats 8 }
+
+        cdx6500NMNPScmemUseComp OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Size of compressed configuration memory in use in bytes."
+        ::= { cdx6500NMNPstats 9 }
+
+        cdx6500NMNPScmemSizeUncomp OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Size of uncompressed configuration memory available (free) in
+                 bytes."
+        ::= { cdx6500NMNPstats 10 }
+
+        cdx6500NMNPScmemUseUnComp OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Size of uncompressed configuration memory in use in bytes."
+        ::= { cdx6500NMNPstats 11 }
+
+        cdx6500NMNPScallsInPlaceCur OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of X.25 calls.  The number of calls currently in
+                 place."
+        ::= { cdx6500NMNPstats 12 }
+
+        cdx6500NMNPScallsInPlaceMax OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of X.25 calls gauge. The maximum number of calls since
+                 the last reset."
+        ::= { cdx6500NMNPstats 13 }
+
+        cdx6500NMNPScallsPerSecCur OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Rate of X.25 calls. The number of calls/sec. currently
+                 in place."
+        ::= { cdx6500NMNPstats 14 }
+
+        cdx6500NMNPScallsPerSecMax OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Rate of X.25 calls gauge. The maximum number of calls/sec.
+                 since the last reset."
+        ::= { cdx6500NMNPstats 15 }
+
+        cdx6500NMNPSpvcConnectCur OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Permanent virtual circuit connections. The number currently
+                 in place."
+        ::= { cdx6500NMNPstats 16 }
+
+        cdx6500NMNPSPVCConnectMax OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Permanent virtual circuit connections. The maximum since the
+                 last reset."
+        ::= { cdx6500NMNPstats 17 }
+
+        cdx6500NMNPSbuffDataAvail OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of data buffers available.
+                 Applicable to all platforms."
+        ::= { cdx6500NMNPstats 18 }
+
+        cdx6500NMNPSbuffDataUse OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of data buffers in use.
+                 Applicable to all platforms."
+        ::= { cdx6500NMNPstats 19 }
+
+        cdx6500NMNPSbuffDataGauge OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The maximum number of data buffers in use since last reset
+                 Applicable to all platforms."
+        ::= { cdx6500NMNPstats 20 }
+
+        cdx6500NMNPSbuffPacketAvail OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of packet buffers available. Applicable to all 
+                 platforms except VG100 ."
+        ::= { cdx6500NMNPstats 21 }
+
+        cdx6500NMNPSbuffPacketUse OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of packet buffers in use. Applicable to all 
+                 platforms except VG100."
+        ::= { cdx6500NMNPstats 22 }
+
+        cdx6500NMNPSbuffPacketExhaust OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of times the packet buffer pool has been 
+                 exhausted since last reset. Applicable to all platforms 
+                 except VG100."
+        ::= { cdx6500NMNPstats 23 }
+
+        cdx6500NMNPSbuffMgtAvail OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of management buffers available. Applicable to 
+                 all platforms except VG100."
+        ::= { cdx6500NMNPstats 24 }
+
+        cdx6500NMNPSbuffMgtUse OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of management buffers in use. Applicable to all 
+                 platforms except VG100."
+        ::= { cdx6500NMNPstats 25 }
+
+        cdx6500NMNPSbuffMgtExhaust OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of times the management buffer pool has been 
+                 exhausted since last reset. Applicable to all platforms 
+                 except VG100."
+        ::= { cdx6500NMNPstats 26 }
+
+        cdx6500NMNPSrateCurChar OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Node throughput, number of current chararacters/second 
+                 for the node."
+        ::= { cdx6500NMNPstats 27 }
+
+        cdx6500NMNPSrateCurPkt OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Node throughput, number of current packets/second 
+                 for the node."
+        ::= { cdx6500NMNPstats 28 }
+
+        cdx6500NMNPSrateMaxChar OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Node throughput gauge, Number of maximum characters/second for
+                 the node since last reset"
+        ::= { cdx6500NMNPstats 29 }
+
+        cdx6500NMNPSrateMaxPkt OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Node throughput gauge, Number of maximum packets/second for
+                 the node since last reset"
+        ::= { cdx6500NMNPstats 30 }
+
+        cdx6500NMNPSmemEprom OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Amount of memory available on the processor card in bytes.
+                 Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 31 }
+
+        cdx6500NMNPSmemDram OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Amount of memory used for data buffers in bytes.
+                 Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 32 }
+
+        cdx6500NMNPSmemFlashCur OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The size of the flash module in bytes. This refers to the
+                 currently selected bank of flash when there is an alternate
+                 bank of flash installed. Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 33 }
+
+        cdx6500NMNPSmemFlashAlt OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The size of the alternate flash module in bytes. Applicable
+                 to 6520 platforms."
+        ::= { cdx6500NMNPstats 34 }
+
+        cdx6500NMNPScpuUtil OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Percentage of time the CPU processed traffic data (as
+                 opposed performing diagnositic tests or processing node
+                 control data) to in the last 64 seconds.
+                 Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 35 }
+
+        cdx6500NMNPSDisplayNumImage OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Front panel numeric display. Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 36 }
+
+        cdx6500NMNPSDisplayLEDstatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off          (0),
+                    on           (1),
+                    blinking     (2),
+                    newvalOff    (50),
+                    notSupported (100)
+                    }
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Front panel status LED. Applicable to 6520 platforms.
+                 newvalOff : same functionality as 'off', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500NMNPstats 37 }
+
+        cdx6500NMNPSDisplayLEDdiag OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off          (0),
+                    on           (1),
+                    blinking     (2),
+                    newvalOff    (50),
+                    notSupported (100)
+                    }
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Front panel fault (or service) LED. Applicable to 6520
+                 platforms.
+                 newvalOff : same functionality as 'off', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500NMNPstats 38 }
+
+        cdx6500NMNPSdefaultNode OBJECT-TYPE
+            SYNTAX INTEGER {
+                    default   (1),
+                    noDefault (2)
+                    }
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A control object. Setting to value default will cause the
+                 current configuration of the entire node to change back to the
+                 default settings. CAUTION: If you implement the Default Node
+                 control, communications are disrupted and data could be lost
+                 after a boot. In addition, configuration settings are lost
+                 unless they had been saved to an external device."
+        ::= { cdx6500NMNPstats 39 }
+
+        cdx6500NMNPSresetStatTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500NMNPSresetStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Port Statistic Reset entries."
+        ::= { cdx6500NMNPstats 40 }
+
+        cdx6500NMNPSresetStatAll OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A value of reset will cause statistics to be reset on all
+                 ports. A value of noReset has no effect."
+        ::= { cdx6500NMNPstats 41 }
+
+        cdx6500NMNPSstatusPowerSy OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..20))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The operational status of the power supply.
+                 This object replaces cdx6500NMNPSstatusPwrSy."
+        ::= { cdx6500NMNPstats 42 }
+
+        cdx6500NMNPSresetStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500NMNPSresetStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains a port number and a control to reset
+                 statistics for that port."
+            INDEX { cdx6500NMNPSresetStatPort }
+        ::= { cdx6500NMNPSresetStatTable 1 }
+
+        Cdx6500NMNPSresetStatEntry ::=
+            SEQUENCE {
+                cdx6500NMNPSresetStatPort
+                    INTEGER,
+                cdx6500NMNPSresetStatStatus
+                    INTEGER
+                }
+
+        cdx6500NMNPSresetStatPort OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "The port number value for this object directs the
+                 statistics reset command to that port."
+        ::= { cdx6500NMNPSresetStatEntry 1 }
+
+
+        cdx6500NMNPSresetStatStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A value of reset will cause a port's statistics to be reset.
+                 A value of noReset has no effect."
+        ::= { cdx6500NMNPSresetStatEntry 2 }
+
+
+        cdx6500NMNPSstatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500NMNPSstatsEntry
+            ACCESS not-accessible
+            STATUS optional
+            DESCRIPTION
+                "Board specific statistics. Applicable to 6500 platforms."
+        ::= { cdx6500NMNPstats 43 }
+
+        cdx6500NMNPSstatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500NMNPSstatsEntry
+            ACCESS not-accessible
+            STATUS optional
+            DESCRIPTION
+                "A Board statistics Table entry. Each entry
+                 contains statistics parameters for a single board.
+                 Applicable to 6500 platforms."
+            INDEX { cdx6500NMNPSstatsBoard }
+        ::= { cdx6500NMNPSstatsTable 1 }
+
+        Cdx6500NMNPSstatsEntry ::=
+            SEQUENCE{
+                cdx6500NMNPSstatsBoard
+                    INTEGER,
+                cdx6500NMNPSstatsbuffDataAvail
+                    INTEGER,
+                cdx6500NMNPSstatsbuffDataUse
+                    INTEGER,
+                cdx6500NMNPSstatsbuffDataGauge
+                    Gauge,
+                cdx6500NMNPSstatsmemEprom
+                    INTEGER,
+                cdx6500NMNPSstatsmemDram
+                    INTEGER,
+                cdx6500NMNPSstatsmemFlash
+                    INTEGER,
+                cdx6500NMNPSstatscpuUtil
+                    INTEGER,
+                cdx6500NMNPSstatsMaxcpuUtil
+                    INTEGER,
+                cdx6500NMNPSstatsMaxcpuUtilTime
+                    DisplayString
+             }
+
+        cdx6500NMNPSstatsBoard OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Board number. Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 1 }
+
+        cdx6500NMNPSstatsbuffDataAvail OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of data buffers available.
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 2 }
+
+        cdx6500NMNPSstatsbuffDataUse OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The number of data buffers in use.
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 3 }
+
+        cdx6500NMNPSstatsbuffDataGauge OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The maximum number of data buffers in use since last reset
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 4 }
+
+        cdx6500NMNPSstatsmemEprom OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Amount of memory available on the processor card in bytes.
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 5 }
+
+        cdx6500NMNPSstatsmemDram OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Amount of memory used for data buffers in bytes.
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 6 }
+
+        cdx6500NMNPSstatsmemFlash OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The size of the flash module in bytes. This refers to the
+                 currently selected bank of flash when there is an alternate
+                 bank of flash installed. Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 7 }
+
+        cdx6500NMNPSstatscpuUtil OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Percentage of time the CPU processed traffic data (as
+                 opposed performing diagnositic tests or processing node
+                 control data) to in the last 64 seconds.
+                 Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 8 }
+
+        cdx6500NMNPSstatsMaxcpuUtil OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Peak CPU Utilization since last node or statistics 
+                 reset. Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 9 }
+
+        cdx6500NMNPSstatsMaxcpuUtilTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Time stamp of Peak CPU Utilization since last node or
+                 statistics reset. Applicable to 6500 platforms."
+        ::= { cdx6500NMNPSstatsEntry 10 }
+
+        cdx6500NMNPScallsInPlaceMaxTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time stamp of Max number of calls since the last
+                 reset."
+        ::= { cdx6500NMNPstats 44 }
+
+        cdx6500NMNPSPVCConnectMaxTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time stamp of Max number of PVC connections since the 
+                 last reset."
+        ::= { cdx6500NMNPstats 45 }
+
+        cdx6500NMNPScallsPerSecMaxTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time stamp of Max number of calls/sec since the last
+                 reset."
+        ::= { cdx6500NMNPstats 46 }
+
+        cdx6500NMNPSbuffDataGaugeTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Time stamp of Max number of data buffers in use since
+                 the last reset. Applicable to all platforms."
+        ::= { cdx6500NMNPstats 47 }
+
+        cdx6500NMNPSbuffPacketGauge OBJECT-TYPE
+            SYNTAX Gauge 
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The maximum number of packet buffers in use since the
+                 last reset. Applicable to all platforms except VG100."
+        ::= { cdx6500NMNPstats 48 }
+
+        cdx6500NMNPSbuffPacketGaugeTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Time stamp of Max number of packet buffers in use since
+                 the last reset. Applicable to all platforms except 
+                 VG100."
+        ::= { cdx6500NMNPstats 49 }
+
+        cdx6500NMNPSbuffMgtGauge OBJECT-TYPE
+            SYNTAX Gauge 
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The maximum number of management buffers in use since 
+                 the last reset. Applicable to all platforms except
+                 VG100."
+        ::= { cdx6500NMNPstats 50 }
+
+        cdx6500NMNPSbuffMgtGaugeTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Time stamp of Max number of management buffers in use 
+                 since the last reset. Applicable to all platforms 
+                 except VG100."
+        ::= { cdx6500NMNPstats 51 }
+
+        cdx6500NMNPSrateMaxCharTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time stamp of Max node throughput (chars/sec) since the
+                 last reset."
+        ::= { cdx6500NMNPstats 52 }
+
+        cdx6500NMNPSrateMaxPktTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time stamp of Max node throughput (packets/sec) since
+                 the last reset."
+        ::= { cdx6500NMNPstats 53 }
+
+        cdx6500NMNPSMaxcpuUtil OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Peak CPU Utilization since last node or statistics 
+                 reset. Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 54 }
+
+        cdx6500NMNPSMaxcpuUtilTime OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Time stamp of Peak CPU Utilization since last node or
+                 statistics reset. Applicable to 6520 platforms."
+        ::= { cdx6500NMNPstats 55 }
+
+
+        -- The Report Statistics Table
+        -- This table contains statistics paramaters 
+        -- for the Report Operator event log table.
+
+        cdx6500NMReportTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500NMReportEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant
+                 to the Report event log table."
+        ::= { cdx6500NMDiagnosticsGroup 1 }
+
+        cdx6500NMReportEntry OBJECT-TYPE
+            SYNTAX Cdx6500NMReportEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of Report Statistics parameters."
+            INDEX { cdx6500reptIndex }
+        ::= { cdx6500NMReportTable 1 }
+
+        Cdx6500NMReportEntry ::=
+            SEQUENCE {
+                cdx6500reptIndex
+                    INTEGER,
+                cdx6500reptEvent
+                    DisplayString
+                }
+    
+        cdx6500reptIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..512)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Report Log Index"
+        ::= { cdx6500NMReportEntry 1 }
+    
+        cdx6500reptEvent OBJECT-TYPE
+            SYNTAX DisplayString (SIZE (0..152))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Report Log Alarm Text"
+        ::= { cdx6500NMReportEntry 2 }
+  
+        cdx6500NMreptClearLog OBJECT-TYPE
+            SYNTAX INTEGER {
+                    clearLog   (1),
+                    noClearLog (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Clears the Operator log.
+                 clearLog   - Clear the Log
+                 noClearLog - Do not clear the Log."
+        ::= { cdx6500NMDiagnosticsGroup 2 }
+
+        -- The V54 Loopback group, part of Pegasus Diagnostics
+        -- This Group contains controls, configurables, and statistics 
+        -- parameters related to invoking and monitoring loopback tests.
+
+        cdx6500NMV54Loopback OBJECT IDENTIFIER ::= { cdx6500NMDiagnosticsGroup 3 }
+        cdx6500NMV54LocalLoop OBJECT-TYPE
+            SYNTAX INTEGER {
+                    startTest (1),
+                    noTest    (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "Local loop test; The test will start when set to value
+                 'startTest'."
+        ::= { cdx6500NMV54Loopback 1 }
+
+        cdx6500NMV54Loop2 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    startTest (1),
+                    noTest    (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "Loopback test 2 : Loop at remote modem digital side."
+        ::= { cdx6500NMV54Loopback 2 }
+
+        cdx6500NMV54Loop3 OBJECT-TYPE
+            SYNTAX INTEGER  {
+                    startTest (1),
+                    noTest    (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "Loopback test 3: Loop at local modem analog side."
+        ::= { cdx6500NMV54Loopback 3 }
+
+        cdx6500NMV54turnLoopbackOff OBJECT-TYPE
+            SYNTAX INTEGER   {
+                    loopbackOff(1)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "A control to turn any loopback test off"
+        ::= { cdx6500NMV54Loopback 4 }
+
+        cdx6500NMV54LoopbackDuration OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "Duration of loopback in seconds."
+        ::= { cdx6500NMV54Loopback 5 }
+
+        cdx6500NMV54TestType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    v54LocalLoop (1),
+                    v54Loop2     (2),
+                    v54Loop3     (3)
+                    }
+            ACCESS read-only
+            STATUS obsolete
+            DESCRIPTION
+                "Loopback test type."
+        ::= { cdx6500NMV54Loopback 6 }
+
+        cdx6500NMV54LoopbackStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    v54Starting           (1),
+                    v54Running            (2),
+                    v54Stopping           (3),
+                    v54Clearing           (4),
+                    v54Stopped            (5),
+                    v54AbortPortDisabled  (6),
+                    v54AbortIsRunning     (7),
+                    v54AbortPortNull      (8),
+                    v54AbortEiaDisc       (9),
+                    v54AbortCpuNotRunning (10),
+                    v54AbortNotSupported  (11),
+                    v54AbortWrongParams   (12),
+                    v54AbortWrongPort     (13),
+                    v54NotRun             (14)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Loopback Status.
+                 v54Starting - test is being prepared to start.
+                 v54Running - test in progress.
+                 v54Stopping - test is being stopped.
+                 v54Clearing - system is clearing resources used for the test.
+                 v54Stopped - test has been completed.
+                 v54AbortPortDisabled - selected port is disabled.
+                 v54AbortIsRunning - test is already running on the specified port.
+                 v54AbortPortNull - selected port is of NULL type.
+                 v54AbortEiaDisc - interface has been disconnected during the test.
+                 v54AbortCpuNotRunning - CPU is not running on the specified port.
+                 v54AbortNotSupported - specified test is not supported by the selected port.
+                 v54AbortWrongParams - specified test params are incorrect. Check port number.
+                 v54AbortWrongPort - specified port is incorrect.
+                 v54NotRun - test has not been run yet."
+        ::= { cdx6500NMV54Loopback 7 }
+
+        cdx6500NMV54MessagesSent OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS obsolete
+            DESCRIPTION
+                "Number of messages sent"
+        ::= { cdx6500NMV54Loopback 9}
+
+        cdx6500NMV54GoodMsgsReceived OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS obsolete
+            DESCRIPTION
+                "Number of good messages received"
+        ::= { cdx6500NMV54Loopback 10 }
+
+        cdx6500NMV54BadMsgsReceived OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS obsolete
+            DESCRIPTION
+                "Number of bad messages received"
+        ::= { cdx6500NMV54Loopback 11 }
+                                
+        cdx6500NMV54LastPortTested OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS obsolete
+            DESCRIPTION
+                "Last port to be put in loopback."
+        ::= { cdx6500NMV54Loopback 12 }
+
+        cdx6500NMV54CurrentTestPort OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-write
+            STATUS obsolete
+            DESCRIPTION
+                "Current test port."
+        ::= { cdx6500NMV54Loopback 13 }
+
+        cdx6500NMV54LoopbackTest OBJECT-TYPE
+            SYNTAX INTEGER {testing (1), notTesting (2)}
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "Starts and stops loopback test."
+        ::= { cdx6500NMV54Loopback 14 }
+
+        cdx6500NMV54LoopbackTestType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    v54LocalLoop          (1),
+                    v54Loop2              (2),
+                    v54Loop3              (3),
+                    dsuInternal           (4),
+                    dsuInternalExternal   (5)
+                    }
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "Loopback test type.
+                 v54LocalLoop - creates a loop on the selected port.
+                 v54Loop2 - creates a loop on the remote modem digital side.
+                 v54Loop3 - creates a loop on the local modem analog side.
+                 dsuInternal - creates a loop on the internal interface.
+                 dsuInternalExternal - creates a loop on the internal and the external interfaces."
+        ::= { cdx6500NMV54Loopback 15 }
+
+        cdx6500NMV54LoopbackLastPortTested OBJECT-TYPE
+            SYNTAX INTEGER (0..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last port put in loopback."
+        ::= { cdx6500NMV54Loopback 16 }
+
+        cdx6500NMV54LoopbackCurrentTestPort OBJECT-TYPE
+            SYNTAX INTEGER (0..54)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "Current test port. Value zero means that no port has been specified.
+                When test completes, this object is defaulted to zero."
+        ::= { cdx6500NMV54Loopback 17 }
+
+        cdx6500NMV54LoopbackMessagesSent OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of messages sent"
+        ::= { cdx6500NMV54Loopback 18}
+
+        cdx6500NMV54LoopbackGoodMsgsReceived OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of good messages received"
+        ::= { cdx6500NMV54Loopback 19}
+
+        cdx6500NMV54LoopbackBadMsgsReceived OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of bad messages received"
+        ::= { cdx6500NMV54Loopback 20}
+ 
+        -- Node Management Controls Group
+
+        cdx6500NMCBootNode OBJECT-TYPE
+            SYNTAX INTEGER {
+                    bootCold       (0),
+                    bootWarm       (1),
+                    newvalBootCold (50)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Setting this object will cuase the node to perform either
+                 a cold or a warm Node boot :
+                 bootCold - perform a cold Node Boot; run diagnostic
+                            tests, reload operational software, request
+                            software download if neccessary, reload
+                            configuration and start the node.
+                 bootWarm - perform a warm Node Boot; reload
+                            configuration and start the node.
+                 newvalBootCold - same functionality as 'bootCold', new
+                            enumeration added for RFC1155 compatibility."
+        ::= { cdx6500NMControlsGroup  1 }
+
+        cdx6500NMCBootTableNodeRec OBJECT-TYPE
+            SYNTAX INTEGER {
+                    bootrec (1)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Setting to bootrec will cause the running configuration
+                 to be updated using new configuration tables from CMEM."
+        ::= { cdx6500NMControlsGroup 2 }
+
+        -- DLSV Group
+        cdx6500DLSVDLstate OBJECT-TYPE
+            SYNTAX INTEGER {
+                    dlStart (1),
+                    dlCall  (2),
+                    dlReq   (3),
+                    dlLoad  (4),
+                    dlGss   (8),
+                    dlLgs   (16),
+                    dlDone  (32),
+                    dlBoot  (64),
+                    dlIdle  (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistic - state of the download
+                 dlStart : Setup phase.
+                 dlCall  : Setup phase.
+                 dlReq   : Setup phase.
+                 dlLoad  : Downloading phase.
+                 dlGss   : Setup phase.
+                 dlLgs   : Downloading phase.
+                 dlDone  : Download Complete.
+                 dlBoot  : Download Complete.
+                 dlIdle  : No download."
+        ::= { cdx6500NMDLSVGroup 1 }
+
+        cdx6500DLSVPercentComplete OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistic - amount of download that has completed."
+        ::= { cdx6500NMDLSVGroup 2 }
+
+        cdx6500DLSVTimestamp OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistic - time of last download."
+        ::= { cdx6500NMDLSVGroup 3 }
+
+        cdx6500DLSVLastServer OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistic - Last server node to send software."
+        ::= { cdx6500NMDLSVGroup 4 }
+
+        cdx6500DLSVTransferType OBJECT-TYPE
+            SYNTAX INTEGER {
+                   idle         (1),
+                   ramToram     (2),
+                   flashToflash (3)
+                   } 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistic - type of transfer - i.e. which bank to which
+                 bank at what throughput."
+        ::= { cdx6500NMDLSVGroup 5 }
+
+        cdx6500DLSVInitiateTransfer OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Type of transfer - i.e. which bank to which bank at
+                 what throughput setting this initiates the flash to
+                 flash transfer."
+        ::= { cdx6500NMDLSVGroup 6 }
+
+        cdx6500DLSVAgntSegmentSize OBJECT-TYPE
+            SYNTAX INTEGER {
+                    segmentSizeDisable       (0),
+                    segmentSize16            (4),
+                    segmentSize32            (5),
+                    segmentSize64            (6),
+                    segmentSize128           (7),
+                    segmentSize256           (8),
+                    segmentSize512           (9),
+                    segmentSize1024          (10),
+                    newvalSegmentSizeDisable (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the segment size used for accounting purposes
+                 with data packets. 
+                 segmentSizeDisable - segment counting disabled.
+                 segmentSize16      - 16   byte segments.
+                 segmentSize32      - 32   byte segments.
+                 segmentSize64      - 64   byte segments.
+                 segmentSize128     - 128  byte segments.
+                 segmentSize256     - 256  byte segments.
+                 segmentSize512     - 512  byte segments.
+                 segmentSize1024    - 1024 byte segments
+                 newvalSegmentSizeDisable - same as 
+                                      'segmentSizeDisable', new
+                                      enumeration added for
+                                      RFC1155 compatibility."
+        ::= { cdx6500NMDLSVGroup 7 }
+
+        cdx6500DLSVAgntnmServAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the mnemonic name of the download server
+                 assigned to load this node with operational
+                 software."
+        ::= { cdx6500NMDLSVGroup 8 }
+
+        cdx6500DLSVagntloaderSubaddress OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the subaddress of the download module in this
+                 node."
+        ::= { cdx6500NMDLSVGroup 9 }
+
+        cdx6500DLSVagntdlServSubaddress OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Calls with network address composed of the node address
+                 (configured in the Node record) and this subaddress will
+                 be routed to the module in this node which sends code to
+                 a remote node. No routing table entry is needed."
+        ::= { cdx6500NMDLSVGroup 10 }
+
+        -- The Statistics Tables
+        -- The allPorts Statistics Table
+        -- This table contains statistic parameters 
+        -- for the allPorts table.
+  
+  
+        cdx6500PPSTallPortsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTallPortsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant
+                 to the allPorts table."
+        ::= { cdx6500PSTPortProtocolGroup 18 }
+  
+        cdx6500PPSTallPortsEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTallPortsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of allPorts statistics parameters."
+            INDEX { cdx6500allportsPortNum }
+        ::= { cdx6500PPSTallPortsTable 1 }
+  
+        Cdx6500PPSTallPortsEntry ::=
+            SEQUENCE {
+                cdx6500allportsPortNum
+                    INTEGER,
+                cdx6500allportsPortType
+                    INTEGER,
+                cdx6500allportsPortStatus
+                    INTEGER,
+                cdx6500allportsPortState
+                    DisplayString,
+                cdx6500allportsPortSpeed
+                    INTEGER,
+                cdx6500allportsUtilizationIn
+                    INTEGER,
+                cdx6500allportsUtilizationOut
+                    INTEGER,
+                cdx6500allportsCharInTot
+                    Counter,
+                cdx6500allportsCharOutTot
+                    Counter,
+                cdx6500allportsPktInTot
+                    Counter,
+                cdx6500allportsPktOutTot
+                    Counter,
+                cdx6500allportsFrameInTot
+                    Counter,
+                cdx6500allportsFrameOutTot
+                    Counter,
+                cdx6500allportsPktsQueued
+                    INTEGER,
+                cdx6500allportsCharsInPerSec
+                    INTEGER,
+                cdx6500allportsCharsOutPerSec
+                    INTEGER,
+                cdx6500allportsPktsInPerSec
+                    INTEGER,
+                cdx6500allportsPktsOutPerSec
+                    INTEGER,
+                cdx6500allportsFramesInPerSec
+                    INTEGER,
+                cdx6500allportsFramesOutPerSec
+                    INTEGER,
+                cdx6500allportsOverrunErrors
+                    Counter16,
+                cdx6500allportsUnderrunErrors
+                    Counter16,
+                cdx6500allportsCRCErrors
+                    Counter16,
+                cdx6500allportsParityErrors
+                    Counter16,
+                cdx6500allportsFramingErrors
+                    Counter16,
+                cdx6500allportsBootPort
+                    INTEGER,
+                cdx6500allportsPortControlStatus
+                    INTEGER
+                }
+  
+        cdx6500allportsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of the port"
+        ::= { cdx6500PPSTallPortsEntry 1 }
+  
+        cdx6500allportsPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    null      (1),
+                    pad       (2),
+                    x25       (3),
+                    mux       (4),
+                    mx25      (9),
+                    bsc2780   (11),
+                    bsc3270   (12),
+                    vip       (13),
+                    pos       (14),
+                    sdlc      (15),
+                    ncrbsc    (16),
+                    fri       (17),
+                    xdlc      (18),
+                    bstd      (19),
+                    rs366     (20),
+                    ibm2260   (23),
+                    vap       (24),
+                    tbop      (25),
+                    n270      (26),
+                    tcop      (27),
+                    tr        (28),
+                    eth       (29),
+                    alc       (31),
+                    sl        (32),
+                    fra       (33),
+                    t3pos     (34),
+                    atpad     (35),
+                    tnpp      (36),
+                    slip      (37),
+                    hub       (39),
+                    bri       (40),
+                    x32pcm    (41),
+                    ppp       (42),
+                    voice     (43),
+                    t1        (44),
+                    e1        (45),
+                    tdlc      (48),
+                    ptype3201 (50),
+                    gsc       (51),
+                    spp       (52),
+                    t1e1       (54),
+                    t3e3       (55),
+                    atm       (56)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Type of port."
+        ::= { cdx6500PPSTallPortsEntry 2 }
+  
+        cdx6500allportsPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    busyOut        (2),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Status of the port.
+                 disabled - Port is disabled.
+                 enabled  - Port is enabled.
+                 busyOut  - Port is busyOuted.
+                 up       - Port is up.
+                 down     - Port is down.
+                 newvalDisabled - same functionality as 'disabled',
+                 new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PPSTallPortsEntry 3 }
+  
+        cdx6500allportsPortState OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(1..25))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current Port state."
+        ::= { cdx6500PPSTallPortsEntry 4 }
+  
+        cdx6500allportsPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port when Clock=Int; 
+                 this is detected clock speed if Clock=Ext. 
+                 If Port Speed is 0, Clock=Ext then
+                 clocking is not being received from attached device."
+        ::= { cdx6500PPSTallPortsEntry 5 }
+  
+        cdx6500allportsUtilizationIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of port bandwidth in use."
+        ::= { cdx6500PPSTallPortsEntry 6 }
+
+        cdx6500allportsUtilizationOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of port bandwidth in use."
+        ::= { cdx6500PPSTallPortsEntry 7 }
+  
+        cdx6500allportsCharInTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received by the port since the 
+                 last node, port or statistics reset."
+        ::= { cdx6500PPSTallPortsEntry 8 }
+  
+        cdx6500allportsCharOutTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent by the port since the last 
+                 node, port or statistics reset."
+        ::= { cdx6500PPSTallPortsEntry 9 }
+  
+        cdx6500allportsPktInTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets received by the port since the last 
+                 node, port or statistics reset."
+        ::= { cdx6500PPSTallPortsEntry 10 }
+  
+        cdx6500allportsPktOutTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets sent by the port since the last node, port
+                 or statistics reset."
+        ::= { cdx6500PPSTallPortsEntry 11 }
+  
+        cdx6500allportsFrameInTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames received by the port since the last node, 
+                 port or statistics reset."
+        ::= { cdx6500PPSTallPortsEntry 12 }
+  
+        cdx6500allportsFrameOutTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames sent by the port since the last node, port
+                 or statistics reset."
+        ::= { cdx6500PPSTallPortsEntry 13 }
+  
+        cdx6500allportsPktsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets currently queued."
+        ::= { cdx6500PPSTallPortsEntry 14}
+  
+        cdx6500allportsCharsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the characters being received over the port."
+        ::= { cdx6500PPSTallPortsEntry 15 }
+  
+        cdx6500allportsCharsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the characters being sent over the port."
+        ::= { cdx6500PPSTallPortsEntry 16 }
+  
+        cdx6500allportsPktsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the packets being received over the port."
+        ::= { cdx6500PPSTallPortsEntry 17 }
+  
+        cdx6500allportsPktsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the packets being sent over the port."
+        ::= { cdx6500PPSTallPortsEntry 18 }
+  
+        cdx6500allportsFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the frames being received over the port."
+        ::= { cdx6500PPSTallPortsEntry 19 }
+  
+        cdx6500allportsFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the frames being sent over the port."
+        ::= { cdx6500PPSTallPortsEntry 20 }
+  
+        cdx6500allportsOverrunErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Overrun errors since the last node or statistics 
+                 reset.  Overrun Errors: Received data was lost because it 
+                 could not be processed by the CPU."
+        ::= { cdx6500PPSTallPortsEntry 21 }
+  
+        cdx6500allportsUnderrunErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Underrun errors since the last node or statistics
+                 reset.  UnderrunErrors: Transmission of a frame could not be 
+                 completed because all the data had not been sent to port."
+        ::= { cdx6500PPSTallPortsEntry 22 }
+  
+        cdx6500allportsCRCErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of CRC errors since the last node or statistics reset.
+                 CRC Errors: Cyclical Redundancy failure because of noise on 
+                 the line."
+        ::= { cdx6500PPSTallPortsEntry 23 }
+
+        cdx6500allportsParityErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Parity errors since the last reset"
+        ::= { cdx6500PPSTallPortsEntry 24 }
+
+        cdx6500allportsFramingErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Framing errors since the last reset."
+        ::= { cdx6500PPSTallPortsEntry 25 }
+
+        cdx6500allportsBootPort OBJECT-TYPE
+            SYNTAX INTEGER {
+                    bootPort (1)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Boots the specified Port.
+                 bootPort - Boot the Port."
+        ::= { cdx6500PPSTallPortsEntry 26 }
+
+        cdx6500allportsPortControlStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enable  (1),
+                    disable (2),
+                    busyout (3)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Change the Port Control Status.
+                 enable  - Enable the Port.
+                 disable - Disable the Port.
+                 busyout - BusyOut the Port."
+        ::= { cdx6500PPSTallPortsEntry 27 }
+
+        -- The allStations Statistics Table
+        -- This table contains statistic paramaters 
+        -- for the allStations table.
+    
+    
+        cdx6500SPSTallStationsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPSTallStationsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant
+                 to the allStations table."
+        ::= { cdx6500PSTStationProtocolGroup 8 }
+  
+        cdx6500SPSTallStationsEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPSTallStationsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of allStations statistics parameters."
+            INDEX { cdx6500allstationsPortNum,
+                    cdx6500allstationsStnNum }
+        ::= { cdx6500SPSTallStationsTable 1 }
+  
+        Cdx6500SPSTallStationsEntry ::=
+            SEQUENCE {
+                cdx6500allstationsPortNum
+                    INTEGER,
+                cdx6500allstationsStnNum
+                    INTEGER,
+                cdx6500allstationsStnType
+                    DisplayString,
+                cdx6500allstationsStnStatus
+                    INTEGER,
+                cdx6500allstationsStnState
+                    DisplayString,
+                cdx6500allstationsUtilizationIn
+                    INTEGER,
+                cdx6500allstationsUtilizationOut
+                    INTEGER,
+                cdx6500allstationsCharInTot
+                    Counter,
+                cdx6500allstationsCharOutTot
+                    Counter,
+                cdx6500allstationsPktInTot
+                    Counter,
+                cdx6500allstationsPktOutTot
+                    Counter,
+                cdx6500allstationsFrameInTot
+                    Counter,
+                cdx6500allstationsFrameOutTot
+                    Counter,
+                cdx6500allstationsPktsQueued
+                    INTEGER,
+                cdx6500allstationsCharsInPerSec
+                    INTEGER,
+                cdx6500allstationsCharsOutPerSec
+                    INTEGER,
+                cdx6500allstationsPktsInPerSec
+                    INTEGER,
+                cdx6500allstationsPktsOutPerSec
+                    INTEGER,
+                cdx6500allstationsFramesInPerSec
+                    INTEGER,
+                cdx6500allstationsFramesOutPerSec
+                    INTEGER,
+                cdx6500allstationsBootStation
+                    INTEGER,
+                cdx6500allstationsDisableStation
+                    INTEGER,
+                cdx6500allstationsEnableStation
+                    INTEGER,
+                cdx6500allstationsBusyOutStation
+                    INTEGER
+                }
+  
+        cdx6500allstationsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of the port."
+        ::= { cdx6500SPSTallStationsEntry 1 }
+  
+        cdx6500allstationsStnNum OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of the station."
+        ::= { cdx6500SPSTallStationsEntry 2 }
+  
+        cdx6500allstationsStnType OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..10))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Type of station."
+        ::= { cdx6500SPSTallStationsEntry 3 }
+  
+        cdx6500allstationsStnStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    busyOut        (2),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Status of the station.
+                 disabled  - Station is disabled.
+                 enabled   - Station is enabled.
+                 busyOut   - Station is busyOuted.
+                 up        - Station is up.
+                 down      - Station is down.
+                 newvalDisabled - same functionality as 'disabled',
+                 new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500SPSTallStationsEntry 4 }
+  
+        cdx6500allstationsStnState OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current Station state."
+        ::= { cdx6500SPSTallStationsEntry 5 }
+  
+        cdx6500allstationsUtilizationIn OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of station bandwidth in use."
+        ::= { cdx6500SPSTallStationsEntry 6 }
+  
+        cdx6500allstationsUtilizationOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of station bandwidth in use."
+        ::= { cdx6500SPSTallStationsEntry 7 }
+  
+        cdx6500allstationsCharInTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received by the station since the 
+                 last node, port, station or statistics reset."
+        ::= { cdx6500SPSTallStationsEntry 8 }
+  
+        cdx6500allstationsCharOutTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent by the station since the last 
+                 node, port, station or statistics reset."
+        ::= { cdx6500SPSTallStationsEntry 9 }
+  
+        cdx6500allstationsPktInTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets received by the station since the last 
+                 node, port, station or statistics reset."
+        ::= { cdx6500SPSTallStationsEntry 10 }
+  
+        cdx6500allstationsPktOutTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets sent by the port since the last node, port,
+                 station or statistics reset."
+        ::= { cdx6500SPSTallStationsEntry 11 }
+  
+        cdx6500allstationsFrameInTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames received by the port since the last node,
+                 port, station or statistics reset."
+        ::= { cdx6500SPSTallStationsEntry 12 }
+  
+        cdx6500allstationsFrameOutTot OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames sent by the port since the last node, port,
+                 station or statistics reset."
+        ::= { cdx6500SPSTallStationsEntry 13 }
+  
+        cdx6500allstationsPktsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets currently queued."
+        ::= { cdx6500SPSTallStationsEntry 14}
+  
+        cdx6500allstationsCharsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the characters being received over the station."
+        ::= { cdx6500SPSTallStationsEntry 15 }
+  
+        cdx6500allstationsCharsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the characters being sent over the station."
+        ::= { cdx6500SPSTallStationsEntry 16 }
+  
+        cdx6500allstationsPktsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the packets being received over the station."
+        ::= { cdx6500SPSTallStationsEntry 17 }
+  
+        cdx6500allstationsPktsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the packets being sent over the station."
+        ::= { cdx6500SPSTallStationsEntry 18 }
+  
+        cdx6500allstationsFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the frames being received over the station."
+        ::= { cdx6500SPSTallStationsEntry 19 }
+
+        cdx6500allstationsFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Summary of the frames being sent over the station."
+        ::= { cdx6500SPSTallStationsEntry 20 }
+
+        cdx6500allstationsBootStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    bootStn   (1),
+                    noBootStn (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                 "Boots the specified station.
+                  bootStn   - Boot Station
+                  noBootStn - Do not boot Station."
+        ::= { cdx6500SPSTallStationsEntry 21 }
+  
+        cdx6500allstationsDisableStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disableStn   (1),
+                    noDisableStn (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Disables the specified station.
+                 disableStn   - Disable Station.
+                 noDisableStn - Do not disable Station."
+        ::= { cdx6500SPSTallStationsEntry 22 }
+  
+        cdx6500allstationsEnableStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enableStn   (1),
+                    noEnableStn (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Enables the specified station.
+                 enableStn   - Enable Station.
+                 noEnableStn - Not not enable Station."
+        ::= { cdx6500SPSTallStationsEntry 23 }
+  
+        cdx6500allstationsBusyOutStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    busyoutStn   (1),
+                    noBusyoutStn (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Busy out the specified station.
+                 busyoutStn   - Busyout Station.
+                 noBusyoutStn - Do not busyout Station."
+        ::= { cdx6500SPSTallStationsEntry 24 }
+
+
+        -- General Objects
+        -- The ROUT selection configuration table
+        -- Implementation of the ROUT group is mandatory for Pegasus BN.
+        -- It is also available on the other 65xx and VGxxx platforms.
+
+        cdx6500GCTRouteSelectionTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500GCTRouteSelectionEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Configuration Parameters that select
+                 the links over which calls are routed."
+        ::= { cdx6500CfgGeneralGroup 1 }
+
+        cdx6500GCTRouteSelectionEntry OBJECT-TYPE
+            SYNTAX Cdx6500GCTRouteSelectionEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains a list of parameters that 
+                 makeup the Route Selection Table."
+            INDEX { cdx6500RoutSVCEntryNumber }
+        ::= { cdx6500GCTRouteSelectionTable 1 }
+
+        Cdx6500GCTRouteSelectionEntry ::=
+            SEQUENCE {
+                cdx6500RoutSVCEntryNumber
+                    INTEGER,
+                cdx6500RoutSVCAddress
+                    INTEGER,
+                cdx6500RoutSVCDestination1
+                    DisplayString,
+                cdx6500RoutSVCPriority1
+                    INTEGER,
+                cdx6500RoutSVCDestination2
+                    DisplayString,
+                cdx6500RoutSVCPriority2
+                    INTEGER,
+                cdx6500RoutSVCDestination3
+                    DisplayString,
+                cdx6500RoutSVCPriority3
+                    INTEGER,
+                cdx6500RoutSVCDestination4
+                    DisplayString,
+                cdx6500RoutSVCPriority4
+                    INTEGER,
+                cdx6500RoutSVCDestination5
+                    DisplayString,
+                cdx6500RoutSVCPriority5
+                    INTEGER,
+                cdx6500RoutSVCDestination6
+                    DisplayString,
+                cdx6500RoutSVCPriority6
+                    INTEGER,
+                cdx6500RoutSVCDestination7
+                    DisplayString,
+                cdx6500RoutSVCPriority7
+                    INTEGER,
+                cdx6500RoutSVCDestination8
+                    DisplayString,
+                cdx6500RoutSVCPriority8
+                    INTEGER,
+                cdx6500RoutSVCAddress1
+                    DisplayString
+                }
+
+        cdx6500RoutSVCEntryNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..128)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is not a configurable parameter. 
+                 This identifies the particular Route 
+                 Selection Table entry being configured by 
+                 the other parameters in the record."
+        ::= { cdx6500GCTRouteSelectionEntry 1 }
+
+
+        cdx6500RoutSVCAddress OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "This is a non-supported object.
+                 It has been replaced by cdx6500RoutSVCAddress1."
+        ::= { cdx6500GCTRouteSelectionEntry 2 }
+
+        cdx6500RoutSVCDestination1 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 3 }
+
+        cdx6500RoutSVCPriority1 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 4 }
+
+        cdx6500RoutSVCDestination2 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 5 }
+
+        cdx6500RoutSVCPriority2 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 6 }
+
+        cdx6500RoutSVCDestination3 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 7 }
+
+        cdx6500RoutSVCPriority3 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 8 }
+
+        cdx6500RoutSVCDestination4 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 9 }
+
+        cdx6500RoutSVCPriority4 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 10 }
+
+        cdx6500RoutSVCDestination5 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 11 }
+
+        cdx6500RoutSVCPriority5 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 12 }
+
+        cdx6500RoutSVCDestination6 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 13 }
+
+        cdx6500RoutSVCPriority6 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 14 }
+
+        cdx6500RoutSVCDestination7 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 15 }
+
+        cdx6500RoutSVCPriority7 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 16 }
+
+        cdx6500RoutSVCDestination8 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the network address to 
+                 which calls are routed. For example: 
+                 BCST         route calls to the broadcast module.
+                 BSC2780-4    route calls to BSC2780 port 4.
+                 BSC3270-9    route calls to BSC3270 port 9.
+                 MX25-2s3     route calls to MX25 port 2, station 3.
+                 PAD-5        route calls to PAD port 5.
+                 P54s9        route calls to port 54, station 9.
+                 SDLC-4s5     route calls to SDLC port 4, station 5.
+                 X25-1        route calls to X25 port 1.
+                 BOSTON       route backup calls to BOSTON resource."
+        ::= { cdx6500GCTRouteSelectionEntry 17 }
+
+        cdx6500RoutSVCPriority8 OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the priority for call forwarding 
+                 to ports within the Route Selection Table. Call 
+                 forwarding is determined by a combination of priority
+                 and load conditions. 
+                 0         - backup port.
+                 1 to 15   - 1 is the highest priority and 15, the lowest."
+        ::= { cdx6500GCTRouteSelectionEntry 18 }
+
+        cdx6500RoutSVCAddress1 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "Network address for calls routed beyond this 
+                 node. A route selection entry is not needed 
+                 for calls destined within this node: PAD port
+                 or node resource (for example, control port) 
+                 calls. The wild card(match anything) character
+                 is * and can also be part of the entry. When 
+                 set to (blank), this parameter is ignored."
+        ::= { cdx6500GCTRouteSelectionEntry 19 }
+
+        -- The PVC Setup configuration table
+
+        cdx6500GCTPVCSetupTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500GCTPVCSetupEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Configuration Parameters for PVCs."
+        ::= { cdx6500CfgGeneralGroup 5 }
+
+        cdx6500GCTPVCSetupEntry OBJECT-TYPE
+            SYNTAX Cdx6500GCTPVCSetupEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains a PVC source and PVC destination."
+            INDEX { cdx6500PVCSetupEntryNumber }
+        ::= { cdx6500GCTPVCSetupTable 1 }
+
+        Cdx6500GCTPVCSetupEntry ::=
+            SEQUENCE {
+                cdx6500PVCSetupEntryNumber
+                    INTEGER,
+                cdx6500PVCSetupSource
+                    DisplayString,
+                cdx6500PVCSetupDestination
+                    DisplayString
+                }
+
+        cdx6500PVCSetupEntryNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is not a configurable parameter. 
+                 This identifies the particular PVC Table entry being 
+                 configured by the other parameters in the record."
+        ::= { cdx6500GCTPVCSetupEntry 1 }
+
+        cdx6500PVCSetupSource OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This is the PVC source channel identifier.  
+                 Entries are not case sensitive. For example:
+                 BCST        route calls to the broadcast module.
+                 MX25-2s3(2) route calls to MX25 port 2, station 3, channel 2.
+                 PAD-5       route calls to PAD port 5.
+                 P54S9(22)   route calls to port 54, station 9, channel 22.
+                 SDLC-4s5    route calls to SDLC port 4, station 5.
+                 X25-1(5)    route calls to X25 port 1, channel 5."
+        ::= { cdx6500GCTPVCSetupEntry 2 }
+
+        cdx6500PVCSetupDestination OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This is the PVC destination channel identifier.  
+                 Entries are not case sensitive. For example:
+                 BCST        route calls to the broadcast module.
+                 MX25-2s3(2) route calls to MX25 port 2, station 3, channel 2.
+                 PAD-5       route calls to PAD port 5.
+                 P54S9(22)   route calls to port 54, station 9, channel 22.
+                 SDLC-4s5    route calls to SDLC port 4, station 5.
+                 X25-1(5)    route calls to X25 port 1, channel 5."
+        ::= { cdx6500GCTPVCSetupEntry 3 }
+
+        -- The Mnemonic Configuration Table
+        -- This table contains Configuration paramaters 
+        -- for the Mnemonic table.
+
+        cdx6500CfgMnemonicTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500CfgMnemonicEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the Mnemonic table."
+        ::= { cdx6500CfgGeneralGroup 6 }
+
+        cdx6500CfgMnemonicEntry OBJECT-TYPE
+            SYNTAX Cdx6500CfgMnemonicEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of mnemonic configuration parameters."
+            INDEX { cdx6500mnemEntryNum }
+        ::= { cdx6500CfgMnemonicTable 1 }
+
+        Cdx6500CfgMnemonicEntry ::=
+            SEQUENCE {
+                cdx6500mnemEntryNum
+                    INTEGER,
+                cdx6500mnemName
+                    DisplayString,
+                cdx6500mnemx28Cmd
+                    DisplayString
+                }
+
+        cdx6500mnemEntryNum OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is not a configuration parameter. Instead, it
+                 identifies the particular Mnemonic Table entry being
+                 configured by the other parameters in the record.
+                 NOTE: You can have up to 256 entries for the 6507Plus 
+                 and 6525Plus, but only 64 entries for the 6505Plus."
+        ::= { cdx6500CfgMnemonicEntry 1 }
+  
+        cdx6500mnemName OBJECT-TYPE
+            SYNTAX DisplayString (SIZE (0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is an mnemonic name available to PAD port users for
+                 abbreviated calling or autocalling. The following parameter
+                 will specify call details. The mnemonic CTP is reserved 
+                 and specifies a call to the control port."
+        ::= { cdx6500CfgMnemonicEntry 2 }
+
+        cdx6500mnemx28Cmd OBJECT-TYPE
+            SYNTAX DisplayString (SIZE (0..64))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies call details for the mnemonic configured 
+                 in the previous parameter. Use the format of an X.28 call 
+                 command, but leave out the command specifier 
+                 (the c or call)."
+        ::= { cdx6500CfgMnemonicEntry 3 }
+
+        -- The CSIS NUI Password Table 
+
+        cdx6500GCTNUIPasswordTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500GCTNUIPasswordEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of NUI/Password configuration entries."
+        ::= { cdx6500CfgGeneralGroup 7 }
+
+        cdx6500GCTNUIPasswordEntry OBJECT-TYPE
+            SYNTAX Cdx6500GCTNUIPasswordEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "The Network User Identification (NUI)/Password Table."
+            INDEX { cdx6500NUITEntryNumber }
+        ::= { cdx6500GCTNUIPasswordTable 1 }
+
+        Cdx6500GCTNUIPasswordEntry ::=
+            SEQUENCE {
+                cdx6500NUITEntryNumber
+                    INTEGER,
+                cdx6500NUITAcctName
+                    DisplayString,
+                cdx6500NUITPasswd
+                    DisplayString,
+                cdx6500NUITPADPromptNum
+                    INTEGER
+                }
+
+        cdx6500NUITEntryNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..400)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is not a configurable parameter. Instead, it
+                  identifies the particular NUI/Password Table entry being
+                  configured by the other parameters in the record."
+        ::= { cdx6500GCTNUIPasswordEntry 1 }
+
+        cdx6500NUITAcctName OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the account name for billing records."
+        ::= { cdx6500GCTNUIPasswordEntry 2 }
+
+        cdx6500NUITPasswd OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the password for the account name."
+        ::= { cdx6500GCTNUIPasswordEntry 3 }
+
+        cdx6500NUITPADPromptNum OBJECT-TYPE
+            SYNTAX INTEGER (0..8)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies which entry in the PAD Prompt
+                 Table is used as a PAD prompt after the user has entered
+                 a valid password. Use 0 for standard asterisk prompt."
+        ::= { cdx6500GCTNUIPasswordEntry 4 }
+
+        -- The CSIS Software Key Table 
+
+        cdx6500GCTSoftwareKeyTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500GCTSoftwareKeyEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table of Software Key configuration entries."
+        ::= { cdx6500CfgGeneralGroup 12 }
+
+        cdx6500GCTSoftwareKeyEntry OBJECT-TYPE
+            SYNTAX Cdx6500GCTSoftwareKeyEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "The Software Key for a specific optional software
+                 product code."
+            INDEX { cdx6500CSISSoftKeyEntryNumber }
+        ::= { cdx6500GCTSoftwareKeyTable 1 }
+
+        Cdx6500GCTSoftwareKeyEntry ::=
+            SEQUENCE {
+                cdx6500CSISSoftKeyEntryNumber
+                    INTEGER,
+                cdx6500CSISSoftKeyValue
+                    DisplayString
+                }
+
+        cdx6500CSISSoftKeyEntryNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..20)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is not a configurable parameter. It is the reference
+                 number for the individual software option that is being
+                 enabled. You must configure a separate entry for each
+                 software option enabled at the node. A node may have up
+                 to 20 options enabled at one time."
+        ::= { cdx6500GCTSoftwareKeyEntry 1 }
+
+        cdx6500CSISSoftKeyValue OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..20))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is a software key supplied by Codex Corporation for
+                 this node."
+        ::= { cdx6500GCTSoftwareKeyEntry 2 }
+
+          -- Other Statistics
+          -- CSIS Option and Port Authorization
+
+        cdx6500OSTCSISOptionStatTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500OSTCSISOptionStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table describing the Software Options that have been
+                 purchased and enabled for this node."
+        ::= { cdx6500StatOtherStatsGroup 5 }
+
+        cdx6500OSTCSISOptionStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500OSTCSISOptionStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of objects describing a single Software Option."
+            INDEX { cdx6500CSISOptionNumber }
+        ::= { cdx6500OSTCSISOptionStatTable 1 }
+
+        Cdx6500OSTCSISOptionStatEntry ::=
+            SEQUENCE {
+                cdx6500CSISOptionNumber
+                    INTEGER,
+                cdx6500CSISMaxAllowed
+                    INTEGER,
+                cdx6500CSISNumUsed
+                    INTEGER,
+                cdx6500CSISOptionAuth
+                    INTEGER
+                }
+
+        cdx6500CSISOptionNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..55)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table index, which is code for the software option.
+                 Following are the various software options and their codes.
+                 1   -  MX25                                        
+                 2   -  SDLC                                        
+                 3   -  BSC3270                                     
+                 4   -  BSC2780                                     
+                 5   -  VIP                                         
+                 6   -  VIDEOTEX                                    
+                 7   -  Data/Connection Protect                     
+                 8   -  INL backup                                  
+                 9   -  FR DTE Interface                            
+                 10  -  6600 ETM                                    
+                 11  -  NCRBSC                                      
+                 12  -  TRANSPARENT POLLED ASYNC                    
+                 13  -  INTERNAL DSD                                
+                 14  -  801 AUTODIALER                              
+                 15  -  BSTD                                        
+                 16  -  FLASH Enable                                
+                 17  -  NCCP Pad                                    
+                 18  -  TBOP                                        
+                 19  -  Source Routing Bridge                       
+                 22  -  IBM2260                                     
+                 23  -  XDLC                                        
+                 24  -  Transparent Bridge                          
+                 25  -  Local Termination                           
+                 26  -  SR/TB Bridge                                
+                 29  -  IP Routing                                  
+                 31  -  FR DCE Interface                            
+                 32  -  6520 Model ID RN                            
+                 33  -  6520 Model ID SN                            
+                 34  -  6520 Model ID BN                            
+                 40  -  TCOP                                        
+                 42  -  FrameRelay LLC Conversion                   
+                 43  -  IP stack on CPU+                            
+                 44  -  TNPP-PAD Enable                             
+                 45  -  Token Ring LLC Conversion                   
+                 46  -  Ethernet LLC Conversion                     
+                 50  -  Dial-Out Routing Manager                    
+                 51  -  Dial-Out Routing Agent                      
+                 52  -  Chinapac Billing Feature                    
+                 53  -  Chinapac NUIC Interface                     
+                 54  -  X32 Port                                    
+                 55  -  Chinapac NUI Concentrator."
+        ::= { cdx6500OSTCSISOptionStatEntry 1 }
+
+        cdx6500CSISMaxAllowed OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of ports that this option can support. Options
+                 can be purchased to support different numbers of ports.
+                 Value of 65535 indicates no limit."
+        ::= { cdx6500OSTCSISOptionStatEntry 2 }
+
+        cdx6500CSISNumUsed OBJECT-TYPE
+            SYNTAX INTEGER (0..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of ports actually being used with this
+                 option."
+        ::= { cdx6500OSTCSISOptionStatEntry 3 }
+
+        cdx6500CSISOptionAuth OBJECT-TYPE
+            SYNTAX INTEGER {
+                    unauthorized (1),
+                    authorized   (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "unauthorized - an attempt was made to use an option
+                                that has not been purchased or enabled.
+                 authorized   - all attempts to use the option were
+                                authorized."
+        ::= { cdx6500OSTCSISOptionStatEntry 4 }
+
+        -- CSIS Port Authorization Statistics
+
+        cdx6500OSTCSISPortUsageTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500OSTCSISPortUsageEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table providing statistics on unauthorized port
+                 usage."
+        ::= { cdx6500StatOtherStatsGroup 6 }
+
+        cdx6500OSTCSISPortUsageEntry OBJECT-TYPE
+            SYNTAX Cdx6500OSTCSISPortUsageEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of authorization statistics for a single port."
+            INDEX { cdx6500CSISPortNumber }
+        ::= { cdx6500OSTCSISPortUsageTable 1 }
+
+        Cdx6500OSTCSISPortUsageEntry ::=
+            SEQUENCE {
+                cdx6500CSISPortNumber
+                    INTEGER,
+                cdx6500CSISPortAuth
+                    INTEGER
+                }
+
+        cdx6500CSISPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port's number."
+        ::= { cdx6500OSTCSISPortUsageEntry 1 }
+
+        cdx6500CSISPortAuth OBJECT-TYPE
+            SYNTAX INTEGER {
+                    unauthorized (1),
+                    authorized   (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "unauthorized - an attempt was made to use this port to
+                                exceed an option port limit.
+                 authorized   - the port was not used in an unauthorized
+                                 fashion."
+        ::= { cdx6500OSTCSISPortUsageEntry 2 }
+
+        -- SVC calls table
+
+        cdx6500StatSVCTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500StatSVCEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table of currently active switched virtual circuits (SVC).
+                 The table is dynamic i.e. changing as queries are being 
+                 performed on the table."
+        ::= { cdx6500StatNetworkSvcsGroup 1}
+
+        cdx6500StatSVCEntry OBJECT-TYPE
+            SYNTAX Cdx6500StatSVCEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION 
+                "A list of objects describing a single SVC."
+            INDEX { cdx6500StatSVCIndex}
+        ::= { cdx6500StatSVCTable 1}
+
+        Cdx6500StatSVCEntry ::= 
+            SEQUENCE {
+                cdx6500StatSVCIndex
+                    INTEGER,
+                cdx6500StatSVCCallingChannel
+                    DisplayString,
+                cdx6500StatSVCCalledChannel
+                    DisplayString,
+                cdx6500StatSVCReverseCharge
+                    INTEGER,
+                cdx6500StatSVCFastSelect             
+                    INTEGER,
+                cdx6500StatSVCNetUserIdentification
+                    INTEGER,
+                cdx6500StatSVCClosedUserGroup
+                    INTEGER,
+                cdx6500StatSVCConnectionUPTime
+                    DisplayString
+                }
+
+        cdx6500StatSVCIndex  OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "It is position in the list of SVC's."
+        ::= { cdx6500StatSVCEntry 1 }
+         
+        cdx6500StatSVCCallingChannel OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..17))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Calling channel of SVC."
+        ::= { cdx6500StatSVCEntry 2 }
+
+        cdx6500StatSVCCalledChannel OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..17))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Called channel of SVC."
+        ::= { cdx6500StatSVCEntry 3 }
+
+        cdx6500StatSVCReverseCharge OBJECT-TYPE
+            SYNTAX INTEGER {
+                    refuse       (0),
+                    accept       (1),
+                    newvalRefuse (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reverse charge facility condition.
+                 refuse       -  Refused the condition.
+                 accept       -  Accepted the condition.
+                 newvalRefuse -  same functionality as 'refuse', new
+                                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500StatSVCEntry 4 }
+
+        cdx6500StatSVCFastSelect  OBJECT-TYPE
+            SYNTAX INTEGER {
+                    noFastSelect       (0),
+                    fastSelect         (1),
+                    newvalNoFastSelect (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Fast select facility condition.
+                 noFastSelect   -  Fast select facility is not selected.
+                 fastSelect     -  Fast select facility is selected.
+                 newvalNoFastSelect - same functionality as 'noFastSelect',
+                                   new enumeration added for RFC1155 
+                                   compatibility."
+        ::= { cdx6500StatSVCEntry 5}
+
+        cdx6500StatSVCNetUserIdentification  OBJECT-TYPE
+            SYNTAX INTEGER {
+                    notRequested       (0),
+                    requested          (1),
+                    newvalNotRequested (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Net user identifiaction facility condition.
+                 notRequested    -  Net user identifiaction facility not requested.
+                 requested       -  Net user identifiaction facility  requested.
+                 newvalNotRequested - same functionality as 'notRequested', new
+                                    enumeration added for RFC1155 compatibility."
+        ::= { cdx6500StatSVCEntry 6}
+
+        cdx6500StatSVCClosedUserGroup  OBJECT-TYPE
+            SYNTAX INTEGER {
+                    notRequested       (0),
+                    requested          (1),
+                    newvalNotRequested (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Closed user group facility on/off.
+                 notRequested   - Closed user group facility off.
+                 requested      - Closed user group facility on.
+                 newvalNotRequested - same functionality as 'notRequested', new
+                                  enumeration added for RFC1155 compatibility."
+        ::= { cdx6500StatSVCEntry 7}
+
+        cdx6500StatSVCConnectionUPTime  OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..21))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time at which connection was up."
+        ::= { cdx6500StatSVCEntry 8}
+
+        -- STAT module control parameter
+
+        cdx6500statResetAllStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A control object that when set to reset will cause the
+                 node to reset ALL its statistics.
+                 reset   -  reset ALL node statistics.
+                 noReset -  Do not reset the statistics."
+        ::= { cdx6500statControls 1 }
+
+       -- Flash Control Group
+
+        cdx6500ContFlashCopyImage OBJECT-TYPE
+            SYNTAX INTEGER {
+                    currentToalternate   (1),
+                    alternateTocurrent   (2),
+                    noOperation        (100)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Copy image from current to alternate or
+                 alternate to current."
+        ::= { cdx6500ContFlash 1 }
+
+        cdx6500ContFlashCopyCmem OBJECT-TYPE
+            SYNTAX INTEGER {
+                    currentToalternate   (1),
+                    alternateTocurrent   (2),
+                    noOperation        (100)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Copy cmem from current to alternate or
+                 alternate to current."
+        ::= { cdx6500ContFlash 2 }
+
+        cdx6500ContFlashActiveImage OBJECT-TYPE
+            SYNTAX INTEGER {
+                    setcurrentImage   (1),
+                    setalternateImage   (2),
+                    noOperation        (100)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Activate image in flash memory."
+        ::= { cdx6500ContFlash 3 }
+
+        cdx6500ContFlashActiveCmem OBJECT-TYPE
+            SYNTAX INTEGER {
+                    setcurrentCmem   (1),
+                    setalternateCmem   (2),
+                    noOperation        (100)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Activate cmem in flash memory."
+        ::= { cdx6500ContFlash 4 }
+
+        cdx6500ContFlashDeleteImage OBJECT-TYPE
+            SYNTAX INTEGER {
+                    deleteImage   (1),
+                    noOperation        (100)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Delete all images in flash memory."
+        ::= { cdx6500ContFlash 5 }
+
+   -- Control creating and station
+
+        cdx6500CreatePortAndStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500CreatePortAndStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                 "Create Port and Station table."
+        ::= { cdx6500CfgProtocolGroup 9 }
+
+        cdx6500CreatePortAndStationEntry OBJECT-TYPE
+            SYNTAX Cdx6500CreatePortAndStationEntry 
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entry for representing Creating Port
+		 and Station  Record."
+            INDEX {cdx6500PortNumber}
+        ::= { cdx6500CreatePortAndStationTable 1 }
+
+        Cdx6500CreatePortAndStationEntry ::= SEQUENCE {
+            cdx6500PortNumber        INTEGER,
+            cdx6500CreatePortType    INTEGER,
+            cdx6500CreateStation     INTEGER
+                    }
+
+        cdx6500PortNumber  OBJECT-TYPE
+            SYNTAX INTEGER(1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "Port Number which is installed."
+            ::= { cdx6500CreatePortAndStationEntry 1 }
+
+        cdx6500CreatePortType  OBJECT-TYPE
+            SYNTAX INTEGER {
+			pad (2),
+			x25 (3),
+			mx25 (9),
+			sdlc (15),
+			fri (17),
+			xdlc (18),
+			tr (28),
+			eth (29),
+			fra (33)
+			}
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION "port type to be created.
+			pad  : PAD port
+			x25  : X25 port
+			mx25 : Multipoint X25 port
+			sdlc : Synchronous Data Link Control Port
+			xdlc : X25 Data Link Control Port
+			fri  : Frame Relay Interface Port
+			tr   : Token Ring Port
+			eth  : Ethernet Port
+			fra  : Frame Relay Access Port."
+            ::= { cdx6500CreatePortAndStationEntry 2 }
+
+        cdx6500CreateStation  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION "station number to be created.
+			 The instance should be existing port number.
+			 Station Range : 1 - Max Station Number."
+            ::= { cdx6500CreatePortAndStationEntry 3 }
+
+ 	cdx6500LconPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500LconPortEntry
+            ACCESS  not-accessible
+            STATUS  mandatory
+            DESCRIPTION
+                "This table contains port and assocaited Lcon
+                 parameters."
+        ::= { cdx6500CfgGeneralGroup 32 }
+
+        cdx6500LconPortEntry OBJECT-TYPE
+            SYNTAX  Cdx6500LconPortEntry
+            ACCESS  not-accessible
+            STATUS  mandatory
+            DESCRIPTION
+                "Entries in the Lcon and Port Table."
+            INDEX  { LconifFriPortNumberIndex, LconDlci  }
+        ::= { cdx6500LconPortTable 1 }
+
+        Cdx6500LconPortEntry ::=
+            SEQUENCE {
+                LconifFriPortNumberIndex
+                    INTEGER,
+                LconDlci
+                    INTEGER,
+                LconNumber
+                    INTEGER,
+                LconFriPortNumber
+                    INTEGER,
+                LconFriStnNumber
+                    INTEGER,
+                LconIpAddress
+                    IpAddress,
+                LconIpSubnetMask
+                    IpAddress
+             }
+
+        LconifFriPortNumberIndex  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "The ifIndex Value of the ifEntry."
+            ::= { cdx6500LconPortEntry 1 }
+
+        LconDlci  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "DLCI number which is associated with Lcon."
+            ::= { cdx6500LconPortEntry 2 }
+
+        LconNumber  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "Lcon number which is associated with this circuit."
+            ::= { cdx6500LconPortEntry 3 }
+
+        LconFriPortNumber  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "Port number which is associated with Lcon."
+            ::= { cdx6500LconPortEntry 4 }
+
+        LconFriStnNumber  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION "Station number which is associated with Lcon."
+            ::= { cdx6500LconPortEntry 5 }
+        LconIpAddress OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Ip Address which is associated with Lcon."
+            ::= { cdx6500LconPortEntry 6 }
+
+        LconIpSubnetMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Ip Address Mask which is associated with Lcon."
+            ::= { cdx6500LconPortEntry 7 }
+
+
+        -- The T3E3 Port Control Table
+
+        cdx6500ContT3E3Table OBJECT IDENTIFIER
+        ::= { cdx6500Controls 23 }
+
+        cdx6500T3E3ContEntry OBJECT-TYPE
+            SYNTAX Cdx6500T3E3ContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each control applies to a single T3E3 port."
+            INDEX { t3e3ContPortNumber }
+        ::= { cdx6500ContT3E3Table 1 }
+
+        Cdx6500T3E3ContEntry ::=
+            SEQUENCE {
+                t3e3ContPortNumber
+                    INTEGER,
+                t3e3ContPortControl
+                    INTEGER
+                }
+
+        t3e3ContPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Port number of the T3E3 port."
+        ::= { cdx6500T3E3ContEntry 1 }
+
+        t3e3ContPortControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                   boot       (1),
+                   enable     (2),
+                   disable    (3),
+                   resetstats (4)
+                   }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control operations for the specified T3E3 port.
+                 boot       - Boots the T3E3 port
+                 enable     - Enables the T3E3 port
+                 disable    - Disables the T3E3 port
+                 resetstats - Resets the T3E3 port statistics."
+        ::= { cdx6500T3E3ContEntry 2 }
+	
+	-- The DSCP-to-CoS Mapping Profile
+        -- This table contains the DSCP-to-CoS Mapping Profile 
+
+        cdx6500CfgDSCPtoCoSTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500CfgDSCPtoCoSEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the DSCP-to-CoS Mapping Profile table."
+        ::= { cdx6500CfgGeneralGroup 36 }
+
+        cdx6500CfgDSCPtoCoSEntry OBJECT-TYPE
+            SYNTAX Cdx6500CfgDSCPtoCoSEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of DSCP-to-CoS entries."
+            INDEX { cdx6500DSCPtoCoSProfile, cdx6500DSCPtoCoSEntryNum }
+        ::= { cdx6500CfgDSCPtoCoSTable 1 }
+
+        Cdx6500CfgDSCPtoCoSEntry ::=
+            SEQUENCE {
+                cdx6500DSCPtoCoSProfile
+                    INTEGER,
+                cdx6500DSCPtoCoSEntryNum
+                    INTEGER,
+                cdx6500DSCPValue
+                    DisplayString,
+                cdx6500CoSValue
+                    DisplayString
+                }
+
+        cdx6500DSCPtoCoSProfile OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This value represents the profile number."
+        ::= { cdx6500CfgDSCPtoCoSEntry 1 }        
+
+        cdx6500DSCPtoCoSEntryNum OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This value identifies the particular DSCP-to-CoS 
+                 Mapping Profile entry being configured by the 
+                 other parameters in the record."
+        ::= { cdx6500CfgDSCPtoCoSEntry 2 }
+  
+        cdx6500DSCPValue OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                "This value specifies the DSCP value(s) that will
+                 be mapped to the specified CoS value.  The values
+                 are specified as a list of values and/or ranges.  A
+                 maximum of 5 ranges is supported per entry."
+        ::= { cdx6500CfgDSCPtoCoSEntry 3 }
+
+        cdx6500CoSValue OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-write
+            STATUS mandatory
+            DESCRIPTION
+                  "This value specifies the CoS value that will be
+                   set for packets with any of the DSCP values
+                   specified in the associated DSCP Value(s) entry"
+        ::= { cdx6500CfgDSCPtoCoSEntry 4 }
+
+END
