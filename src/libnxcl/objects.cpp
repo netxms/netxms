@@ -198,6 +198,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
          pObject->node.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          pObject->node.wSNMPVersion = pMsg->GetVariableShort(VID_SNMP_VERSION);
+         pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);

@@ -155,10 +155,6 @@ SOURCE=.\snmptrap.cpp
 
 SOURCE=.\users.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\webapi.cpp
-# End Source File
 # End Group
 # Begin Group "Header Files"
 

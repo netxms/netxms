@@ -59,12 +59,14 @@ BOOL CObjectPropCaps::OnInitDialog()
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
    // Fill list control with data
+   AddListRecord(_T("agentVersion"), m_pObject->node.szAgentVersion);
    AddListRecord(_T("isSNMP"), (m_pObject->node.dwFlags & NF_IS_SNMP));
    AddListRecord(_T("isNetXMSAgent"), (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT));
    AddListRecord(_T("isManagementServer"), (m_pObject->node.dwFlags & NF_IS_LOCAL_MGMT));
    AddListRecord(_T("isBridge"), (m_pObject->node.dwFlags & NF_IS_BRIDGE));
    AddListRecord(_T("isRouter"), (m_pObject->node.dwFlags & NF_IS_ROUTER));
    AddListRecord(_T("nodeType"), CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
+   AddListRecord(_T("snmpOID"), m_pObject->node.szObjectId);
 	
 	return TRUE;
 }
