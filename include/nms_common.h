@@ -41,6 +41,7 @@
 
 #define MAX_SECRET_LENGTH        64
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
+#define MAX_DB_STRING            256
 
 
 //

@@ -212,6 +212,10 @@ typedef struct
 #define CMD_CREATE_NEW_DCI          0x0030
 #define CMD_GET_DCI_DATA            0x0031
 #define CMD_DCI_DATA                0x0032
+#define CMD_GET_MIB_LIST            0x0033
+#define CMD_GET_MIB                 0x0034
+#define CMD_MIB_LIST                0x0035
+#define CMD_MIB                     0x0036
 
 
 //
@@ -275,6 +279,23 @@ typedef struct
 #define VID_DCI_NUM_MAPS            ((DWORD)55)
 #define VID_DCI_MAP_IDS             ((DWORD)56)
 #define VID_DCI_MAP_INDEXES         ((DWORD)57)
+#define VID_NUM_MIBS                ((DWORD)58)
+#define VID_MIB_NAME                ((DWORD)59)
+#define VID_MIB_FILE_SIZE           ((DWORD)60)
+#define VID_MIB_FILE                ((DWORD)61)
+#define VID_COMMENT                 ((DWORD)62)
+#define VID_ALARM_SEVERITY          ((DWORD)63)
+#define VID_ALARM_KEY               ((DWORD)64)
+#define VID_ALARM_ACK_KEY           ((DWORD)65)
+#define VID_ALARM_MESSAGE           ((DWORD)66)
+#define VID_RULE_ID                 ((DWORD)67)
+#define VID_NUM_SOURCES             ((DWORD)68)
+#define VID_NUM_EVENTS              ((DWORD)69)
+#define VID_NUM_ACTIONS             ((DWORD)70)
+#define VID_RULE_SOURCES            ((DWORD)71)
+#define VID_RULE_EVENTS             ((DWORD)72)
+#define VID_RULE_ACTIONS            ((DWORD)73)
+#define VID_NUM_RULES               ((DWORD)74)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -289,6 +310,12 @@ typedef struct
 // Variable range for data collection thresholds
 #define VID_DCI_THRESHOLD_BASE      ((DWORD)0x00005000)
 #define VID_DCI_THRESHOLD_LAST      ((DWORD)0x00005FFF)
+
+// Variable range for MIB list
+#define VID_MIB_NAME_BASE           ((DWORD)0x00006000)
+#define VID_MIB_NAME_LAST           ((DWORD)0x00006FFF)
+#define VID_MIB_HASH_BASE           ((DWORD)0x00007000)
+#define VID_MIB_HASH_LAST           ((DWORD)0x00007FFF)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,

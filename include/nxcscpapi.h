@@ -60,7 +60,7 @@ private:
    DWORD m_dwNumVar;    // Number of variables
    CSCP_DF **m_ppVarList;   // List of variables
 
-   void Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
+   void *Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
    void *Get(DWORD dwVarId, BYTE bType);
    DWORD FindVariable(DWORD dwVarId);
 
@@ -85,6 +85,7 @@ public:
    void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, DT_FLOAT, &dValue); }
    void SetVariable(DWORD dwVarId, char *szValue) { Set(dwVarId, DT_STRING, szValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, DT_BINARY, pValue, dwSize); }
+   void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
 
    DWORD GetVariableLong(DWORD dwVarId);
    QWORD GetVariableInt64(DWORD dwVarId);
@@ -92,6 +93,7 @@ public:
    double GetVariableDouble(DWORD dwVarId);
    char *GetVariableStr(DWORD dwVarId, char *szBuffer = NULL, DWORD dwBufSize = 0);
    DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);
+   DWORD GetVariableInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwBuffer);
 
    void DeleteAllVariables(void);
 };

@@ -112,6 +112,8 @@ typedef unsigned long HREQUEST;
 #define NF_IS_BRIDGE       0x0004
 #define NF_IS_ROUTER       0x0008
 #define NF_IS_LOCAL_MGMT   0x0010
+#define NF_IS_PRINTER      0x0020
+#define NS_IS_OSPF         0x0040
 
 
 //
@@ -174,6 +176,8 @@ typedef unsigned long HREQUEST;
 #define RCC_INVALID_ARGUMENT        ((DWORD)12)
 #define RCC_DUPLICATE_DCI           ((DWORD)13)
 #define RCC_INVALID_DCI_ID          ((DWORD)14)
+#define RCC_OUT_OF_MEMORY           ((DWORD)15)
+#define RCC_IO_ERROR                ((DWORD)16)
 
 
 //
@@ -212,8 +216,9 @@ typedef unsigned long HREQUEST;
 #define SYSTEM_ACCESS_DROP_CONNECTIONS    0x0008
 #define SYSTEM_ACCESS_VIEW_EVENT_DB       0x0010
 #define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
+#define SYSTEM_ACCESS_EPP                 0x0040
 
-#define SYSTEM_ACCESS_FULL                0x003F
+#define SYSTEM_ACCESS_FULL                0x007F
 
 
 //
@@ -520,6 +525,51 @@ typedef struct
 
 
 //
+// MIB file list
+//
+
+typedef struct
+{
+   DWORD dwNumFiles;
+   char **ppszName;
+   BYTE **ppHash;
+} NXC_MIB_LIST;
+
+
+//
+// Event processing policy rule
+//
+
+typedef struct
+{
+   DWORD dwFlags;
+   DWORD dwId;
+   DWORD dwNumActions;
+   DWORD dwNumEvents;
+   DWORD dwNumSources;
+   DWORD *pdwActionList;
+   DWORD *pdwEventList;
+   DWORD *pdwSourceList;
+   char *pszComment;
+   char szAlarmKey[MAX_DB_STRING];
+   char szAlarmAckKey[MAX_DB_STRING];
+   char szAlarmMessage[MAX_DB_STRING];
+   WORD wAlarmSeverity;
+} NXC_EPP_RULE;
+
+
+//
+// Event processing policy
+//
+
+typedef struct
+{
+   DWORD dwNumRules;
+   NXC_EPP_RULE *pRuleList;
+} NXC_EPP;
+
+
+//
 // Functions
 //
 
@@ -579,6 +629,15 @@ NXC_DCI_ROW LIBNXCL_EXPORTABLE *NXCGetRowPtr(NXC_DCI_DATA *pData, DWORD dwRow);
 DWORD LIBNXCL_EXPORTABLE NXCAddThresholdToItem(NXC_DCI *pItem, NXC_DCI_THRESHOLD *pThreshold);
 BOOL LIBNXCL_EXPORTABLE NXCDeleteThresholdFromItem(NXC_DCI *pItem, DWORD dwIndex);
 BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD dwIndex2);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_MIB_LIST **ppMibList);
+void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList);
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(char *pszName, char *pszDestDir);
+
+DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_EPP **ppEventPolicy);
+DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(void);
+DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_EPP *pEventPolicy);
+void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
 
 #ifdef __cplusplus
 }
