@@ -113,6 +113,7 @@ CREATE TABLE nodes
 	image_id integer,
 	description SQL_TEXT,
 	node_type integer,
+	agent_version varchar(63),
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -62,6 +62,9 @@ static BOOL H_UpgradeFromV17(void)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes DROP COLUMN inherit_access_rights\n"
+      "ALTER TABLE nodes ADD agent_version varchar(63)\n"
+      "UPDATE nodes SET agent_version='' WHERE is_agent=0\n"
+      "UPDATE nodes SET agent_version='<unknown>' WHERE is_agent=1\n"
       "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
          "message,description) SELECT event_id,name,severity,flags,"
          "message,description FROM events\n"
