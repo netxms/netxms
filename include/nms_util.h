@@ -199,6 +199,7 @@ extern "C"
 
    void LIBNETXMS_EXPORTABLE StrStrip(char *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const char *pattern, const char *string, BOOL matchCase);
+   char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer);
    
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, DWORD nbytes);
 

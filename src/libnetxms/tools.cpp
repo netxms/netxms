@@ -362,3 +362,22 @@ INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void)
 
    return t;
 }
+
+
+//
+// Extract word from line. Extracted word will be placed in buffer.
+// Returns pointer to the next word or to the null character if end
+// of line reached.
+//
+
+char LIBNETXMS_EXPORTABLE *ExtractWord(char *line, char *buffer)
+{
+   char *ptr,*bptr;
+
+   for(ptr=line;(*ptr==' ')||(*ptr=='\t');ptr++);  // Skip initial spaces
+   // Copy word to buffer
+   for(bptr=buffer;(*ptr!=' ')&&(*ptr!='\t')&&(*ptr!=0);ptr++,bptr++)
+      *bptr=*ptr;
+   *bptr=0;
+   return ptr;
+}
