@@ -21,12 +21,6 @@
 **/
 
 #include "nms_core.h"
-#ifdef _WIN32
-#include <conio.h>
-#endif   /* _WIN32 */
-
-void DumpUsers(void);
-void DumpSessions(void);
 
 
 //
@@ -256,6 +250,101 @@ void Shutdown(void)
 
 
 //
+// Compare given string to command template with abbreviation possibility
+//
+
+static BOOL IsCommand(char *pszTemplate, char *pszString, int iMinChars)
+{
+   int i;
+
+   // Convert given string to uppercase
+   strupr(pszString);
+
+   for(i = 0; pszString[i] != 0; i++)
+      if (pszString[i] != pszTemplate[i])
+         return FALSE;
+   if (i < iMinChars)
+      return FALSE;
+   return TRUE;
+}
+
+
+//
+// Process command entered from command line in standalone mode
+// Return TRUE if command was "down"
+//
+
+static BOOL ProcessCommand(char *pszCmdLine)
+{
+   char *pArg;
+   char szBuffer[256];
+   BOOL bExitCode = FALSE;
+
+   // Get command
+   pArg = ExtractWord(pszCmdLine, szBuffer);
+
+   if (IsCommand("DOWN", szBuffer, 4))
+   {
+      bExitCode = TRUE;
+   }
+   else if (IsCommand("DUMP", szBuffer, 2))
+   {
+      // Get argument
+      pArg = ExtractWord(pArg, szBuffer);
+
+      if (IsCommand("OBJECTS", szBuffer, 1))
+      {
+      }
+      else if (IsCommand("SESSIONS", szBuffer, 1))
+      {
+         DumpSessions();
+      }
+      else if (IsCommand("USERS", szBuffer, 1))
+      {
+         DumpUsers();
+      }
+      else
+      {
+         printf("ERROR: Invalid command argument\n\n");
+      }
+   }
+   else if (IsCommand("HELP", szBuffer, 2))
+   {
+      printf("Valid commands are:\n"
+             "   down          - Down NetXMS server\n"
+             "   dump objects  - Dump network objects to screen\n"
+             "   dump sessions - Dump active client sessions to screen\n"
+             "   dump users    - Dump users to screen\n"
+             "   mutex         - Display mutex status\n"
+             "   wd            - Display watchdog information\n"
+             "\nAlmost all commands can be abbreviated to 2 or 3 characters\n"
+             "\n");
+   }
+   else if (IsCommand("MUTEX", szBuffer, 2))
+   {
+      printf("Mutex status:\n");
+      DbgTestMutex(g_hMutexIdIndex, "g_hMutexIdIndex");
+      DbgTestMutex(g_hMutexNodeIndex, "g_hMutexNodeIndex");
+      DbgTestMutex(g_hMutexSubnetIndex, "g_hMutexSubnetIndex");
+      DbgTestMutex(g_hMutexInterfaceIndex, "g_hMutexInterfaceIndex");
+      DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
+      printf("\n");
+   }
+   else if (IsCommand("WD", szBuffer, 2))
+   {
+      WatchdogPrintStatus();
+      printf("\n");
+   }
+   else
+   {
+      printf("INVALID COMMAND\n\n");
+   }
+   
+   return bExitCode;
+}
+
+
+//
 // Common main()
 //
 
@@ -265,113 +354,25 @@ void Main(void)
 
    if (IsStandalone())
    {
-      int ch;
+      char *ptr, szCommand[256];
 
-      printf("\n*** NMS Server operational. Press ESC to terminate. ***\n");
+      printf("\nNetXMS Server V" NETXMS_VERSION_STRING " Ready\n"
+             "Enter \"help\" for command list or \"down\" for server shutdown\n"
+             "System Console\n\n");
+      
       while(1)
       {
-#ifdef _WIN32
-         ch = getch();
-         if (ch == 0)
-            ch = -getch();
+         printf("netxmsd: ");
+         fflush(stdout);
+         fgets(szCommand, 255, stdin);
+         ptr = strchr(szCommand, '\n');
+         if (ptr != NULL)
+            *ptr = 0;
+         StrStrip(szCommand);
 
-         if (ch == 27)
-            break;
-#ifdef _DEBUG
-
-         switch(ch)
-         {
-            case 't':   // Thread status
-            case 'T':
-               WatchdogPrintStatus();
-               printf("*** Done ***\n");
+         if (szCommand[0] != 0)
+            if (ProcessCommand(szCommand))
                break;
-            case 'd':   // Dump objects
-            case 'D':
-               {
-                  DWORD i;
-                  char *pBuffer;
-                  static char *objTypes[]={ "Generic", "Subnet", "Node", "Interface", "Network" };
-
-                  pBuffer = (char *)malloc(128000);
-                  MutexLock(g_hMutexIdIndex, INFINITE);
-                  for(i = 0; i < g_dwIdIndexSize; i++)
-                  {
-                     printf("Object ID %d\n"
-                            "   Name='%s' Type=%s Addr=%s Status=%d IsModified=%d\n",
-                            g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
-                            objTypes[g_pIndexById[i].pObject->Type()],
-                            IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
-                            g_pIndexById[i].pObject->Status(), g_pIndexById[i].pObject->IsModified());
-                     printf("   Parents: <%s> Childs: <%s>\n", 
-                            g_pIndexById[i].pObject->ParentList(pBuffer),
-                            g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
-                     if (g_pIndexById[i].pObject->Type() == OBJECT_NODE)
-                        printf("   IsSNMP:%d IsAgent:%d IsLocal:%d OID='%s'\n",
-                               ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
-                               ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
-                               ((Node *)(g_pIndexById[i].pObject))->IsLocalManagenet(),
-                               ((Node *)(g_pIndexById[i].pObject))->ObjectId());
-                  }
-                  MutexUnlock(g_hMutexIdIndex);
-                  free(pBuffer);
-                  printf("*** Object dump complete ***\n");
-               }
-               break;
-            case 'i':   // Dump interface index by IP
-            case 'I':
-               {
-                  DWORD i;
-                  char szBuffer[32];
-
-                  for(i = 0; i < g_dwInterfaceAddrIndexSize; i++)
-                  {
-                     printf("%10u %-15s -> %d [0x%08x]\n",
-                            g_pInterfaceIndexByAddr[i].dwKey,
-                            IpToStr(g_pInterfaceIndexByAddr[i].dwKey, szBuffer),
-                            g_pInterfaceIndexByAddr[i].pObject->Id(),
-                            g_pInterfaceIndexByAddr[i].pObject);
-                  }
-                  printf("*** Interface IP index dump complete ***\n");
-               }
-               break;
-            case 'm':   // Print mutex status
-            case 'M':
-               printf("Mutex status:\n");
-               DbgTestMutex(g_hMutexIdIndex, "g_hMutexIdIndex");
-               DbgTestMutex(g_hMutexNodeIndex, "g_hMutexNodeIndex");
-               DbgTestMutex(g_hMutexSubnetIndex, "g_hMutexSubnetIndex");
-               DbgTestMutex(g_hMutexInterfaceIndex, "g_hMutexInterfaceIndex");
-               DbgTestMutex(g_hMutexObjectAccess, "g_hMutexObjectAccess");
-               printf("*** Done ***\n");
-               break;
-            case 'g':   // Generate test objects
-            case 'G':
-               {
-                  int i;
-                  char szQuery[1024];
-
-                  for(i = 0; i < 10000; i++)
-                  {
-                     sprintf(szQuery, "INSERT INTO new_nodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,%d,65535,%d)",
-                        i + 1000, htonl(0x0A800001 + i), DF_DEFAULT);
-                     DBQuery(g_hCoreDB, szQuery);
-                  }
-               }
-               break;
-            case 'u':      // Dump users
-            case 'U':
-               DumpUsers();
-               break;
-            case 's':      // Dump sessions
-            case 'S':
-               DumpSessions();
-               break;
-            default:
-               break;
-         }
-#endif // _DEBUG
-#endif // _WIN32
       }
 
       Shutdown();

@@ -214,11 +214,17 @@ void ClientListener(void *)
 
 void DumpSessions(void)
 {
-   int i;
+   int i, iCount;
 
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   printf("ID  User information\n"
+          "----------------------------------------------\n");
+   for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
-         printf("%d\n", i);
+      {
+         printf("%-3d %s\n", i, m_pSessionList[i]->GetUserName());
+         iCount++;
+      }
+   printf("\n%d active session%s\n\n", iCount, iCount == 1 ? "" : "s");
 }
 
 

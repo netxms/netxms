@@ -287,6 +287,7 @@ public:
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
    int GetState(void) { return m_iState; }
+   const char *GetUserName(void) { return m_szUserName; }
 
    void Kill(void);
    void Notify(DWORD dwCode);
@@ -405,6 +406,7 @@ char *GetSystemErrorText(DWORD error);
 
 void DbgTestMutex(MUTEX hMutex, char *szName);
 void DbgPrintf(DWORD dwFlags, char *szFormat, ...);
+void DumpSessions(void);
 
 
 //

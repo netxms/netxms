@@ -286,8 +286,9 @@ void DumpUsers(void)
 {
    DWORD i;
 
+   printf("Login name           System rights\n"
+          "----------------------------------\n");
    for(i = 0; i < m_dwNumUsers; i++)
-      printf("%-16s \"%s\" %d\n", m_pUserList[i].szName, m_pUserList[i].szPassword,
-             m_pUserList[i].wSystemRights);
-   printf("*** done ***\n");
+      printf("%-20s 0x%08X\n", m_pUserList[i].szName, m_pUserList[i].wSystemRights);
+   printf("\n");
 }
