@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.8 2004-05-19 19:37:47 victor Exp $
+# $Id: configure.ac,v 1.9 2004-05-20 15:51:07 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -141,7 +141,8 @@ AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/int_types.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
-AC_CHECK_HEADERS([net/if.h net/if_arp.h])
+AC_CHECK_HEADERS([sys/ioctl.h sys/sockio.h])
+AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h])
 AC_CHECK_HEADERS([openssl/ssl.h])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])
@@ -179,6 +180,14 @@ AC_CHECK_DECLS([__bswap_64],,,[
 #include <byteswap.h>
 #endif
 ])
+AC_CHECK_DECLS([SIOCGIFADDR, SIOCGIFNETMASK, SIOCGIFHWADDR],,,[
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+#if HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
+#endif
+])
 
 # --------------------------------------------------------------------------
 # library functions
@@ -192,7 +201,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex])
+AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror strrchr strtol strtoul if_nametoindex daemon])
 
 
 # sockets/resolver (probably for solaris)

@@ -447,11 +447,26 @@ int main(int argc, char *argv[])
 #else    /* _WIN32 */
    if (!IsStandalone())
    {
+#if HAVE_DAEMON
       if (daemon(0, 0) == -1)
       {
          perror("Call to daemon() failed");
          return 2;
       }
+#else
+      pid_t pid;
+
+      pid = fork();
+      if (pid == -1)
+      {
+         perror("Call to fork() failed");
+         return 2;
+      }
+      if (pid != 0)   // Parent process?
+         return 0;
+
+      /* TODO: add full daemon initialization */
+#endif
    }
    if (!Initialize())
       return 3;

@@ -37,11 +37,17 @@
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+#if HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
+#endif
 #if HAVE_NET_IF_H
 #include <net/if.h>
 #endif
 #if HAVE_NET_IF_ARP_H
 #include <net/if_arp.h>
+#endif
+#if HAVE_NET_IF_DL_H
+#include <net/if_dl.h>
 #endif
 
 #endif   /* _WIN32 */
@@ -275,6 +281,7 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
             }
 
             // Interface type
+#if HAVE_DECL_SIOCGIFHWADDR
             if (ioctl(iSock, SIOCGIFHWADDR, &ifrq) == 0)
             {
                switch(ifrq.ifr_hwaddr.sa_family)
@@ -302,6 +309,9 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
                      break;
                }
             }
+#else
+            pIfList->pInterfaces[i].dwType = 0;    // Unknown type
+#endif
 
             // Interface index
             pIfList->pInterfaces[i].dwIndex = ifni[i].if_index;
