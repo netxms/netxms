@@ -81,6 +81,7 @@ SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
 DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
 time_t g_dwAgentStartTime;
+DWORD g_dwStartupDelay = 0;
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
@@ -105,7 +106,6 @@ static char *m_pszInstallServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
-static DWORD m_dwStartupDelay = 0;
 
 
 //
@@ -126,7 +126,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
    { "Servers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
-   { "StartupDelay", CT_LONG, 0, 0, 0, 0, &m_dwStartupDelay },
+   { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
    { "Timeout", CT_LONG, 0, 0, 0, 0, &g_dwTimeOut },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -412,6 +412,31 @@ BOOL Initialize(void)
       free(m_pszExtParamList);
    }
 
+   ThreadSleep(1);
+
+   // If StartupDelay is greater than zero, then wait
+   if (g_dwStartupDelay > 0)
+   {
+      if (g_dwFlags & AF_DAEMON)
+      {
+         ThreadSleep(g_dwStartupDelay);
+      }
+      else
+      {
+         DWORD i;
+
+         printf("XXXXXX%*s]\rWAIT [", g_dwStartupDelay, " ");
+         fflush(stdout);
+         for(i = 0; i < g_dwStartupDelay; i++)
+         {
+            ThreadSleep(1);
+            putc('.', stdout);
+            fflush(stdout);
+         }
+         printf("\n");
+      }
+   }
+
    // Agent start time
    g_dwAgentStartTime = time(NULL);
 
@@ -455,27 +480,6 @@ void Shutdown(void)
 
 void Main(void)
 {
-   if (m_dwStartupDelay > 0)
-   {
-      if (g_dwFlags & AF_DAEMON)
-      {
-         ThreadSleep(m_dwStartupDelay);
-      }
-      else
-      {
-         DWORD i;
-
-         printf("XXXXXX%*s]\rWAIT [", m_dwStartupDelay, " ");
-         fflush(stdout);
-         for(i = 0; i < m_dwStartupDelay; i++)
-         {
-            ThreadSleep(1);
-            putc('.', stdout);
-            fflush(stdout);
-         }
-         printf("\n");
-      }
-   }
    WriteLog(MSG_AGENT_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
    if (g_dwFlags & AF_DAEMON)
