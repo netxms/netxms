@@ -376,7 +376,7 @@ END
 IDD_OBJECT_SECURITY DIALOGEX 0, 0, 292, 170
 STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION
 CAPTION "Security"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST_USERS,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
@@ -436,21 +436,14 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "User Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,110,162,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,165,162,50,14
-    LTEXT           "Login name:",IDC_STATIC,7,10,40,8
     EDITTEXT        IDC_EDIT_LOGIN,53,7,162,14,ES_AUTOHSCROLL
-    LTEXT           "Full name:",IDC_STATIC,7,29,33,8
     EDITTEXT        IDC_EDIT_NAME,54,26,162,14,ES_AUTOHSCROLL
-    LTEXT           "Description:",IDC_STATIC,7,48,38,8
     EDITTEXT        IDC_EDIT_DESCRIPTION,54,45,162,14,ES_AUTOHSCROLL
-    GROUPBOX        "Flags",IDC_STATIC,7,63,208,38
     CONTROL         "&Account disabled",IDC_CHECK_DISABLED,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,74,71,10
     CONTROL         "&User must change password at next logon",
                     IDC_CHECK_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     13,86,148,10
-    GROUPBOX        "System Rights",IDC_STATIC,7,106,208,49
     CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,118,61,10
     CONTROL         "&View server configuration",IDC_CHECK_VIEW_CONFIG,
@@ -463,6 +456,49 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,129,83,10
     CONTROL         "Edit event &database",IDC_CHECK_EDIT_EVENTDB,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,140,79,10
+    DEFPUSHBUTTON   "OK",IDOK,110,162,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,162,50,14
+    LTEXT           "Login name:",IDC_STATIC,7,10,40,8
+    LTEXT           "Full name:",IDC_STATIC,7,29,33,8
+    LTEXT           "Description:",IDC_STATIC,7,48,38,8
+    GROUPBOX        "Flags",IDC_STATIC,7,63,208,38
+    GROUPBOX        "System Rights",IDC_STATIC,7,106,208,49
+END
+
+IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 247
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Group Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
+    CONTROL         "&Group is disabled",IDC_CHECK_DISABLED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,58,79,10
+    CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,91,61,10
+    CONTROL         "&View server configuration",IDC_CHECK_VIEW_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,102,95,10
+    CONTROL         "&Edit server configuration",IDC_CHECK_EDIT_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,113,92,10
+    CONTROL         "D&rop client connections",IDC_CHECK_DROP_CONN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,91,91,10
+    CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,102,83,10
+    CONTROL         "Edi&t event database",IDC_CHECK_EDIT_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,113,79,10
+    DEFPUSHBUTTON   "OK",IDOK,111,226,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,226,50,14
+    LTEXT           "Name:",IDC_STATIC,7,10,22,8
+    LTEXT           "Description:",IDC_STATIC,7,30,38,8
+    GROUPBOX        "System Rights",IDC_STATIC,7,79,208,49
+    GROUPBOX        "Flags",IDC_STATIC,7,46,208,27
+    GROUPBOX        "Members",IDC_STATIC,7,134,208,86
+    CONTROL         "List1",IDC_LIST_MEMBERS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,12,
+                    144,143,72,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,160,144,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,160,163,50,14
 END
 
 
@@ -611,6 +647,14 @@ BEGIN
         RIGHTMARGIN, 215
         TOPMARGIN, 7
         BOTTOMMARGIN, 176
+    END
+
+    IDD_GROUP_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 240
     END
 END
 #endif    // APSTUDIO_INVOKED

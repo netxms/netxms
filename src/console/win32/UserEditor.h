@@ -9,6 +9,7 @@
 
 #include "NewUserDlg.h"
 #include "UserPropDlg.h"
+#include "GroupPropDlg.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,7 @@ protected:
 	afx_msg void OnUserProperties();
 	//}}AFX_MSG
    afx_msg void OnUserDBChange(int iCode, NXC_USER *pUserInfo);
+   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	int AddListItem(NXC_USER *pUser);

@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CUserEditor, CMDIChildWnd)
 	ON_COMMAND(ID_USER_PROPERTIES, OnUserProperties)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -92,7 +93,7 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, ID_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | LVS_EX_FULLROWSELECT);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -113,6 +114,16 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
    return 0;
+}
+
+
+//
+// Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
+//
+
+void CUserEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_USER_PROPERTIES, 0);
 }
 
 
@@ -312,16 +323,53 @@ void CUserEditor::OnUserProperties()
    if (iItem != -1)
    {
       DWORD dwId;
+      NXC_USER *pUser;
 
       dwId = m_wndListCtrl.GetItemData(iItem);
-      if (dwId & GROUP_FLAG)
+      pUser = NXCFindUserById(dwId);
+      if (pUser != NULL)
       {
+         if (dwId & GROUP_FLAG)
+         {
+            CGroupPropDlg dlg;
+
+            dlg.m_strName = pUser->szName;
+            dlg.m_strDescription = pUser->szDescription;
+            dlg.m_bDisabled = pUser->wFlags & UF_DISABLED;
+            dlg.m_bDropConn = pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS;
+            dlg.m_bEditConfig = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG;
+            dlg.m_bViewConfig = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG;
+            dlg.m_bEditEventDB = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB;
+            dlg.m_bViewEventDB = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB;
+            dlg.m_bManageUsers = pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS;
+            if (dlg.DoModal() == IDOK)
+            {
+            }
+         }
+         else
+         {
+            CUserPropDlg dlg;
+
+            dlg.m_strLogin = pUser->szName;
+            dlg.m_strFullName = pUser->szFullName;
+            dlg.m_strDescription = pUser->szDescription;
+            dlg.m_bAccountDisabled = pUser->wFlags & UF_DISABLED;
+            dlg.m_bChangePassword = pUser->wFlags & UF_CHANGE_PASSWORD;
+            dlg.m_bDropConn = pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS;
+            dlg.m_bEditConfig = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_CONFIG;
+            dlg.m_bViewConfig = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_CONFIG;
+            dlg.m_bEditEventDB = pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB;
+            dlg.m_bViewEventDB = pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB;
+            dlg.m_bManageUsers = pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS;
+            if (dlg.DoModal() == IDOK)
+            {
+            }
+         }
       }
       else
       {
-         CUserPropDlg dlg;
-
-         dlg.DoModal();
+         MessageBox("Attempt to edit non-existing user record", "Internal Error", MB_ICONSTOP | MB_OK);
+         PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
       }
    }
 }

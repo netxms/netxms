@@ -56,6 +56,8 @@ src/console/win32/EventBrowser.cpp -text
 src/console/win32/EventBrowser.h -text
 src/console/win32/EventEditor.cpp -text
 src/console/win32/EventEditor.h -text
+src/console/win32/GroupPropDlg.cpp -text
+src/console/win32/GroupPropDlg.h -text
 src/console/win32/LoginDialog.cpp -text
 src/console/win32/LoginDialog.h -text
 src/console/win32/MainFrm.cpp -text
