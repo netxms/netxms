@@ -97,10 +97,6 @@ PostBuild_Cmds=copy Debug\libnetxms.dll ..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\cscp.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\getopt.c
 # End Source File
 # Begin Source File

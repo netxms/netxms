@@ -122,7 +122,6 @@ src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text
 src/console/win32/resource.h -text
 src/libnetxms/Makefile.am -text
-src/libnetxms/cscp.cpp -text
 src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text
 src/libnetxms/icmp.cpp -text
@@ -132,7 +131,6 @@ src/libnetxms/libnetxms.dsw -text
 src/libnetxms/libnetxms.h -text
 src/libnetxms/main.cpp -text
 src/libnetxms/queue.cpp -text
-src/libnetxms/shvar.cpp -text
 src/libnetxms/tools.cpp -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/comm.cpp -text
