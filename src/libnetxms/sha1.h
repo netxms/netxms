@@ -97,7 +97,9 @@ typedef unsigned int uint32;
 #if WORDS_BIGENDIAN
 #undef LITTLE_ENDIAN
 #else
+#ifndef LITTLE_ENDIAN
 #define LITTLE_ENDIAN
+#endif
 #endif
 
 #endif   /* _WIN32 */
@@ -108,7 +110,6 @@ typedef struct {
     unsigned char buffer[64];
 } SHA1_CTX;
 
-void SHA1Transform(uint32 state[5], unsigned char buffer[64]);
 void SHA1Init(SHA1_CTX* context);
 void SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len);	/*
 JHB */
