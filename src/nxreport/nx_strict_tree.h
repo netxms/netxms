@@ -33,56 +33,57 @@ struct TREE_ITEM
 {
 	TREE_ITEM 	*pParent;
 	TREE_ITEM	**pChildList;   // pointer to child items array 
-	DWORD		dwChildCount;  // size of child items array in elemtns.
-	DWORD		dwObjLevel;
+	DWORD			dwChildCount;  // size of child items array in elemtns.
+	DWORD			dwObjLevel;
 	NXC_OBJECT	*pObject;
 };
 
 
 struct TREE_INDEX_ITEM
 {
-	DWORD		dwObjId;
+	DWORD			dwObjId;
 	TREE_ITEM	*pTreeItem;
 };	
 
 
 class StrictTree
 {
-  private:
-	NXC_SESSION	m_hSession;
-	TREE_ITEM 	*m_rootItem;
+	private:
+		NXC_SESSION	m_hSession;
+		TREE_ITEM 	*m_pRootItem;
 
-	// Next 3 members are used for tree enumeration, using different algorithms.
-	TREE_ITEM	*m_currentItem;
-	DWORD		m_dwCurrentChildNo;
-	DWORD		m_dwCurrentItemIdx;
+		// Next 3 members are used for tree enumeration, using different algorithms.
+		TREE_ITEM	*m_pCurrentItem;
+		DWORD			m_dwCurrentChildNo;
+		DWORD			m_dwCurrentItemIdx;
 	
-	TREE_INDEX_ITEM	*m_pTreeIndex;
-	DWORD		m_dwTreeIndexSize;
+		// this is needed to simplify search in tree and to accelerate tree walking when properly sorted
+		TREE_INDEX_ITEM	*m_pTreeIndex;
+		DWORD					m_dwTreeIndexSize;
 		
-	BOOL Init(NXC_OBJECT *pRootObject);
-	TREE_ITEM *FindObjectInTree(DWORD dwObjId);
+		BOOL Init(NXC_OBJECT *pRootObject);
+		TREE_ITEM *FindObjectInTree(DWORD dwObjId);
 
-static	int SortCompare(const void *Param1, const void *Param2);
+	   // this makes a "tricky" comparison, resulting index to be sorted in "tree walking order"
+		static int SortCompareForWalking(const void *Param1, const void *Param2);
 		
-  public:
-  	StrictTree(NXC_SESSION hSession);
-  	StrictTree(NXC_SESSION hSession, NXC_OBJECT *pRootObject);
-  	StrictTree(NXC_SESSION hSession, DWORD dwObjId);
-  	~StrictTree();
+	public:
+		StrictTree(NXC_SESSION hSession);
+		StrictTree(NXC_SESSION hSession, NXC_OBJECT *pRootObject);
+		StrictTree(NXC_SESSION hSession, DWORD dwObjId);
+		~StrictTree();
 
-	BOOL LoadTree();
-	BOOL AddItem(NXC_OBJECT *pObject);
-	BOOL RemoveItem(NXC_OBJECT *pObject);
+		BOOL LoadTree();
+		BOOL AddItem(NXC_OBJECT *pObject);
+		BOOL RemoveItem(NXC_OBJECT *pObject);
 	
-  	const void ResetEnumeration()
-  	 { 
-  	 	m_dwCurrentChildNo = 0; m_currentItem = m_rootItem;
-  	 };
+		const void ResetEnumeration()
+		{ 
+			m_dwCurrentChildNo = 0; m_pCurrentItem = m_pRootItem; m_dwCurrentItemIdx = 0;
+		};
   	 	
-  	NXC_OBJECT *GetNextObject();
-  	NXC_OBJECT *GetNextObject(DWORD *dwLevel);
-};         
+		NXC_OBJECT *GetNextObject();
+		NXC_OBJECT *GetNextObject(DWORD *dwLevel);
+};
 
 #endif
- 

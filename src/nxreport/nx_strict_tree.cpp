@@ -22,8 +22,6 @@
 **/
 
 #include <nxclapi.h>
-//#include <string.h>
-
 #include "nx_strict_tree.h"
 
 //
@@ -31,17 +29,17 @@
 //
 BOOL StrictTree::Init(NXC_OBJECT *pRootObject)
 {
-  m_rootItem 	= NULL;
-  m_currentItem = NULL;
-  m_dwCurrentChildNo = 0;
-  m_dwCurrentItemIdx = 0;
-  m_pTreeIndex = NULL;
-  m_dwTreeIndexSize = 0;
+	m_pRootItem = NULL;
+	m_pCurrentItem = NULL;
+	m_dwCurrentChildNo = 0;
+	m_dwCurrentItemIdx = 0;
+	m_pTreeIndex = NULL;
+	m_dwTreeIndexSize = 0;
 
-  if (pRootObject != NULL)
-     return AddItem(pRootObject);  
-  else
-     return TRUE;
+	if (pRootObject != NULL)
+		return AddItem(pRootObject);  
+	else
+		return TRUE;
 };
 
 
@@ -130,7 +128,7 @@ BOOL StrictTree::LoadTree()
 
   // This step is very important. 
   // After this sorting we cant walk throw whole tree by just incrementing current index.
-  qsort(m_pTreeIndex, m_dwTreeIndexSize, sizeof(TREE_INDEX_ITEM), &SortCompare);
+  qsort(m_pTreeIndex, m_dwTreeIndexSize, sizeof(TREE_INDEX_ITEM), &SortCompareForWalking);
   return TRUE;
 };
 
@@ -149,7 +147,7 @@ BOOL StrictTree::AddItem(NXC_OBJECT *pObject)
 	return FALSE;
 
   // if tree is empty - first object becomes root object.
-  if (m_rootItem == NULL)
+  if (m_pRootItem == NULL)
   {
     pNew = new TREE_ITEM;
     if (pNew==NULL)
@@ -161,8 +159,8 @@ BOOL StrictTree::AddItem(NXC_OBJECT *pObject)
     pNew->pObject=pObject;
     m_dwTreeIndexSize=1;
 
-    m_rootItem = pNew;
-    m_currentItem=m_rootItem;
+    m_pRootItem = pNew;
+    m_pCurrentItem=m_pRootItem;
     bSucceeded=TRUE;
   }
   else // in all other cases object is inserted only if parent is present in tree and don't have this child yet.
@@ -242,7 +240,7 @@ BOOL StrictTree::RemoveItem(NXC_OBJECT *pObject)
 //
 // Try to prepare for "extra quick tree walk" trick. :) 
 //
-int StrictTree::SortCompare(const void *pItem1, const void *pItem2)
+int StrictTree::SortCompareForWalking(const void *pItem1, const void *pItem2)
 {
   TREE_ITEM *lpItem1, *lpItem2,*lpItem1Orig, *lpItem2Orig;
    
