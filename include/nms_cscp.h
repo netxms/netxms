@@ -80,14 +80,15 @@ typedef struct
 // Message (command) codes
 //
 
-#define CMD_LOGIN          1
-#define CMD_LOGIN_RESP     2
-#define CMD_KEEPALIVE      3
-#define CMD_EVENT          4
-#define CMD_GET_OBJECTS    5
-#define CMD_OBJECT         6
-#define CMD_DELETE_OBJECT  7
-#define CMD_UPDATE_OBJECT  8
+#define CMD_LOGIN             1
+#define CMD_LOGIN_RESP        2
+#define CMD_KEEPALIVE         3
+#define CMD_EVENT             4
+#define CMD_GET_OBJECTS       5
+#define CMD_OBJECT            6
+#define CMD_DELETE_OBJECT     7
+#define CMD_UPDATE_OBJECT     8
+#define CMD_OBJECT_LIST_END   9
 
 
 #endif   /* _nms_cscp_h_ */
