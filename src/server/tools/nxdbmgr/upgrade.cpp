@@ -149,7 +149,7 @@ static BOOL H_UpgradeFromV17(void)
       _T("CREATE TABLE modules (module_id integer not null,"
 	      "module_name varchar(63),exec_name varchar(255),"
 	      "module_flags integer not null default 0,description %s,"
-	      "PRIMARY KEY(module_id))"),
+	      "license_key varchar(255),PRIMARY KEY(module_id))"),
               g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
    if (!SQLQuery(szQuery))
       if (!g_bIgnoreErrors)

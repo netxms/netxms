@@ -24,6 +24,7 @@ CREATE TABLE modules
 	exec_name varchar(255),
 	module_flags integer not null default 0,
 	description SQL_TEXT,
+	license_key varchar(255),
 	PRIMARY KEY(module_id)
 );
 
