@@ -423,6 +423,12 @@ src/libnxcl/mib.cpp -text
 src/libnxcl/misc.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/users.cpp -text
+src/libnxsnmp/ber.cpp -text
+src/libnxsnmp/libnxsnmp.dsp -text
+src/libnxsnmp/libnxsnmp.dsw -text
+src/libnxsnmp/libnxsnmp.h -text
+src/libnxsnmp/main.cpp -text
+src/libnxsnmp/parse.cpp -text
 src/nxevent/Makefile.am -text
 src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text

@@ -21,6 +21,7 @@
 **/
 
 #include "nms_core.h"
+#include <nxsnmp.h>
 
 
 //
@@ -40,6 +41,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    struct sockaddr_in addr;
    int iAddrLen, iBytes;
    BYTE *packet;
+   SNMP_PDU *pdu;
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)
@@ -72,6 +74,20 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       if (iBytes > 0)
       {
          printf("SNMP: %d bytes packet received\n", iBytes);
+         pdu = SNMPParsePDU(packet, iBytes);
+         if (pdu != NULL)
+         {
+            TCHAR szBuffer[1024];
+
+            printf("SNMP: version=%d community='%s'\nOID: %s\n",
+               pdu->iVersion,pdu->pszCommunity,
+               SNMPConvertOIDToStr(pdu->pEnterprise, szBuffer));
+            SNMPDestroyPDU(pdu);
+         }
+         else
+         {
+            printf("SNMP: error parsing PDU\n");
+         }
       }
       else
       {
