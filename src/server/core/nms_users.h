@@ -29,8 +29,6 @@
 //
 
 #define MAX_USER_NAME      64
-#define MAX_USER_PASSWORD  64
-
 #define GROUP_FLAG         0x01000000
 
 
@@ -71,7 +69,7 @@ typedef struct
 {
    DWORD dwId;
    char szName[MAX_USER_NAME];
-   char szPassword[MAX_USER_PASSWORD];
+   BYTE szPassword[SHA_DIGEST_LENGTH];
    WORD wSystemRights;      // System-wide user's rights
    WORD wFlags;
 } NMS_USER;
@@ -138,7 +136,7 @@ void SaveUsers(void);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 void DeleteUserFromGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
-BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
+BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
 
 
 //

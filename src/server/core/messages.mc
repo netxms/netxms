@@ -248,4 +248,10 @@ Language=English
 SQL query failed (Query = '%1')
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_SHA1_HASH
+Language=English
+Invalid password hash for user %1: password reset to default
+.
+
 ;#endif

@@ -315,7 +315,8 @@ void CheckForMgmtNode(void);
 
 void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 
-void CreateSHA1Hash(char *pszSource, char *pBuffer);
+void BinToStr(BYTE *pData, DWORD dwSize, char *pStr);
+DWORD StrToBin(char *pStr, BYTE *pData, DWORD dwSize);
 
 #ifdef _WIN32
 

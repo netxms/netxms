@@ -186,14 +186,16 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOGIN:
             if (m_iState != STATE_AUTHENTICATED)
             {
-               char *pszLogin = pMsg->GetVariableStr(VID_LOGIN_NAME);
-               char *pszPassword = pMsg->GetVariableStr(VID_PASSWORD);
+               BYTE szPassword[SHA_DIGEST_LENGTH];
+               char *pszLogin;
+               
+               pszLogin = pMsg->GetVariableStr(VID_LOGIN_NAME);
+               pMsg->GetVariableBinary(VID_PASSWORD, szPassword, SHA_DIGEST_LENGTH);
 
-               if (AuthenticateUser(pszLogin, pszPassword, &m_dwUserId, &m_dwSystemAccess))
+               if (AuthenticateUser(pszLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
                   m_iState = STATE_AUTHENTICATED;
 
                MemFree(pszLogin);
-               MemFree(pszPassword);
 
                // Send reply
                pReply = new CSCPMessage;

@@ -66,7 +66,15 @@ BOOL LoadUsers(void)
    {
       m_pUserList[i].dwId = DBGetFieldULong(hResult, i, 0);
       strncpy(m_pUserList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
-      strncpy(m_pUserList[i].szPassword, DBGetField(hResult, i, 2), MAX_USER_PASSWORD);
+printf("%s %d %d\n",DBGetField(hResult, i, 2),StrToBin(DBGetField(hResult, i, 2), m_pUserList[i].szPassword, SHA_DIGEST_LENGTH),SHA_DIGEST_LENGTH);
+char buf[256];
+BinToStr(m_pUserList[i].szPassword,SHA_DIGEST_LENGTH,buf);
+printf("recover: %s\n",buf);
+      if (StrToBin(DBGetField(hResult, i, 2), m_pUserList[i].szPassword, SHA_DIGEST_LENGTH) != SHA_DIGEST_LENGTH)
+      {
+         WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", m_pUserList[i].szName);
+         CreateSHA1Hash("netxms", m_pUserList[i].szPassword);
+      }
       m_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
       m_pUserList[i].wFlags = 0;
    }
@@ -110,7 +118,7 @@ BOOL LoadUsers(void)
 void SaveUsers(void)
 {
    DWORD i;
-   char szQuery[1024];
+   char szQuery[1024], szPassword[SHA_DIGEST_LENGTH * 2 + 1];
 
    // Save users
    MutexLock(m_hMutexUserAccess, INFINITE);
@@ -143,14 +151,15 @@ void SaveUsers(void)
          }
 
          // Create or update record in database
+         BinToStr(m_pUserList[i].szPassword, SHA_DIGEST_LENGTH, szPassword);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',access=%d WHERE id=%d",
-                    m_pUserList[i].szName, m_pUserList[i].szPassword, 
+                    m_pUserList[i].szName, szPassword, 
                     m_pUserList[i].wSystemRights, m_pUserList[i].dwId);
          else
             sprintf(szQuery, "INSERT INTO users (id,name,password,access) VALUES (%d,'%s','%s',%d)",
                     m_pUserList[i].dwId, m_pUserList[i].szName, 
-                    m_pUserList[i].szPassword, m_pUserList[i].wSystemRights);
+                    szPassword, m_pUserList[i].wSystemRights);
          DBQuery(g_hCoreDB, szQuery);
       }
    }
@@ -224,7 +233,7 @@ void SaveUsers(void)
 // int pdwId.
 //
 
-BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId, DWORD *pdwSystemRights)
+BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights)
 {
    DWORD i;
    BOOL bResult = FALSE;
@@ -232,7 +241,7 @@ BOOL AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId, DWORD *pdwSy
    MutexLock(m_hMutexUserAccess, INFINITE);
    for(i = 0; i < m_dwNumUsers; i++)
       if (!strcmp(szName, m_pUserList[i].szName) &&
-          !strcmp(szPassword, m_pUserList[i].szPassword) &&
+          !memcmp(szPassword, m_pUserList[i].szPassword, SHA_DIGEST_LENGTH) &&
           !(m_pUserList[i].wFlags & UF_DELETED))
       {
          *pdwId = m_pUserList[i].dwId;
