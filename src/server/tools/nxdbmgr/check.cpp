@@ -127,6 +127,8 @@ static void CheckInterfaces(void)
       dwNumObjects = DBGetNumRows(hResult);
       for(i = 0; i < dwNumObjects; i++)
       {
+         dwId = DBGetFieldULong(hResult, i, 0);
+
          // Check appropriate record in object_properties table
          _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%ld"), dwId);
          hResult2 = SQLSelect(szQuery);
@@ -135,7 +137,7 @@ static void CheckInterfaces(void)
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Missing node object %ld properties. Create? (Y/N) "), dwId);
+               _tprintf(_T("Missing interface object %ld properties. Create? (Y/N) "), dwId);
                if (GetYesNo())
                {
                   _sntprintf(szQuery, 256, 
@@ -155,8 +157,8 @@ static void CheckInterfaces(void)
          }
 
          // Check if referred node exists
-         _sntprintf(szQuery, 256, _T("SELECT name FROM nodes WHERE id=%ld AND is_deleted=0"),
-                    DBGetFieldULong(hResult, i, 2));
+         _sntprintf(szQuery, 256, _T("SELECT name FROM object_properties WHERE object_id=%ld AND is_deleted=0"),
+                    DBGetFieldULong(hResult, i, 1));
          hResult2 = SQLSelect(szQuery);
          if (hResult2 != NULL)
          {
