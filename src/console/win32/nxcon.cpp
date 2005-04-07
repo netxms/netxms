@@ -1070,6 +1070,7 @@ CMDIChildWnd *CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems,
          pWnd->AddItem(dwNodeId, pdwItemList[i]);
       dwCurrTime = time(NULL);
       pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
+      pWnd->SetSubTitle(pszItemName);
    }
    else
    {
@@ -1078,7 +1079,7 @@ CMDIChildWnd *CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems,
    }
 
    CreateChildFrameWithSubtitle(pWnd, IDR_DCI_HISTORY_GRAPH,
-                                pszItemName, m_hGraphMenu, m_hGraphAccel);
+                                pWnd->GetSubTitle(), m_hGraphMenu, m_hGraphAccel);
    return pWnd;
 }
 

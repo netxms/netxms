@@ -78,6 +78,9 @@ QWORD g_qwServerId;
 //
 
 static CONDITION m_hEventShutdown;
+static THREAD m_thNodePollMgr = INVALID_THREAD_HANDLE;
+static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
+static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 
 
 //
@@ -332,11 +335,11 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 
    // Start threads
    ThreadCreate(WatchdogThread, 0, NULL);
-   ThreadCreate(HouseKeeper, 0, NULL);
-   ThreadCreate(Syncer, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
-   ThreadCreate(NodePollManager, 0, NULL);
    ThreadCreate(ClientListener, 0, NULL);
+   m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
+   m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
+   m_thNodePollMgr = ThreadCreateEx(NodePollManager, 0, NULL);
 
    // Start network discovery thread if required
    CheckForMgmtNode();
@@ -402,8 +405,13 @@ void NXCORE_EXPORTABLE Shutdown(void)
    ShutdownMailer();
    ShutdownSMSSender();
 
-   ThreadSleep(3);     // Give other threads a chance to terminate in a safe way
+   ThreadSleep(2);     // Give other threads a chance to terminate in a safe way
    DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown");
+
+   // Wait for critical threads
+   ThreadJoin(m_thHouseKeeper);
+   ThreadJoin(m_thNodePollMgr);
+   ThreadJoin(m_thSyncer);
 
    SaveObjects();
    DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
@@ -434,6 +442,13 @@ void NXCORE_EXPORTABLE Shutdown(void)
    // Remove PID file
 #ifndef _WIN32
    remove(g_szPIDFile);
+#endif
+
+   // Terminate process
+#ifdef _WIN32
+   ExitProcess(0);
+#else
+   exit(0);
 #endif
 }
 
@@ -472,8 +487,32 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
    // Get command
    pArg = ExtractWord(pszCmdLine, szBuffer);
 
-   if (IsCommand("DOWN", szBuffer, 4))
+   if (IsCommand("DEBUG", szBuffer, 2))
    {
+      // Get argument
+      pArg = ExtractWord(pArg, szBuffer);
+
+      if (IsCommand("ON", szBuffer, 2))
+      {
+         g_dwFlags |= AF_DEBUG_ALL;
+         ConsolePrintf(pCtx, "Debug mode turned on\n");
+      }
+      else if (IsCommand("OFF", szBuffer, 2))
+      {
+         g_dwFlags &= ~AF_DEBUG_ALL;
+         ConsolePrintf(pCtx, "Debug mode turned off\n");
+      }
+      else
+      {
+         if (szBuffer[0] == 0)
+            ConsolePrintf(pCtx, "ERROR: Missing argument\n\n");
+         else
+            ConsolePrintf(pCtx, "ERROR: Invalid DEBUG argument\n\n");
+      }
+   }
+   else if (IsCommand("DOWN", szBuffer, 4))
+   {
+      ConsolePrintf(pCtx, "Proceeding with server shutdown...\n");
       bExitCode = TRUE;
    }
    else if (IsCommand("SHOW", szBuffer, 2))
@@ -481,7 +520,20 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       // Get argument
       pArg = ExtractWord(pArg, szBuffer);
 
-      if (IsCommand("OBJECTS", szBuffer, 1))
+      if (IsCommand("FLAGS", szBuffer, 1))
+      {
+         ConsolePrintf(pCtx, "Flags: 0x%08X\n\n", g_dwFlags);
+      }
+      else if (IsCommand("MUTEX", szBuffer, 1))
+      {
+         ConsolePrintf(pCtx, "Mutex status:\n");
+         DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex", pCtx);
+         DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex", pCtx);
+         DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex", pCtx);
+         DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex", pCtx);
+         ConsolePrintf(pCtx, "\n");
+      }
+      else if (IsCommand("OBJECTS", szBuffer, 1))
       {
          DumpObjects(pCtx);
       }
@@ -497,15 +549,6 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       {
          DumpUsers(pCtx);
       }
-      else if (IsCommand("MUTEX", szBuffer, 1))
-      {
-         ConsolePrintf(pCtx, "Mutex status:\n");
-         DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex", pCtx);
-         DbgTestRWLock(g_rwlockNodeIndex, "g_hMutexNodeIndex", pCtx);
-         DbgTestRWLock(g_rwlockSubnetIndex, "g_hMutexSubnetIndex", pCtx);
-         DbgTestRWLock(g_rwlockInterfaceIndex, "g_hMutexInterfaceIndex", pCtx);
-         ConsolePrintf(pCtx, "\n");
-      }
       else if (IsCommand("WATCHDOG", szBuffer, 1))
       {
          WatchdogPrintStatus(pCtx);
@@ -513,27 +556,32 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else
       {
-         ConsolePrintf(pCtx, "ERROR: Invalid SHOW subcommand\n\n");
+         if (szBuffer[0] == 0)
+            ConsolePrintf(pCtx, "ERROR: Missing subcommand\n\n");
+         else
+            ConsolePrintf(pCtx, "ERROR: Invalid SHOW subcommand\n\n");
       }
    }
    else if (IsCommand("HELP", szBuffer, 2) || IsCommand("?", szBuffer, 1))
    {
       ConsolePrintf(pCtx, "Valid commands are:\n"
-                          "   down          - Down NetXMS server\n"
-                          "   exit          - Exit from remote session\n"
-                          "   help          - Display this help\n"
-                          "   show mutex    - Display mutex status\n"
-                          "   show objects  - Dump network objects to screen\n"
-                          "   show pollers  - Show poller threads state information\n"
-                          "   show sessions - Show active client sessions\n"
-                          "   show users    - Show users\n"
-                          "   show watchdog - Display watchdog information\n"
+                          "   debug [on|off] - Turn debug mode on or off\n"
+                          "   down           - Down NetXMS server\n"
+                          "   exit           - Exit from remote session\n"
+                          "   help           - Display this help\n"
+                          "   show flags     - Show internal server flags\n"
+                          "   show mutex     - Display mutex status\n"
+                          "   show objects   - Dump network objects to screen\n"
+                          "   show pollers   - Show poller threads state information\n"
+                          "   show sessions  - Show active client sessions\n"
+                          "   show users     - Show users\n"
+                          "   show watchdog  - Display watchdog information\n"
                           "\nAlmost all commands can be abbreviated to 2 or 3 characters\n"
                           "\n");
    }
    else
    {
-      ConsolePrintf(pCtx, "INVALID COMMAND\n\n");
+      ConsolePrintf(pCtx, "UNKNOWN COMMAND\n\n");
    }
    
    return bExitCode;
@@ -604,7 +652,8 @@ void NXCORE_EXPORTABLE Main(void)
 #else
          printf("netxmsd: ");
          fflush(stdout);
-         fgets(szCommand, 255, stdin);
+         if (fgets(szCommand, 255, stdin) == NULL)
+            break;   // Error reading stdin
          ptr = strchr(szCommand, '\n');
          if (ptr != NULL)
             *ptr = 0;
@@ -645,6 +694,27 @@ void NXCORE_EXPORTABLE Main(void)
       Shutdown();
 #endif
    }
+}
+
+
+//
+// Initiate server shutdown
+//
+
+void InitiateShutdown(void)
+{
+#ifdef _WIN32
+   Shutdown();
+#else
+   if (IsStandalone())
+   {
+      Shutdown();
+   }
+   else
+   {
+      ConditionSet(m_hEventShutdown);
+   }
+#endif
 }
 
 

@@ -32,18 +32,8 @@ CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName)
 
 CDCIDataView::CDCIDataView(TCHAR *pszParams)
 {
-   TCHAR szBuffer[32];
-
-   if (ExtractWindowParam(pszParams, _T("N"), szBuffer, 32))
-      m_dwNodeId = _tcstoul(szBuffer, NULL, 0);
-   else
-      m_dwNodeId = 0;
-
-   if (ExtractWindowParam(pszParams, _T("I"), szBuffer, 32))
-      m_dwItemId = _tcstoul(szBuffer, NULL, 0);
-   else
-      m_dwItemId = 0;
-
+   m_dwNodeId = ExtractWindowParamULong(pszParams, _T("N"), 0);
+   m_dwItemId = ExtractWindowParamULong(pszParams, _T("I"), 0);
    if (!ExtractWindowParam(pszParams, _T("IN"), m_szItemName, MAX_OBJECT_NAME))
       m_szItemName[0] = 0;
 }

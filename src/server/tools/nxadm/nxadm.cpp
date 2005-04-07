@@ -23,6 +23,12 @@
 
 #include "nxadm.h"
 
+#if !defined(_WIN32) && HAVE_READLINE_READLINE_H
+#include <readline/readline.h>
+#include <readline/history.h>
+#define USE_READLINE 1
+#endif
+
 
 //
 // Display help
@@ -92,6 +98,68 @@ static BOOL ExecCommand(TCHAR *pszCmd)
 
 
 //
+// Interactive mode loop
+//
+
+static void Shell(void)
+{
+   char *ptr, szCommand[256];
+
+   printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING " Ready\n"
+          "Enter \"help\" for command list\n\n");
+
+#if USE_READLINE
+   // Initialize readline library if we use it
+# if RL_READLINE_VERSION && RL_VERSION_MAJOR >= 5
+   rl_bind_key('\t', (rl_command_func_t *)rl_insert);
+# else 
+   rl_bind_key('\t', (Function *)rl_insert);
+# endif
+#endif
+      
+   while(1)
+   {
+#if USE_READLINE
+      ptr = readline("netxmsd: ");
+#else
+      printf("netxmsd: ");
+      fflush(stdout);
+      if (fgets(szCommand, 255, stdin) == NULL)
+         break;   // Error reading stdin
+      ptr = strchr(szCommand, '\n');
+      if (ptr != NULL)
+         *ptr = 0;
+      ptr = szCommand;
+#endif
+
+      if (ptr != NULL)
+      {
+         StrStrip(ptr);
+         if (*ptr != 0)
+         {
+            if (ExecCommand(ptr))
+               break;
+#if USE_READLINE
+            add_history(ptr);
+#endif
+         }
+#if USE_READLINE
+         free(ptr);
+#endif
+      }
+      else
+      {
+         printf("\n");
+      }
+   }
+
+#if USE_READLINE
+   free(ptr);
+#endif
+}
+
+
+//
 // Entry point
 //
 
@@ -139,6 +207,7 @@ int main(int argc, char *argv[])
          {
             if (pszCmd == NULL)
             {
+               Shell();
             }
             else
             {

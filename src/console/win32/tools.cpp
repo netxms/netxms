@@ -488,3 +488,49 @@ BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iS
    pszBuffer[iPos] = 0;
    return bResult;
 }
+
+
+//
+// Extract window parameter as DWORD
+//
+
+DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault)
+{
+   TCHAR szBuffer[32], *eptr;
+   DWORD dwResult;
+
+   if (ExtractWindowParam(pszStr, pszParam, szBuffer, 32))
+   {
+      dwResult = _tcstoul(szBuffer, &eptr, 0);
+      if (*eptr != 0)
+         dwResult = dwDefault;
+   }
+   else
+   {
+      dwResult = dwDefault;
+   }
+   return dwResult;
+}
+
+
+//
+// Extract window parameter as long
+//
+
+long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault)
+{
+   TCHAR szBuffer[32], *eptr;
+   long nResult;
+
+   if (ExtractWindowParam(pszStr, pszParam, szBuffer, 32))
+   {
+      nResult = _tcstol(szBuffer, &eptr, 0);
+      if (*eptr != 0)
+         nResult = nDefault;
+   }
+   else
+   {
+      nResult = nDefault;
+   }
+   return nResult;
+}

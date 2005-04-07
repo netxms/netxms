@@ -32,6 +32,7 @@ struct __poller_state
    int iType;
    time_t timestamp;
    char szMsg[128];
+   THREAD handle;
 };
 
 
@@ -167,11 +168,11 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
 
    // Start status pollers
    for(i = 0; i < iNumStatusPollers; i++)
-      ThreadCreate(StatusPoller, 0, (void *)i);
+      m_pPollerState[i].handle = ThreadCreateEx(StatusPoller, 0, (void *)i);
 
    // Start configuration pollers
    for(i = 0; i < iNumConfigPollers; i++)
-      ThreadCreate(ConfigurationPoller, 0, (void *)(i + iNumStatusPollers));
+      m_pPollerState[i + iNumStatusPollers].handle = ThreadCreateEx(ConfigurationPoller, 0, (void *)(i + iNumStatusPollers));
 
    dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
 
@@ -210,6 +211,10 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       g_statusPollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumConfigPollers; i++)
       g_configPollQueue.Put(INVALID_POINTER_VALUE);
+
+   // Wait for all pollers
+   for(i = 0; i < m_iNumPollers; i++)
+      ThreadJoin(m_pPollerState[i].handle);
 
    m_iNumPollers = 0;
    safe_free(m_pPollerState);

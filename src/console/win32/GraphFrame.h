@@ -54,6 +54,7 @@ public:
 
 // Implementation
 protected:
+	TCHAR m_szSubTitle[256];
 	DWORD m_dwSeconds;
 	CGraphStatusBar m_wndStatusBar;
 	UINT m_hTimer;
@@ -80,6 +81,10 @@ private:
 	DWORD m_pdwNodeId[MAX_GRAPH_ITEMS];
 	DWORD m_dwNumItems;
 	CGraph m_wndGraph;
+
+public:
+   void SetSubTitle(TCHAR *pszText) { _tcsncpy(m_szSubTitle, pszText, 256); }
+   TCHAR *GetSubTitle(void) { return m_szSubTitle; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

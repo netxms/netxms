@@ -230,6 +230,8 @@ char *TranslateUNIXText(const char *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
 void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize);
+long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault);
+DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
 
 
 //

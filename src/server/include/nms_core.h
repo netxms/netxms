@@ -423,6 +423,7 @@ void NXCORE_EXPORTABLE Shutdown(void);
 BOOL NXCORE_EXPORTABLE Initialize(void);
 void NXCORE_EXPORTABLE Main(void);
 void NXCORE_EXPORTABLE ShutdownDB(void);
+void InitiateShutdown(void);
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 

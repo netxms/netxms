@@ -324,6 +324,10 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
       if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
          _tcscat(pInfo->szParameters, szBuffer);
    }
+
+   _sntprintf(&pInfo->szParameters[_tcslen(pInfo->szParameters)],
+              MAX_WND_PARAM_LEN - _tcslen(pInfo->szParameters),
+              _T("\x7FT:%s"), m_szSubTitle);
    return 1;
 }
 
@@ -334,4 +338,36 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 
 void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
 {
+   TCHAR szBuffer[32];
+   DWORD i;
+
+   m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), 0);
+   m_dwNumItems = ExtractWindowParamULong(pszParams, _T("N"), 0);
+   m_dwTimeFrom = ExtractWindowParamULong(pszParams, _T("TS"), 0);
+   m_dwTimeTo = ExtractWindowParamULong(pszParams, _T("TF"), 0);
+   m_dwRefreshInterval = ExtractWindowParamULong(pszParams, _T("A"), 30);
+   m_wndGraph.m_bAutoScale = (BOOL)ExtractWindowParamLong(pszParams, _T("S"), TRUE);
+   m_wndGraph.m_rgbAxisColor = ExtractWindowParamULong(pszParams, _T("CA"), m_wndGraph.m_rgbAxisColor);
+   m_wndGraph.m_rgbBkColor = ExtractWindowParamULong(pszParams, _T("CB"), m_wndGraph.m_rgbBkColor);
+   m_wndGraph.m_rgbGridColor = ExtractWindowParamULong(pszParams, _T("CG"), m_wndGraph.m_rgbGridColor);
+   m_wndGraph.m_rgbLabelBkColor = ExtractWindowParamULong(pszParams, _T("CK"), m_wndGraph.m_rgbLabelBkColor);
+   m_wndGraph.m_rgbLabelTextColor = ExtractWindowParamULong(pszParams, _T("CL"), m_wndGraph.m_rgbLabelTextColor);
+   m_wndGraph.m_rgbTextColor = ExtractWindowParamULong(pszParams, _T("CT"), m_wndGraph.m_rgbTextColor);
+
+   for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+   {
+      _sntprintf(szBuffer, 32, _T("C%d"), i);
+      m_wndGraph.m_rgbLineColors[i] = 
+         ExtractWindowParamULong(pszParams, szBuffer, m_wndGraph.m_rgbLineColors[i]);
+   }
+
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      _sntprintf(szBuffer, 32, _T("N%d"), i);
+      m_pdwNodeId[i] = ExtractWindowParamULong(pszParams, szBuffer, 0);
+      _sntprintf(szBuffer, 32, _T("I%d"), i);
+      m_pdwItemId[i] = ExtractWindowParamULong(pszParams, szBuffer, 0);
+   }
+
+   ExtractWindowParam(pszParams, _T("T"), m_szSubTitle, 256);
 }

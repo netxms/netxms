@@ -460,7 +460,8 @@ static DWORD LoadDesktop(TCHAR *pszName, DWORD *pdwWindowCount, WINDOW_SAVE_INFO
             StrToBin(szBuffer, (BYTE *)&(*ppInfo)[i].placement, sizeof(WINDOWPLACEMENT));
 
             _stprintf(&szVar[dwLastChar], _T("wnd_%d/props"), i);
-            dwResult = NXCGetUserVariable(g_hSession, szVar, (*ppInfo)[i].szParameters, MAX_DB_STRING);
+            dwResult = NXCGetUserVariable(g_hSession, szVar,
+                                          (*ppInfo)[i].szParameters, MAX_WND_PARAM_LEN);
          }
       }
 
@@ -507,6 +508,9 @@ void CMainFrame::OnDesktopRestore()
                   break;
                case WNDC_DCI_DATA:
                   pWnd = theApp.ShowDCIData(0, 0, NULL, pWndInfo[i].szParameters);
+                  break;
+               case WNDC_GRAPH:
+                  pWnd = theApp.ShowDCIGraph(0, 0, NULL, NULL, pWndInfo[i].szParameters);
                   break;
                case WNDC_NETWORK_SUMMARY:
                   pWnd = theApp.ShowNetworkSummary();

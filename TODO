@@ -31,7 +31,6 @@ SERVER:
   this functionality.
 - Optimize SNMP subsystem
 - Add special handling for HP iLO boards
-- Housekeeping for DCI
 - Add logging API for database drivers
 - DCI transformation scripts (probably Perl?)
 - Event correlation
@@ -39,7 +38,6 @@ SERVER:
 - Network service autodiscovery
 - New attribute: disable status/configuration poll
 - Override Net.IP.Forward
-- NxAdm -- status, stop server
 - NxDbMgr -- backup before db recover
 - Replace mutex with r/w lock for session list access
 - OSPF discovery

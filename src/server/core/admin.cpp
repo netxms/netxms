@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.8 2005-04-06 16:16:25 victor Exp $ */
+/* $Id: admin.cpp,v 1.9 2005-04-07 15:50:58 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -69,7 +69,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       responce.SetId(pRequest->GetId());
       if (ProcessConsoleCommand(szCmd, &ctx))
       {
-         /* TODO: add shutdown code here */
+         InitiateShutdown();
       }
 
       responce.SetCode(CMD_REQUEST_COMPLETED);
@@ -163,6 +163,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/04/06 16:16:25  victor
+Local administrator interface completely rewritten
+
 Revision 1.7  2005/02/02 22:32:16  alk
 condTimedWait fixed
 file transfers fixed

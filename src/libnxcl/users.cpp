@@ -349,6 +349,10 @@ DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPa
             for(i = 0, dwId = VID_VARLIST_BASE; i < *pdwNumVars; i++, dwId++)
                (*pppszVarList)[i] = pResponce->GetVariableStr(dwId);
          }
+         else
+         {
+            *pppszVarList = NULL;
+         }
       }
       delete pResponce;
    }
