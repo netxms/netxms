@@ -56,6 +56,7 @@ protected:
 	afx_msg void OnButtonMoveup();
 	afx_msg void OnButtonMovedown();
 	afx_msg void OnItemchangedListThresholds(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDblclkListThresholds(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -50,6 +50,7 @@ BEGIN_MESSAGE_MAP(CDCIThresholdsPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON_MOVEUP, OnButtonMoveup)
 	ON_BN_CLICKED(IDC_BUTTON_MOVEDOWN, OnButtonMovedown)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_THRESHOLDS, OnItemchangedListThresholds)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_THRESHOLDS, OnDblclkListThresholds)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -401,4 +402,16 @@ void CDCIThresholdsPage::RecalcIndexes(DWORD dwIndex)
          m_wndListCtrl.SetItemData(iItem, dwData);
       }
    }
+}
+
+
+//
+// Handler for double click in thresholds list
+//
+
+void CDCIThresholdsPage::OnDblclkListThresholds(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+   if (m_wndListCtrl.GetSelectedCount() > 0)
+      PostMessage(WM_COMMAND, IDC_BUTTON_MODIFY, 0);
+	*pResult = 0;
 }

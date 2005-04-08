@@ -244,6 +244,8 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
    dlg.AddPage(&pgSettings);
 
+   // Open property sheet
+   dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    if (dlg.DoModal() == IDOK)
    {
       if (m_hTimer != 0)
