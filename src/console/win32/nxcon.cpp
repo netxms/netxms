@@ -290,6 +290,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 14), "&Package");
 
+   m_hLastValuesMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hLastValuesMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hLastValuesMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 15), "&Item");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -303,6 +307,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hTrapEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_TRAP_EDITOR));
 	m_hGraphAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_GRAPH));
 	m_hPackageMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_PACKAGE_MGR));
+	m_hLastValuesAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_LAST_VALUES));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -363,6 +368,10 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hTrapEditorAccel);
    SafeFreeResource(m_hGraphMenu);
    SafeFreeResource(m_hGraphAccel);
+   SafeFreeResource(m_hPackageMgrMenu);
+   SafeFreeResource(m_hPackageMgrAccel);
+   SafeFreeResource(m_hLastValuesMenu);
+   SafeFreeResource(m_hLastValuesAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -646,6 +655,7 @@ void CConsoleApp::OnConnectToServer()
    dlgLogin.m_szServer = g_szServer;
    dlgLogin.m_szLogin = g_szLogin;
    dlgLogin.m_iEncryption = g_dwEncryptionMethod;
+   dlgLogin.m_bClearCache = FALSE;
    do
    {
       if (dlgLogin.DoModal() != IDOK)
@@ -664,7 +674,7 @@ void CConsoleApp::OnConnectToServer()
       WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
 
       // Initiate connection
-      dwResult = DoLogin();
+      dwResult = DoLogin(dlgLogin.m_bClearCache);
       if (dwResult != RCC_SUCCESS)
          ErrorBox(dwResult, "Unable to connect: %s", "Connection error");
    }
@@ -1567,7 +1577,7 @@ CMDIChildWnd *CConsoleApp::ShowLastValues(NXC_OBJECT *pObject, TCHAR *pszParams)
    }
    CreateChildFrameWithSubtitle(pWnd, IDR_LAST_VALUES_VIEW,
                                 (pObject != NULL) ? pObject->szName : _T("unknown object"),
-                                m_hMDIMenu, m_hMDIAccel);
+                                m_hLastValuesMenu, m_hLastValuesAccel);
    return pWnd;
 }
 

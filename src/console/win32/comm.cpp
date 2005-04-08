@@ -34,6 +34,13 @@
 
 
 //
+// Static data
+//
+
+static BOOL m_bClearCache = FALSE;
+
+
+//
 // Set status text in wait window
 //
 
@@ -117,6 +124,8 @@ static DWORD WINAPI LoginThread(void *pArg)
       _tcscpy(szCacheFile, g_szWorkDir);
       _tcscat(szCacheFile, WORKFILE_OBJECTCACHE);
       BinToStr(bsServerId, 8, &szCacheFile[_tcslen(szCacheFile)]);
+      if (m_bClearCache)
+         DeleteFile(szCacheFile);
       dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
    }
 
@@ -209,12 +218,13 @@ static DWORD WINAPI LoginThread(void *pArg)
 // Perform login
 //
 
-DWORD DoLogin(void)
+DWORD DoLogin(BOOL bClearCache)
 {
    HANDLE hThread;
    HWND hWnd = NULL;
    DWORD dwThreadId, dwResult;
 
+   m_bClearCache = bClearCache;
    hThread = CreateThread(NULL, 0, LoginThread, &hWnd, CREATE_SUSPENDED, &dwThreadId);
    if (hThread != NULL)
    {

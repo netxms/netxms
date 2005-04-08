@@ -50,6 +50,11 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnItemGraph();
+	afx_msg void OnItemShowdata();
+	afx_msg void OnUpdateItemGraph(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateItemShowdata(CCmdUI* pCmdUI);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()

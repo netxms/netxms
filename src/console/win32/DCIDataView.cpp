@@ -27,14 +27,15 @@ CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName)
 {
    m_dwNodeId = dwNodeId;
    m_dwItemId = dwItemId;
-   _tcsncpy(m_szItemName, pszItemName, MAX_OBJECT_NAME);
+   _tcsncpy(m_szItemName, pszItemName, MAX_OBJECT_NAME + MAX_ITEM_NAME + 4);
 }
 
 CDCIDataView::CDCIDataView(TCHAR *pszParams)
 {
    m_dwNodeId = ExtractWindowParamULong(pszParams, _T("N"), 0);
    m_dwItemId = ExtractWindowParamULong(pszParams, _T("I"), 0);
-   if (!ExtractWindowParam(pszParams, _T("IN"), m_szItemName, MAX_OBJECT_NAME))
+   if (!ExtractWindowParam(pszParams, _T("IN"), m_szItemName,
+                           MAX_OBJECT_NAME + MAX_ITEM_NAME + 4))
       m_szItemName[0] = 0;
 }
 

@@ -47,6 +47,11 @@ BEGIN_MESSAGE_MAP(CLastValuesView, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_COMMAND(ID_ITEM_GRAPH, OnItemGraph)
+	ON_COMMAND(ID_ITEM_SHOWDATA, OnItemShowdata)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_GRAPH, OnUpdateItemGraph)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_SHOWDATA, OnUpdateItemShowdata)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
@@ -218,4 +223,96 @@ LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%ld"), m_dwNodeId);
    return 1;
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_GRAPH message handler
+//
+
+void CLastValuesView::OnItemGraph() 
+{
+   int iItem;
+   DWORD i, *pdwItemList, dwNumItems;
+   TCHAR szBuffer[384];
+   NXC_OBJECT *pObject;
+
+   pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumItems); i++)
+   {
+      pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   if (dwNumItems == 1)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      sprintf(szBuffer, "%s - ", pObject->szName);
+      m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
+                                384 - _tcslen(szBuffer));
+   }
+   else
+   {
+      strcpy(szBuffer, pObject->szName);
+   }
+
+   theApp.ShowDCIGraph(m_dwNodeId, dwNumItems, pdwItemList, szBuffer);
+   free(pdwItemList);
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_SHOWDATA message handler
+//
+
+void CLastValuesView::OnItemShowdata() 
+{
+   int iItem;
+   DWORD dwItemId;
+   TCHAR szBuffer[384];
+   NXC_OBJECT *pObject;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   while(iItem != -1)
+   {
+      dwItemId = m_wndListCtrl.GetItemData(iItem);
+      pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
+      _stprintf(szBuffer, "%s - ", pObject->szName); 
+      m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
+                                384 - _tcslen(szBuffer));
+      theApp.ShowDCIData(m_dwNodeId, dwItemId, szBuffer);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+}
+
+
+//
+// UI update handlers
+//
+
+void CLastValuesView::OnUpdateItemGraph(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+void CLastValuesView::OnUpdateItemShowdata(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CLastValuesView::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(14);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }

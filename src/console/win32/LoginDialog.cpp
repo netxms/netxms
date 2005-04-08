@@ -25,6 +25,7 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 	m_szPassword = _T("");
 	m_szServer = _T("");
 	m_iEncryption = -1;
+	m_bClearCache = FALSE;
 	//}}AFX_DATA_INIT
 
    lb.lbColor = 0;
@@ -50,6 +51,7 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SERVER, m_szServer);
 	DDV_MaxChars(pDX, m_szServer, 64);
 	DDX_Radio(pDX, IDC_RADIO_CLEAR, m_iEncryption);
+	DDX_Check(pDX, IDC_CHECK_CACHE, m_bClearCache);
 	//}}AFX_DATA_MAP
 }
 

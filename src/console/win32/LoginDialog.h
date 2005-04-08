@@ -24,6 +24,7 @@ public:
 	CString	m_szPassword;
 	CString	m_szServer;
 	int		m_iEncryption;
+	BOOL	m_bClearCache;
 	//}}AFX_DATA
 
 

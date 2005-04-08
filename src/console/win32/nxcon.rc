@@ -254,10 +254,10 @@ BEGIN
         END
         MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
-        MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
-        MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
+        MENUITEM "D&ata collection\tShift+F8",  ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Last DCI values\tShift+F7",  ID_OBJECT_LASTDCIVALUES
         MENUITEM SEPARATOR
-        MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
+        MENUITEM "&Properties\tAlt+Enter",      ID_OBJECT_PROPERTIES
     END
     POPUP "&User"
     BEGIN
@@ -401,6 +401,11 @@ BEGIN
         MENUITEM "&Remove\tCtrl+R",             ID_PACKAGE_REMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Deploy...\tCtrl+D",          ID_PACKAGE_DEPLOY
+    END
+    POPUP "Last Values"
+    BEGIN
+        MENUITEM "&Show history\tCtrl+S",       ID_ITEM_SHOWDATA
+        MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
     END
 END
 
@@ -604,6 +609,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Deploy...",                  ID_PACKAGE_DEPLOY
     END
+    POPUP "Last Values"
+    BEGIN
+        MENUITEM "&Show history",               ID_ITEM_SHOWDATA
+        MENUITEM "&Graph",                      ID_ITEM_GRAPH
+    END
 END
 
 
@@ -658,6 +668,9 @@ BEGIN
     "P",            ID_OBJECT_VIEW_SHOWPREVIEWPANE, VIRTKEY, ALT, NOINVERT
     "S",            ID_OBJECT_POLL_STATUS,  VIRTKEY, CONTROL, ALT, NOINVERT
     "T",            ID_OBJECT_VIEW_VIEWASTREE, VIRTKEY, CONTROL, NOINVERT
+    VK_F7,          ID_OBJECT_LASTDCIVALUES, VIRTKEY, SHIFT, NOINVERT
+    VK_F8,          ID_OBJECT_DATACOLLECTION, VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_OBJECT_PROPERTIES,   VIRTKEY, ALT, NOINVERT
 END
 
 IDA_EPP ACCELERATORS DISCARDABLE 
@@ -724,6 +737,12 @@ BEGIN
     "R",            ID_PACKAGE_REMOVE,      VIRTKEY, CONTROL, NOINVERT
 END
 
+IDA_LAST_VALUES ACCELERATORS DISCARDABLE 
+BEGIN
+    "G",            ID_ITEM_GRAPH,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_ITEM_SHOWDATA,       VIRTKEY, CONTROL, NOINVERT
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -743,17 +762,24 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
 END
 
-IDD_LOGIN DIALOGEX 0, 0, 215, 205
+IDD_LOGIN DIALOGEX 0, 0, 215, 234
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connect to server"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT_SERVER,52,71,156,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_LOGIN,52,92,156,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_PASSWORD,52,113,156,14,ES_PASSWORD | 
                     ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,35,184,50,14
-    PUSHBUTTON      "&Quit",IDCANCEL,129,184,50,14
+    CONTROL         "&No encryption",IDC_RADIO_CLEAR,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,7,148,60,10
+    CONTROL         "Encrypt connection using &Blowfish + SHA1",
+                    IDC_RADIO_BLOWFISH,"Button",BS_AUTORADIOBUTTON,7,160,151,
+                    10
+    CONTROL         "&Clear object cache on connect",IDC_CHECK_CACHE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,190,113,10
+    DEFPUSHBUTTON   "OK",IDOK,35,213,50,14
+    PUSHBUTTON      "&Quit",IDCANCEL,129,213,50,14
     CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,
                     201,43
     LTEXT           "Connect to server",IDC_STATIC,7,58,59,8
@@ -761,15 +787,12 @@ BEGIN
     LTEXT           "User name:",IDC_STATIC,7,95,37,8
     LTEXT           "Server:",IDC_STATIC,7,73,24,8
     LTEXT           "Password:",IDC_STATIC,7,115,34,8
-    LTEXT           "Encryption",IDC_STATIC,7,137,37,8
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,44,141,163,1
-    CONTROL         "&No encryption",IDC_RADIO_CLEAR,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,7,150,60,10
-    CONTROL         "Encrypt connection using &Blowfish + SHA1",
-                    IDC_RADIO_BLOWFISH,"Button",BS_AUTORADIOBUTTON,7,164,151,
-                    10
+    LTEXT           "Encryption",IDC_STATIC,7,135,37,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,44,139,163,1
     RTEXT           "Version",IDC_STATIC_VERSION,87,41,120,8,SS_NOPREFIX,
                     WS_EX_TRANSPARENT
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,35,182,172,1
+    LTEXT           "Options",IDC_STATIC,7,178,25,8
 END
 
 IDD_EDIT_EVENT DIALOG DISCARDABLE  0, 0, 270, 190
@@ -1763,7 +1786,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 208
         TOPMARGIN, 7
-        BOTTOMMARGIN, 198
+        BOTTOMMARGIN, 227
     END
 
     IDD_EDIT_EVENT, DIALOG

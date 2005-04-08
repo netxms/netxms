@@ -143,6 +143,8 @@ protected:
 	HACCEL m_hGraphAccel;         // Accelerator for history and real-time graphs
 	HMENU m_hPackageMgrMenu;      // Menu for package manager
 	HACCEL m_hPackageMgrAccel;    // Accelerator for package manager
+	HMENU m_hLastValuesMenu;      // Menu for last values view
+	HACCEL m_hLastValuesAccel;    // Accelerator for last values view
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

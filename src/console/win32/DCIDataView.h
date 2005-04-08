@@ -35,7 +35,7 @@ public:
 
 // Implementation
 protected:
-	TCHAR m_szItemName[MAX_OBJECT_NAME];
+	TCHAR m_szItemName[MAX_OBJECT_NAME + MAX_ITEM_NAME + 4];
 	CStatusBarCtrl m_wndStatusBar;
 	// Generated message map functions
 	//{{AFX_MSG(CDCIDataView)
