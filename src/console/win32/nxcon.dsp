@@ -233,7 +233,7 @@ SOURCE=.\GraphFrame.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\GraphPropDlg.cpp
+SOURCE=.\GraphSettingsPage.cpp
 # End Source File
 # Begin Source File
 
@@ -566,7 +566,7 @@ SOURCE=.\GraphFrame.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\GraphPropDlg.h
+SOURCE=.\GraphSettingsPage.h
 # End Source File
 # Begin Source File
 

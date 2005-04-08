@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "GraphFrame.h"
-#include "GraphPropDlg.h"
+#include "GraphSettingsPage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -208,28 +208,32 @@ BOOL CGraphFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 void CGraphFrame::OnGraphProperties() 
 {
-   CGraphPropDlg dlg;
+   CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
+   CGraphSettingsPage pgSettings;
    int i;
 
-   dlg.m_bAutoscale = m_wndGraph.m_bAutoScale;
-   dlg.m_bShowGrid = m_wndGraph.m_bShowGrid;
-   dlg.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
-   dlg.m_dwRefreshInterval = m_dwRefreshInterval;
-   dlg.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
-   dlg.m_rgbBackground = m_wndGraph.m_rgbBkColor;
-   dlg.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
-   dlg.m_rgbLabelBkgnd = m_wndGraph.m_rgbLabelBkColor;
-   dlg.m_rgbLabelText = m_wndGraph.m_rgbLabelTextColor;
-   dlg.m_rgbText = m_wndGraph.m_rgbTextColor;
+   // Create "Settings" page
+   pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
+   pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
+   pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
+   pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
+   pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
+   pgSettings.m_rgbBackground = m_wndGraph.m_rgbBkColor;
+   pgSettings.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
+   pgSettings.m_rgbLabelBkgnd = m_wndGraph.m_rgbLabelBkColor;
+   pgSettings.m_rgbLabelText = m_wndGraph.m_rgbLabelTextColor;
+   pgSettings.m_rgbText = m_wndGraph.m_rgbTextColor;
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
-      dlg.m_rgbItems[i] = m_wndGraph.m_rgbLineColors[i];
+      pgSettings.m_rgbItems[i] = m_wndGraph.m_rgbLineColors[i];
+   dlg.AddPage(&pgSettings);
+
    if (dlg.DoModal() == IDOK)
    {
       if (m_hTimer != 0)
          KillTimer(m_hTimer);
-      m_dwRefreshInterval = dlg.m_dwRefreshInterval;
+      m_dwRefreshInterval = pgSettings.m_dwRefreshInterval;
       m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
-      if (dlg.m_bAutoUpdate)
+      if (pgSettings.m_bAutoUpdate)
       {
          m_dwFlags |= GF_AUTOUPDATE;
          m_hTimer = SetTimer(1, 1000, NULL);
@@ -240,17 +244,17 @@ void CGraphFrame::OnGraphProperties()
          m_dwFlags &= ~GF_AUTOUPDATE;
       }
 
-      m_wndGraph.m_bAutoScale = dlg.m_bAutoscale;
-      m_wndGraph.m_bShowGrid = dlg.m_bShowGrid;
+      m_wndGraph.m_bAutoScale = pgSettings.m_bAutoscale;
+      m_wndGraph.m_bShowGrid = pgSettings.m_bShowGrid;
 
-      m_wndGraph.m_rgbAxisColor = dlg.m_rgbAxisLines;
-      m_wndGraph.m_rgbBkColor = dlg.m_rgbBackground;
-      m_wndGraph.m_rgbGridColor = dlg.m_rgbGridLines;
-      m_wndGraph.m_rgbLabelBkColor = dlg.m_rgbLabelBkgnd;
-      m_wndGraph.m_rgbLabelTextColor = dlg.m_rgbLabelText;
-      m_wndGraph.m_rgbTextColor = dlg.m_rgbText;
+      m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
+      m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
+      m_wndGraph.m_rgbGridColor = pgSettings.m_rgbGridLines;
+      m_wndGraph.m_rgbLabelBkColor = pgSettings.m_rgbLabelBkgnd;
+      m_wndGraph.m_rgbLabelTextColor = pgSettings.m_rgbLabelText;
+      m_wndGraph.m_rgbTextColor = pgSettings.m_rgbText;
       for(i = 0; i < MAX_GRAPH_ITEMS; i++)
-         m_wndGraph.m_rgbLineColors[i] = dlg.m_rgbItems[i];
+         m_wndGraph.m_rgbLineColors[i] = pgSettings.m_rgbItems[i];
 
       m_wndGraph.InvalidateRect(NULL, FALSE);
 

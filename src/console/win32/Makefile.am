@@ -40,8 +40,7 @@ EXTRA_DIST = \
 	globals.cpp globals.h \
 	Graph.cpp Graph.h \
 	GraphFrame.cpp GraphFrame.h \
-	GraphPropDlg.cpp GraphPropDlg.h \
-	GroupPropDlg.cpp GroupPropDlg.h \
+	GraphSettingsPage.cpp GraphSettingsPage.h \
 	LastValuesView.cpp LastValuesView.h \
 	LoginDialog.cpp LoginDialog.h \
 	MainFrm.cpp MainFrm.h \

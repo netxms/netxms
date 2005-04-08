@@ -396,8 +396,8 @@ src/console/win32/Graph.cpp -text
 src/console/win32/Graph.h -text
 src/console/win32/GraphFrame.cpp -text
 src/console/win32/GraphFrame.h -text
-src/console/win32/GraphPropDlg.cpp -text
-src/console/win32/GraphPropDlg.h -text
+src/console/win32/GraphSettingsPage.cpp -text
+src/console/win32/GraphSettingsPage.h -text
 src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
 src/console/win32/InputBox.cpp -text

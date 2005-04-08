@@ -1,9 +1,9 @@
-// GraphPropDlg.cpp : implementation file
+// GraphSettingsPage.cpp : implementation file
 //
 
 #include "stdafx.h"
 #include "nxcon.h"
-#include "GraphPropDlg.h"
+#include "GraphSettingsPage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -12,48 +12,51 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// CGraphPropDlg dialog
+// CGraphSettingsPage property page
 
+IMPLEMENT_DYNCREATE(CGraphSettingsPage, CPropertyPage)
 
-CGraphPropDlg::CGraphPropDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CGraphPropDlg::IDD, pParent)
+CGraphSettingsPage::CGraphSettingsPage() : CPropertyPage(CGraphSettingsPage::IDD)
 {
-	//{{AFX_DATA_INIT(CGraphPropDlg)
-	m_dwRefreshInterval = 0;
-	m_bAutoUpdate = FALSE;
-	m_bShowGrid = FALSE;
+	//{{AFX_DATA_INIT(CGraphSettingsPage)
 	m_bAutoscale = FALSE;
+	m_bShowGrid = FALSE;
+	m_bAutoUpdate = FALSE;
+	m_dwRefreshInterval = 0;
 	//}}AFX_DATA_INIT
 }
 
-
-void CGraphPropDlg::DoDataExchange(CDataExchange* pDX)
+CGraphSettingsPage::~CGraphSettingsPage()
 {
-	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CGraphPropDlg)
-	DDX_Text(pDX, IDC_EDIT_REFRESH, m_dwRefreshInterval);
-	DDV_MinMaxDWord(pDX, m_dwRefreshInterval, 5, 3600);
-	DDX_Check(pDX, IDC_CHECK_REFRESH, m_bAutoUpdate);
-	DDX_Check(pDX, IDC_CHECK_GRID, m_bShowGrid);
+}
+
+void CGraphSettingsPage::DoDataExchange(CDataExchange* pDX)
+{
+	CPropertyPage::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CGraphSettingsPage)
 	DDX_Check(pDX, IDC_CHECK_AUTOSCALE, m_bAutoscale);
+	DDX_Check(pDX, IDC_CHECK_GRID, m_bShowGrid);
+	DDX_Check(pDX, IDC_CHECK_REFRESH, m_bAutoUpdate);
+	DDX_Text(pDX, IDC_EDIT_REFRESH, m_dwRefreshInterval);
+	DDV_MinMaxDWord(pDX, m_dwRefreshInterval, 5, 600);
 	//}}AFX_DATA_MAP
 }
 
 
-BEGIN_MESSAGE_MAP(CGraphPropDlg, CDialog)
-	//{{AFX_MSG_MAP(CGraphPropDlg)
+BEGIN_MESSAGE_MAP(CGraphSettingsPage, CPropertyPage)
+	//{{AFX_MSG_MAP(CGraphSettingsPage)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CGraphPropDlg message handlers
+// CGraphSettingsPage message handlers
 
 
 //
 // WM_INITDIALOG message handler
 //
 
-BOOL CGraphPropDlg::OnInitDialog() 
+BOOL CGraphSettingsPage::OnInitDialog() 
 {
    int i;
    static int piItemList[MAX_GRAPH_ITEMS] = 
@@ -62,8 +65,8 @@ BOOL CGraphPropDlg::OnInitDialog()
         IDC_CB_ITEM9, IDC_CB_ITEM10, IDC_CB_ITEM11, IDC_CB_ITEM12,
         IDC_CB_ITEM13, IDC_CB_ITEM14, IDC_CB_ITEM15, IDC_CB_ITEM16 };
 
-	CDialog::OnInitDialog();
-
+	CPropertyPage::OnInitDialog();
+	
    // Init color selectors
    m_wndCSBackground.m_rgbColor = m_rgbBackground;
    m_wndCSText.m_rgbColor = m_rgbText;
@@ -90,14 +93,12 @@ BOOL CGraphPropDlg::OnInitDialog()
 
 
 //
-// "OK" button handler
+// "OK" and "Apply" button handler
 //
 
-void CGraphPropDlg::OnOK() 
+void CGraphSettingsPage::OnOK() 
 {
    int i;
-
-	CDialog::OnOK();
 
    m_rgbBackground = m_wndCSBackground.m_rgbColor;
    m_rgbText = m_wndCSText.m_rgbColor;
@@ -107,4 +108,6 @@ void CGraphPropDlg::OnOK()
    m_rgbLabelBkgnd = m_wndCSLabelBkgnd.m_rgbColor;
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
       m_rgbItems[i] = m_pwndCSItem[i].m_rgbColor;
+	
+	CPropertyPage::OnOK();
 }

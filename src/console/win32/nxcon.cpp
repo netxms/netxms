@@ -335,16 +335,19 @@ int CConsoleApp::ExitInstance()
    TCHAR szBuffer[MAX_PATH + 32];
    BYTE bsServerId[8];
 
-   NXCGetServerID(g_hSession, bsServerId);
-   _tcscpy(szBuffer, g_szWorkDir);
-   _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
-   BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
-   NXCSaveObjectCache(g_hSession, szBuffer);
+   if (g_hSession != NULL)
+   {
+      NXCGetServerID(g_hSession, bsServerId);
+      _tcscpy(szBuffer, g_szWorkDir);
+      _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
+      BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
+      NXCSaveObjectCache(g_hSession, szBuffer);
 
-   NXCSetDebugCallback(NULL);
-   NXCDisconnect(g_hSession);
-   NXCShutdown();
-   NXCDestroyCCList(g_pCCList);
+      NXCSetDebugCallback(NULL);
+      NXCDisconnect(g_hSession);
+      NXCShutdown();
+      NXCDestroyCCList(g_pCCList);
+   }
 
    // Save configuration
    WriteProfileInt(_T("General"), _T("Options"), g_dwOptions);
