@@ -54,6 +54,10 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwTimeFrame;
+	DWORD m_dwNumTimeUnits;
+	int m_iTimeUnit;
+	int m_iTimeFrameType;
 	TCHAR m_szSubTitle[256];
 	DWORD m_dwSeconds;
 	CGraphStatusBar m_wndStatusBar;

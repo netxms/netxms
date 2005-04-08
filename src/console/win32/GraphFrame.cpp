@@ -12,6 +12,14 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Static data
+//
+
+static DWORD m_dwTimeUnitSize[MAX_TIME_UNITS] = { 60, 3600, 86400 };
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CGraphStatusBar
 
@@ -46,6 +54,10 @@ CGraphFrame::CGraphFrame()
    m_dwFlags = 0;
    m_hTimer = 0;
    m_dwSeconds = 0;
+   m_iTimeFrameType = 1;   // Back from now
+   m_iTimeUnit = 1;  // Hours
+   m_dwNumTimeUnits = 1;
+   m_dwTimeFrame = 3600;   // By default, graph covers 3600 seconds
 }
 
 CGraphFrame::~CGraphFrame()
@@ -166,9 +178,11 @@ void CGraphFrame::OnViewRefresh()
    NXC_DCI_DATA *pData;
 
    // Set new time frame
-   i = m_dwTimeTo - m_dwTimeFrom;
-   m_dwTimeTo = (time(NULL) / 60) * 60;   // Round minute boundary
-   m_dwTimeFrom = m_dwTimeTo - i;
+   if (m_iTimeFrameType == 1)
+   {
+      m_dwTimeTo = (time(NULL) / 60) * 60;   // Round minute boundary
+      m_dwTimeFrom = m_dwTimeTo - m_dwTimeFrame;
+   }
    m_wndGraph.SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
 
    for(i = 0; i < m_dwNumItems; i++)
@@ -225,6 +239,9 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_rgbText = m_wndGraph.m_rgbTextColor;
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
       pgSettings.m_rgbItems[i] = m_wndGraph.m_rgbLineColors[i];
+   pgSettings.m_iTimeFrame = m_iTimeFrameType;
+   pgSettings.m_iTimeUnit = m_iTimeUnit;
+   pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
    dlg.AddPage(&pgSettings);
 
    if (dlg.DoModal() == IDOK)
@@ -256,11 +273,25 @@ void CGraphFrame::OnGraphProperties()
       for(i = 0; i < MAX_GRAPH_ITEMS; i++)
          m_wndGraph.m_rgbLineColors[i] = pgSettings.m_rgbItems[i];
 
-      m_wndGraph.InvalidateRect(NULL, FALSE);
-
       m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
       m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
                              (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
+
+      m_iTimeFrameType = pgSettings.m_iTimeFrame;
+      m_iTimeUnit = pgSettings.m_iTimeUnit;
+      m_dwNumTimeUnits = pgSettings.m_dwNumUnits;
+      if (m_iTimeFrameType == 0)
+      {
+         // Fixed time frame
+      }
+      else
+      {
+         // Back from now
+         m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
+      }
+
+      /* TODO: send refresh only if time frame was changed */
+      PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
    }
 }
 

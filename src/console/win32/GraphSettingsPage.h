@@ -9,6 +9,9 @@
 #include "ColorSelector.h"
 
 
+#define MAX_TIME_UNITS     3
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CGraphSettingsPage dialog
 
@@ -18,6 +21,7 @@ class CGraphSettingsPage : public CPropertyPage
 
 // Construction
 public:
+	int m_iTimeUnit;
 	COLORREF m_rgbItems[MAX_GRAPH_ITEMS];
 	COLORREF m_rgbLabelBkgnd;
 	COLORREF m_rgbLabelText;
@@ -32,10 +36,17 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CGraphSettingsPage)
 	enum { IDD = IDD_GRAPH_PROP_SETTINGS };
+	CComboBox	m_wndTimeUnits;
 	BOOL	m_bAutoscale;
 	BOOL	m_bShowGrid;
 	BOOL	m_bAutoUpdate;
 	DWORD	m_dwRefreshInterval;
+	DWORD	m_dwNumUnits;
+	int		m_iTimeFrame;
+	CTime	m_dateFrom;
+	CTime	m_dateTo;
+	CTime	m_timeFrom;
+	CTime	m_timeTo;
 	//}}AFX_DATA
 
 
@@ -61,6 +72,8 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CGraphSettingsPage)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnRadioFromNow();
+	afx_msg void OnRadioFixed();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -379,10 +379,12 @@
 #define IDC_RADIO_FROM_NOW              1241
 #define IDC_DATE_FROM                   1242
 #define IDC_TIME_FROM                   1243
-#define IDC_DATE_FROM2                  1244
-#define IDC_TIME_FROM2                  1245
+#define IDC_DATE_TO                     1244
+#define IDC_TIME_TO                     1245
 #define IDC_EDIT_COUNT                  1246
 #define IDC_COMBO_UNITS                 1247
+#define IDC_STATIC_FROM                 1248
+#define IDC_STATIC_TO                   1249
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -496,7 +498,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        270
 #define _APS_NEXT_COMMAND_VALUE         32920
-#define _APS_NEXT_CONTROL_VALUE         1248
+#define _APS_NEXT_CONTROL_VALUE         1250
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

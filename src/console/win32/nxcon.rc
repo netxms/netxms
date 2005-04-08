@@ -1672,10 +1672,10 @@ BEGIN
     CONTROL         "DateTimePicker2",IDC_TIME_FROM,"SysDateTimePick32",
                     DTS_RIGHTALIGN | DTS_UPDOWN | DTS_APPCANPARSE | 
                     WS_TABSTOP | 0x8,237,44,46,15
-    CONTROL         "DateTimePicker1",IDC_DATE_FROM2,"SysDateTimePick32",
+    CONTROL         "DateTimePicker1",IDC_DATE_TO,"SysDateTimePick32",
                     DTS_RIGHTALIGN | DTS_APPCANPARSE | WS_TABSTOP,171,73,62,
                     15
-    CONTROL         "DateTimePicker2",IDC_TIME_FROM2,"SysDateTimePick32",
+    CONTROL         "DateTimePicker2",IDC_TIME_TO,"SysDateTimePick32",
                     DTS_RIGHTALIGN | DTS_UPDOWN | DTS_APPCANPARSE | 
                     WS_TABSTOP | 0x8,237,73,46,15
     CONTROL         "&Back from now",IDC_RADIO_FROM_NOW,"Button",
@@ -1737,8 +1737,8 @@ BEGIN
     RTEXT           "15",IDC_STATIC,86,176,8,8,SS_CENTERIMAGE
     RTEXT           "16",IDC_STATIC,121,176,8,8,SS_CENTERIMAGE
     GROUPBOX        "Time Frame",IDC_STATIC,165,7,125,185
-    LTEXT           "From",IDC_STATIC,171,34,16,8
-    LTEXT           "To",IDC_STATIC,171,63,10,8
+    LTEXT           "From",IDC_STATIC_FROM,171,34,16,8
+    LTEXT           "To",IDC_STATIC_TO,171,63,10,8
 END
 
 

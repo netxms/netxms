@@ -2,6 +2,7 @@
 * 0.1.18
 *
 
+- Added support for object database caching on client side
 - Polling performance increased
 - Fix: SYS_SERVICE_DOWN event was generated in place of SYS_SERVICE_UNKNOWN
 - Windows console: implemented desktop configuration save and restore
