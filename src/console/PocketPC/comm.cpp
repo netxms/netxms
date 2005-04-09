@@ -34,6 +34,13 @@
 
 
 //
+// Static data
+//
+
+static BOOL m_bClearCache = FALSE;
+
+
+//
 // Set status text in wait window
 //
 
@@ -77,8 +84,17 @@ static DWORD WINAPI LoginThread(void *pArg)
    // Synchronize objects
    if (dwResult == RCC_SUCCESS)
    {
+      BYTE bsServerId[8];
+      TCHAR szCacheFile[MAX_PATH + 32];
+
       SetInfoText(hWnd, _T("Synchronizing objects..."));
-      dwResult = NXCSyncObjects(g_hSession);
+      NXCGetServerID(g_hSession, bsServerId);
+      _tcscpy(szCacheFile, g_szWorkDir);
+      _tcscat(szCacheFile, WORKFILE_OBJECTCACHE);
+      BinToStr(bsServerId, 8, &szCacheFile[_tcslen(szCacheFile)]);
+      if (m_bClearCache)
+         DeleteFile(szCacheFile);
+      dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
    }
 
    // Disconnect if some of post-login operations was failed
@@ -98,12 +114,13 @@ static DWORD WINAPI LoginThread(void *pArg)
 // Perform login
 //
 
-DWORD DoLogin(void)
+DWORD DoLogin(BOOL bClearCache)
 {
    HANDLE hThread;
    HWND hWnd = NULL;
    DWORD dwThreadId, dwResult;
 
+   m_bClearCache = bClearCache;
    hThread = CreateThread(NULL, 0, LoginThread, &hWnd, CREATE_SUSPENDED, &dwThreadId);
    if (hThread != NULL)
    {

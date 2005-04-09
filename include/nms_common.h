@@ -393,9 +393,14 @@ typedef struct tagICMPHDR
 // Convert half-byte's value to hex digit and vice versa
 //
 
-#define bin2hex(x) ((x) < 10 ? ((x) + '0') : ((x) + ('A' - 10)))
+#define bin2hex(x) ((x) < 10 ? ((x) + _T('0')) : ((x) + (_T('A') - 10)))
+#ifdef UNICODE
+#define hex2bin(x) ((((x) >= _T('0')) && ((x) <= _T('9'))) ? ((x) - _T('0')) : \
+                    (((towupper(x) >= _T('A')) && (towupper(x) <= _T('F'))) ? (towupper(x) - _T('A') + 10) : 0))
+#else
 #define hex2bin(x) ((((x) >= '0') && ((x) <= '9')) ? ((x) - '0') : \
                     (((toupper(x) >= 'A') && (toupper(x) <= 'F')) ? (toupper(x) - 'A' + 10) : 0))
+#endif
 
 
 //

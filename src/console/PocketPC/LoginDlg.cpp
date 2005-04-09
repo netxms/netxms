@@ -22,6 +22,7 @@ CLoginDlg::CLoginDlg(CWnd* pParent /*=NULL*/)
 	m_strLogin = _T("");
 	m_strPassword = _T("");
 	m_strServer = _T("");
+	m_bClearCache = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -36,6 +37,7 @@ void CLoginDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strPassword, 63);
 	DDX_Text(pDX, IDC_EDIT_SERVER, m_strServer);
 	DDV_MaxChars(pDX, m_strServer, 63);
+	DDX_Check(pDX, IDC_CHECK_CACHE, m_bClearCache);
 	//}}AFX_DATA_MAP
 }
 

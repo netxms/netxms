@@ -42,6 +42,8 @@ extern CNxpcApp theApp;
 #define MAX_PASSWORD_LEN      64
 #define MAX_INTERFACE_TYPE    32
 
+#define WORKFILE_OBJECTCACHE  L"\\object.cache."
+
 
 //
 // Custom windows messages
@@ -105,7 +107,7 @@ struct DEF_IMG
 // Communication functions
 //
 
-DWORD DoLogin(void);
+DWORD DoLogin(BOOL bClearCache);
 DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText);
 DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText);
 DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText);

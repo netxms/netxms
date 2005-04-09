@@ -206,6 +206,7 @@ void CNxpcApp::OnConnectToServer()
 
    dlgLogin.m_strServer = g_szServer;
    dlgLogin.m_strLogin = g_szLogin;
+   dlgLogin.m_bClearCache = FALSE;
    //dlgLogin.m_iEncryption = g_dwEncryptionMethod;
    do
    {
@@ -225,7 +226,7 @@ void CNxpcApp::OnConnectToServer()
       WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
 
       // Initiate connection
-      dwResult = DoLogin();
+      dwResult = DoLogin(dlgLogin.m_bClearCache);
       if (dwResult != RCC_SUCCESS)
          ErrorBox(dwResult, _T("Unable to connect: %s"), _T("Connection error"));
    }

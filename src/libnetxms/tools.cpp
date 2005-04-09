@@ -487,10 +487,10 @@ BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName)
 // Convert byte array to text representation
 //
 
-void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, char *pStr)
+void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr)
 {
    DWORD i;
-   char *pCurr;
+   TCHAR *pCurr;
 
    for(i = 0, pCurr = pStr; i < dwSize; i++)
    {
@@ -505,10 +505,10 @@ void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, char *pStr)
 // Convert string of hexadecimal digits to byte array
 //
 
-DWORD LIBNETXMS_EXPORTABLE StrToBin(char *pStr, BYTE *pData, DWORD dwSize)
+DWORD LIBNETXMS_EXPORTABLE StrToBin(TCHAR *pStr, BYTE *pData, DWORD dwSize)
 {
    DWORD i;
-   char *pCurr;
+   TCHAR *pCurr;
 
    memset(pData, 0, dwSize);
    for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)

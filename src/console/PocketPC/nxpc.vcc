@@ -2,7 +2,7 @@
 
 [General Info]
 Version=1
-LastClass=CAlarmView
+LastClass=CLoginDlg
 LastTemplate=generic CWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxpc.h"
@@ -16,11 +16,11 @@ Class4=CAboutDlg
 ResourceCount=7
 Resource1=IDD_ABOUTBOX
 Resource2=IDR_MAINFRAME
-Resource4=IDR_MAINFRAME (English (U.S.))
+Resource4=IDD_PROCESSING (English (U.S.))
 Class2=CChildView
-Resource3=IDD_PROCESSING (English (U.S.))
+Resource3=IDD_ABOUTBOX (English (U.S.))
 Class5=CRequestProcessingDlg
-Resource5=IDD_ABOUTBOX (English (U.S.))
+Resource5=IDR_MAINFRAME (English (U.S.))
 Class6=CLoginDlg
 Resource6=IDD_LOGIN
 Class7=CObjectView
@@ -181,7 +181,7 @@ Control2=IDC_STATIC,static,1342177283
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
 Class=CLoginDlg
-ControlCount=9
+ControlCount=10
 Control1=IDCANCEL,button,1342242816
 Control2=IDC_STATIC,static,1342308352
 Control3=IDC_EDIT_SERVER,edit,1350631552
@@ -191,6 +191,7 @@ Control6=IDC_STATIC,static,1342308352
 Control7=IDC_STATIC,static,1342308352
 Control8=IDC_STATIC,static,1342177283
 Control9=IDOK,button,1342242817
+Control10=IDC_CHECK_CACHE,button,1342242819
 
 [CLS:CObjectView]
 Type=0

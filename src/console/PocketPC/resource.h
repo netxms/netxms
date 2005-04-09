@@ -41,6 +41,7 @@
 #define IDC_EDIT_LOGIN                  1002
 #define IDC_EDIT_PASSWORD               1003
 #define IDC_STATIC_TITLE                1005
+#define IDC_CHECK_CACHE                 1006
 #define ID_SYSTEM                       32771
 #define IDS_CAP_SYSTEM                  32773
 #define ID_SYSTEM_SETTINGS              32775
@@ -72,7 +73,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         32788
-#define _APS_NEXT_CONTROL_VALUE         1006
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

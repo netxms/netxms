@@ -77,7 +77,14 @@ int CSummaryView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CSummaryView::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
+   RECT rect;
 
+   GetClientRect(&rect);
+   rect.left += X_MARGIN;
+   rect.top += Y_MARGIN;
+   rect.right -= X_MARGIN;
+
+   PaintAlarmSummary(dc, rect);
    PaintNodeSummary(dc);
 }
 
@@ -137,4 +144,38 @@ void CSummaryView::PaintNodeSummary(CDC &dc)
    rect.bottom = iChartBottom;
    rect.right = rect.left + (rect.bottom - rect.top);
    DrawPieChart(dc, &rect, OBJECT_STATUS_COUNT, m_dwNodeStats, g_statusColorTable);*/
+}
+
+
+//
+// Paint alarm summary
+//
+
+void CSummaryView::PaintAlarmSummary(CDC &dc, RECT &rcView)
+{
+   DrawTitle(dc, L"Active Alarms", rcView);
+}
+
+
+//
+// Draw section title
+// This method get view rectangle on input, draws header at the top of view,
+// and updates view rectangle to exclude header
+//
+
+void CSummaryView::DrawTitle(CDC &dc, TCHAR *pszText, RECT &rect)
+{
+   CFont *pOldFont;
+   RECT rcText;
+
+   memcpy(&rcText, &rect, sizeof(RECT));
+   pOldFont = dc.SelectObject(&m_fontTitle);
+   rcText.left += X_MARGIN / 2;
+   rcText.right -= X_MARGIN / 2;
+   dc.DrawText(pszText, -1, &rcText, DT_LEFT);
+   rect.top += dc.GetTextExtent(L"X", 1).cy + 2;
+   dc.MoveTo(rect.left, rect.top);
+   dc.LineTo(rect.right, rect.top);
+   rect.top += Y_MARGIN;
+   dc.SelectObject(pOldFont);
 }

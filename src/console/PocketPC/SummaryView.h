@@ -35,6 +35,8 @@ public:
 
 	// Generated message map functions
 protected:
+	void DrawTitle(CDC &dc, TCHAR *pszText, RECT &rcText);
+	void PaintAlarmSummary(CDC &dc, RECT &rcView);
 	DWORD m_dwNodeStats[8];
 	DWORD m_dwTotalNodes;
 	CFont m_fontNormal;
