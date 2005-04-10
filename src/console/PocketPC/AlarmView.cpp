@@ -17,6 +17,7 @@ static char THIS_FILE[] = __FILE__;
 CAlarmView::CAlarmView()
 {
    m_pImageList = NULL;
+   memset(m_iNumAlarms, 0, sizeof(int) * 5);
 }
 
 CAlarmView::~CAlarmView()
@@ -130,7 +131,7 @@ void CAlarmView::OnViewRefresh()
                              &dwNumAlarms, &pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
-      //memset(m_iNumAlarms, 0, sizeof(int) * 5);
+      memset(m_iNumAlarms, 0, sizeof(int) * 5);
       for(i = 0; i < dwNumAlarms; i++)
          AddAlarm(&pAlarmList[i]);
       safe_free(pAlarmList);
@@ -168,7 +169,7 @@ void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
 //      m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
       m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
-//   m_iNumAlarms[pAlarm->wSeverity]++;
+   m_iNumAlarms[pAlarm->wSeverity]++;
 }
 
 

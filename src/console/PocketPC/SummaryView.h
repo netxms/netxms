@@ -35,16 +35,18 @@ public:
 
 	// Generated message map functions
 protected:
+	CImageList *m_pImageList;
 	void DrawTitle(CDC &dc, TCHAR *pszText, RECT &rcText);
 	void PaintAlarmSummary(CDC &dc, RECT &rcView);
 	DWORD m_dwNodeStats[8];
 	DWORD m_dwTotalNodes;
 	CFont m_fontNormal;
 	CFont m_fontTitle;
-	void PaintNodeSummary(CDC &dc);
+	void PaintNodeSummary(CDC &dc, RECT &rcView);
 	//{{AFX_MSG(CSummaryView)
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

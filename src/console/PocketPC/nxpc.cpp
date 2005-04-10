@@ -227,8 +227,14 @@ void CNxpcApp::OnConnectToServer()
 
       // Initiate connection
       dwResult = DoLogin(dlgLogin.m_bClearCache);
-      if (dwResult != RCC_SUCCESS)
+      if (dwResult == RCC_SUCCESS)
+      {
+         m_pMainWnd->PostMessage(WM_COMMAND, ID_VIEW_REFRESH_ALL, 0);
+      }
+      else
+      {
          ErrorBox(dwResult, _T("Unable to connect: %s"), _T("Connection error"));
+      }
    }
    while(dwResult != RCC_SUCCESS);
 }
@@ -279,4 +285,31 @@ void CNxpcApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       default:
          break;
    }
+}
+
+
+//
+// Application termination handler
+//
+
+int CNxpcApp::ExitInstance() 
+{
+   TCHAR szBuffer[MAX_PATH + 32];
+   BYTE bsServerId[8];
+
+   if (g_hSession != NULL)
+   {
+      NXCGetServerID(g_hSession, bsServerId);
+      _tcscpy(szBuffer, g_szWorkDir);
+      _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
+      BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
+      NXCSaveObjectCache(g_hSession, szBuffer);
+
+      NXCSetDebugCallback(NULL);
+      NXCDisconnect(g_hSession);
+      NXCShutdown();
+      NXCDestroyCCList(g_pCCList);
+   }
+	
+	return CWinApp::ExitInstance();
 }

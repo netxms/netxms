@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxpc.h"
 #include "SummaryView.h"
+#include "MainFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -24,6 +25,7 @@ CSummaryView::CSummaryView()
 
 CSummaryView::~CSummaryView()
 {
+   delete m_pImageList;
 }
 
 
@@ -31,6 +33,7 @@ BEGIN_MESSAGE_MAP(CSummaryView, CWnd)
 	//{{AFX_MSG_MAP(CSummaryView)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -65,6 +68,7 @@ int CSummaryView::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, L"MS Sans Serif");
+   m_pImageList = CreateEventImageList();
 	
 	return 0;
 }
@@ -85,7 +89,8 @@ void CSummaryView::OnPaint()
    rect.right -= X_MARGIN;
 
    PaintAlarmSummary(dc, rect);
-   PaintNodeSummary(dc);
+   rect.top += 120;
+   PaintNodeSummary(dc, rect);
 }
 
 
@@ -93,8 +98,9 @@ void CSummaryView::OnPaint()
 // Paint nodes status summary
 //
 
-void CSummaryView::PaintNodeSummary(CDC &dc)
+void CSummaryView::PaintNodeSummary(CDC &dc, RECT &rcView)
 {
+   DrawTitle(dc, L"Node Status", rcView);
 /*   int i, x, y = Y_MARGIN, iTabStop, iLineHeight, iCounterWidth;
    int iChartTop, iChartBottom;
    RECT rect;
@@ -153,7 +159,22 @@ void CSummaryView::PaintNodeSummary(CDC &dc)
 
 void CSummaryView::PaintAlarmSummary(CDC &dc, RECT &rcView)
 {
+   int i, y, *piAlarmStats;
+   TCHAR szBuffer[256];
+   RECT rcText;
+
    DrawTitle(dc, L"Active Alarms", rcView);
+   piAlarmStats = ((CMainFrame *)theApp.m_pMainWnd)->GetAlarmStats();
+   for(i = 0, y = rcView.top; i < 5; i++, y += 20)
+   {
+      m_pImageList->Draw(&dc, i, CPoint(rcView.left + X_MARGIN, y), ILD_TRANSPARENT);
+      _snwprintf(szBuffer, 256, L"%-10s\t%d", g_szStatusTextSmall[i], piAlarmStats[i]);
+      rcText.left = rcView.left + 16 + X_MARGIN * 2;
+      rcText.right = rcView.right - X_MARGIN;
+      rcText.top = y;
+      rcText.bottom = y + 16;
+      dc.DrawText(szBuffer, -1, &rcText, DT_LEFT | DT_EXPANDTABS);
+   }
 }
 
 
@@ -178,4 +199,14 @@ void CSummaryView::DrawTitle(CDC &dc, TCHAR *pszText, RECT &rect)
    dc.LineTo(rect.right, rect.top);
    rect.top += Y_MARGIN;
    dc.SelectObject(pOldFont);
+}
+
+
+//
+// Refresh view
+//
+
+void CSummaryView::OnViewRefresh() 
+{
+   InvalidateRect(NULL);
 }

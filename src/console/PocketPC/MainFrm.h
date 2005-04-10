@@ -77,6 +77,7 @@ protected:
 	afx_msg void OnViewSummary();
 	afx_msg void OnViewAlarms();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnViewRefreshAll();
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
@@ -84,6 +85,9 @@ protected:
 	LPTSTR m_ToolTipsTable[NUM_TOOL_TIPS]; 
 
 	DECLARE_MESSAGE_MAP()
+
+public:
+   int *GetAlarmStats(void) { return m_wndAlarmView.m_iNumAlarms; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

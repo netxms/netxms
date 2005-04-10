@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_VIEW_SUMMARY, OnViewSummary)
 	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
 	ON_WM_SIZE()
+	ON_COMMAND(ID_VIEW_REFRESH_ALL, OnViewRefreshAll)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
@@ -231,4 +232,16 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 {
    m_wndAlarmView.OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
    free((void *)lParam);
+}
+
+
+//
+// Refresh all views
+//
+
+void CMainFrame::OnViewRefreshAll() 
+{
+   m_wndAlarmView.PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+   m_wndObjectView.PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+   m_wndSummaryView.PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 }

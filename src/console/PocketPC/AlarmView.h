@@ -29,6 +29,7 @@ public:
 
 // Implementation
 public:
+	int m_iNumAlarms[5];
 	virtual ~CAlarmView();
 
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);

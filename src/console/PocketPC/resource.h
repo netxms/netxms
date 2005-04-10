@@ -54,6 +54,7 @@
 #define ID_VIEW_OBJECTS                 32785
 #define ID_VIEW_REFRESH                 32786
 #define ID_BUTTON32787                  32787
+#define ID_VIEW_REFRESH_ALL             32788
 #define IDS_NEW                         65000
 #define IDS_SUMMARY                     65000
 #define IDS_FILE                        65001
@@ -72,7 +73,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        160
-#define _APS_NEXT_COMMAND_VALUE         32788
+#define _APS_NEXT_COMMAND_VALUE         32789
 #define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
