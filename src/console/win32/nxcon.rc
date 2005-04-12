@@ -390,6 +390,23 @@ BEGIN
     END
     POPUP "Graph"
     BEGIN
+        POPUP "P&resets"
+        BEGIN
+            MENUITEM "Last &10 minutes",            ID_GRAPH_PRESETS_LAST10MINUTES
+
+            MENUITEM "Last &30 minutes",            ID_GRAPH_PRESETS_LAST30MINUTES
+
+            MENUITEM "Last &hour",                  ID_GRAPH_PRESETS_LASTHOUR
+
+            MENUITEM "Last &2 hours",               ID_GRAPH_PRESETS_LAST2HOURS
+
+            MENUITEM "Last &4 hours",               ID_GRAPH_PRESETS_LAST4HOURS
+
+            MENUITEM "Last &day",                   ID_GRAPH_PRESETS_LASTDAY
+            MENUITEM "Last &week",                  ID_GRAPH_PRESETS_LASTWEEK
+
+        END
+        MENUITEM SEPARATOR
         MENUITEM "&Autoscale\tAlt+A",           ID_GRAPH_AUTOSCALE
         MENUITEM "&Freeze\tPause",              ID_GRAPH_FREEZE
         MENUITEM SEPARATOR
@@ -597,6 +614,23 @@ BEGIN
     END
     POPUP "Graph"
     BEGIN
+        POPUP "P&resets"
+        BEGIN
+            MENUITEM "Last &10 minutes",            ID_GRAPH_PRESETS_LAST10MINUTES
+
+            MENUITEM "Last &30 minutes",            ID_GRAPH_PRESETS_LAST30MINUTES
+
+            MENUITEM "Last &hour",                  ID_GRAPH_PRESETS_LASTHOUR
+
+            MENUITEM "Last &2 hours",               ID_GRAPH_PRESETS_LAST2HOURS
+
+            MENUITEM "Last &4 hours",               ID_GRAPH_PRESETS_LAST4HOURS
+
+            MENUITEM "Last &day",                   ID_GRAPH_PRESETS_LASTDAY
+            MENUITEM "Last &week",                  ID_GRAPH_PRESETS_LASTWEEK
+
+        END
+        MENUITEM SEPARATOR
         MENUITEM "&Autoscale",                  ID_GRAPH_AUTOSCALE
         MENUITEM "&Freeze",                     ID_GRAPH_FREEZE
         MENUITEM SEPARATOR

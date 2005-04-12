@@ -74,6 +74,14 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_PROPERTIES, OnGraphProperties)
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_GRAPH_PRESETS_LASTHOUR, OnGraphPresetsLasthour)
+	ON_COMMAND(ID_GRAPH_PRESETS_LAST2HOURS, OnGraphPresetsLast2hours)
+	ON_COMMAND(ID_GRAPH_PRESETS_LAST4HOURS, OnGraphPresetsLast4hours)
+	ON_COMMAND(ID_GRAPH_PRESETS_LASTDAY, OnGraphPresetsLastday)
+	ON_COMMAND(ID_GRAPH_PRESETS_LASTWEEK, OnGraphPresetsLastweek)
+	ON_COMMAND(ID_GRAPH_PRESETS_LAST10MINUTES, OnGraphPresetsLast10minutes)
+	ON_COMMAND(ID_GRAPH_PRESETS_LAST30MINUTES, OnGraphPresetsLast30minutes)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
@@ -180,7 +188,8 @@ void CGraphFrame::OnViewRefresh()
    // Set new time frame
    if (m_iTimeFrameType == 1)
    {
-      m_dwTimeTo = (time(NULL) / 60) * 60;   // Round minute boundary
+      m_dwTimeTo = time(NULL);
+      m_dwTimeTo -= m_dwTimeTo % 60;   // Round to minute boundary
       m_dwTimeFrom = m_dwTimeTo - m_dwTimeFrame;
    }
    m_wndGraph.SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
@@ -242,6 +251,12 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_iTimeFrame = m_iTimeFrameType;
    pgSettings.m_iTimeUnit = m_iTimeUnit;
    pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
+
+   pgSettings.m_dateFrom = (time_t)m_dwTimeFrom;
+   pgSettings.m_timeFrom = (time_t)m_dwTimeFrom;
+   pgSettings.m_dateTo = (time_t)m_dwTimeTo;
+   pgSettings.m_timeTo = (time_t)m_dwTimeTo;
+
    dlg.AddPage(&pgSettings);
 
    // Open property sheet
@@ -284,7 +299,19 @@ void CGraphFrame::OnGraphProperties()
       m_dwNumTimeUnits = pgSettings.m_dwNumUnits;
       if (m_iTimeFrameType == 0)
       {
-         // Fixed time frame
+         m_dwTimeFrom = CTime(pgSettings.m_dateFrom.GetYear(), pgSettings.m_dateFrom.GetMonth(),
+                              pgSettings.m_dateFrom.GetDay(), pgSettings.m_timeFrom.GetHour(),
+                              pgSettings.m_timeFrom.GetMinute(),
+                              pgSettings.m_timeFrom.GetSecond(), -1).GetTime();
+         m_dwTimeTo = CTime(pgSettings.m_dateTo.GetYear(), pgSettings.m_dateTo.GetMonth(),
+                            pgSettings.m_dateTo.GetDay(), pgSettings.m_timeTo.GetHour(),
+                            pgSettings.m_timeTo.GetMinute(),
+                            pgSettings.m_timeTo.GetSecond(), -1).GetTime();
+         if (m_dwTimeTo < m_dwTimeFrom)
+         {
+            m_dwTimeTo = m_dwTimeFrom;
+         }
+         m_dwTimeFrame = m_dwTimeTo - m_dwTimeFrom;
       }
       else
       {
@@ -340,9 +367,11 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    pInfo->iWndClass = WNDC_GRAPH;
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
-              _T("F:%ld\x7FN:%ld\x7FTS:%ld\x7FTF:%ld\x7F" "A:%ld\x7FS:%d\x7F"
+              _T("F:%ld\x7FN:%ld\x7FTS:%ld\x7FTF:%ld\x7F" "A:%ld\x7F"
+                 "TFT:%d\x7FTU:%d\x7FNTU:%ld\x7FS:%d\x7F"
                  "CA:%lu\x7F" "CB:%lu\x7F" "CG:%lu\x7F" "CK:%lu\x7F" "CL:%lu\x7F" "CT:%lu"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
+              m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
               m_wndGraph.m_rgbBkColor, m_wndGraph.m_rgbGridColor,
               m_wndGraph.m_rgbLabelBkColor, m_wndGraph.m_rgbLabelTextColor,
@@ -380,6 +409,9 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
 
    m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), 0);
    m_dwNumItems = ExtractWindowParamULong(pszParams, _T("N"), 0);
+   m_iTimeFrameType = ExtractWindowParamLong(pszParams, _T("TFT"), 0);
+   m_iTimeUnit = ExtractWindowParamLong(pszParams, _T("TU"), 0);
+   m_dwNumTimeUnits = ExtractWindowParamULong(pszParams, _T("NTU"), 0);
    m_dwTimeFrom = ExtractWindowParamULong(pszParams, _T("TS"), 0);
    m_dwTimeTo = ExtractWindowParamULong(pszParams, _T("TF"), 0);
    m_dwRefreshInterval = ExtractWindowParamULong(pszParams, _T("A"), 30);
@@ -407,4 +439,80 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
    }
 
    ExtractWindowParam(pszParams, _T("T"), m_szSubTitle, 256);
+
+   if (m_iTimeFrameType == 1)
+   {
+      m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
+   }
+   else
+   {
+      m_dwTimeFrame = m_dwTimeTo - m_dwTimeFrom;
+   }
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CGraphFrame::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(12);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Preset selection handlers
+//
+
+void CGraphFrame::OnGraphPresetsLast10minutes() 
+{
+   Preset(TIME_UNIT_MINUTE, 10);
+}
+
+void CGraphFrame::OnGraphPresetsLast30minutes() 
+{
+   Preset(TIME_UNIT_MINUTE, 30);
+}
+
+void CGraphFrame::OnGraphPresetsLasthour() 
+{
+   Preset(TIME_UNIT_HOUR, 1);
+}
+
+void CGraphFrame::OnGraphPresetsLast2hours() 
+{
+   Preset(TIME_UNIT_HOUR, 2);
+}
+
+void CGraphFrame::OnGraphPresetsLast4hours() 
+{
+   Preset(TIME_UNIT_HOUR, 4);
+}
+
+void CGraphFrame::OnGraphPresetsLastday() 
+{
+   Preset(TIME_UNIT_DAY, 1);
+}
+
+void CGraphFrame::OnGraphPresetsLastweek() 
+{
+   Preset(TIME_UNIT_DAY, 7);
+}
+
+
+//
+// Set time frame to given preset
+//
+
+void CGraphFrame::Preset(int nTimeUnit, DWORD dwNumUnits)
+{
+   m_iTimeFrameType = 1;   // Back from now
+   m_iTimeUnit = nTimeUnit;
+   m_dwNumTimeUnits = dwNumUnits;
+   m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
+   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 }

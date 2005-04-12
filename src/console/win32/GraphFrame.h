@@ -9,6 +9,15 @@
 //
 
 
+//
+// Time units
+//
+
+#define TIME_UNIT_MINUTE   0
+#define TIME_UNIT_HOUR     1
+#define TIME_UNIT_DAY      2
+
+
 class CGraphStatusBar : public CStatusBarCtrl
 {
 public:
@@ -54,6 +63,7 @@ public:
 
 // Implementation
 protected:
+	void Preset(int nTimeUnit, DWORD dwNumUnits);
 	DWORD m_dwTimeFrame;
 	DWORD m_dwNumTimeUnits;
 	int m_iTimeUnit;
@@ -72,6 +82,14 @@ protected:
 	afx_msg void OnGraphProperties();
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnGraphPresetsLasthour();
+	afx_msg void OnGraphPresetsLast2hours();
+	afx_msg void OnGraphPresetsLast4hours();
+	afx_msg void OnGraphPresetsLastday();
+	afx_msg void OnGraphPresetsLastweek();
+	afx_msg void OnGraphPresetsLast10minutes();
+	afx_msg void OnGraphPresetsLast30minutes();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()
