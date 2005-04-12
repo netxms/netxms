@@ -796,10 +796,10 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
 END
 
-IDD_LOGIN DIALOGEX 0, 0, 215, 234
+IDD_LOGIN DIALOGEX 0, 0, 215, 245
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connect to server"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT_SERVER,52,71,156,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_LOGIN,52,92,156,14,ES_AUTOHSCROLL
@@ -812,8 +812,11 @@ BEGIN
                     10
     CONTROL         "&Clear object cache on connect",IDC_CHECK_CACHE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,190,113,10
-    DEFPUSHBUTTON   "OK",IDOK,35,213,50,14
-    PUSHBUTTON      "&Quit",IDCANCEL,129,213,50,14
+    CONTROL         "Server version should match client version",
+                    IDC_CHECK_VERSION_MATCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,202,149,10
+    DEFPUSHBUTTON   "OK",IDOK,35,224,50,14
+    PUSHBUTTON      "&Quit",IDCANCEL,129,224,50,14
     CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,
                     201,43
     LTEXT           "Connect to server",IDC_STATIC,7,58,59,8
@@ -1840,7 +1843,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 208
         TOPMARGIN, 7
-        BOTTOMMARGIN, 227
+        BOTTOMMARGIN, 238
     END
 
     IDD_EDIT_EVENT, DIALOG

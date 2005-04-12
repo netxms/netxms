@@ -172,7 +172,8 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin, 
-                                    TCHAR *pszPassword, NXC_SESSION *phSession)
+                                    TCHAR *pszPassword, NXC_SESSION *phSession,
+                                    BOOL bExactVersionMatch)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
@@ -241,12 +242,17 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                   dwRetCode = pResp->GetVariableLong(VID_RCC);
                   if (dwRetCode == RCC_SUCCESS)
                   {
-                     TCHAR szServerVersion[64];
-
                      pResp->GetVariableBinary(VID_SERVER_ID, pSession->m_bsServerId, 8);
-                     pResp->GetVariableStr(VID_SERVER_VERSION, szServerVersion, 64);
-                     if (_tcsncmp(szServerVersion, NETXMS_VERSION_STRING, 64))
-                        dwRetCode = RCC_VERSION_MISMATCH;
+                     if (bExactVersionMatch)
+                     {
+                        TCHAR szServerVersion[64];
+
+                        pResp->GetVariableStr(VID_SERVER_VERSION, szServerVersion, 64);
+                        if (_tcsncmp(szServerVersion, NETXMS_VERSION_STRING, 64))
+                           dwRetCode = RCC_VERSION_MISMATCH;
+                     }
+                     if (pResp->GetVariableLong(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
+                        dwRetCode = RCC_BAD_PROTOCOL;
                   }
                   delete pResp;
 

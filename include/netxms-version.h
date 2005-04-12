@@ -28,10 +28,17 @@
 // Version constants 
 //
 
-#define NETXMS_VERSION_MAJOR      0
-#define NETXMS_VERSION_MINOR      1
-#define NETXMS_VERSION_BUILD      18
-#define NETXMS_VERSION_STRING     _T("0.1.18-dev")
+#define NETXMS_VERSION_MAJOR        0
+#define NETXMS_VERSION_MINOR        1
+#define NETXMS_VERSION_BUILD        18
+#define NETXMS_VERSION_STRING       _T("0.1.18")
+
+
+//
+// Current client-server protocol version
+//
+
+#define CLIENT_PROTOCOL_VERSION     1
 
 
 #endif

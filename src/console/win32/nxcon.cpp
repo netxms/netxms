@@ -659,6 +659,7 @@ void CConsoleApp::OnConnectToServer()
    dlgLogin.m_szLogin = g_szLogin;
    dlgLogin.m_iEncryption = g_dwEncryptionMethod;
    dlgLogin.m_bClearCache = FALSE;
+   dlgLogin.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
    do
    {
       if (dlgLogin.DoModal() != IDOK)
@@ -670,6 +671,10 @@ void CConsoleApp::OnConnectToServer()
       strcpy(g_szLogin, (LPCTSTR)dlgLogin.m_szLogin);
       strcpy(g_szPassword, (LPCTSTR)dlgLogin.m_szPassword);
       g_dwEncryptionMethod = dlgLogin.m_iEncryption;
+      if (dlgLogin.m_bMatchVersion)
+         g_dwOptions |= OPT_MATCH_SERVER_VERSION;
+      else
+         g_dwOptions &= ~OPT_MATCH_SERVER_VERSION;
 
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);

@@ -260,6 +260,7 @@ typedef void * NXC_SESSION;
 #define RCC_INVALID_IP_ADDR         ((DWORD)37)
 #define RCC_ACTION_IN_USE           ((DWORD)38)
 #define RCC_VARIABLE_NOT_FOUND      ((DWORD)39)
+#define RCC_BAD_PROTOCOL            ((DWORD)40)
 
 
 //
@@ -969,7 +970,8 @@ void LIBNXCL_EXPORTABLE NXCShutdown(void);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin,
-                                    TCHAR *szPassword, NXC_SESSION *phSession);
+                                    TCHAR *szPassword, NXC_SESSION *phSession,
+                                    BOOL bExactVersionMatch);
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout);

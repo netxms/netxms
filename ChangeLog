@@ -11,6 +11,7 @@
 	- Implemented desktop configuration save and restore
 	- Added possibility to change graph's time frame
 	- Added support for multiple DCIs on one graph
+	- Added graph presets
 	- Many small UI improvements
 
 

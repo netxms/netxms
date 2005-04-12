@@ -443,6 +443,7 @@ typedef struct
 #define VID_SEARCH_PATTERN          ((DWORD)143)
 #define VID_NUM_VARIABLES           ((DWORD)144)
 #define VID_COMMAND                 ((DWORD)145)
+#define VID_PROTOCOL_VERSION        ((DWORD)146)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

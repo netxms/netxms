@@ -69,6 +69,13 @@ extern CConsoleApp theApp;
 
 
 //
+// Other options
+//
+
+#define OPT_MATCH_SERVER_VERSION 0x00010000
+
+
+//
 // Transparent color for images in rule list
 //
 
