@@ -148,6 +148,29 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
       request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
       if (sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == sizeof(ECHOREQUEST))
       {
+#ifdef __FreeBSD__ // use kquque
+			int kq;
+			struct kevent ke;
+			struct timespec ts;
+         socklen_t iAddrLen;
+         struct sockaddr_in saSrc;
+
+			kq = kqueue();
+			EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 5, NULL);
+			kevent(kq, &ke, 1, NULL, 0, NULL);
+
+         // Wait for responce
+         for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
+         {
+            qwStartTime = GetCurrentTimeMs();
+
+				ts.tv_sec = dwTimeLeft / 1000;
+				ts.tv_nsec = (dwTimeLeft % 1000) * 1000 * 1000;
+
+				memset(&ke, 0, sizeof(ke));
+				if (kevent(kq, NULL, 0, &ke, 1, &ts) > 0)
+#else
+
 #if HAVE_POLL
          struct pollfd fds;
 #else
@@ -176,6 +199,8 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
 #else
 	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) > 0)
 #endif
+
+#endif // __FreeBSD__
             {
                dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
