@@ -30,18 +30,30 @@ CGraph::CGraph()
    m_bAutoScale = TRUE;
    m_bShowGrid = TRUE;
    m_dwNumItems = 0;
-   /*m_rgbBkColor = RGB(200,200,200);
-   m_rgbGridColor = RGB(64, 64, 64);
-   m_rgbAxisColor = RGB(0, 0, 0);
-   m_rgbTextColor = RGB(0, 0, 0);
-   m_rgbLineColors[0] = RGB(0, 127, 0);*/
    m_rgbBkColor = RGB(0,0,0);
    m_rgbGridColor = RGB(64, 64, 64);
    m_rgbAxisColor = RGB(127, 127, 127);
    m_rgbTextColor = RGB(255, 255, 255);
-   m_rgbLineColors[0] = RGB(0, 255, 0);
    m_rgbLabelBkColor = RGB(255, 255, 170);
    m_rgbLabelTextColor = RGB(85, 0, 0);
+
+   m_rgbLineColors[0] = RGB(0, 255, 0);
+   m_rgbLineColors[1] = RGB(255, 255, 0);
+   m_rgbLineColors[2] = RGB(0, 255, 255);
+   m_rgbLineColors[3] = RGB(0, 0, 255);
+   m_rgbLineColors[4] = RGB(255, 0, 255);
+   m_rgbLineColors[5] = RGB(255, 0, 0);
+   m_rgbLineColors[6] = RGB(0, 128, 128);
+   m_rgbLineColors[7] = RGB(0, 128, 0);
+   m_rgbLineColors[8] = RGB(128, 128, 255);
+   m_rgbLineColors[9] = RGB(255, 128, 0);
+   m_rgbLineColors[10] = RGB(128, 128, 0);
+   m_rgbLineColors[11] = RGB(128, 0, 255);
+   m_rgbLineColors[12] = RGB(255, 255, 128);
+   m_rgbLineColors[13] = RGB(0, 128, 64);
+   m_rgbLineColors[14] = RGB(0, 128, 255);
+   m_rgbLineColors[15] = RGB(192, 192, 192);
+
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
    m_bIsActive = FALSE;
    memset(&m_rectInfo, 0, sizeof(RECT));
