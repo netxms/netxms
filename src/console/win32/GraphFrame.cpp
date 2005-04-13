@@ -234,7 +234,7 @@ void CGraphFrame::OnGraphProperties()
 {
    CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
    CGraphSettingsPage pgSettings;
-   CGraphDataPage pgData;
+   //CGraphDataPage pgData;
    int i;
 
    // Create "Settings" page
@@ -260,18 +260,18 @@ void CGraphFrame::OnGraphProperties()
    dlg.AddPage(&pgSettings);
 
    // Create "Data Sources" page
-   pgData.m_dwNumItems = m_dwNumItems;
+   /*pgData.m_dwNumItems = m_dwNumItems;
    memcpy(pgData.m_pdwItemId, m_pdwItemId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
    memcpy(pgData.m_pdwNodeId, m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
-   dlg.AddPage(&pgData);
+   dlg.AddPage(&pgData);*/
 
    // Open property sheet
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    if (dlg.DoModal() == IDOK)
    {
-      m_dwNumItems = pgData.m_dwNumItems;
+      /*m_dwNumItems = pgData.m_dwNumItems;
       memcpy(m_pdwItemId, pgData.m_pdwItemId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
-      memcpy(m_pdwNodeId, pgData.m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+      memcpy(m_pdwNodeId, pgData.m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);*/
 
       if (m_hTimer != 0)
          KillTimer(m_hTimer);
