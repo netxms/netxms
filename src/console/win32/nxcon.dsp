@@ -229,6 +229,10 @@ SOURCE=.\Graph.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\GraphDataPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\GraphFrame.cpp
 # End Source File
 # Begin Source File
@@ -559,6 +563,10 @@ SOURCE=.\globals.h
 # Begin Source File
 
 SOURCE=.\Graph.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GraphDataPage.h
 # End Source File
 # Begin Source File
 

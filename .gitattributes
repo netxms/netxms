@@ -394,6 +394,8 @@ src/console/win32/EventSelDlg.cpp -text
 src/console/win32/EventSelDlg.h -text
 src/console/win32/Graph.cpp -text
 src/console/win32/Graph.h -text
+src/console/win32/GraphDataPage.cpp -text
+src/console/win32/GraphDataPage.h -text
 src/console/win32/GraphFrame.cpp -text
 src/console/win32/GraphFrame.h -text
 src/console/win32/GraphSettingsPage.cpp -text

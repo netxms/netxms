@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "GraphFrame.h"
 #include "GraphSettingsPage.h"
+#include "GraphDataPage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -233,6 +234,7 @@ void CGraphFrame::OnGraphProperties()
 {
    CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
    CGraphSettingsPage pgSettings;
+   CGraphDataPage pgData;
    int i;
 
    // Create "Settings" page
@@ -251,18 +253,26 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_iTimeFrame = m_iTimeFrameType;
    pgSettings.m_iTimeUnit = m_iTimeUnit;
    pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
-
    pgSettings.m_dateFrom = (time_t)m_dwTimeFrom;
    pgSettings.m_timeFrom = (time_t)m_dwTimeFrom;
    pgSettings.m_dateTo = (time_t)m_dwTimeTo;
    pgSettings.m_timeTo = (time_t)m_dwTimeTo;
-
    dlg.AddPage(&pgSettings);
+
+   // Create "Data Sources" page
+   pgData.m_dwNumItems = m_dwNumItems;
+   memcpy(pgData.m_pdwItemId, m_pdwItemId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+   memcpy(pgData.m_pdwNodeId, m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+   dlg.AddPage(&pgData);
 
    // Open property sheet
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    if (dlg.DoModal() == IDOK)
    {
+      m_dwNumItems = pgData.m_dwNumItems;
+      memcpy(m_pdwItemId, pgData.m_pdwItemId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+      memcpy(m_pdwNodeId, pgData.m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+
       if (m_hTimer != 0)
          KillTimer(m_hTimer);
       m_dwRefreshInterval = pgSettings.m_dwRefreshInterval;

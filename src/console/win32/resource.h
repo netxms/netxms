@@ -158,6 +158,7 @@
 #define IDI_DESKTOP                     266
 #define IDA_LAST_VALUES                 268
 #define IDD_GRAPH_PROP_SETTINGS         269
+#define IDD_GRAPH_PROP_DATA             270
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -196,6 +197,7 @@
 #define IDC_LIST_PARAMS                 1024
 #define IDC_LIST_PARENTS                1024
 #define IDC_LIST_DESKTOPS               1024
+#define IDC_LIST_DCI                    1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_EDIT_CLASS                  1026
@@ -504,9 +506,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        270
+#define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32929
-#define _APS_NEXT_CONTROL_VALUE         1251
+#define _APS_NEXT_CONTROL_VALUE         1253
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

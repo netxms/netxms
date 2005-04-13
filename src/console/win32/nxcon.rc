@@ -1778,6 +1778,18 @@ BEGIN
     LTEXT           "To",IDC_STATIC_TO,171,63,10,8
 END
 
+IDD_GRAPH_PROP_DATA DIALOGEX 0, 0, 297, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data Sources"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_DCI,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_TABSTOP,7,7,226,185,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,240,7,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,240,25,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2175,6 +2187,14 @@ BEGIN
     END
 
     IDD_GRAPH_PROP_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 290
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+
+    IDD_GRAPH_PROP_DATA, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 290
