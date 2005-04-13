@@ -119,8 +119,8 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    {
       _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
                                    "status,is_deleted,image_id,inherit_access_rights,"
-                                   "last_modified) VALUES (%ld,'%s',%d,%d,%ld,%d,0)"),
-                 dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights);
+                                   "last_modified) VALUES (%ld,'%s',%d,%d,%ld,%d,%ld)"),
+                 dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights, time(NULL));
 
       if (!SQLQuery(szQuery))
          if (!g_bIgnoreErrors)

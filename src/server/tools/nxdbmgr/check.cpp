@@ -184,6 +184,45 @@ static void CheckInterfaces(void)
 
 
 //
+// Check common object properties
+//
+
+static void CheckObjectProperties(void)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[1024];
+   DWORD i, dwNumRows, dwObjectId;
+
+   _tprintf(_T("Checking object properties...\n"));
+   hResult = SQLSelect(_T("SELECT object_id,name,last_modified FROM object_properties"));
+   if (hResult != NULL)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwObjectId = DBGetFieldULong(hResult, i, 0);
+
+         // Check last change time
+         if (DBGetFieldULong(hResult, i, 2) == 0)
+         {
+            m_iNumErrors++;
+            _tprintf(_T("Object %ld [%s] has invalid timestamp. Correct? (Y/N) "),
+                     dwObjectId, DBGetField(hResult, i, 1));
+            if (GetYesNo())
+            {
+               _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%ld"),
+                          time(NULL), dwObjectId);
+               if (SQLQuery(szQuery))
+                  m_iNumFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
 // Check database for errors
 //
 
@@ -264,6 +303,7 @@ void CheckDatabase(BOOL bForce)
       {
          CheckNodes();
          CheckInterfaces();
+         CheckObjectProperties();
 
          if (m_iNumErrors == 0)
          {
