@@ -238,6 +238,9 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                dwTimeLeft = 0;
             }
          }
+#ifdef __FreeBSD__
+			close(kq);
+#endif
       }
 
       ThreadSleepMs(500);     // Wait half a second before sending next packet
