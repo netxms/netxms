@@ -66,7 +66,7 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList)
       if (m_bDebug)
          NXCSetDebugCallback(DebugCallback);
 
-      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &hSession);
+      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &hSession, FALSE);
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
