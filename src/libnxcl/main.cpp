@@ -167,6 +167,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Invalid package ID"),
       _T("Invalid IP address"),
       _T("Action is used in event processing policy"),
+      _T("Variable not found"),
       _T("Server uses incompatible version of communication protocol")
    };
    return ((dwError >= 0) && (dwError <= RCC_BAD_PROTOCOL)) ? pszErrorText[dwError] : _T("Unknown error code");
