@@ -252,9 +252,10 @@ static BOOL H_UpgradeFromV26(void)
             {
                _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
                                             "status,is_deleted,image_id,inherit_access_rights,"
-                                            "last_modified) VALUES (%ld,'%s',5,0,%ld,%d,0)"),
+                                            "last_modified) VALUES (%ld,'%s',5,0,%ld,%d,%ld)"),
                           dwId, szName, dwImageId,
-                          DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE);
+                          DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE,
+                          time(NULL));
 
                if (!SQLQuery(szQuery))
                   if (!g_bIgnoreErrors)
