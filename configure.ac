@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.76 2005-04-14 06:57:20 victor Exp $
+# $Id: configure.ac,v 1.77 2005-04-14 07:46:50 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -390,6 +390,8 @@ AC_CONFIG_FILES([
 	src/libnxcscp/Makefile
 	src/libnxsnmp/Makefile
 	src/libnxcl/Makefile
+	src/install/Makefile
+	src/install/windows/Makefile
 	src/console/Makefile
 	src/console/win32/Makefile
 	src/console/win32/icons/Makefile

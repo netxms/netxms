@@ -66,6 +66,10 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   remove-events       : Remove Win32 event source\n"
 #endif
                         "   standalone          : Run in standalone mode (not as service)\n"
+#ifdef _WIN32
+                        "   start               : Start service\n"
+                        "   stop                : Stop service\n"
+#endif
                         "   version             : Display version and exit\n"
                         "\n"
                         "NOTE: All debug options will work only in standalone mode.\n\n";
