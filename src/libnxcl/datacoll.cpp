@@ -549,6 +549,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
             (*ppValueList)[i].dwId = pResponce->GetVariableLong(dwId++);
             pResponce->GetVariableStr(dwId++, (*ppValueList)[i].szName, MAX_ITEM_NAME);
             pResponce->GetVariableStr(dwId++, (*ppValueList)[i].szDescription, MAX_DB_STRING);
+            (*ppValueList)[i].iSource = pResponce->GetVariableShort(dwId++);
             (*ppValueList)[i].iDataType = pResponce->GetVariableShort(dwId++);
             pResponce->GetVariableStr(dwId++, (*ppValueList)[i].szValue, MAX_DB_STRING);
             (*ppValueList)[i].dwTimestamp = pResponce->GetVariableLong(dwId++);

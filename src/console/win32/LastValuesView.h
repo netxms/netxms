@@ -37,11 +37,14 @@ public:
 
 // Implementation
 protected:
+	DWORD FindItem(DWORD dwId);
 	void UpdateItem(int iItem, NXC_DCI_VALUE *pValue);
 	CImageList m_imageList;
 	CValueList m_wndListCtrl;
    //CListCtrl m_wndListCtrl;
 	DWORD m_dwNodeId;
+   NXC_DCI_VALUE *m_pItemList;
+   DWORD m_dwNumItems;
 	virtual ~CLastValuesView();
 
 	// Generated message map functions

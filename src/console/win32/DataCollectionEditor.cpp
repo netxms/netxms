@@ -551,34 +551,45 @@ void CDataCollectionEditor::OnItemShowdata()
 void CDataCollectionEditor::OnItemGraph() 
 {
    int iItem;
-   DWORD i, *pdwItemList, dwNumItems, dwIndex;
+   DWORD i, dwNumItems, dwIndex;
+   NXC_DCI **ppItemList;
    char szBuffer[384];
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
+   if (pObject == NULL)    // Paranoid check
+      return;
+
    dwNumItems = m_wndListCtrl.GetSelectedCount();
-   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+   ppItemList = (NXC_DCI **)malloc(sizeof(NXC_DCI *) * dwNumItems);
 
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    for(i = 0; (iItem != -1) && (i < dwNumItems); i++)
    {
-      pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+      dwIndex = NXCItemIndex(m_pItemList, m_wndListCtrl.GetItemData(iItem));
+      if (dwIndex != INVALID_INDEX)
+      {
+         ppItemList[i] = &m_pItemList->pItems[dwIndex];
+      }
+      else
+      {
+         ppItemList[i] = NULL;
+      }
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 
-   if (dwNumItems == 1)
+   if ((dwNumItems == 1) && (ppItemList[0] != NULL))
    {
-      dwIndex = NXCItemIndex(m_pItemList, pdwItemList[0]);
-      sprintf(szBuffer, "%s - %s", pObject->szName, 
-              m_pItemList->pItems[dwIndex].szDescription);
+      sprintf(szBuffer, "%s - %s", pObject->szName,
+              ppItemList[0]->szDescription);
    }
    else
    {
       strcpy(szBuffer, pObject->szName);
    }
 
-   theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwNumItems, pdwItemList, szBuffer);
-   free(pdwItemList);
+   theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwNumItems, ppItemList, szBuffer);
+   free(ppItemList);
 }
 
 

@@ -1075,7 +1075,7 @@ CMDIChildWnd *CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *psz
 //
 
 CMDIChildWnd *CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems,
-                                        DWORD *pdwItemList, TCHAR *pszItemName,
+                                        NXC_DCI **ppItemList, TCHAR *pszItemName,
                                         TCHAR *pszParams)
 {
    CGraphFrame *pWnd;
@@ -1085,7 +1085,8 @@ CMDIChildWnd *CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems,
    if (pszParams == NULL)
    {
       for(i = 0; i < dwNumItems; i++)
-         pWnd->AddItem(dwNodeId, pdwItemList[i]);
+         if (ppItemList[i] != NULL)
+            pWnd->AddItem(dwNodeId, ppItemList[i]);
       dwCurrTime = time(NULL);
       pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
       pWnd->SetSubTitle(pszItemName);

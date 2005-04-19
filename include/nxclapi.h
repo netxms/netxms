@@ -951,6 +951,7 @@ typedef struct
    TCHAR szDescription[MAX_DB_STRING];
    TCHAR szValue[MAX_DB_STRING];
    int iDataType;
+   int iSource;
 } NXC_DCI_VALUE;
 
 

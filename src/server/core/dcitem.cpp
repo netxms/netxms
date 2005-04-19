@@ -812,6 +812,7 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
    pMsg->SetVariable(dwId++, m_dwId);
    pMsg->SetVariable(dwId++, m_szName);
    pMsg->SetVariable(dwId++, m_szDescription);
+   pMsg->SetVariable(dwId++, (WORD)m_iSource);
    if (m_dwCacheSize > 0)
    {
       pMsg->SetVariable(dwId++, (WORD)m_iDataType);

@@ -16,9 +16,8 @@ class CGraphDataPage : public CPropertyPage
 
 // Construction
 public:
-	DWORD m_pdwNodeId[MAX_GRAPH_ITEMS];
-	DWORD m_pdwItemId[MAX_GRAPH_ITEMS];
 	DWORD m_dwNumItems;
+   DCIInfo *m_ppItems[MAX_GRAPH_ITEMS];
 	CGraphDataPage();
 	~CGraphDataPage();
 

@@ -51,6 +51,7 @@ IMPLEMENT_DYNCREATE(CGraphFrame, CMDIChildWnd)
 CGraphFrame::CGraphFrame()
 {
    m_dwNumItems = 0;
+   memset(m_ppItems, 0, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
    m_dwRefreshInterval = 30;
    m_dwFlags = 0;
    m_hTimer = 0;
@@ -63,6 +64,10 @@ CGraphFrame::CGraphFrame()
 
 CGraphFrame::~CGraphFrame()
 {
+   DWORD i;
+
+   for(i = 0; i < m_dwNumItems; i++)
+      delete m_ppItems[i];
 }
 
 
@@ -155,12 +160,13 @@ void CGraphFrame::OnSetFocus(CWnd* pOldWnd)
 // Add new item to display
 //
 
-void CGraphFrame::AddItem(DWORD dwNodeId, DWORD dwItemId)
+void CGraphFrame::AddItem(DWORD dwNodeId, NXC_DCI *pItem)
 {
    if (m_dwNumItems < MAX_GRAPH_ITEMS)
    {
-      m_pdwNodeId[m_dwNumItems] = dwNodeId;
-      m_pdwItemId[m_dwNumItems] = dwItemId;
+//      m_pdwNodeId[m_dwNumItems] = dwNodeId;
+//      m_pdwItemId[m_dwNumItems] = dwItemId;
+      m_ppItems[m_dwNumItems] = new DCIInfo(dwNodeId, pItem);
       m_dwNumItems++;
    }
 }
@@ -197,8 +203,8 @@ void CGraphFrame::OnViewRefresh()
 
    for(i = 0; i < m_dwNumItems; i++)
    {
-      dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_pdwNodeId[i], 
-                               (void *)m_pdwItemId[i], 0, (void *)m_dwTimeFrom,
+      dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_ppItems[i]->m_dwNodeId, 
+                               (void *)m_ppItems[i]->m_dwItemId, 0, (void *)m_dwTimeFrom,
                                (void *)m_dwTimeTo, &pData, "Loading item data...");
       if (dwResult == RCC_SUCCESS)
       {
@@ -234,7 +240,7 @@ void CGraphFrame::OnGraphProperties()
 {
    CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
    CGraphSettingsPage pgSettings;
-   //CGraphDataPage pgData;
+   CGraphDataPage pgData;
    int i;
 
    // Create "Settings" page
@@ -260,18 +266,16 @@ void CGraphFrame::OnGraphProperties()
    dlg.AddPage(&pgSettings);
 
    // Create "Data Sources" page
-   /*pgData.m_dwNumItems = m_dwNumItems;
-   memcpy(pgData.m_pdwItemId, m_pdwItemId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
-   memcpy(pgData.m_pdwNodeId, m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
-   dlg.AddPage(&pgData);*/
+   pgData.m_dwNumItems = m_dwNumItems;
+   memcpy(pgData.m_ppItems, m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
+   dlg.AddPage(&pgData);
 
    // Open property sheet
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    if (dlg.DoModal() == IDOK)
    {
-      /*m_dwNumItems = pgData.m_dwNumItems;
-      memcpy(m_pdwItemId, pgData.m_pdwItemId, sizeof(DWORD) * MAX_GRAPH_ITEMS);
-      memcpy(m_pdwNodeId, pgData.m_pdwNodeId, sizeof(DWORD) * MAX_GRAPH_ITEMS);*/
+      m_dwNumItems = pgData.m_dwNumItems;
+      memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
 
       if (m_hTimer != 0)
          KillTimer(m_hTimer);
@@ -371,7 +375,7 @@ void CGraphFrame::OnTimer(UINT nIDEvent)
 
 LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
-   TCHAR szBuffer[32];
+   TCHAR szBuffer[512];
    DWORD i;
 
    pInfo->iWndClass = WNDC_GRAPH;
@@ -389,14 +393,17 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
-      _sntprintf(szBuffer, 32, _T("\x7F" "C%d:%lu"), i, m_wndGraph.m_rgbLineColors[i]);
+      _sntprintf(szBuffer, 512, _T("\x7F" "C%d:%lu"), i, m_wndGraph.m_rgbLineColors[i]);
       if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
          _tcscat(pInfo->szParameters, szBuffer);
    }
    
    for(i = 0; i < m_dwNumItems; i++)
    {
-      _sntprintf(szBuffer, 32, _T("\x7FN%d:%d\x7FI%d:%d"), i, m_pdwNodeId[i], i, m_pdwItemId[i]);
+      _sntprintf(szBuffer, 512, _T("\x7FN%d:%d\x7FI%d:%d\x7FIS%d:%d\x7FIT%d:%d\x7FIN%d:%d\x7FID%d:%d"),
+                 i, m_ppItems[i]->m_dwNodeId, i, m_ppItems[i]->m_dwItemId,
+                 i, m_ppItems[i]->m_iSource, i, m_ppItems[i]->m_iDataType,
+                 i, m_ppItems[i]->m_pszParameter, i, m_ppItems[i]->m_pszDescription);
       if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
          _tcscat(pInfo->szParameters, szBuffer);
    }
@@ -414,7 +421,7 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 
 void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
 {
-   TCHAR szBuffer[32];
+   TCHAR szBuffer[32], szValue[256];
    DWORD i;
 
    m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), 0);
@@ -442,10 +449,31 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
 
    for(i = 0; i < m_dwNumItems; i++)
    {
+      m_ppItems[i] = new DCIInfo;
+      
       _sntprintf(szBuffer, 32, _T("N%d"), i);
-      m_pdwNodeId[i] = ExtractWindowParamULong(pszParams, szBuffer, 0);
+      m_ppItems[i]->m_dwNodeId = ExtractWindowParamULong(pszParams, szBuffer, 0);
+      
       _sntprintf(szBuffer, 32, _T("I%d"), i);
-      m_pdwItemId[i] = ExtractWindowParamULong(pszParams, szBuffer, 0);
+      m_ppItems[i]->m_dwItemId = ExtractWindowParamULong(pszParams, szBuffer, 0);
+      
+      _sntprintf(szBuffer, 32, _T("IS%d"), i);
+      m_ppItems[i]->m_iSource = ExtractWindowParamLong(pszParams, szBuffer, 0);
+      
+      _sntprintf(szBuffer, 32, _T("IT%d"), i);
+      m_ppItems[i]->m_iDataType = ExtractWindowParamLong(pszParams, szBuffer, 0);
+      
+      _sntprintf(szBuffer, 32, _T("IN%d"), i);
+      if (ExtractWindowParam(pszParams, szBuffer, szValue, 256))
+         m_ppItems[i]->m_pszParameter = _tcsdup(szValue);
+      else
+         m_ppItems[i]->m_pszParameter = _tcsdup(_T("<unknown>"));
+
+      _sntprintf(szBuffer, 32, _T("ID%d"), i);
+      if (ExtractWindowParam(pszParams, szBuffer, szValue, 256))
+         m_ppItems[i]->m_pszDescription = _tcsdup(szValue);
+      else
+         m_ppItems[i]->m_pszDescription = _tcsdup(_T("<unknown>"));
    }
 
    ExtractWindowParam(pszParams, _T("T"), m_szSubTitle, 256);

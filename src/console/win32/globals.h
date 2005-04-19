@@ -41,7 +41,7 @@ extern CConsoleApp theApp;
 #define MAX_LOGIN_NAME_LEN    64
 #define MAX_PASSWORD_LEN      64
 #define MAX_INTERFACE_TYPE    32
-#define MAX_WND_PARAM_LEN     4096
+#define MAX_WND_PARAM_LEN     32768
 
 #define TOOLBOX_X_MARGIN      5
 #define TOOLBOX_Y_MARGIN      5
@@ -184,6 +184,29 @@ struct WINDOW_SAVE_INFO
    int iWndClass;
    WINDOWPLACEMENT placement;
    TCHAR szParameters[MAX_WND_PARAM_LEN];
+};
+
+
+//
+// DCI information
+//
+
+class DCIInfo
+{
+   // Attributes
+public:
+   DWORD m_dwNodeId;
+   DWORD m_dwItemId;
+   int m_iSource;
+   int m_iDataType;
+   TCHAR *m_pszParameter;
+   TCHAR *m_pszDescription;
+
+   // Methods
+public:
+   DCIInfo();
+   DCIInfo(DWORD dwNodeId, NXC_DCI *pItem);
+   ~DCIInfo();
 };
 
 

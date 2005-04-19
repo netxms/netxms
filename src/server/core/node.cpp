@@ -1648,7 +1648,7 @@ DWORD Node::GetLastValues(CSCPMessage *pMsg)
    Lock();
 
    pMsg->SetVariable(VID_NUM_ITEMS, m_dwNumItems);
-   for(i = 0, dwId = VID_DCI_VALUES_BASE; i < m_dwNumItems; i++, dwId += 6)
+   for(i = 0, dwId = VID_DCI_VALUES_BASE; i < m_dwNumItems; i++, dwId += 7)
       m_ppItems[i]->GetLastValue(pMsg, dwId);
 
    Unlock();

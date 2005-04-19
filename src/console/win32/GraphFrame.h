@@ -50,7 +50,7 @@ public:
 public:
 	void RestoreFromServer(TCHAR *pszParams);
 	void SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo);
-	void AddItem(DWORD dwNodeId, DWORD dwItemId);
+	void AddItem(DWORD dwNodeId, NXC_DCI *pItem);
 	CGraphFrame();           // default constructor
 	virtual ~CGraphFrame();
 
@@ -99,9 +99,10 @@ private:
 	DWORD m_dwFlags;
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
-	DWORD m_pdwItemId[MAX_GRAPH_ITEMS];
-	DWORD m_pdwNodeId[MAX_GRAPH_ITEMS];
+	//DWORD m_pdwItemId[MAX_GRAPH_ITEMS];
+	//DWORD m_pdwNodeId[MAX_GRAPH_ITEMS];
 	DWORD m_dwNumItems;
+   DCIInfo *m_ppItems[MAX_GRAPH_ITEMS];
 	CGraph m_wndGraph;
 
 public:

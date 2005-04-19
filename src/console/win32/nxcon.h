@@ -205,7 +205,7 @@ public:
 	void CreateContainer(DWORD dwParent);
    NXC_EPP *m_pEventPolicy;
 
-	CMDIChildWnd *ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, DWORD *pdwItemList,
+	CMDIChildWnd *ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, NXC_DCI **ppItemList,
                               TCHAR *pszItemName, TCHAR *pszParams = NULL);
 	CMDIChildWnd *ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName, TCHAR *pszParams = NULL);
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);

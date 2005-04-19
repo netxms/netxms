@@ -78,6 +78,7 @@ WINDOWS CONSOLE:
   field (number)
 - Implement drag-and-drop editing in policy editor
 - Add auto-refresh to "Last values" view
+- Add "previous value" and "delta" fields to last values view
 - Add agent configuration editor
 
 

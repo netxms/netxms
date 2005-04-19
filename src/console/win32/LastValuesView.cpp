@@ -19,11 +19,15 @@ IMPLEMENT_DYNCREATE(CLastValuesView, CMDIChildWnd)
 CLastValuesView::CLastValuesView()
 {
    m_dwNodeId = 0;
+   m_dwNumItems = 0;
+   m_pItemList = NULL;
 }
 
 CLastValuesView::CLastValuesView(DWORD dwNodeId)
 {
    m_dwNodeId = dwNodeId;
+   m_dwNumItems = 0;
+   m_pItemList = NULL;
 }
 
 CLastValuesView::CLastValuesView(TCHAR *pszParams)
@@ -34,10 +38,13 @@ CLastValuesView::CLastValuesView(TCHAR *pszParams)
       m_dwNodeId = _tcstoul(szBuffer, NULL, 0);
    else
       m_dwNodeId = 0;
+   m_dwNumItems = 0;
+   m_pItemList = NULL;
 }
 
 CLastValuesView::~CLastValuesView()
 {
+   safe_free(m_pItemList);
 }
 
 
@@ -90,7 +97,6 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_OWNERDRAWFIXED,
-//   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT,
                         rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES |
@@ -140,31 +146,32 @@ void CLastValuesView::OnSize(UINT nType, int cx, int cy)
 
 void CLastValuesView::OnViewRefresh() 
 {
-   DWORD i, dwResult, dwNumItems;
-   NXC_DCI_VALUE *pItemList;
+   DWORD i, dwResult;
    LVFINDINFO lvfi;
    int iItem;
    TCHAR szBuffer[256];
 
+   safe_free(m_pItemList);
+   m_pItemList = NULL;
+   m_dwNumItems = 0;
    dwResult = DoRequestArg4(NXCGetLastValues, g_hSession, (void *)m_dwNodeId,
-                            &dwNumItems, &pItemList, _T("Loading last DCI values..."));
+                            &m_dwNumItems, &m_pItemList, _T("Loading last DCI values..."));
    if (dwResult == RCC_SUCCESS)
    {
       // Add new items to list or update existing
       lvfi.flags = LVFI_PARAM;
-      for(i = 0; i < dwNumItems; i++)
+      for(i = 0; i < m_dwNumItems; i++)
       {
-         lvfi.lParam = pItemList[i].dwId;
+         lvfi.lParam = m_pItemList[i].dwId;
          iItem = m_wndListCtrl.FindItem(&lvfi, -1);
          if (iItem == -1)
          {
-            _sntprintf(szBuffer, 256, _T("%ld"), pItemList[i].dwId);
+            _sntprintf(szBuffer, 256, _T("%ld"), m_pItemList[i].dwId);
             iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
-            m_wndListCtrl.SetItemData(iItem, pItemList[i].dwId);
+            m_wndListCtrl.SetItemData(iItem, m_pItemList[i].dwId);
          }
-         UpdateItem(iItem, &pItemList[i]);
+         UpdateItem(iItem, &m_pItemList[i]);
       }
-      safe_free(pItemList);
    }
    else
    {
@@ -233,35 +240,46 @@ LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 void CLastValuesView::OnItemGraph() 
 {
    int iItem;
-   DWORD i, *pdwItemList, dwNumItems;
+   DWORD i, dwNumItems, dwIndex;
+   NXC_DCI **ppItemList;
    TCHAR szBuffer[384];
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
    dwNumItems = m_wndListCtrl.GetSelectedCount();
-   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+   ppItemList = (NXC_DCI **)malloc(sizeof(NXC_DCI *) * dwNumItems);
 
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    for(i = 0; (iItem != -1) && (i < dwNumItems); i++)
    {
-      pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+      ppItemList[i] = (NXC_DCI *)malloc(sizeof(NXC_DCI));
+      memset(ppItemList[i], 0, sizeof(NXC_DCI));
+      ppItemList[i]->dwId = m_wndListCtrl.GetItemData(iItem);
+      dwIndex = FindItem(ppItemList[i]->dwId);
+      if (dwIndex != INVALID_INDEX)
+      {
+         _tcscpy(ppItemList[i]->szName, m_pItemList[dwIndex].szName);
+         _tcscpy(ppItemList[i]->szDescription, m_pItemList[dwIndex].szDescription);
+         ppItemList[i]->iDataType = m_pItemList[dwIndex].iDataType;
+         ppItemList[i]->iSource = m_pItemList[dwIndex].iSource;
+      }
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 
    if (dwNumItems == 1)
    {
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      sprintf(szBuffer, "%s - ", pObject->szName);
-      m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
-                                384 - _tcslen(szBuffer));
+      sprintf(szBuffer, "%s - %s", pObject->szName,
+              ppItemList[0]->szDescription);
    }
    else
    {
       strcpy(szBuffer, pObject->szName);
    }
 
-   theApp.ShowDCIGraph(m_dwNodeId, dwNumItems, pdwItemList, szBuffer);
-   free(pdwItemList);
+   theApp.ShowDCIGraph(m_dwNodeId, dwNumItems, ppItemList, szBuffer);
+   for(i = 0; i < dwNumItems; i++)
+      free(ppItemList[i]);
+   free(ppItemList);
 }
 
 
@@ -315,4 +333,19 @@ void CLastValuesView::OnContextMenu(CWnd* pWnd, CPoint point)
 
    pMenu = theApp.GetContextMenu(14);
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Find item in list by id
+//
+
+DWORD CLastValuesView::FindItem(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_pItemList[i].dwId == dwId)
+         return i;
+   return INVALID_INDEX;
 }

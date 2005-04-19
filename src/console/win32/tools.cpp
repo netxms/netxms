@@ -534,3 +534,39 @@ long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault)
    }
    return nResult;
 }
+
+
+//
+// Constructors for DCIInfo class
+//
+
+DCIInfo::DCIInfo()
+{
+   m_dwNodeId = 0;
+   m_dwItemId = 0;
+   m_iSource = 0;
+   m_iDataType = 0;
+   m_pszParameter = NULL;
+   m_pszDescription = NULL;
+}
+
+DCIInfo::DCIInfo(DWORD dwNodeId, NXC_DCI *pItem)
+{
+   m_dwNodeId = dwNodeId;
+   m_dwItemId = pItem->dwId;
+   m_iSource = pItem->iSource;
+   m_iDataType = pItem->iDataType;
+   m_pszParameter = _tcsdup(pItem->szName);
+   m_pszDescription = _tcsdup(pItem->szDescription);
+}
+
+
+//
+// Destructor for class DCIInfo
+//
+
+DCIInfo::~DCIInfo()
+{
+   safe_free(m_pszParameter);
+   safe_free(m_pszDescription);
+}

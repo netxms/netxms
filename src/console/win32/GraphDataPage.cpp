@@ -61,7 +61,8 @@ BOOL CGraphDataPage::OnInitDialog()
    m_wndListCtrl.InsertColumn(0, _T("Pos."), LVCFMT_LEFT, 40);
    m_wndListCtrl.InsertColumn(1, _T("Node"), LVCFMT_LEFT, 150);
    m_wndListCtrl.InsertColumn(2, _T("Type"), LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(3, _T("DCI"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(3, _T("Parameter"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(4, _T("Description"), LVCFMT_LEFT, 150);
 
    // Add items to list control
    for(i = 0; i < m_dwNumItems; i++)
@@ -69,9 +70,14 @@ BOOL CGraphDataPage::OnInitDialog()
       _stprintf(szBuffer, _T("%d"), i + 1);
       iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
       m_wndListCtrl.SetItemData(iItem, i);
-      pObject = NXCFindObjectById(g_hSession, m_pdwNodeId[i]);
+      pObject = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
       if (pObject != NULL)
          m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
+      else
+         m_wndListCtrl.SetItemText(iItem, 1, _T("<unknown>"));
+      m_wndListCtrl.SetItemText(iItem, 2, g_pszItemOrigin[m_ppItems[i]->m_iSource]);
+      m_wndListCtrl.SetItemText(iItem, 3, m_ppItems[i]->m_pszParameter);
+      m_wndListCtrl.SetItemText(iItem, 4, m_ppItems[i]->m_pszDescription);
    }
 	
 	return TRUE;
