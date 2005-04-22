@@ -239,7 +239,6 @@ void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
 //
 
 extern char LIBNXSRV_EXPORTABLE g_szDbDriver[];
-extern char LIBNXSRV_EXPORTABLE g_szDbDriver[];
 extern char LIBNXSRV_EXPORTABLE g_szDbDrvParams[];
 extern char LIBNXSRV_EXPORTABLE g_szDbServer[];
 extern char LIBNXSRV_EXPORTABLE g_szDbLogin[];
