@@ -67,6 +67,12 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; F
 Name: "{app}\etc"
 Name: "{app}\var\packages"
 
+[Registry]
+Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty; Components: server
+Root: HKLM; Subkey: "Software\NetXMS\Server"; Flags: uninsdeletekey; Components: server
+Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Components: server
+Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\netxmsd.conf"; Components: server
+
 [Run]
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c {app}\etc\nxagentd.conf -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
