@@ -769,6 +769,8 @@ src/server/tools/nxadm/nxadm.dsw -text
 src/server/tools/nxadm/nxadm.h -text
 src/server/tools/nxconfig/ChildView.cpp -text
 src/server/tools/nxconfig/ChildView.h -text
+src/server/tools/nxconfig/ConfigFilePage.cpp -text
+src/server/tools/nxconfig/ConfigFilePage.h -text
 src/server/tools/nxconfig/ConfigWizard.cpp -text
 src/server/tools/nxconfig/ConfigWizard.h -text
 src/server/tools/nxconfig/DBSelectPage.cpp -text
@@ -777,6 +779,8 @@ src/server/tools/nxconfig/FinishPage.cpp -text
 src/server/tools/nxconfig/FinishPage.h -text
 src/server/tools/nxconfig/IntroPage.cpp -text
 src/server/tools/nxconfig/IntroPage.h -text
+src/server/tools/nxconfig/LoggingPage.cpp -text
+src/server/tools/nxconfig/LoggingPage.h -text
 src/server/tools/nxconfig/MainFrm.cpp -text
 src/server/tools/nxconfig/MainFrm.h -text
 src/server/tools/nxconfig/ODBCPage.cpp -text

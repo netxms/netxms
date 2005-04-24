@@ -41,8 +41,11 @@
 
 struct WIZARD_CFG_INFO
 {
+   BOOL m_bConfigFileDetected;
+   TCHAR m_szConfigFile[MAX_PATH];
    int m_iDBEngine;
-   TCHAR m_szDBDriver[MAX_DB_STRING];
+   TCHAR m_szDBDriver[MAX_PATH];
+   TCHAR m_szDBDrvParams[MAX_PATH];
    TCHAR m_szDBServer[MAX_DB_STRING];
    TCHAR m_szDBName[MAX_DB_NAME];
    TCHAR m_szDBLogin[MAX_DB_LOGIN];
@@ -51,6 +54,7 @@ struct WIZARD_CFG_INFO
    TCHAR m_szDBAPassword[MAX_DB_PASSWORD];
    BOOL m_bCreateDB;
    BOOL m_bInitDB;
+   BOOL m_bLogFailedSQLQueries;
    BOOL m_bRunAutoDiscovery;
    DWORD m_dwDiscoveryPI;        // Discovery polling interval
    DWORD m_dwStatusPI;           // Status polling interval
@@ -60,6 +64,8 @@ struct WIZARD_CFG_INFO
    BOOL m_bEnableAdminInterface;
    TCHAR m_szSMTPServer[MAX_DB_STRING];
    TCHAR m_szSMTPMailFrom[MAX_DB_STRING];
+   BOOL m_bLogToSyslog;
+   TCHAR m_szLogFile[MAX_PATH];
 };
 
 

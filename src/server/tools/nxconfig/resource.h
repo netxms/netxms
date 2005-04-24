@@ -18,6 +18,8 @@
 #define IDI_OK                          140
 #define IDI_FAILED                      141
 #define IDI_RUNNING                     142
+#define IDD_CFG_FILE                    143
+#define IDD_LOG_FILE                    144
 #define IDC_COMBO_DBDRV                 1000
 #define IDC_COMBO_DBDRV2                1001
 #define IDC_COMBO_DBENGINE              1001
@@ -43,6 +45,10 @@
 #define IDC_STATIC_STATUS               1020
 #define IDC_EDIT_INT_CP                 1021
 #define IDC_LIST_STATUS                 1021
+#define IDC_EDIT_FILE                   1022
+#define IDC_BUTTON_BROWSE               1023
+#define IDC_RADIO_SYSLOG                1024
+#define IDC_RADIO_FILE                  1025
 #define ID_FILE_CFG_WIZARD              32771
 
 // Next default values for new objects
@@ -50,9 +56,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_RESOURCE_VALUE        145
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

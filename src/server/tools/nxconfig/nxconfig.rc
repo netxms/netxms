@@ -235,6 +235,36 @@ BEGIN
                     222,176,WS_EX_CLIENTEDGE
 END
 
+IDD_CFG_FILE DIALOGEX 0, 0, 319, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Select Configuration File"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_FILE,90,17,222,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON_BROWSE,262,35,50,14
+    CONTROL         131,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,7,7,
+                    75,188,WS_EX_CLIENTEDGE
+    LTEXT           "Configuration wizard is unable to determine location of your server's configuration file, and you should provide it manually.",
+                    IDC_STATIC,90,57,222,19
+    LTEXT           "Name of configuration file",IDC_STATIC,90,7,81,8
+END
+
+IDD_LOG_FILE DIALOGEX 0, 0, 319, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Configure Logging"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Log to system event log",IDC_RADIO_SYSLOG,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,98,20,91,10
+    CONTROL         "Log to file",IDC_RADIO_FILE,"Button",BS_AUTORADIOBUTTON,
+                    98,35,47,10
+    EDITTEXT        IDC_EDIT_FILE,109,48,203,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON_BROWSE,262,66,50,14
+    CONTROL         131,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,7,7,
+                    75,188,WS_EX_CLIENTEDGE
+    LTEXT           "Select logging method:",IDC_STATIC,89,7,73,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -352,6 +382,22 @@ BEGIN
     END
 
     IDD_PROCESSING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+
+    IDD_CFG_FILE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+
+    IDD_LOG_FILE, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 312

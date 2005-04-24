@@ -106,6 +106,10 @@ SOURCE=.\ChildView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ConfigFilePage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ConfigWizard.cpp
 # End Source File
 # Begin Source File
@@ -119,6 +123,10 @@ SOURCE=.\FinishPage.cpp
 # Begin Source File
 
 SOURCE=.\IntroPage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\LoggingPage.cpp
 # End Source File
 # Begin Source File
 
@@ -175,6 +183,10 @@ SOURCE=.\ChildView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ConfigFilePage.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ConfigWizard.h
 # End Source File
 # Begin Source File
@@ -188,6 +200,10 @@ SOURCE=.\FinishPage.h
 # Begin Source File
 
 SOURCE=.\IntroPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LoggingPage.h
 # End Source File
 # Begin Source File
 

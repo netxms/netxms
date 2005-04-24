@@ -232,3 +232,14 @@ void CDBSelectPage::OnCheckInitdb()
 
    pc->m_bInitDB = (SendDlgItemMessage(IDC_RADIO_NEWDB, BM_GETCHECK) == BST_CHECKED);
 }
+
+
+//
+// Handler for "Back" button
+//
+
+LRESULT CDBSelectPage::OnWizardBack() 
+{
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+   return pc->m_bConfigFileDetected ? IDD_INTRO : IDD_CFG_FILE;
+}

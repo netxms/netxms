@@ -2,40 +2,44 @@
 
 [General Info]
 Version=1
-LastClass=CProcessingPage
+LastClass=CLoggingPage
 LastTemplate=CPropertyPage
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxconfig.h"
 LastPage=0
 
-ClassCount=13
+ClassCount=15
 Class1=CNxconfigApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=12
+ResourceCount=14
 Resource1=IDD_ABOUTBOX
 Resource2=IDR_MAINFRAME
 Class2=CChildView
-Resource3=IDD_SUMMARY (English (U.S.))
-Resource4=IDD_INTRO (English (U.S.))
+Resource3=IDD_INTRO (English (U.S.))
+Resource4=IDD_POLLING (English (U.S.))
 Class5=CIntroPage
 Class6=CConfigWizard
-Resource5=IDD_ABOUTBOX (English (U.S.))
+Resource5=IDD_ODBC (English (U.S.))
 Class7=CDBSelectPage
-Resource6=IDD_SELECT_DB (English (U.S.))
+Resource6=IDD_SMTP (English (U.S.))
 Class8=CFinishPage
-Resource7=IDD_POLLING (English (U.S.))
+Resource7=IDD_CFG_FILE (English (U.S.))
 Class9=CODBCPage
-Resource8=IDR_MAINFRAME (English (U.S.))
+Resource8=IDD_FINISH (English (U.S.))
 Class10=CPollCfgPage
-Resource9=IDD_FINISH (English (U.S.))
+Resource9=IDD_SUMMARY (English (U.S.))
 Class11=CSMTPPage
-Resource10=IDD_ODBC (English (U.S.))
+Resource10=IDD_PROCESSING (English (U.S.))
 Class12=CSummaryPage
-Resource11=IDD_SMTP (English (U.S.))
+Resource11=IDD_ABOUTBOX (English (U.S.))
 Class13=CProcessingPage
-Resource12=IDD_PROCESSING (English (U.S.))
+Resource12=IDD_SELECT_DB (English (U.S.))
+Class14=CConfigFilePage
+Resource13=IDR_MAINFRAME (English (U.S.))
+Class15=CLoggingPage
+Resource14=IDD_LOG_FILE (English (U.S.))
 
 [CLS:CNxconfigApp]
 Type=0
@@ -321,4 +325,40 @@ BaseClass=CPropertyPage
 Filter=D
 VirtualFilter=idWC
 LastObject=CProcessingPage
+
+[DLG:IDD_CFG_FILE (English (U.S.))]
+Type=1
+Class=CConfigFilePage
+ControlCount=5
+Control1=IDC_EDIT_FILE,edit,1350631552
+Control2=IDC_BUTTON_BROWSE,button,1342242816
+Control3=IDC_STATIC,static,1342177806
+Control4=IDC_STATIC,static,1342308352
+Control5=IDC_STATIC,static,1342308352
+
+[CLS:CConfigFilePage]
+Type=0
+HeaderFile=ConfigFilePage.h
+ImplementationFile=ConfigFilePage.cpp
+BaseClass=CPropertyPage
+Filter=D
+LastObject=CConfigFilePage
+
+[DLG:IDD_LOG_FILE (English (U.S.))]
+Type=1
+Class=CLoggingPage
+ControlCount=6
+Control1=IDC_RADIO_SYSLOG,button,1342373897
+Control2=IDC_RADIO_FILE,button,1342177289
+Control3=IDC_EDIT_FILE,edit,1350631552
+Control4=IDC_BUTTON_BROWSE,button,1342242816
+Control5=IDC_STATIC,static,1342177806
+Control6=IDC_STATIC,static,1342308352
+
+[CLS:CLoggingPage]
+Type=0
+HeaderFile=LoggingPage.h
+ImplementationFile=LoggingPage.cpp
+BaseClass=CPropertyPage
+Filter=D
 
