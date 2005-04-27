@@ -68,6 +68,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
    NetObj *pNode;
+   BOOL bSuccess, bLock1, bLock2;
 
    while(1)
    {
@@ -75,17 +76,35 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       if (pInfo == INVALID_POINTER_VALUE)
          break;
 
+      bSuccess = FALSE;
       pNode = FindObjectById(pInfo->dwNodeId);
       if (pNode != NULL)
       {
          if (pNode->Type() == OBJECT_NODE)
          {
-            //if (pInfo->pTemplate->LockDCIList(0x7FFFFFFF)
-            pInfo->pTemplate->ApplyToNode((Node *)pNode);
+            bLock1 = pInfo->pTemplate->LockDCIList(0x7FFFFFFF);
+            bLock2 = ((Node *)pNode)->LockDCIList(0x7FFFFFFF);
+            if (bLock1 && bLock2)
+            {
+               pInfo->pTemplate->ApplyToNode((Node *)pNode);
+               bSuccess = TRUE;
+            }
+            if (bLock1)
+               pInfo->pTemplate->UnlockDCIList(0x7FFFFFFF);
+            if (bLock2)
+               ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);
          }
       }
 
-      free(pInfo);
+      if (bSuccess)
+      {
+         free(pInfo);
+      }
+      else
+      {
+         g_pTemplateUpdateQueue->Put(pInfo);    // Requeue
+         ThreadSleepMs(500);
+      }
    }
 
    return THREAD_OK;
