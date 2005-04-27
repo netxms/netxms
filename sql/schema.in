@@ -324,7 +324,7 @@ CREATE TABLE raw_dci_values
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
-CREATE INDEX idx_item_id ON raw_dci_values(item_id);
+CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 
 
 /*
@@ -481,8 +481,8 @@ CREATE TABLE thresholds
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 
-CREATE INDEX idx_item_id ON thresholds(item_id);
-CREATE INDEX idx_sequence ON thresholds(sequence_number);
+CREATE INDEX idx_thresholds_item_id ON thresholds(item_id);
+CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
 
 
 /*

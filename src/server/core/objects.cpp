@@ -227,7 +227,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             ConfigReadStr(szQuery, szQueryTemplate, 255, "");
             if (szQueryTemplate[0] != 0)
             {
-               sprintf(szQuery, szQueryTemplate, pObject->Id());
+               sprintf(szQuery, szQueryTemplate, pObject->Id(), pObject->Id());
                DBQuery(g_hCoreDB, szQuery);
             }
          }
