@@ -1920,6 +1920,10 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
                      break;
                   }
             }
+
+            // Queue template update
+            if (pObject->Type() == OBJECT_TEMPLATE)
+               ((Template *)pObject)->QueueUpdate();
          }
          else
          {

@@ -105,9 +105,6 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx)
 {
    DWORD i;
 
-   if (!IsStandalone())
-      return;
-
    ConsolePrintf(pCtx, "%-48s Interval Status\n----------------------------------------------------------------------------\n", "Thread");
    MutexLock(m_mutexWatchdogAccess, INFINITE);
    for(i = 0; i < m_dwNumThreads; i++)

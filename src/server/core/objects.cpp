@@ -51,6 +51,8 @@ RWLOCK g_rwlockInterfaceIndex;
 DWORD g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
+Queue *g_pTemplateUpdateQueue = NULL;
+
 char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
                             "Unknown", "Unmanaged", "Disabled", "Testing" };
 char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
@@ -59,11 +61,45 @@ char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
 
 
 //
+// Thread which apply template updates
+//
+
+static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
+{
+   TEMPLATE_UPDATE_INFO *pInfo;
+   NetObj *pNode;
+
+   while(1)
+   {
+      pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->GetOrBlock();
+      if (pInfo == INVALID_POINTER_VALUE)
+         break;
+
+      pNode = FindObjectById(pInfo->dwNodeId);
+      if (pNode != NULL)
+      {
+         if (pNode->Type() == OBJECT_NODE)
+         {
+            //if (pInfo->pTemplate->LockDCIList(0x7FFFFFFF)
+            pInfo->pTemplate->ApplyToNode((Node *)pNode);
+         }
+      }
+
+      free(pInfo);
+   }
+
+   return THREAD_OK;
+}
+
+
+//
 // Initialize objects infrastructure
 //
 
 void ObjectsInit(void)
 {
+   g_pTemplateUpdateQueue = new Queue;
+
    g_rwlockIdIndex = RWLockCreate();
    g_rwlockNodeIndex = RWLockCreate();
    g_rwlockSubnetIndex = RWLockCreate();
@@ -81,6 +117,9 @@ void ObjectsInit(void)
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
    DbgPrintf(AF_DEBUG_MISC, "Built-in objects created");
+
+   // Start template update applying thread
+   ThreadCreate(ApplyTemplateThread, 0, NULL);
 }
 
 

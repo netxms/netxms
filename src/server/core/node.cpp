@@ -676,7 +676,6 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
-   Lock();
 
    // Check SNMP agent connectivity
    if (m_dwFlags & NF_IS_SNMP)
@@ -733,6 +732,8 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
       }
       delete pAgentConn;
    }
+
+   Lock();
 
    // Find service poller node object
    if (m_dwPollerNode != 0)

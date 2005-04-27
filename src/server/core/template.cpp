@@ -620,3 +620,26 @@ BOOL Template::ApplyToNode(Node *pNode)
 
    return bErrors;
 }
+
+
+//
+// Queue template update
+//
+
+void Template::QueueUpdate(void)
+{
+   DWORD i;
+   TEMPLATE_UPDATE_INFO *pInfo;
+
+   Lock();
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_NODE)
+      {
+         IncRefCount();
+         pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+         pInfo->pTemplate = this;
+         pInfo->dwNodeId = m_pChildList[i]->Id();
+         g_pTemplateUpdateQueue->Put(pInfo);
+      }
+   Unlock();
+}

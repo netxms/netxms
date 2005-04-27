@@ -92,6 +92,17 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
+// Queued template update information
+//
+
+struct TEMPLATE_UPDATE_INFO
+{
+   Template *pTemplate;
+   DWORD dwNodeId;
+};
+
+
+//
 // Base class for network objects
 //
 
@@ -275,6 +286,7 @@ public:
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
 
    BOOL ApplyToNode(Node *pNode);
+   void QueueUpdate(void);
 };
 
 
@@ -731,6 +743,7 @@ extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern char *g_szClassName[];
 extern BOOL g_bModificationsLocked;
+extern Queue *g_pTemplateUpdateQueue;
 
 
 #endif   /* _nms_objects_h_ */
