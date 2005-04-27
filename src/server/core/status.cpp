@@ -32,6 +32,7 @@ struct __poller_state
    int iType;
    time_t timestamp;
    char szMsg[128];
+   char szInfo[128];
    THREAD handle;
 };
 
@@ -59,7 +60,22 @@ static int m_iNumPollers = 0;
 static void SetPollerState(int nIdx, char *pszMsg)
 {
    strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
+   m_pPollerState[nIdx].szInfo[0] = 0;
    m_pPollerState[nIdx].timestamp = time(NULL);
+}
+
+
+//
+// Set poller's info
+//
+
+void SetPollerInfo(int nIdx, char *pszMsg)
+{
+   if (nIdx != -1)
+   {
+      strncpy(m_pPollerState[nIdx].szInfo, pszMsg, 128);
+      m_pPollerState[nIdx].timestamp = time(NULL);
+   }
 }
 
 
@@ -79,6 +95,12 @@ void ShowPollerState(CONSOLE_CTX pCtx)
       ltm = localtime(&m_pPollerState[i].timestamp);
       strftime(szTime, 64, "%d/%b/%Y %H:%M:%S", ltm);
       ConsolePrintf(pCtx, "%c   %s   %s\n", m_pPollerState[i].iType, szTime, m_pPollerState[i].szMsg);
+      if (m_pPollerState[i].szInfo[0] != 0)
+         ConsolePrintf(pCtx, "%c   %s   %s - %s\n", m_pPollerState[i].iType, 
+                       szTime, m_pPollerState[i].szMsg, m_pPollerState[i].szInfo);
+      else
+         ConsolePrintf(pCtx, "%c   %s   %s\n", m_pPollerState[i].iType, 
+                       szTime, m_pPollerState[i].szMsg);
    }
    ConsolePrintf(pCtx, "\n");
 }
@@ -108,7 +130,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
                pNode->Name(), pNode->Id());
       SetPollerState((int)arg, szBuffer);
-      pNode->StatusPoll(NULL, 0);
+      pNode->StatusPoll(NULL, 0, (int)arg);
       pNode->DecRefCount();
    }
    SetPollerState((int)arg, "finished");
@@ -129,6 +151,9 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
    m_pPollerState[(int)arg].iType = 'C';
    SetPollerState((int)arg, "init");
 
+   // Wait one minute to give status pollers chance to run first
+   ThreadSleep(60);
+
    // Main loop
    while(!ShutdownInProgress())
    {
@@ -140,7 +165,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
                pNode->Name(), pNode->Id());
       SetPollerState((int)arg, szBuffer);
-      pNode->ConfigurationPoll(NULL, 0);
+      pNode->ConfigurationPoll(NULL, 0, (int)arg);
       pNode->DecRefCount();
    }
    SetPollerState((int)arg, "finished");

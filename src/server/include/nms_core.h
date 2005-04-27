@@ -518,6 +518,7 @@ void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx);
 void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...);
 void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
+void SetPollerInfo(int nIdx, char *pszMsg);
 
 
 //

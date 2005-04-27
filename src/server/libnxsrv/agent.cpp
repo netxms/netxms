@@ -112,6 +112,8 @@ AgentConnection::~AgentConnection()
 
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
+   if (m_hSocket != -1)
+      closesocket(m_hSocket);
 
    Lock();
    DestroyResultData();
@@ -195,7 +197,11 @@ void AgentConnection::ReceiverThread(void)
    }
 
    // Close socket and mark connection as disconnected
-   Disconnect();
+   if (iErr == 0)
+      shutdown(m_hSocket, SHUT_RDWR);
+   closesocket(m_hSocket);
+   m_hSocket = -1;
+   m_bIsConnected = FALSE;
 
    free(pRawMsg);
    free(pMsgBuffer);
@@ -214,12 +220,16 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    DWORD dwError;
 
    // Check if already connected
-   if ((m_bIsConnected) || (m_hSocket != -1))
+   if (m_bIsConnected)
       return FALSE;
 
    // Wait for receiver thread from previous connection, if any
    ThreadJoin(m_hReceiverThread);
    m_hReceiverThread = INVALID_THREAD_HANDLE;
+
+   // Check if we need to close existing socket
+   if (m_hSocket != -1)
+      closesocket(m_hSocket);
 
    // Create socket
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -267,14 +277,13 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
 connect_cleanup:
    if (!bSuccess)
    {
-      Lock();
       if (m_hSocket != -1)
-      {
          shutdown(m_hSocket, 2);
+      ThreadJoin(m_hReceiverThread);
+      m_hReceiverThread = INVALID_THREAD_HANDLE;
+
+      if (m_hSocket != -1)
          closesocket(m_hSocket);
-         m_hSocket = -1;
-      }
-      Unlock();
    }
    m_bIsConnected = bSuccess;
    return bSuccess;
@@ -290,9 +299,7 @@ void AgentConnection::Disconnect(void)
    Lock();
    if (m_hSocket != -1)
    {
-      shutdown(m_hSocket, 2);
-      closesocket(m_hSocket);
-      m_hSocket = -1;
+      shutdown(m_hSocket, SHUT_RDWR);
    }
    DestroyResultData();
    m_bIsConnected = FALSE;

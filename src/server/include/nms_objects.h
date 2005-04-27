@@ -445,8 +445,8 @@ public:
    int GetInterfaceStatusFromAgent(DWORD dwIndex);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId);
-   void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);
    BOOL ReadyForDiscoveryPoll(void);

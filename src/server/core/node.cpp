@@ -668,20 +668,22 @@ void Node::CalculateCompoundStatus(void)
 // Perform status poll on node
 //
 
-void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
+void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
    DWORD i, dwPollListSize;
    NetObj *pPollerNode = NULL, **ppPollList;
 
+   SetPollerInfo(nPoller, "wait for lock");
    PollerLock();
    m_pPollRequestor = pSession;
-   SendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
+   SendPollerMsg(dwRqId, "Starting status poll for node %s\r\n", m_szName);
 
    // Check SNMP agent connectivity
    if (m_dwFlags & NF_IS_SNMP)
    {
       TCHAR szBuffer[256];
 
+      SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
       if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                   szBuffer, 256, FALSE, FALSE) == SNMP_ERR_SUCCESS)
@@ -709,6 +711,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    {
       AgentConnection *pAgentConn;
 
+      SetPollerInfo(nPoller, "check agent");
       SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
       pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
       if (pAgentConn->Connect())
@@ -733,7 +736,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
       delete pAgentConn;
    }
 
+   SetPollerInfo(nPoller, "waiting for node lock");
    Lock();
+   SetPollerInfo(nPoller, "prepare polling list");
 
    // Find service poller node object
    if (m_dwPollerNode != 0)
@@ -769,6 +774,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    Unlock();
 
    // Poll interfaces and services
+   SetPollerInfo(nPoller, "child poll");
    for(i = 0; i < dwPollListSize; i++)
    {
       switch(ppPollList[i]->Type())
@@ -786,6 +792,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    }
    safe_free(ppPollList);
    
+   SetPollerInfo(nPoller, "cleanup");
    if (pPollerNode != NULL)
       pPollerNode->DecRefCount();
 
@@ -804,7 +811,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId)
 // Perform configuration poll on node
 //
 
-void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
+void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
    DWORD dwOldFlags = m_dwFlags;
    AgentConnection *pAgentConn;
@@ -812,6 +819,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    char szBuffer[4096];
    BOOL bHasChanges = FALSE;
 
+   SetPollerInfo(nPoller, "wait for lock");
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
@@ -826,6 +834,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    else
    {
       // Check node's capabilities
+      SetPollerInfo(nPoller, "capability check");
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
       if (!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)))
       {
@@ -906,6 +915,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
       }
 
       // Retrieve interface list
+      SetPollerInfo(nPoller, "interface check");
       SendPollerMsg(dwRqId, _T("Capability check finished\r\n"
                                "Checking interface configuration...\r\n"));
       pIfList = GetInterfaceList();
@@ -1058,6 +1068,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId)
    }
 
    // Finish configuration poll
+   SetPollerInfo(nPoller, "cleanup");
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    PollerUnlock();
@@ -1580,7 +1591,6 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
 
 void Node::OnObjectDelete(DWORD dwObjectId)
 {
-   Lock();
    if (dwObjectId == m_dwPollerNode)
    {
       // If deleted object is our poller node, change it to default
@@ -1588,7 +1598,6 @@ void Node::OnObjectDelete(DWORD dwObjectId)
       Modify();
       DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
    }
-   Unlock();
 }
 
 

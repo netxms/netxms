@@ -3392,10 +3392,10 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    switch(iPollType)
    {
       case POLL_STATUS:
-         pNode->StatusPoll(this, dwRqId);
+         pNode->StatusPoll(this, dwRqId, -1);
          break;
       case POLL_CONFIGURATION:
-         pNode->ConfigurationPoll(this, dwRqId);
+         pNode->ConfigurationPoll(this, dwRqId, -1);
          break;
       default:
          SendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
