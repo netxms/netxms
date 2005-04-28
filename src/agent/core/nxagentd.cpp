@@ -323,7 +323,7 @@ BOOL Initialize(void)
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         g_pServerList[g_dwServerCount].dwIpAddr = inet_addr(pItem);
+         g_pServerList[g_dwServerCount].dwIpAddr = ResolveHostName(pItem);
          if ((g_pServerList[g_dwServerCount].dwIpAddr == INADDR_NONE) ||
              (g_pServerList[g_dwServerCount].dwIpAddr == INADDR_ANY))
          {
@@ -351,7 +351,7 @@ BOOL Initialize(void)
             *pEnd = 0;
          StrStrip(pItem);
 
-         dwAddr = inet_addr(pItem);
+         dwAddr = ResolveHostName(pItem);
          if ((dwAddr == INADDR_NONE) ||
              (dwAddr == INADDR_ANY))
          {

@@ -334,25 +334,13 @@ int main(int argc, char *argv[])
       // If everything is ok, start communications
       if (bStart)
       {
-         struct hostent *hs;
-
          // Initialize WinSock
 #ifdef _WIN32
          WSADATA wsaData;
          WSAStartup(2, &wsaData);
 #endif
-
-         // Resolve hostname
-         hs = gethostbyname(argv[optind]);
-         if (hs != NULL)
-         {
-            memcpy(&m_dwAddr, hs->h_addr, sizeof(DWORD));
-         }
-         else
-         {
-            m_dwAddr = inet_addr(argv[optind]);
-         }
-         if ((m_dwAddr == 0) || (m_dwAddr == INADDR_NONE))
+         m_dwAddr = ResolveHostName(argv[optind]);
+         if ((m_dwAddr == INADDR_ANY) || (m_dwAddr == INADDR_NONE))
          {
             fprintf(stderr, "Invalid host name or address specified\n");
          }

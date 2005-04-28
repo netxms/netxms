@@ -665,3 +665,37 @@ int LIBNETXMS_EXPORTABLE SendEx(int nSocket, const void *pBuff,
 
 	return nLeft == 0 ? nSize : nRet;
 }
+
+
+//
+// Resolve host name to IP address
+//
+
+DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
+{
+   DWORD dwAddr;
+   struct hostent *hs;
+#ifdef UNICODE
+   char szBuffer[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pszName, -1, szBuffer, 256, NULL, NULL);
+   hs = gethostbyname(szBuffer);
+#else
+   hs = gethostbyname(pszName);
+#endif
+   if (hs != NULL)
+   {
+      memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+   }
+   else
+   {
+#ifdef UNICODE
+      dwAddr = inet_addr(szBuffer);
+#else
+      dwAddr = inet_addr(pszName);
+#endif
+   }
+
+   return dwAddr;
+}

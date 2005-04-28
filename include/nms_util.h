@@ -187,6 +187,7 @@ extern "C"
 
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
+   DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName);
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
