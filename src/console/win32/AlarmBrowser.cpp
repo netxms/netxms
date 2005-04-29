@@ -419,20 +419,43 @@ void CAlarmBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
 
 
 //
+// Alarm acknowlegement worker function
+//
+
+static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = NXCAcknowlegeAlarm(g_hSession, pdwAlarmList[i]);
+   return dwResult;
+}
+
+
+//
 // WM_COMMAND::ID_ALARM_ACKNOWLEGE message handler
 //
 
 void CAlarmBrowser::OnAlarmAcknowlege() 
 {
    int iItem;
+   DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
+
+   dwNumAlarms = m_wndListCtrl.GetSelectedCount();
+   pdwAlarmList = (DWORD *)malloc(sizeof(DWORD) * dwNumAlarms);
 
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-   while(iItem != -1)
+   for(i = 0; (iItem != -1) && (i < dwNumAlarms); i++)
    {
-      DoRequestArg2(NXCAcknowlegeAlarm, g_hSession, 
-                    (void *)m_wndListCtrl.GetItemData(iItem), _T("Acknowleging alarm..."));
+      pdwAlarmList[i] = m_wndListCtrl.GetItemData(iItem);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
+
+   dwResult = DoRequestArg2(AcknowlegeAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Acknowleging alarm..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+   free(pdwAlarmList);
 }
 
 void CAlarmBrowser::OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI) 

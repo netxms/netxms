@@ -12,6 +12,7 @@
 - Fixed deadlock in status poller
 - Fixed incorrect socket handling in AgentConnection class
 - Fixed sorting bug in Windows console alarm browser
+- Fixed GUI unresponsiveness when acknowledging large number of alarms
 
 
 *
