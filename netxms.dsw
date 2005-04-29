@@ -243,6 +243,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "nxconfig"=.\src\server\tools\nxconfig\nxconfig.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "nxcore"=.\src\server\core\nxcore.dsp - Package Owner=<4>
 
 Package=<5>
