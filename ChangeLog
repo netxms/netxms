@@ -6,6 +6,9 @@
 - Added possibility to use server name instead of IP address in
   agent configuration
 - Added diff() method for DCI thresholds
+- Added possibility to set server config file via environment variable
+  NETXMSD_CONFIG on UNIX or registry key HKLM\Software\NetXMS\Server\ConfigFile
+  on Windows
 - Fixed deadlock in status poller
 - Fixed incorrect socket handling in AgentConnection class
 - Fixed sorting bug in Windows console alarm browser

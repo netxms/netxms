@@ -47,7 +47,8 @@ END_MESSAGE_MAP()
 
 LRESULT CIntroPage::OnWizardNext() 
 {
-	return CPropertyPage::OnWizardNext();
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+	return pc->m_bConfigFileDetected ? IDD_SELECT_DB : IDD_CFG_FILE;
 }
 
 
