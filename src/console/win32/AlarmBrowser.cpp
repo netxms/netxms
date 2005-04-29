@@ -11,6 +11,63 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+//
+// Compare two list view items
+//
+
+static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   NXC_ALARM *pAlarm1, *pAlarm2;
+   NXC_OBJECT *pObject1, *pObject2;
+   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
+   int iResult;
+
+   pAlarm1 = ((CAlarmBrowser *)lParamSort)->FindAlarmInList(lParam1);
+   pAlarm2 = ((CAlarmBrowser *)lParamSort)->FindAlarmInList(lParam2);
+   if ((pAlarm1 == NULL) || (pAlarm2 == NULL))
+      return 0;
+
+   switch(((CAlarmBrowser *)lParamSort)->SortMode())
+   {
+      case 0:  // Severity
+         iResult = (pAlarm1->wSeverity < pAlarm2->wSeverity) ? -1 :
+                     ((pAlarm1->wSeverity > pAlarm2->wSeverity) ? 1 : 0);
+         break;
+      case 1:  // Source
+         pObject1 = NXCFindObjectById(g_hSession, pAlarm1->dwSourceObject);
+         pObject2 = NXCFindObjectById(g_hSession, pAlarm2->dwSourceObject);
+
+         if (pObject1 == NULL)
+            _tcscpy(szName1, _T("<unknown>"));
+         else
+            _tcscpy(szName1, pObject1->szName);
+         
+         if (pObject2 == NULL)
+            _tcscpy(szName2, _T("<unknown>"));
+         else
+            _tcscpy(szName2, pObject2->szName);
+
+         iResult = _tcsicmp(szName1, szName2);
+         break;
+      case 2:  // Message
+         iResult = _tcsicmp(pAlarm1->szMessage, pAlarm2->szMessage);
+         break;
+      case 3:  // Timestamp
+         iResult = (pAlarm1->dwTimeStamp < pAlarm2->dwTimeStamp) ? -1 :
+                     ((pAlarm1->dwTimeStamp > pAlarm2->dwTimeStamp) ? 1 : 0);
+         break;
+      case 4:  // Ack
+         iResult = (pAlarm1->wIsAck < pAlarm2->wIsAck) ? -1 :
+                     ((pAlarm1->wIsAck > pAlarm2->wIsAck) ? 1 : 0);
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+   return (((CAlarmBrowser *)lParamSort)->SortDir() == 0) ? iResult : -iResult;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmBrowser
 
@@ -243,6 +300,7 @@ void CAlarmBrowser::OnViewRefresh()
       for(i = 0; i < m_dwNumAlarms; i++)
          AddAlarm(&m_pAlarmList[i]);
       UpdateStatusBar();
+      m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
    }
    else
    {
@@ -296,6 +354,7 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
             AddAlarm(pAlarm);
             AddAlarmToList(pAlarm);
             UpdateStatusBar();
+            m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
          }
          break;
       case NX_NOTIFY_ALARM_ACKNOWLEGED:
@@ -428,63 +487,6 @@ LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("SM:%d\x7FSD:%d"),
               m_iSortMode, m_iSortDir);
    return 1;
-}
-
-
-//
-// Compare two list view items
-//
-
-static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-   NXC_ALARM *pAlarm1, *pAlarm2;
-   NXC_OBJECT *pObject1, *pObject2;
-   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
-   int iResult;
-
-   pAlarm1 = ((CAlarmBrowser *)lParamSort)->FindAlarmInList(lParam1);
-   pAlarm2 = ((CAlarmBrowser *)lParamSort)->FindAlarmInList(lParam2);
-   if ((pAlarm1 == NULL) || (pAlarm2 == NULL))
-      return 0;
-
-   switch(((CAlarmBrowser *)lParamSort)->SortMode())
-   {
-      case 0:  // Severity
-         iResult = (pAlarm1->wSeverity < pAlarm2->wSeverity) ? -1 :
-                     ((pAlarm1->wSeverity > pAlarm2->wSeverity) ? 1 : 0);
-         break;
-      case 1:  // Source
-         pObject1 = NXCFindObjectById(g_hSession, pAlarm1->dwSourceObject);
-         pObject2 = NXCFindObjectById(g_hSession, pAlarm2->dwSourceObject);
-
-         if (pObject1 == NULL)
-            _tcscpy(szName1, _T("<unknown>"));
-         else
-            _tcscpy(szName1, pObject1->szName);
-         
-         if (pObject2 == NULL)
-            _tcscpy(szName2, _T("<unknown>"));
-         else
-            _tcscpy(szName2, pObject2->szName);
-
-         iResult = _tcsicmp(szName1, szName2);
-         break;
-      case 2:  // Message
-         iResult = _tcsicmp(pAlarm1->szMessage, pAlarm2->szMessage);
-         break;
-      case 3:  // Timestamp
-         iResult = (pAlarm1->dwTimeStamp < pAlarm2->dwTimeStamp) ? -1 :
-                     ((pAlarm1->dwTimeStamp > pAlarm2->dwTimeStamp) ? 1 : 0);
-         break;
-      case 4:  // Ack
-         iResult = (pAlarm1->wIsAck < pAlarm2->wIsAck) ? -1 :
-                     ((pAlarm1->wIsAck > pAlarm2->wIsAck) ? 1 : 0);
-         break;
-      default:
-         iResult = 0;
-         break;
-   }
-   return (((CAlarmBrowser *)lParamSort)->SortDir() == 0) ? iResult : -iResult;
 }
 
 

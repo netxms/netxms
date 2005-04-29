@@ -69,7 +69,7 @@ BOOL CThresholdDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
    // Setup lists
-   for(i = 0; i < 3; i++)
+   for(i = 0; i < 4; i++)
       m_wndComboFunction.AddString(g_pszThresholdFunctionLong[i]);
    for(i = 0; i < 8; i++)
       m_wndComboOperation.AddString(g_pszThresholdOperationLong[i]);
@@ -96,9 +96,9 @@ BOOL CThresholdDlg::OnInitDialog()
 void CThresholdDlg::OnSelchangeComboFunction() 
 {
    m_iFunction = m_wndComboFunction.GetCurSel();
-   m_wndStaticFor.EnableWindow(m_iFunction != F_LAST);
-   m_wndStaticSamples.EnableWindow(m_iFunction != F_LAST);
-   m_wndEditArg1.EnableWindow(m_iFunction != F_LAST);
+   m_wndStaticFor.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
+   m_wndStaticSamples.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
+   m_wndEditArg1.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
 }
 
 

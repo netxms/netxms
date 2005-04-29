@@ -44,9 +44,9 @@ NXC_SESSION g_hSession = NULL;
 // Connection parameters
 //
 
-char g_szServer[MAX_SERVER_NAME_LEN] = "localhost";
-char g_szLogin[MAX_LOGIN_NAME_LEN] = "";
-char g_szPassword[MAX_PASSWORD_LEN] = "";
+TCHAR g_szServer[MAX_SERVER_NAME_LEN] = _T("localhost");
+TCHAR g_szLogin[MAX_LOGIN_NAME_LEN] = _T("");
+TCHAR g_szPassword[MAX_PASSWORD_LEN] = _T("");
 DWORD g_dwEncryptionMethod = CSCP_ENCRYPTION_NONE;
 
 
@@ -55,7 +55,7 @@ DWORD g_dwEncryptionMethod = CSCP_ENCRYPTION_NONE;
 //
 
 DWORD g_dwOptions = 0;
-char g_szWorkDir[MAX_PATH] = "";
+TCHAR g_szWorkDir[MAX_PATH] = _T("");
 
 
 //
@@ -153,12 +153,16 @@ COLORREF g_statusColorTable[9] =
 
 char *g_pszItemOrigin[] = { "Internal", "Agent", "SNMP" };
 char *g_pszItemOriginLong[] = { "Internal", "NetXMS Agent", "SNMP Agent" };
-char *g_pszItemDataType[] = { "Integer", "Unsigned Integer", "Int64", "Unsigned Int64", "String", "Float" };
+char *g_pszItemDataType[] = { "Integer", "Unsigned Integer", "Int64", 
+                              "Unsigned Int64", "String", "Float" };
 char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
 char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
-char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", "greater or equal", "greater", "not equal", "like", "not like" };
-char *g_pszThresholdFunction[] = { "last", "average", "deviation" };
-char *g_pszThresholdFunctionLong[] = { "last polled value", "average value", "mean deviation" };
+char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", 
+                                        "greater or equal", "greater", "not equal", 
+                                        "like", "not like" };
+char *g_pszThresholdFunction[] = { "last", "average", "deviation", "diff" };
+char *g_pszThresholdFunctionLong[] = { "last polled value", "average value",
+                                       "mean deviation", "diff with previous value" };
 
 
 //

@@ -18,7 +18,6 @@ GENERAL:
 - Rewrite event management in a way to eliminate the need to unlock
   event configuration to allow sending of new events
 - View and update agent's configuration from server
-- Add diff() method for DCI thresholds
 - Planned outages (maintenance schedule)
 
 

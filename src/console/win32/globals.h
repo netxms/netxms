@@ -286,11 +286,11 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction);
 
 extern NXC_SESSION g_hSession;
 extern DWORD g_dwOptions;
-extern char g_szServer[];
-extern char g_szLogin[];
-extern char g_szPassword[];
+extern TCHAR g_szServer[];
+extern TCHAR g_szLogin[];
+extern TCHAR g_szPassword[];
 extern DWORD g_dwEncryptionMethod;
-extern char g_szWorkDir[];
+extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];
 extern TCHAR *g_szActionType[];

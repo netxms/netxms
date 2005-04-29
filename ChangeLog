@@ -5,8 +5,10 @@
 - Data collection templates fully functional
 - Added possibility to use server name instead of IP address in
   agent configuration
+- Added diff() method for DCI thresholds
 - Fixed deadlock in status poller
 - Fixed incorrect socket handling in AgentConnection class
+- Fixed sorting bug in Windows console alarm browser
 
 
 *

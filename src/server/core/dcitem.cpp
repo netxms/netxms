@@ -618,7 +618,7 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
                value = (double)value - (double)m_prevRawValue;
                break;
             case DCI_DT_STRING:
-               value = (long)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (long)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types

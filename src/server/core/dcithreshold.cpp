@@ -149,7 +149,7 @@ BOOL Threshold::SaveToDB(DWORD dwIndex)
 int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
 {
    BOOL bMatch = FALSE;
-   int iResult;
+   int iResult, iDataType = m_iDataType;
 
    // Execute function on value
    switch(m_iFunction)
@@ -163,6 +163,11 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
       case F_DEVIATION:    // Check deviation from the mean value
          /* TODO */
          break;
+      case F_DIFF:
+         CalculateDiff(&fvalue, value, ppPrevValues);
+         if (m_iDataType == DCI_DT_STRING)
+            iDataType = DCI_DT_INT;  // diff() for strings is an integer
+         break;
       default:
          break;
    }
@@ -171,7 +176,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
    switch(m_iOperation)
    {
       case OP_LE:    // Less
-         switch(m_iDataType)
+         switch(iDataType)
          {
             case DCI_DT_INT:
                bMatch = ((long)fvalue < (long)m_value);
@@ -191,7 +196,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          }
          break;
       case OP_LE_EQ: // Less or equal
-         switch(m_iDataType)
+         switch(iDataType)
          {
             case DCI_DT_INT:
                bMatch = ((long)fvalue <= (long)m_value);
@@ -211,7 +216,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          }
          break;
       case OP_EQ:    // Equal
-         switch(m_iDataType)
+         switch(iDataType)
          {
             case DCI_DT_INT:
                bMatch = ((long)fvalue == (long)m_value);
@@ -234,7 +239,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          }
          break;
       case OP_GT_EQ: // Greater or equal
-         switch(m_iDataType)
+         switch(iDataType)
          {
             case DCI_DT_INT:
                bMatch = ((long)fvalue >= (long)m_value);
@@ -254,7 +259,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          }
          break;
       case OP_GT:    // Greater
-         switch(m_iDataType)
+         switch(iDataType)
          {
             case DCI_DT_INT:
                bMatch = ((long)fvalue > (long)m_value);
@@ -274,7 +279,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          }
          break;
       case OP_NE:    // Not equal
-         switch(m_iDataType)
+         switch(iDataType)
          {
             case DCI_DT_INT:
                bMatch = ((long)fvalue != (long)m_value);
@@ -437,6 +442,40 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
          *pResult = _T("");   // Average value for string is meaningless
          break;
       default:
+         break;
+   }
+}
+
+
+//
+// Calculate difference between last and previous value
+//
+
+void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+{
+   switch(m_iDataType)
+   {
+      case DCI_DT_INT:
+         *pResult = (long)lastValue - (long)(*ppPrevValues[0]);
+         break;
+      case DCI_DT_UINT:
+         *pResult = (DWORD)lastValue - (DWORD)(*ppPrevValues[0]);
+         break;
+      case DCI_DT_INT64:
+         *pResult = (INT64)lastValue - (INT64)(*ppPrevValues[0]);
+         break;
+      case DCI_DT_UINT64:
+         *pResult = (QWORD)lastValue - (QWORD)(*ppPrevValues[0]);
+         break;
+      case DCI_DT_FLOAT:
+         *pResult = (double)lastValue - (double)(*ppPrevValues[0]);
+         break;
+      case DCI_DT_STRING:
+         *pResult = (long)((_tcscmp((const TCHAR *)lastValue, (const TCHAR *)(*ppPrevValues[0])) == 0) ? 0 : 1);
+         break;
+      default:
+         // Delta calculation is not supported for other types
+         *pResult = lastValue;
          break;
    }
 }

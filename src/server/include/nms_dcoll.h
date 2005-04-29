@@ -107,6 +107,7 @@ private:
 
    const ItemValue& Value(void) { return m_value; }
    void CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   void CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
 
 public:
    Threshold(DCItem *pRelatedItem);

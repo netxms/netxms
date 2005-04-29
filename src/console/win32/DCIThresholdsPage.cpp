@@ -117,13 +117,10 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
 
    switch(m_pItem->pThresholdList[dwIndex].wFunction)
    {
-      case F_LAST:
-         szArgs[0] = 0;
-         break;
       case F_AVERAGE:
          sprintf(szArgs, "%d", m_pItem->pThresholdList[dwIndex].dwArg1);
          break;
-      case F_DEVIATION:
+      default:
          szArgs[0] = 0;
          break;
    }
