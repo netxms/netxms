@@ -99,7 +99,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--config"))  // Config file
       {
          i++;
-         strcpy(g_szConfigFile, argv[i]);     // Next word should contain name of the config file
+         strncpy(g_szConfigFile, argv[i], MAX_PATH);     // Next word should contain name of the config file
       }
 #ifndef _WIN32
       else if (!strcmp(argv[i], "--pid-file"))  // PID file
@@ -232,9 +232,28 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-#ifndef _WIN32
+#ifdef _WIN32
+   HKEY hKey;
+   DWORD dwSize;
+#else
    int i;
    FILE *fp;
+   char *pszEnv;
+#endif
+
+   // Check for alternate config file location
+#ifdef _WIN32
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
+                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      dwSize = MAX_PATH * sizeof(TCHAR);
+      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)g_szConfigFile, &dwSize);
+      RegCloseKey(hKey);
+   }
+#else
+   pszEnv = getenv("NETXMSD_CONFIG");
+   if (pszEnv != NULL)
+      strncpy(g_szConfigFile, pszEnv, MAX_PATH);
 #endif
 
    if (!ParseCommandLine(argc, argv))
