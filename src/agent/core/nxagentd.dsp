@@ -169,6 +169,10 @@ SOURCE=..\..\..\include\ata.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\include\netxms-version.h"
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nms_agent.h
 # End Source File
 # Begin Source File
