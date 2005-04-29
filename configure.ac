@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.77 2005-04-14 07:46:50 victor Exp $
+# $Id: configure.ac,v 1.78 2005-04-29 15:09:11 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -174,6 +174,13 @@ AC_ARG_WITH(dist,
 	MODULES="server agent libnxcl nxevent nxreport console"
 	SUBAGENT_DIRS="linux freebsd sunos"
 )
+
+AC_ARG_WITH(nxsm,
+[AS_HELP_STRING(--with-nxsm,build session manager for web interface)],
+[
+	MODULES="$MODULES www"
+	BUILD_CLIENT="yes"
+])
 
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
@@ -429,6 +436,9 @@ AC_CONFIG_FILES([
 	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/portCheck/Makefile
+	src/www/Makefile
+	src/www/iis/Makefile
+	src/www/nxsm/Makefile
 	tools/Makefile
 ])
 
