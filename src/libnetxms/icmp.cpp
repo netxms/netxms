@@ -148,7 +148,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
       request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
       if (sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == sizeof(ECHOREQUEST))
       {
-#ifdef __FreeBSD__ // use kquque
+#ifdef USE_KQUEUE
 			int kq;
 			struct kevent ke;
 			struct timespec ts;
@@ -169,7 +169,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
 
 				memset(&ke, 0, sizeof(ke));
 				if (kevent(kq, NULL, 0, &ke, 1, &ts) > 0)
-#else
+#else    /* not USE_KQUEUE */
 
 #if HAVE_POLL
          struct pollfd fds;
@@ -200,7 +200,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
 	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) > 0)
 #endif
 
-#endif // __FreeBSD__
+#endif   /* USE_KQUEUE */
             {
                dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
@@ -238,7 +238,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                dwTimeLeft = 0;
             }
          }
-#ifdef __FreeBSD__
+#ifdef USE_KQUEUE
 			close(kq);
 #endif
       }
