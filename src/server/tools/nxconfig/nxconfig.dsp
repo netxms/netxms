@@ -118,6 +118,10 @@ SOURCE=.\DBSelectPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ExecBatch.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\FinishPage.cpp
 # End Source File
 # Begin Source File

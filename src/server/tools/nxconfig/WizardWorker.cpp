@@ -27,10 +27,33 @@
 
 
 //
+// Global data
+//
+
+TCHAR g_szWizardErrorText[MAX_ERROR_TEXT] = _T("Completed successfully");
+
+
+//
 // Static data
 //
 
 static HWND m_hStatusWnd = NULL;
+
+
+//
+// Execute query and set error text
+//
+
+static BOOL DBQueryEx(DB_HANDLE hConn, TCHAR *pszQuery)
+{
+   BOOL bResult;
+
+   bResult = DBQuery(hConn, pszQuery);
+   if (!bResult)
+      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
+                 _T("SQL query failed:\n%s"), pszQuery);
+   return bResult;
+}
 
 
 //
@@ -40,11 +63,146 @@ static HWND m_hStatusWnd = NULL;
 static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
 {
    BOOL bResult = FALSE;
+   FILE *pf;
+   time_t t;
 
    PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Creating configuration file"));
 
-   Sleep(5000);
-   bResult = TRUE;
+   pf = _tfopen(pc->m_szConfigFile, _T("w"));
+   if (pf != NULL)
+   {
+      t= time(NULL);
+      fprintf(pf, _T("#\n# NetXMS Server configuration file\n")
+                  _T("# Created by NetXMS Server configuration wizard at %s#\n\n"),
+              _tctime(&t));
+      fprintf(pf, _T("LogFile = %s\n"), pc->m_bLogToSyslog ? _T("{syslog}") : pc->m_szLogFile);
+      fprintf(pf, _T("DBDriver = %s\n"), pc->m_szDBDriver);
+      if (pc->m_szDBDrvParams[0] = 0)
+         fprintf(pf, _T("DBDrvParams = %s\n"), pc->m_szDBDrvParams);
+      fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
+      fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
+      fprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
+      fprintf(pf, _T("LogFailedSQLQueries = %s\n"), pc->m_bLogFailedSQLQueries ? _T("yes") : _T("no"));
+      fclose(pf);
+      bResult = TRUE;
+   }
+   else
+   {
+      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Error creating file %s"), pc->m_szConfigFile);
+   }
+
+   PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
+   return bResult;
+}
+
+
+//
+// Create database in MySQL
+//
+
+static BOOL CreateDBMySQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
+{
+   TCHAR szQuery[256];
+   BOOL bResult;
+
+   _stprintf(szQuery, _T("CREATE DATABASE %s"), pc->m_szDBName);
+   bResult = DBQueryEx(hConn, szQuery);
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("GRANT ALL ON %s.* TO %s IDENTIFIED BY '%s'"),
+                pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
+      bResult = DBQueryEx(hConn, szQuery);
+
+      _stprintf(szQuery, _T("GRANT ALL ON %s.* TO %s@localhost IDENTIFIED BY '%s'"),
+                pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   if (bResult)
+      bResult = DBQueryEx(hConn, _T("FLUSH PRIVILEGES"));
+   return bResult;
+}
+
+
+//
+// Create database in Microsoft SQL
+//
+
+static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
+{
+   TCHAR szQuery[256];
+   BOOL bResult;
+
+   bResult = DBQueryEx(hConn, _T("USE master"));
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("CREATE DATABASE %s"), pc->m_szDBName);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("USE %s"), pc->m_szDBName);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("sp_addlogin @loginame = '%s', @passwd = '%s', @defdb = '%s'"),
+                pc->m_szDBLogin, pc->m_szDBPassword, pc->m_szDBName);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("sp_grantdbaccess @loginame = '%s'"), pc->m_szDBLogin);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("GRANT ALL TO %s"), pc->m_szDBLogin);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   return bResult;
+}
+
+
+//
+// Create database
+//
+
+static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
+{
+   DB_HANDLE hConn;
+   BOOL bResult = FALSE;
+
+   PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
+   hConn = DBConnectEx(pc->m_szDBServer, NULL, pc->m_szDBALogin, pc->m_szDBAPassword);
+   if (hConn != NULL)
+   {
+      PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
+      PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Creating database"));
+
+      switch(pc->m_iDBEngine)
+      {
+         case DB_ENGINE_MYSQL:
+            bResult = CreateDBMySQL(pc, hConn);
+            break;
+         case DB_ENGINE_MSSQL:
+            bResult = CreateDBMSSQL(pc, hConn);
+            break;
+         default:
+            bResult = FALSE;
+            _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
+                       _T("Unsupported database engine code %d"), pc->m_iDBEngine);
+            break;
+      }
+
+      DBDisconnect(hConn);
+   }
 
    PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
    return bResult;
@@ -58,6 +216,7 @@ static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
 static DWORD __stdcall WorkerThread(void *pArg)
 {
    WIZARD_CFG_INFO *pc = (WIZARD_CFG_INFO *)pArg;
+   DB_HANDLE hConn = NULL;
    BOOL bResult;
 
    bResult = CreateConfigFile(pc);
@@ -69,10 +228,46 @@ static DWORD __stdcall WorkerThread(void *pArg)
       _tcsncpy(g_szDbDriver, pc->m_szDBDriver, MAX_PATH);
       _tcsncpy(g_szDbServer, pc->m_szDBServer, MAX_PATH);
       bResult = DBInit(FALSE, FALSE, FALSE);
+      if (!bResult)
+         _tcscpy(g_szWizardErrorText, _T("Error loading database driver"));
       PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
    }
 
    // Create database if requested
+   if (pc->m_bCreateDB && bResult)
+      bResult = CreateDatabase(pc);
+
+   // Connect to database as user
+   if (bResult)
+   {
+      PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database"));
+      hConn = DBConnectEx(pc->m_szDBServer, pc->m_szDBName, pc->m_szDBLogin, pc->m_szDBPassword);
+      bResult = (hConn != NULL);
+      if (!bResult)
+         _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));
+      PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
+   }
+
+   // Initialize database if requested
+   if ((pc->m_bCreateDB || pc->m_bInitDB) && bResult)
+   {
+      TCHAR szInitFile[MAX_PATH];
+      static TCHAR *szEngineName[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle") };
+
+      PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Initializing database"));
+
+      _sntprintf(szInitFile, MAX_PATH, _T("%s\\lib\\sql\\dbinit_%s.sql"),
+                 pc->m_szInstallDir, szEngineName[pc->m_iDBEngine]);
+      bResult = ExecSQLBatch(hConn, szInitFile);
+
+      PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
+   }
+
+   // Set server parameters
+
+   // Cleanup
+   if (hConn != NULL)
+      DBDisconnect(hConn);
 
    // Notify UI that job is finished
    PostMessage(m_hStatusWnd, WM_JOB_FINISHED, bResult, 0);

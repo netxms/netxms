@@ -111,8 +111,13 @@ void CProcessingPage::OnStageCompleted(WPARAM wParam, LPARAM lParam)
 
 void CProcessingPage::OnJobFinished(WPARAM wParam, LPARAM lParam)
 {
-   SetDlgItemText(IDC_STATIC_STATUS, _T("Completed"));
-   ((CPropertySheet *)GetParent())->SetWizardButtons(PSWIZB_NEXT);
+   SetDlgItemText(IDC_STATIC_STATUS, wParam ? _T("Completed") : _T("Failed"));
+   if (wParam)
+      MessageBox(_T("Server configuration was completed successfully"), 
+                 _T("Information"), MB_OK | MB_ICONINFORMATION);
+   else
+      MessageBox(g_szWizardErrorText, _T("Error"), MB_OK | MB_ICONSTOP);
+   ((CPropertySheet *)GetParent())->SetWizardButtons(wParam ? PSWIZB_NEXT : PSWIZB_BACK);
 }
 
 

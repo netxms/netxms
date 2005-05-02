@@ -44,3 +44,18 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CConfigFilePage message handlers
+
+
+//
+// "Next" button handler
+//
+
+LRESULT CConfigFilePage::OnWizardNext() 
+{
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+
+   GetDlgItemText(IDC_EDIT_FILE, pc->m_szConfigFile, MAX_PATH);
+   StrStrip(pc->m_szConfigFile);
+	
+	return CPropertyPage::OnWizardNext();
+}

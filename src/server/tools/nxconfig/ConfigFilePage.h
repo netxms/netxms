@@ -30,6 +30,8 @@ public:
 // Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CConfigFilePage)
+	public:
+	virtual LRESULT OnWizardNext();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL

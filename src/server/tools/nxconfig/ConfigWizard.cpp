@@ -61,6 +61,7 @@ void CConfigWizard::DefaultConfig()
    _tcscpy(m_cfg.m_szDBLogin, _T("netxms"));
    _tcscpy(m_cfg.m_szDBName, _T("netxms_db"));
    _tcscpy(m_cfg.m_szDBALogin, _T("sa"));
+   m_cfg.m_bLogFailedSQLQueries = TRUE;
    m_cfg.m_bEnableAdminInterface = TRUE;
    m_cfg.m_bRunAutoDiscovery = FALSE;
    m_cfg.m_dwDiscoveryPI = 14400;
@@ -83,8 +84,9 @@ void CConfigWizard::DefaultConfig()
 
       dwSize = (MAX_PATH - 16) * sizeof(TCHAR);
       if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, 
-                          (BYTE *)m_cfg.m_szLogFile, &dwSize) == ERROR_SUCCESS)
+                          (BYTE *)m_cfg.m_szInstallDir, &dwSize) == ERROR_SUCCESS)
       {
+         _tcscpy(m_cfg.m_szLogFile, m_cfg.m_szInstallDir);
          _tcscat(m_cfg.m_szLogFile, _T("\\log\\netxmsd.log"));
       }
       

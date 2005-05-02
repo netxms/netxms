@@ -98,5 +98,7 @@ BOOL CSummaryPage::OnSetActive()
    
    SetDlgItemText(IDC_EDIT_SUMMARY, szBuffer);
    SendDlgItemMessage(IDC_EDIT_SUMMARY, EM_SETSEL, -1, 0);
+
+   ((CPropertySheet *)GetParent())->SetWizardButtons(PSWIZB_BACK | PSWIZB_NEXT);
 	return CPropertyPage::OnSetActive();
 }

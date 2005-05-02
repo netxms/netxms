@@ -38,9 +38,67 @@ void CLoggingPage::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CLoggingPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CLoggingPage)
-		// NOTE: the ClassWizard will add message map macros here
+	ON_BN_CLICKED(IDC_RADIO_SYSLOG, OnRadioSyslog)
+	ON_BN_CLICKED(IDC_RADIO_FILE, OnRadioFile)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CLoggingPage message handlers
+
+
+//
+// WM_INITDIALOG message handler
+//
+
+BOOL CLoggingPage::OnInitDialog() 
+{
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+
+	CPropertyPage::OnInitDialog();
+	
+   if (pc->m_bLogToSyslog)
+   {
+      SendDlgItemMessage(IDC_RADIO_SYSLOG, BM_SETCHECK, BST_CHECKED);
+      EnableDlgItem(this, IDC_EDIT_FILE, FALSE);
+      EnableDlgItem(this, IDC_BUTTON_BROWSE, FALSE);
+   }
+   else
+   {
+      SendDlgItemMessage(IDC_RADIO_FILE, BM_SETCHECK, BST_CHECKED);
+      SetDlgItemText(IDC_EDIT_FILE, pc->m_szLogFile);
+   }
+	
+	return TRUE;
+}
+
+
+//
+// Radio butons handlers
+//
+
+void CLoggingPage::OnRadioSyslog() 
+{
+   EnableDlgItem(this, IDC_EDIT_FILE, FALSE);
+   EnableDlgItem(this, IDC_BUTTON_BROWSE, FALSE);
+}
+
+void CLoggingPage::OnRadioFile() 
+{
+   EnableDlgItem(this, IDC_EDIT_FILE, TRUE);
+   EnableDlgItem(this, IDC_BUTTON_BROWSE, TRUE);
+}
+
+
+//
+// "Next" button handler
+//
+
+LRESULT CLoggingPage::OnWizardNext() 
+{
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+
+   pc->m_bLogToSyslog = (SendDlgItemMessage(IDC_RADIO_SYSLOG, BM_GETCHECK) == BST_CHECKED);
+   GetDlgItemText(IDC_EDIT_FILE, pc->m_szLogFile, MAX_PATH);
+	return CPropertyPage::OnWizardNext();
+}

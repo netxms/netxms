@@ -775,6 +775,7 @@ src/server/tools/nxconfig/ConfigWizard.cpp -text
 src/server/tools/nxconfig/ConfigWizard.h -text
 src/server/tools/nxconfig/DBSelectPage.cpp -text
 src/server/tools/nxconfig/DBSelectPage.h -text
+src/server/tools/nxconfig/ExecBatch.cpp -text
 src/server/tools/nxconfig/FinishPage.cpp -text
 src/server/tools/nxconfig/FinishPage.h -text
 src/server/tools/nxconfig/IntroPage.cpp -text

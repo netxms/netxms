@@ -30,6 +30,8 @@ public:
 // Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CLoggingPage)
+	public:
+	virtual LRESULT OnWizardNext();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -38,7 +40,9 @@ public:
 protected:
 	// Generated message map functions
 	//{{AFX_MSG(CLoggingPage)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnRadioSyslog();
+	afx_msg void OnRadioFile();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

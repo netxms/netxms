@@ -17,6 +17,9 @@
 #include <nxsrvapi.h>
 
 
+#define MAX_ERROR_TEXT        4096
+
+
 //
 // Custom Windows messages
 //
@@ -33,6 +36,7 @@
 #define DB_ENGINE_MYSQL    0
 #define DB_ENGINE_PGSQL    1
 #define DB_ENGINE_MSSQL    2
+#define DB_ENGINE_ORACLE   3
 
 
 //
@@ -41,6 +45,7 @@
 
 struct WIZARD_CFG_INFO
 {
+   TCHAR m_szInstallDir[MAX_PATH];
    BOOL m_bConfigFileDetected;
    TCHAR m_szConfigFile[MAX_PATH];
    int m_iDBEngine;
@@ -110,10 +115,11 @@ public:
 
 
 //
-// Wizard worker thread starter
+// Functions
 //
 
 void StartWizardWorkerThread(HWND hWnd, WIZARD_CFG_INFO *pc);
+BOOL ExecSQLBatch(DB_HANDLE hConn, TCHAR *pszFile);
 
 
 //
@@ -122,6 +128,7 @@ void StartWizardWorkerThread(HWND hWnd, WIZARD_CFG_INFO *pc);
 
 extern CNxconfigApp theApp;
 extern TCHAR *g_pszDBEngines[];
+extern TCHAR g_szWizardErrorText[];
 
 
 //{{AFX_INSERT_LOCATION}}
