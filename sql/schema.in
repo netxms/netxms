@@ -22,7 +22,11 @@ CREATE TABLE modules
 	module_id integer not null,
 	module_name varchar(63),
 	exec_name varchar(255),
+#ifdef DB_ORACLE
+	module_flags integer default 0 not null,
+#else
 	module_flags integer not null default 0,
+#endif
 	description SQL_TEXT,
 	license_key varchar(255),
 	PRIMARY KEY(module_id)
@@ -38,7 +42,7 @@ CREATE TABLE users
 	id integer not null,
 	name varchar(63) not null,
 	password varchar(48),
-	access integer,
+	system_access integer,
 	flags integer,
 	full_name varchar(127),
 	description varchar(255),
@@ -54,7 +58,7 @@ CREATE TABLE user_groups
 (
 	id integer not null,
 	name varchar(63) not null,
-	access integer,
+	system_access integer,
 	flags integer,
 	description varchar(255),
 	PRIMARY KEY(id)
@@ -324,7 +328,9 @@ CREATE TABLE raw_dci_values
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
+#ifndef DB_ORACLE
 CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
+#endif
 
 
 /*

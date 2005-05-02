@@ -4,7 +4,7 @@
 
 sqldir=$(pkgdatadir)/sql
 
-sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql
+sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql dbinit_oracle.sql
 
 ROOT_FILE = dbinit.in
 SOURCE = $(ROOT_FILE) schema.in setup.in events.in images.in policy.in
@@ -22,6 +22,9 @@ dbinit_pgsql.sql: $(SOURCE) $(HEADER_FILES)
 
 dbinit_mssql.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_MSSQL $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbinit_oracle.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_ORACLE $(ROOT_FILE) | $(SQUEEZE) > $@
 
 clean:
 	rm -f dbinit_*.sql
