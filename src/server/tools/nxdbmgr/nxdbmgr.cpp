@@ -363,6 +363,10 @@ int main(int argc, char *argv[])
    {
       g_iSyntax = DB_SYNTAX_MSSQL;
    }
+   else if (!_tcscmp(szSyntaxId, _T("ORACLE")))
+   {
+      g_iSyntax = DB_SYNTAX_ORACLE;
+   }
    else
    {
       _tprintf(_T("Unknown database syntax %s\n"), szSyntaxId);

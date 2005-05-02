@@ -36,6 +36,7 @@
 #define DB_SYNTAX_MYSQL    0
 #define DB_SYNTAX_PGSQL    1
 #define DB_SYNTAX_MSSQL    2
+#define DB_SYNTAX_ORACLE   3
 
 
 //

@@ -75,6 +75,33 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V27 to V28
+//
+
+static BOOL H_UpgradeFromV27(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE users ADD system_access integer\n"
+      "UPDATE users SET system_access=access\n"
+      "ALTER TABLE users DROP COLUMN access\n"
+      "ALTER TABLE user_groups ADD system_access integer\n"
+      "UPDATE user_groups SET system_access=access\n"
+      "ALTER TABLE user_groups DROP COLUMN access\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='28' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Move object data from class-specific tables to object_prioperties table
 //
 
@@ -1063,6 +1090,7 @@ static struct
    { 24, H_UpgradeFromV24 },
    { 25, H_UpgradeFromV25 },
    { 26, H_UpgradeFromV26 },
+   { 27, H_UpgradeFromV27 },
    { 0, NULL }
 };
 
