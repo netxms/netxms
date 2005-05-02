@@ -77,8 +77,8 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
       goto connect_failure_1;
 	SQLSetConnectAttr(pConn->sqlConn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0);
 
-	// Connect to the datasource "web" 
-	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)szHost, SQL_NTS, 
+	// Connect to the datasource 
+	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)szHost, SQL_NTS,
                         (SQLCHAR *)szLogin, SQL_NTS, (SQLCHAR *)szPassword, SQL_NTS);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
       goto connect_failure_2;

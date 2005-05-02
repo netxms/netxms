@@ -131,7 +131,7 @@ BEGIN
                     75,188,WS_EX_CLIENTEDGE
     LTEXT           "Select database driver",IDC_STATIC,210,7,72,8
     LTEXT           "Select database engine",IDC_STATIC,90,7,76,8
-    LTEXT           "Database server",IDC_STATIC,90,32,53,8
+    LTEXT           "Database server",IDC_STATIC_SERVER,90,32,222,8
     LTEXT           "DBA login name",IDC_STATIC,90,103,52,8
     LTEXT           "DBA password",IDC_STATIC,90,120,48,8
     LTEXT           "Database name",IDC_STATIC,89,148,51,8

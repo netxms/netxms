@@ -62,7 +62,7 @@ BOOL LoadUsers(void)
    DWORD i, iNumRows;
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,access,flags,full_name,description FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description FROM users ORDER BY id");
    if (hResult == NULL)
       return FALSE;
 
@@ -108,7 +108,7 @@ BOOL LoadUsers(void)
    }
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,access,flags,description FROM user_groups ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,system_access,flags,description FROM user_groups ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -206,13 +206,13 @@ void SaveUsers(void)
          // Create or update record in database
          BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
          if (bUserExists)
-            sprintf(szQuery, "UPDATE users SET name='%s',password='%s',access=%d,flags=%d,"
+            sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
                              "full_name='%s',description='%s' WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
                     g_pUserList[i].wFlags, g_pUserList[i].szFullName,
                     g_pUserList[i].szDescription, g_pUserList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO users (id,name,password,access,flags,full_name,description) "
+            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description) "
                              "VALUES (%d,'%s','%s',%d,%d,'%s','%s')",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
@@ -261,13 +261,13 @@ void SaveUsers(void)
 
          // Create or update record in database
          if (bGroupExists)
-            sprintf(szQuery, "UPDATE user_groups SET name='%s',access=%d,flags=%d,"
+            sprintf(szQuery, "UPDATE user_groups SET name='%s',system_access=%d,flags=%d,"
                              "description='%s' WHERE id=%d",
                     g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
                     g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
                     g_pGroupList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO user_groups (id,name,access,flags,description) "
+            sprintf(szQuery, "INSERT INTO user_groups (id,name,system_access,flags,description) "
                              "VALUES (%d,'%s',%d,%d,'%s')",
                     g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
                     g_pGroupList[i].wFlags, g_pGroupList[i].szDescription);

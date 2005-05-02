@@ -42,6 +42,7 @@ public:
 protected:
 	void OnDBCreationSelect(void);
 	void OnEngineSelect(void);
+	void OnDriverSelect(void);
 	// Generated message map functions
 	//{{AFX_MSG(CDBSelectPage)
 	virtual BOOL OnInitDialog();
@@ -49,6 +50,7 @@ protected:
 	afx_msg void OnRadioNewdb();
 	afx_msg void OnRadioExistingdb();
 	afx_msg void OnCheckInitdb();
+	afx_msg void OnSelchangeComboDbdrv();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

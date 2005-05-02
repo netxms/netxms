@@ -16,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define MAX_DB_ENGINES     3
+#define MAX_DB_ENGINES     4
 #define MAX_DB_DRIVERS     2
 
 
@@ -25,7 +25,7 @@ static char THIS_FILE[] = __FILE__;
 //
 
 TCHAR *g_pszDBEngines[MAX_DB_ENGINES] = { _T("MySQL"), _T("PostgreSQL"),
-                                   _T("Microsoft SQL Server") };
+                                          _T("Microsoft SQL Server"), _T("Oracle") };
 
 
 //
@@ -37,6 +37,7 @@ static TCHAR *m_pszValidDrivers[MAX_DB_ENGINES][MAX_DB_DRIVERS] =
    { _T("mysql.ddr"), _T("odbc.ddr") },
    { _T("odbc.ddr"), NULL },
    { _T("mssql.ddr"), _T("odbc.ddr") },
+   { _T("odbc.ddr"), NULL }
 };
 
 
@@ -71,6 +72,7 @@ BEGIN_MESSAGE_MAP(CDBSelectPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_RADIO_NEWDB, OnRadioNewdb)
 	ON_BN_CLICKED(IDC_RADIO_EXISTINGDB, OnRadioExistingdb)
 	ON_BN_CLICKED(IDC_CHECK_INITDB, OnCheckInitdb)
+	ON_CBN_SELCHANGE(IDC_COMBO_DBDRV, OnSelchangeComboDbdrv)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -94,6 +96,7 @@ BOOL CDBSelectPage::OnInitDialog()
       m_wndEngineList.AddString(g_pszDBEngines[i]);
    m_wndEngineList.SelectString(-1, g_pszDBEngines[pc->m_iDBEngine]);
    OnEngineSelect();
+   OnDriverSelect();
 
    // Initialize new/existing DB selection
    if (pc->m_bCreateDB)
@@ -161,6 +164,8 @@ void CDBSelectPage::OnEngineSelect()
          m_wndDrvList.AddString(m_pszValidDrivers[pc->m_iDBEngine][i]);
    if (m_wndDrvList.SelectString(-1, szBuffer) == CB_ERR)
       m_wndDrvList.SelectString(-1, m_pszValidDrivers[pc->m_iDBEngine][0]);
+   m_wndDrvList.GetWindowText(pc->m_szDBDriver, MAX_DB_STRING);
+   OnDriverSelect();
 }
 
 
@@ -197,12 +202,16 @@ void CDBSelectPage::OnDBCreationSelect()
    if (pc->m_bCreateDB)
    {
       EnableDlgItem(this, IDC_CHECK_INITDB, FALSE);
+      EnableDlgItem(this, IDC_EDIT_DBA_LOGIN, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DBA_PASSWORD, TRUE);
    }
    else
    {
       EnableDlgItem(this, IDC_CHECK_INITDB, TRUE);
       SendDlgItemMessage(IDC_CHECK_INITDB, BM_SETCHECK,
                          pc->m_bInitDB ? BST_CHECKED : BST_UNCHECKED);
+      EnableDlgItem(this, IDC_EDIT_DBA_LOGIN, FALSE);
+      EnableDlgItem(this, IDC_EDIT_DBA_PASSWORD, FALSE);
    }
 }
 
@@ -230,7 +239,7 @@ void CDBSelectPage::OnCheckInitdb()
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
 
-   pc->m_bInitDB = (SendDlgItemMessage(IDC_RADIO_NEWDB, BM_GETCHECK) == BST_CHECKED);
+   pc->m_bInitDB = (SendDlgItemMessage(IDC_CHECK_INITDB, BM_GETCHECK) == BST_CHECKED);
 }
 
 
@@ -242,4 +251,44 @@ LRESULT CDBSelectPage::OnWizardBack()
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
    return pc->m_bConfigFileDetected ? IDD_INTRO : IDD_CFG_FILE;
+}
+
+
+//
+// DB driver selection change handler
+//
+
+void CDBSelectPage::OnSelchangeComboDbdrv() 
+{
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+   
+   m_wndDrvList.GetWindowText(pc->m_szDBDriver, MAX_DB_STRING);
+   OnDriverSelect();
+}
+
+
+//
+// Change dialog appearance when database driver selected
+//
+
+void CDBSelectPage::OnDriverSelect()
+{
+   WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
+
+   if (!_tcscmp(pc->m_szDBDriver, _T("odbc.ddr")))
+   {
+      SetDlgItemText(IDC_STATIC_SERVER, _T("ODBC data source"));
+      EnableDlgItem(this, IDC_EDIT_DB_NAME, FALSE);
+      SendDlgItemMessage(IDC_RADIO_NEWDB, BM_SETCHECK, BST_UNCHECKED);
+      SendDlgItemMessage(IDC_RADIO_EXISTINGDB, BM_SETCHECK, BST_CHECKED);
+      pc->m_bCreateDB = FALSE;
+      EnableDlgItem(this, IDC_RADIO_NEWDB, FALSE);
+      OnDBCreationSelect();
+   }
+   else
+   {
+      SetDlgItemText(IDC_STATIC_SERVER, _T("Database server"));
+      EnableDlgItem(this, IDC_EDIT_DB_NAME, TRUE);
+      EnableDlgItem(this, IDC_RADIO_NEWDB, TRUE);
+   }
 }

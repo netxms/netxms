@@ -128,6 +128,7 @@ void CProcessingPage::OnJobFinished(WPARAM wParam, LPARAM lParam)
 BOOL CProcessingPage::OnSetActive() 
 {
    ((CPropertySheet *)GetParent())->SetWizardButtons(0);
+   m_wndListCtrl.DeleteAllItems();
    StartWizardWorkerThread(this->m_hWnd, &((CConfigWizard *)GetParent())->m_cfg);
 	return CPropertyPage::OnSetActive();
 }
