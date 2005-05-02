@@ -57,7 +57,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EnableEventsAccessControl','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('EventLogRetentionTime','5184000',1,0); -- Default retention time is 60 days == 5184000 seconds
+	VALUES ('EventLogRetentionTime','5184000',1,0); // Default retention time is 60 days == 5184000 seconds
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('HouseKeepingInterval','3600',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
