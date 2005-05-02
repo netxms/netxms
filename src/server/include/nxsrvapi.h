@@ -202,6 +202,7 @@ public:
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
+BYTE LIBNXSRV_EXPORTABLE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
 
 void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen);
 void LIBNXSRV_EXPORTABLE CloseLog(void);
@@ -209,6 +210,8 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...);
 
 BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL);
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(TCHAR *pszServer, TCHAR *pszDBName,
+                                          TCHAR *pszLogin, TCHAR *pszPassword);
 void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
 BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery);
 DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery);

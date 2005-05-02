@@ -477,8 +477,6 @@ BOOL InitIdTable(void);
 DWORD CreateUniqueId(int iGroup);
 QWORD CreateUniqueEventId(void);
 
-BYTE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
-
 void UpdateImageHashes(void);
 void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat);
 void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD wFormat);

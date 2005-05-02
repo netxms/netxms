@@ -159,6 +159,17 @@ DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void)
 
 
 //
+// Connect to database using provided parameters
+//
+
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(TCHAR *pszServer, TCHAR *pszDBName,
+                                          TCHAR *pszLogin, TCHAR *pszPassword)
+{
+   return m_fpDrvConnect(pszServer, pszLogin, pszPassword, pszDBName);
+}
+
+
+//
 // Disconnect from database
 //
 

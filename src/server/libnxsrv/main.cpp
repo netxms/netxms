@@ -102,6 +102,43 @@ void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache)
 
 
 //
+// Load file into memory
+//
+
+BYTE LIBNXSRV_EXPORTABLE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
+{
+   int fd, iBufPos, iNumBytes, iBytesRead;
+   BYTE *pBuffer = NULL;
+   struct stat fs;
+
+   fd = open(pszFileName, O_RDONLY | O_BINARY);
+   if (fd != -1)
+   {
+      if (fstat(fd, &fs) != -1)
+      {
+         pBuffer = (BYTE *)malloc(fs.st_size + 1);
+         if (pBuffer != NULL)
+         {
+            *pdwFileSize = fs.st_size;
+            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
+            {
+               iNumBytes = min(16384, fs.st_size - iBufPos);
+               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+               {
+                  free(pBuffer);
+                  pBuffer = NULL;
+                  break;
+               }
+            }
+         }
+      }
+      close(fd);
+   }
+   return pBuffer;
+}
+
+
+//
 // DLL entry point
 //
 
