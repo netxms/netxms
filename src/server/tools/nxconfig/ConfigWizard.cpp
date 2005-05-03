@@ -96,21 +96,30 @@ void CConfigWizard::DefaultConfig()
    // Read configuration file, if it's exist
    if (m_cfg.m_bConfigFileDetected)
    {
-      DWORD dwFlags;
-      NX_CFG_TEMPLATE cfgTemplate[] =
+      static NX_CFG_TEMPLATE cfgTemplate[] =
       {
-         { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, m_cfg.m_szDBDriver },
-         { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, m_cfg.m_szDBDrvParams },
-         { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, m_cfg.m_szDBLogin },
-         { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, m_cfg.m_szDBName },
-         { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, m_cfg.m_szDBPassword },
-         { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, m_cfg.m_szDBServer },
-         { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, 1, 0, &dwFlags },
-         { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, m_cfg.m_szLogFile },
+         { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, NULL },
+         { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, NULL },
+         { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, NULL },
+         { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
+         { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, 1, 0, NULL },
+         { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, NULL },
          { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
       };
+      DWORD dwFlags;
 
-      if (NxLoadConfig(m_cfg.m_szConfigFile, NULL, cfgTemplate, FALSE) == NXCFG_ERR_OK)
+      cfgTemplate[0].pBuffer = m_cfg.m_szDBDriver;
+      cfgTemplate[1].pBuffer = m_cfg.m_szDBDrvParams;
+      cfgTemplate[2].pBuffer = m_cfg.m_szDBLogin;
+      cfgTemplate[3].pBuffer = m_cfg.m_szDBName;
+      cfgTemplate[4].pBuffer = m_cfg.m_szDBPassword;
+      cfgTemplate[5].pBuffer = m_cfg.m_szDBServer;
+      cfgTemplate[6].pBuffer = &dwFlags;
+      cfgTemplate[7].pBuffer = m_cfg.m_szLogFile;
+
+      if (NxLoadConfig(m_cfg.m_szConfigFile, _T(""), cfgTemplate, FALSE) == NXCFG_ERR_OK)
       {
          m_cfg.m_bLogFailedSQLQueries = (dwFlags ? TRUE : FALSE);
       }

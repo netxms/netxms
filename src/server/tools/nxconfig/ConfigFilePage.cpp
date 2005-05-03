@@ -38,7 +38,7 @@ void CConfigFilePage::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CConfigFilePage, CPropertyPage)
 	//{{AFX_MSG_MAP(CConfigFilePage)
-		// NOTE: the ClassWizard will add message map macros here
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE, OnButtonBrowse)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -58,4 +58,31 @@ LRESULT CConfigFilePage::OnWizardNext()
    StrStrip(pc->m_szConfigFile);
 	
 	return CPropertyPage::OnWizardNext();
+}
+
+
+//
+// Handler for "Browse..." button
+//
+
+void CConfigFilePage::OnButtonBrowse() 
+{
+   CFileDialog dlg(TRUE, _T(".conf"), NULL, OFN_PATHMUSTEXIST,
+                   _T("Configuration Files (*.conf)|*.conf|All Files (*.*)|*.*||"), this);
+
+   if (dlg.DoModal() == IDOK)
+   {
+      SetDlgItemText(IDC_EDIT_FILE, dlg.m_ofn.lpstrFile);
+   }
+}
+
+
+//
+// Page activation handler
+//
+
+BOOL CConfigFilePage::OnSetActive() 
+{
+   ((CPropertySheet *)GetParent())->SetWizardButtons(PSWIZB_BACK | PSWIZB_NEXT);
+	return CPropertyPage::OnSetActive();
 }

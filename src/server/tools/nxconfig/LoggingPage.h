@@ -43,6 +43,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnRadioSyslog();
 	afx_msg void OnRadioFile();
+	afx_msg void OnButtonBrowse();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

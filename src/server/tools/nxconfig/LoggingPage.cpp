@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CLoggingPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CLoggingPage)
 	ON_BN_CLICKED(IDC_RADIO_SYSLOG, OnRadioSyslog)
 	ON_BN_CLICKED(IDC_RADIO_FILE, OnRadioFile)
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE, OnButtonBrowse)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -101,4 +102,20 @@ LRESULT CLoggingPage::OnWizardNext()
    pc->m_bLogToSyslog = (SendDlgItemMessage(IDC_RADIO_SYSLOG, BM_GETCHECK) == BST_CHECKED);
    GetDlgItemText(IDC_EDIT_FILE, pc->m_szLogFile, MAX_PATH);
 	return CPropertyPage::OnWizardNext();
+}
+
+
+//
+// Handler for "Browse..." button
+//
+
+void CLoggingPage::OnButtonBrowse() 
+{
+   CFileDialog dlg(TRUE, _T(".log"), NULL, OFN_PATHMUSTEXIST,
+                   _T("Log Files (*.log)|*.log|All Files (*.*)|*.*||"), this);
+
+   if (dlg.DoModal() == IDOK)
+   {
+      SetDlgItemText(IDC_EDIT_FILE, dlg.m_ofn.lpstrFile);
+   }
 }
