@@ -571,6 +571,7 @@ src/console/win32starter/nxcstart.rc -text
 src/console/win32starter/resource.h -text
 src/install/Makefile.am -text
 src/install/windows/Makefile.am -text
+src/install/windows/files.txt -text
 src/install/windows/netxms.iss -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/Makefile.nw -text

@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.1.18
-AppVersion=0.1.18
+AppVerName=NetXMS 0.1.19
+AppVersion=0.1.19
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.1.18
+OutputBaseFilename=netxms-0.1.19
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -40,7 +40,7 @@ Source: "..\..\server\dbdrv\mssql\Release\mssql.ddr"; DestDir: "{app}\bin"; Flag
 Source: "..\..\server\dbdrv\odbc\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxaction\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxadm\Release\nxadm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
-;Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxdbmgr\Release\nxdbmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxget\Release\nxget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxsnmpget\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -50,18 +50,20 @@ Source: "..\..\console\win32\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ig
 Source: "..\..\agent\core\Release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\winperf\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\ping\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
-Source: "..\..\..\sql\dbinit_mssql.sql"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
-Source: "..\..\..\sql\dbinit_mysql.sql"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
-Source: "..\..\..\sql\dbinit_pgsql.sql"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
+Source: "..\..\..\sql\dbinit_mssql.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
+Source: "..\..\..\sql\dbinit_mysql.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
+Source: "..\..\..\sql\dbinit_pgsql.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*.ico"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*.png"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\var\mibs"; Flags: ignoreversion; Components: server
+Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\libsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 
 [Icons]
-Name: "{group}\NetXMS Console"; Filename: "{app}\nxcon.exe"; Components: console
+Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Components: console
 Name: "{group}\{cm:UninstallProgram,NetXMS}"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\NetXMS Console"; Filename: "{app}\nxcon.exe"; Tasks: desktopicon; Components: console
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; Filename: "{app}\nxcon.exe"; Tasks: quicklaunchicon; Components: console
+Name: "{userdesktop}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Tasks: desktopicon; Components: console
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Tasks: quicklaunchicon; Components: console
 
 [Dirs]
 Name: "{app}\etc"
@@ -74,6 +76,7 @@ Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "Ins
 Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\netxmsd.conf"; Components: server
 
 [Run]
+Filename: "{app}\bin\nxconfig.exe"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c {app}\etc\nxagentd.conf -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "--config {app}\etc\netxmsd.conf install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
