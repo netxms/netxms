@@ -104,10 +104,12 @@ public:
 
 public:
 	//{{AFX_MSG(CNxconfigApp)
-	afx_msg void OnAppAbout();
 	afx_msg void OnFileCfgWizard();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+protected:
+	TCHAR m_szInstallDir[MAX_PATH];
+	void CreateAgentConfig(void);
 };
 
 

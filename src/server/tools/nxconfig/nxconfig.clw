@@ -13,9 +13,9 @@ Class1=CNxconfigApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=14
-Resource1=IDD_ABOUTBOX
-Resource2=IDR_MAINFRAME
+ResourceCount=12
+Resource1=IDR_MAINFRAME (English (U.S.))
+Resource2=IDD_PROCESSING (English (U.S.))
 Class2=CChildView
 Resource3=IDD_SELECT_DB (English (U.S.))
 Resource4=IDD_POLLING (English (U.S.))
@@ -25,7 +25,7 @@ Resource5=IDD_SUMMARY (English (U.S.))
 Class7=CDBSelectPage
 Resource6=IDD_INTRO (English (U.S.))
 Class8=CFinishPage
-Resource7=IDR_MAINFRAME (English (U.S.))
+Resource7=IDD_LOG_FILE (English (U.S.))
 Class9=CODBCPage
 Resource8=IDD_ODBC (English (U.S.))
 Class10=CPollCfgPage
@@ -37,9 +37,7 @@ Resource11=IDD_SMTP (English (U.S.))
 Class13=CProcessingPage
 Resource12=IDD_ABOUTBOX (English (U.S.))
 Class14=CConfigFilePage
-Resource13=IDD_PROCESSING (English (U.S.))
 Class15=CLoggingPage
-Resource14=IDD_LOG_FILE (English (U.S.))
 
 [CLS:CNxconfigApp]
 Type=0
@@ -71,15 +69,6 @@ ImplementationFile=nxconfig.cpp
 Filter=D
 LastObject=CAboutDlg
 
-[DLG:IDD_ABOUTBOX]
-Type=1
-ControlCount=4
-Control1=IDC_STATIC,static,1342177283
-Control2=IDC_STATIC,static,1342308352
-Control3=IDC_STATIC,static,1342308352
-Control4=IDOK,button,1342373889
-Class=CAboutDlg
-
 [MNU:IDR_MAINFRAME]
 Type=1
 Class=CMainFrame
@@ -97,33 +86,12 @@ Command7=ID_EDIT_UNDO
 Command8=ID_EDIT_CUT
 Command9=ID_EDIT_COPY
 
-[ACL:IDR_MAINFRAME]
-Type=1
-Class=CMainFrame
-Command1=ID_FILE_NEW
-Command2=ID_FILE_OPEN
-Command3=ID_FILE_SAVE
-Command5=ID_EDIT_CUT
-Command6=ID_EDIT_COPY
-Command7=ID_EDIT_PASTE
-Command8=ID_EDIT_UNDO
-Command9=ID_EDIT_CUT
-Command10=ID_EDIT_COPY
-Command11=ID_EDIT_PASTE
-Command12=ID_NEXT_PANE
-CommandCount=13
-Command4=ID_EDIT_UNDO
-Command13=ID_PREV_PANE
-
-
 [MNU:IDR_MAINFRAME (English (U.S.))]
 Type=1
 Class=?
 Command1=ID_FILE_CFG_WIZARD
 Command2=ID_APP_EXIT
-Command3=ID_VIEW_STATUS_BAR
-Command4=ID_APP_ABOUT
-CommandCount=4
+CommandCount=2
 
 [ACL:IDR_MAINFRAME (English (U.S.))]
 Type=1

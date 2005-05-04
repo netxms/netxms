@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnetxms.lib libnxsrv.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\..\libnetxms\Release" /libpath:"..\..\libnxsrv\Release"
+# ADD LINK32 libnetxms.lib libnxsrv.lib iphlpapi.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\..\libnetxms\Release" /libpath:"..\..\libnxsrv\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -84,7 +84,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnetxms.lib libnxsrv.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug" /libpath:"..\..\libnxsrv\Debug"
+# ADD LINK32 libnetxms.lib libnxsrv.lib iphlpapi.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug" /libpath:"..\..\libnxsrv\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files

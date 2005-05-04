@@ -142,11 +142,16 @@ static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
               _tctime(&t));
       fprintf(pf, _T("LogFile = %s\n"), pc->m_bLogToSyslog ? _T("{syslog}") : pc->m_szLogFile);
       fprintf(pf, _T("DBDriver = %s\n"), pc->m_szDBDriver);
-      if (pc->m_szDBDrvParams[0] = 0)
+      if (pc->m_szDBDrvParams[0] != 0)
          fprintf(pf, _T("DBDrvParams = %s\n"), pc->m_szDBDrvParams);
-      fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
-      fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
-      fprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
+      if (pc->m_szDBServer[0] != 0)
+         fprintf(pf, _T("DBServer = %s\n"), pc->m_szDBServer);
+      if (pc->m_szDBName[0] != 0)
+         fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
+      if (pc->m_szDBLogin[0] != 0)
+         fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
+      if (pc->m_szDBPassword[0] != 0)
+         fprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
       fprintf(pf, _T("LogFailedSQLQueries = %s\n"), pc->m_bLogFailedSQLQueries ? _T("yes") : _T("no"));
       fclose(pf);
       bResult = TRUE;
