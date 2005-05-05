@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.79 2005-05-02 08:28:09 victor Exp $
+# $Id: configure.ac,v 1.80 2005-05-05 10:59:49 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -173,6 +173,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql pgsql odbc mssql"
 	MODULES="server agent libnxcl nxevent nxreport console"
 	SUBAGENT_DIRS="linux freebsd sunos"
+	NXCONFIG="nxconfig"
 )
 
 AC_ARG_WITH(nxsm,
@@ -185,6 +186,7 @@ AC_ARG_WITH(nxsm,
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
+AC_SUBST(NXCONFIG)
 
 # --------------------------------------------------------------------------
 # checks for libs.
@@ -420,6 +422,8 @@ AC_CONFIG_FILES([
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
+	src/server/tools/nxconfig/Makefile
+	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxsnmpget/Makefile
 	src/server/tools/nxsnmpwalk/Makefile

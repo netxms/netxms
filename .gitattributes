@@ -785,6 +785,7 @@ src/server/tools/nxconfig/LoggingPage.cpp -text
 src/server/tools/nxconfig/LoggingPage.h -text
 src/server/tools/nxconfig/MainFrm.cpp -text
 src/server/tools/nxconfig/MainFrm.h -text
+src/server/tools/nxconfig/Makefile.am -text
 src/server/tools/nxconfig/ODBCPage.cpp -text
 src/server/tools/nxconfig/ODBCPage.h -text
 src/server/tools/nxconfig/PollCfgPage.cpp -text
@@ -804,6 +805,7 @@ src/server/tools/nxconfig/nxconfig.dsp -text
 src/server/tools/nxconfig/nxconfig.dsw -text
 src/server/tools/nxconfig/nxconfig.h -text
 src/server/tools/nxconfig/nxconfig.rc -text
+src/server/tools/nxconfig/res/Makefile.am -text
 src/server/tools/nxconfig/res/failed.ico -text
 src/server/tools/nxconfig/res/nxconfig.ico -text
 src/server/tools/nxconfig/res/nxconfig.rc2 -text

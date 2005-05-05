@@ -8,5 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxget nxadm nxaction nxdbmgr nxsnmpget nxsnmpwalk nxupload
-SUBDIRS += @NXCONFIG@
+EXTRA_DIST = failed.ico nxconfig.ico nxconfig.rc2 ok.ico running.ico wizard.bmp
