@@ -61,7 +61,10 @@ Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Component
 Source: "Files\libsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 
 [Icons]
+Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
 Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Components: console
+Name: "{group}\Server Configuration Wizard"; Filename: "{app}\bin\nxconfig.exe"; Components: server
+Name: "{group}\Server Console"; Filename: "{app}\bin\nxadm.exe"; Parameters: "-i"; Components: server
 Name: "{group}\{cm:UninstallProgram,NetXMS}"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Tasks: desktopicon; Components: console
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Tasks: quicklaunchicon; Components: console
