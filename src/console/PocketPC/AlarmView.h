@@ -7,6 +7,12 @@
 // AlarmView.h : header file
 //
 
+#define SORT_BY_SEVERITY      0
+#define SORT_BY_SOURCE        1
+#define SORT_BY_MESSAGE       2
+#define SORT_BY_TIMESTAMP     3
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmView window
 
@@ -33,9 +39,18 @@ public:
 	virtual ~CAlarmView();
 
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
+   NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
 
 	// Generated message map functions
 protected:
+	BOOL m_bShowAllAlarms;
+   void AddAlarmToList(NXC_ALARM *pAlarm);
+   void DeleteAlarmFromList(DWORD dwAlarmId);
+	int FindAlarmRecord(DWORD dwAlarmId);
+   NXC_ALARM *m_pAlarmList;
+   DWORD m_dwNumAlarms;
+	int m_iSortMode;
+   int m_iSortDir;
 	CFont m_fontLarge;
 	CFont m_fontSmall;
 	void DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData);
@@ -47,8 +62,21 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnAlarmSortbyAscending();
+	afx_msg void OnAlarmSortbyDescending();
+	afx_msg void OnAlarmSortbySeverity();
+	afx_msg void OnAlarmSortbySource();
+	afx_msg void OnAlarmSortbyMessagetext();
+	afx_msg void OnAlarmSortbyTimestamp();
+	afx_msg void OnAlarmAcknowlege();
+	afx_msg void OnAlarmDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+public:
+   int SortMode(void) { return m_iSortMode; }
+   int SortDir(void) { return m_iSortDir; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

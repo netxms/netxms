@@ -56,6 +56,7 @@ public:
 
 	// Generated message map functions
 protected:
+	void ChangeMgmtStatus(DWORD dwObjectId, BOOL bStatus);
 	CImageList m_imageList;
 	DWORD m_dwTreeHashSize;
 	OBJ_TREE_HASH * m_pTreeHash;
@@ -72,8 +73,16 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnObjectManage();
+	afx_msg void OnObjectUnmanage();
+	afx_msg void OnObjectLastdcivalues();
+	afx_msg void OnObjectWakeup();
 	//}}AFX_MSG
+   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
+private:
+	NXC_OBJECT *m_pCurrentObject;
 };
 
 /////////////////////////////////////////////////////////////////////////////

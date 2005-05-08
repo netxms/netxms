@@ -243,10 +243,14 @@ DEP_CPP_ALARM=\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
 	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_ALARM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -347,10 +351,15 @@ DEP_CPP_COMM_=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_COMM_=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -377,6 +386,256 @@ DEP_CPP_COMM_=\
 	".\StdAfx.h"\
 	
 NODEP_CPP_COMM_=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\DataView.cpp
+
+!IF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Release"
+
+DEP_CPP_DATAV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DataView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DATAV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
+
+DEP_CPP_DATAV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DataView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DATAV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_DATAV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DataView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DATAV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_DATAV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DataView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DATAV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicView.cpp
+
+!IF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Release"
+
+DEP_CPP_DYNAM=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DYNAM=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
+
+DEP_CPP_DYNAM=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DYNAM=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_DYNAM=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DYNAM=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_DYNAM=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_DYNAM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
 	
 
@@ -453,10 +712,15 @@ DEP_CPP_GLOBA=\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\nxnt.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_GLOBA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -484,6 +748,133 @@ DEP_CPP_GLOBA=\
 	".\StdAfx.h"\
 	
 NODEP_CPP_GLOBA=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\LastValuesView.cpp
+
+!IF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Release"
+
+DEP_CPP_LASTV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\LastValuesView.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_LASTV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
+
+DEP_CPP_LASTV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\LastValuesView.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_LASTV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_LASTV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\LastValuesView.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_LASTV=\
+	"..\..\..\..\..\usr\include\pthread.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_LASTV=\
+	"..\..\..\include\config-netware.h"\
+	"..\..\..\include\getopt.h"\
+	"..\..\..\include\netxms-version.h"\
+	"..\..\..\include\nms_common.h"\
+	"..\..\..\include\nms_cscp.h"\
+	"..\..\..\include\nms_threads.h"\
+	"..\..\..\include\nms_util.h"\
+	"..\..\..\include\nxclapi.h"\
+	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxevent.h"\
+	"..\..\..\include\nximage.h"\
+	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
+	".\globals.h"\
+	".\LastValuesView.h"\
+	".\MainFrm.h"\
+	".\nxpc.h"\
+	".\ObjectView.h"\
+	".\RequestProcessingDlg.h"\
+	".\StdAfx.h"\
+	".\SummaryView.h"\
+	
+NODEP_CPP_LASTV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
 	
 
@@ -559,11 +950,16 @@ DEP_CPP_LOGIN=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
 	".\LoginDlg.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_LOGIN=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -656,6 +1052,7 @@ DEP_CPP_MAINF=\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
 	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
@@ -742,6 +1139,7 @@ DEP_CPP_NXPC_=\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
 	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
 	".\LoginDlg.h"\
 	".\MainFrm.h"\
@@ -836,6 +1234,8 @@ DEP_CPP_OBJEC=\
 	
 NODEP_CPP_OBJEC=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	".\EmptyDlg.h"\
+	".\LastValuesDlg.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -853,11 +1253,16 @@ DEP_CPP_OBJEC=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\LastValuesView.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
 	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_OBJEC=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -958,10 +1363,15 @@ DEP_CPP_REQUE=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_REQUE=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -1073,8 +1483,11 @@ DEP_CPP_SUMMA=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
 	".\SummaryView.h"\
@@ -1098,8 +1511,12 @@ DEP_CPP_SUMMA=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
 	".\SummaryView.h"\
@@ -1203,10 +1620,15 @@ DEP_CPP_TOOLS=\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
+	".\AlarmView.h"\
+	".\DynamicView.h"\
 	".\globals.h"\
+	".\MainFrm.h"\
 	".\nxpc.h"\
+	".\ObjectView.h"\
 	".\RequestProcessingDlg.h"\
 	".\StdAfx.h"\
+	".\SummaryView.h"\
 	
 NODEP_CPP_TOOLS=\
 	"..\..\..\..\..\usr\include\pthread.h"\
@@ -1249,7 +1671,19 @@ SOURCE=.\AlarmView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DataView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicView.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LastValuesView.h
 # End Source File
 # Begin Source File
 
@@ -1261,7 +1695,23 @@ SOURCE=.\MainFrm.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\include\netxms-version.h"
+# End Source File
+# Begin Source File
+
 SOURCE=.\newres.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nms_common.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxclapi.h
 # End Source File
 # Begin Source File
 
@@ -1297,6 +1747,26 @@ SOURCE=.\res\ack.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\btn_close.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\btn_close_dis.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\btn_close_sel.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\btn_next.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\btn_prev.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\Cmdbar.bmp
 # End Source File
 # Begin Source File
@@ -1306,6 +1776,10 @@ SOURCE=.\res\connect.ico
 # Begin Source File
 
 SOURCE=.\res\container.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\idt_view.bmp
 # End Source File
 # Begin Source File
 

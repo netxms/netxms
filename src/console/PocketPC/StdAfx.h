@@ -18,8 +18,6 @@
 #error This project can not be built for H/PC Pro 2.11 or earlier platforms.
 #endif
 
-//#include <winsock2.h>
-
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 #define _WINSOCK2API_    /* Prevent inclusion of winsock2.h */
 
@@ -35,6 +33,15 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
 #include <afxsock.h>		// MFC socket extensions
+
+
+// Redefine message handlers undefined in afxmsg_.h
+#ifndef ON_WM_CONTEXTMENU
+#define ON_WM_CONTEXTMENU() \
+	{ WM_CONTEXTMENU, 0, 0, 0, AfxSig_vWp, \
+		(AFX_PMSG)(AFX_PMSGW)(void (AFX_MSG_CALL CWnd::*)(CWnd*, CPoint))&OnContextMenu },
+#endif
+
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft eMbedded Visual C++ will insert additional declarations immediately before the previous line.

@@ -17,6 +17,7 @@
 
 #include "resource.h"       // main symbols
 #include "globals.h"
+#include "MainFrm.h"
 #include "RequestProcessingDlg.h"
 
 
@@ -28,6 +29,7 @@
 class CNxpcApp : public CWinApp
 {
 public:
+	CMenu * GetContextMenu(int nIndex);
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	CNxpcApp();
 
@@ -48,6 +50,7 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 protected:
+	CMenu m_ctxMenu;
 	BOOL SetupWorkDir(void);
 };
 

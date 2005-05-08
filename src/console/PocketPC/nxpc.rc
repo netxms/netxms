@@ -55,6 +55,10 @@ IDI_INTERFACE           ICON    DISCARDABLE     "res\\interface.ico"
 //
 
 IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Cmdbar.bmp"
+IDB_BTN_CLOSE           BITMAP  DISCARDABLE     "res\\btn_close.bmp"
+IDB_BTN_CLOSE_DIS       BITMAP  DISCARDABLE     "res\\btn_close_dis.bmp"
+IDB_BTN_PREV            BITMAP  DISCARDABLE     "res\\btn_prev.bmp"
+IDB_BTN_NEXT            BITMAP  DISCARDABLE     "res\\btn_next.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -82,6 +86,7 @@ BEGIN
     POPUP "System"
     BEGIN
         MENUITEM "Settings...",                 ID_SYSTEM_SETTINGS
+        MENUITEM "About...",                    ID_APP_ABOUT
         MENUITEM SEPARATOR
         MENUITEM "Exit",                        ID_APP_EXIT
     END
@@ -92,6 +97,46 @@ BEGIN
         MENUITEM "Objects",                     ID_VIEW_OBJECTS
         MENUITEM SEPARATOR
         MENUITEM "Refresh",                     ID_VIEW_REFRESH
+        MENUITEM "Close",                       ID_VIEW_CLOSE
+    END
+END
+
+IDM_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "Alarm"
+    BEGIN
+        MENUITEM "Acknowlege",                  ID_ALARM_ACKNOWLEGE
+        MENUITEM "Delete",                      ID_ALARM_DELETE
+        MENUITEM SEPARATOR
+        POPUP "Sort by"
+        BEGIN
+            MENUITEM "Severity",                    ID_ALARM_SORTBY_SEVERITY
+            MENUITEM "Source",                      ID_ALARM_SORTBY_SOURCE
+            MENUITEM "Message text",                ID_ALARM_SORTBY_MESSAGETEXT
+
+            MENUITEM "Timestamp",                   ID_ALARM_SORTBY_TIMESTAMP
+
+            MENUITEM SEPARATOR
+            MENUITEM "Ascending",                   ID_ALARM_SORTBY_ASCENDING
+
+            MENUITEM "Descending",                  ID_ALARM_SORTBY_DESCENDING
+
+        END
+    END
+    POPUP "Object"
+    BEGIN
+        MENUITEM "Details...",                  ID_OBJECT_DETAILS
+        MENUITEM "Last DCI values...",          ID_OBJECT_LASTDCIVALUES
+        MENUITEM SEPARATOR
+        MENUITEM "Manage",                      ID_OBJECT_MANAGE
+        MENUITEM "Unmanage",                    ID_OBJECT_UNMANAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Wake up",                     ID_OBJECT_WAKEUP
+    END
+    POPUP "View"
+    BEGIN
+        MENUITEM "Prev",                        ID_VIEW_PREV
+        MENUITEM "Next",                        ID_VIEW_NEXT
     END
 END
 
@@ -108,6 +153,17 @@ BEGIN
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_SYSTEM, 0, 0,
     I_IMAGENONE, ID_VIEW, TBSTATE_ENABLED, 
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_VIEW, 0, 1,
+END
+
+IDM_CONTEXT SHMENUBAR DISCARDABLE 
+BEGIN
+    IDM_CONTEXT, 3,
+    I_IMAGENONE, ID_ALARM, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_ALARM, 0, 0,
+    I_IMAGENONE, ID_OBJECT, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_OBJECT, 0, 1,
+    I_IMAGENONE, ID_VIEW, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_VIEW, 0, 2,
 END
 
 
@@ -134,15 +190,18 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 140, 57
+IDD_ABOUTBOX DIALOGEX 0, 0, 140, 110
 STYLE WS_POPUP | WS_CAPTION
 EXSTYLE 0x80000000L
 CAPTION "About nxpc"
 FONT 8, "System"
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "nxpc Version 1.0",IDC_STATIC,40,10,65,8,SS_NOPREFIX
-    LTEXT           "Copyright © 2005",IDC_STATIC,40,25,65,8
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,21,20
+    LTEXT           "NetXMS Pocket Console",IDC_STATIC,40,10,93,10,
+                    SS_NOPREFIX
+    LTEXT           "Copyright © 2005 Victor Kirhenshtein",IDC_STATIC,40,33,
+                    93,33
+    LTEXT           "Static",IDC_STATIC_VERSION,40,22,93,8
 END
 
 IDD_PROCESSING DIALOG DISCARDABLE  0, 0, 150, 38
@@ -229,7 +288,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 133
         TOPMARGIN, 7
-        BOTTOMMARGIN, 50
+        BOTTOMMARGIN, 103
     END
 
     IDD_PROCESSING, DIALOG
@@ -344,6 +403,17 @@ BEGIN
     IDS_CAP_CONNECT         "Connect"
 END
 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_ALARM           "Alarm"
+    IDS_CAP_OBJECT          "Object"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_REFRESH         "&Refresh"
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -395,6 +465,17 @@ BEGIN
 END
 
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_ALARM           "Alarm"
+END
 
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////

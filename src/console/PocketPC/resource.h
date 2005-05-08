@@ -36,12 +36,19 @@
 #define IDI_TEMPLATE                    149
 #define IDI_TEMPLATE_GROUP              150
 #define IDI_INTERFACE                   151
+#define IDM_CONTEXT                     160
+#define IDD_EMPTY                       161
+#define IDB_BTN_CLOSE                   163
+#define IDB_BTN_CLOSE_DIS               164
+#define IDB_BTN_PREV                    167
+#define IDB_BTN_NEXT                    168
 #define IDC_INFO_TEXT                   1000
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_LOGIN                  1002
 #define IDC_EDIT_PASSWORD               1003
 #define IDC_STATIC_TITLE                1005
 #define IDC_CHECK_CACHE                 1006
+#define IDC_STATIC_VERSION              1007
 #define ID_SYSTEM                       32771
 #define IDS_CAP_SYSTEM                  32773
 #define ID_SYSTEM_SETTINGS              32775
@@ -55,6 +62,27 @@
 #define ID_VIEW_REFRESH                 32786
 #define ID_BUTTON32787                  32787
 #define ID_VIEW_REFRESH_ALL             32788
+#define ID_ALARM                        32789
+#define IDS_CAP_ALARM                   32791
+#define ID_ALARM_ACKNOWLEGE             32792
+#define ID_ALARM_DELETE                 32793
+#define ID_OBJECT                       32794
+#define IDS_CAP_OBJECT                  32796
+#define ID_OBJECT_DETAILS               32797
+#define ID_OBJECT_LASTDCIVALUES         32798
+#define ID_OBJECT_MANAGE                32799
+#define ID_OBJECT_UNMANAGE              32800
+#define IDS_CAP_REFRESH                 32802
+#define ID_VIEW_CLOSE                   32805
+#define ID_VIEW_PREV                    32808
+#define ID_VIEW_NEXT                    32809
+#define ID_OBJECT_WAKEUP                32810
+#define ID_ALARM_SORTBY_SEVERITY        32811
+#define ID_ALARM_SORTBY_SOURCE          32812
+#define ID_ALARM_SORTBY_MESSAGETEXT     32813
+#define ID_ALARM_SORTBY_TIMESTAMP       32814
+#define ID_ALARM_SORTBY_ASCENDING       32815
+#define ID_ALARM_SORTBY_DESCENDING      32816
 #define IDS_NEW                         65000
 #define IDS_SUMMARY                     65000
 #define IDS_FILE                        65001
@@ -72,9 +100,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        160
-#define _APS_NEXT_COMMAND_VALUE         32789
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_COMMAND_VALUE         32817
+#define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

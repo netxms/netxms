@@ -2,31 +2,40 @@
 
 [General Info]
 Version=1
-LastClass=CLoginDlg
+LastClass=CDataView
 LastTemplate=generic CWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxpc.h"
 LastPage=0
 
-ClassCount=9
+ClassCount=14
 Class1=CNxpcApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=7
+ResourceCount=11
 Resource1=IDD_ABOUTBOX
 Resource2=IDR_MAINFRAME
-Resource4=IDD_ABOUTBOX (English (U.S.))
+Resource4=IDT_VIEW_CTRL (English (U.S.))
 Class2=CChildView
-Resource3=IDR_MAINFRAME (English (U.S.))
+Resource3=IDM_REFRESH (English (U.S.))
 Class5=CRequestProcessingDlg
-Resource5=IDD_PROCESSING (English (U.S.))
+Resource5=IDM_CONTEXT (English (U.S.))
 Class6=CLoginDlg
 Resource6=IDD_LOGIN
 Class7=CObjectView
 Class8=CSummaryView
 Class9=CAlarmView
-Resource7=IDD_LOGIN (English (U.S.))
+Resource7=IDD_PROCESSING (English (U.S.))
+Resource8=IDD_ABOUTBOX (English (U.S.))
+Class10=CEmptyDlg
+Class11=CLastValuesDlg
+Resource9=IDR_MAINFRAME (English (U.S.))
+Class12=CDynamicView
+Class13=CLastValuesView
+Resource10=IDD_EMPTY (English (U.S.))
+Resource11=IDD_LOGIN (English (U.S.))
+Class14=CDataView
 
 [CLS:CNxpcApp]
 Type=0
@@ -106,12 +115,14 @@ Command4=ID_EDIT_UNDO
 Type=1
 Class=?
 Command1=ID_SYSTEM_SETTINGS
-Command2=ID_APP_EXIT
-Command3=ID_VIEW_SUMMARY
-Command4=ID_VIEW_ALARMS
-Command5=ID_VIEW_OBJECTS
-Command6=ID_VIEW_REFRESH
-CommandCount=6
+Command2=ID_APP_ABOUT
+Command3=ID_APP_EXIT
+Command4=ID_VIEW_SUMMARY
+Command5=ID_VIEW_ALARMS
+Command6=ID_VIEW_OBJECTS
+Command7=ID_VIEW_REFRESH
+Command8=ID_VIEW_CLOSE
+CommandCount=8
 
 [TB:IDR_MAINFRAME (English (U.S.))]
 Type=1
@@ -138,10 +149,11 @@ CommandCount=8
 [DLG:IDD_ABOUTBOX (English (U.S.))]
 Type=1
 Class=CAboutDlg
-ControlCount=3
+ControlCount=4
 Control1=IDC_STATIC,static,1342177283
 Control2=IDC_STATIC,static,1342308480
 Control3=IDC_STATIC,static,1342308352
+Control4=IDC_STATIC_VERSION,static,1342308352
 
 [CLS:CRequestProcessingDlg]
 Type=0
@@ -216,4 +228,77 @@ ImplementationFile=AlarmView.cpp
 BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
+
+[MNU:IDM_CONTEXT (English (U.S.))]
+Type=1
+Class=?
+Command1=ID_ALARM_ACKNOWLEGE
+Command2=ID_ALARM_DELETE
+Command3=ID_ALARM_SORTBY_SEVERITY
+Command4=ID_ALARM_SORTBY_SOURCE
+Command5=ID_ALARM_SORTBY_MESSAGETEXT
+Command6=ID_ALARM_SORTBY_TIMESTAMP
+Command7=ID_ALARM_SORTBY_ASCENDING
+Command8=ID_ALARM_SORTBY_DESCENDING
+Command9=ID_OBJECT_DETAILS
+Command10=ID_OBJECT_LASTDCIVALUES
+Command11=ID_OBJECT_MANAGE
+Command12=ID_OBJECT_UNMANAGE
+Command13=ID_OBJECT_WAKEUP
+Command14=ID_VIEW_PREV
+Command15=ID_VIEW_NEXT
+CommandCount=15
+
+[DLG:IDD_EMPTY (English (U.S.))]
+Type=1
+Class=CEmptyDlg
+ControlCount=0
+
+[CLS:CEmptyDlg]
+Type=0
+HeaderFile=EmptyDlg.h
+ImplementationFile=EmptyDlg.cpp
+BaseClass=CDialog
+Filter=D
+
+[CLS:CLastValuesDlg]
+Type=0
+HeaderFile=LastValuesDlg.h
+ImplementationFile=LastValuesDlg.cpp
+BaseClass=CEmptyDlg
+Filter=D
+VirtualFilter=dWC
+
+[MNU:IDM_REFRESH (English (U.S.))]
+Type=1
+Command1=ID_VIEW_REFRESH
+CommandCount=1
+
+[CLS:CDynamicView]
+Type=0
+HeaderFile=DynamicView.h
+ImplementationFile=DynamicView.cpp
+BaseClass=CWnd
+Filter=W
+VirtualFilter=WC
+
+[CLS:CLastValuesView]
+Type=0
+HeaderFile=LastValuesView.h
+ImplementationFile=LastValuesView.cpp
+BaseClass=CDynamicView
+Filter=W
+VirtualFilter=VWC
+
+[TB:IDT_VIEW_CTRL (English (U.S.))]
+Type=1
+Command1=ID_BUTTON32804
+CommandCount=1
+
+[CLS:CDataView]
+Type=0
+HeaderFile=DataView.h
+ImplementationFile=DataView.cpp
+BaseClass=CDynamicView
+Filter=W
 

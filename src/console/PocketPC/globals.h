@@ -41,6 +41,7 @@ extern CNxpcApp theApp;
 #define MAX_LOGIN_NAME_LEN    64
 #define MAX_PASSWORD_LEN      64
 #define MAX_INTERFACE_TYPE    32
+#define MAX_DYNAMIC_VIEWS     256
 
 #define WORKFILE_OBJECTCACHE  L"\\object.cache."
 
@@ -59,6 +60,23 @@ extern CNxpcApp theApp;
 #define WM_STATE_CHANGE          (WM_USER + 8)
 #define WM_ALARM_UPDATE          (WM_USER + 9)
 #define WM_POLLER_MESSAGE        (WM_USER + 10)
+
+
+//
+// View classes
+//
+
+#define VIEW_CLASS_LAST_VALUES      1
+#define VIEW_CLASS_GRAPH            2
+#define VIEW_CLASS_OBJECT_DETAILS   3
+
+
+//
+// Macros for creating 8-byte view's fingerprint
+//
+
+#define CREATE_VIEW_FINGERPRINT(cl, p1, p2) \
+   ((((QWORD)cl) << 56) | (((QWORD)(p1 & 0x00FFFFFF)) << 32) | ((QWORD)(p2 & 0xFFFFFFFF)))
 
 
 //
@@ -142,9 +160,9 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
 //
 
 int MulDiv(int nNumber, int nNumerator, int nDenominator);
+void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 /*TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
-void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = "Unknown");
 TCHAR *TranslateUNIXText(const TCHAR *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);

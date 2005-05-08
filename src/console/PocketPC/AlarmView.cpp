@@ -11,6 +11,60 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Alarm comparision function
+//
+
+static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   NXC_ALARM *pAlarm1, *pAlarm2;
+   NXC_OBJECT *pObject1, *pObject2;
+   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
+   int iResult;
+
+   pAlarm1 = ((CAlarmView *)lParamSort)->FindAlarmInList(lParam1);
+   pAlarm2 = ((CAlarmView *)lParamSort)->FindAlarmInList(lParam2);
+   if ((pAlarm1 == NULL) || (pAlarm2 == NULL))
+      return 0;
+
+   switch(((CAlarmView *)lParamSort)->SortMode())
+   {
+      case SORT_BY_SEVERITY:
+         iResult = (pAlarm1->wSeverity < pAlarm2->wSeverity) ? -1 :
+                     ((pAlarm1->wSeverity > pAlarm2->wSeverity) ? 1 : 0);
+         break;
+      case SORT_BY_SOURCE:
+         pObject1 = NXCFindObjectById(g_hSession, pAlarm1->dwSourceObject);
+         pObject2 = NXCFindObjectById(g_hSession, pAlarm2->dwSourceObject);
+
+         if (pObject1 == NULL)
+            _tcscpy(szName1, _T("<unknown>"));
+         else
+            _tcscpy(szName1, pObject1->szName);
+         
+         if (pObject2 == NULL)
+            _tcscpy(szName2, _T("<unknown>"));
+         else
+            _tcscpy(szName2, pObject2->szName);
+
+         iResult = _tcsicmp(szName1, szName2);
+         break;
+      case SORT_BY_MESSAGE:
+         iResult = _tcsicmp(pAlarm1->szMessage, pAlarm2->szMessage);
+         break;
+      case SORT_BY_TIMESTAMP:
+         iResult = (pAlarm1->dwTimeStamp < pAlarm2->dwTimeStamp) ? -1 :
+                     ((pAlarm1->dwTimeStamp > pAlarm2->dwTimeStamp) ? 1 : 0);
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+   return (((CAlarmView *)lParamSort)->SortDir() == 0) ? iResult : -iResult;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmView
 
@@ -18,6 +72,11 @@ CAlarmView::CAlarmView()
 {
    m_pImageList = NULL;
    memset(m_iNumAlarms, 0, sizeof(int) * 5);
+   m_iSortMode = SORT_BY_SEVERITY;
+   m_iSortDir = 1;
+   m_bShowAllAlarms = FALSE;
+   m_dwNumAlarms = 0;
+   m_pAlarmList = NULL;
 }
 
 CAlarmView::~CAlarmView()
@@ -32,6 +91,15 @@ BEGIN_MESSAGE_MAP(CAlarmView, CWnd)
 	ON_WM_SIZE()
 	ON_WM_DRAWITEM()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_ALARM_SORTBY_ASCENDING, OnAlarmSortbyAscending)
+	ON_COMMAND(ID_ALARM_SORTBY_DESCENDING, OnAlarmSortbyDescending)
+	ON_COMMAND(ID_ALARM_SORTBY_SEVERITY, OnAlarmSortbySeverity)
+	ON_COMMAND(ID_ALARM_SORTBY_SOURCE, OnAlarmSortbySource)
+	ON_COMMAND(ID_ALARM_SORTBY_MESSAGETEXT, OnAlarmSortbyMessagetext)
+	ON_COMMAND(ID_ALARM_SORTBY_TIMESTAMP, OnAlarmSortbyTimestamp)
+	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
+	ON_COMMAND(ID_ALARM_DELETE, OnAlarmDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -123,19 +191,20 @@ void CAlarmView::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 
 void CAlarmView::OnViewRefresh() 
 {
-   DWORD i, dwRetCode, dwNumAlarms;
-   NXC_ALARM *pAlarmList;
+   DWORD i, dwRetCode;
 
    m_wndListCtrl.DeleteAllItems();
+   safe_free(m_pAlarmList);
+   m_dwNumAlarms = 0;
+   m_pAlarmList = NULL;
    dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)FALSE, 
-                             &dwNumAlarms, &pAlarmList, _T("Loading alarms..."));
+                             &m_dwNumAlarms, &m_pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
       memset(m_iNumAlarms, 0, sizeof(int) * 5);
-      for(i = 0; i < dwNumAlarms; i++)
-         AddAlarm(&pAlarmList[i]);
-      safe_free(pAlarmList);
-      //UpdateStatusBar();
+      for(i = 0; i < m_dwNumAlarms; i++)
+         AddAlarm(&m_pAlarmList[i]);
+      m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
    }
    else
    {
@@ -151,8 +220,8 @@ void CAlarmView::OnViewRefresh()
 void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
 {
    int iIdx;
-//   struct tm *ptm;
-//   TCHAR szBuffer[64];
+   struct tm *ptm;
+   TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
@@ -164,9 +233,12 @@ void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
       m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
       m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-//      ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
-//      strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
-//      m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
+
+      // Create timestamp
+      ptm = WCE_FCTN(localtime)((time_t *)&pAlarm->dwTimeStamp);
+      _stprintf(szBuffer, _T("%02d-%02d-%04d %02d:%02d:%02d"), ptm->tm_mday,
+                ptm->tm_mon, ptm->tm_year, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+      m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
       m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
    m_iNumAlarms[pAlarm->wSeverity]++;
@@ -235,7 +307,7 @@ void CAlarmView::DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData)
 
 void CAlarmView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
-/*   int iItem;
+   int iItem;
 
    iItem = FindAlarmRecord(pAlarm->dwAlarmId);
    switch(dwCode)
@@ -244,26 +316,247 @@ void CAlarmView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
          if ((iItem == -1) && ((m_bShowAllAlarms) || (pAlarm->wIsAck == 0)))
          {
             AddAlarm(pAlarm);
-            UpdateStatusBar();
+            AddAlarmToList(pAlarm);
+            m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
          }
          break;
       case NX_NOTIFY_ALARM_ACKNOWLEGED:
          if ((iItem != -1) && (!m_bShowAllAlarms))
          {
+            DeleteAlarmFromList(pAlarm->dwAlarmId);
             m_wndListCtrl.DeleteItem(iItem);
             m_iNumAlarms[pAlarm->wSeverity]--;
-            UpdateStatusBar();
          }
          break;
       case NX_NOTIFY_ALARM_DELETED:
          if (iItem != -1)
          {
+            DeleteAlarmFromList(pAlarm->dwAlarmId);
             m_wndListCtrl.DeleteItem(iItem);
             m_iNumAlarms[pAlarm->wSeverity]--;
-            UpdateStatusBar();
          }
          break;
       default:
          break;
-   }*/
+   }
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CAlarmView::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+   int iNumItems, iItem;
+   UINT uFlags;
+   CPoint pt;
+
+   pt = point;
+   pWnd->ScreenToClient(&pt);
+   iItem = m_wndListCtrl.HitTest(pt, &uFlags);
+   if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+   {
+      if (m_wndListCtrl.GetItemState(iItem, LVIS_SELECTED) != LVIS_SELECTED)
+         SelectListViewItem(&m_wndListCtrl, iItem);
+   }
+
+   pMenu = theApp.GetContextMenu(0);
+
+   // Disable or check some menu items
+   iNumItems = m_wndListCtrl.GetSelectedCount();
+   pMenu->EnableMenuItem(ID_ALARM_ACKNOWLEGE, MF_BYCOMMAND | (iNumItems > 0) ? MF_ENABLED : MF_GRAYED);
+   pMenu->EnableMenuItem(ID_ALARM_DELETE, MF_BYCOMMAND | (iNumItems > 0) ? MF_ENABLED : MF_GRAYED);
+   pMenu->CheckMenuRadioItem(ID_ALARM_SORTBY_SEVERITY, ID_ALARM_SORTBY_TIMESTAMP,
+                             m_iSortMode + ID_ALARM_SORTBY_SEVERITY, MF_BYCOMMAND);
+   pMenu->CheckMenuRadioItem(ID_ALARM_SORTBY_ASCENDING, ID_ALARM_SORTBY_DESCENDING,
+                             m_iSortDir ? ID_ALARM_SORTBY_DESCENDING : ID_ALARM_SORTBY_ASCENDING,
+                             MF_BYCOMMAND);
+
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN, point.x, point.y, this, NULL);
+}
+
+
+//
+// Find alarm record in list control by alarm id
+// Will return record index or -1 if no records exist
+//
+
+int CAlarmView::FindAlarmRecord(DWORD dwAlarmId)
+{
+   LVFINDINFO lvfi;
+
+   lvfi.flags = LVFI_PARAM;
+   lvfi.lParam = dwAlarmId;
+   return m_wndListCtrl.FindItem(&lvfi);
+}
+
+
+//
+// Delete alarm from internal alarms list
+//
+
+void CAlarmView::DeleteAlarmFromList(DWORD dwAlarmId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+         m_dwNumAlarms--;
+         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1],
+                 sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+         break;
+      }
+}
+
+
+//
+// Add new alarm to internal list
+//
+
+void CAlarmView::AddAlarmToList(NXC_ALARM *pAlarm)
+{
+   m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
+   memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
+   m_dwNumAlarms++;
+}
+
+
+//
+// Find alarm record in internal list
+//
+
+NXC_ALARM *CAlarmView::FindAlarmInList(DWORD dwAlarmId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+         return &m_pAlarmList[i];
+   return NULL;
+}
+
+
+//
+// Sort mode switchers
+//
+
+void CAlarmView::OnAlarmSortbyAscending() 
+{
+   m_iSortDir = 0;
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+}
+
+void CAlarmView::OnAlarmSortbyDescending() 
+{
+   m_iSortDir = 1;
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+}
+
+void CAlarmView::OnAlarmSortbySeverity() 
+{
+   m_iSortMode = SORT_BY_SEVERITY;
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+}
+
+void CAlarmView::OnAlarmSortbySource() 
+{
+   m_iSortMode = SORT_BY_SOURCE;
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+}
+
+void CAlarmView::OnAlarmSortbyMessagetext() 
+{
+   m_iSortMode = SORT_BY_MESSAGE;
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+}
+
+void CAlarmView::OnAlarmSortbyTimestamp() 
+{
+   m_iSortMode = SORT_BY_TIMESTAMP;
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+}
+
+
+//
+// Alarm acknowlegement worker function
+//
+
+static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = NXCAcknowlegeAlarm(g_hSession, pdwAlarmList[i]);
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_ACKNOWLEGE message handler
+//
+
+void CAlarmView::OnAlarmAcknowlege() 
+{
+   int iItem;
+   DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
+
+   dwNumAlarms = m_wndListCtrl.GetSelectedCount();
+   pdwAlarmList = (DWORD *)malloc(sizeof(DWORD) * dwNumAlarms);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumAlarms); i++)
+   {
+      pdwAlarmList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   dwResult = DoRequestArg2(AcknowlegeAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Acknowleging alarms..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+   free(pdwAlarmList);
+}
+
+
+//
+// Alarm deletion worker function
+//
+
+static DWORD DeleteAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = NXCDeleteAlarm(g_hSession, pdwAlarmList[i]);
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_DELETE message handler
+//
+
+void CAlarmView::OnAlarmDelete() 
+{
+   int iItem;
+   DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
+
+   dwNumAlarms = m_wndListCtrl.GetSelectedCount();
+   pdwAlarmList = (DWORD *)malloc(sizeof(DWORD) * dwNumAlarms);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumAlarms); i++)
+   {
+      pdwAlarmList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   dwResult = DoRequestArg2(DeleteAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Deleting alarms..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+   free(pdwAlarmList);
 }

@@ -100,6 +100,9 @@ BOOL CNxpcApp::InitInstance()
    wcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    g_dwEncryptionMethod = GetProfileInt(_T("Connection"), _T("Encryption"), CSCP_ENCRYPTION_NONE);
 
+   // Load context menus
+   m_ctxMenu.LoadMenu(IDM_CONTEXT);
+
    // To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
 	CMainFrame* pFrame = new CMainFrame;
@@ -187,11 +190,11 @@ void CNxpcApp::OnAppAbout()
 BOOL CAboutDlg::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
+
+   SetDlgItemText(IDC_STATIC_VERSION, _T("Version ") NETXMS_VERSION_STRING);
 	
 	CenterWindow();
-	
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+	return TRUE;
 }
 
 
@@ -312,4 +315,14 @@ int CNxpcApp::ExitInstance()
    }
 	
 	return CWinApp::ExitInstance();
+}
+
+
+//
+// Get context menu by index
+//
+
+CMenu * CNxpcApp::GetContextMenu(int nIndex)
+{
+   return m_ctxMenu.GetSubMenu(nIndex);
 }

@@ -12,6 +12,7 @@
 #include "ObjectView.h"	// Added by ClassView
 #include "SummaryView.h"	// Added by ClassView
 #include "AlarmView.h"	// Added by ClassView
+#include "DynamicView.h"	// Added by ClassView
 
 // Array for the toolbar buttons
 
@@ -66,6 +67,13 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
+	DWORD FindViewInList(CWnd *pwndView);
+	DWORD m_dwNumViews;
+	CBitmapButton m_wndBtnNext;
+	CBitmapButton m_wndBtnPrev;
+	CToolBarCtrl m_wndToolBar;
+	CBitmapButton m_wndBtnClose;
+	CWnd *m_pwndViewList[MAX_DYNAMIC_VIEWS + 3];
 	CAlarmView m_wndAlarmView;
 	CWnd *m_pwndCurrView;
 	CSummaryView m_wndSummaryView;
@@ -78,6 +86,9 @@ protected:
 	afx_msg void OnViewAlarms();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefreshAll();
+	afx_msg void OnPaint();
+	afx_msg void OnViewNext();
+	afx_msg void OnViewPrev();
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
@@ -87,6 +98,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	void CreateView(CDynamicView *pwndView, TCHAR *pszTitle);
+	void UnregisterView(CDynamicView *pView);
+	BOOL RegisterView(CDynamicView *pView);
+	COLORREF m_rgbTitleText;
+	COLORREF m_rgbTitleBkgnd;
    int *GetAlarmStats(void) { return m_wndAlarmView.m_iNumAlarms; }
 };
 

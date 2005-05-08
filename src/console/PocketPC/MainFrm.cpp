@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "nxpc.h"
 
+#define VIEW_TITLE_SIZE    20
+
 #include "MainFrm.h"
 
 #ifdef _DEBUG
@@ -31,6 +33,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_VIEW_ALARMS, OnViewAlarms)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH_ALL, OnViewRefreshAll)
+	ON_WM_PAINT()
+	ON_COMMAND(ID_VIEW_NEXT, OnViewNext)
+	ON_COMMAND(ID_VIEW_PREV, OnViewPrev)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
@@ -42,6 +47,10 @@ END_MESSAGE_MAP()
 CMainFrame::CMainFrame()
 {
    m_pwndCurrView = NULL;
+   m_rgbTitleBkgnd = GetSysColor(COLOR_3DFACE);
+   m_rgbTitleText = RGB(255, 255, 255);
+   memset(m_pwndViewList, 0, sizeof(CDynamicView *) * (MAX_DYNAMIC_VIEWS + 3));
+   m_dwNumViews = 0;
 }
 
 CMainFrame::~CMainFrame()
@@ -56,16 +65,22 @@ CMainFrame::~CMainFrame()
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
    static UINT nCmdArray[4] = { ID_VIEW_SUMMARY, ID_VIEW_ALARMS, ID_VIEW_OBJECTS, ID_APP_ABOUT };
-   RECT rect;
+   RECT rect, rcButton;
 
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
    // Create views
    GetClientRect(&rect);
-   m_wndSummaryView.Create(NULL, NULL, WS_CHILD, rect, this, 0, NULL);
-   m_wndAlarmView.Create(NULL, NULL, WS_CHILD, rect, this, 0, NULL);
-   m_wndObjectView.Create(NULL, NULL, WS_CHILD, rect, this, 0, NULL);
+   rect.top += VIEW_TITLE_SIZE;
+   m_wndSummaryView.Create(NULL, _T("Network Status Summary"), WS_CHILD | WS_VISIBLE, rect, this, 0, NULL);
+   m_wndAlarmView.Create(NULL, _T("Alarm Browser"), WS_CHILD | WS_VISIBLE, rect, this, 0, NULL);
+   m_wndObjectView.Create(NULL, _T("Object Browser"), WS_CHILD | WS_VISIBLE, rect, this, 0, NULL);
+
+   m_pwndViewList[0] = &m_wndSummaryView;
+   m_pwndViewList[1] = &m_wndAlarmView;
+   m_pwndViewList[2] = &m_wndObjectView;
+   m_dwNumViews = 3;
 
    // Create control bar
 	m_wndCommandBar.m_bShowSharedNewButton = FALSE;
@@ -89,24 +104,51 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndCommandBar.SetBarStyle(m_wndCommandBar.GetBarStyle() |
 		CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_FIXED);
 
+   // Create view control buttons
+   rcButton.top = 2;
+   rcButton.bottom = 16;
+   rcButton.right = rect.right - 2;
+   rcButton.left = rcButton.right - 14;
+   m_wndBtnClose.Create(_T("Close"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, rcButton,
+                        this, ID_VIEW_CLOSE);
+   m_wndBtnClose.LoadBitmaps(IDB_BTN_CLOSE, 0, 0, IDB_BTN_CLOSE_DIS);
+   m_wndBtnClose.SizeToContent();
+
+   rcButton.left -= 16;
+   m_wndBtnNext.Create(_T("Next"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, rcButton,
+                       this, ID_VIEW_NEXT);
+   m_wndBtnNext.LoadBitmaps(IDB_BTN_NEXT);
+   m_wndBtnNext.SizeToContent();
+
+   rcButton.left -= 16;
+   m_wndBtnPrev.Create(_T("Previous"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, rcButton,
+                       this, ID_VIEW_PREV);
+   m_wndBtnPrev.LoadBitmaps(IDB_BTN_PREV);
+   m_wndBtnPrev.SizeToContent();
+
    ActivateView(&m_wndSummaryView);
 
 	return 0;
 }
 
+
+//
+// Overriden PreCreateWindow method
+//
+
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if( !CFrameWnd::PreCreateWindow(cs) )
 		return FALSE;
-	// TODO: Modify the Window class or styles here by modifying
-	//  the CREATESTRUCT cs
-
 
 	cs.lpszClass = AfxRegisterWndClass(0);
 	return TRUE;
 }
 
 
+//
+// Make string from resource
+//
 
 LPTSTR CMainFrame::MakeString(UINT stringID)
 {
@@ -193,10 +235,17 @@ void CMainFrame::OnViewObjects()
 
 void CMainFrame::ActivateView(CWnd *pwndView)
 {
-   if (m_pwndCurrView != NULL)
-      m_pwndCurrView->ShowWindow(SW_HIDE);
+   RECT rect;
+
    m_pwndCurrView = pwndView;
-   m_pwndCurrView->ShowWindow(SW_SHOW);
+   m_pwndCurrView->SetWindowPos(&wndTop, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+
+   GetClientRect(&rect);
+   rect.bottom = VIEW_TITLE_SIZE - 1;
+   InvalidateRect(&rect);
+
+   // Enable or disable "Close" button
+   m_wndBtnClose.EnableWindow(m_pwndCurrView->GetDlgCtrlID() != 0);
 }
 
 
@@ -206,11 +255,19 @@ void CMainFrame::ActivateView(CWnd *pwndView)
 
 void CMainFrame::OnSize(UINT nType, int cx, int cy) 
 {
+   DWORD i;
+
 	CFrameWnd::OnSize(nType, cx, cy);
 
-   m_wndAlarmView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
-   m_wndObjectView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
-   m_wndSummaryView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   m_wndAlarmView.SetWindowPos(NULL, 0, VIEW_TITLE_SIZE, cx, cy - VIEW_TITLE_SIZE, SWP_NOZORDER);
+   m_wndObjectView.SetWindowPos(NULL, 0, VIEW_TITLE_SIZE, cx, cy - VIEW_TITLE_SIZE, SWP_NOZORDER);
+   m_wndSummaryView.SetWindowPos(NULL, 0, VIEW_TITLE_SIZE, cx, cy - VIEW_TITLE_SIZE, SWP_NOZORDER);
+   for(i = 0; i < MAX_DYNAMIC_VIEWS; i++)
+      if (m_pwndViewList[i] != NULL)
+         m_pwndViewList[i]->SetWindowPos(NULL, 0, VIEW_TITLE_SIZE, cx, cy - VIEW_TITLE_SIZE, SWP_NOZORDER);
+   m_wndBtnClose.SetWindowPos(NULL, cx - 16, 2, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+   m_wndBtnNext.SetWindowPos(NULL, cx - 32, 2, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+   m_wndBtnPrev.SetWindowPos(NULL, cx - 48, 2, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 
@@ -245,3 +302,147 @@ void CMainFrame::OnViewRefreshAll()
    m_wndObjectView.PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
    m_wndSummaryView.PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 }
+
+
+//
+// WM_PAINT message handler
+//
+
+void CMainFrame::OnPaint() 
+{
+   RECT rect;
+   TCHAR szBuffer[256];
+
+	CPaintDC dc(this); // device context for painting
+
+   GetClientRect(&rect);
+   rect.bottom = VIEW_TITLE_SIZE - 1;
+   dc.FillSolidRect(&rect, m_rgbTitleBkgnd);
+   dc.MoveTo(0, VIEW_TITLE_SIZE - 1);
+   dc.LineTo(rect.right, VIEW_TITLE_SIZE - 1);
+
+   if (m_pwndCurrView != NULL)
+   {
+      m_pwndCurrView->GetWindowText(szBuffer, 256);
+      rect.top += 2;
+      rect.left += 5;
+      rect.right -= 52;
+      rect.bottom -= 2;
+      dc.DrawText(szBuffer, -1, &rect, DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+   }
+}
+
+
+//
+// Register new view
+//
+
+BOOL CMainFrame::RegisterView(CDynamicView *pView)
+{
+   BOOL bResult = FALSE;
+
+   if (m_dwNumViews < MAX_DYNAMIC_VIEWS + 3)
+   {
+      m_pwndViewList[m_dwNumViews++] = pView;
+      bResult = TRUE;
+   }
+   return bResult;
+}
+
+
+//
+// Unregister view
+//
+
+void CMainFrame::UnregisterView(CDynamicView *pView)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumViews; i++)
+      if (m_pwndViewList[i] == pView)
+      {
+         m_dwNumViews--;
+         memmove(&m_pwndViewList[i], &m_pwndViewList[i + 1],
+                 sizeof(CWnd *) * (m_dwNumViews - i));
+         if (m_pwndCurrView == pView)
+            ActivateView(m_pwndViewList[(i > 0) ? (i - 1) : (m_dwNumViews - 1)]);
+         break;
+      }
+}
+
+
+//
+// Create new view (already prepared for creation)
+//
+
+void CMainFrame::CreateView(CDynamicView *pwndView, TCHAR *pszTitle)
+{
+   RECT rect;
+   DWORD i;
+
+   // Check if we already have view with same fingerprints
+   for(i = 3; i < m_dwNumViews; i++)
+      if (((CDynamicView *)m_pwndViewList[i])->GetFingerprint() == pwndView->GetFingerprint())
+         break;
+
+   if (i == m_dwNumViews)
+   {
+      GetClientRect(&rect);
+      rect.top += VIEW_TITLE_SIZE;
+      if (pwndView->Create(NULL, pszTitle, WS_CHILD | WS_VISIBLE, rect, this, 1, NULL))
+         ActivateView(pwndView);
+   }
+   else
+   {
+      delete pwndView;
+      ActivateView(m_pwndViewList[i]);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_NEXT message handler
+//
+
+void CMainFrame::OnViewNext() 
+{
+   DWORD dwIndex;
+
+   if (m_pwndCurrView != NULL)
+   {
+      dwIndex = FindViewInList(m_pwndCurrView);
+      ActivateView(m_pwndViewList[(dwIndex < (m_dwNumViews - 1)) ? (dwIndex + 1) : 0]);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_PREV message handler
+//
+
+void CMainFrame::OnViewPrev() 
+{
+   DWORD dwIndex;
+
+   if (m_pwndCurrView != NULL)
+   {
+      dwIndex = FindViewInList(m_pwndCurrView);
+      ActivateView(m_pwndViewList[(dwIndex > 0) ? (dwIndex - 1) : (m_dwNumViews - 1)]);
+   }
+}
+
+
+//
+// Find view in list
+//
+
+DWORD CMainFrame::FindViewInList(CWnd *pwndView)
+{
+   DWORD i;
+
+   for(i = 0; i < MAX_DYNAMIC_VIEWS + 3; i++)
+      if (m_pwndViewList[i] == pwndView)
+         return i;
+   return 0;
+}
+

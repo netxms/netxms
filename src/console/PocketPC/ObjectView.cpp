@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxpc.h"
 #include "ObjectView.h"
+#include "LastValuesView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,6 +31,7 @@ CObjectView::CObjectView()
 {
    m_dwTreeHashSize = 0;
    m_pTreeHash = NULL;
+   m_pCurrentObject = NULL;
 }
 
 CObjectView::~CObjectView()
@@ -43,7 +45,13 @@ BEGIN_MESSAGE_MAP(CObjectView, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_OBJECT_MANAGE, OnObjectManage)
+	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
+	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
+	ON_COMMAND(ID_OBJECT_WAKEUP, OnObjectWakeup)
 	//}}AFX_MSG_MAP
+   ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
 END_MESSAGE_MAP()
 
 
@@ -445,4 +453,138 @@ DWORD CObjectView::FindObjectInTree(DWORD dwObjectId)
 void CObjectView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
 {
    UpdateObjectTree(dwObjectId, pObject);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CObjectView::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+   CPoint pt;
+   HTREEITEM hItem;
+   UINT uFlags;
+
+   pt = point;
+   pWnd->ScreenToClient(&pt);
+
+   hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
+   if ((hItem != NULL) && (uFlags & TVHT_ONITEM))
+   {
+      m_wndTreeCtrl.Select(hItem, TVGN_CARET);
+
+      // Just paranoid check, current object shouldn't be NULL
+      // after Select() call
+      if (m_pCurrentObject != NULL)
+      {
+         pMenu = theApp.GetContextMenu(1);
+
+         // Update menu items
+         pMenu->EnableMenuItem(ID_OBJECT_LASTDCIVALUES, MF_BYCOMMAND | 
+                                          (m_pCurrentObject->iClass == OBJECT_NODE) ? 
+                                                                     MF_ENABLED : MF_GRAYED);
+         pMenu->EnableMenuItem(ID_OBJECT_WAKEUP, MF_BYCOMMAND | 
+                                          ((m_pCurrentObject->iClass == OBJECT_NODE) ||
+                                           (m_pCurrentObject->iClass == OBJECT_INTERFACE)) ?
+                                                                     MF_ENABLED : MF_GRAYED);
+         pMenu->TrackPopupMenu(TPM_LEFTALIGN, point.x, point.y, this, NULL);
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_MANAGE message handler
+//
+
+void CObjectView::OnObjectManage() 
+{
+   HTREEITEM hItem;
+
+   hItem = m_wndTreeCtrl.GetSelectedItem();
+   if (hItem != NULL)
+   {
+      ChangeMgmtStatus(m_wndTreeCtrl.GetItemData(hItem), TRUE);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_UNMANAGE message handler
+//
+
+void CObjectView::OnObjectUnmanage() 
+{
+   HTREEITEM hItem;
+
+   hItem = m_wndTreeCtrl.GetSelectedItem();
+   if (hItem != NULL)
+   {
+      ChangeMgmtStatus(m_wndTreeCtrl.GetItemData(hItem), FALSE);
+   }
+}
+
+
+//
+// Change management status for object
+//
+
+void CObjectView::ChangeMgmtStatus(DWORD dwObjectId, BOOL bStatus)
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg3(NXCSetObjectMgmtStatus, g_hSession, (void *)dwObjectId, 
+                            (void *)bStatus, L"Changing object status...");
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, L"Unable to change management status for object:\n%s");
+}
+
+
+//
+// WM_NOTIFY::TVN_SELCHANGED message handler
+//
+
+void CObjectView::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+{
+   m_pCurrentObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
+   *pResult = 0;
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_LASTDCIVALUES message handler
+//
+
+void CObjectView::OnObjectLastdcivalues() 
+{
+   CLastValuesView *pwndView;
+   TCHAR szTitle[256];
+
+   if (m_pCurrentObject != NULL)
+   {
+      _sntprintf(szTitle, 256, _T("%s - Last DCI Values"), m_pCurrentObject->szName);
+      pwndView = new CLastValuesView;
+      pwndView->InitView(m_pCurrentObject);
+      ((CMainFrame *)theApp.m_pMainWnd)->CreateView(pwndView, szTitle);
+   }
+}
+
+
+//
+// Wakeup node
+//
+
+void CObjectView::OnObjectWakeup() 
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg2(NXCWakeUpNode, g_hSession, (void *)m_pCurrentObject->dwId,
+                            _T("Sending Wake-On-LAN magic packet to node..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Unable to send WOL magic packet: %s"));
+   else
+      MessageBox(_T("Wake-On-LAN magic packet was successfully sent to node"),
+                 _T("Information"), MB_ICONINFORMATION | MB_OK);
 }

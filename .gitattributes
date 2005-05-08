@@ -242,6 +242,12 @@ src/agent/subagents/winperf/winperf.h -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text
 src/console/PocketPC/AlarmView.h -text
+src/console/PocketPC/DataView.cpp -text
+src/console/PocketPC/DataView.h -text
+src/console/PocketPC/DynamicView.cpp -text
+src/console/PocketPC/DynamicView.h -text
+src/console/PocketPC/LastValuesView.cpp -text
+src/console/PocketPC/LastValuesView.h -text
 src/console/PocketPC/LoginDlg.cpp -text
 src/console/PocketPC/LoginDlg.h -text
 src/console/PocketPC/MainFrm.cpp -text
@@ -271,6 +277,10 @@ src/console/PocketPC/res/SeverityMinor.ico -text
 src/console/PocketPC/res/SeverityNormal.ico -text
 src/console/PocketPC/res/SeverityWarning.ico -text
 src/console/PocketPC/res/ack.ico -text
+src/console/PocketPC/res/btn_close.bmp -text
+src/console/PocketPC/res/btn_close_dis.bmp -text
+src/console/PocketPC/res/btn_next.bmp -text
+src/console/PocketPC/res/btn_prev.bmp -text
 src/console/PocketPC/res/connect.ico -text
 src/console/PocketPC/res/container.ico -text
 src/console/PocketPC/res/interface.ico -text
