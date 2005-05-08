@@ -47,6 +47,7 @@ Source: "..\..\server\tools\nxsnmpget\Release\nxsnmpget.exe"; DestDir: "{app}\bi
 Source: "..\..\server\tools\nxsnmpwalk\Release\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxupload\Release\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\console\win32\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\console\nxav\Release\nxav.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\agent\core\Release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\winperf\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\ping\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
