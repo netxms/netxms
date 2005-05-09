@@ -10,6 +10,7 @@
 	- Implemented alarm browser autoupdate
 	- Implemented object managed/unmanaged state switching
 	- Implementen node wakeup
+- Fixed occasional appearance of invalid objects at the root of object tree
 
 
 *
