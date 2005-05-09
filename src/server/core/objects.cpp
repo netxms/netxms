@@ -276,8 +276,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
             AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
             RWLockUnlock(g_rwlockNodeIndex);
-            if (bNewObject)
-               PostEvent(EVENT_NODE_ADDED, pObject->Id(), NULL);
             break;
          case OBJECT_INTERFACE:
             RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);

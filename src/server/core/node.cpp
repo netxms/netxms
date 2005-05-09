@@ -88,6 +88,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
    m_pParamList = NULL;
    m_dwPollerNode = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   m_bIsHidden = TRUE;
 }
 
 
@@ -592,9 +593,13 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
    AddInterface(pInterface);
-   PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-             pInterface->Name(), pInterface->IpAddr(),
-             pInterface->IpNetMask(), pInterface->IfIndex());
+   if (!m_bIsHidden)
+   {
+      pInterface->Unhide();
+      PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+                pInterface->Name(), pInterface->IpAddr(),
+                pInterface->IpNetMask(), pInterface->IfIndex());
+   }
 
    // Bind node to appropriate subnet
    if (pSubnet != NULL)

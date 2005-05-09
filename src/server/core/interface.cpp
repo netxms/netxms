@@ -49,6 +49,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask)
    m_dwIfIndex = 1;
    m_dwIfType = IFTYPE_OTHER;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   m_bIsHidden = TRUE;
 }
 
 
@@ -65,6 +66,7 @@ Interface::Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask,
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   m_bIsHidden = TRUE;
 }
 
 

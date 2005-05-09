@@ -51,7 +51,9 @@ void CheckForMgmtNode(void)
                pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
                NetObjInsert(pNode, TRUE);
                pNode->NewNodePoll(0);
+               pNode->Unhide();
                g_dwMgmtNode = pNode->Id();   // Set local management node ID
+               PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
                
                // Add default data collection items
                pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), "Status", 

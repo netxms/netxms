@@ -80,6 +80,7 @@ extern DWORD g_dwConfigurationPollingInterval;
 #define NDF_UNREACHEABLE               0x0004
 #define NDF_AGENT_UNREACHEABLE         0x0008
 #define NDF_SNMP_UNREACHEABLE          0x0010
+#define NDF_HIDDEN                     0x0020
 
 
 //
@@ -116,6 +117,7 @@ protected:
    int m_iStatus;
    BOOL m_bIsModified;
    BOOL m_bIsDeleted;
+   BOOL m_bIsHidden;
    MUTEX m_hMutex;         // Generic object access mutex
    MUTEX m_mutexRefCount;  // Reference counter access mutex
    DWORD m_dwIpAddr;       // Every object should have an IP address
@@ -175,6 +177,10 @@ public:
    void DeleteParent(NetObj *pObject); // Delete reference to parent object
 
    void Delete(BOOL bIndexLocked);     // Prepare object for deletion
+
+   BOOL IsHidden(void) { return m_bIsHidden; }
+   void Hide(void);
+   void Unhide(void);
 
    virtual BOOL SaveToDB(void);
    virtual BOOL DeleteFromDB(void);

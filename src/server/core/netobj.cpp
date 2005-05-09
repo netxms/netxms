@@ -36,6 +36,7 @@ NetObj::NetObj()
    m_szName[0] = 0;
    m_bIsModified = FALSE;
    m_bIsDeleted = FALSE;
+   m_bIsHidden = FALSE;
    m_dwIpAddr = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
@@ -550,7 +551,8 @@ void NetObj::Modify(void)
    m_dwTimeStamp = time(NULL);
 
    // Send event to all connected clients
-   EnumerateClientSessions(BroadcastObjectChange, this);
+   if (!m_bIsHidden)
+      EnumerateClientSessions(BroadcastObjectChange, this);
 }
 
 
@@ -778,6 +780,44 @@ void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD 
             m_pChildList[i]->AddChildNodesToList(pdwNumNodes, pppNodeList, dwUserId);
       }
    }
+
+   Unlock();
+}
+
+
+//
+// Hide object and all its childs
+//
+
+void NetObj::Hide(void)
+{
+   DWORD i;
+
+   Lock();
+
+   for(i = 0; i < m_dwChildCount; i++)
+      m_pChildList[i]->Hide();
+   m_bIsHidden = TRUE;
+
+   Unlock();
+}
+
+
+//
+// Unhide object and all its childs
+//
+
+void NetObj::Unhide(void)
+{
+   DWORD i;
+
+   Lock();
+
+   m_bIsHidden = FALSE;
+   EnumerateClientSessions(BroadcastObjectChange, this);
+
+   for(i = 0; i < m_dwChildCount; i++)
+      m_pChildList[i]->Unhide();
 
    Unlock();
 }

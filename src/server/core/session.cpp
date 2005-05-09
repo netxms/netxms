@@ -1212,7 +1212,8 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((g_pIndexById[i].pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-          (g_pIndexById[i].pObject->TimeStamp() >= dwTimeStamp))
+          (g_pIndexById[i].pObject->TimeStamp() >= dwTimeStamp) &&
+          (!g_pIndexById[i].pObject->IsHidden()))
       {
          g_pIndexById[i].pObject->CreateMessage(&msg);
          SendMessage(&msg);
