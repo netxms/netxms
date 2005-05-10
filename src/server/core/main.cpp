@@ -43,7 +43,6 @@
 //
 
 THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg);
-THREAD_RESULT THREAD_CALL DiscoveryThread(void *pArg);
 THREAD_RESULT THREAD_CALL Syncer(void *pArg);
 THREAD_RESULT THREAD_CALL NodePoller(void *pArg);
 THREAD_RESULT THREAD_CALL NodePollManager(void *pArg);
@@ -333,6 +332,9 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    // Initialize watchdog
    WatchdogInit();
 
+   // Check if management node object presented in database
+   CheckForMgmtNode();
+
    // Start threads
    ThreadCreate(WatchdogThread, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
@@ -340,11 +342,6 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
    m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
    m_thNodePollMgr = ThreadCreateEx(NodePollManager, 0, NULL);
-
-   // Start network discovery thread if required
-   CheckForMgmtNode();
-   if (ConfigReadInt("RunNetworkDiscovery", 1))
-      ThreadCreate(DiscoveryThread, 0, NULL);
 
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);

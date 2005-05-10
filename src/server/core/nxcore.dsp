@@ -158,10 +158,6 @@ SOURCE=.\debug.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\discovery.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\email.cpp
 # End Source File
 # Begin Source File
@@ -242,6 +238,10 @@ SOURCE=.\package.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\poll.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\rootobj.cpp
 # End Source File
 # Begin Source File
@@ -259,10 +259,6 @@ SOURCE=.\snmp.cpp
 # Begin Source File
 
 SOURCE=.\snmptrap.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\status.cpp
 # End Source File
 # Begin Source File
 

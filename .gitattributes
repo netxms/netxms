@@ -671,7 +671,6 @@ src/server/core/dcitem.cpp -text
 src/server/core/dcithreshold.cpp -text
 src/server/core/dcivalue.cpp -text
 src/server/core/debug.cpp -text
-src/server/core/discovery.cpp -text
 src/server/core/email.cpp -text
 src/server/core/entirenet.cpp -text
 src/server/core/epp.cpp -text
@@ -695,12 +694,12 @@ src/server/core/nxcore.dsw -text
 src/server/core/nxcore.h -text
 src/server/core/objects.cpp -text
 src/server/core/package.cpp -text
+src/server/core/poll.cpp -text
 src/server/core/rootobj.cpp -text
 src/server/core/session.cpp -text
 src/server/core/sms.cpp -text
 src/server/core/snmp.cpp -text
 src/server/core/snmptrap.cpp -text
-src/server/core/status.cpp -text
 src/server/core/subnet.cpp -text
 src/server/core/syncer.cpp -text
 src/server/core/template.cpp -text

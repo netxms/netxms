@@ -68,6 +68,9 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
    int iPollInterval;
    DWORD dwWatchdogId;
 
+   // Flush new nodes table
+   DBQuery(g_hCoreDB, "DELETE FROM new_nodes");
+
    // Read configuration and initialize
    iPollInterval = ConfigReadInt("NewNodePollingInterval", 60);
    dwWatchdogId = WatchdogAddThread("Node Poller", iPollInterval * 2 + 10);

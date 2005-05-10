@@ -80,7 +80,7 @@ extern DWORD g_dwConfigurationPollingInterval;
 #define NDF_UNREACHEABLE               0x0004
 #define NDF_AGENT_UNREACHEABLE         0x0008
 #define NDF_SNMP_UNREACHEABLE          0x0010
-#define NDF_HIDDEN                     0x0020
+#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x0020
 
 
 //
@@ -458,6 +458,7 @@ public:
    BOOL ReadyForDiscoveryPoll(void);
    void LockForStatusPoll(void);
    void LockForConfigurationPoll(void);
+   void LockForDiscoveryPoll(void);
 
    virtual void CalculateCompoundStatus(void);
 
@@ -511,6 +512,7 @@ inline BOOL Node::ReadyForConfigurationPoll(void)
 inline BOOL Node::ReadyForDiscoveryPoll(void) 
 { 
    return ((m_iStatus != STATUS_UNMANAGED) &&
+           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))
                ? TRUE : FALSE; 
 }
@@ -526,6 +528,13 @@ inline void Node::LockForConfigurationPoll(void)
 { 
    Lock(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL; 
+   Unlock(); 
+}
+
+inline void Node::LockForDiscoveryPoll(void) 
+{ 
+   Lock(); 
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL; 
    Unlock(); 
 }
 
