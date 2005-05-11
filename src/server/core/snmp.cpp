@@ -140,7 +140,7 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char
          if (dwResult == SNMP_ERR_SUCCESS)
          {
             if ((pRespPDU->GetNumVariables() > 0) &&
-                (pRespPDU->GetErrorCode() == 0))
+                (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
             {
                SNMP_Variable *pVar = pRespPDU->GetVariable(0);
 
@@ -185,7 +185,10 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char
             }
             else
             {
-               dwResult = SNMP_ERR_AGENT;
+               if (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+                  dwResult = SNMP_ERR_NO_OBJECT;
+               else
+                  dwResult = SNMP_ERR_AGENT;
             }
             delete pRespPDU;
          }
@@ -250,7 +253,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
             if (dwResult == SNMP_ERR_SUCCESS)
             {
                if ((pRespPDU->GetNumVariables() > 0) &&
-                   (pRespPDU->GetErrorCode() == 0))
+                   (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
                {
                   SNMP_Variable *pVar = pRespPDU->GetVariable(0);
 
@@ -281,7 +284,10 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
                }
                else
                {
-                  dwResult = SNMP_ERR_AGENT;
+                  if (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+                     dwResult = SNMP_ERR_NO_OBJECT;
+                  else
+                     dwResult = SNMP_ERR_AGENT;
                   bRunning = FALSE;
                }
                delete pRespPDU;

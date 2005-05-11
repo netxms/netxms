@@ -107,6 +107,18 @@
 
 
 //
+// PDU error codes
+//
+
+#define SNMP_PDU_ERR_SUCCESS        0
+#define SNMP_PDU_ERR_TOO_BIG        1
+#define SNMP_PDU_ERR_NO_SUCH_NAME   2
+#define SNMP_PDU_ERR_BAD_VALUE      3
+#define SNMP_PDU_ERR_READ_ONLY      4
+#define SNMP_PDU_ERR_GENERIC        5
+
+
+//
 // ASN.1 identifier types
 //
 

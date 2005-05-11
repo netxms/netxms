@@ -687,11 +687,13 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    if (m_dwFlags & NF_IS_SNMP)
    {
       TCHAR szBuffer[256];
+      DWORD dwResult;
 
       SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
-      if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-                  szBuffer, 256, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString,
+                         ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 256, FALSE, FALSE);
+      if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
       {
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
          {
@@ -869,6 +871,24 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             }
 
             CheckOSPFSupport();
+         }
+         else
+         {
+            // Check for CheckPoint SNMP agent
+            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString,
+                        ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
+                        szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+            {
+               if (strcmp(m_szObjectId, ".1.3.6.1.4.1.2620.1.1"))
+               {
+                  strncpy(m_szObjectId, ".1.3.6.1.4.1.2620.1.1", MAX_OID_LEN * 4);
+                  bHasChanges = TRUE;
+               }
+
+               m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
+               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+               SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent is active\r\n"));
+            }
          }
       }
 
