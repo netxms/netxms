@@ -4,6 +4,8 @@
 
 - Added server installation program (Windows only)
 - Added server configuration wizard (Windows only)
+- SNMP agent connectivity check improved
+- Added special handling for CheckPoint SNMP agent
 - Windows CE Console improved:
 	- Added "Last DCI Values" view
 	- Implemented sorting in alarm browser
