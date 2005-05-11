@@ -144,6 +144,7 @@ typedef void * HSNMPSESSION;
 #define DB_SYNTAX_MSSQL       1
 #define DB_SYNTAX_MYSQL       2
 #define DB_SYNTAX_PGSQL       3
+#define DB_SYNTAX_ORACLE      4
 
 
 //

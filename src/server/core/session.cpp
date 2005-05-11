@@ -2275,6 +2275,10 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                   sprintf(szQuery, "SELECT TOP %ld idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
                           dwMaxRows, dwObjectId, dwItemId, szCond);
                   break;
+               case DB_SYNTAX_ORACLE:
+                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %ld ORDER BY idata_timestamp DESC",
+                          dwObjectId, dwItemId, szCond, dwMaxRows);
+                  break;
                case DB_SYNTAX_MYSQL:
                case DB_SYNTAX_PGSQL:
                   sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %ld",

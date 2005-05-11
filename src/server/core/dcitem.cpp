@@ -749,6 +749,11 @@ void DCItem::UpdateCacheSize(void)
                                  "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
                        dwRequiredSize, m_pNode->Id(), m_dwId);
                break;
+            case DB_SYNTAX_ORACLE:
+               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
+                                 "WHERE item_id=%ld AND ROWNUM <= %ld ORDER BY idata_timestamp DESC",
+                       m_pNode->Id(), m_dwId, dwRequiredSize);
+               break;
             case DB_SYNTAX_MYSQL:
             case DB_SYNTAX_PGSQL:
                sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "

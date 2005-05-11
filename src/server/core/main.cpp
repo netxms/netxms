@@ -239,6 +239,10 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    {
       g_dwDBSyntax = DB_SYNTAX_MSSQL;
    }
+   else if (!stricmp(szInfo, "ORACLE"))
+   {
+      g_dwDBSyntax = DB_SYNTAX_ORACLE;
+   }
    else
    {
       g_dwDBSyntax = DB_SYNTAX_GENERIC;
