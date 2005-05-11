@@ -92,6 +92,8 @@ static DWORD WINAPI LoginThread(void *pArg)
       _tcscpy(szCacheFile, g_szWorkDir);
       _tcscat(szCacheFile, WORKFILE_OBJECTCACHE);
       BinToStr(bsServerId, 8, &szCacheFile[_tcslen(szCacheFile)]);
+      _tcscat(szCacheFile, _T("."));
+      _tcscat(szCacheFile, g_szLogin);
       if (m_bClearCache)
          DeleteFile(szCacheFile);
       dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);

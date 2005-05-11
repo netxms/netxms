@@ -306,6 +306,8 @@ int CNxpcApp::ExitInstance()
       _tcscpy(szBuffer, g_szWorkDir);
       _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
       BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
+      _tcscat(szBuffer, _T("."));
+      _tcscat(szBuffer, g_szLogin);
       NXCSaveObjectCache(g_hSession, szBuffer);
 
       NXCSetDebugCallback(NULL);
