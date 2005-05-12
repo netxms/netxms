@@ -9,6 +9,9 @@
 - Added special handling for CheckPoint SNMP agent
 - Windows CE Console improved:
 	- Added "Last DCI Values" view
+	- Added graph view
+	- Added collected DCI data view
+	- Added full screen mode support
 	- Implemented sorting in alarm browser
 	- Implemented alarm browser autoupdate
 	- Implemented object managed/unmanaged state switching
