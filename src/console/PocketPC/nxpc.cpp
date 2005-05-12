@@ -95,9 +95,11 @@ BOOL CNxpcApp::InitInstance()
 	SetRegistryKey(_T("NetXMS"));
 
    // Load configuration from registry
-   g_dwOptions = GetProfileInt(_T("General"), _T("Options"), 0);
+   g_dwFlags = GetProfileInt(_T("General"), _T("Options"), 0);
    wcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    wcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   if (g_dwFlags & AF_SAVE_PASSWORD)
+      wcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
    g_dwEncryptionMethod = GetProfileInt(_T("Connection"), _T("Encryption"), CSCP_ENCRYPTION_NONE);
 
    // Load context menus
@@ -210,6 +212,9 @@ void CNxpcApp::OnConnectToServer()
    dlgLogin.m_strServer = g_szServer;
    dlgLogin.m_strLogin = g_szLogin;
    dlgLogin.m_bClearCache = FALSE;
+   dlgLogin.m_bSavePassword = (g_dwFlags & AF_SAVE_PASSWORD) ? TRUE : FALSE;
+   if (dlgLogin.m_bSavePassword)
+      dlgLogin.m_strPassword = g_szPassword;
    //dlgLogin.m_iEncryption = g_dwEncryptionMethod;
    do
    {
@@ -221,12 +226,21 @@ void CNxpcApp::OnConnectToServer()
       wcscpy(g_szServer, (LPCTSTR)dlgLogin.m_strServer);
       wcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_strLogin);
       wcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_strPassword);
+      if (dlgLogin.m_bSavePassword)
+         g_dwFlags |= AF_SAVE_PASSWORD;
+      else
+         g_dwFlags &= ~AF_SAVE_PASSWORD;
       //g_dwEncryptionMethod = dlgLogin.m_iEncryption;
 
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
       WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
+      if (g_dwFlags & AF_SAVE_PASSWORD)
+         WriteProfileString(_T("Connection"), _T("Password"), g_szPassword);
+      else
+         WriteProfileString(_T("Connection"), _T("Password"), _T(""));
+      WriteProfileInt(_T("General"), _T("Options"), g_dwFlags);
 
       // Initiate connection
       dwResult = DoLogin(dlgLogin.m_bClearCache);

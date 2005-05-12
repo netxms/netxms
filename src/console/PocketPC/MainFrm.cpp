@@ -36,6 +36,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_PAINT()
 	ON_COMMAND(ID_VIEW_NEXT, OnViewNext)
 	ON_COMMAND(ID_VIEW_PREV, OnViewPrev)
+	ON_WM_ACTIVATE()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_VIEW_FULLSCREEN, OnViewFullscreen)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
@@ -51,6 +54,7 @@ CMainFrame::CMainFrame()
    m_rgbTitleText = RGB(255, 255, 255);
    memset(m_pwndViewList, 0, sizeof(CDynamicView *) * (MAX_DYNAMIC_VIEWS + 3));
    m_dwNumViews = 0;
+   m_bFullScreen = FALSE;
 }
 
 CMainFrame::~CMainFrame()
@@ -257,6 +261,18 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 {
    DWORD i;
 
+   if (m_bFullScreen)
+   {
+      CSize scrSize;
+      
+      scrSize = GetScreenSize();
+      if ((cx != scrSize.cx) || (cy != scrSize.cy))
+      {
+         SetWindowPos(NULL, 0, 0, scrSize.cx, scrSize.cy, SWP_NOZORDER);
+         return;
+      }
+   }
+
 	CFrameWnd::OnSize(nType, cx, cy);
 
    m_wndAlarmView.SetWindowPos(NULL, 0, VIEW_TITLE_SIZE, cx, cy - VIEW_TITLE_SIZE, SWP_NOZORDER);
@@ -404,7 +420,7 @@ void CMainFrame::CreateView(CDynamicView *pwndView, TCHAR *pszTitle)
 // WM_COMMAND::ID_VIEW_NEXT message handler
 //
 
-void CMainFrame::OnViewNext() 
+void CMainFrame::OnViewNext(void) 
 {
    DWORD dwIndex;
 
@@ -420,7 +436,7 @@ void CMainFrame::OnViewNext()
 // WM_COMMAND::ID_VIEW_PREV message handler
 //
 
-void CMainFrame::OnViewPrev() 
+void CMainFrame::OnViewPrev(void) 
 {
    DWORD dwIndex;
 
@@ -446,3 +462,98 @@ DWORD CMainFrame::FindViewInList(CWnd *pwndView)
    return 0;
 }
 
+
+//
+// Switch to/from fullscreen mode
+//
+
+void CMainFrame::FullScreen(BOOL bFullScreen)
+{
+   if (!m_bFullScreen == !bFullScreen)
+      return;     // Already in requested mode
+
+   if (bFullScreen)
+   {
+      m_bFullScreen = TRUE;
+      RefreshFullScreen();
+   }
+   else
+   {
+      CSize scrSize;
+      int iMenuHeight;
+
+      scrSize = GetScreenSize();
+      iMenuHeight = GetSystemMetrics(SM_CYMENU);
+      m_bFullScreen = FALSE;
+      SetWindowPos(NULL, 0, iMenuHeight, scrSize.cx, scrSize.cy - iMenuHeight * 2, SWP_NOZORDER);
+	   SHFullScreen(m_hWnd, SHFS_SHOWSTARTICON);
+	   SHFullScreen(m_hWnd, SHFS_SHOWSIPBUTTON);
+	   SHFullScreen(m_hWnd, SHFS_SHOWTASKBAR);
+      m_wndCommandBar.ShowWindow(SW_SHOWNOACTIVATE);
+   }
+}
+
+
+//
+// Refresh fullscreen state
+//
+
+void CMainFrame::RefreshFullScreen(void)
+{
+   CSize scrSize;
+
+   if (!m_bFullScreen)
+      return;
+
+	// Before hide command bar we should hipe SIP panel
+	SHSipPreference(m_hWnd, SIP_FORCEDOWN);
+
+	SetForegroundWindow();
+
+	// If command bar should be hidden then we should resize our window
+	// first to avoid blinking
+   scrSize = GetScreenSize();
+   SetWindowPos(NULL, 0, 0, scrSize.cx, scrSize.cy, SWP_NOZORDER);
+   m_wndCommandBar.ShowWindow(SW_HIDE);
+
+	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR);
+	SHFullScreen(m_hWnd, SHFS_HIDESIPBUTTON);
+	SHFullScreen(m_hWnd, SHFS_HIDESTARTICON);
+}
+
+
+//
+// WM_ACIVATE message hander
+//
+
+void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
+{
+	CFrameWnd::OnActivate(nState, pWndOther, bMinimized);
+   //if (((nState == WA_ACTIVE) || (nState == WA_CLICKACTIVE)) && (m_bFullScreen))
+   if (m_bFullScreen)
+      RefreshFullScreen();
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CMainFrame::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(4);
+   pMenu->CheckMenuItem(ID_VIEW_FULLSCREEN, MF_BYCOMMAND | (m_bFullScreen ? MF_CHECKED : 0));
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN, point.x, point.y, this, NULL);
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_FULLSCREEN
+//
+
+void CMainFrame::OnViewFullscreen() 
+{
+   ToggleFullScreen();
+}

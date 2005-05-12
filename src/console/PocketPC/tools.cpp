@@ -32,11 +32,22 @@
 
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
 {
-/*   struct tm *pTime;
-   static TCHAR *pFormat[] = { L"%d-%b-%Y %H:%M:%S", L"%H:%M:%S" };
+   struct tm *ptm;
 
-   pTime = localtime((const time_t *)&dwTimeStamp);
-   _tcsftime(pszBuffer, 32, pFormat[iType], pTime);*/
+   ptm = WCE_FCTN(localtime)((const time_t *)&dwTimeStamp);
+   switch(iType)
+   {
+      case TS_LONG_DATE_TIME:
+         _stprintf(pszBuffer, _T("%02d-%02d-%04d %02d:%02d:%02d"), ptm->tm_mday,
+                   ptm->tm_mon, ptm->tm_year + 1900, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+         break;
+      case TS_LONG_TIME:
+         _stprintf(pszBuffer, _T("%02d:%02d:%02d"), ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+         break;
+      default:
+         *pszBuffer = 0;
+         break;
+   }
    return pszBuffer;
 }
 
@@ -143,4 +154,21 @@ int MulDiv(int nNumber, int nNumerator, int nDenominator)
    if ((qnResult % nDenominator) > (nDenominator / 2))
       nResult++;
    return nResult;
+}
+
+
+//
+// Get screen size
+//
+
+CSize GetScreenSize(void)
+{
+	CSize size;
+
+	CDC *pDC = AfxGetMainWnd()->GetDC();
+	size.cx = pDC->GetDeviceCaps(HORZRES);
+	size.cy = pDC->GetDeviceCaps(VERTRES);
+	AfxGetMainWnd()->ReleaseDC(pDC);
+
+	return size;
 }

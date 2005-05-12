@@ -67,6 +67,8 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
+	void RefreshFullScreen(void);
+	BOOL m_bFullScreen;
 	DWORD FindViewInList(CWnd *pwndView);
 	DWORD m_dwNumViews;
 	CBitmapButton m_wndBtnNext;
@@ -89,6 +91,9 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg void OnViewNext();
 	afx_msg void OnViewPrev();
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnViewFullscreen();
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
@@ -98,12 +103,15 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	void FullScreen(BOOL bFullScreen);
 	void CreateView(CDynamicView *pwndView, TCHAR *pszTitle);
 	void UnregisterView(CDynamicView *pView);
 	BOOL RegisterView(CDynamicView *pView);
 	COLORREF m_rgbTitleText;
 	COLORREF m_rgbTitleBkgnd;
    int *GetAlarmStats(void) { return m_wndAlarmView.m_iNumAlarms; }
+   BOOL IsFullScreen(void) { return m_bFullScreen; }
+   void ToggleFullScreen(void) { FullScreen(!m_bFullScreen); }
 };
 
 /////////////////////////////////////////////////////////////////////////////

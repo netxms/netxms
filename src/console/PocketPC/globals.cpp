@@ -48,7 +48,7 @@ DWORD g_dwEncryptionMethod = CSCP_ENCRYPTION_NONE;
 // Global configurable parameters
 //
 
-DWORD g_dwOptions = 0;
+DWORD g_dwFlags = 0;
 TCHAR g_szWorkDir[MAX_PATH] = L"";
 
 

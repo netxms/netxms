@@ -44,6 +44,9 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnViewRefresh();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnDciShowhistory();
+	afx_msg void OnDciGraph();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

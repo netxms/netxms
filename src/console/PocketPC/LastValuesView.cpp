@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "nxpc.h"
 #include "LastValuesView.h"
+#include "DataView.h"
+#include "GraphView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,6 +31,9 @@ BEGIN_MESSAGE_MAP(CLastValuesView, CDynamicView)
 	ON_WM_CREATE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_SIZE()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_DCI_SHOWHISTORY, OnDciShowhistory)
+	ON_COMMAND(ID_DCI_GRAPH, OnDciGraph)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -95,7 +100,6 @@ void CLastValuesView::OnViewRefresh()
    NXC_DCI_VALUE *pItemList;
    int iItem;
    TCHAR szBuffer[256];
-   struct tm *ptm;
 
    m_wndListCtrl.DeleteAllItems();
    dwResult = DoRequestArg4(NXCGetLastValues, g_hSession, (void *)m_dwNodeId,
@@ -111,12 +115,7 @@ void CLastValuesView::OnViewRefresh()
             m_wndListCtrl.SetItemData(iItem, pItemList[i].dwId);
             m_wndListCtrl.SetItemText(iItem, 1, pItemList[i].szDescription);
             m_wndListCtrl.SetItemText(iItem, 2, pItemList[i].szValue);
-
-            // Create timestamp
-            ptm = WCE_FCTN(localtime)((time_t *)&pItemList[i].dwTimestamp);
-            _stprintf(szBuffer, _T("%02d-%02d-%04d %02d:%02d:%02d"), ptm->tm_mday,
-                      ptm->tm_mon, ptm->tm_year, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
-            m_wndListCtrl.SetItemText(iItem, 3, szBuffer);
+            m_wndListCtrl.SetItemText(iItem, 3, FormatTimeStamp(pItemList[i].dwTimestamp, szBuffer, TS_LONG_DATE_TIME));
          }
       }
    }
@@ -137,3 +136,104 @@ void CLastValuesView::OnSize(UINT nType, int cx, int cy)
    m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }
 
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CLastValuesView::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+   int iNumItems, iItem;
+   UINT uFlags;
+   CPoint pt;
+
+   pt = point;
+   pWnd->ScreenToClient(&pt);
+   iItem = m_wndListCtrl.HitTest(pt, &uFlags);
+   if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+   {
+      if (m_wndListCtrl.GetItemState(iItem, LVIS_SELECTED) != LVIS_SELECTED)
+         SelectListViewItem(&m_wndListCtrl, iItem);
+   }
+
+   pMenu = theApp.GetContextMenu(2);
+
+   // Disable some menu items
+   iNumItems = m_wndListCtrl.GetSelectedCount();
+   pMenu->EnableMenuItem(ID_DCI_SHOWHISTORY, MF_BYCOMMAND | (iNumItems == 1) ? MF_ENABLED : MF_GRAYED);
+
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN, point.x, point.y, this, NULL);
+}
+
+
+//
+// WM_COMMAND::ID_DCI_SHOWHISTORY
+//
+
+void CLastValuesView::OnDciShowhistory() 
+{
+   CDataView *pwndView;
+   TCHAR szTitle[300];
+   int iItem;
+   DATA_VIEW_INIT init;
+   NXC_OBJECT *pObject;
+
+   iItem = m_wndListCtrl.GetSelectionMark();
+   if (iItem != -1)
+   {
+      init.dwNodeId = m_dwNodeId;
+      init.dwItemId = m_wndListCtrl.GetItemData(iItem);
+      pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
+      _stprintf(szTitle, _T("%s - "), pObject->szName); 
+      m_wndListCtrl.GetItemText(iItem, 1, &szTitle[_tcslen(szTitle)],
+                                256 - _tcslen(szTitle));
+      _tcscat(szTitle, _T(" - Collected Data"));
+      pwndView = new CDataView;
+      pwndView->InitView(&init);
+      ((CMainFrame *)theApp.m_pMainWnd)->CreateView(pwndView, szTitle);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_DCI_GRAPH
+//
+
+void CLastValuesView::OnDciGraph() 
+{
+   CGraphView *pwndView;
+   TCHAR szTitle[300];
+   int iItem;
+   GRAPH_VIEW_INIT init;
+   NXC_OBJECT *pObject;
+   DWORD i;
+
+   init.dwNodeId = m_dwNodeId;
+   init.dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (init.dwNumItems > 0)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      for(i = 0; (iItem != -1) && (i < init.dwNumItems); i++)
+      {
+         init.pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+
+      pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
+      _tcscpy(szTitle, pObject->szName); 
+      if (init.dwNumItems == 1)
+      {
+         iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+         _tcscat(szTitle, _T(" - ["));
+         m_wndListCtrl.GetItemText(iItem, 1, &szTitle[_tcslen(szTitle)],
+                                   256 - _tcslen(szTitle));
+         _tcscat(szTitle, _T("]"));
+      }
+      _tcscat(szTitle, _T(" - History Graph"));
+
+      pwndView = new CGraphView;
+      pwndView->InitView(&init);
+      ((CMainFrame *)theApp.m_pMainWnd)->CreateView(pwndView, szTitle);
+   }
+}

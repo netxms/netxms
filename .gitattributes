@@ -246,6 +246,10 @@ src/console/PocketPC/DataView.cpp -text
 src/console/PocketPC/DataView.h -text
 src/console/PocketPC/DynamicView.cpp -text
 src/console/PocketPC/DynamicView.h -text
+src/console/PocketPC/Graph.cpp -text
+src/console/PocketPC/Graph.h -text
+src/console/PocketPC/GraphView.cpp -text
+src/console/PocketPC/GraphView.h -text
 src/console/PocketPC/LastValuesView.cpp -text
 src/console/PocketPC/LastValuesView.h -text
 src/console/PocketPC/LoginDlg.cpp -text

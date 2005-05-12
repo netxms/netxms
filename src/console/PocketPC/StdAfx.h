@@ -43,6 +43,16 @@
 #endif
 
 
+// Missing function defines
+#ifndef LoadCursor
+#ifdef UNICODE
+#define LoadCursor LoadCursorW
+#else
+#define LoadCursor LoadCursorA
+#endif
+#endif
+
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft eMbedded Visual C++ will insert additional declarations immediately before the previous line.
 

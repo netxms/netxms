@@ -133,10 +133,41 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Wake up",                     ID_OBJECT_WAKEUP
     END
+    POPUP "DCI"
+    BEGIN
+        MENUITEM "Show history",                ID_DCI_SHOWHISTORY
+        MENUITEM "Graph",                       ID_DCI_GRAPH
+    END
+    POPUP "Graph"
+    BEGIN
+        POPUP "Presets"
+        BEGIN
+            MENUITEM "Last 10 minutes",             ID_GRAPH_PRESETS_LAST10MINUTES
+
+            MENUITEM "Last 30 minutes",             ID_GRAPH_PRESETS_LAST30MINUTES
+
+            MENUITEM "Last hour",                   ID_GRAPH_PRESETS_LASTHOUR
+
+            MENUITEM "Last 2 hours",                ID_GRAPH_PRESETS_LAST2HOURS
+
+            MENUITEM "Last 4 hours",                ID_GRAPH_PRESETS_LAST4HOURS
+
+            MENUITEM "Last day",                    ID_GRAPH_PRESETS_LASTDAY
+            MENUITEM "Last week",                   ID_GRAPH_PRESETS_LASTWEEK
+
+        END
+        MENUITEM "Full screen",                 ID_GRAPH_FULLSCREEN
+        MENUITEM "Properties...",               ID_GRAPH_PROPERTIES
+    END
     POPUP "View"
     BEGIN
-        MENUITEM "Prev",                        ID_VIEW_PREV
-        MENUITEM "Next",                        ID_VIEW_NEXT
+        MENUITEM "Refresh current view",        ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Previous view",               ID_VIEW_PREV
+        MENUITEM "Next view",                   ID_VIEW_NEXT
+        MENUITEM "Close current view",          ID_VIEW_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "Full screen",                 ID_VIEW_FULLSCREEN
     END
 END
 
@@ -157,13 +188,17 @@ END
 
 IDM_CONTEXT SHMENUBAR DISCARDABLE 
 BEGIN
-    IDM_CONTEXT, 3,
+    IDM_CONTEXT, 5,
     I_IMAGENONE, ID_ALARM, TBSTATE_ENABLED, 
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_ALARM, 0, 0,
     I_IMAGENONE, ID_OBJECT, TBSTATE_ENABLED, 
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_OBJECT, 0, 1,
+    I_IMAGENONE, ID_DCI, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_DCI, 0, 2,
+    I_IMAGENONE, ID_GRAPH, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_GRAPH, 0, 3,
     I_IMAGENONE, ID_VIEW, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_VIEW, 0, 2,
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_VIEW, 0, 4,
 END
 
 
@@ -190,7 +225,7 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 140, 110
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 140, 110
 STYLE WS_POPUP | WS_CAPTION
 EXSTYLE 0x80000000L
 CAPTION "About nxpc"
@@ -212,12 +247,12 @@ BEGIN
     ICON            IDI_CONNECT,IDC_STATIC,7,7,21,20
 END
 
-IDD_LOGIN DIALOG DISCARDABLE  0, 0, 148, 129
+IDD_LOGIN DIALOG DISCARDABLE  0, 0, 148, 140
 STYLE DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "Login"
 FONT 8, "Microsoft Sans Serif"
 BEGIN
-    PUSHBUTTON      "Exit",IDCANCEL,101,110,40,12
+    PUSHBUTTON      "Exit",IDCANCEL,101,121,40,12
     LTEXT           "Server",IDC_STATIC,39,7,22,8
     EDITTEXT        IDC_EDIT_SERVER,39,17,102,13,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_LOGIN,39,44,102,13,ES_AUTOHSCROLL
@@ -225,10 +260,12 @@ BEGIN
                     ES_AUTOHSCROLL
     LTEXT           "Login",IDC_STATIC,39,34,18,8
     LTEXT           "Password",IDC_STATIC,39,61,32,8
-    ICON            IDI_LOGIN,IDC_STATIC,7,7,21,20
-    DEFPUSHBUTTON   "Connect",IDOK,56,110,40,12
+    ICON            IDI_LOGIN,IDC_STATIC,7,7,20,20
+    DEFPUSHBUTTON   "Connect",IDOK,56,121,40,12
     CONTROL         "&Clear object cache",IDC_CHECK_CACHE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,39,90,75,10
+    CONTROL         "&Save password",IDC_CHECK_PASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,39,102,65,10
 END
 
 
@@ -304,7 +341,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 141
         TOPMARGIN, 7
-        BOTTOMMARGIN, 122
+        BOTTOMMARGIN, 133
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -412,6 +449,12 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_CAP_REFRESH         "&Refresh"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_DCI             "DCI"
+    IDS_CAP_GRAPH           "Graph"
 END
 
 #endif    // English (U.S.) resources

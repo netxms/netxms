@@ -10,6 +10,17 @@
 #include "DynamicView.h"
 
 
+//
+// Init structure
+//
+
+struct DATA_VIEW_INIT
+{
+   DWORD dwNodeId;
+   DWORD dwItemId;
+};
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CDataView window
 
@@ -38,10 +49,13 @@ public:
 
 	// Generated message map functions
 protected:
+	CListCtrl m_wndListCtrl;
 	DWORD m_dwItemId;
 	DWORD m_dwNodeId;
 	//{{AFX_MSG(CDataView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

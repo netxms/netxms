@@ -34,6 +34,13 @@ extern CNxpcApp theApp;
 
 
 //
+// Application flags
+//
+
+#define AF_SAVE_PASSWORD      0x0001
+
+
+//
 // Constants
 //
 
@@ -44,6 +51,14 @@ extern CNxpcApp theApp;
 #define MAX_DYNAMIC_VIEWS     256
 
 #define WORKFILE_OBJECTCACHE  L"\\object.cache."
+
+
+//
+// Timestamp formats
+//
+
+#define TS_LONG_DATE_TIME  0
+#define TS_LONG_TIME       1
 
 
 //
@@ -69,6 +84,7 @@ extern CNxpcApp theApp;
 #define VIEW_CLASS_LAST_VALUES      1
 #define VIEW_CLASS_GRAPH            2
 #define VIEW_CLASS_OBJECT_DETAILS   3
+#define VIEW_CLASS_COLLECTED_DATA   4
 
 
 //
@@ -161,8 +177,9 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
 
 int MulDiv(int nNumber, int nNumerator, int nDenominator);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
-/*TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
-CSize GetWindowSize(CWnd *pWnd);
+TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
+CSize GetScreenSize(void);
+/*CSize GetWindowSize(CWnd *pWnd);
 const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = "Unknown");
 TCHAR *TranslateUNIXText(const TCHAR *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
@@ -174,7 +191,6 @@ void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);*/
 //
 
 extern NXC_SESSION g_hSession;
-extern DWORD g_dwOptions;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
@@ -193,5 +209,6 @@ extern TCHAR *g_pszItemDataType[];
 extern TCHAR *g_pszItemStatus[];
 extern NXC_CC_LIST *g_pCCList;
 extern CODE_TO_TEXT g_ctNodeType[];
+extern DWORD g_dwFlags;
 
 #endif

@@ -220,7 +220,6 @@ void CAlarmView::OnViewRefresh()
 void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
 {
    int iIdx;
-   struct tm *ptm;
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
@@ -233,12 +232,7 @@ void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
       m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
       m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-
-      // Create timestamp
-      ptm = WCE_FCTN(localtime)((time_t *)&pAlarm->dwTimeStamp);
-      _stprintf(szBuffer, _T("%02d-%02d-%04d %02d:%02d:%02d"), ptm->tm_mday,
-                ptm->tm_mon, ptm->tm_year, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
-      m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
+      m_wndListCtrl.SetItemText(iIdx, 3, FormatTimeStamp(pAlarm->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME));
       m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
    m_iNumAlarms[pAlarm->wSeverity]++;

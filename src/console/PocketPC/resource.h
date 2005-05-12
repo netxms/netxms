@@ -10,6 +10,7 @@
 #define ID_LIST_CTRL                    103
 #define IDM_MENU                        104
 #define IDP_SOCKETS_INIT_FAILED         104
+#define IDC_GRAPH                       104
 #define IDR_MAIN_EDIT                   105
 #define IDR_MAIN_TOOL                   106
 #define IDR_MAINFRAME                   128
@@ -49,6 +50,7 @@
 #define IDC_STATIC_TITLE                1005
 #define IDC_CHECK_CACHE                 1006
 #define IDC_STATIC_VERSION              1007
+#define IDC_CHECK_PASSWORD              1008
 #define ID_SYSTEM                       32771
 #define IDS_CAP_SYSTEM                  32773
 #define ID_SYSTEM_SETTINGS              32775
@@ -83,6 +85,22 @@
 #define ID_ALARM_SORTBY_TIMESTAMP       32814
 #define ID_ALARM_SORTBY_ASCENDING       32815
 #define ID_ALARM_SORTBY_DESCENDING      32816
+#define ID_DCI                          32817
+#define IDS_CAP_DCI                     32819
+#define ID_DCI_SHOWHISTORY              32820
+#define ID_DCI_GRAPH                    32821
+#define ID_GRAPH                        32822
+#define IDS_CAP_GRAPH                   32824
+#define ID_GRAPH_PRESETS_LAST10MINUTES  32826
+#define ID_GRAPH_PRESETS_LAST30MINUTES  32827
+#define ID_GRAPH_PRESETS_LASTHOUR       32828
+#define ID_GRAPH_PRESETS_LAST2HOURS     32829
+#define ID_GRAPH_PRESETS_LAST4HOURS     32830
+#define ID_GRAPH_PRESETS_LASTDAY        32831
+#define ID_GRAPH_PRESETS_LASTWEEK       32832
+#define ID_GRAPH_FULLSCREEN             32833
+#define ID_GRAPH_PROPERTIES             32834
+#define ID_VIEW_FULLSCREEN              32835
 #define IDS_NEW                         65000
 #define IDS_SUMMARY                     65000
 #define IDS_FILE                        65001
@@ -101,8 +119,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        169
-#define _APS_NEXT_COMMAND_VALUE         32817
-#define _APS_NEXT_CONTROL_VALUE         1008
-#define _APS_NEXT_SYMED_VALUE           104
+#define _APS_NEXT_COMMAND_VALUE         32837
+#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

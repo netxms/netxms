@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CDataView
+LastClass=CLoginDlg
 LastTemplate=generic CWnd
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxpc.h"
 LastPage=0
 
-ClassCount=14
+ClassCount=15
 Class1=CNxpcApp
 Class3=CMainFrame
 Class4=CAboutDlg
@@ -26,16 +26,17 @@ Resource6=IDD_LOGIN
 Class7=CObjectView
 Class8=CSummaryView
 Class9=CAlarmView
-Resource7=IDD_PROCESSING (English (U.S.))
-Resource8=IDD_ABOUTBOX (English (U.S.))
+Resource7=IDD_ABOUTBOX (English (U.S.))
+Resource8=IDR_MAINFRAME (English (U.S.))
 Class10=CEmptyDlg
 Class11=CLastValuesDlg
-Resource9=IDR_MAINFRAME (English (U.S.))
+Resource9=IDD_PROCESSING (English (U.S.))
 Class12=CDynamicView
 Class13=CLastValuesView
 Resource10=IDD_EMPTY (English (U.S.))
-Resource11=IDD_LOGIN (English (U.S.))
 Class14=CDataView
+Class15=CGraphView
+Resource11=IDD_LOGIN (English (U.S.))
 
 [CLS:CNxpcApp]
 Type=0
@@ -193,7 +194,7 @@ Control2=IDC_STATIC,static,1342177283
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
 Class=CLoginDlg
-ControlCount=10
+ControlCount=11
 Control1=IDCANCEL,button,1342242816
 Control2=IDC_STATIC,static,1342308352
 Control3=IDC_EDIT_SERVER,edit,1350631552
@@ -204,6 +205,7 @@ Control7=IDC_STATIC,static,1342308352
 Control8=IDC_STATIC,static,1342177283
 Control9=IDOK,button,1342242817
 Control10=IDC_CHECK_CACHE,button,1342242819
+Control11=IDC_CHECK_PASSWORD,button,1342242819
 
 [CLS:CObjectView]
 Type=0
@@ -245,9 +247,23 @@ Command10=ID_OBJECT_LASTDCIVALUES
 Command11=ID_OBJECT_MANAGE
 Command12=ID_OBJECT_UNMANAGE
 Command13=ID_OBJECT_WAKEUP
-Command14=ID_VIEW_PREV
-Command15=ID_VIEW_NEXT
-CommandCount=15
+Command14=ID_DCI_SHOWHISTORY
+Command15=ID_DCI_GRAPH
+Command16=ID_GRAPH_PRESETS_LAST10MINUTES
+Command17=ID_GRAPH_PRESETS_LAST30MINUTES
+Command18=ID_GRAPH_PRESETS_LASTHOUR
+Command19=ID_GRAPH_PRESETS_LAST2HOURS
+Command20=ID_GRAPH_PRESETS_LAST4HOURS
+Command21=ID_GRAPH_PRESETS_LASTDAY
+Command22=ID_GRAPH_PRESETS_LASTWEEK
+Command23=ID_GRAPH_FULLSCREEN
+Command24=ID_GRAPH_PROPERTIES
+Command25=ID_VIEW_REFRESH
+Command26=ID_VIEW_PREV
+Command27=ID_VIEW_NEXT
+Command28=ID_VIEW_CLOSE
+Command29=ID_VIEW_FULLSCREEN
+CommandCount=29
 
 [DLG:IDD_EMPTY (English (U.S.))]
 Type=1
@@ -301,4 +317,13 @@ HeaderFile=DataView.h
 ImplementationFile=DataView.cpp
 BaseClass=CDynamicView
 Filter=W
+VirtualFilter=VWC
+
+[CLS:CGraphView]
+Type=0
+HeaderFile=GraphView.h
+ImplementationFile=GraphView.cpp
+BaseClass=CDynamicView
+Filter=W
+VirtualFilter=VWC
 

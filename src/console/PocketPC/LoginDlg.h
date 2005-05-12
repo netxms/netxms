@@ -23,6 +23,7 @@ public:
 	CString	m_strPassword;
 	CString	m_strServer;
 	BOOL	m_bClearCache;
+	BOOL	m_bSavePassword;
 	//}}AFX_DATA
 
 
