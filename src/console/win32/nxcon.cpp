@@ -337,13 +337,16 @@ int CConsoleApp::ExitInstance()
 
    if (g_hSession != NULL)
    {
-      NXCGetServerID(g_hSession, bsServerId);
-      _tcscpy(szBuffer, g_szWorkDir);
-      _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
-      BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
-      _tcscat(szBuffer, _T("."));
-      _tcscat(szBuffer, g_szLogin);
-      NXCSaveObjectCache(g_hSession, szBuffer);
+      if (!(g_dwOptions & OPT_DONT_CACHE_OBJECTS))
+      {
+         NXCGetServerID(g_hSession, bsServerId);
+         _tcscpy(szBuffer, g_szWorkDir);
+         _tcscat(szBuffer, WORKFILE_OBJECTCACHE);
+         BinToStr(bsServerId, 8, &szBuffer[_tcslen(szBuffer)]);
+         _tcscat(szBuffer, _T("."));
+         _tcscat(szBuffer, g_szLogin);
+         NXCSaveObjectCache(g_hSession, szBuffer);
+      }
 
       NXCSetDebugCallback(NULL);
       NXCDisconnect(g_hSession);
@@ -660,6 +663,7 @@ void CConsoleApp::OnConnectToServer()
    dlgLogin.m_szServer = g_szServer;
    dlgLogin.m_szLogin = g_szLogin;
    dlgLogin.m_iEncryption = g_dwEncryptionMethod;
+   dlgLogin.m_bNoCache = FALSE;
    dlgLogin.m_bClearCache = FALSE;
    dlgLogin.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
    do
@@ -677,6 +681,10 @@ void CConsoleApp::OnConnectToServer()
          g_dwOptions |= OPT_MATCH_SERVER_VERSION;
       else
          g_dwOptions &= ~OPT_MATCH_SERVER_VERSION;
+      if (dlgLogin.m_bNoCache)
+         g_dwOptions |= OPT_DONT_CACHE_OBJECTS;
+      else
+         g_dwOptions &= ~OPT_DONT_CACHE_OBJECTS;
 
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);

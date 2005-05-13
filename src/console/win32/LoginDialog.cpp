@@ -27,6 +27,7 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 	m_iEncryption = -1;
 	m_bClearCache = FALSE;
 	m_bMatchVersion = FALSE;
+	m_bNoCache = FALSE;
 	//}}AFX_DATA_INIT
 
    lb.lbColor = 0;
@@ -54,6 +55,7 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RADIO_CLEAR, m_iEncryption);
 	DDX_Check(pDX, IDC_CHECK_CACHE, m_bClearCache);
 	DDX_Check(pDX, IDC_CHECK_VERSION_MATCH, m_bMatchVersion);
+	DDX_Check(pDX, IDC_CHECK_NOCACHE, m_bNoCache);
 	//}}AFX_DATA_MAP
 }
 
@@ -61,6 +63,7 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CLoginDialog, CDialog)
 	//{{AFX_MSG_MAP(CLoginDialog)
 	ON_WM_CTLCOLOR()
+	ON_BN_CLICKED(IDC_CHECK_NOCACHE, OnCheckNocache)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -112,5 +115,26 @@ HBRUSH CLoginDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	   HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 	   
 	   return hbr;
+   }
+}
+
+
+//
+// Handler for "Don't cache this session" selection
+//
+
+void CLoginDialog::OnCheckNocache() 
+{
+   BOOL bNoCache;
+
+   bNoCache = (SendDlgItemMessage(IDC_CHECK_NOCACHE, BM_GETCHECK) == BST_CHECKED);
+   if (bNoCache)
+   {
+      SendDlgItemMessage(IDC_CHECK_CACHE, BM_SETCHECK, BST_CHECKED);
+      EnableDlgItem(this, IDC_CHECK_CACHE, FALSE);
+   }
+   else
+   {
+      EnableDlgItem(this, IDC_CHECK_CACHE, TRUE);
    }
 }

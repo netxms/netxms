@@ -7,6 +7,7 @@
 - Added server configuration wizard (Windows only)
 - SNMP agent connectivity check improved
 - Added special handling for CheckPoint SNMP agent
+- Added "Don't cache this session" option to Windows console login dialog
 - Windows CE Console improved:
 	- Added "Last DCI Values" view
 	- Added graph view

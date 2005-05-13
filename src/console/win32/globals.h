@@ -73,6 +73,7 @@ extern CConsoleApp theApp;
 //
 
 #define OPT_MATCH_SERVER_VERSION 0x00010000
+#define OPT_DONT_CACHE_OBJECTS   0x00020000
 
 
 //

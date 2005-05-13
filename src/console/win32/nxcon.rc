@@ -796,7 +796,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
 END
 
-IDD_LOGIN DIALOGEX 0, 0, 215, 245
+IDD_LOGIN DIALOGEX 0, 0, 215, 255
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connect to server"
 FONT 8, "MS Sans Serif"
@@ -806,17 +806,19 @@ BEGIN
     EDITTEXT        IDC_EDIT_PASSWORD,52,113,156,14,ES_PASSWORD | 
                     ES_AUTOHSCROLL
     CONTROL         "&No encryption",IDC_RADIO_CLEAR,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,7,148,60,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,148,60,10
     CONTROL         "Encrypt connection using &Blowfish + SHA1",
                     IDC_RADIO_BLOWFISH,"Button",BS_AUTORADIOBUTTON,7,160,151,
                     10
     CONTROL         "&Clear object cache on connect",IDC_CHECK_CACHE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,190,113,10
-    CONTROL         "Server version should match client version",
+    CONTROL         "&Do not cache this session",IDC_CHECK_NOCACHE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,201,97,10
+    CONTROL         "&Server version should match client version",
                     IDC_CHECK_VERSION_MATCH,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,202,149,10
-    DEFPUSHBUTTON   "OK",IDOK,35,224,50,14
-    PUSHBUTTON      "&Quit",IDCANCEL,129,224,50,14
+                    WS_TABSTOP,7,212,149,10
+    DEFPUSHBUTTON   "OK",IDOK,35,234,50,14
+    PUSHBUTTON      "&Quit",IDCANCEL,129,234,50,14
     CONTROL         142,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,
                     201,43
     LTEXT           "Connect to server",IDC_STATIC,7,58,59,8
@@ -1855,7 +1857,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 208
         TOPMARGIN, 7
-        BOTTOMMARGIN, 238
+        BOTTOMMARGIN, 248
     END
 
     IDD_EDIT_EVENT, DIALOG

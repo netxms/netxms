@@ -26,6 +26,7 @@ public:
 	int		m_iEncryption;
 	BOOL	m_bClearCache;
 	BOOL	m_bMatchVersion;
+	BOOL	m_bNoCache;
 	//}}AFX_DATA
 
 
@@ -45,6 +46,7 @@ protected:
 	//{{AFX_MSG(CLoginDialog)
 	virtual BOOL OnInitDialog();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnCheckNocache();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

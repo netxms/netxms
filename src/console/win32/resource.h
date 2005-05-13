@@ -388,6 +388,7 @@
 #define IDC_STATIC_FROM                 1248
 #define IDC_STATIC_TO                   1249
 #define IDC_CHECK_VERSION_MATCH         1250
+#define IDC_CHECK_NOCACHE               1253
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -508,7 +509,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32929
-#define _APS_NEXT_CONTROL_VALUE         1253
+#define _APS_NEXT_CONTROL_VALUE         1254
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif
