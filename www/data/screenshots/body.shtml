@@ -1,0 +1,64 @@
+<div class="twoThirds noBorderOnLeft">
+	<h1>Screenshots</h1>
+
+	<!-- links -->
+	<a href="#win32">WIN32 Console &#9660;</a><br />
+	<a href="#PPC">PocketPC Console &#9660;</a><br />
+	<a href="#WEB">WEB Console &#9660;</a><br />
+
+	<!-- images -->
+	<a name="win32"></a>
+	<h2>WIN32 Console</h2>
+	<p class="screenShot">
+		Login window:<br />
+		<a href="netxms_console_01.png"><img src="th_netxms_console_01.png" border="0" alt="Login window"></a>
+	</p>
+	<p class="screenShot">
+		Event Processing Policy editor:<br />
+		<a href="netxms_console_02.png"><img src="th_netxms_console_02.png" border="0" alt="Event Processing Policy editor"></a>
+	</p>
+	<p class="screenShot">
+		<a href="netxms_console_03.png"><img src="th_netxms_console_03.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="netxms_console_04.png"><img src="th_netxms_console_04.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		Agent package deployment:<br />
+		<a href="netxms_console_05.png"><img src="th_netxms_console_05.png" border="0" alt="Agent package deployment"></a>
+	</p>
+	<p class="screenShot">
+		MIB Browser:<br />
+		<a href="netxms_console_06.png"><img src="th_netxms_console_06.png" border="0" alt="MIB Browser"></a>
+	</p>
+	<p class="screenShot">
+		Node properties:<br />
+		<a href="netxms_console_07.png"><img src="th_netxms_console_07.png" border="0" alt="Node properties"></a>
+	</p>
+	<p class="screenShot">
+		List of parameters supported by agent on selected node:<br />
+		<a href="netxms_console_08.png"><img src="th_netxms_console_08.png" border="0" alt="List of parameters supported by agent on selected node"></a>
+	</p>
+	<p class="screenShot">
+		Agent package deployment&nbsp;&#151;progress:<br />
+		<a href="netxms_console_09.png"><img src="th_netxms_console_09.png" border="0" alt="Agent package deployment&nbsp;&#151;progress:"></a>
+	</p>
+
+	<a name="PPC"></a>
+	<h2>PocketPC Console</h2>
+	<p class="screenShot">
+		Alarm viewer:<br />
+		<a href="ppc_console_01.png"><img src="ppc_console_01.png" border="0" alt="Alarm viewer"></a>
+	</p>
+	<p class="screenShot">
+		Objects tree:<br />
+		<a href="ppc_console_02.png"><img src="ppc_console_02.png" border="0" alt="Objects tree"></a>
+	</p>
+
+	<a name="WEB"></a>
+	<h2>Web interface (<acronym title="Proof of concept">PoC</acronym> version for <acronym title="Internet Information Services">IIS</acronym>)</h2>
+	<p class="screenShot">
+		Object Info:<br />
+		<a href="netxms_web_01.png"><img src="th_netxms_web_01.png" border="0" alt="Object Info"></a>
+	</p>
+</div>

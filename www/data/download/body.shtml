@@ -1,0 +1,47 @@
+<div class="twoThirds noBorderOnLeft">
+    <h1>Download Area</h1>
+    
+	 <h2>Current Release version 0.1.19 &ndash; April 29, 2005</h2>
+    <p>
+    	<a href="netxms-0.1.19.tar.gz">Source code</a>
+    	<a href="netxms-0.1.19.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.19.tar.gz.asc">(PGP sign)</a>
+    </p>
+    <p>
+    	<a href="netxms-0.1.19-win32-binary.tar.gz">WIN32 Precompiled Binaries</a>
+    	<a href="netxms-0.1.19-win32-binary.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.19-win32-binary.tar.gz.asc">(PGP sign)</a>
+    </p>
+    <p>
+    	<a href="netxms-0.1.19-images.tar.gz">Images</a>
+    	<a href="netxms-0.1.19-images.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.19-images.tar.gz.asc">(PGP sign)</a>
+    </p>
+    <p>
+    	<a href="netxms-0.1.19-mibs.tar.gz">Validated MIBs</a>
+    	<a href="netxms-0.1.19-mibs.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.19-mibs.tar.gz.asc">(PGP sign)</a>
+    </p>
+
+	 <h2>Previous Release version 0.1.18 &ndash; April 13, 2005</h2>
+    <p>
+    	<a href="netxms-0.1.18.tar.gz">Source code</a>
+    	<a href="netxms-0.1.18.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.18.tar.gz.asc">(PGP sign)</a>
+    </p>
+    <p>
+    	<a href="netxms-0.1.18-win32-binary.tar.gz">WIN32 Precompiled Binaries</a>
+    	<a href="netxms-0.1.18-win32-binary.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.18-win32-binary.tar.gz.asc">(PGP sign)</a>
+    </p>
+    <p>
+    	<a href="netxms-0.1.18-images.tar.gz">Images</a>
+    	<a href="netxms-0.1.18-images.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.18-images.tar.gz.asc">(PGP sign)</a>
+    </p>
+    <p>
+    	<a href="netxms-0.1.18-mibs.tar.gz">Validated MIBs</a>
+    	<a href="netxms-0.1.18-mibs.tar.gz.md5">(MD5)</a>
+    	<a href="netxms-0.1.18-mibs.tar.gz.asc">(PGP sign)</a>
+    </p>
+</div>

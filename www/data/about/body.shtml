@@ -1,0 +1,12 @@
+<div class="twoThirds noBorderOnLeft">
+    <h1>About</h1>
+	 <h2>Team</h2>
+	 <p>
+		 Victor Kirhenshtein<br />
+		 Alex Kirhenshtein<br />
+		 Igor Kopman<br />
+		 Elina Judelovich<br />
+	 </p>
+	 <h2>Site Design</h2>
+    <p>Design is based on <acronym title="Open Source Web Design">OSWD</acronym> Template &quot;Prosimii&quot; by <a href="http://www.oswd.org/userinfo.phtml?user=haran">haran</a></p>
+</div>

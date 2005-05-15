@@ -1,0 +1,32 @@
+<div class="twoThirds noBorderOnLeft">
+	<!--<h1>Documentation area</h1>-->
+
+	<h1>Documentation; This section will be opened soon</h1>
+
+	<h2>Mailing lists</h2>
+	<p>
+		Please check &quot;<a href="/contacts/">Contacts</a>&quot;section
+	</p>
+
+	<!--
+	<h2>System Manuals</h2>
+	<ul>
+		<li/><a href="manual/">NetXMS Manual</a>
+		<li/><a href="subagents/portcheck.shtml">Subagent: PortChecker</a>
+	</ul>
+
+	<h2>HOWTO</h2>
+	<ul>
+		<li /><a href="howto-server.shtml">Quick'n'Dirty: setting up server, step-bu-step</a>
+		<li /><a href="howto-agent.shtml">Quick'n'Dirty: setting up agents, step-bu-step</a>
+	</ul>-->
+
+	<h2>Miscellaneous snatches</h2>
+	<p>
+		<ul>
+			<li /><a href="/cgi-bin/matrix">Agents capabilities matrix</a>
+			<li /><a href="macros.shtml">Macros that can be used in event messages and alarms</a>
+			<li /><a href="upgrade.shtml">Server upgrade procedure</a>
+		</ul>
+	</p>
+</div>

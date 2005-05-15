@@ -1,0 +1,36 @@
+<head>
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="/prosimii-screen.css" media="screen, tv, projection" title="Default" />
+    <link rel="stylesheet alternative" type="text/css" href="/prosimii-print.css" media="screen" title="Print Preview" />
+    <link rel="stylesheet" type="text/css" href="/prosimii-print.css" media="print" />
+	 <link rel='alternate' type='application/rss+xml' title='RSS' href='/netxms.xml' />
+
+    <title>NetXMS :: <!--#echo var="title" --></title>
+</head>
+<div id="header">
+    <div class="midHeader">
+        <h1 class="headerTitle">NetXMS</h1>
+        <div class="headerSubTitle" title="">
+			  <!-- { x&ndash;X&ndash;x } -->
+			  &nbsp;
+        </div>
+
+        <br class="doNotDisplay doNotPrint" />
+
+<!--        <div class="headerLangLinks">
+        	Change language: eng | rus
+        </div>
+		  -->
+
+        <div class="headerLinks">
+            <span class="doNotDisplay">Current release:</span>
+            <a href="netxms-0.1.19.tar.gz">latest version (0.1.19) &laquo;</a>
+            <span class="doNotDisplay">|</span>
+            <a href="netxms-cvs.tar.gz">daily snapsnot &laquo;</a>
+            </div>
+        </div>
+    </div>
+
+    <!--#include virtual="/menu.shtml" -->
+</div>
+
