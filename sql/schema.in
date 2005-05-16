@@ -121,6 +121,33 @@ CREATE TABLE object_properties
 
 
 /*
+** Zone object
+*/
+
+CREATE TABLE zones
+(
+	id integer not null,		// Zone object's ID
+	zone_guid integer not null,	// Globally unique ID for zone
+	zone_type integer not null,	// Active or passive zone
+	controller_ip varchar(15) not null,
+	description SQL_TEXT,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Zone IP address list
+*/
+
+CREATE TABLE zone_ip_addr_list
+(
+	zone_id integer not null,	// Zone object's ID
+	ip_addr varchar(15) not null,
+	PRIMARY KEY(zone_id,ip_addr)
+) TABLE_TYPE;
+
+
+/*
 ** Nodes information
 */
 
@@ -142,6 +169,7 @@ CREATE TABLE nodes
 	agent_version varchar(63),
 	platform_name varchar(63),
 	poller_node_id integer not null,
+	zone_guid integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -155,6 +183,7 @@ CREATE TABLE subnets
 	id integer not null,
 	ip_addr varchar(15),
 	ip_netmask varchar(15),
+	zone_guid integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

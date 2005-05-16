@@ -61,6 +61,8 @@
 #define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
 #endif   /* _WIN32 */
 
+#define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_dwFlags & x) ? 1 : 0
+
 
 //
 // Common includes
@@ -178,6 +180,7 @@ typedef void * HSNMPSESSION;
 #define AF_LOG_SQL_ERRORS                 0x00000010
 #define AF_DELETE_EMPTY_SUBNETS           0x00000020
 #define AF_ENABLE_SNMP_TRAPD              0x00000040
+#define AF_ENABLE_ZONING                  0x00000080
 #define AF_DEBUG_EVENTS                   0x00000100
 #define AF_DEBUG_CSCP                     0x00000200
 #define AF_DEBUG_DISCOVERY                0x00000400

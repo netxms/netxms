@@ -80,7 +80,7 @@ void CheckForMgmtNode(void)
          for(i = 0; i < pIfList->iNumEntries; i++)
             if (pIfList->pInterfaces[i].dwIpAddr != 0)
             {
-               pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT);
+               pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT, 0);
                NetObjInsert(pNode, TRUE);
                pNode->NewNodePoll(0);
                pNode->Unhide();

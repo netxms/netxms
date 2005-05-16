@@ -15,6 +15,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ServerID','',0,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('EnableZoning','0',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NewNodePollingInterval','60',1,1);
@@ -25,7 +27,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ConfigurationPollingInterval','3600',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('ResolveNodeNames','0',1,0);
+	VALUES ('ResolveNodeNames','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfEventProcessors','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

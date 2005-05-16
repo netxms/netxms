@@ -33,6 +33,7 @@ Node::Node()
    m_dwFlags = 0;
    m_dwDiscoveryFlags = 0;
    m_dwDynamicFlags = 0;
+   m_dwZoneGUID = 0;
    m_dwNodeType = NODE_TYPE_GENERIC;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
@@ -60,12 +61,13 @@ Node::Node()
 // Constructor for new node object
 //
 
-Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags)
+Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
      :Template()
 {
    m_dwIpAddr = dwAddr;
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;
+   m_dwZoneGUID = dwZone;
    m_dwNodeType = NODE_TYPE_GENERIC;
    m_dwDiscoveryFlags = dwDiscoveryFlags;
    m_wAgentPort = AGENT_LISTEN_PORT;
@@ -128,7 +130,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "snmp_version,discovery_flags,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "description,node_type,agent_version,"
-                            "platform_name,poller_node_id FROM nodes WHERE id=%ld", dwId);
+                            "platform_name,poller_node_id,zone_guid"
+                            " FROM nodes WHERE id=%ld", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -157,6 +160,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    _tcsncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 13)), MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 14);
+   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 15);
 
    DBFreeResult(hResult);
 
@@ -252,24 +256,26 @@ BOOL Node::SaveToDB(void)
                "node_flags,snmp_version,community,discovery_flags,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,"
                "description,node_type,agent_version,platform_name,"
-               "poller_node_id) VALUES (%ld,'%s',%ld,%d,'%s',%ld,%d,%d,%d,"
-               "'%s','%s','%s',%ld,'%s','%s',%ld)",
+               "poller_node_id,zone_guid) VALUES (%ld,'%s',%ld,%d,'%s',%ld,%d,%d,%d,"
+               "'%s','%s','%s',%ld,'%s','%s',%ld,%ld)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_szObjectId,
-               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform, m_dwPollerNode);
+               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform,
+               m_dwPollerNode, m_dwZoneGUID);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
                "node_flags=%ld,snmp_version=%d,community='%s',discovery_flags=%d,"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
                "snmp_oid='%s',description='%s',node_type=%ld,"
-               "agent_version='%s',platform_name='%s',poller_node_id=%ld WHERE id=%ld",
+               "agent_version='%s',platform_name='%s',poller_node_id=%ld,zone_guid=%ld"
+               " WHERE id=%ld",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
                m_szObjectId, pszEscDescr, m_dwNodeType, 
-               pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwId);
+               pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID, m_dwId);
    bResult = DBQuery(g_hCoreDB, szQuery);
    free(pszEscDescr);
    free(pszEscVersion);
@@ -567,7 +573,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
          // Create new subnet object
          if (dwIpAddr < 0xE0000000)
          {
-            pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask);
+            pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_dwZoneGUID);
             NetObjInsert(pSubnet, TRUE);
             g_pEntireNet->AddSubnet(pSubnet);
          }
@@ -1390,6 +1396,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
+   pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
 }
 
 

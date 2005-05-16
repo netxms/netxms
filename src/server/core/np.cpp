@@ -44,7 +44,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
       return NULL;
    }
 
-   pNode = new Node(dwIpAddr, 0, dwFlags);
+   pNode = new Node(dwIpAddr, 0, dwFlags, 0);
    NetObjInsert(pNode, TRUE);
    pNode->NewNodePoll(dwNetMask);
    if (pszName != NULL)

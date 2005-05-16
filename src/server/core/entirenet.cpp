@@ -30,7 +30,7 @@
 Network::Network()
         :NetObj()
 {
-   m_dwId = 1;
+   m_dwId = BUILTIN_OID_NETWORK;
    strcpy(m_szName, "Entire Network");
 }
 

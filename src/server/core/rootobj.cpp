@@ -30,7 +30,7 @@
 ServiceRoot::ServiceRoot()
             :UniversalRoot()
 {
-   m_dwId = 2;
+   m_dwId = BUILTIN_OID_SERVICEROOT;
    strcpy(m_szName, "All Services");
 }
 
@@ -51,7 +51,7 @@ ServiceRoot::~ServiceRoot()
 TemplateRoot::TemplateRoot()
              :UniversalRoot()
 {
-   m_dwId = 3;
+   m_dwId = BUILTIN_OID_TEMPLATEROOT;
    strcpy(m_szName, "Templates");
 }
 

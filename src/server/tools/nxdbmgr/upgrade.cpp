@@ -75,6 +75,52 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V28 to V29
+//
+
+static BOOL H_UpgradeFromV28(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE nodes ADD zone_guid integer\n"
+      "ALTER TABLE subnets ADD zone_guid integer\n"
+      "UPDATE nodes SET zone_guid=0\n"
+      "UPDATE subnets SET zone_guid=0\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE zones ("
+	                    "id integer not null,"
+	                    "zone_guid integer not null,"
+	                    "zone_type integer not null,"
+	                    "controller_ip varchar(15) not null,"
+	                    "description $SQL:TEXT,"
+	                    "PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE zone_ip_addr_list ("
+	                    "zone_id integer not null,"
+	                    "ip_addr varchar(15) not null,"
+	                    "PRIMARY KEY(zone_id,ip_addr))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("EnableZoning"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='29' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V27 to V28
 //
 
@@ -345,13 +391,8 @@ static BOOL H_UpgradeFromV25(void)
 
    if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), 
                           _T("CREATE INDEX idx_timestamp ON idata_%ld(idata_timestamp)"), 0, 1))
-   {
       if (!g_bIgnoreErrors)
-      {
-         DBFreeResult(hResult);
          return FALSE;
-      }
-   }
 
    if (!SQLQuery(_T("UPDATE config SET var_value='26' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
@@ -1091,6 +1132,7 @@ static struct
    { 25, H_UpgradeFromV25 },
    { 26, H_UpgradeFromV26 },
    { 27, H_UpgradeFromV27 },
+   { 28, H_UpgradeFromV28 },
    { 0, NULL }
 };
 

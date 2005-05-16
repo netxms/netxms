@@ -292,6 +292,10 @@ SOURCE=.\users.cpp
 
 SOURCE=.\watchdog.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\zone.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

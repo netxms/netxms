@@ -63,6 +63,16 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
+// Built-in object IDs
+//
+
+#define BUILTIN_OID_NETWORK         1
+#define BUILTIN_OID_SERVICEROOT     2
+#define BUILTIN_OID_TEMPLATEROOT    3
+#define BUILTIN_OID_ZONE0           4
+
+
+//
 // Discovery flags
 //
 
@@ -90,6 +100,14 @@ extern DWORD g_dwConfigurationPollingInterval;
 #define POLL_ICMP_PING        0
 #define POLL_SNMP             1
 #define POLL_NATIVE_AGENT     2
+
+
+//
+// Zone types
+//
+
+#define ZONE_TYPE_PASSIVE     0
+#define ZONE_TYPE_ACTIVE      1
 
 
 //
@@ -383,6 +401,7 @@ protected:
    DWORD m_dwFlags;
    DWORD m_dwDiscoveryFlags;
    DWORD m_dwDynamicFlags;       // Flags used at runtime by server
+   DWORD m_dwZoneGUID;
    WORD m_wAgentPort;
    WORD m_wAuthMethod;
    DWORD m_dwNodeType;
@@ -416,7 +435,7 @@ protected:
 
 public:
    Node();
-   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags);
+   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone);
    virtual ~Node();
 
    virtual int Type(void) { return OBJECT_NODE; }
@@ -547,10 +566,11 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 {
 protected:
    DWORD m_dwIpNetMask;
+   DWORD m_dwZoneGUID;
 
 public:
    Subnet();
-   Subnet(DWORD dwAddr, DWORD dwNetMask);
+   Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone);
    virtual ~Subnet();
 
    virtual int Type(void) { return OBJECT_SUBNET; }
@@ -681,6 +701,34 @@ public:
    virtual ~TemplateGroup() { }
 
    virtual int Type(void) { return OBJECT_TEMPLATEGROUP; }
+};
+
+
+//
+// Zone object
+//
+
+class Zone : public NetObj
+{
+protected:
+   DWORD m_dwZoneGUID;
+   int m_iZoneType;
+   DWORD m_dwControllerIpAddr;
+   DWORD m_dwAddrListSize;
+   DWORD *m_pdwIpAddrList;
+   TCHAR *m_pszDescription;
+
+public:
+   Zone();
+   virtual ~Zone();
+
+   virtual int Type(void) { return OBJECT_ZONE; }
+
+   virtual BOOL SaveToDB(void);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
 };
 
 

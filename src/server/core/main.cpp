@@ -178,6 +178,8 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
    if (ConfigReadInt("EnableSNMPTraps", 1))
       g_dwFlags |= AF_ENABLE_SNMP_TRAPD;
+   if (ConfigReadInt("EnableZoning", 0))
+      g_dwFlags |= AF_ENABLE_ZONING;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
 }
 
@@ -523,7 +525,29 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 
       if (IsCommand("FLAGS", szBuffer, 1))
       {
-         ConsolePrintf(pCtx, "Flags: 0x%08X\n\n", g_dwFlags);
+         ConsolePrintf(pCtx, "Flags: 0x%08X\n", g_dwFlags);
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_STANDALONE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_EVENT_LOG));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ACCESS_CONTROL));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_EVENTS_ACCESS_CONTROL));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_SQL_ERRORS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DELETE_EMPTY_SUBNETS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_EVENTS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CSCP));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_DISCOVERY));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_DC));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_HOUSEKEEPER));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_LOCKS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_ACTIONS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_MISC));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_SQL));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_SNMP));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
+         ConsolePrintf(pCtx, "\n");
       }
       else if (IsCommand("MUTEX", szBuffer, 1))
       {

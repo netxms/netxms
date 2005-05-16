@@ -31,6 +31,7 @@ Subnet::Subnet()
        :NetObj()
 {
    m_dwIpNetMask = 0;
+   m_dwZoneGUID = 0;
 }
 
 
@@ -38,13 +39,14 @@ Subnet::Subnet()
 // Subnet class constructor
 //
 
-Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask)
+Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone)
 {
    char szBuffer[32];
 
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    sprintf(m_szName, "%s/%d", IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
+   m_dwZoneGUID = dwZone;
 }
 
 
@@ -71,7 +73,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT ip_addr,ip_netmask FROM subnets WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -84,6 +86,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
 
    m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
    m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
+   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 2);
 
    DBFreeResult(hResult);
 
@@ -122,15 +125,15 @@ BOOL Subnet::SaveToDB(void)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask) "
-                       "VALUES (%ld,'%s','%s')",
+      sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid) "
+                       "VALUES (%ld,'%s','%s',%ld)",
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask));
+              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID);
    else
       sprintf(szQuery, "UPDATE subnets SET ip_addr='%s',"
-                       "ip_netmask='%s' WHERE id=%ld",
+                       "ip_netmask='%s',zone_guid=%ld WHERE id=%ld",
               IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask), m_dwId);
+              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_dwId);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update node to subnet mapping
@@ -182,4 +185,5 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
+   pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
 }
