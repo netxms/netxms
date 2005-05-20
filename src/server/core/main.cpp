@@ -566,9 +566,13 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowPollerState(pCtx);
       }
-      else if (IsCommand("SESSIONS", szBuffer, 1))
+      else if (IsCommand("SESSIONS", szBuffer, 2))
       {
          DumpSessions(pCtx);
+      }
+      else if (IsCommand("STATS", szBuffer, 2))
+      {
+         ShowServerStats(pCtx);
       }
       else if (IsCommand("USERS", szBuffer, 1))
       {
@@ -599,6 +603,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                           "   show objects   - Dump network objects to screen\n"
                           "   show pollers   - Show poller threads state information\n"
                           "   show sessions  - Show active client sessions\n"
+                          "   show stats     - Show server statistics\n"
                           "   show users     - Show users\n"
                           "   show watchdog  - Display watchdog information\n"
                           "\nAlmost all commands can be abbreviated to 2 or 3 characters\n"

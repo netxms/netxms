@@ -115,3 +115,23 @@ void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...)
    }
    va_end(args);
 }
+
+
+//
+// Show server statistics
+//
+
+void ShowServerStats(CONSOLE_CTX pCtx)
+{
+   DWORD i, dwNumItems;
+
+   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
+   for(i = 0, dwNumItems = 0; i < g_dwNodeAddrIndexSize; i++)
+      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->GetItemCount();
+   RWLockUnlock(g_rwlockNodeIndex);
+
+   ConsolePrintf(pCtx, "Total number of objects:   %ld\n"
+                       "Number of monitored nodes: %ld\n"
+                       "Number of collected DCIs:  %ld\n\n",
+                 g_dwIdIndexSize, g_dwNodeAddrIndexSize, dwNumItems);
+}

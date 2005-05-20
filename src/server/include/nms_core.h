@@ -521,6 +521,7 @@ void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...);
 void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
 void SetPollerInfo(int nIdx, char *pszMsg);
+void ShowServerStats(CONSOLE_CTX pCtx);
 
 
 //
