@@ -157,6 +157,8 @@ protected:
 	afx_msg void OnObjectLastdcivalues();
 	afx_msg void OnUpdateObjectApply(CCmdUI* pCmdUI);
 	afx_msg void OnObjectApply();
+	afx_msg void OnUpdateObjectUnbind(CCmdUI* pCmdUI);
+	afx_msg void OnObjectUnbind();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);

@@ -18,6 +18,7 @@
 #include "DeploymentView.h"
 #include "LastValuesView.h"
 #include "ObjectPropsRelations.h"
+#include "RemoveTemplateDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1697,4 +1698,109 @@ CMDIChildWnd *CConsoleApp::ShowNetworkSummary(void)
                                     IDR_NETWORK_SUMMARY, m_hMDIMenu, m_hMDIAccel);	
    }
    return pWnd;
+}
+
+
+//
+// Object binding worker function
+//
+
+static DWORD DoObjectBinding(DWORD dwCmd, DWORD dwParent, DWORD dwNumChilds,
+                             DWORD *pdwChildList, BOOL bRemoveDCI)
+{
+   DWORD i, dwResult;
+
+   switch(dwCmd)
+   {
+      case 0:  // Bind object
+         for(i = 0; i < dwNumChilds; i++)
+         {
+            dwResult = NXCBindObject(g_hSession, dwParent, pdwChildList[i]);
+            if (dwResult != RCC_SUCCESS)
+               break;
+         }
+         break;
+      case 1:  // Unbind object
+         for(i = 0; i < dwNumChilds; i++)
+         {
+            dwResult = NXCUnbindObject(g_hSession, dwParent, pdwChildList[i]);
+            if (dwResult != RCC_SUCCESS)
+               break;
+         }
+         break;
+      case 2:  // Unbind node from template (remove template)
+         for(i = 0; i < dwNumChilds; i++)
+         {
+            dwResult = NXCRemoveTemplate(g_hSession, dwParent, pdwChildList[i], bRemoveDCI);
+            if (dwResult != RCC_SUCCESS)
+               break;
+         }
+         break;
+      default:
+         break;
+   }
+   return dwResult;
+}
+
+
+//
+// Bind new object(s) to current
+//
+
+void CConsoleApp::BindObject(NXC_OBJECT *pObject)
+{
+   CObjectSelDlg dlg;
+   DWORD dwResult;
+
+   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_ZONE;
+   if (dlg.DoModal() == IDOK)
+   {
+      dwResult = DoRequestArg5(DoObjectBinding, (void *)0, (void *)pObject->dwId,
+                               (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList,
+                               (void *)0, _T("Binding objects..."));
+      if (dwResult != RCC_SUCCESS)
+         theApp.ErrorBox(dwResult, _T("Cannot bind object: %s"));
+   }
+}
+
+
+//
+// Unbind object(s) from current
+//
+
+void CConsoleApp::UnbindObject(NXC_OBJECT *pObject)
+{
+   CObjectSelDlg dlg;
+   DWORD dwResult, dwCmd = 1;
+   BOOL bRun = TRUE, bRemoveDCI = FALSE;
+
+   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_ZONE;
+   dlg.m_dwParentObject = pObject->dwId;
+   if (dlg.DoModal() == IDOK)
+   {
+      if (pObject->iClass == OBJECT_TEMPLATE)
+      {
+         CRemoveTemplateDlg dlgRemove;
+
+         dlgRemove.m_iRemoveDCI = 0;
+         if (dlgRemove.DoModal() == IDOK)
+         {
+            bRemoveDCI = dlgRemove.m_iRemoveDCI;
+            dwCmd = 2;
+         }
+         else
+         {
+            bRun = FALSE;  // Cancel unbind
+         }
+      }
+
+      if (bRun)
+      {
+         dwResult = DoRequestArg5(DoObjectBinding, (void *)dwCmd, (void *)pObject->dwId,
+                                  (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList,
+                                  (void *)bRemoveDCI, _T("Unbinding objects..."));
+         if (dwResult != RCC_SUCCESS)
+            theApp.ErrorBox(dwResult, _T("Cannot unbind object: %s"));
+      }
+   }
 }

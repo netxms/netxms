@@ -159,6 +159,7 @@
 #define IDA_LAST_VALUES                 268
 #define IDD_GRAPH_PROP_SETTINGS         269
 #define IDD_GRAPH_PROP_DATA             270
+#define IDD_REMOVE_TEMPLATE             271
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -389,6 +390,8 @@
 #define IDC_STATIC_TO                   1249
 #define IDC_CHECK_VERSION_MATCH         1250
 #define IDC_CHECK_NOCACHE               1253
+#define IDC_RADIO_UNBIND                1254
+#define IDC_RADIO_REMOVE                1255
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -499,6 +502,7 @@
 #define ID_GRAPH_PRESETS_LASTWEEK       32924
 #define ID_GRAPH_PRESETS_LAST10MINUTES  32925
 #define ID_GRAPH_PRESETS_LAST30MINUTES  32926
+#define ID_OBJECT_UNBIND                32929
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -507,9 +511,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        271
-#define _APS_NEXT_COMMAND_VALUE         32929
-#define _APS_NEXT_CONTROL_VALUE         1254
+#define _APS_NEXT_RESOURCE_VALUE        272
+#define _APS_NEXT_COMMAND_VALUE         32930
+#define _APS_NEXT_CONTROL_VALUE         1256
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

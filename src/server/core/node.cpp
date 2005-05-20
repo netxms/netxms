@@ -1789,3 +1789,48 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
       DeleteItem(pdwDeleteList[i]);
    free(pdwDeleteList);
 }
+
+
+//
+// Unbind node from template, i.e either remove DCI association with template
+// or remove these DCIs at all
+//
+
+void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
+{
+   DWORD i;
+
+   if (bRemoveDCI)
+   {
+      DWORD dwNumDeleted, *pdwDeleteList;
+
+      pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
+      dwNumDeleted = 0;
+
+      Lock();
+
+      for(i = 0; i < m_dwNumItems; i++)
+         if (m_ppItems[i]->TemplateId() == dwTemplateId)
+         {
+            pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
+         }
+
+      Unlock();
+
+      for(i = 0; i < dwNumDeleted; i++)
+         DeleteItem(pdwDeleteList[i]);
+      free(pdwDeleteList);
+   }
+   else
+   {
+      Lock();
+
+      for(i = 0; i < m_dwNumItems; i++)
+         if (m_ppItems[i]->TemplateId() == dwTemplateId)
+         {
+            m_ppItems[i]->SetTemplateId(0, 0);
+         }
+
+      Unlock();
+   }
+}

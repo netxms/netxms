@@ -446,6 +446,10 @@ typedef struct
 #define VID_PROTOCOL_VERSION        ((DWORD)146)
 #define VID_ZONE_GUID               ((DWORD)147)
 #define VID_ZONE_TYPE               ((DWORD)148)
+#define VID_CONTROLLER_IP_ADDR      ((DWORD)149)
+#define VID_ADDR_LIST_SIZE          ((DWORD)150)
+#define VID_IP_ADDR_LIST            ((DWORD)151)
+#define VID_REMOVE_DCI              ((DWORD)152)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -82,17 +82,33 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       {
          if (pNode->Type() == OBJECT_NODE)
          {
-            bLock1 = pInfo->pTemplate->LockDCIList(0x7FFFFFFF);
-            bLock2 = ((Node *)pNode)->LockDCIList(0x7FFFFFFF);
-            if (bLock1 && bLock2)
+            switch(pInfo->iUpdateType)
             {
-               pInfo->pTemplate->ApplyToNode((Node *)pNode);
-               bSuccess = TRUE;
+               case APPLY_TEMPLATE:
+                  bLock1 = pInfo->pTemplate->LockDCIList(0x7FFFFFFF);
+                  bLock2 = ((Node *)pNode)->LockDCIList(0x7FFFFFFF);
+                  if (bLock1 && bLock2)
+                  {
+                     pInfo->pTemplate->ApplyToNode((Node *)pNode);
+                     bSuccess = TRUE;
+                  }
+                  if (bLock1)
+                     pInfo->pTemplate->UnlockDCIList(0x7FFFFFFF);
+                  if (bLock2)
+                     ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);
+                  break;
+               case REMOVE_TEMPLATE:
+                  if (((Node *)pNode)->LockDCIList(0x7FFFFFFF))
+                  {
+                     ((Node *)pNode)->UnbindFromTemplate(pInfo->pTemplate->Id(), pInfo->bRemoveDCI);
+                     ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);
+                     bSuccess = TRUE;
+                  }
+                  break;
+               default:
+                  bSuccess = TRUE;
+                  break;
             }
-            if (bLock1)
-               pInfo->pTemplate->UnlockDCIList(0x7FFFFFFF);
-            if (bLock2)
-               ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);
          }
       }
 

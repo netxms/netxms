@@ -690,7 +690,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
 //
 
 static DWORD ChangeObjectBinding(NXCL_Session *pSession, DWORD dwParentObject,
-                                 DWORD dwChildObject, BOOL bBind)
+                                 DWORD dwChildObject, BOOL bBind, BOOL bRemoveDCI)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -702,6 +702,8 @@ static DWORD ChangeObjectBinding(NXCL_Session *pSession, DWORD dwParentObject,
    msg.SetId(dwRqId);
    msg.SetVariable(VID_PARENT_ID, dwParentObject);
    msg.SetVariable(VID_CHILD_ID, dwChildObject);
+   if (!bBind)
+      msg.SetVariable(VID_REMOVE_DCI, (WORD)bRemoveDCI);
 
    // Send request
    pSession->SendMsg(&msg);
@@ -718,7 +720,8 @@ static DWORD ChangeObjectBinding(NXCL_Session *pSession, DWORD dwParentObject,
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(NXC_SESSION hSession, DWORD dwParentObject, 
                                        DWORD dwChildObject)
 {
-   return ChangeObjectBinding((NXCL_Session *)hSession, dwParentObject, dwChildObject, TRUE);
+   return ChangeObjectBinding((NXCL_Session *)hSession, dwParentObject,
+                              dwChildObject, TRUE, FALSE);
 }
 
 
@@ -729,7 +732,20 @@ DWORD LIBNXCL_EXPORTABLE NXCBindObject(NXC_SESSION hSession, DWORD dwParentObjec
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(NXC_SESSION hSession, DWORD dwParentObject,
                                          DWORD dwChildObject)
 {
-   return ChangeObjectBinding((NXCL_Session *)hSession, dwParentObject, dwChildObject, FALSE);
+   return ChangeObjectBinding((NXCL_Session *)hSession, dwParentObject, 
+                              dwChildObject, FALSE, FALSE);
+}
+
+
+//
+// Remove template from node
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, DWORD dwTemplateId,
+                                           DWORD dwNodeId, BOOL bRemoveDCI)
+{
+   return ChangeObjectBinding((NXCL_Session *)hSession, dwTemplateId, 
+                              dwNodeId, FALSE, bRemoveDCI);
 }
 
 

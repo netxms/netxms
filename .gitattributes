@@ -475,6 +475,8 @@ src/console/win32/PackageMgr.cpp -text
 src/console/win32/PackageMgr.h -text
 src/console/win32/PasswordChangeDlg.cpp -text
 src/console/win32/PasswordChangeDlg.h -text
+src/console/win32/RemoveTemplateDlg.cpp -text
+src/console/win32/RemoveTemplateDlg.h -text
 src/console/win32/RequestProcessingDlg.cpp -text
 src/console/win32/RequestProcessingDlg.h -text
 src/console/win32/RuleAlarmDlg.cpp -text

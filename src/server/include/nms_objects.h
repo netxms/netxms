@@ -111,13 +111,23 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
+// Template update types
+//
+
+#define APPLY_TEMPLATE        0
+#define REMOVE_TEMPLATE       1
+
+
+//
 // Queued template update information
 //
 
 struct TEMPLATE_UPDATE_INFO
 {
+   int iUpdateType;
    Template *pTemplate;
    DWORD dwNodeId;
+   BOOL bRemoveDCI;
 };
 
 
@@ -311,6 +321,7 @@ public:
 
    BOOL ApplyToNode(Node *pNode);
    void QueueUpdate(void);
+   void QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
 };
 
 
@@ -491,6 +502,7 @@ public:
    void CleanDCIData(void);
    BOOL ApplyTemplateItem(DCItem *pItem);
    void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
+   void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
 
    AgentConnection *CreateAgentConnection(void);
 

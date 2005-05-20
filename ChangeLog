@@ -2,6 +2,8 @@
 * 0.1.20
 *
 
+- Implemented object unbinding from administrator console
+- Implemented template removing
 - Added Oracle support (via ODBC driver)
 - Added server installation program (Windows only)
 - Added server configuration wizard (Windows only)

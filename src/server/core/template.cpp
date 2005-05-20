@@ -637,9 +637,30 @@ void Template::QueueUpdate(void)
       {
          IncRefCount();
          pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+         pInfo->iUpdateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
          pInfo->dwNodeId = m_pChildList[i]->Id();
          g_pTemplateUpdateQueue->Put(pInfo);
       }
+   Unlock();
+}
+
+
+//
+// Queue template remove from node
+//
+
+void Template::QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
+{
+   TEMPLATE_UPDATE_INFO *pInfo;
+
+   Lock();
+   IncRefCount();
+   pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+   pInfo->iUpdateType = REMOVE_TEMPLATE;
+   pInfo->pTemplate = this;
+   pInfo->dwNodeId = dwNodeId;
+   pInfo->bRemoveDCI = bRemoveDCI;
+   g_pTemplateUpdateQueue->Put(pInfo);
    Unlock();
 }

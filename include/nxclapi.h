@@ -996,6 +996,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(NXC_SESSION hSession, DWORD dwOb
 DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession, NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId);
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(NXC_SESSION hSession, DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(NXC_SESSION hSession, DWORD dwParentObject, DWORD dwChildObject);
+DWORD LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, DWORD dwTemplateId,
+                                           DWORD dwNodeId, BOOL bRemoveDCI);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject);
 DWORD LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, DWORD dwObjectId, int iPollType, 
                                      void (* pCallback)(TCHAR *, void *), void *pArg);

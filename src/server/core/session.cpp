@@ -2837,8 +2837,10 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
           (pChild->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
          // Parent object should be container or service root
+         // For unbind, it can also be template
          if ((pParent->Type() == OBJECT_CONTAINER) ||
-             (pParent->Type() == OBJECT_SERVICEROOT))
+             (pParent->Type() == OBJECT_SERVICEROOT) ||
+             ((pParent->Type() == OBJECT_TEMPLATE) && (!bBind)))
          {
             if (bBind)
             {
@@ -2859,6 +2861,12 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
             {
                pParent->DeleteChild(pChild);
                pChild->DeleteParent(pParent);
+               if ((pParent->Type() == OBJECT_TEMPLATE) &&
+                   (pChild->Type() == OBJECT_NODE))
+               {
+                  ((Template *)pParent)->QueueRemoveFromNode(pChild->Id(), 
+                                                pRequest->GetVariableShort(VID_REMOVE_DCI));
+               }
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
             }
          }

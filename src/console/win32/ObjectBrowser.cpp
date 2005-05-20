@@ -181,6 +181,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_APPLY, OnUpdateObjectApply)
 	ON_COMMAND(ID_OBJECT_APPLY, OnObjectApply)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNBIND, OnUpdateObjectUnbind)
+	ON_COMMAND(ID_OBJECT_UNBIND, OnObjectUnbind)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1263,6 +1265,26 @@ void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI)
    }
 }
 
+void CObjectBrowser::OnUpdateObjectUnbind(CCmdUI* pCmdUI) 
+{
+   if (m_pCurrentObject == NULL)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
+                        (m_pCurrentObject->iClass == OBJECT_SERVICEROOT) ||
+                        (m_pCurrentObject->iClass == OBJECT_TEMPLATE));
+      else
+         pCmdUI->Enable(((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
+                         (m_pCurrentObject->iClass == OBJECT_SERVICEROOT) ||
+                         (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) &&
+                        (m_wndListCtrl.GetSelectedCount() == 1));
+   }
+}
+
 void CObjectBrowser::OnUpdateObjectApply(CCmdUI* pCmdUI) 
 {
    if (m_pCurrentObject == NULL)
@@ -1364,23 +1386,19 @@ void CObjectBrowser::ChangeMgmtStatus(BOOL bIsManaged)
 
 void CObjectBrowser::OnObjectBind() 
 {
-   CObjectSelDlg dlg;
-   DWORD i, dwResult;
+   if (m_pCurrentObject != NULL)
+      theApp.BindObject(m_pCurrentObject);
+}
 
-   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET;
-   if (dlg.DoModal() == IDOK)
-   {
-      for(i = 0; i < dlg.m_dwNumObjects; i++)
-      {
-         dwResult = DoRequestArg3(NXCBindObject, g_hSession, (void *)m_pCurrentObject->dwId,
-                                  (void *)dlg.m_pdwObjectList[i], "Binding objects...");
-         if (dwResult != RCC_SUCCESS)
-         {
-            theApp.ErrorBox(dwResult, "Cannot bind object: %s");
-            break;
-         }
-      }
-   }
+
+//
+// WM_COMMAND::ID_OBJECT_UNBIND message handler
+//
+
+void CObjectBrowser::OnObjectUnbind() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.UnbindObject(m_pCurrentObject);
 }
 
 

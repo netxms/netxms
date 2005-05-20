@@ -369,6 +369,10 @@ SOURCE=.\PasswordChangeDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RemoveTemplateDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RequestProcessingDlg.cpp
 # End Source File
 # Begin Source File
@@ -719,6 +723,10 @@ SOURCE=.\PackageMgr.h
 # Begin Source File
 
 SOURCE=.\PasswordChangeDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RemoveTemplateDlg.h
 # End Source File
 # Begin Source File
 
