@@ -292,6 +292,7 @@ typedef struct
 #define CMD_DELETE_USER_VARIABLE    0x007E
 #define CMD_ADM_MESSAGE             0x007F
 #define CMD_ADM_REQUEST             0x0080
+#define CMD_CHANGE_IP_ADDR          0x0081
 
 
 //
