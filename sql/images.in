@@ -37,6 +37,9 @@ INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file
 INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file_hash_ico)
 	VALUES (IMG_NETWORK_SERVICE,'Obj.NetworkService','network_service.png','<invalid_hash>',
                 'network_service.ico','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file_hash_ico)
+	VALUES (IMG_ZONE,'Obj.Zone','zone.png','<invalid_hash>',
+                'zone.ico','<invalid_hash>');
 
 
 /*
@@ -53,6 +56,8 @@ INSERT INTO default_images (object_class,image_id)
 	VALUES (4, IMG_NETWORK);
 INSERT INTO default_images (object_class,image_id)
 	VALUES (5, IMG_CONTAINER_NODE_GROUP);
+INSERT INTO default_images (object_class,image_id)
+	VALUES (6, IMG_ZONE);
 INSERT INTO default_images (object_class,image_id)
 	VALUES (7, IMG_NETWORK);
 INSERT INTO default_images (object_class,image_id)
