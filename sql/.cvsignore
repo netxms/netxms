@@ -1,3 +1,4 @@
 dbinit_mssql.sql
 dbinit_mysql.sql
 dbinit_pgsql.sql
+dbinit_oracle.sql

@@ -10,6 +10,7 @@
 /libtool
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
+sql/dbinit_oracle.sql
 sql/dbinit_pgsql.sql
 src/agent/core/messages.c
 src/agent/core/messages.h
