@@ -186,10 +186,16 @@ void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
 {
    BOOL bResult;
-
+   INT64 ms;
+   
+   if (m_bDumpSQL)
+      ms = GetCurrentTimeMs();
    bResult = m_fpDrvQuery(hConn, szQuery);
    if (m_bDumpSQL)
-      printf("%s sync query: \"%s\"\n", bResult ? "Successful" : "Failed", szQuery);
+   {
+      ms = GetCurrentTimeMs() - ms;
+      printf("%s sync query: \"%s\" [%d ms]\n", bResult ? "Successful" : "Failed", szQuery, ms);
+   }
    if ((!bResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return bResult;
@@ -203,13 +209,16 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
 DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery)
 {
    DB_RESULT hResult;
+   INT64 ms;
    
-DWORD ms;
-ms = GetTickCount();
-   hResult = m_fpDrvSelect(hConn, szQuery);
-ms = GetTickCount() - ms;
    if (m_bDumpSQL)
-      printf("%s sync query: \"%s\" [%d ms]\n", (hResult != NULL) ? "Successful" : "Failed", szQuery, ms);
+      ms = GetCurrentTimeMs();
+   hResult = m_fpDrvSelect(hConn, szQuery);
+   if (m_bDumpSQL)
+   {
+      ms = GetCurrentTimeMs() - ms;
+      printf("%s sync query: \"%s\" [%d ms]\n", (hResult != NULL) ? "Successful" : "Failed", szQuery, (DWORD)ms);
+   }
    if ((!hResult) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
