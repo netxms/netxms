@@ -468,6 +468,7 @@ public:
    DWORD Flags(void) { return m_dwFlags; }
    DWORD DiscoveryFlags(void) { return m_dwDiscoveryFlags; }
    DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
+   DWORD ZoneGUID(void) { return m_dwZoneGUID; }
 
    BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
    BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
@@ -616,6 +617,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
 
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
+   DWORD ZoneGUID(void) { return m_dwZoneGUID; }
 };
 
 
@@ -635,24 +637,6 @@ public:
 
    void LinkChildObjects(void);
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
-};
-
-
-//
-// Entire network
-//
-
-class NXCORE_EXPORTABLE Network : public NetObj
-{
-public:
-   Network();
-   virtual ~Network();
-
-   virtual int Type(void) { return OBJECT_NETWORK; }
-   virtual BOOL SaveToDB(void);
-
-   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
-   void LoadFromDB(void);
 };
 
 
@@ -763,6 +747,29 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   DWORD GUID(void) { return m_dwZoneGUID; }
+
+   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+};
+
+
+//
+// Entire network
+//
+
+class NXCORE_EXPORTABLE Network : public NetObj
+{
+public:
+   Network();
+   virtual ~Network();
+
+   virtual int Type(void) { return OBJECT_NETWORK; }
+   virtual BOOL SaveToDB(void);
+
+   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+   void AddZone(Zone *pZone) { AddChild(pZone); pZone->AddParent(this); }
+   void LoadFromDB(void);
 };
 
 
@@ -808,6 +815,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
 DWORD NXCORE_EXPORTABLE FindLocalMgmtNode(void);
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId);
+Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID);
 
 BOOL LoadObjects(void);
 void DumpObjects(CONSOLE_CTX pCtx);
@@ -834,10 +842,13 @@ extern INDEX *g_pNodeIndexByAddr;
 extern DWORD g_dwNodeAddrIndexSize;
 extern INDEX *g_pInterfaceIndexByAddr;
 extern DWORD g_dwInterfaceAddrIndexSize;
+extern INDEX *g_pZoneIndexByGUID;
+extern DWORD g_dwZoneGUIDIndexSize;
 extern RWLOCK g_rwlockIdIndex;
 extern RWLOCK g_rwlockNodeIndex;
 extern RWLOCK g_rwlockSubnetIndex;
 extern RWLOCK g_rwlockInterfaceIndex;
+extern RWLOCK g_rwlockZoneIndex;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern char *g_szClassName[];

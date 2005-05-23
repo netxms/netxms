@@ -146,6 +146,10 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponce);
          break;
+      case OBJECT_ZONE:
+         safe_free(pObject->zone.pszDescription);
+         safe_free(pObject->zone.pdwAddrList);
+         break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -1094,6 +1098,15 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
                fwrite(pList[i].pObject->netsrv.pszResponce, 1, dwSize, hFile);
                break;
+            case OBJECT_ZONE:
+               dwSize = _tcslen(pList[i].pObject->zone.pszDescription) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->zone.pszDescription, 1, dwSize, hFile);
+
+               if (pList[i].pObject->zone.dwAddrListSize > 0)
+                  fwrite(pList[i].pObject->zone.pdwAddrList, sizeof(DWORD),
+                         pList[i].pObject->zone.dwAddrListSize, hFile);
+               break;
             default:
                break;
          }
@@ -1179,6 +1192,22 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                         object.netsrv.pszResponce = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
                         fread(object.netsrv.pszResponce, 1, dwSize, hFile);
                         object.netsrv.pszResponce[dwSize / sizeof(TCHAR)] = 0;
+                        break;
+                     case OBJECT_ZONE:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.zone.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.zone.pszDescription, 1, dwSize, hFile);
+                        object.zone.pszDescription[dwSize / sizeof(TCHAR)] = 0;
+
+                        if (object.zone.dwAddrListSize > 0)
+                        {
+                           object.zone.pdwAddrList = (DWORD *)malloc(object.zone.dwAddrListSize * sizeof(DWORD));
+                           fread(object.zone.pdwAddrList, sizeof(DWORD), object.zone.dwAddrListSize, hFile);
+                        }
+                        else
+                        {
+                           object.zone.pdwAddrList = NULL;
+                        }
                         break;
                      default:
                         break;

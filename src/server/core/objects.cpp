@@ -42,11 +42,14 @@ INDEX *g_pNodeIndexByAddr = NULL;
 DWORD g_dwNodeAddrIndexSize = 0;
 INDEX *g_pInterfaceIndexByAddr = NULL;
 DWORD g_dwInterfaceAddrIndexSize = 0;
+INDEX *g_pZoneIndexByGUID = NULL;
+DWORD g_dwZoneGUIDIndexSize = 0;
 
 RWLOCK g_rwlockIdIndex;
 RWLOCK g_rwlockNodeIndex;
 RWLOCK g_rwlockSubnetIndex;
 RWLOCK g_rwlockInterfaceIndex;
+RWLOCK g_rwlockZoneIndex;
 
 DWORD g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
@@ -139,6 +142,7 @@ void ObjectsInit(void)
    g_rwlockNodeIndex = RWLockCreate();
    g_rwlockSubnetIndex = RWLockCreate();
    g_rwlockInterfaceIndex = RWLockCreate();
+   g_rwlockZoneIndex = RWLockCreate();
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
@@ -271,7 +275,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    RWLockWriteLock(g_rwlockIdIndex, INFINITE);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
    RWLockUnlock(g_rwlockIdIndex);
-   if ((pObject->IpAddr() != 0) && (!pObject->IsDeleted()))
+   if (((pObject->IpAddr() != 0) || (pObject->Type() == OBJECT_ZONE)) && (!pObject->IsDeleted()))
    {
       switch(pObject->Type())
       {
@@ -297,6 +301,11 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
             AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
             RWLockUnlock(g_rwlockInterfaceIndex);
+            break;
+         case OBJECT_ZONE:
+            RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
+            AddObjectToIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID(), pObject);
+            RWLockUnlock(g_rwlockZoneIndex);
             break;
          default:
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -338,6 +347,11 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
             RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
             DeleteObjectFromIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr());
             RWLockUnlock(g_rwlockInterfaceIndex);
+            break;
+         case OBJECT_ZONE:
+            RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
+            DeleteObjectFromIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID());
+            RWLockUnlock(g_rwlockZoneIndex);
             break;
          default:
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -450,6 +464,26 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 
 
 //
+// Find object by ID
+//
+
+Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
+{
+   DWORD dwPos;
+   NetObj *pObject;
+
+   if (g_pZoneIndexByGUID == NULL)
+      return NULL;
+
+   RWLockReadLock(g_rwlockZoneIndex, INFINITE);
+   dwPos = SearchIndex(g_pZoneIndexByGUID, g_dwZoneGUIDIndexSize, dwZoneGUID);
+   pObject = (dwPos == INVALID_INDEX) ? NULL : g_pZoneIndexByGUID[dwPos].pObject;
+   RWLockUnlock(g_rwlockZoneIndex);
+   return (pObject->Type() == OBJECT_ZONE) ? (Zone *)pObject : NULL;
+}
+
+
+//
 // Find local management node ID
 //
 
@@ -509,6 +543,43 @@ BOOL LoadObjects(void)
    g_pServiceRoot->LoadFromDB();
    g_pTemplateRoot->LoadFromDB();
 
+   // Load zones
+   if (g_dwFlags & AF_ENABLE_ZONING)
+   {
+      Zone *pZone;
+
+      DbgPrintf(AF_DEBUG_MISC, "Loading zones...");
+
+      // Load (or create) default zone
+      pZone = new Zone;
+      pZone->CreateFromDB(BUILTIN_OID_ZONE0);
+      NetObjInsert(pZone, FALSE);
+      g_pEntireNet->AddZone(pZone);
+
+      hResult = DBSelect(g_hCoreDB, "SELECT id FROM zones WHERE id<>4");
+      if (hResult != 0)
+      {
+         dwNumRows = DBGetNumRows(hResult);
+         for(i = 0; i < dwNumRows; i++)
+         {
+            dwId = DBGetFieldULong(hResult, i, 0);
+            pZone = new Zone;
+            if (pZone->CreateFromDB(dwId))
+            {
+               if (!pZone->IsDeleted())
+                  g_pEntireNet->AddZone(pZone);
+               NetObjInsert(pZone, FALSE);  // Insert into indexes
+            }
+            else     // Object load failed
+            {
+               delete pZone;
+               WriteLog(MSG_ZONE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            }
+         }
+         DBFreeResult(hResult);
+      }
+   }
+
    // Load subnets
    DbgPrintf(AF_DEBUG_MISC, "Loading subnets...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
@@ -524,7 +595,20 @@ BOOL LoadObjects(void)
          if (pSubnet->CreateFromDB(dwId))
          {
             if (!pSubnet->IsDeleted())
-               g_pEntireNet->AddSubnet(pSubnet);
+            {
+               if (g_dwFlags & AF_ENABLE_ZONING)
+               {
+                  Zone *pZone;
+
+                  pZone = FindZoneByGUID(pSubnet->ZoneGUID());
+                  if (pZone != NULL)
+                     pZone->AddSubnet(pSubnet);
+               }
+               else
+               {
+                  g_pEntireNet->AddSubnet(pSubnet);
+               }
+            }
             NetObjInsert(pSubnet, FALSE);  // Insert into indexes
          }
          else     // Object load failed
@@ -707,6 +791,13 @@ BOOL LoadObjects(void)
    g_pServiceRoot->CalculateCompoundStatus();
    g_pTemplateRoot->CalculateCompoundStatus();
 
+   // Recalculate status for zone objects
+   if (g_dwFlags & AF_ENABLE_ZONING)
+   {
+      for(i = 0; i < g_dwZoneGUIDIndexSize; i++)
+         g_pZoneIndexByGUID[i].pObject->CalculateCompoundStatus();
+   }
+
    return TRUE;
 }
 
@@ -751,7 +842,7 @@ void DumpObjects(CONSOLE_CTX pCtx)
       ConsolePrintf(pCtx, "   Parents: <%s>\n   Childs: <%s>\n", 
                     g_pIndexById[i].pObject->ParentList(pBuffer),
                     g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
-      ConsolePrintf(pCtx, "   Last change: %s\n", g_pIndexById[i].pObject->TimeStampAsText());
+      ConsolePrintf(pCtx, "   Last change: %s", g_pIndexById[i].pObject->TimeStampAsText());
       switch(g_pIndexById[i].pObject->Type())
       {
          case OBJECT_NODE:

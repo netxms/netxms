@@ -451,4 +451,15 @@ typedef struct tagICMPHDR
 #define DCI_DT_NULL        6
 
 
+//
+// Insert parameter as string
+//
+
+#ifdef UNICODE
+#define STRING(x)   L#x
+#else
+#define STRING(x)   #x
+#endif
+
+
 #endif   /* _nms_common_h_ */
