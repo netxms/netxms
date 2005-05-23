@@ -85,6 +85,10 @@ static BOOL H_UpgradeFromV28(void)
       "ALTER TABLE subnets ADD zone_guid integer\n"
       "UPDATE nodes SET zone_guid=0\n"
       "UPDATE subnets SET zone_guid=0\n"
+      "INSERT INTO default_images (object_class,image_id) VALUES (6,13)\n"
+      "INSERT INTO images (image_id,name,file_name_png,file_hash_png,"
+         "file_name_ico,file_hash_ico) VALUES (13,'Obj.Zone','zone.png',"
+         "'<invalid_hash>','zone.ico','<invalid_hash>')\n"
       "<END>";
 
    if (!CreateTable(_T("CREATE TABLE zones ("
