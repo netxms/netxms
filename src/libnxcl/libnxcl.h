@@ -151,7 +151,7 @@ public:
    BOOL SendMsg(CSCPMessage *pMsg);
    CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
    CSCP_MESSAGE *WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
-   DWORD WaitForRCC(DWORD dwRqId);
+   DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut = 0);
    DWORD CreateRqId(void) { return m_dwMsgId++; }
    DWORD SendFile(DWORD dwRqId, TCHAR *pszFileName);
 

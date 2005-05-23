@@ -189,6 +189,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void ChangeNodeAddress(DWORD dwNodeId);
 	void UnbindObject(NXC_OBJECT *pObject);
 	void BindObject(NXC_OBJECT *pObject);
 	CMDIChildWnd *ShowEventBrowser(void);

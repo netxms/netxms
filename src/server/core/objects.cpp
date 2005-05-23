@@ -841,3 +841,26 @@ void NetObjDelete(NetObj *pObject)
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());
    delete pObject;
 }
+
+
+//
+// Update node index when primary IP address changes
+//
+
+void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
+{
+   DWORD dwPos;
+
+   RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
+   dwPos = SearchIndex(g_pNodeIndexByAddr, g_dwNodeAddrIndexSize, dwOldIpAddr);
+   if (dwPos != INVALID_INDEX)
+   {
+      g_pNodeIndexByAddr[dwPos].dwKey = dwNewIpAddr;
+      qsort(g_pNodeIndexByAddr, g_dwNodeAddrIndexSize, sizeof(INDEX), IndexCompare);
+   }
+   else
+   {
+      AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, dwNewIpAddr, pObject);
+   }
+   RWLockUnlock(g_rwlockNodeIndex);
+}

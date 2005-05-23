@@ -46,6 +46,10 @@ void DestroyObject(NXC_OBJECT *pObject)
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponce);
          break;
+      case OBJECT_ZONE:
+         safe_free(pObject->zone.pszDescription);
+         safe_free(pObject->zone.pdwAddrList);
+         break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -210,6 +214,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong(VID_DISCOVERY_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
          pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
+         pObject->node.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
          pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
@@ -222,6 +227,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
+         pObject->subnet.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
          break;
       case OBJECT_CONTAINER:
          pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
@@ -238,6 +244,15 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->netsrv.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->netsrv.pszRequest = pMsg->GetVariableStr(VID_SERVICE_REQUEST);
          pObject->netsrv.pszResponce = pMsg->GetVariableStr(VID_SERVICE_RESPONCE);
+         break;
+      case OBJECT_ZONE:
+         pObject->zone.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
+         pObject->zone.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
+         pObject->zone.wZoneType = pMsg->GetVariableShort(VID_ZONE_TYPE);
+         pObject->zone.dwControllerIpAddr = pMsg->GetVariableLong(VID_CONTROLLER_IP_ADDR);
+         pObject->zone.dwAddrListSize = pMsg->GetVariableLong(VID_ADDR_LIST_SIZE);
+         pObject->zone.pdwAddrList = (DWORD *)malloc(sizeof(DWORD) * pObject->zone.dwAddrListSize);
+         pMsg->GetVariableInt32Array(VID_IP_ADDR_LIST, pObject->zone.dwAddrListSize, pObject->zone.pdwAddrList);
          break;
       default:
          break;
@@ -1181,4 +1196,24 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
 
       fclose(hFile);
    }
+}
+
+
+//
+// Change node's IP address
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCChangeNodeIP(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwIpAddr)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_CHANGE_IP_ADDR);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_IP_ADDRESS, dwIpAddr);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 300000);
 }

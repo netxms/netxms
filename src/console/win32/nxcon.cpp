@@ -19,6 +19,7 @@
 #include "LastValuesView.h"
 #include "ObjectPropsRelations.h"
 #include "RemoveTemplateDlg.h"
+#include "AddrChangeDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1759,7 +1760,7 @@ void CConsoleApp::BindObject(NXC_OBJECT *pObject)
                                (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList,
                                (void *)0, _T("Binding objects..."));
       if (dwResult != RCC_SUCCESS)
-         theApp.ErrorBox(dwResult, _T("Cannot bind object: %s"));
+         ErrorBox(dwResult, _T("Cannot bind object: %s"));
    }
 }
 
@@ -1800,7 +1801,26 @@ void CConsoleApp::UnbindObject(NXC_OBJECT *pObject)
                                   (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList,
                                   (void *)bRemoveDCI, _T("Unbinding objects..."));
          if (dwResult != RCC_SUCCESS)
-            theApp.ErrorBox(dwResult, _T("Cannot unbind object: %s"));
+            ErrorBox(dwResult, _T("Cannot unbind object: %s"));
       }
+   }
+}
+
+
+//
+// Change IP address for node
+//
+
+void CConsoleApp::ChangeNodeAddress(DWORD dwNodeId)
+{
+   CAddrChangeDlg dlg;
+   DWORD dwResult;
+
+   if (dlg.DoModal() == IDOK)
+   {
+      dwResult = DoRequestArg3(NXCChangeNodeIP, g_hSession, (void *)dwNodeId,
+                               (void *)dlg.m_dwIpAddr, _T("Changing node's IP address..."));
+      if (dwResult != RCC_SUCCESS)
+         ErrorBox(dwResult, _T("Error changing IP address for node: %s"));
    }
 }

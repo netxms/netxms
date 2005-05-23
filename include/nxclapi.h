@@ -261,6 +261,7 @@ typedef void * NXC_SESSION;
 #define RCC_ACTION_IN_USE           ((DWORD)38)
 #define RCC_VARIABLE_NOT_FOUND      ((DWORD)39)
 #define RCC_BAD_PROTOCOL            ((DWORD)40)
+#define RCC_ADDRESS_IN_USE          ((DWORD)41)
 
 
 //
@@ -646,6 +647,7 @@ typedef struct
          DWORD dwDiscoveryFlags;
          DWORD dwNodeType;
          DWORD dwPollerNode;
+         DWORD dwZoneGUID;
          TCHAR szSharedSecret[MAX_SECRET_LENGTH];
          TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
          TCHAR szObjectId[MAX_OID_LENGTH];
@@ -659,6 +661,7 @@ typedef struct
       struct
       {
          DWORD dwIpNetMask;
+         DWORD dwZoneGUID;
       } subnet;
       struct
       {
@@ -679,6 +682,15 @@ typedef struct
          TCHAR *pszRequest;
          TCHAR *pszResponce;
       } netsrv;
+      struct
+      {
+         DWORD dwZoneGUID;
+         DWORD dwControllerIpAddr;
+         DWORD dwAddrListSize;
+         DWORD *pdwAddrList;
+         TCHAR *pszDescription;
+         WORD wZoneType;
+      } zone;
    };
 } NXC_OBJECT;
 
@@ -993,6 +1005,7 @@ void LIBNXCL_EXPORTABLE NXCLockObjectIndex(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE *pData);
 DWORD LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(NXC_SESSION hSession, DWORD dwObjectId, BOOL bIsManaged);
+DWORD LIBNXCL_EXPORTABLE NXCChangeNodeIP(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwIpAddr);
 DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession, NXC_OBJECT_CREATE_INFO *pCreateInfo, DWORD *pdwObjectId);
 DWORD LIBNXCL_EXPORTABLE NXCBindObject(NXC_SESSION hSession, DWORD dwParentObject, DWORD dwChildObject);
 DWORD LIBNXCL_EXPORTABLE NXCUnbindObject(NXC_SESSION hSession, DWORD dwParentObject, DWORD dwChildObject);

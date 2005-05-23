@@ -183,6 +183,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_APPLY, OnObjectApply)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNBIND, OnUpdateObjectUnbind)
 	ON_COMMAND(ID_OBJECT_UNBIND, OnObjectUnbind)
+	ON_COMMAND(ID_OBJECT_CHANGEIPADDRESS, OnObjectChangeipaddress)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_CHANGEIPADDRESS, OnUpdateObjectChangeipaddress)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1311,6 +1313,11 @@ void CObjectBrowser::OnUpdateObjectPollConfiguration(CCmdUI* pCmdUI)
    pCmdUI->Enable(CurrObjectIsNode());
 }
 
+void CObjectBrowser::OnUpdateObjectChangeipaddress(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode());
+}
+
 
 //
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
@@ -1697,4 +1704,15 @@ void CObjectBrowser::OnObjectApply()
 {
    if (m_pCurrentObject != NULL)
       theApp.ApplyTemplate(m_pCurrentObject);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CHANGEIPADDRESS message handler
+//
+
+void CObjectBrowser::OnObjectChangeipaddress() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ChangeNodeAddress(m_pCurrentObject->dwId);
 }

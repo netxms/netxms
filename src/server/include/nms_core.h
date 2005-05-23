@@ -378,6 +378,7 @@ private:
    void SetUserVariable(CSCPMessage *pRequest);
    void EnumUserVariables(CSCPMessage *pRequest);
    void DeleteUserVariable(CSCPMessage *pRequest);
+   void ChangeObjectIP(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -160,6 +160,7 @@
 #define IDD_GRAPH_PROP_SETTINGS         269
 #define IDD_GRAPH_PROP_DATA             270
 #define IDD_REMOVE_TEMPLATE             271
+#define IDD_CHANGE_IP                   272
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -503,6 +504,7 @@
 #define ID_GRAPH_PRESETS_LAST10MINUTES  32925
 #define ID_GRAPH_PRESETS_LAST30MINUTES  32926
 #define ID_OBJECT_UNBIND                32929
+#define ID_OBJECT_CHANGEIPADDRESS       32930
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -511,9 +513,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        272
-#define _APS_NEXT_COMMAND_VALUE         32930
-#define _APS_NEXT_CONTROL_VALUE         1256
+#define _APS_NEXT_RESOURCE_VALUE        273
+#define _APS_NEXT_COMMAND_VALUE         32931
+#define _APS_NEXT_CONTROL_VALUE         1257
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

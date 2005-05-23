@@ -91,6 +91,8 @@ extern DWORD g_dwConfigurationPollingInterval;
 #define NDF_AGENT_UNREACHEABLE         0x0008
 #define NDF_SNMP_UNREACHEABLE          0x0010
 #define NDF_QUEUED_FOR_DISCOVERY_POLL  0x0020
+#define NDF_FORCE_STATUS_POLL          0x0040
+#define NDF_FORCE_CONFIGURATION_POLL   0x0080
 
 
 //
@@ -219,6 +221,7 @@ public:
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
    void SetMgmtStatus(BOOL bIsManaged);
    void SetName(char *pszName) { strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
+   void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
 
    virtual void CalculateCompoundStatus(void);
 
@@ -357,6 +360,11 @@ public:
    DWORD IfType(void) { return m_dwIfType; }
    const BYTE *MacAddr(void) { return m_bMacAddr; }
 
+   BOOL IsFake(void) { return (m_dwIfIndex == 1) && 
+                              (m_dwIfType == IFTYPE_OTHER) &&
+                              (!_tcscmp(m_szName, _T("lan0"))) &&
+                              (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+
    void StatusPoll(ClientSession *pSession, DWORD dwRqId);
    virtual void CreateMessage(CSCPMessage *pMsg);
 
@@ -442,6 +450,8 @@ protected:
 
    void CheckOSPFSupport(void);
 
+   DWORD GetInterfaceCount(Interface **ppInterface);
+
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
@@ -473,6 +483,7 @@ public:
    void DeleteInterface(Interface *pInterface);
 
    void NewNodePoll(DWORD dwNetMask);
+   void ChangeIPAddress(DWORD dwIpAddr);
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
@@ -525,7 +536,12 @@ public:
 //
 
 inline BOOL Node::ReadyForStatusPoll(void) 
-{ 
+{
+   if (m_dwDynamicFlags & NDF_FORCE_STATUS_POLL)
+   {
+      m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
+      return TRUE;
+   }
    return ((m_iStatus != STATUS_UNMANAGED) && 
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval))
@@ -534,6 +550,11 @@ inline BOOL Node::ReadyForStatusPoll(void)
 
 inline BOOL Node::ReadyForConfigurationPoll(void) 
 { 
+   if (m_dwDynamicFlags & NDF_FORCE_CONFIGURATION_POLL)
+   {
+      m_dwDynamicFlags &= ~NDF_FORCE_CONFIGURATION_POLL;
+      return TRUE;
+   }
    return ((m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval))
@@ -741,6 +762,7 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 
@@ -777,6 +799,8 @@ void ObjectsInit(void);
 void NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
+
+void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);

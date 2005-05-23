@@ -1088,7 +1088,23 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       }
       else
       {
+         Interface *pInterface;
+
          SendPollerMsg(dwRqId, _T("   Unable to get interface list from node\r\n"));
+
+         // Check if we have pseudo-interface object
+         if (GetInterfaceCount(&pInterface) == 1)
+         {
+            if (pInterface->IsFake())
+            {
+               // Check if primary IP is different from interface's IP
+               if (pInterface->IpAddr() != m_dwIpAddr)
+               {
+                  DeleteInterface(pInterface);
+                  CreateNewInterface(m_dwIpAddr, 0);
+               }
+            }
+         }
       }
 
       m_tLastConfigurationPoll = time(NULL);
@@ -1427,6 +1443,7 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
          return RCC_INVALID_IP_ADDR;
       }
 
+      UpdateNodeIndex(m_dwIpAddr, dwIpAddr, this);
       m_dwIpAddr = dwIpAddr;
    }
 
@@ -1833,4 +1850,48 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 
       Unlock();
    }
+}
+
+
+//
+// Change node's IP address
+//
+
+void Node::ChangeIPAddress(DWORD dwIpAddr)
+{
+   DWORD i;
+
+   Lock();
+
+   UpdateNodeIndex(m_dwIpAddr, dwIpAddr, this);
+   m_dwIpAddr = dwIpAddr;
+   m_dwDynamicFlags |= NDF_FORCE_STATUS_POLL | NDF_FORCE_CONFIGURATION_POLL;
+
+   // Change status of node and all it's childs to UNKNOWN
+   m_iStatus = STATUS_UNKNOWN;
+   for(i = 0; i < m_dwChildCount; i++)
+      m_pChildList[i]->ResetStatus();
+
+   Modify();
+   Unlock();
+}
+
+
+//
+// Get number of interface objects and pointer to the last one
+//
+
+DWORD Node::GetInterfaceCount(Interface **ppInterface)
+{
+   DWORD i, dwCount;
+
+   Lock();
+   for(i = 0, dwCount = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         dwCount++;
+         *ppInterface = (Interface *)m_pChildList[i];
+      }
+   Unlock();
+   return dwCount;
 }

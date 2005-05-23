@@ -4,6 +4,7 @@
 
 - Implemented object unbinding from administrator console
 - Implemented template removing
+- Added "Change IP address" function for node objects
 - Added Oracle support (via ODBC driver)
 - Added server installation program (Windows only)
 - Added server configuration wizard (Windows only)

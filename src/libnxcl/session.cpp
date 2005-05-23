@@ -154,12 +154,12 @@ CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTi
 // from recived message
 //
 
-DWORD NXCL_Session::WaitForRCC(DWORD dwRqId)
+DWORD NXCL_Session::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 {
    CSCPMessage *pResponce;
    DWORD dwRetCode;
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
    if (pResponce != NULL)
    {
       dwRetCode = pResponce->GetVariableLong(VID_RCC);

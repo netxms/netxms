@@ -354,6 +354,8 @@ src/console/win32/ActionEditor.cpp -text
 src/console/win32/ActionEditor.h -text
 src/console/win32/ActionSelDlg.cpp -text
 src/console/win32/ActionSelDlg.h -text
+src/console/win32/AddrChangeDlg.cpp -text
+src/console/win32/AddrChangeDlg.h -text
 src/console/win32/AgentParamSelDlg.cpp -text
 src/console/win32/AgentParamSelDlg.h -text
 src/console/win32/AlarmBrowser.cpp -text

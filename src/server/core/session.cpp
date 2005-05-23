@@ -756,6 +756,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_ENUM_USER_VARIABLES:
             EnumUserVariables(pMsg);
             break;
+         case CMD_CHANGE_IP_ADDR:
+            ChangeObjectIP(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -4436,6 +4439,62 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Change object's IP address
+//
+
+void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwIpAddr;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check prerequisites
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+
+            // Check if we already have object with given IP
+            if ((FindNodeByIP(dwIpAddr) == NULL) &&
+                (FindSubnetByIP(dwIpAddr) == NULL))
+            {
+               ((Node *)pObject)->ChangeIPAddress(dwIpAddr);
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_ADDRESS_IN_USE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send responce
