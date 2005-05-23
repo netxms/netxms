@@ -470,4 +470,10 @@ Language=English
 SMS driver "%1" initialization failed
 .
 
+MessageId=
+SymbolicName=MSG_ZONE_LOAD_FAILED
+Language=English
+Failed to load zone object with id %1 from database
+.
+
 ;#endif
