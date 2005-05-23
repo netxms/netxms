@@ -11,8 +11,8 @@ LONG H_CheckSMTP(char *pszParam, char *pArg, char *pValue)
 	char szTo[256];
 	bool bIsOk = false;
 
-   NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-   NxGetParameterArg(pszParam, 2, szTo, sizeof(szTo));
+	NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	NxGetParameterArg(pszParam, 2, szTo, sizeof(szTo));
 
 	if (szHost[0] == 0 || szTo[0] == 0)
 	{
@@ -35,6 +35,7 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 {
 	int nRet = 0;
 	int nSd;
+	int nErr = 0; 
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
@@ -45,10 +46,15 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 
 		nRet = PC_ERR_HANDSHAKE;
 
-#define CHECK_OK(x) ((NetRead(nSd, szBuff, sizeof(szBuff)) > 3) \
-				&& (strncmp(szBuff, x" ", 4) == 0))
+#define CHECK_OK(x) nErr = 1; while(1) { \
+	if (NetRead(nSd, szBuff, sizeof(szBuff)) > 3) { \
+			if (szBuff[3] == '-') { continue; } \
+			if (strncmp(szBuff, x" ", 4) == 0) { nErr = 0; } break; \
+		} else { break; } } \
+	if (nErr == 0)
 
-		if (CHECK_OK("220"))
+
+		CHECK_OK("220")
 		{
 			if (gethostname(szHostname, sizeof(szHostname)) == -1)
 			{
@@ -58,31 +64,31 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 			snprintf(szTmp, sizeof(szTmp), "HELO %s\r\n", szHostname);
 			if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
 			{
-				if (CHECK_OK("250"))
+				CHECK_OK("250")
 				{
 					snprintf(szTmp, sizeof(szTmp), "MAIL FROM: noreply@%s\r\n",
 						szHostname);
 					if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
 					{
-						if (CHECK_OK("250"))
+						CHECK_OK("250")
 						{
 							snprintf(szTmp, sizeof(szTmp), "RCPT TO: %s\r\n", szTo);
 							if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
 							{
-								if (CHECK_OK("250"))
+								CHECK_OK("250")
 								{
 									if (NetWrite(nSd, "DATA\r\n", 6) > 0)
 									{
-										if (CHECK_OK("354"))
+										CHECK_OK("354")
 										{
 											if (NetWrite(nSd, "NetXMS test mail\r\n.\r\n",
 														21) > 0)
 											{
-												if (CHECK_OK("250"))
+												CHECK_OK("250")
 												{
 													if (NetWrite(nSd, "QUIT\r\n", 6) > 0)
 													{
-														if (CHECK_OK("221"))
+														CHECK_OK("221")
 														{
 															nRet = PC_ERR_NONE;
 														}

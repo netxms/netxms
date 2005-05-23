@@ -1,4 +1,4 @@
-/* $Id: pop3.cpp,v 1.5 2005-01-29 21:24:03 victor Exp $ */
+/* $Id: pop3.cpp,v 1.6 2005-05-23 21:03:41 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -14,9 +14,9 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 	char szPassword[256];
 	bool bIsOk = false;
 
-   NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-   NxGetParameterArg(pszParam, 2, szUser, sizeof(szUser));
-   NxGetParameterArg(pszParam, 3, szPassword, sizeof(szPassword));
+	NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	NxGetParameterArg(pszParam, 2, szUser, sizeof(szUser));
+	NxGetParameterArg(pszParam, 3, szPassword, sizeof(szPassword));
 
 	if (szHost[0] == 0 || szUser[0] == 0 || szPassword[0] == 0)
 	{
@@ -84,6 +84,9 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/01/29 21:24:03  victor
+Fixed some Windows compatibility issues
+
 Revision 1.4  2005/01/28 23:45:01  alk
 SMTP check added, requst string == rcpt to
 
