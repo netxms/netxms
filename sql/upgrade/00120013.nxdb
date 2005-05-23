@@ -1,7 +1,0 @@
-# Upgrade NetXMS database from format version 11 to 12
-
-@include common.nxdb
-
-INSERT INTO events (event_id,name,severity,flags,message,description) VALUES (24,'SYS_INCORRECT_NETMASK',2,1,'Invalid network mask %4 on interface %3, should be %5','Generated when server detects invalid network mask on an interface.#0D#0AParameters:#0D#0A   1) Interface object ID#0D#0A   2) Interface index#0D#0A   3) Interface name#0D#0A   4) Actual network mask on interface#0D#0A   5) Correct network mask')
-
-UPDATE config SET var_value=13 WHERE var_name='DBFormatVersion'
