@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.5 2005-03-10 19:04:07 alk Exp $ */
+/* $Id: net.cpp,v 1.6 2005-05-23 20:30:28 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -309,7 +309,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 					ADDR *pTmp;
 					pList[nIfCount-1].addrCount++;
 					pTmp = (ADDR *)realloc(pList[nIfCount-1].addr,
-							pList[nIfCount-1].addrCount);
+							pList[nIfCount-1].addrCount * sizeof(ADDR));
 					if (pTmp == NULL)
 					{
 						pList[nIfCount-1].addrCount--;
@@ -405,6 +405,11 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/03/10 19:04:07  alk
+implemented:
+	Net.Interface.AdminStatus(*)
+	Net.Interface.Link(*)
+
 Revision 1.4  2005/03/10 12:23:56  alk
 issue #18
 alias handling on inet interfaces
