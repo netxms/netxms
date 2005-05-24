@@ -287,6 +287,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
 {
    WIZARD_CFG_INFO *pc = (WIZARD_CFG_INFO *)pArg;
    DB_HANDLE hConn = NULL;
+   TCHAR szDataDir[MAX_PATH];
    BOOL bResult;
 
    bResult = CreateConfigFile(pc);
@@ -351,6 +352,9 @@ static DWORD __stdcall WorkerThread(void *pArg)
       __CHK(WriteConfigStr(hConn, _T("SMTPFromAddr"), pc->m_szSMTPMailFrom, TRUE, FALSE));
 
       __CHK(WriteConfigInt(hConn, _T("EnableAdminInterface"), pc->m_bEnableAdminInterface, TRUE, TRUE));
+
+      _sntprintf(szDataDir, MAX_PATH, _T("%s\\var"), pc->m_szInstallDir);
+      __CHK(WriteConfigStr(hConn, _T("DataDirectory"), szDataDir, TRUE, TRUE));
 
 #undef __CHK
 
