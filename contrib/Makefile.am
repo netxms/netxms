@@ -10,4 +10,4 @@
 
 
 EXTRA_DIST = logo.jpg
-SUBDIRS= config dct startup
+SUBDIRS= config dct startup mibs

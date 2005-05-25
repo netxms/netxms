@@ -42,6 +42,7 @@ contrib/mibs/IF-MIB.txt -text
 contrib/mibs/INET-ADDRESS-MIB.txt -text
 contrib/mibs/IP-MIB.txt -text
 contrib/mibs/MTA-MIB.txt -text
+contrib/mibs/Makefile.am -text
 contrib/mibs/NET-SNMP-AGENT-MIB.txt -text
 contrib/mibs/NET-SNMP-MIB.txt -text
 contrib/mibs/NET-SNMP-MONITOR-MIB.txt -text

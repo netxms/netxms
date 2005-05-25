@@ -111,23 +111,28 @@ typedef __console_ctx * CONSOLE_CTX;
 
 #ifdef _WIN32
 
-#define DEFAULT_SHELL         "cmd.exe"
-#define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
-#define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
+# define DEFAULT_SHELL         "cmd.exe"
+# define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
+# define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
 
-#define DDIR_MIBS             "\\mibs"
-#define DDIR_IMAGES           "\\images"
-#define DDIR_PACKAGES         "\\packages"
+# define DDIR_MIBS             "\\mibs"
+# define DDIR_IMAGES           "\\images"
+# define DDIR_PACKAGES         "\\packages"
 
 #else    /* _WIN32 */
 
-#define DEFAULT_SHELL         "/bin/sh"
-#define DEFAULT_LOG_FILE      "/var/log/netxmsd.log"
-#define DEFAULT_DATA_DIR      "/var/netxms"
+# define DEFAULT_SHELL         "/bin/sh"
 
-#define DDIR_MIBS             "/mibs"
-#define DDIR_IMAGES           "/images"
-#define DDIR_PACKAGES         "/packages"
+# ifndef DATADIR
+#  define DATADIR              "/var/netxms"
+# endif
+
+# define DEFAULT_LOG_FILE      DATADIR"/log/netxmsd.log"
+# define DEFAULT_DATA_DIR      DATADIR
+
+# define DDIR_MIBS             "/mibs"
+# define DDIR_IMAGES           "/images"
+# define DDIR_PACKAGES         "/packages"
 
 #endif   /* _WIN32 */
 

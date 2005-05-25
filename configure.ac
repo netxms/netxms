@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.82 2005-05-25 10:12:26 victor Exp $
+# $Id: configure.ac,v 1.83 2005-05-25 11:02:07 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -348,6 +348,9 @@ AC_SUBST(PTHREAD_LIBS)
 # Extensions to posix threads
 AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
+# misc
+CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\""
+
 # --------------------------------------------------------------------------
 
 # shared libs versions
@@ -403,6 +406,7 @@ AC_CONFIG_FILES([
 	contrib/dct/Makefile
 	contrib/startup/Makefile
 	contrib/startup/redhat/Makefile
+	contrib/mibs/Makefile
 	doc/Makefile
 	images/Makefile
 	include/Makefile
