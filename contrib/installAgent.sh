@@ -2,7 +2,7 @@
 
 prefix=/opt/netxms
 config=/etc/nxagentd.conf
-log=/tmp/nxagentup.log
+log=/tmp/nxagentupdate.log
 #prefix=/usr/local
 configureAdd=
 
@@ -45,18 +45,18 @@ esac
 cd `dirname $0`
 name=`ls netxms-*.tar.gz 2>/dev/null|sed s',\.tar\.gz$,,'`
 if [ "x$name" = "x" ]; then
-	echo invalid package
+	echo invalid package >> $log
 	exit 1
 fi
 
 tar zxf $name.tar.gz 2>/dev/null
 if [ $? != 0 ]; then
-	echo invalid package
+	echo invalid package >> $log
 	exit 2
 fi
 cd $name
 if [ $? != 0 ]; then
-	echo invalid package
+	echo invalid package >> $log
 	exit 3
 fi
 
@@ -68,33 +68,33 @@ sleep 15 && $pkill -9 nxagentd 2>/dev/null
 # do configure
 ./configure --prefix=$prefix --with-agent $configureAdd 2>/dev/null >/dev/null
 if [ $? != 0 ]; then
-	echo configure failed, duh
+	echo configure failed, duh >> $log
    # Try to restart existing agent
-   $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
+   $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
 	exit 4
 fi
 
 # build
 $make >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
-	echo build failed, duh
+	echo build failed, duh >> $log
    # Try to restart existing agent
-   $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
+   $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
 	exit 4
 fi
 
 # now we can install it...
 $make install >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
-	echo install failed
+	echo install failed >> $log
    # Try to restart existing agent
-   $prefix/bin/nxagentd -d >/dev/null 2>/dev/null
+   $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
 	exit 5
 fi
 
 # and restart
 $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
-	echo nxagentd not started
+	echo nxagentd not started >> $log
 	exit 5
 fi

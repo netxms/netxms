@@ -4,8 +4,7 @@ hash1=__HASH1__
 hash2=__HASH2__
 skip=__SKIP__
 command=__COMMAND__
-log="/tmp/agent_upgrade_log"
-elog="/tmp/agent_upgrade_log.stderr"
+log=/tmp/nxagentupdate.log
 
 trap '
 	echo "Upgrade script finished" >> $log
@@ -13,7 +12,7 @@ trap '
 	exit
 ' INT EXIT
 
-rm -f $log $elog
+rm -f $log
 
 md5=`which md5 2>/dev/null`
 if [ $? != 0 ]; then
@@ -61,7 +60,8 @@ else
 		echo "Can't chmod $command" >> $log
 		exit
 	fi
-	./$command >> $log 2> $elog
+	echo Starting $command... >> $log
+	./$command 2>&1 >> $log
 fi
 
 exit
