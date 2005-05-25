@@ -79,6 +79,7 @@
 #define _topen    open
 #define _taccess  access
 #define _tunlink  unlink
+#define _tcsftime strftime
 
 #endif
 

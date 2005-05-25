@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.80 2005-05-05 10:59:49 victor Exp $
+# $Id: configure.ac,v 1.81 2005-05-25 09:16:46 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -60,8 +60,23 @@ AC_CHECK_HEADERS([/usr/include/pthread.h])
 # --------------------------------------------------------------------------
 # command line options
 
+AC_ARG_WITH(odbc,
+[AS_HELP_STRING(--with-odbc,build ODBC database driver)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+   fi
+	with_odbc="yes"
+	AC_DEFINE(WITH_ODBC,,[with odbc])
+	DB_DRIVERS="$DB_DRIVERS odbc"
+	AC_CHECK_LIB(odbc, SQLAllocHandle, ,
+		[AC_MSG_ERROR(libodbc is needed for ODBC support)])
+fi ])
+
 AC_ARG_WITH(mysql,
-[AS_HELP_STRING(--with-mysql,enable mysql backend)],
+[AS_HELP_STRING(--with-mysql,build MySQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
@@ -97,7 +112,7 @@ AC_ARG_WITH(mysql,
 fi ])
 
 AC_ARG_WITH(pgsql,
-[AS_HELP_STRING(--with-pgsql,enable postgres backend)],
+[AS_HELP_STRING(--with-pgsql,build PostgreSQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
