@@ -37,3 +37,6 @@ mibs_DATA = \
 				  UCD-IPFILTER-MIB.txt UCD-IPFWACC-MIB.txt \
 				  UCD-SNMP-MIB.txt UDP-MIB.txt \
 				  WF-COM.txt
+
+
+EXTRA_DIST=$(mibs_DATA)

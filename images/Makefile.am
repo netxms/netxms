@@ -21,3 +21,5 @@ images_DATA = \
     template_group.ico template_group.png \
     template.ico template.png \
     template_root.ico template_root.png
+
+EXTRA_DIST=$(images_DATA)
