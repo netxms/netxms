@@ -14,12 +14,14 @@ images_DATA = \
     generic_printer.ico generic_printer.png \
     interface.ico interface.png \
     network.ico network.png \
+    network_service.ico network_service.png \
     node_group.ico node_group.png \
     node.ico node.png \
     service.ico service.png \
     subnet.ico subnet.png \
     template_group.ico template_group.png \
     template.ico template.png \
-    template_root.ico template_root.png
+    template_root.ico template_root.png \
+    zone.ico zone.png
 
 EXTRA_DIST=$(images_DATA)
