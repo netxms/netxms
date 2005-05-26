@@ -200,6 +200,7 @@ BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *p
    if (DBGetNumRows(hResult) > 0)
    {
       _tcsncpy(pszBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      DecodeSQLString(pszBuffer);
       bSuccess = TRUE;
    }
 
@@ -336,6 +337,7 @@ int main(int argc, char *argv[])
       if (DBGetNumRows(hResult) > 0)
       {
          _tcsncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
+         DecodeSQLString(szSyntaxId);
       }
       else
       {

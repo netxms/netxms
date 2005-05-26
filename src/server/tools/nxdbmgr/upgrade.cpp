@@ -49,7 +49,7 @@ static BOOL CreateTable(TCHAR *pszQuery)
 
 static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int iNeedRestart)
 {
-   TCHAR szQuery[1024];
+   TCHAR szQuery[1024], *pszEscValue;
    DB_RESULT hResult;
    BOOL bVarExist = FALSE, bResult = TRUE;
 
@@ -65,9 +65,11 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
    if (!bVarExist)
    {
+      pszEscValue = EncodeSQLString(pszValue);
       _stprintf(szQuery, _T("INSERT INTO config (var_name,var_value,is_visible,"
                             "need_server_restart) VALUES ('%s','%s',%d,%d)"), 
-                pszName, pszValue, iVisible, iNeedRestart);
+                pszName, pszEscValue, iVisible, iNeedRestart);
+      free(pszEscValue);
       bResult = SQLQuery(szQuery);
    }
    return bResult;

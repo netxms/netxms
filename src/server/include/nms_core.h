@@ -492,9 +492,6 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat);
 void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD wFormat);
 void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId);
 
-char NXCORE_EXPORTABLE *EncodeSQLString(const char *pszIn);
-void NXCORE_EXPORTABLE DecodeSQLString(char *pszStr);
-
 void InitMailer(void);
 void ShutdownMailer(void);
 void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText);

@@ -87,6 +87,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, 
    if (DBGetNumRows(hResult) > 0)
    {
       strncpy(szBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      DecodeSQLString(szBuffer);
       bSuccess = TRUE;
    }
 
@@ -132,7 +133,7 @@ DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault)
 BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
 {
    DB_RESULT hResult;
-   char szQuery[1024];
+   TCHAR *pszEscValue, szQuery[1024];
    BOOL bVarExist = FALSE;
 
    if (strlen(szVar) > 127)
@@ -153,11 +154,15 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
       return FALSE;
 
    // Create or update variable value
+   pszEscValue = EncodeSQLString(szValue);
    if (bVarExist)
-      sprintf(szQuery, "UPDATE config SET var_value='%s' WHERE var_name='%s'", szValue, szVar);
+      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value='%s' WHERE var_name='%s'"),
+              pszEscValue, szVar);
    else
-      sprintf(szQuery, "INSERT INTO config (var_name,var_value,is_visible,"
-                       "need_server_restart) VALUES ('%s','%s',0,0)", szVar, szValue);
+      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
+                                _T("need_server_restart) VALUES ('%s','%s',0,0)"),
+                 szVar, pszEscValue);
+   free(pszEscValue);
    return DBQuery(g_hCoreDB, szQuery);
 }
 

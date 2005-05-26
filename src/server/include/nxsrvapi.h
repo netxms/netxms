@@ -236,6 +236,9 @@ void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult);
 void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
 void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
 
+TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
+void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
+
 
 //
 // Variables

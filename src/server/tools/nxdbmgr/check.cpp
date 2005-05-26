@@ -266,6 +266,7 @@ void CheckDatabase(BOOL bForce)
          if (DBGetNumRows(hResult) > 0)
          {
             _tcsncpy(szLockStatus, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+            DecodeSQLString(szLockStatus);
             bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
          }
          DBFreeResult(hResult);
@@ -278,6 +279,7 @@ void CheckDatabase(BOOL bForce)
                if (DBGetNumRows(hResult) > 0)
                {
                   _tcsncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+                  DecodeSQLString(szLockInfo);
                }
                DBFreeResult(hResult);
             }

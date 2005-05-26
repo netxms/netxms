@@ -484,3 +484,84 @@ void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult)
 {
    m_fpDrvFreeAsyncResult(hResult);
 }
+
+
+//
+// Characters to be escaped before writing to SQL
+//
+
+static char m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
+                                 _T("\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10")
+                                 _T("\x11\x12\x13\x14\x15\x16\x17\x18")
+                                 _T("\x19\x1A\x1B\x1C\x1D\x1E\x1F")
+                                 _T("#%\"\\'\x7F");
+
+
+//
+// Escape some special characters in string for writing into database
+//
+
+TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
+{
+   char *pszOut;
+   int iPosIn, iPosOut, iStrSize;
+
+   if (*pszIn != 0)
+   {
+      // Allocate destination buffer
+      iStrSize = _tcslen(pszIn) + 1;
+      for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
+         if (_tcschr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
+            iStrSize += 2;
+      pszOut = (char *)malloc(iStrSize);
+
+      // Translate string
+      for(iPosIn = 0, iPosOut = 0; pszIn[iPosIn] != 0; iPosIn++)
+         if (strchr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
+         {
+            pszOut[iPosOut++] = _T('#');
+            pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] >> 4);
+            pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] & 0x0F);
+         }
+         else
+         {
+            pszOut[iPosOut++] = pszIn[iPosIn];
+         }
+      pszOut[iPosOut] = 0;
+   }
+   else
+   {
+      // Encode empty strings as #00
+      pszOut = (TCHAR *)malloc(4 * sizeof(TCHAR));
+      _tcscpy(pszOut, _T("#00"));
+   }
+   return pszOut;
+}
+
+
+//
+// Restore characters encoded by EncodeSQLString()
+// Characters are decoded "in place"
+//
+
+void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
+{
+   int iPosIn, iPosOut;
+
+   for(iPosIn = 0, iPosOut = 0; pszStr[iPosIn] != 0; iPosIn++)
+   {
+      if (pszStr[iPosIn] == _T('#'))
+      {
+         iPosIn++;
+         pszStr[iPosOut] = hex2bin(pszStr[iPosIn]) << 4;
+         iPosIn++;
+         pszStr[iPosOut] |= hex2bin(pszStr[iPosIn]);
+         iPosOut++;
+      }
+      else
+      {
+         pszStr[iPosOut++] = pszStr[iPosIn];
+      }
+   }
+   pszStr[iPosOut] = 0;
+}

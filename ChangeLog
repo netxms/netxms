@@ -1,4 +1,11 @@
 *
+* 0.2.0
+*
+
+- First public release
+
+
+*
 * 0.1.20
 *
 
@@ -24,6 +31,7 @@
 - Network discovery polling mechanism redesigned
 - Fixed bug in "show pollers" console command handler
 - Fixed occasional appearance of invalid objects at the root of object tree
+- Fixed issue #14 (Error handling multiline SMTP responces)
 
 
 *

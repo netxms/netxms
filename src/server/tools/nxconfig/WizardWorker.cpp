@@ -64,7 +64,7 @@ static BOOL WriteConfigStr(DB_HANDLE hConn, TCHAR *pszVar, TCHAR *pszValue,
                            BOOL bIsVisible, BOOL bNeedRestart)
 {
    DB_RESULT hResult;
-   char szQuery[1024];
+   TCHAR *pszEscValue, szQuery[1024];
    BOOL bVarExist = FALSE;
 
    if (_tcslen(pszVar) > 127)
@@ -81,14 +81,16 @@ static BOOL WriteConfigStr(DB_HANDLE hConn, TCHAR *pszVar, TCHAR *pszValue,
    }
 
    // Create or update variable value
+   pszEscValue = EncodeSQLString(pszValue);
    if (bVarExist)
       _sntprintf(szQuery, 1024, 
                  _T("UPDATE config SET var_value='%s' WHERE var_name='%s'"),
-                 pszValue, pszVar);
+                 pszEscValue, pszVar);
    else
       _sntprintf(szQuery, 1024, 
                  _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('%s','%s',%d,%d)"),
-                 pszVar, pszValue, bIsVisible, bNeedRestart);
+                 pszVar, pszEscValue, bIsVisible, bNeedRestart);
+   free(pszEscValue);
    return DBQueryEx(hConn, szQuery);
 }
 
