@@ -42,8 +42,6 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CControlPanel message handlers
 
-
-
 BOOL CControlPanel::PreCreateWindow(CREATESTRUCT& cs) 
 {
    if (cs.lpszClass == NULL)
@@ -51,6 +49,24 @@ BOOL CControlPanel::PreCreateWindow(CREATESTRUCT& cs)
                                          AfxGetApp()->LoadIcon(IDI_SETUP));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
+
+
+//
+// Item comparision function
+//
+
+static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   CListCtrl *pListCtrl = (CListCtrl *)lParamSort;
+   CString strItem1 = pListCtrl->GetItemText(lParam1, 0);
+   CString strItem2 = pListCtrl->GetItemText(lParam2, 0);
+   return strcmp(strItem2, strItem1);
+}
+
+
+//
+// WM_CREATE message handler
+//
 
 int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
@@ -85,6 +101,8 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
    AddItem("SNMP Traps", 4, ID_CONTROLPANEL_SNMPTRAPS);
    AddItem("Agent Packages", 5, ID_CONTROLPANEL_AGENTPKG);
+
+   m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 
    theApp.OnViewCreate(IDR_CTRLPANEL, this);
 	return 0;
