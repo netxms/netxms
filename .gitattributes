@@ -865,6 +865,8 @@ tools/nwmkimp.pl -text
 tools/patch_libtool.pl -text
 tools/sharIt -text
 tools/stub.sh -text
+www/cgi-bin/matrix -text
+www/cgi-bin/matrixEdit -text
 www/cgi-bin/news.pl -text
 www/cgi-bin/quote.pl -text
 www/data/about/body.shtml -text
