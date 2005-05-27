@@ -1,0 +1,7 @@
+DBDriver=[path_to_netxms_install_dir]/lib/libnxddr_mysql.so
+DBLogin=netxms
+DBName=netxms
+DBPassword=changeit!!!
+DBServer=localhost
+LogFailedSQLQueries=yes
+LogFile=/var/log/netxms

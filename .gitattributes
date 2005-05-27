@@ -130,6 +130,7 @@ netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
 /netxms.dsw -text
+/netxmsd.conf-dist -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text

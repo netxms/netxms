@@ -1,17 +1,87 @@
-Basic Installation
-==================
+Basic NetXMS server Installation
+================================
 
-   These are generic installation instructions.
+   These are generic installation instructions. For more detailed
+installation instruction consult docs/install-guide.doc (when it will be
+ready).
 
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, a file
-`config.cache' that saves the results of its tests to speed up
-reconfiguring, and a file `config.log' containing compiler output
-(useful mainly for debugging `configure').
+The simplest way to install netxms distribution is:
+
+  1. Get current distribution from www.netxms.org using any of methods
+     available. 
+     For ex.: fetch http://www.netxms.org/download/netxms-0.1.20.tar.gz
+     (do not just copy-paste line above, there might be newer version
+     available).
+
+  2. Unpack distribution.
+     For ex. gunzip netxms-0.1.20.tar.gz; tar xf netxms-0.1.20.tar
+
+  3. `cd' to the directory containing the package's source code and type
+     `./configure' to configure the package for your system.  If you're
+     using `csh' on an old version of System V, you might need to type
+     `sh ./configure' instead to prevent `csh' from trying to execute
+     `configure' itself.
+
+     Running `configure' takes awhile.  While running, it prints some
+     messages telling which features it is checking for.
+
+     Please note: if You're willing to install netxms server - in most cases
+     You should specify also --with-server and --with-[dbname] parameters
+     for configure script where [dbname] is database driver name You're
+     going to use. Try ./configure --help to see all possible
+     parameters.
+     
+     For. ex.: 
+     ./configure --with-server --with-agent --with-mysql=/opt/mysql \
+                 --prefix=/opt/netxms
+     Will configure distribution to build both server and agent and to build
+     mysql driver for netxms using mysql libraries from mysql distribution 
+     located in /opt/mysql.
+
+  4. Type `make' to compile the package.
+
+  5. Type `make install' to install the programs and any data files and
+     documentation.
+ 
+  6. Use sql/dbinit_[dbname].sql script with and Your database client
+     program to initialize database for netxms. 
+     For ex.if You're going to use mysql this could be like this:
+
+     mysql> create database netxms;
+     mysql> \q
+     $> mysql netxms < sql/dbinit_mysql.sql
+
+  7. Default netxms daemon configuration file to /etc directory as
+     with name 'netxmsd.conf' and edit it to match actual settings.
+     You can do it like this: 
+     cp ./netxmsd.conf-dist /etc/netxmsd.conf
+     vi /etc/netxmsd.conf
+  
+  8. `cd' to netxms installation directory and try running bin/netxmsd.
+     Check if netsmd process is running.If not try starting it again with
+     --debug-all parameter and see log file for details.
+ 
+  9. If You see netxmsd running - You have just successfuly installed netxms 
+     monitoring server. Try connecting with netxms console. Default
+     login/pass are admin/netxms.
+
+ 10. If You succeeded to connect - first action You might need to do is
+     changing password (see nexms console docs for details).
+
+ 11. Repeat steps 1-5 on each server which needs to be monitored using just
+     "./configure --with-agent --prefix=..." as parameters. You don't need
+     server and database driver/libraries on monitored machines. 
+
+Upgrading
+=========
+See UPGRADE file for details of server upgrade.
+Agent upgrades can be done automatically. New agent versions are distributed
+to all servers by netxms server. This can be done from netxms console. So
+You need to build agents only once - during initial installation.
+
+
+Advanced installation/build details
+===================================
 
    If you need to do unusual things to compile the package, please try
 to figure out how `configure' could check whether to do them, and mail
@@ -22,34 +92,6 @@ contains results you don't want to keep, you may remove or edit it.
    The file `configure.in' is used to create `configure' by a program
 called `autoconf'.  You only need `configure.in' if you want to change
 it or regenerate `configure' using a newer version of `autoconf'.
-
-The simplest way to compile this package is:
-
-  1. `cd' to the directory containing the package's source code and type
-     `./configure' to configure the package for your system.  If you're
-     using `csh' on an old version of System V, you might need to type
-     `sh ./configure' instead to prevent `csh' from trying to execute
-     `configure' itself.
-
-     Running `configure' takes awhile.  While running, it prints some
-     messages telling which features it is checking for.
-
-  2. Type `make' to compile the package.
-
-  3. Optionally, type `make check' to run any self-tests that come with
-     the package.
-
-  4. Type `make install' to install the programs and any data files and
-     documentation.
-
-  5. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  To also remove the
-     files that `configure' created (so you can compile the package for
-     a different kind of computer), type `make distclean'.  There is
-     also a `make maintainer-clean' target, but that is intended mainly
-     for the package's developers.  If you use it, you may have to get
-     all sorts of other programs in order to regenerate files that came
-     with the distribution.
 
 Compilers and Options
 =====================
