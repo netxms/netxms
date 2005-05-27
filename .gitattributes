@@ -11,6 +11,7 @@
 /README.in -text
 /THANKS -text
 /TODO -text
+/UPGRADE -text
 /configure.ac -text
 contrib/Makefile.am -text
 contrib/dct/Makefile.am -text

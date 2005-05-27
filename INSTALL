@@ -1,11 +1,15 @@
-Basic NetXMS server Installation
-================================
+Deployment of netxms should start from installation of NetXMS server which
+does most of work and then distributing netxms agent all over the network
+where it is possible and needed.
+
+Basic NetXMS Installation
+=========================
 
    These are generic installation instructions. For more detailed
 installation instruction consult docs/install-guide.doc (when it will be
 ready).
 
-The simplest way to install netxms distribution is:
+The simplest way to install netxms server is:
 
   1. Get current distribution from www.netxms.org using any of methods
      available. 
@@ -36,7 +40,8 @@ The simplest way to install netxms distribution is:
                  --prefix=/opt/netxms
      Will configure distribution to build both server and agent and to build
      mysql driver for netxms using mysql libraries from mysql distribution 
-     located in /opt/mysql.
+     located in /opt/mysql. Distribution will be configured also to be
+     installed in /opt/netxms.
 
   4. Type `make' to compile the package.
 
@@ -51,30 +56,30 @@ The simplest way to install netxms distribution is:
      mysql> \q
      $> mysql netxms < sql/dbinit_mysql.sql
 
-  7. Default netxms daemon configuration file to /etc directory as
+  7. Copy default netxms daemon configuration file ('netxmsd.conf') to /etc directory
      with name 'netxmsd.conf' and edit it to match actual settings.
      You can do it like this: 
      cp ./netxmsd.conf-dist /etc/netxmsd.conf
      vi /etc/netxmsd.conf
   
   8. `cd' to netxms installation directory and try running bin/netxmsd.
-     Check if netsmd process is running.If not try starting it again with
+     Check if netsmd process is running. If not try starting it again with
      --debug-all parameter and see log file for details.
  
   9. If You see netxmsd running - You have just successfuly installed netxms 
      monitoring server. Try connecting with netxms console. Default
      login/pass are admin/netxms.
 
- 10. If You succeeded to connect - first action You might need to do is
+ 10. If You succeeded to connect - first action You should do is
      changing password (see nexms console docs for details).
 
  11. Repeat steps 1-5 on each server which needs to be monitored using just
      "./configure --with-agent --prefix=..." as parameters. You don't need
-     server and database driver/libraries on monitored machines. 
+     server and database driver/libraries for agent. 
 
 Upgrading
 =========
-See UPGRADE file for details of server upgrade.
+See UPGRADE file in root source directory for details of upgrade procedure.
 Agent upgrades can be done automatically. New agent versions are distributed
 to all servers by netxms server. This can be done from netxms console. So
 You need to build agents only once - during initial installation.
