@@ -56,8 +56,8 @@ The simplest way to install netxms server is:
      mysql> \q
      $> mysql netxms < sql/dbinit_mysql.sql
 
-  7. Copy default netxms daemon configuration file ('netxmsd.conf') to /etc directory
-     with name 'netxmsd.conf' and edit it to match actual settings.
+  7. Copy default netxms daemon configuration file ('netxmsd.conf-dist') to /etc
+     directory with name 'netxmsd.conf' and edit it to match actual settings.
      You can do it like this: 
      cp ./netxmsd.conf-dist /etc/netxmsd.conf
      vi /etc/netxmsd.conf
@@ -76,6 +76,14 @@ The simplest way to install netxms server is:
  11. Repeat steps 1-5 on each server which needs to be monitored using just
      "./configure --with-agent --prefix=..." as parameters. You don't need
      server and database driver/libraries for agent. 
+ 12. Copy default netxms agent daemon configuration file ('nxagentd.conf-dist')
+     to /etc directory with name 'nxagentd.conf' and edit it to match actual
+     settings.
+     You can do it like this:
+     cp ./nxagentd.conf-dist /etc/nxagentd.conf
+     vi /etc/nxagentd.conf
+ 13. Start nxagentd and check that it is running 
+     (do it same way as netxms server).
 
 Upgrading
 =========

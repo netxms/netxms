@@ -1,0 +1,5 @@
+RequireAuthentication = no
+LogFile = /var/log/nxagentd.log
+Servers = 10.0.0.1
+InstallationServers = 10.0.0.1
+
