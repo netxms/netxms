@@ -1,0 +1,18 @@
+<div class="twoThirds noBorderOnLeft">
+	<!--<h1>Some of the companies, that are using our system:</h2>-->
+	<h1>Some of the companies that are using NetXMS:</h2>
+	 <p>
+	 <h2>OptiCom (<a href="http://www.opticom.lv">www.opticom.lv</a>)</h1>
+	 <ul>
+		 <li />25+ Nodes
+		 <li />215+ Data Collection Items
+	 </ul>
+	 </p>
+	 <p>
+	 <h2>C.T.Co (<a href="http://www.ctco.lv">www.ctco.lv</a>)</h2>
+	 <ul>
+		 <li />85+ Nodes
+		 <li />600+ Data Collection Items
+	 </ul>
+	 </p>
+</div>

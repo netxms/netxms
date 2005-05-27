@@ -24,9 +24,9 @@
 
         <div class="headerLinks">
             <span class="doNotDisplay">Current release:</span>
-            <a href="netxms-0.1.19.tar.gz">latest version (0.1.19) &laquo;</a>
+            <a href="/download/netxms-0.1.20.tar.gz">latest version (0.1.20) &laquo;</a>
             <span class="doNotDisplay">|</span>
-            <a href="netxms-cvs.tar.gz">daily snapsnot &laquo;</a>
+            <a href="/download/netxms-cvs.tar.gz">daily snapsnot &laquo;</a>
             </div>
         </div>
     </div>
