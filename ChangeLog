@@ -5,6 +5,7 @@
 - Windows console:
 	- Items in Control Panel now sorted alphabetically
 	- Data collection editor now shows associated template for DCI
+	- Added automatic refresh to last values view
 
 
 *
