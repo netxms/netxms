@@ -8,6 +8,13 @@
 //
 #include "ValueList.h"
 
+//
+// Flags
+//
+
+#define LVF_SHOW_GRID      0x01
+#define LVF_AUTOREFRESH    0x02
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CLastValuesView frame
@@ -37,6 +44,9 @@ public:
 
 // Implementation
 protected:
+	UINT m_nTimer;
+	DWORD m_dwSeconds;
+	DWORD m_dwFlags;
 	DWORD FindItem(DWORD dwId);
 	void UpdateItem(int iItem, NXC_DCI_VALUE *pValue);
 	CImageList m_imageList;
@@ -58,6 +68,9 @@ protected:
 	afx_msg void OnUpdateItemGraph(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateItemShowdata(CCmdUI* pCmdUI);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnLastvaluesProperties();
+	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()

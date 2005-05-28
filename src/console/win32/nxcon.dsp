@@ -257,6 +257,10 @@ SOURCE=.\InternalItemSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\LastValuesPropDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\LastValuesView.cpp
 # End Source File
 # Begin Source File
@@ -599,6 +603,10 @@ SOURCE=.\InputBox.h
 # Begin Source File
 
 SOURCE=.\InternalItemSelDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LastValuesPropDlg.h
 # End Source File
 # Begin Source File
 

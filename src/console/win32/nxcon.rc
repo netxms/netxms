@@ -427,6 +427,8 @@ BEGIN
     BEGIN
         MENUITEM "&Show history\tCtrl+S",       ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...\tAlt+P",       ID_LASTVALUES_PROPERTIES
     END
 END
 
@@ -782,6 +784,7 @@ END
 IDA_LAST_VALUES ACCELERATORS DISCARDABLE 
 BEGIN
     "G",            ID_ITEM_GRAPH,          VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_LASTVALUES_PROPERTIES, VIRTKEY, ALT, NOINVERT
     "S",            ID_ITEM_SHOWDATA,       VIRTKEY, CONTROL, NOINVERT
 END
 
@@ -1800,6 +1803,22 @@ BEGIN
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,240,25,50,14
 END
 
+IDD_LASTVAL_PROP DIALOG DISCARDABLE  0, 0, 192, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Refresh automatically",IDC_CHECK_REFRESH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,7,83,10
+    EDITTEXT        IDC_EDIT_TIME,64,19,32,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Show &grid",IDC_CHECK_GRID,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,38,47,10
+    DEFPUSHBUTTON   "OK",IDOK,135,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,135,24,50,14
+    LTEXT           "Refresh interval:",IDC_STATIC_REFRESH,7,22,52,8
+    LTEXT           "seconds",IDC_STATIC_SEC,99,22,28,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2210,6 +2229,14 @@ BEGIN
         RIGHTMARGIN, 290
         TOPMARGIN, 7
         BOTTOMMARGIN, 192
+    END
+
+    IDD_LASTVAL_PROP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 185
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
     END
 END
 #endif    // APSTUDIO_INVOKED

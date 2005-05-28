@@ -161,6 +161,7 @@
 #define IDD_GRAPH_PROP_DATA             270
 #define IDD_REMOVE_TEMPLATE             271
 #define IDD_CHANGE_IP                   272
+#define IDD_LASTVAL_PROP                273
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -393,6 +394,8 @@
 #define IDC_CHECK_NOCACHE               1253
 #define IDC_RADIO_UNBIND                1254
 #define IDC_RADIO_REMOVE                1255
+#define IDC_EDIT_TIME                   1258
+#define IDC_STATIC_SEC                  1259
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -514,9 +517,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        273
+#define _APS_NEXT_RESOURCE_VALUE        274
 #define _APS_NEXT_COMMAND_VALUE         32932
-#define _APS_NEXT_CONTROL_VALUE         1257
+#define _APS_NEXT_CONTROL_VALUE         1261
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

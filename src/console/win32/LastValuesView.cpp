@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "LastValuesView.h"
+#include "LastValuesPropDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -21,6 +22,9 @@ CLastValuesView::CLastValuesView()
    m_dwNodeId = 0;
    m_dwNumItems = 0;
    m_pItemList = NULL;
+   m_dwSeconds = 30;
+   m_dwFlags = LVF_SHOW_GRID;
+   m_nTimer = 0;
 }
 
 CLastValuesView::CLastValuesView(DWORD dwNodeId)
@@ -28,18 +32,19 @@ CLastValuesView::CLastValuesView(DWORD dwNodeId)
    m_dwNodeId = dwNodeId;
    m_dwNumItems = 0;
    m_pItemList = NULL;
+   m_dwSeconds = 30;
+   m_dwFlags = LVF_SHOW_GRID;
+   m_nTimer = 0;
 }
 
 CLastValuesView::CLastValuesView(TCHAR *pszParams)
 {
-   TCHAR szBuffer[32];
-
-   if (ExtractWindowParam(pszParams, _T("N"), szBuffer, 32))
-      m_dwNodeId = _tcstoul(szBuffer, NULL, 0);
-   else
-      m_dwNodeId = 0;
+   m_dwNodeId = ExtractWindowParamULong(pszParams, _T("N"), 0);
+   m_dwSeconds = ExtractWindowParamULong(pszParams, _T("S"), 30);
+   m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), LVF_SHOW_GRID);
    m_dwNumItems = 0;
    m_pItemList = NULL;
+   m_nTimer = 0;
 }
 
 CLastValuesView::~CLastValuesView()
@@ -59,6 +64,9 @@ BEGIN_MESSAGE_MAP(CLastValuesView, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_GRAPH, OnUpdateItemGraph)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_SHOWDATA, OnUpdateItemShowdata)
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_LASTVALUES_PROPERTIES, OnLastvaluesProperties)
+	ON_WM_TIMER()
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
@@ -99,8 +107,9 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_OWNERDRAWFIXED,
                         rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
-                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES |
-                                  LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES);
+                                  LVS_EX_FULLROWSELECT | LVS_EX_SUBITEMIMAGES |
+                                  LVS_EX_LABELTIP | 
+                                  ((m_dwFlags & LVF_SHOW_GRID) ? LVS_EX_GRIDLINES : 0));
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
@@ -113,6 +122,9 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    if (m_dwNodeId != 0)
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
+
+   if (m_dwFlags & LVF_AUTOREFRESH)
+      SetTimer(1, m_dwSeconds * 1000, NULL);
 
 	return 0;
 }
@@ -228,7 +240,8 @@ LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
    pInfo->iWndClass = WNDC_LAST_VALUES;
    GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%ld"), m_dwNodeId);
+   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("F:%ld\x7FN:%ld\x7FS:%ld"),
+              m_dwFlags, m_dwNodeId, m_dwSeconds);
    return 1;
 }
 
@@ -348,4 +361,66 @@ DWORD CLastValuesView::FindItem(DWORD dwId)
       if (m_pItemList[i].dwId == dwId)
          return i;
    return INVALID_INDEX;
+}
+
+
+//
+// Change properties
+//
+
+void CLastValuesView::OnLastvaluesProperties() 
+{
+   CLastValuesPropDlg dlg;
+
+   dlg.m_dwSeconds = m_dwSeconds;
+   dlg.m_bShowGrid = (m_dwFlags & LVF_SHOW_GRID) ? TRUE : FALSE;
+   dlg.m_bRefresh = (m_dwFlags & LVF_AUTOREFRESH) ? TRUE : FALSE;
+   if (dlg.DoModal() == IDOK)
+   {
+      if (m_nTimer != 0)
+      {
+         KillTimer(m_nTimer);
+         m_nTimer = 0;
+      }
+
+      m_dwSeconds = dlg.m_dwSeconds;
+      m_dwFlags = 0;
+      if (dlg.m_bRefresh)
+      {
+         m_dwFlags |= LVF_AUTOREFRESH;
+         m_nTimer = SetTimer(1, m_dwSeconds * 1000, NULL);
+      }
+      if (dlg.m_bShowGrid)
+      {
+         m_dwFlags |= LVF_SHOW_GRID;
+         m_wndListCtrl.SetExtendedStyle(m_wndListCtrl.GetExtendedStyle() | LVS_EX_GRIDLINES);
+      }
+      else
+      {
+         m_wndListCtrl.SetExtendedStyle(m_wndListCtrl.GetExtendedStyle() & (~LVS_EX_GRIDLINES));
+      }
+   }
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CLastValuesView::OnTimer(UINT nIDEvent) 
+{
+   PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CLastValuesView::OnDestroy() 
+{
+   if (m_nTimer != 0)
+      KillTimer(m_nTimer);
+
+	CMDIChildWnd::OnDestroy();
 }

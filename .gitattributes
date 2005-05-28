@@ -423,6 +423,8 @@ src/console/win32/InputBox.cpp -text
 src/console/win32/InputBox.h -text
 src/console/win32/InternalItemSelDlg.cpp -text
 src/console/win32/InternalItemSelDlg.h -text
+src/console/win32/LastValuesPropDlg.cpp -text
+src/console/win32/LastValuesPropDlg.h -text
 src/console/win32/LastValuesView.cpp -text
 src/console/win32/LastValuesView.h -text
 src/console/win32/LoginDialog.cpp -text
