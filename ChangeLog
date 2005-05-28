@@ -6,6 +6,8 @@
 	- Items in Control Panel now sorted alphabetically
 	- Data collection editor now shows associated template for DCI
 	- Added automatic refresh to last values view
+	- Rule in policy editor can be enabled/disabled by double click
+	  on leftmost column (rule number)
 
 
 *

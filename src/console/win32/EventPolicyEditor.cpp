@@ -778,6 +778,9 @@ void CEventPolicyEditor::OnPolicyEdit()
    if (iRow != -1)
       switch(iColumn)
       {
+         case COL_RULE:
+            EnableSelectedRows((m_pEventPolicy->pRuleList[iRow].dwFlags & RF_DISABLED) ? TRUE : FALSE);
+            break;
          case COL_SEVERITY:
             EditSeverity(iRow);
             break;

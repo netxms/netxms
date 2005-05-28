@@ -73,10 +73,7 @@ WINDOWS CONSOLE:
 - Play sound on new alarms
 - Add sorting to all list views
 - Add "Copy value to clipboard" to "Collected data" window
-- Event Processing Policy: Disable record with doubleclick on leftmost
-  field (number)
 - Implement drag-and-drop editing in policy editor
-- Add auto-refresh to "Last values" view
 - Add "previous value" and "delta" fields to last values view
 - Add agent configuration editor
 
