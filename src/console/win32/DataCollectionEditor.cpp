@@ -129,6 +129,7 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(5, "Polling Interval", LVCFMT_LEFT, 80);
    m_wndListCtrl.InsertColumn(6, "Retention Time", LVCFMT_LEFT, 80);
    m_wndListCtrl.InsertColumn(7, "Status", LVCFMT_LEFT, 90);
+   m_wndListCtrl.InsertColumn(8, "Template", LVCFMT_LEFT, 120);
 
    // Fill list view with data
    for(i = 0; i < m_pItemList->dwNumItems; i++)
@@ -206,6 +207,7 @@ int CDataCollectionEditor::AddListItem(NXC_DCI *pItem)
 void CDataCollectionEditor::UpdateListItem(int iItem, NXC_DCI *pItem)
 {
    char szBuffer[32];
+   NXC_OBJECT *pObject;
 
    m_wndListCtrl.SetItemText(iItem, 1, g_pszItemOrigin[pItem->iSource]);
    m_wndListCtrl.SetItemText(iItem, 2, pItem->szDescription);
@@ -216,6 +218,15 @@ void CDataCollectionEditor::UpdateListItem(int iItem, NXC_DCI *pItem)
    sprintf(szBuffer, "%d days", pItem->iRetentionTime);
    m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 7, g_pszItemStatus[pItem->iStatus]);
+   if (pItem->dwTemplateId != 0)
+   {
+      pObject = NXCFindObjectById(g_hSession, pItem->dwTemplateId);
+      m_wndListCtrl.SetItemText(iItem, 8, (pObject != NULL) ? pObject->szName : _T("<unknown>"));
+   }
+   else
+   {
+      m_wndListCtrl.SetItemText(iItem, 8, _T(""));
+   }
    m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, pItem->iStatus, 0, 0, 0);
 }
 

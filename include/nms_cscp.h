@@ -451,6 +451,7 @@ typedef struct
 #define VID_ADDR_LIST_SIZE          ((DWORD)150)
 #define VID_IP_ADDR_LIST            ((DWORD)151)
 #define VID_REMOVE_DCI              ((DWORD)152)
+#define VID_TEMPLATE_ID             ((DWORD)153)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -653,6 +653,8 @@ BEGIN
     BEGIN
         MENUITEM "&Show history",               ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_LASTVALUES_PROPERTIES
     END
 END
 

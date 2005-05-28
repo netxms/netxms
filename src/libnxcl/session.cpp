@@ -299,6 +299,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems, 
                                           sizeof(NXC_DCI) * m_pItemList->dwNumItems);
             m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
+            m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
             m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
             m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
             m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);

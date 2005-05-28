@@ -188,7 +188,7 @@ Resource100=IDD_LOGIN (English (U.S.))
 Resource101=IDD_SET_PASSWORD (English (U.S.))
 Resource102=IDD_CREATE_TEMPLATE (English (U.S.))
 Resource103=IDD_DESKTOP_SAVE_AS (English (U.S.))
-Resource104=IDM_CONTEXT (English (U.S.))
+Resource104=IDD_CHANGE_IP
 Resource105=IDD_DCI_THRESHOLDS (English (U.S.))
 Resource106=IDD_EDIT_RULE_ALARM (English (U.S.))
 Resource107=IDD_CP_GENERAL (English (U.S.))
@@ -218,7 +218,7 @@ Resource117=IDD_CREATE_CONTAINER (English (U.S.))
 Class88=CRemoveTemplateDlg
 Resource118=IDR_MAINFRAME (English (U.S.))
 Class89=CAddrChangeDlg
-Resource119=IDD_CHANGE_IP
+Resource119=IDM_CONTEXT (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -1563,7 +1563,8 @@ Command100=ID_PACKAGE_REMOVE
 Command101=ID_PACKAGE_DEPLOY
 Command102=ID_ITEM_SHOWDATA
 Command103=ID_ITEM_GRAPH
-CommandCount=103
+Command104=ID_LASTVALUES_PROPERTIES
+CommandCount=104
 
 [DLG:IDD_SET_PASSWORD (English (U.S.))]
 Type=1

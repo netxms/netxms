@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.1.20
-AppVersion=0.1.20
+AppVerName=NetXMS 0.2.0
+AppVersion=0.2.0
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.1.20
+OutputBaseFilename=netxms-0.2.0
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -22,6 +22,7 @@ LanguageDetectionMethod=none
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
 Name: "console"; Description: "Administrator's Console"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
+Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -60,6 +61,7 @@ Source: "..\..\..\images\*.png"; DestDir: "{app}\var\images"; Flags: ignoreversi
 Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\var\mibs"; Flags: ignoreversion; Components: server
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 
 [Icons]
 Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console

@@ -2,7 +2,9 @@
 * 0.2.0
 *
 
-- Windows console: items in Control Panel now sorted alphabetically
+- Windows console:
+	- Items in Control Panel now sorted alphabetically
+	- Data collection editor now shows associated template for DCI
 
 
 *

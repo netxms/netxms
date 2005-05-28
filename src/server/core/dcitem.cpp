@@ -408,6 +408,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
 
    Lock();
    pMsg->SetVariable(VID_DCI_ID, m_dwId);
+   pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
    pMsg->SetVariable(VID_NAME, m_szName);
    pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
    pMsg->SetVariable(VID_INSTANCE, m_szInstance);
