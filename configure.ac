@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.84 2005-05-26 09:15:51 victor Exp $
+# $Id: configure.ac,v 1.85 2005-05-29 21:28:21 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -26,10 +26,7 @@ AC_PROG_LIBTOOL
 # disable C++ exceptions
 CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
-LDFLAGS="-nodefaultlibs $LDFLAGS"
-
-AC_CHECK_LIB(c_r, pthread_create, LDFLAGS="$LDFLAGS -lc_r", LDFLAGS="$LDFLAGS -lc")
-
+LDFLAGS="$LDFLAGS"
 
 # --------------------------------------------------------------------------
 # misc
@@ -333,10 +330,6 @@ if test "x$PTHREAD_LIBS" = xerror; then
 		PTHREAD_LIBS="-lpthreads")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_LIB(c_r, pthread_attr_init,
-		PTHREAD_LIBS="-lc_r")
-fi
-if test "x$PTHREAD_LIBS" = xerror; then
 	AC_CHECK_FUNC(pthread_attr_init,
 		PTHREAD_LIBS="")
 fi
@@ -467,15 +460,15 @@ AC_CONFIG_FILES([
 
 AC_OUTPUT
 
-echo "Updating libtool-1"
-sed 's/-lc_r/-lc_rXXX/' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
+#echo "Updating libtool-1"
+#sed 's/-lc_r/-lc_rXXX/' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 
 echo "Updating libtool-2"
 sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 
-if test ! "x$BUILD_SERVER" = "xyes" ; then
-   echo "Updating libtool-3"
-   $PERL tools/patch_libtool.pl <libtool >libtool.new
-   mv libtool.new libtool
-   chmod 755 libtool
-fi
+#if test ! "x$BUILD_SERVER" = "xyes" ; then
+#   echo "Updating libtool-3"
+#   $PERL tools/patch_libtool.pl <libtool >libtool.new
+#   mv libtool.new libtool
+#   chmod 755 libtool
+#fi

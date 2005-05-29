@@ -7,7 +7,7 @@ libnxsrv_la_LDFLAGS = -version-info $(LIBNXSRV_LIBRARY_VERSION)
 messages.c: ../include/messages.h
 
 ../include/messages.h: messages.mc
-	$(PERL) @top_builddir@/tools/mc.pl $<
+	$(PERL) @top_builddir@/tools/mc.pl messages.mc
 	mv messages.h ../include
 
 EXTRA_DIST = \
