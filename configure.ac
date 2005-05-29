@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.85 2005-05-29 21:28:21 alk Exp $
+# $Id: configure.ac,v 1.86 2005-05-29 22:44:59 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -315,7 +315,7 @@ AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed 
 PTHREAD_LIBS=error
 AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
 AC_EGREP_CPP(yes,
-	[#if (defined(__FreeBSD_cc_version) && __FreeBSD_cc_version <= 500001) || defined(__OpenBSD__)
+	[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
 		yes
 	#endif
 	], AC_MSG_RESULT(yes)

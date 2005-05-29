@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.6 2005-01-24 19:51:16 alk Exp $ */
+/* $Id: system.cpp,v 1.7 2005-05-29 22:44:59 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -166,6 +166,8 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	size_t nSize;
 	int i;
 
+#if __FreeBSD__ < 5
+
    NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	nSize = sizeof(mib);
@@ -200,6 +202,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		ret_int(pValue, nCount);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
+#endif
 
 	return nRet;
 }
@@ -327,6 +330,8 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	size_t nSize;
 	int i;
 
+#if __FreeBSD__ < 5
+
 	nSize = sizeof(mib);
 	if (sysctlnametomib("kern.proc.all", mib, &nSize) == 0)
 	{
@@ -361,6 +366,8 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
+#endif
+
 	return nRet;
 }
 
@@ -378,6 +385,10 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/01/24 19:51:16  alk
+reurn types/comments added
+Process.Count(*)/System.ProcessCount fixed
+
 Revision 1.5  2005/01/23 05:36:11  alk
 + System.Memory.Swap.*
 + System.Memory.Virtual.*
