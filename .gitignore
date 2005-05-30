@@ -209,8 +209,10 @@ www/data/bugtrack/view_all_bug_page.php
 www/data/bugtrack/view_all_inc.php
 www/data/bugtrack/view_all_set.php
 www/data/bugtrack/view_filters_page.php
+www/data/download/*.asc
 www/data/download/*.gz
 www/data/download/*.md5
+www/data/download/*.zip
 www/data/download/agent_packages
 www/data/download/preview
 www/data/webalizer
