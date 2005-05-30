@@ -10,6 +10,7 @@
 	- Added automatic refresh to last values view
 	- Rule in policy editor can be enabled/disabled by double click
 	  on leftmost column (rule number)
+- Fixed incorrect interface detection on FreeBSD
 
 
 *
