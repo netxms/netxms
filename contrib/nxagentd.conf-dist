@@ -27,8 +27,6 @@
 # InstallationServers = 10.0.0.1
 # InstallationServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
 
-RequireAuthentication = no
-
 #
 # LogFile
 #
@@ -38,3 +36,86 @@ RequireAuthentication = no
 # Examples:
 # LogFile = {syslog}
 # LogFile = /var/log/nxagentd.log
+
+#
+# RequireAuthentication
+#
+# If set to "yes", host connected to agent have to provide correct shared
+# secret before issuing any command. Default value is "no".
+#
+# Example:
+# RequireAuthentication = no
+
+#
+# SharedSecret
+#
+# Agent's shared secret. Used only if RequireAuthentication set to "yes".
+#
+# Example:
+# SharedSecret = secret
+
+#
+# FileStore
+#
+# Directory to be used for storing files uploaded by installation server(s).
+#
+# Example:
+# FileStore = /var/nxagentd
+
+#
+# TimeOut
+#
+# GET request timeout in seconds. If GET request cannot be completed for
+# specified amount of time, agent will return an error to server.
+# Default value is 5 seconds.
+#
+# Example:
+# TimeOut = 5
+
+#
+# StartupDelay
+#
+# Number of seconds agent should wait on startup before start servicing
+# requests. This parameter can be useful to prevent false reports about
+# missing processes or failed services just after monitored system startup.
+# Default value is 0, i.e. no startup delay.
+#
+# Example:
+# StartupDelay = 0
+
+#
+# PlatformSuffix
+#
+# String to be added as suffix to value of System.PlatformName parameter.
+#
+# Example:
+# PlatformSuffix = dbg
+
+#
+# SubAgent
+#
+# Subagent to load. To load multiple subagents, you should use multiple
+# SubAgent parameters. Subagents will be loaded in the same order as they
+# appears in configuration file.
+#
+# UNIX example:
+# SubAgent = [path_to_netxms_install_dir]/lib/libnsm_linux.so
+#
+# Windows example:
+# SubAgent = winperf.nsm
+
+#
+# ExternalParameter
+#
+# Add parameter handled by external command. To add multiple parameters, you
+# should use multiple ExternalParameter entries.
+# 
+# Syntax:
+# ExternalParameter = <parameter_name>:<command_line>
+# If you specify parameter name as "name(*)", then you can use $1 .. $9 in
+# command line to substitute actual arguments passed from server.
+#
+# Examples:
+# ExternalParameter = Test:echo test
+# ExternalParameter = LineCount(*):cat $1 | wc -l
+# ExternalParameter = Test2(*):myprog $1 $2
