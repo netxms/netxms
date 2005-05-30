@@ -71,6 +71,7 @@ contrib/mibs/UCD-IPFWACC-MIB.txt -text
 contrib/mibs/UCD-SNMP-MIB.txt -text
 contrib/mibs/UDP-MIB.txt -text
 contrib/mibs/WF-COM.txt -text
+contrib/netxmsd.conf-dist -text
 contrib/startup/Makefile.am -text
 contrib/startup/redhat/Makefile.am -text
 contrib/startup/redhat/netxmsd -text
@@ -131,7 +132,6 @@ netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
 /netxms.dsw -text
-/netxmsd.conf-dist -text
 /nxagentd.conf-dist -text
 /reconf -text
 sql/.cvsignore -text
