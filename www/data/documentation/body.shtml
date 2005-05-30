@@ -9,7 +9,7 @@
 
 	<h2>Mailing lists</h2>
 	<p>
-		See &quot;<a href="/contacts/">Contacts</a>&quot; section.
+	See &quot;<a href="/contacts/">Contacts</a>&quot; section.
 	</p>
 
 	<!--
@@ -27,10 +27,11 @@
 
 	<h2>Miscellaneous snatches</h2>
 	<p>
-		<ul>
-			<li /><a href="/cgi-bin/matrix">Agents capabilities matrix</a>
-			<li /><a href="macros.shtml">Macros that can be used in event messages and alarms</a>
-			<li /><a href="upgrade.shtml">Server upgrade procedure</a>
-		</ul>
+	<ul>
+		<li /><a href="confexample/">Configuration example</a>
+		<li /><a href="/cgi-bin/matrix">Agents capabilities matrix</a>
+		<li /><a href="macros.shtml">Macros that can be used in event messages and alarms</a>
+		<li /><a href="upgrade.shtml">Server upgrade procedure</a>
+	</ul>
 	</p>
 </div>

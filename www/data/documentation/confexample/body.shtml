@@ -1,48 +1,45 @@
 <div class="twoThirds noBorderOnLeft">
+	<p>
+	Sample Configuration: Two boxes, one runs server (&quot;kenny&quot;), second &#151; agent (&quot;alk&quot;).<br />
+	Goal: Send E-Mail alert if CPU Load is too high on box &quot;alk&quot;.
+	</p>
 
-<p>
-Sample Configuration: Two boxes, one runs server ("kenny"), second - agent ("alk").<br />
-Goal: Send E-Mail alert if CPU Load is too high on box "alk"
-</p>
-
-<p>
-<ul>
-	<li />run NxCon and login:
+	<p>
+	<ul>
+		<li />run NxCon and login:
 		<br /><img src="image001.png">
-	<li />Main Window:
+		<li />Main Window:
 		<br /><img src="image002.png">
-	<li />Press <strong>F3</strong> &#151; Object List:
+		<li />Press <strong>F3</strong> to open <strong>Object Browser</strong> window:
 		<br /><img src="image003.png">
-	<li />Right Click on Node name, then "Data Collection" menu item:
+		<li />Right-click on Node name in <strong>Object Browser</strong> window, then select <strong>Data Collection</strong> item from the menu:
 		<br /><img src="image004.png">
-	<li />Right Click anywhere in the "Data Collection Configuration" window, select "Collection" tab, then press "Select" button and look for "System.CPU.Usage":
+		<li />Right-click anywhere in the <strong>Data Collection Configuration</strong> window, select <strong>New</strong> menu item. DCI configuration dialog will appear. Select <strong>Collection</strong> tab, then press <strong>Select</strong> button and look for <strong>System.CPU.Usage</strong>:
 		<br /><img src="image005.png">
-	<li />Press "OK" to close parameter selection dialog, select "Thresholds" tab, then press button "Add":
+		<li />Press <strong>OK</strong> to close parameter selection dialog, select <strong>Thresholds</strong> tab, then press button <strong>Add</strong>:
 		<br /><img src="image006.png"><br />
-		In this example: "If Last Value is greater or equal 50% &#151; generate SYS_THRESHOLD_REACHED event"<br /><br />
-		press "OK" twice - close all dialog boxes.
-	<li />Press <strong>F9</strong> &#151; "Control Pannel":
+		In this example: &quot;If Last Value is greater or equal 50% &#151; generate SYS_THRESHOLD_REACHED event&quot;<br /><br />
+		Close both dialogs, <strong>Threshold Configuration</strong> and <strong>New Data Collection Item</strong> by pressing <strong>OK</strong> twice.
+		<li />Press <strong>F9</strong> to open <strong>Control Pannel</strong> window:
 		<br /><img src="image007.png">		
-	<li />and doubleclick on "Actions":
+		<li />doubleclick on <strong>Actions</strong> icon:
 		<br /><img src="image008.png"><br /><br />
-	<li />Right Click in "Action Configuration" window, then "New" menu item:
+		<li />Right-click in <strong>Action Configuration</strong> window, then select <strong>New</strong> item from the menu:
 		<br /><img src="image009.png"><br /><br />
-		In this example we send email.<br />
-		NB! Don't forget to set "SMTPServer" and "SMTPFrom" in table "config" and restart server before it will be able to send e-mail notifications.
-	<li />Go back to "Control Pannel" and open "Event Processing Policy":
+		<strong>NB!</strong> Don't forget to set &quot;SMTPServer&quot; and &quot;SMTPFrom&quot; in table &quot;config&quot; and restart server before it will be able to send e-mail notifications.
+		<li />Go back to <strong>Control Panel</strong> and open <strong>Event Processing Policy</strong> window by doubleclicking on <strong>Event Processing Policy</strong> icon:
 		<br /><img src="image010.png"><br /><br />
-	<li />Right Click, "Insert Rule" menu item, then "Bottom" submenu. New rule will be added to the end of the list. Right Click on the "Event" column (on new rule line), then "Add" submenu, in "Select Event" dialog search for "SYS_TRASHOLD_REACHED":
+		<li />Right-click on the last rule, select <strong>Insert Rule</strong> menu item, then select <strong>Bottom</strong> option. New rule will be added to the end of the list. Right-click on the <strong>Event</strong> column (on new rule line), then select <strong>Add</strong> menu item and in <strong>Select Event</strong> dialog window search for <strong>SYS_TRASHOLD_REACHED</strong> item:
 		<br /><img src="image011.png"><br /><br />
-	<li />Right Click on the "Action" column, then "Add" menu item. In the "Select Action" select previously created action ("test"):
+		<li />Right-click on the <strong>Action</strong> column, then select <strong>Add</strong> menu item. In the <strong>Select Action</strong> dialog window select previously created action (&quot;test&quot;):
 		<br /><img src="image012.png"><br /><br />
-	<li />Now Policy should look like this:
+		<li />Resulting Policy should look as shown below:
 		<br /><img src="image013.png"><br /><br />
-		Close Policy Editor window and confirm save changes.
+		Close Policy Editor window. Confirmation message will appear and after positive response new policy will be installed on server.
 
-	<hr align="left" width="70%" size="1" noshade="" />
+		<hr align="left" width="70%" size="1" noshade="" />
 
-	Now run some CPU-consuming task (we need 50+% load) and wait one minute, then check mailbox.
-</ul>
-</p>
-
+		Now run any CPU-consuming task (we need 50+% load) and wait one minute, then check mailbox.
+	</ul>
+	</p>
 </div>
