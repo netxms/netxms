@@ -1,7 +1,65 @@
-DBDriver=[path_to_netxms_install_dir]/lib/libnxddr_mysql.so
-DBLogin=netxms
-DBName=netxms
-DBPassword=changeit!!!
-DBServer=localhost
-LogFailedSQLQueries=yes
-LogFile=/var/log/netxms
+#
+# Sample configuration file for NetXMS server
+#
+
+#
+# DBDriver
+#
+# Database driver to use
+#
+# UNIX example:
+# DBDriver = [path_to_netxms_install_dir]/lib/libnxddr_mysql.so
+#
+# Windows example:
+# DBDriver = mysql.ddr
+
+#
+# DBServer
+#
+# Database server (ODBC source name for ODBC driver)
+#
+# Example:
+# DBServer = localhost
+
+#
+# DBName
+#
+# Database name (not used by ODBC driver)
+#
+# Example:
+# DBName = netxms_db
+
+#
+# DBLogin
+#
+# Database user name
+#
+# Example:
+# DBLogin = netxms
+
+#
+# DBPassword
+#
+# Database user's password
+#
+# Example:
+# DBPassword = password
+
+#
+# LogFailedSQLQueries
+#
+# Controls logging of failed SQL queries.
+# Possible values: "yes" (default) or "no".
+#
+# Example:
+# LogFailedSQLQueries = yes
+
+#
+# LogFile
+#
+# Server's log file. To write log to syslog (or Event Log on Windows),
+# use {syslog} as file name.
+#
+# Examples:
+# LogFile = {syslog}
+# LogFile = /var/log/netxms

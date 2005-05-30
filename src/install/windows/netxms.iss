@@ -61,6 +61,8 @@ Source: "..\..\..\sql\dbinit_pgsql.sql"; DestDir: "{app}\lib\sql"; Flags: ignore
 Source: "..\..\..\images\*.ico"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*.png"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\var\mibs"; Flags: ignoreversion; Components: server
+Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
+Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql

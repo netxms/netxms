@@ -1,5 +1,40 @@
-RequireAuthentication = no
-LogFile = /var/log/nxagentd.log
-Servers = 10.0.0.1
-InstallationServers = 10.0.0.1
+#
+# Sample configuration file for NetXMS agent
+#
 
+#
+# Servers
+#
+# List of management servers which have read access to this agent.
+# Both IP addresses and DNS names can be used. Multiple servers can be
+# specified in one line, separated by commas. If this parameter used more
+# than once, servers listed in all occurences will have access to agent.
+#
+# Examples:
+# Servers = 10.0.0.1
+# Servers = 127.0.0.1, srv1.domain.com, srv2.domain.com
+
+#
+# InstallationServers
+#
+# List of management servers which can upload files to agent and initiate
+# agent upgrade. Hosts listed in this parameter also have read access to agent.
+# Both IP addresses and DNS names can be used. Multiple servers can be
+# specified in one line, separated by commas. If this parameter used more
+# than once, servers listed in all occurences will have access to agent.
+#
+# Examples:
+# InstallationServers = 10.0.0.1
+# InstallationServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
+
+RequireAuthentication = no
+
+#
+# LogFile
+#
+# Agent's log file. To write log to syslog (or Event Log on Windows),
+# use {syslog} as file name.
+#
+# Examples:
+# LogFile = {syslog}
+# LogFile = /var/log/nxagentd.log

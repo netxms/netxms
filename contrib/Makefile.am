@@ -9,5 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
-EXTRA_DIST = logo.jpg
+EXTRA_DIST = netxmsd.conf-dist nxagentd.conf-dist
 SUBDIRS= config dct startup mibs
