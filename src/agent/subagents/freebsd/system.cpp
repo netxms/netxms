@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.7 2005-05-29 22:44:59 alk Exp $ */
+/* $Id: system.cpp,v 1.8 2005-05-30 14:39:32 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -28,9 +28,12 @@
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
 #include <sys/param.h>
+#include <sys/proc.h>
 #include <sys/user.h>
 #include <fcntl.h>
 #include <kvm.h>
+#include <paths.h>
+
 
 #include "system.h"
 
@@ -160,41 +163,42 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	int nRet = SYSINFO_RC_ERROR;
 //	struct statvfs s;
    char szArg[128] = {0};
-	int nCount = -1;
-	struct kinfo_proc *pKInfo;
-	int mib[3];
-	size_t nSize;
+	int nCount;
+	int nResult = -1;
 	int i;
-
-#if __FreeBSD__ < 5
+	kvm_t *kd;
+	struct kinfo_proc *kp;
 
    NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-	nSize = sizeof(mib);
-	if (sysctlnametomib("kern.proc.all", mib, &nSize) == 0)
+	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	if (kd != 0)
 	{
-		if (sysctl(mib, 3, NULL, &nSize, NULL, 0) == 0)
+		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
+
+		if (kp != NULL)
 		{
+			if (szArg[0] != 0)
 			{
-				pKInfo = (struct kinfo_proc *)malloc(nSize);
-				if (pKInfo != NULL)
+				for (i = 0; i < nCount; i++)
 				{
-					if (sysctl(mib, 3, pKInfo, &nSize, NULL, 0) == 0)
-					{
-						nCount = 0;
-						for (i = 0; i < (nSize / sizeof(struct kinfo_proc)); i++)
+#if __FreeBSD__ >= 5
+					if (strcasecmp(kp[i].ki_comm, szArg) == 0)
+#else
+						if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
+#endif
 						{
-							if (szArg != 0 ||
-									strcasecmp(pKInfo[i].kp_proc.p_comm, szArg) == 0)
-							{
-								nCount++;
-							}
+							nResult++;
 						}
-					}
-					free(pKInfo);
 				}
 			}
+			else
+			{
+				nResult = nCount;
+			}
 		}
+
+		kvm_close(kd);
 	}
 
 	if (nCount >= 0)
@@ -202,7 +206,6 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		ret_int(pValue, nCount);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
-#endif
 
 	return nRet;
 }
@@ -325,48 +328,41 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int nCount = -1;
-	struct kinfo_proc *pKInfo;
-	int mib[3];
-	size_t nSize;
 	int i;
+	struct kinfo_proc *kp;
+	kvm_t *kd;
 
-#if __FreeBSD__ < 5
 
-	nSize = sizeof(mib);
-	if (sysctlnametomib("kern.proc.all", mib, &nSize) == 0)
+
+	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	if (kd != 0)
 	{
-		if (sysctl(mib, 3, NULL, &nSize, NULL, 0) == 0)
+		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
+
+		if (kp != NULL)
 		{
+			for (i = 0; i < nCount; i++)
 			{
-				pKInfo = (struct kinfo_proc *)malloc(nSize);
-				if (pKInfo != NULL)
-				{
-					if (sysctl(mib, 3, pKInfo, &nSize, NULL, 0) == 0)
-					{
-						nCount = 0;
-						for (i = 0; i < (nSize / sizeof(struct kinfo_proc)); i++)
-						{
-							char szBuff[128];
+				char szBuff[128];
 
-							snprintf(szBuff, sizeof(szBuff), "%d %s",
-									pKInfo[i].kp_proc.p_pid, pKInfo[i].kp_proc.p_comm);
-							NxAddResultString(pValue, szBuff);
-
-							nCount++;
-						}
-					}
-					free(pKInfo);
-				}
+				snprintf(szBuff, sizeof(szBuff), "%d %s",
+#if __FreeBSD__ >= 5
+						kp[i].ki_pid, kp[i].ki_comm
+#else
+						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
+#endif
+						);
+				NxAddResultString(pValue, szBuff);
 			}
 		}
+
+		kvm_close(kd);
 	}
 
 	if (nCount >= 0)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
 	}
-
-#endif
 
 	return nRet;
 }
@@ -385,6 +381,11 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/05/29 22:44:59  alk
+* configure: pthreads & fbsd5+; detection code should be rewriten!
+* another ugly hack: agent's process info disabled for fbsd5+: struct kinfo_proc changed; m/b fix it tomorow
+* server/nxadm & fbsd5.1: a**holes, in 5.1 there no define with version in readline.h...
+
 Revision 1.6  2005/01/24 19:51:16  alk
 reurn types/comments added
 Process.Count(*)/System.ProcessCount fixed
