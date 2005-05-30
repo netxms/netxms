@@ -3,7 +3,8 @@
     <link rel="stylesheet" type="text/css" href="/prosimii-screen.css" media="screen, tv, projection" title="Default" />
     <link rel="stylesheet alternative" type="text/css" href="/prosimii-print.css" media="screen" title="Print Preview" />
     <link rel="stylesheet" type="text/css" href="/prosimii-print.css" media="print" />
-	 <link rel='alternate' type='application/rss+xml' title='RSS' href='/netxms.xml' />
+	 <!--<link rel='alternate' type='application/rss+xml' title='RSS' href='/netxms.xml' />-->
+	 <link rel='alternate' type='application/rss+xml' title='RSS' href='/cgi-bin/news.pl?rss=yes' />
 
     <title>NetXMS :: <!--#echo var="title" --></title>
 </head>
