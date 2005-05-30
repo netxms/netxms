@@ -2,6 +2,8 @@
 * 0.2.0
 *
 
+- Windows installer improved
+- Fixed build issues on various platforms
 - Windows console:
 	- Items in Control Panel now sorted alphabetically
 	- Data collection editor now shows associated template for DCI

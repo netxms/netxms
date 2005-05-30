@@ -22,6 +22,7 @@ LanguageDetectionMethod=none
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
 Name: "console"; Description: "Administrator's Console"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
+Name: "server\mssql"; Description: "Microsoft SQL DB-Library"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 
 [Tasks]
@@ -55,6 +56,7 @@ Source: "..\..\agent\subagents\ping\Release\ping.nsm"; DestDir: "{app}\bin"; Fla
 Source: "..\..\agent\subagents\portCheck\Release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbinit_mssql.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbinit_mysql.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
+Source: "..\..\..\sql\dbinit_oracle.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\sql\dbinit_pgsql.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*.ico"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*.png"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
@@ -62,6 +64,7 @@ Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\var\mibs"; Flags: ignorev
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
+Source: "Files\ntwdblib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mssql
 
 [Icons]
 Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
