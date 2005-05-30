@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.6 2005-05-23 20:30:28 alk Exp $ */
+/* $Id: net.cpp,v 1.7 2005-05-30 16:31:58 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -349,30 +349,42 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				int j;
 				char szOut[1024];
 
-				for (j = 0; j < pList[i].addrCount; j++)
+				if (pList[i].addrCount == 0)
 				{
-					if (j > 0)
-					{
-						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s:%d",
-								pList[i].index,
-								inet_ntoa(pList[i].addr[j].ip),
-								pList[i].addr[j].mask,
-								IFTYPE_OTHER,
-								ether_ntoa(pList[i].mac),
-								pList[i].name,
-								j - 1);
-					}
-					else
-					{
-						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-								pList[i].index,
-								inet_ntoa(pList[i].addr[j].ip),
-								pList[i].addr[j].mask,
-								IFTYPE_OTHER,
-								ether_ntoa(pList[i].mac),
-								pList[i].name);
-					}
+					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
+							pList[i].index,
+							IFTYPE_OTHER,
+							ether_ntoa(pList[i].mac),
+							pList[i].name);
 					NxAddResultString(pValue, szOut);
+				}
+				else
+				{
+					for (j = 0; j < pList[i].addrCount; j++)
+					{
+						if (j > 0)
+						{
+							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s:%d",
+									pList[i].index,
+									inet_ntoa(pList[i].addr[j].ip),
+									pList[i].addr[j].mask,
+									IFTYPE_OTHER,
+									ether_ntoa(pList[i].mac),
+									pList[i].name,
+									j - 1);
+						}
+						else
+						{
+							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
+									pList[i].index,
+									inet_ntoa(pList[i].addr[j].ip),
+									pList[i].addr[j].mask,
+									IFTYPE_OTHER,
+									ether_ntoa(pList[i].mac),
+									pList[i].name);
+						}
+						NxAddResultString(pValue, szOut);
+					}
 				}
 			}
 		}
@@ -405,6 +417,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/05/23 20:30:28  alk
+! memory allocation for address list now in sizeof * count, fixes "mixing" lists of aliases
+
 Revision 1.5  2005/03/10 19:04:07  alk
 implemented:
 	Net.Interface.AdminStatus(*)
