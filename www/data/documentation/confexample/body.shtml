@@ -1,0 +1,48 @@
+<div class="twoThirds noBorderOnLeft">
+
+<p>
+Sample Configuration: Two boxes, one runs server ("kenny"), second - agent ("alk").<br />
+Goal: Send E-Mail alert if CPU Load is too high on box "alk"
+</p>
+
+<p>
+<ul>
+	<li />run NxCon and login:
+		<br /><img src="image001.png">
+	<li />Main Window:
+		<br /><img src="image002.png">
+	<li />Press <strong>F3</strong> &#151; Object List:
+		<br /><img src="image003.png">
+	<li />Right Click on Node name, then "Data Collection" menu item:
+		<br /><img src="image004.png">
+	<li />Right Click anywhere in the "Data Collection Configuration" window, select "Collection" tab, then press "Select" button and look for "System.CPU.Usage":
+		<br /><img src="image005.png">
+	<li />Press "OK" to close parameter selection dialog, select "Thresholds" tab, then press button "Add":
+		<br /><img src="image006.png"><br />
+		In this example: "If Last Value is greater or equal 50% &#151; generate SYS_THRESHOLD_REACHED event"<br /><br />
+		press "OK" twice - close all dialog boxes.
+	<li />Press <strong>F9</strong> &#151; "Control Pannel":
+		<br /><img src="image007.png">		
+	<li />and doubleclick on "Actions":
+		<br /><img src="image008.png"><br /><br />
+	<li />Right Click in "Action Configuration" window, then "New" menu item:
+		<br /><img src="image009.png"><br /><br />
+		In this example we send email.<br />
+		NB! Don't forget to set "SMTPServer" and "SMTPFrom" in table "config" and restart server before it will be able to send e-mail notifications.
+	<li />Go back to "Control Pannel" and open "Event Processing Policy":
+		<br /><img src="image010.png"><br /><br />
+	<li />Right Click, "Insert Rule" menu item, then "Bottom" submenu. New rule will be added to the end of the list. Right Click on the "Event" column (on new rule line), then "Add" submenu, in "Select Event" dialog search for "SYS_TRASHOLD_REACHED":
+		<br /><img src="image011.png"><br /><br />
+	<li />Right Click on the "Action" column, then "Add" menu item. In the "Select Action" select previously created action ("test"):
+		<br /><img src="image012.png"><br /><br />
+	<li />Now Policy should look like this:
+		<br /><img src="image013.png"><br /><br />
+		Close Policy Editor window and confirm save changes.
+
+	<hr align="left" width="70%" size="1" noshade="" />
+
+	Now run some CPU-consuming task (we need 50+% load) and wait one minute, then check mailbox.
+</ul>
+</p>
+
+</div>
