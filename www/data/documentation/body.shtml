@@ -30,7 +30,7 @@
 		<ul>
 			<li /><a href="/cgi-bin/matrix">Agents capabilities matrix</a>
 			<li /><a href="macros.shtml">Macros that can be used in event messages and alarms</a>
-			<li /><a href="upgrade.txt">Server upgrade procedure</a>
+			<li /><a href="upgrade.shtml">Server upgrade procedure</a>
 		</ul>
 	</p>
 </div>
