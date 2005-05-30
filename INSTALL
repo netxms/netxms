@@ -35,7 +35,7 @@ The simplest way to install netxms server is:
      going to use. Try ./configure --help to see all possible
      parameters.
      
-     For. ex.: 
+     For example:
      ./configure --with-server --with-agent --with-mysql=/opt/mysql \
                  --prefix=/opt/netxms
      Will configure distribution to build both server and agent and to build
@@ -48,9 +48,9 @@ The simplest way to install netxms server is:
   5. Type `make install' to install the programs and any data files and
      documentation.
  
-  6. Use sql/dbinit_[dbname].sql script with and Your database client
+  6. Use sql/dbinit_[dbname].sql script and Your database client
      program to initialize database for netxms. 
-     For ex.if You're going to use mysql this could be like this:
+     For example if You're going to use mysql this could be like this:
 
      mysql> create database netxms;
      mysql> \q
@@ -71,7 +71,7 @@ The simplest way to install netxms server is:
      login/pass are admin/netxms.
 
  10. If You succeeded to connect - first action You should do is
-     changing password (see nexms console docs for details).
+     changing password (see netxms console docs for details).
 
  11. Repeat steps 1-5 on each server which needs to be monitored using just
      "./configure --with-agent --prefix=..." as parameters. You don't need
