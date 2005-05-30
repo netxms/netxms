@@ -4,4 +4,4 @@ lib_LTLIBRARIES = libnxddr_odbc.la
 libnxddr_odbc_la_SOURCES = odbc.cpp
 libnxddr_odbc_la_LDFLAGS = -version-info $(DBDRV_LIBRARY_VERSION)
 
-EXTRA_DIST = odbc.dsp odbc.dsw
+EXTRA_DIST = odbc.dsp odbc.dsw odbcdrv.h
