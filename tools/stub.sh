@@ -60,8 +60,8 @@ else
 		echo "Can't chmod $command" >> $log
 		exit
 	fi
-	echo Starting $command... >> $log
-	./$command 2>&1 >> $log
+	echo Starting $command $*... >> $log
+	./$command $* 2>&1 >> $log
 fi
 
 exit
