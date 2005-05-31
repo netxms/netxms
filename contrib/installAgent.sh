@@ -92,9 +92,19 @@ if [ $? != 0 ]; then
 	exit 5
 fi
 
+# show config
+echo "config ($config):" >> $log
+cat $config >> $log 2>&1
+echo "---------------" >> $log
+
 # and restart
-$prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
-if [ $? != 0 ]; then
-	echo nxagentd not started >> $log
+echo "Starting agent: $prefix/bin/nxagentd -d -c $config" >> $log
+$prefix/bin/nxagentd -d -c $config > $log.tmp 2>&1
+ret=$?
+if [ $ret != 0 ]; then
+	cat $log.tmp >> $log
+	rm -f $log.tmp
+	echo nxagentd not started \($ret\) >> $log
 	exit 5
 fi
+rm -f $log.tmp
