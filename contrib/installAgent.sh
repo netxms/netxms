@@ -18,8 +18,8 @@ configureAdd=
 
 # process args
 while [ "x"$1 != "x" ]; do
-	name=`echo -n $1|cut -d= -f1`
-	val=`echo -n $1|cut -d= -f2`
+	name=`echo $1|cut -d= -f1`
+	val=`echo $1|cut -d= -f2`
 	eval $name=$val
 	shift
 done
