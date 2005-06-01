@@ -41,8 +41,11 @@ case `uname -s` in
 		exit;
 		;;
 esac
+skip1=`let $skip+1`
 
-sed "s,__SKIP__,$skip,g" < stub.sh | sed "s,__COMMAND__,$2,g" > tmp
+sed "s,__SKIP__,$skip,g" < stub.sh |
+	sed "s,__SKIP1__,$skip1,g" |
+	sed "s,__COMMAND__,$2,g" > tmp
 hash1=`tail -n+5 tmp | $md5 | cut -b1-32 | tr A-Z a-z`
 hash2=`cat $1 | $md5 | cut -b1-32 | tr A-Z a-z`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3

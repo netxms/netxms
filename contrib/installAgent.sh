@@ -25,7 +25,11 @@ while [ "x"$1 != "x" ]; do
 done
 
 make=`which gmake`
-[ "x"$make = "x" ] && make=make
+if [ $? = 0 ]; then
+	echo $make | grep "no gmake in " >/dev/null && make=make
+else
+	make=make
+fi
 
 case `uname -s` in
 	Linux)
@@ -49,7 +53,7 @@ if [ "x$name" = "x" ]; then
 	exit 1
 fi
 
-tar zxf $name.tar.gz 2>/dev/null
+gzip -dc $name.tar.gz | tar xf - 2>/dev/null
 if [ $? != 0 ]; then
 	echo invalid package >> $log
 	exit 2
