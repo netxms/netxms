@@ -39,32 +39,32 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
 {
    SERVICE_STATUS status;
 
-   status.dwServiceType=SERVICE_WIN32_OWN_PROCESS;
-   status.dwCurrentState=SERVICE_RUNNING;
-   status.dwControlsAccepted=SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-   status.dwWin32ExitCode=0;
-   status.dwServiceSpecificExitCode=0;
-   status.dwCheckPoint=0;
-   status.dwWaitHint=0;
+   status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+   status.dwCurrentState = SERVICE_RUNNING;
+   status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+   status.dwWin32ExitCode = 0;
+   status.dwServiceSpecificExitCode = 0;
+   status.dwCheckPoint = 0;
+   status.dwWaitHint = 0;
 
    switch(ctrlCode)
    {
       case SERVICE_CONTROL_STOP:
       case SERVICE_CONTROL_SHUTDOWN:
-         status.dwCurrentState=SERVICE_STOP_PENDING;
-         status.dwWaitHint=4000;
-         SetServiceStatus(serviceHandle,&status);
+         status.dwCurrentState = SERVICE_STOP_PENDING;
+         status.dwWaitHint = 60000;
+         SetServiceStatus(serviceHandle, &status);
 
          Shutdown();
 
-         status.dwCurrentState=SERVICE_STOPPED;
-         status.dwWaitHint=0;
+         status.dwCurrentState = SERVICE_STOPPED;
+         status.dwWaitHint = 0;
          break;
       default:
          break;
    }
 
-   SetServiceStatus(serviceHandle,&status);
+   SetServiceStatus(serviceHandle, &status);
 }
 
 
@@ -76,7 +76,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
 {
    SERVICE_STATUS status;
 
-   serviceHandle=RegisterServiceCtrlHandler(CORE_SERVICE_NAME,ServiceCtrlHandler);
+   serviceHandle = RegisterServiceCtrlHandler(CORE_SERVICE_NAME, ServiceCtrlHandler);
 
    // Now we start service initialization
    status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;

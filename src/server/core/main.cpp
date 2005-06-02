@@ -449,7 +449,8 @@ void NXCORE_EXPORTABLE Shutdown(void)
 
    // Terminate process
 #ifdef _WIN32
-   ExitProcess(0);
+   if (g_dwFlags & AF_STANDALONE)
+      ExitProcess(0);
 #else
    exit(0);
 #endif
