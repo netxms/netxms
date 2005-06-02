@@ -1357,7 +1357,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,13,56,117,10
     CONTROL         "Send e-&mail",IDC_RADIO_EMAIL,"Button",
                     BS_AUTORADIOBUTTON,13,67,53,10
-    CONTROL         "Send &SMS message to mobile phone",IDC_RADIO4,"Button",
+    CONTROL         "Send &SMS message to mobile phone",IDC_RADIO_SMS,"Button",
                     BS_AUTORADIOBUTTON,13,78,132,10
     EDITTEXT        IDC_EDIT_RCPT,7,107,161,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_SUBJECT,7,137,161,14,ES_AUTOHSCROLL
@@ -1366,9 +1366,9 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,178,24,50,14
     LTEXT           "Name",IDC_STATIC,7,7,20,8
     GROUPBOX        "Type",IDC_STATIC,7,34,161,58
-    LTEXT           "Recipent address",IDC_STATIC,7,96,56,8
-    LTEXT           "E-mail subject",IDC_STATIC,7,126,44,8
-    LTEXT           "Command / message text",IDC_STATIC,7,156,81,8
+    LTEXT           "Recipent address",IDC_STATIC_RCPT,7,96,160,8
+    LTEXT           "E-mail subject",IDC_STATIC_SUBJ,7,126,160,8
+    LTEXT           "Command / message text",IDC_STATIC_DATA,7,156,159,8
 END
 
 IDD_SELECT_ACTION DIALOGEX 0, 0, 259, 146

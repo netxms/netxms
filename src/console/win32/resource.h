@@ -299,6 +299,7 @@
 #define IDC_RADIO_REXEC                 1148
 #define IDC_RADIO_EMAIL                 1149
 #define IDC_RADIO4                      1150
+#define IDC_RADIO_SMS                   1150
 #define IDC_LIST_ACTIONS                1152
 #define IDC_COMBO_CATEGORY              1154
 #define IDC_ICON_PARENT                 1155
@@ -396,6 +397,9 @@
 #define IDC_RADIO_REMOVE                1255
 #define IDC_EDIT_TIME                   1258
 #define IDC_STATIC_SEC                  1259
+#define IDC_STATIC_RCPT                 1261
+#define IDC_STATIC_SUBJ                 1262
+#define IDC_STATIC_DATA                 1263
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -518,8 +522,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        274
-#define _APS_NEXT_COMMAND_VALUE         32932
-#define _APS_NEXT_CONTROL_VALUE         1261
+#define _APS_NEXT_COMMAND_VALUE         32933
+#define _APS_NEXT_CONTROL_VALUE         1264
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

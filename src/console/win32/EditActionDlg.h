@@ -36,10 +36,15 @@ public:
 
 // Implementation
 protected:
+	void OnTypeChange(void);
 
 	// Generated message map functions
 	//{{AFX_MSG(CEditActionDlg)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnRadioEmail();
+	afx_msg void OnRadioExec();
+	afx_msg void OnRadioRexec();
+	afx_msg void OnRadioSms();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

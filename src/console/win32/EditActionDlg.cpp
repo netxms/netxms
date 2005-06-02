@@ -11,6 +11,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define MAX_CTRL_COUNT     6
+
 /////////////////////////////////////////////////////////////////////////////
 // CEditActionDlg dialog
 
@@ -47,9 +49,93 @@ void CEditActionDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CEditActionDlg, CDialog)
 	//{{AFX_MSG_MAP(CEditActionDlg)
-		// NOTE: the ClassWizard will add message map macros here
+	ON_BN_CLICKED(IDC_RADIO_EMAIL, OnRadioEmail)
+	ON_BN_CLICKED(IDC_RADIO_EXEC, OnRadioExec)
+	ON_BN_CLICKED(IDC_RADIO_REXEC, OnRadioRexec)
+	ON_BN_CLICKED(IDC_RADIO_SMS, OnRadioSms)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CEditActionDlg message handlers
+
+
+//
+// WM_INITDIALOG message handler
+//
+
+BOOL CEditActionDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	
+   OnTypeChange();	
+	return TRUE;
+}
+
+
+//
+// Change dialog behavior when action type changes
+//
+
+void CEditActionDlg::OnTypeChange()
+{
+   static int nCtrlList[MAX_CTRL_COUNT] = 
+      { IDC_STATIC_RCPT, IDC_EDIT_RCPT, IDC_STATIC_SUBJ,
+        IDC_EDIT_SUBJECT, IDC_STATIC_DATA, IDC_EDIT_DATA };
+   static BOOL bStateTable[][MAX_CTRL_COUNT] =
+   {
+      { FALSE, FALSE, FALSE, FALSE, TRUE, TRUE },
+      { TRUE, TRUE, FALSE, FALSE, TRUE, TRUE },
+      { TRUE, TRUE, TRUE, TRUE, TRUE, TRUE },
+      { TRUE, TRUE, FALSE, FALSE, TRUE, TRUE }
+   };
+   static TCHAR *pszRcptTitles[] = 
+   { 
+      _T("Recipient address"),
+      _T("Remote host"),
+      _T("Recipient address"),
+      _T("Recipient phone number")
+   };
+   static TCHAR *pszDataTitles[] = 
+   { 
+      _T("Command"),
+      _T("Action"),
+      _T("Message text"),
+      _T("Message text")
+   };
+   int i;
+
+   SetDlgItemText(IDC_STATIC_RCPT, pszRcptTitles[m_iType]);
+   SetDlgItemText(IDC_STATIC_DATA, pszDataTitles[m_iType]);
+   for(i = 0; i < MAX_CTRL_COUNT; i++)
+      EnableDlgItem(this, nCtrlList[i], bStateTable[m_iType][i]);
+}
+
+
+//
+// Radio button handlers
+//
+
+void CEditActionDlg::OnRadioEmail() 
+{
+   m_iType = 2;
+   OnTypeChange();
+}
+
+void CEditActionDlg::OnRadioExec() 
+{
+   m_iType = 0;
+   OnTypeChange();
+}
+
+void CEditActionDlg::OnRadioRexec() 
+{
+   m_iType = 1;
+   OnTypeChange();
+}
+
+void CEditActionDlg::OnRadioSms() 
+{
+   m_iType = 3;
+   OnTypeChange();
+}
