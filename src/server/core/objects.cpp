@@ -131,6 +131,24 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 
 
 //
+// DCI cache loading thread
+//
+
+static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
+{
+   DWORD i;
+
+   DbgPrintf(AF_DEBUG_DC, _T("Started caching of DCI values"));
+   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
+   for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+      ((Node *)g_pNodeIndexByAddr[i].pObject)->UpdateDCICache();
+   RWLockUnlock(g_rwlockNodeIndex);
+   DbgPrintf(AF_DEBUG_DC, _T("Finished caching of DCI values"));
+   return THREAD_OK;
+}
+
+
+//
 // Initialize objects infrastructure
 //
 
@@ -643,6 +661,9 @@ BOOL LoadObjects(void)
          }
       }
       DBFreeResult(hResult);
+
+      // Start cache loading thread
+      ThreadCreate(CacheLoadingThread, 0, NULL);
    }
 
    // Load interfaces

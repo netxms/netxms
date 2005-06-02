@@ -1895,3 +1895,16 @@ DWORD Node::GetInterfaceCount(Interface **ppInterface)
    Unlock();
    return dwCount;
 }
+
+
+//
+// Update cache for all DCI's
+//
+
+void Node::UpdateDCICache(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumItems; i++)
+      m_ppItems[i]->UpdateCacheSize();
+}

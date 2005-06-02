@@ -51,6 +51,7 @@ DCItem::DCItem()
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
+   m_bCacheLoaded = FALSE;
 }
 
 
@@ -82,6 +83,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
+   m_bCacheLoaded = FALSE;
 
    // Copy thresholds
    m_dwNumThresholds = pSrc->m_dwNumThresholds;
@@ -133,6 +135,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
+   m_bCacheLoaded = FALSE;
 
    // Load last raw value from database
    sprintf(szQuery, "SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%ld", m_dwId);
@@ -183,6 +186,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_dwCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
+   m_bCacheLoaded = FALSE;
 
    UpdateCacheSize();
 }
@@ -249,7 +253,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
       bResult = TRUE;
    }
 
-   UpdateCacheSize();
+   //UpdateCacheSize();
 
    return bResult;
 }
@@ -806,6 +810,7 @@ void DCItem::UpdateCacheSize(void)
       }
       m_dwCacheSize = dwRequiredSize;
    }
+   m_bCacheLoaded = TRUE;
 }
 
 

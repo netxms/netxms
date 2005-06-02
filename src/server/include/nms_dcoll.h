@@ -165,13 +165,13 @@ private:
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;  // Previous raw value (used for delta calculation)
    time_t m_tPrevValueTimeStamp;
+   BOOL m_bCacheLoaded;
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
 
    void Transform(ItemValue &value, long nElapsedTime);
    void CheckThresholds(ItemValue &value);
-   void UpdateCacheSize(void);
    void ClearCache(void);
 
 public:
@@ -190,6 +190,8 @@ public:
    BOOL LoadThresholdsFromDB(void);
    void DeleteFromDB(void);
 
+   void UpdateCacheSize(void);
+
    DWORD Id(void) { return m_dwId; }
    int DataSource(void) { return m_iSource; }
    int DataType(void) { return m_iDataType; }
@@ -205,7 +207,8 @@ public:
 
       Lock();
       bResult = ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) &&
-                 (m_tLastPoll + m_iPollingInterval <= currTime));
+                 (m_tLastPoll + m_iPollingInterval <= currTime) &&
+                 (m_bCacheLoaded));
       Unlock();
       return bResult;
    }

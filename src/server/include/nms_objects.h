@@ -515,6 +515,7 @@ public:
    BOOL ApplyTemplateItem(DCItem *pItem);
    void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
    void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
+   void UpdateDCICache(void);
 
    AgentConnection *CreateAgentConnection(void);
 

@@ -2,6 +2,7 @@
 * 0.2.1
 *
 
+- Server startup procedure improved
 - Fixed bug in Windows service shutdown code
 - Windows console:
 	- Action properties dialog improved
