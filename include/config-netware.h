@@ -7,4 +7,4 @@
 #define HAVE_STRTOULL 1
 
 /* Define to 1 if you have the `wcslen' function and sizeof(wchar_t) == 2. */
-#define HAVE_WCSLEN 1
+#define HAVE_USEFUL_WCSLEN 1

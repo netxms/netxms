@@ -232,9 +232,6 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr);
 
 #ifndef _WIN32
-#if !(HAVE_WCSLEN)
-   int LIBNETXMS_EXPORTABLE wcslen(WCHAR *pStr);
-#endif
    int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR *pWideCharStr, 
                                                 int cchWideChar, char *pByteStr, int cchByteChar, 
                                                 char *pDefaultChar, BOOL *pbUsedDefChar);

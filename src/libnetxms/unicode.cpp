@@ -30,9 +30,13 @@
 // Calculate length of wide character string
 //
 
-#if !(HAVE_WCSLEN)
+#if HAVE_USEFUL_WCSLEN
 
-int LIBNETXMS_EXPORTABLE wcslen(WCHAR *pStr)
+#define __wcslen wcslen
+
+#else
+
+static int __wcslen(WCHAR *pStr)
 {
    int iLen = 0;
    WCHAR *pCurr = pStr;
@@ -57,7 +61,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR
    char *pDest;
    int iPos, iSize;
 
-   iSize = (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar;
+   iSize = (cchWideChar == -1) ? __wcslen(pWideCharStr) : cchWideChar;
    if (iSize >= cchByteChar)
       iSize = cchByteChar - 1;
    for(pSrc = pWideCharStr, iPos = 0, pDest = pByteStr; iPos < iSize; iPos++, pSrc++, pDest++)
