@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.87 2005-06-01 13:20:14 victor Exp $
+# $Id: configure.ac,v 1.88 2005-06-05 14:14:36 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -146,7 +146,9 @@ fi ])
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	MODULES="$MODULES server"
+	MODULES="$MODULES libnxsnmp server"
+   TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
+   CONTRIB_MODULES="$CONTRIB_MODULES mibs"
 	BUILD_SERVER="yes"
 ])
 
@@ -183,9 +185,11 @@ AC_ARG_WITH(agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql"
-	MODULES="server agent libnxcl nxevent nxreport console www"
+	MODULES="libnxsnmp server agent libnxcl nxevent nxreport console www"
 	SUBAGENT_DIRS="linux freebsd sunos"
 	NXCONFIG="nxconfig"
+   TOP_LEVEL_MODULES="sql images"
+   CONTRIB_MODULES="mibs"
 )
 
 AC_ARG_WITH(nxsm,
@@ -199,14 +203,14 @@ AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(NXCONFIG)
+AC_SUBST(TOP_LEVEL_MODULES)
+AC_SUBST(CONTRIB_MODULES)
 
 # --------------------------------------------------------------------------
 # checks for libs.
 
 #AC_CHECK_LIB([socket], [socket])
 #AC_CHECK_LIB([nsl], [gethostbyname])
-
-AC_CHECK_LIB([gcc], [__muldi3])
 
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
@@ -275,9 +279,9 @@ AC_CHECK_DECLS([SIOCGIFADDR, SIOCGIFNETMASK, SIOCGIFHWADDR],,,[
 # library functions
 
 AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
+#AC_FUNC_REALLOC
 AC_FUNC_MEMCMP
-AC_FUNC_REALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
@@ -452,6 +456,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/portCheck/Makefile
+	src/agent/subagents/ping/Makefile
 	src/www/Makefile
 	src/www/iis/Makefile
 	src/www/nxsm/Makefile

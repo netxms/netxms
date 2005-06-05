@@ -597,7 +597,6 @@ src/install/windows/files.txt -text
 src/install/windows/netxms.iss -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/Makefile.nw -text
-src/libnetxms/c_lgcc2.cpp -text
 src/libnetxms/c_lgcc3.cpp -text
 src/libnetxms/config.cpp -text
 src/libnetxms/dir.c -text

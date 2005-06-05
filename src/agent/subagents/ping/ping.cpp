@@ -175,8 +175,8 @@ static void UnloadHandler(void)
 {
    m_bShutdown = TRUE;
    if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
-      SetEvent(m_hCondShutdown);
-   Sleep(500);
+      ConditionSet(m_hCondShutdown);
+   ThreadSleepMs(500);
 }
 
 
@@ -290,8 +290,8 @@ extern "C" BOOL PING_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TC
             StrStrip(pItem);
             if (!AddTargetFromConfig(pItem))
                NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
-                               _T("Unable to add ICMP ping target from configuration file. "
-                                  "Original configuration record: %s",), pItem);
+                               _T("Unable to add ICMP ping target from configuration file. ")
+                               _T("Original configuration record: %s"), pItem);
          }
          free(m_pszTargetList);
       }

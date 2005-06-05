@@ -9,4 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = reconf configure include netxms.dsw
-SUBDIRS = m4 contrib src doc sql images tools netware
+SUBDIRS = m4 contrib src doc tools netware
+SUBDIRS += @TOP_LEVEL_MODULES@
