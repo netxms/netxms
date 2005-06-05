@@ -128,6 +128,10 @@ SOURCE=..\..\..\..\include\nms_threads.h
 
 SOURCE=..\..\..\..\include\nms_util.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\ping.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
