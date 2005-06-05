@@ -28,6 +28,8 @@ src/server/tools/nxsnmpwalk/nxsnmpwalk
 src/server/tools/nxupload/nxupload
 /stamp-h1
 /status
+www/bugtrackUpload
+www/cgi-bin-dist
 www/data/bugtrack/CVS
 www/data/bugtrack/account_delete.php
 www/data/bugtrack/account_page.php
@@ -216,3 +218,6 @@ www/data/download/*.zip
 www/data/download/agent_packages
 www/data/download/preview
 www/data/webalizer
+www/icons
+www/proxy
+www/twiki

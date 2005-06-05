@@ -871,6 +871,8 @@ tools/nwmkimp.pl -text
 tools/patch_libtool.pl -text
 tools/sharIt -text
 tools/stub.sh -text
+www/.cvsignore -text
+www/.htpasswd.digest -text
 www/cgi-bin/matrix -text
 www/cgi-bin/matrixEdit -text
 www/cgi-bin/news.pl -text
@@ -910,7 +912,9 @@ www/data/documentation/macros.shtml -text
 www/data/documentation/upgrade.shtml -text
 www/data/documentation/upgrade.txt -text
 www/data/download/.cvsignore -text
+www/data/download/CHANGELOG.txt -text
 www/data/download/body.shtml -text
+www/data/download/changelog.shtml -text
 www/data/download/index.shtml -text
 www/data/footer.shtml -text
 www/data/header.shtml -text

@@ -1,0 +1,331 @@
+*
+* 0.2.0
+*
+
+- Windows installer improved
+- Fixed build issues on various platforms
+- Windows console:
+	- Items in Control Panel now sorted alphabetically
+	- Data collection editor now shows associated template for DCI
+	- Added automatic refresh to last values view
+	- Rule in policy editor can be enabled/disabled by double click
+	  on leftmost column (rule number)
+- Fixed incorrect interface detection on FreeBSD
+
+
+*
+* 0.1.20
+*
+
+- Implemented object unbinding from administrator console
+- Implemented template removing
+- Added "Change IP address" function for node objects
+- Added Oracle support (via ODBC driver)
+- Added server installation program (Windows only)
+- Added server configuration wizard (Windows only)
+- SNMP agent connectivity check improved
+- Added special handling for CheckPoint SNMP agent
+- Added "Don't cache this session" option to Windows console login dialog
+- Added new console command "show stats"
+- Windows CE Console improved:
+	- Added "Last DCI Values" view
+	- Added graph view
+	- Added collected DCI data view
+	- Added full screen mode support
+	- Implemented sorting in alarm browser
+	- Implemented alarm browser autoupdate
+	- Implemented object managed/unmanaged state switching
+	- Implementen node wakeup
+- Network discovery polling mechanism redesigned
+- Fixed bug in "show pollers" console command handler
+- Fixed occasional appearance of invalid objects at the root of object tree
+- Fixed issue #14 (Error handling multiline SMTP responces)
+
+
+*
+* 0.1.19
+*
+
+- Data collection templates fully functional
+- Added possibility to use server name instead of IP address in
+  agent configuration
+- Added diff() method for DCI thresholds
+- Added possibility to set server config file via environment variable
+  NETXMSD_CONFIG on UNIX or registry key HKLM\Software\NetXMS\Server\ConfigFile
+  on Windows
+- Fixed deadlock in status poller
+- Fixed incorrect socket handling in AgentConnection class
+- Fixed sorting bug in Windows console alarm browser
+- Fixed GUI unresponsiveness when acknowledging large number of alarms
+
+
+*
+* 0.1.18
+*
+
+- Added support for object database caching on client side
+- Polling performance increased
+- Fix: SYS_SERVICE_DOWN event was generated in place of SYS_SERVICE_UNKNOWN
+- nxadm completely rewritten, and now allows to execute any command
+  available on server console in standalone mode
+- Windows console: 
+	- Implemented desktop configuration save and restore
+	- Added possibility to change graph's time frame
+	- Added support for multiple DCIs on one graph
+	- Added graph presets
+	- Many small UI improvements
+
+
+*
+* 0.1.17
+*
+
+- Templates can be manually applied
+- Fixed issue #0000021 (agent crash on multiprocessor Solaris systems)
+- Fixed issue #0000022 (server can crash after unsuccessfull interface
+  configuration poll)
+- Fixed bug in filling DCI cache with values from database
+- Server now can save and restore last DCI poll time and raw value
+  across restarts
+
+
+*
+* 0.1.16
+*
+
+- Added System.CPU.Usage(*), System.CPU.Usage5(*) and System.CPU.Usage15(*)
+  parameters to WinPerf subagent
+- Fixed issue #0000015 (unable to modify network service port number)
+- Fixed server crash sometimes caused by DCI deletion
+- Fixed issue #0000017 (server crash after DCI copy)
+- Fixed memory leaks in DCI cache management
+- Added interface for processing SNMP traps by server modules
+- Added internal parameters AgentStatus and ChildStatus(*)
+- Fixed issue #0000018 (incorrect aliases handling by FreeBSD subagent)
+- Some GUI improvements
+- Parameters Net.Interface.AdminStatus(*) and Net.Interface.Link(*) added
+  to FreeBSD subagent
+
+
+*
+* 0.1.15
+*
+
+- DCI housekeeping implemented
+- Fixed server crash at forced poll time
+- Fixed critical bug in upgrade script starter under UNIX
+- Added support of HDD temperature monitoring under Windows and Linux
+- Added PhysicalDisk.Model, PhysicalDisk.SerialNumber and
+  PhysicalDisk.Firmware parameters under Windows
+- Added parameters System.CPU.Count, System.CPU.Usage*, System.KStat(*)
+  and System.Memory.Physical.* to Solaris subagent
+- Parameters System.Memory.Swap.* removed from Windows agent because they
+  are meaningless under Windows
+- Added parameter Disk.Used(*) to NetWare subagent
+
+
+*
+* 0.1.14
+*
+
+- Parameters System.Memory.* behaves correctly under Windows
+- Fixed bug in loading of NetworkService objects from database
+- Fixed bug in interface status detection via NetXMS agent
+- Added support for NAT'ed nodes (correct interface polling, etc.)
+- Backslash (\) character is no longer works as escape character
+  inside parameter arguments enclosed in quotes
+- Windows console: object tree works correctly for users without rights
+  on root objects
+- Windows console: implemented user deletion from access lists
+- Implemented action delete
+- Windows agent deployment packages now built with InnoSetup
+- "Last Values" view added to Windows console
+- Fixed issue #0000008
+- Added interface for SMS drivers
+- Optimized access to collected DCI data in database
+- Added support for System.CPU.LoadAvg to Solaris subagent
+- Added support for all Net.Interface.* parameters to Solaris subagent
+
+
+*
+* 0.1.13
+*
+
+- Fixed bug which cause server to hang when deleting unreacheable node
+- Added basic checking of node and interface objects to nxdbmgr
+
+
+*
+* 0.1.12
+*
+
+- Added new object class - NetworkService, for simplified network service
+  health checking
+- Server internal synchronization mechanisms improved to increase
+  stability and performance
+- Fixed deadlock sometimes caused by retrieving DCI collected data
+- Added parameters System.Hostname, System.Uname and System.Uptime to
+  Solaris subagent
+- Object status now recalculated after binding change
+- Implemented primary IP address selection for nodes
+- Added OSPF support detection
+- Fixed bug with StartupDelay parameter handling in core agent
+- Fixed communication problems on FreeBSD
+- Bug #0000003 fixed
+- Bug fixed: objects was not marked as modified when platform name or agent
+  version changes
+- Windows console: implemented cell edit by double click in policy editor
+- Implemented external command execution under UNIX
+
+
+*
+* 0.1.11
+*
+
+- Fixed incorrect behavior of Process.Count() parameter under Linux and
+  FreeBSD
+
+
+*
+* 0.1.10
+*
+
+- Support for centralized upgrade added to agents
+- Implemented agent packages upload to server from console
+- New parameters added to Solaris subagent
+- Alarm deletion implemented
+- Implemented all delta calculation methods for DCI
+- Implemented thresholds for average values
+- Fixed bug with policy editor header drawing
+
+
+*
+* 0.1.9
+*
+
+- Added support for server modules
+- Initial version of web interface created (for Microsoft IIS)
+- Microsoft SQL driver improved
+- Added file upload to agents (as preparation for centralized agent update)
+- Client library redesigned to support multiple connections within
+  one process
+- Windows console: added automatic refresh in graphs
+- Very basic Solaris subagent added
+
+
+*
+* 0.1.8
+*
+
+- Added support for System.CPU.Count and System.ProcessList parameters
+  under Windows
+- Created our own SNMP library (currently SNMP versions 1 and 2c are
+  supported). Server is no longer needs net-snmp library. 
+- Component locks moved to RAM from SQL database
+- Added support for SNMP traps
+- Removed access right "View server configuration" as unneeded
+- Windows console: Added sorting to event selection dialog
+- Windows console: Objects in object browser are now sorted with respect
+  to IP addresses when object name is an IP address
+- Windows console: Fixed bug with MDI window position restoration when
+  window is maximized
+- Windows console: Fixed bug with duplication of child window title in
+  parent's title when child is maximized
+- Windows console: Status icons now placed over object icons in
+  object browser
+- Windows console: Policy editor drawing code improved
+- Added StartupDelay parameter to agent's configuration file
+- Windows console: Added "Save policy" function to policy editor
+- Fixed deadlock in Queue::GetOrBlock() which sometimes cause communication
+  failures between client and server
+- Server now can detect that SNMP variable is not supported by agent and
+  change DCI status to "Not supported" accordingly
+- Added interface status polling via SNMP
+- Agent: Fixed bug in interface operational status detection under Windows
+- Added server version checking in client connection procedure. If versions
+  mismatch, client will not connect to server.
+- Windows console: when searching object in object browser, '*' characters
+  assumed at the beginning and the end of search string
+- Added parameter File.Count(*) to core agent
+- Added possibility to change status of many DCIs status at once
+
+
+*
+* 0.1.7
+*
+
+- Added more customized events for threshold violation
+- Added ability to send Wake-On-LAN packets to managed nodes
+- Fixed serious bug in DCI copy
+
+
+*
+* 0.1.6
+*
+
+- Added parameter System.ServiceState(*) to core agent (Windows only)
+- Implemented user-defined counters in WinPerf subagent
+- Added support for macros in e-mail subject
+- Added support for data collection item duplication within same node
+- Now possible to copy DCIs to many nodes at once
+- Fixed memory management bugs in Windows console DCI editor
+- Added "instance" field to DCI which can be used as information text in
+  user-defined data collection events and alarms
+- Client library do cleanup after NXCDisconnect()
+- User system rights now ORed with its group(s) system rights
+- Added database checking/upgrade utility (nxdbmgr)
+
+
+*
+* 0.1.5
+*
+
+- Object access mutexes changed to read/write locks in server to 
+  improve performance
+- Algorithm of placing nodes into subnets improved
+- System no longer needs network mask when creating new node manually
+- Detection of incorrect network masks on interfaces added
+- Windows console: fixed bug in object browser which cause console to crash
+- Added internal statistics collection for average data collector queue length
+  and average database writer queue length
+- All IP addresses now stored in database as text
+- Added external event sender (nxevent)
+- Fixed bug with user password change (new password was not saved to database)
+- Configuration script ("configure") improved
+
+
+*
+* 0.1.4
+*
+
+- Created performance subagent for Windows (winperf.nsm)
+- Added SNMP OID to node type translation
+- Added support for Nortel Networks Passport routing switches
+- "configure" script improved
+
+
+*
+* 0.1.3
+*
+
+- Added 64-bit string-to-binary conversion
+- Added MAC address property to interface objects
+- Added Template and TemplateGroup object classes
+- It's now possible to configure data collection items for templates
+
+
+*
+* 0.1.2
+*
+
+- Added possibility for copying DCIs from one node to other(s)
+- Added server's startup script for RedHat Linux
+- Numerous bug fixes
+
+
+*
+* 0.1.1
+*
+
+- First version number given to system: a lot of things works, and lot
+  of things have to be done.

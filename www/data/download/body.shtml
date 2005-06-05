@@ -1,17 +1,9 @@
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
+	<h2>Changelog</h2>
 	<p>
-	<h2>PGP Key</h2>
-	<pre>
-pub   1024D/508EE698 2005-05-30
-      Key fingerprint = B18B FBBC 6055 23AF 1AA0  7263 236B 4AEF 508E E698
-uid                  NetXMS Security Officer &lt;security-officer@netxms.org&gt;
-	</pre>
-	<a href="netxms.key.asc">download it here</a> or check keyring at <a href="http://keyserver.veridis.com:11371/export?id=2552216005544699544">www.keyserver.net</a>
-	<p>
-	Make sure that you have the right key, either by checking the fingerprint of that key with other sources or by checking that the key has been signed by a trustworthy other key.
-	</p>
+	<a href="changelog.shtml">Current Changelog</a>
 	</p>
 
 	<h2>Current Release version 0.2.0 &ndash; May 30, 2005</h2>
@@ -26,7 +18,14 @@ uid                  NetXMS Security Officer &lt;security-officer@netxms.org&gt;
 	<a href="netxms-0.2.0.exe.asc">(PGP sign)</a>
 	</p>
 	<p>
-	<a href="netxms-0.2.0-win32-binary.tar.gz">WIN32 Precompiled Binaries</a>
+	<a href="agent_packages/nxagent-0.2.0.exe">WIN32 Agent Installer</a>
+	<a href="agent_packages/nxagent-0.2.0-win32.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.0.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.0.exe.asc">(PGP sign)</a><br />
+	NB! We strongly recommended to use this installer if you are planning on using centralised upgrade feature.
+	</p>
+	<p>
+	<a href="netxms-0.2.0-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
 	<a href="netxms-0.2.0-win32-binary.tar.gz.md5">(MD5)</a>
 	<a href="netxms-0.2.0-win32-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
@@ -56,5 +55,16 @@ uid                  NetXMS Security Officer &lt;security-officer@netxms.org&gt;
 	<a href="netxms-0.1.20-mibs.tar.gz">Validated MIBs</a>
 	<a href="netxms-0.1.20-mibs.tar.gz.md5">(MD5)</a>
 	<a href="netxms-0.1.20-mibs.tar.gz.asc">(PGP sign)</a>
+	</p>
+
+	<h2>PGP Key</h2>
+	<pre>
+pub   1024D/508EE698 2005-05-30
+      Key fingerprint = B18B FBBC 6055 23AF 1AA0  7263 236B 4AEF 508E E698
+uid                  NetXMS Security Officer &lt;security-officer@netxms.org&gt;
+	</pre>
+	<a href="netxms.key.asc">download it here</a> or check keyring at <a href="http://keyserver.veridis.com:11371/export?id=2552216005544699544">www.keyserver.net</a>
+	<p>
+	Make sure that you have the right key, either by checking the fingerprint of that key with other sources or by checking that the key has been signed by a trustworthy other key.
 	</p>
 </div>
