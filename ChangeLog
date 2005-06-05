@@ -4,6 +4,7 @@
 
 - Server startup procedure improved
 - Fixed bug in Windows service shutdown code
+- Added ICMP ping subagent
 - Windows console:
 	- Action properties dialog improved
 

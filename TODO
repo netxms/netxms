@@ -9,7 +9,6 @@ GENERAL:
 - Finish Solaris subagent
 - AIX subagent
 - HP-UX subagent
-- Cross-platform pinger subagent
 - Write README for NetWare
 - Add check for read/write locks support to configure script
 - Add ability to clear collected DCI data
