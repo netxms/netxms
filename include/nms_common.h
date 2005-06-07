@@ -37,12 +37,6 @@
 #endif
 #endif
 
-#if HAVE__USR_INCLUDE_PTHREAD_H
-#include </usr/include/pthread.h>
-#else
-#include <pthread.h>
-#endif
-
 #include <unicode.h>
 #include <ctype.h>
 #include <stdio.h>

@@ -1377,6 +1377,9 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    DWORD i;
    time_t currTime;
 
+   if (m_iStatus == STATUS_UNMANAGED)
+      return;  // Do not collect data for unmanaged nodes
+
    currTime = time(NULL);
 
    Lock();

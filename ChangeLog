@@ -5,6 +5,7 @@
 - Server startup procedure improved
 - Fixed bug in Windows service shutdown code
 - Added ICMP ping subagent
+- Server will not collect data from unmanaged nodes
 - Windows console:
 	- Action properties dialog improved
 
