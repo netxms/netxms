@@ -18,6 +18,7 @@ GENERAL:
   event configuration to allow sending of new events
 - View and update agent's configuration from server
 - Planned outages (maintenance schedule)
+- Maintenance mode for nodes
 
 
 SERVER:

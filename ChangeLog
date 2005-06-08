@@ -7,6 +7,7 @@
 - Added ICMP ping subagent
 - Server will not collect data from unmanaged nodes
 - Added PostgreSQL support under Windows
+- NetWare platform subagent improved
 - Windows console:
 	- Action properties dialog improved
 

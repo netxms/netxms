@@ -11,7 +11,7 @@ DEF      = netware.def
 
 all: $(EXEC)
 
-$(OBJECTS): Makefile.nw
+$(OBJECTS): Makefile.nw nwagent.h
 
 .cpp.o:
 	$(CC) $(CFLAGS) -o $*.o $<

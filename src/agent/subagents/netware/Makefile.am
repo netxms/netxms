@@ -11,4 +11,5 @@
 EXTRA_DIST = \
     Makefile.nw \
     netware.def \
-    netware.cpp
+    netware.cpp \
+    nwagent.h
