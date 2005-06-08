@@ -1,7 +1,7 @@
-/* $Id: pgsql.cpp,v 1.3 2005-06-08 06:52:58 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.4 2005-06-08 08:25:33 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -119,6 +119,7 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 	return bRet;
 }
 
+
 //
 // Perform SELECT query
 //
@@ -131,7 +132,6 @@ static DB_RESULT UnsafeDrvSelect(DB_HANDLE hConn, char *szQuery)
 
 	if (pResult == NULL)
 	{
-		PQclear(pResult);
 		return NULL;
 	}
 
@@ -155,6 +155,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
 
    return pResult;
 }
+
 
 //
 // Get field value from result
@@ -184,6 +185,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 {
    PQclear((PGresult *)hResult);
 }
+
 
 //
 // Perform asynchronous SELECT query
@@ -319,4 +321,3 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 }
 
 #endif
-
