@@ -6,6 +6,7 @@
 - Fixed bug in Windows service shutdown code
 - Added ICMP ping subagent
 - Server will not collect data from unmanaged nodes
+- Added PostgreSQL support under Windows
 - Windows console:
 	- Action properties dialog improved
 

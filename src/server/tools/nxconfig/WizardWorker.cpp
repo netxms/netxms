@@ -198,6 +198,36 @@ static BOOL CreateDBMySQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 
 
 //
+// Create database in PostgreSQL
+//
+
+static BOOL CreateDBPostgreSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
+{
+   TCHAR szQuery[256];
+   BOOL bResult;
+
+   _stprintf(szQuery, _T("CREATE DATABASE %s"), pc->m_szDBName);
+   bResult = DBQueryEx(hConn, szQuery);
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("CREATE USER %s WITH PASSWORD '%s'"),
+                pc->m_szDBLogin, pc->m_szDBPassword);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   if (bResult)
+   {
+      _stprintf(szQuery, _T("GRANT ALL PRIVILEGES ON DATABASE %s TO %s"),
+                pc->m_szDBName, pc->m_szDBLogin);
+      bResult = DBQueryEx(hConn, szQuery);
+   }
+
+   return bResult;
+}
+
+
+//
 // Create database in Microsoft SQL
 //
 
@@ -265,6 +295,9 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
             break;
          case DB_ENGINE_MSSQL:
             bResult = CreateDBMSSQL(pc, hConn);
+            break;
+         case DB_ENGINE_PGSQL:
+            bResult = CreateDBPostgreSQL(pc, hConn);
             break;
          default:
             bResult = FALSE;

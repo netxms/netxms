@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.2 2004-06-12 22:55:47 alk Exp $ */
+/* $Id: pgsql.cpp,v 1.3 2005-06-08 06:52:58 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003 Victor Kirhenshtein
@@ -61,8 +61,10 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 {
 	PGconn *pConn;
    
-	// should be raplaced with PQconnectdb();
-   pConn = PQsetdbLogin(szHost, NULL, NULL, NULL, szDatabase, szLogin, szPassword);
+	// should be replaced with PQconnectdb();
+   pConn = PQsetdbLogin(szHost, NULL, NULL, NULL, 
+                        (szDatabase != NULL) ? szDatabase : "template1",
+                        szLogin, szPassword);
 
 	if (PQstatus(pConn) == CONNECTION_BAD)
       return 0;
@@ -85,7 +87,7 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 // Perform non-SELECT query
 //
 
-static BOOL EXPORT UnsafeDrvQuery(DB_HANDLE hConn, char *szQuery)
+static BOOL UnsafeDrvQuery(DB_HANDLE hConn, char *szQuery)
 {
 	PGresult	*pResult;
 
@@ -93,7 +95,6 @@ static BOOL EXPORT UnsafeDrvQuery(DB_HANDLE hConn, char *szQuery)
 
 	if (pResult == NULL)
 	{
-		PQclear(pResult);
 		return FALSE;
 	}
 
@@ -122,7 +123,7 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 // Perform SELECT query
 //
 
-static DB_RESULT EXPORT UnsafeDrvSelect(DB_HANDLE hConn, char *szQuery)
+static DB_RESULT UnsafeDrvSelect(DB_HANDLE hConn, char *szQuery)
 {
 	PGresult	*pResult;
 
@@ -281,7 +282,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int nColumn, c
 	}
 
    // Now get column data
-   nLen = min(strlen(szResult), nBufSize - 1);
+   nLen = min((int)strlen(szResult), nBufSize - 1);
    if (nLen > 0)
       memcpy(pBuffer, szResult, nLen);
    pBuffer[nLen] = 0;
