@@ -680,21 +680,21 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
 
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszName, -1, szBuffer, 256, NULL, NULL);
-   hs = gethostbyname(szBuffer);
+   dwAddr = inet_addr(szBuffer);
 #else
-   hs = gethostbyname(pszName);
+   dwAddr = inet_addr(pszName);
 #endif
-   if (hs != NULL)
-   {
-      memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
-   }
-   else
+   if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
    {
 #ifdef UNICODE
-      dwAddr = inet_addr(szBuffer);
+      hs = gethostbyname(szBuffer);
 #else
-      dwAddr = inet_addr(pszName);
+      hs = gethostbyname(pszName);
 #endif
+      if (hs != NULL)
+      {
+         memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
+      }
    }
 
    return dwAddr;

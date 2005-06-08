@@ -123,6 +123,7 @@ typedef int socklen_t;
 #include <errno.h>
 #include <dirent.h>
 #include <wchar.h>
+#include <netdb.h>
 
 typedef int BOOL;
 typedef long int LONG;

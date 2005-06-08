@@ -58,6 +58,8 @@ static LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
    if (netware_vol_info_from_name(&vi, szVolumeName) != 0)
       return SYSINFO_RC_UNSUPPORTED;
 
+printf("bs=%llu bc=%llu bf=%llu\n",vi.BlockSize,vi.BlockCount,vi.BlocksFree);
+
    switch(pArg[0])
    {
       case 'T':   // Total size
