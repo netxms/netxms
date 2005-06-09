@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.4 2005-01-05 12:21:24 victor Exp $ */
+/* $Id: net.cpp,v 1.5 2005-06-09 12:15:43 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -31,6 +31,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+
+#include "net.h"
+
 
 LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 {
@@ -248,10 +251,84 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
+LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
+{
+   char *eptr, szBuffer[256];
+   LONG nRet = SYSINFO_RC_SUCCESS;
+   struct ifreq ifr;
+   int fd;
+
+   if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   fd = socket(AF_INET, SOCK_DGRAM, 0);
+   if (fd == -1)
+   {
+      return 1;
+   }
+
+   // Check if we have interface name or index
+   ifr.ifr_ifindex = strtol(szBuffer, &eptr, 10);
+   if (*eptr == 0)
+   {
+      // Index passed as argument, convert to name
+      if (ioctl(fd, SIOCGIFNAME, &ifr) != 0)
+         nRet = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      // Name passed as argument
+      strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
+   }
+
+   // Get interface information
+   if (nRet == SYSINFO_RC_SUCCESS)
+   {
+      switch((int)pArg)
+      {
+         case IF_INFO_ADMIN_STATUS:
+            if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
+            {
+               ret_int(pValue, (ifr.ifr_flags & IFF_UP) ? 1 : 0);
+            }
+            else
+            {
+               nRet = SYSINFO_RC_ERROR;
+            }
+            break;
+         case IF_INFO_OPER_STATUS:
+            if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
+            {
+               // IFF_RUNNING should be set only if interface can
+               // transmit/receive data, but in fact looks like it
+               // always set. I have unverified information that
+               // newer kernels set this flag correctly.
+               ret_int(pValue, (ifr.ifr_flags & IFF_RUNNING) ? 1 : 0);
+            }
+            else
+            {
+               nRet = SYSINFO_RC_ERROR;
+            }
+            break;
+         default:
+            break;
+      }
+   }
+
+   // Cleanup
+   close(fd);
+
+   return nRet;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/05 12:21:24  victor
+- Added wrappers for new and delete from gcc2 libraries
+- sys/stat.h and fcntl.h included in nms_common.h
+
 Revision 1.3  2004/11/25 08:01:27  victor
 Processing of interface list will be stopped on error
 

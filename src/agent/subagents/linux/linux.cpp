@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.15 2005-02-24 17:38:49 victor Exp $ */
+/* $Id: linux.cpp,v 1.16 2005-06-09 12:15:43 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -50,6 +50,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
 			DCI_DT_UINT64,	"Used disk space on {instance}" },
 
+   { "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
+			DCI_DT_INT,		"Administrative status of interface {instance}" },
+   { "Net.Interface.Link(*)",        H_NetIfInfoFromIOCTL, (char *)IF_INFO_OPER_STATUS,
+			DCI_DT_INT,		"Operational status of interface {instance}" },
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
@@ -142,6 +146,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2005/02/24 17:38:49  victor
+Added HDD monitring via SMART on Linux
+
 Revision 1.14  2005/02/21 20:16:05  victor
 Fixes in parameter data types and descriptions
 
