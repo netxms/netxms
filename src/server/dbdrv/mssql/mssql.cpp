@@ -32,11 +32,14 @@ static int ErrorHandler(PDBPROCESS hProcess, int severity, int dberr,
 {
    MSDB_CONN *pConn;
 
-   pConn = (MSDB_CONN *)dbgetuserdata(hProcess);
-   if (pConn != NULL)
+   if (hProcess != NULL)
    {
-      if (dbdead(hProcess))
-         pConn->bProcessDead = TRUE;
+      pConn = (MSDB_CONN *)dbgetuserdata(hProcess);
+      if (pConn != NULL)
+      {
+         if (dbdead(hProcess))
+            pConn->bProcessDead = TRUE;
+      }
    }
    return INT_CANCEL;
 }
