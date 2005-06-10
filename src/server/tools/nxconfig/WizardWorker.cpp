@@ -308,6 +308,10 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
 
       DBDisconnect(hConn);
    }
+   else
+   {
+      _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));
+   }
 
    PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
    return bResult;

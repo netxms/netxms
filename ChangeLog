@@ -8,6 +8,7 @@
 - Server will not collect data from unmanaged nodes
 - Added PostgreSQL support under Windows
 - NetWare platform subagent improved
+- Fixed crash in Microsoft SQL driver caused by unsuccessful connection
 - Windows console:
 	- Action properties dialog improved
 
