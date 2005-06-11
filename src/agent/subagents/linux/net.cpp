@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.5 2005-06-09 12:15:43 victor Exp $ */
+/* $Id: net.cpp,v 1.6 2005-06-11 16:28:24 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -310,7 +310,11 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
                nRet = SYSINFO_RC_ERROR;
             }
             break;
+         case IF_INFO_DESCRIPTION:
+            ret_string(pValue, ifr.ifr_name);
+            break;
          default:
+            nRet = SYSINFO_RC_UNSUPPORTED;
             break;
       }
    }
@@ -321,10 +325,127 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
    return nRet;
 }
 
+static LONG ValueFromLine(char *pszLine, int nPos, char *pValue)
+{
+   int i;
+   char *eptr, *pszWord, szBuffer[256];
+   DWORD dwValue;
+   LONG nRet = SYSINFO_RC_ERROR;
+
+   for(i = 0, pszWord = pszLine; i <= nPos; i++)
+      pszWord = ExtractWord(pszWord, szBuffer);
+   dwValue = strtoul(szBuffer, &eptr, 0);
+   if (*eptr == 0)
+   {
+      ret_uint(pValue, dwValue);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   return nRet;
+}
+
+LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
+{
+   char *ptr, szBuffer[256], szName[IFNAMSIZ];
+   LONG nIndex, nRet = SYSINFO_RC_SUCCESS;
+   FILE *fp;
+
+   if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Check if we have interface name or index
+   nIndex = strtol(szBuffer, &ptr, 10);
+   if (*ptr == 0)
+   {
+      // Index passed as argument, convert to name
+      if (if_indextoname(nIndex, szName) == NULL)
+         nRet = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      // Name passed as argument
+      strncpy(szName, szBuffer, IFNAMSIZ);
+   }
+
+   // Get interface information
+   if (nRet == SYSINFO_RC_SUCCESS)
+   {
+      // If name is an alias (i.e. eth0:1), remove alias number
+      ptr = strchr(szName, ':');
+      if (ptr != NULL)
+         *ptr = 0;
+
+      fp = fopen("/proc/net/dev", "r");
+      if (fp != NULL)
+      {
+         while(1)
+         {
+            fgets(szBuffer, 256, fp);
+            if (feof(fp))
+            {
+               nRet = SYSINFO_RC_ERROR;   // Interface record not found
+               break;
+            }
+
+            // We expect line in form interface:stats
+            StrStrip(szBuffer);
+            ptr = strchr(szBuffer, ':');
+            if (ptr == NULL)
+               continue;
+            *ptr = 0;
+
+            if (!stricmp(szBuffer, szName))
+            {
+               ptr++;
+               break;
+            }
+         }
+         fclose(fp);
+      }
+      else
+      {
+         nRet = SYSINFO_RC_ERROR;
+      }
+
+      if (nRet == SYSINFO_RC_SUCCESS)
+      {
+         StrStrip(ptr);
+         switch((int)pArg)
+         {
+            case IF_INFO_BYTES_IN:
+               nRet = ValueFromLine(ptr, 0, pValue);
+               break;
+            case IF_INFO_PACKETS_IN:
+               nRet = ValueFromLine(ptr, 1, pValue);
+               break;
+            case IF_INFO_IN_ERRORS:
+               nRet = ValueFromLine(ptr, 2, pValue);
+               break;
+            case IF_INFO_BYTES_OUT:
+               nRet = ValueFromLine(ptr, 8, pValue);
+               break;
+            case IF_INFO_PACKETS_OUT:
+               nRet = ValueFromLine(ptr, 9, pValue);
+               break;
+            case IF_INFO_OUT_ERRORS:
+               nRet = ValueFromLine(ptr, 10, pValue);
+               break;
+            default:
+               nRet = SYSINFO_RC_UNSUPPORTED;
+               break;
+         }
+      }
+   }
+
+   return nRet;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/06/09 12:15:43  victor
+Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
+
 Revision 1.4  2005/01/05 12:21:24  victor
 - Added wrappers for new and delete from gcc2 libraries
 - sys/stat.h and fcntl.h included in nms_common.h

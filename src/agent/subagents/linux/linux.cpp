@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.16 2005-06-09 12:15:43 victor Exp $ */
+/* $Id: linux.cpp,v 1.17 2005-06-11 16:28:24 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -52,8 +52,22 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
 			DCI_DT_INT,		"Administrative status of interface {instance}" },
+   { "Net.Interface.BytesIn(*)",     H_NetIfInfoFromProc, (char *)IF_INFO_BYTES_IN,
+			DCI_DT_UINT,	"Number of input bytes on interface {instance}" },
+   { "Net.Interface.BytesOut(*)",    H_NetIfInfoFromProc, (char *)IF_INFO_BYTES_OUT,
+			DCI_DT_UINT,	"Number of output bytes on interface {instance}" },
+   { "Net.Interface.Description(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_DESCRIPTION,
+			DCI_DT_STRING, "Description of interface {instance}" },
+   { "Net.Interface.InErrors(*)",    H_NetIfInfoFromProc, (char *)IF_INFO_IN_ERRORS,
+			DCI_DT_UINT,	"Number of input errors on interface {instance}" },
    { "Net.Interface.Link(*)",        H_NetIfInfoFromIOCTL, (char *)IF_INFO_OPER_STATUS,
 			DCI_DT_INT,		"Operational status of interface {instance}" },
+   { "Net.Interface.OutErrors(*)",   H_NetIfInfoFromProc, (char *)IF_INFO_OUT_ERRORS,
+			DCI_DT_UINT,	"Number of output errors on interface {instance}" },
+   { "Net.Interface.PacketsIn(*)",   H_NetIfInfoFromProc, (char *)IF_INFO_PACKETS_IN,
+			DCI_DT_UINT,	"Number of input packets on interface {instance}" },
+   { "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromProc, (char *)IF_INFO_PACKETS_OUT,
+			DCI_DT_UINT,	"Number of output packets on interface {instance}" },
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
@@ -146,6 +160,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2005/06/09 12:15:43  victor
+Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
+
 Revision 1.15  2005/02/24 17:38:49  victor
 Added HDD monitring via SMART on Linux
 
