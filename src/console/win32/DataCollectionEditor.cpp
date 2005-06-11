@@ -15,6 +15,60 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
+//
+// Compare two list view items
+//
+
+static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   int iResult = 0;
+   NXC_DCI *pItem1, *pItem2;
+   NXC_OBJECT *pObject1, *pObject2;
+
+   pItem1 = ((CDataCollectionEditor *)lParamSort)->GetItem(lParam1);
+   pItem2 = ((CDataCollectionEditor *)lParamSort)->GetItem(lParam2);
+   if ((pItem1 == NULL) || (pItem2 == NULL))
+      return 0;   // Shouldn't happen
+
+   switch(((CDataCollectionEditor *)lParamSort)->SortMode())
+   {
+      case 0:  // ID
+         iResult = COMPARE_NUMBERS(lParam1, lParam2);
+         break;
+      case 1:  // Source
+         iResult = stricmp(g_pszItemOrigin[pItem1->iSource], g_pszItemOrigin[pItem2->iSource]);
+         break;
+      case 2:  // Description
+         iResult = stricmp(pItem1->szDescription, pItem2->szDescription);
+         break;
+      case 3:  // Parameter
+         iResult = stricmp(pItem1->szName, pItem2->szName);
+         break;
+      case 4:  // Data type
+         iResult = stricmp(g_pszItemDataType[pItem1->iDataType], g_pszItemDataType[pItem2->iDataType]);
+         break;
+      case 5:  // Polling interval
+         iResult = COMPARE_NUMBERS(pItem1->iPollingInterval, pItem2->iPollingInterval);
+         break;
+      case 6:  // Retention time
+         iResult = COMPARE_NUMBERS(pItem1->iRetentionTime, pItem2->iRetentionTime);
+         break;
+      case 7:  // Status
+         iResult = COMPARE_NUMBERS(pItem1->iStatus, pItem2->iStatus);
+         break;
+      case 8:  // Template
+         pObject1 = NXCFindObjectById(g_hSession, pItem1->dwTemplateId);
+         pObject2 = NXCFindObjectById(g_hSession, pItem2->dwTemplateId);
+         iResult = stricmp((pObject1 != NULL) ? pObject1->szName : _T(""),
+                           (pObject2 != NULL) ? pObject2->szName : _T(""));
+         break;
+      default:
+         break;
+   }
+   return (((CDataCollectionEditor *)lParamSort)->SortDir() == 1) ? iResult : -iResult;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CDataCollectionEditor
 
@@ -81,7 +135,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_ACTIVATE, OnUpdateItemActivate)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_DISABLE, OnUpdateItemDisable)
 	//}}AFX_MSG_MAP
-	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
+	ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDblClk)
+	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -96,6 +151,7 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
    RECT rect;
    DWORD i;
+   LVCOLUMN lvCol;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -109,19 +165,21 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_ACTIVE));
    m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
    m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));
+   m_iSortImageBase = m_imageList.GetImageCount();
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
 
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHAREIMAGELISTS,
+                        rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 55);
    m_wndListCtrl.InsertColumn(1, "Source", LVCFMT_LEFT, 80);
    m_wndListCtrl.InsertColumn(2, "Description", LVCFMT_LEFT, 150);
    m_wndListCtrl.InsertColumn(3, "Parameter", LVCFMT_LEFT, 150);
@@ -134,7 +192,14 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Fill list view with data
    for(i = 0; i < m_pItemList->dwNumItems; i++)
       AddListItem(&m_pItemList->pItems[i]);
-	
+   m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+
+   // Mark sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_DC_EDITOR, this, m_pItemList->dwNodeId);
 
 	return 0;
@@ -278,6 +343,7 @@ void CDataCollectionEditor::OnItemNew()
                memcpy(&m_pItemList->pItems[dwIndex], &item, sizeof(NXC_DCI));
                iItem = AddListItem(&item);
                SelectListItem(iItem);
+               m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
             }
             else
             {
@@ -833,16 +899,36 @@ void CDataCollectionEditor::ChangeItemsStatus(int iStatus)
 
 
 //
-// Sort item list
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CDataCollectionEditor::SortList()
+void CDataCollectionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
 {
-/*   LVCOLUMN lvc;
+   LVCOLUMN lvCol;
 
-   m_wndListCtrl.SortItems(TrapCompareProc, (LPARAM)this);
-   lvc.mask = LVCF_IMAGE | LVCF_FMT;
-   lvc.fmt = LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_BITMAP_ON_RIGHT;
-   lvc.iImage = (m_iSortDir == 1) ? m_iSortImageBase : m_iSortImageBase + 1;
-   m_wndListCtrl.SetColumn(m_iSortMode, &lvc);*/
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = 1 - m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
 }

@@ -11,6 +11,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
 //
 // Compare two list view items
 //
@@ -30,8 +31,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    switch(((CAlarmBrowser *)lParamSort)->SortMode())
    {
       case 0:  // Severity
-         iResult = (pAlarm1->wSeverity < pAlarm2->wSeverity) ? -1 :
-                     ((pAlarm1->wSeverity > pAlarm2->wSeverity) ? 1 : 0);
+         iResult = COMPARE_NUMBERS(pAlarm1->wSeverity, pAlarm2->wSeverity);
          break;
       case 1:  // Source
          pObject1 = NXCFindObjectById(g_hSession, pAlarm1->dwSourceObject);
@@ -53,12 +53,10 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
          iResult = _tcsicmp(pAlarm1->szMessage, pAlarm2->szMessage);
          break;
       case 3:  // Timestamp
-         iResult = (pAlarm1->dwTimeStamp < pAlarm2->dwTimeStamp) ? -1 :
-                     ((pAlarm1->dwTimeStamp > pAlarm2->dwTimeStamp) ? 1 : 0);
+         iResult = COMPARE_NUMBERS(pAlarm1->dwTimeStamp, pAlarm2->dwTimeStamp);
          break;
       case 4:  // Ack
-         iResult = (pAlarm1->wIsAck < pAlarm2->wIsAck) ? -1 :
-                     ((pAlarm1->wIsAck > pAlarm2->wIsAck) ? 1 : 0);
+         iResult = COMPARE_NUMBERS(pAlarm1->wIsAck, pAlarm2->wIsAck);
          break;
       default:
          iResult = 0;

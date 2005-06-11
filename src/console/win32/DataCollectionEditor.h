@@ -33,8 +33,8 @@ public:
 
 // Implementation
 protected:
+	int m_iSortImageBase;
 	BOOL m_bIsTemplate;
-	void SortList(void);
 	void ChangeItemsStatus(int iStatus);
 	void SelectListItem(int iItem);
 	void UpdateListItem(int iItem, NXC_DCI *pItem);
@@ -73,11 +73,23 @@ protected:
 	afx_msg void OnUpdateItemDisable(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iSortDir;
 	int m_iSortMode;
 	CImageList m_imageList;
+
+public:
+   int SortDir(void) { return m_iSortDir; }
+   int SortMode(void) { return m_iSortMode; }
+   NXC_DCI *GetItem(DWORD dwItemId)
+   {
+      DWORD dwIndex;
+
+      dwIndex = NXCItemIndex(m_pItemList, dwItemId);
+      return (dwIndex != INVALID_INDEX) ? &m_pItemList->pItems[dwIndex] : NULL;
+   }
 };
 
 /////////////////////////////////////////////////////////////////////////////
