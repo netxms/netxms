@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.7 2005-05-30 16:31:58 alk Exp $ */
+/* $Id: net.cpp,v 1.8 2005-06-12 17:58:36 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -131,7 +131,7 @@ LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
 					}
 					else
 					{
-						ret_int(pValue, 0);
+						ret_int(pValue, 2);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 				}
@@ -417,6 +417,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/05/30 16:31:58  alk
+fix: InterfaceList now return interfaces w/o IP address
+
 Revision 1.6  2005/05/23 20:30:28  alk
 ! memory allocation for address list now in sizeof * count, fixes "mixing" lists of aliases
 

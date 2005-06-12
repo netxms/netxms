@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.6 2005-06-11 16:28:24 victor Exp $ */
+/* $Id: net.cpp,v 1.7 2005-06-12 17:57:24 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -289,7 +289,7 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
          case IF_INFO_ADMIN_STATUS:
             if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
             {
-               ret_int(pValue, (ifr.ifr_flags & IFF_UP) ? 1 : 0);
+               ret_int(pValue, (ifr.ifr_flags & IFF_UP) ? 1 : 2);
             }
             else
             {
@@ -443,6 +443,9 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/06/11 16:28:24  victor
+Implemented all Net.Interface.* parameters except Net.Interface.Speed
+
 Revision 1.5  2005/06/09 12:15:43  victor
 Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
 

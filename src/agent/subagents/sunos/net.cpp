@@ -260,7 +260,7 @@ LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue)
 			strcpy(rq.lifr_name, szIfName);
 			if (ioctl(nFd, SIOCGLIFFLAGS, &rq) == 0)
 			{
-				ret_int(pValue, (rq.lifr_flags & IFF_UP) ? 1 : 0);
+				ret_int(pValue, (rq.lifr_flags & IFF_UP) ? 1 : 2);
 				nRet = SYSINFO_RC_SUCCESS;
 			}
 			close(nFd);				  

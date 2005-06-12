@@ -281,7 +281,7 @@ LONG H_NetInterfaceStats(char *cmd, char *arg, char *value)
                   ret_uint(value, info.dwSpeed);
                   break;
                case NET_IF_ADMIN_STATUS:
-                  ret_uint(value, info.dwAdminStatus ? 1 : 0);
+                  ret_uint(value, info.dwAdminStatus ? 1 : 2);
                   break;
                default:
                   iResult = SYSINFO_RC_UNSUPPORTED;
