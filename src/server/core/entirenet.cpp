@@ -56,8 +56,8 @@ BOOL Network::SaveToDB(void)
    SaveACLToDB();
 
    // Unlock object and clear modification flag
-   Unlock();
    m_bIsModified = FALSE;
+   Unlock();
    return TRUE;
 }
 

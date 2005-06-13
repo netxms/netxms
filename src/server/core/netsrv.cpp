@@ -122,8 +122,8 @@ BOOL NetworkService::SaveToDB(void)
    SaveACLToDB();
 
    // Unlock object and clear modification flag
-   Unlock();
    m_bIsModified = FALSE;
+   Unlock();
    return TRUE;
 }
 
@@ -343,7 +343,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
    if (m_pHostNode == NULL)
    {
       m_iStatus = STATUS_UNKNOWN;
-      return;     // Status without host node, which is VERY strange
+      return;     // Service without host node, which is VERY strange
    }
 
    SendPollerMsg(dwRqId, "   Starting status poll on network service %s\r\n"
@@ -383,6 +383,9 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
          SendPollerMsg(dwRqId, "      Unable to check service status due to agent or communication error\r\n");
          m_iStatus = STATUS_UNKNOWN;
       }
+
+      if (pNode != pPollerNode)
+         pNode->DecRefCount();
    }
    else
    {

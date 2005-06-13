@@ -642,9 +642,9 @@ void Node::DeleteInterface(Interface *pInterface)
       {
          // Last interface in subnet, should unlink node
          Subnet *pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
-         DeleteParent(pSubnet);
          if (pSubnet != NULL)
          {
+            DeleteParent(pSubnet);
             pSubnet->DeleteChild(this);
             if ((pSubnet->IsEmpty()) && (g_dwFlags & AF_DELETE_EMPTY_SUBNETS))
             {
@@ -964,10 +964,13 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                if (pInterface->IfType() != IFTYPE_NETXMS_NAT_ADAPTER)
                {
                   for(j = 0; j < pIfList->iNumEntries; j++)
+                  {
                      if ((pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex()) &&
                          (pIfList->pInterfaces[j].dwIpAddr == pInterface->IpAddr()) &&
                          (pIfList->pInterfaces[j].dwIpNetMask == pInterface->IpNetMask()))
                         break;
+                  }
+
                   if (j == pIfList->iNumEntries)
                   {
                      // No such interface in current configuration, delete it
@@ -1005,6 +1008,10 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                                   pInterface->Id(), pInterface->IfIndex(),
                                   pInterface->Name(), szOldMac, szNewMac);
                         pInterface->SetMacAddr(pIfList->pInterfaces[j].bMacAddr);
+                     }
+                     if (strcmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
+                     {
+                        pInterface->SetName(pIfList->pInterfaces[j].szName);
                      }
                      break;
                   }
@@ -1388,7 +1395,7 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
       if (m_ppItems[i]->ReadyForPolling(currTime))
       {
          m_ppItems[i]->SetBusyFlag(TRUE);
-         m_dwRefCount++;   // Increment reference count for each queued DCI
+         IncRefCount();   // Increment reference count for each queued DCI
          pPollerQueue->Put(m_ppItems[i]);
       }
    }
@@ -1554,6 +1561,7 @@ int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
             iStatus = STATUS_TESTING;
             break;
          case 2:
+         case 0:     // Agents before 0.2.1 may return 0 instead of 2
             iStatus = STATUS_DISABLED;
             break;
          case 1:     // Interface administratively up, check link state
