@@ -35,7 +35,7 @@
 //
 
 static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
-static MUTEX m_hSessionListAccess;
+static RWLOCK m_rwlockSessionListAccess;
 
 
 //
@@ -46,17 +46,17 @@ static BOOL RegisterSession(ClientSession *pSession)
 {
    DWORD i;
 
-   MutexLock(m_hSessionListAccess, INFINITE);
+   RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
          pSession->SetIndex(i);
-         MutexUnlock(m_hSessionListAccess);
+         RWLockUnlock(m_rwlockSessionListAccess);
          return TRUE;
       }
 
-   MutexUnlock(m_hSessionListAccess);
+   RWLockUnlock(m_rwlockSessionListAccess);
    WriteLog(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;
 }
@@ -68,9 +68,9 @@ static BOOL RegisterSession(ClientSession *pSession)
 
 void UnregisterSession(DWORD dwIndex)
 {
-   MutexLock(m_hSessionListAccess, INFINITE);
+   RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
    m_pSessionList[dwIndex] = NULL;
-   MutexUnlock(m_hSessionListAccess);
+   RWLockUnlock(m_rwlockSessionListAccess);
 }
 
 
@@ -96,12 +96,12 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
          break;
 
       msg.SetVariable(VID_TIMESTAMP, (DWORD)time(NULL));
-      MutexLock(m_hSessionListAccess, INFINITE);
+      RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (m_pSessionList[i] != NULL)
             if (m_pSessionList[i]->IsAuthenticated())
                m_pSessionList[i]->SendMessage(&msg);
-      MutexUnlock(m_hSessionListAccess);
+      RWLockUnlock(m_rwlockSessionListAccess);
    }
 
    DbgPrintf(AF_DEBUG_MISC, _T("Client keep-alive thread terminated"));
@@ -134,8 +134,8 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
 
 	SetSocketReuseFlag(sock);
 
-   // Create session list access mutex
-   m_hSessionListAccess = MutexCreate();
+   // Create session list access rwlock
+   m_rwlockSessionListAccess = RWLockCreate();
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
@@ -213,6 +213,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
    static TCHAR *pszStateName[] = { "init", "idle", "processing" };
 
    ConsolePrintf(pCtx, "ID  STATE                    USER\n");
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
       {
@@ -223,6 +224,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
                        m_pSessionList[i]->GetUserName());
          iCount++;
       }
+   RWLockUnlock(m_rwlockSessionListAccess);
    ConsolePrintf(pCtx, "\n%d active session%s\n\n", iCount, iCount == 1 ? "" : "s");
 }
 
@@ -235,11 +237,11 @@ void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pA
 {
    int i;
 
-   MutexLock(m_hSessionListAccess, INFINITE);
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
          pHandler(m_pSessionList[i], pArg);
-   MutexUnlock(m_hSessionListAccess);
+   RWLockUnlock(m_rwlockSessionListAccess);
 }
 
 
@@ -251,9 +253,9 @@ void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP
 {
    int i;
 
-   MutexLock(m_hSessionListAccess, INFINITE);
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
          m_pSessionList[i]->OnUserDBUpdate(iCode, dwUserId, pUser, pGroup);
-   MutexUnlock(m_hSessionListAccess);
+   RWLockUnlock(m_rwlockSessionListAccess);
 }
