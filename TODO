@@ -38,7 +38,6 @@ SERVER:
 - New attribute: disable status/configuration poll
 - Override Net.IP.Forward
 - NxDbMgr -- backup before db recover
-- Replace mutex with r/w lock for session list access
 - OSPF discovery
 
 
