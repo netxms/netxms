@@ -232,7 +232,7 @@ BOOL Node::SaveToDB(void)
    BOOL bResult;
 
    // Lock object's access
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
@@ -295,7 +295,7 @@ BOOL Node::SaveToDB(void)
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
 
    return bResult;
 }
@@ -513,7 +513,7 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
    DWORD i;
    Interface *pInterface;
 
-   Lock();
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
@@ -523,12 +523,12 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
             if ((pInterface->IpAddr() & pInterface->IpNetMask()) ==
                 (dwHostAddr & pInterface->IpNetMask()))
             {
-               Unlock();
+               UnlockChildList();
                return pInterface;
             }
          }
       }
-   Unlock();
+   UnlockChildList();
    return NULL;
 }
 
@@ -749,11 +749,10 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       delete pAgentConn;
    }
 
-   SetPollerInfo(nPoller, "waiting for node lock");
-   Lock();
    SetPollerInfo(nPoller, "prepare polling list");
 
    // Find service poller node object
+   LockData();
    if (m_dwPollerNode != 0)
    {
       pPollerNode = FindObjectById(m_dwPollerNode);
@@ -763,6 +762,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             pPollerNode = NULL;
       }
    }
+   UnlockData();
 
    // If nothing found, use management server
    if (pPollerNode == NULL)
@@ -778,13 +778,14 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
    // Create polling list
    ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_dwChildCount);
+   LockChildList(FALSE);
    for(i = 0, dwPollListSize = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
       {
          m_pChildList[i]->IncRefCount();
          ppPollList[dwPollListSize++] = m_pChildList[i];
       }
-   Unlock();
+   UnlockChildList();
 
    // Poll interfaces and services
    SetPollerInfo(nPoller, "child poll");
@@ -906,8 +907,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             m_dwFlags |= NF_IS_NATIVE_AGENT;
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
       
-            Lock();
-      
             if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
             {
                if (strcmp(m_szAgentVersion, szBuffer))
@@ -931,7 +930,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             safe_free(m_pParamList);
             pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
 
-            Unlock();
             pAgentConn->Disconnect();
             SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
          }
@@ -1043,14 +1041,14 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             m_dwFlags |= NF_BEHIND_NAT;
 
             // Check if we already have NAT interface
-            Lock();
+            LockChildList(FALSE);
             for(i = 0; i < m_dwChildCount; i++)
                if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
                {
                   if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
                      break;
                }
-            Unlock();
+            UnlockChildList();
 
             if (i == m_dwChildCount)
             {
@@ -1071,7 +1069,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                Interface *pIfNat;
 
                // Remove NAT interface
-               Lock();
+               LockChildList(FALSE);
                for(i = 0, pIfNat = NULL; i < m_dwChildCount; i++)
                   if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
                   {
@@ -1081,7 +1079,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                         break;
                      }
                   }
-               Unlock();
+               UnlockChildList();
 
                if (pIfNat != NULL)
                   DeleteInterface(pIfNat);
@@ -1130,9 +1128,9 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
    if (bHasChanges)
    {
-      Lock();
+      LockData();
       Modify();
-      Unlock();
+      UnlockData();
    }
 }
 
@@ -1269,7 +1267,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       }
 
       // Find child object with requested ID or name
-      Lock();
+      LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
       {
          if (((dwId == 0) && (!stricmp(m_pChildList[i]->Name(), szArg))) ||
@@ -1279,7 +1277,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
             break;
          }
       }
-      Unlock();
+      UnlockChildList();
 
       if (pObject != NULL)
       {
@@ -1389,7 +1387,7 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
 
    currTime = time(NULL);
 
-   Lock();
+   LockData();
    for(i = 0; i < m_dwNumItems; i++)
    {
       if (m_ppItems[i]->ReadyForPolling(currTime))
@@ -1399,7 +1397,7 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
          pPollerQueue->Put(m_ppItems[i]);
       }
    }
-   Unlock();
+   UnlockData();
 }
 
 
@@ -1433,7 +1431,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      Lock();
+      LockData();
 
    // Change primary IP address
    if (pRequest->IsVariableExist(VID_IP_ADDRESS))
@@ -1443,13 +1441,15 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
 
       // Check if received IP address is one of node's interface addresses
+      LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
          if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
              (m_pChildList[i]->IpAddr() == dwIpAddr))
             break;
+      UnlockChildList();
       if (i == m_dwChildCount)
       {
-         Unlock();
+         UnlockData();
          return RCC_INVALID_IP_ADDR;
       }
 
@@ -1469,12 +1469,12 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       // Check if received id is a valid node id
       if (pObject == NULL)
       {
-         Unlock();
+         UnlockData();
          return RCC_INVALID_OBJECT_ID;
       }
       if (pObject->Type() != OBJECT_NODE)
       {
-         Unlock();
+         UnlockData();
          return RCC_INVALID_OBJECT_ID;
       }
 
@@ -1513,7 +1513,7 @@ DWORD Node::WakeUp(void)
 {
    DWORD i, dwResult = RCC_NO_WOL_INTERFACES;
 
-   Lock();
+   LockChildList(FALSE);
 
    for(i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
@@ -1524,7 +1524,7 @@ DWORD Node::WakeUp(void)
          break;
       }
 
-   Unlock();
+   UnlockChildList();
    return dwResult;
 }
 
@@ -1598,7 +1598,7 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId;
 
-   Lock();
+   LockData();
    if (m_pParamList != NULL)
    {
       pMsg->SetVariable(VID_NUM_PARAMETERS, m_dwNumParams);
@@ -1613,7 +1613,7 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)0);
    }
-   Unlock();
+   UnlockData();
 }
 
 
@@ -1654,6 +1654,7 @@ void Node::OnObjectDelete(DWORD dwObjectId)
    if (dwObjectId == m_dwPollerNode)
    {
       // If deleted object is our poller node, change it to default
+      /* LOCK? */
       m_dwPollerNode = 0;
       Modify();
       DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
@@ -1715,13 +1716,13 @@ DWORD Node::GetLastValues(CSCPMessage *pMsg)
 {
    DWORD i, dwId;
 
-   Lock();
+   LockData();
 
    pMsg->SetVariable(VID_NUM_ITEMS, m_dwNumItems);
    for(i = 0, dwId = VID_DCI_VALUES_BASE; i < m_dwNumItems; i++, dwId += 7)
       m_ppItems[i]->GetLastValue(pMsg, dwId);
 
-   Unlock();
+   UnlockData();
    return RCC_SUCCESS;
 }
 
@@ -1734,10 +1735,10 @@ void Node::CleanDCIData(void)
 {
    DWORD i;
 
-   Lock();
+   LockData();
    for(i = 0; i < m_dwNumItems; i++)
       m_ppItems[i]->CleanData();
-   Unlock();
+   UnlockData();
 }
 
 
@@ -1753,7 +1754,7 @@ BOOL Node::ApplyTemplateItem(DCItem *pItem)
    DWORD i;
    int iStatus;
 
-   Lock();
+   LockData();
 
    DbgPrintf(AF_DEBUG_DC, "Applying item \"%s\" to node \"%s\"", pItem->Name(), m_szName);
 
@@ -1779,7 +1780,7 @@ BOOL Node::ApplyTemplateItem(DCItem *pItem)
       Modify();
    }
 
-   Unlock();
+   UnlockData();
    return bResult;
 }
 
@@ -1797,7 +1798,7 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
    pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
    dwNumDeleted = 0;
 
-   Lock();
+   LockData();
 
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->TemplateId() == dwTemplateId)
@@ -1811,7 +1812,7 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
             pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
       }
 
-   Unlock();
+   UnlockData();
 
    for(i = 0; i < dwNumDeleted; i++)
       DeleteItem(pdwDeleteList[i]);
@@ -1835,7 +1836,7 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
       pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
       dwNumDeleted = 0;
 
-      Lock();
+      LockData();
 
       for(i = 0; i < m_dwNumItems; i++)
          if (m_ppItems[i]->TemplateId() == dwTemplateId)
@@ -1843,7 +1844,7 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
             pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
          }
 
-      Unlock();
+      UnlockData();
 
       for(i = 0; i < dwNumDeleted; i++)
          DeleteItem(pdwDeleteList[i]);
@@ -1851,7 +1852,7 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
    }
    else
    {
-      Lock();
+      LockData();
 
       for(i = 0; i < m_dwNumItems; i++)
          if (m_ppItems[i]->TemplateId() == dwTemplateId)
@@ -1859,7 +1860,7 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
             m_ppItems[i]->SetTemplateId(0, 0);
          }
 
-      Unlock();
+      UnlockData();
    }
 }
 
@@ -1872,7 +1873,7 @@ void Node::ChangeIPAddress(DWORD dwIpAddr)
 {
    DWORD i;
 
-   Lock();
+   LockData();
 
    UpdateNodeIndex(m_dwIpAddr, dwIpAddr, this);
    m_dwIpAddr = dwIpAddr;
@@ -1880,11 +1881,13 @@ void Node::ChangeIPAddress(DWORD dwIpAddr)
 
    // Change status of node and all it's childs to UNKNOWN
    m_iStatus = STATUS_UNKNOWN;
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
       m_pChildList[i]->ResetStatus();
+   UnlockChildList();
 
    Modify();
-   Unlock();
+   UnlockData();
 }
 
 
@@ -1896,14 +1899,14 @@ DWORD Node::GetInterfaceCount(Interface **ppInterface)
 {
    DWORD i, dwCount;
 
-   Lock();
+   LockChildList(FALSE);
    for(i = 0, dwCount = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
       {
          dwCount++;
          *ppInterface = (Interface *)m_pChildList[i];
       }
-   Unlock();
+   UnlockChildList();
    return dwCount;
 }
 
@@ -1916,6 +1919,7 @@ void Node::UpdateDCICache(void)
 {
    DWORD i;
 
+   /* LOCK? */
    for(i = 0; i < m_dwNumItems; i++)
       m_ppItems[i]->UpdateCacheSize();
 }

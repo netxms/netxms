@@ -147,7 +147,7 @@ BOOL Container::SaveToDB(void)
    BOOL bNewObject = TRUE;
 
    // Lock object's access
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
@@ -175,18 +175,20 @@ BOOL Container::SaveToDB(void)
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
       DBQuery(g_hCoreDB, szQuery);
    }
+   UnlockChildList();
 
    // Save access list
    SaveACLToDB();
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
 
    return TRUE;
 }

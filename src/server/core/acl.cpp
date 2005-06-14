@@ -107,6 +107,8 @@ BOOL AccessList::GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
    DWORD i;
    BOOL bFound = FALSE;
 
+   Lock();
+
    // Check for explicit rights
    for(i = 0; i < m_dwNumElements; i++)
       if (m_pElements[i].dwUserId == dwUserId)
@@ -130,6 +132,7 @@ BOOL AccessList::GetUserRights(DWORD dwUserId, DWORD *pdwAccessRights)
          }
    }
 
+   Unlock();
    return bFound;
 }
 

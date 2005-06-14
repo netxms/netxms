@@ -133,7 +133,7 @@ BOOL Zone::SaveToDB(void)
    DB_RESULT hResult;
    DWORD i;
 
-   Lock();
+   LockData();
 
    SaveCommonProperties();
    
@@ -179,7 +179,7 @@ BOOL Zone::SaveToDB(void)
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
    return TRUE;
 }
 
@@ -228,7 +228,7 @@ void Zone::CreateMessage(CSCPMessage *pMsg)
 DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      Lock();
+      LockData();
 
    // Change description
    if (pRequest->IsVariableExist(VID_DESCRIPTION))

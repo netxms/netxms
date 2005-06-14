@@ -153,11 +153,12 @@ BOOL Interface::SaveToDB(void)
 {
    char szQuery[1024], szMacStr[16], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
+   Node *pNode;
    DWORD dwNodeId;
    DB_RESULT hResult;
 
    // Lock object's access
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
@@ -172,8 +173,9 @@ BOOL Interface::SaveToDB(void)
    }
 
    // Determine owning node's ID
-   if (m_dwParentCount > 0)   // Always should be
-      dwNodeId = m_pParentList[0]->Id();
+   pNode = GetParentNode();
+   if (pNode != NULL)
+      dwNodeId = pNode->Id();
    else
       dwNodeId = 0;
 
@@ -200,7 +202,7 @@ BOOL Interface::SaveToDB(void)
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
 
    return TRUE;
 }
@@ -294,7 +296,9 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
       PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
                 pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
                 m_dwIfIndex);
+      LockData();
       Modify();
+      UnlockData();
    }
    SendPollerMsg(dwRqId, "   Finished status poll on interface %s\r\n", m_szName);
 }
@@ -343,13 +347,13 @@ Node *Interface::GetParentNode(void)
    DWORD i;
    Node *pNode = NULL;
 
-   Lock();
+   LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
       if (m_pParentList[i]->Type() == OBJECT_NODE)
       {
          pNode = (Node *)m_pParentList[i];
          break;
       }
-   Unlock();
+   UnlockParentList();
    return pNode;
 }

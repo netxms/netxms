@@ -50,14 +50,14 @@ Network::~Network()
 
 BOOL Network::SaveToDB(void)
 {
-   Lock();
+   LockData();
 
    SaveCommonProperties();
    SaveACLToDB();
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
    return TRUE;
 }
 
@@ -68,8 +68,6 @@ BOOL Network::SaveToDB(void)
 
 void Network::LoadFromDB(void)
 {
-   Lock();
    LoadCommonProperties();
    LoadACLFromDB();
-   Unlock();
 }

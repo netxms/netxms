@@ -141,30 +141,48 @@ class NXCORE_EXPORTABLE NetObj
 {
 protected:
    DWORD m_dwId;
-   DWORD m_dwTimeStamp;    // Last change time stamp
-   DWORD m_dwRefCount;     // Number of references. Object can be deleted only when this counter is zero
+   DWORD m_dwTimeStamp;       // Last change time stamp
+   DWORD m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
    char m_szName[MAX_OBJECT_NAME];
    int m_iStatus;
    BOOL m_bIsModified;
    BOOL m_bIsDeleted;
    BOOL m_bIsHidden;
-   MUTEX m_hMutex;         // Generic object access mutex
-   MUTEX m_mutexRefCount;  // Reference counter access mutex
-   DWORD m_dwIpAddr;       // Every object should have an IP address
-   DWORD m_dwImageId;      // Custom image id or 0 if object has default image
+   MUTEX m_mutexData;         // Object data access mutex
+   MUTEX m_mutexRefCount;     // Reference counter access mutex
+   RWLOCK m_rwlockParentList; // Lock for parent list
+   RWLOCK m_rwlockChildList;  // Lock for child list
+   DWORD m_dwIpAddr;          // Every object should have an IP address
+   DWORD m_dwImageId;         // Custom image id or 0 if object has default image
    ClientSession *m_pPollRequestor;
 
-   DWORD m_dwChildCount;   // Number of child objects
-   NetObj **m_pChildList;  // Array of pointers to child objects
+   DWORD m_dwChildCount;      // Number of child objects
+   NetObj **m_pChildList;     // Array of pointers to child objects
 
-   DWORD m_dwParentCount;  // Number of parent objects
-   NetObj **m_pParentList; // Array of pointers to parent objects
+   DWORD m_dwParentCount;     // Number of parent objects
+   NetObj **m_pParentList;    // Array of pointers to parent objects
 
    AccessList *m_pAccessList;
    BOOL m_bInheritAccessRights;
 
-   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_hMutex); }
+   void LockData(void) { MutexLock(m_mutexData, INFINITE); }
+   void UnlockData(void) { MutexUnlock(m_mutexData); }
+   void LockParentList(BOOL bWrite) 
+   { 
+      if (bWrite) 
+         RWLockWriteLock(m_rwlockParentList, INFINITE);
+      else
+         RWLockReadLock(m_rwlockParentList, INFINITE); 
+   }
+   void UnlockParentList(void) { RWLockUnlock(m_rwlockParentList); }
+   void LockChildList(BOOL bWrite) 
+   { 
+      if (bWrite) 
+         RWLockWriteLock(m_rwlockChildList, INFINITE);
+      else
+         RWLockReadLock(m_rwlockChildList, INFINITE); 
+   }
+   void UnlockChildList(void) { RWLockUnlock(m_rwlockChildList); }
 
    void Modify(void);                  // Used to mark object as modified
 
@@ -573,23 +591,23 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
 
 inline void Node::LockForStatusPoll(void)
 { 
-   Lock(); 
+   LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_STATUS_POLL; 
-   Unlock(); 
+   UnlockData(); 
 }
 
 inline void Node::LockForConfigurationPoll(void) 
 { 
-   Lock(); 
+   LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL; 
-   Unlock(); 
+   UnlockData(); 
 }
 
 inline void Node::LockForDiscoveryPoll(void) 
 { 
-   Lock(); 
+   LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL; 
-   Unlock(); 
+   UnlockData(); 
 }
 
 

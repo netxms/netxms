@@ -84,24 +84,26 @@ BOOL UniversalRoot::SaveToDB(void)
    char szQuery[1024];
    DWORD i;
 
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
       DBQuery(g_hCoreDB, szQuery);
    }
+   UnlockChildList();
 
    // Save access list
    SaveACLToDB();
 
    // Unlock object and clear modification flag
-   Unlock();
+   UnlockData();
    m_bIsModified = FALSE;
    return TRUE;
 }
@@ -113,8 +115,6 @@ BOOL UniversalRoot::SaveToDB(void)
 
 void UniversalRoot::LoadFromDB(void)
 {
-   Lock();
    LoadCommonProperties();
    LoadACLFromDB();
-   Unlock();
 }

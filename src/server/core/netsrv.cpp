@@ -81,7 +81,7 @@ BOOL NetworkService::SaveToDB(void)
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
 
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
@@ -123,7 +123,7 @@ BOOL NetworkService::SaveToDB(void)
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
    return TRUE;
 }
 
@@ -259,7 +259,7 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
 DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      Lock();
+      LockData();
 
    // Polling node
    if (pRequest->IsVariableExist(VID_POLLER_NODE_ID))
@@ -284,13 +284,13 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
             }
             else
             {
-               Unlock();
+               UnlockData();
                return RCC_INVALID_OBJECT_ID;
             }
          }
          else
          {
-            Unlock();
+            UnlockData();
             return RCC_INVALID_OBJECT_ID;
          }
       }

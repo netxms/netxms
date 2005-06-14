@@ -30,8 +30,10 @@
 NetObj::NetObj()
 {
    m_dwRefCount = 0;
-   m_hMutex = MutexCreate();
+   m_mutexData = MutexCreate();
    m_mutexRefCount = MutexCreate();
+   m_rwlockParentList = RWLockCreate();
+   m_rwlockChildList = RWLockCreate();
    m_iStatus = STATUS_UNKNOWN;
    m_szName[0] = 0;
    m_bIsModified = FALSE;
@@ -55,8 +57,10 @@ NetObj::NetObj()
 
 NetObj::~NetObj()
 {
-   MutexDestroy(m_hMutex);
+   MutexDestroy(m_mutexData);
    MutexDestroy(m_mutexRefCount);
+   RWLockDestroy(m_rwlockParentList);
+   RWLockDestroy(m_rwlockChildList);
    if (m_pChildList != NULL)
       free(m_pChildList);
    if (m_pParentList != NULL)
@@ -179,17 +183,17 @@ void NetObj::AddChild(NetObj *pObject)
 {
    DWORD i;
 
-   Lock();
+   LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i] == pObject)
       {
-         Unlock();
+         UnlockChildList();
          return;     // Already in the child list
       }
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
    m_pChildList[m_dwChildCount++] = pObject;
    Modify();
-   Unlock();
+   UnlockChildList();
 }
 
 
@@ -201,17 +205,17 @@ void NetObj::AddParent(NetObj *pObject)
 {
    DWORD i;
 
-   Lock();
+   LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
       if (m_pParentList[i] == pObject)
       {
-         Unlock();
+         UnlockParentList();
          return;     // Already in the parents list
       }
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
    m_pParentList[m_dwParentCount++] = pObject;
    Modify();
-   Unlock();
+   UnlockParentList();
 }
 
 
@@ -223,14 +227,14 @@ void NetObj::DeleteChild(NetObj *pObject)
 {
    DWORD i;
 
-   Lock();
+   LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i] == pObject)
          break;
 
    if (i == m_dwChildCount)   // No such object
    {
-      Unlock();
+      UnlockChildList();
       return;
    }
    m_dwChildCount--;
@@ -245,7 +249,7 @@ void NetObj::DeleteChild(NetObj *pObject)
       m_pChildList = NULL;
    }
    Modify();
-   Unlock();
+   UnlockChildList();
 }
 
 
@@ -257,13 +261,13 @@ void NetObj::DeleteParent(NetObj *pObject)
 {
    DWORD i;
 
-   Lock();
+   LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
       if (m_pParentList[i] == pObject)
          break;
    if (i == m_dwParentCount)   // No such object
    {
-      Unlock();
+      UnlockParentList();
       return;
    }
    m_dwParentCount--;
@@ -278,7 +282,7 @@ void NetObj::DeleteParent(NetObj *pObject)
       m_pParentList = NULL;
    }
    Modify();
-   Unlock();
+   UnlockParentList();
 }
 
 
@@ -294,10 +298,11 @@ void NetObj::Delete(BOOL bIndexLocked)
 
    DbgPrintf(AF_DEBUG_OBJECTS, "Deleting object %d [%s]", m_dwId, m_szName);
 
-   Lock();
+   LockData();
 
    // Remove references to this object from parent objects
    DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): clearing parent list for object %d", m_dwId);
+   LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
    {
       m_pParentList[i]->DeleteChild(this);
@@ -306,9 +311,11 @@ void NetObj::Delete(BOOL bIndexLocked)
    free(m_pParentList);
    m_pParentList = NULL;
    m_dwParentCount = 0;
+   UnlockParentList();
 
    // Delete references to this object from child objects
    DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): clearing child list for object %d", m_dwId);
+   LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       m_pChildList[i]->DeleteParent(this);
@@ -318,10 +325,11 @@ void NetObj::Delete(BOOL bIndexLocked)
    free(m_pChildList);
    m_pChildList = NULL;
    m_dwChildCount = 0;
+   UnlockChildList();
 
    m_bIsDeleted = TRUE;
    Modify();
-   Unlock();
+   UnlockData();
 
    DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): deleting object %d from indexes", m_dwId);
    NetObjDeleteFromIndexes(this);
@@ -361,14 +369,14 @@ const char *NetObj::ChildList(char *szBuffer)
    char *pBuf = szBuffer;
 
    *pBuf = 0;
-   Lock();
+   LockChildList(FALSE);
    for(i = 0, pBuf = szBuffer; i < m_dwChildCount; i++)
    {
       sprintf(pBuf, "%d ", m_pChildList[i]->Id());
       while(*pBuf)
          pBuf++;
    }
-   Unlock();
+   UnlockChildList();
    if (pBuf != szBuffer)
       *(pBuf - 1) = 0;
    return szBuffer;
@@ -385,14 +393,14 @@ const char *NetObj::ParentList(char *szBuffer)
    char *pBuf = szBuffer;
 
    *pBuf = 0;
-   Lock();
+   LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
    {
       sprintf(pBuf, "%d ", m_pParentList[i]->Id());
       while(*pBuf)
          pBuf++;
    }
-   Unlock();
+   UnlockParentList();
    if (pBuf != szBuffer)
       *(pBuf - 1) = 0;
    return szBuffer;
@@ -410,28 +418,32 @@ void NetObj::CalculateCompoundStatus(void)
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      Lock();
+      LockData();
       /* TODO: probably status calculation algorithm should be changed */
+
+      LockChildList(FALSE);
       for(i = 0, iSum = 0, iCount = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->Status() < STATUS_UNKNOWN)
          {
             iSum += m_pChildList[i]->Status();
             iCount++;
          }
+      UnlockChildList();
+
       if (iCount > 0)
          m_iStatus = iSum / iCount;
       else
          m_iStatus = STATUS_UNKNOWN;
-      Unlock();
+      UnlockData();
 
       // Cause parent object(s) to recalculate it's status
       if (iOldStatus != m_iStatus)
       {
-         Lock();
+         LockParentList(FALSE);
          for(i = 0; i < m_dwParentCount; i++)
             m_pParentList[i]->CalculateCompoundStatus();
-         Modify();
-         Unlock();
+         Modify();   /* LOCK? */
+         UnlockParentList();
       }
    }
 }
@@ -563,7 +575,7 @@ void NetObj::Modify(void)
 DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      Lock();
+      LockData();
 
    // Change object's name
    if (pRequest->IsVariableExist(VID_OBJECT_NAME))
@@ -586,8 +598,8 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
                                    pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
    }
 
-   Unlock();
    Modify();
+   UnlockData();
 
    return RCC_SUCCESS;
 }
@@ -605,7 +617,7 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
    if (dwUserId == 0)
       return 0xFFFFFFFF;
 
-   Lock();
+   LockData();
 
    // Check if have direct right assignment
    if (!m_pAccessList->GetUserRights(dwUserId, &dwRights))
@@ -615,12 +627,14 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
       {
          DWORD i;
 
+         LockParentList(FALSE);
          for(i = 0, dwRights = 0; i < m_dwParentCount; i++)
             dwRights |= m_pParentList[i]->GetUserRights(dwUserId);
+         UnlockParentList();
       }
    }
 
-   Unlock();
+   UnlockData();
    return dwRights;
 }
 
@@ -642,8 +656,10 @@ BOOL NetObj::CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights)
 
 void NetObj::DropUserAccess(DWORD dwUserId)
 {
+   LockData();
    if (m_pAccessList->DeleteElement(dwUserId))
       Modify();
+   UnlockData();
 }
 
 
@@ -656,12 +672,12 @@ void NetObj::SetMgmtStatus(BOOL bIsManaged)
    DWORD i;
    int iOldStatus;
 
-   Lock();
+   LockData();
 
    if ((bIsManaged && (m_iStatus != STATUS_UNMANAGED)) ||
        ((!bIsManaged) && (m_iStatus == STATUS_UNMANAGED)))
    {
-      Unlock();
+      UnlockData();
       return;  // Status is already correct
    }
 
@@ -673,15 +689,19 @@ void NetObj::SetMgmtStatus(BOOL bIsManaged)
       PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_dwId, "d", iOldStatus);
 
    // Change status for child objects also
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
       m_pChildList[i]->SetMgmtStatus(bIsManaged);
+   UnlockChildList();
 
    // Cause parent object(s) to recalculate it's status
+   LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
       m_pParentList[i]->CalculateCompoundStatus();
+   UnlockParentList();
 
    Modify();
-   Unlock();
+   UnlockData();
 }
 
 
@@ -694,35 +714,36 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
    DWORD i;
    BOOL bResult = FALSE;
 
-   Lock();
-
-   // Check for our own ID
+   // Check for our own ID (object ID should never change, so we may not lock object's data)
    if (m_dwId == dwObjectId)
       bResult = TRUE;
 
    // First, walk through our own child list
    if (!bResult)
    {
+      LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->Id() == dwObjectId)
          {
             bResult = TRUE;
             break;
          }
+      UnlockChildList();
    }
 
    // If given object is not in child list, check if it is indirect child
    if (!bResult)
    {
+      LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->IsChild(dwObjectId))
          {
             bResult = TRUE;
             break;
          }
+      UnlockChildList();
    }
 
-   Unlock();
    return bResult;
 }
 
@@ -755,7 +776,7 @@ void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD 
 {
    DWORD i, j;
 
-   Lock();
+   LockChildList(FALSE);
 
    // Walk through our own child list
    for(i = 0; i < m_dwChildCount; i++)
@@ -781,7 +802,7 @@ void NetObj::AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD 
       }
    }
 
-   Unlock();
+   UnlockChildList();
 }
 
 
@@ -793,13 +814,15 @@ void NetObj::Hide(void)
 {
    DWORD i;
 
-   Lock();
+   LockData();
+   LockChildList(FALSE);
 
    for(i = 0; i < m_dwChildCount; i++)
       m_pChildList[i]->Hide();
    m_bIsHidden = TRUE;
 
-   Unlock();
+   UnlockChildList();
+   UnlockData();
 }
 
 
@@ -811,13 +834,15 @@ void NetObj::Unhide(void)
 {
    DWORD i;
 
-   Lock();
+   LockData();
 
    m_bIsHidden = FALSE;
    EnumerateClientSessions(BroadcastObjectChange, this);
 
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
       m_pChildList[i]->Unhide();
 
-   Unlock();
+   UnlockChildList();
+   UnlockData();
 }

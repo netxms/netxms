@@ -109,7 +109,7 @@ BOOL Subnet::SaveToDB(void)
    BOOL bNewObject = TRUE;
 
    // Lock object's access
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
@@ -139,18 +139,20 @@ BOOL Subnet::SaveToDB(void)
    // Update node to subnet mapping
    sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%d", m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO nsmap (subnet_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
       DBQuery(g_hCoreDB, szQuery);
    }
+   UnlockChildList();
 
    // Save access list
    SaveACLToDB();
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
 
    return TRUE;
 }

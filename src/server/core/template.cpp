@@ -156,7 +156,7 @@ BOOL Template::SaveToDB(void)
    BOOL bNewObject = TRUE;
 
    // Lock object's access
-   Lock();
+   LockData();
 
    SaveCommonProperties();
 
@@ -185,11 +185,13 @@ BOOL Template::SaveToDB(void)
    // Update members list
    sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
    DBQuery(g_hCoreDB, szQuery);
+   LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO dct_node_map (template_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
       DBQuery(g_hCoreDB, szQuery);
    }
+   UnlockChildList();
 
    // Save data collection items
    for(i = 0; i < m_dwNumItems; i++)
@@ -200,7 +202,7 @@ BOOL Template::SaveToDB(void)
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
-   Unlock();
+   UnlockData();
 
    return TRUE;
 }
@@ -280,7 +282,7 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
    BOOL bResult = FALSE;
 
    if (!bLocked)
-      Lock();
+      LockData();
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -300,7 +302,7 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
    }
 
    if (!bLocked)
-      Unlock();
+      UnlockData();
    return bResult;
 }
 
@@ -314,7 +316,7 @@ BOOL Template::DeleteItem(DWORD dwItemId)
    DWORD i;
    BOOL bResult = FALSE;
 
-   Lock();
+   LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == dwItemId)
@@ -329,7 +331,7 @@ BOOL Template::DeleteItem(DWORD dwItemId)
          break;
       }
 
-   Unlock();
+   UnlockData();
    return bResult;
 }
 
@@ -344,7 +346,8 @@ BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps,
    DWORD i;
    BOOL bResult = FALSE;
 
-   Lock();
+   LockData();
+
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == dwItemId)
@@ -355,7 +358,7 @@ BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps,
          break;
       }
 
-   Unlock();
+   UnlockData();
    return bResult;
 }
 
@@ -369,7 +372,7 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
    DWORD i, j;
    BOOL bResult = TRUE;
 
-   Lock();
+   LockData();
    for(i = 0; i < dwNumItems; i++)
    {
       for(j = 0; j < m_dwNumItems; j++)
@@ -383,7 +386,7 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
       if (j == m_dwNumItems)
          bResult = FALSE;     // Invalid DCI ID provided
    }
-   Unlock();
+   UnlockData();
    return bResult;
 }
 
@@ -396,14 +399,14 @@ BOOL Template::LockDCIList(DWORD dwSessionId)
 {
    BOOL bSuccess = FALSE;
 
-   Lock();
+   LockData();
    if (m_dwDCILockStatus == INVALID_INDEX)
    {
       m_dwDCILockStatus = dwSessionId;
       m_bDCIListModified = FALSE;
       bSuccess = TRUE;
    }
-   Unlock();
+   UnlockData();
    return bSuccess;
 }
 
@@ -416,7 +419,7 @@ BOOL Template::UnlockDCIList(DWORD dwSessionId)
 {
    BOOL bSuccess = FALSE;
 
-   Lock();
+   LockData();
    if (m_dwDCILockStatus == dwSessionId)
    {
       m_dwDCILockStatus = INVALID_INDEX;
@@ -428,7 +431,7 @@ BOOL Template::UnlockDCIList(DWORD dwSessionId)
       m_bDCIListModified = FALSE;
       bSuccess = TRUE;
    }
-   Unlock();
+   UnlockData();
    return bSuccess;
 }
 
@@ -446,6 +449,8 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    msg.SetId(dwRqId);
    msg.SetCode(CMD_NODE_DCI);
 
+   LockData();
+
    // Walk through items list
    for(i = 0; i < m_dwNumItems; i++)
    {
@@ -453,6 +458,8 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
       pSession->SendMessage(&msg);
       msg.DeleteAllVariables();
    }
+
+   UnlockData();
 
    // Send end-of-list indicator
    msg.SetCode(CMD_NODE_DCI_LIST_END);
@@ -469,7 +476,7 @@ int Template::GetItemType(DWORD dwItemId)
    DWORD i;
    int iType = -1;
 
-   Lock();
+   LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == dwItemId)
@@ -478,7 +485,7 @@ int Template::GetItemType(DWORD dwItemId)
          break;
       }
 
-   Unlock();
+   UnlockData();
    return iType;
 }
 
@@ -492,7 +499,7 @@ DCItem *Template::GetItemById(DWORD dwItemId)
    DWORD i;
    DCItem *pItem = NULL;
 
-   Lock();
+   LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == dwItemId)
@@ -501,7 +508,7 @@ DCItem *Template::GetItemById(DWORD dwItemId)
          break;
       }
 
-   Unlock();
+   UnlockData();
    return pItem;
 }
 
@@ -514,12 +521,12 @@ DCItem *Template::GetItemByIndex(DWORD dwIndex)
 {
    DCItem *pItem = NULL;
 
-   Lock();
+   LockData();
 
    if (dwIndex < m_dwNumItems)
       pItem = m_ppItems[dwIndex];
 
-   Unlock();
+   UnlockData();
    return pItem;
 }
 
@@ -553,7 +560,7 @@ void Template::CreateMessage(CSCPMessage *pMsg)
 DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      Lock();
+      LockData();
 
    // Change template version
    if (pRequest->IsVariableExist(VID_TEMPLATE_VERSION))
@@ -631,7 +638,7 @@ void Template::QueueUpdate(void)
    DWORD i;
    TEMPLATE_UPDATE_INFO *pInfo;
 
-   Lock();
+   LockData();
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->Type() == OBJECT_NODE)
       {
@@ -642,7 +649,7 @@ void Template::QueueUpdate(void)
          pInfo->dwNodeId = m_pChildList[i]->Id();
          g_pTemplateUpdateQueue->Put(pInfo);
       }
-   Unlock();
+   UnlockData();
 }
 
 
@@ -654,7 +661,7 @@ void Template::QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
 
-   Lock();
+   LockData();
    IncRefCount();
    pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
    pInfo->iUpdateType = REMOVE_TEMPLATE;
@@ -662,5 +669,5 @@ void Template::QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
    pInfo->dwNodeId = dwNodeId;
    pInfo->bRemoveDCI = bRemoveDCI;
    g_pTemplateUpdateQueue->Put(pInfo);
-   Unlock();
+   UnlockData();
 }
