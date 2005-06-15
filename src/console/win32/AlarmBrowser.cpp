@@ -84,35 +84,13 @@ CAlarmBrowser::CAlarmBrowser()
 
 CAlarmBrowser::CAlarmBrowser(TCHAR *pszParams)
 {
-   TCHAR szBuffer[32];
-
    m_pImageList = NULL;
    m_bShowAllAlarms = FALSE;
    m_bRestoredDesktop = TRUE;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
-
-   if (ExtractWindowParam(pszParams, _T("SM"), szBuffer, 32))
-   {
-      m_iSortMode = _tcstol(szBuffer, NULL, 0);
-      if ((m_iSortMode < 0) || (m_iSortMode > 4))
-         m_iSortMode = 0;
-   }
-   else
-   {
-      m_iSortMode = 0;
-   }
-
-   if (ExtractWindowParam(pszParams, _T("SD"), szBuffer, 32))
-   {
-      m_iSortDir = _tcstol(szBuffer, NULL, 0);
-      if ((m_iSortDir != 0) && (m_iSortDir != 1))
-         m_iSortDir = 0;
-   }
-   else
-   {
-      m_iSortDir = 1;
-   }
+   m_iSortMode = ExtractWindowParamLong(pszParams, _T("SM"), 0);
+   m_iSortDir = ExtractWindowParamLong(pszParams, _T("SD"), 0);
 }
 
 CAlarmBrowser::~CAlarmBrowser()
@@ -507,7 +485,7 @@ LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
    pInfo->iWndClass = WNDC_ALARM_BROWSER;
    GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("SM:%d\x7FSD:%d"),
+   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("SM:%d\x7FSD:%d"),
               m_iSortMode, m_iSortDir);
    return 1;
 }

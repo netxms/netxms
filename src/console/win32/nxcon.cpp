@@ -492,7 +492,7 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = TRUE;
-         m_pwndObjectBrowser = pWnd;
+         m_pwndObjectBrowser = (CObjectBrowser *)pWnd;
          break;
       case IDR_EVENT_EDITOR:
          m_bEventEditorActive = TRUE;
@@ -708,14 +708,7 @@ void CConsoleApp::OnConnectToServer()
 
 void CConsoleApp::OnViewObjectbrowser() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	// create a new MDI child window or open existing
-   if (m_bObjectBrowserActive)
-      m_pwndObjectBrowser->BringWindowToTop();
-   else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CObjectBrowser), IDR_OBJECTS, m_hObjectBrowserMenu, m_hObjectBrowserAccel);	
+   ShowObjectBrowser();
 }
 
 
@@ -1823,4 +1816,32 @@ void CConsoleApp::ChangeNodeAddress(DWORD dwNodeId)
       if (dwResult != RCC_SUCCESS)
          ErrorBox(dwResult, _T("Error changing IP address for node: %s"));
    }
+}
+
+CMDIChildWnd *CConsoleApp::ShowObjectBrowser(TCHAR *pszParams)
+{
+   CMDIChildWnd *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_bObjectBrowserActive)
+   {
+      m_pwndObjectBrowser->BringWindowToTop();
+      pWnd = m_pwndObjectBrowser;
+   }
+   else
+   {
+   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+      if (pszParams == NULL)
+      {
+	      pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CObjectBrowser), IDR_OBJECTS,
+                                       m_hObjectBrowserMenu, m_hObjectBrowserAccel);
+      }
+      else
+      {
+         pWnd = new CObjectBrowser(pszParams);
+         CreateChildFrameWithSubtitle(pWnd, IDR_OBJECTS, NULL, m_hObjectBrowserMenu, m_hObjectBrowserAccel);
+      }
+   }
+   return pWnd;
 }

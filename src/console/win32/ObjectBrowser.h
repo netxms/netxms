@@ -84,6 +84,7 @@ public:
 
 // Operations
 public:
+	CObjectBrowser(TCHAR *pszParams);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -94,6 +95,7 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bRestoredDesktop;
 	void SortTreeItems(HTREEITEM hItem);
 	int m_iStatusImageBase;
 	void ChangeMgmtStatus(BOOL bIsManaged);
@@ -168,6 +170,7 @@ protected:
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()
 private:
 	BOOL CurrObjectIsInterface(void);

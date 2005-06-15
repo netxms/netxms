@@ -166,6 +166,7 @@ BEGIN
     END
     POPUP "&Desktop"
     BEGIN
+        MENUITEM "&New",                        ID_DESKTOP_NEW
         MENUITEM "&Save\tCtrl+Shift+F2",        ID_DESKTOP_SAVE
         MENUITEM "Save &as...",                 ID_DESKTOP_SAVEAS
         MENUITEM "&Restore...\tCtrl+Shift+F3",  ID_DESKTOP_RESTORE

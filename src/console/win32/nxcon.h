@@ -110,7 +110,7 @@ protected:
 	CEventBrowser *m_pwndEventBrowser;
    CEventEditor *m_pwndEventEditor;
    CUserEditor *m_pwndUserEditor;
-	CWnd* m_pwndObjectBrowser;
+	CObjectBrowser *m_pwndObjectBrowser;
 	CWnd *m_pwndCtrlPanel;
    CDebugFrame *m_pwndDebugWindow;
    CNetSummaryFrame *m_pwndNetSummary;
@@ -189,6 +189,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	CMDIChildWnd *ShowObjectBrowser(TCHAR *pszParams = NULL);
 	void ChangeNodeAddress(DWORD dwNodeId);
 	void UnbindObject(NXC_OBJECT *pObject);
 	void BindObject(NXC_OBJECT *pObject);

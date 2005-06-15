@@ -56,6 +56,7 @@ protected:
 	afx_msg void OnDesktopSave();
 	afx_msg void OnDesktopSaveas();
 	afx_msg void OnDesktopRestore();
+	afx_msg void OnDesktopNew();
 	//}}AFX_MSG
    afx_msg void OnStateChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);

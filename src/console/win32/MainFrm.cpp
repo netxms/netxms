@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_DESKTOP_SAVE, OnDesktopSave)
 	ON_COMMAND(ID_DESKTOP_SAVEAS, OnDesktopSaveas)
 	ON_COMMAND(ID_DESKTOP_RESTORE, OnDesktopRestore)
+	ON_COMMAND(ID_DESKTOP_NEW, OnDesktopNew)
 	//}}AFX_MSG_MAP
 //   ON_UPDATE_COMMAND_UI(ID_INDICATOR_CONNECT, OnUpdateConnState)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
@@ -521,6 +522,9 @@ void CMainFrame::OnDesktopRestore()
                case WNDC_EVENT_BROWSER:
                   pWnd = theApp.ShowEventBrowser();
                   break;
+               case WNDC_OBJECT_BROWSER:
+                  pWnd = theApp.ShowObjectBrowser(pWndInfo[i].szParameters);
+                  break;
                default:
                   pWnd = NULL;
                   break;
@@ -538,4 +542,15 @@ void CMainFrame::OnDesktopRestore()
 
       SetDesktopIndicator();
    }
+}
+
+
+//
+// WM_COMMAND::ID_DESKTOP_NEW message handler
+//
+
+void CMainFrame::OnDesktopNew() 
+{
+   m_szDesktopName[0] = 0;
+   SetDesktopIndicator();
 }

@@ -127,6 +127,28 @@ CObjectBrowser::CObjectBrowser()
    m_dwFlags = SHOW_OBJECT_PREVIEW | VIEW_OBJECTS_AS_TREE;
    m_dwSortMode = OBJECT_SORT_BY_NAME;
    m_pCurrentObject = NULL;
+   m_bRestoredDesktop = FALSE;
+}
+
+CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
+{
+   DWORD dwObjectId;
+
+   m_pImageList = NULL;
+   m_dwTreeHashSize = 0;
+   m_pTreeHash = NULL;
+   m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), SHOW_OBJECT_PREVIEW | VIEW_OBJECTS_AS_TREE);
+   m_dwSortMode = ExtractWindowParamULong(pszParams, _T("SM"), OBJECT_SORT_BY_NAME);
+   dwObjectId = ExtractWindowParamULong(pszParams, _T("O"), 0);
+   if (dwObjectId != 0)
+   {
+      m_pCurrentObject = NXCFindObjectById(g_hSession, dwObjectId);
+   }
+   else
+   {
+      m_pCurrentObject = NULL;
+   }
+   m_bRestoredDesktop = TRUE;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -192,6 +214,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_FIND_OBJECT, OnFindObject)
+   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -225,8 +248,11 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
    // Read browser configuration
-   m_dwFlags = theApp.GetProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
-   m_dwSortMode = theApp.GetProfileInt(_T("ObjectBrowser"), _T("SortMode"), m_dwSortMode);
+   if (!m_bRestoredDesktop)
+   {
+      m_dwFlags = theApp.GetProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
+      m_dwSortMode = theApp.GetProfileInt(_T("ObjectBrowser"), _T("SortMode"), m_dwSortMode);
+   }
 
    // Create preview pane
    GetClientRect(&rect);
@@ -1715,4 +1741,19 @@ void CObjectBrowser::OnObjectChangeipaddress()
 {
    if (m_pCurrentObject != NULL)
       theApp.ChangeNodeAddress(m_pCurrentObject->dwId);
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CObjectBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_OBJECT_BROWSER;
+   GetWindowPlacement(&pInfo->placement);
+   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("F:%u\x7FSM:%u\x7FO:%u"),
+              m_dwFlags, m_dwSortMode, 
+              (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+   return 1;
 }
