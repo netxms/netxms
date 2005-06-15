@@ -287,6 +287,10 @@ SOURCE=.\res\running.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\warning.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\wizard.bmp
 # End Source File
 # End Group

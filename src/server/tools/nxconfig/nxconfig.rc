@@ -32,6 +32,7 @@ IDR_MAINFRAME           ICON    DISCARDABLE     "res\\nxconfig.ico"
 IDI_OK                  ICON    DISCARDABLE     "res\\ok.ico"
 IDI_FAILED              ICON    DISCARDABLE     "res\\failed.ico"
 IDI_RUNNING             ICON    DISCARDABLE     "res\\running.ico"
+IDI_WARN                ICON    DISCARDABLE     "res\\warning.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -123,6 +124,9 @@ BEGIN
                     75,188,WS_EX_CLIENTEDGE
     LTEXT           "You have selected ODBC driver. In order for this driver to work, you have to have correctly configured ODBC source. If you are sure that your ODBC configuration is correct, please press Next, or press Configure ODBC to go to ODBC configuration.",
                     IDC_STATIC,89,7,223,33
+    ICON            IDI_WARN,IDC_STATIC,89,81,20,20
+    LTEXT           "Please make sure that you have configured your ODBC source as system (under ""System DSN"" tab), otherwise NetXMS server service will unable to connect to database. ",
+                    IDC_STATIC,114,79,198,26
 END
 
 IDD_POLLING DIALOGEX 0, 0, 319, 202

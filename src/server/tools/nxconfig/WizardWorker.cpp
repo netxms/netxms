@@ -148,7 +148,7 @@ static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
          fprintf(pf, _T("DBDrvParams = %s\n"), pc->m_szDBDrvParams);
       if (pc->m_szDBServer[0] != 0)
          fprintf(pf, _T("DBServer = %s\n"), pc->m_szDBServer);
-      if (pc->m_szDBName[0] != 0)
+      if ((pc->m_szDBName[0] != 0) && (stricmp(pc->m_szDBDriver, _T("odbc.ddr"))))
          fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
       if (pc->m_szDBLogin[0] != 0)
          fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);

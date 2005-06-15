@@ -833,6 +833,7 @@ src/server/tools/nxconfig/res/nxconfig.ico -text
 src/server/tools/nxconfig/res/nxconfig.rc2 -text
 src/server/tools/nxconfig/res/ok.ico -text
 src/server/tools/nxconfig/res/running.ico -text
+src/server/tools/nxconfig/res/warning.ico -text
 src/server/tools/nxconfig/res/wizard.bmp -text
 src/server/tools/nxconfig/resource.h -text
 src/server/tools/nxconfig/tools.cpp -text
