@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.88 2005-06-05 14:14:36 victor Exp $
+# $Id: configure.ac,v 1.89 2005-06-16 21:29:16 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -380,18 +380,20 @@ CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\""
 #
 #
 
-LIBNETXMS_LIBRARY_VERSION=0:1:0
-LIBNXCSCP_LIBRARY_VERSION=0:1:0
-LIBNXSNMP_LIBRARY_VERSION=0:1:0
-LIBNXSRV_LIBRARY_VERSION=0:1:0
-LIBNXCORE_LIBRARY_VERSION=0:1:0
-DBDRV_LIBRARY_VERSION=0:1:0
+LIBNETXMS_LIBRARY_VERSION=0:2:0
+LIBNXCSCP_LIBRARY_VERSION=0:2:0
+LIBNXSNMP_LIBRARY_VERSION=0:2:0
+LIBNXSRV_LIBRARY_VERSION=0:2:0
+LIBNXCORE_LIBRARY_VERSION=0:2:0
+DBDRV_LIBRARY_VERSION=0:2:0
+SMSDRV_LIBRARY_VERSION=0:2:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
 AC_SUBST(LIBNXCSCP_LIBRARY_VERSION)
 AC_SUBST(LIBNXSNMP_LIBRARY_VERSION)
 AC_SUBST(LIBNXSRV_LIBRARY_VERSION)
 AC_SUBST(LIBNXCORE_LIBRARY_VERSION)
 AC_SUBST(DBDRV_LIBRARY_VERSION)
+AC_SUBST(SMSDRV_LIBRARY_VERSION)
 
 # --------------------------------------------------------------------------
 
@@ -434,6 +436,8 @@ AC_CONFIG_FILES([
 	src/server/dbdrv/mssql/Makefile
 	src/server/dbdrv/mysql/Makefile
 	src/server/dbdrv/pgsql/Makefile
+	src/server/smsdrv/Makefile
+	src/server/smsdrv/generic/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxaction/Makefile
