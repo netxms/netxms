@@ -17,6 +17,7 @@ static char THIS_FILE[] = __FILE__;
 CFlatButton::CFlatButton()
 {
    m_bMouseHover = FALSE;
+   m_bPressed = FALSE;
 }
 
 CFlatButton::~CFlatButton()
@@ -30,6 +31,7 @@ BEGIN_MESSAGE_MAP(CFlatButton, CWnd)
 	ON_WM_CREATE()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_MOUSEHOVER, OnMouseHover)
    ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeave)
@@ -60,14 +62,25 @@ void CFlatButton::OnPaint()
 	
    // Setup DC
    brLines.CreateSolidBrush(g_rgbInfoLineButtons);
-   brBkgnd.CreateSolidBrush(g_rgbInfoLineBackground);
-   dc.SetTextColor(g_rgbInfoLineButtons);
-   dc.SetBkColor(g_rgbInfoLineBackground);
+   brBkgnd.CreateSolidBrush(m_bPressed ? g_rgbInfoLineButtons : g_rgbInfoLineBackground);
+   dc.SetTextColor(m_bPressed ? g_rgbInfoLineBackground : g_rgbInfoLineButtons);
+   dc.SetBkColor(m_bPressed ? g_rgbInfoLineButtons : g_rgbInfoLineBackground);
    pFont = dc.SelectObject(m_bMouseHover ? &m_fontFocused : &m_fontNormal);
 
    // Draw frame
    GetClientRect(&rect);
-   dc.FrameRect(&rect, &brLines);
+   if (m_bPressed)
+   {
+      CBrush *pBrush;
+
+      pBrush = dc.SelectObject(&brBkgnd);
+      dc.Rectangle(&rect);
+      dc.SelectObject(pBrush);
+   }
+   else
+   {
+      dc.FrameRect(&rect, &brLines);
+   }
 
    // Draw text
    rect.top += 2;
@@ -142,10 +155,11 @@ int CFlatButton::OnMouseHover(WPARAM wParam, LPARAM lParam)
 
 int CFlatButton::OnMouseLeave(WPARAM wParam, LPARAM lParam)
 {
-   if (m_bMouseHover)
+   if (m_bMouseHover || m_bPressed)
    {
       m_bMouseHover = FALSE;
-      InvalidateRect(NULL, FALSE);
+      m_bPressed = FALSE;
+      InvalidateRect(NULL);
    }
    return 0;
 }
@@ -168,5 +182,21 @@ void CFlatButton::OnMouseMove(UINT nFlags, CPoint point)
 
 void CFlatButton::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-   GetParent()->PostMessage(WM_COMMAND, GetDlgCtrlID(), 0);
+   m_bPressed = TRUE;
+   InvalidateRect(NULL, FALSE);
+}
+
+
+//
+// WM_LBUTTONUP message handler
+//
+
+void CFlatButton::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+   if (m_bPressed)
+   {
+      m_bPressed = FALSE;
+      InvalidateRect(NULL);
+      GetParent()->PostMessage(WM_COMMAND, GetDlgCtrlID(), 0);
+   }
 }

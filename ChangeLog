@@ -11,9 +11,14 @@
 - Linux subagent: Implemented all Net.Interface.* parameters except
   Net.Interface.Speed
 - Fixed crash in Microsoft SQL driver caused by unsuccessful connection
+- More SNMP MIBs added
+- Fixed issue #27 (poller threads deadlock)
+- Server's internal synchronization mechanisms improved
+- Added driver for generic GSM modems
 - Windows console:
 	- Action properties dialog improved
 	- Sorting implemented in data collection editor
+	- Object browser window can be saved in desktop configuration
 
 
 *

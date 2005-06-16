@@ -35,6 +35,7 @@ public:
 
 	// Generated message map functions
 protected:
+	BOOL m_bPressed;
 	BOOL m_bMouseHover;
 	void SetMouseTracking(void);
 	CFont m_fontNormal;
@@ -44,6 +45,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	//}}AFX_MSG
    afx_msg int OnMouseHover(WPARAM wParam, LPARAM lParam);
    afx_msg int OnMouseLeave(WPARAM wParam, LPARAM lParam);
