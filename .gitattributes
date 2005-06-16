@@ -779,6 +779,8 @@ src/server/netxmsd/netxmsd.h -text
 src/server/netxmsd/winsrv.cpp -text
 src/server/smsdrv/Makefile.am -text
 src/server/smsdrv/generic/Makefile.am -text
+src/server/smsdrv/generic/generic.sln -text
+src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/main.cpp -text
 src/server/smsdrv/generic/main.h -text
 src/server/smsdrv/generic/serial.cpp -text

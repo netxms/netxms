@@ -1,13 +1,10 @@
-/* $Id: main.h,v 1.1 2005-06-16 13:19:38 alk Exp $ */
+/* $Id: main.h,v 1.2 2005-06-16 13:34:21 alk Exp $ */
 
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
-
-# include <windows.h>
-# include <io.h>
 #else
 
 # define EXPORT
@@ -37,5 +34,8 @@
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/06/16 13:19:38  alk
+added sms-driver for generic gsm modem
+
 
 */

@@ -1,5 +1,4 @@
-/* $Id: main.cpp,v 1.1 2005-06-16 13:19:38 alk Exp $ */
-
+/* $Id: main.cpp,v 1.2 2005-06-16 13:34:21 alk Exp $ */
 #include "main.h"
 
 #ifdef _WIN32
@@ -10,12 +9,16 @@
 
 static Serial m_serial;
 
-BOOL SMSDriverInit(TCHAR *pszInitArgs)
+extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 {
 	bool bRet = false;
 	if (pszInitArgs == NULL || *pszInitArgs == 0)
 	{
-		pszInitArgs = "/dev/ttyS0";
+#ifdef _WIN32
+		pszInitArgs = _T("COM1:");
+#else
+		pszInitArgs = _T("/dev/ttyS0");
+#endif
 	}
 
 	m_serial.SetTimeout(1);
@@ -42,7 +45,7 @@ BOOL SMSDriverInit(TCHAR *pszInitArgs)
 	return bRet;
 }
 
-BOOL SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
+extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 {
 	if (pszPhoneNumber != NULL && pszText != NULL)
 	{
@@ -64,7 +67,7 @@ BOOL SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 	return true;
 }
 
-void SMSDriverUnload(void)
+extern "C" void EXPORT SMSDriverUnload(void)
 {
 	m_serial.Close();
 }
@@ -73,5 +76,6 @@ void SMSDriverUnload(void)
 /*
 
 $Log: not supported by cvs2svn $
-
-*/
+Revision 1.1  2005/06/16 13:19:38  alk
+added sms-driver for generic gsm modem
+*/
