@@ -33,6 +33,11 @@ contrib/mibs/CISCO-SYSLOG-MIB.txt -text
 contrib/mibs/CISCO-TC.txt -text
 contrib/mibs/CISCO-TCP-MIB.txt -text
 contrib/mibs/CISCO-VTP-MIB.txt -text
+contrib/mibs/COSINE-GLOBAL-REG.txt -text
+contrib/mibs/COSINE-InVision-MIB.txt -text
+contrib/mibs/COSINE-ORION-MIB.txt -text
+contrib/mibs/DS1-MIB.txt -text
+contrib/mibs/DS3-MIB.txt -text
 contrib/mibs/HOST-RESOURCES-MIB.txt -text
 contrib/mibs/HOST-RESOURCES-TYPES.txt -text
 contrib/mibs/IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt -text
@@ -42,6 +47,7 @@ contrib/mibs/IEEE8021-PAE-MIB.txt -text
 contrib/mibs/IF-MIB.txt -text
 contrib/mibs/INET-ADDRESS-MIB.txt -text
 contrib/mibs/IP-MIB.txt -text
+contrib/mibs/MAU-MIB.txt -text
 contrib/mibs/MTA-MIB.txt -text
 contrib/mibs/Makefile.am -text
 contrib/mibs/NET-SNMP-AGENT-MIB.txt -text
@@ -50,7 +56,9 @@ contrib/mibs/NET-SNMP-MONITOR-MIB.txt -text
 contrib/mibs/NET-SNMP-SYSTEM-MIB.txt -text
 contrib/mibs/NET-SNMP-TC.txt -text
 contrib/mibs/NETWORK-SERVICES-MIB.txt -text
+contrib/mibs/OPTIMUX-MIB.txt -text
 contrib/mibs/OSPF-MIB.txt -text
+contrib/mibs/PerfHist-TC-MIB.txt -text
 contrib/mibs/RAPID-CITY.txt -text
 contrib/mibs/RFC-1215.txt -text
 contrib/mibs/RFC1155-SMI.txt -text
@@ -61,6 +69,7 @@ contrib/mibs/SNMPv2-MIB.txt -text
 contrib/mibs/SNMPv2-SMI.txt -text
 contrib/mibs/SNMPv2-TC.txt -text
 contrib/mibs/SNMPv2-TM.txt -text
+contrib/mibs/SW-MIB.txt -text
 contrib/mibs/SYNOPTICS-ROOT-MIB.txt -text
 contrib/mibs/TCP-MIB.txt -text
 contrib/mibs/TUNNEL-MIB.txt -text

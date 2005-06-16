@@ -1,0 +1,1496 @@
+OPTIMUX-MIB 	DEFINITIONS ::= BEGIN
+
+--Title:    OPTIMUX   MIB
+--
+-- Copyright 1993 RAD Data Communications, Ltd.
+-- All Rights Reserved.  
+
+-- It is RAD's intent to encourage the widespread use of
+-- this Specification in connection with the management of
+-- RAD products. RAD grants vendors, end-users,
+-- and other interested parties a non-exclusive license to
+-- use this Specification in connection with the management
+-- of RAD products.
+
+-- This Specification is supplied "as is," and RAD makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+IMPORTS
+	DisplayString	                        FROM RFC1213-MIB
+ 	enterprises, Counter, IpAddress, TimeTicks	FROM RFC1155-SMI
+	OBJECT-TYPE                     	    FROM RFC-1212
+	TRAP-TYPE                               FROM RFC-1215
+    ifIndex, InterfaceIndex			        FROM IF-MIB
+ 	dsx1LoopbackStatus 	                	FROM DS1-MIB
+	dsx3LoopbackStatus                      FROM DS3-MIB; 
+
+-- Some MIB compilers need those two lines:
+-- enterprises OBJECT IDENTIFIER ::=
+--                   { iso org(3) dod(6) internet(1) private(4) 1 }
+
+
+
+rad OBJECT IDENTIFIER ::= { enterprises 164 }
+radWan   OBJECT IDENTIFIER ::= { rad 3 } -- rad WAN Tree
+radGen   OBJECT IDENTIFIER ::= { rad 6} -- General information
+wanGen   OBJECT IDENTIFIER ::= { radWan 1}
+
+-- 
+-- file :v:\doc\rdv\mib\ver440\radgen.txt
+-- 
+
+--Version:   4.40
+--First Version Date:   16.10.94              
+--By:        Orly Nicklass
+--File:      radgen.txt
+
+--Last Update:  04.01.99 by Smadar (added OID for DXC30E)
+
+
+systems OBJECT IDENTIFIER ::= { radGen 1}  --    list of RAD products
+
+radSysTR  OBJECT IDENTIFIER ::= { systems 1 } -- RAD Token Ring 
+
+radRADring    OBJECT IDENTIFIER  ::= { radSysTR  1 }
+
+radTMA  OBJECT IDENTIFIER  ::= { radSysTR  2 }
+
+radRingMonitor    OBJECT IDENTIFIER  ::= { radSysTR  3 }
+
+radSysFddi OBJECT IDENTIFIER ::= { systems 2 } -- RAD Fddi 
+
+radFDX100  OBJECT IDENTIFIER ::= { radSysFddi  1 } -- RAD Fddi
+ 
+radSysWan OBJECT IDENTIFIER ::= { systems 3 }  -- RAD Wan products
+
+radMP2100      OBJECT IDENTIFIER ::= { radSysWan  1 }
+radMP2104      OBJECT IDENTIFIER ::= { radSysWan  2 }
+radMP2100B     OBJECT IDENTIFIER ::= { radSysWan  3 }
+radMP2100F     OBJECT IDENTIFIER ::= { radSysWan  4 }
+
+radMP2100H      OBJECT IDENTIFIER ::= { radSysWan  5 }
+radMP2104H      OBJECT IDENTIFIER ::= { radSysWan  6 }
+radMP2200B      OBJECT IDENTIFIER ::= { radSysWan  7 }
+radMP2200F      OBJECT IDENTIFIER ::= { radSysWan  8 }
+
+radMX3000       OBJECT IDENTIFIER ::= { radSysWan  9 }
+radMX3004       OBJECT IDENTIFIER ::= { radSysWan 10 }
+radMX30			OBJECT IDENTIFIER ::= { radSysWan 11 }
+radMX300		OBJECT IDENTIFIER ::= { radSysWan 12 }
+
+radKM2100	    OBJECT IDENTIFIER ::= { radSysWan 15 }
+radKM2104		OBJECT IDENTIFIER ::= { radSysWan 16 }
+
+radDXC30        OBJECT IDENTIFIER ::= { radSysWan 20 }
+radDXC10A       OBJECT IDENTIFIER ::= { radSysWan 21 }
+radDXC8R        OBJECT IDENTIFIER ::= { radSysWan 22 }
+radDXC30E       OBJECT IDENTIFIER ::= { radSysWan 23 }
+
+radFcdT1        OBJECT IDENTIFIER ::= { radSysWan 30 }
+radFcdE1        OBJECT IDENTIFIER ::= { radSysWan 31 }
+radFcdE1I       OBJECT IDENTIFIER ::= { radSysWan 32 }
+
+radHtuE1Sa      OBJECT IDENTIFIER ::= { radSysWan 40 }
+radHtuE1        OBJECT IDENTIFIER ::= { radSysWan 41 }	 --card
+radHtu2Sa       OBJECT IDENTIFIER ::= { radSysWan 42 }
+radHtu2         OBJECT IDENTIFIER ::= { radSysWan 43 }	 --card
+radAsmi450R768Sa OBJECT IDENTIFIER ::= { radSysWan 44 }
+radAsmi450R768  OBJECT IDENTIFIER ::= { radSysWan 45 }	 --card
+radAsmi450R1152Sa  OBJECT IDENTIFIER ::= { radSysWan 46 }
+radAsmi450R1152 OBJECT IDENTIFIER ::= { radSysWan 47 }	 --card
+
+radLrs12F        OBJECT IDENTIFIER ::= { radSysWan 48 }
+radLrs12B        OBJECT IDENTIFIER ::= { radSysWan 49 }
+
+radHcdE1Sa       OBJECT IDENTIFIER ::= { radSysWan 51 }
+radHcdE1         OBJECT IDENTIFIER ::= { radSysWan 52 }  --card
+radHtuT1Sa       OBJECT IDENTIFIER ::= { radSysWan 53 }
+radHtuT1         OBJECT IDENTIFIER ::= { radSysWan 54 }	 --card
+
+radOptimux4E1         OBJECT IDENTIFIER ::= { radSysWan 55 }
+radOptimux4T1         OBJECT IDENTIFIER ::= { radSysWan 56 }
+radOptimuxXLE1         OBJECT IDENTIFIER ::= { radSysWan 57 }
+radOptimuxXLT1         OBJECT IDENTIFIER ::= { radSysWan 58 }
+radOptimuxXL16E1       OBJECT IDENTIFIER ::= { radSysWan 59 }
+
+radImx64        OBJECT IDENTIFIER ::= { radSysWan 60 }
+radImx6L        OBJECT IDENTIFIER ::= { radSysWan 61 }
+radImxT1E1      OBJECT IDENTIFIER ::= { radSysWan 62 }
+
+radHtuE1SaV2      OBJECT IDENTIFIER ::= { radSysWan 70 }
+radHtuE1V2        OBJECT IDENTIFIER ::= { radSysWan 71 }	 --card
+
+ 
+radSysBRG OBJECT IDENTIFIER ::= { systems 4 }  -- RAD Bridges products
+
+radTRE1  OBJECT IDENTIFIER ::= { radSysBRG 1 }  -- RAD Bridges products
+
+radTRE1D  OBJECT IDENTIFIER ::= { radSysBRG 2 }  -- RAD Bridges products
+
+radTRE8  OBJECT IDENTIFIER ::= { radSysBRG 3 }  -- RAD Bridges products
+
+radTRE8D  OBJECT IDENTIFIER ::= { radSysBRG 4 }  -- RAD Bridges products
+
+radMBE1  OBJECT IDENTIFIER ::= { radSysBRG 5 }  -- RAD Bridges products
+
+radMBE1D  OBJECT IDENTIFIER ::= { radSysBRG  6 }  -- RAD Bridges products
+
+radMBE8  OBJECT IDENTIFIER ::= { radSysBRG  7 }  -- RAD Bridges products
+
+radMBE8D  OBJECT IDENTIFIER ::= { radSysBRG  8 }  -- RAD Bridges products
+
+radMLBT   OBJECT IDENTIFIER ::= { radSysBRG  9 }  -- RAD Bridges products 
+
+radFEB4DAS    OBJECT IDENTIFIER ::= { radSysBRG  10 }  -- RAD Bridges products
+
+radTrimBrg10  OBJECT IDENTIFIER ::= { radSysBRG 11 }  -- RAD Bridges products
+
+radTrimBrg16  OBJECT IDENTIFIER ::= { radSysBRG 12 }  -- RAD Bridges products
+
+radRRTRE8  OBJECT IDENTIFIER ::= { radSysBRG 13 }  -- RAD Bridges products
+
+radRRTRE8D  OBJECT IDENTIFIER ::= { radSysBRG 14 }  -- RAD Bridges products
+
+radRRMLBT   OBJECT IDENTIFIER ::= { radSysBRG 15 }  -- RAD Bridges products 
+
+radRRMLBTF   OBJECT IDENTIFIER ::= { radSysBRG 16 }  -- RAD Bridges products 
+
+radRRTRE1D  OBJECT IDENTIFIER ::= { radSysBRG 17 }  -- RAD Bridges products
+
+radTRERAS  OBJECT IDENTIFIER ::= { radSysBRG 18 }  -- RAD Bridges products
+
+radTRERASa  OBJECT IDENTIFIER ::= { radSysBRG 19 }  -- RAD Bridges products
+
+radMBERAS  OBJECT IDENTIFIER ::= { radSysBRG 20 }  -- RAD Bridges products
+
+radMBERASa  OBJECT IDENTIFIER ::= { radSysBRG 21 }  -- RAD Bridges products
+ 
+radFEB4FDX   OBJECT IDENTIFIER ::= { radSysBRG 22 }  -- RAD Bridges products
+
+radFEB4SAS  OBJECT IDENTIFIER ::= { radSysBRG 23 }  -- RAD Bridges products
+
+radRRFTBDAS  OBJECT IDENTIFIER ::= { radSysBRG 24 }  -- RAD Bridges products
+
+radRRFTBSAS  OBJECT IDENTIFIER ::= { radSysBRG 25 }  -- RAD Bridges products
+
+radFTBDAS    OBJECT IDENTIFIER ::= { radSysBRG 26 }  -- RAD Bridges products
+
+radFTBSAS    OBJECT IDENTIFIER ::= { radSysBRG 27 }  -- RAD Bridges products
+
+radFastWay100    OBJECT IDENTIFIER ::= { radSysBRG 28 }  -- RAD Bridges products
+
+radSysCnvrtr OBJECT IDENTIFIER ::= { systems 5 }  -- RAD Converters products
+
+radSTC1   OBJECT IDENTIFIER ::= { radSysCnvrtr 1 }  -- RAD Converters products
+
+radSTC2   OBJECT IDENTIFIER ::= { radSysCnvrtr 3 }  -- RAD Converters products
+
+radSTC1UDP  OBJECT IDENTIFIER ::= { radSysCnvrtr 4 }  -- RAD Converters products
+
+radSTC2UDP  OBJECT IDENTIFIER ::= { radSysCnvrtr 6 }  -- RAD Converters products
+
+radFTC1   OBJECT IDENTIFIER ::= { radSysCnvrtr 10 }  -- RAD Converters products
+
+radFTC2   OBJECT IDENTIFIER ::= { radSysCnvrtr 12 }  -- RAD Converters products
+
+radFTC1UDP    OBJECT IDENTIFIER ::= { radSysCnvrtr 13 }  -- RAD Converters products
+
+radFTC2UDP    OBJECT IDENTIFIER ::= { radSysCnvrtr 15 }  -- RAD Converters products
+
+radSEC1   OBJECT IDENTIFIER ::= { radSysCnvrtr 20 }  -- RAD Converters products
+
+radSEC2   OBJECT IDENTIFIER ::= { radSysCnvrtr 22 }  -- RAD Converters products
+
+radSEC1UDP   OBJECT IDENTIFIER ::= { radSysCnvrtr 23 }  -- RAD Converters products
+
+radSEC2UDP   OBJECT IDENTIFIER ::= { radSysCnvrtr 25 }  -- RAD Converters products
+
+radFEC1   OBJECT IDENTIFIER ::= { radSysCnvrtr 30 }  -- RAD Converters products
+
+radFEC2   OBJECT IDENTIFIER ::= { radSysCnvrtr 32 }  -- RAD Converters products
+
+radFEC1UDP   OBJECT IDENTIFIER ::= { radSysCnvrtr 33 }  -- RAD Converters products
+
+radFEC2UDP   OBJECT IDENTIFIER ::= { radSysCnvrtr 35 }  -- RAD Converters products
+
+radSysStkHub  OBJECT IDENTIFIER ::= { systems 7 }  -- RAD Stackable products
+
+radRBHE    OBJECT IDENTIFIER ::= { radSysStkHub 1 }  -- RAD Stackable products
+
+radRBHT    OBJECT IDENTIFIER ::= { radSysStkHub 2 }  -- RAD Stackable products
+
+radETS4fddiDAS   OBJECT IDENTIFIER ::= { radSysStkHub 3 }  -- RAD Stackable products
+
+radETS4fddiSAS   OBJECT IDENTIFIER ::= { radSysStkHub 4 }  -- RAD Stackable products
+
+radSAHEMX  OBJECT IDENTIFIER ::= { radSysStkHub 5 }  -- RAD Stackable products
+
+radSAHTM   OBJECT IDENTIFIER ::= { radSysStkHub 6 }  -- RAD Stackable products
+
+radETS4   OBJECT IDENTIFIER ::= { radSysStkHub 7 }  -- RAD Stackable products
+
+radSAHEMU  OBJECT IDENTIFIER ::= { radSysStkHub 8 }  -- RAD Stackable products
+
+
+unknown    	OBJECT IDENTIFIER ::= { radSysStkHub 9 }  -- RAD Stackable products
+
+radSAH16Eint   OBJECT IDENTIFIER ::= { radSysStkHub 10 }  -- RAD Stackable products
+
+radSAH16Tint   OBJECT IDENTIFIER ::= { radSysStkHub 11 }  -- RAD Stackable products
+
+radSAH16Eext   OBJECT IDENTIFIER ::= { radSysStkHub 12 }  -- RAD Stackable products
+
+radSAH16Text   OBJECT IDENTIFIER ::= { radSysStkHub 13 }  -- RAD Stackable products
+
+
+
+radSysPS OBJECT IDENTIFIER ::=  { systems 8 } -- RAD Packet Switch  (PS) products 
+
+radSPS2  OBJECT IDENTIFIER ::=  { radSysPS 1 } -- RAD Packet Switch  (PS) products 
+
+radSPS3  OBJECT IDENTIFIER ::=  { radSysPS 2 } -- RAD Packet Switch  (PS) products 
+
+radSPS6  OBJECT IDENTIFIER ::=  { radSysPS 3 } -- RAD Packet Switch  (PS) products 
+
+radSPS9  OBJECT IDENTIFIER ::=  { radSysPS 4 } -- RAD Packet Switch  (PS) products 
+
+radSPS12 OBJECT IDENTIFIER ::=  { radSysPS 5 } -- RAD Packet Switch  (PS) products 
+
+radAPD2  OBJECT IDENTIFIER ::=  { radSysPS 6 } -- RAD Packet Switch  (PS) products 
+
+radAPD8  OBJECT IDENTIFIER ::=  { radSysPS 7 } -- RAD Packet Switch  (PS) products 
+
+radAPS8  OBJECT IDENTIFIER ::=  { radSysPS 8 } -- RAD Packet Switch  (PS) products 
+
+radAPS16 OBJECT IDENTIFIER ::=  { radSysPS 9 } -- RAD Packet Switch  (PS) products 
+
+radAPS24 OBJECT IDENTIFIER ::=  { radSysPS 10 } -- RAD Packet Switch  (PS) products 
+
+radSPS3S  OBJECT IDENTIFIER ::=  { radSysPS 11} -- RAD Packet Switch  (PS) products 
+
+radFPS8  OBJECT IDENTIFIER ::=  { radSysPS 12} -- RAD Packet Switch  (PS) products 
+
+radFPS12  OBJECT IDENTIFIER ::=  { radSysPS 13} -- RAD Packet Switch  (PS) products 
+
+radSPS3ScSL  OBJECT IDENTIFIER ::= { radSysPS 14} -- RAD Packet Switch  (PS) products 
+
+radSPS3Sc2S  OBJECT IDENTIFIER ::=  { radSysPS 15} -- RAD Packet Switch  (PS) products 
+
+radFPS8c OBJECT IDENTIFIER ::=  { radSysPS 16} -- RAD Packet Switch  (PS) products
+
+radFPS4 OBJECT IDENTIFIER ::=  { radSysPS 17} -- RAD Packet Switch  (PS) products
+
+
+radSysEth  OBJECT IDENTIFIER ::= { systems 9 } -- RAD Ethernet products 
+
+radEP8T    OBJECT IDENTIFIER ::= {radSysEth 1} -- RAD Ethernet products
+
+radEP4TAUI   OBJECT IDENTIFIER ::= {radSysEth 2} -- RAD Ethernet products
+
+radEP4T2FL   OBJECT IDENTIFIER ::= {radSysEth 3} -- RAD Ethernet products
+
+radEP4TFL    OBJECT IDENTIFIER ::= {radSysEth 4} -- RAD Ethernet products
+
+radEP4FL     OBJECT IDENTIFIER ::= {radSysEth 5} -- RAD Ethernet products
+
+
+radEPR8T   OBJECT IDENTIFIER ::= {radSysEth 7} -- RAD Ethernet products
+
+radEPR4TAUI  OBJECT IDENTIFIER ::= {radSysEth 8} -- RAD Ethernet products
+
+radEPR4T2FL  OBJECT IDENTIFIER ::= {radSysEth 9} -- RAD Ethernet products
+
+radEPR4TFL   OBJECT IDENTIFIER ::= {radSysEth 10} -- RAD Ethernet products
+
+radEPR4FL    OBJECT IDENTIFIER ::= {radSysEth 11} -- RAD Ethernet products
+
+
+radSysRtr  OBJECT IDENTIFIER ::= { systems 11 } -- RAD Router products 
+
+radRTED    OBJECT IDENTIFIER ::= {radSysRtr 1} -- RAD Router products
+
+radRTEM    OBJECT IDENTIFIER ::= {radSysRtr 2} -- RAD Router products
+
+radRTEC    OBJECT IDENTIFIER ::= {radSysRtr 3} -- RAD Router products
+
+
+radSysAtm  OBJECT IDENTIFIER ::= { systems 12 } -- RAD ATM products 
+
+radStarSwitch    OBJECT IDENTIFIER ::= {radSysAtm 1} --RAD StartSwitch products
+
+radStarSwitchATM25    OBJECT IDENTIFIER ::= {radStarSwitch 1} --RAD StartSwitch products
+radStarSwitchATM25L   OBJECT IDENTIFIER ::= {radStarSwitch 2} --RAD StartSwitch products
+radStarSwitchATM155   OBJECT IDENTIFIER ::= {radStarSwitch 3} --RAD StartSwitch products
+
+
+radAtmCsuDsu  OBJECT IDENTIFIER ::= {radSysAtm 2} --RAD CSU/DSU products 
+
+radAmcdE1  OBJECT IDENTIFIER ::= {radAtmCsuDsu 1} -- RAD CSU/DSU products
+radAmcdT1  OBJECT IDENTIFIER ::= {radAtmCsuDsu 2} -- RAD CSU/DSU products
+radAce20E  OBJECT IDENTIFIER ::= {radAtmCsuDsu 3} -- RAD CSU/DSU products
+radAce20T  OBJECT IDENTIFIER ::= {radAtmCsuDsu 4} -- RAD CSU/DSU products
+
+radAce2005 OBJECT IDENTIFIER ::= { radAtmCsuDsu 5} -- RAD ACE2005
+radAce2002 OBJECT IDENTIFIER ::= { radAtmCsuDsu 6} -- RAD ACE2002
+
+radAce2E  OBJECT IDENTIFIER ::= {radAtmCsuDsu 8} -- RAD CSU/DSU products
+radAce2T  OBJECT IDENTIFIER ::= {radAtmCsuDsu 9} -- RAD CSU/DSU products
+
+radAce  OBJECT IDENTIFIER ::= {radSysAtm 3} --RAD ACE products 
+radAce101  OBJECT IDENTIFIER ::= {radAce 1} -- RAD ACE101
+radAce102  OBJECT IDENTIFIER ::= {radAce 2} -- RAD ACE102
+
+
+agnt OBJECT IDENTIFIER ::= { radGen 2} 
+-- agent general tree
+-- Agent General  
+agnHwVersion OBJECT-TYPE
+      SYNTAX  DisplayString
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "ASCII string for description and display of the agent hardware version,
+      as it is known by the agent software.The user can update the version
+       upon request when he changes   components in the agent's module  "
+      ::= { agnt 1 }
+
+agnTrapMask OBJECT-TYPE   
+      SYNTAX  INTEGER 
+      ACCESS  read-write    
+      STATUS  mandatory
+      DESCRIPTION
+      "The value of this attribute determines the type of traps the 
+       agent should mask and not send to the management console. The 
+       value is differently determined for different products. There are 
+       mainly two methods:
+       - an integer number, specifying the traps' severity.
+       - a sum of 2**n, where n is a bit assigned to a certain 
+         masked trap group.
+       User should consult the product specification, to find out 
+       the method employed."
+      ::= { agnt 2 }
+
+agnTrapValue OBJECT-TYPE
+	SYNTAX  OCTET STRING
+	ACCESS  read-only
+	STATUS deprecated
+	DESCRIPTION
+	"The value of the trap decoded in internal RAD format. Full description is given
+	  in the Trap definition file"
+	::= {agnt 3}
+
+agnChangeCnt OBJECT-TYPE
+	SYNTAX  Counter
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	"The number of changes in system configuration that were  reported to the 
+	manager since last cold start"
+	::= {agnt 4 }
+
+agnSpecific OBJECT-TYPE
+      SYNTAX  OBJECT IDENTIFIER
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+      " Object identifier of entity containing additional information 
+      regarding this instance."
+      ::= { agnt 5}
+
+agnConfigMsg OBJECT-TYPE   
+      SYNTAX  OCTET STRING
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+      "Full configuration message  coded in internal RAD application format.
+      This entry describes agent's configuration. "
+      ::= { agnt 6 }
+
+-- Manager table to record all IP addresses
+
+mngTrapIpTable  OBJECT-TYPE
+	SYNTAX  SEQUENCE OF MngEntry
+	ACCESS  not-accessible
+	STATUS mandatory
+	DESCRIPTION
+	"This table indicates  the destination address of the traps.
+	  Internally it will be limited to ten addresses. "
+	::= { agnt 7 }
+
+mngEntry OBJECT-TYPE
+	SYNTAX  MngEntry
+	ACCESS  not-accessible
+	STATUS mandatory
+	INDEX {  mngID }
+	::= { mngTrapIpTable 1 }
+
+
+MngEntry  ::=
+	    SEQUENCE {
+	mngID
+	  INTEGER,
+	mngIP
+	  IpAddress,
+	mngIPMask
+	  IpAddress,
+    mngTrapMask
+      INTEGER	
+    }
+
+mngID OBJECT-TYPE
+	SYNTAX  INTEGER 
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	" This value indicates an index of a specific IP address"
+	::= { mngEntry 1 }
+
+mngIP OBJECT-TYPE
+	SYNTAX  IpAddress 
+	ACCESS  read-write
+	STATUS mandatory
+	DESCRIPTION
+	"This value indicates  the  destination address of the traps. IP 0.0.0.0 removes the entry. "
+	::= { mngEntry 2 }
+
+mngIPMask OBJECT-TYPE
+	SYNTAX  IpAddress 
+	ACCESS  read-write
+	STATUS deprecated
+	DESCRIPTION
+	"This value indicates  the  mask of the destination addresses of the traps. "
+	::= { mngEntry 3 }
+
+mngTrapMask OBJECT-TYPE
+	SYNTAX  INTEGER 
+	ACCESS  read-write
+	STATUS mandatory
+	DESCRIPTION
+      "The value of this attribute determines the type of traps the 
+       agent should mask and not send to this NMS. The 
+       value is differently determined for different products. There are 
+       mainly two methods:
+       - an integer number, specifying the traps' severity.
+       - a sum of 2**n, where n is a bit assigned to a certain 
+         masked trap group.
+       User should consult the product specification, to find out 
+       the method employed."
+	::= { mngEntry 4 }
+
+agnIndication OBJECT-TYPE   
+      SYNTAX  INTEGER {
+		 faulty (1),        -- critical
+		 warning (2),
+		 normal(3),			-- off
+		 minor(4),
+		 major(5),
+		 event(6)
+     
+		}
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+      "Attribute describing the state of the entity the agent is responsible for.
+       In case of a modular entity, the value of this attribute will be according
+       to the component which is in the worst state."
+      ::= { agnt 8 }
+
+
+agnMonitorModeCmd OBJECT-TYPE
+	SYNTAX  INTEGER {
+	notApplicable(1),
+	off(2),
+	on(3)
+	}
+	ACCESS  read-write
+	STATUS mandatory
+	DESCRIPTION
+	"Setting this attribute to ON, will enforce the agent to change its mode of operation to
+	 Monitor Mode"
+	::= {agnt 9}
+
+agnLed OBJECT-TYPE
+	SYNTAX  OCTET STRING
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	"This entry specifies  the LEDs status of the agent module . Each led will be represented by 4 
+	 bits  where the first 2 bits (left) will specify  the status :
+	 (00=NA, 01=OFF, 10=ON, 11=BLINK),
+     and the next two bits (right) will specify the color :
+     (00=GREEN, 01=RED, 10=YELLOW, 11=ORANGE)"
+	::= {agnt 10}
+
+trapTable  OBJECT-TYPE
+	SYNTAX  SEQUENCE OF TrapEntry
+	ACCESS  not-accessible
+	STATUS mandatory
+	DESCRIPTION
+	"This table includes the last few traps generated by the agent, for future retrieval. The table
+	 has a limited capacity. If traps are not retrieved in proper time, they will be
+	 over-written by new traps "
+	::= {agnt 11}
+
+trapEntry OBJECT-TYPE
+	SYNTAX  TrapEntry
+	ACCESS  not-accessible
+	STATUS mandatory
+	INDEX {  trapID }
+	::= { trapTable 1 }
+
+TrapEntry  ::=
+	    SEQUENCE {
+	trapID
+	  INTEGER,
+	trapVal
+	  DisplayString,
+	 trapTimeSinceOccurrence
+	   TimeTicks
+	}
+
+trapID OBJECT-TYPE
+	SYNTAX  INTEGER 
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	" This value indicates an index of a specific trap "
+	::= { trapEntry 1 }
+
+trapVal OBJECT-TYPE
+	SYNTAX  DisplayString 
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	"This value is the actual ASCII description  of the trap. "
+	::= { trapEntry 2 }
+
+trapTimeSinceOccurrence OBJECT-TYPE
+	 SYNTAX    TimeTicks
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	"This value indicates the amount of  time passed since the occurrence of the event that
+	   trigger this trap. "
+	::= { trapEntry 3 }
+
+fileTransfer  OBJECT IDENTIFIER ::= { agnt 12 }
+
+fileServerIP  OBJECT-TYPE
+	SYNTAX  IpAddress
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+	"The IP address of the server from which the file is loaded "
+	::= { fileTransfer 1 }
+
+fileName  OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+	"The name of the file to be loaded. For protection, read returns
+	 NULL. "
+	::= { fileTransfer 2 }
+
+fileTransCmd  OBJECT-TYPE
+	SYNTAX  INTEGER {
+	                 swDwnLoad     (1),
+					 configDwnLoad (2),
+					 configUpLoad  (3),
+					 coProcDwnLoad (4),
+					 stateUpLoad   (5),
+					 noOp          (255)
+					}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+	"The command to be executed on fileName at fileServerIP."
+	::= { fileTransfer 3 }
+ 
+-- tftp  group  
+
+tftpRetryTimeOut OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        " General Retransmission time-out value (seconds) "
+    -- DEFVAL  { 15 }
+    ::= { fileTransfer 4 }
+
+tftpTotalTimeOut OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        " Total Retransmission time-out value (seconds) "
+    -- DEFVAL  { 60 }
+    ::= { fileTransfer 5 }
+
+tftpStatus OBJECT-TYPE
+    SYNTAX  INTEGER {
+		noOp(2),
+		connecting(3),
+		transferringData(4),
+		endedTimeOut(5),
+		endedOk(6),
+		error(7)
+	}
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "Status of tftp session. When a session ended with success,
+    the tftpStatus should be endedOk(6). Before restarting a
+    tftp session, the NMS should set the tftpStatus to noOp(2).
+    That's the reason of ACCESS read-write to this field."
+    DEFVAL  { noOp}
+    ::= { fileTransfer 6 }
+
+tftpError OBJECT-TYPE
+    SYNTAX  OCTET STRING ( SIZE(2) )
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    " The MSB represents the standard error code.
+    The LSB represents the private error code.
+    0x0000 is No Error
+    0x0100 is File Not Found
+    0x0400 is Illegal TFTP operation
+    0x0500 is Unknown transfer ID
+    0x0001 is Server Overflow
+    0x0002 is No empty UDP port
+    0x0003 is No empty connection
+    0x0004 is Illegal File Mode
+    0x0007 is Illegal PDU size "
+    DEFVAL  { '0000'h }
+    ::= { fileTransfer 7 }
+
+fileTransferToSubSystems OBJECT-TYPE
+    SYNTAX  OCTET STRING 
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    " This object represents the sub-systems the fileTransCmd 
+      refers to. It should be used when a system is divided 
+      to sub-systems and each sub-system (or part of them) can 
+	  have a different SW/Configuration.
+
+	  Each bit of this object will represent one of the sub-systems.
+	  Bit='1' - APPLY to respective sub-system
+	  Bit='0' - DO NOT APPLY to respective sub-system
+
+	  For the meaning of each bit, see product's specification.
+	  User will select the sub-systems envolved by filling-in the bits
+      that represent these sub-systems.
+      In this case, the file represented by 'fileName' will 
+	  include several parts, each representing one of the sub-systems.
+	  The agent will refer only to the part/s indicated by this object.
+
+      0 Octet Strings = not applicable  
+      DEFVAL = 0h	for  the products that support this object."
+    ::= { fileTransfer 8 }
+
+
+systemReset  OBJECT-TYPE
+	SYNTAX  INTEGER	{
+	                 off         (2),
+					 on          (3), --HW
+					 resetConfig (4)  
+				    }
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION
+	"Reset action to be performed on the system."
+	::= { agnt 13 }
+
+systemTiming  OBJECT IDENTIFIER ::= { agnt 14 }
+
+systemDate OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+           "System date."
+        ::= { systemTiming 1 }
+        
+systemTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+           "System time."
+        ::= { systemTiming 2 }
+
+
+systemPort  OBJECT IDENTIFIER ::= { agnt 15 }
+
+physicalConnectorTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF PhysicalConnectorEntry
+	ACCESS  not-accessible
+	STATUS mandatory
+	DESCRIPTION
+	"This table includes the connector type of ports or interfaces."
+	::= {systemPort 1}
+
+physicalConnectorEntry OBJECT-TYPE
+	SYNTAX  PhysicalConnectorEntry
+	ACCESS  not-accessible
+	STATUS mandatory
+	INDEX {portIdx}
+	::= { physicalConnectorTable 1 }
+
+PhysicalConnectorEntry  ::=
+	    SEQUENCE {
+	portIdx
+	  INTEGER,
+	physicalConnector
+	  INTEGER
+	}
+
+portIdx OBJECT-TYPE
+	SYNTAX  INTEGER 
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	"This object is an index of the specific port or interface.
+	 For a port, the index will be as agreed between agent and 
+	 application.
+	 For an interface, ifIndex may be used."
+	::= { physicalConnectorEntry 1 }
+
+physicalConnector OBJECT-TYPE
+	SYNTAX  INTEGER 
+	        {
+			other (1),
+			v35   (2),	  --34 pin female
+			rs530 (3),	  --DB25
+			x21   (4),	  --DB15
+			bnc   (5),
+			utp   (6),	  --RJ45
+			aui   (7),
+			rs422 (8),	  --DB25
+			crossUtp (9), --RJ45
+			rj45    (10),
+			v24     (11), --DB25
+			g703    (12), --TB5
+			termBlock3AndRj45 (13),
+			terminalBlock3    (14),
+			terminalBlock5    (15),
+			terminalBlock7    (16),
+			db25              (17),
+			db15              (18),
+			rj45ethernet      (19),
+			termBlock5AndRj45 (20),
+			db9               (21),
+			g703E1            (22),  --BNC-RJ45-BNC	
+			g703E1-LTU        (23),  --BNC-RJ45-BNC
+			sc                (24),	 --sc optical 
+			st                (25),	 --st optical
+			stl               (26),
+			fc                (27),	 --fc optical
+			tb5w              (28),  --Term-Block-5-Wire (for HCD)
+			termBlock6AndRj45 (29),
+
+			none             (255)    	
+			}	 
+	ACCESS  read-only
+	STATUS mandatory
+	DESCRIPTION
+	"The connector of the port/interface.
+	 other - none of the specified connectors
+	 none -  no connector."
+	::= { physicalConnectorEntry 2 }
+
+
+prtSupervisory  OBJECT IDENTIFIER ::= { systemPort 2 }
+
+
+prtSpTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF PrtSpEntry
+      ACCESS not-accessible
+      STATUS  mandatory
+      ::= {prtSupervisory 1}
+
+prtSpEntry OBJECT-TYPE
+      SYNTAX PrtSpEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      DESCRIPTION
+      "Supervisory port parameter table."
+      INDEX {prtSupervisoryIndex }
+      ::= { prtSpTable 1}
+
+PrtSpEntry ::=
+      SEQUENCE {
+      prtSupervisoryIndex       INTEGER,
+	  prtSupervisoryRate        INTEGER,
+	  prtSupervisoryDataBits    INTEGER,
+	  prtSupervisoryParity      INTEGER,
+	  prtSupervisoryStopBits    INTEGER,
+	  prtSupervisoryUsage       INTEGER,
+	  prtSupervisoryInterface   INTEGER,
+	  prtSupervisoryCTS		    INTEGER,
+	  prtSupervisoryDcdDelay    INTEGER,
+	  prtSupervisoryDSR		    INTEGER
+      }				  
+					  
+
+prtSupervisoryIndex OBJECT-TYPE
+      SYNTAX  INTEGER
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+      "The SP port index. 
+       The LS byte of the integer is the port index 1..255. 
+       The MS byte is different than 0 only if the port belongs to 
+       a module. In	that case it is the module number."
+      ::= { prtSpEntry 1}
+
+prtSupervisoryRate     OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+        auto      (1),
+        s300bps   (2),
+        s1200bps  (3),
+        s2400bps  (4),
+        s4800bps  (5),
+        s9600bps  (6),
+        s19200bps (7),
+        s38400bps (8),
+        s57600bps (9),
+        s115200bps (10)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This attribute indicates the operation rate (speed) of the 
+       port.
+       auto - automatic rate selection, by the agent."
+      ::= { prtSpEntry 2}
+
+prtSupervisoryDataBits OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+        dataBits7 (1),
+        dataBits8 (2)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This attribute indicates the number of data bits in an async 
+       frame"
+      ::= { prtSpEntry 3}
+
+prtSupervisoryParity OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+        none  (1),
+        odd   (2),
+        even  (3)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This attribute indicates the parity mode in an async frame"
+      ::= { prtSpEntry 4}
+
+prtSupervisoryStopBits OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+		notApplicable  (1),
+        stopBits1      (2),
+        stopBits1dot5  (3),
+        stopBits2      (4)
+	      }
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+      "This attribute indicates the parity mode in an async frame."
+      ::= { prtSpEntry 5}
+
+prtSupervisoryUsage OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+		unknown (1),
+		noUse   (2),
+		terminal(3),
+		nmsSlip (4),
+		nmsPpp  (5),
+		muxSlip (6),
+		muxPpp  (7),
+		dialOut (8)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This attribute indicates the usage of the SP port."
+      ::= { prtSpEntry 6}
+
+prtSupervisoryInterface OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+		  notApplicable(1),
+          dce  (2),
+          dte  (3)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This attribute indicates the supervisory port interface."
+      ::= { prtSpEntry 7}
+
+prtSupervisoryCTS OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+          	notApplicable   (1),
+          	on            	(2),        --Old value for DCE.
+			rts           	(3),        --Old value for DCE 
+			dteWait         (4),        --DTE will wait for CTS to become active before transmit date.
+			dteIgnore       (5)         --DTE will Ignore CTS signal and will transmit date anyway.
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+	  "CTS line state." 
+      ::= { prtSpEntry 8}
+
+prtSupervisoryDcdDelay OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+          notApplicable (1),
+          d0   (2),
+          d10  (3),
+		  d50  (4),
+		  d100 (5),
+		  d200 (6),
+		  d300 (7)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+	  "DCD delay in msec." 
+      ::= { prtSpEntry 9}
+
+prtSupervisoryDSR OBJECT-TYPE
+      SYNTAX  INTEGER
+	      {
+          notApplicable (1),
+          on   (2),
+          dtr  (3)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+	  "DSR line state." 
+      ::= { prtSpEntry 10}
+
+systemResetAllStatsCmd OBJECT-TYPE
+      SYNTAX   INTEGER
+	      {
+    		off(2),
+	    	on (3)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+       "Reset statistics of all ports and connections of the device."
+      ::= { agnt 16 }
+
+systemClearTablesCmd OBJECT-TYPE
+      SYNTAX   INTEGER
+	      {
+    		off(2),
+	    	tempCnfgTables (3)
+	      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+       "tempCnfgTables - Set *RowStatus = destroy for all entries of 
+                         some tables having *RowStatus object, for 
+                         temporary configuration only! (255).
+                         For the relevant tables, see product's specification.
+                         This object should be used by WAN product applications 
+                         before performing the Update operation, in order to clear 
+                         old entries of these tables. 
+        off - agent will automatically change to this value, after performing the 
+              command. "
+      ::= { agnt 17 }
+
+systemParameter OBJECT-TYPE
+      SYNTAX   INTEGER
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+       "Protocol indication parameter. This parameter can be used for
+        different purposes: 
+        - TELNET session time-out in seconds."
+       ::= { agnt 18 }
+
+agnGlobalAlarmMask OBJECT-TYPE   
+      SYNTAX OCTET STRING 
+      ACCESS  read-write    
+      STATUS  mandatory
+      DESCRIPTION
+      "The value of this attribute determines the alarm traps the 
+       agent should mask and not send to the managers.
+       Each bit from a certain octet represents a certain alarm."
+      ::= { agnt 19 }
+
+alarmSeverity   OBJECT-TYPE
+      	SYNTAX   INTEGER
+	      	{
+			event		(3),
+			minor		(4),
+			major		(5),
+	    	warning		(6),
+			critical	(7)
+	  		}
+      	ACCESS  read-only
+      	STATUS  mandatory
+      	DESCRIPTION
+       	"This object specifies the severity of the alarms."
+      ::= { agnt 20 }
+
+alarmState   OBJECT-TYPE
+      	SYNTAX   INTEGER
+	      	{
+			off (2), 	-- End, 
+			on  (3) 	-- Start.
+	  		}
+      	ACCESS  read-only
+      	STATUS  mandatory
+      	DESCRIPTION
+       "."
+      ::= { agnt 21 }
+
+ 
+agnTestStatus OBJECT-TYPE
+	SYNTAX	INTEGER
+		{
+		 off			(2),
+		 on 			(3)
+		}
+
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+	"Indicates the current test status (for all levels: system,
+	   card, port).
+       This attribute will be set to: 
+         on(3): when there is at least one test	in progress on the
+                system/card/port
+		 off(2): when there is NO test in progress on the
+		         system/card/port"
+    ::= {agnt 22  }
+
+
+tftpStatusChangeTrap  TRAP-TYPE
+     ENTERPRISE      systems
+     VARIABLES       { tftpStatus}
+     DESCRIPTION     
+     "This trap is sent whenever the status of tftp changed."
+     ::= 1
+
+
+agnStatusChangeTrap  TRAP-TYPE
+	ENTERPRISE		systems
+	VARIABLES		{agnIndication}
+	DESCRIPTION
+	"This trap is sent whenever the state of the entity the agent is
+	 responsible for is changed.
+	 TDM devices will send agnTestStatus variable to indicate the current test status."
+	::= 2
+
+
+optimux OBJECT IDENTIFIER ::= { radWan 5 }
+
+-- One Optimux is always connected to another optimux 
+-- via its link. Therefore, the SNMP agent sitting on
+-- one device is responsible of the second (remote)
+-- device. This table supplies information for the both
+-- optimux, while the first is the local one and the second
+-- is the remote one.
+
+optMxConfigTable OBJECT-TYPE
+     SYNTAX  SEQUENCE OF OptMxConfigEntry
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+        "This table contains parameters of configuration
+	for each member of the couple of Optimux."
+     ::= { optimux 1 }
+
+ optMxConfigEntry OBJECT-TYPE
+     SYNTAX OptMxConfigEntry 
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+         "An entry in the Optimux Config  table."
+     INDEX   { optIndex }
+     ::= { optMxConfigTable 1 }
+
+     OptMxConfigEntry ::=
+              SEQUENCE {
+                  optIndex   		INTEGER,
+	     optHWVersion           DisplayString,
+ 	     optSWVersion           DisplayString,
+                  optPSPrimary 		INTEGER,
+	     optPSSecondary 	INTEGER,
+	     optLinkActive       	InterfaceIndex,
+	     optSelectLink       	INTEGER,
+	     optGrpPayLoadLoop    INTEGER,
+	     optGrpClockSource      INTEGER,
+	     optRedundancyStatus   INTEGER,
+	     optRedundancyCnf       INTEGER 
+      }
+
+ optIndex OBJECT-TYPE
+ SYNTAX  INTEGER {local(1), remote(2) }
+ ACCESS  read-only
+ STATUS  mandatory
+ DESCRIPTION
+ "optIndex = 1 is for local Optimux.
+  optIndex = 2 is for remote Optimux."
+  ::= { optMxConfigEntry 1 }
+
+ optHWVersion OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "HW Version of the device."
+     ::= { optMxConfigEntry 2 }
+
+optSWVersion OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "SW Version of the device."
+     ::= { optMxConfigEntry 3 }
+
+optPSPrimary OBJECT-TYPE
+    SYNTAX  INTEGER {
+		unknown(1),
+		fault(3),
+		active(4),
+		none(6)
+    }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "The status of the primary Power Supply Unit."
+    DEFVAL { active }
+     ::= { optMxConfigEntry 4 }
+
+optPSSecondary OBJECT-TYPE
+     SYNTAX  INTEGER {
+		unknown(1),
+		fault(3),
+		active(4),
+		none(6)
+      }
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+     "The status of the secondary Power Supply Unit."
+     DEFVAL { none }
+              ::= { optMxConfigEntry 5 }
+
+optLinkActive OBJECT-TYPE
+     SYNTAX  InterfaceIndex
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+     "This object indicates which link is active. It
+       may be: 5, 6 or 105, 106" 
+      ::= { optMxConfigEntry 6 }
+
+optSelectLink OBJECT-TYPE
+     SYNTAX  INTEGER {
+		autoredundancy(1),
+		main(5),
+		back(6)
+     }
+     ACCESS  read-write
+     STATUS   mandatory
+     DESCRIPTION
+     "This mib item enables the user to force the device
+       to use specific link. "
+      DEFVAL { autoredundancy }
+      ::= { optMxConfigEntry 7 }
+
+optGrpPayLoadLoop OBJECT-TYPE
+     SYNTAX  INTEGER {
+		off(2), on(3)
+     }
+     ACCESS  read-write
+     STATUS   mandatory
+     DESCRIPTION
+    	"Performs payload loop ( remote loop) to 4 E1 channels
+           at once."
+      DEFVAL { off }
+      ::= { optMxConfigEntry 8 }
+
+optGrpClockSource OBJECT-TYPE
+     SYNTAX  INTEGER {
+	notApplicable(1), localInternal(2), localExternal(3),loopTiming(4)
+     }
+     ACCESS  read-write
+     STATUS   mandatory
+     DESCRIPTION
+     "If dsx3TransmitClockSource = localTiming(2), then the user
+      can configure this field as:
+      localInternal(2) = use the internal clock of the device
+      localExternal(3) = use the external clock connected to the port
+      dedicated to clock."
+      DEFVAL { notApplicable }
+      ::= { optMxConfigEntry 9 }
+
+
+optRedundancyStatus OBJECT-TYPE
+     SYNTAX  INTEGER {
+	  available(2), notAvailable(3)
+     }
+     ACCESS  read-only
+     STATUS   mandatory
+     DESCRIPTION
+     "If there are two modules 'links', then this field
+      should be set to available(2). If there is only one
+      module 'link', this field should be set to notAvailable(3)."
+      DEFVAL { available }
+      ::= { optMxConfigEntry 10 }
+
+optRedundancyCnf  OBJECT-TYPE
+     SYNTAX  INTEGER {
+	off(2), auto(3), manual(4)
+     }
+     ACCESS  read-write
+     STATUS   mandatory
+     DESCRIPTION
+     "If optRedundancyStatus = notAvailable(3), then this field
+       is off(2). Else the user can configure this field as:
+      auto(3) = switch back to main link when valid.
+      manual(4) = don't switch back to main link. "
+      DEFVAL { auto }
+      ::= { optMxConfigEntry 11 }
+
+-- This table is for XL Optimux
+optMxModuleTable OBJECT-TYPE
+     SYNTAX  SEQUENCE OF OptMxModuleEntry
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+        "This table defines the type of the module
+      enrolled in each slot."
+     ::= { optimux 2 }
+
+ optMxModuleEntry OBJECT-TYPE
+     SYNTAX OptMxModuleEntry 
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+         "An entry in the Optimux Module  table."
+     INDEX   { optMdIdx, optMdSltIdx }
+     ::= { optMxModuleTable 1 }
+
+ OptMxModuleEntry ::=
+              SEQUENCE {
+ 		optMdIdx	    INTEGER,
+	 	optMdSltIdx 	INTEGER,
+ 		optMdType 	    INTEGER,
+	    optMdHWVersion  DisplayString,
+	    optMdModLed 	OCTET STRING 
+      }
+
+ optMdIdx OBJECT-TYPE
+ SYNTAX  INTEGER {local(1), remote(2) }
+ ACCESS  read-only
+ STATUS  mandatory
+ DESCRIPTION
+ " optMdIdx = 1 is for local Optimux.
+ optMdIdx = 2 is for remote Optimux."
+  ::= { optMxModuleEntry 1 }
+
+ optMdSltIdx OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "Slot A = 1, Slot B = 2, Slot C = 3, Slot D = 4,
+      Slot Link = 5, Slot BU = 6 ."
+     ::= { optMxModuleEntry 2 }
+
+optMdType OBJECT-TYPE
+    SYNTAX  INTEGER {
+		unknown(1),
+		noModule(2),
+		e3linkCX34(3),
+		e3linkOPT1(4),
+		t3linkOPT1(5),
+		eth1Port(6),
+		e1FourUTP(7),
+		e1TwoPort(8),
+		e1TwoUB(9),
+		t1FourPort(10),
+		t1TwoPort(11),
+		e1FourRJ45(12),  -- special for XL/16
+		e1FourBNC(13),   -- special for XL/16
+		e1FourMiniBNC(14),
+		sfLink(15),      -- single fiber
+		stationClk(16)   -- not for XL/T1
+	}
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "Module Type and number of connectors."
+     ::= { optMxModuleEntry 3 }
+
+optMdHWVersion OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "HW Version of the module."
+     ::= { optMxModuleEntry 4 }
+
+optMdModLed OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "The meaning of each bit depends on the module type."
+     ::= { optMxModuleEntry 5 }
+
+-- Traps
+optMxConfigChange TRAP-TYPE
+      ENTERPRISE  optimux
+      VARIABLES  {optIndex,  agnLed }
+      DESCRIPTION
+	  "The trap is sent every time there is a change in
+	   the state of one of the PS.."
+      ::= 1
+
+optMxAgentFault TRAP-TYPE
+      ENTERPRISE  optimux
+      VARIABLES  {agnIndication,  agnLed }
+      DESCRIPTION
+	  "The trap is sent every time there is a change in
+	   the agnIndication variable."
+      ::= 2
+
+optLineStatusChange TRAP-TYPE
+      ENTERPRISE  optimux
+      VARIABLES { dsx1LineStatus,
+                        dsx1LineStatusLastChange }
+	  DESCRIPTION
+      "optLineStatusChange trap is sent when the value of an instance 
+       dsx1LineStatus changes. It can be utilized by an NMS to trigger polls.
+       When the line status change results from a higher level line status 
+       change (i.e. ds3), then no traps for the ds1 are sent."
+      ::= 3
+
+optSlotChange TRAP-TYPE
+      ENTERPRISE  optimux
+        VARIABLES { optMdIdx, optMdSltIdx }
+--         STATUS  current
+         DESCRIPTION
+         "This trap alerts the console if there is module
+          enrollement/de-enrollement "
+         ::= 4
+
+optLoopbackStatusChange TRAP-TYPE
+      ENTERPRISE  optimux
+        VARIABLES { ifIndex, dsx1LoopbackStatus, dsx3LoopbackStatus }
+--         STATUS  current
+         DESCRIPTION
+         "This trap alerts the console if there is changes in the
+         loopback status of some of the line."
+                 ::= 5
+
+optXlLineStatusChange TRAP-TYPE
+      ENTERPRISE  optimux
+      VARIABLES { ifIndex,  optMdModLed, dsx1LineStatus, dsx3LineStatus }
+      DESCRIPTION
+       "optXlLineStatusChange trap is sent when the value of an instance 
+        dsx1LineStatus changes. It can be utilized by an NMS to trigger polls."
+      ::= 6
+
+
+-- 
+-- file :v:\doc\rdv\mib\ver435\ethif.txt
+-- 
+--25/03/97
+--By: Smadar Tauber
+--File:      s:\doc\rdv\mib\ver435\ethIf.txt
+
+
+--EthIf MIB - special for DXC-30 v2.3, v2.4
+
+diverseIfWanGen	OBJECT IDENTIFIER ::= {wanGen 6}
+
+
+--
+-- diverseIf - diverse NON-WAN interfaces of WAN products 	
+--
+
+--Ethernet Interface
+
+ethIf	OBJECT IDENTIFIER ::= {diverseIfWanGen 1}
+
+ethIfTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF EthIfEntry
+      ACCESS not-accessible
+      STATUS  mandatory
+      ::= { ethIf 1}
+
+ethIfEntry OBJECT-TYPE
+      SYNTAX EthIfEntry
+      ACCESS not-accessible
+      STATUS mandatory
+      INDEX {ethIfIdx}
+      ::= {ethIfTable 1}
+
+EthIfEntry ::=
+      SEQUENCE {
+      ethIfIdx                INTEGER,
+      ethMode                 INTEGER,
+      ethBridgingMode         INTEGER
+      }
+
+ethIfIdx     OBJECT-TYPE
+      SYNTAX  INTEGER
+      ACCESS  read-only
+      STATUS  mandatory
+      DESCRIPTION
+      "A unique index of the ethernet interface/port."
+      ::=  {ethIfEntry 1}
+
+ethMode    OBJECT-TYPE
+      SYNTAX  INTEGER
+        {
+		  halfDuplex  (1),
+          fullDuplex  (2)
+	    }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This object indicates the Ethernet mode of operation."
+      ::=  {ethIfEntry 2}
+
+ethBridgingMode  OBJECT-TYPE
+      SYNTAX  INTEGER
+      {
+         filtered    (1),
+         transparent (2)
+      }
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+      "This object indicates the bridging mode of the Ethernet
+       interface. "
+      ::=  {ethIfEntry 3}
+
+
+END

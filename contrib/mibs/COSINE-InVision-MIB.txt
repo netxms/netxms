@@ -1,0 +1,303 @@
+COSINE-InVision-MIB DEFINITIONS ::= BEGIN
+ 
+   IMPORTS
+        MODULE-IDENTITY, OBJECT-TYPE, Counter32, Gauge32, Counter64,
+        Integer32, TimeTicks, mib-2, enterprises,
+        NOTIFICATION-TYPE                FROM SNMPv2-SMI
+        TEXTUAL-CONVENTION, DisplayString,
+        PhysAddress, RowStatus, DateAndTime,
+        TimeStamp                            FROM SNMPv2-TC
+        MODULE-COMPLIANCE, OBJECT-GROUP      FROM SNMPv2-CONF
+        snmpTraps                            FROM SNMPv2-MIB
+        csModules, csOrionMIB, csInVisionMIB FROM COSINE-GLOBAL-REG
+        csOrionRestoreSlotIndex, csOrionBladeType FROM COSINE-ORION-MIB
+        csOrionRestoreNumVRs, csOrionSystemIpAddress FROM COSINE-ORION-MIB;
+ 
+ 
+   cosineInVisionMod MODULE-IDENTITY
+        LAST-UPDATED "9911231355Z"
+        ORGANIZATION "Cosine Communication Co."
+        CONTACT-INFO
+                "   Lianghwa Jou
+                    Cosine Communications Co.
+                    1200 Bridge Parkway
+                    Redwood City, CA  94065
+                    US
+ 
+                    650-637-4777
+                    ljou@cosinecom.com"
+        DESCRIPTION
+                "The MIB module to describe generic objects for
+                 InVision system. "
+        REVISION        ""
+        DESCRIPTION
+                "Initial revision."
+        ::= { csModules 3 }
+
+
+------------------------------------------------------------------------------
+--
+--              Groups in the InVision Private MIB
+--
+------------------------------------------------------------------------------
+ 
+   csInVisionEvents               OBJECT IDENTIFIER ::= { csInVisionMIB 1 }
+   csInVisionBladeInfo            OBJECT IDENTIFIER ::= { csInVisionMIB 2 }
+   csInVisionObjects              OBJECT IDENTIFIER ::= { csInVisionMIB 3 }
+
+------------------------------------------------------------------------------
+--
+--              The Objects Group Info
+--
+------------------------------------------------------------------------------
+
+   csInVisionServerName OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..255))
+      MAX-ACCESS read-write
+      STATUS  current
+      DESCRIPTION
+                "A it is passed as argument to the trap csInVisionServerDown signifies that SMS Server is
+                 Down."
+      ::= { csInVisionObjects 1 }
+
+------------------------------------------------------------------------------
+--
+--              The Blade Group Info
+--
+------------------------------------------------------------------------------
+
+   csInVisionBladeTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF CsInVisionBladeEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+                "A list of Blades which belongs to InVision database."
+      ::= { csInVisionBladeInfo 1 }
+
+   csInVisionBladeEntry OBJECT-TYPE
+      SYNTAX   CsInVisionBladeEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+                "An entry containing management information applicable
+                 to a particular Blade."
+      INDEX   { csInVisionBladeSlotLocation }
+      ::= { csInVisionBladeTable 1 }
+ 
+    CsInVisionBladeEntry ::=
+        SEQUENCE {
+        csInVisionBladeSlotLocation
+                INTEGER,
+        csInVisionBladeDescr
+                DisplayString,
+        csInVisionBladeType
+                INTEGER,
+        csInVisionBladeState
+                INTEGER,
+        csInVisionBladeEnginesNumb
+                INTEGER,
+        csInVisionBladePortNumb
+                Integer32,
+        csInVisionBladeSerialNumb
+                DisplayString,
+        csInVisionBladeHwVer
+                DisplayString,
+        csInVisionBladeSwVer
+                DisplayString,
+        csInVisionBladeReset
+                INTEGER
+        }
+
+    csInVisionBladeSlotLocation OBJECT-TYPE
+        SYNTAX  Integer32 (1..26)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+                "Slot Location of the Blade in the InVision database."
+        ::= { csInVisionBladeEntry 1 }
+ 
+    csInVisionBladeDescr OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..255))
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "A textual string containing information about the
+                   blade.  This string should include the name of the
+                   manufacturer and the product name."
+        ::= { csInVisionBladeEntry 2 }
+ 
+    csInVisionBladeType OBJECT-TYPE
+        SYNTAX INTEGER{
+                process                 (1),
+                control                 (2),
+                ethernet                (3),
+                ds3Unchannelized        (4),
+                ds3channelized          (5),
+                oc3Atm                  (6),
+                oc3Pos                  (7)
+        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "The type of blade inserted in this slot."
+        ::= { csInVisionBladeEntry 3 }
+
+    csInVisionBladeState OBJECT-TYPE
+        SYNTAX INTEGER{
+                notPresent              (1),    -- there is no blade
+                inactive                (2),    -- loader sw initializing or failed to initialize
+                active                  (3),    -- loader sw is running
+                softwareLoading         (4),    -- software loading is in progress
+                operational             (5),    -- software initialization is complete
+                nonOperational          (6),    -- software initialization failed
+                failedWithBackup        (7),    -- failed with backup active
+                failedWithOutBackup     (8),    -- failed with no backup
+                backup                  (9),    -- working as a backup of a blade that failed
+                standby                (10),    -- waiting to be kicked of incase one blade fials
+                reboot                 (11)     -- rebooting
+        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "The current state of this blade."
+        ::= { csInVisionBladeEntry 4 }
+ 
+    csInVisionBladeEnginesNumb OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                  "The number of engines on the blade."
+        ::= { csInVisionBladeEntry 5 }
+ 
+    csInVisionBladePortNumb OBJECT-TYPE
+        SYNTAX  Integer32 (0..200)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "The number of ports on this blade (note, process
+                   blades have no ports)."
+        ::= { csInVisionBladeEntry 6 }
+ 
+    csInVisionBladeSerialNumb OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "The serial number of the blade. This is a
+                   series of alphanumeric characters which uniquely
+                   identifies this blade."
+        ::= { csInVisionBladeEntry 7 }
+
+    csInVisionBladeHwVer OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "A textual string containing information about the
+                   hardware revision version."
+        ::= { csInVisionBladeEntry 8 }
+ 
+    csInVisionBladeSwVer OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+                  "A textual string containing information about the
+                   software revision version."
+        ::= { csInVisionBladeEntry 9 }
+ 
+    csInVisionBladeReset OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none    (1),
+                reset   (2)
+        }
+        MAX-ACCESS read-write
+        STATUS  current
+        DESCRIPTION
+                  "The software reset for this blade. It is an action
+                   object such that when set to 'reset' will reset this blade.
+                   Setting it to 'none' has no effect, and when it is retrieved
+                   the value will always be 'none' . "
+        ::= { csInVisionBladeEntry 10}
+
+------------------------------------------------------------------------------
+--
+--              InVision Inform PDU definitions
+--
+------------------------------------------------------------------------------
+
+   csInVisionEventsInfo   OBJECT IDENTIFIER ::= { csInVisionEvents 1 }
+
+   csInVisionBladeResyncedInInVision NOTIFICATION-TYPE
+      OBJECTS { csOrionRestoreSlotIndex, csOrionBladeType }
+      STATUS  current
+      DESCRIPTION
+                "A csInVisionBladeResyncedInInVision Inform PDU signifies that a blade had been
+                 resynced successfully."
+      ::= { csInVisionEventsInfo 1 }
+
+   csInVisionBladeInconsistentInInVision NOTIFICATION-TYPE
+      OBJECTS { csOrionRestoreSlotIndex, csInVisionBladeType, csOrionBladeType }
+      STATUS  current
+      DESCRIPTION
+                "A csgBladeInconsistent Inform PDU signifies that type of blade in InVision
+                 is different from type of blade type in device in same slot."
+      ::= { csInVisionEventsInfo 2 }
+
+   csInVisionBladeRestoreOnDevice NOTIFICATION-TYPE
+      OBJECTS { csOrionRestoreSlotIndex, csOrionBladeType }
+      STATUS  current
+      DESCRIPTION
+                "A csInVisionBladeResyncedInInVision Inform PDU signifies that a blade had been
+                 resynced successfully."
+   ::= { csInVisionEventsInfo 3 }
+
+   csInVisionVRRestoreSuccess NOTIFICATION-TYPE   -- This can be combined togather with next trap
+--    by passing one more parameter as status 
+      OBJECTS { csOrionRestoreNumVRs }
+      STATUS  current
+      DESCRIPTION
+                "A csgVRRestoreSuccess Inform PDU signifies that InVision is succedded
+                 in restoring affecred VRs to device."
+   ::= { csInVisionEventsInfo 4 }
+
+   csInVisionVRRestoreFail NOTIFICATION-TYPE   -- This can be combined togather with previous trap
+--    by passing one more parameter as status 
+      OBJECTS { csOrionRestoreNumVRs }
+      STATUS  current
+      DESCRIPTION
+                "A csgVRRestoreFail Inform PDU signifies that InVision is failed
+                 in restoring affecred VRs to device."
+   ::= { csInVisionEventsInfo 5 }
+
+   csInVisionDeviceVRRestoreFail NOTIFICATION-TYPE
+      OBJECTS { csOrionRestoreNumVRs }
+      STATUS  current
+      DESCRIPTION
+                "A csInVisionDeviceVRRestoreFail Inform PDU signifies that Device is failed
+                 in restoring affecred VRs."
+   ::= { csInVisionEventsInfo 6 }
+
+   csInVisionFailToRegisterForTrap NOTIFICATION-TYPE
+      OBJECTS { csOrionSystemIpAddress }
+      STATUS  current
+      DESCRIPTION
+                "A csInVisionFailToRegisterForTrap Inform PDU signifies that SMS Trap Server failed to register for trap with device."
+   ::= { csInVisionEventsInfo 7 }
+
+   csInVisionServerDown NOTIFICATION-TYPE
+      OBJECTS { csInVisionServerName }
+      STATUS  current
+      DESCRIPTION
+                "A csInVisionServerDown Inform PDU signifies that SMS Server is Down. This trap is generated from launcher to any third party alarm display system."
+   ::= { csInVisionEventsInfo 8 }
+
+   csInVisionFailToUnRegisterForTrap NOTIFICATION-TYPE
+      OBJECTS { csOrionSystemIpAddress }
+      STATUS  current
+      DESCRIPTION
+                "A csInVisionFailToUnRegisterForTrap Inform PDU signifies that SMS Trap Server failed to unregister for trap with device."
+   ::= { csInVisionEventsInfo 9 }
+
+END 

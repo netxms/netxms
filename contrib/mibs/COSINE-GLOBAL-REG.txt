@@ -1,0 +1,78 @@
+   COSINE-GLOBAL-REG DEFINITIONS ::= BEGIN
+
+   IMPORTS
+       MODULE-IDENTITY, OBJECT-IDENTITY, 
+       enterprises                        FROM SNMPv2-SMI;
+ 
+   csRoot	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"The root of the OID sub-tree assigned to 
+	CoSine Commmunication by the Internet Assigned Numbers 
+	Authority (IANA)."
+	::= { enterprises 3085 }
+
+   csReg	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for registration."
+	::= { csRoot 1 }
+
+   csModules	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for module registration."
+	::= { csReg 1 }
+
+   csGeneric	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for common object and event definitions."
+	::= { csRoot 2 }
+
+   csProduct	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for specific object and event definitions."
+	::= { csRoot 3 }
+
+   csOrionMIB	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for Orion object and event definitions."
+	::= { csProduct 1 }
+
+   csInVisionMIB OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION "Sub-tree for SMS object and event definitions."
+	::= { csProduct 2 }
+
+   csCaps	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for agent profiles."
+	::= { csRoot 4 }
+
+   csReqs	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for management application requirements."
+	::= { csRoot 5 }
+
+   csExpr	OBJECT-IDENTITY
+	STATUS	current
+	DESCRIPTION	"Sub-tree for experimental definitions."
+	::= { csRoot 6 }
+
+   cosineGlobalRegMod MODULE-IDENTITY
+       LAST-UPDATED "9803241355Z"
+       ORGANIZATION "Cosine Communication Co."
+       CONTACT-INFO
+               "   Lianghwa Jou
+                   Cosine Communications Co.
+                   1070 Sixth Avenue Suite 200
+                   Belmont, CA  94002
+                   US
+
+                   650-637-4777
+                   ljou@cosinecom.com"
+       DESCRIPTION
+               ". "
+       REVISION      "9803241355Z"
+       DESCRIPTION
+               "Initial revision."
+       ::= { csModules 1 }
+
+END

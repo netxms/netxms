@@ -1,0 +1,1236 @@
+--				"@(#)swmib.smiv1"
+--
+-- Title: Fibre Channel Switch MIB, Version 1.6b
+--
+-- Significant changes (since V1.6):
+-- o added Event Group
+-- o changed swNsPortIndex to swNsEntryIndex
+-- o added swFCPortTxType, swFCPortLinkState
+--
+-- This is specified based on SMIv1, mainly to ensure that the specification
+-- can be parsed easily by off-the-shelf network management product in
+-- the market.
+--
+
+SW-MIB DEFINITIONS ::= BEGIN
+  IMPORTS
+	enterprises, Counter, NetworkAddress
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC1212;
+
+  -- additional textual conventions
+
+  -- DisplayString: comment out the next line if your MIB compiler complains
+  --   that it is already defined.
+  DisplayString	::= OCTET STRING -- containing displayable octets (aka ASCII)
+
+  FcWwn ::= OCTET STRING (SIZE(8))
+  SwDomainIndex		::= INTEGER (0..31)
+  SwNbIndex		::= INTEGER (0..2048)
+  SwSensorIndex		::= INTEGER (1..1024)
+
+  bcsi		OBJECT IDENTIFIER ::= { enterprises 1588 }
+
+  -- Product Lines or Generic Product information
+  --  { bcsi 1 } is reserved
+  commDev	OBJECT IDENTIFIER ::= { bcsi 2 } -- communication devices
+
+  fibrechannel	OBJECT IDENTIFIER ::= { commDev 1 }
+  fcSwitch	OBJECT IDENTIFIER ::= { fibrechannel 1 }
+
+  sw		OBJECT IDENTIFIER ::= { fcSwitch 1 }
+
+  -- various groups
+  swSystem	OBJECT IDENTIFIER ::= { sw 1 }
+  swFabric	OBJECT IDENTIFIER ::= { sw 2 }
+  swModule	OBJECT IDENTIFIER ::= { sw 3 }
+  swAgtCfg	OBJECT IDENTIFIER ::= { sw 4 }
+  -- { sw 5 } is reserved
+  swFCport	OBJECT IDENTIFIER ::= { sw 6 }
+  swNs		OBJECT IDENTIFIER ::= { sw 7 }
+  swEvent	OBJECT IDENTIFIER ::= { sw 8 }
+
+  --
+  -- the System Group (sw)
+  --
+
+  swCurrentDate		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (64))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current date information in displayable textual
+		format."
+  ::= { swSystem 1 }
+
+  swBootDate		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (64))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The date and time when the system last booted, in
+		displaybale textual format."
+  ::= { swSystem 2 }
+
+  swFWLastUpdated	OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (64))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The information indicates the date when the firmware
+		was last updated, in displayable textual format."
+  ::= { swSystem 3 }
+
+  swFlashLastUpdated	OBJECT-TYPE
+	SYNTAX		DisplayString
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The information indicates the date when the FLASH
+		was last updated, in displayable textual format."
+  ::= { swSystem 4 }
+
+  swBootPromLastUpdated	OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (64))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The information indicates the date when the boot PROM
+		was last updated, in displayable textual format."
+  ::= { swSystem 5 }
+
+  swFirmwareVersion	OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (24))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current version of the firwmare."
+  ::= { swSystem 6 }
+
+  swOperStatus		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  online	(1),
+			  offline	(2),
+			  testing	(3),
+			  faulty	(4)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current operational status of the switch.
+		The states are as follow:
+		o online(1) means the switch is accessible by an external
+		  Fibre Channel port;
+		o offline(2) means the switch is not accesible;
+		o testing(3) means the switch is in a built-in test mode
+		  and is not accessible by an external Fibre Channel port;
+		o faulty(4) means the switch is not operational."
+  ::= { swSystem 7 }
+
+  swAdmStatus		OBJECT-TYPE
+	SYNTAX		INTEGER {
+				online	(1),
+				offline	(2),
+				testing	(3),
+				faulty	(4),
+				reboot	(5),
+				fastboot(6)
+			}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The desired administrative status of the switch.
+		A management station may place the switch in a desired
+		state by setting this object accordingly. The states
+		are as follow:
+		o online(1) means set the switch to be accessible by an
+		  external Fibre Channel port;
+		o offline(2) means set the switch to be inaccesible;
+		o testing(3) means set the switch to run the built-in test;
+		o faulty(4) means set the switch to a 'soft' faulty
+		  condition;
+		o reboot(5) means set the switch to reboot in 1 second.
+		o fastboot(6) means set the switch to fastboot in 1 second.
+		Fastboot would cause the switch to boot but skip over the
+		POST.
+
+		When the switch is in faulty state, only two states
+		can be set: faulty and reboot/fastboot."
+  ::= { swSystem 8 }
+
+
+  -- 9..10 are reserved
+
+  -- FLASH administration
+  -- the next 5 objects are related to FlashDownload
+  --
+  -- 2 steps to download a new firmware into the switch FLASH,
+  -- (A) set swFlashDLHost.0, swFlashDLUser.0 and swFlashDLFile.0 to
+  --     appropriate
+  --       host IP address in user dot notation (e.g. 192.168.1.7),
+  --       user name (e.g. "administrator"), and
+  --       file name of the firmware  (e.g. "/home/fcswitch/v2.0")
+  --     respectively;
+  -- (B) set swFlashDLAdmStatus.0 to sw-upgraded(2)
+
+  swFlashDLOperStatus	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  sw-current		(1),
+			  sw-upgraded		(2)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The operational status of the boot FLASH.
+		The operational states are as follow:
+		o current(1) indicates that the boot FLASH contains the
+		  current firmware image; and
+		o upgraded(2) state indicates that it contains the image
+		  upgraded from the swFlashDLHost.0."
+  ::= { swSystem 11 }
+
+  swFlashDLAdmStatus	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  sw-current		(1),
+			  sw-upgraded		(2)
+			}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The desired state of the boot FLASH.
+		A management station may place the boot FLASH in a desired
+		state by setting this object accordingly.
+		The sw-upgraded(2) state indicates that the boot FLASH shall be
+		upgraded from the host specified in swFlashDLHost.0,
+		with the user name specified in swFlashDLUser.0, and
+		the new firmware image file specified in swFlashDLFile.0."
+  ::= { swSystem 12 }
+
+  swFlashDLHost		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (0..64))
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The name or IP address (in dot notation) of the host
+		to download the firmware image to the FLASH."
+  ::= { swSystem 13 }
+
+  swFlashDLUser		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (0..64))
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The user name on the host to download the firmware
+			 image to the boot FLASH."
+  ::= { swSystem 14 }
+
+  swFlashDLFile		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (0..256))
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The file name of the firmware image."
+  ::= { swSystem 15 }
+
+  -- 16..19 are reserved
+
+  swDiagResult	OBJECT-TYPE
+	SYNTAX		INTEGER {
+				sw-ok			(1),
+				sw-central-memory-fault	(2),
+				sw-embedded-port-fault	(3)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The result of the power-on startup (POST)
+			 diagnostics."
+  ::= { swSystem 20 }
+
+  -- operating environment sensors (temperature, fan, power supply...)
+  swNumSensors		OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of sensors inside the switch."
+  ::= { swSystem 21 }
+
+  swSensorTable	OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SwSensorEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"The table of sensor entries."
+  ::= { swSystem 22 }
+
+  swSensorEntry		OBJECT-TYPE
+	SYNTAX		SwSensorEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"An entry of the sensor information."
+	INDEX		{ swSensorIndex }
+  ::= { swSensorTable 1 }
+
+  SwSensorEntry	::= SEQUENCE {
+	swSensorIndex	SwSensorIndex,
+	swSensorType	INTEGER,
+	swSensorStatus	INTEGER,
+	swSensorValue	INTEGER,
+	swSensorInfo	DisplayString (SIZE(256))
+  }
+
+  swSensorIndex		OBJECT-TYPE
+	SYNTAX		SwSensorIndex
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the sensor."
+  ::= { swSensorEntry 1 }
+
+  swSensorType		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  temperature	(1),
+			  fan		(2),
+			  power-supply	(3)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the sensor type."
+  ::= { swSensorEntry 2 }
+
+  swSensorStatus	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  unknown	(1),
+			  faulty	(2),
+			  below-min	(3),
+			  nominal	(4),
+			  above-max	(5),
+			  absent	(6)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current status of the sensor."
+  ::= { swSensorEntry 3 }
+
+  swSensorValue		OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current value of the sensor.
+		The value, -2147483648, represents an unknown quantity.
+		It also means that the sensor does not have the capability to
+		measure the actual value. In V1.6, the temperature sensor
+		value will be in Celsius; the fan and power supply sensor
+		reading will be unknown."
+  ::= { swSensorEntry 4 }
+
+  swSensorInfo		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE(256))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Additional displayable information on the sensor.
+		In V1.6, it contains the sensor type and number
+		in textual format. For example, 'Temp 3', 'Fan 6'."
+  ::= { swSensorEntry 5 }
+
+  --
+  -- End of System Group
+  --
+
+  --
+  -- Fabric Group
+  --
+  swDomainID	OBJECT-TYPE
+	SYNTAX		SwDomainIndex
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The current Fibre Channel domain ID of the switch.
+		To set a new value, the switch (swAdmStatus) must be in
+		offline or testing state."
+  ::= { swFabric 1 }
+
+  swPrincipalSwitch	OBJECT-TYPE
+	SYNTAX		INTEGER {
+				yes	(1),
+				no	(2)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object indicates whether the switch is
+		the Principal switch as per FC-SW."
+  ::= { swFabric 2 }
+
+  -- swFabric 3..7 are reserved
+
+  -- (immediate) Neighborhood ISL family
+  --
+  swNumNbs		OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of Inter-Switch Links in the (immediate)
+		neighborhood."
+  ::= { swFabric 8 }
+
+  swNbTable	OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SwNbEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"This table contains the ISLs in the immediate
+		neighorhood of the switch."
+  ::= { swFabric 9 }
+
+  swNbEntry		OBJECT-TYPE
+	SYNTAX		SwNbEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"An entry containing each neighbor ISL parameters."
+	INDEX		{ swNbIndex }
+  ::= { swNbTable 1 }
+
+  SwNbEntry		::= SEQUENCE {
+	swNbIndex	SwNbIndex,
+	swNbMyPort	INTEGER,
+	swNbRemDomain	SwDomainIndex,
+	swNbRemPort	INTEGER,
+	swNbBaudRate	INTEGER,
+	swNbIslState	INTEGER
+  }
+
+  swNbIndex		OBJECT-TYPE
+	SYNTAX		SwNbIndex
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the neighbour ISL entry."
+  ::= { swNbEntry 1 }
+
+  swNbMyPort		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  portNum-0	(1),
+			  portNum-1	(2),
+			  portNum-2	(3),
+			  portNum-3	(4),
+			  portNum-4	(5),
+			  portNum-5	(6),
+			  portNum-6	(7),
+			  portNum-7	(8),
+			  portNum-8	(9),
+			  portNum-9	(10),
+			  portNum-10	(11),
+			  portNum-11	(12),
+			  portNum-12	(13),
+			  portNum-13	(14),
+			  portNum-14	(15),
+			  portNum-15	(16)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This is the port that has an ISL to another switch."
+  ::= { swNbEntry 2 }
+
+  swNbRemDomain		OBJECT-TYPE
+	SYNTAX		SwDomainIndex
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This is the Fibre Channel domain on the other end
+		of the ISL."
+  ::= { swNbEntry 3 }
+
+  swNbRemPort		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  portNum-0	(1),
+			  portNum-1	(2),
+			  portNum-2	(3),
+			  portNum-3	(4),
+			  portNum-4	(5),
+			  portNum-5	(6),
+			  portNum-6	(7),
+			  portNum-7	(8),
+			  portNum-8	(9),
+			  portNum-9	(10),
+			  portNum-10	(11),
+			  portNum-11	(12),
+			  portNum-12	(13),
+			  portNum-13	(14),
+			  portNum-14	(15),
+			  portNum-15	(16)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This is the port index on the other end of the ISL."
+  ::= { swNbEntry 4 }
+
+  swNbBaudRate		OBJECT-TYPE
+	SYNTAX		INTEGER {
+				other           (1),    -- none of below
+				oneEighth       (2),    -- 155 Mbaud
+				quarter         (4),    -- 266 Mbaud
+				half            (8),    -- 532 Mbaud
+				full            (16),   --   1 Gbaud
+				double          (32),   --   2 Gbaud
+				quadruple       (64)    --   4 Gbaud
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The baud rate of the ISL."
+  ::= { swNbEntry 5 }
+
+  swNbIslState		OBJECT-TYPE
+	SYNTAX		INTEGER {
+				-- sw-down		(0),
+				sw-init		(1),
+				sw-internal2	(2),
+				sw-internal3	(3),
+				sw-internal4	(4),
+				sw-active	(5)
+  }
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The current state of the ISL."
+  ::= { swNbEntry 6 }
+
+  --
+  -- SNMP Agent Configuration
+  --
+
+  -- swAgtCfg 1..10 are reserved
+
+  swAgtCmtyTable	OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SwAgtCmtyEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"A table that contains, one entry for each Community,
+		the access control and parameters of the Community."
+  ::= { swAgtCfg 11 }
+
+  swAgtCmtyEntry	OBJECT-TYPE
+	SYNTAX		SwAgtCmtyEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"An entry containing the Community parameters."
+	INDEX	{ swAgtCmtyIdx }
+  ::= { swAgtCmtyTable 1 }
+
+  SwAgtCmtyEntry	::= SEQUENCE {
+	swAgtCmtyIdx		INTEGER (1..6),
+	swAgtCmtyStr		DisplayString (SIZE (16)),
+	swAgtTrapRcp		NetworkAddress
+  }
+
+  swAgtCmtyIdx		OBJECT-TYPE
+	SYNTAX		INTEGER (1..6)
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the SNMPv1 Community entry."
+  ::= { swAgtCmtyEntry 1 }
+
+  swAgtCmtyStr		OBJECT-TYPE
+	SYNTAX		DisplayString (SIZE (16))
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"This is a Community string supported by the agent.
+		If a new value is set successfully, it takes effect
+		immediately."
+  ::= { swAgtCmtyEntry 2 }
+
+  swAgtTrapRcp		OBJECT-TYPE
+	SYNTAX		NetworkAddress
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"This is the trap recipient associated with the
+		Community. If a new value is set successfully, it takes
+		effect immediately."
+  ::= { swAgtCmtyEntry 3 }
+
+  --
+  -- End of SNMP Agent Configuration Group
+  --
+
+  --
+  -- Fibre Channel Port Group
+  -- This group contains information about the physical state,
+  -- operational status, performance and error statistics of each
+  -- Fibre Channel port on the switch. A Fibre Channel port is one which
+  -- supports the Fibre Channel protocol. E.g. F_Port, E_Port, FL_Port.
+  --
+
+  swFCPortCapacity	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The maximum number of Fibre Channel ports on this
+		switch. It includes G_Port, F_Port, FL_Port and any other
+		types of Fibre Channel port."
+  ::= { swFCport 1 }
+
+  swFCPortTable		OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SwFCPortEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"A table that contains, one entry for each switch port,
+		configuration and service parameters of the port."
+  ::= { swFCport 2 }
+
+  swFCPortEntry		OBJECT-TYPE
+	SYNTAX		SwFCPortEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"An entry containing the configuration and service
+		parameters of the switch port."
+	INDEX	{ swFCPortIndex }
+	::= { swFCPortTable 1 }
+
+  SwFCPortEntry		::= SEQUENCE {
+	swFCPortIndex		INTEGER,
+	swFCPortType		INTEGER,
+	swFCPortPhyState	INTEGER,
+	swFCPortOpStatus	INTEGER,
+	swFCPortAdmStatus	INTEGER,
+	-- new info for V1.6b
+	swFCPortLinkState	INTEGER,
+	swFCPortTxType		INTEGER,
+
+	-- the rest is mapped to gstat_t
+	swFCPortTxWords		Counter,
+	swFCPortRxWords		Counter,
+	swFCPortTxFrames	Counter,
+	swFCPortRxFrames	Counter,
+	swFCPortTxC2Frames	Counter,
+	swFCPortRxC3Frames	Counter,
+	swFCPortRxLCs		Counter,
+	swFCPortRxMcasts	Counter,
+	swFCPortTooManyRdys	Counter,
+	swFCPortNoTxCredits	Counter,
+	swFCPortRxEncInFrs	Counter,
+	swFCPortRxCrcs		Counter,
+	swFCPortRxTruncs	Counter,
+	swFCPortRxTooLongs	Counter,
+	swFCPortRxBadEofs	Counter,
+	swFCPortRxEncOutFrs	Counter,
+	swFCPortRxBadOs		Counter,
+	swFCPortC3Discards	Counter,
+	swFCPortMcastTimedOuts	Counter,
+	swFCPortTxMcasts	Counter,
+
+	-- LIP statistics
+	swFCPortLipIns		Counter,
+	swFCPortLipOuts		Counter,
+	swFCPortLipLastAlpa	OCTET STRING (SIZE(4))
+  }
+
+  swFCPortIndex		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  portNum-0	(1),
+			  portNum-1	(2),
+			  portNum-2	(3),
+			  portNum-3	(4),
+			  portNum-4	(5),
+			  portNum-5	(6),
+			  portNum-6	(7),
+			  portNum-7	(8),
+			  portNum-8	(9),
+			  portNum-9	(10),
+			  portNum-10	(11),
+			  portNum-11	(12),
+			  portNum-12	(13),
+			  portNum-13	(14),
+			  portNum-14	(15),
+			  portNum-15	(16)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the switch port index.
+		Note that the value of a port index is 1 higher than the
+		port number labeled on the front panel.
+		E.g. port index 1 correspond to port number 0."
+  ::= { swFCPortEntry 1 }
+
+  swFCPortType		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  stitch	(1),
+			  flannel	(2)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the type of switch port.
+			 It may be of type stitch(1) or flannel(2)."
+  ::= { swFCPortEntry 2 }
+
+  swFCPortPhyState	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  noCard	(1),
+			  noGbic	(2),
+			  laserFault	(3),
+			  noLight	(4),
+			  noSync	(5),
+			  inSync	(6),
+			  portFault	(7),
+			  diagFault	(8),
+			  lockRef	(9)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the physical state of
+		the port:
+			noCard(1)	no card present in this switch slot;
+			noGbic(2)	no GBIC module in this port;
+			laserFault(3)	the module is signaling a laser fault
+					(defective GBIC);
+			noLight(4)	the module is not receiving light;
+			noSync(5)	the module is receiving light but is
+					out of sync;
+			inSync(6)	the module is receiving light and is
+					in sync;
+			portFault(7)	the port is marked faulty (defective
+					GBIC, cable or device);
+			diagFault(8)	the port failed diagnostics (defective
+					G_Port or FL_Port card or motherboard);
+			lockRef(9)	the port is locking to the reference
+					signal.
+		"
+  ::= { swFCPortEntry 3 }
+
+  swFCPortOpStatus	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  unknown	(0),
+			  online	(1),
+			  offline	(2),
+			  testing	(3),
+			  faulty	(4)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object identifies the operational status of
+		the port. The online(1) state indicates that user frames
+		can be passed. The unknown(0) state indicates that likely
+		the port module is physically absent (see swFCPortPhyState)."
+  ::= { swFCPortEntry 4 }
+
+  swFCPortAdmStatus	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  online	(1),
+			  offline	(2),
+			  testing	(3),
+			  faulty	(4)
+			}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"The desired state of the port. A management station
+                may place the port in a desired state by setting this
+                object accordingly.  The testing(3) state indicates that
+                no user frames can be passed. As the result of
+                either explicit management action or per configuration
+                information accessible by the switch, swFCPortAdmStatus is
+		then changed to either the online(1) or testing(3)
+		states,	or remains in the offline(2) state."
+  ::= { swFCPortEntry 5 }
+
+  --
+  -- new variables for V1.6b
+  --
+
+  swFCPortLinkState	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  enabled	(1),
+			  disabled	(2),
+			  loopback	(3)
+			}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"This object indicates the link state of the port.
+		The value may be:
+		  enabled(1) - port is allowed to participate in the FC-PH
+			protocol with its attached port (or ports if it is
+			in a FC-AL loop);
+		  disabled(2) - the port is not allowed to participate in
+			the FC-PH protocol with its attached port(s);
+		  loopback(3) - the port may transmit frames through an
+			internal path to verify the health of the transmitter
+			and receiver path.
+
+		Note that when the port's link state changes, its
+		operational status (swFCPortOpStatus) will be affected."
+  ::= { swFCPortEntry 6 }
+
+  swFCPortTxType	OBJECT-TYPE
+	SYNTAX		INTEGER {
+			  unknown	(1),
+			  lw		(2),
+			  sw		(3),
+			  ld		(4),
+			  cu		(5)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object indicates the media transmitter type of
+		the port. The value may be:
+		  unknown(1)		cannot determined to the port driver
+		  lw(2)			long wave laser
+		  sw(3)			short wave laser
+		  ld(4)			long wave LED
+		  cu(5)			copper (electrical)
+
+		Note that there is a new type of GBIC which has a serial ID
+		and will be mapped as unknown(1) for the current firmware
+		revision."
+  ::= { swFCPortEntry 7 }
+
+  swFCPortTxWords	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Fibre Channel
+		words that the port has transmitted."
+  ::= { swFCPortEntry 11 }
+
+  swFCPortRxWords	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Fibre Channel
+		words that the port has received."
+  ::= { swFCPortEntry 12 }
+
+  swFCPortTxFrames	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of (Fibre Channel)
+		frames that the port has transmitted."
+  ::= { swFCPortEntry 13 }
+
+  swFCPortRxFrames	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of (Fibre Channel)
+		frames that the port has received."
+  ::= { swFCPortEntry 14 }
+
+  swFCPortTxC2Frames	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Class 2
+		frames that the port has transmitted."
+  ::= { swFCPortEntry 15 }
+
+  swFCPortRxC3Frames	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Class 3
+		frames that the port has received."
+  ::= { swFCPortEntry 16 }
+
+  swFCPortRxLCs		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Link Control
+		frames that the port has received."
+  ::= { swFCPortEntry 17 }
+
+  swFCPortRxMcasts	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Multicast
+		frames that the port has received."
+  ::= { swFCPortEntry 18 }
+
+  swFCPortTooManyRdys	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of times when RDYs
+		 exceeds the frames received."
+  ::= { swFCPortEntry 19 }
+
+  swFCPortNoTxCredits	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of times when the
+		 transmit credit has reached zero."
+  ::= { swFCPortEntry 20 }
+
+  swFCPortRxEncInFrs	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of encoding error or
+		disparity error inside frames received."
+  ::= { swFCPortEntry 21 }
+
+  swFCPortRxCrcs	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of CRC errors
+		detected for frames received."
+  ::= { swFCPortEntry 22 }
+
+  swFCPortRxTruncs	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of truncated
+		frames that the port has received."
+  ::= { swFCPortEntry 23 }
+
+  swFCPortRxTooLongs	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of received frames that
+		are too long."
+  ::= { swFCPortEntry 24 }
+
+  swFCPortRxBadEofs	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of received frames that
+		have bad EOF delimiter."
+  ::= { swFCPortEntry 25 }
+
+  swFCPortRxEncOutFrs	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of encoding error or
+		disparity error outside frames received."
+  ::= { swFCPortEntry 26 }
+
+  swFCPortRxBadOs		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of invalid Ordered
+		Sets received."
+  ::= { swFCPortEntry 27 }
+
+  swFCPortC3Discards	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Class 3
+		frames that the port has discarded."
+  ::= { swFCPortEntry 28 }
+
+  swFCPortMcastTimedOuts	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Multicast
+		frames that has been timed out."
+  ::= { swFCPortEntry 29 }
+
+  swFCPortTxMcasts	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Multicast
+		frames that has been transmitted."
+  ::= { swFCPortEntry 30 }
+
+  -- LIP statistics
+  swFCPortLipIns	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Loop Initializations
+		that has been initiated by loop devices attached."
+  ::= { swFCPortEntry 31 }
+
+  swFCPortLipOuts	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object counts the number of Loop Initializations
+		that has been initiated by the port."
+  ::= { swFCPortEntry 32 }
+
+  swFCPortLipLastAlpa	OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(4))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"This object indicates the Physical Address (AL_PA)
+		of the loop device that initiated the last
+		Loop Initialization."
+  ::= { swFCPortEntry 33 }
+
+  --
+  -- End of Fibre Channel Port group
+  --
+
+
+
+  --
+  -- The Name Server Database group
+  --
+
+  swNsLocalNumEntry	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of local Name Server entries."
+  ::= { swNs 1 }
+
+  swNsLocalTable	OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SwNsEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"The table of local Name Server entries."
+  ::= { swNs 2 }
+
+  swNsLocalEntry	OBJECT-TYPE
+	SYNTAX		SwNsEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"An entry of the local Name Server database."
+	INDEX		{ swNsEntryIndex }
+  ::= { swNsLocalTable 1 }
+
+  SwNsEntry ::= SEQUENCE {
+	swNsEntryIndex	INTEGER,
+	swNsPortID	OCTET STRING(SIZE(4)),
+	swNsPortType	INTEGER,
+	swNsPortName	FcWwn,
+	swNsPortSymb	OCTET STRING,
+	swNsNodeName	FcWwn,
+	swNsNodeSymb	OCTET STRING,
+	swNsIPA		OCTET STRING,
+	swNsIpAddress	OCTET STRING,
+	swNsCos		INTEGER,
+	swNsFc4		OCTET STRING
+  }
+
+  swNsEntryIndex	OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the Name Server database entry."
+  ::= { swNsLocalEntry 1 }
+
+  swNsPortID		OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(4))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the Fibre Channel port address
+		ID of the entry."
+  ::= { swNsLocalEntry 2 }
+
+  swNsPortType		OBJECT-TYPE
+	SYNTAX		INTEGER {
+			--  unknown	(0),
+			  nPort		(1),
+			  nlPort	(2)
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the type of port: N_Port,
+		NL_Port, etc., for this entry. The type is defined in FC-GS-2."
+  ::= { swNsLocalEntry 3 }
+
+  swNsPortName		OBJECT-TYPE
+	SYNTAX		FcWwn
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the Fibre Channel World_wide
+		Name of the port entry."
+  ::= { swNsLocalEntry 4 }
+
+  swNsPortSymb		OBJECT-TYPE
+	SYNTAX		OCTET STRING(SIZE(1..255))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the contents of a Symbolic Name
+		of the port entry. In FC-GS-2, a Symbolic Name consists of
+		a byte array of 1 through 256 bytes, and the first byte of the
+		array specifies the length of its 'contents'.
+		This object variable corresponds to the 'contents' of the
+		Symbolic Name, without the first byte."
+  ::= { swNsLocalEntry 5 }
+
+  swNsNodeName		OBJECT-TYPE
+	SYNTAX		FcWwn
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the Fibre Channel World_wide
+		Name of the associated node as defined in FC-GS-2."
+  ::= { swNsLocalEntry 6 }
+
+  swNsNodeSymb		OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(1..255))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the contents of a Symbolic Name
+		of the the node associated with the entry. In FC-GS-2,
+		a Symbolic Name consists of a byte array of 1 through 256
+		bytes,	and the first byte of the array specifies the length
+		of its 'contents'.
+		This object variable corresponds to the 'contents' of the
+		Symbolic Name, without the first byte (specifying the length)."
+  ::= { swNsLocalEntry 7 }
+
+  swNsIPA		OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(8))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the Initial Process Associator
+		of the node for the entry as defined in FC-GS-2."
+  ::= { swNsLocalEntry 8 }
+
+  swNsIpAddress		OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE(16))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the IP address of the node
+		for the entry as defined in FC-GS-2. The format of the address
+		is in IPv6."
+  ::= { swNsLocalEntry 9 }
+
+  swNsCos		OBJECT-TYPE
+	SYNTAX		INTEGER {
+		--	  class-unknown	(0),
+			  class-F	(1),
+			  class-1	(2),
+			  class-F-1	(3),
+			  class-2	(4),
+			  class-F-2	(5),
+			  class-1-2	(6),
+			  class-F-1-2	(7),
+			  class-3	(8),
+			  class-F-3	(9),
+			  class-1-3	(10),
+			  class-F-1-3	(11),
+			  class-2-3	(12),
+			  class-F-2-3	(13),
+			  class-1-2-3	(14),
+			  class-F-1-2-3	(15)
+			-- more to enumerate in future.
+			}
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the class of services supported
+		by the port. The value is a bit-map defined as follows:
+		o bit 0 is class F,
+		o bit 1 is class 1,
+		o bit 2 is class 2,
+		o bit 3 is class 3,
+		o bit 4 is class 4, etc."
+  ::= { swNsLocalEntry 10 }
+
+  swNsFc4		OBJECT-TYPE
+	SYNTAX		OCTET STRING (SIZE (32))
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The object identifies the FC-4s supported
+		by the port as defined in FC-GS-2."
+  ::= { swNsLocalEntry 11 }
+
+  --
+  -- End of Fibre Channel Name Server group
+  --
+
+  -- #######################################################################
+  --
+  -- Event Group - to map the errLog
+  --
+  -- NOTE
+  -- Logically, swEventTable is separate from the error log since it is
+  -- essentially a view of the error log within a particular time window.
+  -- The value of swEventIndex shall indicate the event number that has  
+  -- occurred since the switch booted. The value will range from 1 through
+  -- 2147383647 (2^31 - 1).
+  --
+  -- #######################################################################
+ 
+  swEventTrapLevel      OBJECT-TYPE
+        SYNTAX          INTEGER {
+			  none		(0),
+                          critical      (1),
+                          error         (2),
+                          warning       (3),
+                          informational (4),
+                          debug         (5)
+                        }
+        ACCESS          read-write
+        STATUS          mandatory
+        DESCRIPTION     "This object specifies the swEventTrap level in
+		conjunction with an event's severity level. When an event
+		occurs and if its severity level is at or below the value
+		specified by this object instance, the agent will send
+		the associated swEventTrap to configured recipients."
+  ::= { swEvent 1 }
+ 
+  -- { swEvent 2..3 are reserved }
+ 
+  swEventNumEntries     OBJECT-TYPE
+        SYNTAX          INTEGER (1..30)
+        ACCESS          read-only
+        STATUS          mandatory
+        DESCRIPTION     "The number of entries in the Event Table."
+  ::= { swEvent 4 }
+ 
+  swEventTable          OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwEventEntry
+        ACCESS          not-accessible
+        STATUS          mandatory
+        DESCRIPTION     "The table of event entries."
+  ::= { swEvent 5 }
+ 
+  swEventEntry          OBJECT-TYPE
+        SYNTAX          SwEventEntry
+        ACCESS          not-accessible
+        STATUS          mandatory
+        DESCRIPTION     "An entry of the event table."
+        INDEX           { swEventIndex }
+ 
+  ::= { swEventTable 1 }
+ 
+  SwEventEntry          ::= SEQUENCE {
+        swEventIndex		INTEGER,
+        swEventTimeInfo		DisplayString,
+        swEventLevel		INTEGER,
+	swEventRepeatCount	INTEGER,
+        swEventDescr		DisplayString
+  }
+
+  swEventIndex          OBJECT-TYPE
+        SYNTAX          INTEGER (1..30)
+        ACCESS          read-only
+        STATUS          mandatory
+        DESCRIPTION     "This object identifies the event entry."
+  ::= { swEventEntry 1 }
+ 
+  swEventTimeInfo       OBJECT-TYPE
+        SYNTAX          DisplayString
+        ACCESS          read-only
+        STATUS          mandatory
+        DESCRIPTION     "This object identifies the date and time when this
+                event occurred, in textual format."
+  ::= { swEventEntry 2 }
+ 
+  swEventLevel          OBJECT-TYPE
+        SYNTAX          INTEGER {
+                          critical      (1),
+                          error         (2),
+                          warning       (3),
+			  informational	(4),
+                          debug         (5)
+                        }
+        ACCESS          read-only
+        STATUS          mandatory
+        DESCRIPTION     "This object identifies the severity level of this
+		event entry."
+  ::= { swEventEntry 3 }
+ 
+  swEventRepeatCount	OBJECT-TYPE
+        SYNTAX          INTEGER
+        ACCESS          read-only
+        STATUS          mandatory
+        DESCRIPTION     "This object identifies how many times this particular
+		event has occurred."
+  ::= { swEventEntry 4 }
+ 
+  swEventDescr          OBJECT-TYPE
+        SYNTAX          DisplayString
+        ACCESS          read-only
+        STATUS          mandatory
+         DESCRIPTION     "This object identifies the textual description of
+                the event."
+  ::= { swEventEntry 5 }
+ 
+  --
+  -- End of Fibre Channel Event Group
+  --
+
+END
