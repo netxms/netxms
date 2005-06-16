@@ -234,8 +234,6 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
-   NetObj *GetParent(DWORD dwIndex = 0) { return dwIndex < m_dwParentCount ? m_pParentList[dwIndex] : NULL; }
-
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
    void SetMgmtStatus(BOOL bIsManaged);
    void SetName(char *pszName) { strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }

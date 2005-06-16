@@ -410,7 +410,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr)
 
    RWLockReadLock(g_rwlockInterfaceIndex, INFINITE);
    dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwAddr);
-   pNode = (dwPos == INVALID_INDEX) ? NULL : (Node *)g_pInterfaceIndexByAddr[dwPos].pObject->GetParent();
+   pNode = (dwPos == INVALID_INDEX) ? NULL : (Node *)((Interface *)g_pInterfaceIndexByAddr[dwPos].pObject)->GetParentNode();
    RWLockUnlock(g_rwlockInterfaceIndex);
    return pNode;
 }

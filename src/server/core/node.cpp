@@ -484,7 +484,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    {
       pIfList = GetLocalInterfaceList();
    }
-   else if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   if ((pIfList == NULL) && (m_dwFlags & NF_IS_NATIVE_AGENT))
    {
       AgentLock();
       if (ConnectToAgent())
@@ -494,7 +494,7 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
       }
       AgentUnlock();
    }
-   else if (m_dwFlags & NF_IS_SNMP)
+   if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))
    {
       pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, m_dwNodeType);
    }
@@ -553,12 +553,10 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
          // new subnet with class mask
          if (dwNetMask == 0)
          {
-            if (dwIpAddr < 0x80000000)
-               dwNetMask = 0xFF000000;   // Class A
-            else if (dwIpAddr < 0xC0000000)
-               dwNetMask = 0xFFFF0000;   // Class B
-            else if (dwIpAddr < 0xE0000000)
-               dwNetMask = 0xFFFFFF00;   // Class C
+            if (dwIpAddr < 0xE0000000)
+            {
+               dwNetMask = 0xFFFFFF00;   // Class A, B or C
+            }
             else
             {
                TCHAR szBuffer[16];
@@ -632,13 +630,21 @@ void Node::DeleteInterface(Interface *pInterface)
    // Check if we should unlink node from interface's subnet
    if (pInterface->IpAddr() != 0)
    {
+      BOOL bUnlink = TRUE;
+
+      LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
             if (m_pChildList[i] != pInterface)
                if ((((Interface *)m_pChildList[i])->IpAddr() & ((Interface *)m_pChildList[i])->IpNetMask()) ==
                    (pInterface->IpAddr() & pInterface->IpNetMask()))
+               {
+                  bUnlink = FALSE;
                   break;
-      if (i == m_dwChildCount)
+               }
+      UnlockChildList();
+      
+      if (bUnlink)
       {
          // Last interface in subnet, should unlink node
          Subnet *pSubnet = FindSubnetByIP(pInterface->IpAddr() & pInterface->IpNetMask());
@@ -857,6 +863,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          {
             DWORD dwNodeFlags, dwNodeType;
 
+            LockData();
+
             if (strcmp(m_szObjectId, szBuffer))
             {
                strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
@@ -877,6 +885,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                bHasChanges = TRUE;
             }
 
+            UnlockData();
+
             CheckOSPFSupport();
          }
          else
@@ -886,6 +896,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                         ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                         szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
+               LockData();
                if (strcmp(m_szObjectId, ".1.3.6.1.4.1.2620.1.1"))
                {
                   strncpy(m_szObjectId, ".1.3.6.1.4.1.2620.1.1", MAX_OID_LEN * 4);
@@ -894,6 +905,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
                m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+               UnlockData();
                SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent is active\r\n"));
             }
          }
@@ -904,29 +916,36 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
          if (pAgentConn->Connect())
          {
+            LockData();
             m_dwFlags |= NF_IS_NATIVE_AGENT;
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+            UnlockData();
       
             if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
             {
+               LockData();
                if (strcmp(m_szAgentVersion, szBuffer))
                {
                   strcpy(m_szAgentVersion, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
                }
+               UnlockData();
             }
 
             if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
             {
+               LockData();
                if (strcmp(m_szPlatformName, szBuffer))
                {
                   strcpy(m_szPlatformName, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
                }
+               UnlockData();
             }
 
+            /* LOCK? */
             safe_free(m_pParamList);
             pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
 
@@ -951,10 +970,14 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       if (pIfList != NULL)
       {
          DWORD i;
-         int j;
+         Interface **ppDeleteList;
+         int j, iDelCount;
 
          // Find non-existing interfaces
-         for(i = 0; i < m_dwChildCount; i++)
+         LockChildList(FALSE);
+         ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
+         for(i = 0, iDelCount = 0; i < m_dwChildCount; i++)
+         {
             if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
             {
                Interface *pInterface = (Interface *)m_pChildList[i];
@@ -971,22 +994,37 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
                   if (j == pIfList->iNumEntries)
                   {
-                     // No such interface in current configuration, delete it
-                     SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
-                                   pInterface->Name());
-                     PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", pInterface->IfIndex(),
-                               pInterface->Name(), pInterface->IpAddr(), pInterface->IpNetMask());
-                     DeleteInterface(pInterface);
-                     i = 0xFFFFFFFF;   // Restart loop
-                     bHasChanges = TRUE;
+                     // No such interface in current configuration, add it to delete list
+                     ppDeleteList[iDelCount++] = pInterface;
                   }
                }
             }
+         }
+         UnlockChildList();
+
+         // Delete non-existent interfaces
+         if (iDelCount > 0)
+         {
+            for(j = 0; j < iDelCount; j++)
+            {
+               SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
+                             ppDeleteList[j]->Name());
+               PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->IfIndex(),
+                         ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->IpNetMask());
+               DeleteInterface(ppDeleteList[j]);
+            }
+            bHasChanges = TRUE;
+         }
+         safe_free(ppDeleteList);
 
          // Add new interfaces and check configuration of existing
          for(j = 0; j < pIfList->iNumEntries; j++)
          {
+            BOOL bNewInterface = FALSE;
+
+            LockChildList(FALSE);
             for(i = 0; i < m_dwChildCount; i++)
+            {
                if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
                {
                   Interface *pInterface = (Interface *)m_pChildList[i];
@@ -1014,7 +1052,10 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                      break;
                   }
                }
-            if (i == m_dwChildCount)
+            }
+            UnlockChildList();
+
+            if (bNewInterface)
             {
                // New interface
                SendPollerMsg(dwRqId, _T("   Found new interface \"%s\"\r\n"), 
@@ -1037,6 +1078,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
          if (i == (DWORD)pIfList->iNumEntries)
          {
+            BOOL bCreate = TRUE;
+
             // Node is behind NAT
             m_dwFlags |= NF_BEHIND_NAT;
 
@@ -1046,11 +1089,14 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
                {
                   if (((Interface *)m_pChildList[i])->IfType() == IFTYPE_NETXMS_NAT_ADAPTER)
+                  {
+                     bCreate = FALSE;
                      break;
+                  }
                }
             UnlockChildList();
 
-            if (i == m_dwChildCount)
+            if (bCreate)
             {
                char szBuffer[MAX_OBJECT_NAME];
 
