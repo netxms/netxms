@@ -244,6 +244,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
             case ACTION_SEND_SMS:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
+               PostSMS(pAction->szRcptAddr, pszExpandedData);
                break;
             case ACTION_REMOTE:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"",
