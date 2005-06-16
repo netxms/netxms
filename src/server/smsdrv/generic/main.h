@@ -1,7 +1,9 @@
-/* $Id: main.h,v 1.2 2005-06-16 13:34:21 alk Exp $ */
+/* $Id: main.h,v 1.3 2005-06-16 20:54:26 victor Exp $ */
 
 #ifndef __MAIN_H__
 #define __MAIN_H__
+
+#include <nxsrvapi.h>
 
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -34,6 +36,9 @@
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/06/16 13:34:21  alk
+project files addded
+
 Revision 1.1  2005/06/16 13:19:38  alk
 added sms-driver for generic gsm modem
 

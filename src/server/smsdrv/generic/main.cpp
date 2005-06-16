@@ -1,4 +1,5 @@
-/* $Id: main.cpp,v 1.2 2005-06-16 13:34:21 alk Exp $ */
+/* $Id: main.cpp,v 1.3 2005-06-16 20:54:26 victor Exp $ */
+
 #include "main.h"
 
 #ifdef _WIN32
@@ -33,12 +34,19 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 		char szTmp[128];
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
+		m_serial.Write("ATE0\r\n", 5); // disable echo
+		m_serial.Read(szTmp, 128); // read OK
 		m_serial.Write("ATI3\r\n", 6); // read vendor id
 		m_serial.Read(szTmp, 128); // read version
 
 		if (strcasecmp(szTmp, "ERROR") != 0)
 		{
-			printf("Hardware ID: %s\n", szTmp);
+         char *sptr, *eptr;
+
+         for(sptr = szTmp; (*sptr != 0) && ((*sptr == '\r') || (*sptr == '\n') || (*sptr == ' ') || (*sptr == '\t')); sptr++);
+         for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
+         *eptr = 0;
+         WriteLog(MSG_GSM_MODEM_INFO, EVENTLOG_INFORMATION_TYPE, "ss", pszInitArgs, sptr);
 		}
 	}
 
@@ -76,6 +84,10 @@ extern "C" void EXPORT SMSDriverUnload(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/06/16 13:34:21  alk
+project files addded
+
 Revision 1.1  2005/06/16 13:19:38  alk
 added sms-driver for generic gsm modem
-*/
+
+*/

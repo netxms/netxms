@@ -476,4 +476,10 @@ Language=English
 Failed to load zone object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_GSM_MODEM_INFO
+Language=English
+GSM modem on %1 initialized successfully. Hardware ID: "%2".
+.
+
 ;#endif
