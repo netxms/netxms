@@ -6,4 +6,4 @@ libnxsms_generic_la_LDFLAGS = -version-info $(SMSDRV_LIBRARY_VERSION)
 
 EXTRA_DIST = \
 	generic.dsp generic.dsw \
-	genericdrv.h
+	main.h serial.h
