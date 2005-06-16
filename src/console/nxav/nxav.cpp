@@ -6,6 +6,7 @@
 
 #include "MainFrm.h"
 #include "LoginDialog.h"
+#include "SettingsDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -20,8 +21,7 @@ static char THIS_FILE[] = __FILE__;
 BEGIN_MESSAGE_MAP(CAlarmViewApp, CWinApp)
 	//{{AFX_MSG_MAP(CAlarmViewApp)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code!
+	ON_COMMAND(ID_CMD_SETTINGS, OnCmdSettings)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -315,5 +315,19 @@ void CAlarmViewApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          default:
             break;
       }
+   }
+}
+
+
+//
+// Handler for "Settings..." button
+//
+
+void CAlarmViewApp::OnCmdSettings() 
+{
+   CSettingsDlg dlg;
+
+   if (dlg.DoModal() == IDOK)
+   {
    }
 }

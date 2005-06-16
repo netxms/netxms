@@ -44,8 +44,7 @@ public:
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	//{{AFX_MSG(CAlarmViewApp)
 	afx_msg void OnAppAbout();
-		// NOTE - the ClassWizard will add and remove member functions here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
+	afx_msg void OnCmdSettings();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 protected:

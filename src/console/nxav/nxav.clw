@@ -26,11 +26,11 @@ Resource4=IDR_MAINFRAME
 Class9=CAlarmBrowser
 Class10=CFlatButton
 Resource5=IDM_CONTEXT
-Resource6=IDD_LOGIN (English (U.S.))
-Resource7=IDD_SETTINGS (English (U.S.))
+Resource6=IDD_ABOUTBOX (English (U.S.))
+Resource7=IDD_LOGIN (English (U.S.))
 Resource8=IDD_REQUEST_WAIT (English (U.S.))
-Resource9=IDD_ABOUTBOX (English (U.S.))
-Resource10=IDR_MAINFRAME (English (U.S.))
+Resource9=IDR_MAINFRAME (English (U.S.))
+Resource10=IDD_SETTINGS (English (U.S.))
 Resource11=IDM_CONTEXT (English (U.S.))
 
 [CLS:CAlarmViewApp]
@@ -172,6 +172,7 @@ ImplementationFile=FlatButton.cpp
 BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
+LastObject=CFlatButton
 
 [ACL:IDR_MAINFRAME (English (U.S.))]
 Type=1
@@ -191,7 +192,7 @@ CommandCount=11
 
 [DLG:IDD_ABOUTBOX (English (U.S.))]
 Type=1
-Class=?
+Class=CAboutDlg
 ControlCount=4
 Control1=IDC_STATIC,static,1342177283
 Control2=IDC_STATIC,static,1342308480
@@ -200,14 +201,14 @@ Control4=IDOK,button,1342373889
 
 [DLG:IDD_REQUEST_WAIT (English (U.S.))]
 Type=1
-Class=?
+Class=CRequestProcessingDlg
 ControlCount=2
 Control1=IDC_STATIC,static,1342177283
 Control2=IDC_INFO_TEXT,static,1342308352
 
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
-Class=?
+Class=CLoginDialog
 ControlCount=15
 Control1=IDC_EDIT_SERVER,edit,1350631552
 Control2=IDC_EDIT_LOGIN,edit,1350631552
@@ -236,7 +237,15 @@ CommandCount=3
 [DLG:IDD_SETTINGS (English (U.S.))]
 Type=1
 Class=?
-ControlCount=2
+ControlCount=10
 Control1=IDOK,button,1342242817
 Control2=IDCANCEL,button,1342242816
+Control3=IDC_STATIC,button,1342177287
+Control4=IDC_CHECK_AUTOLOGIN,button,1342242819
+Control5=IDC_STATIC_SERVER,static,1342308352
+Control6=IDC_EDIT_SERVER,edit,1350631552
+Control7=IDC_STATIC_USER,static,1342308352
+Control8=IDC_EDIT_USER,edit,1350631552
+Control9=IDC_STATIC_PASSWORD,static,1342308352
+Control10=IDC_EDIT_PASSWORD,edit,1350631552
 

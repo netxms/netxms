@@ -331,6 +331,8 @@ src/console/nxav/MainFrm.h -text
 src/console/nxav/Makefile.am -text
 src/console/nxav/RequestProcessingDlg.cpp -text
 src/console/nxav/RequestProcessingDlg.h -text
+src/console/nxav/SettingsDlg.cpp -text
+src/console/nxav/SettingsDlg.h -text
 src/console/nxav/StdAfx.cpp -text
 src/console/nxav/StdAfx.h -text
 src/console/nxav/comm.cpp -text

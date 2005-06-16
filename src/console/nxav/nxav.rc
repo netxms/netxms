@@ -146,6 +146,24 @@ BEGIN
                     10
 END
 
+IDD_SETTINGS DIALOG DISCARDABLE  0, 0, 233, 127
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Settings"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,176,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
+    GROUPBOX        "Automatic login",IDC_STATIC,7,7,159,112
+    CONTROL         "Enable &automatic login",IDC_CHECK_AUTOLOGIN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,19,87,10
+    LTEXT           "Server",IDC_STATIC_SERVER,13,33,22,8
+    EDITTEXT        IDC_EDIT_SERVER,13,43,146,14,ES_AUTOHSCROLL
+    LTEXT           "User name",IDC_STATIC_USER,13,60,35,8
+    EDITTEXT        IDC_EDIT_USER,13,70,146,14,ES_AUTOHSCROLL
+    LTEXT           "Password",IDC_STATIC_PASSWORD,13,88,32,8
+    EDITTEXT        IDC_EDIT_PASSWORD,13,97,146,14,ES_AUTOHSCROLL
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -220,6 +238,14 @@ BEGIN
         RIGHTMARGIN, 208
         TOPMARGIN, 7
         BOTTOMMARGIN, 198
+    END
+
+    IDD_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 226
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
     END
 END
 #endif    // APSTUDIO_INVOKED
