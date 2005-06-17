@@ -34,6 +34,11 @@
 	<a href="netxms-0.2.0-wce-binary.zip.md5">(MD5)</a>
 	<a href="netxms-0.2.0-wce-binary.zip.asc">(PGP sign)</a> (not changed since v0.2.0)
 	</p>
+	<p>
+	<a href="netxms-0.2.1-netware-binary.tar.gz">Netware (5.1 SP3 or higher) Precompiled Binaries (agent only)</a>
+	<a href="netxms-0.2.1-netware-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.1-netware-binary.tar.gz.asc">(PGP sign)</a>
+	</p>
 
 	<h2>Previous Release version 0.2.0 &ndash; May 30, 2005</h2>
 	<p>
