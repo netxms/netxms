@@ -396,7 +396,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
       __CHK(WriteConfigStr(hConn, _T("DataDirectory"), szDataDir, TRUE, TRUE));
 
       __CHK(WriteConfigStr(hConn, _T("SMSDriver"), pc->m_szSMSDriver, TRUE, TRUE));
-      __CHK(WriteConfigStr(hConn, _T("SMSDrvParam"), pc->m_szSMSDrvParam, TRUE, TRUE));
+      __CHK(WriteConfigStr(hConn, _T("SMSDrvConfig"), pc->m_szSMSDrvParam, TRUE, TRUE));
 
 #undef __CHK
 
