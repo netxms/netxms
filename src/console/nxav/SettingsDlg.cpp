@@ -19,7 +19,10 @@ CSettingsDlg::CSettingsDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CSettingsDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CSettingsDlg)
-		// NOTE: the ClassWizard will add member initialization here
+	m_bAutoLogin = FALSE;
+	m_strPassword = _T("");
+	m_strServer = _T("");
+	m_strUser = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -28,16 +31,48 @@ void CSettingsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSettingsDlg)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Check(pDX, IDC_CHECK_AUTOLOGIN, m_bAutoLogin);
+	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_strPassword);
+	DDV_MaxChars(pDX, m_strPassword, 63);
+	DDX_Text(pDX, IDC_EDIT_SERVER, m_strServer);
+	DDV_MaxChars(pDX, m_strServer, 63);
+	DDX_Text(pDX, IDC_EDIT_USER, m_strUser);
+	DDV_MaxChars(pDX, m_strUser, 63);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CSettingsDlg, CDialog)
 	//{{AFX_MSG_MAP(CSettingsDlg)
-		// NOTE: the ClassWizard will add message map macros here
+	ON_BN_CLICKED(IDC_CHECK_AUTOLOGIN, OnCheckAutologin)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CSettingsDlg message handlers
+
+BOOL CSettingsDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	
+   EnableControls();
+	return TRUE;
+}
+
+void CSettingsDlg::OnCheckAutologin() 
+{
+   EnableControls();
+}
+
+void CSettingsDlg::EnableControls()
+{
+   BOOL bEnable;
+
+   bEnable = (SendDlgItemMessage(IDC_CHECK_AUTOLOGIN, BM_GETCHECK) == BST_CHECKED);
+   EnableDlgItem(this, IDC_STATIC_SERVER, bEnable);
+   EnableDlgItem(this, IDC_STATIC_USER, bEnable);
+   EnableDlgItem(this, IDC_STATIC_PASSWORD, bEnable);
+   EnableDlgItem(this, IDC_EDIT_SERVER, bEnable);
+   EnableDlgItem(this, IDC_EDIT_USER, bEnable);
+   EnableDlgItem(this, IDC_EDIT_PASSWORD, bEnable);
+}

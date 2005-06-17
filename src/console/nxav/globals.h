@@ -55,6 +55,7 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
                     void *pArg5, void *pArg6, char *pszInfoText);
 BOOL FileFromResource(UINT nResId, TCHAR *pszFileName);
 void CreateMonitorList(void);
+void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 
 
 //

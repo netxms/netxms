@@ -2,13 +2,13 @@
 
 [General Info]
 Version=1
-LastClass=CFlatButton
-LastTemplate=CButton
+LastClass=CSettingsDlg
+LastTemplate=CDialog
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxav.h"
 LastPage=0
 
-ClassCount=10
+ClassCount=11
 Class1=CAlarmViewApp
 Class3=CMainFrame
 Class4=CAboutDlg
@@ -26,11 +26,12 @@ Resource4=IDR_MAINFRAME
 Class9=CAlarmBrowser
 Class10=CFlatButton
 Resource5=IDM_CONTEXT
-Resource6=IDD_ABOUTBOX (English (U.S.))
-Resource7=IDD_LOGIN (English (U.S.))
-Resource8=IDD_REQUEST_WAIT (English (U.S.))
-Resource9=IDR_MAINFRAME (English (U.S.))
+Resource6=IDD_LOGIN (English (U.S.))
+Resource7=IDD_ABOUTBOX (English (U.S.))
+Resource8=IDR_MAINFRAME (English (U.S.))
+Resource9=IDD_REQUEST_WAIT (English (U.S.))
 Resource10=IDD_SETTINGS (English (U.S.))
+Class11=CSettingsDlg
 Resource11=IDM_CONTEXT (English (U.S.))
 
 [CLS:CAlarmViewApp]
@@ -236,16 +237,25 @@ CommandCount=3
 
 [DLG:IDD_SETTINGS (English (U.S.))]
 Type=1
-Class=?
+Class=CSettingsDlg
 ControlCount=10
-Control1=IDOK,button,1342242817
-Control2=IDCANCEL,button,1342242816
-Control3=IDC_STATIC,button,1342177287
-Control4=IDC_CHECK_AUTOLOGIN,button,1342242819
-Control5=IDC_STATIC_SERVER,static,1342308352
-Control6=IDC_EDIT_SERVER,edit,1350631552
-Control7=IDC_STATIC_USER,static,1342308352
-Control8=IDC_EDIT_USER,edit,1350631552
-Control9=IDC_STATIC_PASSWORD,static,1342308352
-Control10=IDC_EDIT_PASSWORD,edit,1350631552
+Control1=IDC_CHECK_AUTOLOGIN,button,1342242819
+Control2=IDC_EDIT_SERVER,edit,1350631552
+Control3=IDC_EDIT_USER,edit,1350631552
+Control4=IDC_EDIT_PASSWORD,edit,1350631584
+Control5=IDOK,button,1342242817
+Control6=IDCANCEL,button,1342242816
+Control7=IDC_STATIC,button,1342177287
+Control8=IDC_STATIC_SERVER,static,1342308352
+Control9=IDC_STATIC_USER,static,1342308352
+Control10=IDC_STATIC_PASSWORD,static,1342308352
+
+[CLS:CSettingsDlg]
+Type=0
+HeaderFile=SettingsDlg.h
+ImplementationFile=SettingsDlg.cpp
+BaseClass=CDialog
+Filter=D
+VirtualFilter=dWC
+LastObject=CSettingsDlg
 

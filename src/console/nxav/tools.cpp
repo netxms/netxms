@@ -100,3 +100,17 @@ void CreateMonitorList(void)
    g_dwNumMonitors = 0;
    EnumDisplayMonitors(NULL, NULL, MonitorEnumCallback, 0);
 }
+
+
+//
+// Enable or disable dialog item
+//
+
+void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable)
+{
+   CWnd *pCtrl;
+
+   pCtrl = pWnd->GetDlgItem(nCtrl);
+   if (pCtrl != NULL)
+      pCtrl->EnableWindow(bEnable);
+}

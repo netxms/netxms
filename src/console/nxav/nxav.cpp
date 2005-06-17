@@ -45,6 +45,7 @@ CAlarmViewApp theApp;
 BOOL CAlarmViewApp::InitInstance()
 {
    DWORD dwResult, dwMonitor;
+   BOOL bAutoLogin;
 
    // Initialize Windows sockets
 	if (!AfxSocketInit())
@@ -75,8 +76,10 @@ BOOL CAlarmViewApp::InitInstance()
 	SetRegistryKey(_T("NetXMS"));
 
    // Load settings
-   strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
-   strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
+   _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
+   _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   _tcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
@@ -86,33 +89,39 @@ BOOL CAlarmViewApp::InitInstance()
 	// create and load the frame with its resources
    pFrame->Create(NULL, _T("NetXMS Alarm Viewer"));
 
-   // Ask for credentials
-   CLoginDialog dlg;
-
-   dlg.m_szServer = g_szServer;
-   dlg.m_szLogin = g_szLogin;
-   dlg.m_szPassword = g_szPassword;
-   if (dlg.DoModal() != IDOK)
-      return FALSE;
-   _tcsncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
-   _tcsncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
-   _tcsncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
-
-   // Save last connection parameters
-   WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
-   WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
-   //WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
-
-   // Connect
-   dwResult = DoLogin();
-   if (dwResult != RCC_SUCCESS)
+   do
    {
-      TCHAR szBuffer[1024];
+      // Ask for credentials
+      if (!bAutoLogin)
+      {
+         CLoginDialog dlg;
 
-      _sntprintf(szBuffer, 1024, _T("Unable to connect: %s"), NXCGetErrorText(dwResult));
-      pFrame->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
-      return FALSE;
-   }
+         dlg.m_szServer = g_szServer;
+         dlg.m_szLogin = g_szLogin;
+         dlg.m_szPassword = g_szPassword;
+         if (dlg.DoModal() != IDOK)
+            return FALSE;
+         _tcsncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
+         _tcsncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
+         _tcsncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
+      }
+
+      // Save last connection parameters
+      WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
+      WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
+      //WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
+
+      // Connect
+      dwResult = DoLogin();
+      if (dwResult != RCC_SUCCESS)
+      {
+         TCHAR szBuffer[1024];
+
+         _sntprintf(szBuffer, 1024, _T("Unable to connect: %s"), NXCGetErrorText(dwResult));
+         pFrame->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
+         bAutoLogin = FALSE;
+      }
+   } while(dwResult != RCC_SUCCESS);
 
    // Create files from resources
    FileFromResource(IDF_BACKGROUND, _T("background.jpg"));
@@ -327,7 +336,19 @@ void CAlarmViewApp::OnCmdSettings()
 {
    CSettingsDlg dlg;
 
+   dlg.m_bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
+   dlg.m_strServer = (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost"));
+   dlg.m_strUser = (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL);
+   dlg.m_strPassword = (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL);
    if (dlg.DoModal() == IDOK)
    {
+      WriteProfileInt(_T("Connection"), _T("AutoLogin"), dlg.m_bAutoLogin);
+      if (dlg.m_bAutoLogin)
+      {
+         WriteProfileString(_T("Connection"), _T("Server"), (LPCTSTR)dlg.m_strServer);
+         WriteProfileString(_T("Connection"), _T("Login"), (LPCTSTR)dlg.m_strUser);
+      }
+      WriteProfileString(_T("Connection"), _T("Password"), 
+                         dlg.m_bAutoLogin ? (LPCTSTR)dlg.m_strPassword : _T(""));
    }
 }
