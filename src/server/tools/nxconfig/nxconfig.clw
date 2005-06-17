@@ -2,7 +2,7 @@
 
 [General Info]
 Version=1
-LastClass=CLoggingPage
+LastClass=CSMTPPage
 LastTemplate=CPropertyPage
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxconfig.h"
@@ -14,24 +14,24 @@ Class3=CMainFrame
 Class4=CAboutDlg
 
 ResourceCount=12
-Resource1=IDD_CFG_FILE (English (U.S.))
-Resource2=IDD_FINISH (English (U.S.))
+Resource1=IDD_POLLING (English (U.S.))
+Resource2=IDD_CFG_FILE (English (U.S.))
 Class2=CChildView
-Resource3=IDD_POLLING (English (U.S.))
-Resource4=IDR_MAINFRAME (English (U.S.))
+Resource3=IDD_SELECT_DB (English (U.S.))
+Resource4=IDD_ODBC (English (U.S.))
 Class5=CIntroPage
 Class6=CConfigWizard
 Resource5=IDD_PROCESSING (English (U.S.))
 Class7=CDBSelectPage
-Resource6=IDD_ODBC (English (U.S.))
+Resource6=IDD_SMTP (English (U.S.))
 Class8=CFinishPage
 Resource7=IDD_INTRO (English (U.S.))
 Class9=CODBCPage
 Resource8=IDD_ABOUTBOX (English (U.S.))
 Class10=CPollCfgPage
-Resource9=IDD_SELECT_DB (English (U.S.))
+Resource9=IDR_MAINFRAME (English (U.S.))
 Class11=CSMTPPage
-Resource10=IDD_SMTP (English (U.S.))
+Resource10=IDD_FINISH (English (U.S.))
 Class12=CSummaryPage
 Resource11=IDD_SUMMARY (English (U.S.))
 Class13=CProcessingPage
@@ -246,12 +246,20 @@ VirtualFilter=idWC
 [DLG:IDD_SMTP (English (U.S.))]
 Type=1
 Class=CSMTPPage
-ControlCount=5
+ControlCount=13
 Control1=IDC_EDIT_SERVER,edit,1350631552
 Control2=IDC_EDIT_EMAIL,edit,1350631552
 Control3=IDC_STATIC,static,1342177806
 Control4=IDC_STATIC,static,1342308352
 Control5=IDC_STATIC,static,1342308352
+Control6=IDC_STATIC,static,1342308352
+Control7=IDC_COMBO_SMSDRV,combobox,1344340227
+Control8=IDC_STATIC_PORT,static,1342308352
+Control9=IDC_COMBO_PORT,combobox,1344340227
+Control10=IDC_STATIC,static,1342308352
+Control11=IDC_STATIC,static,1342177296
+Control12=IDC_STATIC,static,1342308352
+Control13=IDC_STATIC,static,1342177296
 
 [CLS:CSMTPPage]
 Type=0

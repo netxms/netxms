@@ -71,6 +71,8 @@ struct WIZARD_CFG_INFO
    TCHAR m_szSMTPMailFrom[MAX_DB_STRING];
    BOOL m_bLogToSyslog;
    TCHAR m_szLogFile[MAX_PATH];
+   TCHAR m_szSMSDriver[MAX_PATH];
+   TCHAR m_szSMSDrvParam[MAX_DB_STRING];
 };
 
 

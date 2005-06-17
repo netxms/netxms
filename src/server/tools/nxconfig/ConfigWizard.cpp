@@ -70,6 +70,8 @@ void CConfigWizard::DefaultConfig()
    m_cfg.m_dwStatusPI = 60;
    m_cfg.m_dwNumStatusPollers = 10;
    m_cfg.m_bLogToSyslog = TRUE;
+   _tcscpy(m_cfg.m_szSMSDriver, _T("generic.sms"));
+   _tcscpy(m_cfg.m_szSMSDrvParam, _T("COM1:"));
 
    // Read installation info from registry
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,

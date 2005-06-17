@@ -395,6 +395,9 @@ static DWORD __stdcall WorkerThread(void *pArg)
       _sntprintf(szDataDir, MAX_PATH, _T("%s\\var"), pc->m_szInstallDir);
       __CHK(WriteConfigStr(hConn, _T("DataDirectory"), szDataDir, TRUE, TRUE));
 
+      __CHK(WriteConfigStr(hConn, _T("SMSDriver"), pc->m_szSMSDriver, TRUE, TRUE));
+      __CHK(WriteConfigStr(hConn, _T("SMSDrvParam"), pc->m_szSMSDrvParam, TRUE, TRUE));
+
 #undef __CHK
 
       PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);

@@ -22,8 +22,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CSMTPPage)
 	enum { IDD = IDD_SMTP };
-		// NOTE - ClassWizard will add data members here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
+	CComboBox	m_wndDrvList;
+	CComboBox	m_wndPortList;
 	//}}AFX_DATA
 
 
@@ -41,6 +41,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CSMTPPage)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnSelchangeComboSmsdrv();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
