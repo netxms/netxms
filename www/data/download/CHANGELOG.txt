@@ -1,4 +1,31 @@
 *
+* 0.2.1
+*
+
+- Server startup procedure improved
+- Fixed bug in Windows service shutdown code
+- Added ICMP ping subagent
+- Server will not collect data from unmanaged nodes
+- Added PostgreSQL support under Windows
+- NetWare platform subagent improved
+- Linux subagent: Implemented all Net.Interface.* parameters except
+  Net.Interface.Speed
+- Fixed crash in Microsoft SQL driver caused by unsuccessful connection
+- More SNMP MIBs added
+- Fixed issue #27 (poller threads deadlock)
+- Server's internal synchronization mechanisms improved
+- Added driver for generic GSM modems
+- SMS driver can be configured from server configuration wizard
+- Windows console:
+	- Action properties dialog improved
+	- Sorting implemented in data collection editor
+	- Object browser window can be saved in desktop configuration
+- Windows alarm viewer:
+	- Added autologin feature
+	- UI appearance improved
+
+
+*
 * 0.2.0
 *
 
