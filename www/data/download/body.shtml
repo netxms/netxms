@@ -6,7 +6,36 @@
 	<a href="changelog.shtml">Current Changelog</a>
 	</p>
 
-	<h2>Current Release version 0.2.0 &ndash; May 30, 2005</h2>
+	<h2>Current Release version 0.2.1 &ndash; Jun 17, 2005</h2>
+	<p>
+	<a href="netxms-0.2.1.tar.gz">Source code</a>
+	<a href="netxms-0.2.1.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.1.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="netxms-0.2.1.exe">WIN32 Installer</a>
+	<a href="netxms-0.2.1.exe.md5">(MD5)</a>
+	<a href="netxms-0.2.1.exe.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="agent_packages/nxagent-0.2.1.exe">WIN32 Agent Installer</a>
+	<a href="agent_packages/nxagent-0.2.1-win32.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.1.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.1.exe.asc">(PGP sign)</a><br />
+	NB! We strongly recommended to use this installer if you are planning on using centralised upgrade feature.
+	</p>
+	<p>
+	<a href="netxms-0.2.1-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
+	<a href="netxms-0.2.1-win32-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.1-win32-binary.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="netxms-0.2.0-wce-binary.zip">PocketPC Precompiled Binaries</a>
+	<a href="netxms-0.2.0-wce-binary.zip.md5">(MD5)</a>
+	<a href="netxms-0.2.0-wce-binary.zip.asc">(PGP sign)</a> (not changed since v0.2.0)
+	</p>
+
+	<h2>Previous Release version 0.2.0 &ndash; May 30, 2005</h2>
 	<p>
 	<a href="netxms-0.2.0.tar.gz">Source code</a>
 	<a href="netxms-0.2.0.tar.gz.md5">(MD5)</a>
@@ -21,8 +50,7 @@
 	<a href="agent_packages/nxagent-0.2.0.exe">WIN32 Agent Installer</a>
 	<a href="agent_packages/nxagent-0.2.0-win32.npi">NPI file</a>
 	<a href="agent_packages/nxagent-0.2.0.exe.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.0.exe.asc">(PGP sign)</a><br />
-	NB! We strongly recommended to use this installer if you are planning on using centralised upgrade feature.
+	<a href="agent_packages/nxagent-0.2.0.exe.asc">(PGP sign)</a>
 	</p>
 	<p>
 	<a href="netxms-0.2.0-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
@@ -33,28 +61,6 @@
 	<a href="netxms-0.2.0-wce-binary.zip">PocketPC Precompiled Binaries</a>
 	<a href="netxms-0.2.0-wce-binary.zip.md5">(MD5)</a>
 	<a href="netxms-0.2.0-wce-binary.zip.asc">(PGP sign)</a>
-	</p>
-
-	<h2>Previous Release version 0.1.20 &ndash; May 25, 2005</h2>
-	<p>
-	<a href="netxms-0.1.20.tar.gz">Source code</a>
-	<a href="netxms-0.1.20.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.1.20.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.1.20-win32-binary.tar.gz">WIN32 Precompiled Binaries</a>
-	<a href="netxms-0.1.20-win32-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.1.20-win32-binary.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.1.20-images.tar.gz">Images</a>
-	<a href="netxms-0.1.20-images.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.1.20-images.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.1.20-mibs.tar.gz">Validated MIBs</a>
-	<a href="netxms-0.1.20-mibs.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.1.20-mibs.tar.gz.asc">(PGP sign)</a>
 	</p>
 
 	<h2>PGP Key</h2>
