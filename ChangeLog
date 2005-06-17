@@ -20,6 +20,9 @@
 	- Action properties dialog improved
 	- Sorting implemented in data collection editor
 	- Object browser window can be saved in desktop configuration
+- Windows alarm viewer:
+	- Added autologin feature
+	- UI appearance improved
 
 
 *
