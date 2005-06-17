@@ -3,6 +3,21 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "generic"=.\src\server\smsdrv\generic\generic.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libnetxms"=.\src\libnetxms\libnetxms.dsp - Package Owner=<4>
 
 Package=<5>

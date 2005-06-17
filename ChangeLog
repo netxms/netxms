@@ -15,6 +15,7 @@
 - Fixed issue #27 (poller threads deadlock)
 - Server's internal synchronization mechanisms improved
 - Added driver for generic GSM modems
+- SMS driver can be configured from server configuration wizard
 - Windows console:
 	- Action properties dialog improved
 	- Sorting implemented in data collection editor
