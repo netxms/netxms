@@ -118,6 +118,7 @@ typedef __console_ctx * CONSOLE_CTX;
 # define DDIR_MIBS             "\\mibs"
 # define DDIR_IMAGES           "\\images"
 # define DDIR_PACKAGES         "\\packages"
+# define DFILE_KEYS            "\\server_key"
 
 #else    /* _WIN32 */
 
@@ -133,6 +134,7 @@ typedef __console_ctx * CONSOLE_CTX;
 # define DDIR_MIBS             "/mibs"
 # define DDIR_IMAGES           "/images"
 # define DDIR_PACKAGES         "/packages"
+# define DFILE_KEYS            "/.server_key"
 
 #endif   /* _WIN32 */
 

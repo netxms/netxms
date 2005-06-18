@@ -70,7 +70,9 @@ DWORD g_dwConfigurationPollingInterval;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 QWORD g_qwServerId;
-
+#ifdef _WITH_ENCRYPTION
+RSA *g_pServerKey = NULL;
+#endif
 
 //
 // Static data
@@ -185,6 +187,89 @@ static void LoadGlobalConfig()
 
 
 //
+// Initialize cryptografic functions
+//
+
+static BOOL InitCryptografy(void)
+{
+#ifdef _WITH_ENCRYPTION
+   char szKeyFile[MAX_PATH];
+   BOOL bResult = FALSE;
+   int fd, iLen;
+   BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
+
+   if (!InitCryptoLib())
+      return FALSE;
+
+   strcpy(szKeyFile, g_szDataDir);
+   strcat(szKeyFile, DFILE_KEYS);
+   fd = open(szKeyFile, O_RDONLY | O_BINARY);
+   if (fd != -1)
+   {
+      if (read(fd, &iLen, sizeof(int)) == sizeof(int))
+      {
+         pKeyBuffer = (BYTE *)malloc(iLen);
+         pBufPos = pKeyBuffer;
+         if (read(fd, pKeyBuffer, iLen) == iLen)
+         {
+            BYTE hash2[SHA1_DIGEST_SIZE];
+
+            read(fd, hash, SHA1_DIGEST_SIZE);
+            CalculateSHA1Hash(pKeyBuffer, iLen, hash2);
+            if (!memcmp(hash, hash2, SHA1_DIGEST_SIZE))
+            {
+               g_pServerKey = d2i_RSAPublicKey(NULL, (const BYTE **)&pBufPos, iLen);
+               if (g_pServerKey != NULL)
+               {
+                  if (d2i_RSAPrivateKey(&g_pServerKey, (const BYTE **)&pBufPos,
+                                        iLen - (pBufPos - pKeyBuffer)) != NULL)
+                  {
+                     bResult = TRUE;
+                  }
+               }
+            }
+         }
+         free(pKeyBuffer);
+      }
+      close(fd);
+   }
+   else
+   {
+      DbgPrintf(AF_DEBUG_MISC, "Generating RSA key pair...");
+      g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
+      if (g_pServerKey != NULL)
+      {
+         fd = open(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
+         if (fd != -1)
+         {
+            iLen = i2d_RSAPublicKey(g_pServerKey, NULL);
+            iLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
+            pKeyBuffer = (BYTE *)malloc(iLen);
+
+            pBufPos = pKeyBuffer;
+            i2d_RSAPublicKey(g_pServerKey, &pBufPos);
+            i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
+            write(fd, &iLen, sizeof(int));
+            write(fd, pKeyBuffer, iLen);
+
+            CalculateSHA1Hash(pKeyBuffer, iLen, hash);
+            write(fd, hash, SHA1_DIGEST_SIZE);
+            
+            close(fd);
+            free(pKeyBuffer);
+            bResult = TRUE;
+         }
+      }
+   }
+
+   return bResult;
+#else
+   return TRUE;
+#endif
+}
+
+
+//
 // Server initialization
 //
 
@@ -280,12 +365,19 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    LoadGlobalConfig();
    DbgPrintf(AF_DEBUG_MISC, "Global configuration loaded");
 
-   // Initialize SNMP stuff
-   SnmpInit();
-
    // Check data directory
    if (!CheckDataDir())
       return FALSE;
+
+   // Initialize cryptografy
+   if (!InitCryptografy())
+   {
+      WriteLog(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      return FALSE;
+   }
+
+   // Initialize SNMP stuff
+   SnmpInit();
 
    // Update hashes for image files
    UpdateImageHashes();

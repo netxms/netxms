@@ -181,6 +181,8 @@ CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
 TCHAR LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
 BOOL LIBNXCSCP_EXPORTABLE SendFileOverCSCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile);
    
+BOOL LIBNXCSCP_EXPORTABLE InitCryptoLib(void);
+
 #ifdef __cplusplus
 }
 #endif

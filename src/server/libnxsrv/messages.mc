@@ -482,4 +482,10 @@ Language=English
 GSM modem on %1 initialized successfully. Hardware ID: "%2".
 .
 
+MessageId=
+SymbolicName=MSG_INIT_CRYPTO_FAILED
+Language=English
+Failed to initialize cryptografy module
+.
+
 ;#endif
