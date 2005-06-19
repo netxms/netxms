@@ -230,7 +230,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                   for(i = 20; i < dwMaxWait; i += 20)
                   {
                      ThreadSleep(20);
-                     if (pAgentConn->Connect())
+                     if (pAgentConn->Connect(g_pServerKey))
                      {
                         bConnected = TRUE;
                         break;   // Connected successfully
@@ -239,7 +239,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 
                   // Last attempt to reconnect
                   if (!bConnected)
-                     bConnected = pAgentConn->Connect();
+                     bConnected = pAgentConn->Connect(g_pServerKey);
 
                   if (bConnected)
                   {

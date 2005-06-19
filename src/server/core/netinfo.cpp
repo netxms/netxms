@@ -388,7 +388,7 @@ ARP_CACHE *GetLocalArpCache(void)
    AgentConnection conn(inet_addr("127.0.0.1"));
 
    // Try to get local interface list from agent via loopback address
-   if (conn.Connect())
+   if (conn.Connect(g_pServerKey))
    {
       pArpCache = conn.GetArpCache();
       conn.Disconnect();
@@ -412,7 +412,7 @@ INTERFACE_LIST *GetLocalInterfaceList(void)
    AgentConnection conn(inet_addr("127.0.0.1"));
 
    // Try to get local interface list from agent via loopback address
-   if (conn.Connect())
+   if (conn.Connect(g_pServerKey))
    {
       pIfList = conn.GetInterfaceList();
       conn.Disconnect();

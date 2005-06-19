@@ -367,7 +367,7 @@ void Node::NewNodePoll(DWORD dwNetMask)
 
    pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod,
                                     m_szSharedSecret);
-   if (pAgentConn->Connect())
+   if (pAgentConn->Connect(g_pServerKey))
    {
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
@@ -733,7 +733,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       SetPollerInfo(nPoller, "check agent");
       SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
       pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-      if (pAgentConn->Connect())
+      if (pAgentConn->Connect(g_pServerKey))
       {
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
          {
@@ -914,7 +914,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       if (!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)))
       {
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-         if (pAgentConn->Connect())
+         if (pAgentConn->Connect(g_pServerKey))
          {
             LockData();
             m_dwFlags |= NF_IS_NATIVE_AGENT;
@@ -1197,7 +1197,7 @@ BOOL Node::ConnectToAgent(void)
 
    // Close current connection or clean up after broken connection
    m_pAgentConnection->Disconnect();
-   return m_pAgentConnection->Connect();
+   return m_pAgentConnection->Connect(g_pServerKey);
 }
 
 
@@ -1680,7 +1680,7 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
       AgentConnection conn(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 
       // Establish connection with agent
-      if (conn.Connect())
+      if (conn.Connect(g_pServerKey))
       {
          dwError = conn.CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
                                             wPort, wProto, pszRequest, pszResponce);
@@ -1745,7 +1745,7 @@ AgentConnection *Node::CreateAgentConnection(void)
       return NULL;
 
    pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-   if (!pConn->Connect())
+   if (!pConn->Connect(g_pServerKey))
    {
       delete pConn;
       pConn = NULL;

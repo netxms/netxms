@@ -1,6 +1,6 @@
 /* 
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -159,9 +159,14 @@ static int ListParameters(AgentConnection *pConn)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE, bEncrypt = FALSE;
+   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE;
    int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
    int iAuthMethod = AUTH_NONE, iServiceType = NETSRV_SSH;
+#ifdef _WITH_ENCRYPTION
+   int iEncryptionPolicy = ENCRYPTION_ALLOWED;
+#else
+   int iEncryptionPolicy = ENCRYPTION_DISABLED;
+#endif
    WORD wAgentPort = AGENT_LISTEN_PORT, wServicePort = 0, wServiceProto = 0;
    DWORD dwTimeout = 3000, dwServiceAddr = 0, dwError;
    char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
@@ -170,7 +175,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:behi:IK:lnp:P:qr:R:s:S:t:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:be:hi:IK:lnp:P:qr:R:s:S:t:vw:")) != -1)
    {
       switch(ch)
       {
@@ -181,7 +186,12 @@ int main(int argc, char *argv[])
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
                    "   -b           : Batch mode - get all parameters listed on command line.\n"
 #ifdef _WITH_ENCRYPTION
-                   "   -e           : Encrypt connection.\n"
+                   "   -e <policy>  : Set encryption policy. Possible values are:\n"
+                   "                    0 = Encryption disabled;\n"
+                   "                    1 = Encrypt connection only if agent requires encryption;\n"
+                   "                    2 = Encrypt connection if agent supports encryption;\n"
+                   "                    3 = Force encrypted connection;\n"
+                   "                  Default value is 1.\n"
 #endif
                    "   -h           : Display help and exit.\n"
                    "   -i <seconds> : Get specified parameter(s) continously with given interval.\n"
@@ -320,7 +330,13 @@ int main(int argc, char *argv[])
             break;
 #ifdef _WITH_ENCRYPTION
          case 'e':
-            bEncrypt = TRUE;
+            iEncryptionPolicy = atoi(optarg);
+            if ((iEncryptionPolicy < 0) ||
+                (iEncryptionPolicy > 3))
+            {
+               printf("Invalid encryption policy %d\n", iEncryptionPolicy);
+               bStart = FALSE;
+            }
             break;
          case 'K':
             strncpy(szKeyFile, optarg, MAX_PATH);
@@ -356,7 +372,7 @@ int main(int argc, char *argv[])
 
       // Load server key if requested
 #ifdef _WITH_ENCRYPTION
-      if (bEncrypt && bStart)
+      if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && bStart)
       {
          if (InitCryptoLib(0xFFFF))
          {
@@ -364,13 +380,15 @@ int main(int argc, char *argv[])
             if (pServerKey == NULL)
             {
                printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
-               bStart = FALSE;
+               if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
+                  bStart = FALSE;
             }
          }
          else
          {
             printf("Error initializing cryptografy module\n");
-            bStart = FALSE;
+            if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
+               bStart = FALSE;
          }
       }
 #endif
@@ -393,6 +411,7 @@ int main(int argc, char *argv[])
             AgentConnection conn(m_dwAddr, wAgentPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
+            conn.SetEncryptionPolicy(iEncryptionPolicy);
             if (conn.Connect(pServerKey, m_bVerbose, &dwError))
             {
                do

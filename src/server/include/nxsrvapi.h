@@ -84,6 +84,16 @@
 
 
 //
+// Encryption usage policies
+//
+
+#define ENCRYPTION_DISABLED   0
+#define ENCRYPTION_ALLOWED    1
+#define ENCRYPTION_PREFERRED  2
+#define ENCRYPTION_REQUIRED   3
+
+
+//
 // DB-related constants
 //
 
@@ -178,6 +188,7 @@ private:
    MUTEX m_mutexDataLock;
    THREAD m_hReceiverThread;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+   int m_iEncryptionPolicy;
 
    void ReceiverThread(void);
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
@@ -221,6 +232,7 @@ public:
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
    void SetCommandTimeout(DWORD dwTimeout) { if (dwTimeout > 500) m_dwCommandTimeout = dwTimeout; }
+   void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
 };
 
 
@@ -267,6 +279,8 @@ void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
 
 TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
+
+void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
 
 //

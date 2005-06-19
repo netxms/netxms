@@ -33,6 +33,29 @@
 
 
 //
+// Static data
+//
+
+#ifdef _WITH_ENCRYPTION
+static int m_iDefaultEncryptionPolicy = ENCRYPTION_ALLOWED;
+#else
+static int m_iDefaultEncryptionPolicy = ENCRYPTION_DISABLED;
+#endif
+
+
+//
+// Set default encryption policy for agent communication
+//
+
+void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
+{
+#ifdef _WITH_ENCRYPTION
+   m_iDefaultEncryptionPolicy = iPolicy;
+#endif
+}
+
+
+//
 // Receiver thread starter
 //
 
@@ -64,6 +87,7 @@ AgentConnection::AgentConnection()
    m_mutexDataLock = MutexCreate();
    m_hReceiverThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
+   m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
 }
 
 
@@ -100,6 +124,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHA
    m_mutexDataLock = MutexCreate();
    m_hReceiverThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
+   m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
 }
 
 
@@ -233,8 +258,8 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
-   BOOL bSuccess = FALSE;
-   DWORD dwError;
+   BOOL bSuccess = FALSE, bForceEncryption = FALSE;
+   DWORD dwError = 0;
 
    if (pdwError != NULL)
       *pdwError = ERR_INTERNAL_ERROR;
@@ -278,16 +303,37 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
    m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
 
    // Setup encryption
-   if (pServerKey != NULL)
+setup_encryption:
+   if ((m_iEncryptionPolicy == ENCRYPTION_PREFERRED) ||
+       (m_iEncryptionPolicy == ENCRYPTION_REQUIRED) ||
+       (bForceEncryption))    // Agent require encryption
    {
-      dwError = SetupEncryption(pServerKey);
-      if (dwError != ERR_SUCCESS)
-         goto connect_cleanup;
+      if (pServerKey != NULL)
+      {
+         dwError = SetupEncryption(pServerKey);
+         if ((dwError != ERR_SUCCESS) &&
+             ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || bForceEncryption))
+            goto connect_cleanup;
+      }
+      else
+      {
+         if ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || bForceEncryption)
+         {
+            dwError = ERR_ENCRYPTION_REQUIRED;
+            goto connect_cleanup;
+         }
+      }
    }
 
    // Authenticate itself to agent
    if ((dwError = Authenticate()) != ERR_SUCCESS)
    {
+      if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
+          (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
+      {
+         bForceEncryption = TRUE;
+         goto setup_encryption;
+      }
       PrintMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
@@ -296,6 +342,12 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
    // Test connectivity
    if ((dwError = Nop()) != ERR_SUCCESS)
    {
+      if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
+          (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
+      {
+         bForceEncryption = TRUE;
+         goto setup_encryption;
+      }
       PrintMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;

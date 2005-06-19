@@ -39,9 +39,14 @@
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE, bEncrypt = FALSE;
+   BOOL bStart = TRUE, bVerbose = TRUE;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
+#ifdef _WITH_ENCRYPTION
+   int iEncryptionPolicy = ENCRYPTION_ALLOWED;
+#else
+   int iEncryptionPolicy = ENCRYPTION_DISABLED;
+#endif
    WORD wPort = AGENT_LISTEN_PORT;
    DWORD dwAddr, dwTimeout = 3000, dwError;
    char szSecret[MAX_SECRET_LENGTH] = "";
@@ -50,7 +55,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:ehK:p:qs:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:e:hK:p:qs:vw:")) != -1)
    {
       switch(ch)
       {
@@ -60,7 +65,12 @@ int main(int argc, char *argv[])
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
 #ifdef _WITH_ENCRYPTION
-                   "   -e           : Encrypt connection.\n"
+                   "   -e <policy>  : Set encryption policy. Possible values are:\n"
+                   "                    0 = Encryption disabled;\n"
+                   "                    1 = Encrypt connection only if agent requires encryption;\n"
+                   "                    2 = Encrypt connection if agent supports encryption;\n"
+                   "                    3 = Force encrypted connection;\n"
+                   "                  Default value is 1.\n"
 #endif
                    "   -h           : Display help and exit.\n"
 #ifdef _WITH_ENCRYPTION
@@ -126,7 +136,13 @@ int main(int argc, char *argv[])
             break;
 #ifdef _WITH_ENCRYPTION
          case 'e':
-            bEncrypt = TRUE;
+            iEncryptionPolicy = atoi(optarg);
+            if ((iEncryptionPolicy < 0) ||
+                (iEncryptionPolicy > 3))
+            {
+               printf("Invalid encryption policy %d\n", iEncryptionPolicy);
+               bStart = FALSE;
+            }
             break;
          case 'K':
             strncpy(szKeyFile, optarg, MAX_PATH);
@@ -162,7 +178,7 @@ int main(int argc, char *argv[])
 
       // Load server key if requested
 #ifdef _WITH_ENCRYPTION
-      if (bEncrypt && bStart)
+      if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && bStart)
       {
          if (InitCryptoLib(0xFFFF))
          {
@@ -170,13 +186,15 @@ int main(int argc, char *argv[])
             if (pServerKey == NULL)
             {
                printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
-               bStart = FALSE;
+               if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
+                  bStart = FALSE;
             }
          }
          else
          {
             printf("Error initializing cryptografy module\n");
-            bStart = FALSE;
+            if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
+               bStart = FALSE;
          }
       }
 #endif
@@ -211,6 +229,7 @@ int main(int argc, char *argv[])
             AgentConnection conn(dwAddr, wPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
+            conn.SetEncryptionPolicy(iEncryptionPolicy);
             if (conn.Connect(pServerKey, bVerbose, &dwError))
             {
                DWORD dwError;

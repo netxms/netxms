@@ -70,9 +70,7 @@ DWORD g_dwConfigurationPollingInterval;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 QWORD g_qwServerId;
-#ifdef _WITH_ENCRYPTION
 RSA *g_pServerKey = NULL;
-#endif
 
 //
 // Static data
@@ -195,11 +193,11 @@ static BOOL InitCryptografy(void)
 #ifdef _WITH_ENCRYPTION
    char szKeyFile[MAX_PATH];
    BOOL bResult = FALSE;
-   int fd;
+   int fd, iPolicy;
    DWORD dwLen;
    BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
-   if (!InitCryptoLib(0xFFFF))
+   if (!InitCryptoLib(ConfigReadULong("AllowedCiphers", 15)))
       return FALSE;
 
    strcpy(szKeyFile, g_szDataDir);
@@ -234,6 +232,15 @@ static BOOL InitCryptografy(void)
          }
       }
    }
+   else
+   {
+      bResult = TRUE;
+   }
+
+   iPolicy = ConfigReadInt("DefaultEncryptionPolicy", 1);
+   if ((iPolicy < 0) || (iPolicy > 3))
+      iPolicy = 1;
+   SetAgentDEP(iPolicy);
 
    return bResult;
 #else
