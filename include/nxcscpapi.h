@@ -178,13 +178,14 @@ extern "C" {
 
 int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
-                                         CSCP_ENCRYPTION_CONTEXT *pCtx, 
+                                         CSCP_ENCRYPTION_CONTEXT **ppCtx,
                                          BYTE *pDecryptionBuffer);
 CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
 TCHAR LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
-BOOL LIBNXCSCP_EXPORTABLE SendFileOverCSCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile);
+BOOL LIBNXCSCP_EXPORTABLE SendFileOverCSCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile,
+                                           CSCP_ENCRYPTION_CONTEXT *pCtx);
    
 BOOL LIBNXCSCP_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers);
 CSCP_ENCRYPTED_MESSAGE LIBNXCSCP_EXPORTABLE 

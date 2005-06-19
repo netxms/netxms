@@ -172,7 +172,7 @@ void AgentConnection::ReceiverThread(void)
    {
       // Receive raw message
       if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
-                                  m_pCtx, pDecryptionBuffer)) <= 0)
+                                  &m_pCtx, pDecryptionBuffer)) <= 0)
          break;
 
       // Check if we get too large message
@@ -229,12 +229,15 @@ void AgentConnection::ReceiverThread(void)
 // Connect to agent
 //
 
-BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose)
+BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
    DWORD dwError;
+
+   if (pdwError != NULL)
+      *pdwError = ERR_INTERNAL_ERROR;
 
    // Check if already connected
    if (m_bIsConnected)
@@ -267,6 +270,7 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose)
    {
       if (bVerbose)
          PrintMsg(_T("Cannot establish connection with agent %s"), IpToStr(ntohl(m_dwAddr), szBuffer));
+      dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
 
@@ -298,6 +302,7 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose)
    }
 
    bSuccess = TRUE;
+   dwError = ERR_SUCCESS;
 
 connect_cleanup:
    if (!bSuccess)
@@ -314,6 +319,8 @@ connect_cleanup:
       m_pCtx = NULL;
    }
    m_bIsConnected = bSuccess;
+   if (pdwError != NULL)
+      *pdwError = dwError;
    return bSuccess;
 }
 
@@ -781,7 +788,7 @@ DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 
    if (dwResult == ERR_SUCCESS)
    {
-      if (SendFileOverCSCP(m_hSocket, dwRqId, pszFile))
+      if (SendFileOverCSCP(m_hSocket, dwRqId, pszFile, m_pCtx))
          dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;

@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
    int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
    int iAuthMethod = AUTH_NONE, iServiceType = NETSRV_SSH;
    WORD wAgentPort = AGENT_LISTEN_PORT, wServicePort = 0, wServiceProto = 0;
-   DWORD dwTimeout = 3000, dwServiceAddr = 0;
+   DWORD dwTimeout = 3000, dwServiceAddr = 0, dwError;
    char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
    char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponce[MAX_DB_STRING] = "";
    RSA *pServerKey = NULL;
@@ -358,10 +358,18 @@ int main(int argc, char *argv[])
 #ifdef _WITH_ENCRYPTION
       if (bEncrypt && bStart)
       {
-         pServerKey = LoadRSAKeys(szKeyFile);
-         if (pServerKey == NULL)
+         if (InitCryptoLib(0xFFFF))
          {
-            printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
+            pServerKey = LoadRSAKeys(szKeyFile);
+            if (pServerKey == NULL)
+            {
+               printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
+               bStart = FALSE;
+            }
+         }
+         else
+         {
+            printf("Error initializing cryptografy module\n");
             bStart = FALSE;
          }
       }
@@ -385,7 +393,7 @@ int main(int argc, char *argv[])
             AgentConnection conn(m_dwAddr, wAgentPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
-            if (conn.Connect(pServerKey, m_bVerbose))
+            if (conn.Connect(pServerKey, m_bVerbose, &dwError))
             {
                do
                {
@@ -418,6 +426,7 @@ int main(int argc, char *argv[])
             }
             else
             {
+               printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
          }

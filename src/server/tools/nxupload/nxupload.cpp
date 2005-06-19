@@ -35,7 +35,7 @@
 // Do agent upgrade
 //
 
-static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
+static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *pServerKey)
 {
    DWORD dwError;
    int i;
@@ -58,7 +58,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
             fflush(stdout);
             if ((i % 20 == 0) && (i > 30))
             {
-               if (conn.Connect(FALSE))
+               if (conn.Connect(pServerKey, FALSE))
                {
                   bConnected = TRUE;
                   break;   // Connected successfully
@@ -73,7 +73,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
          for(i = 20; i < 120; i += 20)
          {
             ThreadSleep(20);
-            if (conn.Connect(FALSE))
+            if (conn.Connect(pServerKey, FALSE))
             {
                bConnected = TRUE;
                break;   // Connected successfully
@@ -83,7 +83,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
 
       // Last attempt to reconnect
       if (!bConnected)
-         bConnected = conn.Connect(bVerbose);
+         bConnected = conn.Connect(pServerKey, FALSE);
 
       if (bConnected && bVerbose)
       {
@@ -111,17 +111,19 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE, bUpgrade = FALSE;
+   BOOL bStart = TRUE, bVerbose = TRUE, bUpgrade = FALSE, bEncrypt = FALSE;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
    WORD wPort = AGENT_LISTEN_PORT;
-   DWORD dwAddr, dwTimeout = 3000;
-   char szSecret[MAX_SECRET_LENGTH] = "";
+   DWORD dwAddr, dwTimeout = 3000, dwError;
    INT64 nElapsedTime;
+   char szSecret[MAX_SECRET_LENGTH] = "";
+   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
+   RSA *pServerKey = NULL;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hp:qs:uvw:")) != -1)
+   while((ch = getopt(argc, argv, "a:ehK:p:qs:uvw:")) != -1)
    {
       switch(ch)
       {
@@ -130,7 +132,14 @@ int main(int argc, char *argv[])
                    "Valid options are:\n"
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
+#ifdef _WITH_ENCRYPTION
+                   "   -e           : Encrypt connection.\n"
+#endif
                    "   -h           : Display help and exit.\n"
+#ifdef _WITH_ENCRYPTION
+                   "   -K <file>    : Specify server's key file\n"
+                   "                  (default is " DEFAULT_DATA_DIR DFILE_KEYS ").\n"
+#endif
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
                    "   -q           : Quiet mode.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
@@ -192,6 +201,21 @@ int main(int argc, char *argv[])
                dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
             }
             break;
+#ifdef _WITH_ENCRYPTION
+         case 'e':
+            bEncrypt = TRUE;
+            break;
+         case 'K':
+            strncpy(szKeyFile, optarg, MAX_PATH);
+            break;
+#else
+         case 'e':
+         case 'K':
+            if (bVerbose)
+               fprintf(stderr, "ERROR: This tool was compiled without encryption support\n");
+            bStart = FALSE;
+            break;
+#endif
          case '?':
             bStart = FALSE;
             break;
@@ -215,6 +239,29 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Shared secret not specified or empty\n");
          bStart = FALSE;
       }
+
+      // Load server key if requested
+#ifdef _WITH_ENCRYPTION
+      if (bEncrypt && bStart)
+      {
+         if (InitCryptoLib(0xFFFF))
+         {
+            pServerKey = LoadRSAKeys(szKeyFile);
+            if (pServerKey == NULL)
+            {
+               if (bVerbose)
+                  fprintf(stderr, "Error loading RSA keys from \"%s\"\n", szKeyFile);
+               bStart = FALSE;
+            }
+         }
+         else
+         {
+            if (bVerbose)
+               fprintf(stderr, "Error initializing cryptografy module\n");
+            bStart = FALSE;
+         }
+      }
+#endif
 
       // If everything is ok, start communications
       if (bStart)
@@ -247,7 +294,7 @@ int main(int argc, char *argv[])
             AgentConnection conn(dwAddr, wPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
-            if (conn.Connect(bVerbose))
+            if (conn.Connect(pServerKey, bVerbose, &dwError))
             {
                DWORD dwError;
 
@@ -280,7 +327,7 @@ int main(int argc, char *argv[])
 
                if (bUpgrade && (dwError == RCC_SUCCESS))
                {
-                  iExitCode = UpgradeAgent(conn, argv[optind + 1], bVerbose);
+                  iExitCode = UpgradeAgent(conn, argv[optind + 1], bVerbose, pServerKey);
                }
                else
                {
@@ -290,6 +337,8 @@ int main(int argc, char *argv[])
             }
             else
             {
+               if (bVerbose)
+                  fprintf(stderr, "%d: %s\n", dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
          }

@@ -149,7 +149,7 @@ void CommSession::ReadThread(void)
    while(1)
    {
       if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE,
-                                  m_pCtx, pDecryptionBuffer)) <= 0)
+                                  &m_pCtx, pDecryptionBuffer)) <= 0)
          break;
 
       // Check if message is too large
@@ -220,6 +220,7 @@ void CommSession::ReadThread(void)
          pMsg = new CSCPMessage(pRawMsg);
          if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
          {
+            DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
             if (m_pCtx == NULL)
             {
                CSCPMessage *pResponce;

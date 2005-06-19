@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.10 2005-06-19 19:20:40 victor Exp $ */
+/* $Id: admin.cpp,v 1.11 2005-06-19 21:39:20 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -46,6 +46,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    CSCPMessage *pRequest, responce;
    TCHAR szCmd[256];
    struct __console_ctx ctx;
+   static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -55,7 +56,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
    while(1)
    {
-      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, NULL, NULL);
+      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL);
       if (iError <= 0)
          break;   // Communication error or closed connection
 
@@ -163,6 +164,10 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/06/19 19:20:40  victor
+- Added encryption foundation
+- Encryption between server and agent almost working
+
 Revision 1.9  2005/04/07 15:50:58  victor
 - Implemented save and restore for DCI graph windows
 - More commands added to server console

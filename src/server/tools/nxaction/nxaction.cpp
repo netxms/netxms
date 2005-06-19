@@ -39,16 +39,18 @@
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE;
+   BOOL bStart = TRUE, bVerbose = TRUE, bEncrypt = FALSE;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
    WORD wPort = AGENT_LISTEN_PORT;
-   DWORD dwAddr, dwTimeout = 3000;
+   DWORD dwAddr, dwTimeout = 3000, dwError;
    char szSecret[MAX_SECRET_LENGTH] = "";
+   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
+   RSA *pServerKey = NULL;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:hp:qs:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:ehK:p:qs:vw:")) != -1)
    {
       switch(ch)
       {
@@ -57,7 +59,14 @@ int main(int argc, char *argv[])
                    "Valid options are:\n"
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
+#ifdef _WITH_ENCRYPTION
+                   "   -e           : Encrypt connection.\n"
+#endif
                    "   -h           : Display help and exit.\n"
+#ifdef _WITH_ENCRYPTION
+                   "   -K <file>    : Specify server's key file\n"
+                   "                  (default is " DEFAULT_DATA_DIR DFILE_KEYS ").\n"
+#endif
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
                    "   -q           : Quiet mode.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
@@ -115,6 +124,20 @@ int main(int argc, char *argv[])
                dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
             }
             break;
+#ifdef _WITH_ENCRYPTION
+         case 'e':
+            bEncrypt = TRUE;
+            break;
+         case 'K':
+            strncpy(szKeyFile, optarg, MAX_PATH);
+            break;
+#else
+         case 'e':
+         case 'K':
+            printf("ERROR: This tool was compiled without encryption support\n");
+            bStart = FALSE;
+            break;
+#endif
          case '?':
             bStart = FALSE;
             break;
@@ -136,6 +159,27 @@ int main(int argc, char *argv[])
          printf("Shared secret not specified or empty\n");
          bStart = FALSE;
       }
+
+      // Load server key if requested
+#ifdef _WITH_ENCRYPTION
+      if (bEncrypt && bStart)
+      {
+         if (InitCryptoLib(0xFFFF))
+         {
+            pServerKey = LoadRSAKeys(szKeyFile);
+            if (pServerKey == NULL)
+            {
+               printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
+               bStart = FALSE;
+            }
+         }
+         else
+         {
+            printf("Error initializing cryptografy module\n");
+            bStart = FALSE;
+         }
+      }
+#endif
 
       // If everything is ok, start communications
       if (bStart)
@@ -167,7 +211,7 @@ int main(int argc, char *argv[])
             AgentConnection conn(dwAddr, wPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
-            if (conn.Connect(bVerbose))
+            if (conn.Connect(pServerKey, bVerbose, &dwError))
             {
                DWORD dwError;
 
@@ -184,6 +228,7 @@ int main(int argc, char *argv[])
             }
             else
             {
+               printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
          }

@@ -53,6 +53,10 @@ static struct
    { ERR_RESOURCE_BUSY, _T("Resource busy") },
    { ERR_EXEC_FAILED, _T("External program execution failed") },
    { ERR_ENCRYPTION_REQUIRED, _T("Encryption required") },
+   { ERR_NO_CIPHERS, _T("No acceptable ciphers") },
+   { ERR_INVALID_PUBLIC_KEY, _T("Invalid public key") },
+   { ERR_INVALID_SESSION_KEY, _T("Invalid session key") },
+   { ERR_CONNECT_FAILED, _T("Connect failed") },
    { -1, NULL }
 };
 
