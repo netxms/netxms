@@ -170,4 +170,16 @@ Language=English
 Signal %1 received
 .
 
+MessageId=
+SymbolicName=MSG_INIT_CRYPTO_FAILED
+Language=English
+Failed to initialize cryptografy module
+.
+
+MessageId=
+SymbolicName=MSG_DECRYPTION_FAILURE
+Language=English
+Failed to decrypt received message
+.
+
 ;#endif

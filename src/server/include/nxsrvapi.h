@@ -50,10 +50,37 @@
 //
 
 #ifdef _WIN32
-#define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
-#else
-#define DEFAULT_CONFIG_FILE   _T("/etc/netxmsd.conf")
-#endif
+
+# define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
+
+# define DEFAULT_SHELL         "cmd.exe"
+# define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
+# define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
+
+# define DDIR_MIBS             "\\mibs"
+# define DDIR_IMAGES           "\\images"
+# define DDIR_PACKAGES         "\\packages"
+# define DFILE_KEYS            "\\server_key"
+
+#else    /* _WIN32 */
+
+# define DEFAULT_CONFIG_FILE   _T("/etc/netxmsd.conf")
+
+# define DEFAULT_SHELL         "/bin/sh"
+
+# ifndef DATADIR
+#  define DATADIR              "/var/netxms"
+# endif
+
+# define DEFAULT_LOG_FILE      DATADIR"/log/netxmsd.log"
+# define DEFAULT_DATA_DIR      DATADIR
+
+# define DDIR_MIBS             "/mibs"
+# define DDIR_IMAGES           "/images"
+# define DDIR_PACKAGES         "/packages"
+# define DFILE_KEYS            "/.server_key"
+
+#endif   /* _WIN32 */
 
 
 //
@@ -150,6 +177,7 @@ private:
    BOOL m_bIsConnected;
    MUTEX m_mutexDataLock;
    THREAD m_hReceiverThread;
+   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
 
    void ReceiverThread(void);
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
@@ -160,6 +188,7 @@ protected:
    CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
    DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
    DWORD Authenticate(void);
+   DWORD SetupEncryption(RSA *pServerKey);
 
    virtual void PrintMsg(TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
@@ -172,7 +201,7 @@ public:
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, TCHAR *szSecret = NULL);
    ~AgentConnection();
 
-   BOOL Connect(BOOL bVerbose = FALSE);
+   BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE);
    void Disconnect(void);
    BOOL IsConnected(void) { return m_bIsConnected; }
 

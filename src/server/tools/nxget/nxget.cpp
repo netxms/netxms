@@ -159,16 +159,18 @@ static int ListParameters(AgentConnection *pConn)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE;
+   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE, bEncrypt = FALSE;
    int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
    int iAuthMethod = AUTH_NONE, iServiceType = NETSRV_SSH;
    WORD wAgentPort = AGENT_LISTEN_PORT, wServicePort = 0, wServiceProto = 0;
    DWORD dwTimeout = 3000, dwServiceAddr = 0;
-   char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "", szResponce[MAX_DB_STRING] = "";
+   char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
+   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponce[MAX_DB_STRING] = "";
+   RSA *pServerKey = NULL;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:bi:hIlnp:P:qr:R:s:S:t:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:behi:IK:lnp:P:qr:R:s:S:t:vw:")) != -1)
    {
       switch(ch)
       {
@@ -178,9 +180,16 @@ int main(int argc, char *argv[])
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
                    "   -b           : Batch mode - get all parameters listed on command line.\n"
+#ifdef _WITH_ENCRYPTION
+                   "   -e           : Encrypt connection.\n"
+#endif
                    "   -h           : Display help and exit.\n"
                    "   -i <seconds> : Get specified parameter(s) continously with given interval.\n"
                    "   -I           : Get list of supported parameters.\n"
+#ifdef _WITH_ENCRYPTION
+                   "   -K <file>    : Specify server's key file\n"
+                   "                  (default is " DEFAULT_DATA_DIR DFILE_KEYS ").\n"
+#endif
                    "   -l           : Get list of values for enum parameter.\n"
                    "   -n           : Show parameter's name in result.\n"
                    "   -p <port>    : Specify agent's port number. Default is %d.\n"
@@ -309,6 +318,20 @@ int main(int argc, char *argv[])
                dwTimeout = (DWORD)i * 1000;  // Convert to milliseconds
             }
             break;
+#ifdef _WITH_ENCRYPTION
+         case 'e':
+            bEncrypt = TRUE;
+            break;
+         case 'K':
+            strncpy(szKeyFile, optarg, MAX_PATH);
+            break;
+#else
+         case 'e':
+         case 'K':
+            printf("ERROR: This tool was compiled without encryption support\n");
+            bStart = FALSE;
+            break;
+#endif
          case '?':
             bStart = FALSE;
             break;
@@ -331,6 +354,19 @@ int main(int argc, char *argv[])
          bStart = FALSE;
       }
 
+      // Load server key if requested
+#ifdef _WITH_ENCRYPTION
+      if (bEncrypt && bStart)
+      {
+         pServerKey = LoadRSAKeys(szKeyFile);
+         if (pServerKey == NULL)
+         {
+            printf("Error loading RSA keys from \"%s\"\n", szKeyFile);
+            bStart = FALSE;
+         }
+      }
+#endif
+
       // If everything is ok, start communications
       if (bStart)
       {
@@ -349,7 +385,7 @@ int main(int argc, char *argv[])
             AgentConnection conn(m_dwAddr, wAgentPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
-            if (conn.Connect(m_bVerbose))
+            if (conn.Connect(pServerKey, m_bVerbose))
             {
                do
                {

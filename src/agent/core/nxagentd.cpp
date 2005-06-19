@@ -112,7 +112,7 @@ static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 // Configuration file template
 //
 
-static NX_CFG_TEMPLATE cfgTemplate[] =
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
@@ -124,6 +124,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
    { "PlatformSuffix", CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
+   { "RequireEncryption", CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags },
    { "Servers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
    { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
@@ -304,6 +305,13 @@ BOOL Initialize(void)
 
    // Initialize logger for subagents
    InitSubAgentsLogger(WriteSubAgentMsg);
+
+   // Initialize cryptografy
+   if (!InitCryptoLib(0xFFFF))
+   {
+      WriteLog(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      return FALSE;
+   }
 
    // Initialize built-in parameters
    if (!InitParameterList())
@@ -599,7 +607,7 @@ int main(int argc, char *argv[])
    switch(iAction)
    {
       case ACTION_RUN_AGENT:
-         if (NxLoadConfig(g_szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
+         if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
             if ((!stricmp(g_szLogFile, "{syslog}")) || 
                 (!stricmp(g_szLogFile, "{eventlog}")))
@@ -677,7 +685,7 @@ int main(int argc, char *argv[])
          }
          break;
       case ACTION_CHECK_CONFIG:
-         if (NxLoadConfig(g_szConfigFile, "", cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
+         if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
          {
             ConsolePrintf("Configuration file check failed\n");
             iExitCode = 2;

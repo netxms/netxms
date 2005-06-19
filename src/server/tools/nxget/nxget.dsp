@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxsrv.lib /nologo /version:0.1 /subsystem:console /machine:I386 /libpath:"..\..\..\libnetxms\Release" /libpath:"..\..\libnxsrv\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxsrv.lib libnxcscp.lib /nologo /version:0.1 /subsystem:console /machine:I386 /libpath:"..\..\..\libnetxms\Release" /libpath:"..\..\..\libnxcscp\Release" /libpath:"..\..\libnxsrv\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxsrv.lib /nologo /version:0.1 /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug" /libpath:"..\..\libnxsrv\Debug"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxsrv.lib libnxcscp.lib /nologo /version:0.1 /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug" /libpath:"..\..\..\libnxcscp\Debug" /libpath:"..\..\libnxsrv\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy Files
@@ -110,6 +110,10 @@ SOURCE=..\..\..\..\include\nms_agent.h
 # Begin Source File
 
 SOURCE=..\..\..\..\include\nms_common.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nms_core.h
 # End Source File
 # Begin Source File
 

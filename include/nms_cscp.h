@@ -28,9 +28,27 @@
 // Constants
 //
 
-#define SERVER_LISTEN_PORT       4701
-#define MAX_DCI_STRING_VALUE     256
-#define CSCP_HEADER_SIZE         16
+#define SERVER_LISTEN_PORT             4701
+#define MAX_DCI_STRING_VALUE           256
+#define CSCP_HEADER_SIZE               16
+#define CSCP_ENCRYPTION_HEADER_SIZE    16
+#define CSCP_EH_UNENCRYPTED_BYTES      8
+#define CSCP_EH_ENCRYPTED_BYTES        (CSCP_ENCRYPTION_HEADER_SIZE - CSCP_EH_UNENCRYPTED_BYTES)
+
+
+//
+// Ciphers
+//
+
+#define CSCP_CIPHER_AES_256      0
+#define CSCP_CIPHER_BLOWFISH     1
+#define CSCP_CIPHER_IDEA         2
+#define CSCP_CIPHER_3DES         3
+
+#define CSCP_SUPPORT_AES_256     0x01
+#define CSCP_SUPPORT_BLOWFISH    0x02
+#define CSCP_SUPPORT_IDEA        0x04
+#define CSCP_SUPPORT_3DES        0x08
 
 
 //
@@ -88,6 +106,31 @@ typedef struct
 
 
 //
+// Encrypted payload header
+//
+
+typedef struct
+{
+   DWORD dwChecksum;
+   DWORD dwReserved; // Align to 8-byte boundary
+} CSCP_ENCRYPTED_PAYLOAD_HEADER;
+
+
+//
+// Encrypted message structure
+//
+
+typedef struct
+{
+   WORD wCode;       // Should be CMD_ENCRYPTED_MESSAGE
+   BYTE nPadding;    // Number of bytes added to the end of message
+   BYTE nReserved;
+   DWORD dwSize;     // Size of encrypted message (including encryption header and padding)
+   BYTE data[1];     // Encrypted payload
+} CSCP_ENCRYPTED_MESSAGE;
+
+
+//
 // DCI data header structure
 //
 
@@ -141,6 +184,18 @@ typedef struct
 
 
 //
+// CSCP encryption context
+//
+
+typedef struct
+{
+   int nCipher;            // Encryption algorithm
+   BYTE *pSessionKey;      // Current session key
+   int nKeyLen;            // Session key length in bytes
+} CSCP_ENCRYPTION_CONTEXT;
+
+
+//
 // Data types
 //
 
@@ -156,8 +211,9 @@ typedef struct
 // Message flags
 //
 
-#define MF_BINARY    0x0001
-#define MF_EOF       0x0002
+#define MF_BINARY          0x0001
+#define MF_EOF             0x0002
+#define MF_DONT_ENCRYPT    0x0004
 
 
 //
@@ -293,6 +349,9 @@ typedef struct
 #define CMD_ADM_MESSAGE             0x007F
 #define CMD_ADM_REQUEST             0x0080
 #define CMD_CHANGE_IP_ADDR          0x0081
+#define CMD_REQUEST_SESSION_KEY     0x0082
+#define CMD_ENCRYPTED_MESSAGE       0x0083
+#define CMD_SESSION_KEY             0x0084
 
 
 //
@@ -452,6 +511,10 @@ typedef struct
 #define VID_IP_ADDR_LIST            ((DWORD)151)
 #define VID_REMOVE_DCI              ((DWORD)152)
 #define VID_TEMPLATE_ID             ((DWORD)153)
+#define VID_PUBLIC_KEY              ((DWORD)154)
+#define VID_SESSION_KEY             ((DWORD)155)
+#define VID_CIPHER                  ((DWORD)156)
+#define VID_KEY_LENGTH              ((DWORD)157)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

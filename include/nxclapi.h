@@ -262,6 +262,9 @@ typedef void * NXC_SESSION;
 #define RCC_VARIABLE_NOT_FOUND      ((DWORD)39)
 #define RCC_BAD_PROTOCOL            ((DWORD)40)
 #define RCC_ADDRESS_IN_USE          ((DWORD)41)
+#define RCC_NO_CIPHERS              ((DWORD)42)
+#define RCC_INVALID_PUBLIC_KEY      ((DWORD)43)
+#define RCC_INVALID_SESSION_KEY     ((DWORD)44)
 
 
 //

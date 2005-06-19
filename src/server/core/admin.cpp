@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.9 2005-04-07 15:50:58 victor Exp $ */
+/* $Id: admin.cpp,v 1.10 2005-06-19 19:20:40 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -49,13 +49,13 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pRecvBuffer, 0);
+   RecvCSCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL);
    ctx.hSocket = sock;
    ctx.pMsg = &responce;
 
    while(1)
    {
-      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE);
+      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, NULL, NULL);
       if (iError <= 0)
          break;   // Communication error or closed connection
 
@@ -163,6 +163,10 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/04/07 15:50:58  victor
+- Implemented save and restore for DCI graph windows
+- More commands added to server console
+
 Revision 1.8  2005/04/06 16:16:25  victor
 Local administrator interface completely rewritten
 

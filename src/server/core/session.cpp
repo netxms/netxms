@@ -268,12 +268,12 @@ void ClientSession::ReadThread(void)
    WORD wFlags;
 
    // Initialize raw message receiving function
-   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0);
+   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE, NULL, NULL)) <= 0)
          break;
 
       // Check if message is too large

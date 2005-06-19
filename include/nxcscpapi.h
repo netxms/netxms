@@ -69,6 +69,7 @@ private:
    DWORD m_dwId;
    DWORD m_dwNumVar;    // Number of variables
    CSCP_DF **m_ppVarList;   // List of variables
+   BOOL m_bDontEncrypt;
 
    void *Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
    void *Get(DWORD dwVarId, BYTE bType);
@@ -106,6 +107,8 @@ public:
    DWORD GetVariableInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwBuffer);
 
    void DeleteAllVariables(void);
+
+   void DisableEncryption(void) { m_bDontEncrypt = TRUE; }
 };
 
 
@@ -173,15 +176,29 @@ public:
 extern "C" {
 #endif
 
-int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg, 
-                                         CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize);
+int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
+                                         CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
+                                         CSCP_ENCRYPTION_CONTEXT *pCtx, 
+                                         BYTE *pDecryptionBuffer);
 CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
 TCHAR LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
 BOOL LIBNXCSCP_EXPORTABLE SendFileOverCSCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile);
    
-BOOL LIBNXCSCP_EXPORTABLE InitCryptoLib(void);
+BOOL LIBNXCSCP_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers);
+CSCP_ENCRYPTED_MESSAGE LIBNXCSCP_EXPORTABLE 
+   *CSCPEncryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx, CSCP_MESSAGE *pMsg);
+BOOL LIBNXCSCP_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
+                                             CSCP_ENCRYPTED_MESSAGE *pMsg,
+                                             BYTE *pDecryptionBuffer);
+DWORD LIBNXCSCP_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
+                                                  CSCP_ENCRYPTION_CONTEXT **ppCtx,
+                                                  CSCPMessage **ppResponce,
+                                                  RSA *pPrivateKey);
+void LIBNXCSCP_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx);
+void LIBNXCSCP_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);
+RSA LIBNXCSCP_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile);
 
 #ifdef __cplusplus
 }

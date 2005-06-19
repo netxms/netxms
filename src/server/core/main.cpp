@@ -195,45 +195,18 @@ static BOOL InitCryptografy(void)
 #ifdef _WITH_ENCRYPTION
    char szKeyFile[MAX_PATH];
    BOOL bResult = FALSE;
-   int fd, iLen;
+   int fd;
+   DWORD dwLen;
    BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
-   if (!InitCryptoLib())
+   if (!InitCryptoLib(0xFFFF))
       return FALSE;
 
    strcpy(szKeyFile, g_szDataDir);
    strcat(szKeyFile, DFILE_KEYS);
    fd = open(szKeyFile, O_RDONLY | O_BINARY);
-   if (fd != -1)
-   {
-      if (read(fd, &iLen, sizeof(int)) == sizeof(int))
-      {
-         pKeyBuffer = (BYTE *)malloc(iLen);
-         pBufPos = pKeyBuffer;
-         if (read(fd, pKeyBuffer, iLen) == iLen)
-         {
-            BYTE hash2[SHA1_DIGEST_SIZE];
-
-            read(fd, hash, SHA1_DIGEST_SIZE);
-            CalculateSHA1Hash(pKeyBuffer, iLen, hash2);
-            if (!memcmp(hash, hash2, SHA1_DIGEST_SIZE))
-            {
-               g_pServerKey = d2i_RSAPublicKey(NULL, (const BYTE **)&pBufPos, iLen);
-               if (g_pServerKey != NULL)
-               {
-                  if (d2i_RSAPrivateKey(&g_pServerKey, (const BYTE **)&pBufPos,
-                                        iLen - (pBufPos - pKeyBuffer)) != NULL)
-                  {
-                     bResult = TRUE;
-                  }
-               }
-            }
-         }
-         free(pKeyBuffer);
-      }
-      close(fd);
-   }
-   else
+   g_pServerKey = LoadRSAKeys(szKeyFile);
+   if (g_pServerKey == NULL)
    {
       DbgPrintf(AF_DEBUG_MISC, "Generating RSA key pair...");
       g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
@@ -242,17 +215,17 @@ static BOOL InitCryptografy(void)
          fd = open(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
          if (fd != -1)
          {
-            iLen = i2d_RSAPublicKey(g_pServerKey, NULL);
-            iLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
-            pKeyBuffer = (BYTE *)malloc(iLen);
+            dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
+            dwLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
+            pKeyBuffer = (BYTE *)malloc(dwLen);
 
             pBufPos = pKeyBuffer;
             i2d_RSAPublicKey(g_pServerKey, &pBufPos);
             i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
-            write(fd, &iLen, sizeof(int));
-            write(fd, pKeyBuffer, iLen);
+            write(fd, &dwLen, sizeof(DWORD));
+            write(fd, pKeyBuffer, dwLen);
 
-            CalculateSHA1Hash(pKeyBuffer, iLen, hash);
+            CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
             write(fd, hash, SHA1_DIGEST_SIZE);
             
             close(fd);

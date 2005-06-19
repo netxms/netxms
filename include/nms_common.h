@@ -56,6 +56,8 @@
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
+
+#define NETXMS_MAX_CIPHERS       4
 #define NETXMS_RSA_KEYLEN        2048
 
 #ifndef LLONG_MAX
@@ -277,6 +279,13 @@ typedef int SOCKET;
 #include <openssl/crypto.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+
+#else
+
+// Prevent compilation errors on function prototypes
+#define RSA void
 
 #endif
 

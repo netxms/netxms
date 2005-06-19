@@ -63,6 +63,7 @@ AgentConnection::AgentConnection()
    m_bIsConnected = FALSE;
    m_mutexDataLock = MutexCreate();
    m_hReceiverThread = INVALID_THREAD_HANDLE;
+   m_pCtx = NULL;
 }
 
 
@@ -98,6 +99,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHA
    m_bIsConnected = FALSE;
    m_mutexDataLock = MutexCreate();
    m_hReceiverThread = INVALID_THREAD_HANDLE;
+   m_pCtx = NULL;
 }
 
 
@@ -120,6 +122,7 @@ AgentConnection::~AgentConnection()
    Unlock();
 
    delete m_pMsgWaitQueue;
+   DestroyEncryptionContext(m_pCtx);
 
    MutexDestroy(m_mutexDataLock);
 }
@@ -150,21 +153,26 @@ void AgentConnection::ReceiverThread(void)
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
+   BYTE *pDecryptionBuffer = NULL;
    int iErr;
    TCHAR szBuffer[128];
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pMsgBuffer, 0);
+   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL);
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
+#ifdef _WITH_ENCRYPTION
+   pDecryptionBuffer = (BYTE *)malloc(RECEIVER_BUFFER_SIZE);
+#endif
 
    // Message receiving loop
    while(1)
    {
       // Receive raw message
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
+                                  m_pCtx, pDecryptionBuffer)) <= 0)
          break;
 
       // Check if we get too large message
@@ -173,6 +181,13 @@ void AgentConnection::ReceiverThread(void)
          PrintMsg(_T("Received too large message %s (%ld bytes)"), 
                   CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
+         continue;
+      }
+
+      // Check if we are unable to decrypt message
+      if (iErr == 2)
+      {
+         PrintMsg(_T("Unable to decrypt received message"));
          continue;
       }
 
@@ -201,6 +216,8 @@ void AgentConnection::ReceiverThread(void)
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    m_hSocket = -1;
+   DestroyEncryptionContext(m_pCtx);
+   m_pCtx = NULL;
    m_bIsConnected = FALSE;
 
    free(pRawMsg);
@@ -212,7 +229,7 @@ void AgentConnection::ReceiverThread(void)
 // Connect to agent
 //
 
-BOOL AgentConnection::Connect(BOOL bVerbose)
+BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
@@ -256,6 +273,14 @@ BOOL AgentConnection::Connect(BOOL bVerbose)
    // Start receiver thread
    m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
 
+   // Setup encryption
+   if (pServerKey != NULL)
+   {
+      dwError = SetupEncryption(pServerKey);
+      if (dwError != ERR_SUCCESS)
+         goto connect_cleanup;
+   }
+
    // Authenticate itself to agent
    if ((dwError = Authenticate()) != ERR_SUCCESS)
    {
@@ -284,6 +309,9 @@ connect_cleanup:
 
       if (m_hSocket != -1)
          closesocket(m_hSocket);
+
+      DestroyEncryptionContext(m_pCtx);
+      m_pCtx = NULL;
    }
    m_bIsConnected = bSuccess;
    return bSuccess;
@@ -559,10 +587,27 @@ DWORD AgentConnection::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 BOOL AgentConnection::SendMessage(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
+   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
 
    pRawMsg = pMsg->CreateMessage();
-   bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+   if (m_pCtx != NULL)
+   {
+      pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      if (pEnMsg != NULL)
+      {
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+         free(pEnMsg);
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+   }
+   else
+   {
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+   }
    free(pRawMsg);
    return bResult;
 }
@@ -887,4 +932,60 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
    }
 
    return dwResult;
+}
+
+
+//
+// Setup encryption
+//
+
+DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
+{
+#ifdef _WITH_ENCRYPTION
+   CSCPMessage msg, *pResp;
+   DWORD dwRqId, dwError, dwResult;
+
+   dwRqId = m_dwRequestId++;
+
+   PrepareKeyRequestMsg(&msg, pServerKey);
+   msg.SetId(dwRqId);
+   if (SendMessage(&msg))
+   {
+      pResp = WaitForMessage(CMD_SESSION_KEY, dwRqId, m_dwCommandTimeout);
+      if (pResp != NULL)
+      {
+         dwResult = SetupEncryptionContext(pResp, &m_pCtx, NULL, pServerKey);
+         switch(dwResult)
+         {
+            case RCC_SUCCESS:
+               dwError = ERR_SUCCESS;
+               break;
+            case RCC_NO_CIPHERS:
+               dwError = ERR_NO_CIPHERS;
+               break;
+            case RCC_INVALID_PUBLIC_KEY:
+               dwError = ERR_INVALID_PUBLIC_KEY;
+               break;
+            case RCC_INVALID_SESSION_KEY:
+               dwError = ERR_INVALID_SESSION_KEY;
+               break;
+            default:
+               dwError = ERR_INTERNAL_ERROR;
+               break;
+         }
+      }
+      else
+      {
+         dwError = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwError = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwError;
+#else
+   return ERR_NOT_IMPLEMENTED;
+#endif
 }

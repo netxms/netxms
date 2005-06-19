@@ -52,6 +52,7 @@ static struct
    { ERR_IO_FAILURE, _T("I/O failure") },
    { ERR_RESOURCE_BUSY, _T("Resource busy") },
    { ERR_EXEC_FAILED, _T("External program execution failed") },
+   { ERR_ENCRYPTION_REQUIRED, _T("Encryption required") },
    { -1, NULL }
 };
 

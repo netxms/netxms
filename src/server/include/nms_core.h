@@ -109,35 +109,6 @@ typedef __console_ctx * CONSOLE_CTX;
 // Common constants and macros
 //
 
-#ifdef _WIN32
-
-# define DEFAULT_SHELL         "cmd.exe"
-# define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
-# define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
-
-# define DDIR_MIBS             "\\mibs"
-# define DDIR_IMAGES           "\\images"
-# define DDIR_PACKAGES         "\\packages"
-# define DFILE_KEYS            "\\server_key"
-
-#else    /* _WIN32 */
-
-# define DEFAULT_SHELL         "/bin/sh"
-
-# ifndef DATADIR
-#  define DATADIR              "/var/netxms"
-# endif
-
-# define DEFAULT_LOG_FILE      DATADIR"/log/netxmsd.log"
-# define DEFAULT_DATA_DIR      DATADIR
-
-# define DDIR_MIBS             "/mibs"
-# define DDIR_IMAGES           "/images"
-# define DDIR_PACKAGES         "/packages"
-# define DFILE_KEYS            "/.server_key"
-
-#endif   /* _WIN32 */
-
 #define MAX_LINE_SIZE         4096
 
 #define GROUP_FLAG_BIT     ((DWORD)0x80000000)

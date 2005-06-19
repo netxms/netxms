@@ -93,6 +93,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallationSer
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
    m_bInstallationServer = bInstallationServer;
    m_hCurrFile = -1;
+   m_pCtx = NULL;
 }
 
 
@@ -109,6 +110,7 @@ CommSession::~CommSession()
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
+   DestroyEncryptionContext(m_pCtx);
 }
 
 
@@ -132,22 +134,34 @@ void CommSession::ReadThread(void)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
+   BYTE *pDecryptionBuffer = NULL;
    int iErr;
    char szBuffer[256];
    WORD wFlags;
 
    // Initialize raw message receiving function
-   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0);
+   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
+#ifdef _WITH_ENCRYPTION
+   pDecryptionBuffer = (BYTE *)malloc(RAW_MSG_SIZE);
+#endif
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE,
+                                  m_pCtx, pDecryptionBuffer)) <= 0)
          break;
 
       // Check if message is too large
       if (iErr == 1)
          continue;
+
+      // Check for decryption failure
+      if (iErr == 2)
+      {
+         WriteLog(MSG_DECRYPTION_FAILURE, EVENTLOG_WARNING_TYPE, NULL);
+         continue;
+      }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
@@ -204,12 +218,30 @@ void CommSession::ReadThread(void)
       {
          // Create message object from raw message
          pMsg = new CSCPMessage(pRawMsg);
-         m_pMessageQueue->Put(pMsg);
+         if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
+         {
+            if (m_pCtx == NULL)
+            {
+               CSCPMessage *pResponce;
+
+               SetupEncryptionContext(pMsg, &m_pCtx, &pResponce, NULL);
+               SendMessage(pResponce);
+               delete pResponce;
+            }
+            delete pMsg;
+         }
+         else
+         {
+            m_pMessageQueue->Put(pMsg);
+         }
       }
    }
    if (iErr < 0)
       WriteLog(MSG_SESSION_BROKEN, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
    free(pRawMsg);
+#ifdef _WITH_ENCRYPTION
+   free(pDecryptionBuffer);
+#endif
 
    // Notify other threads to exit
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
@@ -239,12 +271,31 @@ void CommSession::WriteThread(void)
          break;
 
       DebugPrintf("Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
-      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
+      if (m_pCtx != NULL)
       {
+         CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+
+         pEnMsg = CSCPEncryptMessage(m_pCtx, pMsg);
          free(pMsg);
-         break;
+         if (pEnMsg != NULL)
+         {
+            if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) <= 0)
+            {
+               free(pEnMsg);
+               break;
+            }
+            free(pEnMsg);
+         }
       }
-      free(pMsg);
+      else
+      {
+         if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
+         {
+            free(pMsg);
+            break;
+         }
+         free(pMsg);
+      }
    }
 }
 
@@ -277,6 +328,10 @@ void CommSession::ProcessingThread(void)
       if ((!m_bIsAuthenticated) && (dwCommand != CMD_AUTHENTICATE))
       {
          msg.SetVariable(VID_RCC, ERR_AUTH_REQUIRED);
+      }
+      else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_pCtx == NULL))
+      {
+         msg.SetVariable(VID_RCC, ERR_ENCRYPTION_REQUIRED);
       }
       else
       {

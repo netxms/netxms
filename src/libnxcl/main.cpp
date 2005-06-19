@@ -56,7 +56,7 @@ void DebugPrintf(TCHAR *szFormat, ...)
 
 BOOL LIBNXCL_EXPORTABLE NXCInitialize(void)
 {
-   return TRUE;
+   return InitCryptoLib(0xFFFF);
 }
 
 
@@ -169,9 +169,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Action is used in event processing policy"),
       _T("Variable not found"),
       _T("Server uses incompatible version of communication protocol"),
-      _T("Address already in use")
+      _T("Address already in use"),
+      _T("Unable to select cipher"),
+      _T("Invalid public key")
    };
-   return ((dwError >= 0) && (dwError <= RCC_ADDRESS_IN_USE)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_PUBLIC_KEY)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

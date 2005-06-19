@@ -93,6 +93,7 @@
 #define AF_REQUIRE_AUTH             0x0008
 #define AF_LOG_UNRESOLVED_SYMBOLS   0x0010
 #define AF_ENABLE_ACTIONS           0x0020
+#define AF_REQUIRE_ENCRYPTION       0x0040
 #define AF_SHUTDOWN                 0x1000
 
 
@@ -223,6 +224,7 @@ private:
    BOOL m_bInstallationServer;
    int m_hCurrFile;
    DWORD m_dwFileRqId;
+   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
 
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);

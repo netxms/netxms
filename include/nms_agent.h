@@ -61,6 +61,10 @@
 #define ERR_IO_FAILURE              ((DWORD)903)
 #define ERR_RESOURCE_BUSY           ((DWORD)904)
 #define ERR_EXEC_FAILED             ((DWORD)905)
+#define ERR_ENCRYPTION_REQUIRED     ((DWORD)906)
+#define ERR_NO_CIPHERS              ((DWORD)907)
+#define ERR_INVALID_PUBLIC_KEY      ((DWORD)908)
+#define ERR_INVALID_SESSION_KEY     ((DWORD)909)
 
 
 //
