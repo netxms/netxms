@@ -192,8 +192,8 @@ void NetObj::AddChild(NetObj *pObject)
       }
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
    m_pChildList[m_dwChildCount++] = pObject;
-   Modify();
    UnlockChildList();
+   Modify();
 }
 
 
@@ -214,8 +214,8 @@ void NetObj::AddParent(NetObj *pObject)
       }
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
    m_pParentList[m_dwParentCount++] = pObject;
-   Modify();
    UnlockParentList();
+   Modify();
 }
 
 
@@ -248,8 +248,8 @@ void NetObj::DeleteChild(NetObj *pObject)
       free(m_pChildList);
       m_pChildList = NULL;
    }
-   Modify();
    UnlockChildList();
+   Modify();
 }
 
 
@@ -281,8 +281,8 @@ void NetObj::DeleteParent(NetObj *pObject)
       free(m_pParentList);
       m_pParentList = NULL;
    }
-   Modify();
    UnlockParentList();
+   Modify();
 }
 
 
@@ -442,8 +442,8 @@ void NetObj::CalculateCompoundStatus(void)
          LockParentList(FALSE);
          for(i = 0; i < m_dwParentCount; i++)
             m_pParentList[i]->CalculateCompoundStatus();
-         Modify();   /* LOCK? */
          UnlockParentList();
+         Modify();   /* LOCK? */
       }
    }
 }
