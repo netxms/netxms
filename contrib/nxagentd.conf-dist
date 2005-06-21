@@ -47,6 +47,33 @@
 # RequireAuthentication = no
 
 #
+# RequireEncryption
+#
+# If set to "yes", host connected to agent will be forced to use encryption,
+# and if encryption is not supported by remote host, connection will be 
+# dropped. Default value is "no". This parameter has no effect if agent
+# was compiled without encryption support.
+#
+# Example:
+# RequireEncryption = no
+
+#
+# EnabledCiphers
+#
+# Control what ciphers agent can use for connection encryption. Value for
+# this parameter is a cipher code. To enable more than one cipher, they
+# codes should be added. By default, all possible ciphers are enabled.
+#
+# Possible cipher codes:
+#	1  =  AES-256
+#	2  =  BLOWFISH
+#	4  =  IDEA
+#       8  =  Triple DES
+#
+# Example (enable AES-256 and IDEA):
+# EnabledCiphers = 5
+
+#
 # SharedSecret
 #
 # Agent's shared secret. Used only if RequireAuthentication set to "yes".

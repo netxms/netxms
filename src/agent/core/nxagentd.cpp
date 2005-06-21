@@ -106,6 +106,7 @@ static char *m_pszInstallServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+static DWORD m_dwEnabledCiphers = 0xFFFF;
 
 
 //
@@ -116,6 +117,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
+   { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszInstallServerList },
@@ -307,7 +309,7 @@ BOOL Initialize(void)
    InitSubAgentsLogger(WriteSubAgentMsg);
 
    // Initialize cryptografy
-   if (!InitCryptoLib(0xFFFF))
+   if (!InitCryptoLib(m_dwEnabledCiphers))
    {
       WriteLog(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;

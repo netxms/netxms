@@ -108,6 +108,36 @@ static LONG H_UIntPtr(char *cmd, char *arg, char *value)
 
 
 //
+// Handler for Agent.SupportedCiphers
+//
+
+static LONG H_SupportedCiphers(char *pszCmd, char *pArg, char *pValue)
+{
+   DWORD dwCiphers;
+
+   dwCiphers = CSCPGetSupportedCiphers();
+   if (dwCiphers == 0)
+   {
+      ret_string(pValue, "NONE");
+   }
+   else
+   {
+      *pValue = 0;
+      if (dwCiphers & CSCP_SUPPORT_AES_256)
+         strcat(pValue, "AES-256 ");
+      if (dwCiphers & CSCP_SUPPORT_BLOWFISH)
+         strcat(pValue, "BLOWFISH ");
+      if (dwCiphers & CSCP_SUPPORT_IDEA)
+         strcat(pValue, "IDEA ");
+      if (dwCiphers & CSCP_SUPPORT_3DES)
+         strcat(pValue, "3DES ");
+      pValue[strlen(pValue) - 1] = 0;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // Handler for parameters list
 //
 
@@ -196,6 +226,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, "" },
    { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections, DCI_DT_UINT, "" },
    { "Agent.SourcePackageSupport", H_StringConstant, "0", DCI_DT_INT, "" },
+   { "Agent.SupportedCiphers", H_SupportedCiphers, NULL, DCI_DT_STRING, "List of ciphers supported by agent" },
    { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests, DCI_DT_UINT, "" },
    { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests, DCI_DT_UINT, "" },
    { "Agent.Uptime", H_AgentUptime, NULL, DCI_DT_UINT, "Agent's uptime" },
