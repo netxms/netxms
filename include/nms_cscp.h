@@ -192,6 +192,7 @@ typedef struct
    int nCipher;            // Encryption algorithm
    BYTE *pSessionKey;      // Current session key
    int nKeyLen;            // Session key length in bytes
+   BYTE iv[EVP_MAX_IV_LENGTH];
 } CSCP_ENCRYPTION_CONTEXT;
 
 
@@ -515,6 +516,7 @@ typedef struct
 #define VID_SESSION_KEY             ((DWORD)155)
 #define VID_CIPHER                  ((DWORD)156)
 #define VID_KEY_LENGTH              ((DWORD)157)
+#define VID_SESSION_IV              ((DWORD)158)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
