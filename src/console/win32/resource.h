@@ -400,6 +400,7 @@
 #define IDC_STATIC_RCPT                 1261
 #define IDC_STATIC_SUBJ                 1262
 #define IDC_STATIC_DATA                 1263
+#define IDC_CHECK_ENCRYPT               1264
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -524,7 +525,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        274
 #define _APS_NEXT_COMMAND_VALUE         32934
-#define _APS_NEXT_CONTROL_VALUE         1264
+#define _APS_NEXT_CONTROL_VALUE         1265
 #define _APS_NEXT_SYMED_VALUE           121
 #endif
 #endif

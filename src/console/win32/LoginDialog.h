@@ -23,10 +23,10 @@ public:
 	CString	m_szLogin;
 	CString	m_szPassword;
 	CString	m_szServer;
-	int		m_iEncryption;
 	BOOL	m_bClearCache;
 	BOOL	m_bMatchVersion;
 	BOOL	m_bNoCache;
+	BOOL	m_bEncrypt;
 	//}}AFX_DATA
 
 

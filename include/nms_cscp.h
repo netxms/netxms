@@ -353,6 +353,7 @@ typedef struct
 #define CMD_REQUEST_SESSION_KEY     0x0082
 #define CMD_ENCRYPTED_MESSAGE       0x0083
 #define CMD_SESSION_KEY             0x0084
+#define CMD_REQUEST_ENCRYPTION      0x0085
 
 
 //

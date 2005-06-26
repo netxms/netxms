@@ -133,16 +133,16 @@ typedef struct
 class LIBNXCSCP_EXPORTABLE MsgWaitQueue
 {
 private:
-   MUTEX m_hMutexDataAccess;
-   CONDITION m_hStopCondition;
+   MUTEX m_mutexDataAccess;
+   CONDITION m_condStop;
+   CONDITION m_condNewMsg;
    DWORD m_dwMsgHoldTime;
    DWORD m_dwNumElements;
    WAIT_QUEUE_ELEMENT *m_pElements;
-   BOOL m_bIsRunning;
    THREAD m_hHkThread;
 
-   void Lock(void) { MutexLock(m_hMutexDataAccess, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_hMutexDataAccess); }
+   void Lock(void) { MutexLock(m_mutexDataAccess, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutexDataAccess); }
    void HousekeeperThread(void);
    void *WaitForMessageInternal(WORD wIsBinary, WORD wCode, DWORD dwId, DWORD dwTimeOut);
    

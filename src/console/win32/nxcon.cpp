@@ -211,7 +211,6 @@ BOOL CConsoleApp::InitInstance()
    g_dwOptions = GetProfileInt(_T("General"), _T("Options"), 0);
    strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
-   g_dwEncryptionMethod = GetProfileInt(_T("Connection"), _T("Encryption"), CSCP_ENCRYPTION_NONE);
 
    // Create mutex for action list access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);
@@ -664,7 +663,7 @@ void CConsoleApp::OnConnectToServer()
 
    dlgLogin.m_szServer = g_szServer;
    dlgLogin.m_szLogin = g_szLogin;
-   dlgLogin.m_iEncryption = g_dwEncryptionMethod;
+   dlgLogin.m_bEncrypt = (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE;
    dlgLogin.m_bNoCache = FALSE;
    dlgLogin.m_bClearCache = FALSE;
    dlgLogin.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
@@ -678,7 +677,10 @@ void CConsoleApp::OnConnectToServer()
       strcpy(g_szServer, (LPCTSTR)dlgLogin.m_szServer);
       strcpy(g_szLogin, (LPCTSTR)dlgLogin.m_szLogin);
       strcpy(g_szPassword, (LPCTSTR)dlgLogin.m_szPassword);
-      g_dwEncryptionMethod = dlgLogin.m_iEncryption;
+      if (dlgLogin.m_bEncrypt)
+         g_dwOptions |= OPT_ENCRYPT_CONNECTION;
+      else
+         g_dwOptions &= ~OPT_ENCRYPT_CONNECTION;
       if (dlgLogin.m_bMatchVersion)
          g_dwOptions |= OPT_MATCH_SERVER_VERSION;
       else
@@ -691,7 +693,6 @@ void CConsoleApp::OnConnectToServer()
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
-      WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
 
       // Initiate connection
       dwResult = DoLogin(dlgLogin.m_bClearCache);

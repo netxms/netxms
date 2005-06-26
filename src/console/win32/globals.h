@@ -74,6 +74,7 @@ extern CConsoleApp theApp;
 
 #define OPT_MATCH_SERVER_VERSION 0x00010000
 #define OPT_DONT_CACHE_OBJECTS   0x00020000
+#define OPT_ENCRYPT_CONNECTION   0x00040000
 
 
 //
@@ -290,7 +291,6 @@ extern DWORD g_dwOptions;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
-extern DWORD g_dwEncryptionMethod;
 extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];

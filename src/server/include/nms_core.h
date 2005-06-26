@@ -251,6 +251,7 @@ private:
    DWORD m_dwSystemAccess;    // User's system access rights
    DWORD m_dwFlags;           // Session flags
    CSCP_BUFFER *m_pMsgBuffer;
+   CSCP_ENCRYPTION_CONTEXT *m_pCtx;
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hUpdateThread;
@@ -272,6 +273,9 @@ private:
    DWORD m_dwUploadData;
    TCHAR m_szCurrFileName[MAX_PATH];
    DWORD m_dwRefCount;
+   DWORD m_dwEncryptionRqId;
+   DWORD m_dwEncryptionResult;
+   CONDITION m_condEncryptionSetup;
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -291,6 +295,7 @@ private:
          ((dwRequiredAccess & m_dwSystemAccess) ? TRUE : FALSE);
    }
 
+   void SetupEncryption(DWORD dwRqId);
    void OnFileUpload(BOOL bSuccess);
    void DebugPrintf(char *szFormat, ...);
    void SendServerInfo(DWORD dwRqId);
@@ -377,6 +382,7 @@ public:
    DWORD GetUserId(void) { return m_dwUserId; }
    BOOL IsAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
    WORD GetCurrentCmd(void) { return m_wCurrentCmd; }
+   int GetCipher(void) { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
 
    void Kill(void);
    void Notify(DWORD dwCode, DWORD dwData = 0);

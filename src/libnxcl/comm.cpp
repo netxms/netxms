@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,9 +23,6 @@
 
 #include "libnxcl.h"
 
-// for TCP_NODELAY
-//#include "netinet/tcp.h"
-
 
 //
 // Network receiver thread
@@ -36,6 +33,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
+   BYTE *pDecryptionBuffer;
    int iErr;
    BOOL bMsgNotNeeded;
    TCHAR szBuffer[128];
@@ -46,13 +44,15 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(pSession->m_dwReceiverBufferSize);
+   pDecryptionBuffer = (BYTE *)malloc(pSession->m_dwReceiverBufferSize);
 
    // Message receiving loop
    while(1)
    {
       // Receive raw message
       if ((iErr = RecvCSCPMessage(pSession->m_hSocket, pRawMsg, 
-                                  pMsgBuffer, pSession->m_dwReceiverBufferSize)) <= 0)
+                                  pMsgBuffer, pSession->m_dwReceiverBufferSize,
+                                  &pSession->m_pCtx, pDecryptionBuffer)) <= 0)
          break;
 
       // Check if we get too large message
@@ -61,6 +61,13 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          DebugPrintf(_T("Received too large message %s (%ld bytes)"), 
                      CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
+         continue;
+      }
+
+      // Check for decryption errors
+      if (iErr == 2)
+      {
+         DebugPrintf(_T("Message decryption error")); 
          continue;
       }
 
@@ -106,6 +113,15 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_KEEPALIVE:     // Keepalive message, ignore it
                pSession->SetTimeStamp(pMsg->GetVariableLong(VID_TIMESTAMP));
                break;
+            case CMD_REQUEST_SESSION_KEY:
+               if (pSession->m_pCtx == NULL)
+               {
+                  CSCPMessage *pResponce;
+
+                  SetupEncryptionContext(pMsg, &pSession->m_pCtx, &pResponce, NULL);
+                  pSession->SendMsg(pResponce);
+                  delete pResponce;
+               }
             case CMD_OBJECT:        // Object information
             case CMD_OBJECT_UPDATE:
             case CMD_OBJECT_LIST_END:
@@ -173,7 +189,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin, 
                                     TCHAR *pszPassword, NXC_SESSION *phSession,
-                                    BOOL bExactVersionMatch)
+                                    BOOL bExactVersionMatch, BOOL bEncrypt)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
@@ -256,6 +272,22 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                   }
                   delete pResp;
 
+                  // Request encryption if needed
+                  if ((dwRetCode == RCC_SUCCESS) && bEncrypt)
+                  {
+                     msg.DeleteAllVariables();
+                     msg.SetId(pSession->CreateRqId());
+                     msg.SetCode(CMD_REQUEST_ENCRYPTION);
+                     if (pSession->SendMsg(&msg))
+                     {
+                        dwRetCode = pSession->WaitForRCC(msg.GetId());
+                     }
+                     else
+                     {
+                        dwRetCode = RCC_COMM_FAILURE;
+                     }
+                  }
+
                   if (dwRetCode == RCC_SUCCESS)
                   {
                      // Do login if we are requested to do so
@@ -292,6 +324,10 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                               // Connection is broken or timed out
                               dwRetCode = RCC_TIMEOUT;
                            }
+                        }
+                        else
+                        {
+                           dwRetCode = RCC_COMM_FAILURE;
                         }
                      }
                   }

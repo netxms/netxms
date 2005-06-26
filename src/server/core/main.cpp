@@ -76,7 +76,7 @@ RSA *g_pServerKey = NULL;
 // Static data
 //
 
-static CONDITION m_hEventShutdown;
+static CONDITION m_hEventShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thNodePollMgr = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;

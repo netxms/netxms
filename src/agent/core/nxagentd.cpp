@@ -464,7 +464,7 @@ BOOL Initialize(void)
    // Start network listener
    ThreadCreate(ListenerThread, 0, NULL);
 
-   m_hCondShutdown = ConditionCreate(FALSE);
+   m_hCondShutdown = ConditionCreate(TRUE);
    ThreadSleep(1);
 
    return TRUE;

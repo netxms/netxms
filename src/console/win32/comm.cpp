@@ -102,7 +102,8 @@ static DWORD WINAPI LoginThread(void *pArg)
    DWORD dwResult;
 
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession,
-                         (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE);
+                         (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
+                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE);
 
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)

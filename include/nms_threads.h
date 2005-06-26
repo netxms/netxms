@@ -148,6 +148,16 @@ inline void ConditionDestroy(CONDITION hCond)
 
 inline void ConditionSet(CONDITION hCond)
 {
+   SetEvent(hCond);
+}
+
+inline void ConditionReset(CONDITION hCond)
+{
+   ResetEvent(hCond);
+}
+
+inline void ConditionPulse(CONDITION hCond)
+{
    PulseEvent(hCond);
 }
 
@@ -182,6 +192,7 @@ struct condition_t
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 	BOOL broadcast;
+   BOOL isSet;
 };
 typedef struct condition_t * CONDITION;
 
@@ -326,6 +337,7 @@ inline CONDITION ConditionCreate(BOOL bBroadcast)
       pthread_cond_init(&cond->cond, NULL);
       pthread_mutex_init(&cond->mutex, NULL);
 		cond->broadcast = bBroadcast;
+      cond->isSet = FALSE;
 	}
 
    return cond;
@@ -333,7 +345,7 @@ inline CONDITION ConditionCreate(BOOL bBroadcast)
 
 inline void ConditionDestroy(CONDITION cond)
 {
-	if (cond != NULL)
+	if (cond != INVALID_CONDITION_HANDLE)
 	{
 		pthread_cond_destroy(&cond->cond);
 		pthread_mutex_destroy(&cond->mutex);
@@ -343,7 +355,35 @@ inline void ConditionDestroy(CONDITION cond)
 
 inline void ConditionSet(CONDITION cond)
 {
-	if (cond != NULL)
+	if (cond != INVALID_CONDITION_HANDLE)
+	{
+		pthread_mutex_lock(&cond->mutex);
+      cond->isSet = TRUE;
+		if (cond->broadcast)
+		{
+			pthread_cond_broadcast(&cond->cond);
+		}
+		else
+		{
+			pthread_cond_signal(&cond->cond);
+		}
+		pthread_mutex_unlock(&cond->mutex);
+	}
+}
+
+inline void ConditionReset(CONDITION cond)
+{
+	if (cond != INVALID_CONDITION_HANDLE)
+	{
+		pthread_mutex_lock(&cond->mutex);
+      cond->isSet = FALSE;
+		pthread_mutex_unlock(&cond->mutex);
+	}
+}
+
+inline void ConditionPulse(CONDITION cond)
+{
+	if (cond != INVALID_CONDITION_HANDLE)
 	{
 		pthread_mutex_lock(&cond->mutex);
 		if (cond->broadcast)
@@ -354,6 +394,7 @@ inline void ConditionSet(CONDITION cond)
 		{
 			pthread_cond_signal(&cond->cond);
 		}
+      cond->isSet = FALSE;
 		pthread_mutex_unlock(&cond->mutex);
 	}
 }
@@ -367,46 +408,54 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 		int retcode;
 
 		pthread_mutex_lock(&cond->mutex);
-
-		if (dwTimeOut != INFINITE)
-		{
+      if (cond->isSet)
+      {
+         ret = TRUE;
+         if (!cond->broadcast)
+            cond->isSet = FALSE;
+      }
+      else
+      {
+		   if (dwTimeOut != INFINITE)
+		   {
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
-			struct timespec timeout;
+			   struct timespec timeout;
 
-			timeout.tv_sec = dwTimeOut / 1000;
-			timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
-			retcode = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
+			   timeout.tv_sec = dwTimeOut / 1000;
+			   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
+			   retcode = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
 #else
-			struct timeval now;
-			struct timespec timeout;
+			   struct timeval now;
+			   struct timespec timeout;
 
-			// note.
-			// mili - 10^-3
-			// micro - 10^-6
-			// nano - 10^-9
+			   // note.
+			   // mili - 10^-3
+			   // micro - 10^-6
+			   // nano - 10^-9
 
-			// FIXME there should be more accurate way
-			gettimeofday(&now, NULL);
-			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
+			   // FIXME there should be more accurate way
+			   gettimeofday(&now, NULL);
+			   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
 
-			now.tv_usec += (dwTimeOut % 1000) * 1000;
-			timeout.tv_sec += now.tv_usec / 1000000;
-			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
+			   now.tv_usec += (dwTimeOut % 1000) * 1000;
+			   timeout.tv_sec += now.tv_usec / 1000000;
+			   timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
-			retcode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
+			   retcode = pthread_cond_timedwait(&cond->cond, &cond->mutex, &timeout);
 #endif
-		}
-		else
-		{
-			retcode = pthread_cond_wait(&cond->cond, &cond->mutex);
-		}
+		   }
+		   else
+		   {
+			   retcode = pthread_cond_wait(&cond->cond, &cond->mutex);
+		   }
+
+		   if (retcode == 0)
+		   {
+			   ret = TRUE;
+		   }
+      }
 
 		pthread_mutex_unlock(&cond->mutex);
-
-		if (retcode == 0)
-		{
-			ret = TRUE;
-		}
 	}
 
 	return ret;

@@ -51,6 +51,7 @@ NXCL_Session::NXCL_Session()
    m_pUserList = NULL;
 
    m_hRecvThread = INVALID_THREAD_HANDLE;
+   m_pCtx = NULL;
 
 #ifdef _WIN32
    m_condSyncOp = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -85,6 +86,8 @@ NXCL_Session::~NXCL_Session()
    pthread_mutex_destroy(&m_mutexSyncOp);
    pthread_cond_destroy(&m_condSyncOp);
 #endif
+
+   DestroyEncryptionContext(m_pCtx);
 }
 
 
@@ -106,6 +109,9 @@ void NXCL_Session::Disconnect(void)
    DestroyAllObjects();
    DestroyEventDB();
    DestroyUserDB();
+
+   DestroyEncryptionContext(m_pCtx);
+   m_pCtx = NULL;
 }
 
 
@@ -180,12 +186,29 @@ DWORD NXCL_Session::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
+   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
    TCHAR szBuffer[128];
 
    DebugPrintf(_T("SendMsg(\"%s\"), id:%ld)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
-   bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+   if (m_pCtx != NULL)
+   {
+      pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      if (pEnMsg != NULL)
+      {
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+         free(pEnMsg);
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+   }
+   else
+   {
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+   }
    free(pRawMsg);
    return bResult;
 }
@@ -758,5 +781,5 @@ DWORD NXCL_Session::LoadUserDB(void)
 
 DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
 {
-   return SendFileOverCSCP(m_hSocket, dwRqId, pszFileName) ? RCC_SUCCESS : RCC_IO_ERROR;
+   return SendFileOverCSCP(m_hSocket, dwRqId, pszFileName, m_pCtx) ? RCC_SUCCESS : RCC_IO_ERROR;
 }

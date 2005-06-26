@@ -171,6 +171,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwIndex = INVALID_INDEX;
    m_iState = SESSION_STATE_INIT;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   m_pCtx = NULL;
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_hUpdateThread = INVALID_THREAD_HANDLE;
@@ -189,6 +190,8 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hCurrFile = -1;
    m_dwFileRqId = 0;
    m_dwRefCount = 0;
+   m_dwEncryptionRqId = 0;
+   m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
 }
 
 
@@ -219,6 +222,7 @@ ClientSession::~ClientSession()
             delete m_ppEPPRuleList[i];
       free(m_ppEPPRuleList);
    }
+   DestroyEncryptionContext(m_pCtx);
 }
 
 
@@ -261,6 +265,7 @@ void ClientSession::ReadThread(void)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
+   BYTE *pDecryptionBuffer;
    TCHAR szBuffer[256];
    int iErr;
    DWORD i;
@@ -271,9 +276,12 @@ void ClientSession::ReadThread(void)
    RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
+   pDecryptionBuffer = (BYTE *)malloc(RAW_MSG_SIZE);
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE, NULL, NULL)) <= 0)
+      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, 
+                                  m_pMsgBuffer, RAW_MSG_SIZE, 
+                                  &m_pCtx, pDecryptionBuffer)) <= 0)
          break;
 
       // Check if message is too large
@@ -282,6 +290,13 @@ void ClientSession::ReadThread(void)
          DebugPrintf("Received message %s is too large (%d bytes)\n",
                      CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
+         continue;
+      }
+
+      // Check for decryption error
+      if (iErr == 2)
+      {
+         DebugPrintf("Unable to decrypt received message\n");
          continue;
       }
 
@@ -361,12 +376,23 @@ void ClientSession::ReadThread(void)
       {
          // Create message object from raw message
          pMsg = new CSCPMessage(pRawMsg);
-         m_pMessageQueue->Put(pMsg);
+         if ((pMsg->GetCode() == CMD_SESSION_KEY) && (pMsg->GetId() == m_dwEncryptionRqId))
+         {
+            m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey);
+            ConditionSet(m_condEncryptionSetup);
+            m_dwEncryptionRqId = 0;
+            delete pMsg;
+         }
+         else
+         {
+            m_pMessageQueue->Put(pMsg);
+         }
       }
    }
    if (iErr < 0)
       WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
    free(pRawMsg);
+   free(pDecryptionBuffer);
 
    // Notify other threads to exit
    m_pSendQueue->Clear();
@@ -420,23 +446,42 @@ void ClientSession::ReadThread(void)
 
 void ClientSession::WriteThread(void)
 {
-   CSCP_MESSAGE *pMsg;
+   CSCP_MESSAGE *pRawMsg;
+   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
    char szBuffer[128];
+   BOOL bResult;
 
    while(1)
    {
-      pMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      pRawMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
-      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
+      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+      if (m_pCtx != NULL)
       {
-         safe_free(pMsg);
+         pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+         if (pEnMsg != NULL)
+         {
+            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) == (int)ntohl(pEnMsg->dwSize));
+            free(pEnMsg);
+         }
+         else
+         {
+            bResult = FALSE;
+         }
+      }
+      else
+      {
+         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
+      }
+      free(pRawMsg);
+
+      if (!bResult)
+      {
          closesocket(m_hSocket);
          break;
       }
-      safe_free(pMsg);
    }
 }
 
@@ -525,7 +570,9 @@ void ClientSession::ProcessingThread(void)
 
       DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
-          (pMsg->GetCode() != CMD_LOGIN) && (pMsg->GetCode() != CMD_GET_SERVER_INFO))
+          (pMsg->GetCode() != CMD_LOGIN) && 
+          (pMsg->GetCode() != CMD_GET_SERVER_INFO) &&
+          (pMsg->GetCode() != CMD_REQUEST_ENCRYPTION))
       {
          delete pMsg;
          continue;
@@ -758,6 +805,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_CHANGE_IP_ADDR:
             ChangeObjectIP(pMsg);
+            break;
+         case CMD_REQUEST_ENCRYPTION:
+            SetupEncryption(pMsg->GetId());
             break;
          default:
             // Pass message to loaded modules
@@ -4498,5 +4548,42 @@ void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
    }
 
    // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Setup encryption with client
+//
+
+void ClientSession::SetupEncryption(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+#ifdef _WITH_ENCRYPTION
+   m_dwEncryptionRqId = dwRqId;
+   m_dwEncryptionResult = RCC_TIMEOUT;
+   if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
+      m_condEncryptionSetup = ConditionCreate(FALSE);
+
+   // Send request for session key
+   PrepareKeyRequestMsg(&msg, g_pServerKey);
+   msg.SetId(dwRqId);
+   SendMessage(&msg);
+   msg.DeleteAllVariables();
+
+   // Wait for encryption setup
+   ConditionWait(m_condEncryptionSetup, 3000);
+
+   // Send responce
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, m_dwEncryptionResult);
+#else    /* _WITH_ENCRYPTION not defined */
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+#endif
+
    SendMessage(&msg);
 }

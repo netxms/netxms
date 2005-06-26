@@ -47,7 +47,6 @@ NXC_SESSION g_hSession = NULL;
 TCHAR g_szServer[MAX_SERVER_NAME_LEN] = _T("localhost");
 TCHAR g_szLogin[MAX_LOGIN_NAME_LEN] = _T("");
 TCHAR g_szPassword[MAX_PASSWORD_LEN] = _T("");
-DWORD g_dwEncryptionMethod = CSCP_ENCRYPTION_NONE;
 
 
 //
