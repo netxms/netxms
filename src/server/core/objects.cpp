@@ -141,7 +141,10 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
    DbgPrintf(AF_DEBUG_DC, _T("Started caching of DCI values"));
    RWLockReadLock(g_rwlockNodeIndex, INFINITE);
    for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+   {
       ((Node *)g_pNodeIndexByAddr[i].pObject)->UpdateDCICache();
+      ThreadSleepMs(100);  // Give a chance to other threads to do something with database
+   }
    RWLockUnlock(g_rwlockNodeIndex);
    DbgPrintf(AF_DEBUG_DC, _T("Finished caching of DCI values"));
    return THREAD_OK;

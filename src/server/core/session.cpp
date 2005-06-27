@@ -4582,7 +4582,7 @@ void ClientSession::SetupEncryption(DWORD dwRqId)
 #else    /* _WITH_ENCRYPTION not defined */
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+   msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
    SendMessage(&msg);

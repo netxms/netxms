@@ -35,6 +35,10 @@
 #define CSCP_EH_UNENCRYPTED_BYTES      8
 #define CSCP_EH_ENCRYPTED_BYTES        (CSCP_ENCRYPTION_HEADER_SIZE - CSCP_EH_UNENCRYPTED_BYTES)
 
+#ifndef EVP_MAX_IV_LENGTH
+#define EVP_MAX_IV_LENGTH              16
+#endif
+
 
 //
 // Ciphers
