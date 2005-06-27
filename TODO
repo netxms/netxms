@@ -13,12 +13,12 @@ GENERAL:
 - Add check for read/write locks support to configure script
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
-- Optimize WaitForMessage method in message waiting queue class
 - Rewrite event management in a way to eliminate the need to unlock
   event configuration to allow sending of new events
 - View and update agent's configuration from server
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
+- Possibility to tune ICMP packet size on server and ping subagent
 
 
 SERVER:
@@ -39,6 +39,7 @@ SERVER:
 - Override Net.IP.Forward
 - NxDbMgr -- backup before db recover
 - OSPF discovery
+- Add MIB parsing to libnxsnmp
 
 
 CORE AGENT:
