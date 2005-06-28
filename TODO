@@ -40,6 +40,7 @@ SERVER:
 - NxDbMgr -- backup before db recover
 - OSPF discovery
 - Add MIB parsing to libnxsnmp
+- Add support for 64 bit counters to libnxsnmp
 
 
 CORE AGENT:

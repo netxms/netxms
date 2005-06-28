@@ -3,6 +3,7 @@
 *
 
 - Implemented communication session encryption
+- Fixed incorrect 32 bit integer varbinds parsing in libnxsnmp
 
 
 *
