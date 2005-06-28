@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -96,10 +96,18 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         if ((dwLength >= 1) && (dwLength <= 4))
+         if ((dwLength >= 1) && (dwLength <= 5))
          {
             DWORD dwValue = 0;
             BYTE *pbTemp;
+
+            // For large integers, we can have length of 5, and first byte
+            // is usually 0. In this case, we skip first byte.
+            if (dwLength == 5)
+            {
+               pData++;
+               dwLength--;
+            }
 
             pbTemp = ((BYTE *)&dwValue) + (4 - dwLength);
             while(dwLength > 0)
