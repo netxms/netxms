@@ -9,7 +9,9 @@ my $db = DBI->connect("DBI:mysql:database=netxms_web_db;host=10.0.0.4", "netxms_
 
 #####################
 # html header
-print <<"__END";
+if (defined $ENV{QUERY_STRING} && $ENV{QUERY_STRING} eq "")
+{
+	print <<"__END";
 <html>
 <head>
 <title></title>
@@ -26,52 +28,55 @@ print <<"__END";
 		{
 			font-size: 10.0pt;
 		}
-		
-		table
-		{
-			empty-cells: show
-		}
-		
-		td
+
+		.matrixParam
 		{
 			border: #000000 1pt solid;
 			padding: 0in 5.4pt;
 		}
-
-		.header
+		
+		.matrixHeader
 		{
 			font-weight: bold;
 		}
 		
-		.ready
+		.matrixReady
 		{
 			text-align: center;
 			background-image: url('/supported.png');
 			background-position: center; 
 			background-repeat: no-repeat;
+			border: #000000 1pt solid;
+			padding: 0in 5.4pt;
 		}
 
-		.notReady
+		.matrixNotReady
 		{
 			text-align: center;
 			background-image: url('/unsupported.png');
 			background-position: center; 
 			background-repeat: no-repeat;
+			border: #000000 1pt solid;
+			padding: 0in 5.4pt;
 		}
 	</style>
 </head>
 <body>
+__END
+}
+
+print <<"__END";
 <h2>Parameters support matrix</h2>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 	<tr>
-		<td width="300pix" class="header">Parameter</td>
-		<td class="header">Windows</td>
-		<td class="header">NetWare</td>
-		<td class="header">Linux</td>
-		<td class="header">FreeBSD</td>
-		<td class="header">HPUX</td>
-		<td class="header">AIX</td>
-		<td class="header">Solaris</td>
+		<td width="300pix" class="matrixHeader">Parameter</td>
+		<td class="matrixHeader">Windows</td>
+		<td class="matrixHeader">NetWare</td>
+		<td class="matrixHeader">Linux</td>
+		<td class="matrixHeader">FreeBSD</td>
+		<td class="matrixHeader">HPUX</td>
+		<td class="matrixHeader">AIX</td>
+		<td class="matrixHeader">Solaris</td>
 	</tr>
 __END
 #####################
@@ -81,14 +86,35 @@ my $sth = $db->prepare("SELECT param, r1, r2, r3, r4, r5, r6, r7 FROM agentMatri
 $sth->execute();
 while (my $rec = $sth->fetchrow_hashref())
 {
-	print "<tr><td class=\"param\">$rec->{param}</td>";
-	$rec->{r1} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r2} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r3} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r4} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r5} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r6} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r7} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
+	print "<tr><td class=\"matrixParam\">$rec->{param}</td>";
+	$rec->{r1} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r2} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r3} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r4} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r5} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r6} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r7} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
 	print "</tr>";
 }
 $sth->finish();
@@ -105,14 +131,14 @@ print <<"__END";
 <br /><h2>Enums support matrix</h2>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 	<tr>
-		<td width="300pix" class="header">Parameter</td>
-		<td class="header">Windows</td>
-		<td class="header">NetWare</td>
-		<td class="header">Linux</td>
-		<td class="header">FreeBSD</td>
-		<td class="header">HPUX</td>
-		<td class="header">AIX</td>
-		<td class="header">Solaris</td>
+		<td width="300pix" class="matrixHeader">Parameter</td>
+		<td class="matrixHeader">Windows</td>
+		<td class="matrixHeader">NetWare</td>
+		<td class="matrixHeader">Linux</td>
+		<td class="matrixHeader">FreeBSD</td>
+		<td class="matrixHeader">HPUX</td>
+		<td class="matrixHeader">AIX</td>
+		<td class="matrixHeader">Solaris</td>
 	</tr>
 __END
 #####################
@@ -121,14 +147,14 @@ $sth = $db->prepare("SELECT param, r1, r2, r3, r4, r5, r6, r7 FROM agentMatrix W
 $sth->execute();
 while (my $rec = $sth->fetchrow_hashref())
 {
-	print "<tr><td class=\"param\">$rec->{param}</td>";
-	$rec->{r1} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r2} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r3} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r4} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r5} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r6} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
-	$rec->{r7} == 1 ? print "<td class=\"ready\"></td>" : print "<td class=\"notReady\"></td>";
+	print "<tr><td class=\"matrixParam\">$rec->{param}</td>";
+	$rec->{r1} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r2} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r3} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r4} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r5} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r6} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r7} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
 	print "</tr>";
 }
 $sth->finish();
@@ -142,10 +168,13 @@ __END
 
 #####################
 # html footer
-print <<"__END";
+if (defined $ENV{QUERY_STRING} && $ENV{QUERY_STRING} eq "")
+{
+	print <<"__END";
 </body>
 </html>
 __END
+}
 #####################
 
 #$db->do("INSERT INTO agentMatrix (param, r1, r2, r3, r4, r5, r6, r7, type) VALUES ('$1', $2, $3, $4, $5, $6, $7, $8, 'E')");

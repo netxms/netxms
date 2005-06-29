@@ -8,7 +8,7 @@
 	<div id="main-copy">
 		<div class="twoThirds noBorderOnLeft">
 			<p>
-			<h1>Macros for usage in event messages and alarms</h1>
+			<h2>Macros for usage in event messages and alarms</h2>
 			<table border=1 width=100%> 
 				<tr><td width=15%>%%</td><td>Insert % character</td></tr>
 				<tr><td>%n</td><td>Name of event source object</td></tr>
@@ -33,7 +33,7 @@
 			</p>
 
 			<p>
-			<h1>Special characters</h1>
+			<h2>Special characters</h2>
 			<table width=100% border=1>
 				<tr><td width=15%>\t</td><td>Tab character</td></tr>
 				<tr><td>\n</td><td>CR/LF character pair</td></tr>

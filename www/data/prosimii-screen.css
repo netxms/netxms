@@ -19,6 +19,10 @@ html > body {
   font-size: 9pt;
 }
 
+table, tr, td {
+	border-collapse: collapse;
+}
+
 acronym, .titleTip {
   border-bottom: 1px dotted rgb(61,92,122);
   cursor: help;
@@ -383,4 +387,41 @@ dd {
 
 #footer a:hover {
   text-decoration: none;
+}
+
+
+
+
+
+
+/* params matrix */
+.matrixParam
+{
+	border: #000000 1pt solid;
+	padding: 0in 5.4pt;
+}
+
+.matrixHeader
+{
+	font-weight: bold;
+}
+
+.matrixReady
+{
+	text-align: center;
+	background-image: url('/supported.png');
+	background-position: center; 
+	background-repeat: no-repeat;
+	border: #000000 1pt solid;
+	padding: 0in 5.4pt;
+}
+
+.matrixNotReady
+{
+	text-align: center;
+	background-image: url('/unsupported.png');
+	background-position: center; 
+	background-repeat: no-repeat;
+	border: #000000 1pt solid;
+	padding: 0in 5.4pt;
 }

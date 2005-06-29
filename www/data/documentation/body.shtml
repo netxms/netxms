@@ -1,7 +1,7 @@
 <div class="twoThirds noBorderOnLeft">
 	<!--<h1>Documentation area</h1>-->
 
-	<h1>Documentation; This section will be opened soon</h1>
+	<h1>Section Incomplete.</h1>
 
 	<p>
 	If you have any questions, please contact us.
@@ -30,9 +30,11 @@
 	<ul>
 		<li /><a href="install.shtml">Short step-by-step server installation guide</a>
 		<li /><a href="confexample/">Configuration example</a>
-		<li /><a href="/cgi-bin/matrix">Agents capabilities matrix</a>
+		<li /><a href="common_parameters.html">Short description of built-in agent parameters</a>
+		<li /><a href="matrix.shtml">Agents capabilities matrix</a>
 		<li /><a href="macros.shtml">Macros that can be used in event messages and alarms</a>
 		<li /><a href="upgrade.shtml">Server upgrade procedure</a>
+		<li /><a href="ping_subagent.shtml">PING Subagent</a>
 	</ul>
 	</p>
 </div>

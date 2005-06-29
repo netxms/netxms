@@ -96,6 +96,7 @@ www/data/bugtrack/history_inc.php
 www/data/bugtrack/images
 www/data/bugtrack/index.html
 www/data/bugtrack/index.php
+www/data/bugtrack/issues_rss.php
 www/data/bugtrack/javascript
 www/data/bugtrack/jump_to_bug.php
 www/data/bugtrack/lang
@@ -109,11 +110,19 @@ www/data/bugtrack/lost_pwd.php
 www/data/bugtrack/lost_pwd_page.php
 www/data/bugtrack/main_page.php
 www/data/bugtrack/make_captcha_img.php
+www/data/bugtrack/manage_config_email_page.php
+www/data/bugtrack/manage_config_email_set.php
+www/data/bugtrack/manage_config_revert.php
+www/data/bugtrack/manage_config_work_threshold_page.php
+www/data/bugtrack/manage_config_work_threshold_set.php
+www/data/bugtrack/manage_config_workflow_page.php
+www/data/bugtrack/manage_config_workflow_set.php
 www/data/bugtrack/manage_custom_field_create.php
 www/data/bugtrack/manage_custom_field_delete.php
 www/data/bugtrack/manage_custom_field_edit_page.php
 www/data/bugtrack/manage_custom_field_page.php
 www/data/bugtrack/manage_custom_field_update.php
+www/data/bugtrack/manage_prof_menu_page.php
 www/data/bugtrack/manage_proj_cat_add.php
 www/data/bugtrack/manage_proj_cat_copy.php
 www/data/bugtrack/manage_proj_cat_delete.php
@@ -127,6 +136,8 @@ www/data/bugtrack/manage_proj_custom_field_update.php
 www/data/bugtrack/manage_proj_delete.php
 www/data/bugtrack/manage_proj_edit_page.php
 www/data/bugtrack/manage_proj_page.php
+www/data/bugtrack/manage_proj_subproj_add.php
+www/data/bugtrack/manage_proj_subproj_delete.php
 www/data/bugtrack/manage_proj_update.php
 www/data/bugtrack/manage_proj_user_add.php
 www/data/bugtrack/manage_proj_user_copy.php
@@ -178,6 +189,7 @@ www/data/bugtrack/query_delete_page.php
 www/data/bugtrack/query_store.php
 www/data/bugtrack/query_store_page.php
 www/data/bugtrack/query_view_page.php
+www/data/bugtrack/return_dynamic_filters.php
 www/data/bugtrack/set_project.php
 www/data/bugtrack/signup.php
 www/data/bugtrack/signup_page.php

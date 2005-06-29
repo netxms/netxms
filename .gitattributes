@@ -932,6 +932,9 @@ www/data/documentation/confexample/index.shtml -text
 www/data/documentation/index.shtml -text
 www/data/documentation/install.shtml -text
 www/data/documentation/macros.shtml -text
+www/data/documentation/matrix.shtml -text
+www/data/documentation/ping_subagent.shtml -text
+www/data/documentation/ping_subagent.txt -text
 www/data/documentation/upgrade.shtml -text
 www/data/documentation/upgrade.txt -text
 www/data/download/.cvsignore -text

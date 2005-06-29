@@ -1,4 +1,4 @@
-<!--#set var="title" value="Server upgrade procedure" -->
+<!--#set var="title" value="Agents capabilities matrix" -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -7,7 +7,7 @@
 	<!--#include virtual="/header.shtml" -->
 	<div id="main-copy">
 		<div class="twoThirds noBorderOnLeft">
-			<pre><!--#include file="upgrade.txt" --></pre>
+			<!--#include virtual="/cgi-bin/matrix?nocss" -->
 		</div>
 	</div>
 	<!--#include virtual="/footer.shtml" -->
