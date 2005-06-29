@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.89 2005-06-16 21:29:16 victor Exp $
+# $Id: configure.ac,v 1.90 2005-06-29 10:40:15 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -198,6 +198,24 @@ AC_ARG_WITH(nxsm,
 	MODULES="$MODULES www"
 	BUILD_CLIENT="yes"
 ])
+
+AC_ARG_WITH(openssl,
+[AS_HELP_STRING(--with-openssl,enable encryption)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	else
+		LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
+		CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
+	fi
+	with_openssl="yes"
+	AC_DEFINE(WITH_OPENSSL,,[with openssl])
+	AC_CHECK_LIB(crypto, RSA_new, ,
+		[AC_MSG_ERROR(libcrypto is needed for encryption support)])
+fi ])
 
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
