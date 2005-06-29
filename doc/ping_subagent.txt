@@ -1,0 +1,62 @@
+* PING subagent
+****************
+
+This subagent can be used to measure ICMP ping responce times from one
+location to another.
+
+
+I. Parameters and enums
+
+When loaded, PING subagent adds the following parameters to agent:
+
+Icmp.AvgPingTime($1)
+
+Average ICMP ping responce time from target $1 for last minute. Argument $1
+can be either IP address or name specified in Target configuration record
+(see below).
+
+
+Icmp.LastPingTime($1)
+
+Last ICMP ping responce time from target $1. Argument $1 can be either IP
+address or name specified in Target configuration record (see below).
+
+
+Icmp.Ping($1,$2)
+
+ICMP ping responce time from target $1. Agent will send echo request as soon
+as it receives request for paramter's value, and will return responce time
+for that particular request. Argument $1 should be an IP address. Optional
+argument $2 specifies timeout in milliseconds. Default timeout is 1 second.
+Please note that other parameters just returns result of background ping
+process, while this parameter waits for actual ping completion and then
+returns the result. Because of this behavior, it is not recommended to
+use Icmp.Ping parameter for instant monitoring, only for occasional tests.
+For instant monitoring, you should configure targets for background ping
+and use Icmp.AvgPingTime or Icmp.LastPingTime parameters to retrieve results.
+
+
+Also PING subagent adds enum Icmp.TargetList, which returns list of configured
+ping targets.
+
+
+II. Configuration file
+
+All configuration parameters related to PING subagent should be placed
+into *PING section of agent's configuration file. The following configuration
+parameters are supported:
+
+Target = <ip>:<name>
+
+Add target with IP address <ip> to background ping target list and assign a 
+name <name> to it. Name field is optional and can be omited.
+
+
+Timeout = <milliseconds>
+
+Set timeout for background ping requests. Default timeout is 3 seconds.
+
+
+III. Notes
+
+PING subagent uses value of 10000 to indicate timed out requests.

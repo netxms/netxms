@@ -91,6 +91,7 @@ doc/admin_guide.doc -text
 doc/client_library.doc -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
+doc/ping_subagent.txt -text
 doc/snmp.txt -text
 images/Makefile.am -text
 images/generic_printer.ico -text
