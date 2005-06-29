@@ -78,7 +78,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
    TCHAR szHostName[256], szTimeOut[32];
-   DWORD dwAddr, dwTimeOut, dwRTT;
+   DWORD dwAddr, dwTimeOut = 1000, dwRTT;
 
    if (!NxGetParameterArg(pszParam, 1, szHostName, 256))
       return SYSINFO_RC_UNSUPPORTED;
@@ -89,13 +89,15 @@ static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
    dwAddr = _t_inet_addr(szHostName);
    if (szTimeOut[0] != 0)
+   {
       dwTimeOut = _tcstoul(szTimeOut, NULL, 0);
-   if (dwTimeOut < 500)
-      dwTimeOut = 500;
-   if (dwTimeOut > 5000)
-      dwTimeOut = 5000;
+      if (dwTimeOut < 500)
+         dwTimeOut = 500;
+      if (dwTimeOut > 5000)
+         dwTimeOut = 5000;
+   }
 
-   if (IcmpPing(dwAddr, 3, dwTimeOut, &dwRTT) != ICMP_SUCCESS)
+   if (IcmpPing(dwAddr, 1, dwTimeOut, &dwRTT) != ICMP_SUCCESS)
       dwRTT = 10000;
    ret_uint(pValue, dwRTT);
    return SYSINFO_RC_SUCCESS;
