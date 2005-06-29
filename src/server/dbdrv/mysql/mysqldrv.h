@@ -38,11 +38,23 @@
 
 
 //
+// Structure of DB connection handle
+//
+
+typedef struct
+{
+   MYSQL *pMySQL;
+   MUTEX mutexQueryLock;
+} MYSQL_CONN;
+
+
+//
 // Structure of asynchronous SELECT result
 //
 
 typedef struct
 {
+   MYSQL_CONN *pConn;
    MYSQL_RES *pHandle;
    MYSQL_ROW pCurrRow;
    BOOL bNoMoreRows;

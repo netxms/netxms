@@ -24,19 +24,11 @@
 
 
 //
-// Static data
-//
-
-static MUTEX m_hQueryLock;
-
-
-//
 // Initialize driver
 //
 
 extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 {
-   m_hQueryLock = MutexCreate();
    return TRUE;
 }
 
@@ -47,7 +39,6 @@ extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 
 extern "C" void EXPORT DrvUnload(void)
 {
-   MutexDestroy(m_hQueryLock);
 }
 
 
@@ -57,14 +48,15 @@ extern "C" void EXPORT DrvUnload(void)
 
 extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
-   MYSQL *pConn;
+   MYSQL *pMySQL;
+   MYSQL_CONN *pConn;
 
-   pConn = mysql_init(NULL);
-   if (pConn == NULL)
-      return 0;
+   pMySQL = mysql_init(NULL);
+   if (pMySQL == NULL)
+      return NULL;
 
    if (!mysql_real_connect(
-				pConn, // MYSQL *
+				pMySQL, // MYSQL *
 				szHost, // host
 				szLogin[0] == 0 ? NULL : szLogin, // user
 				(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
@@ -74,9 +66,13 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 				0 // flags
 			))
    {
-      mysql_close(pConn);
-      return 0;
+      mysql_close(pMySQL);
+      return NULL;
    }
+
+   pConn = (MYSQL_CONN *)malloc(sizeof(MYSQL_CONN));
+   pConn->pMySQL = pMySQL;
+   pConn->mutexQueryLock = MutexCreate();
 
    return (DB_HANDLE)pConn;
 }
@@ -88,7 +84,11 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 
 extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 {
-   mysql_close((MYSQL *)hConn);
+   if (hConn != NULL)
+   {
+      mysql_close(((MYSQL_CONN *)hConn)->pMySQL);
+      MutexDestroy(((MYSQL_CONN *)hConn)->mutexQueryLock);
+   }
 }
 
 
@@ -100,9 +100,9 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 {
    BOOL bResult;
 
-   MutexLock(m_hQueryLock, INFINITE);
-   bResult = (mysql_query((MYSQL *)hConn, szQuery) == 0);
-   MutexUnlock(m_hQueryLock);
+   MutexLock(((MYSQL_CONN *)hConn)->mutexQueryLock, INFINITE);
+   bResult = (mysql_query(((MYSQL_CONN *)hConn)->pMySQL, szQuery) == 0);
+   MutexUnlock(((MYSQL_CONN *)hConn)->mutexQueryLock);
    return bResult;
 }
 
@@ -115,10 +115,10 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
 {
    DB_RESULT pResult = NULL;
 
-   MutexLock(m_hQueryLock, INFINITE);
-   if (mysql_query((MYSQL *)hConn, szQuery) == 0)
-      pResult = (DB_RESULT)mysql_store_result((MYSQL *)hConn);
-   MutexUnlock(m_hQueryLock);
+   MutexLock(((MYSQL_CONN *)hConn)->mutexQueryLock, INFINITE);
+   if (mysql_query(((MYSQL_CONN *)hConn)->pMySQL, szQuery) == 0)
+      pResult = (DB_RESULT)mysql_store_result(((MYSQL_CONN *)hConn)->pMySQL);
+   MutexUnlock(((MYSQL_CONN *)hConn)->mutexQueryLock);
    return pResult;
 }
 
@@ -167,11 +167,12 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
 {
    MYSQL_ASYNC_RESULT *pResult = NULL;
 
-   MutexLock(m_hQueryLock, INFINITE);
-   if (mysql_query((MYSQL *)hConn, szQuery) == 0)
+   MutexLock(((MYSQL_CONN *)hConn)->mutexQueryLock, INFINITE);
+   if (mysql_query(((MYSQL_CONN *)hConn)->pMySQL, szQuery) == 0)
    {
       pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
-      pResult->pHandle = mysql_use_result((MYSQL *)hConn);
+      pResult->pConn = (MYSQL_CONN *)hConn;
+      pResult->pHandle = mysql_use_result(((MYSQL_CONN *)hConn)->pMySQL);
       if (pResult->pHandle != NULL)
       {
          pResult->bNoMoreRows = FALSE;
@@ -186,7 +187,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
       }
    }
    if (pResult == NULL)
-      MutexUnlock(m_hQueryLock);
+      MutexUnlock(((MYSQL_CONN *)hConn)->mutexQueryLock);
    return pResult;
 }
 
@@ -211,7 +212,7 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
       {
          ((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows = TRUE;
          bResult = FALSE;
-         MutexUnlock(m_hQueryLock);
+         MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->pConn->mutexQueryLock);
       }
       else
       {
@@ -281,7 +282,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
          while(mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) != NULL);
 
          // Now we are ready for next query, so unlock query mutex
-         MutexUnlock(m_hQueryLock);
+         MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->pConn->mutexQueryLock);
       }
 
       // Free allocated memory
