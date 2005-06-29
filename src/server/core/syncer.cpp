@@ -31,6 +31,13 @@ void NetObjDelete(NetObj *pObject);
 
 
 //
+// Static data
+//
+
+static DB_HANDLE m_hdb;
+
+
+//
 // Save objects to database
 //
 
@@ -76,6 +83,21 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
    int iSyncInterval;
    DWORD dwWatchdogId;
 
+   // Establish separate connection to database if needed
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      m_hdb = DBConnect();
+      if (m_hdb == NULL)
+      {
+         WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         m_hdb = g_hCoreDB;   // Switch to main DB connection
+      }
+   }
+   else
+   {
+      m_hdb = g_hCoreDB;
+   }
+
    // Read configuration
    iSyncInterval = ConfigReadInt("SyncInterval", 60);
    DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread started, sync_interval = %d", iSyncInterval);
@@ -90,6 +112,13 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       SaveObjects();
       SaveUsers();
    }
+
+   // Disconnect from database if using separate connection
+   if (m_hdb != g_hCoreDB)
+   {
+      DBDisconnect(m_hdb);
+   }
+
    DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread terminated");
    return THREAD_OK;
 }

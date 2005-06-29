@@ -24,6 +24,13 @@
 
 
 //
+// Constants
+//
+
+#define MAX_DB_WRITERS     16
+
+
+//
 // Global variables
 //
 
@@ -34,7 +41,8 @@ Queue *g_pLazyRequestQueue = NULL;
 // Static data
 //
 
-static THREAD m_hWriteThread = INVALID_THREAD_HANDLE;
+static int m_iNumWriters = 1;
+static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
 
 
 //
@@ -54,6 +62,21 @@ void QueueSQLRequest(char *szQuery)
 static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
 {
    char *pQuery;
+   DB_HANDLE hdb;
+
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      hdb = DBConnect();
+      if (hdb == NULL)
+      {
+         WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         return THREAD_OK;
+      }
+   }
+   else
+   {
+      hdb = g_hCoreDB;
+   }
 
    while(1)
    {
@@ -61,8 +84,13 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
       if (pQuery == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      DBQuery(g_hCoreDB, pQuery);
+      DBQuery(hdb, pQuery);
       free(pQuery);
+   }
+
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      DBDisconnect(hdb);
    }
    return THREAD_OK;
 }
@@ -74,7 +102,19 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
 
 void StartDBWriter(void)
 {
-   m_hWriteThread = ThreadCreateEx(DBWriteThread, 0, NULL);
+   int i;
+
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      m_iNumWriters = ConfigReadInt("NumberOfDatabaseWriters", 1);
+      if (m_iNumWriters < 1)
+         m_iNumWriters = 1;
+      if (m_iNumWriters > MAX_DB_WRITERS)
+         m_iNumWriters = MAX_DB_WRITERS;
+   }
+
+   for(i = 0; i < m_iNumWriters; i++)
+      m_hWriteThreadList[i] = ThreadCreateEx(DBWriteThread, 0, NULL);
 }
 
 
@@ -84,6 +124,10 @@ void StartDBWriter(void)
 
 void StopDBWriter(void)
 {
-   g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
-   ThreadJoin(m_hWriteThread);
+   int i;
+
+   for(i = 0; i < m_iNumWriters; i++)
+      g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < m_iNumWriters; i++)
+      ThreadJoin(m_hWriteThreadList[i]);
 }

@@ -180,6 +180,8 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_SNMP_TRAPD;
    if (ConfigReadInt("EnableZoning", 0))
       g_dwFlags |= AF_ENABLE_ZONING;
+   if (ConfigReadInt("EnableMultipleDBConnections", 1))
+      g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
 }
 
@@ -277,7 +279,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
       return FALSE;
 
    g_hCoreDB = DBConnect();
-   if (g_hCoreDB == 0)
+   if (g_hCoreDB == NULL)
    {
       WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
@@ -619,6 +621,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_SNMP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, "\n");
       }

@@ -24,6 +24,13 @@
 
 
 //
+// Static data
+//
+
+static DB_HANDLE m_hdb;
+
+
+//
 // Remove deleted objects which are no longer referenced
 //
 
@@ -31,7 +38,7 @@ static void CleanDeletedObjects(void)
 {
    DB_RESULT hResult;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT object_id FROM deleted_objects");
+   hResult = DBSelect(m_hdb, "SELECT object_id FROM deleted_objects");
    if (hResult != NULL)
    {
       DB_ASYNC_RESULT hAsyncResult;
@@ -46,7 +53,7 @@ static void CleanDeletedObjects(void)
 
          // Check if there are references to this object in event log
          sprintf(szQuery, "SELECT event_source FROM event_log WHERE event_source=%ld", dwObjectId);
-         hAsyncResult = DBAsyncSelect(g_hCoreDB, szQuery);
+         hAsyncResult = DBAsyncSelect(m_hdb, szQuery);
          if (hAsyncResult != NULL)
          {
             if (!DBFetch(hAsyncResult))
@@ -99,6 +106,21 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    char szQuery[256];
    DWORD i, dwEventLogRetentionTime, dwInterval;
 
+   // Establish separate connection to database if needed
+   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      m_hdb = DBConnect();
+      if (m_hdb == NULL)
+      {
+         WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         m_hdb = g_hCoreDB;   // Switch to main DB connection
+      }
+   }
+   else
+   {
+      m_hdb = g_hCoreDB;
+   }
+
    // Load configuration
    dwInterval = ConfigReadULong("HouseKeepingInterval", 3600);
    dwEventLogRetentionTime = ConfigReadULong("EventLogRetentionTime", 5184000);
@@ -114,7 +136,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       if (dwEventLogRetentionTime > 0)
       {
          sprintf(szQuery, "DELETE FROM event_log WHERE event_timestamp<%ld", currTime - dwEventLogRetentionTime);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(m_hdb, szQuery);
       }
 
       // Delete empty subnets if needed
@@ -129,6 +151,12 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
          ((Node *)g_pNodeIndexByAddr[i].pObject)->CleanDCIData();
       RWLockUnlock(g_rwlockNodeIndex);
+   }
+
+   // Disconnect from database if using separate connection
+   if (m_hdb != g_hCoreDB)
+   {
+      DBDisconnect(m_hdb);
    }
    return THREAD_OK;
 }
