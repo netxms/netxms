@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.90 2005-06-29 10:40:15 alk Exp $
+# $Id: configure.ac,v 1.91 2005-06-29 10:41:16 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -69,7 +69,7 @@ AC_ARG_WITH(odbc,
 	AC_DEFINE(WITH_ODBC,,[with odbc])
 	DB_DRIVERS="$DB_DRIVERS odbc"
 	AC_CHECK_LIB(odbc, SQLAllocHandle, ,
-		[AC_MSG_ERROR(libodbc is needed for ODBC support)])
+		[AC_MSG_ERROR(libodbc is required for ODBC support)])
 fi ])
 
 AC_ARG_WITH(mysql,
@@ -90,7 +90,7 @@ AC_ARG_WITH(mysql,
 	AC_DEFINE(WITH_MYSQL,,[with mysql])
 	DB_DRIVERS="$DB_DRIVERS mysql"
 	AC_CHECK_LIB(mysqlclient, mysql_init, ,
-		[AC_MSG_ERROR(libmysqlclient is needed for MySQL support)])
+		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
 	AC_MSG_CHECKING(whether mysql clients can run)
 	AC_RUN_IFELSE([AC_LANG_SOURCE([[
 		#include <stdio.h>
@@ -126,7 +126,7 @@ AC_ARG_WITH(pgsql,
 	DB_DRIVERS="$DB_DRIVERS pgsql"
 	AC_DEFINE(WITH_PGSQL,,[with pgsql])
 	AC_CHECK_LIB(pq, PQconnectdb, ,
-		[AC_MSG_ERROR(libpq is needed for PostgreSQL support)])        
+		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
 			AC_MSG_CHECKING(whether postgresql clients can run)
 			AC_RUN_IFELSE([AC_LANG_SOURCE([[
 				#include <stdio.h>
@@ -214,7 +214,7 @@ AC_ARG_WITH(openssl,
 	with_openssl="yes"
 	AC_DEFINE(WITH_OPENSSL,,[with openssl])
 	AC_CHECK_LIB(crypto, RSA_new, ,
-		[AC_MSG_ERROR(libcrypto is needed for encryption support)])
+		[AC_MSG_ERROR(libcrypto is required for encryption support)])
 fi ])
 
 AC_SUBST(DB_DRIVERS)
