@@ -75,7 +75,7 @@ NetworkService::~NetworkService()
 // Save object to database
 //
 
-BOOL NetworkService::SaveToDB(void)
+BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscRequest, *pszEscResponce, szQuery[16384], szIpAddr[32];
    DB_RESULT hResult;
@@ -83,11 +83,11 @@ BOOL NetworkService::SaveToDB(void)
 
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM network_services WHERE id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -116,10 +116,10 @@ BOOL NetworkService::SaveToDB(void)
                  pszEscResponce, m_dwPollerNode, m_dwId);
    free(pszEscRequest);
    free(pszEscResponce);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
                  
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;

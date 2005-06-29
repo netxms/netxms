@@ -31,17 +31,10 @@ void NetObjDelete(NetObj *pObject);
 
 
 //
-// Static data
-//
-
-static DB_HANDLE m_hdb;
-
-
-//
 // Save objects to database
 //
 
-void SaveObjects(void)
+void SaveObjects(DB_HANDLE hdb)
 {
    DWORD i;
 
@@ -69,7 +62,7 @@ delete_loop_start:;
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
       if (g_pIndexById[i].pObject->IsModified())
-         g_pIndexById[i].pObject->SaveToDB();
+         g_pIndexById[i].pObject->SaveToDB(hdb);
    RWLockUnlock(g_rwlockIdIndex);
 }
 
@@ -82,20 +75,21 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
    int iSyncInterval;
    DWORD dwWatchdogId;
+   DB_HANDLE hdb;
 
    // Establish separate connection to database if needed
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
-      m_hdb = DBConnect();
-      if (m_hdb == NULL)
+      hdb = DBConnect();
+      if (hdb == NULL)
       {
          WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
-         m_hdb = g_hCoreDB;   // Switch to main DB connection
+         hdb = g_hCoreDB;   // Switch to main DB connection
       }
    }
    else
    {
-      m_hdb = g_hCoreDB;
+      hdb = g_hCoreDB;
    }
 
    // Read configuration
@@ -109,14 +103,14 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       if (SleepAndCheckForShutdown(iSyncInterval))
          break;   // Shutdown time has arrived
       WatchdogNotify(dwWatchdogId);
-      SaveObjects();
-      SaveUsers();
+      SaveObjects(hdb);
+      SaveUsers(hdb);
    }
 
    // Disconnect from database if using separate connection
-   if (m_hdb != g_hCoreDB)
+   if (hdb != g_hCoreDB)
    {
-      DBDisconnect(m_hdb);
+      DBDisconnect(hdb);
    }
 
    DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread terminated");

@@ -105,7 +105,7 @@ void Threshold::CreateId(void)
 // Save threshold to database
 //
 
-BOOL Threshold::SaveToDB(DWORD dwIndex)
+BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
 {
    char szQuery[512];
    DB_RESULT hResult;
@@ -113,7 +113,7 @@ BOOL Threshold::SaveToDB(DWORD dwIndex)
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE threshold_id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -134,7 +134,7 @@ BOOL Threshold::SaveToDB(DWORD dwIndex)
                        "sequence_number=%ld WHERE threshold_id=%ld", m_dwItemId, 
               m_value.String(), m_iFunction, m_iOperation, m_iParam1, m_iParam2, m_dwEventCode, 
               dwIndex, m_dwId);
-   return DBQuery(g_hCoreDB, szQuery);
+   return DBQuery(hdb, szQuery);
 }
 
 

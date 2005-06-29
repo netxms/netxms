@@ -263,7 +263,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 // Save to database
 //
 
-BOOL DCItem::SaveToDB(void)
+BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[1024];
    DB_RESULT hResult;
@@ -273,7 +273,7 @@ BOOL DCItem::SaveToDB(void)
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT item_id FROM items WHERE item_id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -305,7 +305,7 @@ BOOL DCItem::SaveToDB(void)
                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
                        pszEscDescr, pszEscInstance, m_dwTemplateItemId, m_dwId);
-   bResult = DBQuery(g_hCoreDB, szQuery);
+   bResult = DBQuery(hdb, szQuery);
    free(pszEscName);
    free(pszEscFormula);
    free(pszEscDescr);
@@ -317,12 +317,12 @@ BOOL DCItem::SaveToDB(void)
       DWORD i;
 
       for(i = 0; i < m_dwNumThresholds; i++)
-         m_ppThresholdList[i]->SaveToDB(i);
+         m_ppThresholdList[i]->SaveToDB(hdb, i);
    }
 
    // Delete non-existing thresholds
    sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       int i, iNumRows;
@@ -338,7 +338,7 @@ BOOL DCItem::SaveToDB(void)
          if (j == m_dwNumThresholds)
          {
             sprintf(szQuery, "DELETE FROM thresholds WHERE threshold_id=%ld", dwId);
-            DBQuery(g_hCoreDB, szQuery);
+            DBQuery(hdb, szQuery);
          }
       }
       DBFreeResult(hResult);
@@ -346,7 +346,7 @@ BOOL DCItem::SaveToDB(void)
 
    // Create record in raw_dci_values if needed
    sprintf(szQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) == 0)
@@ -358,7 +358,7 @@ BOOL DCItem::SaveToDB(void)
                           " VALUES (%ld,'%s',%ld)",
                  m_dwId, pszEscValue, m_tPrevValueTimeStamp);
          free(pszEscValue);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
       }
       DBFreeResult(hResult);
    }

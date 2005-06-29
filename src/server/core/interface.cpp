@@ -149,7 +149,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
 // Save interface object to database
 //
 
-BOOL Interface::SaveToDB(void)
+BOOL Interface::SaveToDB(DB_HANDLE hdb)
 {
    char szQuery[1024], szMacStr[16], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
@@ -160,11 +160,11 @@ BOOL Interface::SaveToDB(void)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM interfaces WHERE id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -195,10 +195,10 @@ BOOL Interface::SaveToDB(void)
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, szMacStr, m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
 
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

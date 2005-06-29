@@ -187,9 +187,9 @@ protected:
    void Modify(void);                  // Used to mark object as modified
 
    BOOL LoadACLFromDB(void);
-   BOOL SaveACLToDB(void);
+   BOOL SaveACLToDB(DB_HANDLE hdb);
    BOOL LoadCommonProperties(void);
-   BOOL SaveCommonProperties(void);
+   BOOL SaveCommonProperties(DB_HANDLE hdb);
 
    void SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...);
 
@@ -230,7 +230,7 @@ public:
    void Hide(void);
    void Unhide(void);
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -310,7 +310,7 @@ public:
 
    virtual int Type(void) { return OBJECT_TEMPLATE; }
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -363,7 +363,7 @@ public:
    virtual ~Interface();
 
    virtual int Type(void) { return OBJECT_INTERFACE; }
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -415,7 +415,7 @@ public:
 
    virtual int Type(void) { return OBJECT_NETWORKSERVICE; }
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -477,7 +477,7 @@ public:
 
    virtual int Type(void) { return OBJECT_NODE; }
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -626,7 +626,7 @@ public:
 
    virtual int Type(void) { return OBJECT_SUBNET; }
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -648,7 +648,7 @@ public:
    UniversalRoot();
    virtual ~UniversalRoot();
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual void LoadFromDB(void);
    virtual const char *DefaultName(void) { return "Root Object"; }
 
@@ -709,7 +709,7 @@ public:
 
    virtual int Type(void) { return OBJECT_CONTAINER; }
   
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -758,7 +758,7 @@ public:
 
    virtual int Type(void) { return OBJECT_ZONE; }
 
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
@@ -782,7 +782,7 @@ public:
    virtual ~Network();
 
    virtual int Type(void) { return OBJECT_NETWORK; }
-   virtual BOOL SaveToDB(void);
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
 
    void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
    void AddZone(Zone *pZone) { AddChild(pZone); pZone->AddParent(this); }

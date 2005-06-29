@@ -122,7 +122,7 @@ public:
    const char *StringValue(void) { return m_value.String(); }
    BOOL IsReached(void) { return m_bIsReached; }
 
-   BOOL SaveToDB(DWORD dwIndex);
+   BOOL SaveToDB(DB_HANDLE hdb, DWORD dwIndex);
    int Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
 
    void CreateMessage(DCI_THRESHOLD *pData);
@@ -186,7 +186,7 @@ public:
    void PrepareForReplacement(DCItem *pItem, int iStatus);
    void PrepareForDeletion(void);
 
-   BOOL SaveToDB(void);
+   BOOL SaveToDB(DB_HANDLE hdb);
    BOOL LoadThresholdsFromDB(void);
    void DeleteFromDB(void);
 

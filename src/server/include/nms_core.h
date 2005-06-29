@@ -420,7 +420,7 @@ BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...);
 BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
 
-void SaveObjects(void);
+void SaveObjects(DB_HANDLE hdb);
 
 void QueueSQLRequest(char *szQuery);
 void StartDBWriter(void);

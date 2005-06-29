@@ -101,7 +101,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
 // Save subnet object to database
 //
 
-BOOL Subnet::SaveToDB(void)
+BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 {
    char szQuery[1024], szIpAddr[16], szNetMask[16];
    DB_RESULT hResult;
@@ -111,11 +111,11 @@ BOOL Subnet::SaveToDB(void)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM subnets WHERE id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -134,21 +134,21 @@ BOOL Subnet::SaveToDB(void)
                        "ip_netmask='%s',zone_guid=%ld WHERE id=%ld",
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
    sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%d", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO nsmap (subnet_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
-      DBQuery(g_hCoreDB, szQuery);
+      DBQuery(hdb, szQuery);
    }
    UnlockChildList();
 
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

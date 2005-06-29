@@ -148,7 +148,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
 // Save object to database
 //
 
-BOOL Template::SaveToDB(void)
+BOOL Template::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscDescr, szQuery[1024];
    DB_RESULT hResult;
@@ -158,11 +158,11 @@ BOOL Template::SaveToDB(void)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Check for object's existence in database
    _stprintf(szQuery, _T("SELECT id FROM templates WHERE id=%ld"), m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -179,26 +179,26 @@ BOOL Template::SaveToDB(void)
    else
       sprintf(szQuery, "UPDATE templates SET version=%ld,description='%s' WHERE id=%ld",
               m_dwVersion, pszEscDescr, m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
    free(pszEscDescr);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO dct_node_map (template_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
-      DBQuery(g_hCoreDB, szQuery);
+      DBQuery(hdb, szQuery);
    }
    UnlockChildList();
 
    // Save data collection items
    for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->SaveToDB();
+      m_ppItems[i]->SaveToDB(hdb);
 
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

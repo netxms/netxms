@@ -83,7 +83,7 @@ BOOL NetObj::CreateFromDB(DWORD dwId)
 // Save object to database
 //
 
-BOOL NetObj::SaveToDB(void)
+BOOL NetObj::SaveToDB(DB_HANDLE hdb)
 {
    return FALSE;     // Abstract objects cannot be saved to database
 }
@@ -143,7 +143,7 @@ BOOL NetObj::LoadCommonProperties(void)
 // Save common object properties to database
 //
 
-BOOL NetObj::SaveCommonProperties(void)
+BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
@@ -151,7 +151,7 @@ BOOL NetObj::SaveCommonProperties(void)
 
    // Save access options
    _sntprintf(szQuery, 512, _T("SELECT object_id FROM object_properties WHERE object_id=%ld"), m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -169,7 +169,7 @@ BOOL NetObj::SaveCommonProperties(void)
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp);
       DBFreeResult(hResult);
-      bResult = DBQuery(g_hCoreDB, szQuery);
+      bResult = DBQuery(hdb, szQuery);
    }
    return bResult;
 }
@@ -479,6 +479,17 @@ BOOL NetObj::LoadACLFromDB(void)
 
 
 //
+// Enumeration parameters structure
+//
+
+struct SAVE_PARAM
+{
+   DB_HANDLE hdb;
+   DWORD dwObjectId;
+};
+
+
+//
 // Handler for ACL elements enumeration
 //
 
@@ -487,8 +498,8 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
    char szQuery[256];
 
    sprintf(szQuery, "INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,%d)",
-           (DWORD)pArg, dwUserId, dwAccessRights);
-   DBQuery(g_hCoreDB, szQuery);
+           ((SAVE_PARAM *)pArg)->dwObjectId, dwUserId, dwAccessRights);
+   DBQuery(((SAVE_PARAM *)pArg)->hdb, szQuery);
 }
 
 
@@ -496,16 +507,19 @@ static void EnumerationHandler(DWORD dwUserId, DWORD dwAccessRights, void *pArg)
 // Save ACL to database
 //
 
-BOOL NetObj::SaveACLToDB(void)
+BOOL NetObj::SaveACLToDB(DB_HANDLE hdb)
 {
    char szQuery[256];
    BOOL bSuccess = FALSE;
+   SAVE_PARAM sp;
 
    // Save access list
    sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
-   if (DBQuery(g_hCoreDB, szQuery))
+   if (DBQuery(hdb, szQuery))
    {
-      m_pAccessList->EnumerateElements(EnumerationHandler, (void *)m_dwId);
+      sp.dwObjectId = m_dwId;
+      sp.hdb = hdb;
+      m_pAccessList->EnumerateElements(EnumerationHandler, &sp);
       bSuccess = TRUE;
    }
    return bSuccess;

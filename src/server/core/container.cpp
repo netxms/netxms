@@ -139,7 +139,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
 // Save object to database
 //
 
-BOOL Container::SaveToDB(void)
+BOOL Container::SaveToDB(DB_HANDLE hdb)
 {
    char szQuery[1024];
    DB_RESULT hResult;
@@ -149,11 +149,11 @@ BOOL Container::SaveToDB(void)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM containers WHERE id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -170,21 +170,21 @@ BOOL Container::SaveToDB(void)
       sprintf(szQuery, "UPDATE containers SET category=%ld,"
                        "description='%s',object_class=%d WHERE id=%ld",
               m_dwCategory, CHECK_NULL(m_pszDescription), Type(), m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
-      DBQuery(g_hCoreDB, szQuery);
+      DBQuery(hdb, szQuery);
    }
    UnlockChildList();
 
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;

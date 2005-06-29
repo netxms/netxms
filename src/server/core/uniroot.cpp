@@ -79,28 +79,28 @@ void UniversalRoot::LinkChildObjects(void)
 // Save object to database
 //
 
-BOOL UniversalRoot::SaveToDB(void)
+BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
 {
    char szQuery[1024];
    DWORD i;
 
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
       sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
-      DBQuery(g_hCoreDB, szQuery);
+      DBQuery(hdb, szQuery);
    }
    UnlockChildList();
 
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    UnlockData();

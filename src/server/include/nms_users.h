@@ -101,7 +101,7 @@ public:
 //
 
 BOOL LoadUsers(void);
-void SaveUsers(void);
+void SaveUsers(DB_HANDLE hdb);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);

@@ -48,12 +48,12 @@ Network::~Network()
 // Save object to database
 //
 
-BOOL Network::SaveToDB(void)
+BOOL Network::SaveToDB(DB_HANDLE hdb)
 {
    LockData();
 
-   SaveCommonProperties();
-   SaveACLToDB();
+   SaveCommonProperties(hdb);
+   SaveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;

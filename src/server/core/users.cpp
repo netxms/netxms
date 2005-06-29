@@ -163,7 +163,7 @@ BOOL LoadUsers(void)
 // Save user list to database
 //
 
-void SaveUsers(void)
+void SaveUsers(DB_HANDLE hdb)
 {
    DWORD i;
    char szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1];
@@ -176,9 +176,9 @@ void SaveUsers(void)
       {
          // Delete user record from database
          sprintf(szQuery, "DELETE FROM users WHERE id=%ld", g_pUserList[i].dwId);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
          sprintf(szQuery, "DELETE FROM user_profiles WHERE user_id=%ld", g_pUserList[i].dwId);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
 
          // Delete user record from memory
          g_dwNumUsers--;
@@ -195,7 +195,7 @@ void SaveUsers(void)
 
          // Check if user record exists in database
          sprintf(szQuery, "SELECT name FROM users WHERE id=%d", g_pUserList[i].dwId);
-         hResult = DBSelect(g_hCoreDB, szQuery);
+         hResult = DBSelect(hdb, szQuery);
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) != 0)
@@ -217,7 +217,7 @@ void SaveUsers(void)
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
                     g_pUserList[i].szFullName, g_pUserList[i].szDescription);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
       }
    }
    MutexUnlock(m_hMutexUserAccess);
@@ -230,9 +230,9 @@ void SaveUsers(void)
       {
          // Delete group record from database
          sprintf(szQuery, "DELETE FROM user_groups WHERE id=%d", g_pGroupList[i].dwId);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
          sprintf(szQuery, "DELETE FROM user_group_members WHERE group_id=%d", g_pGroupList[i].dwId);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
 
          // Delete group record from memory
          if (g_pGroupList[i].pMembers != NULL)
@@ -251,7 +251,7 @@ void SaveUsers(void)
 
          // Check if group record exists in database
          sprintf(szQuery, "SELECT name FROM user_groups WHERE id=%d", g_pGroupList[i].dwId);
-         hResult = DBSelect(g_hCoreDB, szQuery);
+         hResult = DBSelect(hdb, szQuery);
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) != 0)
@@ -271,19 +271,19 @@ void SaveUsers(void)
                              "VALUES (%d,'%s',%d,%d,'%s')",
                     g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
                     g_pGroupList[i].wFlags, g_pGroupList[i].szDescription);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
 
          if (bGroupExists)
          {
             sprintf(szQuery, "DELETE FROM user_group_members WHERE group_id=%d", g_pGroupList[i].dwId);
-            DBQuery(g_hCoreDB, szQuery);
+            DBQuery(hdb, szQuery);
          }
 
          for(DWORD j = 0; j < g_pGroupList[i].dwNumMembers; j++)
          {
             sprintf(szQuery, "INSERT INTO user_group_members (group_id, user_id) VALUES (%d, %d)",
                     g_pGroupList[i].dwId, g_pGroupList[i].pMembers[j]);
-            DBQuery(g_hCoreDB, szQuery);
+            DBQuery(hdb, szQuery);
          }
       }
    }

@@ -490,9 +490,9 @@ void NXCORE_EXPORTABLE Shutdown(void)
    ThreadJoin(m_thNodePollMgr);
    ThreadJoin(m_thSyncer);
 
-   SaveObjects();
+   SaveObjects(g_hCoreDB);
    DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
-   SaveUsers();
+   SaveUsers(g_hCoreDB);
    DbgPrintf(AF_DEBUG_MISC, "All users saved to database");
    StopDBWriter();
    DbgPrintf(AF_DEBUG_MISC, "Database writer stopped");

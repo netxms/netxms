@@ -126,7 +126,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
 // Save object to database
 //
 
-BOOL Zone::SaveToDB(void)
+BOOL Zone::SaveToDB(DB_HANDLE hdb)
 {
    BOOL bNewObject = TRUE;
    TCHAR *pszEscDescr, szIpAddr[16], szQuery[8192];
@@ -135,11 +135,11 @@ BOOL Zone::SaveToDB(void)
 
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
    
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM zones WHERE id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -160,22 +160,22 @@ BOOL Zone::SaveToDB(void)
                  m_dwZoneGUID, m_iZoneType,
                  IpToStr(m_dwControllerIpAddr, szIpAddr), pszEscDescr, m_dwId);
    free(pszEscDescr);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
 
    // Save ip address list
    _stprintf(szQuery, _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%ld"), m_dwId);
-   DBQuery(g_hCoreDB, szQuery);
+   DBQuery(hdb, szQuery);
    if (m_iZoneType == ZONE_TYPE_PASSIVE)
    {
       for(i = 0; i < m_dwAddrListSize; i++)
       {
          _stprintf(szQuery, _T("INSERT INTO zone_ip_addr_list (zone_id,ip_addr) VALUES (%ld,'%s')"),
                    m_dwId, IpToStr(m_pdwIpAddrList[i], szIpAddr));
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
       }
    }
    
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_bIsModified = FALSE;

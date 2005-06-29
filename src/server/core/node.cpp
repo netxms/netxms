@@ -223,7 +223,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 // Save object to database
 //
 
-BOOL Node::SaveToDB(void)
+BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscDescr, *pszEscVersion, *pszEscPlatform;
    TCHAR szQuery[4096], szIpAddr[16];
@@ -234,11 +234,11 @@ BOOL Node::SaveToDB(void)
    // Lock object's access
    LockData();
 
-   SaveCommonProperties();
+   SaveCommonProperties(hdb);
 
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM nodes WHERE id=%ld", m_dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -276,7 +276,7 @@ BOOL Node::SaveToDB(void)
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
                m_szObjectId, pszEscDescr, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID, m_dwId);
-   bResult = DBQuery(g_hCoreDB, szQuery);
+   bResult = DBQuery(hdb, szQuery);
    free(pszEscDescr);
    free(pszEscVersion);
    free(pszEscPlatform);
@@ -287,11 +287,11 @@ BOOL Node::SaveToDB(void)
       DWORD i;
 
       for(i = 0; i < m_dwNumItems; i++)
-         m_ppItems[i]->SaveToDB();
+         m_ppItems[i]->SaveToDB(hdb);
    }
 
    // Save access list
-   SaveACLToDB();
+   SaveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
    m_bIsModified = FALSE;
