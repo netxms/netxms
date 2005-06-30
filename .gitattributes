@@ -949,6 +949,7 @@ www/data/menu.shtml -text
 www/data/news.shtml -text
 www/data/prosimii-print.css -text
 www/data/prosimii-screen.css -text
+www/data/rss.gif -text
 www/data/screenshots/body.shtml -text
 www/data/screenshots/index.shtml -text
 www/data/screenshots/netxms_console_01.png -text

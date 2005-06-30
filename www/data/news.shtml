@@ -7,7 +7,7 @@
 	<!--#include virtual="/header.shtml" -->
 
 	<div id="main-copy">
-		<h1>Latest news</h1>
+		<h1>Latest news <a href="/cgi-bin/news.pl?rss=yes"><img border="0" src="/rss.gif" /></h1>
 		<!--#include virtual="/cgi-bin/news.pl" -->
 	</div>
 

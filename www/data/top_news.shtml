@@ -1,5 +1,5 @@
 <div class="oneThird">
-  <h1>Latest News</h1>
+	<h1>Latest news <a href="/cgi-bin/news.pl?rss=yes"><img border="0" src="/rss.gif" /></a></h1>
   
   <!--#include virtual="/cgi-bin/news.pl?count=3&cut" -->
 
