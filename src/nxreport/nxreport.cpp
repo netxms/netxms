@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 	      if (gs_bDebug)
    	      NXCSetDebugCallback(DebugCallback);
 
-      	dwResult = NXCConnect(szServer, szLogin, szPassword, &gs_hSession, FALSE);
+      	dwResult = NXCConnect(szServer, szLogin, szPassword, &gs_hSession, FALSE, FALSE);
 			if (dwResult != RCC_SUCCESS)
 			{
 				_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));\
