@@ -43,7 +43,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEhIRsSUv"
+#define VALID_OPTIONS   "c:CdDEhHIRsSUv"
 #elif defined(_NETWARE)
 #define VALID_OPTIONS   "c:CDhv"
 #else
@@ -151,6 +151,7 @@ static char m_szHelpText[] =
    "   -D         : Turn on debug output\n"
    "   -h         : Display help and exit\n"
 #ifdef _WIN32
+   "   -H         : Hide agent's window when in standalone mode\n"
    "   -I         : Install Windows service\n"
    "   -R         : Remove Windows service\n"
    "   -s         : Start Windows servive\n"
@@ -161,6 +162,31 @@ static char m_szHelpText[] =
 
 
 #ifdef _WIN32
+
+//
+// Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
+//
+
+static HWND GetConsoleHWND(void)
+{
+	HWND hWnd;
+	DWORD wpid, cpid;
+
+   cpid = GetCurrentProcessId();
+   while(1)
+   {
+	   hWnd = FindWindowEx(NULL, NULL, _T("ConsoleWindowClass"), NULL);
+      if (hWnd == NULL)
+         break;
+	   
+      GetWindowThreadProcessId(hWnd, &wpid);
+	   if (cpid == wpid)
+         break;
+   }
+
+	return hWnd;
+}
+
 
 //
 // Get proc address and write log file
@@ -510,14 +536,26 @@ void Main(void)
    else
    {
 #if defined(_WIN32)
-      printf("Agent running. Press ESC to shutdown.\n");
-      while(1)
+      if (g_dwFlags & AF_HIDE_WINDOW)
       {
-         if (getch() == 27)
-            break;
+         HWND hWnd;
+
+         hWnd = GetConsoleHWND();
+         if (hWnd != NULL)
+            ShowWindow(hWnd, SW_HIDE);
+         ConditionWait(m_hCondShutdown, INFINITE);
       }
-      printf("Agent shutting down...\n");
-      Shutdown();
+      else
+      {
+         printf("Agent running. Press ESC to shutdown.\n");
+         while(1)
+         {
+            if (getch() == 27)
+               break;
+         }
+         printf("Agent shutting down...\n");
+         Shutdown();
+      }
 #elif defined(_NETWARE)
       printf("Agent running. Type UNLOAD NXAGENTD on the system console for shutdown.\n");
       ConditionWait(m_hCondShutdown, INFINITE);
@@ -577,6 +615,9 @@ int main(int argc, char *argv[])
             iAction = ACTION_NONE;
             break;
 #ifdef _WIN32
+         case 'H':   // Hide window
+            g_dwFlags |= AF_HIDE_WINDOW;
+            break;
          case 'I':   // Install Windows service
             iAction = ACTION_INSTALL_SERVICE;
             break;
