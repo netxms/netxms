@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.91 2005-06-29 10:41:16 alk Exp $
+# $Id: configure.ac,v 1.92 2005-07-04 17:16:10 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -165,6 +165,7 @@ SUBAGENT_DIRS=""
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
+	BUILD_AGENT=yes
 	MODULES="$MODULES agent"
 	case `uname -s` in
 		Linux)
@@ -200,22 +201,33 @@ AC_ARG_WITH(nxsm,
 ])
 
 AC_ARG_WITH(openssl,
-[AS_HELP_STRING(--with-openssl,enable encryption)],
-[ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-	else
-		LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
+	[AS_HELP_STRING(--without-openssl,Disable encryption)],
+	[],
+	[with_openssl=yes])
+
+AC_ARG_WITH(openssl,
+	[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
+	[
+	if test "x$withval" != "xno"; then
+		if test "x$withval" != "xno" ; then
+			if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+				LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+				LDFLAGS="$LDFLAGS -L${withval}/lib"
+				CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			else
+				LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+				LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
+				CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
+			fi
+			with_openssl="yes"
+			AC_DEFINE(WITH_OPENSSL,,[with openssl])
+			AC_CHECK_LIB(crypto, RSA_new, ,
+				[AC_MSG_ERROR(libcrypto is required for encryption support)])
+		fi
 	fi
-	with_openssl="yes"
-	AC_DEFINE(WITH_OPENSSL,,[with openssl])
-	AC_CHECK_LIB(crypto, RSA_new, ,
-		[AC_MSG_ERROR(libcrypto is required for encryption support)])
-fi ])
+	],
+)
+
 
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
@@ -499,3 +511,42 @@ sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.n
 #   mv libtool.new libtool
 #   chmod 755 libtool
 #fi
+
+
+
+###########################
+#
+echo
+echo
+echo
+echo '---------------------------------------------------------------------'
+echo '                         Configure results'
+echo '---------------------------------------------------------------------'
+echo
+	echo "Prefix              : ${prefix}"
+if test "x${BUILD_SERVER}" = "xyes"; then
+	echo "Build Server        : YES"
+else
+	echo "Build Server        : NO"
+fi
+if test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"; then
+	echo "Encryption enabled  : YES"
+else
+	echo "Encryption enabled  : NO"
+fi
+if test "x${DB_DRIVERS}" != "x"; then
+	echo "Build DB-Drivers    : ${DB_DRIVERS}"
+else
+	echo "Build DB-Drivers    : NO"
+fi
+if test "x${BUILD_CLIENT}" = "xyes"; then
+	echo "Build Clients       : YES"
+else
+	echo "Build Clients       : NO"
+fi
+if test "x${BUILD_AGENT}" = "xyes"; then
+	echo "Build Agent         : YES"
+	echo "Subagents list      : ${SUBAGENT_DIRS}"
+else
+	echo "Build Agent         : NO"
+fi
