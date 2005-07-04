@@ -1246,3 +1246,45 @@ DWORD LIBNXCL_EXPORTABLE NXCChangeNodeIP(NXC_SESSION hSession, DWORD dwNodeId, D
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 300000);
 }
+
+
+//
+// Read agent's configuration file
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
+                                           TCHAR **ppszConfig)
+{
+   CSCPMessage msg, *pResponce;
+   DWORD dwRqId, dwRetCode;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   *ppszConfig = NULL;
+
+   // Build request message
+   msg.SetCode(CMD_GET_AGENT_CONFIG);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   // Wait for responce
+   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 30000);
+   if (pResponce != NULL)
+   {
+      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         *ppszConfig = pResponce->GetVariableStr(VID_CONFIG_FILE);
+      }
+      delete pResponce;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
+}
