@@ -522,6 +522,7 @@ typedef struct
 #define VID_CIPHER                  ((DWORD)156)
 #define VID_KEY_LENGTH              ((DWORD)157)
 #define VID_SESSION_IV              ((DWORD)158)
+#define VID_CONFIG_FILE             ((DWORD)159)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

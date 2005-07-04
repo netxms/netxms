@@ -228,6 +228,7 @@ private:
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
 
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
+   void GetConfig(CSCPMessage *pMsg);
    void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);

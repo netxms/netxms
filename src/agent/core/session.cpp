@@ -363,6 +363,12 @@ void CommSession::ProcessingThread(void)
                msg.SetVariable(VID_RCC, ERR_SUCCESS);
                GetParameterList(&msg);
                break;
+            case CMD_GET_AGENT_CONFIG:
+               GetConfig(&msg);
+               break;
+            case CMD_UPDATE_AGENT_CONFIG:
+               msg.SetVariable(VID_RCC, ERR_NOT_IMPLEMENTED);
+               break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))
@@ -583,5 +589,23 @@ DWORD CommSession::Upgrade(CSCPMessage *pRequest)
    else
    {
       return ERR_ACCESS_DENIED;
+   }
+}
+
+
+//
+// Get agent's configuration file
+//
+
+void CommSession::GetConfig(CSCPMessage *pMsg)
+{
+   if (m_bInstallationServer)
+   {
+      pMsg->SetVariable(VID_RCC, 
+         pMsg->SetVariableFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
+   }
+   else
+   {
+      pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
    }
 }

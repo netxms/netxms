@@ -949,11 +949,11 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
    DWORD i, dwId, dwRqId, dwResult;
    CSCPMessage msg, *pResponce;
 
-   if (!m_bIsConnected)
-      return ERR_NOT_CONNECTED;
-
    *pdwNumParams = 0;
    *ppParamList = NULL;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
 
    dwRqId = m_dwRequestId++;
 
@@ -962,7 +962,6 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
 
    if (SendMessage(&msg))
    {
-      // Wait up to 90 seconds for results
       pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
       if (pResponce != NULL)
       {
@@ -1047,4 +1046,71 @@ DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
 #else
    return ERR_NOT_IMPLEMENTED;
 #endif
+}
+
+
+//
+// Get configuration file from agent
+//
+
+DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
+{
+   DWORD i, dwRqId, dwResult;
+   CSCPMessage msg, *pResponce;
+#ifdef UNICODE
+   BYTE *pBuffer;
+#endif
+
+   *ppszConfig = NULL;
+   *pdwSize = 0;
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
+
+   dwRqId = m_dwRequestId++;
+
+   msg.SetCode(CMD_GET_AGENT_CONFIG);
+   msg.SetId(dwRqId);
+
+   if (SendMessage(&msg))
+   {
+      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (pResponce != NULL)
+      {
+         dwResult = pResponce->GetVariableLong(VID_RCC);
+         if (dwResult == ERR_SUCCESS)
+         {
+            *pdwSize = pResponce->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
+            *ppszConfig = (TCHAR *)malloc((*pdwSize + 1) * sizeof(TCHAR));
+#ifdef UNICODE
+            pBuffer = (BYTE *)malloc(*pdwSize + 1);
+            pResponce->GetVariableBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pBuffer, *pdwSize, *ppszConfig, *pdwSize);
+            free(pBuffer);
+#else
+            pResponce->GetVariableBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
+#endif
+            (*ppszConfig)[*pdwSize] = 0;
+
+            // We expect text file, so replace all non-printable characters with spaces
+            for(i = 0; i < *pdwSize; i++)
+               if (((*ppszConfig)[i] < _T(' ')) && 
+                   ((*ppszConfig)[i] != _T('\t')) &&
+                   ((*ppszConfig)[i] != _T('\r')) &&
+                   ((*ppszConfig)[i] != _T('\n')))
+                  (*ppszConfig)[i] = _T(' ');
+         }
+         delete pResponce;
+      }
+      else
+      {
+         dwResult = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      dwResult = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwResult;
 }

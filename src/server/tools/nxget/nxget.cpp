@@ -41,6 +41,7 @@
 #define CMD_LIST           1
 #define CMD_CHECK_SERVICE  2
 #define CMD_GET_PARAMS     3
+#define CMD_GET_CONFIG     4
 
 
 //
@@ -153,6 +154,38 @@ static int ListParameters(AgentConnection *pConn)
 
 
 //
+// Get configuration file
+//
+
+static int GetConfig(AgentConnection *pConn)
+{
+   DWORD dwError, dwSize;
+   TCHAR *pszFile;
+
+   dwError = pConn->GetConfigFile(&pszFile, &dwSize);
+   if (dwError == ERR_SUCCESS)
+   {
+      TranslateStr(pszFile, "\r\n", "\n");
+      fputs(pszFile, stdout);
+      if (dwSize > 0)
+      {
+         if (pszFile[dwSize - 1] != '\n')
+            fputc('\n', stdout);
+      }
+      else
+      {
+         fputc('\n', stdout);
+      }
+   }
+   else
+   {
+      printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
+   }
+   return (dwError == ERR_SUCCESS) ? 0 : 1;
+}
+
+
+//
 // Startup
 //
 
@@ -175,7 +208,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:be:hi:IK:lnp:P:qr:R:s:S:t:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:bCe:hi:IK:lnp:P:qr:R:s:S:t:vw:")) != -1)
    {
       switch(ch)
       {
@@ -185,6 +218,7 @@ int main(int argc, char *argv[])
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
                    "   -b           : Batch mode - get all parameters listed on command line.\n"
+                   "   -C           : Get agent's configuration file\n"
 #ifdef _WITH_ENCRYPTION
                    "   -e <policy>  : Set encryption policy. Possible values are:\n"
                    "                    0 = Encryption disabled;\n"
@@ -248,6 +282,9 @@ int main(int argc, char *argv[])
             break;
          case 'I':
             iCommand = CMD_GET_PARAMS;
+            break;
+         case 'C':
+            iCommand = CMD_GET_CONFIG;
             break;
          case 'l':
             iCommand = CMD_LIST;
@@ -359,7 +396,7 @@ int main(int argc, char *argv[])
    // Check parameter correctness
    if (bStart)
    {
-      if (argc - optind < (((iCommand == CMD_CHECK_SERVICE) || (iCommand == CMD_GET_PARAMS)) ? 1 : 2))
+      if (argc - optind < (((iCommand == CMD_CHECK_SERVICE) || (iCommand == CMD_GET_PARAMS) || (iCommand == CMD_GET_CONFIG)) ? 1 : 2))
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
          bStart = FALSE;
@@ -434,6 +471,9 @@ int main(int argc, char *argv[])
                         break;
                      case CMD_GET_PARAMS:
                         iExitCode = ListParameters(&conn);
+                        break;
+                     case CMD_GET_CONFIG:
+                        iExitCode = GetConfig(&conn);
                         break;
                      default:
                         break;

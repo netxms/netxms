@@ -94,9 +94,10 @@ public:
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
    void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, CSCP_DT_INT64, &qwValue); }
    void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, CSCP_DT_FLOAT, &dValue); }
-   void SetVariable(DWORD dwVarId, TCHAR *szValue) { Set(dwVarId, CSCP_DT_STRING, szValue); }
+   void SetVariable(DWORD dwVarId, TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
    void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
+   BOOL SetVariableFromFile(DWORD dwVarId, TCHAR *pszFileName);
 
    DWORD GetVariableLong(DWORD dwVarId);
    QWORD GetVariableInt64(DWORD dwVarId);
