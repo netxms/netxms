@@ -36,7 +36,9 @@
 #include <config.h>
 #endif
 #else    /* _WIN32 */
+#ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
+#endif
 #endif
 
 #include <unicode.h>
