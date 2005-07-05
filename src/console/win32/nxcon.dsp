@@ -113,6 +113,10 @@ SOURCE=.\AddrChangeDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AgentCfgEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AgentParamSelDlg.cpp
 # End Source File
 # Begin Source File
@@ -467,6 +471,10 @@ SOURCE=.\ActionSelDlg.h
 # Begin Source File
 
 SOURCE=.\AddrChangeDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\AgentCfgEditor.h
 # End Source File
 # Begin Source File
 

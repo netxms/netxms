@@ -207,6 +207,7 @@ public:
 	void DeleteNetXMSObject(NXC_OBJECT *pObject);
 	void CreateNode(DWORD dwParent);
 	void CreateContainer(DWORD dwParent);
+	void EditAgentConfig(NXC_OBJECT *pNode);
    NXC_EPP *m_pEventPolicy;
 
 	CMDIChildWnd *ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, NXC_DCI **ppItemList,

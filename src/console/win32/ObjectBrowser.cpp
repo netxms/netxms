@@ -207,6 +207,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_UNBIND, OnObjectUnbind)
 	ON_COMMAND(ID_OBJECT_CHANGEIPADDRESS, OnObjectChangeipaddress)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_CHANGEIPADDRESS, OnUpdateObjectChangeipaddress)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_AGENTCFG, OnUpdateObjectAgentcfg)
+	ON_COMMAND(ID_OBJECT_AGENTCFG, OnObjectAgentcfg)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1245,6 +1247,11 @@ void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI)
                      (m_wndListCtrl.GetSelectedCount() == 1));
 }
 
+void CObjectBrowser::OnUpdateObjectAgentcfg(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
+}
+
 void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(CurrObjectIsNode(TRUE));
@@ -1756,4 +1763,15 @@ LRESULT CObjectBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
               m_dwFlags, m_dwSortMode, 
               (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
    return 1;
+}
+
+
+//
+// Edit agent's configuration file
+//
+
+void CObjectBrowser::OnObjectAgentcfg() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.EditAgentConfig(m_pCurrentObject);
 }

@@ -245,6 +245,8 @@ BEGIN
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
         MENUITEM SEPARATOR
+        MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
+        MENUITEM SEPARATOR
         MENUITEM "Appl&y...",                   ID_OBJECT_APPLY
         MENUITEM SEPARATOR
         MENUITEM "&Manage object(s)\tCtrl+M",   ID_OBJECT_MANAGE
@@ -355,6 +357,8 @@ BEGIN
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
         MENUITEM SEPARATOR
         MENUITEM "Appl&y...",                   ID_OBJECT_APPLY
         MENUITEM SEPARATOR
@@ -467,6 +471,8 @@ BEGIN
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
         MENUITEM SEPARATOR
         MENUITEM "Appl&y...",                   ID_OBJECT_APPLY
         MENUITEM SEPARATOR
@@ -2356,6 +2362,7 @@ BEGIN
     IDR_ACTION_EDITOR       "\nAction Configuration\nAction Configuration"
     IDR_NODE_POLLER         "\nPoll Node\nPoll Node"
     IDR_TRAP_EDITOR         "\nSNMP Trap Configuration\nSNMP Trap Configuration"
+    IDR_AGENT_CFG_EDITOR    "\nAgent Configuration\nAgent Configuration"
 END
 
 STRINGTABLE DISCARDABLE 

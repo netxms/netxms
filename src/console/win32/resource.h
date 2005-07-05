@@ -28,6 +28,7 @@
 #define ID_HEADER_CTRL                  115
 #define ID_SIZEBOX                      118
 #define ID_PROGRESS_CTRL                120
+#define ID_EDIT_CTRL                    121
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -60,6 +61,7 @@
 #define IDR_TRAP_EDITOR                 155
 #define IDI_SORT_UP                     156
 #define IDA_PACKAGE_MGR                 156
+#define IDR_AGENT_CFG_EDITOR            156
 #define IDI_SORT_DOWN                   157
 #define IDD_OBJECT_NODE_GENERAL         159
 #define IDD_OBJECT_CAPS                 160
@@ -515,6 +517,7 @@
 #define ID_OBJECT_CHANGEIPADDRESS       32930
 #define ID_LASTVALUES_PROPERTIES        32931
 #define ID_DESKTOP_NEW                  32933
+#define ID_OBJECT_AGENTCFG              32934
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -524,8 +527,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        274
-#define _APS_NEXT_COMMAND_VALUE         32934
+#define _APS_NEXT_COMMAND_VALUE         32935
 #define _APS_NEXT_CONTROL_VALUE         1265
-#define _APS_NEXT_SYMED_VALUE           121
+#define _APS_NEXT_SYMED_VALUE           122
 #endif
 #endif

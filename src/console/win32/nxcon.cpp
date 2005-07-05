@@ -20,6 +20,7 @@
 #include "ObjectPropsRelations.h"
 #include "RemoveTemplateDlg.h"
 #include "AddrChangeDlg.h"
+#include "AgentCfgEditor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1845,4 +1846,18 @@ CMDIChildWnd *CConsoleApp::ShowObjectBrowser(TCHAR *pszParams)
       }
    }
    return pWnd;
+}
+
+
+//
+// Edit agent's configuration file
+//
+
+void CConsoleApp::EditAgentConfig(NXC_OBJECT *pNode)
+{
+   CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CAgentCfgEditor *pWnd;
+
+   pWnd = new CAgentCfgEditor(pNode->dwId);
+   CreateChildFrameWithSubtitle(pWnd, IDR_AGENT_CFG_EDITOR, pNode->szName, m_hMDIMenu, m_hMDIAccel);
 }
