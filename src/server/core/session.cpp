@@ -809,6 +809,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_REQUEST_ENCRYPTION:
             SetupEncryption(pMsg->GetId());
             break;
+         case CMD_GET_AGENT_CONFIG:
+            GetAgentConfig(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -4585,5 +4588,75 @@ void ClientSession::SetupEncryption(DWORD dwRqId)
    msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
+   SendMessage(&msg);
+}
+
+
+//
+// Get agent's configuration file
+//
+
+void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwResult, dwSize;
+   TCHAR *pszConfig;
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check prerequisites
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            AgentConnection *pConn;
+
+            pConn = ((Node *)pObject)->CreateAgentConnection();
+            if (pConn != NULL)
+            {
+               dwResult = pConn->GetConfigFile(&pszConfig, &dwSize);
+               delete pConn;
+               switch(dwResult)
+               {
+                  case ERR_SUCCESS:
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                     msg.SetVariable(VID_CONFIG_FILE, pszConfig);
+                     free(pszConfig);
+                     break;
+                  case ERR_ACCESS_DENIED:
+                     msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                     break;
+                  default:
+                     msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+                     break;
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send responce
    SendMessage(&msg);
 }
