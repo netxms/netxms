@@ -169,6 +169,10 @@ SOURCE=.\DataCollectionEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DataExportDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DataQueryDlg.cpp
 # End Source File
 # Begin Source File
@@ -523,6 +527,10 @@ SOURCE=.\CreateTGDlg.h
 # Begin Source File
 
 SOURCE=.\DataCollectionEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DataExportDlg.h
 # End Source File
 # Begin Source File
 

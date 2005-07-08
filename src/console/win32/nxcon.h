@@ -189,6 +189,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void ExportDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom, DWORD dwTimeTo, int iSeparator, int iTimeStampFormat, const TCHAR *pszFile);
 	CMDIChildWnd *ShowObjectBrowser(TCHAR *pszParams = NULL);
 	void ChangeNodeAddress(DWORD dwNodeId);
 	void UnbindObject(NXC_OBJECT *pObject);

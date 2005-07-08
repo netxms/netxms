@@ -288,6 +288,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Show data\tCtrl+S",          ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
+        MENUITEM "E&xport data...",             ID_ITEM_EXPORTDATA
     END
     POPUP "&Policy"
     BEGIN
@@ -432,6 +433,7 @@ BEGIN
     BEGIN
         MENUITEM "&Show history\tCtrl+S",       ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
+        MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
         MENUITEM SEPARATOR
         MENUITEM "&Properties...\tAlt+P",       ID_LASTVALUES_PROPERTIES
     END
@@ -504,6 +506,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Show data",                  ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
+        MENUITEM "E&xport data...",             ID_ITEM_EXPORTDATA
     END
     POPUP "Policy (rule)"
     BEGIN
@@ -662,6 +665,7 @@ BEGIN
     BEGIN
         MENUITEM "&Show history",               ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
+        MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_LASTVALUES_PROPERTIES
     END
@@ -1821,6 +1825,47 @@ BEGIN
     LTEXT           "seconds",IDC_STATIC_SEC,99,22,28,8
 END
 
+IDD_DCI_DATA_EXPORT DIALOG DISCARDABLE  0, 0, 302, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Export Collected Data"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_FILE,7,17,136,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BROWSE,147,17,14,14
+    CONTROL         "&Tab",IDC_RADIO_TAB,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,12,51,29,10
+    CONTROL         "&Space",IDC_RADIO_SPACE,"Button",BS_AUTORADIOBUTTON,12,
+                    63,37,10
+    CONTROL         "&Comma",IDC_RADIO_COMMA,"Button",BS_AUTORADIOBUTTON,50,
+                    51,39,10
+    CONTROL         "S&emicolon",IDC_RADIO_SEMICOLON,"Button",
+                    BS_AUTORADIOBUTTON,49,63,49,10
+    CONTROL         "&Raw",IDC_RADIO_RAW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,112,51,31,10
+    CONTROL         "Te&xt",IDC_RADIO_TEXT,"Button",BS_AUTORADIOBUTTON,112,
+                    63,30,10
+    CONTROL         "DateTimePicker1",IDC_DATE_FROM,"SysDateTimePick32",
+                    DTS_RIGHTALIGN | DTS_APPCANPARSE | WS_TABSTOP,176,29,62,
+                    15
+    CONTROL         "DateTimePicker2",IDC_TIME_FROM,"SysDateTimePick32",
+                    DTS_RIGHTALIGN | DTS_UPDOWN | DTS_APPCANPARSE | 
+                    WS_TABSTOP | 0x8,242,29,46,15
+    CONTROL         "DateTimePicker1",IDC_DATE_TO,"SysDateTimePick32",
+                    DTS_RIGHTALIGN | DTS_APPCANPARSE | WS_TABSTOP,176,58,62,
+                    15
+    CONTROL         "DateTimePicker2",IDC_TIME_TO,"SysDateTimePick32",
+                    DTS_RIGHTALIGN | DTS_UPDOWN | DTS_APPCANPARSE | 
+                    WS_TABSTOP | 0x8,242,58,46,15
+    DEFPUSHBUTTON   "OK",IDOK,188,88,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,245,88,50,14
+    LTEXT           "File name",IDC_STATIC,7,7,31,8
+    LTEXT           "From",IDC_STATIC_FROM,176,18,16,8
+    LTEXT           "To",IDC_STATIC_TO,176,47,10,8
+    GROUPBOX        "Field separator",IDC_STATIC,7,39,93,40
+    GROUPBOX        "Time frame",IDC_STATIC,170,7,125,72
+    GROUPBOX        "Time stamp",IDC_STATIC,105,39,57,40
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2239,6 +2284,14 @@ BEGIN
         RIGHTMARGIN, 185
         TOPMARGIN, 7
         BOTTOMMARGIN, 48
+    END
+
+    IDD_DCI_DATA_EXPORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 295
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 102
     END
 END
 #endif    // APSTUDIO_INVOKED

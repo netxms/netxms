@@ -405,6 +405,8 @@ src/console/win32/DCITransformPage.cpp -text
 src/console/win32/DCITransformPage.h -text
 src/console/win32/DataCollectionEditor.cpp -text
 src/console/win32/DataCollectionEditor.h -text
+src/console/win32/DataExportDlg.cpp -text
+src/console/win32/DataExportDlg.h -text
 src/console/win32/DataQueryDlg.cpp -text
 src/console/win32/DataQueryDlg.h -text
 src/console/win32/DebugFrame.cpp -text

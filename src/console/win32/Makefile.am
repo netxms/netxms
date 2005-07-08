@@ -11,6 +11,7 @@
 SUBDIRS = res icons
 EXTRA_DIST = \
 	ActionEditor.cpp ActionEditor.h ActionSelDlg.cpp ActionSelDlg.h \
+	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	comm.cpp \
 	ColorSelector.cpp ColorSelector.h \
@@ -22,6 +23,7 @@ EXTRA_DIST = \
 	CreateTemplateDlg.cpp CreateTemplateDlg.h \
 	CreateTGDlg.cpp CreateTGDlg.h \
 	DataCollectionEditor.cpp DataCollectionEditor.h \
+	DataExportDlg.cpp DataExportDlg.h \
 	DataQueryDlg.cpp DataQueryDlg.h \
 	DCIDataView.cpp DCIDataView.h \
 	DCIPropPage.cpp DCIPropPage.h \

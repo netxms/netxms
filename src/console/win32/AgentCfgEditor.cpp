@@ -70,9 +70,11 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    cf.cbSize = sizeof(CHARFORMAT);
    cf.dwMask = CFM_FACE | CFM_BOLD;
    cf.dwEffects = 0;
+   cf.bPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
    _tcscpy(cf.szFaceName, _T("Courier"));
    m_wndEdit.SetDefaultCharFormat(cf);
    m_wndEdit.SetSelectionCharFormat(cf);
+   m_wndEdit.SetWordCharFormat(cf);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	

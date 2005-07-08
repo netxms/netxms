@@ -164,6 +164,7 @@
 #define IDD_REMOVE_TEMPLATE             271
 #define IDD_CHANGE_IP                   272
 #define IDD_LASTVAL_PROP                273
+#define IDD_DCI_DATA_EXPORT             274
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -239,6 +240,7 @@
 #define IDC_RADIO_NOT_SUPPORTED         1068
 #define IDC_RADIO_MSG                   1068
 #define IDC_RADIO_EVENT                 1068
+#define IDC_RADIO_TEXT                  1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
@@ -302,6 +304,7 @@
 #define IDC_RADIO_EMAIL                 1149
 #define IDC_RADIO4                      1150
 #define IDC_RADIO_SMS                   1150
+#define IDC_RADIO_SEMICOLON             1150
 #define IDC_LIST_ACTIONS                1152
 #define IDC_COMBO_CATEGORY              1154
 #define IDC_ICON_PARENT                 1155
@@ -403,6 +406,12 @@
 #define IDC_STATIC_SUBJ                 1262
 #define IDC_STATIC_DATA                 1263
 #define IDC_CHECK_ENCRYPT               1264
+#define IDC_EDIT_FILE                   1265
+#define IDC_BROWSE                      1266
+#define IDC_RADIO_TAB                   1269
+#define IDC_RADIO_SPACE                 1270
+#define IDC_RADIO_COMMA                 1271
+#define IDC_RADIO_RAW                   1272
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -518,6 +527,7 @@
 #define ID_LASTVALUES_PROPERTIES        32931
 #define ID_DESKTOP_NEW                  32933
 #define ID_OBJECT_AGENTCFG              32934
+#define ID_ITEM_EXPORTDATA              32937
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -526,9 +536,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        274
-#define _APS_NEXT_COMMAND_VALUE         32935
-#define _APS_NEXT_CONTROL_VALUE         1265
+#define _APS_NEXT_RESOURCE_VALUE        275
+#define _APS_NEXT_COMMAND_VALUE         32939
+#define _APS_NEXT_CONTROL_VALUE         1273
 #define _APS_NEXT_SYMED_VALUE           122
 #endif
 #endif

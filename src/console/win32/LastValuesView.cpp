@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "LastValuesView.h"
 #include "LastValuesPropDlg.h"
+#include "DataExportDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -67,6 +68,8 @@ BEGIN_MESSAGE_MAP(CLastValuesView, CMDIChildWnd)
 	ON_COMMAND(ID_LASTVALUES_PROPERTIES, OnLastvaluesProperties)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
+	ON_UPDATE_COMMAND_UI(ID_ITEM_EXPORTDATA, OnUpdateItemExportdata)
+	ON_COMMAND(ID_ITEM_EXPORTDATA, OnItemExportdata)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
@@ -335,6 +338,11 @@ void CLastValuesView::OnUpdateItemShowdata(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
+void CLastValuesView::OnUpdateItemExportdata(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
 
 //
 // WM_CONTEXTMENU message handler
@@ -423,4 +431,27 @@ void CLastValuesView::OnDestroy()
       KillTimer(m_nTimer);
 
 	CMDIChildWnd::OnDestroy();
+}
+
+void CLastValuesView::OnItemExportdata() 
+{
+   CDataExportDlg dlg;
+   DWORD dwItemId, dwTimeFrom, dwTimeTo;
+
+   dwItemId = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+   if (dlg.DoModal() == IDOK)
+   {
+      dlg.SaveLastSelection();
+      dwTimeFrom = CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
+                         dlg.m_dateFrom.GetDay(), dlg.m_timeFrom.GetHour(),
+                         dlg.m_timeFrom.GetMinute(),
+                         dlg.m_timeFrom.GetSecond(), -1).GetTime();
+      dwTimeTo = CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
+                       dlg.m_dateTo.GetDay(), dlg.m_timeTo.GetHour(),
+                       dlg.m_timeTo.GetMinute(),
+                       dlg.m_timeTo.GetSecond(), -1).GetTime();
+      theApp.ExportDCIData(m_dwNodeId, dwItemId, dwTimeFrom, dwTimeTo,
+                           dlg.m_iSeparator, dlg.m_iTimeStampFormat,
+                           (LPCTSTR)dlg.m_strFileName);
+   }
 }

@@ -71,6 +71,8 @@ protected:
 	afx_msg void OnLastvaluesProperties();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnDestroy();
+	afx_msg void OnUpdateItemExportdata(CCmdUI* pCmdUI);
+	afx_msg void OnItemExportdata();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
 	DECLARE_MESSAGE_MAP()

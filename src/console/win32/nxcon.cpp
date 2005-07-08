@@ -1861,3 +1861,101 @@ void CConsoleApp::EditAgentConfig(NXC_OBJECT *pNode)
    pWnd = new CAgentCfgEditor(pNode->dwId);
    CreateChildFrameWithSubtitle(pWnd, IDR_AGENT_CFG_EDITOR, pNode->szName, m_hMDIMenu, m_hMDIAccel);
 }
+
+
+//
+// Worker function for DCI data export
+//
+
+static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
+                          DWORD dwTimeTo, int iSeparator, int iTimeStampFormat,
+                          const TCHAR *pszFile)
+{
+   DWORD i, dwResult;
+   NXC_DCI_DATA *pData;
+   NXC_DCI_ROW *pRow;
+   int hFile;
+   char szBuffer[MAX_DB_STRING];
+   static char separator[4] = { '\t', ' ', ',', ';' };
+
+   dwResult = NXCGetDCIData(g_hSession, dwNodeId, dwItemId, 0, dwTimeFrom,
+                            dwTimeTo, &pData);
+   if (dwResult == RCC_SUCCESS)
+   {
+      hFile = _topen(pszFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+      if (hFile != -1)
+      {
+         pRow = pData->pRows;
+         for(i = 0; i < pData->dwNumRows; i++)
+         {
+            switch(iTimeStampFormat)
+            {
+               case 0:  // RAW
+                  sprintf(szBuffer, "%lu", pRow->dwTimeStamp);
+                  break;
+               case 1:  // Text
+                  FormatTimeStamp(pRow->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME);
+                  break;
+               default:
+                  strcpy(szBuffer, "<internal error>");
+                  break;
+            }
+            write(hFile, szBuffer, strlen(szBuffer));
+            write(hFile, &separator[iSeparator], 1);
+            switch(pData->wDataType)
+            {
+               case DCI_DT_STRING:
+                  write(hFile, pRow->value.szString, strlen(pRow->value.szString));
+                  break;
+               case DCI_DT_INT:
+                  sprintf(szBuffer, "%ld", pRow->value.dwInt32);
+                  write(hFile, szBuffer, strlen(szBuffer));
+                  break;
+               case DCI_DT_UINT:
+                  sprintf(szBuffer, "%lu", pRow->value.dwInt32);
+                  write(hFile, szBuffer, strlen(szBuffer));
+                  break;
+               case DCI_DT_INT64:
+                  sprintf(szBuffer, "%I64d", pRow->value.qwInt64);
+                  write(hFile, szBuffer, strlen(szBuffer));
+                  break;
+               case DCI_DT_UINT64:
+                  sprintf(szBuffer, "%I64u", pRow->value.qwInt64);
+                  write(hFile, szBuffer, strlen(szBuffer));
+                  break;
+               case DCI_DT_FLOAT:
+                  sprintf(szBuffer, "%f", pRow->value.dFloat);
+                  write(hFile, szBuffer, strlen(szBuffer));
+                  break;
+               default:
+                  break;
+            }
+            write(hFile, "\r\n", 2);
+            inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+         }
+         close(hFile);
+      }
+      NXCDestroyDCIData(pData);
+   }
+   return dwResult;
+}
+
+
+//
+// Export DCI's data
+//
+
+void CConsoleApp::ExportDCIData(DWORD dwNodeId, DWORD dwItemId,
+                                DWORD dwTimeFrom, DWORD dwTimeTo,
+                                int iSeparator, int iTimeStampFormat,
+                                const TCHAR *pszFile)
+{
+   DWORD dwResult;
+   
+   dwResult = DoRequestArg7(DoDataExport, (void *)dwNodeId, (void *)dwItemId,
+                            (void *)dwTimeFrom, (void *)dwTimeTo,
+                            (void *)iSeparator, (void *)iTimeStampFormat,
+                            (void *)pszFile, _T("Exporting data..."));
+   if (dwResult != RCC_SUCCESS)
+      ErrorBox(dwResult, _T("Error exporting DCI data: %s"));
+}
