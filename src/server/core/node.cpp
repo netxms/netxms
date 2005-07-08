@@ -1137,7 +1137,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
          DestroyInterfaceList(pIfList);
       }
-      else
+      else     /* pIfList == NULL */
       {
          Interface *pInterface;
 

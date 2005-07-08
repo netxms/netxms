@@ -164,9 +164,12 @@ protected:
 
    AccessList *m_pAccessList;
    BOOL m_bInheritAccessRights;
+   MUTEX m_mutexACL;
 
    void LockData(void) { MutexLock(m_mutexData, INFINITE); }
    void UnlockData(void) { MutexUnlock(m_mutexData); }
+   void LockACL(void) { MutexLock(m_mutexACL, INFINITE); }
+   void UnlockACL(void) { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite) 
    { 
       if (bWrite) 

@@ -32,6 +32,7 @@ NetObj::NetObj()
    m_dwRefCount = 0;
    m_mutexData = MutexCreate();
    m_mutexRefCount = MutexCreate();
+   m_mutexACL = MutexCreate();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
    m_iStatus = STATUS_UNKNOWN;
@@ -59,6 +60,7 @@ NetObj::~NetObj()
 {
    MutexDestroy(m_mutexData);
    MutexDestroy(m_mutexRefCount);
+   MutexDestroy(m_mutexACL);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
    if (m_pChildList != NULL)
@@ -514,6 +516,7 @@ BOOL NetObj::SaveACLToDB(DB_HANDLE hdb)
    SAVE_PARAM sp;
 
    // Save access list
+   LockACL();
    sprintf(szQuery, "DELETE FROM acl WHERE object_id=%d", m_dwId);
    if (DBQuery(hdb, szQuery))
    {
@@ -522,6 +525,7 @@ BOOL NetObj::SaveACLToDB(DB_HANDLE hdb)
       m_pAccessList->EnumerateElements(EnumerationHandler, &sp);
       bSuccess = TRUE;
    }
+   UnlockACL();
    return bSuccess;
 }
 
@@ -604,12 +608,14 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    {
       DWORD i, dwNumElements;
 
+      LockACL();
       dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
       m_bInheritAccessRights = pRequest->GetVariableShort(VID_INHERIT_RIGHTS);
       m_pAccessList->DeleteAll();
       for(i = 0; i < dwNumElements; i++)
          m_pAccessList->AddElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
                                    pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
+      UnlockACL();
    }
 
    Modify();
@@ -631,7 +637,7 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
    if (dwUserId == 0)
       return 0xFFFFFFFF;
 
-   LockData();
+   LockACL();
 
    // Check if have direct right assignment
    if (!m_pAccessList->GetUserRights(dwUserId, &dwRights))
@@ -648,7 +654,7 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
       }
    }
 
-   UnlockData();
+   UnlockACL();
    return dwRights;
 }
 
@@ -670,10 +676,10 @@ BOOL NetObj::CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights)
 
 void NetObj::DropUserAccess(DWORD dwUserId)
 {
-   LockData();
+   LockACL();
    if (m_pAccessList->DeleteElement(dwUserId))
       Modify();
-   UnlockData();
+   UnlockACL();
 }
 
 
