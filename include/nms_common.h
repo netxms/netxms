@@ -34,6 +34,9 @@
 #include <config-netware.h>
 #else
 #include <config.h>
+#ifdef WITH_OPENSSL
+#define _WITH_ENCRYPTION   1
+#endif
 #endif
 #else    /* _WIN32 */
 #ifndef UNDER_CE
