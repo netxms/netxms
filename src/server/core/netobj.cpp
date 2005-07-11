@@ -49,6 +49,7 @@ NetObj::NetObj()
    m_bInheritAccessRights = TRUE;
    m_dwImageId = IMG_DEFAULT;    // Default image
    m_pPollRequestor = NULL;
+   m_iStatusAlgorithm = SA_DEFAULT;
 }
 
 
@@ -120,7 +121,7 @@ BOOL NetObj::LoadCommonProperties(void)
 
    // Load access options
    _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,image_id,"
-                               "inherit_access_rights,last_modified "
+                               "inherit_access_rights,last_modified,status_alg "
                                "FROM object_properties WHERE object_id=%ld"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -133,6 +134,7 @@ BOOL NetObj::LoadCommonProperties(void)
          m_dwImageId = DBGetFieldULong(hResult, 0, 3);
          m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 4) ? TRUE : FALSE;
          m_dwTimeStamp = DBGetFieldULong(hResult, 0, 5);
+         m_iStatusAlgorithm = DBGetFieldLong(hResult, 0, 6);
          bResult = TRUE;
       }
       DBFreeResult(hResult);
@@ -160,16 +162,16 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
          _sntprintf(szQuery, 512, 
                     _T("UPDATE object_properties SET name='%s',status=%d,"
                        "is_deleted=%d,image_id=%ld,inherit_access_rights=%d,"
-                       "last_modified=%ld WHERE object_id=%ld"),
+                       "last_modified=%ld,status_alg=%d WHERE object_id=%ld"),
                     m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
-                    m_bInheritAccessRights, m_dwTimeStamp, m_dwId);
+                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusAlgorithm, m_dwId);
       else
          _sntprintf(szQuery, 512, 
                     _T("INSERT INTO object_properties (object_id,name,status,is_deleted,"
-                       "image_id,inherit_access_rights,last_modified) "
-                       "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld)"),
+                       "image_id,inherit_access_rights,last_modified,status_alg) "
+                       "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld,%d)"),
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
-                    m_bInheritAccessRights, m_dwTimeStamp);
+                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusAlgorithm);
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
    }
@@ -416,26 +418,36 @@ const char *NetObj::ParentList(char *szBuffer)
 void NetObj::CalculateCompoundStatus(void)
 {
    DWORD i;
-   int iSum, iCount, iOldStatus = m_iStatus;
+   int iWorstStatus, iCount, iStatusAlg, iOldStatus = m_iStatus;
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
       LockData();
-      /* TODO: probably status calculation algorithm should be changed */
 
-      LockChildList(FALSE);
-      for(i = 0, iSum = 0, iCount = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->Status() < STATUS_UNKNOWN)
-         {
-            iSum += m_pChildList[i]->Status();
-            iCount++;
-         }
-      UnlockChildList();
+      iStatusAlg = (m_iStatusAlgorithm == SA_DEFAULT) ? g_iStatusAlgorithm : m_iStatusAlgorithm;
 
-      if (iCount > 0)
-         m_iStatus = iSum / iCount;
-      else
-         m_iStatus = STATUS_UNKNOWN;
+      switch(iStatusAlg)
+      {
+         case SA_WORST_STATUS:
+            LockChildList(FALSE);
+            for(i = 0, iCount = 0, iWorstStatus = 0; i < m_dwChildCount; i++)
+               if ((m_pChildList[i]->Status() < STATUS_UNKNOWN) &&
+                   (m_pChildList[i]->Status() > iWorstStatus))
+               {
+                  iWorstStatus = m_pChildList[i]->Status();
+                  iCount++;
+               }
+            UnlockChildList();
+
+            if (iCount > 0)
+               m_iStatus = iWorstStatus;
+            else
+               m_iStatus = STATUS_UNKNOWN;
+            break;
+         default:
+            m_iStatus = STATUS_UNKNOWN;
+            break;
+      }
       UnlockData();
 
       // Cause parent object(s) to recalculate it's status
@@ -552,6 +564,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
       pMsg->SetVariable(dwId, m_pChildList[i]->Id());
    pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
    pMsg->SetVariable(VID_IMAGE_ID, m_dwImageId);
+   pMsg->SetVariable(VID_STATUS_ALGORITHM, (WORD)m_iStatusAlgorithm);
    m_pAccessList->CreateMessage(pMsg);
 }
 
@@ -602,6 +615,10 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change object's image (icon)
    if (pRequest->IsVariableExist(VID_IMAGE_ID))
       m_dwImageId = pRequest->GetVariableLong(VID_IMAGE_ID);
+
+   // Change object's status calculation algorithm
+   if (pRequest->IsVariableExist(VID_STATUS_ALGORITHM))
+      m_iStatusAlgorithm = (int)pRequest->GetVariableShort(VID_STATUS_ALGORITHM);
 
    // Change object's ACL
    if (pRequest->IsVariableExist(VID_ACL_SIZE))

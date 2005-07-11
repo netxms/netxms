@@ -77,6 +77,53 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V29 to V30
+//
+
+static BOOL H_UpgradeFromV29(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE object_properties ADD status_alg integer\n"
+      "UPDATE object_properties SET status_alg=-1\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusCalculationAlgorithm"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("EnableMultipleDBConnections"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("NumberOfDatabaseWriters"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DefaultEncryptionPolicy"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("AllowedCiphers"), _T("15"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("KeepAliveInterval"), _T("60"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='30' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V28 to V29
 //
 
@@ -1139,6 +1186,7 @@ static struct
    { 26, H_UpgradeFromV26 },
    { 27, H_UpgradeFromV27 },
    { 28, H_UpgradeFromV28 },
+   { 29, H_UpgradeFromV29 },
    { 0, NULL }
 };
 

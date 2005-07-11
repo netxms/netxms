@@ -7,6 +7,7 @@
 #include "DCIPropPage.h"
 #include "DCIThresholdsPage.h"
 #include "DCITransformPage.h"
+#include "DataExportDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -134,6 +135,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_COMMAND(ID_ITEM_ACTIVATE, OnItemActivate)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_ACTIVATE, OnUpdateItemActivate)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_DISABLE, OnUpdateItemDisable)
+	ON_COMMAND(ID_ITEM_EXPORTDATA, OnItemExportdata)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_EXPORTDATA, OnUpdateItemExportdata)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDblClk)
 	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
@@ -497,6 +500,11 @@ void CDataCollectionEditor::OnUpdateItemShowdata(CCmdUI* pCmdUI)
 void CDataCollectionEditor::OnUpdateItemGraph(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() > 0) && (!m_bIsTemplate));
+}
+
+void CDataCollectionEditor::OnUpdateItemExportdata(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() == 1) && (!m_bIsTemplate));
 }
 
 void CDataCollectionEditor::OnUpdateItemCopy(CCmdUI* pCmdUI) 
@@ -931,4 +939,32 @@ void CDataCollectionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
    *pResult = 0;
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_EXPORTDATA message handler
+//
+
+void CDataCollectionEditor::OnItemExportdata() 
+{
+   CDataExportDlg dlg;
+   DWORD dwItemId, dwTimeFrom, dwTimeTo;
+
+   dwItemId = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+   if (dlg.DoModal() == IDOK)
+   {
+      dlg.SaveLastSelection();
+      dwTimeFrom = CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
+                         dlg.m_dateFrom.GetDay(), dlg.m_timeFrom.GetHour(),
+                         dlg.m_timeFrom.GetMinute(),
+                         dlg.m_timeFrom.GetSecond(), -1).GetTime();
+      dwTimeTo = CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
+                       dlg.m_dateTo.GetDay(), dlg.m_timeTo.GetHour(),
+                       dlg.m_timeTo.GetMinute(),
+                       dlg.m_timeTo.GetSecond(), -1).GetTime();
+      theApp.ExportDCIData(m_pItemList->dwNodeId, dwItemId, dwTimeFrom, dwTimeTo,
+                           dlg.m_iSeparator, dlg.m_iTimeStampFormat,
+                           (LPCTSTR)dlg.m_strFileName);
+   }
 }

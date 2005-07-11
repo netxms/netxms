@@ -67,6 +67,7 @@ DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
+int g_iStatusAlgorithm = SA_WORST_STATUS;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 QWORD g_qwServerId;
@@ -183,6 +184,7 @@ static void LoadGlobalConfig()
    if (ConfigReadInt("EnableMultipleDBConnections", 1))
       g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
+   g_iStatusAlgorithm = ConfigReadInt("StatusCalculationAlgorithm", SA_WORST_STATUS);
 }
 
 

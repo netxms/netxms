@@ -60,6 +60,7 @@ void CDataExportDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDataExportDlg, CDialog)
 	//{{AFX_MSG_MAP(CDataExportDlg)
+	ON_BN_CLICKED(IDC_BROWSE, OnBrowse)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -84,4 +85,21 @@ void CDataExportDlg::SaveLastSelection()
                     m_timeTo.GetSecond(), -1).GetTime();
    theApp.WriteProfileInt(_T("DataExport"), _T("TimeFrom"), dwTimeFrom);
    theApp.WriteProfileInt(_T("DataExport"), _T("TimeTo"), dwTimeTo);
+}
+
+
+//
+// Handler for "Browse" button
+//
+
+void CDataExportDlg::OnBrowse() 
+{
+   TCHAR szBuffer[MAX_PATH];
+
+   GetDlgItemText(IDC_EDIT_FILE, szBuffer, MAX_PATH);
+   CFileDialog dlg(FALSE, _T(".txt"), szBuffer);
+   if (dlg.DoModal() == IDOK)
+   {
+      SetDlgItemText(IDC_EDIT_FILE, dlg.m_ofn.lpstrFile);
+   }
 }

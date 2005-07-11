@@ -116,6 +116,7 @@ CREATE TABLE object_properties
 	image_id integer,
 	last_modified integer not null,
 	inherit_access_rights integer not null,
+	status_alg integer not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

@@ -1935,6 +1935,10 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
          }
          close(hFile);
       }
+      else
+      {
+         dwResult = RCC_IO_ERROR;
+      }
       NXCDestroyDCIData(pData);
    }
    return dwResult;
@@ -1956,6 +1960,9 @@ void CConsoleApp::ExportDCIData(DWORD dwNodeId, DWORD dwItemId,
                             (void *)dwTimeFrom, (void *)dwTimeTo,
                             (void *)iSeparator, (void *)iTimeStampFormat,
                             (void *)pszFile, _T("Exporting data..."));
-   if (dwResult != RCC_SUCCESS)
+   if (dwResult == RCC_SUCCESS)
+      m_pMainWnd->MessageBox(_T("Collected DCI data was successfuly exported."),
+                             _T("Information"), MB_OK | MB_ICONINFORMATION);
+   else
       ErrorBox(dwResult, _T("Error exporting DCI data: %s"));
 }

@@ -433,6 +433,11 @@ void CLastValuesView::OnDestroy()
 	CMDIChildWnd::OnDestroy();
 }
 
+
+//
+// WM_COMMAND::ID_ITEM_EXPORTDATA message handler
+//
+
 void CLastValuesView::OnItemExportdata() 
 {
    CDataExportDlg dlg;

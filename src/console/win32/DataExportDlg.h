@@ -42,6 +42,7 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CDataExportDlg)
+	afx_msg void OnBrowse();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

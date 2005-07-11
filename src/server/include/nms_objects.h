@@ -121,6 +121,14 @@ extern DWORD g_dwConfigurationPollingInterval;
 
 
 //
+// Status calculation algorithms
+//
+
+#define SA_DEFAULT            -1
+#define SA_WORST_STATUS       0
+
+
+//
 // Queued template update information
 //
 
@@ -145,6 +153,7 @@ protected:
    DWORD m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
    char m_szName[MAX_OBJECT_NAME];
    int m_iStatus;
+   int m_iStatusAlgorithm;    // Status calculation algorithm
    BOOL m_bIsModified;
    BOOL m_bIsDeleted;
    BOOL m_bIsHidden;
