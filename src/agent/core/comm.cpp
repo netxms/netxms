@@ -203,3 +203,30 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    MutexDestroy(m_hSessionListAccess);
    return THREAD_OK;
 }
+
+
+//
+// Session watchdog thread
+//
+
+THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
+{
+   DWORD i;
+   time_t now;
+
+   while(!(g_dwFlags & AF_SHUTDOWN))
+   {
+      ThreadSleep(1);
+
+      MutexLock(m_hSessionListAccess, INFINITE);
+      now = time(NULL);
+      for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+         if (m_pSessionList[i] != NULL)
+         {
+            if (m_pSessionList[i]->GetTimeStamp() < now - (time_t)g_dwIdleTimeout)
+               m_pSessionList[i]->Disconnect();
+         }
+      MutexUnlock(m_hSessionListAccess);
+   }
+   return THREAD_OK;
+}

@@ -82,6 +82,16 @@
 # SharedSecret = secret
 
 #
+# SessionIdleTimeout
+#
+# Communication session's idle timeout in seconds. If agent will not receive
+# any command from peer within specified timeout, session will be closed.
+# Default value is 60 seconds.
+#
+# Example:
+# SessionIdleTimeout = 60
+
+#
 # FileStore
 #
 # Directory to be used for storing files uploaded by installation server(s).

@@ -36,6 +36,7 @@
 //
 
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
+THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
 
 
 //
@@ -82,6 +83,7 @@ DWORD g_dwServerCount = 0;
 DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
 time_t g_dwAgentStartTime;
 DWORD g_dwStartupDelay = 0;
+DWORD g_dwIdleTimeout = 60;   // Session idle timeout
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
@@ -128,6 +130,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
    { "RequireEncryption", CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags },
    { "Servers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList },
+   { "SessionIdleTimeout", CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout },
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
    { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
@@ -487,8 +490,9 @@ BOOL Initialize(void)
    // Agent start time
    g_dwAgentStartTime = time(NULL);
 
-   // Start network listener
+   // Start network listener and session watchdog
    ThreadCreate(ListenerThread, 0, NULL);
+   ThreadCreate(SessionWatchdog, 0, NULL);
 
    m_hCondShutdown = ConditionCreate(TRUE);
    ThreadSleep(1);

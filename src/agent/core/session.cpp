@@ -94,6 +94,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallationSer
    m_bInstallationServer = bInstallationServer;
    m_hCurrFile = -1;
    m_pCtx = NULL;
+   m_ts = time(NULL);
 }
 
 
@@ -103,7 +104,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallationSer
 
 CommSession::~CommSession()
 {
-   shutdown(m_hSocket, 2);
+   shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
@@ -123,6 +124,16 @@ void CommSession::Run(void)
    m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
    m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
    ThreadCreate(ReadThreadStarter, 0, this);
+}
+
+
+//
+// Disconnect session
+//
+
+void CommSession::Disconnect(void)
+{
+   shutdown(m_hSocket, SHUT_RDWR);
 }
 
 
@@ -169,6 +180,9 @@ void CommSession::ReadThread(void)
          DebugPrintf("Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
+
+      // Update activity timestamp
+      m_ts = time(NULL);
 
       wFlags = ntohs(pRawMsg->wFlags);
       if (wFlags & MF_BINARY)

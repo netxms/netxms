@@ -5,7 +5,9 @@
 - Implemented communication session encryption
 - Added support for multiple database connections for better performance
 - Fixed incorrect 32 bit integer varbinds parsing in libnxsnmp
-- Windows console: added simple collected data export
+- Windows console: added simple export of collected DCI data
+- Core agent: added configuration option SessionIdleTimeout for automatic
+  disconnect of idle or broken sessions
 
 
 *

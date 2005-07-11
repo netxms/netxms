@@ -226,6 +226,7 @@ private:
    int m_hCurrFile;
    DWORD m_dwFileRqId;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+   time_t m_ts;               // Last command timestamp
 
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetConfig(CSCPMessage *pMsg);
@@ -248,11 +249,14 @@ public:
    ~CommSession();
 
    void Run(void);
+   void Disconnect(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+
+   time_t GetTimeStamp(void) { return m_ts; }
 };
 
 
@@ -324,6 +328,7 @@ extern DWORD g_dwServerCount;
 extern time_t g_dwAgentStartTime;
 extern char g_szPlatformSuffix[];
 extern DWORD g_dwStartupDelay;
+extern DWORD g_dwIdleTimeout;
 
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;
