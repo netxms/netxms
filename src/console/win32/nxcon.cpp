@@ -70,6 +70,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_ADDNODE, OnToolsAddnode)
 	ON_COMMAND(ID_CONTROLPANEL_SNMPTRAPS, OnControlpanelSnmptraps)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTPKG, OnControlpanelAgentpkg)
+	ON_COMMAND(ID_CONTROLPANEL_SERVERCFG, OnControlpanelServercfg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -92,6 +93,7 @@ CConsoleApp::CConsoleApp()
    m_bNetSummaryActive = FALSE;
    m_bEventPolicyEditorActive = FALSE;
    m_bPackageMgrActive = FALSE;
+   m_bServerCfgEditorActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
 }
@@ -296,6 +298,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hLastValuesMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hLastValuesMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 15), "&Item");
 
+   m_hServerCfgEditorMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 16), "V&ariable");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -310,6 +316,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hGraphAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_GRAPH));
 	m_hPackageMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_PACKAGE_MGR));
 	m_hLastValuesAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_LAST_VALUES));
+	m_hServerCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SERVER_CFG_EDITOR));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -537,6 +544,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bPackageMgrActive = TRUE;
          m_pwndPackageMgr = (CPackageMgr *)pWnd;
          break;
+      case IDR_SERVER_CFG_EDITOR:
+         m_bServerCfgEditorActive = TRUE;
+         m_pwndServerCfgEditor = (CServerCfgEditor *)pWnd;
+         break;
       default:
          break;
    }
@@ -599,6 +610,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_PACKAGE_MGR:
          m_bPackageMgrActive = FALSE;
+         break;
+      case IDR_SERVER_CFG_EDITOR:
+         m_bServerCfgEditorActive = FALSE;
          break;
       default:
          break;
@@ -1965,4 +1979,25 @@ void CConsoleApp::ExportDCIData(DWORD dwNodeId, DWORD dwItemId,
                              _T("Information"), MB_OK | MB_ICONINFORMATION);
    else
       ErrorBox(dwResult, _T("Error exporting DCI data: %s"));
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_SERVERCFG message handler
+//
+
+void CConsoleApp::OnControlpanelServercfg() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bServerCfgEditorActive)
+   {
+      m_pwndServerCfgEditor->BringWindowToTop();
+   }
+   else
+   {
+	   pFrame->CreateNewChild(
+		   RUNTIME_CLASS(CServerCfgEditor), IDR_SERVER_CFG_EDITOR, m_hServerCfgEditorMenu, m_hServerCfgEditorAccel);
+   }
 }

@@ -81,6 +81,7 @@ EXTRA_DIST = \
 	RuleHeader.cpp RuleHeader.h \
 	RuleList.cpp RuleList.h \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
+	ServerCfgEditor.cpp ServerCfgEditor.h \
 	StdAfx.cpp StdAfx.h \
 	ThresholdDlg.cpp ThresholdDlg.h \
 	ToolBox.cpp ToolBox.h \

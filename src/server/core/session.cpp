@@ -595,7 +595,7 @@ void ClientSession::ProcessingThread(void)
             SendAllEvents(pMsg->GetId());
             break;
          case CMD_GET_CONFIG_VARLIST:
-            SendAllConfigVars();
+            SendAllConfigVars(pMsg->GetId());
             break;
          case CMD_LOAD_EVENT_DB:
             SendEventDB(pMsg->GetId());
@@ -1349,46 +1349,46 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
 // Send all configuration variables to client
 //
 
-void ClientSession::SendAllConfigVars(void)
+void ClientSession::SendAllConfigVars(DWORD dwRqId)
 {
-   DWORD i, dwNumRecords;
+   DWORD i, dwId, dwNumRecords;
    CSCPMessage msg;
    DB_RESULT hResult;
+   TCHAR szBuffer[MAX_DB_STRING];
+
+   // Prepare message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
 
    // Check user rights
-   if ((m_dwUserId != 0) && ((m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG) == 0))
+   if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      // Access denied
-      msg.SetCode(CMD_CONFIG_VARLIST_END);
-      msg.SetVariable(VID_ERROR, (DWORD)1);
-      SendMessage(&msg);
-   }
-   else
-   {
-      // Prepare message
-      msg.SetCode(CMD_CONFIG_VARIABLE);
-
       // Retrieve configuration variables from database
-      hResult = DBSelect(g_hCoreDB, "SELECT var_name,var_value FROM config WHERE is_visible=1");
+      hResult = DBSelect(g_hCoreDB, "SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1");
       if (hResult != NULL)
       {
          // Send events, one per message
          dwNumRecords = DBGetNumRows(hResult);
-         for(i = 0; i < dwNumRecords; i++)
+         msg.SetVariable(VID_NUM_VARIABLES, dwNumRecords);
+         for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++)
          {
-            msg.SetVariable(VID_NAME, DBGetField(hResult, i, 0));
-            msg.SetVariable(VID_VALUE, DBGetField(hResult, i, 1));
-            SendMessage(&msg);
-            msg.DeleteAllVariables();
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 0));
+            _tcsncpy(szBuffer, DBGetField(hResult, i, 1), MAX_DB_STRING);
+            DecodeSQLString(szBuffer);
+            msg.SetVariable(dwId++, szBuffer);
+            msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
          }
          DBFreeResult(hResult);
       }
-
-      // Send end of list notification
-      msg.SetCode(CMD_CONFIG_VARLIST_END);
-      msg.SetVariable(VID_ERROR, (DWORD)0);
-      SendMessage(&msg);
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
    }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
 }
 
 

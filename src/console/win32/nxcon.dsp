@@ -417,6 +417,10 @@ SOURCE=.\SaveDesktopDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ServerCfgEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -791,6 +795,10 @@ SOURCE=.\RuleSeverityDlg.h
 # Begin Source File
 
 SOURCE=.\SaveDesktopDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ServerCfgEditor.h
 # End Source File
 # Begin Source File
 

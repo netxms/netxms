@@ -63,6 +63,7 @@
 #define IDA_PACKAGE_MGR                 156
 #define IDR_AGENT_CFG_EDITOR            156
 #define IDI_SORT_DOWN                   157
+#define IDR_SERVER_CFG_EDITOR           157
 #define IDD_OBJECT_NODE_GENERAL         159
 #define IDD_OBJECT_CAPS                 160
 #define IDD_REQUEST_PROCESSING          162
@@ -165,6 +166,7 @@
 #define IDD_CHANGE_IP                   272
 #define IDD_LASTVAL_PROP                273
 #define IDD_DCI_DATA_EXPORT             274
+#define IDA_SERVER_CFG_EDITOR           276
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -528,6 +530,10 @@
 #define ID_DESKTOP_NEW                  32933
 #define ID_OBJECT_AGENTCFG              32934
 #define ID_ITEM_EXPORTDATA              32937
+#define ID_CONTROLPANEL_SERVERCFG       32940
+#define ID_VARIABLE_EDIT                32941
+#define ID_VARIABLE_NEW                 32942
+#define ID_VARIABLE_DELETE              32943
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -536,8 +542,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        275
-#define _APS_NEXT_COMMAND_VALUE         32939
+#define _APS_NEXT_RESOURCE_VALUE        277
+#define _APS_NEXT_COMMAND_VALUE         32944
 #define _APS_NEXT_CONTROL_VALUE         1273
 #define _APS_NEXT_SYMED_VALUE           122
 #endif

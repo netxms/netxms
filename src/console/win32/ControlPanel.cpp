@@ -92,6 +92,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EXEC));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_TRAP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_DATABASE));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SETUP));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -101,6 +102,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
    AddItem("SNMP Traps", 4, ID_CONTROLPANEL_SNMPTRAPS);
    AddItem("Agent Packages", 5, ID_CONTROLPANEL_AGENTPKG);
+   AddItem("Server Configuration", 6, ID_CONTROLPANEL_SERVERCFG);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 

@@ -239,8 +239,8 @@ typedef struct
 #define CMD_EVENT_LIST_END          0x000C
 #define CMD_GET_CONFIG_VARLIST      0x000D
 #define CMD_SET_CONFIG_VARIABLE     0x000E
-#define CMD_CONFIG_VARIABLE         0x000F
-#define CMD_CONFIG_VARLIST_END      0x0010
+//#define CMD_CONFIG_VARIABLE         0x000F
+//#define CMD_CONFIG_VARLIST_END      0x0010
 #define CMD_DELETE_CONFIG_VARIABLE  0x0011
 #define CMD_NOTIFY                  0x0012
 #define CMD_TRAP                    0x0013
@@ -385,7 +385,7 @@ typedef struct
 #define VID_SNMP_OID                ((DWORD)19)
 #define VID_NAME                    ((DWORD)20)
 #define VID_VALUE                   ((DWORD)21)
-#define VID_ERROR                   ((DWORD)22)
+//#define VID_ERROR                   ((DWORD)22)
 #define VID_NOTIFICATION_CODE       ((DWORD)23)
 #define VID_EVENT_CODE              ((DWORD)24)
 #define VID_SEVERITY                ((DWORD)25)

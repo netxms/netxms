@@ -514,6 +514,8 @@ src/console/win32/RuleSeverityDlg.cpp -text
 src/console/win32/RuleSeverityDlg.h -text
 src/console/win32/SaveDesktopDlg.cpp -text
 src/console/win32/SaveDesktopDlg.h -text
+src/console/win32/ServerCfgEditor.cpp -text
+src/console/win32/ServerCfgEditor.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/ThresholdDlg.cpp -text
@@ -657,6 +659,7 @@ src/libnxcl/main.cpp -text
 src/libnxcl/mib.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/package.cpp -text
+src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text

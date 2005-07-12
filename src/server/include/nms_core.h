@@ -303,7 +303,7 @@ private:
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(CSCPMessage *pRequest);
    void SendAllEvents(DWORD dwRqId);
-   void SendAllConfigVars(void);
+   void SendAllConfigVars(DWORD dwRqId);
    void SendUserDB(DWORD dwRqId);
    void SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck);
    void CreateUser(CSCPMessage *pRequest);

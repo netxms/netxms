@@ -332,6 +332,7 @@ BEGIN
         MENUITEM "Agent Pac&kages",             ID_CONTROLPANEL_AGENTPKG
         MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
+        MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
     END
@@ -436,6 +437,12 @@ BEGIN
         MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
         MENUITEM SEPARATOR
         MENUITEM "&Properties...\tAlt+P",       ID_LASTVALUES_PROPERTIES
+    END
+    POPUP "Variable"
+    BEGIN
+        MENUITEM "&New...\tIns",                ID_VARIABLE_NEW
+        MENUITEM "&Edit...\tAlt+Enter",         ID_VARIABLE_EDIT
+        MENUITEM "Delete\tDel",                 ID_VARIABLE_DELETE
     END
 END
 
@@ -669,6 +676,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_LASTVALUES_PROPERTIES
     END
+    POPUP "Variable"
+    BEGIN
+        MENUITEM "&New...",                     ID_VARIABLE_NEW
+        MENUITEM "&Edit...",                    ID_VARIABLE_EDIT
+        MENUITEM "Delete",                      ID_VARIABLE_DELETE
+    END
 END
 
 
@@ -797,6 +810,13 @@ BEGIN
     "G",            ID_ITEM_GRAPH,          VIRTKEY, CONTROL, NOINVERT
     "P",            ID_LASTVALUES_PROPERTIES, VIRTKEY, ALT, NOINVERT
     "S",            ID_ITEM_SHOWDATA,       VIRTKEY, CONTROL, NOINVERT
+END
+
+IDA_SERVER_CFG_EDITOR ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_DELETE,      ID_VARIABLE_DELETE,     VIRTKEY, NOINVERT
+    VK_INSERT,      ID_VARIABLE_NEW,        VIRTKEY, NOINVERT
+    VK_RETURN,      ID_VARIABLE_EDIT,       VIRTKEY, ALT, NOINVERT
 END
 
 
@@ -2416,6 +2436,7 @@ BEGIN
     IDR_NODE_POLLER         "\nPoll Node\nPoll Node"
     IDR_TRAP_EDITOR         "\nSNMP Trap Configuration\nSNMP Trap Configuration"
     IDR_AGENT_CFG_EDITOR    "\nAgent Configuration\nAgent Configuration"
+    IDR_SERVER_CFG_EDITOR   "\nServer Configuration\nServer Configuration"
 END
 
 STRINGTABLE DISCARDABLE 

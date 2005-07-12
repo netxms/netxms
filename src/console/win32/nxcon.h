@@ -51,6 +51,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ActionEditor.h"
 #include "TrapEditor.h"
 #include "PackageMgr.h"
+#include "ServerCfgEditor.h"
 
 
 #define MAX_DC_EDITORS     1024
@@ -116,6 +117,7 @@ protected:
    CNetSummaryFrame *m_pwndNetSummary;
    CEventPolicyEditor *m_pwndEventPolicyEditor;
    CPackageMgr *m_pwndPackageMgr;
+   CServerCfgEditor *m_pwndServerCfgEditor;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -145,6 +147,8 @@ protected:
 	HACCEL m_hPackageMgrAccel;    // Accelerator for package manager
 	HMENU m_hLastValuesMenu;      // Menu for last values view
 	HACCEL m_hLastValuesAccel;    // Accelerator for last values view
+	HMENU m_hServerCfgEditorMenu; // Menu for server configuration editor
+	HACCEL m_hServerCfgEditorAccel; // Accelerator for server configuration editor
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
@@ -170,6 +174,7 @@ public:
 	afx_msg void OnToolsAddnode();
 	afx_msg void OnControlpanelSnmptraps();
 	afx_msg void OnControlpanelAgentpkg();
+	afx_msg void OnControlpanelServercfg();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -185,6 +190,7 @@ private:
    BOOL m_bNetSummaryActive;
    BOOL m_bEventPolicyEditorActive;
    BOOL m_bPackageMgrActive;
+   BOOL m_bServerCfgEditorActive;
 
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 

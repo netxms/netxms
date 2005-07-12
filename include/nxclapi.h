@@ -576,6 +576,18 @@ typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
 
 
 //
+// Server's configuration variable
+//
+
+typedef struct
+{
+   TCHAR szName[MAX_OBJECT_NAME];
+   TCHAR szValue[MAX_DB_STRING];
+   BOOL bNeedRestart;
+} NXC_SERVER_VARIABLE;
+
+
+//
 // Agent package information
 //
 
@@ -1132,6 +1144,10 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
                                           DWORD dwNumObjects, DWORD *pdwObjectList,
                                           DWORD *pdwRqId);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
+                                               NXC_SERVER_VARIABLE **ppVarList, 
+                                               DWORD *pdwNumVars);
 
 #ifdef __cplusplus
 }
