@@ -72,5 +72,46 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
    }
 
    return dwRetCode;
+}
 
+
+//
+// Set value of server's variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, TCHAR *pszVarName,
+                                              TCHAR *pszValue)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SET_CONFIG_VARIABLE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, pszVarName);
+   msg.SetVariable(VID_VALUE, pszValue);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Delete server's variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *pszVarName)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_DELETE_CONFIG_VARIABLE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, pszVarName);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

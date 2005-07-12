@@ -1148,6 +1148,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
 DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
                                                NXC_SERVER_VARIABLE **ppVarList, 
                                                DWORD *pdwNumVars);
+DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, TCHAR *pszVarName,
+                                              TCHAR *pszValue);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *pszVarName);
 
 #ifdef __cplusplus
 }

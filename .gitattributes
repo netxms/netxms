@@ -419,6 +419,8 @@ src/console/win32/EditBox.cpp -text
 src/console/win32/EditBox.h -text
 src/console/win32/EditEventDlg.cpp -text
 src/console/win32/EditEventDlg.h -text
+src/console/win32/EditVariableDlg.cpp -text
+src/console/win32/EditVariableDlg.h -text
 src/console/win32/EventBrowser.cpp -text
 src/console/win32/EventBrowser.h -text
 src/console/win32/EventEditor.cpp -text

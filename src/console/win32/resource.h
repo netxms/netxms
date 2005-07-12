@@ -167,6 +167,7 @@
 #define IDD_LASTVAL_PROP                273
 #define IDD_DCI_DATA_EXPORT             274
 #define IDA_SERVER_CFG_EDITOR           276
+#define IDD_EDIT_VARIABLE               277
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -542,9 +543,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        277
+#define _APS_NEXT_RESOURCE_VALUE        278
 #define _APS_NEXT_COMMAND_VALUE         32944
-#define _APS_NEXT_CONTROL_VALUE         1273
+#define _APS_NEXT_CONTROL_VALUE         1275
 #define _APS_NEXT_SYMED_VALUE           122
 #endif
 #endif

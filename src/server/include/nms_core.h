@@ -304,6 +304,8 @@ private:
    void SendAllObjects(CSCPMessage *pRequest);
    void SendAllEvents(DWORD dwRqId);
    void SendAllConfigVars(DWORD dwRqId);
+   void SetConfigVariable(CSCPMessage *pRequest);
+   void DeleteConfigVariable(CSCPMessage *pRequest);
    void SendUserDB(DWORD dwRqId);
    void SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck);
    void CreateUser(CSCPMessage *pRequest);
@@ -311,7 +313,6 @@ private:
    void DeleteUser(CSCPMessage *pRequest);
    void SetPassword(CSCPMessage *pRequest);
    void LockUserDB(DWORD dwRqId, BOOL bLock);
-   void SetConfigVariable(CSCPMessage *pRequest);
    void SendEventDB(DWORD dwRqId);
    void LockEventDB(DWORD dwRqId);
    void UnlockEventDB(DWORD dwRqId);

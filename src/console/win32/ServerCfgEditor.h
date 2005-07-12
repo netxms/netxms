@@ -42,7 +42,14 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnVariableEdit();
+	afx_msg void OnUpdateVariableDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateVariableEdit(CCmdUI* pCmdUI);
+	afx_msg void OnVariableNew();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnVariableDelete();
 	//}}AFX_MSG
+   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

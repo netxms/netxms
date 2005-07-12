@@ -35,6 +35,7 @@ EXTRA_DIST = \
 	EditActionDlg.cpp EditActionDlg.h \
 	EditBox.cpp EditBox.h \
 	EditEventDlg.cpp EditEventDlg.h \
+	EditVariableDlg.cpp EditVariableDlg.h \
 	EventBrowser.cpp EventBrowser.h \
 	EventEditor.cpp EventEditor.h \
 	EventPolicyEditor.cpp EventPolicyEditor.h \

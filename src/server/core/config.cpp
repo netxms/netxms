@@ -160,7 +160,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
               pszEscValue, szVar);
    else
       _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
-                                _T("need_server_restart) VALUES ('%s','%s',0,0)"),
+                                _T("need_server_restart) VALUES ('%s','%s',1,1)"),
                  szVar, pszEscValue);
    free(pszEscValue);
    return DBQuery(g_hCoreDB, szQuery);

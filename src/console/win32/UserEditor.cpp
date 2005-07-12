@@ -131,6 +131,7 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CUserEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_USER_PROPERTIES, 0);
+   *pResult = 0;
 }
 
 

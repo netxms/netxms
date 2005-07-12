@@ -597,6 +597,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars(pMsg->GetId());
             break;
+         case CMD_SET_CONFIG_VARIABLE:
+            SetConfigVariable(pMsg);
+            break;
+         case CMD_DELETE_CONFIG_VARIABLE:
+            DeleteConfigVariable(pMsg);
+            break;
          case CMD_LOAD_EVENT_DB:
             SendEventDB(pMsg->GetId());
             break;
@@ -1381,6 +1387,72 @@ void ClientSession::SendAllConfigVars(DWORD dwRqId)
          DBFreeResult(hResult);
       }
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Set configuration variable's value
+//
+
+void ClientSession::SetConfigVariable(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szName[MAX_OBJECT_NAME], szValue[MAX_DB_STRING];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+   {
+      pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
+      pRequest->GetVariableStr(VID_VALUE, szValue, MAX_DB_STRING);
+      if (ConfigWriteStr(szName, szValue, TRUE))
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      else
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send responce
+   SendMessage(&msg);
+}
+
+
+//
+// Delete configuration variable
+//
+
+void ClientSession::DeleteConfigVariable(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szName[MAX_OBJECT_NAME], szQuery[1024];
+
+   // Prepare responce message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+   {
+      pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
+      _sntprintf(szQuery, 1024, _T("DELETE FROM config WHERE var_name='%s'"), szName);
+      if (DBQuery(g_hCoreDB, szQuery))
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      else
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
    else
    {

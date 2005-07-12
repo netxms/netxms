@@ -217,6 +217,10 @@ SOURCE=.\EditEventDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditVariableDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EventBrowser.cpp
 # End Source File
 # Begin Source File
@@ -575,6 +579,10 @@ SOURCE=.\EditBox.h
 # Begin Source File
 
 SOURCE=.\EditEventDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditVariableDlg.h
 # End Source File
 # Begin Source File
 
