@@ -689,6 +689,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
    DWORD i, dwPollListSize;
    NetObj *pPollerNode = NULL, **ppPollList;
+   BOOL bAllDown;
 
    SetPollerInfo(nPoller, "wait for lock");
    PollerLock();
@@ -811,6 +812,42 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       ppPollList[i]->DecRefCount();
    }
    safe_free(ppPollList);
+
+   // Check if entire node is down
+   LockChildList(FALSE);
+   for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+      if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+          (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
+          (m_pChildList[i]->Status() != STATUS_UNKNOWN))
+      {
+         bAllDown = FALSE;
+         break;
+      }
+   UnlockChildList();
+   if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT))
+      if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))
+         bAllDown = FALSE;
+   if (bAllDown && (m_dwFlags & NF_IS_SNMP))
+      if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))
+         bAllDown = FALSE;
+   if (bAllDown)
+   {
+      if (!(m_dwDynamicFlags & NDF_UNREACHEABLE))
+      {
+         m_dwDynamicFlags |= NDF_UNREACHEABLE;
+         PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
+         SendPollerMsg(dwRqId, "Node is unreacheable\r\n");
+      }
+   }
+   else
+   {
+      if (m_dwDynamicFlags & NDF_UNREACHEABLE)
+      {
+         m_dwDynamicFlags &= ~NDF_UNREACHEABLE;
+         PostEvent(EVENT_NODE_UP, m_dwId, NULL);
+         SendPollerMsg(dwRqId, "Node recovered from unreacheable state\r\n");
+      }
+   }
    
    SetPollerInfo(nPoller, "cleanup");
    if (pPollerNode != NULL)
@@ -1020,7 +1057,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          // Add new interfaces and check configuration of existing
          for(j = 0; j < pIfList->iNumEntries; j++)
          {
-            BOOL bNewInterface = FALSE;
+            BOOL bNewInterface = TRUE;
 
             LockChildList(FALSE);
             for(i = 0; i < m_dwChildCount; i++)
@@ -1049,6 +1086,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                      {
                         pInterface->SetName(pIfList->pInterfaces[j].szName);
                      }
+                     bNewInterface = FALSE;
                      break;
                   }
                }

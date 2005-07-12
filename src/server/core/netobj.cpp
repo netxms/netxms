@@ -430,7 +430,7 @@ void NetObj::CalculateCompoundStatus(void)
       {
          case SA_WORST_STATUS:
             LockChildList(FALSE);
-            for(i = 0, iCount = 0, iWorstStatus = 0; i < m_dwChildCount; i++)
+            for(i = 0, iCount = 0, iWorstStatus = -1; i < m_dwChildCount; i++)
                if ((m_pChildList[i]->Status() < STATUS_UNKNOWN) &&
                    (m_pChildList[i]->Status() > iWorstStatus))
                {
