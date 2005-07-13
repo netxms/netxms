@@ -1,4 +1,20 @@
 *
+* 0.2.2
+*
+
+- Implemented communication session encryption
+- Added support for multiple database connections for better performance
+- Added generation of SYS_NODE_DOWN and SYS_NODE_UP events
+- Added possibility to edit server's configuration parameters from
+  administrator's console
+- Fixed incorrect 32 bit integer varbinds parsing in libnxsnmp
+- Fixed bug with new interface detection
+- Windows console: added simple export of collected DCI data
+- Core agent: added configuration option SessionIdleTimeout for automatic
+  disconnect of idle or broken sessions
+
+
+*
 * 0.2.1
 *
 
