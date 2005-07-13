@@ -71,7 +71,7 @@ Source: "Files\libsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Compone
 Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "Files\ntwdblib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mssql
 Source: "Files\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "Files\libeay.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 
 [Icons]
 Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
