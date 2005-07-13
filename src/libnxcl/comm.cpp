@@ -33,7 +33,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    CSCPMessage *pMsg;
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
-   BYTE *pDecryptionBuffer;
+   BYTE *pDecryptionBuffer = NULL;
    int iErr;
    BOOL bMsgNotNeeded;
    TCHAR szBuffer[128];
@@ -44,7 +44,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(pSession->m_dwReceiverBufferSize);
+#ifdef _WITH_ENCRYPTION
    pDecryptionBuffer = (BYTE *)malloc(pSession->m_dwReceiverBufferSize);
+#endif
 
    // Message receiving loop
    while(1)
@@ -170,6 +172,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    DebugPrintf(_T("Network receiver thread stopped"));
    free(pRawMsg);
    free(pMsgBuffer);
+#ifdef _WITH_ENCRYPTION
+   free(pDecryptionBuffer);
+#endif
 
    // Close socket
    shutdown(pSession->m_hSocket, SHUT_WR);

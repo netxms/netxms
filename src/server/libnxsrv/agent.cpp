@@ -247,6 +247,9 @@ void AgentConnection::ReceiverThread(void)
 
    free(pRawMsg);
    free(pMsgBuffer);
+#ifdef _WITH_ENCRYPTION
+   free(pDecryptionBuffer);
+#endif
 }
 
 

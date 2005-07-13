@@ -265,7 +265,7 @@ void ClientSession::ReadThread(void)
 {
    CSCP_MESSAGE *pRawMsg;
    CSCPMessage *pMsg;
-   BYTE *pDecryptionBuffer;
+   BYTE *pDecryptionBuffer = NULL;
    TCHAR szBuffer[256];
    int iErr;
    DWORD i;
@@ -276,7 +276,9 @@ void ClientSession::ReadThread(void)
    RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
+#ifdef _WITH_ENCRYPTION
    pDecryptionBuffer = (BYTE *)malloc(RAW_MSG_SIZE);
+#endif
    while(1)
    {
       if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, 
@@ -392,7 +394,9 @@ void ClientSession::ReadThread(void)
    if (iErr < 0)
       WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
    free(pRawMsg);
+#ifdef _WITH_ENCRYPTION
    free(pDecryptionBuffer);
+#endif
 
    // Notify other threads to exit
    m_pSendQueue->Clear();
