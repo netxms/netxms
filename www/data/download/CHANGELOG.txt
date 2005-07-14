@@ -7,6 +7,7 @@
 - Added generation of SYS_NODE_DOWN and SYS_NODE_UP events
 - Added possibility to edit server's configuration parameters from
   administrator's console
+- Object status calculation algorithm changed
 - Fixed incorrect 32 bit integer varbinds parsing in libnxsnmp
 - Fixed bug with new interface detection
 - Windows console: added simple export of collected DCI data
