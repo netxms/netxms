@@ -110,7 +110,7 @@ static void Shell(void)
 
 #if USE_READLINE
    // Initialize readline library if we use it
-# if (RL_READLINE_VERSION && RL_VERSION_MAJOR >= 5) || __FreeBSD__ >= 5
+# if (RL_READLINE_VERSION && RL_VERSION_MAJOR >= 4 && RL_VERSION_MINOR >= 2) || __FreeBSD__ >= 5
    rl_bind_key('\t', (rl_command_func_t *)rl_insert);
 # else 
    rl_bind_key('\t', (Function *)rl_insert);
