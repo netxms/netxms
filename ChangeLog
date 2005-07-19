@@ -20,6 +20,7 @@
 - Windows console: added simple export of collected DCI data
 - Core agent: added configuration option SessionIdleTimeout for automatic
   disconnect of idle or broken sessions
+- Fixed issues: 26, 30
 
 
 *
