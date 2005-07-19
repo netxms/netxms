@@ -334,7 +334,8 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
 // Perform status poll on network service
 //
 
-void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode)
+void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
+                                Node *pPollerNode, Queue *pEventQueue)
 {
    int iOldStatus = m_iStatus;
    Node *pNode;
@@ -396,9 +397,9 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPo
    if (m_iStatus != iOldStatus)
    {
       SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_pszStatusName[m_iStatus]);
-      PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
-                (m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
-                m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
+      PostEventEx(pEventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
+                  (m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
+                  m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
       Modify();
    }
    SendPollerMsg(dwRqId, "   Finished status poll on network service %s\r\n", m_szName);

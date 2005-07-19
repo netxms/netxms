@@ -393,7 +393,7 @@ public:
                               (!_tcscmp(m_szName, _T("lan0"))) &&
                               (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue);
    virtual void CreateMessage(CSCPMessage *pMsg);
 
    DWORD WakeUp(void);
@@ -431,7 +431,7 @@ public:
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
 
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode, Queue *pEventQueue);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -557,7 +557,8 @@ public:
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponce = NULL);
 
-   QWORD LastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
+   QWORD GetLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
+   void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 };
 
 

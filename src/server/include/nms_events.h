@@ -171,7 +171,10 @@ public:
 
 BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...);
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...);
+BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
+                 TCHAR *pszFormat, ...);
+void ResendEvents(Queue *pQueue);
 void ReloadEvents(void);
 void CorrelateEvent(Event *pEvent);
 

@@ -690,7 +690,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    DWORD i, dwPollListSize;
    NetObj *pPollerNode = NULL, **ppPollList;
    BOOL bAllDown;
+   Queue *pQueue;    // Delayed event queue
 
+   pQueue = new Queue;
    SetPollerInfo(nPoller, "wait for lock");
    PollerLock();
    m_pPollRequestor = pSession;
@@ -711,7 +713,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
          {
             m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
-            PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
+            PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
             SendPollerMsg(dwRqId, "Connectivity with SNMP agent restored\r\n");
          }
       }
@@ -720,7 +722,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))
          {
             m_dwDynamicFlags |= NDF_SNMP_UNREACHEABLE;
-            PostEvent(EVENT_SNMP_FAIL, m_dwId, NULL);
+            PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
             SendPollerMsg(dwRqId, "SNMP agent unreacheable\r\n");
          }
       }
@@ -739,7 +741,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
          {
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
-            PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
+            PostEventEx(pQueue, EVENT_AGENT_OK, m_dwId, NULL);
             SendPollerMsg(dwRqId, "Connectivity with NetXMS agent restored\r\n");
          }
          pAgentConn->Disconnect();
@@ -749,7 +751,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))
          {
             m_dwDynamicFlags |= NDF_AGENT_UNREACHEABLE;
-            PostEvent(EVENT_AGENT_FAIL, m_dwId, NULL);
+            PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
             SendPollerMsg(dwRqId, "NetXMS agent unreacheable\r\n");
          }
       }
@@ -801,10 +803,11 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       switch(ppPollList[i]->Type())
       {
          case OBJECT_INTERFACE:
-            ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId);
+            ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue);
             break;
          case OBJECT_NETWORKSERVICE:
-            ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId, (Node *)pPollerNode);
+            ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId,
+                                                          (Node *)pPollerNode, pQueue);
             break;
          default:
             break;
@@ -848,6 +851,10 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          SendPollerMsg(dwRqId, "Node recovered from unreacheable state\r\n");
       }
    }
+
+   // Send delayed events and destroy delayed event queue
+   ResendEvents(pQueue);
+   delete pQueue;
    
    SetPollerInfo(nPoller, "cleanup");
    if (pPollerNode != NULL)

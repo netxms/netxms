@@ -231,7 +231,7 @@ BOOL Interface::DeleteFromDB(void)
 // Perform status poll on interface
 //
 
-void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
+void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue)
 {
    int iOldStatus = m_iStatus;
    DWORD dwPingStatus;
@@ -293,9 +293,10 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId)
    if (m_iStatus != iOldStatus)
    {
       SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
-      PostEvent(m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
-                pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
-                m_dwIfIndex);
+      PostEventEx(pEventQueue, 
+                  m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
+                  pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
+                  m_dwIfIndex);
       LockData();
       Modify();
       UnlockData();

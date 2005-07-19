@@ -24,36 +24,35 @@
 
 
 //
-// Correlate SYS_SERVICE_DOWN event to possible SYS_NODE_DOWN
+// Correlate event
 //
 
-static void C_SysServiceDown(Event *pEvent)
+void CorrelateEvent(Event *pEvent)
 {
    NetObj *pObject;
 
    pObject = FindObjectById(pEvent->SourceId());
    if ((pObject != NULL) && (pObject->Type() == OBJECT_NODE))
    {
-      if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHEABLE)
+      switch(pEvent->Code())
       {
-         pEvent->SetRootId(((Node *)pObject)->LastEventId(LAST_EVENT_NODE_DOWN));
+         case EVENT_SERVICE_DOWN:
+         case EVENT_INTERFACE_DOWN:
+         case EVENT_SNMP_FAIL:
+         case EVENT_AGENT_FAIL:
+            if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHEABLE)
+            {
+               pEvent->SetRootId(((Node *)pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+            }
+            break;
+         case EVENT_NODE_DOWN:
+            ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, pEvent->Id());
+            break;
+         case EVENT_NODE_UP:
+            ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, 0);
+            break;
+         default:
+            break;
       }
-   }
-}
-
-
-//
-// Correlate event
-//
-
-void CorrelateEvent(Event *pEvent)
-{
-   switch(pEvent->Code())
-   {
-      case EVENT_SERVICE_DOWN:
-         C_SysServiceDown(pEvent);
-         break;
-      default:
-         break;
    }
 }

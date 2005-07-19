@@ -491,13 +491,15 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 //        x - Hex integer
 //        a - IP address
 //        i - Object ID
+// PostEventEx will put events to specified queue, and PostEvent to system
+// event queue. Both functions uses RealPostEvent to do real job.
 //
 
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...)
+static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
+                          TCHAR *pszFormat, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
-   va_list args;
    BOOL bResult = FALSE;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
@@ -509,12 +511,10 @@ BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...)
       if (pEventTemplate != NULL)
       {
          // Template found, create new event
-         va_start(args, szFormat);
-         pEvent = new Event(pEventTemplate, dwSourceId, szFormat, args);
-         va_end(args);
+         pEvent = new Event(pEventTemplate, dwSourceId, pszFormat, args);
 
          // Add new event to queue
-         g_pEventQueue->Put(pEvent);
+         pQueue->Put(pEvent);
 
          bResult = TRUE;
       }
@@ -522,4 +522,45 @@ BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *szFormat, ...)
 
    RWLockUnlock(m_rwlockTemplateAccess);
    return bResult;
+}
+
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...)
+{
+   va_list args;
+   BOOL bResult;
+
+   va_start(args, pszFormat);
+   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, pszFormat, args);
+   va_end(args);
+   return bResult;
+}
+
+BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
+                 TCHAR *pszFormat, ...)
+{
+   va_list args;
+   BOOL bResult;
+
+   va_start(args, pszFormat);
+   bResult = RealPostEvent(pQueue, dwEventCode, dwSourceId, pszFormat, args);
+   va_end(args);
+   return bResult;
+}
+
+
+//
+// Resend events from specific queue to system event queue
+//
+
+void ResendEvents(Queue *pQueue)
+{
+   void *pEvent;
+
+   while(1)
+   {
+      pEvent = pQueue->Get();
+      if (pEvent == NULL)
+         break;
+      g_pEventQueue->Put(pEvent);
+   }
 }
