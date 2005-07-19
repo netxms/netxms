@@ -301,3 +301,46 @@ LONG H_NetInterfaceStats(char *cmd, char *arg, char *value)
 
    return iResult;
 }
+
+
+//
+// Get IP routing table
+//
+
+LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+   MIB_IPFORWARDTABLE *pRoutingTable;
+   DWORD i, dwError, dwSize;
+   char szBuffer[256], szDestIp[16], szNextHop[16];
+
+   // Determine required buffer size
+   dwSize = 0;
+   dwError = GetIpForwardTable(NULL, &dwSize, FALSE);
+   if (dwError != NO_ERROR)
+      return SYSINFO_RC_ERROR;
+
+   pRoutingTable = (MIB_IPFORWARDTABLE *)malloc(dwSize);
+   if (pRoutingTable == NULL)
+      return SYSINFO_RC_ERROR;
+
+   dwError = GetIpForwardTable(pRoutingTable, &dwSize, FALSE);
+   if (dwError != NO_ERROR)
+   {
+      free(pRoutingTable);
+      return SYSINFO_RC_ERROR;
+   }
+
+   for(i = 0; i < pRoutingTable->dwNumEntries; i++)
+   {
+      snprintf(szBuffer, 256, "%s/%d %s %d %d", 
+               IpToStr(pRoutingTable->table[i].dwForwardDest, szDestIp),
+               BitsInMask(pRoutingTable->table[i].dwForwardMask),
+               IpToStr(pRoutingTable->table[i].dwForwardNextHop, szNextHop),
+               pRoutingTable->table[i].dwForwardIfIndex,
+               pRoutingTable->table[i].dwForwardType);
+      NxAddResultString(pValue, szBuffer);
+   }
+
+   free(pRoutingTable);
+   return SYSINFO_RC_SUCCESS;
+}

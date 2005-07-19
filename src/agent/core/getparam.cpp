@@ -42,6 +42,7 @@ LONG H_PlatformName(char *cmd, char *arg, char *value);
 #ifdef _WIN32
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue);
 LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ProcCount(char *cmd, char *arg, char *value);
 LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
@@ -249,6 +250,7 @@ static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
 #ifdef _WIN32
    { "Net.ArpCache", H_ArpCache, NULL },
    { "Net.InterfaceList", H_InterfaceList, NULL },
+   { "Net.IP.RoutingTable", H_IPRoutingTable, NULL },
    { "System.ProcessList", H_ProcessList, NULL },
 #endif
    { "Agent.ActionList", H_ActionList, NULL },
