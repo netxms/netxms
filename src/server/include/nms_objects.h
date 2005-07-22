@@ -469,6 +469,7 @@ protected:
    AgentConnection *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
+   ROUTING_TABLE *m_pRoutingTable;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -519,6 +520,8 @@ public:
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
    int GetInterfaceStatusFromSNMP(DWORD dwIndex);
    int GetInterfaceStatusFromAgent(DWORD dwIndex);
+   ROUTING_TABLE *GetRoutingTable(void);
+   DWORD GetNextHop(DWORD dwDestAddr);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);

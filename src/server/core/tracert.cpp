@@ -29,5 +29,18 @@
 
 BOOL TraceRoute(Node *pSrc, Node *pDest, NetObj **ppTrace)
 {
+   DWORD dwNextHop, dwDestAddr;
+   Node *pCurr;
+
+   dwDestAddr = pDest->IpAddr();
+   do
+   {
+      dwNextHop = pCurr->GetNextHop(dwDestAddr);
+      if (dwNextHop != INADDR_NONE)
+      {
+         pCurr = FindNodeByIP(dwNextHop);
+      }
+   } while((pCurr != pDest) && (dwNextHop != INADDR_NONE));
+
    return FALSE;
 }

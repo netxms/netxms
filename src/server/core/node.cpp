@@ -54,6 +54,7 @@ Node::Node()
    m_pParamList = NULL;
    m_dwPollerNode = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   m_pRoutingTable = NULL;
 }
 
 
@@ -91,6 +92,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_dwPollerNode = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_bIsHidden = TRUE;
+   m_pRoutingTable = NULL;
 }
 
 
@@ -105,6 +107,7 @@ Node::~Node()
    if (m_pAgentConnection != NULL)
       delete m_pAgentConnection;
    safe_free(m_pParamList);
+   DestroyRoutingTable(m_pRoutingTable);
 }
 
 
@@ -2013,4 +2016,34 @@ void Node::UpdateDCICache(void)
    /* LOCK? */
    for(i = 0; i < m_dwNumItems; i++)
       m_ppItems[i]->UpdateCacheSize();
+}
+
+
+//
+// Get routing table from node
+//
+
+ROUTING_TABLE *Node::GetRoutingTable(void)
+{
+   ROUTING_TABLE *pRT = NULL;
+
+   if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   {
+      AgentLock();
+      if (ConnectToAgent())
+      {
+         pRT = m_pAgentConnection->GetRoutingTable();
+      }
+      AgentUnlock();
+   }
+   if ((pRT == NULL) && (m_dwFlags & NF_IS_SNMP))
+   {
+      pRT = SnmpGetRoutingTable(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString);
+   }
+
+   if (pRT != NULL)
+   {
+      SortRoutingTable(pRT);
+   }
+   return pRT;
 }

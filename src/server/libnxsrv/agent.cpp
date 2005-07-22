@@ -1117,3 +1117,76 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 
    return dwResult;
 }
+
+
+//
+// Get routing table from agent
+//
+
+ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
+{
+   ROUTING_TABLE *pRT = NULL;
+   DWORD i;
+   TCHAR *pChar, *pBuf;
+
+   if (GetList(_T("Net.IP.RoutingTable")) == ERR_SUCCESS)
+   {
+      pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
+      pRT->iNumEntries = m_dwNumDataLines;
+      pRT->pRoutes = (ROUTE *)malloc(sizeof(ROUTE) * m_dwNumDataLines);
+      memset(pRT->pRoutes, 0, sizeof(ROUTE) * m_dwNumDataLines);
+      for(i = 0; i < m_dwNumDataLines; i++)
+      {
+         pBuf = m_ppDataLines[i];
+
+         // Destination address and mask
+         pChar = _tcschr(pBuf, _T(' '));
+         if (pChar != NULL)
+         {
+            TCHAR *pSlash;
+
+            *pChar = 0;
+            pSlash = _tcschr(pBuf, _T('/'));
+            if (pSlash != NULL)
+            {
+               *pSlash = 0;
+               pSlash++;
+            }
+            else     // Just a paranoia protection, should'n happen if agent working correctly
+            {
+               pSlash = _T("24");
+            }
+            pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
+            pRT->pRoutes[i].dwDestMask = ~(0xFFFFFFFF >> _tcstoul(pSlash, NULL, 10));
+            pBuf = pChar + 1;
+         }
+
+         // Next hop address
+         pChar = _tcschr(pBuf, _T(' '));
+         if (pChar != NULL)
+         {
+            *pChar = 0;
+            pRT->pRoutes[i].dwNextHop = ntohl(_t_inet_addr(pBuf));
+            pBuf = pChar + 1;
+         }
+
+         // Interface index
+         pChar = _tcschr(pBuf, ' ');
+         if (pChar != NULL)
+         {
+            *pChar = 0;
+            pRT->pRoutes[i].dwIfIndex = _tcstoul(pBuf, NULL, 10);
+            pBuf = pChar + 1;
+         }
+
+         // Route type
+         pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, NULL, 10);
+      }
+
+      Lock();
+      DestroyResultData();
+      Unlock();
+   }
+
+   return pRT;
+}

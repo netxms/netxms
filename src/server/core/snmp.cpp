@@ -460,7 +460,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
 //
 
 static void HandlerArp(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
-                       SNMP_Variable *pVar,void *pArg)
+                       SNMP_Variable *pVar, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
    BYTE bMac[64];
@@ -561,4 +561,74 @@ int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity
          break;
    }
    return iStatus;
+}
+
+
+//
+// Handler for route enumeration
+//
+
+static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+                         SNMP_Variable *pVar, void *pArg)
+{
+   DWORD oidName[MAX_OID_LEN], dwNameLen;
+   ROUTE route;
+
+   dwNameLen = pVar->GetName()->Length();
+   memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
+   route.dwDestAddr = ntohl(pVar->GetValueAsUInt());
+
+   oidName[dwNameLen - 5] = 2;  // Interface index
+   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+               &route.dwIfIndex, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
+      return;
+
+   oidName[dwNameLen - 5] = 7;  // Next hop
+   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+               &route.dwNextHop, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
+      return;
+   route.dwNextHop = ntohl(route.dwNextHop);
+
+   oidName[dwNameLen - 5] = 8;  // Route type
+   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+               &route.dwRouteType, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
+      return;
+
+   oidName[dwNameLen - 5] = 11;  // Destination mask
+   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+               &route.dwDestMask, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
+      return;
+   route.dwDestMask = ntohl(route.dwDestMask);
+
+   ((ROUTING_TABLE *)pArg)->iNumEntries++;
+   ((ROUTING_TABLE *)pArg)->pRoutes = 
+      (ROUTE *)realloc(((ROUTING_TABLE *)pArg)->pRoutes,
+                       sizeof(ROUTE) * ((ROUTING_TABLE *)pArg)->iNumEntries);
+   memcpy(&((ROUTING_TABLE *)pArg)->pRoutes[((ROUTING_TABLE *)pArg)->iNumEntries - 1],
+          &route, sizeof(ROUTE));
+}
+
+
+//
+// Get routing table via SNMP
+//
+
+ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, DWORD dwAddr, const char *szCommunity)
+{
+   ROUTING_TABLE *pRT;
+
+   pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
+   if (pRT == NULL)
+      return NULL;
+
+   pRT->iNumEntries = 0;
+   pRT->pRoutes = NULL;
+
+   if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.4.21.1.1", 
+                     HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
+   {
+      DestroyRoutingTable(pRT);
+      pRT = NULL;
+   }
+   return pRT;
 }

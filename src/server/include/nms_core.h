@@ -448,6 +448,8 @@ INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity, DWORD dwIfIndex);
 
+ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, DWORD dwAddr, const char *szCommunity);
+
 void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval);
 void WatchdogNotify(DWORD dwId);

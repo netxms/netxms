@@ -167,6 +167,31 @@ typedef struct
 
 
 //
+// Route information
+//
+
+typedef struct
+{
+   DWORD dwDestAddr;
+   DWORD dwDestMask;
+   DWORD dwNextHop;
+   DWORD dwIfIndex;
+   DWORD dwRouteType;
+} ROUTE;
+
+
+//
+// Routing table
+//
+
+typedef struct
+{
+   int iNumEntries;     // Number of entries
+   ROUTE *pRoutes;      // Route list
+} ROUTING_TABLE;
+
+
+//
 // Agent connection
 //
 
@@ -218,6 +243,7 @@ public:
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
+   ROUTING_TABLE *GetRoutingTable(void);
    DWORD GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
    DWORD GetList(TCHAR *pszParam);
    DWORD Nop(void);
@@ -243,6 +269,8 @@ public:
 
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyInterfaceList(INTERFACE_LIST *pIfList);
+void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
+void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 BYTE LIBNXSRV_EXPORTABLE *LoadFile(char *pszFileName, DWORD *pdwFileSize);
 

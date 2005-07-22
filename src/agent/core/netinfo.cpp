@@ -316,7 +316,7 @@ LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
    // Determine required buffer size
    dwSize = 0;
    dwError = GetIpForwardTable(NULL, &dwSize, FALSE);
-   if (dwError != NO_ERROR)
+   if ((dwError != NO_ERROR) && (dwError != ERROR_INSUFFICIENT_BUFFER))
       return SYSINFO_RC_ERROR;
 
    pRoutingTable = (MIB_IPFORWARDTABLE *)malloc(dwSize);
@@ -333,9 +333,9 @@ LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
    for(i = 0; i < pRoutingTable->dwNumEntries; i++)
    {
       snprintf(szBuffer, 256, "%s/%d %s %d %d", 
-               IpToStr(pRoutingTable->table[i].dwForwardDest, szDestIp),
-               BitsInMask(pRoutingTable->table[i].dwForwardMask),
-               IpToStr(pRoutingTable->table[i].dwForwardNextHop, szNextHop),
+               IpToStr(ntohl(pRoutingTable->table[i].dwForwardDest), szDestIp),
+               BitsInMask(ntohl(pRoutingTable->table[i].dwForwardMask)),
+               IpToStr(ntohl(pRoutingTable->table[i].dwForwardNextHop), szNextHop),
                pRoutingTable->table[i].dwForwardIfIndex,
                pRoutingTable->table[i].dwForwardType);
       NxAddResultString(pValue, szBuffer);
