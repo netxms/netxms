@@ -24,20 +24,76 @@
 
 
 //
+// Correlate SYS_NODE_DOWN event
+//
+
+static void C_SysNodeDown(Node *pNode, Event *pEvent)
+{
+   NETWORK_PATH_TRACE *pTrace;
+   Node *pMgmtNode;
+   Interface *pInterface;
+   int i;
+
+   // Trace route from management station to failed node and
+   // check for failed intermediate nodes or interfaces
+   pMgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
+   if (pMgmtNode != NULL)
+   {
+      pTrace = TraceRoute(pMgmtNode, pNode);
+      if (pTrace != NULL)
+      {
+         for(i = 0; i < pTrace->iNumHops; i++)
+         {
+            if ((pTrace->pHopList[i].pObject != NULL) &&
+                (pTrace->pHopList[i].pObject != pNode))
+            {
+               if (pTrace->pHopList[i].pObject->Type() == OBJECT_NODE)
+               {
+                  if (((Node *)pTrace->pHopList[i].pObject)->IsDown())
+                  {
+                     pEvent->SetRootId(((Node *)pTrace->pHopList[i].pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+                  }
+                  else
+                  {
+                     pInterface = ((Node *)pTrace->pHopList[i].pObject)->FindInterface(pTrace->pHopList[i].dwIfIndex, INADDR_ANY);
+                     if (pInterface != NULL)
+                     {
+                        if (pInterface->Status() == STATUS_CRITICAL)
+                        {
+                           pEvent->SetRootId(pInterface->GetLastDownEventId());
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         DestroyTraceData(pTrace);
+      }
+   }
+}
+
+
+//
 // Correlate event
 //
 
 void CorrelateEvent(Event *pEvent)
 {
    NetObj *pObject;
+   Interface *pInterface;
 
    pObject = FindObjectById(pEvent->SourceId());
    if ((pObject != NULL) && (pObject->Type() == OBJECT_NODE))
    {
       switch(pEvent->Code())
       {
-         case EVENT_SERVICE_DOWN:
          case EVENT_INTERFACE_DOWN:
+            pInterface = ((Node *)pObject)->FindInterface(pEvent->GetParameterAsULong(4), INADDR_ANY);
+            if (pInterface != NULL)
+            {
+               pInterface->SetLastDownEventId(pEvent->Id());
+            }
+         case EVENT_SERVICE_DOWN:
          case EVENT_SNMP_FAIL:
          case EVENT_AGENT_FAIL:
             if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHEABLE)
@@ -47,6 +103,7 @@ void CorrelateEvent(Event *pEvent)
             break;
          case EVENT_NODE_DOWN:
             ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, pEvent->Id());
+            C_SysNodeDown((Node *)pObject, pEvent);
             break;
          case EVENT_NODE_UP:
             ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, 0);

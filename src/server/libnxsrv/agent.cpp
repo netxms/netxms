@@ -424,7 +424,7 @@ void AgentConnection::DestroyResultData(void)
 INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 {
    INTERFACE_LIST *pIfList = NULL;
-   DWORD i;
+   DWORD i, dwBits;
    TCHAR *pChar, *pBuf;
 
    if (GetList(_T("Net.InterfaceList")) == ERR_SUCCESS)
@@ -464,7 +464,8 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
                pSlash = _T("24");
             }
             pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
-            pIfList->pInterfaces[i].dwIpNetMask = ~(0xFFFFFFFF >> _tcstoul(pSlash, NULL, 10));
+            dwBits = _tcstoul(pSlash, NULL, 10);
+            pIfList->pInterfaces[i].dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
             pBuf = pChar + 1;
          }
 
@@ -1126,7 +1127,7 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
 {
    ROUTING_TABLE *pRT = NULL;
-   DWORD i;
+   DWORD i, dwBits;
    TCHAR *pChar, *pBuf;
 
    if (GetList(_T("Net.IP.RoutingTable")) == ERR_SUCCESS)
@@ -1157,7 +1158,8 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
                pSlash = _T("24");
             }
             pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
-            pRT->pRoutes[i].dwDestMask = ~(0xFFFFFFFF >> _tcstoul(pSlash, NULL, 10));
+            dwBits = _tcstoul(pSlash, NULL, 10);
+            pRT->pRoutes[i].dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
             pBuf = pChar + 1;
          }
 

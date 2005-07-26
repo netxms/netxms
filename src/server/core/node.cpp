@@ -45,6 +45,7 @@ Node::Node()
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
    m_tLastConfigurationPoll = 0;
+   m_tLastRTUpdate = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_pAgentConnection = NULL;
@@ -82,6 +83,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
    m_tLastConfigurationPoll = 0;
+   m_tLastRTUpdate = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_pAgentConnection = NULL;
@@ -523,8 +525,9 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
          pInterface = (Interface *)m_pChildList[i];
          if (pInterface->IfIndex() == dwIndex)
          {
-            if ((pInterface->IpAddr() & pInterface->IpNetMask()) ==
-                (dwHostAddr & pInterface->IpNetMask()))
+            if (((pInterface->IpAddr() & pInterface->IpNetMask()) ==
+                 (dwHostAddr & pInterface->IpNetMask())) ||
+                (dwHostAddr == INADDR_ANY))
             {
                UnlockChildList();
                return pInterface;
@@ -2046,4 +2049,50 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
       SortRoutingTable(pRT);
    }
    return pRT;
+}
+
+
+//
+// Get next hop for given destination address
+//
+
+BOOL Node::GetNextHop(DWORD dwDestAddr, DWORD *pdwNextHop, DWORD *pdwIfIndex)
+{
+   int i;
+   BOOL bResult = FALSE;
+
+   RTLock();
+   if (m_pRoutingTable != NULL)
+   {
+      for(i = 0; i < m_pRoutingTable->iNumEntries; i++)
+         if ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
+         {
+            *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
+            *pdwIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+            bResult = TRUE;
+            break;
+         }
+   }
+   RTUnlock();
+
+   return bResult;
+}
+
+
+//
+// Update cached routing table
+//
+
+void Node::UpdateRoutingTable(void)
+{
+   ROUTING_TABLE *pRT;
+
+   pRT = GetRoutingTable();
+   if (pRT != NULL)
+   {
+      RTLock();
+      DestroyRoutingTable(m_pRoutingTable);
+      m_pRoutingTable = pRT;
+      RTUnlock();
+   }
 }

@@ -370,6 +370,10 @@ SOURCE=..\..\..\include\nms_threads.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\nms_topo.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\nms_users.h
 # End Source File
 # Begin Source File

@@ -2,6 +2,7 @@
 * 0.2.3
 *
 
+- Implemented basic event correlation
 - Windows agent: implemented enum Net.IP.RoutingTable
 - Fixed issues: 29
 

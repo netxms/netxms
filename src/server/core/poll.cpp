@@ -43,6 +43,7 @@ struct __poller_state
 
 Queue g_statusPollQueue;
 Queue g_configPollQueue;
+Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
 
 
@@ -241,6 +242,38 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 
 
 //
+// Routing table poll thread
+//
+
+static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
+{
+   Node *pNode;
+   char szBuffer[MAX_OBJECT_NAME + 64];
+
+   // Initialize state info
+   m_pPollerState[(int)arg].iType = 'R';
+   SetPollerState((int)arg, "init");
+
+   // Main loop
+   while(!ShutdownInProgress())
+   {
+      SetPollerState((int)arg, "wait");
+      pNode = (Node *)g_routePollQueue.GetOrBlock();
+      if (pNode == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+               pNode->Name(), pNode->Id());
+      SetPollerState((int)arg, szBuffer);
+      pNode->UpdateRoutingTable();
+      pNode->DecRefCount();
+   }
+   SetPollerState((int)arg, "finished");
+   return THREAD_OK;
+}
+
+
+//
 // Discovery poll thread
 //
 
@@ -313,34 +346,39 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
 {
    Node *pNode;
    DWORD dwWatchdogId;
-   int i, iCounter, iNumStatusPollers, iNumConfigPollers, iNumDiscoveryPollers;
+   int i, iCounter, iNumStatusPollers, iNumConfigPollers;
+   int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
    BOOL bDoNetworkDiscovery;
 
    // Read configuration
    iNumStatusPollers = ConfigReadInt("NumberOfStatusPollers", 10);
    iNumConfigPollers = ConfigReadInt("NumberOfConfigurationPollers", 4);
+   iNumRoutePollers = ConfigReadInt("NumberOfRoutingTablePollers", 5);
    bDoNetworkDiscovery = ConfigReadInt("RunNetworkDiscovery", 1);
    if (bDoNetworkDiscovery)
       iNumDiscoveryPollers = ConfigReadInt("NumberOfDiscoveryPollers", 1);
    else
       iNumDiscoveryPollers = 0;
-   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + iNumDiscoveryPollers;
+   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + iNumDiscoveryPollers + iNumRoutePollers;
 
    // Prepare static data
    m_pPollerState = (__poller_state *)malloc(sizeof(__poller_state) * m_iNumPollers);
 
    // Start status pollers
-   for(i = 0; i < iNumStatusPollers; i++)
-      m_pPollerState[i].handle = ThreadCreateEx(StatusPoller, 0, (void *)i);
+   for(i = 0, nIndex = 0; i < iNumStatusPollers; i++, nIndex++)
+      m_pPollerState[nIndex].handle = ThreadCreateEx(StatusPoller, 0, (void *)nIndex);
 
    // Start configuration pollers
-   for(i = 0; i < iNumConfigPollers; i++)
-      m_pPollerState[i + iNumStatusPollers].handle = ThreadCreateEx(ConfigurationPoller, 0, (void *)(i + iNumStatusPollers));
+   for(i = 0; i < iNumConfigPollers; i++, nIndex++)
+      m_pPollerState[nIndex].handle = ThreadCreateEx(ConfigurationPoller, 0, (void *)nIndex);
+
+   // Start routing table pollers
+   for(i = 0; i < iNumRoutePollers; i++, nIndex++)
+      m_pPollerState[nIndex].handle = ThreadCreateEx(RoutePoller, 0, (void *)nIndex);
 
    // Start discovery pollers
-   for(i = 0; i < iNumDiscoveryPollers; i++)
-      m_pPollerState[i + iNumStatusPollers + iNumConfigPollers].handle = 
-         ThreadCreateEx(DiscoveryPoller, 0, (void *)(i + iNumStatusPollers + iNumConfigPollers));
+   for(i = 0; i < iNumDiscoveryPollers; i++, nIndex++)
+      m_pPollerState[nIndex].handle = ThreadCreateEx(DiscoveryPoller, 0, (void *)nIndex);
 
    dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
    iCounter = 0;
@@ -377,6 +415,12 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
             pNode->LockForStatusPoll();
             g_statusPollQueue.Put(pNode);
          }
+         if (pNode->ReadyForRoutePoll())
+         {
+            pNode->IncRefCount();
+            pNode->LockForRoutePoll();
+            g_routePollQueue.Put(pNode);
+         }
          if (bDoNetworkDiscovery && pNode->ReadyForDiscoveryPoll())
          {
             pNode->IncRefCount();
@@ -395,6 +439,8 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       g_statusPollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumConfigPollers; i++)
       g_configPollQueue.Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < iNumRoutePollers; i++)
+      g_routePollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumDiscoveryPollers; i++)
       g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
 

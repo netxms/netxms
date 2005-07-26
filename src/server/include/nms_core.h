@@ -103,6 +103,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "messages.h"
 #include "nms_locks.h"
 #include "nms_pkg.h"
+#include "nms_topo.h"
 
 
 //

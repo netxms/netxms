@@ -67,6 +67,7 @@ DB_HANDLE g_hCoreDB = 0;
 DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
+DWORD g_dwRoutingTableUpdateInterval;
 int g_iStatusAlgorithm = SA_WORST_STATUS;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
@@ -171,6 +172,7 @@ static void LoadGlobalConfig()
    g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 900);
    g_dwStatusPollingInterval = ConfigReadInt("StatusPollingInterval", 60);
    g_dwConfigurationPollingInterval = ConfigReadInt("ConfigurationPollingInterval", 3600);
+   g_dwRoutingTableUpdateInterval = ConfigReadInt("RoutingTableUpdateInterval", 300);
    if (ConfigReadInt("EnableAccessControl", 1))
       g_dwFlags |= AF_ENABLE_ACCESS_CONTROL;
    if (ConfigReadInt("EnableEventsAccessControl", 1))
@@ -644,6 +646,58 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowPollerState(pCtx);
       }
+      else if (IsCommand("ROUTING-TABLE", szBuffer, 1))
+      {
+         DWORD dwNode;
+         NetObj *pObject;
+
+         pArg = ExtractWord(pArg, szBuffer);
+         dwNode = strtoul(szBuffer, NULL, 0);
+         if (dwNode != 0)
+         {
+            pObject = FindObjectById(dwNode);
+            if (pObject != NULL)
+            {
+               if (pObject->Type() == OBJECT_NODE)
+               {
+                  ROUTING_TABLE *pRT;
+                  char szIpAddr[16];
+                  int i;
+
+                  ConsolePrintf(pCtx, "Routing table for node %s:\n\n", pObject->Name());
+                  pRT = ((Node *)pObject)->GetCachedRoutingTable();
+                  if (pRT != NULL)
+                  {
+                     for(i = 0; i < pRT->iNumEntries; i++)
+                     {
+                        sprintf(szBuffer, "%s/%d", IpToStr(pRT->pRoutes[i].dwDestAddr, szIpAddr),
+                                BitsInMask(pRT->pRoutes[i].dwDestMask));
+                        ConsolePrintf(pCtx, "%-18s %-15s %-6ld %ld\n", szBuffer,
+                                      IpToStr(pRT->pRoutes[i].dwNextHop, szIpAddr),
+                                      pRT->pRoutes[i].dwIfIndex, pRT->pRoutes[i].dwRouteType);
+                     }
+                     ConsolePrintf(pCtx, "\n");
+                  }
+                  else
+                  {
+                     ConsolePrintf(pCtx, "Node doesn't have cached routing table\n\n");
+                  }
+               }
+               else
+               {
+                  ConsolePrintf(pCtx, "ERROR: Object is not a node\n\n");
+               }
+            }
+            else
+            {
+               ConsolePrintf(pCtx, "ERROR: Object with ID %ld does not exist\n\n", dwNode);
+            }
+         }
+         else
+         {
+            ConsolePrintf(pCtx, "ERROR: Invalid or missing node ID\n\n");
+         }
+      }
       else if (IsCommand("SESSIONS", szBuffer, 2))
       {
          DumpSessions(pCtx);
@@ -669,21 +723,88 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
             ConsolePrintf(pCtx, "ERROR: Invalid SHOW subcommand\n\n");
       }
    }
+   else if (IsCommand("TRACE", szBuffer, 1))
+   {
+      DWORD dwNode1, dwNode2;
+      NetObj *pObject1, *pObject2;
+      NETWORK_PATH_TRACE *pTrace;
+      char szNextHop[16];
+      int i;
+
+      // Get arguments
+      pArg = ExtractWord(pArg, szBuffer);
+      dwNode1 = strtoul(szBuffer, NULL, 0);
+
+      pArg = ExtractWord(pArg, szBuffer);
+      dwNode2 = strtoul(szBuffer, NULL, 0);
+
+      if ((dwNode1 != 0) && (dwNode2 != 0))
+      {
+         pObject1 = FindObjectById(dwNode1);
+         if (pObject1 == NULL)
+         {
+            ConsolePrintf(pCtx, "ERROR: Object with ID %ld does not exist\n\n", dwNode1);
+         }
+         else
+         {
+            pObject2 = FindObjectById(dwNode2);
+            if (pObject2 == NULL)
+            {
+               ConsolePrintf(pCtx, "ERROR: Object with ID %ld does not exist\n\n", dwNode2);
+            }
+            else
+            {
+               if ((pObject1->Type() == OBJECT_NODE) &&
+                   (pObject2->Type() == OBJECT_NODE))
+               {
+                  pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
+                  if (pTrace != NULL)
+                  {
+                     ConsolePrintf(pCtx, "Trace from %s to %s (%d hops):\n",
+                                   pObject1->Name(), pObject2->Name(), pTrace->iNumHops);
+                     for(i = 0; i < pTrace->iNumHops; i++)
+                        ConsolePrintf(pCtx, "[%ld] %s %s %d\n",
+                                      pTrace->pHopList[i].pObject->Id(),
+                                      pTrace->pHopList[i].pObject->Name(),
+                                      IpToStr(pTrace->pHopList[i].dwNextHop, szNextHop),
+                                      pTrace->pHopList[i].dwIfIndex);
+                     DestroyTraceData(pTrace);
+                     ConsolePrintf(pCtx, "\n");
+                  }
+                  else
+                  {
+                     ConsolePrintf(pCtx, "ERROR: Call to TraceRoute() failed\n\n");
+                  }
+               }
+               else
+               {
+                  ConsolePrintf(pCtx, "ERROR: Object is not a node\n\n");
+               }
+            }
+         }
+      }
+      else
+      {
+         ConsolePrintf(pCtx, "ERROR: Invalid or missing node id(s)\n\n");
+      }
+   }
    else if (IsCommand("HELP", szBuffer, 2) || IsCommand("?", szBuffer, 1))
    {
       ConsolePrintf(pCtx, "Valid commands are:\n"
-                          "   debug [on|off] - Turn debug mode on or off\n"
-                          "   down           - Down NetXMS server\n"
-                          "   exit           - Exit from remote session\n"
-                          "   help           - Display this help\n"
-                          "   show flags     - Show internal server flags\n"
-                          "   show mutex     - Display mutex status\n"
-                          "   show objects   - Dump network objects to screen\n"
-                          "   show pollers   - Show poller threads state information\n"
-                          "   show sessions  - Show active client sessions\n"
-                          "   show stats     - Show server statistics\n"
-                          "   show users     - Show users\n"
-                          "   show watchdog  - Display watchdog information\n"
+                          "   debug [on|off]            - Turn debug mode on or off\n"
+                          "   down                      - Down NetXMS server\n"
+                          "   exit                      - Exit from remote session\n"
+                          "   help                      - Display this help\n"
+                          "   show flags                - Show internal server flags\n"
+                          "   show mutex                - Display mutex status\n"
+                          "   show objects              - Dump network objects to screen\n"
+                          "   show pollers              - Show poller threads state information\n"
+                          "   show routing-table <node> - Show cached routing table for node\n"
+                          "   show sessions             - Show active client sessions\n"
+                          "   show stats                - Show server statistics\n"
+                          "   show users                - Show users\n"
+                          "   show watchdog             - Display watchdog information\n"
+                          "   trace <node1> <node2>     - Show network path trace between two nodes\n"
                           "\nAlmost all commands can be abbreviated to 2 or 3 characters\n"
                           "\n");
    }

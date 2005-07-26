@@ -587,7 +587,6 @@ static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
    if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
                &route.dwNextHop, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
-   route.dwNextHop = ntohl(route.dwNextHop);
 
    oidName[dwNameLen - 5] = 8;  // Route type
    if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
@@ -598,7 +597,6 @@ static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
    if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
                &route.dwDestMask, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
-   route.dwDestMask = ntohl(route.dwDestMask);
 
    ((ROUTING_TABLE *)pArg)->iNumEntries++;
    ((ROUTING_TABLE *)pArg)->pRoutes = 

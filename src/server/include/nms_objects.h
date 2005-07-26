@@ -43,6 +43,7 @@ class Queue;
 extern DWORD g_dwDiscoveryPollingInterval;
 extern DWORD g_dwStatusPollingInterval;
 extern DWORD g_dwConfigurationPollingInterval;
+extern DWORD g_dwRoutingTableUpdateInterval;
 
 
 //
@@ -93,6 +94,7 @@ extern DWORD g_dwConfigurationPollingInterval;
 #define NDF_QUEUED_FOR_DISCOVERY_POLL  0x0020
 #define NDF_FORCE_STATUS_POLL          0x0040
 #define NDF_FORCE_CONFIGURATION_POLL   0x0080
+#define NDF_QUEUED_FOR_ROUTE_POLL      0x0100
 
 
 //
@@ -367,6 +369,7 @@ protected:
    DWORD m_dwIfType;
    DWORD m_dwIpNetMask;
    BYTE m_bMacAddr[MAC_ADDR_LENGTH];
+   QWORD m_qwLastDownEventId;
 
 public:
    Interface();
@@ -387,6 +390,9 @@ public:
    DWORD IfIndex(void) { return m_dwIfIndex; }
    DWORD IfType(void) { return m_dwIfType; }
    const BYTE *MacAddr(void) { return m_bMacAddr; }
+
+   QWORD GetLastDownEventId(void) { return m_qwLastDownEventId; }
+   void SetLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
 
    BOOL IsFake(void) { return (m_dwIfIndex == 1) && 
                               (m_dwIfType == IFTYPE_OTHER) &&
@@ -464,8 +470,10 @@ protected:
    time_t m_tLastDiscoveryPoll;
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;
+   time_t m_tLastRTUpdate;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
+   MUTEX m_mutexRTAccess;
    AgentConnection *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
@@ -476,6 +484,9 @@ protected:
 
    void AgentLock(void) { MutexLock(m_hAgentAccessMutex, INFINITE); }
    void AgentUnlock(void) { MutexUnlock(m_hAgentAccessMutex); }
+
+   void RTLock(void) { MutexLock(m_mutexRTAccess, INFINITE); }
+   void RTUnlock(void) { MutexUnlock(m_mutexRTAccess); }
 
    void CheckOSPFSupport(void);
 
@@ -505,6 +516,8 @@ public:
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
    BOOL IsLocalManagement(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
+   BOOL IsDown(void) { return m_dwDynamicFlags & NDF_UNREACHEABLE ? TRUE : FALSE; }
+
    const char *ObjectId(void) { return m_szObjectId; }
 
    void AddInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
@@ -521,17 +534,21 @@ public:
    int GetInterfaceStatusFromSNMP(DWORD dwIndex);
    int GetInterfaceStatusFromAgent(DWORD dwIndex);
    ROUTING_TABLE *GetRoutingTable(void);
-   DWORD GetNextHop(DWORD dwDestAddr);
+   ROUTING_TABLE *GetCachedRoutingTable(void) { return m_pRoutingTable; }
+   BOOL GetNextHop(DWORD dwDestAddr, DWORD *pdwNextHop, DWORD *pdwIfIndex);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void UpdateRoutingTable(void);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);
    BOOL ReadyForDiscoveryPoll(void);
+   BOOL ReadyForRoutePoll(void);
    void LockForStatusPoll(void);
    void LockForConfigurationPoll(void);
    void LockForDiscoveryPoll(void);
+   void LockForRoutePoll(void);
 
    virtual void CalculateCompoundStatus(void);
 
@@ -603,6 +620,14 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
                ? TRUE : FALSE; 
 }
 
+inline BOOL Node::ReadyForRoutePoll(void) 
+{ 
+   return ((m_iStatus != STATUS_UNMANAGED) &&
+           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
+           ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval))
+               ? TRUE : FALSE; 
+}
+
 inline void Node::LockForStatusPoll(void)
 { 
    LockData(); 
@@ -621,6 +646,13 @@ inline void Node::LockForDiscoveryPoll(void)
 { 
    LockData(); 
    m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL; 
+   UnlockData(); 
+}
+
+inline void Node::LockForRoutePoll(void) 
+{ 
+   LockData(); 
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_ROUTE_POLL; 
    UnlockData(); 
 }
 

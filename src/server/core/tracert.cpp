@@ -27,20 +27,49 @@
 // Trace route between two nodes
 //
 
-BOOL TraceRoute(Node *pSrc, Node *pDest, NetObj **ppTrace)
+NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest)
 {
-   DWORD dwNextHop, dwDestAddr;
-   Node *pCurr;
+   DWORD dwNextHop, dwDestAddr, dwIfIndex, dwHopCount;
+   Node *pCurr, *pNext;
+   NETWORK_PATH_TRACE *pTrace;
 
+   pTrace = (NETWORK_PATH_TRACE *)malloc(sizeof(NETWORK_PATH_TRACE));
+   memset(pTrace, 0, sizeof(NETWORK_PATH_TRACE));
+   
    dwDestAddr = pDest->IpAddr();
-   do
-   {
-      dwNextHop = pCurr->GetNextHop(dwDestAddr);
-      if (dwNextHop != INADDR_NONE)
-      {
-         pCurr = FindNodeByIP(dwNextHop);
-      }
-   } while((pCurr != pDest) && (dwNextHop != INADDR_NONE));
 
-   return FALSE;
+   for(pCurr = pSrc, dwHopCount = 0; (pCurr != pDest) && (pCurr != NULL) && (dwHopCount < 30); pCurr = pNext, dwHopCount++)
+   {
+      if (pCurr->GetNextHop(dwDestAddr, &dwNextHop, &dwIfIndex))
+      {
+         pNext = FindNodeByIP(dwNextHop);
+         pTrace->pHopList = (HOP_INFO *)realloc(pTrace->pHopList, sizeof(HOP_INFO) * (pTrace->iNumHops + 1));
+         pTrace->pHopList[pTrace->iNumHops].dwNextHop = dwNextHop;
+         pTrace->pHopList[pTrace->iNumHops].dwIfIndex = dwIfIndex;
+         pTrace->pHopList[pTrace->iNumHops].pObject = pCurr;
+         pTrace->iNumHops++;
+         if ((pNext == pCurr) || (dwNextHop == 0))
+            pNext = NULL;     // Directly connected subnet, stop trace
+      }
+      else
+      {
+         pNext = NULL;
+      }
+   }
+
+   return pTrace;
+}
+
+
+//
+// Destroy trace information
+//
+
+void DestroyTraceData(NETWORK_PATH_TRACE *pTrace)
+{
+   if (pTrace != NULL)
+   {
+      safe_free(pTrace->pHopList);
+      free(pTrace);
+   }
 }

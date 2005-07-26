@@ -86,6 +86,9 @@ public:
    void PrepareMessage(NXC_EVENT *pEventData);
 
    char *ExpandText(char *szTemplate);
+
+   char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
+   DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? strtoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
 };
 
 

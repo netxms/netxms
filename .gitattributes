@@ -774,6 +774,7 @@ src/server/include/nms_events.h -text
 src/server/include/nms_locks.h -text
 src/server/include/nms_objects.h -text
 src/server/include/nms_pkg.h -text
+src/server/include/nms_topo.h -text
 src/server/include/nms_users.h -text
 src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text

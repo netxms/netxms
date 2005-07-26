@@ -33,6 +33,7 @@ Interface::Interface()
    m_dwIpNetMask = 0;
    m_dwIfIndex = 0;
    m_dwIfType = IFTYPE_OTHER;
+   m_qwLastDownEventId = 0;
 }
 
 
@@ -49,6 +50,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask)
    m_dwIfIndex = 1;
    m_dwIfType = IFTYPE_OTHER;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   m_qwLastDownEventId = 0;
    m_bIsHidden = TRUE;
 }
 
@@ -66,6 +68,7 @@ Interface::Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask,
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   m_qwLastDownEventId = 0;
    m_bIsHidden = TRUE;
 }
 
