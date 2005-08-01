@@ -740,6 +740,7 @@ src/server/core/tools.cpp -text
 src/server/core/tracert.cpp -text
 src/server/core/uniroot.cpp -text
 src/server/core/users.cpp -text
+src/server/core/vpnconn.cpp -text
 src/server/core/watchdog.cpp -text
 src/server/core/zone.cpp -text
 src/server/dbdrv/Makefile.am -text

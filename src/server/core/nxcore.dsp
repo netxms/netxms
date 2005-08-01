@@ -290,6 +290,10 @@ SOURCE=.\users.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\vpnconn.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\watchdog.cpp
 # End Source File
 # Begin Source File

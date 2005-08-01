@@ -385,7 +385,7 @@ typedef struct
 #define VID_SNMP_OID                ((DWORD)19)
 #define VID_NAME                    ((DWORD)20)
 #define VID_VALUE                   ((DWORD)21)
-//#define VID_ERROR                   ((DWORD)22)
+#define VID_PEER_GATEWAY            ((DWORD)22)
 #define VID_NOTIFICATION_CODE       ((DWORD)23)
 #define VID_EVENT_CODE              ((DWORD)24)
 #define VID_SEVERITY                ((DWORD)25)
@@ -524,6 +524,8 @@ typedef struct
 #define VID_SESSION_IV              ((DWORD)158)
 #define VID_CONFIG_FILE             ((DWORD)159)
 #define VID_STATUS_ALGORITHM        ((DWORD)160)
+#define VID_NUM_LOCAL_NETS          ((DWORD)161)
+#define VID_NUM_REMOTE_NETS         ((DWORD)162)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -581,6 +583,10 @@ typedef struct
 
 // Base value for variable names
 #define VID_VARLIST_BASE            ((DWORD)0x10000000)
+
+// Base value for network list
+#define VID_VPN_NETWORK_BASE        ((DWORD)0x10000000)
+
 
 //
 // Inline functions

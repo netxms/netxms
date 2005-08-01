@@ -226,6 +226,33 @@ CREATE TABLE network_services
 
 
 /*
+** VPN connectors
+*/
+
+CREATE TABLE vpn_connectors
+(
+	id integer not null,
+	node_id integer not null,
+	peer_gateway integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** VPN connector networks
+*/
+
+CREATE TABLE vpn_connector_networks
+(
+	vpn_id integer not null,
+	network_type integer not null,	// 0 == local, 1 == remote
+	ip_addr varchar(15),
+	ip_netmask varchar(15),
+	PRIMARY KEY(vpn_id,ip_addr)
+) TABLE_TYPE;
+
+
+/*
 ** Container objects
 */
 

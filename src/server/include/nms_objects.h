@@ -144,6 +144,17 @@ struct TEMPLATE_UPDATE_INFO
 
 
 //
+// IP network
+//
+
+struct IP_NETWORK
+{
+   DWORD dwAddr;
+   DWORD dwMask;
+};
+
+
+//
 // Base class for network objects
 //
 
@@ -438,6 +449,36 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Node *pPollerNode, Queue *pEventQueue);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
+//
+// VPN connector class
+//
+
+class VPNConnector : public NetObj
+{
+protected:
+   DWORD m_dwPeerGateway;        // Object ID of peer gateway
+   DWORD m_dwNumLocalNets;
+   IP_NETWORK *m_pLocalNetList;
+   DWORD m_dwNumRemoteNets;
+   IP_NETWORK *m_pRemoteNetList;
+
+   Node *GetParentNode(void);
+
+public:
+   VPNConnector();
+   virtual ~VPNConnector();
+
+   virtual int Type(void) { return OBJECT_VPNCONNECTOR; }
+
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
