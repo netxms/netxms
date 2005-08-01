@@ -144,17 +144,6 @@ struct TEMPLATE_UPDATE_INFO
 
 
 //
-// IP network
-//
-
-struct IP_NETWORK
-{
-   DWORD dwAddr;
-   DWORD dwMask;
-};
-
-
-//
 // Base class for network objects
 //
 

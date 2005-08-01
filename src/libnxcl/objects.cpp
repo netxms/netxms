@@ -50,6 +50,10 @@ void DestroyObject(NXC_OBJECT *pObject)
          safe_free(pObject->zone.pszDescription);
          safe_free(pObject->zone.pdwAddrList);
          break;
+      case OBJECT_VPNCONNECTOR:
+         safe_free(pObject->vpnc.pLocalNetList);
+         safe_free(pObject->vpnc.pRemoteNetList);
+         break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -149,6 +153,10 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
       case OBJECT_ZONE:
          safe_free(pObject->zone.pszDescription);
          safe_free(pObject->zone.pdwAddrList);
+         break;
+      case OBJECT_VPNCONNECTOR:
+         safe_free(pObject->vpnc.pLocalNetList);
+         safe_free(pObject->vpnc.pRemoteNetList);
          break;
    }
    safe_free(pObject->pdwChildList);
@@ -257,6 +265,23 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->zone.dwAddrListSize = pMsg->GetVariableLong(VID_ADDR_LIST_SIZE);
          pObject->zone.pdwAddrList = (DWORD *)malloc(sizeof(DWORD) * pObject->zone.dwAddrListSize);
          pMsg->GetVariableInt32Array(VID_IP_ADDR_LIST, pObject->zone.dwAddrListSize, pObject->zone.pdwAddrList);
+         break;
+      case OBJECT_VPNCONNECTOR:
+         pObject->vpnc.dwPeerGateway = pMsg->GetVariableLong(VID_PEER_GATEWAY);
+         pObject->vpnc.dwNumLocalNets = pMsg->GetVariableLong(VID_NUM_LOCAL_NETS);
+         pObject->vpnc.pLocalNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->vpnc.dwNumLocalNets);
+         for(i = 0, dwId1 = VID_VPN_NETWORK_BASE; i < pObject->vpnc.dwNumLocalNets; i++)
+         {
+            pObject->vpnc.pLocalNetList[i].dwAddr = pMsg->GetVariableLong(dwId1++);
+            pObject->vpnc.pLocalNetList[i].dwMask = pMsg->GetVariableLong(dwId1++);
+         }
+         pObject->vpnc.dwNumRemoteNets = pMsg->GetVariableLong(VID_NUM_REMOTE_NETS);
+         pObject->vpnc.pRemoteNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->vpnc.dwNumRemoteNets);
+         for(i = 0; i < pObject->vpnc.dwNumRemoteNets; i++)
+         {
+            pObject->vpnc.pRemoteNetList[i].dwAddr = pMsg->GetVariableLong(dwId1++);
+            pObject->vpnc.pRemoteNetList[i].dwMask = pMsg->GetVariableLong(dwId1++);
+         }
          break;
       default:
          break;
@@ -589,6 +614,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
    if (pUpdate->dwFlags & OBJ_UPDATE_IP_ADDR)
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
+   if (pUpdate->dwFlags & OBJ_UPDATE_PEER_GATEWAY)
+      msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
    {
       DWORD i, dwId1, dwId2;

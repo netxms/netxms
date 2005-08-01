@@ -89,6 +89,7 @@ contrib/startup/redhat/nxagentd -text
 doc/Makefile.am -text
 doc/admin_guide.doc -text
 doc/client_library.doc -text
+doc/db_format_change.txt -text
 doc/internals.rtf -text
 doc/libnxcl-pg.doc -text
 doc/ping_subagent.txt -text

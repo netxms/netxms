@@ -38,9 +38,7 @@
 // Constants
 //
 
-#define OBJECT_CACHE_MAGIC 0x7080ABCD
-
-#define LIBNXCL_VERSION    2
+#define OBJECT_CACHE_MAGIC 0x8090ABCD
 
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64

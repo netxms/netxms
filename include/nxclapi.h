@@ -285,25 +285,26 @@ typedef void * NXC_SESSION;
 // Mask bits (flags) for NXCModifyObject()
 //
 
-#define OBJ_UPDATE_NAME             ((DWORD)0x0001)
-#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x0002)
-#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x0004)
-#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x0008)
-#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x0010)
-#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x0020)
-#define OBJ_UPDATE_ACL              ((DWORD)0x0040)
-#define OBJ_UPDATE_IMAGE            ((DWORD)0x0080)
-#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x0100)
-#define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x0200)
-#define OBJ_UPDATE_IP_PROTO         ((DWORD)0x0400)
-#define OBJ_UPDATE_IP_PORT          ((DWORD)0x0800)
-#define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x1000)
-#define OBJ_UPDATE_CHECK_RESPONCE   ((DWORD)0x2000)
-#define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x4000)
-#define OBJ_UPDATE_IP_ADDR          ((DWORD)0x8000)
+#define OBJ_UPDATE_NAME             ((DWORD)0x000001)
+#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x000002)
+#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x000004)
+#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x000008)
+#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x000010)
+#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x000020)
+#define OBJ_UPDATE_ACL              ((DWORD)0x000040)
+#define OBJ_UPDATE_IMAGE            ((DWORD)0x000080)
+#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x000100)
+#define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x000200)
+#define OBJ_UPDATE_IP_PROTO         ((DWORD)0x000400)
+#define OBJ_UPDATE_IP_PORT          ((DWORD)0x000800)
+#define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x001000)
+#define OBJ_UPDATE_CHECK_RESPONCE   ((DWORD)0x002000)
+#define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x004000)
+#define OBJ_UPDATE_IP_ADDR          ((DWORD)0x008000)
+#define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x010000)
 
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x41FF)
-#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0xFEC1)
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0041FF)
+#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x00FEC1)
 
 
 //
@@ -442,6 +443,17 @@ typedef void * NXC_SESSION;
 #define DEPLOYMENT_STATUS_FAILED       4
 #define DEPLOYMENT_STATUS_INITIALIZE   5
 #define DEPLOYMENT_STATUS_FINISHED     255
+
+
+//
+// IP network
+//
+
+typedef struct
+{
+   DWORD dwAddr;
+   DWORD dwMask;
+} IP_NETWORK;
 
 
 //
@@ -708,6 +720,14 @@ typedef struct
          TCHAR *pszDescription;
          WORD wZoneType;
       } zone;
+      struct
+      {
+         DWORD dwPeerGateway;
+         DWORD dwNumLocalNets;
+         DWORD dwNumRemoteNets;
+         IP_NETWORK *pLocalNetList;
+         IP_NETWORK *pRemoteNetList;
+      } vpnc;  // VPN connector
    };
 } NXC_OBJECT;
 
@@ -738,6 +758,7 @@ typedef struct
    TCHAR *pszRequest;
    TCHAR *pszResponce;
    DWORD dwIpAddr;
+   DWORD dwPeerGateway;
 } NXC_OBJECT_UPDATE;
 
 
