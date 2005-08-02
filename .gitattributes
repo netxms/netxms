@@ -117,6 +117,8 @@ images/template_group.ico -text
 images/template_group.png -text
 images/template_root.ico -text
 images/template_root.png -text
+images/vpnc.ico -text
+images/vpnc.png -text
 images/zone.ico -text
 images/zone.png -text
 include/Makefile.am -text

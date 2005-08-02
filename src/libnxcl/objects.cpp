@@ -576,7 +576,7 @@ void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(NXC_SESSION hSession)
 DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE *pUpdate)
 {
    CSCPMessage msg;
-   DWORD dwRqId;
+   DWORD dwRqId, i, dwId1, dwId2;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -616,10 +616,23 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->dwFlags & OBJ_UPDATE_PEER_GATEWAY)
       msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
+   if (pUpdate->dwFlags & OBJ_UPDATE_NETWORK_LIST)
+   {
+      msg.SetVariable(VID_NUM_LOCAL_NETS, pUpdate->dwNumLocalNets);
+      msg.SetVariable(VID_NUM_REMOTE_NETS, pUpdate->dwNumRemoteNets);
+      for(i = 0, dwId1 = VID_VPN_NETWORK_BASE; i < pUpdate->dwNumLocalNets; i++)
+      {
+         msg.SetVariable(dwId1++, pUpdate->pLocalNetList[i].dwAddr);
+         msg.SetVariable(dwId1++, pUpdate->pLocalNetList[i].dwMask);
+      }
+      for(i = 0; i < pUpdate->dwNumRemoteNets; i++)
+      {
+         msg.SetVariable(dwId1++, pUpdate->pRemoteNetList[i].dwAddr);
+         msg.SetVariable(dwId1++, pUpdate->pRemoteNetList[i].dwMask);
+      }
+   }
    if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
    {
-      DWORD i, dwId1, dwId2;
-
       msg.SetVariable(VID_ACL_SIZE, pUpdate->dwAclSize);
       msg.SetVariable(VID_INHERIT_RIGHTS, (WORD)pUpdate->bInheritRights);
       for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;

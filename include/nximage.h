@@ -42,5 +42,6 @@
 #define IMG_TEMPLATE_ROOT           11
 #define IMG_NETWORK_SERVICE         12
 #define IMG_ZONE                    13
+#define IMG_VPN_CONNECTOR           14
 
 #endif

@@ -20,3 +20,9 @@
 		ip_netmask varchar(15),
 		PRIMARY KEY(vpn_id,ip_addr)
 	) TABLE_TYPE;
+- New images added:
+	INSERT INTO default_images (object_class,image_id)
+		VALUES (12, IMG_VPN_CONNECTOR);
+	INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file_hash_ico)
+		VALUES (IMG_VPN_CONNECTOR,'Obj.VPNConnector','vpnc.png','<invalid_hash>',
+                	'vpnc.ico','<invalid_hash>');

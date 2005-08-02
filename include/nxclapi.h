@@ -302,6 +302,7 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x004000)
 #define OBJ_UPDATE_IP_ADDR          ((DWORD)0x008000)
 #define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x010000)
+#define OBJ_UPDATE_NETWORK_LIST     ((DWORD)0x020000)
 
 #define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0041FF)
 #define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x00FEC1)
@@ -759,6 +760,10 @@ typedef struct
    TCHAR *pszResponce;
    DWORD dwIpAddr;
    DWORD dwPeerGateway;
+   DWORD dwNumLocalNets;
+   DWORD dwNumRemoteNets;
+   IP_NETWORK *pLocalNetList;
+   IP_NETWORK *pRemoteNetList;
 } NXC_OBJECT_UPDATE;
 
 
