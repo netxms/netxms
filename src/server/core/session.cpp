@@ -2900,6 +2900,13 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      pObject->SetName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
+                  case OBJECT_VPNCONNECTOR:
+                     pObject = new VPNConnector;
+                     pObject->SetName(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+                     break;
+                  default:
+                     break;
                }
 
                // If creation was successful do binding
