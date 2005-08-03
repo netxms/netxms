@@ -4,6 +4,7 @@
 
 - Implemented basic event correlation
 - Windows agent: implemented enum Net.IP.RoutingTable
+- Database Manager: implemented forced check/unlock flag
 - Fixed issues: 29
 
 

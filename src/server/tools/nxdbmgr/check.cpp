@@ -226,7 +226,7 @@ static void CheckObjectProperties(void)
 // Check database for errors
 //
 
-void CheckDatabase(BOOL bForce)
+void CheckDatabase(void)
 {
    DB_RESULT hResult;
    long iVersion = 0;

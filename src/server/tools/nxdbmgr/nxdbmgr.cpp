@@ -58,6 +58,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "LogFile", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
+static BOOL m_bForce = FALSE;
 
 
 //
@@ -66,31 +67,39 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 
 BOOL GetYesNo(void)
 {
-#ifdef _WIN32
-   int ch;
-
-   while(1)
+   if (m_bForce)
    {
-      ch = getch();
-      if ((ch == 'y') || (ch == 'Y'))
-      {
-         printf("Y\n");
-         return TRUE;
-      }
-      if ((ch == 'n') || (ch == 'N'))
-      {
-         printf("N\n");
-         return FALSE;
-      }
+      printf("Y\n");
+      return TRUE;
    }
-#else
-   TCHAR szBuffer[16];
+   else
+   {
+#ifdef _WIN32
+      int ch;
 
-   fflush(stdout);
-   _fgetts(szBuffer, 16, stdin);
-   StrStrip(szBuffer);
-   return ((szBuffer[0] == 'y') || (szBuffer[0] == 'Y'));
+      while(1)
+      {
+         ch = getch();
+         if ((ch == 'y') || (ch == 'Y'))
+         {
+            printf("Y\n");
+            return TRUE;
+         }
+         if ((ch == 'n') || (ch == 'N'))
+         {
+            printf("N\n");
+            return FALSE;
+         }
+      }
+#else
+      TCHAR szBuffer[16];
+
+      fflush(stdout);
+      _fgetts(szBuffer, 16, stdin);
+      StrStrip(szBuffer);
+      return ((szBuffer[0] == 'y') || (szBuffer[0] == 'Y'));
 #endif
+   }
 }
 
 
@@ -279,7 +288,7 @@ int main(int argc, char *argv[])
             _tcsncpy(szConfigFile, optarg, MAX_PATH);
             break;
          case 'f':
-            bForce = TRUE;
+            m_bForce = TRUE;
             break;
          case 'X':
             g_bIgnoreErrors = TRUE;
@@ -379,7 +388,7 @@ int main(int argc, char *argv[])
 
    // Do requested operation
    if (!strcmp(argv[optind], "check"))
-      CheckDatabase(bForce);
+      CheckDatabase();
    else if (!strcmp(argv[optind], "upgrade"))
       UpgradeDatabase();
 

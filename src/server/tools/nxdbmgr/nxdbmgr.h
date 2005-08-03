@@ -51,7 +51,7 @@
 // Functions
 //
 
-void CheckDatabase(BOOL bForce);
+void CheckDatabase(void);
 void UpgradeDatabase(void);
 DB_RESULT SQLSelect(TCHAR *pszQuery);
 BOOL SQLQuery(TCHAR *pszQuery);
