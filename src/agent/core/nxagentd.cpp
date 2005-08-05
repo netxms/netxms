@@ -84,6 +84,7 @@ DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
 time_t g_dwAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwIdleTimeout = 60;   // Session idle timeout
+DWORD g_dwMaxSessions = 32;
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
@@ -126,6 +127,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
+   { "MaxSessions", CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions },
    { "PlatformSuffix", CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
    { "RequireEncryption", CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags },

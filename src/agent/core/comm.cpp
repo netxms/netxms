@@ -33,17 +33,10 @@ DWORD g_dwRejectedConnections = 0;
 
 
 //
-// Constants
-//
-
-#define MAX_CLIENT_SESSIONS   32
-
-
-//
 // Static data
 //
 
-static CommSession *m_pSessionList[MAX_CLIENT_SESSIONS];
+static CommSession **m_pSessionList = NULL;
 static MUTEX m_hSessionListAccess;
 
 
@@ -74,7 +67,7 @@ static BOOL RegisterSession(CommSession *pSession)
    DWORD i;
 
    MutexLock(m_hSessionListAccess, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   for(i = 0; i < g_dwMaxSessions; i++)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
@@ -143,7 +136,9 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Set up queue
    listen(hSocket, SOMAXCONN);
 
-   // Create session list access mutex
+   // Create session list and it's access mutex
+   g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
+   m_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
    m_hSessionListAccess = MutexCreate();
 
    // Wait for connection requests
@@ -201,6 +196,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    }
 
    MutexDestroy(m_hSessionListAccess);
+   free(m_pSessionList);
    return THREAD_OK;
 }
 
@@ -220,7 +216,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 
       MutexLock(m_hSessionListAccess, INFINITE);
       now = time(NULL);
-      for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      for(i = 0; i < g_dwMaxSessions; i++)
          if (m_pSessionList[i] != NULL)
          {
             if (m_pSessionList[i]->GetTimeStamp() < now - (time_t)g_dwIdleTimeout)
