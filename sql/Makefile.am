@@ -32,4 +32,4 @@ clean:
 EXTRA_DIST = \
 	$(sql_DATA) \
 	dbinit.in events.in images.in \
-	policy.in schema.in setup.in
+	policy.in schema.in setup.in traps.in
