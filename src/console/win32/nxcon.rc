@@ -238,6 +238,8 @@ BEGIN
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
+
         END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
@@ -353,6 +355,8 @@ BEGIN
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
+
         END
         MENUITEM "&Bind...\tCtrl+B",            ID_OBJECT_BIND
         MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
@@ -474,6 +478,8 @@ BEGIN
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
+
         END
         MENUITEM "&Bind...",                    ID_OBJECT_BIND
         MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
@@ -1899,6 +1905,50 @@ BEGIN
     LTEXT           "Value",IDC_STATIC,7,40,19,8
 END
 
+IDD_CREATE_VPNC DIALOG DISCARDABLE  0, 0, 229, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create VPN Connector"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,27,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,110,62,50,12
+    DEFPUSHBUTTON   "OK",IDOK,172,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,24,50,14
+    GROUPBOX        "New object",IDC_STATIC,7,7,158,41
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,51,158,42
+    ICON            "",IDC_ICON_PARENT,14,64,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,64,54,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,78,112,9
+END
+
+IDD_OBJECT_VPNC_GENERAL DIALOGEX 0, 0, 292, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,26,211,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ID,233,26,45,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_IPADDR,13,54,94,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "&Select...",IDC_SELECT_GATEWAY,111,54,43,14
+    CONTROL         "List1",IDC_LIST_LOCAL,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_TABSTOP,13,
+                    90,105,68,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "+",IDC_ADD_LOCAL_NET,123,90,14,14
+    PUSHBUTTON      "-",IDC_REMOVE_LOCAL_NET,123,108,14,14
+    CONTROL         "List1",IDC_LIST_LOCAL2,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_TABSTOP,155,
+                    90,105,68,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "+",IDC_ADD_REMOTE_NET,265,90,14,14
+    PUSHBUTTON      "-",IDC_REMOVE_REMOTE_NET,265,108,14,14
+    LTEXT           "Object ID",IDC_STATIC,233,16,31,8
+    LTEXT           "Peer gateway",IDC_STATIC,13,44,44,8
+    LTEXT           "Name",IDC_STATIC,13,16,20,8
+    GROUPBOX        "General",IDC_STATIC,7,7,278,68
+    GROUPBOX        "Local networks",IDC_STATIC,7,79,136,84
+    GROUPBOX        "Remote networks",IDC_STATIC,149,79,136,84
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2333,6 +2383,22 @@ BEGIN
         RIGHTMARGIN, 197
         TOPMARGIN, 7
         BOTTOMMARGIN, 64
+    END
+
+    IDD_CREATE_VPNC, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 93
+    END
+
+    IDD_OBJECT_VPNC_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -11,6 +11,7 @@
 #include "CreateTemplateDlg.h"
 #include "CreateTGDlg.h"
 #include "CreateNetSrvDlg.h"
+#include "CreateVPNConnDlg.h"
 #include "NodePoller.h"
 #include "MIBBrowserDlg.h"
 #include "NetSrvPropsGeneral.h"
@@ -1460,6 +1461,7 @@ void CConsoleApp::CreateTemplate(DWORD dwParent)
    NXC_OBJECT_CREATE_INFO ci;
    CCreateTemplateDlg dlg;
 
+   dlg.m_iObjectClass = OBJECT_TEMPLATE;
    dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_TEMPLATEGROUP) &&
@@ -1484,6 +1486,7 @@ void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
    NXC_OBJECT_CREATE_INFO ci;
    CCreateTGDlg dlg;
 
+   dlg.m_iObjectClass = OBJECT_TEMPLATEGROUP;
    dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_TEMPLATEGROUP) &&
@@ -1495,6 +1498,30 @@ void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
       ci.iClass = OBJECT_TEMPLATEGROUP;
       ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.templateGroup.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
+      CreateObject(&ci);
+   }
+}
+
+
+//
+// Create VPN connector object
+//
+
+void CConsoleApp::CreateVPNConnector(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateVPNConnDlg dlg;
+
+   dlg.m_iObjectClass = OBJECT_VPNCONNECTOR;
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if (dlg.m_pParentObject->iClass != OBJECT_NODE)
+         dlg.m_pParentObject = NULL;
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_VPNCONNECTOR;
+      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
       CreateObject(&ci);
    }
 }

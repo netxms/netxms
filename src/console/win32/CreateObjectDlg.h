@@ -15,6 +15,7 @@ class CCreateObjectDlg : public CDialog
 {
 // Construction
 public:
+	int m_iObjectClass;
 	NXC_OBJECT *m_pParentObject;
 	CCreateObjectDlg(int iId, CWnd* pParent = NULL);
 

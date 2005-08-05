@@ -921,7 +921,8 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
             return TRUE;
          break;
       case OBJECT_NODE:
-         if (iChildClass == OBJECT_NETWORKSERVICE)
+         if ((iChildClass == OBJECT_NETWORKSERVICE) ||
+             (iChildClass == OBJECT_VPNCONNECTOR))
             return TRUE;
          break;
       case -1:    // Creating object without parent

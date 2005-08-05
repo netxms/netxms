@@ -22,6 +22,7 @@ EXTRA_DIST = \
 	CreateObjectDlg.cpp CreateObjectDlg.h \
 	CreateTemplateDlg.cpp CreateTemplateDlg.h \
 	CreateTGDlg.cpp CreateTGDlg.h \
+	CreateVPNConnDlg.cpp CreateVPNConnDlg.h \
 	DataCollectionEditor.cpp DataCollectionEditor.h \
 	DataExportDlg.cpp DataExportDlg.h \
 	DataQueryDlg.cpp DataQueryDlg.h \

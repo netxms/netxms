@@ -165,6 +165,7 @@ protected:
 	afx_msg void OnUpdateObjectChangeipaddress(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateObjectAgentcfg(CCmdUI* pCmdUI);
 	afx_msg void OnObjectAgentcfg();
+	afx_msg void OnObjectCreateVpnconnector();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);

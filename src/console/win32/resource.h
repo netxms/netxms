@@ -168,6 +168,8 @@
 #define IDD_DCI_DATA_EXPORT             274
 #define IDA_SERVER_CFG_EDITOR           276
 #define IDD_EDIT_VARIABLE               277
+#define IDD_CREATE_VPNC                 278
+#define IDD_OBJECT_VPNC_GENERAL         279
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -207,8 +209,10 @@
 #define IDC_LIST_PARENTS                1024
 #define IDC_LIST_DESKTOPS               1024
 #define IDC_LIST_DCI                    1024
+#define IDC_LIST_LOCAL                  1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
+#define IDC_LIST_LOCAL2                 1025
 #define IDC_EDIT_CLASS                  1026
 #define IDC_CHECK_READ                  1027
 #define IDC_CHECK_MODIFY                1028
@@ -415,6 +419,11 @@
 #define IDC_RADIO_SPACE                 1270
 #define IDC_RADIO_COMMA                 1271
 #define IDC_RADIO_RAW                   1272
+#define IDC_SELECT_GATEWAY              1275
+#define IDC_ADD_LOCAL_NET               1276
+#define IDC_REMOVE_LOCAL_NET            1277
+#define IDC_ADD_REMOTE_NET              1278
+#define IDC_REMOVE_REMOTE_NET           1279
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -535,6 +544,7 @@
 #define ID_VARIABLE_EDIT                32941
 #define ID_VARIABLE_NEW                 32942
 #define ID_VARIABLE_DELETE              32943
+#define ID_OBJECT_CREATE_VPNCONNECTOR   32944
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -543,9 +553,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        278
-#define _APS_NEXT_COMMAND_VALUE         32944
-#define _APS_NEXT_CONTROL_VALUE         1275
+#define _APS_NEXT_RESOURCE_VALUE        280
+#define _APS_NEXT_COMMAND_VALUE         32945
+#define _APS_NEXT_CONTROL_VALUE         1277
 #define _APS_NEXT_SYMED_VALUE           122
 #endif
 #endif

@@ -165,6 +165,10 @@ SOURCE=.\CreateTGDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateVPNConnDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DataCollectionEditor.cpp
 # End Source File
 # Begin Source File
@@ -468,6 +472,10 @@ SOURCE=.\UserSelectDlg.cpp
 
 SOURCE=.\ValueList.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\VPNCPropsGeneral.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -531,6 +539,10 @@ SOURCE=.\CreateTemplateDlg.h
 # Begin Source File
 
 SOURCE=.\CreateTGDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateVPNConnDlg.h
 # End Source File
 # Begin Source File
 
@@ -847,6 +859,10 @@ SOURCE=.\UserSelectDlg.h
 # Begin Source File
 
 SOURCE=.\ValueList.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\VPNCPropsGeneral.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

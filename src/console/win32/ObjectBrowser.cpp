@@ -209,6 +209,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_CHANGEIPADDRESS, OnUpdateObjectChangeipaddress)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_AGENTCFG, OnUpdateObjectAgentcfg)
 	ON_COMMAND(ID_OBJECT_AGENTCFG, OnObjectAgentcfg)
+	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1489,6 +1490,16 @@ void CObjectBrowser::OnObjectCreateTemplategroup()
 void CObjectBrowser::OnObjectCreateService() 
 {
    theApp.CreateNetworkService((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CREATE_VPNCONNECTOR message handler
+//
+
+void CObjectBrowser::OnObjectCreateVpnconnector() 
+{
+   theApp.CreateVPNConnector((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }
 
 

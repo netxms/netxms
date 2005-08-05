@@ -66,7 +66,19 @@ void CCreateObjectDlg::OnSelectParent()
 {
    CObjectSelDlg dlg;
 
-   dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
+   switch(m_iObjectClass)
+   {
+      case OBJECT_TEMPLATE:
+      case OBJECT_TEMPLATEGROUP:
+         dlg.m_dwAllowedClasses = SCL_TEMPLATEROOT | SCL_TEMPLATEGROUP;
+         break;
+      case OBJECT_VPNCONNECTOR:
+         dlg.m_dwAllowedClasses = SCL_NODE;
+         break;
+      default:
+         dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
+         break;
+   }
    dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {

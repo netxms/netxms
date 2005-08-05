@@ -84,7 +84,8 @@ TCHAR *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major",
                                  "Disabled", "Testing" };
 TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
                              _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
-                             _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService") };
+                             _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
+                             _T("VPNConnector") };
 TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS") };
 TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP"),
                              _T("FTP"), _T("HTTP"), NULL };
