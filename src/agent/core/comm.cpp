@@ -139,6 +139,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Create session list and it's access mutex
    g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
    m_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
+   memset(m_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
    m_hSessionListAccess = MutexCreate();
 
    // Wait for connection requests
@@ -210,6 +211,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    DWORD i;
    time_t now;
 
+   ThreadSleep(5);
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
       ThreadSleep(1);
