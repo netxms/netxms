@@ -1147,6 +1147,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                   fwrite(pList[i].pObject->zone.pdwAddrList, sizeof(DWORD),
                          pList[i].pObject->zone.dwAddrListSize, hFile);
                break;
+            case OBJECT_VPNCONNECTOR:
+               fwrite(pList[i].pObject->vpnc.pLocalNetList, 1, 
+                      pList[i].pObject->vpnc.dwNumLocalNets * sizeof(IP_NETWORK), hFile);
+               fwrite(pList[i].pObject->vpnc.pRemoteNetList, 1, 
+                      pList[i].pObject->vpnc.dwNumRemoteNets * sizeof(IP_NETWORK), hFile);
+               break;
             default:
                break;
          }
@@ -1248,6 +1254,15 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                         {
                            object.zone.pdwAddrList = NULL;
                         }
+                        break;
+                     case OBJECT_VPNCONNECTOR:
+                        dwSize = object.vpnc.dwNumLocalNets * sizeof(IP_NETWORK);
+                        object.vpnc.pLocalNetList = (IP_NETWORK *)malloc(dwSize);
+                        fread(object.vpnc.pLocalNetList, 1, dwSize, hFile);
+
+                        dwSize = object.vpnc.dwNumRemoteNets * sizeof(IP_NETWORK);
+                        object.vpnc.pRemoteNetList = (IP_NETWORK *)malloc(dwSize);
+                        fread(object.vpnc.pRemoteNetList, 1, dwSize, hFile);
                         break;
                      default:
                         break;
