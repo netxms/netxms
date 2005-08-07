@@ -82,6 +82,15 @@
 # SharedSecret = secret
 
 #
+# MaxSessions
+#
+# Maximum number of simultaneous communication sessions. Possible value can
+# be in range from 2 to 256. Default value is 32.
+#
+# Example:
+# MaxSessions = 32
+
+#
 # SessionIdleTimeout
 #
 # Communication session's idle timeout in seconds. If agent will not receive
