@@ -221,6 +221,10 @@ SOURCE=.\EditEventDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\EditSubnetDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EditVariableDlg.cpp
 # End Source File
 # Begin Source File
@@ -591,6 +595,10 @@ SOURCE=.\EditBox.h
 # Begin Source File
 
 SOURCE=.\EditEventDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditSubnetDlg.h
 # End Source File
 # Begin Source File
 

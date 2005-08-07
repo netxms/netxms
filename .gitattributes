@@ -403,6 +403,8 @@ src/console/win32/CreateTGDlg.cpp -text
 src/console/win32/CreateTGDlg.h -text
 src/console/win32/CreateTemplateDlg.cpp -text
 src/console/win32/CreateTemplateDlg.h -text
+src/console/win32/CreateVPNConnDlg.cpp -text
+src/console/win32/CreateVPNConnDlg.h -text
 src/console/win32/DCIDataView.cpp -text
 src/console/win32/DCIDataView.h -text
 src/console/win32/DCIPropPage.cpp -text
@@ -427,6 +429,8 @@ src/console/win32/EditBox.cpp -text
 src/console/win32/EditBox.h -text
 src/console/win32/EditEventDlg.cpp -text
 src/console/win32/EditEventDlg.h -text
+src/console/win32/EditSubnetDlg.cpp -text
+src/console/win32/EditSubnetDlg.h -text
 src/console/win32/EditVariableDlg.cpp -text
 src/console/win32/EditVariableDlg.h -text
 src/console/win32/EventBrowser.cpp -text
@@ -544,6 +548,8 @@ src/console/win32/UserPropDlg.cpp -text
 src/console/win32/UserPropDlg.h -text
 src/console/win32/UserSelectDlg.cpp -text
 src/console/win32/UserSelectDlg.h -text
+src/console/win32/VPNCPropsGeneral.cpp -text
+src/console/win32/VPNCPropsGeneral.h -text
 src/console/win32/ValueList.cpp -text
 src/console/win32/ValueList.h -text
 src/console/win32/comm.cpp -text

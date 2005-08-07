@@ -19,6 +19,7 @@
 #include "DeploymentView.h"
 #include "LastValuesView.h"
 #include "ObjectPropsRelations.h"
+#include "VPNCPropsGeneral.h"
 #include "RemoveTemplateDlg.h"
 #include "AddrChangeDlg.h"
 #include "AgentCfgEditor.h"
@@ -896,6 +897,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CObjectPropsPresentation wndObjectPresentation;
    CObjectPropsRelations wndObjectRelations;
    CNodePropsPolling wndNodePolling;
+   CVPNCPropsGeneral wndVPNCGeneral;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -936,6 +938,13 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNetSrvGeneral.m_dwIpAddr = pObject->dwIpAddr;
             wndNetSrvGeneral.m_dwPollerNode = pObject->netsrv.dwPollerNode;
             wndPropSheet.AddPage(&wndNetSrvGeneral);
+            break;
+         case OBJECT_VPNCONNECTOR:
+            wndVPNCGeneral.m_pObject = pObject;
+            wndVPNCGeneral.m_dwObjectId = dwObjectId;
+            wndVPNCGeneral.m_strName = pObject->szName;
+            wndVPNCGeneral.m_dwPeerGateway = pObject->vpnc.dwPeerGateway;
+            wndPropSheet.AddPage(&wndVPNCGeneral);
             break;
          default:
             wndObjectGeneral.m_dwObjectId = dwObjectId;

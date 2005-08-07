@@ -36,6 +36,7 @@ EXTRA_DIST = \
 	EditActionDlg.cpp EditActionDlg.h \
 	EditBox.cpp EditBox.h \
 	EditEventDlg.cpp EditEventDlg.h \
+	EditSubnetDlg.cpp EditSubnetDlg.h \
 	EditVariableDlg.cpp EditVariableDlg.h \
 	EventBrowser.cpp EventBrowser.h \
 	EventEditor.cpp EventEditor.h \
@@ -94,4 +95,5 @@ EXTRA_DIST = \
 	UserEditor.cpp UserEditor.h \
 	UserPropDlg.cpp UserPropDlg.h \
 	UserSelectDlg.cpp UserSelectDlg.h \
-	ValueList.cpp ValueList.h
+	ValueList.cpp ValueList.h \
+	VPNCPropsGeneral.cpp VPNCPropsGeneral.h

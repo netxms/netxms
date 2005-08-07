@@ -170,6 +170,7 @@
 #define IDD_EDIT_VARIABLE               277
 #define IDD_CREATE_VPNC                 278
 #define IDD_OBJECT_VPNC_GENERAL         279
+#define IDD_EDIT_IP_SUBNET              280
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -212,7 +213,7 @@
 #define IDC_LIST_LOCAL                  1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
-#define IDC_LIST_LOCAL2                 1025
+#define IDC_LIST_REMOTE                 1025
 #define IDC_EDIT_CLASS                  1026
 #define IDC_CHECK_READ                  1027
 #define IDC_CHECK_MODIFY                1028
@@ -424,6 +425,8 @@
 #define IDC_REMOVE_LOCAL_NET            1277
 #define IDC_ADD_REMOTE_NET              1278
 #define IDC_REMOVE_REMOTE_NET           1279
+#define IDC_EDIT_GATEWAY                1280
+#define IDC_IP_NETMASK                  1283
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
@@ -553,9 +556,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        280
+#define _APS_NEXT_RESOURCE_VALUE        281
 #define _APS_NEXT_COMMAND_VALUE         32945
-#define _APS_NEXT_CONTROL_VALUE         1277
+#define _APS_NEXT_CONTROL_VALUE         1284
 #define _APS_NEXT_SYMED_VALUE           122
 #endif
 #endif
