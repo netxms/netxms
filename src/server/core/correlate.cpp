@@ -32,6 +32,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
    NETWORK_PATH_TRACE *pTrace;
    Node *pMgmtNode;
    Interface *pInterface;
+   NetObj *pObject;
    int i;
 
    // Trace route from management station to failed node and
@@ -55,12 +56,28 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                   }
                   else
                   {
-                     pInterface = ((Node *)pTrace->pHopList[i].pObject)->FindInterface(pTrace->pHopList[i].dwIfIndex, INADDR_ANY);
-                     if (pInterface != NULL)
+                     if (pTrace->pHopList[i].bIsVPN)
                      {
-                        if (pInterface->Status() == STATUS_CRITICAL)
+                        // Next hop is behind VPN tunnel
+                        pObject = FindObjectById(pTrace->pHopList[i].dwIfIndex);
+                        if (pObject != NULL)
                         {
-                           pEvent->SetRootId(pInterface->GetLastDownEventId());
+                           if ((pObject->Type() == OBJECT_VPNCONNECTOR) &&
+                               (pObject->Status() == STATUS_CRITICAL))
+                           {
+                              /* TODO: set root id */
+                           }
+                        }
+                     }
+                     else
+                     {
+                        pInterface = ((Node *)pTrace->pHopList[i].pObject)->FindInterface(pTrace->pHopList[i].dwIfIndex, INADDR_ANY);
+                        if (pInterface != NULL)
+                        {
+                           if (pInterface->Status() == STATUS_CRITICAL)
+                           {
+                              pEvent->SetRootId(pInterface->GetLastDownEventId());
+                           }
                         }
                      }
                   }

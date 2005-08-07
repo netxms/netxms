@@ -30,9 +30,10 @@
 
 struct HOP_INFO
 {
-   DWORD dwNextHop;
-   NetObj *pObject;
-   DWORD dwIfIndex;
+   DWORD dwNextHop;     // Next hop address
+   NetObj *pObject;     // Current hop object
+   DWORD dwIfIndex;     // Interface index or VPN connector object ID
+   BOOL bIsVPN;         // TRUE if next hop is behind VPN tunnel
 };
 
 

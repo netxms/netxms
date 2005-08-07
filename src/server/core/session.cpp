@@ -2901,7 +2901,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_VPNCONNECTOR:
-                     pObject = new VPNConnector;
+                     pObject = new VPNConnector(TRUE);
                      pObject->SetName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
@@ -2918,6 +2918,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      pObject->AddParent(pParent);
                      pParent->CalculateCompoundStatus();
                   }
+                  pObject->Unhide();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   msg.SetVariable(VID_OBJECT_ID, pObject->Id());
                }

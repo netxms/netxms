@@ -64,6 +64,7 @@ Container::Container(char *pszName, DWORD dwCategory, char *pszDescription)
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_dwCategory = dwCategory;
+   m_bIsHidden = TRUE;
 }
 
 

@@ -719,6 +719,31 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load VPN connectors
+   DbgPrintf(AF_DEBUG_MISC, "Loading VPN connectors...");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM vpn_connectors");
+   if (hResult != 0)
+   {
+      VPNConnector *pConnector;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pConnector = new VPNConnector;
+         if (pConnector->CreateFromDB(dwId))
+         {
+            NetObjInsert(pConnector, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pConnector;
+            WriteLog(MSG_VPNC_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load templates
    DbgPrintf(AF_DEBUG_MISC, "Loading templates...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");

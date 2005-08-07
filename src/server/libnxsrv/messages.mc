@@ -488,4 +488,16 @@ Language=English
 Failed to initialize cryptografy module
 .
 
+MessageId=
+SymbolicName=MSG_VPNC_LOAD_FAILED
+Language=English
+Failed to load VPN connector object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_NODE_ID_EX
+Language=English
+Inconsistent database: %3 %1 linked to non-existing node %2
+.
+
 ;#endif

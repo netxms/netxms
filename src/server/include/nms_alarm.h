@@ -44,6 +44,7 @@ private:
 
    void AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId);
    void NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
+   void UpdateObjectStatus(DWORD dwObjectId);
 
 public:
    AlarmManager();
@@ -58,6 +59,8 @@ public:
    void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);
 
    NetObj *GetAlarmSourceObject(DWORD dwAlarmId);
+
+   int GetWorstStatusForObject(DWORD dwObjectId);
 };
 
 

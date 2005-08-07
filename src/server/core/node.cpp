@@ -900,6 +900,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    {
       SendPollerMsg(dwRqId, _T("Node is marked as unreacheable, configuration poll aborted\r\n"));
       DbgPrintf(AF_DEBUG_DISCOVERY, "Node is marked as unreacheable, configuration poll aborted");
+      m_tLastConfigurationPoll = time(NULL);
    }
    else
    {
@@ -2056,24 +2057,47 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
 // Get next hop for given destination address
 //
 
-BOOL Node::GetNextHop(DWORD dwDestAddr, DWORD *pdwNextHop, DWORD *pdwIfIndex)
+BOOL Node::GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
+                      DWORD *pdwIfIndex, BOOL *pbIsVPN)
 {
-   int i;
+   DWORD i;
    BOOL bResult = FALSE;
 
-   RTLock();
-   if (m_pRoutingTable != NULL)
-   {
-      for(i = 0; i < m_pRoutingTable->iNumEntries; i++)
-         if ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
+   // Check VPN connectors
+   LockChildList(FALSE);
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
+      {
+         if (((VPNConnector *)m_pChildList[i])->IsRemoteAddr(dwDestAddr) &&
+             ((VPNConnector *)m_pChildList[i])->IsLocalAddr(dwSrcAddr))
          {
-            *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
-            *pdwIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+            *pdwNextHop = ((VPNConnector *)m_pChildList[i])->GetPeerGatewayAddr();
+            *pdwIfIndex = m_pChildList[i]->Id();
+            *pbIsVPN = TRUE;
             bResult = TRUE;
             break;
          }
+      }
+   UnlockChildList();
+
+   // Check routing table
+   if (!bResult)
+   {
+      RTLock();
+      if (m_pRoutingTable != NULL)
+      {
+         for(i = 0; i < (DWORD)m_pRoutingTable->iNumEntries; i++)
+            if ((dwDestAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
+            {
+               *pdwNextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
+               *pdwIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
+               *pbIsVPN = FALSE;
+               bResult = TRUE;
+               break;
+            }
+      }
+      RTUnlock();
    }
-   RTUnlock();
 
    return bResult;
 }

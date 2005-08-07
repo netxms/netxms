@@ -418,12 +418,13 @@ const char *NetObj::ParentList(char *szBuffer)
 void NetObj::CalculateCompoundStatus(void)
 {
    DWORD i;
-   int iWorstStatus, iCount, iStatusAlg, iOldStatus = m_iStatus;
+   int iWorstAlarm, iWorstStatus, iCount, iStatusAlg, iOldStatus = m_iStatus;
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      LockData();
+      iWorstAlarm = g_alarmMgr.GetWorstStatusForObject(m_dwId);
 
+      LockData();
       iStatusAlg = (m_iStatusAlgorithm == SA_DEFAULT) ? g_iStatusAlgorithm : m_iStatusAlgorithm;
 
       switch(iStatusAlg)
@@ -440,9 +441,13 @@ void NetObj::CalculateCompoundStatus(void)
             UnlockChildList();
 
             if (iCount > 0)
-               m_iStatus = iWorstStatus;
+            {
+               m_iStatus = (iWorstAlarm != STATUS_UNKNOWN) ? max(iWorstStatus, iWorstAlarm) : iWorstStatus;
+            }
             else
-               m_iStatus = STATUS_UNKNOWN;
+            {
+               m_iStatus = iWorstAlarm;
+            }
             break;
          default:
             m_iStatus = STATUS_UNKNOWN;

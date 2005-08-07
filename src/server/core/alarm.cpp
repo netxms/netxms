@@ -122,6 +122,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
 {
    NXC_ALARM alarm;
    char *pszExpMsg, *pszExpKey, szQuery[2048];
+   DWORD dwObjectId = 0;
 
    // Expand alarm's message and key
    pszExpMsg = pEvent->ExpandText(pszMsg);
@@ -149,6 +150,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
       m_dwNumAlarms++;
       m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * m_dwNumAlarms);
       memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
+      dwObjectId = alarm.dwSourceObject;
 
       Unlock();
    }
@@ -173,6 +175,10 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
 
    // Notify connected clients about new alarm
    NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
+
+   // Update status of related object if needed
+   if (dwObjectId != 0)
+      UpdateObjectStatus(dwObjectId);
 }
 
 
@@ -182,12 +188,13 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
 
 void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
 {
-   DWORD i;
+   DWORD i, dwObject;
 
    Lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
+         dwObject = m_pAlarmList[i].dwSourceObject;
          NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, &m_pAlarmList[i]);
          AckAlarmInDB(m_pAlarmList[i].dwAlarmId, dwUserId);
          m_dwNumAlarms--;
@@ -195,6 +202,8 @@ void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
          break;
       }
    Unlock();
+
+   UpdateObjectStatus(dwObject);
 }
 
 
@@ -204,12 +213,26 @@ void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
 
 void AlarmManager::AckByKey(char *pszKey)
 {
-   DWORD i;
+   DWORD i, j, dwNumObjects, *pdwObjectList;
+
+   pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumAlarms);
 
    Lock();
-   for(i = 0; i < m_dwNumAlarms; i++)
+   for(i = 0, dwNumObjects = 0; i < m_dwNumAlarms; i++)
       if (!strcmp(pszKey, m_pAlarmList[i].szKey))
       {
+         // Add alarm's source object to update list
+         for(j = 0; j < dwNumObjects; j++)
+         {
+            if (pdwObjectList[j] == m_pAlarmList[i].dwSourceObject)
+               break;
+         }
+         if (j == dwNumObjects)
+         {
+            pdwObjectList[dwNumObjects++] = m_pAlarmList[i].dwSourceObject;
+         }
+
+         // Acknowlege alarm
          NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, &m_pAlarmList[i]);
          AckAlarmInDB(m_pAlarmList[i].dwAlarmId, 0);
          m_dwNumAlarms--;
@@ -217,6 +240,11 @@ void AlarmManager::AckByKey(char *pszKey)
          i--;
       }
    Unlock();
+
+   // Update status of objects
+   for(i = 0; i < dwNumObjects; i++)
+      UpdateObjectStatus(pdwObjectList[i]);
+   free(pdwObjectList);
 }
 
 
@@ -226,7 +254,7 @@ void AlarmManager::AckByKey(char *pszKey)
 
 void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 {
-   DWORD i;
+   DWORD i, dwObject;
    char szQuery[256];
 
    // Delete alarm from in-memory list
@@ -234,6 +262,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
+         dwObject = m_pAlarmList[i].dwSourceObject;
          NotifyClients(NX_NOTIFY_ALARM_DELETED, &m_pAlarmList[i]);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
@@ -244,6 +273,8 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
    // Delete from database
    sprintf(szQuery, "DELETE FROM alarms WHERE alarm_id=%ld", dwAlarmId);
    DBQuery(g_hCoreDB, szQuery);
+
+   UpdateObjectStatus(dwObject);
 }
 
 
@@ -369,4 +400,44 @@ NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
    }
 
    return FindObjectById(dwObjectId);
+}
+
+
+//
+// Get worst status among active alarms for given object
+// Will return STATUS_UNKNOWN if there are no active alarms
+//
+
+int AlarmManager::GetWorstStatusForObject(DWORD dwObjectId)
+{
+   DWORD i;
+   int iStatus = STATUS_UNKNOWN;
+
+   Lock();
+
+   for(i = 0; i < m_dwNumAlarms; i++)
+   {
+      if ((m_pAlarmList[i].dwSourceObject == dwObjectId) &&
+          ((m_pAlarmList[i].wSeverity > iStatus) || (iStatus == STATUS_UNKNOWN)))
+      {
+         iStatus = (int)m_pAlarmList[i].wSeverity;
+      }
+   }
+
+   Unlock();
+   return iStatus;
+}
+
+
+//
+// Update object status after alarm acknowlegement or deletion
+//
+
+void AlarmManager::UpdateObjectStatus(DWORD dwObjectId)
+{
+   NetObj *pObject;
+
+   pObject = FindObjectById(dwObjectId);
+   if (pObject != NULL)
+      pObject->CalculateCompoundStatus();
 }

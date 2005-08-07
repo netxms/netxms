@@ -39,6 +39,22 @@ VPNConnector::VPNConnector()
 
 
 //
+// Constructor for new VPNConnector object
+//
+
+VPNConnector::VPNConnector(BOOL bIsHidden)
+             : NetObj()
+{
+   m_dwPeerGateway = 0;
+   m_dwNumLocalNets = 0;
+   m_dwNumRemoteNets = 0;
+   m_pLocalNetList = NULL;
+   m_pRemoteNetList = NULL;
+   m_bIsHidden = bIsHidden;
+}
+
+
+//
 // VPNConnector class destructor
 //
 
@@ -110,7 +126,8 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwNodeId);
          if (pObject == NULL)
          {
-            WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+            WriteLog(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
+                     "dds", dwId, dwNodeId, "VPN connector");
          }
          else if (pObject->Type() != OBJECT_NODE)
          {
@@ -336,4 +353,69 @@ DWORD VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
    }
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Check if given address falls into one of the local nets
+//
+
+BOOL VPNConnector::IsLocalAddr(DWORD dwIpAddr)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   LockData();
+
+   for(i = 0; i < m_dwNumLocalNets; i++)
+      if ((dwIpAddr & m_pLocalNetList[i].dwMask) == m_pLocalNetList[i].dwAddr)
+      {
+         bResult = TRUE;
+         break;
+      }
+
+   UnlockData();
+   return bResult;
+}
+
+
+//
+// Check if given address falls into one of the remote nets
+//
+
+BOOL VPNConnector::IsRemoteAddr(DWORD dwIpAddr)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   LockData();
+
+   for(i = 0; i < m_dwNumRemoteNets; i++)
+      if ((dwIpAddr & m_pRemoteNetList[i].dwMask) == m_pRemoteNetList[i].dwAddr)
+      {
+         bResult = TRUE;
+         break;
+      }
+
+   UnlockData();
+   return bResult;
+}
+
+
+//
+// Get address of peer gateway
+//
+
+DWORD VPNConnector::GetPeerGatewayAddr(void)
+{
+   NetObj *pObject;
+   DWORD dwAddr = 0;
+
+   pObject = FindObjectById(m_dwPeerGateway);
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+         dwAddr = pObject->IpAddr();
+   }
+   return dwAddr;
 }

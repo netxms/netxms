@@ -763,10 +763,11 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                      ConsolePrintf(pCtx, "Trace from %s to %s (%d hops):\n",
                                    pObject1->Name(), pObject2->Name(), pTrace->iNumHops);
                      for(i = 0; i < pTrace->iNumHops; i++)
-                        ConsolePrintf(pCtx, "[%ld] %s %s %d\n",
+                        ConsolePrintf(pCtx, "[%ld] %s %s %s %d\n",
                                       pTrace->pHopList[i].pObject->Id(),
                                       pTrace->pHopList[i].pObject->Name(),
                                       IpToStr(pTrace->pHopList[i].dwNextHop, szNextHop),
+                                      pTrace->pHopList[i].bIsVPN ? "VPN Connector ID:" : "Interface Index: ",
                                       pTrace->pHopList[i].dwIfIndex);
                      DestroyTraceData(pTrace);
                      ConsolePrintf(pCtx, "\n");

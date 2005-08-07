@@ -461,6 +461,7 @@ protected:
 
 public:
    VPNConnector();
+   VPNConnector(BOOL bIsHidden);
    virtual ~VPNConnector();
 
    virtual int Type(void) { return OBJECT_VPNCONNECTOR; }
@@ -471,6 +472,10 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   BOOL IsLocalAddr(DWORD dwIpAddr);
+   BOOL IsRemoteAddr(DWORD dwIpAddr);
+   DWORD GetPeerGatewayAddr(void);
 };
 
 
@@ -565,7 +570,8 @@ public:
    int GetInterfaceStatusFromAgent(DWORD dwIndex);
    ROUTING_TABLE *GetRoutingTable(void);
    ROUTING_TABLE *GetCachedRoutingTable(void) { return m_pRoutingTable; }
-   BOOL GetNextHop(DWORD dwDestAddr, DWORD *pdwNextHop, DWORD *pdwIfIndex);
+   BOOL GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
+                   DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
    void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);

@@ -29,27 +29,27 @@
 
 NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest)
 {
-   DWORD dwNextHop, dwDestAddr, dwIfIndex, dwHopCount;
+   DWORD dwNextHop, dwIfIndex, dwHopCount;
    Node *pCurr, *pNext;
    NETWORK_PATH_TRACE *pTrace;
+   BOOL bIsVPN;
 
    pTrace = (NETWORK_PATH_TRACE *)malloc(sizeof(NETWORK_PATH_TRACE));
    memset(pTrace, 0, sizeof(NETWORK_PATH_TRACE));
    
-   dwDestAddr = pDest->IpAddr();
-
    for(pCurr = pSrc, dwHopCount = 0; (pCurr != pDest) && (pCurr != NULL) && (dwHopCount < 30); pCurr = pNext, dwHopCount++)
    {
-      if (pCurr->GetNextHop(dwDestAddr, &dwNextHop, &dwIfIndex))
+      if (pCurr->GetNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
       {
          pNext = FindNodeByIP(dwNextHop);
          pTrace->pHopList = (HOP_INFO *)realloc(pTrace->pHopList, sizeof(HOP_INFO) * (pTrace->iNumHops + 1));
          pTrace->pHopList[pTrace->iNumHops].dwNextHop = dwNextHop;
          pTrace->pHopList[pTrace->iNumHops].dwIfIndex = dwIfIndex;
+         pTrace->pHopList[pTrace->iNumHops].bIsVPN = bIsVPN;
          pTrace->pHopList[pTrace->iNumHops].pObject = pCurr;
          pTrace->iNumHops++;
          if ((pNext == pCurr) || (dwNextHop == 0))
-            pNext = NULL;     // Directly connected subnet, stop trace
+            pNext = NULL;     // Directly connected subnet or too many hops, stop trace
       }
       else
       {

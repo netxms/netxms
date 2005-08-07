@@ -57,6 +57,7 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
    m_wPort = wPort;
    m_pszRequest = pszRequest;
    m_pszResponce = pszResponce;
+   m_bIsHidden = TRUE;
 }
 
 
@@ -172,7 +173,8 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwHostNodeId);
          if (pObject == NULL)
          {
-            WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwHostNodeId);
+            WriteLog(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds",
+                     dwId, dwHostNodeId, "network service");
          }
          else if (pObject->Type() != OBJECT_NODE)
          {
@@ -192,7 +194,8 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
             pObject = FindObjectById(m_dwPollerNode);
             if (pObject == NULL)
             {
-               WriteLog(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, m_dwPollerNode);
+               WriteLog(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
+                        "dds", dwId, m_dwPollerNode, "network service");
                bResult = FALSE;
             }
             else if (pObject->Type() != OBJECT_NODE)
