@@ -1,6 +1,6 @@
 /* 
-** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Windows NT/2000/XP/2003 NetXMS subagent
+** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: win32.cpp
+** $module: procinfo.cpp
 ** Win32 specific process information parameters
 **
 **/
 
-#include "nxagentd.h"
+#include "winnt_subagent.h"
 
 
 //
@@ -129,8 +129,9 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
          value = ioCounters.OtherOperationCount;
          break;
       default:       // Unknown attribute
-         WriteLog(MSG_UNEXPECTED_ATTRIBUTE, EVENTLOG_ERROR_TYPE, "x", attr);
+         NxWriteAgentLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected attribute: 0x%02X", attr);
          value = 0;
+         break;
    }
 
    // Recalculate final value according to selected type
@@ -150,7 +151,7 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
       case INFOTYPE_SUM:
          return lastValue + value;
       default:
-         WriteLog(MSG_UNEXPECTED_TYPE, EVENTLOG_ERROR_TYPE, "x", type);
+         NxWriteAgentLog(EVENTLOG_ERROR_TYPE, "GetProcessAttribute(): Unexpected type: 0x%02X", type);
          return 0;
    }
 }
@@ -243,4 +244,148 @@ LONG H_ProcInfo(char *cmd, char *arg, char *value)
 
    ret_uint64(value, attrVal);
    return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for System.ProcessCount
+//
+
+LONG H_ProcCount(char *cmd, char *arg, char *value)
+{
+   DWORD dwSize, *pdwProcList;
+   PERFORMANCE_INFORMATION pi;
+
+   // On Windows XP and higher, use new method
+   if (imp_GetPerformanceInfo != NULL)
+   {
+      pi.cb = sizeof(PERFORMANCE_INFORMATION);
+      if (!imp_GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
+         return SYSINFO_RC_ERROR;
+      ret_uint(value, pi.ProcessCount);
+   }
+   else
+   {
+      pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+      EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
+      free(pdwProcList);
+      ret_int(value, dwSize / sizeof(DWORD));
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for Process.Count(*)
+//
+
+LONG H_ProcCountSpecific(char *cmd, char *arg, char *value)
+{
+   DWORD dwSize = 0, *pdwProcList;
+   int i, counter, procCount;
+   char procName[MAX_PATH];
+   HANDLE hProcess;
+   HMODULE modList[MAX_MODULES];
+
+   NxGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
+   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+   EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
+   procCount = dwSize / sizeof(DWORD);
+   for(i = 0, counter = 0; i < procCount; i++)
+   {
+      hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
+      if (hProcess != NULL)
+      {
+         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
+         {
+            if (dwSize >= sizeof(HMODULE))     // At least one module exist
+            {
+               char baseName[MAX_PATH];
+
+               GetModuleBaseName(hProcess, modList[0], baseName, sizeof(baseName));
+               if (!stricmp(baseName, procName))
+                  counter++;
+            }
+         }
+         CloseHandle(hProcess);
+      }
+   }
+   ret_int(value, counter);
+   free(pdwProcList);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Handler for System.ProcessList enum
+//
+
+LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+{
+   DWORD i, dwSize, dwNumProc, *pdwProcList;
+   LONG iResult = SYSINFO_RC_SUCCESS;
+   TCHAR szBuffer[MAX_PATH + 64];
+   HMODULE phModList[MAX_MODULES];
+   HANDLE hProcess;
+
+   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+   if (EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize))
+   {
+      dwNumProc = dwSize / sizeof(DWORD);
+      for(i = 0; i < dwNumProc; i++)
+      {
+         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
+         if (hProcess != NULL)
+         {
+            if (EnumProcessModules(hProcess, phModList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
+            {
+               if (dwSize >= sizeof(HMODULE))     // At least one module exist
+               {
+                  TCHAR szBaseName[MAX_PATH];
+
+                  GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu %s"), pdwProcList[i], szBaseName);
+                  NxAddResultString(value, szBuffer);
+               }
+               else
+               {
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unknown>"), pdwProcList[i]);
+                  NxAddResultString(value, szBuffer);
+               }
+            }
+            else
+            {
+               if (pdwProcList[i] == 4)
+               {
+                  NxAddResultString(value, _T("4 System"));
+               }
+               else
+               {
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unknown>"), pdwProcList[i]);
+                  NxAddResultString(value, szBuffer);
+               }
+            }
+            CloseHandle(hProcess);
+         }
+         else
+         {
+            if (pdwProcList[i] == 0)
+            {
+               NxAddResultString(value, _T("0 System Idle Process"));
+            }
+            else
+            {
+               _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unaccessible>"), pdwProcList[i]);
+               NxAddResultString(value, szBuffer);
+            }
+         }
+      }
+   }
+   else
+   {
+      iResult = SYSINFO_RC_ERROR;
+   }
+
+   free(pdwProcList);
+   return iResult;
 }

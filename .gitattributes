@@ -180,7 +180,6 @@ src/agent/core/nxagentd.dsp -text
 src/agent/core/nxagentd.dsw -text
 src/agent/core/nxagentd.h -text
 src/agent/core/nxagentd.rc -text
-src/agent/core/procinfo.cpp -text
 src/agent/core/resource.h -text
 src/agent/core/service.cpp -text
 src/agent/core/session.cpp -text
@@ -248,6 +247,12 @@ src/agent/subagents/sunos/net.cpp -text
 src/agent/subagents/sunos/process.cpp -text
 src/agent/subagents/sunos/sunos_subagent.h -text
 src/agent/subagents/sunos/system.cpp -text
+src/agent/subagents/winnt/main.cpp -text
+src/agent/subagents/winnt/procinfo.cpp -text
+src/agent/subagents/winnt/system.cpp -text
+src/agent/subagents/winnt/winnt.dsp -text
+src/agent/subagents/winnt/winnt.dsw -text
+src/agent/subagents/winnt/winnt_subagent.h -text
 src/agent/subagents/winperf/Makefile.am -text
 src/agent/subagents/winperf/collect.cpp -text
 src/agent/subagents/winperf/tools.cpp -text

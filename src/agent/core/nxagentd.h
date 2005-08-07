@@ -32,10 +32,6 @@
 #include <nxqueue.h>
 #include "messages.h"
 
-#ifdef _WIN32
-#include <psapi.h>
-#endif
-
 #define LIBNXCL_NO_DECLARATIONS
 #include <nxclapi.h>
 
@@ -99,33 +95,6 @@
 
 
 #ifdef _WIN32
-
-#define MAX_PROCESSES      4096
-#define MAX_MODULES        512
-
-
-//
-// Attributes for H_ProcInfo
-//
-
-#define PROCINFO_GDI_OBJ         1
-#define PROCINFO_IO_OTHER_B      2
-#define PROCINFO_IO_OTHER_OP     3
-#define PROCINFO_IO_READ_B       4
-#define PROCINFO_IO_READ_OP      5
-#define PROCINFO_IO_WRITE_B      6
-#define PROCINFO_IO_WRITE_OP     7
-#define PROCINFO_KTIME           8
-#define PROCINFO_PF              9
-#define PROCINFO_USER_OBJ        10
-#define PROCINFO_UTIME           11
-#define PROCINFO_VMSIZE          12
-#define PROCINFO_WKSET           13
-
-#define INFOTYPE_MIN             0
-#define INFOTYPE_MAX             1
-#define INFOTYPE_AVG             2
-#define INFOTYPE_SUM             3
 
 
 //
@@ -336,9 +305,6 @@ extern DWORD g_dwAcceptedConnections;
 extern DWORD g_dwRejectedConnections;
 
 #ifdef _WIN32
-extern DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
-extern BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
-extern BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
 extern BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */

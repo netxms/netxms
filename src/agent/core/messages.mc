@@ -182,4 +182,10 @@ Language=English
 Failed to decrypt received message
 .
 
+MessageId=
+SymbolicName=MSG_GETVERSION_FAILED
+Language=English
+Unable to deterime OS version (GetVersionEx() failed: %1)
+.
+
 ;#endif

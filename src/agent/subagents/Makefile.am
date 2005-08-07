@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = skeleton winperf netware portCheck ping ${SUBAGENT_DIRS}
+SUBDIRS = skeleton winnt win9x winperf netware portCheck ping ${SUBAGENT_DIRS}

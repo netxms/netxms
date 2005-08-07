@@ -91,9 +91,6 @@ char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
 #endif
 
 #ifdef _WIN32
-DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
-BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
-BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
 BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */
@@ -216,38 +213,15 @@ static void ImportSymbols(void)
 {
    HMODULE hModule;
 
-   // USER32.DLL
-   hModule = GetModuleHandle("USER32.DLL");
-   if (hModule != NULL)
-   {
-      imp_GetGuiResources = (DWORD (__stdcall *)(HANDLE, DWORD))GetProcAddressAndLog(hModule,"GetGuiResources");
-   }
-   else
-   {
-      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "USER32.DLL");
-   }
-
    // KERNEL32.DLL
    hModule = GetModuleHandle("KERNEL32.DLL");
    if (hModule != NULL)
    {
-      imp_GetProcessIoCounters = (BOOL (__stdcall *)(HANDLE, PIO_COUNTERS))GetProcAddressAndLog(hModule,"GetProcessIoCounters");
       imp_GlobalMemoryStatusEx = (BOOL (__stdcall *)(LPMEMORYSTATUSEX))GetProcAddressAndLog(hModule,"GlobalMemoryStatusEx");
    }
    else
    {
       WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "KERNEL32.DLL");
-   }
-
-   // PSAPI.DLL
-   hModule = GetModuleHandle("PSAPI.DLL");
-   if (hModule != NULL)
-   {
-      imp_GetPerformanceInfo = (BOOL (__stdcall *)(PPERFORMANCE_INFORMATION, DWORD))GetProcAddressAndLog(hModule,"GetPerformanceInfo");
-   }
-   else
-   {
-      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "PSAPI.DLL");
    }
 
    // NETMAN.DLL
@@ -314,6 +288,39 @@ void OnSignal(int iSignal)
 
 #endif
 
+
+//
+// Load subagent for Windows NT or Windows 9x
+//
+
+#ifdef _WIN32
+
+void LoadWindowsSubagent(void)
+{
+   OSVERSIONINFO ver;
+
+   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   if (GetVersionEx(&ver))
+   {
+      switch(ver.dwPlatformId)
+      {
+         case VER_PLATFORM_WIN32_WINDOWS:    // Windows 9x
+            LoadSubAgent("WIN9X.NSM");
+            break;
+         case VER_PLATFORM_WIN32_NT:   // Windows NT or higher
+            LoadSubAgent("WINNT.NSM");
+            break;
+         default:
+            break;
+      }
+   }
+   else
+   {
+      WriteLog(MSG_GETVERSION_FAILED, EVENTLOG_WARNING_TYPE, "e", GetLastError());
+   }
+}
+
+#endif
 
 
 //
@@ -421,6 +428,9 @@ BOOL Initialize(void)
    }
 
    // Load subagents
+#ifdef _WIN32
+   LoadWindowsSubagent();
+#endif
    if (m_pszSubagentList != NULL)
    {
       for(pItem = m_pszSubagentList; *pItem != 0; pItem = pEnd + 1)

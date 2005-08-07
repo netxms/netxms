@@ -43,18 +43,12 @@ LONG H_PlatformName(char *cmd, char *arg, char *value);
 LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue);
-LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
-LONG H_ProcCount(char *cmd, char *arg, char *value);
-LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
-LONG H_ProcInfo(char *cmd, char *arg, char *value);
 LONG H_DiskInfo(char *cmd, char *arg, char *value);
 LONG H_MemoryInfo(char *cmd, char *arg, char *value);
 LONG H_HostName(char *cmd, char *arg, char *value);
 LONG H_SystemUname(char *cmd, char *arg, char *value);
-LONG H_ThreadCount(char *cmd, char *arg, char *value);
 LONG H_NetIPStats(char *cmd, char *arg, char *value);
 LONG H_NetInterfaceStats(char *cmd, char *arg, char *value);
-LONG H_ServiceState(char *cmd, char *arg, char *value);
 LONG H_CPUCount(char *cmd, char *arg, char *value);
 LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue);
 #endif
@@ -193,20 +187,6 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "PhysicalDisk.SmartAttr(*)", H_PhysicalDiskInfo, "A", DCI_DT_STRING, "" },
    { "PhysicalDisk.SmartStatus(*)", H_PhysicalDiskInfo, "S", DCI_DT_INT, "Status of hard disk {instance} reported by SMART" },
    { "PhysicalDisk.Temperature(*)", H_PhysicalDiskInfo, "T", DCI_DT_INT, "Temperature of hard disk {instance}" },
-   { "Process.Count(*)", H_ProcCountSpecific, NULL, DCI_DT_UINT, "" },
-   { "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, "" },
-   { "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B, DCI_DT_UINT64, "" },
-   { "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP, DCI_DT_UINT64, "" },
-   { "Process.IO.ReadB(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_B, DCI_DT_UINT64, "" },
-   { "Process.IO.ReadOp(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_OP, DCI_DT_UINT64, "" },
-   { "Process.IO.WriteB(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_B, DCI_DT_UINT64, "" },
-   { "Process.IO.WriteOp(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, "" },
-   { "Process.KernelTime(*)", H_ProcInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
-   { "Process.PageFaults(*)", H_ProcInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
-   { "Process.UserObj(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ, DCI_DT_UINT64, "" },
-   { "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
-   { "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, "" },
-   { "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, "" },
    { "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, "Number of CPU in the system" },
    { "System.Hostname", H_HostName, NULL, DCI_DT_STRING, "Host name" },
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Free physical memory" },
@@ -215,9 +195,6 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "System.Memory.Virtual.Free", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, "Free virtual memory" },
    { "System.Memory.Virtual.Total", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, "Total amount of virtual memory" },
    { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, "Used virtual memory" },
-   { "System.ProcessCount", H_ProcCount, NULL, DCI_DT_INT, "Total number of processes" },
-   { "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, "State of {instance} service" },
-   { "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_INT, "Total number of threads" },
    { "System.Uname", H_SystemUname, NULL, DCI_DT_STRING, "System uname" },
 #endif
    { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, "" },
@@ -251,7 +228,6 @@ static NETXMS_SUBAGENT_ENUM m_stdEnums[] =
    { "Net.ArpCache", H_ArpCache, NULL },
    { "Net.InterfaceList", H_InterfaceList, NULL },
    { "Net.IP.RoutingTable", H_IPRoutingTable, NULL },
-   { "System.ProcessList", H_ProcessList, NULL },
 #endif
    { "Agent.ActionList", H_ActionList, NULL },
    { "Agent.SubAgentList", H_SubAgentList, NULL },

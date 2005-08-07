@@ -22,6 +22,8 @@ LicenseFile=..\..\..\copying
 Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
 Source: "..\..\libnxcscp\Release\libnxcscp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\core\Release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\winnt\Release\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\win9x\Release\win9x.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\winperf\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ping\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\portCheck\Release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
