@@ -190,7 +190,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       else     // Unauthorized connection
       {
          g_dwRejectedConnections++;
-         shutdown(hClientSocket, 2);
+         shutdown(hClientSocket, SHUT_RDWR);
          closesocket(hClientSocket);
          DebugPrintf("Connection from %s rejected", szBuffer);
       }
@@ -198,6 +198,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
    MutexDestroy(m_hSessionListAccess);
    free(m_pSessionList);
+   closesocket(hSocket);
    return THREAD_OK;
 }
 
