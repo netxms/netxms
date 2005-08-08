@@ -85,7 +85,7 @@
 # MaxSessions
 #
 # Maximum number of simultaneous communication sessions. Possible value can
-# be in range from 2 to 256. Default value is 32.
+# be in range from 2 to 1024. Default value is 32.
 #
 # Example:
 # MaxSessions = 32
