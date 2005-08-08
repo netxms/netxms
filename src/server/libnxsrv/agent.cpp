@@ -237,10 +237,12 @@ void AgentConnection::ReceiverThread(void)
    }
 
    // Close socket and mark connection as disconnected
+   Lock();
    if (iErr == 0)
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    m_hSocket = -1;
+   Unlock();
    DestroyEncryptionContext(m_pCtx);
    m_pCtx = NULL;
    m_bIsConnected = FALSE;
@@ -276,8 +278,13 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
    m_hReceiverThread = INVALID_THREAD_HANDLE;
 
    // Check if we need to close existing socket
+   Lock();
    if (m_hSocket != -1)
+   {
       closesocket(m_hSocket);
+      m_hSocket = -1;
+   }
+   Unlock();
 
    // Create socket
    m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -362,13 +369,20 @@ setup_encryption:
 connect_cleanup:
    if (!bSuccess)
    {
+      Lock();
       if (m_hSocket != -1)
          shutdown(m_hSocket, SHUT_RDWR);
+      Unlock();
       ThreadJoin(m_hReceiverThread);
       m_hReceiverThread = INVALID_THREAD_HANDLE;
 
+      Lock();
       if (m_hSocket != -1)
+      {
          closesocket(m_hSocket);
+         m_hSocket = -1;
+      }
+      Unlock();
 
       DestroyEncryptionContext(m_pCtx);
       m_pCtx = NULL;
