@@ -201,8 +201,8 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
 
 ClientSession::~ClientSession()
 {
-   shutdown(m_hSocket, 2);
-   closesocket(m_hSocket);
+   if (m_hSocket != -1)
+      closesocket(m_hSocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
@@ -484,6 +484,7 @@ void ClientSession::WriteThread(void)
       if (!bResult)
       {
          closesocket(m_hSocket);
+         m_hSocket = -1;
          break;
       }
    }
