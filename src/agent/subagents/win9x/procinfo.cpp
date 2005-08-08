@@ -65,7 +65,7 @@ LONG H_ProcCountSpecific(char *pszCmd, char *pArg, char *pValue)
 {
    HANDLE hSnapshot;
    PROCESSENTRY32 pe;
-   TCHAR szProcName[MAX_PATH];
+   TCHAR *pszFileName, szProcName[MAX_PATH];
    LONG nCount = 0, nRet = SYSINFO_RC_SUCCESS;
 
    if (!NxGetParameterArg(pszCmd, 1, szProcName, MAX_PATH))
@@ -79,7 +79,12 @@ LONG H_ProcCountSpecific(char *pszCmd, char *pArg, char *pValue)
       {
          do
          {
-            if (!_tcsicmp(szProcName, pe.szExeFile))
+            pszFileName = _tcsrchr(pe.szExeFile, _T('\\'));
+            if (pszFileName != NULL)
+               pszFileName++;
+            else
+               pszFileName = pe.szExeFile;
+            if (!_tcsicmp(szProcName, pszFileName))
                nCount++;
             pe.dwSize = sizeof(PROCESSENTRY32);
          } while(Process32Next(hSnapshot, &pe));
@@ -103,7 +108,7 @@ LONG H_ProcessList(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
    HANDLE hSnapshot;
    PROCESSENTRY32 pe;
-   TCHAR szBuffer[MAX_PATH + 64];
+   TCHAR *pszFileName, szBuffer[MAX_PATH + 64];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
    hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -114,7 +119,12 @@ LONG H_ProcessList(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
       {
          do
          {
-            _sntprintf(szBuffer, MAX_PATH + 64, _T("%d %s"), pe.th32ProcessID, pe.szExeFile);
+            pszFileName = _tcsrchr(pe.szExeFile, _T('\\'));
+            if (pszFileName != NULL)
+               pszFileName++;
+            else
+               pszFileName = pe.szExeFile;
+            _sntprintf(szBuffer, MAX_PATH + 64, _T("%u %s"), pe.th32ProcessID, pszFileName);
             NxAddResultString(pValue, szBuffer);
             pe.dwSize = sizeof(PROCESSENTRY32);
          } while(Process32Next(hSnapshot, &pe));
