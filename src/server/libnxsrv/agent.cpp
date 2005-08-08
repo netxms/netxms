@@ -363,7 +363,7 @@ connect_cleanup:
    if (!bSuccess)
    {
       if (m_hSocket != -1)
-         shutdown(m_hSocket, 2);
+         shutdown(m_hSocket, SHUT_RDWR);
       ThreadJoin(m_hReceiverThread);
       m_hReceiverThread = INVALID_THREAD_HANDLE;
 
