@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.94 2005-07-15 07:45:33 victor Exp $
+# $Id: configure.ac,v 1.95 2005-08-08 20:45:38 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -488,6 +488,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/netware/Makefile
+	src/agent/subagents/winnt/Makefile
+	src/agent/subagents/win9x/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/ping/Makefile
