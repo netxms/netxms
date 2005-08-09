@@ -9,6 +9,8 @@
 - Database Manager: implemented forced check/unlock flag
 - Maximum number of sessions in agent made configurable
 - Agent ported to Windows 95/98/Me
+- Windows console: added possibility to specify loopback address (127.0.0.1)
+  as bind address for network service
 - Fixed bug which causes random fails of connections from server to agent and
   from console to server
 - Fixed issues: 29

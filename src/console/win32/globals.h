@@ -246,6 +246,7 @@ void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
 void CreateObjectImageList(void);
 int ImageIdToIndex(DWORD dwImageId);
 int GetObjectImageIndex(NXC_OBJECT *pObject);
+int GetClassDefaultImageIndex(int iClass);
 CImageList *CreateEventImageList(void);
 void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
 

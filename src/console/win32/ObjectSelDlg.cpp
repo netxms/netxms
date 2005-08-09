@@ -28,6 +28,7 @@ CObjectSelDlg::CObjectSelDlg(CWnd* pParent /*=NULL*/)
    m_dwParentObject = 0;   // All objects by default
    m_bSelectAddress = FALSE;  // Not in address selection mode by default
    m_bAllowEmptySelection = FALSE;
+   m_bShowLoopback = FALSE;
 }
 
 
@@ -152,6 +153,14 @@ BOOL CObjectSelDlg::OnInitDialog()
                   }
                }
             }
+         }
+
+         if (m_bSelectAddress && m_bShowLoopback)
+         {
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("<loopback>"),
+                                             GetClassDefaultImageIndex(OBJECT_INTERFACE));
+            m_wndListCtrl.SetItemText(iItem, 1, _T("127.0.0.1"));
+            m_wndListCtrl.SetItemData(iItem, 0);
          }
       }
    }

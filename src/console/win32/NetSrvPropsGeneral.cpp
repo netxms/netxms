@@ -313,18 +313,25 @@ void CNetSrvPropsGeneral::OnSelectIp()
       dlg.m_bSelectAddress = TRUE;
       dlg.m_bSingleSelection = TRUE;
       dlg.m_bAllowEmptySelection = TRUE;
+      dlg.m_bShowLoopback = TRUE;
       if (dlg.DoModal() == IDOK)
       {
          if (dlg.m_dwNumObjects != 0)
          {
-            pObject = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[0]);
-            if (pObject != NULL)
-            {
-               TCHAR szBuffer[16];
+            TCHAR szBuffer[16];
 
-               m_dwIpAddr = pObject->dwIpAddr;
-               SetDlgItemText(IDC_EDIT_IPADDR, IpToStr(m_dwIpAddr, szBuffer));
+            if (dlg.m_pdwObjectList[0] != 0)
+            {
+               pObject = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[0]);
+               if (pObject != NULL)
+                  m_dwIpAddr = pObject->dwIpAddr;
             }
+            else
+            {
+               // Loopback
+               m_dwIpAddr = 0x7F000001;
+            }
+            SetDlgItemText(IDC_EDIT_IPADDR, IpToStr(m_dwIpAddr, szBuffer));
          }
          else
          {

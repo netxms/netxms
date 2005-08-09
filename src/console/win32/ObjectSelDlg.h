@@ -31,6 +31,7 @@ class CObjectSelDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bShowLoopback;
 	BOOL m_bAllowEmptySelection;
 	BOOL m_bSelectAddress;
 	DWORD m_dwParentObject;
