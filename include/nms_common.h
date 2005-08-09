@@ -287,6 +287,30 @@ typedef int SOCKET;
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
+#ifdef NETXMS_NO_AES
+#ifndef OPENSSL_NO_AES
+#define OPENSSL_NO_AES
+#endif
+#endif
+
+#ifdef NETXMS_NO_BF
+#ifndef OPENSSL_NO_BF
+#define OPENSSL_NO_BF
+#endif
+#endif
+
+#ifdef NETXMS_NO_IDEA
+#ifndef OPENSSL_NO_IDEA
+#define OPENSSL_NO_IDEA
+#endif
+#endif
+
+#ifdef NETXMS_NO_DES
+#ifndef OPENSSL_NO_DES
+#define OPENSSL_NO_DES
+#endif
+#endif
+
 #else
 
 // Prevent compilation errors on function prototypes
