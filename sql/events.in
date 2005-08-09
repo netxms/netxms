@@ -297,7 +297,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Network service "%1" returned to operational state',
 		'Generated when network service responds as expected after failure.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
-		'   1) Service name#0D0A' CONCAT
+		'   1) Service name#0D#0A' CONCAT
 		'   2) Service object ID#0D#0A' CONCAT
 		'   3) Service type'
 	);

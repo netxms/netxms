@@ -5,20 +5,36 @@
 */
 
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
-	VALUES (0,7944,'Show alarm when node status isn#27t NORMAL',
-		'%m',5,'NODE_STATUS_%i','NODE_STATUS_%i');
+	VALUES (0,7944,'Show alarm when node is down',
+		'%m',5,'NODE_DOWN_%i','NODE_DOWN_%i');
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
-	VALUES (1,7944,'Acknowlege node status alarms when node status changes to NORMAL',
-		'%m',6,'#00','NODE_STATUS_%i');
+	VALUES (1,7944,'Acknowlege node down alarms when node is up',
+		'%m',6,'#00','NODE_DOWN_%i');
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
-	VALUES (2,7944,'Generate alarm when incorrect network mask detected on interface',
+	VALUES (2,7944,'Show alarm when network service is down or in unknown state',
+		'%m',5,'SERVICE_DOWN_%i_%2','SERVICE_DOWN_%i_%2');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (3,7944,'Acknowlege network service down/unknown alarms when service is up',
+		'%m',6,'#00','SERVICE_DOWN_%i_%2');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (4,7944,'Show alarm when interface is down',
+		'%m',5,'IF_DOWN_%i_%1','IF_DOWN_%i_%1');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (5,7944,'Acknowlege interface down alarms when interface is up',
+		'%m',6,'#00','IF_DOWN_%i_%1');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (6,7944,'Generate alarm when incorrect network mask detected on interface',
 		'%m',2,'BAD_NETMASK_%i_%2','BAD_NETMASK_%i_%2');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (7,7944,'Generate alarm when MAC address change detected on interface',
+		'%m',1,'#00','#00');
 
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_WARNING);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_MINOR);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_MAJOR);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_CRITICAL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_UNKNOWN);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_UNMANAGED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_NORMAL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_INCORRECT_NETMASK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_DOWN);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_UNKNOWN);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (3,EVENT_SERVICE_UP);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (4,EVENT_INTERFACE_DOWN);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (5,EVENT_INTERFACE_UP);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (6,EVENT_INCORRECT_NETMASK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (7,EVENT_MAC_ADDR_CHANGED);
