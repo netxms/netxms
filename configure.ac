@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.95 2005-08-08 20:45:38 victor Exp $
+# $Id: configure.ac,v 1.96 2005-08-10 16:52:25 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -201,14 +201,8 @@ AC_ARG_WITH(nxsm,
 ])
 
 AC_ARG_WITH(openssl,
-	[AS_HELP_STRING(--without-openssl,Disable encryption)],
-	[],
-	[with_openssl=yes])
-
-AC_ARG_WITH(openssl,
 	[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
 	[
-	if test "x$withval" != "xno"; then
 		if test "x$withval" != "xno" ; then
 			if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 				LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
@@ -219,15 +213,36 @@ AC_ARG_WITH(openssl,
 				LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
 				CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
 			fi
-			with_openssl="yes"
-			AC_DEFINE(WITH_OPENSSL,,[with openssl])
-			AC_CHECK_LIB(crypto, RSA_new, ,
+			AC_CHECK_LIB(crypto, RSA_new,
+				[
+				 	AC_DEFINE(WITH_OPENSSL,,[with openssl])
+					AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
+									 [], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
+					AC_CHECK_LIB(crypto, EVP_bf_cbc,
+									 [], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
+					AC_CHECK_LIB(crypto, EVP_idea_cbc,
+									 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
+					AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
+									 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+				],
 				[AC_MSG_ERROR(libcrypto is required for encryption support)])
 		fi
-	fi
 	],
-)
-
+	[
+		AC_CHECK_LIB(crypto, RSA_new,
+			[
+				AC_DEFINE(WITH_OPENSSL,,[with openssl])
+				AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
+								 [], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
+				AC_CHECK_LIB(crypto, EVP_bf_cbc,
+								 [], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
+				AC_CHECK_LIB(crypto, EVP_idea_cbc,
+								 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
+				AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
+								 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+			],
+			[AC_MSG_RESULT(libcrypto is required for encryption support)])
+	 ])
 
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
