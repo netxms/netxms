@@ -9,9 +9,9 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	main.cpp
-	procinfo.cpp
-	system.cpp
-	winnt.dsp
-	winnt.dsw
+	main.cpp \
+	procinfo.cpp \
+	system.cpp \
+	winnt.dsp \
+	winnt.dsw \
 	winnt_subagent.h
