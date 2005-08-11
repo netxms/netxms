@@ -1,6 +1,5 @@
 30 ==> 31
 
-- Added configuration parameter DefaultRTQueryInterval
 - Added configuration parameter NumberOfRoutingTablePollers
 - Added configuration parameter RoutingTableUpdateInterval
 - Added table vpn_connectors:

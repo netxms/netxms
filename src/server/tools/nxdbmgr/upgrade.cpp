@@ -77,6 +77,57 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V30 to V31
+//
+
+static BOOL H_UpgradeFromV30(void)
+{
+   static TCHAR m_szBatch[] =
+	   "INSERT INTO default_images (object_class,image_id) "
+		   "VALUES (12, 14)\n"
+	   "INSERT INTO images (image_id,name,file_name_png,file_hash_png,"
+         "file_name_ico,file_hash_ico) VALUES (14,'Obj.VPNConnector',"
+         "'vpnc.png','<invalid_hash>','vpnc.ico','<invalid_hash>')\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE vpn_connectors ("
+		                 "id integer not null,"
+		                 "node_id integer not null,"
+		                 "peer_gateway integer not null,"
+		                 "PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE vpn_connector_networks ("
+		                 "vpn_id integer not null,"
+		                 "network_type integer not null,"
+		                 "ip_addr varchar(15),"
+		                 "ip_netmask varchar(15),"
+		                 "PRIMARY KEY(vpn_id,ip_addr))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("NumberOfRoutingTablePollers"), _T("5"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("RoutingTableUpdateInterval"), _T("300"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='31' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V29 to V30
 //
 
@@ -1187,6 +1238,7 @@ static struct
    { 27, H_UpgradeFromV27 },
    { 28, H_UpgradeFromV28 },
    { 29, H_UpgradeFromV29 },
+   { 30, H_UpgradeFromV30 },
    { 0, NULL }
 };
 
