@@ -321,6 +321,7 @@ src/console/PocketPC/res/interface.ico -text
 src/console/PocketPC/res/login.ico -text
 src/console/PocketPC/res/network.ico -text
 src/console/PocketPC/res/network_service.ico -text
+src/console/PocketPC/res/node.ico -text
 src/console/PocketPC/res/nxpc.ico -text
 src/console/PocketPC/res/nxpc.rc2 -text
 src/console/PocketPC/res/question.ico -text
