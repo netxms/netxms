@@ -43,6 +43,7 @@
 #define IDB_BTN_CLOSE_DIS               164
 #define IDB_BTN_PREV                    167
 #define IDB_BTN_NEXT                    168
+#define IDI_VPNC                        169
 #define IDC_INFO_TEXT                   1000
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_LOGIN                  1002
@@ -118,7 +119,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_RESOURCE_VALUE        170
 #define _APS_NEXT_COMMAND_VALUE         32837
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           105

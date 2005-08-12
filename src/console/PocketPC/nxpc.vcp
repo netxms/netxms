@@ -2155,6 +2155,10 @@ SOURCE=.\res\template_root.ico
 
 SOURCE=.\res\vertical_code.bmp
 # End Source File
+# Begin Source File
+
+SOURCE=.\res\vpnc.ico
+# End Source File
 # End Group
 # Begin Source File
 

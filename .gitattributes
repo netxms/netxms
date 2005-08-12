@@ -284,6 +284,7 @@ src/console/PocketPC/LoginDlg.cpp -text
 src/console/PocketPC/LoginDlg.h -text
 src/console/PocketPC/MainFrm.cpp -text
 src/console/PocketPC/MainFrm.h -text
+src/console/PocketPC/Makefile.am -text
 src/console/PocketPC/ObjectView.cpp -text
 src/console/PocketPC/ObjectView.h -text
 src/console/PocketPC/RequestProcessingDlg.cpp -text
@@ -303,6 +304,7 @@ src/console/PocketPC/nxpc.vcc -text
 src/console/PocketPC/nxpc.vcp -text
 src/console/PocketPC/nxpc.vcw -text
 src/console/PocketPC/res/Cmdbar.bmp -text
+src/console/PocketPC/res/Makefile.am -text
 src/console/PocketPC/res/SeverityCritical.ico -text
 src/console/PocketPC/res/SeverityMajor.ico -text
 src/console/PocketPC/res/SeverityMinor.ico -text
@@ -326,6 +328,7 @@ src/console/PocketPC/res/subnet.ico -text
 src/console/PocketPC/res/template.ico -text
 src/console/PocketPC/res/template_group.ico -text
 src/console/PocketPC/res/template_root.ico -text
+src/console/PocketPC/res/vpnc.ico -text
 src/console/PocketPC/resource.h -text
 src/console/PocketPC/tools.cpp -text
 src/console/cmdline/Makefile.am -text

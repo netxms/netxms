@@ -48,6 +48,7 @@ IDI_SUBNET              ICON    DISCARDABLE     "res\\subnet.ico"
 IDI_TEMPLATE            ICON    DISCARDABLE     "res\\template.ico"
 IDI_TEMPLATE_GROUP      ICON    DISCARDABLE     "res\\template_group.ico"
 IDI_INTERFACE           ICON    DISCARDABLE     "res\\interface.ico"
+IDI_VPNC                ICON    DISCARDABLE     "res\\vpnc.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
