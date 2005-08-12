@@ -105,8 +105,8 @@ static BOOL H_UpgradeFromV30(void)
    if (!CreateTable(_T("CREATE TABLE vpn_connector_networks ("
 		                 "vpn_id integer not null,"
 		                 "network_type integer not null,"
-		                 "ip_addr varchar(15),"
-		                 "ip_netmask varchar(15),"
+		                 "ip_addr varchar(15) not null,"
+		                 "ip_netmask varchar(15) not null,"
 		                 "PRIMARY KEY(vpn_id,ip_addr))")))
       if (!g_bIgnoreErrors)
          return FALSE;
