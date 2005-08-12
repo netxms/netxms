@@ -8,17 +8,22 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = res
 EXTRA_DIST = \
-	AlarmBrowser.cpp AlarmBrowser.h \
-	FlatButton.cpp FlatButton.h \
-	InfoLine.cpp InfoLine.h \
-	LoginDialog.cpp LoginDialog.h \
-	MainFrm.cpp MainFrm.h \
-	RequestProcessingDlg.cpp RequestProcessingDlg.h \
-	SettingsDlg.cpp SettingsDlg.h \
-	StdAfx.cpp StdAfx.h \
-	comm.cpp globals.cpp globals.h \
-	nxav.clw nxav.cpp nxav.dsp nxav.dsw nxav.h nxav.rc \
-	resource.h \
-	tools.cpp
+	SeverityCritical.ico \
+	SeverityMajor.ico \
+	SeverityMinor.ico \
+	SeverityNormal.ico \
+	SeverityWarning.ico \
+	ack.png \
+	alarm.wav \
+	background.jpg \
+	critical.ico \
+	login.bmp \
+	major.ico \
+	minor.ico \
+	normal.ico \
+	nxav.ico \
+	nxav.rc2 \
+	processing.ico \
+	small_logo.bmp \
+	warning.ico
