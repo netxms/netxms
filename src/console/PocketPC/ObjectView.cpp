@@ -88,6 +88,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_TEMPLATE_GROUP));
    m_imageList.Add(theApp.LoadIcon(IDI_TEMPLATE_ROOT));
    m_imageList.Add(theApp.LoadIcon(IDI_SERVICE));
+   m_imageList.Add(theApp.LoadIcon(IDI_VPNC));
    m_wndTreeCtrl.SetImageList(&m_imageList, TVSIL_NORMAL);
 	
 	return 0;
