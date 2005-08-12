@@ -22,7 +22,6 @@ EXTRA_DIST = \
 	btn_prev.bmp \
 	connect.ico \
 	container.ico \
-	idt_view.bmp \
 	interface.ico \
 	login.ico \
 	network.ico \
