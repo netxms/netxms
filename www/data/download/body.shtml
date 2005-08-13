@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.10 2005-08-13 14:20:07 alk Exp $ -->
+<!-- $Id: body.shtml,v 1.11 2005-08-13 14:32:02 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -14,6 +14,12 @@
 	<a href="netxms-0.2.3.tar.gz.asc">(PGP sign)</a>
 	</p>
 	<p>
+	<a href="agent_packages/nxagent-0.2.3.sh">Agent upgrade package for UNIX systems</a>
+	<a href="agent_packages/nxagent-0.2.3.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.3.sh.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.3.sh.asc">(PGP sign)</a><br />
+	</p>
+	<p>
 	<a href="netxms-0.2.3.exe">WIN32 Installer</a>
 	<a href="netxms-0.2.3.exe.md5">(MD5)</a>
 	<a href="netxms-0.2.3.exe.asc">(PGP sign)</a>
@@ -24,12 +30,6 @@
 	<a href="agent_packages/nxagent-0.2.3.exe.md5">(MD5)</a>
 	<a href="agent_packages/nxagent-0.2.3.exe.asc">(PGP sign)</a><br />
 	NB! We strongly recommended to use this installer if you are planning on using centralised upgrade feature.
-	</p>
-	<p>
-	<a href="agent_packages/nxagent-0.2.3.sh">Agent upgrade package for UNIX</a>
-	<a href="agent_packages/nxagent-0.2.3.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.3.sh.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.3.sh.asc">(PGP sign)</a><br />
 	</p>
 	<p>
 	<a href="netxms-0.2.3-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
