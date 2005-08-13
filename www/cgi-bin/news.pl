@@ -118,8 +118,8 @@ __END
 				localtime(mktime(0, 0, 11, $1, $m{$2}, $3 - 1900)));
 			my $title = $news[$i]->{title};
 			my $description = $news[$i]->{sum};
-			$title =~ s/</&lt;/g; $title =~ s/>/&gt;/g;
-			$description =~ s/</&lt;/g; $description =~ s/>/&gt;/g;
+			$title =~ s/&/&amp;/g; $title =~ s/</&lt;/g; $title =~ s/>/&gt;/g;
+			$description =~ s/&/&amp;/g; $description =~ s/</&lt;/g; $description =~ s/>/&gt;/g;
 			print <<"__END";
 		<item>
 			<pubDate>$pubDate</pubDate>

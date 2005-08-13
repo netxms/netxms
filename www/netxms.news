@@ -1,3 +1,4 @@
+13-Aug-2005|0.2.3 released|Version 0.2.3 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 14-Jul-2005|0.2.2-r1 released|Bugfix release of 0.2.2
 13-Jul-2005|0.2.2 warning|We got a report about memory leak in 0.2.2 - still not confirmed; i'm working on it right now; do not upgrade your server yet. Stay tuned.
 13-Jul-2005|0.2.2 released|Version 0.2.2 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a><br />Web interface was scheduled in this version, but unfortunately it has to be postponed till version 0.2.3.
