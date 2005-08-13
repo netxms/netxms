@@ -1,4 +1,22 @@
 *
+* 0.2.3
+*
+
+- Implemented basic event correlation
+- Added new object class: VPN connector
+- Active alarms now used in status calculation
+- Windows agent: implemented enum Net.IP.RoutingTable
+- Database Manager: implemented forced check/unlock flag
+- Maximum number of sessions in agent made configurable
+- Agent ported to Windows 95/98/Me
+- Windows console: added possibility to specify loopback address (127.0.0.1)
+  as bind address for network service
+- Fixed bug which causes random fails of connections from server to agent and
+  from console to server
+- Fixed issues: 29
+
+
+*
 * 0.2.2
 *
 
@@ -13,6 +31,7 @@
 - Windows console: added simple export of collected DCI data
 - Core agent: added configuration option SessionIdleTimeout for automatic
   disconnect of idle or broken sessions
+- Fixed issues: 26, 30
 
 
 *
