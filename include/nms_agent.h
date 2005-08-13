@@ -122,10 +122,23 @@ typedef struct
 
 
 //
+// Subagent's action information
+//
+
+typedef struct
+{
+   TCHAR szName[MAX_PARAM_NAME];
+   LONG (* fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *);
+   TCHAR *pArg;
+   TCHAR szDescription[MAX_DB_STRING];
+} NETXMS_SUBAGENT_ACTION;
+
+
+//
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0xAD00010C)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0xAD000204)
 
 class CSCPMessage;
 
@@ -141,6 +154,8 @@ typedef struct
    NETXMS_SUBAGENT_PARAM *pParamList;
    DWORD dwNumEnums;
    NETXMS_SUBAGENT_ENUM *pEnumList;
+   DWORD dwNumActions;
+   NETXMS_SUBAGENT_ACTION *pActionList;
 } NETXMS_SUBAGENT_INFO;
 
 
