@@ -28,6 +28,19 @@
 # InstallationServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
 
 #
+# ControlServers
+#
+# List of management servers which can execute actions on agent and change
+# agent's config. Hosts listed in this parameter also have read access to 
+# the agent. Both IP addresses and DNS names can be used. Multiple servers
+# can be specified in one line, separated by commas. If this parameter used
+# more than once, servers listed in all occurences will have access to agent.
+#
+# Examples:
+# ControlServers = 10.0.0.1
+# ControlServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
+
+#
 # LogFile
 #
 # Agent's log file. To write log to syslog (or Event Log on Windows),
