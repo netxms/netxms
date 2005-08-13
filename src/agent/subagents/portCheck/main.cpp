@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.8 2005-02-08 18:32:56 alk Exp $ */
+/* $Id: main.cpp,v 1.9 2005-08-13 16:03:01 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -142,7 +142,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	NULL //m_enums
+	NULL, //m_enums,
+   0, NULL     // actions
 };
 
 //
@@ -160,6 +161,9 @@ extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInf
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/02/08 18:32:56  alk
++ simple "custom" checker added
+
 Revision 1.7  2005/01/29 00:21:29  alk
 + http checker
 
