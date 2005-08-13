@@ -148,7 +148,17 @@ typedef struct
 {
    char szName[MAX_PARAM_NAME];
    int iType;
-   char *pszCmdLine;
+   union
+   {
+      char *pszCmdLine;
+      struct __subagentAction
+      {
+         LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *);
+         char *pArg;
+         char szSubagentName[MAX_PATH];
+      } sa;
+   } handler;
+   char szDescription[MAX_DB_STRING];
 } ACTION;
 
 
@@ -172,6 +182,7 @@ struct SERVER_INFO
 {
    DWORD dwIpAddr;
    BOOL bInstallationServer;
+   BOOL bControlServer;
 };
 
 
@@ -259,7 +270,9 @@ BOOL LoadSubAgent(char *szModuleName);
 void UnloadAllSubAgents(void);
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponce);
 
-BOOL AddAction(char *pszName, int iType, char *pszCmdLine);
+BOOL AddAction(char *pszName, int iType, char *pArg, 
+               LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *),
+               char *pszSubAgent, char *pszDescription);
 BOOL AddActionFromConfig(char *pszLine);
 DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 

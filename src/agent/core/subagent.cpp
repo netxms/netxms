@@ -105,6 +105,15 @@ BOOL LoadSubAgent(char *szModuleName)
                           pInfo->pEnumList[i].fpHandler,
                           pInfo->pEnumList[i].pArg);
 
+               // Add actions provided by this subagent to common list
+               for(i = 0; i < pInfo->dwNumActions; i++)
+                  AddAction(pInfo->pActionList[i].szName,
+                            AGENT_ACTION_SUBAGENT,
+                            pInfo->pActionList[i].pArg,
+                            pInfo->pActionList[i].fpHandler,
+                            pInfo->szName,
+                            pInfo->pActionList[i].szDescription);
+
                WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
                         "s", szModuleName);
                bSuccess = TRUE;
@@ -113,7 +122,9 @@ BOOL LoadSubAgent(char *szModuleName)
             {
                WriteLog(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
                         "s", szModuleName);
-               DLClose(hModule);
+               // We shouldn't unload subagent after call to Init(),
+               // because subagent may already start worker threads
+               //DLClose(hModule);
             }
          }
          else

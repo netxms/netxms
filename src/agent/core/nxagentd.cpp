@@ -102,6 +102,7 @@ DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR,
 
 static char *m_pszActionList = NULL;
 static char *m_pszServerList = NULL;
+static char *m_pszControlServerList = NULL;
 static char *m_pszInstallServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
@@ -116,6 +117,7 @@ static DWORD m_dwEnabledCiphers = 0xFFFF;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
+   { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
@@ -381,6 +383,7 @@ BOOL Initialize(void)
          else
          {
             g_pServerList[g_dwServerCount].bInstallationServer = FALSE;
+            g_pServerList[g_dwServerCount].bControlServer = FALSE;
             g_dwServerCount++;
          }
       }
@@ -416,6 +419,7 @@ BOOL Initialize(void)
             {
                g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
                g_pServerList[g_dwServerCount].bInstallationServer = TRUE;
+               g_pServerList[g_dwServerCount].bControlServer = FALSE;
                g_dwServerCount++;
             }
             else
@@ -425,6 +429,47 @@ BOOL Initialize(void)
          }
       }
       free(m_pszInstallServerList);
+   }
+
+   // Parse control server list
+   if (m_pszControlServerList != NULL)
+   {
+      DWORD i, dwAddr;
+
+      for(pItem = m_pszControlServerList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, ',');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+
+         dwAddr = ResolveHostName(pItem);
+         if ((dwAddr == INADDR_NONE) ||
+             (dwAddr == INADDR_ANY))
+         {
+            if (!(g_dwFlags & AF_DAEMON))
+               printf("Invalid server address '%s'\n", pItem);
+         }
+         else
+         {
+            for(i = 0; i < g_dwServerCount; i++)
+               if (g_pServerList[i].dwIpAddr == dwAddr)
+                  break;
+
+            if (i == g_dwServerCount)
+            {
+               g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
+               g_pServerList[g_dwServerCount].bInstallationServer = FALSE;
+               g_pServerList[g_dwServerCount].bControlServer = TRUE;
+               g_dwServerCount++;
+            }
+            else
+            {
+               g_pServerList[i].bControlServer = TRUE;
+            }
+         }
+      }
+      free(m_pszControlServerList);
    }
 
    // Load subagents

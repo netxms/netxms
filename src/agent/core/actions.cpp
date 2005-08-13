@@ -35,7 +35,9 @@ static DWORD m_dwNumActions = 0;
 // Add action
 //
 
-BOOL AddAction(char *pszName, int iType, char *pszCmdLine)
+BOOL AddAction(char *pszName, int iType, char *pArg, 
+               LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *),
+               char *pszSubAgent, char *pszDescription)
 {
    DWORD i;
 
@@ -49,7 +51,20 @@ BOOL AddAction(char *pszName, int iType, char *pszCmdLine)
    m_pActionList = (ACTION *)realloc(m_pActionList, sizeof(ACTION) * m_dwNumActions);
    strncpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
    m_pActionList[i].iType = iType;
-   m_pActionList[i].pszCmdLine = strdup(pszCmdLine);
+   strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
+   switch(iType)
+   {
+      case AGENT_ACTION_EXEC:
+         m_pActionList[i].handler.pszCmdLine = strdup(pArg);
+         break;
+      case AGENT_ACTION_SUBAGENT:
+         m_pActionList[i].handler.sa.fpHandler = fpHandler;
+         m_pActionList[i].handler.sa.pArg = pArg;
+         strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
+         break;
+      default:
+         break;
+   }
    return TRUE;
 }
 
@@ -70,7 +85,7 @@ BOOL AddActionFromConfig(char *pszLine)
    pCmdLine++;
    StrStrip(pszLine);
    StrStrip(pCmdLine);
-   return AddAction(pszLine, AGENT_ACTION_EXEC, pCmdLine);
+   return AddAction(pszLine, AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, "");
 }
 
 
@@ -89,7 +104,10 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:
-               dwErrorCode = ExecuteCommand(m_pActionList[i].pszCmdLine, pArgs);
+               dwErrorCode = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, pArgs);
+               break;
+            case AGENT_ACTION_SUBAGENT:
+               dwErrorCode = m_pActionList[i].handler.sa.fpHandler(pszAction, pArgs, m_pActionList[i].handler.sa.pArg);
                break;
             default:
                dwErrorCode = ERR_NOT_IMPLEMENTED;
@@ -112,8 +130,10 @@ LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumActions; i++)
    {
-      _sntprintf(szBuffer, 1024, "%s %d \"%s\"", m_pActionList[i].szName, m_pActionList[i].iType,
-               m_pActionList[i].pszCmdLine);
+      _sntprintf(szBuffer, 1024, _T("%s %d \"%s\""), m_pActionList[i].szName, m_pActionList[i].iType,
+                 m_pActionList[i].iType == AGENT_ACTION_EXEC ? 
+                     m_pActionList[i].handler.pszCmdLine :
+                     m_pActionList[i].handler.sa.szSubagentName);
       NxAddResultString(value, szBuffer);
    }
    return SYSINFO_RC_SUCCESS;
