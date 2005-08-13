@@ -32,6 +32,7 @@ public:
 
 // Implementation
 protected:
+	CFont m_font;
 	CRichEditCtrl m_wndEdit;
 	DWORD m_dwNodeId;
 	virtual ~CAgentCfgEditor();

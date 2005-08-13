@@ -370,10 +370,12 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("WinPerf"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX), OnUnload,
-	0, NULL, NULL,
+	_T("WinPerf"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX),
+   OnUnload, NULL,      // handlers
+   0, NULL,             // parameters
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	m_enums,
+   0, NULL              // actions
 };
 
 

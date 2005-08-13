@@ -63,18 +63,25 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
+   m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                     0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                     FIXED_PITCH | FF_DONTCARE, "Courier");
+
    GetClientRect(&rect);
    m_wndEdit.Create(WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOHSCROLL | 
                     ES_AUTOVSCROLL | ES_WANTRETURN | WS_HSCROLL | WS_VSCROLL,
                     rect, this, ID_EDIT_CTRL);
+   m_wndEdit.SetFont(&m_font);
+
    cf.cbSize = sizeof(CHARFORMAT);
    cf.dwMask = CFM_FACE | CFM_BOLD;
    cf.dwEffects = 0;
    cf.bPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
    _tcscpy(cf.szFaceName, _T("Courier"));
    m_wndEdit.SetDefaultCharFormat(cf);
-   m_wndEdit.SetSelectionCharFormat(cf);
-   m_wndEdit.SetWordCharFormat(cf);
+   //m_wndEdit.SetSelectionCharFormat(cf);
+   //m_wndEdit.SetWordCharFormat(cf);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	
@@ -97,6 +104,15 @@ void CAgentCfgEditor::OnViewRefresh()
    {
       m_wndEdit.SetWindowText(pszConfig);
       free(pszConfig);
+   CHARFORMAT cf;
+   cf.cbSize = sizeof(CHARFORMAT);
+   cf.dwMask = CFM_FACE | CFM_BOLD | CFM_CHARSET;
+   cf.dwEffects = 0;
+   cf.bPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
+   cf.bCharSet = ANSI_CHARSET;
+   _tcscpy(cf.szFaceName, _T("Courier"));
+   if (!m_wndEdit.SetDefaultCharFormat(cf))
+      MessageBox("huh");
    }
    else
    {
