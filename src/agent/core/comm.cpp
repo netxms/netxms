@@ -44,7 +44,8 @@ static MUTEX m_hSessionListAccess;
 // Validates server's address
 //
 
-static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbInstallationServer)
+static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbInstallationServer,
+                              BOOL *pbControlServer)
 {
    DWORD i;
 
@@ -52,6 +53,7 @@ static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbInstallationServer)
       if (dwAddr == g_pServerList[i].dwIpAddr)
       {
          *pbInstallationServer = g_pServerList[i].bInstallationServer;
+         *pbControlServer = g_pServerList[i].bControlServer;
          return TRUE;
       }
    return FALSE;
@@ -106,7 +108,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    socklen_t iSize;
    CommSession *pSession;
    char szBuffer[256];
-   BOOL bInstallationServer;
+   BOOL bInstallationServer, bControlServer;
 
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -170,14 +172,14 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       iNumErrors = 0;     // Reset consecutive errors counter
       DebugPrintf("Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
 
-      if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bInstallationServer))
+      if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bInstallationServer, &bControlServer))
       {
          g_dwAcceptedConnections++;
          DebugPrintf("Connection from %s accepted", szBuffer);
 
          // Create new session structure and threads
          pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
-                                    bInstallationServer);
+                                    bInstallationServer, bControlServer);
          if (!RegisterSession(pSession))
          {
             delete pSession;

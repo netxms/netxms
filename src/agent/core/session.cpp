@@ -80,7 +80,8 @@ THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
 // Client session class constructor
 //
 
-CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallationServer)
+CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
+                         BOOL bInstallationServer, BOOL bControlServer)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -92,6 +93,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallationSer
    m_dwHostAddr = dwHostAddr;
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
    m_bInstallationServer = bInstallationServer;
+   m_bControlServer = bControlServer;
    m_hCurrFile = -1;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -524,21 +526,28 @@ void CommSession::Action(CSCPMessage *pRequest, CSCPMessage *pMsg)
    NETXMS_VALUES_LIST args;
    DWORD i, dwRetCode;
 
-   // Get action name and arguments
-   pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
-   args.dwNumStrings = pRequest->GetVariableLong(VID_NUM_ARGS);
-   args.ppStringList = (char **)malloc(sizeof(char *) * args.dwNumStrings);
-   for(i = 0; i < args.dwNumStrings; i++)
-      args.ppStringList[i] = pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i);
+   if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_bControlServer)
+   {
+      // Get action name and arguments
+      pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
+      args.dwNumStrings = pRequest->GetVariableLong(VID_NUM_ARGS);
+      args.ppStringList = (char **)malloc(sizeof(char *) * args.dwNumStrings);
+      for(i = 0; i < args.dwNumStrings; i++)
+         args.ppStringList[i] = pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i);
 
-   // Execute action
-   dwRetCode = ExecAction(szAction, &args);
-   pMsg->SetVariable(VID_RCC, dwRetCode);
+      // Execute action
+      dwRetCode = ExecAction(szAction, &args);
+      pMsg->SetVariable(VID_RCC, dwRetCode);
 
-   // Cleanup
-   for(i = 0; i < args.dwNumStrings; i++)
-      safe_free(args.ppStringList[i]);
-   safe_free(args.ppStringList);
+      // Cleanup
+      for(i = 0; i < args.dwNumStrings; i++)
+         safe_free(args.ppStringList[i]);
+      safe_free(args.ppStringList);
+   }
+   else
+   {
+      pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+   }
 }
 
 

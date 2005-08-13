@@ -203,6 +203,7 @@ private:
    DWORD m_dwIndex;
    BOOL m_bIsAuthenticated;
    BOOL m_bInstallationServer;
+   BOOL m_bControlServer;
    int m_hCurrFile;
    DWORD m_dwFileRqId;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
@@ -225,7 +226,7 @@ private:
    static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallServer);
+   CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallServer, BOOL bControlServer);
    ~CommSession();
 
    void Run(void);
