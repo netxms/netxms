@@ -34,6 +34,16 @@ LONG H_ThreadCount(char *pszCmd, char *pArg, char *pValue);
 
 
 //
+// Shutdown system
+//
+
+static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char *pData)
+{
+   return ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+}
+
+
+//
 // Called by master agent at unload
 //
 
@@ -56,6 +66,11 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "System.ProcessList", H_ProcessList, NULL }
 };
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+   { "System.Restart", H_ActionShutdown, "R", "Restart system" },
+   { "System.Shutdown", H_ActionShutdown, "S", "Shutdown system" }
+};
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
@@ -64,7 +79,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	m_enums,
+	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+   m_actions
 };
 
 
