@@ -32,7 +32,13 @@ public:
 
 // Implementation
 protected:
-	CFont m_font;
+	CHARRANGE m_crSavedSelection;
+	void OnStopParsing(void);
+	void OnStartParsing(void);
+	BOOL m_bParserActive;
+	void ParseLine(int nLine);
+	void ParseFile(void);
+	void HighlightText(int nStartPos, int nEndPos, COLORREF rgbColor);
 	CRichEditCtrl m_wndEdit;
 	DWORD m_dwNodeId;
 	virtual ~CAgentCfgEditor();
@@ -43,7 +49,18 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
+	afx_msg void OnEditUndo();
+	afx_msg void OnEditCopy();
+	afx_msg void OnEditCut();
+	afx_msg void OnEditDelete();
+	afx_msg void OnEditPaste();
+	afx_msg void OnEditSelectAll();
 	//}}AFX_MSG
+	afx_msg void OnEditCtrlChange();
 	DECLARE_MESSAGE_MAP()
 };
 

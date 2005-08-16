@@ -304,6 +304,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 16), "V&ariable");
 
+   m_hAgentCfgEditorMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -319,6 +323,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hPackageMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_PACKAGE_MGR));
 	m_hLastValuesAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_LAST_VALUES));
 	m_hServerCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SERVER_CFG_EDITOR));
+	m_hAgentCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -391,6 +396,10 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hPackageMgrAccel);
    SafeFreeResource(m_hLastValuesMenu);
    SafeFreeResource(m_hLastValuesAccel);
+   SafeFreeResource(m_hServerCfgEditorMenu);
+   SafeFreeResource(m_hServerCfgEditorAccel);
+   SafeFreeResource(m_hAgentCfgEditorMenu);
+   SafeFreeResource(m_hAgentCfgEditorAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -1909,7 +1918,8 @@ void CConsoleApp::EditAgentConfig(NXC_OBJECT *pNode)
    CAgentCfgEditor *pWnd;
 
    pWnd = new CAgentCfgEditor(pNode->dwId);
-   CreateChildFrameWithSubtitle(pWnd, IDR_AGENT_CFG_EDITOR, pNode->szName, m_hMDIMenu, m_hMDIAccel);
+   CreateChildFrameWithSubtitle(pWnd, IDR_AGENT_CFG_EDITOR, pNode->szName,
+                                m_hAgentCfgEditorMenu, m_hAgentCfgEditorAccel);
 }
 
 

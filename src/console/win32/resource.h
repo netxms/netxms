@@ -171,6 +171,7 @@
 #define IDD_CREATE_VPNC                 278
 #define IDD_OBJECT_VPNC_GENERAL         279
 #define IDD_EDIT_IP_SUBNET              280
+#define IDA_AGENT_CFG_EDITOR            281
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -548,6 +549,7 @@
 #define ID_VARIABLE_NEW                 32942
 #define ID_VARIABLE_DELETE              32943
 #define ID_OBJECT_CREATE_VPNCONNECTOR   32944
+#define ID_EDIT_DELETE                  32949
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -556,8 +558,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        281
-#define _APS_NEXT_COMMAND_VALUE         32945
+#define _APS_NEXT_RESOURCE_VALUE        282
+#define _APS_NEXT_COMMAND_VALUE         32951
 #define _APS_NEXT_CONTROL_VALUE         1284
 #define _APS_NEXT_SYMED_VALUE           122
 #endif
