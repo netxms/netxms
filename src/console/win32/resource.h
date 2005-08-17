@@ -382,7 +382,7 @@
 #define IDC_CB_ITEM13                   1226
 #define IDC_EDIT_REQUEST                1226
 #define IDC_CB_ITEM10                   1227
-#define IDC_EDIT_RESPONCE               1227
+#define IDC_EDIT_RESPONSE               1227
 #define IDC_CB_ITEM14                   1228
 #define IDC_COMBO_TYPE                  1228
 #define IDC_CB_ITEM11                   1229

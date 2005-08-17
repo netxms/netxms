@@ -420,14 +420,14 @@ protected:
    WORD m_wProto;        // Protocol (TCP, UDP, etc.)
    WORD m_wPort;         // TCP or UDP port number
    TCHAR *m_pszRequest;  // Service-specific request
-   TCHAR *m_pszResponce; // Service-specific expected responce
+   TCHAR *m_pszResponse; // Service-specific expected response
 
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
    NetworkService();
    NetworkService(int iServiceType, WORD wProto, WORD wPort,
-                  TCHAR *pszRequest, TCHAR *pszResponce,
+                  TCHAR *pszRequest, TCHAR *pszResponse,
                   Node *pHostNode = NULL, DWORD dwPollerNode = 0);
    virtual ~NetworkService();
 
@@ -611,7 +611,7 @@ public:
 
    void AddService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0,
-                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponce = NULL);
+                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
 
    QWORD GetLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }

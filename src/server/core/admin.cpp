@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.11 2005-06-19 21:39:20 victor Exp $ */
+/* $Id: admin.cpp,v 1.12 2005-08-17 12:09:25 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -43,7 +43,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    int iError;
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
-   CSCPMessage *pRequest, responce;
+   CSCPMessage *pRequest, response;
    TCHAR szCmd[256];
    struct __console_ctx ctx;
    static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
@@ -52,7 +52,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    RecvCSCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL);
    ctx.hSocket = sock;
-   ctx.pMsg = &responce;
+   ctx.pMsg = &response;
 
    while(1)
    {
@@ -66,15 +66,15 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       pRequest = new CSCPMessage(pRawMsg);
       pRequest->GetVariableStr(VID_COMMAND, szCmd, 256);
 
-      responce.SetCode(CMD_ADM_MESSAGE);
-      responce.SetId(pRequest->GetId());
+      response.SetCode(CMD_ADM_MESSAGE);
+      response.SetId(pRequest->GetId());
       if (ProcessConsoleCommand(szCmd, &ctx))
       {
          InitiateShutdown();
       }
 
-      responce.SetCode(CMD_REQUEST_COMPLETED);
-      pRawMsgOut = responce.CreateMessage();
+      response.SetCode(CMD_REQUEST_COMPLETED);
+      pRawMsgOut = response.CreateMessage();
       SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
       
       free(pRawMsgOut);
@@ -164,6 +164,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/06/19 21:39:20  victor
+Encryption between server and agent fully working
+
 Revision 1.10  2005/06/19 19:20:40  victor
 - Added encryption foundation
 - Encryption between server and agent almost working

@@ -48,7 +48,7 @@ static struct
    { ERR_OUT_OF_RESOURCES, _T("Out of resources") },
    { ERR_NOT_CONNECTED, _T("Not connected") },
    { ERR_CONNECTION_BROKEN, _T("Connection broken") },
-   { ERR_BAD_RESPONCE, _T("Bad responce") },
+   { ERR_BAD_RESPONSE, _T("Bad response") },
    { ERR_IO_FAILURE, _T("I/O failure") },
    { ERR_RESOURCE_BUSY, _T("Resource busy") },
    { ERR_EXEC_FAILED, _T("External program execution failed") },

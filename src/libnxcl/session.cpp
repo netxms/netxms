@@ -162,14 +162,14 @@ CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTi
 
 DWORD NXCL_Session::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
 {
-   CSCPMessage *pResponce;
+   CSCPMessage *pResponse;
    DWORD dwRetCode;
 
-   pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
-   if (pResponce != NULL)
+   pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
-      delete pResponce;
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      delete pResponse;
    }
    else
    {

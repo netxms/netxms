@@ -44,7 +44,7 @@ void DestroyObject(NXC_OBJECT *pObject)
          break;
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
-         safe_free(pObject->netsrv.pszResponce);
+         safe_free(pObject->netsrv.pszResponse);
          break;
       case OBJECT_ZONE:
          safe_free(pObject->zone.pszDescription);
@@ -148,7 +148,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
          break;
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
-         safe_free(pObject->netsrv.pszResponce);
+         safe_free(pObject->netsrv.pszResponse);
          break;
       case OBJECT_ZONE:
          safe_free(pObject->zone.pszDescription);
@@ -255,7 +255,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->netsrv.wPort = pMsg->GetVariableShort(VID_IP_PORT);
          pObject->netsrv.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->netsrv.pszRequest = pMsg->GetVariableStr(VID_SERVICE_REQUEST);
-         pObject->netsrv.pszResponce = pMsg->GetVariableStr(VID_SERVICE_RESPONCE);
+         pObject->netsrv.pszResponse = pMsg->GetVariableStr(VID_SERVICE_RESPONSE);
          break;
       case OBJECT_ZONE:
          pObject->zone.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
@@ -602,8 +602,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_DESCRIPTION, pUpdate->pszDescription);
    if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_REQUEST)
       msg.SetVariable(VID_SERVICE_REQUEST, pUpdate->pszRequest);
-   if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_RESPONCE)
-      msg.SetVariable(VID_SERVICE_RESPONCE, pUpdate->pszResponce);
+   if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_RESPONSE)
+      msg.SetVariable(VID_SERVICE_RESPONSE, pUpdate->pszResponse);
    if (pUpdate->dwFlags & OBJ_UPDATE_IP_PROTO)
       msg.SetVariable(VID_IP_PROTO, pUpdate->wProto);
    if (pUpdate->dwFlags & OBJ_UPDATE_IP_PORT)
@@ -685,7 +685,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
                                          NXC_OBJECT_CREATE_INFO *pCreateInfo, 
                                          DWORD *pdwObjectId)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -714,7 +714,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
          msg.SetVariable(VID_IP_PROTO, pCreateInfo->cs.netsrv.wProto);
          msg.SetVariable(VID_IP_PORT, pCreateInfo->cs.netsrv.wPort);
          msg.SetVariable(VID_SERVICE_REQUEST, pCreateInfo->cs.netsrv.pszRequest);
-         msg.SetVariable(VID_SERVICE_RESPONCE, pCreateInfo->cs.netsrv.pszResponce);
+         msg.SetVariable(VID_SERVICE_RESPONSE, pCreateInfo->cs.netsrv.pszResponse);
          break;
       default:
          break;
@@ -723,17 +723,17 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Wait for responce. Creating node object can include polling,
+   // Wait for response. Creating node object can include polling,
    // which can take a minute or even more in worst cases
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwObjectId = pResponce->GetVariableLong(VID_OBJECT_ID);
+         *pdwObjectId = pResponse->GetVariableLong(VID_OBJECT_ID);
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {
@@ -838,7 +838,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject)
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumCats = 0, dwCatId = 0;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -853,24 +853,24 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppLis
 
    do
    {
-      pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId);
-      if (pResponce != NULL)
+      pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId);
+      if (pResponse != NULL)
       {
-         dwCatId = pResponce->GetVariableLong(VID_CATEGORY_ID);
+         dwCatId = pResponse->GetVariableLong(VID_CATEGORY_ID);
          if (dwCatId != 0)  // 0 is end of list indicator
          {
             (*ppList)->pElements = (NXC_CONTAINER_CATEGORY *)realloc((*ppList)->pElements, 
                sizeof(NXC_CONTAINER_CATEGORY) * ((*ppList)->dwNumElements + 1));
             (*ppList)->pElements[(*ppList)->dwNumElements].dwId = dwCatId;
             (*ppList)->pElements[(*ppList)->dwNumElements].dwImageId =
-               pResponce->GetVariableLong(VID_IMAGE_ID);
-            pResponce->GetVariableStr(VID_CATEGORY_NAME, 
+               pResponse->GetVariableLong(VID_IMAGE_ID);
+            pResponse->GetVariableStr(VID_CATEGORY_NAME, 
                (*ppList)->pElements[(*ppList)->dwNumElements].szName, MAX_OBJECT_NAME);
             (*ppList)->pElements[(*ppList)->dwNumElements].pszDescription =
-               pResponce->GetVariableStr(VID_DESCRIPTION);
+               pResponse->GetVariableStr(VID_DESCRIPTION);
             (*ppList)->dwNumElements++;
          }
-         delete pResponce;
+         delete pResponse;
       }
       else
       {
@@ -918,7 +918,7 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, DWORD dwObjectId, int
                                      void (* pfCallback)(TCHAR *, void *), void *pArg)
 {
    DWORD dwRetCode, dwRqId;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    TCHAR *pszMsg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -932,17 +932,17 @@ DWORD LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, DWORD dwObjectId, int
    do
    {
       // Polls can take a long time, so we wait up to 120 seconds for each message
-      pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_POLLING_INFO, dwRqId, 120000);
-      if (pResponce != NULL)
+      pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_POLLING_INFO, dwRqId, 120000);
+      if (pResponse != NULL)
       {
-         dwRetCode = pResponce->GetVariableLong(VID_RCC);
+         dwRetCode = pResponse->GetVariableLong(VID_RCC);
          if ((dwRetCode == RCC_OPERATION_IN_PROGRESS) && (pfCallback != NULL))
          {
-            pszMsg = pResponce->GetVariableStr(VID_POLLER_MESSAGE);
+            pszMsg = pResponse->GetVariableStr(VID_POLLER_MESSAGE);
             pfCallback(pszMsg, pArg);
             free(pszMsg);
          }
-         delete pResponce;
+         delete pResponse;
       }
       else
       {
@@ -982,7 +982,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, DWORD d
                                                    DWORD *pdwNumParams, 
                                                    NXC_AGENT_PARAM **ppParamList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD i, dwId, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -998,23 +998,23 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, DWORD d
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Wait for responce
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   // Wait for response
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwNumParams = pResponce->GetVariableLong(VID_NUM_PARAMETERS);
+         *pdwNumParams = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
          *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * *pdwNumParams);
          for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
          {
-            pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
-            pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
-            (*ppParamList)[i].iDataType = (int)pResponce->GetVariableShort(dwId++);
+            pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
+            pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
+            (*ppParamList)[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
          }
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {
@@ -1134,9 +1134,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
                fwrite(pList[i].pObject->netsrv.pszRequest, 1, dwSize, hFile);
 
-               dwSize = _tcslen(pList[i].pObject->netsrv.pszResponce) * sizeof(TCHAR);
+               dwSize = _tcslen(pList[i].pObject->netsrv.pszResponse) * sizeof(TCHAR);
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->netsrv.pszResponce, 1, dwSize, hFile);
+               fwrite(pList[i].pObject->netsrv.pszResponse, 1, dwSize, hFile);
                break;
             case OBJECT_ZONE:
                dwSize = _tcslen(pList[i].pObject->zone.pszDescription) * sizeof(TCHAR);
@@ -1235,9 +1235,9 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                         object.netsrv.pszRequest[dwSize / sizeof(TCHAR)] = 0;
 
                         fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.netsrv.pszResponce = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.netsrv.pszResponce, 1, dwSize, hFile);
-                        object.netsrv.pszResponce[dwSize / sizeof(TCHAR)] = 0;
+                        object.netsrv.pszResponse = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.netsrv.pszResponse, 1, dwSize, hFile);
+                        object.netsrv.pszResponse[dwSize / sizeof(TCHAR)] = 0;
                         break;
                      case OBJECT_ZONE:
                         fread(&dwSize, 1, sizeof(DWORD), hFile);
@@ -1310,7 +1310,7 @@ DWORD LIBNXCL_EXPORTABLE NXCChangeNodeIP(NXC_SESSION hSession, DWORD dwNodeId, D
 DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
                                            TCHAR **ppszConfig)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -1325,16 +1325,16 @@ DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Wait for responce
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 30000);
-   if (pResponce != NULL)
+   // Wait for response
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 30000);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *ppszConfig = pResponce->GetVariableStr(VID_CONFIG_FILE);
+         *ppszConfig = pResponse->GetVariableStr(VID_CONFIG_FILE);
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {

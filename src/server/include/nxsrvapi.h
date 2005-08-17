@@ -251,7 +251,7 @@ public:
    DWORD UploadFile(TCHAR *pszFile);
    DWORD StartUpgrade(TCHAR *pszPkgName);
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
-                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponce = NULL);
+                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
    DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
 

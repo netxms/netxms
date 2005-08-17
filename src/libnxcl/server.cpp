@@ -32,7 +32,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
                                                NXC_SERVER_VARIABLE **ppVarList, 
                                                DWORD *pdwNumVars)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD i, dwId, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -47,24 +47,24 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Wait for responce
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 30000);
-   if (pResponce != NULL)
+   // Wait for response
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 30000);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwNumVars = pResponce->GetVariableLong(VID_NUM_VARIABLES);
+         *pdwNumVars = pResponse->GetVariableLong(VID_NUM_VARIABLES);
          *ppVarList = (NXC_SERVER_VARIABLE *)malloc(sizeof(NXC_SERVER_VARIABLE) * (*pdwNumVars));
 
          for(i = 0, dwId = VID_VARLIST_BASE; i < *pdwNumVars; i++)
          {
-            pResponce->GetVariableStr(dwId++, (*ppVarList)[i].szName, MAX_OBJECT_NAME);
-            pResponce->GetVariableStr(dwId++, (*ppVarList)[i].szValue, MAX_DB_STRING);
-            (*ppVarList)[i].bNeedRestart = pResponce->GetVariableShort(dwId++) ? TRUE : FALSE;
+            pResponse->GetVariableStr(dwId++, (*ppVarList)[i].szName, MAX_OBJECT_NAME);
+            pResponse->GetVariableStr(dwId++, (*ppVarList)[i].szValue, MAX_DB_STRING);
+            (*ppVarList)[i].bNeedRestart = pResponse->GetVariableShort(dwId++) ? TRUE : FALSE;
          }
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {

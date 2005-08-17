@@ -106,12 +106,12 @@ static int List(AgentConnection *pConn, char *pszParam)
 //
 
 static int CheckService(AgentConnection *pConn, int iServiceType, DWORD dwServiceAddr,
-                        WORD wProto, WORD wPort, char *pszRequest, char *pszResponce)
+                        WORD wProto, WORD wPort, char *pszRequest, char *pszResponse)
 {
    DWORD dwStatus, dwError;
 
    dwError = pConn->CheckNetworkService(&dwStatus, dwServiceAddr, iServiceType, wPort,
-                                        wProto, pszRequest, pszResponce);
+                                        wProto, pszRequest, pszResponse);
    if (dwError == ERR_SUCCESS)
    {
       printf("Service status: %d\n", dwStatus);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
    WORD wAgentPort = AGENT_LISTEN_PORT, wServicePort = 0, wServiceProto = 0;
    DWORD dwTimeout = 3000, dwServiceAddr = 0, dwError;
    char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
-   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponce[MAX_DB_STRING] = "";
+   char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = "";
    RSA *pServerKey = NULL;
 
    // Parse command line
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
                    "   -P <port>    : Specify network service port (to be used wth -S option).\n"
                    "   -q           : Quiet mode.\n"
                    "   -r <string>  : Service check request string.\n"
-                   "   -R <string>  : Service check expected responce string.\n"
+                   "   -R <string>  : Service check expected response string.\n"
                    "   -s <secret>  : Specify shared secret for authentication.\n"
                    "   -S <addr>    : Check state of network service at given address.\n"
                    "   -t <type>    : Set type of service to be checked.\n"
@@ -314,8 +314,8 @@ int main(int argc, char *argv[])
          case 'r':   // Service check request string
             strncpy(szRequest, optarg, MAX_DB_STRING);
             break;
-         case 'R':   // Service check responce string
-            strncpy(szResponce, optarg, MAX_DB_STRING);
+         case 'R':   // Service check response string
+            strncpy(szResponse, optarg, MAX_DB_STRING);
             break;
          case 's':   // Shared secret
             strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
                         break;
                      case CMD_CHECK_SERVICE:
                         iExitCode = CheckService(&conn, iServiceType, dwServiceAddr,
-                                                 wServiceProto, wServicePort, szRequest, szResponce);
+                                                 wServiceProto, wServicePort, szRequest, szResponse);
                         break;
                      case CMD_GET_PARAMS:
                         iExitCode = ListParameters(&conn);

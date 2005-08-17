@@ -156,7 +156,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, DWORD dwEv
 
 DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, DWORD *pdwEventCode)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -167,12 +167,12 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, DWORD *pdwEv
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwEventCode = pResponce->GetVariableLong(VID_EVENT_CODE);
+         *pdwEventCode = pResponse->GetVariableLong(VID_EVENT_CODE);
    }
    else
    {

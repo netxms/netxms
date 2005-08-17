@@ -307,27 +307,27 @@ DWORD SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, W
 // with respect for timeouts and retransmissions
 //
 
-DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponce, 
+DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponse, 
                                 DWORD dwTimeout, DWORD dwNumRetries)
 {
    DWORD dwResult = SNMP_ERR_SUCCESS;
    int iBytes;
 
-   if ((pRequest == NULL) || (ppResponce == NULL) || (dwNumRetries == 0))
+   if ((pRequest == NULL) || (ppResponse == NULL) || (dwNumRetries == 0))
       return SNMP_ERR_PARAM;
 
-   *ppResponce = NULL;
+   *ppResponse = NULL;
    if (Send(pRequest) <= 0)
       return SNMP_ERR_COMM;
 
    while(dwNumRetries-- > 0)
    {
-      iBytes = Read(ppResponce, dwTimeout);
+      iBytes = Read(ppResponse, dwTimeout);
       if (iBytes > 0)
       {
-         if (*ppResponce != NULL)
+         if (*ppResponse != NULL)
          {
-            if ((*ppResponce)->GetRequestId() == pRequest->GetRequestId())
+            if ((*ppResponse)->GetRequestId() == pRequest->GetRequestId())
                break;
             dwResult = SNMP_ERR_TIMEOUT;
          }

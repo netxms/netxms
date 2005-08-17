@@ -50,7 +50,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD i, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -61,66 +61,66 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
          // Prepare event policy structure
          *ppEventPolicy = (NXC_EPP *)malloc(sizeof(NXC_EPP));
-         (*ppEventPolicy)->dwNumRules = pResponce->GetVariableLong(VID_NUM_RULES);
+         (*ppEventPolicy)->dwNumRules = pResponse->GetVariableLong(VID_NUM_RULES);
          (*ppEventPolicy)->pRuleList = 
             (NXC_EPP_RULE *)malloc(sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
          memset((*ppEventPolicy)->pRuleList, 0, sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
-         delete pResponce;
+         delete pResponse;
 
          // Receive policy rules, each in separate message
          for(i = 0; i < (*ppEventPolicy)->dwNumRules; i++)
          {
-            pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_EPP_RECORD, dwRqId);
-            if (pResponce != NULL)
+            pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_EPP_RECORD, dwRqId);
+            if (pResponse != NULL)
             {
-               (*ppEventPolicy)->pRuleList[i].dwFlags = pResponce->GetVariableLong(VID_FLAGS);
-               (*ppEventPolicy)->pRuleList[i].dwId = pResponce->GetVariableLong(VID_RULE_ID);
-               (*ppEventPolicy)->pRuleList[i].pszComment = pResponce->GetVariableStr(VID_COMMENT);
+               (*ppEventPolicy)->pRuleList[i].dwFlags = pResponse->GetVariableLong(VID_FLAGS);
+               (*ppEventPolicy)->pRuleList[i].dwId = pResponse->GetVariableLong(VID_RULE_ID);
+               (*ppEventPolicy)->pRuleList[i].pszComment = pResponse->GetVariableStr(VID_COMMENT);
 
                (*ppEventPolicy)->pRuleList[i].dwNumActions = 
-                  pResponce->GetVariableLong(VID_NUM_ACTIONS);
+                  pResponse->GetVariableLong(VID_NUM_ACTIONS);
                (*ppEventPolicy)->pRuleList[i].pdwActionList = 
                   (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
-               pResponce->GetVariableInt32Array(VID_RULE_ACTIONS, 
+               pResponse->GetVariableInt32Array(VID_RULE_ACTIONS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumActions,
                                                 (*ppEventPolicy)->pRuleList[i].pdwActionList);
 
                (*ppEventPolicy)->pRuleList[i].dwNumEvents = 
-                  pResponce->GetVariableLong(VID_NUM_EVENTS);
+                  pResponse->GetVariableLong(VID_NUM_EVENTS);
                (*ppEventPolicy)->pRuleList[i].pdwEventList = 
                   (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
-               pResponce->GetVariableInt32Array(VID_RULE_EVENTS, 
+               pResponse->GetVariableInt32Array(VID_RULE_EVENTS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumEvents,
                                                 (*ppEventPolicy)->pRuleList[i].pdwEventList);
 
                (*ppEventPolicy)->pRuleList[i].dwNumSources = 
-                  pResponce->GetVariableLong(VID_NUM_SOURCES);
+                  pResponse->GetVariableLong(VID_NUM_SOURCES);
                (*ppEventPolicy)->pRuleList[i].pdwSourceList = 
                   (DWORD *)malloc(sizeof(DWORD) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
-               pResponce->GetVariableInt32Array(VID_RULE_SOURCES, 
+               pResponse->GetVariableInt32Array(VID_RULE_SOURCES, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumSources,
                                                 (*ppEventPolicy)->pRuleList[i].pdwSourceList);
 
-               pResponce->GetVariableStr(VID_ALARM_KEY, 
+               pResponse->GetVariableStr(VID_ALARM_KEY, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmKey,
                                          MAX_DB_STRING);
-               pResponce->GetVariableStr(VID_ALARM_ACK_KEY, 
+               pResponse->GetVariableStr(VID_ALARM_ACK_KEY, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmAckKey,
                                          MAX_DB_STRING);
-               pResponce->GetVariableStr(VID_ALARM_MESSAGE, 
+               pResponse->GetVariableStr(VID_ALARM_MESSAGE, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmMessage,
                                          MAX_DB_STRING);
-               (*ppEventPolicy)->pRuleList[i].wAlarmSeverity = pResponce->GetVariableShort(VID_ALARM_SEVERITY);
+               (*ppEventPolicy)->pRuleList[i].wAlarmSeverity = pResponse->GetVariableShort(VID_ALARM_SEVERITY);
 
-               delete pResponce;
+               delete pResponse;
             }
             else
             {
@@ -135,7 +135,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
       }
       else
       {
-         delete pResponce;
+         delete pResponse;
       }
    }
    else
@@ -183,7 +183,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEven
    msg.SetId(dwRqId);
    msg.SetVariable(VID_NUM_RULES, pEventPolicy->dwNumRules);
 
-   // Send message and wait for responce
+   // Send message and wait for response
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)

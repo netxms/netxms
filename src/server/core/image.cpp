@@ -115,7 +115,7 @@ void SendDefaultImageList(ClientSession *pSession, DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
 
-   // Send responce
+   // Send response
    pSession->SendMessage(&msg);
 }
 
@@ -171,7 +171,7 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
 
-   // Send responce
+   // Send response
    pSession->SendMessage(&msg);
 }
 
@@ -232,6 +232,6 @@ void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD 
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
 
-   // Send responce
+   // Send response
    pSession->SendMessage(&msg);
 }

@@ -270,7 +270,7 @@ void GetParameterList(CSCPMessage *pMsg);
 
 BOOL LoadSubAgent(char *szModuleName);
 void UnloadAllSubAgents(void);
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponce);
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse);
 
 BOOL AddAction(char *pszName, int iType, char *pArg, 
                LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *),

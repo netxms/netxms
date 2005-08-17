@@ -57,7 +57,7 @@
 #define ERR_OUT_OF_RESOURCES        ((DWORD)503)
 #define ERR_NOT_CONNECTED           ((DWORD)900)
 #define ERR_CONNECTION_BROKEN       ((DWORD)901)
-#define ERR_BAD_RESPONCE            ((DWORD)902)
+#define ERR_BAD_RESPONSE            ((DWORD)902)
 #define ERR_IO_FAILURE              ((DWORD)903)
 #define ERR_RESOURCE_BUSY           ((DWORD)904)
 #define ERR_EXEC_FAILED             ((DWORD)905)
@@ -150,7 +150,7 @@ typedef struct
    TCHAR szVersion[32];
    void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
    BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
-                            CSCPMessage *pResponce);
+                            CSCPMessage *pResponse);
    DWORD dwNumParameters;
    NETXMS_SUBAGENT_PARAM *pParamList;
    DWORD dwNumEnums;

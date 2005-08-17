@@ -229,9 +229,9 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average responce time of ICMP ping to {instance} for last minute") },
-   { _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Responce time of last ICMP ping to {instance}") },
-   { _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping responce time for {instance}") }
+   { _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
+   { _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {

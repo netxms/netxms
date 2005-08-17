@@ -65,7 +65,7 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck,
                                           DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
    NXC_ALARM *pList = NULL;
 
@@ -78,18 +78,18 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck
 
    do
    {
-      pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ALARM_DATA, dwRqId);
-      if (pResponce != NULL)
+      pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ALARM_DATA, dwRqId);
+      if (pResponse != NULL)
       {
-         dwAlarmId = pResponce->GetVariableLong(VID_ALARM_ID);
+         dwAlarmId = pResponse->GetVariableLong(VID_ALARM_ID);
          if (dwAlarmId != 0)  // 0 is end of list indicator
          {
             pList = (NXC_ALARM *)realloc(pList, sizeof(NXC_ALARM) * (dwNumAlarms + 1));
             pList[dwNumAlarms].dwAlarmId = dwAlarmId;
-            AlarmFromMsg(pResponce, &pList[dwNumAlarms]);
+            AlarmFromMsg(pResponse, &pList[dwNumAlarms]);
             dwNumAlarms++;
          }
-         delete pResponce;
+         delete pResponse;
       }
       else
       {

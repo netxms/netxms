@@ -95,7 +95,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, DWORD *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumTraps = 0, dwTrapId = 0;
    NXC_TRAP_CFG_ENTRY *pList = NULL;
 
@@ -110,19 +110,19 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, DWORD *pdwNumTraps
    {
       do
       {
-         pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_TRAP_CFG_RECORD, dwRqId);
-         if (pResponce != NULL)
+         pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_TRAP_CFG_RECORD, dwRqId);
+         if (pResponse != NULL)
          {
-            dwTrapId = pResponce->GetVariableLong(VID_TRAP_ID);
+            dwTrapId = pResponse->GetVariableLong(VID_TRAP_ID);
             if (dwTrapId != 0)  // 0 is end of list indicator
             {
                pList = (NXC_TRAP_CFG_ENTRY *)realloc(pList, 
                            sizeof(NXC_TRAP_CFG_ENTRY) * (dwNumTraps + 1));
                pList[dwNumTraps].dwId = dwTrapId;
-               TrapCfgFromMsg(pResponce, &pList[dwNumTraps]);
+               TrapCfgFromMsg(pResponse, &pList[dwNumTraps]);
                dwNumTraps++;
             }
-            delete pResponce;
+            delete pResponse;
          }
          else
          {
@@ -198,7 +198,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId)
 
 DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -207,13 +207,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId)
    msg.SetId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwResult = pResponce->GetVariableLong(VID_RCC);
+      dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
-         *pdwTrapId = pResponce->GetVariableLong(VID_TRAP_ID);
-      delete pResponce;
+         *pdwTrapId = pResponse->GetVariableLong(VID_TRAP_ID);
+      delete pResponse;
    }
    else
    {

@@ -1721,7 +1721,7 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
 
 DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType,
                                 WORD wPort, WORD wProto, TCHAR *pszRequest,
-                                TCHAR *pszResponce)
+                                TCHAR *pszResponse)
 {
    DWORD dwError = ERR_NOT_CONNECTED;
 
@@ -1735,7 +1735,7 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
       if (conn.Connect(g_pServerKey))
       {
          dwError = conn.CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
-                                            wPort, wProto, pszRequest, pszResponce);
+                                            wPort, wProto, pszRequest, pszResponse);
          conn.Disconnect();
       }
    }

@@ -298,7 +298,7 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_IP_PROTO         ((DWORD)0x000400)
 #define OBJ_UPDATE_IP_PORT          ((DWORD)0x000800)
 #define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x001000)
-#define OBJ_UPDATE_CHECK_RESPONCE   ((DWORD)0x002000)
+#define OBJ_UPDATE_CHECK_RESPONSE   ((DWORD)0x002000)
 #define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x004000)
 #define OBJ_UPDATE_IP_ADDR          ((DWORD)0x008000)
 #define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x010000)
@@ -710,7 +710,7 @@ typedef struct
          WORD wPort;
          DWORD dwPollerNode;
          TCHAR *pszRequest;
-         TCHAR *pszResponce;
+         TCHAR *pszResponse;
       } netsrv;
       struct
       {
@@ -757,7 +757,7 @@ typedef struct
    WORD wPort;
    DWORD dwPollerNode;
    TCHAR *pszRequest;
-   TCHAR *pszResponce;
+   TCHAR *pszResponse;
    DWORD dwIpAddr;
    DWORD dwPeerGateway;
    DWORD dwNumLocalNets;
@@ -965,7 +965,7 @@ typedef struct
          WORD wProto;
          WORD wPort;
          TCHAR *pszRequest;
-         TCHAR *pszResponce;
+         TCHAR *pszResponse;
       } netsrv;
    } cs;
 } NXC_OBJECT_CREATE_INFO;

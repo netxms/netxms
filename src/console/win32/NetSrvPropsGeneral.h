@@ -32,7 +32,7 @@ public:
 	CString	m_strName;
 	long	m_iPort;
 	CString	m_strRequest;
-	CString	m_strResponce;
+	CString	m_strResponse;
 	long	m_iProto;
 	//}}AFX_DATA
 
@@ -55,7 +55,7 @@ protected:
 	afx_msg void OnChangeEditName();
 	afx_msg void OnSelchangeComboType();
 	afx_msg void OnChangeEditRequest();
-	afx_msg void OnChangeEditResponce();
+	afx_msg void OnChangeEditResponse();
 	afx_msg void OnRadioTcp();
 	afx_msg void OnRadioUdp();
 	afx_msg void OnRadioIcmp();

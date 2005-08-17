@@ -32,7 +32,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId,
                                           TCHAR *pszCacheDir, WORD wFormat)
 {
    DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    BYTE *pBuffer;
    TCHAR cLastChar, szFileName[MAX_PATH];
    FILE *hFile;
@@ -46,17 +46,17 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId,
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Loading  file can take time, so we use 60 sec. timeout instead of default
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_IMAGE_FILE, dwRqId, 60000);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_IMAGE_FILE, dwRqId, 60000);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         dwFileSize = pResponce->GetVariableLong(VID_IMAGE_FILE_SIZE);
+         dwFileSize = pResponse->GetVariableLong(VID_IMAGE_FILE_SIZE);
          pBuffer = (BYTE *)malloc(dwFileSize);
          if (pBuffer != NULL)
          {
-            pResponce->GetVariableBinary(VID_IMAGE_FILE, pBuffer, dwFileSize);
+            pResponse->GetVariableBinary(VID_IMAGE_FILE, pBuffer, dwFileSize);
             cLastChar = pszCacheDir[_tcslen(pszCacheDir) - 1];
             _stprintf(szFileName, _T("%s%s%08x.%s"), pszCacheDir, 
                     (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : FS_PATH_SEPARATOR, 
@@ -85,7 +85,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId,
             dwRetCode = RCC_OUT_OF_MEMORY;
          }
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {
@@ -126,7 +126,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **pp
                                        TCHAR *pszCacheDir, WORD wFormat)
 {
    DWORD i, dwRqId, dwRetCode;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -135,19 +135,19 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **pp
    msg.SetVariable(VID_IMAGE_FORMAT, wFormat);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_IMAGE_LIST, dwRqId, 
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_IMAGE_LIST, dwRqId, 
                                   ((NXCL_Session *)hSession)->m_dwCommandTimeout * 2);
-   if (pResponce != NULL)
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
          *ppImageList = (NXC_IMAGE_LIST *)malloc(sizeof(NXC_IMAGE_LIST));
-         (*ppImageList)->dwNumImages = pResponce->GetVariableLong(VID_NUM_IMAGES);
+         (*ppImageList)->dwNumImages = pResponse->GetVariableLong(VID_NUM_IMAGES);
          if ((*ppImageList)->dwNumImages > 0)
          {
             (*ppImageList)->pImageList = (NXC_IMAGE *)malloc(sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
-            pResponce->GetVariableBinary(VID_IMAGE_LIST, (BYTE *)(*ppImageList)->pImageList, 
+            pResponse->GetVariableBinary(VID_IMAGE_LIST, (BYTE *)(*ppImageList)->pImageList, 
                                          sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
             for(i = 0; i < (*ppImageList)->dwNumImages; i++)
             {
@@ -167,7 +167,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **pp
             (*ppImageList)->pImageList = NULL;
          }
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {
@@ -199,7 +199,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList)
 DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(NXC_SESSION hSession, DWORD *pdwListSize, 
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -208,19 +208,19 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(NXC_SESSION hSession, DWORD *pd
    msg.SetId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_DEFAULT_IMAGE_LIST, dwRqId);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwListSize = pResponce->GetVariableLong(VID_NUM_IMAGES);
+         *pdwListSize = pResponse->GetVariableLong(VID_NUM_IMAGES);
          *ppdwClassId = (DWORD *)malloc(sizeof(DWORD) * *pdwListSize);
          *ppdwImageId = (DWORD *)malloc(sizeof(DWORD) * *pdwListSize);
-         pResponce->GetVariableInt32Array(VID_CLASS_ID_LIST, *pdwListSize, *ppdwClassId);
-         pResponce->GetVariableInt32Array(VID_IMAGE_ID_LIST, *pdwListSize, *ppdwImageId);
+         pResponse->GetVariableInt32Array(VID_CLASS_ID_LIST, *pdwListSize, *ppdwClassId);
+         pResponse->GetVariableInt32Array(VID_IMAGE_ID_LIST, *pdwListSize, *ppdwImageId);
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {

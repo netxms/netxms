@@ -149,7 +149,7 @@ Inconsistent database: interface %1 linked to object %2 which is not a node
 MessageId=
 SymbolicName=MSG_SNMP_UNKNOWN_TYPE
 Language=English
-Unknown SNMP variable type %1 in GET responce PDU
+Unknown SNMP variable type %1 in GET response PDU
 .
 
 MessageId=
@@ -161,7 +161,7 @@ Error %1 in processing SNMP GET request
 MessageId=
 SymbolicName=MSG_SNMP_BAD_PACKET
 Language=English
-Error in SNMP responce packet: %1
+Error in SNMP response packet: %1
 .
 
 MessageId=

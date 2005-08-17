@@ -239,11 +239,11 @@ void CommSession::ReadThread(void)
             DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
             if (m_pCtx == NULL)
             {
-               CSCPMessage *pResponce;
+               CSCPMessage *pResponse;
 
-               SetupEncryptionContext(pMsg, &m_pCtx, &pResponce, NULL);
-               SendMessage(pResponce);
-               delete pResponce;
+               SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL);
+               SendMessage(pResponse);
+               delete pResponse;
             }
             delete pMsg;
          }
@@ -337,7 +337,7 @@ void CommSession::ProcessingThread(void)
       dwCommand = pMsg->GetCode();
       DebugPrintf("Received message %s", CSCPMessageCodeName((WORD)dwCommand, szBuffer));
 
-      // Prepare responce message
+      // Prepare response message
       msg.SetCode(CMD_REQUEST_COMPLETED);
       msg.SetId(pMsg->GetId());
 
@@ -394,7 +394,7 @@ void CommSession::ProcessingThread(void)
       }
       delete pMsg;
 
-      // Send responce
+      // Send response
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }

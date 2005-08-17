@@ -118,11 +118,11 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_REQUEST_SESSION_KEY:
                if (pSession->m_pCtx == NULL)
                {
-                  CSCPMessage *pResponce;
+                  CSCPMessage *pResponse;
 
-                  SetupEncryptionContext(pMsg, &pSession->m_pCtx, &pResponce, NULL);
-                  pSession->SendMsg(pResponce);
-                  delete pResponce;
+                  SetupEncryptionContext(pMsg, &pSession->m_pCtx, &pResponse, NULL);
+                  pSession->SendMsg(pResponse);
+                  delete pResponse;
                }
             case CMD_OBJECT:        // Object information
             case CMD_OBJECT_UPDATE:
@@ -256,7 +256,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
             msg.SetCode(CMD_GET_SERVER_INFO);
             if (pSession->SendMsg(&msg))
             {
-               // Receive responce message
+               // Receive response message
                pResp = pSession->WaitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
                if (pResp != NULL)
                {
@@ -317,7 +317,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 
                         if (pSession->SendMsg(&msg))
                         {
-                           // Receive responce message
+                           // Receive response message
                            pResp = pSession->WaitForMessage(CMD_LOGIN_RESP, msg.GetId());
                            if (pResp != NULL)
                            {

@@ -109,7 +109,7 @@ static WORD IPChecksum(WORD *addr, int len)
 // Return value: TRUE if host is alive and FALSE otherwise
 // Parameters: dwAddr - IP address with network byte order
 //             iNumRetries - number of retries
-//             dwTimeout - Timeout waiting for responce in milliseconds
+//             dwTimeout - Timeout waiting for response in milliseconds
 //
 
 DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT)
@@ -159,7 +159,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
 			EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 5, NULL);
 			kevent(kq, &ke, 1, NULL, 0, NULL);
 
-         // Wait for responce
+         // Wait for response
          for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
          {
             qwStartTime = GetCurrentTimeMs();
@@ -180,7 +180,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
          socklen_t iAddrLen;
          struct sockaddr_in saSrc;
 
-         // Wait for responce
+         // Wait for response
          for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
          {
 #if HAVE_POLL
@@ -209,7 +209,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                iAddrLen = sizeof(struct sockaddr_in);
                if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &iAddrLen) > 0)
                {
-                  // Check responce
+                  // Check response
                   if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
                       (reply.m_icmpHdr.m_cType == 0) &&
                       (reply.m_icmpHdr.m_wId == request.m_icmpHdr.m_wId) &&

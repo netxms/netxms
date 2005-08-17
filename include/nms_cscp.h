@@ -497,7 +497,7 @@ typedef struct
 #define VID_IP_PROTO                ((DWORD)131)
 #define VID_IP_PORT                 ((DWORD)132)
 #define VID_SERVICE_REQUEST         ((DWORD)133)
-#define VID_SERVICE_RESPONCE        ((DWORD)134)
+#define VID_SERVICE_RESPONSE        ((DWORD)134)
 #define VID_POLLER_NODE_ID          ((DWORD)135)
 #define VID_SERVICE_STATUS          ((DWORD)136)
 #define VID_NUM_PARAMETERS          ((DWORD)137)

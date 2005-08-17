@@ -94,7 +94,7 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList
 DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
                                        BOOL bIsGroup, DWORD *pdwNewId)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -105,13 +105,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
    msg.SetVariable(VID_IS_GROUP, (WORD)bIsGroup);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwNewId = pResponce->GetVariableLong(VID_USER_ID);
-      delete pResponce;
+         *pdwNewId = pResponse->GetVariableLong(VID_USER_ID);
+      delete pResponse;
    }
    else
    {
@@ -214,7 +214,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Wait for responce
+   // Wait for response
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
 
@@ -251,7 +251,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId,
 DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName,
                                             TCHAR *pszValue, DWORD dwSize)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -261,13 +261,13 @@ DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarN
    msg.SetVariable(VID_NAME, pszVarName);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwResult = pResponce->GetVariableLong(VID_RCC);
+      dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
-         pResponce->GetVariableStr(VID_VALUE, pszValue, dwSize);
-      delete pResponce;
+         pResponse->GetVariableStr(VID_VALUE, pszValue, dwSize);
+      delete pResponse;
    }
    else
    {
@@ -326,7 +326,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszV
 DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPattern,
                                               DWORD *pdwNumVars, TCHAR ***pppszVarList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD i, dwId, dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -336,25 +336,25 @@ DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPa
    msg.SetVariable(VID_SEARCH_PATTERN, pszPattern);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwResult = pResponce->GetVariableLong(VID_RCC);
+      dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         *pdwNumVars = pResponce->GetVariableLong(VID_NUM_VARIABLES);
+         *pdwNumVars = pResponse->GetVariableLong(VID_NUM_VARIABLES);
          if (*pdwNumVars > 0)
          {
             *pppszVarList = (TCHAR **)malloc(sizeof(TCHAR *) * (*pdwNumVars));
             for(i = 0, dwId = VID_VARLIST_BASE; i < *pdwNumVars; i++, dwId++)
-               (*pppszVarList)[i] = pResponce->GetVariableStr(dwId);
+               (*pppszVarList)[i] = pResponse->GetVariableStr(dwId);
          }
          else
          {
             *pppszVarList = NULL;
          }
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {

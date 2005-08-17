@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.3 2005-01-31 15:29:31 victor Exp $ */
+/* $Id: http.cpp,v 1.4 2005-08-17 12:09:23 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -96,6 +96,9 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/01/31 15:29:31  victor
+Regular expressions implemented under Windows
+
 Revision 1.2  2005/01/29 21:24:03  victor
 Fixed some Windows compatibility issues
 
@@ -103,7 +106,7 @@ Revision 1.1  2005/01/29 00:21:29  alk
 + http checker
 
 request string: "HOST:URI"
-responce string: posix regex, e.g. '^HTTP/1.[01] 200 .*'
+response string: posix regex, e.g. '^HTTP/1.[01] 200 .*'
 
 requst sent to server:
 ---

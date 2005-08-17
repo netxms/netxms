@@ -516,7 +516,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 
 DWORD AgentConnection::GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode;
 
    if (m_bIsConnected)
@@ -527,13 +527,13 @@ DWORD AgentConnection::GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *psz
       msg.SetVariable(VID_PARAMETER, pszParam);
       if (SendMessage(&msg))
       {
-         pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-         if (pResponce != NULL)
+         pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         if (pResponse != NULL)
          {
-            dwRetCode = pResponce->GetVariableLong(VID_RCC);
+            dwRetCode = pResponse->GetVariableLong(VID_RCC);
             if (dwRetCode == ERR_SUCCESS)
-               pResponce->GetVariableStr(VID_VALUE, pszBuffer, dwBufSize);
-            delete pResponce;
+               pResponse->GetVariableStr(VID_VALUE, pszBuffer, dwBufSize);
+            delete pResponse;
          }
          else
          {
@@ -702,7 +702,7 @@ void AgentConnection::OnTrap(CSCPMessage *pMsg)
 
 DWORD AgentConnection::GetList(TCHAR *pszParam)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD i, dwRqId, dwRetCode;
 
    if (m_bIsConnected)
@@ -714,18 +714,18 @@ DWORD AgentConnection::GetList(TCHAR *pszParam)
       msg.SetVariable(VID_PARAMETER, pszParam);
       if (SendMessage(&msg))
       {
-         pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-         if (pResponce != NULL)
+         pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+         if (pResponse != NULL)
          {
-            dwRetCode = pResponce->GetVariableLong(VID_RCC);
+            dwRetCode = pResponse->GetVariableLong(VID_RCC);
             if (dwRetCode == ERR_SUCCESS)
             {
-               m_dwNumDataLines = pResponce->GetVariableLong(VID_NUM_STRINGS);
+               m_dwNumDataLines = pResponse->GetVariableLong(VID_NUM_STRINGS);
                m_ppDataLines = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumDataLines);
                for(i = 0; i < m_dwNumDataLines; i++)
-                  m_ppDataLines[i] = pResponce->GetVariableStr(VID_ENUM_VALUE_BASE + i);
+                  m_ppDataLines[i] = pResponse->GetVariableStr(VID_ENUM_VALUE_BASE + i);
             }
-            delete pResponce;
+            delete pResponse;
          }
          else
          {
@@ -904,10 +904,10 @@ DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
 
 DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, 
                                            WORD wPort, WORD wProto, 
-                                           TCHAR *pszRequest, TCHAR *pszResponce)
+                                           TCHAR *pszRequest, TCHAR *pszResponse)
 {
    DWORD dwRqId, dwResult;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80 };
 
    if (!m_bIsConnected)
@@ -925,20 +925,20 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
                          (iServiceType <= NETSRV_HTTP)) ? iServiceType : 0]);
    msg.SetVariable(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
    msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
-   msg.SetVariable(VID_SERVICE_RESPONCE, pszResponce);
+   msg.SetVariable(VID_SERVICE_RESPONSE, pszResponse);
 
    if (SendMessage(&msg))
    {
       // Wait up to 90 seconds for results
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
-      if (pResponce != NULL)
+      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
+      if (pResponse != NULL)
       {
-         dwResult = pResponce->GetVariableLong(VID_RCC);
+         dwResult = pResponse->GetVariableLong(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwStatus = pResponce->GetVariableLong(VID_SERVICE_STATUS);
+            *pdwStatus = pResponse->GetVariableLong(VID_SERVICE_STATUS);
          }
-         delete pResponce;
+         delete pResponse;
       }
       else
       {
@@ -961,7 +961,7 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
 DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
 {
    DWORD i, dwId, dwRqId, dwResult;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
 
    *pdwNumParams = 0;
    *ppParamList = NULL;
@@ -976,22 +976,22 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
 
    if (SendMessage(&msg))
    {
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponce != NULL)
+      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (pResponse != NULL)
       {
-         dwResult = pResponce->GetVariableLong(VID_RCC);
+         dwResult = pResponse->GetVariableLong(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwNumParams = pResponce->GetVariableLong(VID_NUM_PARAMETERS);
+            *pdwNumParams = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
             *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * *pdwNumParams);
             for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
             {
-               pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
-               pResponce->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
-               (*ppParamList)[i].iDataType = (int)pResponce->GetVariableShort(dwId++);
+               pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
+               pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
+               (*ppParamList)[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
             }
          }
-         delete pResponce;
+         delete pResponse;
       }
       else
       {
@@ -1070,7 +1070,7 @@ DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
 DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 {
    DWORD i, dwRqId, dwResult;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
 #ifdef UNICODE
    BYTE *pBuffer;
 #endif
@@ -1088,21 +1088,21 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 
    if (SendMessage(&msg))
    {
-      pResponce = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponce != NULL)
+      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (pResponse != NULL)
       {
-         dwResult = pResponce->GetVariableLong(VID_RCC);
+         dwResult = pResponse->GetVariableLong(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwSize = pResponce->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
+            *pdwSize = pResponse->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
             *ppszConfig = (TCHAR *)malloc((*pdwSize + 1) * sizeof(TCHAR));
 #ifdef UNICODE
             pBuffer = (BYTE *)malloc(*pdwSize + 1);
-            pResponce->GetVariableBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
+            pResponse->GetVariableBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pBuffer, *pdwSize, *ppszConfig, *pdwSize);
             free(pBuffer);
 #else
-            pResponce->GetVariableBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
+            pResponse->GetVariableBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
 #endif
             (*ppszConfig)[*pdwSize] = 0;
 
@@ -1114,7 +1114,7 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
                    ((*ppszConfig)[i] != _T('\n')))
                   (*ppszConfig)[i] = _T(' ');
          }
-         delete pResponce;
+         delete pResponse;
       }
       else
       {

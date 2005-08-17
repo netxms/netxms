@@ -54,7 +54,7 @@ static void Help(void)
 
 static BOOL ExecCommand(TCHAR *pszCmd)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    BOOL bConnClosed = FALSE;
    WORD wCode;
    TCHAR *pszText;
@@ -66,19 +66,19 @@ static BOOL ExecCommand(TCHAR *pszCmd)
 
    while(1)
    {
-      pResponce = RecvMsg();
-      if (pResponce == NULL)
+      pResponse = RecvMsg();
+      if (pResponse == NULL)
       {
          printf("Connection closed\n");
          bConnClosed = TRUE;
          break;
       }
 
-      wCode = pResponce->GetCode();
+      wCode = pResponse->GetCode();
       switch(wCode)
       {
          case CMD_ADM_MESSAGE:
-            pszText = pResponce->GetVariableStr(VID_MESSAGE);
+            pszText = pResponse->GetVariableStr(VID_MESSAGE);
             if (pszText != NULL)
             {
                fputs(pszText, stdout);
@@ -88,7 +88,7 @@ static BOOL ExecCommand(TCHAR *pszCmd)
          default:
             break;
       }
-      delete pResponce;
+      delete pResponse;
       if (wCode == CMD_REQUEST_COMPLETED)
          break;
    }

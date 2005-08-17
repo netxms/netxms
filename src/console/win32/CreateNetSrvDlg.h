@@ -28,7 +28,7 @@ public:
 	int		m_iProtocolType;
 	long	m_iProtocolNumber;
 	CString	m_strRequest;
-	CString	m_strResponce;
+	CString	m_strResponse;
 	//}}AFX_DATA
 
 

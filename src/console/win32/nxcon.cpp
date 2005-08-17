@@ -943,7 +943,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNetSrvGeneral.m_iPort = pObject->netsrv.wPort;
             wndNetSrvGeneral.m_iProto = pObject->netsrv.wProto;
             wndNetSrvGeneral.m_strRequest = pObject->netsrv.pszRequest;
-            wndNetSrvGeneral.m_strResponce = pObject->netsrv.pszResponce;
+            wndNetSrvGeneral.m_strResponse = pObject->netsrv.pszResponse;
             wndNetSrvGeneral.m_dwIpAddr = pObject->dwIpAddr;
             wndNetSrvGeneral.m_dwPollerNode = pObject->netsrv.dwPollerNode;
             wndPropSheet.AddPage(&wndNetSrvGeneral);
@@ -1464,7 +1464,7 @@ void CConsoleApp::CreateNetworkService(DWORD dwParent)
       ci.cs.netsrv.wPort = (WORD)dlg.m_iPort;
       ci.cs.netsrv.wProto = (WORD)dlg.m_iProtocolNumber;
       ci.cs.netsrv.pszRequest = (TCHAR *)((LPCTSTR)dlg.m_strRequest);
-      ci.cs.netsrv.pszResponce = (TCHAR *)((LPCTSTR)dlg.m_strResponce);
+      ci.cs.netsrv.pszResponse = (TCHAR *)((LPCTSTR)dlg.m_strResponse);
       CreateObject(&ci);
    }
 }

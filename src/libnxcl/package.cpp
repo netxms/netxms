@@ -70,7 +70,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession)
 DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
                                            NXC_PACKAGE_INFO **ppList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwResult, dwRqId, dwPkgId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -87,32 +87,32 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
       *pdwNumPackages = 0;
       do
       {
-         pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_PACKAGE_INFO, dwRqId);
-         if (pResponce != NULL)
+         pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_PACKAGE_INFO, dwRqId);
+         if (pResponse != NULL)
          {
-            dwPkgId = pResponce->GetVariableLong(VID_PACKAGE_ID);
+            dwPkgId = pResponse->GetVariableLong(VID_PACKAGE_ID);
             if (dwPkgId != 0)
             {
                *ppList = (NXC_PACKAGE_INFO *)realloc(*ppList, sizeof(NXC_PACKAGE_INFO) * (*pdwNumPackages + 1));
                (*ppList)[*pdwNumPackages].dwId = dwPkgId;
-               pResponce->GetVariableStr(VID_PACKAGE_NAME, 
+               pResponse->GetVariableStr(VID_PACKAGE_NAME, 
                                          (*ppList)[*pdwNumPackages].szName, 
                                          MAX_PACKAGE_NAME_LEN);
-               pResponce->GetVariableStr(VID_FILE_NAME, 
+               pResponse->GetVariableStr(VID_FILE_NAME, 
                                          (*ppList)[*pdwNumPackages].szFileName, 
                                          MAX_DB_STRING);
-               pResponce->GetVariableStr(VID_PLATFORM_NAME, 
+               pResponse->GetVariableStr(VID_PLATFORM_NAME, 
                                          (*ppList)[*pdwNumPackages].szPlatform, 
                                          MAX_PLATFORM_NAME_LEN);
-               pResponce->GetVariableStr(VID_PACKAGE_VERSION, 
+               pResponse->GetVariableStr(VID_PACKAGE_VERSION, 
                                          (*ppList)[*pdwNumPackages].szVersion, 
                                          MAX_AGENT_VERSION_LEN);
-               pResponce->GetVariableStr(VID_DESCRIPTION, 
+               pResponse->GetVariableStr(VID_DESCRIPTION, 
                                          (*ppList)[*pdwNumPackages].szDescription, 
                                          MAX_DB_STRING);
                (*pdwNumPackages)++;
             }
-            delete pResponce;
+            delete pResponse;
          }
          else
          {
@@ -156,7 +156,7 @@ DWORD LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, DWORD dwPkgId)
 DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
                                            TCHAR *pszFullPkgPath)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -170,17 +170,17 @@ DWORD LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INF
    msg.SetVariable(VID_PACKAGE_VERSION, pInfo->szVersion);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwResult = pResponce->GetVariableLong(VID_RCC);
+      dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
          // Get id assigned to installed package and
          // update provided package information structure
-         pInfo->dwId = pResponce->GetVariableLong(VID_PACKAGE_ID);
+         pInfo->dwId = pResponse->GetVariableLong(VID_PACKAGE_ID);
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {

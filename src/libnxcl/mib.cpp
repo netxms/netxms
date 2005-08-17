@@ -35,7 +35,7 @@
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_SESSION hSession, NXC_MIB_LIST **ppMibList)
 {
    DWORD i, dwRqId, dwRetCode, dwId1, dwId2;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -43,22 +43,22 @@ DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_SESSION hSession, NXC_MIB_LIST **ppMi
    msg.SetId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB_LIST, dwRqId, 
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB_LIST, dwRqId, 
                                        ((NXCL_Session *)hSession)->m_dwCommandTimeout * 2);
-   if (pResponce != NULL)
+   if (pResponse != NULL)
    {
       *ppMibList = (NXC_MIB_LIST *)malloc(sizeof(NXC_MIB_LIST));
-      (*ppMibList)->dwNumFiles = pResponce->GetVariableLong(VID_NUM_MIBS);
+      (*ppMibList)->dwNumFiles = pResponse->GetVariableLong(VID_NUM_MIBS);
       (*ppMibList)->ppszName = (TCHAR **)malloc(sizeof(TCHAR *) * (*ppMibList)->dwNumFiles);
       (*ppMibList)->ppHash = (BYTE **)malloc(sizeof(BYTE *) * (*ppMibList)->dwNumFiles);
       for(i = 0, dwId1 = VID_MIB_NAME_BASE, dwId2 = VID_MIB_HASH_BASE; 
           i < (*ppMibList)->dwNumFiles; i++, dwId1++, dwId2++)
       {
-         (*ppMibList)->ppszName[i] = pResponce->GetVariableStr(dwId1);
+         (*ppMibList)->ppszName[i] = pResponse->GetVariableStr(dwId1);
          (*ppMibList)->ppHash[i] = (BYTE *)malloc(MD5_DIGEST_SIZE);
-         pResponce->GetVariableBinary(dwId2, (*ppMibList)->ppHash[i], MD5_DIGEST_SIZE);
+         pResponse->GetVariableBinary(dwId2, (*ppMibList)->ppHash[i], MD5_DIGEST_SIZE);
       }
-      delete pResponce;
+      delete pResponse;
       dwRetCode = RCC_SUCCESS;
    }
    else
@@ -96,7 +96,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList)
 DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName, TCHAR *pszDestDir)
 {
    DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    BYTE *pBuffer;
    TCHAR cLastChar, szFileName[MAX_PATH];
    FILE *hFile;
@@ -109,17 +109,17 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Loading file can take time, so timeout is 60 sec. instead of default
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB, dwRqId, 60000);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB, dwRqId, 60000);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         dwFileSize = pResponce->GetVariableLong(VID_MIB_FILE_SIZE);
+         dwFileSize = pResponse->GetVariableLong(VID_MIB_FILE_SIZE);
          pBuffer = (BYTE *)malloc(dwFileSize);
          if (pBuffer != NULL)
          {
-            pResponce->GetVariableBinary(VID_MIB_FILE, pBuffer, dwFileSize);
+            pResponse->GetVariableBinary(VID_MIB_FILE, pBuffer, dwFileSize);
             cLastChar = pszDestDir[_tcslen(pszDestDir) - 1];
             _stprintf(szFileName, _T("%s%s%s"), pszDestDir, 
                     (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : _T("/"), pszName);
@@ -144,7 +144,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName
             dwRetCode = RCC_OUT_OF_MEMORY;
          }
       }
-      delete pResponce;
+      delete pResponse;
    }
    else
    {

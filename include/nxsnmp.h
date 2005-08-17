@@ -99,7 +99,7 @@
 #define SNMP_INVALID_PDU         255
 #define SNMP_GET_REQUEST         0
 #define SNMP_GET_NEXT_REQUEST    1
-#define SNMP_GET_RESPONCE        2
+#define SNMP_GET_RESPONSE        2
 #define SNMP_SET_REQUEST         3
 #define SNMP_TRAP                4
 #define SNMP_GET_BULK_REQUEST    5
@@ -140,7 +140,7 @@
 #define ASN_NO_SUCH_INSTANCE        0x81
 #define ASN_GET_REQUEST_PDU         0xA0
 #define ASN_GET_NEXT_REQUEST_PDU    0xA1
-#define ASN_GET_RESPONCE_PDU        0xA2
+#define ASN_GET_RESPONSE_PDU        0xA2
 #define ASN_SET_REQUEST_PDU         0xA3
 #define ASN_TRAP_V1_PDU             0xA4
 #define ASN_GET_BULK_REQUEST_PDU    0xA5
@@ -289,7 +289,7 @@ public:
    int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
             struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
    int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0);
-   DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponce, 
+   DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponse, 
                    DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
 
    DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = 161);

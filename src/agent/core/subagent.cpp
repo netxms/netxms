@@ -193,7 +193,7 @@ LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 // Process unknown command by subagents
 //
 
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponce)
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse)
 {
    BOOL bResult = FALSE;
    DWORD i;
@@ -201,7 +201,7 @@ BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *p
    for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
    {
       if (m_pSubAgentList[i].pInfo->pCommandHandler != NULL)
-         bResult = m_pSubAgentList[i].pInfo->pCommandHandler(dwCommand, pRequest, pResponce);
+         bResult = m_pSubAgentList[i].pInfo->pCommandHandler(dwCommand, pRequest, pResponse);
    }
    return bResult;
 }

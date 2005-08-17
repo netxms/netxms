@@ -23,7 +23,7 @@ CNetSrvPropsGeneral::CNetSrvPropsGeneral() : CPropertyPage(CNetSrvPropsGeneral::
 	m_strName = _T("");
 	m_iPort = 0;
 	m_strRequest = _T("");
-	m_strResponce = _T("");
+	m_strResponse = _T("");
 	m_iProto = 0;
 	//}}AFX_DATA_INIT
 }
@@ -42,7 +42,7 @@ void CNetSrvPropsGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_PORT, m_iPort);
 	DDV_MinMaxLong(pDX, m_iPort, 0, 65535);
 	DDX_Text(pDX, IDC_EDIT_REQUEST, m_strRequest);
-	DDX_Text(pDX, IDC_EDIT_RESPONCE, m_strResponce);
+	DDX_Text(pDX, IDC_EDIT_RESPONSE, m_strResponse);
 	DDX_Text(pDX, IDC_EDIT_PROTO, m_iProto);
 	DDV_MinMaxLong(pDX, m_iProto, 0, 255);
 	//}}AFX_DATA_MAP
@@ -54,7 +54,7 @@ BEGIN_MESSAGE_MAP(CNetSrvPropsGeneral, CPropertyPage)
 	ON_EN_CHANGE(IDC_EDIT_NAME, OnChangeEditName)
 	ON_CBN_SELCHANGE(IDC_COMBO_TYPE, OnSelchangeComboType)
 	ON_EN_CHANGE(IDC_EDIT_REQUEST, OnChangeEditRequest)
-	ON_EN_CHANGE(IDC_EDIT_RESPONCE, OnChangeEditResponce)
+	ON_EN_CHANGE(IDC_EDIT_RESPONSE, OnChangeEditResponse)
 	ON_BN_CLICKED(IDC_RADIO_TCP, OnRadioTcp)
 	ON_BN_CLICKED(IDC_RADIO_UDP, OnRadioUdp)
 	ON_BN_CLICKED(IDC_RADIO_ICMP, OnRadioIcmp)
@@ -137,7 +137,7 @@ void CNetSrvPropsGeneral::OnOK()
    // Set fields in update structure
    m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
    m_pUpdate->pszRequest = (char *)((LPCTSTR)m_strRequest);
-   m_pUpdate->pszResponce = (char *)((LPCTSTR)m_strResponce);
+   m_pUpdate->pszResponse = (char *)((LPCTSTR)m_strResponse);
    m_pUpdate->iServiceType = m_iServiceType;
    m_pUpdate->wPort = (WORD)m_iPort;
    m_pUpdate->wProto = (WORD)m_iProto;
@@ -162,9 +162,9 @@ void CNetSrvPropsGeneral::OnChangeEditRequest()
    SetModified();
 }
 
-void CNetSrvPropsGeneral::OnChangeEditResponce() 
+void CNetSrvPropsGeneral::OnChangeEditResponse() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_CHECK_RESPONCE;
+   m_pUpdate->dwFlags |= OBJ_UPDATE_CHECK_RESPONSE;
    SetModified();
 }
 

@@ -41,7 +41,7 @@ static struct
    { ASN_GET_REQUEST_PDU, -1, SNMP_GET_REQUEST },
    { ASN_GET_NEXT_REQUEST_PDU, -1, SNMP_GET_NEXT_REQUEST },
    { ASN_SET_REQUEST_PDU, -1, SNMP_SET_REQUEST },
-   { ASN_GET_RESPONCE_PDU, -1, SNMP_GET_RESPONCE },
+   { ASN_GET_RESPONSE_PDU, -1, SNMP_GET_RESPONSE },
    { 0, -1, 0 }
 };
 
@@ -445,8 +445,8 @@ BOOL SNMP_PDU::Parse(BYTE *pRawData, DWORD dwRawLength)
             m_dwCommand = SNMP_GET_NEXT_REQUEST;
             bResult = ParsePDU(pbCurrPos, dwLength);
             break;
-         case ASN_GET_RESPONCE_PDU:
-            m_dwCommand = SNMP_GET_RESPONCE;
+         case ASN_GET_RESPONSE_PDU:
+            m_dwCommand = SNMP_GET_RESPONSE;
             bResult = ParsePDU(pbCurrPos, dwLength);
             break;
          case ASN_SET_REQUEST_PDU:

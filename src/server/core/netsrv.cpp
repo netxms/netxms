@@ -36,18 +36,18 @@ NetworkService::NetworkService()
    m_wProto = IPPROTO_TCP;
    m_wPort = 80;
    m_pszRequest = NULL;
-   m_pszResponce = NULL;
+   m_pszResponse = NULL;
 }
 
 
 //
 // Extended constructor
-// Note that pszRequest and pszResponce should be dynamically allocated
+// Note that pszRequest and pszResponse should be dynamically allocated
 // and they will be freed by object's destructor!!!
 //
 
 NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
-                               TCHAR *pszRequest, TCHAR *pszResponce,
+                               TCHAR *pszRequest, TCHAR *pszResponse,
                                Node *pHostNode, DWORD dwPollerNode)
 {
    m_iServiceType = iServiceType;
@@ -56,7 +56,7 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
    m_wProto = wProto;
    m_wPort = wPort;
    m_pszRequest = pszRequest;
-   m_pszResponce = pszResponce;
+   m_pszResponse = pszResponse;
    m_bIsHidden = TRUE;
 }
 
@@ -68,7 +68,7 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
 NetworkService::~NetworkService()
 {
    safe_free(m_pszRequest);
-   safe_free(m_pszResponce);
+   safe_free(m_pszResponse);
 }
 
 
@@ -78,7 +78,7 @@ NetworkService::~NetworkService()
 
 BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscRequest, *pszEscResponce, szQuery[16384], szIpAddr[32];
+   TCHAR *pszEscRequest, *pszEscResponse, szQuery[16384], szIpAddr[32];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
 
@@ -98,7 +98,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    pszEscRequest = EncodeSQLString(CHECK_NULL_EX(m_pszRequest));
-   pszEscResponce = EncodeSQLString(CHECK_NULL_EX(m_pszResponce));
+   pszEscResponse = EncodeSQLString(CHECK_NULL_EX(m_pszResponse));
    if (bNewObject)
       _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
                                     "service_type,ip_bind_addr,ip_proto,ip_port,"
@@ -106,7 +106,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
                                     "(%ld,%ld,%d,'%s',%d,%d,'%s','%s',%ld)"),
                  m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponce, m_dwPollerNode);
+                 pszEscResponse, m_dwPollerNode);
    else
       _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%ld,"
                                     "service_type=%d,ip_bind_addr='%s',"
@@ -114,9 +114,9 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
                                     "check_responce='%s',poller_node_id=%ld WHERE id=%ld"),
                  m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponce, m_dwPollerNode, m_dwId);
+                 pszEscResponse, m_dwPollerNode, m_dwId);
    free(pszEscRequest);
-   free(pszEscResponce);
+   free(pszEscResponse);
    DBQuery(hdb, szQuery);
                  
    // Save access list
@@ -162,8 +162,8 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       m_wPort = (WORD)DBGetFieldULong(hResult, 0, 4);
       m_pszRequest = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 5)));
       DecodeSQLString(m_pszRequest);
-      m_pszResponce = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 6)));
-      DecodeSQLString(m_pszResponce);
+      m_pszResponse = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 6)));
+      DecodeSQLString(m_pszResponse);
       m_dwPollerNode = DBGetFieldULong(hResult, 0, 7);
 
       // Link service to node
@@ -251,7 +251,7 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_IP_PORT, m_wPort);
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
    pMsg->SetVariable(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_pszRequest));
-   pMsg->SetVariable(VID_SERVICE_RESPONCE, CHECK_NULL_EX(m_pszResponce));
+   pMsg->SetVariable(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_pszResponse));
 }
 
 
@@ -322,11 +322,11 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
       m_pszRequest = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
    }
 
-   // Check responce
-   if (pRequest->IsVariableExist(VID_SERVICE_RESPONCE))
+   // Check response
+   if (pRequest->IsVariableExist(VID_SERVICE_RESPONSE))
    {
-      safe_free(m_pszResponce);
-      m_pszResponce = pRequest->GetVariableStr(VID_SERVICE_RESPONCE);
+      safe_free(m_pszResponse);
+      m_pszResponse = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
    }
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
@@ -377,7 +377,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       if (pNode->CheckNetworkService(&dwStatus, 
                                      (m_dwIpAddr == 0) ? m_pHostNode->IpAddr() : m_dwIpAddr,
                                      m_iServiceType, m_wPort, m_wProto, 
-                                     m_pszRequest, m_pszResponce) == ERR_SUCCESS)
+                                     m_pszRequest, m_pszResponse) == ERR_SUCCESS)
       {
          m_iStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
          SendPollerMsg(dwRqId, "      Agent reports service status [%d]\r\n", dwStatus);

@@ -43,7 +43,7 @@ static DWORD m_dwTimeout = 3000;
 int GetData(int argc, char *argv[])
 {
    SNMP_Transport *pTransport;
-   SNMP_PDU *request, *responce;
+   SNMP_PDU *request, *response;
    DWORD dwResult;
    int i, iExit = 0;
 
@@ -78,17 +78,17 @@ int GetData(int argc, char *argv[])
          }
       }
 
-      // Send request and process responce
+      // Send request and process response
       if (iExit == 0)
       {
-         if ((dwResult = pTransport->DoRequest(request, &responce, m_dwTimeout, 3)) == SNMP_ERR_SUCCESS)
+         if ((dwResult = pTransport->DoRequest(request, &response, m_dwTimeout, 3)) == SNMP_ERR_SUCCESS)
          {
             SNMP_Variable *var;
             char szBuffer[1024];
 
-            for(i = 0; i < (int)responce->GetNumVariables(); i++)
+            for(i = 0; i < (int)response->GetNumVariables(); i++)
             {
-               var = responce->GetVariable(i);
+               var = response->GetVariable(i);
                if (var->GetType() == ASN_NO_SUCH_OBJECT)
                {
                   printf("No such object: %s\n", var->GetName()->GetValueAsText());
@@ -103,7 +103,7 @@ int GetData(int argc, char *argv[])
                          var->GetType(),var->GetValueAsString(szBuffer, 1024));
                }
             }
-            delete responce;
+            delete response;
          }
          else
          {

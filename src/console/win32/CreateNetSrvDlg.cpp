@@ -23,7 +23,7 @@ CCreateNetSrvDlg::CCreateNetSrvDlg(CWnd* pParent /*=NULL*/)
 	m_iProtocolType = -1;
 	m_iProtocolNumber = 0;
 	m_strRequest = _T("");
-	m_strResponce = _T("");
+	m_strResponse = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -39,7 +39,7 @@ void CCreateNetSrvDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_PROTO, m_iProtocolNumber);
 	DDV_MinMaxLong(pDX, m_iProtocolNumber, 0, 255);
 	DDX_Text(pDX, IDC_EDIT_REQUEST, m_strRequest);
-	DDX_Text(pDX, IDC_EDIT_RESPONCE, m_strResponce);
+	DDX_Text(pDX, IDC_EDIT_RESPONSE, m_strResponse);
 	//}}AFX_DATA_MAP
 }
 

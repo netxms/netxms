@@ -1,4 +1,4 @@
-/* $Id: custom.cpp,v 1.1 2005-02-08 18:32:56 alk Exp $ */
+/* $Id: custom.cpp,v 1.2 2005-08-17 12:09:23 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -7,7 +7,7 @@
 #include "net.h"
 
 int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
-		char *szResponce)
+		char *szResponse)
 {
 	int nRet = 0;
 	int nSd;
@@ -31,5 +31,8 @@ int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/02/08 18:32:56  alk
++ simple "custom" checker added
+
 
 */

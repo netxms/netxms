@@ -3,6 +3,7 @@
 *
 
 - Implemented actions provided by subagents
+- Fixed issues: #37
 
 
 *
@@ -20,7 +21,7 @@
   as bind address for network service
 - Fixed bug causing random fails of connections from server to agent and
   from console to server
-- Fixed issues: 29
+- Fixed issues: #29
 
 
 *
@@ -38,7 +39,7 @@
 - Windows console: added simple export of collected DCI data
 - Core agent: added configuration option SessionIdleTimeout for automatic
   disconnect of idle or broken sessions
-- Fixed issues: 26, 30
+- Fixed issues: #26, #30
 
 
 *

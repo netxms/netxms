@@ -197,7 +197,7 @@ BOOL LIBNXCSCP_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
                                              BYTE *pDecryptionBuffer);
 DWORD LIBNXCSCP_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
                                                   CSCP_ENCRYPTION_CONTEXT **ppCtx,
-                                                  CSCPMessage **ppResponce,
+                                                  CSCPMessage **ppResponse,
                                                   RSA *pPrivateKey);
 void LIBNXCSCP_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx);
 void LIBNXCSCP_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);

@@ -62,7 +62,7 @@ void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActions, NXC_ACTION **ppActionList)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwRetCode = RCC_SUCCESS, dwNumActions = 0, dwActionId = 0;
    NXC_ACTION *pList = NULL;
 
@@ -77,18 +77,18 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActio
    {
       do
       {
-         pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ACTION_DATA, dwRqId);
-         if (pResponce != NULL)
+         pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ACTION_DATA, dwRqId);
+         if (pResponse != NULL)
          {
-            dwActionId = pResponce->GetVariableLong(VID_ACTION_ID);
+            dwActionId = pResponse->GetVariableLong(VID_ACTION_ID);
             if (dwActionId != 0)  // 0 is end of list indicator
             {
                pList = (NXC_ACTION *)realloc(pList, sizeof(NXC_ACTION) * (dwNumActions + 1));
                pList[dwNumActions].dwId = dwActionId;
-               ActionFromMsg(pResponce, &pList[dwNumActions]);
+               ActionFromMsg(pResponse, &pList[dwNumActions]);
                dwNumActions++;
             }
-            delete pResponce;
+            delete pResponse;
          }
          else
          {
@@ -161,7 +161,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(NXC_SESSION hSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, DWORD *pdwNewId)
 {
-   CSCPMessage msg, *pResponce;
+   CSCPMessage msg, *pResponse;
    DWORD dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -171,13 +171,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, D
    msg.SetVariable(VID_ACTION_NAME, pszName);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   pResponce = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
-   if (pResponce != NULL)
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
    {
-      dwRetCode = pResponce->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwNewId = pResponce->GetVariableLong(VID_ACTION_ID);
-      delete pResponce;
+         *pdwNewId = pResponse->GetVariableLong(VID_ACTION_ID);
+      delete pResponse;
    }
    else
    {
@@ -231,6 +231,6 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_SESSION hSession, NXC_ACTION *pActi
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Wait for responce
+   // Wait for response
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
