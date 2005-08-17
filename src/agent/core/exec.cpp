@@ -111,7 +111,6 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    else
       dwRetCode = ERR_EXEC_FAILED;
 #else
-   /* TODO: add UNIX code here */
    dwRetCode = ERR_EXEC_FAILED;
 	{
 		int nPid;

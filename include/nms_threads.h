@@ -461,6 +461,11 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 	return ret;
 }
 
+inline DWORD GetCurrentProcessId(void)
+{
+   return getpid();
+}
+
 #endif   /* _WIN32 */
 
 #endif   /* _nms_threads_h_ */

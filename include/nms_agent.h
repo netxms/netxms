@@ -66,6 +66,7 @@
 #define ERR_INVALID_PUBLIC_KEY      ((DWORD)908)
 #define ERR_INVALID_SESSION_KEY     ((DWORD)909)
 #define ERR_CONNECT_FAILED          ((DWORD)910)
+#define ERR_MAILFORMED_COMMAND      ((DWORD)911)
 
 
 //

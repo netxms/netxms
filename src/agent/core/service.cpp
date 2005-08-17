@@ -269,7 +269,7 @@ void StopAgentService(void)
    {
       SERVICE_STATUS status;
 
-      if (ControlService(service,SERVICE_CONTROL_STOP,&status))
+      if (ControlService(service, SERVICE_CONTROL_STOP, &status))
          printf("Win32 Agent service stopped successfully\n");
       else
          printf("ERROR: Cannot stop service named '" AGENT_SERVICE_NAME "' (%s)\n",
@@ -327,4 +327,57 @@ void RemoveEventSource(void)
       printf("Unable to uninstall event source \"" AGENT_EVENT_SOURCE "\": %s\n",
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
+}
+
+
+//
+// Wait for service
+//
+
+BOOL WaitForService(DWORD dwDesiredState)
+{
+   SC_HANDLE mgr, service;
+   char szErrorText[256];
+   BOOL bResult = FALSE;
+
+   mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
+   if (mgr == NULL)
+   {
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", 
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
+      return FALSE;
+   }
+
+   service = OpenService(mgr, AGENT_SERVICE_NAME, SERVICE_QUERY_STATUS);
+   if (service == NULL)
+   {
+      printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
+             GetSystemErrorText(GetLastError(), szErrorText, 256));
+   }
+   else
+   {
+      SERVICE_STATUS status;
+
+      while(1)
+      {
+         if (QueryServiceStatus(service, &status))
+         {
+            if (status.dwCurrentState == dwDesiredState)
+            {
+               bResult = TRUE;
+               break;
+            }
+         }
+         else
+         {
+            break;   // Error
+         }
+         Sleep(200);
+      }
+
+      CloseServiceHandle(service);
+   }
+
+   CloseServiceHandle(mgr);
+   return bResult;
 }

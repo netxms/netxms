@@ -211,6 +211,7 @@ private:
 
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetConfig(CSCPMessage *pMsg);
+   void UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetList(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
@@ -288,6 +289,7 @@ void InstallService(char *execName, char *confFile);
 void RemoveService(void);
 void StartAgentService(void);
 void StopAgentService(void);
+BOOL WaitForService(DWORD dwDesiredState);
 void InstallEventSource(char *path);
 void RemoveEventSource(void);
 

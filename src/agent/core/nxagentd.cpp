@@ -44,11 +44,11 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEhHIRsSUv"
+#define VALID_OPTIONS   "c:CdDEhHIRsSUvX:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDhv"
+#define VALID_OPTIONS   "c:CDhvX:"
 #else
-#define VALID_OPTIONS   "c:CdDhp:v"
+#define VALID_OPTIONS   "c:CdDhp:vX:"
 #endif
 
 
@@ -240,7 +240,81 @@ static void ImportSymbols(void)
    }
 }
 
+
+//
+// Shutdown thread (created by H_RestartAgent)
+//
+
+static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
+{
+   Shutdown();
+   ExitProcess(0);
+   return THREAD_OK; // Never reached
+}
+
 #endif   /* _WIN32 */
+
+
+//
+// Restart agent
+//
+
+static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *pData)
+{
+   TCHAR szCmdLine[4096];
+#ifdef _WIN32
+   TCHAR szExecName[MAX_PATH];
+   DWORD dwResult;
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   GetModuleFileName(GetModuleHandle(NULL), szExecName, MAX_PATH);
+#else
+   TCHAR szExecName[MAX_PATH] = PREFIX _T("/bin/nxagentd");
+#endif
+
+#ifdef _WIN32
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" %s%s-X %lu"), szExecName, 
+              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+              (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
+              (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
+
+   // Fill in process startup info structure
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+
+   // Create new process
+   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 
+                      (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
+                      NULL, NULL, &si, &pi))
+   {
+      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", szCmdLine, GetLastError());
+      dwResult = ERR_EXEC_FAILED;
+   }
+   else
+   {
+      // Close all handles
+      CloseHandle(pi.hThread);
+      CloseHandle(pi.hProcess);
+      dwResult = ERR_SUCCESS;
+   }
+   if ((dwResult == ERR_SUCCESS) && (!(g_dwFlags & AF_DAEMON)))
+   {
+      if (g_dwFlags & AF_HIDE_WINDOW)
+      {
+         ConditionSet(m_hCondShutdown);
+      }
+      else
+      {
+         ThreadCreate(ShutdownThread, 0, NULL);
+      }
+   }
+   return dwResult;
+#else
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -d -X %lu"), szExecName, GetCurrentProcessId());
+   return ExecuteCommand(szCmdLine, NULL);
+#endif
+}
 
 
 //
@@ -472,6 +546,9 @@ BOOL Initialize(void)
       free(m_pszControlServerList);
    }
 
+   // Add built-in actions
+   AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
+
    // Load subagents
 #ifdef _WIN32
    LoadWindowsSubagent();
@@ -605,6 +682,7 @@ void Main(void)
          if (hWnd != NULL)
             ShowWindow(hWnd, SW_HIDE);
          ConditionWait(m_hCondShutdown, INFINITE);
+         ThreadSleep(1);
       }
       else
       {
@@ -630,12 +708,50 @@ void Main(void)
 
 
 //
+// Do necessary actions on agent restart
+//
+
+static void DoRestartActions(DWORD dwOldPID)
+{
+#ifdef _WIN32
+   if (dwOldPID == 0)
+   {
+      // Service
+      StopAgentService();
+      WaitForService(SERVICE_STOPPED);
+      StartAgentService();
+      ExitProcess(0);
+   }
+   else
+   {
+      HANDLE hProcess;
+
+      hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, dwOldPID);
+      if (hProcess != NULL)
+      {
+         if (WaitForSingleObject(hProcess, 60000) == WAIT_TIMEOUT)
+         {
+            TerminateProcess(hProcess, 0);
+         }
+         CloseHandle(hProcess);
+      }
+   }
+#else
+   kill(dwOldPID, SIGTERM);
+   sleep(10);
+#endif
+}
+
+
+//
 // Startup
 //
 
 int main(int argc, char *argv[])
 {
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
+   BOOL bRestart = FALSE;
+   DWORD dwOldPID;
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
@@ -675,6 +791,10 @@ int main(int argc, char *argv[])
             printf("NetXMS Core Agent Version " AGENT_VERSION_STRING "\n");
             iAction = ACTION_NONE;
             break;
+         case 'X':   // Agent is being restarted
+            bRestart = TRUE;
+            dwOldPID = strtoul(optarg, NULL, 10);
+            break;
 #ifdef _WIN32
          case 'H':   // Hide window
             g_dwFlags |= AF_HIDE_WINDOW;
@@ -706,6 +826,9 @@ int main(int argc, char *argv[])
             break;
       }
    }
+
+   if (bRestart)
+      DoRestartActions(dwOldPID);
 
    // Do requested action
    switch(iAction)

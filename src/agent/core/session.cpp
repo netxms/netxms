@@ -383,7 +383,7 @@ void CommSession::ProcessingThread(void)
                GetConfig(&msg);
                break;
             case CMD_UPDATE_AGENT_CONFIG:
-               msg.SetVariable(VID_RCC, ERR_NOT_IMPLEMENTED);
+               UpdateConfig(pMsg, &msg);
                break;
             default:
                // Attempt to process unknown command by subagents
@@ -626,6 +626,47 @@ void CommSession::GetConfig(CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_RCC, 
          pMsg->SetVariableFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
+   }
+   else
+   {
+      pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+
+//
+// Update agent's configuration file
+//
+
+void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
+{
+   if (m_bInstallationServer)
+   {
+      TCHAR *pszConfig;
+      int hFile;
+
+      pszConfig = pRequest->GetVariableStr(VID_CONFIG_FILE);
+      if (pszConfig != NULL)
+      {
+         hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+         if (hFile != -1)
+         {
+            write(hFile, pszConfig, _tcslen(pszConfig));
+            close(hFile);
+            pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            DebugPrintf("Error opening file %s for writing: %s",
+                        g_szConfigFile, strerror(errno));
+            pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
+         }
+         free(pszConfig);
+      }
+      else
+      {
+         pMsg->SetVariable(VID_RCC, ERR_MAILFORMED_COMMAND);
+      }
    }
    else
    {
