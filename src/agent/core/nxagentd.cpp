@@ -109,6 +109,10 @@ static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 
+#if !defined(_WIN32) && !defined(_NETWARE)
+static pid_t m_pid;
+#endif
+
 
 //
 // Configuration file template
@@ -311,7 +315,8 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -d -X %lu"), szExecName, GetCurrentProcessId());
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" %s-X %lu"), szExecName,
+              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""), m_pid);
    return ExecuteCommand(szCmdLine, NULL);
 #endif
 }
@@ -877,6 +882,9 @@ int main(int argc, char *argv[])
 #endif
             if (iExitCode == 0)
             {
+#ifndef _NETWARE
+               m_pid = getpid();
+#endif
                if (Initialize())
                {
 #ifndef _NETWARE
@@ -886,7 +894,7 @@ int main(int argc, char *argv[])
                   fp = fopen(g_szPidFile, "w");
                   if (fp != NULL)
                   {
-                     fprintf(fp, "%d", getpid());
+                     fprintf(fp, "%d", m_pid);
                      fclose(fp);
                   }   
 #endif
