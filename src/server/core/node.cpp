@@ -48,6 +48,7 @@ Node::Node()
    m_tLastRTUpdate = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
+   m_mutexRTAccess = MutexCreate();
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -86,6 +87,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_tLastRTUpdate = 0;
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
+   m_mutexRTAccess = MutexCreate();
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -106,6 +108,7 @@ Node::~Node()
 {
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
+   MutexDestroy(m_mutexRTAccess);
    if (m_pAgentConnection != NULL)
       delete m_pAgentConnection;
    safe_free(m_pParamList);
