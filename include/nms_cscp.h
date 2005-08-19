@@ -526,6 +526,7 @@ typedef struct
 #define VID_STATUS_ALGORITHM        ((DWORD)160)
 #define VID_NUM_LOCAL_NETS          ((DWORD)161)
 #define VID_NUM_REMOTE_NETS         ((DWORD)162)
+#define VID_APPLY_FLAG              ((DWORD)163)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

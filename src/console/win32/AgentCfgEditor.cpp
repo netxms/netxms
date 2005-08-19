@@ -32,15 +32,22 @@ CAgentCfgEditor::CAgentCfgEditor()
 {
    m_dwNodeId = 0;
    m_bParserActive = FALSE;
+   m_pCtxMenu = NULL;
 }
 
 CAgentCfgEditor::CAgentCfgEditor(DWORD dwNodeId)
 {
    m_dwNodeId = dwNodeId;
+   m_pCtxMenu = NULL;
 }
 
 CAgentCfgEditor::~CAgentCfgEditor()
 {
+   if (m_pCtxMenu != NULL)
+   {
+      m_pCtxMenu->DestroyMenu();
+      delete m_pCtxMenu;
+   }
 }
 
 
@@ -60,6 +67,8 @@ BEGIN_MESSAGE_MAP(CAgentCfgEditor, CMDIChildWnd)
 	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
 	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_CONFIG_SAVE, OnConfigSave)
 	//}}AFX_MSG_MAP
 	ON_EN_CHANGE(ID_EDIT_CTRL, OnEditCtrlChange)
 END_MESSAGE_MAP()
@@ -86,6 +95,12 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
+
+   m_pCtxMenu = new CMenu;
+   m_pCtxMenu->CreatePopupMenu();
+   CopyMenuItems(m_pCtxMenu, theApp.GetContextMenu(16));
+   m_pCtxMenu->AppendMenu(MF_SEPARATOR);
+   CopyMenuItems(m_pCtxMenu, theApp.GetContextMenu(17));
 
    GetClientRect(&rect);
    m_wndEdit.Create(WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOHSCROLL | 
@@ -376,4 +391,39 @@ void CAgentCfgEditor::OnStopParsing()
    m_wndEdit.SetEventMask(m_wndEdit.GetEventMask() | ENM_CHANGE);
    m_wndEdit.Invalidate(FALSE);
    m_bParserActive = FALSE;
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CAgentCfgEditor::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   m_pCtxMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// WM_COMMAND::ID_CONFIG_SAVE message handler
+//
+
+void CAgentCfgEditor::OnConfigSave() 
+{
+   DWORD dwResult, dwLength;
+   TCHAR *pszText;
+
+   dwLength = m_wndEdit.GetWindowTextLength();
+   pszText = (TCHAR *)malloc(sizeof(TCHAR) * (dwLength + 2));
+   m_wndEdit.GetWindowText(pszText, dwLength + 1);
+   dwResult = DoRequestArg4(NXCUpdateAgentConfig, g_hSession, (void *)m_dwNodeId,
+                            pszText, (void *)0, _T("Updating agent's configuration file..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      m_wndEdit.SetModify(FALSE);
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Error updating agent's configuration: %s"));
+   }
 }

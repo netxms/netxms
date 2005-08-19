@@ -1326,7 +1326,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for response
-   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 30000);
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 60000);
    if (pResponse != NULL)
    {
       dwRetCode = pResponse->GetVariableLong(VID_RCC);
@@ -1342,4 +1342,30 @@ DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
    }
 
    return dwRetCode;
+}
+
+
+//
+// Update agent's configuration file
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
+                                              TCHAR *pszConfig, BOOL bApply)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Build request message
+   msg.SetCode(CMD_UPDATE_AGENT_CONFIG);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_CONFIG_FILE, pszConfig);
+   msg.SetVariable(VID_APPLY_FLAG, (WORD)bApply);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 60000);
 }

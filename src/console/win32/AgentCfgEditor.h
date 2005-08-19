@@ -32,6 +32,7 @@ public:
 
 // Implementation
 protected:
+	CMenu *m_pCtxMenu;
 	CHARRANGE m_crSavedSelection;
 	void OnStopParsing(void);
 	void OnStartParsing(void);
@@ -59,6 +60,8 @@ protected:
 	afx_msg void OnEditDelete();
 	afx_msg void OnEditPaste();
 	afx_msg void OnEditSelectAll();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnConfigSave();
 	//}}AFX_MSG
 	afx_msg void OnEditCtrlChange();
 	DECLARE_MESSAGE_MAP()

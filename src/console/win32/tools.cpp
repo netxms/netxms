@@ -577,3 +577,26 @@ DCIInfo::~DCIInfo()
    safe_free(m_pszParameter);
    safe_free(m_pszDescription);
 }
+
+
+//
+// Copy menu items from one menu to another
+//
+
+void CopyMenuItems(CMenu *pDst, CMenu *pSrc)
+{
+   DWORD i;
+   TCHAR szBuffer[256];
+   MENUITEMINFO info;
+
+   info.cbSize = sizeof(MENUITEMINFO);
+   for(i = 0; i < pSrc->GetMenuItemCount(); i++)
+   {
+      info.fMask = MIIM_ID | MIIM_TYPE;
+      info.dwTypeData = szBuffer;
+      info.cch = 256;
+      pSrc->GetMenuItemInfo(i, &info, TRUE);
+      pDst->AppendMenu(MF_ENABLED | ((info.fType == MFT_SEPARATOR) ? MF_SEPARATOR : MF_STRING),
+                       info.wID, info.dwTypeData);
+   }
+}

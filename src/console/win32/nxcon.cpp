@@ -307,6 +307,7 @@ BOOL CConsoleApp::InitInstance()
    m_hAgentCfgEditorMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
+   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 18), "&Config");
 
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));

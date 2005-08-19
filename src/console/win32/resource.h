@@ -550,6 +550,8 @@
 #define ID_VARIABLE_DELETE              32943
 #define ID_OBJECT_CREATE_VPNCONNECTOR   32944
 #define ID_EDIT_DELETE                  32949
+#define ID_CONFIG_SAVE                  32951
+#define ID_CONFIG_SAVEANDAPPLY          32952
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -559,7 +561,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        282
-#define _APS_NEXT_COMMAND_VALUE         32951
+#define _APS_NEXT_COMMAND_VALUE         32953
 #define _APS_NEXT_CONTROL_VALUE         1284
 #define _APS_NEXT_SYMED_VALUE           122
 #endif
