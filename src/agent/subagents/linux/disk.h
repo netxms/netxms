@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.1 2004-10-22 22:08:34 alk Exp $ */
+/* $Id: disk.h,v 1.2 2005-08-19 15:23:50 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -26,8 +26,12 @@
 enum
 {
 	DISK_FREE,
+   DISK_AVAIL,
 	DISK_USED,
 	DISK_TOTAL,
+   DISK_FREE_PERC,
+   DISK_AVAIL_PERC,
+   DISK_USED_PERC
 };
 
 LONG H_DiskInfo(char *, char *, char *);
@@ -38,5 +42,15 @@ LONG H_DiskInfo(char *, char *, char *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/22 22:08:34  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 
 */

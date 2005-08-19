@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.17 2005-06-11 16:28:24 victor Exp $ */
+/* $Id: linux.cpp,v 1.18 2005-08-19 15:23:50 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -43,12 +43,20 @@ LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue);
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
+			DCI_DT_UINT64,	"Available disk space on {instance}" },
+   { "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
+			DCI_DT_FLOAT,	"Percentage of available disk space on {instance}" },
    { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
 			DCI_DT_UINT64,	"Free disk space on {instance}" },
+   { "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
+			DCI_DT_FLOAT,	"Percentage of free disk space on {instance}" },
    { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
 			DCI_DT_UINT64,	"Total disk space on {instance}" },
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
 			DCI_DT_UINT64,	"Used disk space on {instance}" },
+   { "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
+			DCI_DT_FLOAT,	"Percentage of used disk space on {instance}" },
 
    { "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
 			DCI_DT_INT,		"Administrative status of interface {instance}" },
@@ -160,6 +168,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2005/06/11 16:28:24  victor
+Implemented all Net.Interface.* parameters except Net.Interface.Speed
+
 Revision 1.16  2005/06/09 12:15:43  victor
 Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
 

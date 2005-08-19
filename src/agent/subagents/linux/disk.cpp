@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.1 2004-10-22 22:08:34 alk Exp $ */
+/* $Id: disk.cpp,v 1.2 2005-08-19 15:23:50 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -43,12 +43,24 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 		case DISK_FREE:
 			ret_uint64(pValue, (QWORD)s.f_bfree * (QWORD)s.f_bsize);
 			break;
+      case DISK_FREE_PERC:
+         ret_double(pValue, 100.0 * s.f_bfree / s.f_blocks);
+         break;
+      case DISK_AVAIL:
+         ret_uint64(pValue, (QWORD)s.f_bavail * (QWORD)s.f_bsize);
+         break;
+      case DISK_AVAIL_PERC:
+         ret_double(pValue, 100.0 * s.f_bavail / s.f_blocks);
+         break;
 		case DISK_TOTAL:
 			ret_uint64(pValue, (QWORD)s.f_blocks * (QWORD)s.f_frsize);
 			break;
 		case DISK_USED:
 			ret_uint64(pValue, (QWORD)(s.f_blocks - s.f_bfree) * (QWORD)s.f_frsize);
 			break;
+      case DISK_USED_PERC:
+         ret_double(pValue, 100.0 * (s.f_blocks - s.f_bfree) / s.f_blocks);
+         break;
 		default: // YIC
 			nRet = SYSINFO_RC_ERROR;
 			break;
@@ -62,5 +74,15 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/22 22:08:34  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 
 */
