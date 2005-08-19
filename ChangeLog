@@ -3,7 +3,8 @@
 *
 
 - Implemented actions provided by subagents
-- Fixed issues: #37
+- Built-in action Agent.Restart added to core agent
+- Fixed issues: #37, #38
 
 
 *
@@ -21,7 +22,7 @@
   as bind address for network service
 - Fixed bug causing random fails of connections from server to agent and
   from console to server
-- Fixed issues: #29
+- Fixed issues: #29, #32, #33
 
 
 *

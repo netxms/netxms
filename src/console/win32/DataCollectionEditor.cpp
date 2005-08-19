@@ -519,12 +519,48 @@ void CDataCollectionEditor::OnUpdateItemDuplicate(CCmdUI* pCmdUI)
 
 void CDataCollectionEditor::OnUpdateItemActivate(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+   int iItem;
+   DWORD dwIndex;
+   BOOL bEnable = FALSE;
+
+   if (m_wndListCtrl.GetSelectedCount() > 0)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         dwIndex = NXCItemIndex(m_pItemList, m_wndListCtrl.GetItemData(iItem));
+         if (m_pItemList->pItems[dwIndex].iStatus != ITEM_STATUS_ACTIVE)
+         {
+            bEnable = TRUE;
+            break;
+         }
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
+   pCmdUI->Enable(bEnable);
 }
 
 void CDataCollectionEditor::OnUpdateItemDisable(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+   int iItem;
+   DWORD dwIndex;
+   BOOL bEnable = FALSE;
+
+   if (m_wndListCtrl.GetSelectedCount() > 0)
+   {
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         dwIndex = NXCItemIndex(m_pItemList, m_wndListCtrl.GetItemData(iItem));
+         if (m_pItemList->pItems[dwIndex].iStatus != ITEM_STATUS_DISABLED)
+         {
+            bEnable = TRUE;
+            break;
+         }
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
+   pCmdUI->Enable(bEnable);
 }
 
 void CDataCollectionEditor::OnUpdateFileExport(CCmdUI* pCmdUI) 
