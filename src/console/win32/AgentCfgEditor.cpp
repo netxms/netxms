@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "AgentCfgEditor.h"
+#include "ModifiedAgentCfgDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,6 +71,7 @@ BEGIN_MESSAGE_MAP(CAgentCfgEditor, CMDIChildWnd)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_CONFIG_SAVE, OnConfigSave)
 	ON_COMMAND(ID_CONFIG_SAVEANDAPPLY, OnConfigSaveandapply)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 	ON_EN_CHANGE(ID_EDIT_CTRL, OnEditCtrlChange)
 END_MESSAGE_MAP()
@@ -132,6 +134,15 @@ void CAgentCfgEditor::OnViewRefresh()
    DWORD dwResult;
    TCHAR *pszConfig;
 
+   if (m_wndEdit.GetModify())
+   {
+      if (MessageBox(_T("All changes made since last save will be discarded. Are you sure?"),
+                     _T("Warning"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
+      {
+         return;
+      }
+   }
+
    dwResult = DoRequestArg3(NXCGetAgentConfig, g_hSession, (void *)m_dwNodeId,
                             &pszConfig, _T("Requesting agent's configuration file..."));
    if (dwResult == RCC_SUCCESS)
@@ -139,6 +150,7 @@ void CAgentCfgEditor::OnViewRefresh()
       m_wndEdit.SetWindowText(pszConfig);
       free(pszConfig);
       ParseFile();
+      m_wndEdit.SetModify(FALSE);
    }
    else
    {
@@ -429,10 +441,20 @@ void CAgentCfgEditor::OnConfigSaveandapply()
 // Save and apply agent's configuration file
 //
 
-void CAgentCfgEditor::SaveConfig(BOOL bApply)
+BOOL CAgentCfgEditor::SaveConfig(BOOL bApply)
 {
    DWORD dwResult, dwLength;
    TCHAR *pszText;
+   BOOL bResult = FALSE;
+
+   if (bApply)
+   {
+      if (MessageBox(_T("In order to apply new configuration agent will be restarted. Are you sure?"),
+                     _T("Warning"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
+      {
+         return FALSE;
+      }
+   }
 
    dwLength = m_wndEdit.GetWindowTextLength();
    pszText = (TCHAR *)malloc(sizeof(TCHAR) * (dwLength + 2));
@@ -442,9 +464,46 @@ void CAgentCfgEditor::SaveConfig(BOOL bApply)
    if (dwResult == RCC_SUCCESS)
    {
       m_wndEdit.SetModify(FALSE);
+      bResult = TRUE;
    }
    else
    {
       theApp.ErrorBox(dwResult, _T("Error updating agent's configuration: %s"));
    }
+   return bResult;
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CAgentCfgEditor::OnClose() 
+{
+   BOOL bAllowClose = TRUE;
+
+   if (m_wndEdit.GetModify())
+   {
+      CModifiedAgentCfgDlg dlg;
+      int iAction;
+
+      iAction = dlg.DoModal();
+      switch(iAction)
+      {
+         case IDC_SAVE:
+            bAllowClose = SaveConfig(FALSE);
+            break;
+         case IDC_APPLY:
+            bAllowClose = SaveConfig(TRUE);
+            break;
+         case IDCANCEL:
+            bAllowClose = FALSE;
+            break;
+         default:
+            break;
+      }
+   }
+	
+   if (bAllowClose)
+	   CMDIChildWnd::OnClose();
 }

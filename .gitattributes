@@ -482,6 +482,8 @@ src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
 src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
+src/console/win32/ModifiedAgentCfgDlg.cpp -text
+src/console/win32/ModifiedAgentCfgDlg.h -text
 src/console/win32/NetSrvPropsGeneral.cpp -text
 src/console/win32/NetSrvPropsGeneral.h -text
 src/console/win32/NetSummaryFrame.cpp -text
