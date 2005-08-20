@@ -1131,6 +1131,50 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 
 
 //
+// Get configuration file from agent
+//
+
+DWORD AgentConnection::UpdateConfigFile(TCHAR *pszConfig)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg;
+#ifdef UNICODE
+   int nChars;
+   BYTE *pBuffer;
+#endif
+
+   if (!m_bIsConnected)
+      return ERR_NOT_CONNECTED;
+
+   dwRqId = m_dwRequestId++;
+
+   msg.SetCode(CMD_UPDATE_AGENT_CONFIG);
+   msg.SetId(dwRqId);
+#ifdef UNICODE
+   nChars = _tcslen(pszConfig);
+   pBuffer = (BYTE *)malloc(nChars + 1);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pszConfig, nChars, pBuffer, nChars + 1, NULL, NULL);
+   msg.SetVariable(VID_CONFIG_FILE, pBuffer, nChars);
+   free(pBuffer);
+#else
+   msg.SetVariable(VID_CONFIG_FILE, (BYTE *)pszConfig, strlen(pszConfig));
+#endif
+
+   if (SendMessage(&msg))
+   {
+      dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
+   }
+   else
+   {
+      dwResult = ERR_CONNECTION_BROKEN;
+   }
+
+   return dwResult;
+}
+
+
+//
 // Get routing table from agent
 //
 

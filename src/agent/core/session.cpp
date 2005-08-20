@@ -642,16 +642,19 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    if (m_bInstallationServer)
    {
-      TCHAR *pszConfig;
+      BYTE *pConfig;
       int hFile;
+      DWORD dwSize;
 
-      pszConfig = pRequest->GetVariableStr(VID_CONFIG_FILE);
-      if (pszConfig != NULL)
+      if (pRequest->IsVariableExist(VID_CONFIG_FILE))
       {
-         hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+         dwSize = pRequest->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
+         pConfig = (BYTE *)malloc(dwSize);
+         pRequest->GetVariableBinary(VID_CONFIG_FILE, pConfig, dwSize);
+         hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0644);
          if (hFile != -1)
          {
-            write(hFile, pszConfig, _tcslen(pszConfig));
+            write(hFile, pConfig, dwSize);
             close(hFile);
             pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
          }
@@ -661,7 +664,7 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
                         g_szConfigFile, strerror(errno));
             pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
          }
-         free(pszConfig);
+         free(pConfig);
       }
       else
       {

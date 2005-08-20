@@ -254,6 +254,7 @@ public:
                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
    DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
+   DWORD UpdateConfigFile(TCHAR *pszConfig);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

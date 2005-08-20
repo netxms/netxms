@@ -267,6 +267,7 @@ typedef void * NXC_SESSION;
 #define RCC_INVALID_PUBLIC_KEY      ((DWORD)43)
 #define RCC_INVALID_SESSION_KEY     ((DWORD)44)
 #define RCC_NO_ENCRYPTION_SUPPORT   ((DWORD)45)
+#define RCC_INTERNAL_ERROR          ((DWORD)46)
 
 
 //

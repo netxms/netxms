@@ -69,6 +69,7 @@ BEGIN_MESSAGE_MAP(CAgentCfgEditor, CMDIChildWnd)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_CONFIG_SAVE, OnConfigSave)
+	ON_COMMAND(ID_CONFIG_SAVEANDAPPLY, OnConfigSaveandapply)
 	//}}AFX_MSG_MAP
 	ON_EN_CHANGE(ID_EDIT_CTRL, OnEditCtrlChange)
 END_MESSAGE_MAP()
@@ -410,6 +411,26 @@ void CAgentCfgEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 
 void CAgentCfgEditor::OnConfigSave() 
 {
+   SaveConfig(FALSE);
+}
+
+
+//
+// WM_COMMAND::ID_CONFIG_SAVEANDAPPLY message handler
+//
+
+void CAgentCfgEditor::OnConfigSaveandapply() 
+{
+   SaveConfig(TRUE);
+}
+
+
+//
+// Save and apply agent's configuration file
+//
+
+void CAgentCfgEditor::SaveConfig(BOOL bApply)
+{
    DWORD dwResult, dwLength;
    TCHAR *pszText;
 
@@ -417,7 +438,7 @@ void CAgentCfgEditor::OnConfigSave()
    pszText = (TCHAR *)malloc(sizeof(TCHAR) * (dwLength + 2));
    m_wndEdit.GetWindowText(pszText, dwLength + 1);
    dwResult = DoRequestArg4(NXCUpdateAgentConfig, g_hSession, (void *)m_dwNodeId,
-                            pszText, (void *)0, _T("Updating agent's configuration file..."));
+                            pszText, (void *)bApply, _T("Updating agent's configuration file..."));
    if (dwResult == RCC_SUCCESS)
    {
       m_wndEdit.SetModify(FALSE);

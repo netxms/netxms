@@ -366,6 +366,7 @@ private:
    void DeleteUserVariable(CSCPMessage *pRequest);
    void ChangeObjectIP(CSCPMessage *pRequest);
    void GetAgentConfig(CSCPMessage *pRequest);
+   void UpdateAgentConfig(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

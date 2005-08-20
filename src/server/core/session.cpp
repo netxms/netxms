@@ -823,6 +823,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_AGENT_CONFIG:
             GetAgentConfig(pMsg);
             break;
+         case CMD_UPDATE_AGENT_CONFIG:
+            UpdateAgentConfig(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -4721,6 +4724,89 @@ void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
                      msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Update agent's configuration file
+//
+
+void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwResult;
+   TCHAR *pszConfig;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check prerequisites
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         {
+            AgentConnection *pConn;
+
+            pConn = ((Node *)pObject)->CreateAgentConnection();
+            if (pConn != NULL)
+            {
+               pszConfig = pRequest->GetVariableStr(VID_CONFIG_FILE);
+               dwResult = pConn->UpdateConfigFile(pszConfig);
+               free(pszConfig);
+
+               if ((pRequest->GetVariableShort(VID_APPLY_FLAG) != 0) &&
+                   (dwResult == ERR_SUCCESS))
+               {
+                  dwResult = pConn->ExecAction("Agent.Restart", 0, NULL);
+               }
+
+               switch(dwResult)
+               {
+                  case ERR_SUCCESS:
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                     break;
+                  case ERR_ACCESS_DENIED:
+                     msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                     break;
+                  case ERR_IO_FAILURE:
+                     msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+                     break;
+                  case ERR_MAILFORMED_COMMAND:
+                     msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+                     break;
+                  default:
+                     msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+                     break;
+               }
+               delete pConn;
             }
             else
             {

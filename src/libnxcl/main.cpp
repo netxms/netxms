@@ -173,9 +173,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Unable to select cipher"),
       _T("Invalid public key"),
       _T("Invalid session key"),
-      _T("Encryption is not supported by peer")
+      _T("Encryption is not supported by peer"),
+      _T("Server internal error")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NO_ENCRYPTION_SUPPORT)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_INTERNAL_ERROR)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 
