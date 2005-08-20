@@ -42,6 +42,7 @@ public:
 
 // Implementation
 protected:
+	void EditTrap(BOOL bNewTrap);
 	void SortList(void);
 	CImageList *m_pImageList;
 	void UpdateItem(int iItem, DWORD dwIndex);

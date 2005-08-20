@@ -269,7 +269,7 @@ void CTrapEditor::OnTrapNew()
       m_pTrapList[m_dwNumTraps].dwEventCode = EVENT_SNMP_UNMATCHED_TRAP;
       m_dwNumTraps++;
       SelectListViewItem(&m_wndListCtrl, AddItem(m_dwNumTraps - 1));
-      PostMessage(WM_COMMAND, ID_TRAP_EDIT);
+      EditTrap(TRUE);
    }
    else
    {
@@ -338,10 +338,10 @@ void CTrapEditor::OnTrapDelete()
 
 
 //
-// WM_COMMAND::ID_TRAP_EDIT message handler
+// Edit currently selected trap record
 //
 
-void CTrapEditor::OnTrapEdit() 
+void CTrapEditor::EditTrap(BOOL bNewTrap)
 {
    CTrapEditDlg dlg;
    int iItem;
@@ -403,9 +403,24 @@ void CTrapEditor::OnTrapEdit()
                   theApp.ErrorBox(dwResult, _T("Error updating trap configuration:\n%s"));
                }
             }
+            else  /* user press cancel */
+            {
+               if (bNewTrap)
+                  PostMessage(WM_COMMAND, ID_TRAP_DELETE, 0);
+            }
          }
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_TRAP_EDIT message handler
+//
+
+void CTrapEditor::OnTrapEdit() 
+{
+   EditTrap(FALSE);
 }
 
 
