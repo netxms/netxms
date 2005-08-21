@@ -4883,20 +4883,23 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
          for(i = 0, dwId = VID_OBJECT_TOOLS_BASE, dwNumMsgRec = 0; i < dwNumTools; i++)
          {
             dwToolId = DBGetFieldULong(hResult, i, 0);
-            for(j = 0; j < dwAclSize; j++)
+            if (m_dwUserId != 0)
             {
-               if (pAccessList[j].dwToolId == dwToolId)
+               for(j = 0; j < dwAclSize; j++)
                {
-                  if ((pAccessList[j].dwUserId == m_dwUserId) ||
-                      (pAccessList[j].dwUserId == GROUP_EVERYONE))
-                     break;
-                  if (pAccessList[j].dwUserId & GROUP_FLAG)
-                     if (CheckUserMembership(m_dwUserId, pAccessList[j].dwUserId))
+                  if (pAccessList[j].dwToolId == dwToolId)
+                  {
+                     if ((pAccessList[j].dwUserId == m_dwUserId) ||
+                         (pAccessList[j].dwUserId == GROUP_EVERYONE))
                         break;
+                     if (pAccessList[j].dwUserId & GROUP_FLAG)
+                        if (CheckUserMembership(m_dwUserId, pAccessList[j].dwUserId))
+                           break;
+                  }
                }
             }
 
-            if (j < dwAclSize)   // User has access to this tool
+            if ((m_dwUserId == 0) || (j < dwAclSize))   // User has access to this tool
             {
                msg.SetVariable(dwId, dwToolId);
                msg.SetVariable(dwId + 1, DBGetField(hResult, i, 1));
