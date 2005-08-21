@@ -23,6 +23,11 @@ static char THIS_FILE[] = __FILE__;
 #define COLOR_COMMENT      RGB(80, 127, 80)
 #define COLOR_SECTION      RGB(0, 0, 192)
 
+#define PANE_MESSAGE       0
+#define PANE_LINE          1
+#define PANE_COLUMN        2
+#define PANE_MODIFY        3
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CAgentCfgEditor
@@ -72,8 +77,11 @@ BEGIN_MESSAGE_MAP(CAgentCfgEditor, CMDIChildWnd)
 	ON_COMMAND(ID_CONFIG_SAVE, OnConfigSave)
 	ON_COMMAND(ID_CONFIG_SAVEANDAPPLY, OnConfigSaveandapply)
 	ON_WM_CLOSE()
+	ON_WM_TIMER()
+	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
 	ON_EN_CHANGE(ID_EDIT_CTRL, OnEditCtrlChange)
+	ON_NOTIFY(EN_MSGFILTER, ID_EDIT_CTRL, OnEditCtrlMsgFilter)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -81,8 +89,11 @@ END_MESSAGE_MAP()
 
 BOOL CAgentCfgEditor::PreCreateWindow(CREATESTRUCT& cs) 
 {
-	// TODO: Add your specialized code here and/or call the base class
-	
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
+                                         NULL, 
+                                         GetSysColorBrush(COLOR_WINDOW), 
+                                         AfxGetApp()->LoadIcon(IDI_EDITOR));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
 
@@ -95,6 +106,7 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
    RECT rect;
    CHARFORMAT cf;
+   static int widths[4] = { 60, 120, 220, -1 };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -106,6 +118,14 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    CopyMenuItems(m_pCtxMenu, theApp.GetContextMenu(17));
 
    GetClientRect(&rect);
+
+   // Create status bar
+	m_wndStatusBar.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_STATUS_BAR);
+   m_wndStatusBar.SetParts(4, widths);
+   m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
+   rect.bottom -= m_iStatusBarHeight;
+
+   // Create edit control
    m_wndEdit.Create(WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOHSCROLL | 
                     ES_AUTOVSCROLL | ES_WANTRETURN | WS_HSCROLL | WS_VSCROLL,
                     rect, this, ID_EDIT_CTRL);
@@ -117,11 +137,24 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    _tcscpy(cf.szFaceName, _T("Courier New"));
    m_wndEdit.SetDefaultCharFormat(cf);
 
-   m_wndEdit.SetEventMask(m_wndEdit.GetEventMask() | ENM_CHANGE);
+   m_wndEdit.SetEventMask(m_wndEdit.GetEventMask() | ENM_CHANGE | ENM_KEYEVENTS | ENM_MOUSEEVENTS);
+
+   m_dwTimer = SetTimer(1, 1000, NULL);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	
 	return 0;
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CAgentCfgEditor::OnDestroy() 
+{
+   KillTimer(m_dwTimer);
+	CMDIChildWnd::OnDestroy();
 }
 
 
@@ -147,15 +180,20 @@ void CAgentCfgEditor::OnViewRefresh()
                             &pszConfig, _T("Requesting agent's configuration file..."));
    if (dwResult == RCC_SUCCESS)
    {
+      OnStartParsing();
       m_wndEdit.SetWindowText(pszConfig);
       free(pszConfig);
       ParseFile();
+      OnStopParsing();
       m_wndEdit.SetModify(FALSE);
+      m_wndStatusBar.SetText(_T(""), PANE_MODIFY, 0);
+      WriteStatusMsg(_T("Loaded successfully"));
    }
    else
    {
       m_wndEdit.SetWindowText(_T(""));
       theApp.ErrorBox(dwResult, _T("Error getting agent's configuration file: %s"));
+      WriteStatusMsg(_T("Error loading configuration file"));
    }
 }
 
@@ -166,8 +204,19 @@ void CAgentCfgEditor::OnViewRefresh()
 
 void CAgentCfgEditor::OnSize(UINT nType, int cx, int cy) 
 {
+   RECT rect;
+   int nShift;
+
 	CMDIChildWnd::OnSize(nType, cx, cy);
-   m_wndEdit.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+
+   m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
+   m_wndEdit.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
+   
+   nShift = GetSystemMetrics(SM_CXVSCROLL);
+   m_wndStatusBar.GetClientRect(&rect);
+   int widths[4] = { rect.right - 170 - nShift, rect.right - 120 - nShift, 
+                     rect.right - 70 - nShift, rect.right -  nShift };
+   m_wndStatusBar.SetParts(4, widths);
 }
 
 
@@ -293,13 +342,9 @@ void CAgentCfgEditor::ParseFile()
 {
    int i, nLineCount;
 
-   OnStartParsing();
-
    nLineCount = m_wndEdit.GetLineCount();
    for(i = 0; i < nLineCount; i++)
       ParseLine(i);
-
-   OnStopParsing();
 }
 
 
@@ -357,7 +402,7 @@ void CAgentCfgEditor::ParseLine(int nLine)
 
 
 //
-// Handle edit control updates
+// Handle edit control changes
 //
 
 void CAgentCfgEditor::OnEditCtrlChange()
@@ -376,6 +421,7 @@ void CAgentCfgEditor::OnEditCtrlChange()
          ParseLine(nCurrLine + 1);
 
       OnStopParsing();
+      m_wndStatusBar.SetText(_T("Modified"), PANE_MODIFY, 0);
    }
 }
 
@@ -464,11 +510,14 @@ BOOL CAgentCfgEditor::SaveConfig(BOOL bApply)
    if (dwResult == RCC_SUCCESS)
    {
       m_wndEdit.SetModify(FALSE);
+      m_wndStatusBar.SetText(_T(""), PANE_MODIFY, 0);
       bResult = TRUE;
+      WriteStatusMsg(_T("Saved successfully"));
    }
    else
    {
       theApp.ErrorBox(dwResult, _T("Error updating agent's configuration: %s"));
+      WriteStatusMsg(_T("Error updating agent's configuration"));
    }
    return bResult;
 }
@@ -506,4 +555,50 @@ void CAgentCfgEditor::OnClose()
 	
    if (bAllowClose)
 	   CMDIChildWnd::OnClose();
+}
+
+
+//
+// Write message to the status bar and set timer
+//
+
+void CAgentCfgEditor::WriteStatusMsg(TCHAR *pszMsg)
+{
+   m_wndStatusBar.SetText(pszMsg, PANE_MESSAGE, 0);
+   m_iMsgTimer = 0;
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CAgentCfgEditor::OnTimer(UINT nIDEvent) 
+{
+   m_iMsgTimer++;
+   if (m_iMsgTimer == 60)
+      m_wndStatusBar.SetText(_T(""), PANE_MESSAGE, 0);
+}
+
+
+//
+// Mouse and keyboard message filter for edit control
+//
+
+void CAgentCfgEditor::OnEditCtrlMsgFilter(NMHDR *pNotifyStruct, LRESULT *pResult)
+{
+   CHARRANGE cr;
+   TCHAR szBuffer[32];
+   int nLine;
+
+   m_wndEdit.GetSel(cr);
+   nLine = m_wndEdit.LineFromChar(cr.cpMin);
+
+   _stprintf(szBuffer, _T("L: %d"), nLine + 1);
+   m_wndStatusBar.SetText(szBuffer, PANE_LINE, 0);
+
+   _stprintf(szBuffer, _T("C: %d"), cr.cpMin - m_wndEdit.LineIndex(nLine) + 1);
+   m_wndStatusBar.SetText(szBuffer, PANE_COLUMN, 0);
+
+   *pResult = 0;
 }

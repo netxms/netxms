@@ -49,7 +49,6 @@ protected:
 	int m_iStatusBarHeight;
 	CStatusBarCtrl m_wndStatusBar;
 	int FindAlarmRecord(DWORD dwAlarmId);
-	CFont m_fontNormal;
 	void AddAlarm(NXC_ALARM *pAlarm);
 	BOOL m_bShowAllAlarms;
 	CImageList *m_pImageList;

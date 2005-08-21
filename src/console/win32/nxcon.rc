@@ -114,6 +114,7 @@ IDI_RUNNING             ICON    DISCARDABLE     "icons\\running.ico"
 IDI_PENDING             ICON    DISCARDABLE     "icons\\pending.ico"
 IDI_TIPS                ICON    DISCARDABLE     "icons\\Tips.ico"
 IDI_DESKTOP             ICON    DISCARDABLE     "icons\\desktop.ico"
+IDI_EDITOR              ICON    DISCARDABLE     "icons\\editor.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2499,11 +2500,6 @@ BEGIN
     ID_INDICATOR_CONNECT    "default-server.default-domain.com"
     ID_INDICATOR_DESKTOP    "Default_desktop_name"
     IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
-    IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
-    IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
-    IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
-    IDR_DC_EDITOR           "\nData Collection Configuration\nData Collection Configuration"
-    IDR_DCI_DATA_VIEW       "\nCollected Data\nCollected Data"
     IDR_EPP_EDITOR          "\nEvent Processing Policy Editor\nEvent Processing Policy Editor"
 END
 
@@ -2512,10 +2508,6 @@ BEGIN
     IDR_MAINFRAME           "NetXMS Console"
     IDR_NXCONTYPE           "\nNxcon 1\nNxcon 2"
     IDS_NXC_INIT_FAILED     "NetXMS client library initialization failed."
-    IDR_CTRLPANEL           "\nControl Panel\nControl Panel"
-    IDR_EVENTS              "\nEvent Browser\nEvent Browser"
-    IDR_MAPFRAME            "\nNetwork Map\nNetwork Map"
-    IDR_ALARMS              "\nAlarm Browser\nAlarm Browser"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -2602,13 +2594,31 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDS_GETFOLDERPATH_FAILED "Call to SHGetFolderPath() failed."
+    IDS_WORKDIR_CREATION_FAILED "Failed to create working directory tree."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDR_OBJECTS             "\nObject Browser\nObject Browser"
     IDR_DEBUG_WINDOW        "\nDebug Log\nDebug Log"
     IDR_ACTION_EDITOR       "\nAction Configuration\nAction Configuration"
     IDR_NODE_POLLER         "\nPoll Node\nPoll Node"
     IDR_TRAP_EDITOR         "\nSNMP Trap Configuration\nSNMP Trap Configuration"
-    IDR_AGENT_CFG_EDITOR    "\nAgent Configuration\nAgent Configuration"
     IDR_SERVER_CFG_EDITOR   "\nServer Configuration\nServer Configuration"
+    IDR_AGENT_CFG_EDITOR    "\nAgent Configuration\nAgent Configuration"
+    IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
+    IDR_DEPLOYMENT_VIEW     "\nPackage Deployment\nPackage Deployment"
+    IDR_LAST_VALUES_VIEW    "\nLast Values\nLast Values"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
+    IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
+    IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
+    IDR_DC_EDITOR           "\nData Collection Configuration\nData Collection Configuration"
+    IDR_DCI_DATA_VIEW       "\nCollected Data\nCollected Data"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -2618,15 +2628,10 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_GETFOLDERPATH_FAILED "Call to SHGetFolderPath() failed."
-    IDS_WORKDIR_CREATION_FAILED "Failed to create working directory tree."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDR_PACKAGE_MGR         "\nPackage Manager\nPackage Manager"
-    IDR_DEPLOYMENT_VIEW     "\nPackage Deployment\nPackage Deployment"
-    IDR_LAST_VALUES_VIEW    "\nLast Values\nLast Values"
+    IDR_CTRLPANEL           "\nControl Panel\nControl Panel"
+    IDR_EVENTS              "\nEvent Browser\nEvent Browser"
+    IDR_MAPFRAME            "\nNetwork Map\nNetwork Map"
+    IDR_ALARMS              "\nAlarm Browser\nAlarm Browser"
 END
 
 #endif    // English (U.S.) resources

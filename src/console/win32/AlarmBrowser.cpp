@@ -164,20 +164,12 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
    rect.bottom -= m_iStatusBarHeight;
 
-   // Create font for elements
-   m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                          0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
-
    // Create list view control
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHAREIMAGELISTS,
                         rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
-
-   //m_wndListCtrl.SetFont(&m_fontNormal, FALSE);
 
    // Create image list
    m_pImageList = CreateEventImageList();

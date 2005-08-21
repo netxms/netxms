@@ -32,6 +32,11 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwTimer;
+	int m_iMsgTimer;
+	void WriteStatusMsg(TCHAR *pszMsg);
+	int m_iStatusBarHeight;
+	CStatusBarCtrl m_wndStatusBar;
 	BOOL SaveConfig(BOOL bApply);
 	CMenu *m_pCtxMenu;
 	CHARRANGE m_crSavedSelection;
@@ -65,8 +70,12 @@ protected:
 	afx_msg void OnConfigSave();
 	afx_msg void OnConfigSaveandapply();
 	afx_msg void OnClose();
+	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnDestroy();
 	//}}AFX_MSG
 	afx_msg void OnEditCtrlChange();
+	afx_msg void OnEditCtrlUpdate();
+   afx_msg void OnEditCtrlMsgFilter(NMHDR *pNotifyStruct, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -950,6 +950,10 @@ SOURCE=.\icons\EARTH.ICO
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\editor.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\enabled.ico
 # End Source File
 # Begin Source File

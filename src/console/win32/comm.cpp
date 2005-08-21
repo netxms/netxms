@@ -93,13 +93,23 @@ static void ClientEventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode
 
 
 //
+// Compare two NXC_OBJECT_TOOL structures
+//
+
+static int CompareTools(const void *p1, const void *p2)
+{
+   return _tcsicmp(((NXC_OBJECT_TOOL *)p1)->szName,((NXC_OBJECT_TOOL *)p2)->szName);
+}
+
+
+//
 // Login thread
 //
 
 static DWORD WINAPI LoginThread(void *pArg)
 {
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
-   DWORD dwResult;
+   DWORD i, dwResult;
 
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession,
                          (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
@@ -150,7 +160,6 @@ static DWORD WINAPI LoginThread(void *pArg)
    if (dwResult == RCC_SUCCESS)
    {
       NXC_MIB_LIST *pMibList;
-      DWORD i;
 
       SetInfoText(hWnd, "Loading and initializing MIB files...");
       dwResult = NXCGetMIBList(g_hSession, &pMibList);
@@ -187,7 +196,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    // Load default image list
    if (dwResult == RCC_SUCCESS)
    {
-      DWORD i, *pdwClassId, *pdwImageId;
+      DWORD *pdwClassId, *pdwImageId;
 
       SetInfoText(hWnd, "Loading default image list...");
       dwResult = NXCLoadDefaultImageList(g_hSession, &g_dwDefImgListSize, &pdwClassId, &pdwImageId);
@@ -202,6 +211,34 @@ static DWORD WINAPI LoginThread(void *pArg)
          }
          safe_free(pdwClassId);
          safe_free(pdwImageId);
+      }
+   }
+
+   // Load object tools
+   if (dwResult == RCC_SUCCESS)
+   {
+      SetInfoText(hWnd, "Loading object tools information...");
+      dwResult = NXCGetObjectTools(g_hSession, &g_dwNumObjectTools, &g_pObjectToolList);
+      if (dwResult == RCC_SUCCESS)
+      {
+         TCHAR szCurrPath[MAX_DB_STRING] = _T("");
+         UINT nId;
+
+         // Sort tools in alphabetical order
+         qsort(g_pObjectToolList, g_dwNumObjectTools, sizeof(NXC_OBJECT_TOOL), CompareTools);
+
+         // Build pop-up submenu
+         g_pObjectToolsMenu = new CMenu;
+         g_pObjectToolsMenu->CreatePopupMenu();
+         for(i = 0, nId = OBJTOOL_MENU_FIRST_ID; i < g_dwNumObjectTools; i++, nId++)
+         {
+            g_pObjectToolsMenu->AppendMenu(MF_ENABLED | MF_STRING, nId, g_pObjectToolList[i].szName);
+         }
+
+         // Insert tools submenu into various menus
+         theApp.GetContextMenu(1)->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                                              (UINT)g_pObjectToolsMenu->GetSafeHmenu(),
+                                              _T("&Tools"));
       }
    }
 

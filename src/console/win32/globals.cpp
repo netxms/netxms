@@ -252,3 +252,12 @@ CODE_TO_TEXT g_ctNodeType[] =
    { NODE_TYPE_NORTEL_ACCELAR, _T("Nortel Networks Passport switch") },
    { 0, NULL }    // End of list
 };
+
+
+//
+// Object tools
+//
+
+DWORD g_dwNumObjectTools = 0;
+NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
+CMenu *g_pObjectToolsMenu = NULL;

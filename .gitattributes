@@ -591,6 +591,7 @@ src/console/win32/icons/deploy.ico -text
 src/console/win32/icons/desktop.ico -text
 src/console/win32/icons/disabled.ico -text
 src/console/win32/icons/e-mail.ico -text
+src/console/win32/icons/editor.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/log.ico -text
