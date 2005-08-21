@@ -167,9 +167,11 @@ static LONG H_EnumList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 {
 #ifdef _WIN32
-   { "Disk.Free(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Free disk space on *" },
-   { "Disk.Total(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Total disk space on *" },
-   { "Disk.Used(*)", H_DiskInfo, NULL, DCI_DT_UINT64, "Used disk space on *" },
+   { "Disk.Free(*)", H_DiskInfo, (char *)DISKINFO_FREE_BYTES, DCI_DT_UINT64, "Free disk space on {instance}" },
+   { "Disk.FreePerc(*)", H_DiskInfo, (char *)DISKINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, "Percentage of free disk space on {instance}" },
+   { "Disk.Total(*)", H_DiskInfo, (char *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, "Total disk space on {instance}" },
+   { "Disk.Used(*)", H_DiskInfo, (char *)DISKINFO_USED_BYTES, DCI_DT_UINT64, "Used disk space on {instance}" },
+   { "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, "Percentage of used disk space on {instance}" },
    { "Net.Interface.AdminStatus(*)", H_NetInterfaceStats, (char *)NET_IF_ADMIN_STATUS, DCI_DT_INT, "Administrative status of interface {instance}" },
    { "Net.Interface.BytesIn(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_IN, DCI_DT_UINT, "Number of input bytes on interface {instance}" },
    { "Net.Interface.BytesOut(*)", H_NetInterfaceStats, (char *)NET_IF_BYTES_OUT, DCI_DT_UINT, "Number of output bytes on interface {instance}" },

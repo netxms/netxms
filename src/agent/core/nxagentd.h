@@ -129,6 +129,17 @@
 #define MEMINFO_VIRTUAL_TOTAL    8
 #define MEMINFO_VIRTUAL_USED     9
 
+
+//
+// Request types for H_DiskInfo
+//
+
+#define DISKINFO_FREE_BYTES      1
+#define DISKINFO_USED_BYTES      2
+#define DISKINFO_TOTAL_BYTES     3
+#define DISKINFO_FREE_SPACE_PCT  4
+#define DISKINFO_USED_SPACE_PCT  5
+
 #endif   /* _WIN32 */
 
 

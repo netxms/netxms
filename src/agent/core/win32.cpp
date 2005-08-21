@@ -100,39 +100,60 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value)
 // Handler for System.Hostname parameter
 //
 
-LONG H_HostName(char *cmd, char *arg, char *value)
+LONG H_HostName(char *pszCmd, char *pArg, char *pValue)
 {
    DWORD dwSize;
-   char buffer[MAX_COMPUTERNAME_LENGTH + 1];
+   char szBuffer[MAX_COMPUTERNAME_LENGTH + 1];
 
    dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-   GetComputerName(buffer, &dwSize);
-   ret_string(value, buffer);
+   GetComputerName(szBuffer, &dwSize);
+   ret_string(pValue, szBuffer);
    return SYSINFO_RC_SUCCESS;
 }
 
 
 //
-// Handler for Disk.Free(*), Disk.Used(*)  and Disk.Total(*) parameters
+// Handler for disk space information parameters
 //
 
-LONG H_DiskInfo(char *cmd, char *arg, char *value)
+LONG H_DiskInfo(char *pszCmd, char *pArg, char *pValue)
 {
-   char path[MAX_PATH];
-   ULARGE_INTEGER freeBytes, totalBytes;
+   char szPath[MAX_PATH];
+   ULARGE_INTEGER availBytes, freeBytes, totalBytes;
+   LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (!NxGetParameterArg(cmd, 1, path, MAX_PATH - 1))
+   if (!NxGetParameterArg(pszCmd, 1, szPath, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
-   if (!GetDiskFreeSpaceEx(path, &freeBytes, &totalBytes, NULL))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   if (!memicmp(cmd, "Disk.Free",9))
-      ret_uint64(value, freeBytes.QuadPart);
-   else if (!memicmp(cmd, "Disk.Used",9))
-      ret_uint64(value, totalBytes.QuadPart - freeBytes.QuadPart);
+   if (GetDiskFreeSpaceEx(szPath, &availBytes, &totalBytes, &freeBytes))
+   {
+      switch((int)pArg)
+      {
+         case DISKINFO_FREE_BYTES:
+            ret_uint64(pValue, freeBytes.QuadPart);
+            break;
+         case DISKINFO_USED_BYTES:
+            ret_uint64(pValue, totalBytes.QuadPart - freeBytes.QuadPart);
+            break;
+         case DISKINFO_TOTAL_BYTES:
+            ret_uint64(pValue, totalBytes.QuadPart);
+            break;
+         case DISKINFO_FREE_SPACE_PCT:
+            ret_double(pValue, 100.0 * (INT64)freeBytes.QuadPart / (INT64)totalBytes.QuadPart);
+            break;
+         case DISKINFO_USED_SPACE_PCT:
+            ret_double(pValue, 100.0 * (INT64)(totalBytes.QuadPart - freeBytes.QuadPart) / (INT64)totalBytes.QuadPart);
+            break;
+         default:
+            nRet = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+   }
    else
-      ret_uint64(value, totalBytes.QuadPart);
-   return SYSINFO_RC_SUCCESS;
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+
+   return nRet;
 }
 
 
@@ -213,11 +234,11 @@ LONG H_SystemUname(char *cmd, char *arg, char *value)
 // Handler for System.CPU.Count parameter
 //
 
-LONG H_CPUCount(char *cmd, char *arg, char *value)
+LONG H_CPUCount(char *pszCmd, char *pArg, char *pValue)
 {
    SYSTEM_INFO sysInfo;
 
    GetSystemInfo(&sysInfo);
-   ret_uint(value, sysInfo.dwNumberOfProcessors);
+   ret_uint(pValue, sysInfo.dwNumberOfProcessors);
    return SYSINFO_RC_SUCCESS;
 }
