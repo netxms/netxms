@@ -29,6 +29,7 @@
 #include <nxevent.h>
 #include <nximage.h>
 #include <nxcscpapi.h>
+#include <nxtools.h>
 
 #ifdef _WIN32
 #ifdef LIBNXCL_EXPORTS
@@ -1013,6 +1014,21 @@ typedef struct
 
 
 //
+// Object tool
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwFlags;
+   WORD wType;
+   TCHAR szName[MAX_DB_STRING];
+   TCHAR szDescription[MAX_DB_STRING];
+   TCHAR *pszData;
+} NXC_OBJECT_TOOL;
+
+
+//
 // Functions
 //
 
@@ -1181,6 +1197,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
 DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, TCHAR *pszVarName,
                                               TCHAR *pszValue);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *pszVarName);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTools,
+                                           NXC_OBJECT_TOOL **ppToolList);
+void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TOOL *pList);
 
 #ifdef __cplusplus
 }

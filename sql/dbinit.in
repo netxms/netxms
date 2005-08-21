@@ -16,6 +16,7 @@
 #include <nximage.h>
 #include <netxmsdb.h>
 #include <nxnt.h>
+#include <nxtools.h>
 
 // Define common macros for uncommon data types
 // and database syntax type

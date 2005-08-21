@@ -140,6 +140,7 @@ include/nximage.h -text
 include/nxnt.h -text
 include/nxqueue.h -text
 include/nxsnmp.h -text
+include/nxtools.h -text
 include/unicode.h -text
 m4/Makefile.am -text
 netware/Makefile.am -text
@@ -688,6 +689,7 @@ src/libnxcl/libnxcl.vcw -text
 src/libnxcl/main.cpp -text
 src/libnxcl/mib.cpp -text
 src/libnxcl/objects.cpp -text
+src/libnxcl/objtools.cpp -text
 src/libnxcl/package.cpp -text
 src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text

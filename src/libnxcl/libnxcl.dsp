@@ -145,6 +145,10 @@ SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\objtools.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\package.cpp
 # End Source File
 # Begin Source File
@@ -202,6 +206,10 @@ SOURCE=..\..\include\nxcscpapi.h
 # Begin Source File
 
 SOURCE=..\..\include\nxevent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxtools.h
 # End Source File
 # Begin Source File
 

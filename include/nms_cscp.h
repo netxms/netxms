@@ -239,7 +239,7 @@ typedef struct
 #define CMD_EVENT_LIST_END          0x000C
 #define CMD_GET_CONFIG_VARLIST      0x000D
 #define CMD_SET_CONFIG_VARIABLE     0x000E
-//#define CMD_CONFIG_VARIABLE         0x000F
+#define CMD_GET_OBJECT_TOOLS        0x000F
 //#define CMD_CONFIG_VARLIST_END      0x0010
 #define CMD_DELETE_CONFIG_VARIABLE  0x0011
 #define CMD_NOTIFY                  0x0012
@@ -527,6 +527,7 @@ typedef struct
 #define VID_NUM_LOCAL_NETS          ((DWORD)161)
 #define VID_NUM_REMOTE_NETS         ((DWORD)162)
 #define VID_APPLY_FLAG              ((DWORD)163)
+#define VID_NUM_TOOLS               ((DWORD)164)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -587,6 +588,9 @@ typedef struct
 
 // Base value for network list
 #define VID_VPN_NETWORK_BASE        ((DWORD)0x10000000)
+
+// Base value for network list
+#define VID_OBJECT_TOOLS_BASE       ((DWORD)0x10000000)
 
 
 //
