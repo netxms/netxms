@@ -152,7 +152,6 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnObjectCreateTemplate();
 	afx_msg void OnObjectCreateTemplategroup();
-	afx_msg void OnObjectWakeup();
 	afx_msg void OnUpdateObjectWakeup(CCmdUI* pCmdUI);
 	afx_msg void OnObjectCreateService();
 	afx_msg void OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI);
@@ -174,6 +173,7 @@ protected:
    afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnObjectTool(UINT nID);
 	DECLARE_MESSAGE_MAP()
 private:
 	BOOL CurrObjectIsInterface(void);

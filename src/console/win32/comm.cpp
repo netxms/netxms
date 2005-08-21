@@ -221,19 +221,10 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = NXCGetObjectTools(g_hSession, &g_dwNumObjectTools, &g_pObjectToolList);
       if (dwResult == RCC_SUCCESS)
       {
-         TCHAR szCurrPath[MAX_DB_STRING] = _T("");
-         UINT nId;
-
-         // Sort tools in alphabetical order
+         // Sort tools in alphabetical order and create pop-up menu
          qsort(g_pObjectToolList, g_dwNumObjectTools, sizeof(NXC_OBJECT_TOOL), CompareTools);
-
-         // Build pop-up submenu
-         g_pObjectToolsMenu = new CMenu;
-         g_pObjectToolsMenu->CreatePopupMenu();
-         for(i = 0, nId = OBJTOOL_MENU_FIRST_ID; i < g_dwNumObjectTools; i++, nId++)
-         {
-            g_pObjectToolsMenu->AppendMenu(MF_ENABLED | MF_STRING, nId, g_pObjectToolList[i].szName);
-         }
+         i = 0;
+         g_pObjectToolsMenu = CreateToolsSubmenu(_T(""), &i);
 
          // Insert tools submenu into various menus
          theApp.GetContextMenu(1)->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,

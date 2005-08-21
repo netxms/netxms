@@ -2048,3 +2048,32 @@ void CConsoleApp::OnControlpanelServercfg()
 		   RUNTIME_CLASS(CServerCfgEditor), IDR_SERVER_CFG_EDITOR, m_hServerCfgEditorMenu, m_hServerCfgEditorAccel);
    }
 }
+
+
+//
+// Execute object tool
+//
+
+void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
+{
+   if ((dwIndex >= g_dwNumObjectTools) ||
+       (pObject->iClass != OBJECT_NODE))
+      return;
+
+   switch(g_pObjectToolList[dwIndex].wType)
+   {
+      case TOOL_TYPE_INTERNAL:
+         if (!_tcsicmp(g_pObjectToolList[dwIndex].pszData, _T("wakeup")))
+         {
+            WakeUpNode(pObject->dwId);
+         }
+         else
+         {
+            m_pMainWnd->MessageBox(_T("This type of tool is not implemented yet"), _T("Warning"), MB_OK | MB_ICONSTOP);
+         }
+         break;
+      default:
+         m_pMainWnd->MessageBox(_T("This type of tool is not implemented yet"), _T("Warning"), MB_OK | MB_ICONSTOP);
+         break;
+   }
+}

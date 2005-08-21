@@ -260,7 +260,6 @@ BEGIN
             MENUITEM "&Configuration\tCtrl+Alt+C",  ID_OBJECT_POLL_CONFIGURATION
 
         END
-        MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection\tShift+F8",  ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values\tShift+F7",  ID_OBJECT_LASTDCIVALUES
@@ -377,7 +376,6 @@ BEGIN
             MENUITEM "&Configuration\tCtrl+Alt+C",  ID_OBJECT_POLL_CONFIGURATION
 
         END
-        MENUITEM "&Wakeup",                     ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
@@ -516,7 +514,6 @@ BEGIN
             MENUITEM "&Configuration",              ID_OBJECT_POLL_CONFIGURATION
 
         END
-        MENUITEM "&Wake up",                    ID_OBJECT_WAKEUP
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES

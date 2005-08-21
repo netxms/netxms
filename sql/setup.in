@@ -169,13 +169,15 @@ INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
 */
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (1,'Shutdown system',TOOL_TYPE_ACTION,'System.Shutdown',0,'');
+	VALUES (1,'&Shutdown system',TOOL_TYPE_ACTION,'System.Shutdown',0,'');
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (2,'Shutdown restart',TOOL_TYPE_ACTION,'System.Restart',0,'');
+	VALUES (2,'&Restart system',TOOL_TYPE_ACTION,'System.Restart',0,'');
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (3,'Wakeup node',TOOL_TYPE_INTERNAL,'wakeup',0,'');
+	VALUES (3,'&Wakeup node',TOOL_TYPE_INTERNAL,'wakeup',0,'');
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (4,'Diag->Routing table',TOOL_TYPE_INTERNAL,'RoutingTable',0,'');
+	VALUES (4,'&Info->&Routing table',TOOL_TYPE_INTERNAL,'RoutingTable',0,'');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+	VALUES (5,'&Info->&Process list',TOOL_TYPE_TABLE_AGENT,'System.ProcessList',0,'');
 
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);

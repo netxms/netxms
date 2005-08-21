@@ -196,7 +196,6 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATE, OnObjectCreateTemplate)
 	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
-	ON_COMMAND(ID_OBJECT_WAKEUP, OnObjectWakeup)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_WAKEUP, OnUpdateObjectWakeup)
 	ON_COMMAND(ID_OBJECT_CREATE_SERVICE, OnObjectCreateService)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
@@ -218,6 +217,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
    ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(WM_FIND_OBJECT, OnFindObject)
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1659,33 +1659,6 @@ void CObjectBrowser::OnClose()
 
 
 //
-// Handler for WM_COMMAND::ID_OBJECT_WAKEUP message
-//
-
-void CObjectBrowser::OnObjectWakeup() 
-{
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-         theApp.WakeUpNode(m_pCurrentObject->dwId);
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.WakeUpNode(pObject->dwId);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-   }
-}
-
-
-//
 // Comparision function for tree items sorting
 //
 
@@ -1785,4 +1758,36 @@ void CObjectBrowser::OnObjectAgentcfg()
 {
    if (m_pCurrentObject != NULL)
       theApp.EditAgentConfig(m_pCurrentObject);
+}
+
+
+//
+// Handler for object tools
+//
+
+void CObjectBrowser::OnObjectTool(UINT nID)
+{
+//DEL void CObjectBrowser::OnObjectWakeup() 
+//DEL {
+//DEL    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+//DEL    {
+//DEL       if (m_pCurrentObject != NULL)
+//DEL          theApp.WakeUpNode(m_pCurrentObject->dwId);
+//DEL    }
+//DEL    else
+//DEL    {
+//DEL       int iItem;
+//DEL       NXC_OBJECT *pObject;
+//DEL 
+//DEL       iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+//DEL       while(iItem != -1)
+//DEL       {
+//DEL          pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+//DEL          theApp.WakeUpNode(pObject->dwId);
+//DEL          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+//DEL       }
+//DEL    }
+//DEL }
+   if (m_pCurrentObject != NULL)
+      theApp.ExecuteObjectTool(m_pCurrentObject, nID - OBJTOOL_MENU_FIRST_ID);
 }
