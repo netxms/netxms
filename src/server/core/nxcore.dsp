@@ -426,6 +426,10 @@ SOURCE=..\include\nxsrvapi.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxtools.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\rwlock.h
 # End Source File
 # Begin Source File

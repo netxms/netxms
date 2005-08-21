@@ -59,6 +59,17 @@ typedef struct
 
 
 //
+// Object tool acl entry
+//
+
+typedef struct
+{
+   DWORD dwToolId;
+   DWORD dwUserId;
+} OBJECT_TOOL_ACL;
+
+
+//
 // Fill CSCP message with user data
 //
 
@@ -825,6 +836,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_UPDATE_AGENT_CONFIG:
             UpdateAgentConfig(pMsg);
+            break;
+         case CMD_GET_OBJECT_TOOLS:
+            SendObjectTools(pMsg->GetId());
             break;
          default:
             // Pass message to loaded modules
@@ -3598,6 +3612,8 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
       {
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
          iNumArgs = pRequest->GetVariableShort(VID_NUM_ARGS);
+         if (iNumArgs > 32)
+            iNumArgs = 32;
          for(i = 0; i < iNumArgs; i++)
             pszArgList[i] = pRequest->GetVariableStr(VID_EVENT_ARG_BASE + i);
 
@@ -3655,7 +3671,7 @@ void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
       if ((pObject->Type() == OBJECT_NODE) ||
           (pObject->Type() == OBJECT_INTERFACE))
       {
-         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             DWORD dwResult;
 
@@ -4826,6 +4842,86 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Send tool list to client
+//
+
+void ClientSession::SendObjectTools(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD i, j, dwAclSize, dwNumTools, dwNumMsgRec, dwToolId, dwId;
+   OBJECT_TOOL_ACL *pAccessList;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,user_id FROM object_tools_acl"));
+   if (hResult != NULL)
+   {
+      dwAclSize = DBGetNumRows(hResult);
+      pAccessList = (OBJECT_TOOL_ACL *)malloc(sizeof(OBJECT_TOOL_ACL) * dwAclSize);
+      for(i = 0; i < dwAclSize; i++)
+      {
+         pAccessList[i].dwToolId = DBGetFieldULong(hResult, i, 0);
+         pAccessList[i].dwUserId = DBGetFieldULong(hResult, i, 1);
+      }
+      DBFreeResult(hResult);
+
+      hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description FROM object_tools"));
+      if (hResult != NULL)
+      {
+         dwNumTools = DBGetNumRows(hResult);
+         for(i = 0, dwId = VID_OBJECT_TOOLS_BASE, dwNumMsgRec = 0; i < dwNumTools; i++)
+         {
+            dwToolId = DBGetFieldULong(hResult, i, 0);
+            for(j = 0; j < dwAclSize; j++)
+            {
+               if (pAccessList[j].dwToolId == dwToolId)
+               {
+                  if ((pAccessList[j].dwUserId == m_dwUserId) ||
+                      (pAccessList[j].dwUserId == GROUP_EVERYONE))
+                     break;
+                  if (pAccessList[j].dwUserId & GROUP_FLAG)
+                     if (CheckUserMembership(m_dwUserId, pAccessList[j].dwUserId))
+                        break;
+               }
+            }
+
+            if (j < dwAclSize)   // User has access to this tool
+            {
+               msg.SetVariable(dwId, dwToolId);
+               msg.SetVariable(dwId + 1, DBGetField(hResult, i, 1));
+               msg.SetVariable(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
+               msg.SetVariable(dwId + 3, DBGetField(hResult, i, 3));
+               msg.SetVariable(dwId + 4, DBGetFieldULong(hResult, i, 4));
+               msg.SetVariable(dwId + 5, DBGetField(hResult, i, 5));
+               dwNumMsgRec++;
+               dwId += 10;
+            }
+         }
+         msg.SetVariable(VID_NUM_TOOLS, dwNumMsgRec);
+
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+
+      free(pAccessList);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
    }
 
    // Send response
