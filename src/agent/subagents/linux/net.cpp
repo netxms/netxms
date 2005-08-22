@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.7 2005-06-12 17:57:24 victor Exp $ */
+/* $Id: net.cpp,v 1.8 2005-08-22 00:11:47 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -153,6 +153,82 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 		
 		fclose(hFile);
 	}
+
+	return nRet;
+}
+
+LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	FILE *hFile;
+	int nFd;
+
+	nFd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (nFd <= 0)
+	{
+		return SYSINFO_RC_ERROR;
+	}
+
+	hFile = fopen("/proc/net/route", "r");
+	if (hFile == NULL)
+	{
+		close(nFd);
+		return SYSINFO_RC_ERROR;
+	}
+
+	char szLine[256];
+
+	if (fgets(szLine, sizeof(szLine), hFile) != NULL)
+	{
+		if (!strncmp(szLine,
+					"Iface\tDestination\tGateway \tFlags\tRefCnt\t"
+					"Use\tMetric\tMask", 55))
+		{
+			nRet = SYSINFO_RC_SUCCESS;
+
+			while (fgets(szLine, sizeof(szLine), hFile) != NULL)
+			{
+				char szIF[64];
+				int nTmp, nType = 0;
+				unsigned long nDestination, nGateway, nMask;
+
+				if (sscanf(szLine,
+							"%s\t%08X\t%08X\t%d\t%d\t%d\t%d\t%08X",
+							szIF,
+							&nDestination,
+							&nGateway,
+							&nTmp, &nTmp, &nTmp, &nTmp,
+							&nMask) == 8)
+				{
+					int nIndex;
+					struct ifreq irq;
+
+					strncpy(irq.ifr_name, szIF, IFNAMSIZ);
+					if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
+					{
+						perror("ioctl()");
+						nIndex = 0;
+					}
+					else
+					{
+						nIndex = irq.ifr_ifindex;
+					}
+
+					char szBuf1[64], szBuf2[64];
+					snprintf(szLine, sizeof(szLine), "%s/%d %s %d %d",
+							IpToStr(ntohl(nDestination), szBuf1),
+							BitsInMask(htonl(nMask)),
+							IpToStr(ntohl(nGateway), szBuf2),
+							nIndex,
+							nType);
+					NxAddResultString(pValue, szLine);
+				}
+			}
+		}
+	}
+
+	close(nFd);
+	fclose(hFile);
 
 	return nRet;
 }
@@ -443,6 +519,9 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/06/12 17:57:24  victor
+Net.Interface.AdminStatus should return 2 for disabled interfaces
+
 Revision 1.6  2005/06/11 16:28:24  victor
 Implemented all Net.Interface.* parameters except Net.Interface.Speed
 

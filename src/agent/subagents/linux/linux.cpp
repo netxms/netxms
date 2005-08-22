@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.18 2005-08-19 15:23:50 victor Exp $ */
+/* $Id: linux.cpp,v 1.19 2005-08-22 00:11:46 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -137,6 +137,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "Net.ArpCache",                 H_NetArpCache,     NULL },
+   { "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
    { "Net.InterfaceList",            H_NetIfList,       NULL },
    { "System.ProcessList",           H_ProcessList,     NULL },
 };
@@ -168,6 +169,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2005/08/19 15:23:50  victor
+Added new parameters
+
 Revision 1.17  2005/06/11 16:28:24  victor
 Implemented all Net.Interface.* parameters except Net.Interface.Speed
 

@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.3 2005-06-11 16:28:24 victor Exp $ */
+/* $Id: net.h,v 1.4 2005-08-22 00:11:47 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -39,6 +39,7 @@ LONG H_NetIfInfoFromIOCTL(char *, char *, char *);
 LONG H_NetIfInfoFromProc(char *, char *, char *);
 LONG H_NetIpForwarding(char *, char *, char *);
 LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
 LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
 
 #endif // __NET_H__
@@ -47,6 +48,9 @@ LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/06/11 16:28:24  victor
+Implemented all Net.Interface.* parameters except Net.Interface.Speed
+
 Revision 1.2  2005/06/09 12:15:43  victor
 Added support for Net.Interface.AdminStatus and Net.Interface.Link parameters
 
