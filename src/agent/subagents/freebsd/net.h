@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.2 2005-03-10 19:04:07 alk Exp $ */
+/* $Id: net.h,v 1.3 2005-08-22 23:00:05 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -28,6 +28,7 @@ LONG H_NetIfAdmStatus(char *, char *, char *);
 LONG H_NetIfLink(char *, char *, char *);
 LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
 LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
 
 #endif // __NET_H__
 
@@ -35,6 +36,11 @@ LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/03/10 19:04:07  alk
+implemented:
+	Net.Interface.AdminStatus(*)
+	Net.Interface.Link(*)
+
 Revision 1.1  2005/01/17 17:14:32  alk
 freebsd agent, incomplete (but working)
 

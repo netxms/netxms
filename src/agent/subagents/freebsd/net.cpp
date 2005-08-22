@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.8 2005-06-12 17:58:36 victor Exp $ */
+/* $Id: net.cpp,v 1.9 2005-08-22 23:00:05 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -266,6 +266,122 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
+LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+#define sa2sin(x) ((struct sockaddr_in *)x)
+#define ROUNDUP(a) \
+	((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
+	int nRet = SYSINFO_RC_ERROR;
+	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_DUMP, 0 };
+	char *pRT = NULL, *pNext = NULL;
+	size_t nReqSize = 0;
+	struct rt_msghdr *rtm;
+	struct sockaddr *sa;
+	struct sockaddr *rti_info[RTAX_MAX];
+
+	if (sysctl(mib, 6, NULL, &nReqSize, NULL, 0) == 0)
+	{
+		if (nReqSize > 0)
+		{
+			pRT = (char *)malloc(nReqSize);
+			if (pRT != NULL)
+			{
+				if (sysctl(mib, 6, pRT, &nReqSize, NULL, 0) < 0)
+				{
+					free(pRT);
+					pRT = NULL;
+				}
+			}
+		}
+	}
+
+	if (pRT != NULL)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+
+		for (pNext = pRT; pNext < pRT + nReqSize; pNext += rtm->rtm_msglen)
+		{
+			rtm = (struct rt_msghdr *)pNext;
+			sa = (struct sockaddr *)(rtm + 1);
+
+			if (sa->sa_family != AF_INET)
+			{
+				continue;
+			}
+
+			for (int i = 0; i < RTAX_MAX; i++)
+			{
+				if (rtm->rtm_addrs & (1 << i))
+				{
+					rti_info[i] = sa;
+					sa = (struct sockaddr *)((char *)(sa) + ROUNDUP(sa->sa_len));
+				}
+				else
+				{
+					rti_info[i] = NULL;
+				}
+			}
+
+			if (rti_info[RTAX_DST] != NULL && !(rtm->rtm_flags & RTF_WASCLONED))
+			{
+				char szOut[1024];
+				char szTmp[64];
+
+				if (sa2sin(rti_info[RTAX_DST])->sin_addr.s_addr == INADDR_ANY)
+				{
+					strcpy(szOut, "0.0.0.0/0 ");
+				}
+				else
+				{
+					if ((rtm->rtm_flags & RTF_HOST) || rti_info[RTAX_NETMASK]==NULL)
+					{
+						// host
+						strcpy(szOut,
+								inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr));
+						strcat(szOut, "/32 ");
+					}
+					else
+					{
+						// net
+						int nMask =
+							rti_info[RTAX_NETMASK] ?
+								ntohl(sa2sin(rti_info[RTAX_NETMASK])->sin_addr.s_addr)
+								: 0;
+
+						sprintf(szOut, "%s/%d ",
+								inet_ntoa(sa2sin(rti_info[RTAX_DST])->sin_addr),
+								nMask ? 33 - ffs(nMask) : 0);
+					}
+				}
+
+				if (rti_info[RTAX_GATEWAY]->sa_family != AF_INET)
+				{
+					strcat(szOut, "0.0.0.0 ");
+				}
+				else
+				{
+					strcat(szOut,
+							inet_ntoa(sa2sin(rti_info[RTAX_GATEWAY])->sin_addr));
+					strcat(szOut, " ");
+				}
+				snprintf(szTmp, sizeof(szTmp), "%d %d",
+						rtm->rtm_index,
+						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
+				strcat(szOut, szTmp);
+
+				NxAddResultString(pValue, szOut);
+			}
+		}
+
+		free(pRT);
+	}
+
+#undef ROUNDUP
+#undef sa2sin
+
+	return nRet;
+}
+
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -417,6 +533,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/06/12 17:58:36  victor
+Net.Interface.AdminStatus should return 2 for disabled interfaces
+
 Revision 1.7  2005/05/30 16:31:58  alk
 fix: InterfaceList now return interfaces w/o IP address
 

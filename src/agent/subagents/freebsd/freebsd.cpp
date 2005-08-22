@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.5 2005-03-10 19:04:07 alk Exp $ */
+/* $Id: freebsd.cpp,v 1.6 2005-08-22 23:00:05 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -101,6 +101,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "Net.ArpCache",                 H_NetArpCache,     NULL },
    { "Net.InterfaceList",            H_NetIfList,       NULL },
+   { "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
    { "System.ProcessList",           H_ProcessList,     NULL },
 };
 
@@ -131,6 +132,11 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/03/10 19:04:07  alk
+implemented:
+	Net.Interface.AdminStatus(*)
+	Net.Interface.Link(*)
+
 Revision 1.4  2005/01/24 19:51:16  alk
 reurn types/comments added
 Process.Count(*)/System.ProcessCount fixed
