@@ -1,8 +1,36 @@
 31 ==> 32
 
-- Added table object_tools
-- Added table object_tools_acl
+- Added table object_tools:
+	CREATE TABLE object_tools
+	(
+		tool_id integer not null,
+		tool_name varchar(255) not null,
+		tool_type integer not null,
+		tool_data SQL_TEXT,
+		description varchar(255),
+		flags integer not null,
+		PRIMARY KEY(tool_id)
+	) TABLE_TYPE;
+- Added table object_tools_acl:
+	CREATE TABLE object_tools_acl
+	(
+		tool_id integer not null,
+		user_id integer not null,
+		PRIMARY KEY(tool_id,user_id)
+	) TABLE_TYPE;
 - Predefined tools added:
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+		VALUES (1,'&Shutdown system',TOOL_TYPE_ACTION,'System.Shutdown',0,'Shutdown target node via NetXMS agent');
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+		VALUES (2,'&Restart system',TOOL_TYPE_ACTION,'System.Restart',0,'Restart target node via NetXMS agent');
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+		VALUES (3,'&Wakeup node',TOOL_TYPE_INTERNAL,'wakeup',0,'Wakeup node using Wake-On-LAN magic packet');
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+		VALUES (4,'Restart &agent',TOOL_TYPE_ACTION,'Agent.Restart',0,'Restart NetXMS agent on target node');
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (4,-2147483648);
 
 
 30 ==> 31
