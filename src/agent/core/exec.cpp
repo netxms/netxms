@@ -118,52 +118,72 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 		int i;
 		char *pTmp;
 		struct stat st;
+		int state = 0;
+		int nCount = 0;
 
 		pTmp = pszCmdLine;
-		for (i = 0; i < 128; i++)
+		pCmd[nCount++] = pTmp;
+		int nLen = strlen(pTmp);
+		for (int i = 0; i < nLen; i++)
 		{
-			pCmd[i] = pTmp;
-			pTmp = strchr(pTmp, ' ');
-			if (pTmp != NULL)
+			switch(pTmp[i])
 			{
-				*pTmp = 0;
-				pTmp++;
-			}
-			else
-			{
-				break;
+				case ' ':
+					if (state == 0)
+					{
+						pTmp[i] = 0;
+						if (pTmp[i + 1] != 0)
+						{
+							pCmd[nCount++] = pTmp + i + 1;
+						}
+					}
+					break;
+				case '"':
+					state == 0 ? state++ : state--;
+
+					memmove(pTmp + i, pTmp + i + 1, nLen - i);
+					i--;
+					break;
+				case '\\':
+					if (pTmp[i+1] == '"')
+					{
+						memmove(pTmp + i, pTmp + i + 1, nLen - i);
+					}
+					break;
+				default:
+					break;
 			}
 		}
-		pCmd[i+1] = 0;
+		pCmd[nCount] = NULL;
 
 		if (stat(pCmd[0], &st) == 0 && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
 		{
 			switch ((nPid = fork()))
 			{
-			case -1:
-				perror("fork()");
-				break;
-			case 0: // child
-				{
-					int sd = open("/dev/null", O_RDWR);
-					if (sd == -1)
-						sd = open("/dev/null", O_RDONLY);
-					close(0);
-					close(1);
-					close(2);
-					dup2(sd, 0);
-					dup2(sd, 1);
-					dup2(sd, 2);
-					close(sd);
-					execv(pCmd[0], pCmd);
-					// should not be reached
-					//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
-					_exit(127);
-				}
-				break;
-			default: // parent
-				dwRetCode = ERR_SUCCESS;
-				break;
+				case -1:
+					perror("fork()");
+					break;
+				case 0: // child
+					{
+						int sd = open("/dev/null", O_RDWR);
+						if (sd == -1)
+							sd = open("/dev/null", O_RDONLY);
+						close(0);
+						close(1);
+						close(2);
+						dup2(sd, 0);
+						dup2(sd, 1);
+						dup2(sd, 2);
+						close(sd);
+						execv(pCmd[0], pCmd);
+						// should not be reached
+						//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
+						_exit(127);
+					}
+					break;
+				default: // parent
+					dwRetCode = ERR_SUCCESS;
+					break;
 			}
 		}
 	}
