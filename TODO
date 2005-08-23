@@ -15,7 +15,6 @@ GENERAL:
 - Add possibility to set different polling timeouts for different nodes
 - Rewrite event management in a way to eliminate the need to unlock
   event configuration to allow sending of new events
-- View and update agent's configuration from server
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
 - Possibility to tune ICMP packet size on server and ping subagent
@@ -75,7 +74,6 @@ WINDOWS CONSOLE:
 - Add "Copy value to clipboard" to "Collected data" window
 - Implement drag-and-drop editing in policy editor
 - Add "previous value" and "delta" fields to last values view
-- Add agent configuration editor
 
 
 POCKET PC CONSOLE:
