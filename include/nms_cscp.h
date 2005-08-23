@@ -240,7 +240,7 @@ typedef struct
 #define CMD_GET_CONFIG_VARLIST      0x000D
 #define CMD_SET_CONFIG_VARIABLE     0x000E
 #define CMD_GET_OBJECT_TOOLS        0x000F
-//#define CMD_CONFIG_VARLIST_END      0x0010
+#define CMD_EXECUTE_ACTION          0x0010
 #define CMD_DELETE_CONFIG_VARIABLE  0x0011
 #define CMD_NOTIFY                  0x0012
 #define CMD_TRAP                    0x0013
@@ -358,6 +358,7 @@ typedef struct
 #define CMD_ENCRYPTED_MESSAGE       0x0083
 #define CMD_SESSION_KEY             0x0084
 #define CMD_REQUEST_ENCRYPTION      0x0085
+#define CMD_GET_ROUTING_TABLE       0x0086
 
 
 //
