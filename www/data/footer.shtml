@@ -1,6 +1,6 @@
 <!--#config timefmt="%d-%b-%Y %H:%M %Z" -->
 <div id="footer">
-  <strong>Updated &raquo;</strong> <!--#flastmod file="body.shtml" -->
+	<strong>Page Updated &raquo;</strong> <!--#flastmod virtual="${REQUEST_URI}/body.shtml" -->
   <span class="doNotPrint">
       &bull;
     <strong>Comments or questions &raquo;</strong>
