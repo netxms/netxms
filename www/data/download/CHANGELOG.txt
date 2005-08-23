@@ -1,4 +1,16 @@
 *
+* 0.2.4
+*
+
+- Implemented agent's configuration file editing from console
+- Implemented actions provided by subagents
+- Built-in action Agent.Restart added to core agent
+- Configurable object tools introduced (not fully implemented yet)
+- Fixed bug causing occasional server crash
+- Fixed issues: #5, #37, #38, #40, #41
+
+
+*
 * 0.2.3
 *
 
@@ -11,9 +23,9 @@
 - Agent ported to Windows 95/98/Me
 - Windows console: added possibility to specify loopback address (127.0.0.1)
   as bind address for network service
-- Fixed bug which causes random fails of connections from server to agent and
+- Fixed bug causing random fails of connections from server to agent and
   from console to server
-- Fixed issues: 29
+- Fixed issues: #29, #32, #33
 
 
 *
@@ -31,7 +43,7 @@
 - Windows console: added simple export of collected DCI data
 - Core agent: added configuration option SessionIdleTimeout for automatic
   disconnect of idle or broken sessions
-- Fixed issues: 26, 30
+- Fixed issues: #26, #30
 
 
 *
