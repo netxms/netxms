@@ -7,7 +7,7 @@ CPP = cpp
 sql_SCRIPTS = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql dbinit_oracle.sql
 
 ROOT_FILE = dbinit.in
-SOURCE = $(ROOT_FILE) schema.in setup.in events.in images.in policy.in
+SOURCE = $(ROOT_FILE) schema.in setup.in events.in images.in policy.in objtools.in
 HEADERS = ../include/netxmsdb.h ../include/nxevent.h ../include/nximage.h ../src/server/include/nms_locks.h
 COMMAND = $(CPP) -P -Wundef -D_NETXMS_DB_SCHEMA_ -I../include -I../src/server/include
 SQUEEZE = perl -e "while (<>) { if (! /^[\s\t\n]*$$/) { print; } }"

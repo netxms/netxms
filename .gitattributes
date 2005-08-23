@@ -155,6 +155,7 @@ sql/dbinit.in -text
 sql/drop.sh -text
 sql/events.in -text
 sql/images.in -text
+sql/objtools.in -text
 sql/policy.in -text
 sql/schema.in -text
 sql/setup.in -text

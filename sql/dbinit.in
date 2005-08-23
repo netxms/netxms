@@ -66,3 +66,4 @@
 #include "images.in"
 #include "policy.in"
 #include "traps.in"
+#include "objtools.in"
