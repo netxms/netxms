@@ -32,13 +32,6 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
-// Constants
-//
-
-#define LAST_APP_MENU   4
-
-
-//
 // Wrapper for client library debug callback
 //
 
@@ -2056,6 +2049,8 @@ void CConsoleApp::OnControlpanelServercfg()
 
 void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
 {
+   DWORD dwResult;
+
    if ((dwIndex >= g_dwNumObjectTools) ||
        (pObject->iClass != OBJECT_NODE))
       return;
@@ -2070,6 +2065,26 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
          else
          {
             m_pMainWnd->MessageBox(_T("This type of tool is not implemented yet"), _T("Warning"), MB_OK | MB_ICONSTOP);
+         }
+         break;
+      case TOOL_TYPE_ACTION:
+         if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
+         {
+            dwResult = DoRequestArg3(NXCExecuteAction, g_hSession, (void *)pObject->dwId,
+                                     g_pObjectToolList[dwIndex].pszData,
+                                     _T("Executing action on agent..."));
+            if (dwResult == RCC_SUCCESS)
+            {
+               m_pMainWnd->MessageBox(_T("Action executed successfully"), _T("Information"), MB_OK | MB_ICONINFORMATION);
+            }
+            else
+            {
+               ErrorBox(dwResult, _T("Error executing action on agent: %s"));
+            }
+         }
+         else
+         {
+            m_pMainWnd->MessageBox(_T("Node doesn't have NetXMS agent"), _T("Error"), MB_OK | MB_ICONSTOP);
          }
          break;
       default:

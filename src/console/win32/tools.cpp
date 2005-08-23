@@ -659,6 +659,7 @@ CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart)
             for(; (szPath[j] != 0) && (memcmp(&szPath[j], _T("->"), sizeof(TCHAR) * 2)); j++);
             szPath[j] = 0;
             pSubMenu = CreateToolsSubmenu(szPath, &i);
+            nId = OBJTOOL_MENU_FIRST_ID + i;
             StrStrip(pszName);
             pMenu->AppendMenu(MF_ENABLED | MF_STRING | MF_POPUP,
                               (UINT)pSubMenu->Detach(), pszName);

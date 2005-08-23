@@ -269,6 +269,7 @@ typedef void * NXC_SESSION;
 #define RCC_INVALID_SESSION_KEY     ((DWORD)44)
 #define RCC_NO_ENCRYPTION_SUPPORT   ((DWORD)45)
 #define RCC_INTERNAL_ERROR          ((DWORD)46)
+#define RCC_EXEC_FAILED             ((DWORD)47)
 
 
 //
@@ -1085,6 +1086,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
                                            TCHAR **ppszConfig);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateAgentConfig(NXC_SESSION hSession, DWORD dwNodeId,
                                               TCHAR *pszConfig, BOOL bApply);
+DWORD LIBNXCL_EXPORTABLE NXCExecuteAction(NXC_SESSION hSession, DWORD dwObjectId,
+                                          TCHAR *pszAction);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);

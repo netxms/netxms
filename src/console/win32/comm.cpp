@@ -98,7 +98,34 @@ static void ClientEventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode
 
 static int CompareTools(const void *p1, const void *p2)
 {
-   return _tcsicmp(((NXC_OBJECT_TOOL *)p1)->szName,((NXC_OBJECT_TOOL *)p2)->szName);
+   TCHAR szName1[MAX_DB_STRING], szName2[MAX_DB_STRING];
+   int i, j;
+
+   for(i = 0, j = 0; ((NXC_OBJECT_TOOL *)p1)->szName[i] != 0; i++)
+   {
+      if (((NXC_OBJECT_TOOL *)p1)->szName[i] == _T('&'))
+      {
+         i++;
+         if (((NXC_OBJECT_TOOL *)p1)->szName[i] == 0)
+            break;
+      }
+      szName1[j++] = ((NXC_OBJECT_TOOL *)p1)->szName[i];
+   }
+   szName1[j] = 0;
+
+   for(i = 0, j = 0; ((NXC_OBJECT_TOOL *)p2)->szName[i] != 0; i++)
+   {
+      if (((NXC_OBJECT_TOOL *)p2)->szName[i] == _T('&'))
+      {
+         i++;
+         if (((NXC_OBJECT_TOOL *)p2)->szName[i] == 0)
+            break;
+      }
+      szName2[j++] = ((NXC_OBJECT_TOOL *)p2)->szName[i];
+   }
+   szName2[j] = 0;
+
+   return _tcsicmp(szName1, szName2);
 }
 
 
@@ -230,6 +257,9 @@ static DWORD WINAPI LoginThread(void *pArg)
          theApp.GetContextMenu(1)->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
                                               (UINT)g_pObjectToolsMenu->GetSafeHmenu(),
                                               _T("&Tools"));
+         InsertMenu(GetSubMenu(theApp.m_hObjectBrowserMenu, LAST_APP_MENU - 1),
+                    18, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                    (UINT)g_pObjectToolsMenu->GetSafeHmenu(), _T("&Tools"));
       }
    }
 

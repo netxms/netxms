@@ -178,8 +178,12 @@ INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,descriptio
 	VALUES (4,'&Info->&Routing table',TOOL_TYPE_INTERNAL,'RoutingTable',0,'');
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
 	VALUES (5,'&Info->&Process list',TOOL_TYPE_TABLE_AGENT,'System.ProcessList',0,'');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+	VALUES (6,'Restart &agent',TOOL_TYPE_ACTION,'Agent.Restart',0,'');
 
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (4,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (5,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (6,-2147483648);

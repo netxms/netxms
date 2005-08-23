@@ -837,6 +837,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_UPDATE_AGENT_CONFIG:
             UpdateAgentConfig(pMsg);
             break;
+         case CMD_EXECUTE_ACTION:
+            ExecuteAction(pMsg);
+            break;
          case CMD_GET_OBJECT_TOOLS:
             SendObjectTools(pMsg->GetId());
             break;
@@ -4817,6 +4820,82 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
                      break;
                   case ERR_MAILFORMED_COMMAND:
                      msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+                     break;
+                  default:
+                     msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+                     break;
+               }
+               delete pConn;
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Execute action on client
+//
+
+void ClientSession::ExecuteAction(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwResult;
+   TCHAR szAction[MAX_PARAM_NAME];
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get object id and check prerequisites
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         {
+            AgentConnection *pConn;
+
+            pConn = ((Node *)pObject)->CreateAgentConnection();
+            if (pConn != NULL)
+            {
+               pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
+               dwResult = pConn->ExecAction(szAction, 0, NULL);
+
+               switch(dwResult)
+               {
+                  case ERR_SUCCESS:
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                     break;
+                  case ERR_ACCESS_DENIED:
+                     msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                     break;
+                  case ERR_IO_FAILURE:
+                     msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+                     break;
+                  case ERR_EXEC_FAILED:
+                     msg.SetVariable(VID_RCC, RCC_EXEC_FAILED);
                      break;
                   default:
                      msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);

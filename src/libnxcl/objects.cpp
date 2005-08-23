@@ -1369,3 +1369,24 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateAgentConfig(NXC_SESSION hSession, DWORD dwNode
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 60000);
 }
+
+
+//
+// Execute action on agent
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCExecuteAction(NXC_SESSION hSession, DWORD dwObjectId,
+                                          TCHAR *pszAction)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_EXECUTE_ACTION);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.SetVariable(VID_ACTION_NAME, pszAction);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

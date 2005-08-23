@@ -54,7 +54,12 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ServerCfgEditor.h"
 
 
+//
+// Constants
+//
+
 #define MAX_DC_EDITORS     1024
+#define LAST_APP_MENU      4
 
 
 //
@@ -84,6 +89,8 @@ struct DC_EDITOR
 
 class CConsoleApp : public CWinApp
 {
+   friend DWORD WINAPI LoginThread(void *pArg);
+
 public:
 	CConsoleApp();
    virtual ~CConsoleApp();

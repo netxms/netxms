@@ -367,6 +367,7 @@ private:
    void ChangeObjectIP(CSCPMessage *pRequest);
    void GetAgentConfig(CSCPMessage *pRequest);
    void UpdateAgentConfig(CSCPMessage *pRequest);
+   void ExecuteAction(CSCPMessage *pRequest);
    void SendObjectTools(DWORD dwRqId);
 
 public:
