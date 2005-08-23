@@ -7,7 +7,7 @@
 - Built-in action Agent.Restart added to core agent
 - Configurable object tools introduced (not fully implemented yet)
 - Fixed bug causing occasional server crash
-- Fixed issues: #37, #38, #40, #41
+- Fixed issues: #5, #37, #38, #40, #41
 
 
 *
