@@ -77,6 +77,57 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V31 to V32
+//
+
+static BOOL H_UpgradeFromV31(void)
+{
+   static TCHAR m_szBatch[] =
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (1,'&Shutdown system',1 ,'System.Shutdown',0,'Shutdown target node via NetXMS agent')\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (2,'&Restart system',1 ,'System.Restart',0,'Restart target node via NetXMS agent')\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (3,'&Wakeup node',0 ,'wakeup',0,'Wakeup node using Wake-On-LAN magic packet')\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (4,'Restart &agent',1 ,'Agent.Restart',0,'Restart NetXMS agent on target node')\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (4,-2147483648)\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE object_tools ("
+	                    "tool_id integer not null,"
+	                    "tool_name varchar(255) not null,"
+	                    "tool_type integer not null,"
+	                    "tool_data $SQL:TEXT,"
+	                    "description varchar(255),"
+	                    "flags integer not null,"
+	                    "PRIMARY KEY(tool_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE object_tools_acl ("
+	                    "tool_id integer not null,"
+	                    "user_id integer not null,"
+	                    "PRIMARY KEY(tool_id,user_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='32' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V30 to V31
 //
 
@@ -1239,6 +1290,7 @@ static struct
    { 28, H_UpgradeFromV28 },
    { 29, H_UpgradeFromV29 },
    { 30, H_UpgradeFromV30 },
+   { 31, H_UpgradeFromV31 },
    { 0, NULL }
 };
 
