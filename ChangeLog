@@ -5,7 +5,9 @@
 - Implemented agent's configuration file editing from console
 - Implemented actions provided by subagents
 - Built-in action Agent.Restart added to core agent
-- Fixed issues: #37, #38, #41
+- Configurable object tools introduced (not fully implemented yet)
+- Fixed bug causing occasional server crash
+- Fixed issues: #37, #38, #40, #41
 
 
 *
