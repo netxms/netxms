@@ -915,7 +915,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
                      szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
-            DWORD dwNodeFlags, dwNodeType;
+            DWORD dwNodeFlags, dwNodeType, dwTemp;
 
             LockData();
 
@@ -937,6 +937,16 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                m_dwNodeType = dwNodeType;
                SendPollerMsg(dwRqId, _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
                bHasChanges = TRUE;
+            }
+
+            // Check IP forwarding
+            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.4.1.0",
+                        NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+            {
+               if (dwTemp != 0)
+                  m_dwFlags |= NF_IS_ROUTER;
+               else
+                  m_dwFlags &= ~NF_IS_ROUTER;
             }
 
             UnlockData();
@@ -997,6 +1007,15 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                   SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
                }
                UnlockData();
+            }
+
+            // Check IP forwarding status
+            if (pAgentConn->GetParameter("Net.IP.Forwarding", 16, szBuffer) == ERR_SUCCESS)
+            {
+               if (_tcstoul(szBuffer, NULL, 10) != 0)
+                  m_dwFlags |= NF_IS_ROUTER;
+               else
+                  m_dwFlags &= ~NF_IS_ROUTER;
             }
 
             /* LOCK? */
