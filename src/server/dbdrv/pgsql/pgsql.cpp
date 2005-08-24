@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.4 2005-06-08 08:25:33 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.5 2005-08-24 16:19:49 alk Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -25,21 +25,11 @@
 
 
 //
-// Static data
-//
-
-static MUTEX m_hQueryLock;
-static PGresult *m_FetchBuffer = NULL;
-
-
-//
 // Initialize driver
 //
 
 extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 {
-	m_hQueryLock = MutexCreate();
-
 	return TRUE;
 }
 
@@ -49,7 +39,6 @@ extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 
 extern "C" void EXPORT DrvUnload(void)
 {
-	MutexDestroy(m_hQueryLock);
 }
 
 
@@ -57,17 +46,36 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DB_HANDLE EXPORT DrvConnect(
+		char *szHost,
+		char *szLogin,
+		char *szPassword,
+		char *szDatabase)
 {
-	PGconn *pConn;
-   
-	// should be replaced with PQconnectdb();
-   pConn = PQsetdbLogin(szHost, NULL, NULL, NULL, 
-                        (szDatabase != NULL) ? szDatabase : "template1",
-                        szLogin, szPassword);
+	PG_CONN *pConn;
 
-	if (PQstatus(pConn) == CONNECTION_BAD)
-      return 0;
+	if (szDatabase == NULL || *szDatabase == 0)
+	{
+		return NULL;
+	}
+
+	pConn = (PG_CONN *)malloc(sizeof(PG_CONN));
+	if (pConn != NULL)
+	{
+		// should be replaced with PQconnectdb();
+		pConn->pHandle = PQsetdbLogin(szHost, NULL, NULL, NULL, 
+				szDatabase, szLogin, szPassword);
+
+		if (PQstatus(pConn->pHandle) == CONNECTION_BAD)
+		{
+			free(pConn);
+			pConn = NULL;
+		}
+		else
+		{
+   		pConn->mutexQueryLock = MutexCreate();
+		}
+	}
 
    return (DB_HANDLE)pConn;
 }
@@ -77,9 +85,13 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
+extern "C" void EXPORT DrvDisconnect(DB_HANDLE pConn)
 {
-   PQfinish((PGconn *)hConn);
+	if (pConn != NULL)
+	{
+   	PQfinish(((PG_CONN *)pConn)->pHandle);
+     	MutexDestroy(((PG_CONN *)pConn)->mutexQueryLock);
+	}
 }
 
 
@@ -87,11 +99,16 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 // Perform non-SELECT query
 //
 
-static BOOL UnsafeDrvQuery(DB_HANDLE hConn, char *szQuery)
+static BOOL UnsafeDrvQuery(DB_HANDLE pConn, char *szQuery)
 {
 	PGresult	*pResult;
 
-	pResult = PQexec((PGconn *)hConn, szQuery);
+	if (pConn == NULL || szQuery == NULL)
+	{
+		return FALSE;
+	}
+
+	pResult = PQexec(((PG_CONN *)pConn)->pHandle, szQuery);
 
 	if (pResult == NULL)
 	{
@@ -108,13 +125,16 @@ static BOOL UnsafeDrvQuery(DB_HANDLE hConn, char *szQuery)
    return TRUE;
 }
 
-extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
+extern "C" BOOL EXPORT DrvQuery(DB_HANDLE pConn, char *szQuery)
 {
-	BOOL bRet;
+	BOOL bRet = FALSE;
 
-	MutexLock(m_hQueryLock, INFINITE);
-	bRet = UnsafeDrvQuery(hConn, szQuery);
-	MutexUnlock(m_hQueryLock);
+	if (pConn != NULL && szQuery != NULL)
+	{
+		MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
+		bRet = UnsafeDrvQuery(pConn, szQuery);
+		MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
+	}
 
 	return bRet;
 }
@@ -124,11 +144,11 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 // Perform SELECT query
 //
 
-static DB_RESULT UnsafeDrvSelect(DB_HANDLE hConn, char *szQuery)
+static DB_RESULT UnsafeDrvSelect(DB_HANDLE pConn, char *szQuery)
 {
 	PGresult	*pResult;
 
-	pResult = PQexec((PGconn *)hConn, szQuery);
+	pResult = PQexec(((PG_CONN *)pConn)->pHandle, szQuery);
 
 	if (pResult == NULL)
 	{
@@ -145,13 +165,13 @@ static DB_RESULT UnsafeDrvSelect(DB_HANDLE hConn, char *szQuery)
    return (DB_RESULT)pResult;
 }
 
-extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE pConn, char *szQuery)
 {
 	DB_RESULT pResult;
 
-	MutexLock(m_hQueryLock, INFINITE);
-	pResult = UnsafeDrvSelect(hConn, szQuery);
-	MutexUnlock(m_hQueryLock);
+	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
+	pResult = UnsafeDrvSelect(pConn, szQuery);
+	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 
    return pResult;
 }
@@ -161,9 +181,14 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
 // Get field value from result
 //
 
-extern "C" char EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int nColumn)
+extern "C" char EXPORT *DrvGetField(DB_RESULT pResult, int nRow, int nColumn)
 {
-   return PQgetvalue((PGresult *)hResult, iRow, nColumn);
+	if (pResult != NULL)
+	{
+   	return PQgetvalue((PGresult *)pResult, nRow, nColumn);
+	}
+
+	return NULL;
 }
 
 
@@ -171,9 +196,14 @@ extern "C" char EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int nColumn)
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetNumRows(DB_RESULT pResult)
 {
-   return PQntuples((PGresult *)hResult);
+	if (pResult != NULL)
+	{
+   	return PQntuples((PGresult *)pResult);
+	}
+	
+	return 0;
 }
 
 
@@ -181,9 +211,12 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 // Free SELECT results
 //
 
-extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
+extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
 {
-   PQclear((PGresult *)hResult);
+	if (pResult != NULL)
+	{
+   	PQclear((PGresult *)pResult);
+	}
 }
 
 
@@ -191,20 +224,26 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
 {
 	BOOL bStatus = FALSE;
 
-	MutexLock(m_hQueryLock, INFINITE);
-
-	if (UnsafeDrvQuery(hConn, "BEGIN"))
+	if (pConn == NULL)
 	{
-		char *szReq = (char *)malloc(strlen(szQuery) + strlen("DECLARE cur1 CURSOR FOR ") + 1);
+		return NULL;
+	}
+
+	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
+
+	if (UnsafeDrvQuery(pConn, "BEGIN"))
+	{
+		char *szReq =
+			(char *)malloc( strlen(szQuery)+strlen("DECLARE cur1 CURSOR FOR ")+1 );
 		if (szReq != NULL)
 		{
 			strcpy(szReq, "DECLARE cur1 CURSOR FOR ");
 			strcat(szReq, szQuery);
-			if (UnsafeDrvQuery(hConn, szReq))
+			if (UnsafeDrvQuery(pConn, szReq))
 			{
 				bStatus = TRUE;
 			}
@@ -214,12 +253,12 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
 
 	if (bStatus != TRUE)
 	{
-		UnsafeDrvQuery(hConn, "ROLLBACK");
-		MutexUnlock(m_hQueryLock);
+		UnsafeDrvQuery(pConn, "ROLLBACK");
+		MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 		return NULL;
 	}
 
-	return (DB_ASYNC_RESULT)hConn;
+	return (DB_ASYNC_RESULT)pConn;
 }
 
 
@@ -227,20 +266,21 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
 {
    BOOL bResult = TRUE;
-
-	m_FetchBuffer = NULL;
    
-   if (hResult == NULL)
+   if (pConn == NULL)
    {
       bResult = FALSE;
    }
    else
    {
-		m_FetchBuffer = (PGresult *)UnsafeDrvSelect((DB_HANDLE)hResult, "FETCH cur1");
-		if (m_FetchBuffer == NULL || DrvGetNumRows(m_FetchBuffer) <= 0)
+		((PG_CONN *)pConn)->pFetchBuffer =
+			(PGresult *)UnsafeDrvSelect((PG_CONN *)pConn, "FETCH cur1");
+		if (
+				((PG_CONN *)pConn)->pFetchBuffer == NULL
+				|| DrvGetNumRows(((PG_CONN *)pConn)->pFetchBuffer) <= 0)
 		{
 			bResult = FALSE;
 		}
@@ -253,23 +293,28 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field from current row in async query result
 //
 
-extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int nColumn, char *pBuffer, int nBufSize)
+extern "C" char EXPORT *DrvGetFieldAsync(
+		DB_ASYNC_RESULT pConn,
+		int nColumn,
+		char *pBuffer,
+		int nBufSize)
 {
-   int nLen;
+	int nLen;
 	char *szResult;
 
-   // Check if we have valid result handle
-   if (m_FetchBuffer == NULL)
-      return NULL;
-
-	// validate column index
-	if (nColumn > PQnfields(m_FetchBuffer))
+	if (pConn == NULL || ((PG_CONN *)pConn)->pFetchBuffer)
 	{
 		return NULL;
 	}
 
-	// FIXME: correct processing of binaries fields
-	if (PQfformat(m_FetchBuffer, nColumn) != 0)
+	// validate column index
+	if (nColumn > PQnfields(((PG_CONN *)pConn)->pFetchBuffer))
+	{
+		return NULL;
+	}
+
+	// FIXME: correct processing of binary fields
+	if (PQfformat(((PG_CONN *)pConn)->pFetchBuffer, nColumn) != 0)
 	{
 		fprintf(stderr, "db:postgres:binary fields not supported\n");
 		fflush(stderr);
@@ -277,19 +322,19 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int nColumn, c
 		return NULL;
 	}
 
-	szResult = PQgetvalue(m_FetchBuffer, 0, nColumn);
+	szResult = PQgetvalue(((PG_CONN *)pConn)->pFetchBuffer, 0, nColumn);
 	if (szResult == NULL)
 	{
 		return NULL;
 	}
 
-   // Now get column data
-   nLen = min((int)strlen(szResult), nBufSize - 1);
-   if (nLen > 0)
-      memcpy(pBuffer, szResult, nLen);
-   pBuffer[nLen] = 0;
-   
-   return pBuffer;
+	// Now get column data
+	nLen = min((int)strlen(szResult), nBufSize - 1);
+	if (nLen > 0)
+		memcpy(pBuffer, szResult, nLen);
+	pBuffer[nLen] = 0;
+
+	return pBuffer;
 }
 
 
@@ -297,15 +342,15 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int nColumn, c
 // Destroy result of async query
 //
 
-extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT pConn)
 {
-   if (m_FetchBuffer != NULL)
+   if (pConn != NULL && ((PG_CONN *)pConn)->pFetchBuffer != NULL)
    {
-		PQclear(m_FetchBuffer);
-		UnsafeDrvQuery((DB_HANDLE)hResult, "CLOSE cur1");
-		UnsafeDrvQuery((DB_HANDLE)hResult, "ROLLBACK");
+		PQclear(((PG_CONN *)pConn)->pFetchBuffer);
+		UnsafeDrvQuery((DB_HANDLE)pConn, "CLOSE cur1");
+		UnsafeDrvQuery((DB_HANDLE)pConn, "ROLLBACK");
    }
-	MutexUnlock(m_hQueryLock);
+	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 }
 
 

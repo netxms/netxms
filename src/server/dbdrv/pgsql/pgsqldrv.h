@@ -37,4 +37,11 @@
 #include <libpq-fe.h>
 #include <string.h>
 
+typedef struct
+{
+	PGconn *pHandle;
+	PGresult *pFetchBuffer;
+	MUTEX mutexQueryLock;
+} PG_CONN;
+
 #endif   /* _pgsqldrv_h_ */
