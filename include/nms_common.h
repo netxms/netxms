@@ -286,6 +286,7 @@ typedef int SOCKET;
 #include <openssl/pem.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <openssl/opensslv.h>
 
 #ifdef NETXMS_NO_AES
 #ifndef OPENSSL_NO_AES
@@ -309,6 +310,12 @@ typedef int SOCKET;
 #ifndef OPENSSL_NO_DES
 #define OPENSSL_NO_DES
 #endif
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x00907000
+#define OPENSSL_CONST const
+#else
+#define OPENSSL_CONST
 #endif
 
 #else
