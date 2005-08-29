@@ -1,0 +1,92 @@
+NOKIA-IPSO-REGISTRATION-MIB DEFINITIONS ::= BEGIN
+
+-- 4567890123456789012345678901234567890123456789012345678901234567890123456789
+-- This line is 80 characters wide, keep lines in this file shorter than that--
+-- ===============================================================
+--	   Copyright (C) Nokia Telecommunications Oy 1998
+-- ===============================================================
+-- This MIB Module defines the System MIB for products running IPSO.
+-- More detailed description of the variables and tables is
+-- provided in other related documentation.
+--
+-- Format:   SNMP v2 MIB (Simple network management protocol,
+--	     version 2, Management Information Base  )
+--
+-- ================================================================
+-- Author      : Alan Francisco
+-- Version     : 1.02
+-- Created     : 02.12.1998
+-- Last Update : 28.01.1999 - Added ipsoIP3xx.
+--		 14.12.1998 - Added newer and more comprehensive
+--				 IP and VPN product OIDs.
+-- ================================================================
+
+IMPORTS
+    enterprises, MODULE-IDENTITY
+            FROM SNMPv2-SMI;
+
+ipsoProducts MODULE-IDENTITY
+	LAST-UPDATED "0001140000Z"
+	ORGANIZATION "Nokia"
+	CONTACT-INFO
+	"Alan Fransisco
+	 Postal: 313 Fairchild Drive
+	         Mountain View,
+                 California, 94043"
+	
+	DESCRIPTION
+		"The root of the OID sub-tree assigned to IPSO products"
+
+	REVISION "9812020000Z"
+        DESCRIPTION 
+		" Revision 1.02
+		  Added newer and more comprehensive
+                  IP and VPN product OIDs. - 14.12.1998
+		  Revision 1.02
+		  Added ipsoIP3xx - 28.01.1999"
+
+	REVISION "0001140000Z"
+        DESCRIPTION 
+		"MIB converted from SMIv1 to SMIv2 format
+		Revision 1.03 - 14.01.2000"
+
+        REVISION "0107170000Z"
+        DESCRIPTION
+                "Added ipsoSosSystem for Ramp MIBs.
+                Revision 1.5 - 17.07.2001"
+		
+	::=  { nokiaProducts 21 }
+	
+nokia			OBJECT IDENTIFIER ::= { enterprises 94 }
+nokiaProducts		OBJECT IDENTIFIER ::= { nokia 1 }
+--ipsoProducts		OBJECT IDENTIFIER ::= { nokiaProducts 21 }
+-- ipsoSystem           OBJECT IDENTIFIER ::= { ipsoProducts 1 }
+ipsoProductIds		OBJECT IDENTIFIER ::= { ipsoProducts 2 }
+-- fmConf               OBJECT IDENTIFIER ::= { ipsoProducts 3 }
+ipsoSosSystem           OBJECT IDENTIFIER ::= { ipsoProducts 4 }
+ipsoAgentID		OBJECT IDENTIFIER ::= { ipsoProductIds 1 }
+
+ipsoIPUnknown		OBJECT IDENTIFIER ::= { ipsoAgentID 1 }
+ipsoIP4xx		OBJECT IDENTIFIER ::= { ipsoAgentID 2 }
+ipsoIP400		OBJECT IDENTIFIER ::= { ipsoAgentID 3 }
+ipsoIP410		OBJECT IDENTIFIER ::= { ipsoAgentID 4 }
+ipsoIP440		OBJECT IDENTIFIER ::= { ipsoAgentID 5 }
+ipsoIP6xx		OBJECT IDENTIFIER ::= { ipsoAgentID 6 }
+ipsoIP600		OBJECT IDENTIFIER ::= { ipsoAgentID 7 }
+ipsoIP650		OBJECT IDENTIFIER ::= { ipsoAgentID 8 }
+ipsoIP3xx		OBJECT IDENTIFIER ::= { ipsoAgentID 9 }
+ipsoIP110		OBJECT IDENTIFIER ::= { ipsoAgentID 10 }
+ipsoIP530		OBJECT IDENTIFIER ::= { ipsoAgentID 11 }
+ipsoIP740		OBJECT IDENTIFIER ::= { ipsoAgentID 12 }
+ipsoIP3400		OBJECT IDENTIFIER ::= { ipsoAgentID 13 }
+ipsoVPNUnknown		OBJECT IDENTIFIER ::= { ipsoAgentID 128 }
+ipsoVPN1RL50		OBJECT IDENTIFIER ::= { ipsoAgentID 129 }
+ipsoVPN1RL250		OBJECT IDENTIFIER ::= { ipsoAgentID 130 }
+ipsoVPN1RL500		OBJECT IDENTIFIER ::= { ipsoAgentID 131 }
+ipsoVPN1RLU		OBJECT IDENTIFIER ::= { ipsoAgentID 132 }
+ipsoVPN210		OBJECT IDENTIFIER ::= { ipsoAgentID 133 }
+ipsoVPN220		OBJECT IDENTIFIER ::= { ipsoAgentID 134 }
+ipsoVPN230		OBJECT IDENTIFIER ::= { ipsoAgentID 135 }
+ipsoVPN240		OBJECT IDENTIFIER ::= { ipsoAgentID 136 }
+
+END

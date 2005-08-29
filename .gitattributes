@@ -56,6 +56,8 @@ contrib/mibs/NET-SNMP-MONITOR-MIB.txt -text
 contrib/mibs/NET-SNMP-SYSTEM-MIB.txt -text
 contrib/mibs/NET-SNMP-TC.txt -text
 contrib/mibs/NETWORK-SERVICES-MIB.txt -text
+contrib/mibs/NOKIA-IPSO-REGISTRATION-MIB.txt -text
+contrib/mibs/NOKIA-IPSO-SYSTEM-MIB.txt -text
 contrib/mibs/OPTIMUX-MIB.txt -text
 contrib/mibs/OSPF-MIB.txt -text
 contrib/mibs/PerfHist-TC-MIB.txt -text
