@@ -23,6 +23,7 @@
 #define ID_SIZEBOX                      118
 #define ID_PROGRESS_CTRL                120
 #define ID_EDIT_CTRL                    121
+#define IDC_SPLITTER                    122
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -556,6 +557,7 @@
 #define ID_EDIT_DELETE                  32949
 #define ID_CONFIG_SAVE                  32951
 #define ID_CONFIG_SAVEANDAPPLY          32952
+#define ID_ALARM_SHOWNODES              32953
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -565,8 +567,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        284
-#define _APS_NEXT_COMMAND_VALUE         32953
+#define _APS_NEXT_COMMAND_VALUE         32954
 #define _APS_NEXT_CONTROL_VALUE         1287
-#define _APS_NEXT_SYMED_VALUE           122
+#define _APS_NEXT_SYMED_VALUE           123
 #endif
 #endif

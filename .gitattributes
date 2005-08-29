@@ -395,6 +395,8 @@ src/console/win32/ActionSelDlg.cpp -text
 src/console/win32/ActionSelDlg.h -text
 src/console/win32/AddrChangeDlg.cpp -text
 src/console/win32/AddrChangeDlg.h -text
+src/console/win32/AdvSplitter.cpp -text
+src/console/win32/AdvSplitter.h -text
 src/console/win32/AgentCfgEditor.cpp -text
 src/console/win32/AgentCfgEditor.h -text
 src/console/win32/AgentParamSelDlg.cpp -text

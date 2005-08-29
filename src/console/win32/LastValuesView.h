@@ -30,6 +30,7 @@ public:
 
 // Operations
 public:
+	int CompareListItems(LPARAM lParam1, LPARAM lParam2);
 	CLastValuesView(DWORD dwNodeId);
 	CLastValuesView(TCHAR *pszParams);
 
@@ -44,6 +45,10 @@ public:
 
 // Implementation
 protected:
+	int m_iSortImageBase;
+	DWORD GetDCIIndex(DWORD dwId);
+	int m_iSortMode;
+	int m_iSortDir;
 	UINT m_nTimer;
 	DWORD m_dwSeconds;
 	DWORD m_dwFlags;
@@ -75,6 +80,7 @@ protected:
 	afx_msg void OnItemExportdata();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

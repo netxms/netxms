@@ -8,6 +8,9 @@
 // AlarmBrowser.h : header file
 //
 
+#include "AdvSplitter.h"
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmBrowser frame
 
@@ -36,6 +39,9 @@ public:
 
 // Implementation
 protected:
+	CTreeCtrl m_wndTreeCtrl;
+	CAdvSplitter m_wndSplitter;
+	BOOL m_bShowNodes;
 	BOOL m_bRestoredDesktop;
 	void AddAlarmToList(NXC_ALARM *pAlarm);
 	void DeleteAlarmFromList(DWORD dwAlarmId);
@@ -66,6 +72,8 @@ protected:
 	afx_msg void OnAlarmAcknowlege();
 	afx_msg void OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI);
 	afx_msg void OnClose();
+	afx_msg void OnAlarmShownodes();
+	afx_msg void OnUpdateAlarmShownodes(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

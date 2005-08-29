@@ -13,6 +13,17 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Item comparision callback
+//
+
+static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   return ((CLastValuesView *)lParamSort)->CompareListItems(lParam1, lParam2);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CLastValuesView
 
@@ -23,9 +34,11 @@ CLastValuesView::CLastValuesView()
    m_dwNodeId = 0;
    m_dwNumItems = 0;
    m_pItemList = NULL;
-   m_dwSeconds = 30;
-   m_dwFlags = LVF_SHOW_GRID;
    m_nTimer = 0;
+   m_dwSeconds = theApp.GetProfileInt(_T("LastValuesView"), _T("Seconds"), 30);
+   m_dwFlags = theApp.GetProfileInt(_T("LastValuesView"), _T("Flags"), LVF_SHOW_GRID);
+   m_iSortMode = theApp.GetProfileInt(_T("LastValuesView"), _T("SortMode"), 1);
+   m_iSortDir = theApp.GetProfileInt(_T("LastValuesView"), _T("SortDir"), 1);
 }
 
 CLastValuesView::CLastValuesView(DWORD dwNodeId)
@@ -33,9 +46,11 @@ CLastValuesView::CLastValuesView(DWORD dwNodeId)
    m_dwNodeId = dwNodeId;
    m_dwNumItems = 0;
    m_pItemList = NULL;
-   m_dwSeconds = 30;
-   m_dwFlags = LVF_SHOW_GRID;
    m_nTimer = 0;
+   m_dwSeconds = theApp.GetProfileInt(_T("LastValuesView"), _T("Seconds"), 30);
+   m_dwFlags = theApp.GetProfileInt(_T("LastValuesView"), _T("Flags"), LVF_SHOW_GRID);
+   m_iSortMode = theApp.GetProfileInt(_T("LastValuesView"), _T("SortMode"), 1);
+   m_iSortDir = theApp.GetProfileInt(_T("LastValuesView"), _T("SortDir"), 1);
 }
 
 CLastValuesView::CLastValuesView(TCHAR *pszParams)
@@ -43,6 +58,8 @@ CLastValuesView::CLastValuesView(TCHAR *pszParams)
    m_dwNodeId = ExtractWindowParamULong(pszParams, _T("N"), 0);
    m_dwSeconds = ExtractWindowParamULong(pszParams, _T("S"), 30);
    m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), LVF_SHOW_GRID);
+   m_iSortDir = ExtractWindowParamLong(pszParams, _T("SD"), 1);
+   m_iSortMode = ExtractWindowParamLong(pszParams, _T("SM"), 1);
    m_dwNumItems = 0;
    m_pItemList = NULL;
    m_nTimer = 0;
@@ -51,6 +68,10 @@ CLastValuesView::CLastValuesView(TCHAR *pszParams)
 CLastValuesView::~CLastValuesView()
 {
    safe_free(m_pItemList);
+   theApp.WriteProfileInt(_T("LastValuesView"), _T("Seconds"), m_dwSeconds);
+   theApp.WriteProfileInt(_T("LastValuesView"), _T("Flags"), m_dwFlags);
+   theApp.WriteProfileInt(_T("LastValuesView"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("LastValuesView"), _T("SortDir"), m_iSortDir);
 }
 
 
@@ -72,6 +93,7 @@ BEGIN_MESSAGE_MAP(CLastValuesView, CMDIChildWnd)
 	ON_COMMAND(ID_ITEM_EXPORTDATA, OnItemExportdata)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -92,6 +114,7 @@ BOOL CLastValuesView::PreCreateWindow(CREATESTRUCT& cs)
 int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   LVCOLUMN lvCol;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -102,12 +125,13 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
    m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));
    m_imageList.Add(theApp.LoadIcon(IDI_TIPS));
+   m_iSortImageBase = m_imageList.GetImageCount();
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
 
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_OWNERDRAWFIXED,
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_OWNERDRAWFIXED | LVS_SHAREIMAGELISTS,
                         rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_SUBITEMIMAGES |
@@ -117,11 +141,17 @@ int CLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(1, "Description", LVCFMT_LEFT, 250);
-   m_wndListCtrl.InsertColumn(2, "Value", LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, 100);
-   m_wndListCtrl.InsertColumn(3, "Changed", LVCFMT_LEFT, 26);
-   m_wndListCtrl.InsertColumn(4, "Timestamp", LVCFMT_LEFT, 124);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 55);
+   m_wndListCtrl.InsertColumn(1, _T("Description"), LVCFMT_LEFT, 250);
+   m_wndListCtrl.InsertColumn(2, _T("Value"), LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, 100);
+   m_wndListCtrl.InsertColumn(3, _T("Changed"), LVCFMT_LEFT, 26);
+   m_wndListCtrl.InsertColumn(4, _T("Timestamp"), LVCFMT_LEFT, 124);
+
+   // Mark sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    if (m_dwNodeId != 0)
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
@@ -187,6 +217,7 @@ void CLastValuesView::OnViewRefresh()
          }
          UpdateItem(iItem, &m_pItemList[i]);
       }
+      m_wndListCtrl.SortItems(CompareItems, (DWORD)this);
    }
    else
    {
@@ -459,4 +490,101 @@ void CLastValuesView::OnItemExportdata()
                            dlg.m_iSeparator, dlg.m_iTimeStampFormat,
                            (LPCTSTR)dlg.m_strFileName);
    }
+}
+
+
+//
+// Get DCI index by id
+//
+
+DWORD CLastValuesView::GetDCIIndex(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumItems; i++)
+      if (m_pItemList[i].dwId == dwId)
+         return i;
+   return INVALID_INDEX;
+}
+
+
+//
+// Compare two list items for sorting
+//
+
+int CLastValuesView::CompareListItems(LPARAM lParam1, LPARAM lParam2)
+{
+   int iResult;
+   DWORD dwIndex1, dwIndex2;
+   TCHAR szText1[16], szText2[16];
+   LVFINDINFO lvfi;
+
+   dwIndex1 = GetDCIIndex(lParam1);
+   dwIndex2 = GetDCIIndex(lParam2);
+   if ((dwIndex1 == INVALID_INDEX) || (dwIndex2 == INVALID_INDEX))
+      return 0;   // Sanity check
+
+   switch(m_iSortMode)
+   {
+      case 0:     // Item ID
+         iResult = COMPARE_NUMBERS(lParam1, lParam2);
+         break;
+      case 1:     // Item description
+         iResult = _tcsicmp(m_pItemList[dwIndex1].szDescription, m_pItemList[dwIndex2].szDescription);
+         break;
+      case 2:     // Value
+         iResult = _tcsicmp(m_pItemList[dwIndex1].szValue, m_pItemList[dwIndex2].szValue);
+         break;
+      case 3:     // Change flag
+         lvfi.flags = LVFI_PARAM;
+         lvfi.lParam = lParam1;
+         m_wndListCtrl.GetItemText(m_wndListCtrl.FindItem(&lvfi), 3, szText1, 16);
+         lvfi.lParam = lParam2;
+         m_wndListCtrl.GetItemText(m_wndListCtrl.FindItem(&lvfi), 3, szText2, 16);
+         iResult = _tcsicmp(szText1, szText2);
+         break;
+      case 4:     // Timestamp
+         iResult = COMPARE_NUMBERS(m_pItemList[dwIndex1].dwTimestamp, m_pItemList[dwIndex2].dwTimestamp);
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+   return iResult * m_iSortDir;
+}
+
+
+//
+// Handler for list view column click
+//
+
+void CLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   m_wndListCtrl.SortItems(CompareItems, (DWORD)this);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
 }

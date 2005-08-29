@@ -75,8 +75,9 @@ CAlarmBrowser::CAlarmBrowser()
 {
    m_pImageList = NULL;
    m_bShowAllAlarms = FALSE;
-   m_iSortDir = 1;
-   m_iSortMode = 0;
+   m_iSortDir = theApp.GetProfileInt(_T("AlarmBrowser"), _T("SortDir"), 1);
+   m_iSortMode = theApp.GetProfileInt(_T("AlarmBrowser"), _T("SortMode"), 0);
+   m_bShowNodes = theApp.GetProfileInt(_T("AlarmBrowser"), _T("ShowNodes"), FALSE);
    m_bRestoredDesktop = FALSE;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
@@ -91,6 +92,7 @@ CAlarmBrowser::CAlarmBrowser(TCHAR *pszParams)
    m_pAlarmList = NULL;
    m_iSortMode = ExtractWindowParamLong(pszParams, _T("SM"), 0);
    m_iSortDir = ExtractWindowParamLong(pszParams, _T("SD"), 0);
+   m_bShowNodes = ExtractWindowParamLong(pszParams, _T("SN"), 0);
 }
 
 CAlarmBrowser::~CAlarmBrowser()
@@ -111,8 +113,11 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEGE, OnUpdateAlarmAcknowlege)
 	ON_WM_CLOSE()
+	ON_COMMAND(ID_ALARM_SHOWNODES, OnAlarmShownodes)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_SHOWNODES, OnUpdateAlarmShownodes)
 	//}}AFX_MSG_MAP
-	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
+	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
+	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
@@ -140,16 +145,16 @@ BOOL CAlarmBrowser::PreCreateWindow(CREATESTRUCT& cs)
 
 int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
+   BYTE *pwp;
+   UINT iBytes;
    RECT rect;
+   int i;
+   LVCOLUMN lvCol;
    static int widths[6] = { 50, 100, 150, 200, 250, -1 };
    static int icons[5] = { IDI_SEVERITY_NORMAL, IDI_SEVERITY_WARNING, IDI_SEVERITY_MINOR,
                            IDI_SEVERITY_MAJOR, IDI_SEVERITY_CRITICAL };
-   int i;
-   BYTE *pwp;
-   UINT iBytes;
-   LVCOLUMN lvCol;
 
-	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
+   if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
    GetClientRect(&rect);
@@ -162,11 +167,13 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                                                  MAKEINTRESOURCE(icons[i]),
                                                  IMAGE_ICON, 16, 16, LR_SHARED));
    m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
-   rect.bottom -= m_iStatusBarHeight;
 
+   // Create splitter
+   m_wndSplitter.CreateStatic(this, 1, 2, WS_CHILD | WS_VISIBLE, IDC_SPLITTER);
+	
    // Create list view control
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHAREIMAGELISTS,
-                        rect, this, ID_LIST_VIEW);
+                        rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 1));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
@@ -190,6 +197,18 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = m_iSortImageBase + m_iSortDir;
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Create tree view control
+   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE,
+                        rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
+   m_wndTreeCtrl.InsertItem("All Nodes");
+
+   // Create panes in splitter
+   m_wndSplitter.SetupView(0, 0, CSize(150, 100));
+   m_wndSplitter.SetupView(0, 1, CSize(400, 100));
+   if (!m_bShowNodes)
+      m_wndSplitter.HideColumn(0);
+   m_wndSplitter.InitComplete();
 
    // Restore window size and position if we have one
    if (!m_bRestoredDesktop)
@@ -230,7 +249,6 @@ void CAlarmBrowser::OnDestroy()
 void CAlarmBrowser::OnSetFocus(CWnd* pOldWnd) 
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
-	
    m_wndListCtrl.SetFocus();	
 }
 
@@ -244,7 +262,7 @@ void CAlarmBrowser::OnSize(UINT nType, int cx, int cy)
 	CMDIChildWnd::OnSize(nType, cx, cy);
 	
    m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
-   m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
+   m_wndSplitter.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
 }
 
 
@@ -370,20 +388,38 @@ int CAlarmBrowser::FindAlarmRecord(DWORD dwAlarmId)
 // WM_CONTEXTMENU message handler
 //
 
-void CAlarmBrowser::OnContextMenu(CWnd* pWnd, CPoint point) 
+void CAlarmBrowser::OnContextMenu(CWnd *pWnd, CPoint point) 
 {
    int iItem;
    UINT uFlags;
    CMenu *pMenu;
    CPoint pt;
+   CWnd *pChildWnd;
 
-   pt = point;
-   pWnd->ScreenToClient(&pt);
-   iItem = m_wndListCtrl.HitTest(pt, &uFlags);
-   if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+   if (pWnd->GetDlgCtrlID() == IDC_SPLITTER)
    {
-      pMenu = theApp.GetContextMenu(6);
-      pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+      pt = point;
+      pWnd->ScreenToClient(&pt);
+      pChildWnd = pWnd->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
+   }
+   else
+   {
+      pChildWnd = pWnd;
+   }
+
+   if (pChildWnd != NULL)
+   {
+      if (pChildWnd->GetDlgCtrlID() == m_wndSplitter.IdFromRowCol(0, m_bShowNodes ? 1 : 0))
+      {
+         pt = point;
+         pWnd->ScreenToClient(&pt);
+         iItem = m_wndListCtrl.HitTest(pt, &uFlags);
+         if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+         {
+            pMenu = theApp.GetContextMenu(6);
+            pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+         }
+      }
    }
 }
 
@@ -465,6 +501,9 @@ void CAlarmBrowser::OnClose()
    GetWindowPlacement(&wp);
    theApp.WriteProfileBinary(_T("AlarmBrowser"), _T("WindowPlacement"), 
                              (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
+   theApp.WriteProfileInt(_T("AlarmBrowser"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("AlarmBrowser"), _T("SortDir"), m_iSortDir);
+   theApp.WriteProfileInt(_T("AlarmBrowser"), _T("ShowNodes"), m_bShowNodes);
 	CMDIChildWnd::OnClose();
 }
 
@@ -477,8 +516,8 @@ LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
    pInfo->iWndClass = WNDC_ALARM_BROWSER;
    GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("SM:%d\x7FSD:%d"),
-              m_iSortMode, m_iSortDir);
+   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("SM:%d\x7FSD:%d\x7FSN:%d"),
+              m_iSortMode, m_iSortDir, m_bShowNodes);
    return 1;
 }
 
@@ -562,4 +601,28 @@ NXC_ALARM *CAlarmBrowser::FindAlarmInList(DWORD dwAlarmId)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
          return &m_pAlarmList[i];
    return NULL;
+}
+
+
+//
+// Show/hide node tree
+//
+
+void CAlarmBrowser::OnAlarmShownodes() 
+{
+   if (m_bShowNodes)
+   {
+      m_wndSplitter.HideColumn(0);
+      m_bShowNodes = FALSE;
+   }
+   else
+   {
+      m_wndSplitter.ShowColumn(0, &m_wndTreeCtrl);
+      m_bShowNodes = TRUE;
+   }
+}
+
+void CAlarmBrowser::OnUpdateAlarmShownodes(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_bShowNodes);
 }

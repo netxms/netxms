@@ -10,7 +10,9 @@
 
 SUBDIRS = res icons
 EXTRA_DIST = \
-	ActionEditor.cpp ActionEditor.h ActionSelDlg.cpp ActionSelDlg.h \
+	ActionEditor.cpp ActionEditor.h \
+	ActionSelDlg.cpp ActionSelDlg.h \
+	AdvSplitter.cpp AdvSplitter.h \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	comm.cpp \

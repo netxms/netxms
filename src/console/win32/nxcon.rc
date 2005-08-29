@@ -323,6 +323,8 @@ BEGIN
         MENUITEM "&Acknowlege\tCtrl+A",         ID_ALARM_ACKNOWLEGE
         MENUITEM "&Delete\tDel",                ID_ALARM_DELETE
         MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Show nodes",                 ID_ALARM_SHOWNODES
     END
     POPUP "Hidden"
     BEGIN

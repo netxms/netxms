@@ -113,6 +113,10 @@ SOURCE=.\AddrChangeDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AdvSplitter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AgentCfgEditor.cpp
 # End Source File
 # Begin Source File
@@ -499,6 +503,10 @@ SOURCE=.\ActionSelDlg.h
 # Begin Source File
 
 SOURCE=.\AddrChangeDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\AdvSplitter.h
 # End Source File
 # Begin Source File
 
