@@ -1585,7 +1585,7 @@ void CObjectBrowser::OnObjectPollConfiguration()
 
 
 //
-// returns TRUE if currently selected object is node
+// Returns TRUE if currently selected object is node
 //
 
 BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
@@ -1616,7 +1616,7 @@ BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
 
 
 //
-// returns TRUE if currently selected object is interface
+// Returns TRUE if currently selected object is interface
 //
 
 BOOL CObjectBrowser::CurrObjectIsInterface()
