@@ -949,6 +949,16 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                   m_dwFlags &= ~NF_IS_ROUTER;
             }
 
+            // Check IP forwarding
+            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.4.1.0",
+                        NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+            {
+               if (dwTemp != 0)
+                  m_dwFlags |= NF_IS_ROUTER;
+               else
+                  m_dwFlags &= ~NF_IS_ROUTER;
+            }
+
             UnlockData();
 
             CheckOSPFSupport();

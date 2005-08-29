@@ -74,6 +74,7 @@ IMPLEMENT_DYNCREATE(CAlarmBrowser, CMDIChildWnd)
 CAlarmBrowser::CAlarmBrowser()
 {
    m_pImageList = NULL;
+   m_pObjectImageList = NULL;
    m_bShowAllAlarms = FALSE;
    m_iSortDir = theApp.GetProfileInt(_T("AlarmBrowser"), _T("SortDir"), 1);
    m_iSortMode = theApp.GetProfileInt(_T("AlarmBrowser"), _T("SortMode"), 0);
@@ -81,15 +82,18 @@ CAlarmBrowser::CAlarmBrowser()
    m_bRestoredDesktop = FALSE;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
+   m_dwCurrNode = 0;
 }
 
 CAlarmBrowser::CAlarmBrowser(TCHAR *pszParams)
 {
    m_pImageList = NULL;
+   m_pObjectImageList = NULL;
    m_bShowAllAlarms = FALSE;
    m_bRestoredDesktop = TRUE;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
+   m_dwCurrNode = 0;
    m_iSortMode = ExtractWindowParamLong(pszParams, _T("SM"), 0);
    m_iSortDir = ExtractWindowParamLong(pszParams, _T("SD"), 0);
    m_bShowNodes = ExtractWindowParamLong(pszParams, _T("SN"), 0);
@@ -98,6 +102,7 @@ CAlarmBrowser::CAlarmBrowser(TCHAR *pszParams)
 CAlarmBrowser::~CAlarmBrowser()
 {
    delete m_pImageList;
+   delete m_pObjectImageList;
    safe_free(m_pAlarmList);
 }
 
@@ -118,6 +123,7 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
+   ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
@@ -178,12 +184,15 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
-   // Create image list
+   // Create image lists
    m_pImageList = CreateEventImageList();
    m_iSortImageBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
    m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
+
+   m_pObjectImageList = new CImageList;
+   m_pObjectImageList->Create(g_pObjectSmallImageList);
 
    // Setup columns
    m_wndListCtrl.InsertColumn(0, _T("Severity"), LVCFMT_LEFT, 80);
@@ -199,9 +208,12 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Create tree view control
-   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE,
+   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
                         rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
-   m_wndTreeCtrl.InsertItem("All Nodes");
+   m_wndTreeCtrl.SetImageList(m_pObjectImageList, TVSIL_NORMAL);
+   m_hTreeRoot = m_wndTreeCtrl.InsertItem(_T("All Nodes"),
+                                          GetClassDefaultImageIndex(OBJECT_NETWORK),
+                                          GetClassDefaultImageIndex(OBJECT_NETWORK));
 
    // Create panes in splitter
    m_wndSplitter.SetupView(0, 0, CSize(150, 100));
@@ -249,7 +261,7 @@ void CAlarmBrowser::OnDestroy()
 void CAlarmBrowser::OnSetFocus(CWnd* pOldWnd) 
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
-   m_wndListCtrl.SetFocus();	
+   m_wndListCtrl.SetFocus();
 }
 
 
@@ -275,16 +287,25 @@ void CAlarmBrowser::OnViewRefresh()
    DWORD i, dwRetCode;
 
    m_wndListCtrl.DeleteAllItems();
+   m_wndTreeCtrl.DeleteAllItems();
+   m_hTreeRoot = m_wndTreeCtrl.InsertItem(_T("All Nodes"),
+                                          GetClassDefaultImageIndex(OBJECT_NETWORK),
+                                          GetClassDefaultImageIndex(OBJECT_NETWORK));
    safe_free(m_pAlarmList);
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
+   m_dwCurrNode = 0;
    dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)m_bShowAllAlarms, 
                              &m_dwNumAlarms, &m_pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
    {
       memset(m_iNumAlarms, 0, sizeof(int) * 5);
       for(i = 0; i < m_dwNumAlarms; i++)
+      {
+         AddNodeToTree(m_pAlarmList[i].dwSourceObject);
          AddAlarm(&m_pAlarmList[i]);
+         m_iNumAlarms[m_pAlarmList[i].wSeverity]++;
+      }
       UpdateStatusBar();
       m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
    }
@@ -319,7 +340,6 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
       m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
       m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
-   m_iNumAlarms[pAlarm->wSeverity]++;
 }
 
 
@@ -337,7 +357,9 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
       case NX_NOTIFY_NEW_ALARM:
          if ((iItem == -1) && ((m_bShowAllAlarms) || (pAlarm->wIsAck == 0)))
          {
-            AddAlarm(pAlarm);
+            AddNodeToTree(pAlarm->dwSourceObject);
+            if ((m_dwCurrNode == 0) || (m_dwCurrNode == pAlarm->dwSourceObject))
+               AddAlarm(pAlarm);
             AddAlarmToList(pAlarm);
             UpdateStatusBar();
             m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
@@ -586,6 +608,7 @@ void CAlarmBrowser::AddAlarmToList(NXC_ALARM *pAlarm)
    m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
    memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
    m_dwNumAlarms++;
+   m_iNumAlarms[pAlarm->wSeverity]++;
 }
 
 
@@ -614,6 +637,9 @@ void CAlarmBrowser::OnAlarmShownodes()
    {
       m_wndSplitter.HideColumn(0);
       m_bShowNodes = FALSE;
+      m_wndTreeCtrl.SelectItem(m_hTreeRoot);
+      m_dwCurrNode = 0;
+      RefreshAlarmList();
    }
    else
    {
@@ -625,4 +651,83 @@ void CAlarmBrowser::OnAlarmShownodes()
 void CAlarmBrowser::OnUpdateAlarmShownodes(CCmdUI* pCmdUI) 
 {
    pCmdUI->SetCheck(m_bShowNodes);
+}
+
+
+//
+// Add node to the tree if it doesn't exist
+//
+
+void CAlarmBrowser::AddNodeToTree(DWORD dwNodeId)
+{
+   NXC_OBJECT *pObject;
+   int iImage;
+   HTREEITEM hItem;
+
+   pObject = NXCFindObjectById(g_hSession, dwNodeId);
+   if (pObject != NULL)
+   {
+      if (!IsNodeExist(dwNodeId))
+      {
+         iImage = GetObjectImageIndex(pObject);
+         hItem = m_wndTreeCtrl.InsertItem(pObject->szName, iImage, iImage, m_hTreeRoot);
+         m_wndTreeCtrl.SetItemData(hItem, dwNodeId);
+      }
+   }
+}
+
+
+//
+// Check if given node exists in the tree
+//
+
+BOOL CAlarmBrowser::IsNodeExist(DWORD dwNodeId)
+{
+   HTREEITEM hItem;
+   BOOL bResult = FALSE;
+
+   hItem = m_wndTreeCtrl.GetChildItem(m_hTreeRoot);
+   while(hItem != NULL)
+   {
+      if (m_wndTreeCtrl.GetItemData(hItem) == dwNodeId)
+      {
+         bResult = TRUE;
+         break;
+      }
+      hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT);
+   }
+   return bResult;
+}
+
+
+//
+// WM_NOTIFY::TVN_SELCHANGED message handler
+//
+
+void CAlarmBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+{
+   if (m_bShowNodes)
+   {
+      m_dwCurrNode = lpnmt->itemNew.lParam;
+      RefreshAlarmList();
+   }
+   *pResult = 0;
+}
+
+
+//
+// Refresh alarm list after node change
+//
+
+void CAlarmBrowser::RefreshAlarmList()
+{
+   DWORD i;
+
+   m_wndListCtrl.DeleteAllItems();
+   for(i = 0; i < m_dwNumAlarms; i++)
+   {
+      if ((m_dwCurrNode == 0) || (m_dwCurrNode == m_pAlarmList[i].dwSourceObject))
+         AddAlarm(&m_pAlarmList[i]);
+   }
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 }

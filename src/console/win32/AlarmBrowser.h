@@ -39,6 +39,12 @@ public:
 
 // Implementation
 protected:
+	void RefreshAlarmList(void);
+	BOOL IsNodeExist(DWORD dwNodeId);
+	void AddNodeToTree(DWORD dwNodeId);
+	HTREEITEM m_hTreeRoot;
+	CImageList *m_pObjectImageList;
+	DWORD m_dwCurrNode;
 	CTreeCtrl m_wndTreeCtrl;
 	CAdvSplitter m_wndSplitter;
 	BOOL m_bShowNodes;
@@ -77,6 +83,7 @@ protected:
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 
 public:

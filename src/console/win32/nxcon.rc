@@ -324,7 +324,7 @@ BEGIN
         MENUITEM "&Delete\tDel",                ID_ALARM_DELETE
         MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "&Show nodes",                 ID_ALARM_SHOWNODES
+        MENUITEM "&Show nodes\tAlt+N",          ID_ALARM_SHOWNODES
     END
     POPUP "Hidden"
     BEGIN
@@ -800,6 +800,7 @@ END
 IDA_ALARM_BROWSER ACCELERATORS DISCARDABLE 
 BEGIN
     "A",            ID_ALARM_ACKNOWLEGE,    VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_ALARM_SHOWNODES,     VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_ALARM_DELETE,        VIRTKEY, NOINVERT
 END
 
