@@ -54,6 +54,7 @@
 //
 
 #define MAX_OID_LEN        128
+#define SNMP_DEFAULT_PORT  161
 
 
 //
@@ -292,7 +293,7 @@ public:
    DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponse, 
                    DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
 
-   DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = 161);
+   DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
 };
 
 

@@ -116,6 +116,8 @@ typedef __console_ctx * CONSOLE_CTX;
 
 typedef void * HSNMPSESSION;
 
+#define CHECKPOINT_SNMP_PORT  260
+
 
 //
 // Database syntax codes

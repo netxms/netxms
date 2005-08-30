@@ -95,6 +95,7 @@ extern DWORD g_dwRoutingTableUpdateInterval;
 #define NDF_FORCE_STATUS_POLL          0x0040
 #define NDF_FORCE_CONFIGURATION_POLL   0x0080
 #define NDF_QUEUED_FOR_ROUTE_POLL      0x0100
+#define NDF_CPSNMP_UNREACHEABLE        0x0200
 
 
 //

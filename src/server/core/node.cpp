@@ -976,7 +976,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          }
          else
          {
-            // Check for CheckPoint SNMP agent
+            // Check for CheckPoint SNMP agent on port 161
             if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
                         ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                         szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
@@ -991,8 +991,23 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
                UnlockData();
-               SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent is active\r\n"));
+               SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
             }
+         }
+      }
+
+      // Check for CheckPoint SNMP agent on port 260
+      if (!((m_dwFlags & NF_IS_CPSNMP_AGENT) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHEABLE)))
+      {
+         if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, CHECKPOINT_SNMP_PORT, m_szCommunityString,
+                     ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
+                     szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+         {
+            LockData();
+            m_dwFlags |= NF_IS_CPSNMP_AGENT | NF_IS_ROUTER;
+            m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHEABLE;
+            UnlockData();
+            SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
          }
       }
 
