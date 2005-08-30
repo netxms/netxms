@@ -40,6 +40,7 @@ Node::Node()
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_iSNMPVersion = SNMP_VERSION_1;
+   m_wSNMPPort = SNMP_DEFAULT_PORT;
    strcpy(m_szCommunityString, "public");
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
@@ -78,6 +79,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_iSNMPVersion = SNMP_VERSION_1;
+   m_wSNMPPort = SNMP_DEFAULT_PORT;
    strcpy(m_szCommunityString, "public");
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
    m_szObjectId[0] = 0;
@@ -345,8 +347,9 @@ void Node::NewNodePoll(DWORD dwNetMask)
    PollerLock();
 
    // Determine node's capabilities
-   if (SnmpGet(SNMP_VERSION_2C, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-               m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(SNMP_VERSION_2C, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+               ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4,
+               FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       DWORD dwNodeFlags;
 
@@ -356,8 +359,9 @@ void Node::NewNodePoll(DWORD dwNetMask)
    }
    else
    {
-      if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-                  m_szObjectId, MAX_OID_LEN * 4, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+                  ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4,
+                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          DWORD dwNodeFlags;
 
@@ -399,7 +403,8 @@ void Node::NewNodePoll(DWORD dwNetMask)
          CleanInterfaceList(pIfList);
       }
       if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
-         pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, m_dwNodeType);
+         pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+                                        m_szCommunityString, m_dwNodeType);
 
       if (pIfList != NULL)
       {
@@ -473,7 +478,8 @@ ARP_CACHE *Node::GetArpCache(void)
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
-      pArpCache = SnmpGetArpCache(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString);
+      pArpCache = SnmpGetArpCache(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+                                  m_szCommunityString);
    }
 
    return pArpCache;
@@ -504,7 +510,8 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    }
    if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))
    {
-      pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, m_dwNodeType);
+      pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+                                     m_szCommunityString, m_dwNodeType);
    }
 
    return pIfList;
@@ -715,8 +722,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
       SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
-      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString,
-                         ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 256, FALSE, FALSE);
+      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+                         ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 256, 
+                         FALSE, FALSE);
       if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
       {
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
@@ -912,8 +920,9 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
       if (!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)))
       {
-         if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.1.2.0", NULL, 0,
-                     szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+         if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+                     ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
+                     FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
             DWORD dwNodeFlags, dwNodeType, dwTemp;
 
@@ -940,8 +949,9 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             }
 
             // Check IP forwarding
-            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.4.1.0",
-                        NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+                        ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                        FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
                if (dwTemp != 0)
                   m_dwFlags |= NF_IS_ROUTER;
@@ -950,8 +960,9 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             }
 
             // Check IP forwarding
-            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.4.1.0",
-                        NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+                        ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                        FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
                if (dwTemp != 0)
                   m_dwFlags |= NF_IS_ROUTER;
@@ -966,7 +977,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          else
          {
             // Check for CheckPoint SNMP agent
-            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString,
+            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
                         ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                         szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
@@ -1300,8 +1311,8 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
    }
    else
    {
-      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, szParam, NULL, 0,
-                         szBuffer, dwBufSize, FALSE, TRUE);
+      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr,m_wSNMPPort, m_szCommunityString,
+                         szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
    }
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
@@ -1665,7 +1676,8 @@ DWORD Node::WakeUp(void)
 
 int Node::GetInterfaceStatusFromSNMP(DWORD dwIndex)
 {
-   return SnmpGetInterfaceStatus(m_dwIpAddr, m_iSNMPVersion, m_szCommunityString, dwIndex);
+   return SnmpGetInterfaceStatus(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+                                 m_szCommunityString, dwIndex);
 }
 
 
@@ -1800,8 +1812,9 @@ void Node::CheckOSPFSupport(void)
 {
    long nAdminStatus;
 
-   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString, ".1.3.6.1.2.1.14.1.2.0",
-               NULL, 0, &nAdminStatus, sizeof(long), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+               ".1.3.6.1.2.1.14.1.2.0", NULL, 0, &nAdminStatus, sizeof(long),
+               FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       if (nAdminStatus)
       {
@@ -2074,7 +2087,7 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
    }
    if ((pRT == NULL) && (m_dwFlags & NF_IS_SNMP))
    {
-      pRT = SnmpGetRoutingTable(m_iSNMPVersion, m_dwIpAddr, m_szCommunityString);
+      pRT = SnmpGetRoutingTable(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString);
    }
 
    if (pRT != NULL)

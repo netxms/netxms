@@ -496,6 +496,7 @@ protected:
    char m_szSharedSecret[MAX_SECRET_LENGTH];
    int m_iStatusPollType;
    int m_iSNMPVersion;
+   WORD m_wSNMPPort;
    char m_szCommunityString[MAX_COMMUNITY_LENGTH];
    char m_szObjectId[MAX_OID_LEN * 4];
    char m_szAgentVersion[MAX_AGENT_VERSION_LEN];

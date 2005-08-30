@@ -97,8 +97,8 @@ DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags)
 // binary representation from oidBinary and dwOidLen
 //
 
-DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char *szOidStr,
-              const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
+DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity,
+              const char *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
               DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult)
 {
    SNMP_Transport *pTransport;
@@ -107,7 +107,7 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char
 
    // Open SNMP session
    pTransport = new SNMP_Transport;
-   dwResult = pTransport->CreateUDPTransport(NULL, htonl(dwAddr));
+   dwResult = pTransport->CreateUDPTransport(NULL, htonl(dwAddr), wPort);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       WriteLog(MSG_SNMP_TRANSPORT_FAILED, EVENTLOG_ERROR_TYPE, NULL);
@@ -211,9 +211,9 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, const char
 // Enumerate multiple values by walking throgh MIB, starting at given root
 //
 
-DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
                     const char *szRootOid,
-                    void (* pHandler)(DWORD, DWORD, const char *, SNMP_Variable *, void *), 
+                    void (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, void *), 
                     void *pUserArg, BOOL bVerbose)
 {
    DWORD pdwRootName[MAX_OID_LEN], dwRootLen, pdwName[MAX_OID_LEN], dwNameLen, dwResult;
@@ -223,7 +223,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 
    // Open SNMP session
    pTransport = new SNMP_Transport;
-   dwResult = pTransport->CreateUDPTransport(NULL, htonl(dwAddr));
+   dwResult = pTransport->CreateUDPTransport(NULL, htonl(dwAddr), wPort);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       WriteLog(MSG_SNMP_TRANSPORT_FAILED, EVENTLOG_ERROR_TYPE, NULL);
@@ -274,7 +274,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
                      dwNameLen = pVar->GetName()->Length();
 
                      // Call user's callback function for processing
-                     pHandler(dwVersion, dwAddr, szCommunity, pVar, pUserArg);
+                     pHandler(dwVersion, dwAddr, wPort, szCommunity, pVar, pUserArg);
                   }
                   else
                   {
@@ -312,7 +312,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 // Handler for enumerating indexes
 //
 
-static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
                          SNMP_Variable *pVar, void *pArg)
 {
    if (((INTERFACE_LIST *)pArg)->iEnumPos < ((INTERFACE_LIST *)pArg)->iNumEntries)
@@ -325,8 +325,8 @@ static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 // Handler for enumerating IP addresses
 //
 
-static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
-                          SNMP_Variable *pVar, void *pArg)
+static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, WORD wPort,
+                          const char *szCommunity, SNMP_Variable *pVar, void *pArg)
 {
    DWORD dwIndex, dwNetMask, dwNameLen;
    DWORD oidName[MAX_OID_LEN];
@@ -334,12 +334,12 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity
    dwNameLen = pVar->GetName()->Length();
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
    oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
                 &dwNetMask, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
 
    oidName[dwNameLen - 5] = 2;  // Retrieve interface index for this IP
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
                &dwIndex, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       int i;
@@ -377,7 +377,7 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, const char *szCommunity
 // Get interface list via SNMP
 //
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, 
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
                                      const char *szCommunity, DWORD dwNodeType)
 {
    long i, iNumIf;
@@ -386,7 +386,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
    BOOL bSuccess = FALSE;
 
    // Get number of interfaces
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
                 &iNumIf, sizeof(long), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return NULL;
 
@@ -398,7 +398,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
    memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
 
    // Gather interface indexes
-   if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.2.2.1.1",
+   if (SnmpEnumerate(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.2.2.1.1",
                      HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
       // Enumerate interfaces
@@ -406,14 +406,14 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
       {
          // Interface name
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
-         if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
+         if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, szOid, NULL, 0,
                       pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME,
                       FALSE, FALSE) != SNMP_ERR_SUCCESS)
             break;
 
          // Interface type
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);
-         if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
+         if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, szOid, NULL, 0,
                       &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
                       FALSE, FALSE) != SNMP_ERR_SUCCESS)
             break;
@@ -421,7 +421,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
          // MAC address
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.6.%d", pIfList->pInterfaces[i].dwIndex);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
-         if (SnmpGet(dwVersion, dwAddr, szCommunity, szOid, NULL, 0,
+         if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, szOid, NULL, 0,
                       szBuffer, 256, FALSE, TRUE) != SNMP_ERR_SUCCESS)
             break;
          memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
@@ -430,12 +430,12 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
       if (i == iNumIf)
       {
          // Interface IP address'es and netmasks
-         if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.4.20.1.1",
+         if (SnmpEnumerate(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.4.20.1.1",
                            HandlerIpAddr, pIfList, FALSE) == SNMP_ERR_SUCCESS)
          {
             // Handle special cases
             if (dwNodeType == NODE_TYPE_NORTEL_ACCELAR)
-               GetAccelarVLANIfList(dwVersion, dwAddr, szCommunity, pIfList);
+               GetAccelarVLANIfList(dwVersion, dwAddr, wPort, szCommunity, pIfList);
             bSuccess = TRUE;
          }
       }
@@ -459,7 +459,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr,
 // Handler for ARP enumeration
 //
 
-static void HandlerArp(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
+static void HandlerArp(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
                        SNMP_Variable *pVar, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
@@ -469,11 +469,11 @@ static void HandlerArp(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
 
    oidName[dwNameLen - 6] = 1;  // Retrieve interface index
-   SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen, &dwIndex,
+   SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen, &dwIndex,
            sizeof(DWORD), FALSE, FALSE);
 
    oidName[dwNameLen - 6] = 2;  // Retrieve MAC address for this IP
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen, bMac,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen, bMac,
                64, FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
@@ -490,7 +490,7 @@ static void HandlerArp(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 // Get ARP cache via SNMP
 //
 
-ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, const char *szCommunity)
+ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity)
 {
    ARP_CACHE *pArpCache;
 
@@ -501,7 +501,7 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, const char *szCommunit
    pArpCache->dwNumEntries = 0;
    pArpCache->pEntries = NULL;
 
-   if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.4.22.1.3", 
+   if (SnmpEnumerate(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.4.22.1.3", 
                      HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyArpCache(pArpCache);
@@ -516,7 +516,8 @@ ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, const char *szCommunit
 // Possible return values can be NORMAL, CRITICAL, DISABLED, TESTING and UNKNOWN
 //
 
-int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity, DWORD dwIfIndex)
+int SnmpGetInterfaceStatus(DWORD dwVersion, DWORD dwNodeAddr, WORD wPort,
+                           char *pszCommunity, DWORD dwIfIndex)
 {
    DWORD dwAdminStatus = 0, dwOperStatus = 0;
    int iStatus;
@@ -524,7 +525,7 @@ int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity
 
    // Interface administrative status
    sprintf(szOid, ".1.3.6.1.2.1.2.2.1.7.%ld", dwIfIndex);
-   SnmpGet(dwVersion, dwNodeAddr, pszCommunity, szOid, NULL, 0,
+   SnmpGet(dwVersion, dwNodeAddr, wPort, pszCommunity, szOid, NULL, 0,
            &dwAdminStatus, sizeof(DWORD), FALSE, FALSE);
 
    switch(dwAdminStatus)
@@ -538,7 +539,7 @@ int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity
       case 1:     // Interface administratively up, check operational status
          // Get interface operational status
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.8.%ld", dwIfIndex);
-         SnmpGet(dwVersion, dwNodeAddr, pszCommunity, szOid, NULL, 0,
+         SnmpGet(dwVersion, dwNodeAddr, wPort, pszCommunity, szOid, NULL, 0,
                  &dwOperStatus, sizeof(DWORD), FALSE, FALSE);
          switch(dwOperStatus)
          {
@@ -568,8 +569,8 @@ int SnmpGetInterfaceStatus(DWORD dwNodeAddr, DWORD dwVersion, char *pszCommunity
 // Handler for route enumeration
 //
 
-static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, const char *szCommunity, 
-                         SNMP_Variable *pVar, void *pArg)
+static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, WORD wPort,
+                         const char *szCommunity, SNMP_Variable *pVar, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen;
    ROUTE route;
@@ -579,22 +580,22 @@ static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
    route.dwDestAddr = ntohl(pVar->GetValueAsUInt());
 
    oidName[dwNameLen - 5] = 2;  // Interface index
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
                &route.dwIfIndex, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
 
    oidName[dwNameLen - 5] = 7;  // Next hop
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
                &route.dwNextHop, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
 
    oidName[dwNameLen - 5] = 8;  // Route type
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
                &route.dwRouteType, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
 
    oidName[dwNameLen - 5] = 11;  // Destination mask
-   if (SnmpGet(dwVersion, dwAddr, szCommunity, NULL, oidName, dwNameLen,
+   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
                &route.dwDestMask, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
 
@@ -611,7 +612,8 @@ static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, const char *szCommunity,
 // Get routing table via SNMP
 //
 
-ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, DWORD dwAddr, const char *szCommunity)
+ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, DWORD dwAddr, WORD wPort,
+                                   const char *szCommunity)
 {
    ROUTING_TABLE *pRT;
 
@@ -622,7 +624,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, DWORD dwAddr, const char *sz
    pRT->iNumEntries = 0;
    pRT->pRoutes = NULL;
 
-   if (SnmpEnumerate(dwVersion, dwAddr, szCommunity, ".1.3.6.1.2.1.4.21.1.1", 
+   if (SnmpEnumerate(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.4.21.1.1", 
                      HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyRoutingTable(pRT);
