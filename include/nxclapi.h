@@ -161,7 +161,7 @@ typedef void * NXC_SESSION;
 #define NF_IS_PRINTER      0x0020
 #define NF_IS_OSPF         0x0040
 #define NF_BEHIND_NAT      0x0080
-#define NF_IS_CPSNMP_AGENT 0x0100   /* CheckPoint SNMP agent on port 260 */
+#define NF_IS_CPSNMP       0x0100   /* CheckPoint SNMP agent on port 260 */
 
 
 //

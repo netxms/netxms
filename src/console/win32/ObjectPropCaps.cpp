@@ -66,6 +66,7 @@ BOOL CObjectPropCaps::OnInitDialog()
    AddListRecord(_T("agentVersion"), m_pObject->node.szAgentVersion);
    AddListRecord(_T("isOSPF"), (m_pObject->node.dwFlags & NF_IS_OSPF));
    AddListRecord(_T("isSNMP"), (m_pObject->node.dwFlags & NF_IS_SNMP));
+   AddListRecord(_T("isCheckPointSNMP"), (m_pObject->node.dwFlags & NF_IS_CPSNMP));
    AddListRecord(_T("isNetXMSAgent"), (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT));
    AddListRecord(_T("isManagementServer"), (m_pObject->node.dwFlags & NF_IS_LOCAL_MGMT));
    AddListRecord(_T("isBridge"), (m_pObject->node.dwFlags & NF_IS_BRIDGE));

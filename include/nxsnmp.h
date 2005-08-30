@@ -45,6 +45,7 @@
 #ifdef NXSNMP_WITH_NET_SNMP
 
 #define SNMP_VERSION_2C    1
+#define SNMP_DEFAULT_PORT  161
 
 #else
 
