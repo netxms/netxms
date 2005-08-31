@@ -1326,8 +1326,32 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
    }
    else
    {
-      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr,m_wSNMPPort, m_szCommunityString,
+      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
                          szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
+   }
+   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
+      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+}
+
+
+//
+// Get item's value via SNMP from CheckPoint's agent
+//
+
+DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer)
+{
+   DWORD dwResult;
+
+   if ((m_dwDynamicFlags & NDF_CPSNMP_UNREACHEABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+   {
+      dwResult = SNMP_ERR_COMM;
+   }
+   else
+   {
+      dwResult = SnmpGet(SNMP_VERSION_1, m_dwIpAddr, CHECKPOINT_SNMP_PORT,
+                         m_szCommunityString, szParam, NULL, 0, szBuffer,
+                         dwBufSize, FALSE, TRUE);
    }
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
@@ -1499,6 +1523,9 @@ DWORD Node::GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer,
          break;
       case DS_SNMP_AGENT:
          dwRetCode = GetItemFromSNMP(pszParam, dwBufSize, pszBuffer);
+         break;
+      case DS_CHECKPOINT_AGENT:
+         dwRetCode = GetItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
          break;
       default:
          dwResult = RCC_INVALID_ARGUMENT;

@@ -84,6 +84,9 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             case DS_SNMP_AGENT:
                dwError = pNode->GetItemFromSNMP(pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;
+            case DS_CHECKPOINT_AGENT:
+               dwError = pNode->GetItemFromCheckPointSNMP(pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               break;
             case DS_NATIVE_AGENT:
                dwError = pNode->GetItemFromAgent(pItem->Name(), MAX_LINE_SIZE, pBuffer);
                break;

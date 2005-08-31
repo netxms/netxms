@@ -2,6 +2,7 @@
 * 0.2.5
 *
 
+- Added support for CheckPoint SNMP agent running on port 260
 - Windows console:
 	- Sorting implemented in "Last DCI Values" view
 	- Added node tree in alarm browser

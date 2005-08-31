@@ -592,6 +592,7 @@ public:
 
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
+   DWORD GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer);
    DWORD GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer);
    void QueueItemsForPolling(Queue *pPollerQueue);

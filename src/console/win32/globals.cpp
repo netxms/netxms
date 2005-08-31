@@ -76,12 +76,12 @@ CImageList *g_pObjectNormalImageList = NULL;
 // Global string constants
 //
 
-TCHAR *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR",
-                            "CRITICAL", "UNKNOWN", "UNMANAGED",
-                            "DISABLED", "TESTING" };
-TCHAR *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major",
-                                 "Critical", "Unknown", "Unmanaged",
-                                 "Disabled", "Testing" };
+TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"),
+                            _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"),
+                            _T("DISABLED"), _T("TESTING") };
+TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"),
+                                 _T("Critical"), _T("Unknown"), _T("Unmanaged"),
+                                 _T("Disabled"), _T("Testing") };
 TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
                              _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
                              _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
@@ -151,10 +151,11 @@ COLORREF g_statusColorTable[9] =
 // Data collection item texts
 //
 
-char *g_pszItemOrigin[] = { "Internal", "Agent", "SNMP" };
-char *g_pszItemOriginLong[] = { "Internal", "NetXMS Agent", "SNMP Agent" };
-char *g_pszItemDataType[] = { "Integer", "Unsigned Integer", "Int64", 
-                              "Unsigned Int64", "String", "Float" };
+TCHAR *g_pszItemOrigin[] = { _T("Internal"), _T("Agent"), _T("SNMP"), _T("CheckPoint") };
+TCHAR *g_pszItemOriginLong[] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP Agent"),
+                                 _T("CheckPoint SNMP Agent") };
+TCHAR *g_pszItemDataType[] = { _T("Integer"), _T("Unsigned Integer"), _T("Int64"), 
+                               _T("Unsigned Int64"), _T("String"), _T("Float") };
 char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
 char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
 char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", 

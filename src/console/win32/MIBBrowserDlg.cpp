@@ -45,6 +45,7 @@ CMIBBrowserDlg::CMIBBrowserDlg(CWnd* pParent /*=NULL*/)
    m_bDisableOIDUpdate = FALSE;
    m_pNode = NULL;
    m_bUseInstance = TRUE;
+   m_iOrigin = DS_SNMP_AGENT;
 }
 
 
@@ -400,7 +401,7 @@ void CMIBBrowserDlg::OnButtonGet()
       dlg.m_strParameter = (LPCTSTR)szBuffer;
       _stprintf(szBuffer, _T(".%ld"), m_dwInstance);
       dlg.m_strParameter += szBuffer;
-      dlg.m_iOrigin = DS_SNMP_AGENT;
+      dlg.m_iOrigin = m_iOrigin;
       dlg.DoModal();
    }
 }

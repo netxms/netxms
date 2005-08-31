@@ -21,6 +21,7 @@ class CMIBBrowserDlg : public CDialog
 {
 // Construction
 public:
+	int m_iOrigin;
 	int m_iDataType;
 	BOOL m_bUseInstance;
 	NXC_OBJECT *m_pNode;

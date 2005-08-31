@@ -87,7 +87,7 @@ BOOL CDCIPropPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
    // Add origins
-   for(i = 0; i < 3; i++)
+   for(i = 0; i < 4; i++)
       m_wndOriginList.AddString(g_pszItemOriginLong[i]);
    m_wndOriginList.SelectString(-1, g_pszItemOriginLong[m_iOrigin]);
 	
@@ -112,6 +112,7 @@ void CDCIPropPage::OnButtonSelect()
          SelectAgentItem();
          break;
       case DS_SNMP_AGENT:
+      case DS_CHECKPOINT_AGENT:
          SelectSNMPItem();
          break;
       case DS_INTERNAL:
@@ -132,7 +133,7 @@ void CDCIPropPage::OnSelchangeComboOrigin()
    TCHAR szBuffer[256];
 
    m_wndOriginList.GetWindowText(szBuffer, 256);
-   for(m_iOrigin = 0; m_iOrigin < 2; m_iOrigin++)
+   for(m_iOrigin = 0; m_iOrigin < 3; m_iOrigin++)
       if (!strcmp(szBuffer, g_pszItemOriginLong[m_iOrigin]))
          break;
 }
@@ -161,6 +162,7 @@ void CDCIPropPage::SelectSNMPItem(void)
       dlg.m_dwInstance = 0;
    }
    dlg.m_strOID = szBuffer;
+   dlg.m_iOrigin = m_iOrigin;
    if (dlg.DoModal() == IDOK)
    {
       _stprintf(szBuffer, _T(".%lu"), dlg.m_dwInstance);
