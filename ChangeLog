@@ -3,6 +3,8 @@
 *
 
 - Added support for CheckPoint SNMP agent running on port 260
+- Added SNMP MIBs for Nokia IPSO
+- Added new parameter Agent.ActiveConnections to core agent
 - Windows console:
 	- Sorting implemented in "Last DCI Values" view
 	- Added node tree in alarm browser

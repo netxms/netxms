@@ -231,3 +231,22 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    }
    return THREAD_OK;
 }
+
+
+//
+// Handler for Agent.ActiveConnections parameter
+//
+
+LONG H_ActiveConnections(char *pszCmd, char *pArg, char *pValue)
+{
+   int nCounter;
+   DWORD i;
+
+   MutexLock(m_hSessionListAccess, INFINITE);
+   for(i = 0, nCounter = 0; i < g_dwMaxSessions; i++)
+      if (m_pSessionList[i] != NULL)
+         nCounter++;
+   MutexUnlock(m_hSessionListAccess);
+   ret_int(pValue, nCounter);
+   return SYSINFO_RC_SUCCESS;
+}

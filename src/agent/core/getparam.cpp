@@ -27,6 +27,7 @@
 // Externals
 //
 
+LONG H_ActiveConnections(char *pszCmd, char *pArg, char *pValue);
 LONG H_AgentStats(char *cmd, char *arg, char *value);
 LONG H_AgentUptime(char *cmd, char *arg, char *value);
 LONG H_CRC32(char *cmd, char *arg, char *value);
@@ -201,6 +202,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 #endif
    { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, "" },
    { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors, DCI_DT_UINT, "" },
+   { "Agent.ActiveConnections", H_ActiveConnections, NULL, DCI_DT_INT, "Number of active connections to agent" },
    { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, "" },
    { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, "" },
    { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, "" },
