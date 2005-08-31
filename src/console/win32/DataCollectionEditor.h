@@ -24,6 +24,8 @@ public:
 	CDataCollectionEditor(NXC_DCI_LIST *pList);           // public constructor
 	virtual ~CDataCollectionEditor();
 
+   DWORD MoveItemsToTemplate(DWORD dwTemplate, DWORD dwNumItems, DWORD *pdwItemList);
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CDataCollectionEditor)
@@ -33,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	void RefreshItemList(void);
 	int m_iSortImageBase;
 	BOOL m_bIsTemplate;
 	void ChangeItemsStatus(int iStatus);
@@ -73,6 +76,8 @@ protected:
 	afx_msg void OnUpdateItemDisable(CCmdUI* pCmdUI);
 	afx_msg void OnItemExportdata();
 	afx_msg void OnUpdateItemExportdata(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateItemMovetotemplate(CCmdUI* pCmdUI);
+	afx_msg void OnItemMovetotemplate();
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

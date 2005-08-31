@@ -157,6 +157,7 @@
 #define IDA_AGENT_CFG_EDITOR            281
 #define IDD_SAVE_AGENT_CFG              282
 #define IDI_EDITOR                      283
+#define IDA_DC_EDITOR                   284
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -558,6 +559,7 @@
 #define ID_CONFIG_SAVE                  32951
 #define ID_CONFIG_SAVEANDAPPLY          32952
 #define ID_ALARM_SHOWNODES              32953
+#define ID_ITEM_MOVETOTEMPLATE          32954
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -566,8 +568,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        284
-#define _APS_NEXT_COMMAND_VALUE         32954
+#define _APS_NEXT_RESOURCE_VALUE        285
+#define _APS_NEXT_COMMAND_VALUE         32956
 #define _APS_NEXT_CONTROL_VALUE         1287
 #define _APS_NEXT_SYMED_VALUE           123
 #endif

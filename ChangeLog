@@ -8,7 +8,8 @@
 - Windows console:
 	- Sorting implemented in "Last DCI Values" view
 	- Added node tree in alarm browser
-- Fixed issues: #42, #45
+	- Added possibility to copy DCIs to template
+- Fixed issues: #39, #42, #45
 
 
 *
