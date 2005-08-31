@@ -771,7 +771,7 @@ void CDataCollectionEditor::OnItemCopy()
       }
 
       // Ask for destination nodes
-      dlg.m_dwAllowedClasses = SCL_NODE;
+      dlg.m_dwAllowedClasses = SCL_NODE | SCL_TEMPLATE;
       if (dlg.DoModal() == IDOK)
       {
          // Perform request(s) to server

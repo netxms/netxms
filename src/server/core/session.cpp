@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2289,7 +2289,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
    {
       // Check object types
       if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_TEMPLATE)) && 
-          (pDestination->Type() == OBJECT_NODE))
+          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_TEMPLATE)))
       {
          if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
          {
