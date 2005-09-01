@@ -399,6 +399,7 @@ public:
                               (m_dwIfType == IFTYPE_OTHER) &&
                               (!_tcscmp(m_szName, _T("lan0"))) &&
                               (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+   void SetIpAddr(DWORD dwNewAddr) { LockData(); m_dwIpAddr = dwNewAddr; Modify(); UnlockData(); }
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue);
    virtual void CreateMessage(CSCPMessage *pMsg);

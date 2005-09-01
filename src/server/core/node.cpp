@@ -2068,7 +2068,16 @@ void Node::ChangeIPAddress(DWORD dwIpAddr)
    m_iStatus = STATUS_UNKNOWN;
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
+   {
       m_pChildList[i]->ResetStatus();
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         if (((Interface *)m_pChildList[i])->IsFake())
+         {
+            ((Interface *)m_pChildList[i])->SetIpAddr(dwIpAddr);
+         }
+      }
+   }
    UnlockChildList();
 
    Modify();
