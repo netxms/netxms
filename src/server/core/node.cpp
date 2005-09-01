@@ -953,21 +953,22 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                         ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
                         FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
-               if (dwTemp != 0)
+               if (dwTemp == 1)
                   m_dwFlags |= NF_IS_ROUTER;
                else
                   m_dwFlags &= ~NF_IS_ROUTER;
             }
 
-            // Check IP forwarding
+            // Check for bridge MIB support
             if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
-                        ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                        ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 4096,
                         FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
-               if (dwTemp != 0)
-                  m_dwFlags |= NF_IS_ROUTER;
-               else
-                  m_dwFlags &= ~NF_IS_ROUTER;
+               m_dwFlags |= NF_IS_BRIDGE;
+            }
+            else
+            {
+               m_dwFlags &= ~NF_IS_BRIDGE;
             }
 
             UnlockData();
