@@ -10,5 +10,5 @@
 
 
 EXTRA_DIST = netxmsd.conf-dist nxagentd.conf-dist
-SUBDIRS= config dct startup
+SUBDIRS= dct startup
 SUBDIRS += @CONTRIB_MODULES@

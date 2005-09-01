@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.99 2005-08-24 16:26:32 victor Exp $
+# $Id: configure.ac,v 1.100 2005-09-01 08:24:44 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -446,7 +446,6 @@ AC_CONFIG_FILES([
    README
 	Makefile
 	contrib/Makefile
-	contrib/config/Makefile
 	contrib/dct/Makefile
 	contrib/startup/Makefile
 	contrib/startup/redhat/Makefile
