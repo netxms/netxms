@@ -11,6 +11,7 @@
 mibsdir=$(pkgdatadir)/mibs
 
 mibs_DATA = \
+	BRIDGE-MIB.txt \
 	CDX-6500-COMMON-MIB.txt \
 	CHECKPOINT-NG-MIB.txt \
 	CISCO-C2900-MIB.txt \
