@@ -694,3 +694,18 @@ CREATE TABLE object_tools_acl
 	user_id integer not null,
 	PRIMARY KEY(tool_id,user_id)
 ) TABLE_TYPE;
+
+
+/*
+** Configuration for SNMP_TABLE type of object tools
+*/
+
+CREATE TABLE object_tools_snmp_tables
+(
+	tool_id integer not null,
+	col_number integer not null,
+	col_name varchar(255),
+	col_oid varchar(255),
+	col_display integer,	// Column display mode
+	PRIMARY KEY(tool_id,col_number)
+) TABLE_TYPE;
