@@ -446,6 +446,10 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TableView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ThresholdDlg.cpp
 # End Source File
 # Begin Source File
@@ -487,6 +491,10 @@ SOURCE=.\ValueList.cpp
 # Begin Source File
 
 SOURCE=.\VPNCPropsGeneral.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\WaitView.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -850,6 +858,10 @@ SOURCE=.\StdAfx.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\TableView.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ThresholdDlg.h
 # End Source File
 # Begin Source File
@@ -887,6 +899,10 @@ SOURCE=.\ValueList.h
 # Begin Source File
 
 SOURCE=.\VPNCPropsGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\WaitView.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

@@ -553,6 +553,8 @@ src/console/win32/ServerCfgEditor.cpp -text
 src/console/win32/ServerCfgEditor.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
+src/console/win32/TableView.cpp -text
+src/console/win32/TableView.h -text
 src/console/win32/ThresholdDlg.cpp -text
 src/console/win32/ThresholdDlg.h -text
 src/console/win32/ToolBox.cpp -text
@@ -573,6 +575,8 @@ src/console/win32/VPNCPropsGeneral.cpp -text
 src/console/win32/VPNCPropsGeneral.h -text
 src/console/win32/ValueList.cpp -text
 src/console/win32/ValueList.h -text
+src/console/win32/WaitView.cpp -text
+src/console/win32/WaitView.h -text
 src/console/win32/comm.cpp -text
 src/console/win32/draw.cpp -text
 src/console/win32/globals.cpp -text

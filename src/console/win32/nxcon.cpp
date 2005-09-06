@@ -23,6 +23,7 @@
 #include "RemoveTemplateDlg.h"
 #include "AddrChangeDlg.h"
 #include "AgentCfgEditor.h"
+#include "TableView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -2087,8 +2088,43 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
             m_pMainWnd->MessageBox(_T("Node doesn't have NetXMS agent"), _T("Error"), MB_OK | MB_ICONSTOP);
          }
          break;
+      case TOOL_TYPE_TABLE_AGENT:
+         if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
+         {
+            ExecuteTableTool(pObject->dwId, g_pObjectToolList[dwIndex].dwId);
+         }
+         else
+         {
+            m_pMainWnd->MessageBox(_T("Node doesn't have NetXMS agent"), _T("Error"), MB_OK | MB_ICONSTOP);
+         }
+         break;
+      case TOOL_TYPE_TABLE_SNMP:
+         if (pObject->node.dwFlags & NF_IS_SNMP)
+         {
+            ExecuteTableTool(pObject->dwId, g_pObjectToolList[dwIndex].dwId);
+         }
+         else
+         {
+            m_pMainWnd->MessageBox(_T("Node doesn't have SNMP agent"), _T("Error"), MB_OK | MB_ICONSTOP);
+         }
+         break;
       default:
          m_pMainWnd->MessageBox(_T("This type of tool is not implemented yet"), _T("Warning"), MB_OK | MB_ICONSTOP);
          break;
    }
+}
+
+
+//
+// Execute table tool on given node
+//
+
+void CConsoleApp::ExecuteTableTool(DWORD dwNodeId, DWORD dwToolId)
+{
+   CTableView *pWnd;
+
+   pWnd = new CTableView(dwNodeId, dwToolId);
+   CreateChildFrameWithSubtitle(pWnd, IDR_DCI_HISTORY_GRAPH,
+                                "zzz", m_hMDIMenu, m_hMDIAccel);
+//   return pWnd;
 }

@@ -89,6 +89,7 @@ EXTRA_DIST = \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \
 	StdAfx.cpp StdAfx.h \
+	TableView.cpp TableView.h \
 	ThresholdDlg.cpp ThresholdDlg.h \
 	ToolBox.cpp ToolBox.h \
 	tools.cpp \
@@ -99,4 +100,5 @@ EXTRA_DIST = \
 	UserPropDlg.cpp UserPropDlg.h \
 	UserSelectDlg.cpp UserSelectDlg.h \
 	ValueList.cpp ValueList.h \
-	VPNCPropsGeneral.cpp VPNCPropsGeneral.h
+	VPNCPropsGeneral.cpp VPNCPropsGeneral.h \
+	WaitView.cpp WaitView.h

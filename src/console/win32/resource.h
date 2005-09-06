@@ -24,6 +24,7 @@
 #define ID_PROGRESS_CTRL                120
 #define ID_EDIT_CTRL                    121
 #define IDC_SPLITTER                    122
+#define ID_WAIT_VIEW                    123
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -571,6 +572,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        285
 #define _APS_NEXT_COMMAND_VALUE         32956
 #define _APS_NEXT_CONTROL_VALUE         1287
-#define _APS_NEXT_SYMED_VALUE           123
+#define _APS_NEXT_SYMED_VALUE           124
 #endif
 #endif

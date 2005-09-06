@@ -124,6 +124,7 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar, LONG
 {
    TCHAR szBuffer[4096];
 
+printf("ADD RESULT FROM %p\n",pVar);
    if (pVar != NULL)
    {
       switch(nFmt)
@@ -135,6 +136,7 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar, LONG
             pVar->GetValueAsString(szBuffer, 4096);
             break;
       }
+printf("VALUE == \"%s\"\n", szBuffer);
    }
    else
    {
@@ -252,7 +254,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
             // Fill in message with results
             msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
             msg.SetVariable(VID_NUM_ROWS, args.dwNumRows);
-            for(i = 0; i < args.values.dwNumStrings; i++)
+            for(i = 0, dwId = VID_ROW_DATA_BASE; i < args.values.dwNumStrings; i++)
                msg.SetVariable(dwId++, args.values.ppStringList[i]);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
