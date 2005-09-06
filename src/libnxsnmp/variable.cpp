@@ -265,6 +265,30 @@ SNMP_ObjectId *SNMP_Variable::GetValueAsObjectId(void)
 
 
 //
+// Get value as MAC address
+//
+
+TCHAR *SNMP_Variable::GetValueAsMACAddr(TCHAR *pszBuffer)
+{
+   int i;
+   TCHAR *pszPos;
+
+   // MAC address usually encoded as octet string
+   if ((m_dwType == ASN_OCTET_STRING) && (m_dwValueLength >= 6))
+   {
+      for(i = 0, pszPos = pszBuffer; i < 6; i++)
+         _stprintf(pszPos, _T("%02X:"), m_pValue[i]);
+      *(pszPos - 1) = 0;
+   }
+   else
+   {
+      _tcscpy(pszBuffer, _T("00:00:00:00:00:00"));
+   }
+   return pszBuffer;
+}
+
+
+//
 // Encode variable using BER
 // Normally buffer provided should be at least m_dwValueLength+ (name_length * 4) + 12 bytes
 // Return value is number of bytes actually used in buffer

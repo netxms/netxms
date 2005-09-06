@@ -211,6 +211,7 @@ public:
    long GetValueAsInt(void);
    TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
    SNMP_ObjectId *GetValueAsObjectId(void);
+   TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);
 };
 
 
