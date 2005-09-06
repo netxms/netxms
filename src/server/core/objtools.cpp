@@ -44,6 +44,7 @@ struct TOOL_STARTUP_INFO
 struct SNMP_ENUM_ARGS
 {
    DWORD dwNumCols;
+   DWORD dwNumRows;
    TCHAR **ppszOidList;
    LONG *pnFormatList;
    DWORD dwFlags;
@@ -191,6 +192,8 @@ printf("SUFFIX: \"%s\"\n", szSuffix);
       if ((pRespPDU->GetNumVariables() > 0) &&
        (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
+         ((SNMP_ENUM_ARGS *)pArg)->dwNumRows++;
+
          // Add first column to results
          AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, pVar, ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0]);
 
@@ -228,7 +231,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
       dwNumCols = DBGetNumRows(hResult);
       if (dwNumCols > 0)
       {
-         msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
+         args.dwNumRows = 0;
          args.dwNumCols = dwNumCols;
          args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
          args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
@@ -243,11 +246,19 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          }
 
          // Enumerate
-         ((TOOL_STARTUP_INFO *)pArg)->pNode->CallSnmpEnumerate(args.ppszOidList[0], TableHandler, &args);
-
-         // Fill in message with results
-         for(i = 0; i < args.values.dwNumStrings; i++)
-            msg.SetVariable(dwId++, args.values.ppStringList[i]);
+         if (((TOOL_STARTUP_INFO *)pArg)->pNode->CallSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
+         {
+            // Fill in message with results
+            msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
+            msg.SetVariable(VID_NUM_ROWS, args.dwNumRows);
+            for(i = 0; i < args.values.dwNumStrings; i++)
+               msg.SetVariable(dwId++, args.values.ppStringList[i]);
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_SNMP_ERROR);
+         }
 
          // Cleanup
          for(i = 0; i < args.values.dwNumStrings; i++)
