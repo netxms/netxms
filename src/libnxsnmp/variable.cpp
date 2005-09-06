@@ -276,7 +276,7 @@ TCHAR *SNMP_Variable::GetValueAsMACAddr(TCHAR *pszBuffer)
    // MAC address usually encoded as octet string
    if ((m_dwType == ASN_OCTET_STRING) && (m_dwValueLength >= 6))
    {
-      for(i = 0, pszPos = pszBuffer; i < 6; i++)
+      for(i = 0, pszPos = pszBuffer; i < 6; i++, pszPos += 3)
          _stprintf(pszPos, _T("%02X:"), m_pValue[i]);
       *(pszPos - 1) = 0;
    }
