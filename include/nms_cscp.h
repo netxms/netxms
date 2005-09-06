@@ -359,6 +359,8 @@ typedef struct
 #define CMD_SESSION_KEY             0x0084
 #define CMD_REQUEST_ENCRYPTION      0x0085
 #define CMD_GET_ROUTING_TABLE       0x0086
+#define CMD_EXEC_TABLE_TOOL         0x0087
+#define CMD_TABLE_DATA              0x0088
 
 
 //
@@ -529,6 +531,8 @@ typedef struct
 #define VID_NUM_REMOTE_NETS         ((DWORD)162)
 #define VID_APPLY_FLAG              ((DWORD)163)
 #define VID_NUM_TOOLS               ((DWORD)164)
+#define VID_TOOL_ID                 ((DWORD)165)
+#define VID_NUM_COLUMNS             ((DWORD)166)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -592,6 +596,10 @@ typedef struct
 
 // Base value for network list
 #define VID_OBJECT_TOOLS_BASE       ((DWORD)0x10000000)
+
+// Base values for table data
+#define VID_COLUMN_NAME_BASE        ((DWORD)0x10000000)
+#define VID_ROW_DATA_BASE           ((DWORD)0x20000000)
 
 
 //
