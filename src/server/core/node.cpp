@@ -2217,3 +2217,21 @@ void Node::UpdateRoutingTable(void)
       RTUnlock();
    }
 }
+
+
+//
+// Call SNMP Enumerate with node's SNMP parameters
+//
+
+DWORD Node::CallSnmpEnumerate(char *pszRootOid, 
+                              void (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
+                              void *pArg)
+{
+   if ((m_dwFlags & NF_IS_SNMP) && 
+       (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)) &&
+       (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+      return SnmpEnumerate(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+                           m_szCommunityString, pszRootOid, pHandler, pArg, FALSE);
+   else
+      return SNMP_ERR_COMM;
+}

@@ -271,6 +271,7 @@ typedef void * NXC_SESSION;
 #define RCC_NO_ENCRYPTION_SUPPORT   ((DWORD)45)
 #define RCC_INTERNAL_ERROR          ((DWORD)46)
 #define RCC_EXEC_FAILED             ((DWORD)47)
+#define RCC_INVALID_TOOL_ID         ((DWORD)48)
 
 
 //

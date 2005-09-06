@@ -47,7 +47,8 @@ struct VLAN_LIST
 //
 
 static void HandlerVlanList(DWORD dwVersion, DWORD dwAddr, WORD wPort, 
-                            const char *pszCommunity, SNMP_Variable *pVar, void *pArg)
+                            const char *pszCommunity, SNMP_Variable *pVar,
+                            SNMP_Transport *pTransport, void *pArg)
 {
    DWORD dwIndex, oidName[MAX_OID_LEN], dwNameLen;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pArg;
@@ -87,7 +88,8 @@ static void HandlerVlanList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
 //
 
 static void HandlerPassportIfList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
-                                  const char *pszCommunity, SNMP_Variable *pVar, void *pArg)
+                                  const char *pszCommunity, SNMP_Variable *pVar,
+                                  SNMP_Transport *pTransport, void *pArg)
 {
    INTERFACE_LIST *pIfList = (INTERFACE_LIST *)pArg;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pIfList->pArg;

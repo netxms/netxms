@@ -45,6 +45,16 @@ static DWORD m_dwRequestId = 1;
 
 
 //
+// Generate new request ID
+//
+
+DWORD SnmpNewRequestId(void)
+{
+   return m_dwRequestId++;
+}
+
+
+//
 // Initialize SNMP subsystem
 //
 
@@ -213,7 +223,7 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity
 
 DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
                     const char *szRootOid,
-                    void (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, void *), 
+                    void (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose)
 {
    DWORD pdwRootName[MAX_OID_LEN], dwRootLen, pdwName[MAX_OID_LEN], dwNameLen, dwResult;
@@ -274,7 +284,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCom
                      dwNameLen = pVar->GetName()->Length();
 
                      // Call user's callback function for processing
-                     pHandler(dwVersion, dwAddr, wPort, szCommunity, pVar, pUserArg);
+                     pHandler(dwVersion, dwAddr, wPort, szCommunity, pVar, pTransport, pUserArg);
                   }
                   else
                   {
@@ -313,7 +323,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCom
 //
 
 static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
-                         SNMP_Variable *pVar, void *pArg)
+                         SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    if (((INTERFACE_LIST *)pArg)->iEnumPos < ((INTERFACE_LIST *)pArg)->iNumEntries)
       ((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iEnumPos].dwIndex = pVar->GetValueAsUInt();
@@ -326,7 +336,8 @@ static void HandlerIndex(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *
 //
 
 static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, WORD wPort,
-                          const char *szCommunity, SNMP_Variable *pVar, void *pArg)
+                          const char *szCommunity, SNMP_Variable *pVar,
+                          SNMP_Transport *pTransport, void *pArg)
 {
    DWORD dwIndex, dwNetMask, dwNameLen;
    DWORD oidName[MAX_OID_LEN];
@@ -460,7 +471,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
 //
 
 static void HandlerArp(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
-                       SNMP_Variable *pVar, void *pArg)
+                       SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
    BYTE bMac[64];
@@ -570,7 +581,8 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, DWORD dwNodeAddr, WORD wPort,
 //
 
 static void HandlerRoute(DWORD dwVersion, DWORD dwAddr, WORD wPort,
-                         const char *szCommunity, SNMP_Variable *pVar, void *pArg)
+                         const char *szCommunity, SNMP_Variable *pVar,
+                         SNMP_Transport *pTransport, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen;
    ROUTE route;

@@ -28,12 +28,30 @@
 // Tool types
 //
 
-#define TOOL_TYPE_INTERNAL       0
-#define TOOL_TYPE_ACTION         1
-#define TOOL_TYPE_TABLE_SNMP     2
-#define TOOL_TYPE_TABLE_AGENT    3
-#define TOOL_TYPE_URL            4
-#define TOOL_TYPE_COMMAND        5
+#define TOOL_TYPE_INTERNAL          0
+#define TOOL_TYPE_ACTION            1
+#define TOOL_TYPE_TABLE_SNMP        2
+#define TOOL_TYPE_TABLE_AGENT       3
+#define TOOL_TYPE_URL               4
+#define TOOL_TYPE_COMMAND           5
+
+
+//
+// SNMP tool flags
+//
+
+#define TF_SNMP_INDEXED_BY_VALUE    ((DWORD)0x00010000)
+
+
+//
+// Column formats
+//
+
+#define CFMT_STRING     0
+#define CFMT_INTEGER    1
+#define CFMT_FLOAT      2
+#define CFMT_IP_ADDR    3
+#define CFMT_MAC_ADDR   4
 
 
 #endif

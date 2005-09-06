@@ -843,6 +843,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_OBJECT_TOOLS:
             SendObjectTools(pMsg->GetId());
             break;
+         case CMD_EXEC_TABLE_TOOL:
+            ExecTableTool(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -5004,6 +5007,61 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
    else
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Execute table tool (either SNMP or agent table)
+//
+
+void ClientSession::ExecTableTool(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwToolId;
+   NetObj *pObject;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check if tool exist and has correct type
+   dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
+   if (IsTableTool(dwToolId))
+   {
+      // Check access
+      if (CheckObjectToolAccess(dwToolId, m_dwUserId))
+      {
+         pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+         if (pObject != NULL)
+         {
+            if (pObject->Type() == OBJECT_NODE)
+            {
+               msg.SetVariable(VID_RCC,
+                               ExecuteTableTool(dwToolId, (Node *)pObject,
+                                                pRequest->GetId(), this));
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_TOOL_ID);
    }
 
    // Send response

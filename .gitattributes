@@ -763,6 +763,7 @@ src/server/core/nxcore.dsp -text
 src/server/core/nxcore.dsw -text
 src/server/core/nxcore.h -text
 src/server/core/objects.cpp -text
+src/server/core/objtools.cpp -text
 src/server/core/package.cpp -text
 src/server/core/poll.cpp -text
 src/server/core/rootobj.cpp -text

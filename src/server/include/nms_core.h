@@ -371,6 +371,7 @@ private:
    void UpdateAgentConfig(CSCPMessage *pRequest);
    void ExecuteAction(CSCPMessage *pRequest);
    void SendObjectTools(DWORD dwRqId);
+   void ExecTableTool(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -435,12 +436,14 @@ void StartDBWriter(void);
 void StopDBWriter(void);
 
 void SnmpInit(void);
+DWORD SnmpNewRequestId(void);
 DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity,
               const char *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
               DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
 DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity,
                     const char *szRootOid, void (* pHandler)(DWORD, DWORD, WORD,
-                    const char *, SNMP_Variable *, void *), void *pUserArg, BOOL bVerbose);
+                    const char *, SNMP_Variable *, SNMP_Transport *, void *),
+                    void *pUserArg, BOOL bVerbose);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 
@@ -499,6 +502,10 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
 DWORD CreateNewTrap(DWORD *pdwTrapId);
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg);
 DWORD DeleteTrap(DWORD dwId);
+
+BOOL IsTableTool(DWORD dwToolId);
+BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
+DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
 
 #ifdef _WIN32
 

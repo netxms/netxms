@@ -706,6 +706,6 @@ CREATE TABLE object_tools_snmp_tables
 	col_number integer not null,
 	col_name varchar(255),
 	col_oid varchar(255),
-	col_display integer,	// Column display mode
+	col_format integer,	// Column format (integer, string, etc.)
 	PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
