@@ -243,6 +243,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
             msg.SetVariable(VID_COLUMN_NAME_BASE + i, DBGetField(hResult, i, 0));
             args.ppszOidList[i] = _tcsdup(DBGetField(hResult, i, 1));
             args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
+            msg.SetVariable(VID_COLUMN_FMT_BASE + i, (DWORD)args.pnFormatList[i]);
          }
 
          // Enumerate

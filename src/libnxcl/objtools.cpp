@@ -87,3 +87,86 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
       free(pList);
    }
 }
+
+
+//
+// Execute table tool
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
+                                             DWORD dwToolId, NXC_TABLE_DATA **ppData)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, dwResult, dwRqId, dwId, dwNumRecords;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_EXEC_TABLE_TOOL);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_TOOL_ID, dwToolId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   *ppData = NULL;
+
+   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   if (dwResult == RCC_SUCCESS)
+   {
+      pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_TABLE_DATA, dwRqId, 180000);
+      if (pResponse != NULL)
+      {
+         dwResult = pResponse->GetVariableLong(VID_RCC);
+         if (dwResult == RCC_SUCCESS)
+         {
+            *ppData = (NXC_TABLE_DATA *)malloc(sizeof(NXC_TABLE_DATA));
+            (*ppData)->dwNumCols = pResponse->GetVariableLong(VID_NUM_COLUMNS);
+            (*ppData)->dwNumRows = pResponse->GetVariableLong(VID_NUM_ROWS);
+            (*ppData)->pnColFormat = (LONG *)malloc(sizeof(LONG) * (*ppData)->dwNumCols);
+            (*ppData)->ppszColNames = (TCHAR **)malloc(sizeof(TCHAR *) * (*ppData)->dwNumCols);
+            dwNumRecords = (*ppData)->dwNumCols * (*ppData)->dwNumRows;
+            (*ppData)->ppszData = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumRecords);
+
+            // Column information
+            for(i = 0; i < (*ppData)->dwNumCols; i++)
+            {
+               (*ppData)->ppszColNames[i] = pResponse->GetVariableStr(VID_COLUMN_NAME_BASE + i);
+               (*ppData)->pnColFormat[i] = pResponse->GetVariableLong(VID_COLUMN_FMT_BASE + i);
+            }
+
+            // Column data
+            for(i = 0, dwId = VID_ROW_DATA_BASE; i < dwNumRecords; i++, dwId++)
+               (*ppData)->ppszData[i] = pResponse->GetVariableStr(dwId);
+         }
+         delete pResponse;
+      }
+      else
+      {
+         dwResult = RCC_TIMEOUT;
+      }
+   }
+
+   return dwResult;
+}
+
+
+//
+// Destroy received table data
+//
+
+void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData)
+{
+   DWORD i;
+
+   if (pData == NULL)
+      return;
+
+   for(i = 0; i < pData->dwNumCols; i++)
+      safe_free(pData->ppszColNames[i]);
+   safe_free(pData->ppszColNames);
+   safe_free(pData->pnColFormat);
+
+   for(i = 0; i < pData->dwNumCols * pData->dwNumRows; i++)
+      safe_free(pData->ppszData[i]);
+   safe_free(pData->ppszData);
+   free(pData);
+}

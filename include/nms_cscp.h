@@ -533,6 +533,7 @@ typedef struct
 #define VID_NUM_TOOLS               ((DWORD)164)
 #define VID_TOOL_ID                 ((DWORD)165)
 #define VID_NUM_COLUMNS             ((DWORD)166)
+#define VID_NUM_ROWS                ((DWORD)167)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -599,7 +600,8 @@ typedef struct
 
 // Base values for table data
 #define VID_COLUMN_NAME_BASE        ((DWORD)0x10000000)
-#define VID_ROW_DATA_BASE           ((DWORD)0x20000000)
+#define VID_COLUMN_FMT_BASE         ((DWORD)0x20000000)
+#define VID_ROW_DATA_BASE           ((DWORD)0x30000000)
 
 
 //

@@ -272,6 +272,7 @@ typedef void * NXC_SESSION;
 #define RCC_INTERNAL_ERROR          ((DWORD)46)
 #define RCC_EXEC_FAILED             ((DWORD)47)
 #define RCC_INVALID_TOOL_ID         ((DWORD)48)
+#define RCC_SNMP_ERROR              ((DWORD)49)
 
 
 //
@@ -1033,6 +1034,20 @@ typedef struct
 
 
 //
+// Results of table object tool execution
+//
+
+typedef struct
+{
+   DWORD dwNumCols;
+   DWORD dwNumRows;
+   TCHAR **ppszColNames;
+   LONG *pnColFormat;
+   TCHAR **ppszData;
+} NXC_TABLE_DATA;
+
+
+//
 // Functions
 //
 
@@ -1207,6 +1222,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *ps
 DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTools,
                                            NXC_OBJECT_TOOL **ppToolList);
 void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TOOL *pList);
+DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
+                                             DWORD dwToolId, NXC_TABLE_DATA **ppData);
+void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData);
 
 #ifdef __cplusplus
 }

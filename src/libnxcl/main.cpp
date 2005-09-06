@@ -176,9 +176,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Encryption is not supported by peer"),
       _T("Server internal error"),
       _T("Execution of external command failed"),
-      _T("Invalid object tool ID")
+      _T("Invalid object tool ID"),
+      _T("SNMP protocol error")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_TOOL_ID)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_SNMP_ERROR)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 
