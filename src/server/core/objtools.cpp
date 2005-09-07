@@ -21,6 +21,11 @@
 **/
 
 #include "nxcore.h"
+#ifdef _WIN32
+#include <netxms-regex.h>
+#else
+#include <regex.h>
+#endif
 
 
 //
@@ -34,6 +39,7 @@ struct TOOL_STARTUP_INFO
    DWORD dwFlags;
    Node *pNode;
    ClientSession *pSession;
+   TCHAR *pszToolData;
 };
 
 
@@ -112,6 +118,76 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId)
 
 static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 {
+   CSCPMessage msg;
+   TCHAR *pszEnum, *pszRegEx;
+   AgentConnection *pConn;
+   DWORD i, dwNumRows, dwResult;
+   regex_t preg;
+
+   // Prepare data message
+   msg.SetCode(CMD_TABLE_DATA);
+   msg.SetId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
+
+   // Parse tool data. For agent table, it should have the following format:
+   // table_title<separator>enum<separator>matching_regexp
+   // where <separator> is a character with code 0x7F
+   pszEnum = _tcschr(((TOOL_STARTUP_INFO *)pArg)->pszToolData, _T('\x7F'));
+   if (pszEnum != NULL)
+   {
+      *pszEnum = 0;
+      pszEnum++;
+      pszRegEx = _tcschr(pszEnum, _T('\x7F'));
+      if (pszRegEx != NULL)
+      {
+         *pszRegEx = 0;
+         pszRegEx++;
+      }
+   }
+
+   if ((pszEnum != NULL) && (pszRegEx != NULL))
+   {
+	   if (regcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
+	   {
+         pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->CreateAgentConnection();
+         if (pConn != NULL)
+         {
+            dwResult = pConn->GetList(pszEnum);
+            if (dwResult == ERR_SUCCESS)
+            {
+               dwNumRows = pConn->GetNumDataLines();
+               for(i = 0; i < dwNumRows; i++)
+               {
+                  if (regexec(&preg, pConn->GetDataLine(i), 0, NULL, 0) == 0)
+                  {
+                  }
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
+            }
+            delete pConn;
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_BAD_REGEXP);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+   }
+
+   // Send responce to client
+   ((TOOL_STARTUP_INFO *)pArg)->pSession->SendMessage(&msg);
+   ((TOOL_STARTUP_INFO *)pArg)->pSession->DecRefCount();
+   safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+   free(pArg);
    return THREAD_OK;
 }
 
@@ -124,7 +200,6 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar, LONG
 {
    TCHAR szBuffer[4096];
 
-printf("ADD RESULT FROM %p\n",pVar);
    if (pVar != NULL)
    {
       switch(nFmt)
@@ -136,7 +211,6 @@ printf("ADD RESULT FROM %p\n",pVar);
             pVar->GetValueAsString(szBuffer, 4096);
             break;
       }
-printf("VALUE == \"%s\"\n", szBuffer);
    }
    else
    {
@@ -172,7 +246,6 @@ static void TableHandler(DWORD dwVersion, DWORD dwAddr, WORD wPort,
       SNMPConvertOIDToText(pOid->Length() - dwNameLen, 
          (DWORD *)&(pOid->GetValue())[dwNameLen], szSuffix, MAX_OID_LEN * 4);
    }
-printf("SUFFIX: \"%s\"\n", szSuffix);
 
    // Get values for other columns
    pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)szCommunity, SnmpNewRequestId(), dwVersion);
@@ -242,7 +315,9 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          args.values.ppStringList = NULL;
          for(i = 0; i < dwNumCols; i++)
          {
-            msg.SetVariable(VID_COLUMN_NAME_BASE + i, DBGetField(hResult, i, 0));
+            _tcsncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+            DecodeSQLString(szBuffer);
+            msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
             args.ppszOidList[i] = _tcsdup(DBGetField(hResult, i, 1));
             args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
             msg.SetVariable(VID_COLUMN_FMT_BASE + i, (DWORD)args.pnFormatList[i]);
@@ -252,6 +327,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          if (((TOOL_STARTUP_INFO *)pArg)->pNode->CallSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
          {
             // Fill in message with results
+            msg.SetVariable(VID_TABLE_TITLE, ((TOOL_STARTUP_INFO *)pArg)->pszToolData);
             msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
             msg.SetVariable(VID_NUM_ROWS, args.dwNumRows);
             for(i = 0, dwId = VID_ROW_DATA_BASE; i < args.values.dwNumStrings; i++)
@@ -286,6 +362,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    // Send responce to client
    ((TOOL_STARTUP_INFO *)pArg)->pSession->SendMessage(&msg);
    ((TOOL_STARTUP_INFO *)pArg)->pSession->DecRefCount();
+   safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
    return THREAD_OK;
 }
@@ -303,7 +380,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
    TCHAR szBuffer[256];
    DB_RESULT hResult;
 
-   _stprintf(szBuffer, _T("SELECT tool_type,flags FROM object_tools WHERE tool_id=%ld"), dwToolId);
+   _stprintf(szBuffer, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=%ld"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
@@ -316,7 +393,9 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
             pStartup = (TOOL_STARTUP_INFO *)malloc(sizeof(TOOL_STARTUP_INFO));
             pStartup->dwToolId = dwToolId;
             pStartup->dwRqId = dwRqId;
-            pStartup->dwFlags = DBGetFieldULong(hResult, 0, 1);
+            pStartup->pszToolData = _tcsdup(DBGetField(hResult, 0, 1));
+            DecodeSQLString(pStartup->pszToolData);
+            pStartup->dwFlags = DBGetFieldULong(hResult, 0, 2);
             pStartup->pNode = pNode;
             pStartup->pSession = pSession;
             ThreadCreate((nType == TOOL_TYPE_TABLE_SNMP) ? GetSNMPTable : GetAgentTable,

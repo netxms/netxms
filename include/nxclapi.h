@@ -273,6 +273,8 @@ typedef void * NXC_SESSION;
 #define RCC_EXEC_FAILED             ((DWORD)47)
 #define RCC_INVALID_TOOL_ID         ((DWORD)48)
 #define RCC_SNMP_ERROR              ((DWORD)49)
+#define RCC_BAD_REGEXP              ((DWORD)50)
+#define RCC_UNKNOWN_PARAMETER       ((DWORD)51)
 
 
 //
@@ -1041,6 +1043,7 @@ typedef struct
 {
    DWORD dwNumCols;
    DWORD dwNumRows;
+   TCHAR *pszTitle;        // Table's title
    TCHAR **ppszColNames;
    LONG *pnColFormat;
    TCHAR **ppszData;

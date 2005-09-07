@@ -2634,6 +2634,7 @@ BEGIN
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
     IDR_DC_EDITOR           "\nData Collection Configuration\nData Collection Configuration"
     IDR_DCI_DATA_VIEW       "\nCollected Data\nCollected Data"
+    IDR_TABLE_VIEW          "\nTable View\nTable View"
 END
 
 STRINGTABLE DISCARDABLE 

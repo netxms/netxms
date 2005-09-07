@@ -177,9 +177,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Server internal error"),
       _T("Execution of external command failed"),
       _T("Invalid object tool ID"),
-      _T("SNMP protocol error")
+      _T("SNMP protocol error"),
+      _T("Incorrect regular expression"),
+      _T("Parameter is not supported by agent")
    };
-   return ((dwError >= 0) && (dwError <= RCC_SNMP_ERROR)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_UNKNOWN_PARAMETER)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 

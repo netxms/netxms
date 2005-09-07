@@ -105,7 +105,7 @@ public:
 
 // Implementation
 protected:
-	void ExecuteTableTool(DWORD dwNodeId, DWORD dwToolId);
+	void ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId);
 	void CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId, TCHAR *pszSubTitle, HMENU hMenu, HACCEL hAccel);
 	void CreateObject(NXC_OBJECT_CREATE_INFO *pInfo);
 	HMENU LoadAppMenu(HMENU hViewMenu);

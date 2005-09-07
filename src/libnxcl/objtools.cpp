@@ -119,6 +119,7 @@ DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeI
          if (dwResult == RCC_SUCCESS)
          {
             *ppData = (NXC_TABLE_DATA *)malloc(sizeof(NXC_TABLE_DATA));
+            (*ppData)->pszTitle = pResponse->GetVariableStr(VID_TABLE_TITLE);
             (*ppData)->dwNumCols = pResponse->GetVariableLong(VID_NUM_COLUMNS);
             (*ppData)->dwNumRows = pResponse->GetVariableLong(VID_NUM_ROWS);
             (*ppData)->pnColFormat = (LONG *)malloc(sizeof(LONG) * (*ppData)->dwNumCols);
@@ -168,5 +169,6 @@ void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData)
    for(i = 0; i < pData->dwNumCols * pData->dwNumRows; i++)
       safe_free(pData->ppszData[i]);
    safe_free(pData->ppszData);
+   safe_free(pData->pszTitle);
    free(pData);
 }

@@ -423,6 +423,7 @@
 #define IDR_NETWORK_SUMMARY             8107
 #define IDR_DC_EDITOR                   8108
 #define IDR_DCI_DATA_VIEW               8109
+#define IDR_TABLE_VIEW                  8110
 #define IDR_DCI_HISTORY_GRAPH           8113
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137

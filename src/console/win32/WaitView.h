@@ -31,12 +31,20 @@ public:
 
 // Implementation
 public:
+	void Stop(void);
+	void Start(void);
 	virtual ~CWaitView();
 
 	// Generated message map functions
 protected:
+	int m_iStageDir;
+	int m_iStage;
+	UINT m_nTimer;
+	int m_iActiveBox;
 	//{{AFX_MSG(CWaitView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnPaint();
+	afx_msg void OnDestroy();
+	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

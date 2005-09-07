@@ -2091,7 +2091,7 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
       case TOOL_TYPE_TABLE_AGENT:
          if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
          {
-            ExecuteTableTool(pObject->dwId, g_pObjectToolList[dwIndex].dwId);
+            ExecuteTableTool(pObject, g_pObjectToolList[dwIndex].dwId);
          }
          else
          {
@@ -2101,7 +2101,7 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
       case TOOL_TYPE_TABLE_SNMP:
          if (pObject->node.dwFlags & NF_IS_SNMP)
          {
-            ExecuteTableTool(pObject->dwId, g_pObjectToolList[dwIndex].dwId);
+            ExecuteTableTool(pObject, g_pObjectToolList[dwIndex].dwId);
          }
          else
          {
@@ -2119,12 +2119,12 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
 // Execute table tool on given node
 //
 
-void CConsoleApp::ExecuteTableTool(DWORD dwNodeId, DWORD dwToolId)
+void CConsoleApp::ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId)
 {
    CTableView *pWnd;
 
-   pWnd = new CTableView(dwNodeId, dwToolId);
-   CreateChildFrameWithSubtitle(pWnd, IDR_DCI_HISTORY_GRAPH,
-                                "zzz", m_hMDIMenu, m_hMDIAccel);
+   pWnd = new CTableView(pNode->dwId, dwToolId);
+   CreateChildFrameWithSubtitle(pWnd, IDR_TABLE_VIEW,
+                                pNode->szName, m_hMDIMenu, m_hMDIAccel);
 //   return pWnd;
 }

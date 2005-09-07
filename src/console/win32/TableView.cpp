@@ -123,6 +123,7 @@ void CTableView::OnViewRefresh()
 
    m_wndWaitView.ShowWindow(SW_SHOW);
    m_wndListCtrl.ShowWindow(SW_HIDE);
+   m_wndWaitView.Start();
    m_wndListCtrl.DeleteAllItems();
    while(m_wndListCtrl.DeleteColumn(0));
 
@@ -169,6 +170,8 @@ void CTableView::OnTableData(WPARAM wParam, NXC_TABLE_DATA *pData)
 {
    DWORD i, j;
    int iItem, nPos;
+   TCHAR szBuffer[256];
+   NXC_OBJECT *pNode;
 
    if (wParam == RCC_SUCCESS)
    {
@@ -185,6 +188,12 @@ void CTableView::OnTableData(WPARAM wParam, NXC_TABLE_DATA *pData)
          m_wndListCtrl.SetItemData(iItem, i);
       }
 
+      pNode = NXCFindObjectById(g_hSession, m_dwNodeId);
+      _sntprintf(szBuffer, 256, _T("%s - [%s]"), pData->pszTitle, 
+                 (pNode != NULL) ? pNode->szName : _T("<unknown>"));
+      SetTitle(szBuffer); 
+      OnUpdateFrameTitle(TRUE);
+
       NXCDestroyTableData(pData);
       m_wndStatusBar.SetText(_T("Ready"), 0, 0);
    }
@@ -195,5 +204,6 @@ void CTableView::OnTableData(WPARAM wParam, NXC_TABLE_DATA *pData)
    }
    m_wndListCtrl.ShowWindow(SW_SHOW);
    m_wndWaitView.ShowWindow(SW_HIDE);
+   m_wndWaitView.Stop();
    m_bIsBusy = FALSE;
 }
