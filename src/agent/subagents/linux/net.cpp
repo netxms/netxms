@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.8 2005-08-22 00:11:47 alk Exp $ */
+/* $Id: net.cpp,v 1.9 2005-09-08 16:26:31 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -241,88 +241,95 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
    struct sockaddr_in *sa;
 	int nFd;
 
-	pIndex = if_nameindex();
-	if (pIndex != NULL)
+	int s;
+	char *buff;
+	struct ifconf ifc;
+	int i;
+
+	s = socket(PF_INET, SOCK_DGRAM, 0);
+	if (s > 0)
 	{
-		nFd = socket(AF_INET, SOCK_DGRAM, 0);
-		if (nFd >= 0)
+		ifc.ifc_len = 0;
+		ifc.ifc_buf = NULL;
+		if (ioctl(s, SIOCGIFCONF, (caddr_t)&ifc) == 0)
 		{
-			for (int i = 0; pIndex[i].if_index != 0; i++)
+			buff = (char *)malloc(ifc.ifc_len);
+			if (buff != NULL)
 			{
-				char szOut[256];
-				struct sockaddr_in *sa;
-				struct in_addr in;
-				char szIpAddr[32];
-				char szMacAddr[32];
-				int nMask;
+				ifc.ifc_buf = buff;
 
-				nRet = SYSINFO_RC_SUCCESS;
-
-				strcpy(irq.ifr_name, pIndex[i].if_name);
-				if (ioctl(nFd, SIOCGIFADDR, &irq) == 0)
+				if (ioctl(s, SIOCGIFCONF, (caddr_t)&ifc) == 0)
 				{
-					sa = (struct sockaddr_in *)&irq.ifr_addr;
-					strncpy(szIpAddr, inet_ntoa(sa->sin_addr), sizeof(szIpAddr));
-				}
-				else
-				{
-					nRet = SYSINFO_RC_ERROR;
-				}
-
-				if (nRet == SYSINFO_RC_SUCCESS)
-				{
-					if (ioctl(nFd, SIOCGIFNETMASK, &irq) == 0)
+					for (i = 0; i < ifc.ifc_len / sizeof(struct ifreq); i++)
 					{
-						sa = (struct sockaddr_in *)&irq.ifr_addr;
-						nMask = BitsInMask(htonl(sa->sin_addr.s_addr));
-					}
-				}
-				else
-				{
-					nRet = SYSINFO_RC_ERROR;
-				}
-
-				if (nRet == SYSINFO_RC_SUCCESS)
-				{
-					if (ioctl(nFd, SIOCGIFHWADDR, &irq) == 0)
-					{
-						for (int z = 0; z < 6; z++)
+						if( ifc.ifc_req[i].ifr_addr.sa_family == AF_INET )
 						{
-							sprintf(&szMacAddr[z << 1], "%02X",
-									(unsigned char)irq.ifr_hwaddr.sa_data[z]);
+							struct sockaddr_in *addr;
+							struct ifreq irq;
+							int mask = 0;
+							char szOut[1024];
+							int index = if_nametoindex(ifc.ifc_req[i].ifr_name);
+							char szMacAddr[16];
+
+
+							nRet = SYSINFO_RC_SUCCESS;
+
+							strcpy(irq.ifr_name, ifc.ifc_req[i].ifr_name);
+
+							if (ioctl(s, SIOCGIFNETMASK, &irq) == 0)
+							{
+								mask = 33 - ffs(htonl(((struct sockaddr_in *)
+													&irq.ifr_addr)->sin_addr.s_addr));
+							}
+
+							strcpy(irq.ifr_name, ifc.ifc_req[i].ifr_name);
+							strcpy(szMacAddr, "000000000000");
+							if (ioctl(s, SIOCGIFHWADDR, &irq) == 0)
+							{
+								for (int z = 0; z < 6; z++)
+								{
+									sprintf(&szMacAddr[z << 1], "%02X",
+											(unsigned char)irq.ifr_hwaddr.sa_data[z]);
+								}
+							}
+
+							addr = (struct sockaddr_in *)&(ifc.ifc_req[i].ifr_addr);
+
+							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
+									index,
+									inet_ntoa(addr->sin_addr),
+									mask,
+									IFTYPE_OTHER,
+									szMacAddr,
+									ifc.ifc_req[i].ifr_name);
+							NxAddResultString(pValue, szOut);
 						}
 					}
-               else
-               {
-					   nRet = SYSINFO_RC_ERROR;
-               }
 				}
 				else
 				{
-					nRet = SYSINFO_RC_ERROR;
+					//perror("sysctl-2()");
 				}
 
-				if (nRet == SYSINFO_RC_SUCCESS)
-				{
-					snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-							pIndex[i].if_index,
-							szIpAddr,
-							nMask,
-							IFTYPE_OTHER,
-							szMacAddr,
-							pIndex[i].if_name);
-					NxAddResultString(pValue, szOut);
-				}
-            else
-            {
-               break;   // Stop enumerating interfaces on error
-            }
+				free(buff);
 			}
-
-			close(nFd);
+			else
+			{
+				//perror("malloc()");
+			}
 		}
-      if_freenameindex(pIndex);
+		else
+		{
+			//perror("sysctl-1()");
+		}
+
+		close(s);
 	}
+	else
+	{
+		//perror("socket()");
+	}
+
 
 	return nRet;
 }
@@ -519,6 +526,9 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/08/22 00:11:47  alk
+Net.IP.RoutingTable added
+
 Revision 1.7  2005/06/12 17:57:24  victor
 Net.Interface.AdminStatus should return 2 for disabled interfaces
 
