@@ -113,6 +113,7 @@ protected:
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
+   HWND m_hwndEventBrowser;
    CActionEditor *m_pwndActionEditor;
    CTrapEditor *m_pwndTrapEditor;
 	CAlarmBrowser *m_pwndAlarmBrowser;

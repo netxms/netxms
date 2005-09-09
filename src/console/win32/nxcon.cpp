@@ -91,6 +91,7 @@ CConsoleApp::CConsoleApp()
    m_bPackageMgrActive = FALSE;
    m_bServerCfgEditorActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
+   m_hwndEventBrowser = NULL;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
 }
 
@@ -502,6 +503,7 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
       case IDR_EVENTS:
          m_bEventBrowserActive = TRUE;
          m_pwndEventBrowser = (CEventBrowser *)pWnd;
+         m_hwndEventBrowser = pWnd->m_hWnd;
          break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = TRUE;
@@ -578,6 +580,7 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_EVENTS:
          m_bEventBrowserActive = FALSE;
+         m_hwndEventBrowser = NULL;
          break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = FALSE;
@@ -747,7 +750,13 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
    {
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_bEventBrowserActive)
-            m_pwndEventBrowser->AddEvent((NXC_EVENT *)pArg);
+         {
+            void *pData;
+
+            pData = nx_memdup(pArg, sizeof(NXC_EVENT));
+            if (!PostMessage(m_hwndEventBrowser, WM_NETXMS_EVENT, 0, (LPARAM)pData))
+               free(pData);
+         }
          break;
       case NXC_EVENT_OBJECT_CHANGED:
          ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);

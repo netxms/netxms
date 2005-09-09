@@ -147,6 +147,7 @@ void CWaitView::Start()
    m_iStageDir = 1;
 
    m_nTimer = SetTimer(1, 100, NULL);
+   InvalidateRect(NULL, FALSE);
 }
 
 

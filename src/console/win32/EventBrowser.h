@@ -1,6 +1,7 @@
 #if !defined(AFX_EVENTBROWSER_H__02BA6E09_9B47_47DF_BD7F_5D39FB02A78C__INCLUDED_)
 #define AFX_EVENTBROWSER_H__02BA6E09_9B47_47DF_BD7F_5D39FB02A78C__INCLUDED_
 
+#include "WaitView.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -21,7 +22,6 @@ public:
 
 // Operations
 public:
-	void EnableDisplay(BOOL bEnable);
 	void AddEvent(NXC_EVENT *pEvent);
 
 // Overrides
@@ -33,6 +33,8 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bIsBusy;
+	CWaitView m_wndWaitView;
 	CImageList *m_pImageList;
 	CListCtrl m_wndListCtrl;
 	virtual ~CEventBrowser();
@@ -46,6 +48,8 @@ protected:
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnRequestCompleted(void);
+   afx_msg void OnNetXMSEvent(WPARAM wParam, NXC_EVENT *pEvent);
 	DECLARE_MESSAGE_MAP()
 };
 

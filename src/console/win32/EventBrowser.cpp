@@ -19,6 +19,7 @@ IMPLEMENT_DYNCREATE(CEventBrowser, CMDIChildWnd)
 CEventBrowser::CEventBrowser()
 {
    m_pImageList = NULL;
+   m_bIsBusy = FALSE;
 }
 
 CEventBrowser::~CEventBrowser()
@@ -36,6 +37,8 @@ BEGIN_MESSAGE_MAP(CEventBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_MESSAGE(WM_NETXMS_EVENT, OnNetXMSEvent)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -80,6 +83,9 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(2, "Source", LVCFMT_LEFT, 140);
    m_wndListCtrl.InsertColumn(3, "Message", LVCFMT_LEFT, 500);
 	
+   // Create wait view
+   m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
+
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENTS, this);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -107,6 +113,7 @@ void CEventBrowser::OnSize(UINT nType, int cx, int cy)
 	CMDIChildWnd::OnSize(nType, cx, cy);
 	
    m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
+   m_wndWaitView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }
 
 
@@ -118,7 +125,10 @@ void CEventBrowser::OnSetFocus(CWnd* pOldWnd)
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
 	
-   m_wndListCtrl.SetFocus();	
+   if (m_bIsBusy)
+      m_wndWaitView.SetFocus();
+   else
+      m_wndListCtrl.SetFocus();
 }
 
 
@@ -150,13 +160,13 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
 
 
 //
-// Enable or disable data display
-// This function is useful when large amount of data being added
+// Event loading thread
 //
 
-void CEventBrowser::EnableDisplay(BOOL bEnable)
+static void LoadEvents(void *pArg)
 {
-   m_wndListCtrl.ShowWindow(bEnable ? SW_SHOW : SW_HIDE);
+   NXCSyncEvents(g_hSession);
+   PostMessage((HWND)pArg, WM_REQUEST_COMPLETED, 0, 0);
 }
 
 
@@ -166,9 +176,31 @@ void CEventBrowser::EnableDisplay(BOOL bEnable)
 
 void CEventBrowser::OnViewRefresh() 
 {
-   EnableDisplay(FALSE);
-   DoRequestArg1(NXCSyncEvents, g_hSession, "Loading events...");
-   EnableDisplay(TRUE);
+   if (!m_bIsBusy)
+   {
+      m_bIsBusy = TRUE;
+      m_wndWaitView.ShowWindow(SW_SHOW);
+      m_wndListCtrl.ShowWindow(SW_HIDE);
+      m_wndWaitView.Start();
+      m_wndListCtrl.DeleteAllItems();
+      _beginthread(LoadEvents, 0, m_hWnd);
+   }
+}
+
+
+//
+// WM_REQUEST_COMPLETED message handler
+//
+
+void CEventBrowser::OnRequestCompleted(void)
+{
+   if (m_bIsBusy)
+   {
+      m_bIsBusy = FALSE;
+      m_wndListCtrl.ShowWindow(SW_SHOW);
+      m_wndWaitView.ShowWindow(SW_HIDE);
+      m_wndWaitView.Stop();
+   }
 }
 
 
@@ -182,4 +214,15 @@ LRESULT CEventBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    GetWindowPlacement(&pInfo->placement);
    pInfo->szParameters[0] = 0;
    return 1;
+}
+
+
+//
+// WM_NETXMS_EVENT message handler
+//
+
+void CEventBrowser::OnNetXMSEvent(WPARAM wParam, NXC_EVENT *pEvent)
+{
+   AddEvent(pEvent);
+   free(pEvent);
 }

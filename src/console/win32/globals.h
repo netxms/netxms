@@ -106,6 +106,7 @@ extern CConsoleApp theApp;
 #define WM_DEPLOYMENT_FINISHED   (WM_USER + 13)
 #define WM_GET_SAVE_INFO         (WM_USER + 14)
 #define WM_TABLE_DATA            (WM_USER + 15)
+#define WM_NETXMS_EVENT          (WM_USER + 16)
 
 
 //
