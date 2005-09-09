@@ -953,6 +953,7 @@ www/cgi-bin/matrix -text
 www/cgi-bin/matrixEdit -text
 www/cgi-bin/news.pl -text
 www/cgi-bin/quote.pl -text
+www/cgi-bin/sendmail.pl -text
 www/data/.cvsignore -text
 www/data/about/body.shtml -text
 www/data/about/index.shtml -text
