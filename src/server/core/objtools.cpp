@@ -119,10 +119,13 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId)
 static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 {
    CSCPMessage msg;
-   TCHAR *pszEnum, *pszRegEx;
+   TCHAR *pszEnum, *pszRegEx, *pszLine, szBuffer[4096];
    AgentConnection *pConn;
-   DWORD i, dwNumRows, dwResult;
+   DWORD i, j, dwNumRows, dwNumCols, dwNumValidRows, dwResult, dwId, dwLen;
+   int *pnSubstrPos, nPos;
    regex_t preg;
+   regmatch_t *pMatchList;
+   DB_RESULT hResult;
 
    // Prepare data message
    msg.SetCode(CMD_TABLE_DATA);
@@ -146,36 +149,85 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 
    if ((pszEnum != NULL) && (pszRegEx != NULL))
    {
-	   if (regcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
-	   {
-         pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->CreateAgentConnection();
-         if (pConn != NULL)
+      // Load column information
+      _stprintf(szBuffer, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=%ld ORDER BY col_number"),
+                ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
+      hResult = DBSelect(g_hCoreDB, szBuffer);
+      if (hResult != NULL)
+      {
+         dwNumCols = DBGetNumRows(hResult);
+         if (dwNumCols > 0)
          {
-            dwResult = pConn->GetList(pszEnum);
-            if (dwResult == ERR_SUCCESS)
+            pnSubstrPos = (int *)malloc(sizeof(int) * dwNumCols);
+            for(i = 0; i < dwNumCols; i++)
             {
-               dwNumRows = pConn->GetNumDataLines();
-               for(i = 0; i < dwNumRows; i++)
+               _tcsncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+               DecodeSQLString(szBuffer);
+               msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
+               msg.SetVariable(VID_COLUMN_FMT_BASE + i, DBGetFieldULong(hResult, i, 1));
+               pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
+            }
+	         if (regcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
+	         {
+               pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->CreateAgentConnection();
+               if (pConn != NULL)
                {
-                  if (regexec(&preg, pConn->GetDataLine(i), 0, NULL, 0) == 0)
+                  dwResult = pConn->GetList(pszEnum);
+                  if (dwResult == ERR_SUCCESS)
                   {
+                     dwNumRows = pConn->GetNumDataLines();
+                     pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (dwNumCols + 1));
+                     for(i = 0, dwNumValidRows = 0, dwId = VID_ROW_DATA_BASE; i < dwNumRows; i++)
+                     {
+                        pszLine = (TCHAR *)pConn->GetDataLine(i);
+                        if (regexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
+                        {
+                           // Write data for current row into message
+                           for(j = 0; j < dwNumCols; j++)
+                           {
+                              nPos = pnSubstrPos[j];
+                              dwLen = pMatchList[nPos].rm_eo - pMatchList[nPos].rm_so;
+                              memcpy(szBuffer, &pszLine[pMatchList[nPos].rm_so], dwLen * sizeof(TCHAR));
+                              szBuffer[dwLen] = 0;
+                              msg.SetVariable(dwId++, szBuffer);
+                           }
+                           dwNumValidRows++;
+                        }
+                     }
+                     free(pMatchList);
+
+                     // Set remaining variables
+                     msg.SetVariable(VID_NUM_ROWS, dwNumValidRows);
+                     msg.SetVariable(VID_TABLE_TITLE, ((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+                     msg.SetVariable(VID_NUM_COLUMNS, dwNumCols);
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
+                  }
+                  delete pConn;
                }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+               }
+               regfree(&preg);
             }
-            else
+            else     // Regexp compilation failed
             {
-               msg.SetVariable(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
+               msg.SetVariable(VID_RCC, RCC_BAD_REGEXP);
             }
-            delete pConn;
+            free(pnSubstrPos);
          }
-         else
+         else  // No columns defined
          {
-            msg.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+            msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
          }
       }
-      else
+      else     // Cannot load column info from DB
       {
-         msg.SetVariable(VID_RCC, RCC_BAD_REGEXP);
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
    }
    else
@@ -298,7 +350,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    msg.SetCode(CMD_TABLE_DATA);
    msg.SetId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
 
-   _stprintf(szBuffer, _T("SELECT col_name,col_oid,col_format FROM object_tools_snmp_tables WHERE tool_id=%ld ORDER BY col_number"),
+   _stprintf(szBuffer, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=%ld ORDER BY col_number"),
              ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)

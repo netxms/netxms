@@ -697,15 +697,16 @@ CREATE TABLE object_tools_acl
 
 
 /*
-** Configuration for SNMP_TABLE type of object tools
+** Configuration of columns for SNMP_TABLE and AGENT_TABLE type of object tools
 */
 
-CREATE TABLE object_tools_snmp_tables
+CREATE TABLE object_tools_table_columns
 (
 	tool_id integer not null,
 	col_number integer not null,
 	col_name varchar(255),
 	col_oid varchar(255),
 	col_format integer,	// Column format (integer, string, etc.)
+	col_substr integer,	// Number of matching substring in regexp
 	PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;

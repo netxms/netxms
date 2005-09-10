@@ -14,25 +14,34 @@ INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,descriptio
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
 	VALUES (5,'&Info->&MAC address table',TOOL_TYPE_TABLE_SNMP,'MAC Address Table',0,'Show switch MAC address table');
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (5,0,'MAC Address','.1.3.6.1.2.1.17.4.3.1.1',CFMT_MAC_ADDR);
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (5,1,'Port','.1.3.6.1.2.1.17.4.3.1.2',CFMT_INTEGER);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (5,0,'MAC Address','.1.3.6.1.2.1.17.4.3.1.1',CFMT_MAC_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (5,1,'Port','.1.3.6.1.2.1.17.4.3.1.2',CFMT_INTEGER,0);
 
-/*
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
 	VALUES (6,'&Info->Nokia process list',TOOL_TYPE_TABLE_SNMP,'Process List',65536,'Show process list on Nokia IP device');
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (6,0,'PID','.1.3.6.1.4.1.94.1.21.1.7.2.1.1',CFMT_INTEGER);
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (6,1,'Parent','.1.3.6.1.4.1.94.1.21.1.7.2.1.2',CFMT_INTEGER);
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (6,2,'Name','.1.3.6.1.4.1.94.1.21.1.7.2.1.6',CFMT_STRING);
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (6,3,'Owner','.1.3.6.1.4.1.94.1.21.1.7.2.1.3',CFMT_STRING);
-INSERT INTO object_tools_snmp_tables (tool_id,col_number,col_name,col_oid,col_format)
-	VALUES (6,4,'Memory','.1.3.6.1.4.1.94.1.21.1.7.2.1.4',CFMT_INTEGER);
-*/
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (6,0,'PID','.1.3.6.1.4.1.94.1.21.1.7.2.1.1',CFMT_INTEGER,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (6,1,'Parent','.1.3.6.1.4.1.94.1.21.1.7.2.1.2',CFMT_INTEGER,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (6,2,'Name','.1.3.6.1.4.1.94.1.21.1.7.2.1.6',CFMT_STRING,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (6,3,'Owner','.1.3.6.1.4.1.94.1.21.1.7.2.1.3',CFMT_STRING,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (6,4,'Memory','.1.3.6.1.4.1.94.1.21.1.7.2.1.4',CFMT_INTEGER,0);
+
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+	VALUES (7,'&Info->&Subagent list',TOOL_TYPE_TABLE_AGENT,'Subagent List#7FAgent.SubAgentList#7F^(.*) (.*) (.*) (.*)',0,'Show list of loaded subagents');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (7,0,'Name','',CFMT_STRING,1);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (7,1,'Version','',CFMT_STRING,2);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (7,2,'File','',CFMT_STRING,4);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (7,3,'Module handle','',CFMT_STRING,3);
 
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
