@@ -1,4 +1,24 @@
-31 ==> 32
+*************
+* 32 ==> 33 *
+*************
+
+- Added table object_tools_table_columns
+	CREATE TABLE object_tools_table_columns
+	(
+		tool_id integer not null,
+		col_number integer not null,
+		col_name varchar(255),
+		col_oid varchar(255),
+		col_format integer,
+		col_substr integer,
+		PRIMARY KEY(tool_id,col_number)
+	) TABLE_TYPE;
+- Predefined tools added:
+
+
+*************
+* 31 ==> 32 *
+*************
 
 - Added table object_tools:
 	CREATE TABLE object_tools
@@ -33,7 +53,9 @@
 	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (4,-2147483648);
 
 
-30 ==> 31
+*************
+* 30 ==> 31 *
+*************
 
 - Added configuration parameter NumberOfRoutingTablePollers
 - Added configuration parameter RoutingTableUpdateInterval

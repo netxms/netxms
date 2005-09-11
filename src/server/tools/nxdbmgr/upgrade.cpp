@@ -77,6 +77,31 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V32 to V33
+//
+
+static BOOL H_UpgradeFromV32(void)
+{
+   if (!CreateTable(_T("CREATE TABLE object_tools_table_columns ("
+                  	  "tool_id integer not null,"
+		                 "col_number integer not null,"
+		                 "col_name varchar(255),"
+		                 "col_oid varchar(255),"
+		                 "col_format integer,"
+		                 "col_substr integer,"
+		                 "PRIMARY KEY(tool_id,col_number))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='33' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V31 to V32
 //
 
