@@ -1,12 +1,18 @@
 <head>
-    <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
-    <link rel="stylesheet" type="text/css" href="/prosimii-screen.css" media="screen, tv, projection" title="Default" />
-    <link rel="stylesheet alternative" type="text/css" href="/prosimii-print.css" media="screen" title="Print Preview" />
-    <link rel="stylesheet" type="text/css" href="/prosimii-print.css" media="print" />
-	 <!--<link rel='alternate' type='application/rss+xml' title='RSS' href='/netxms.xml' />-->
-	 <link rel='alternate' type='application/rss+xml' title='RSS' href='/cgi-bin/news.pl?rss=yes' />
+	<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+	<link rel="stylesheet" type="text/css" href="/prosimii-screen.css" media="screen, tv, projection" title="Default" />
+	<link rel="stylesheet alternative" type="text/css" href="/prosimii-print.css" media="screen" title="Print Preview" />
+	<link rel="stylesheet" type="text/css" href="/prosimii-print.css" media="print" />
+	<!--<link rel='alternate' type='application/rss+xml' title='RSS' href='/netxms.xml' />-->
+	<link rel='alternate' type='application/rss+xml' title='RSS' href='/cgi-bin/news.pl?rss=yes' />
 
-    <title>NetXMS :: <!--#echo var="title" --></title>
+	<title>NetXMS :: <!--#echo var="title" --></title>
+
+	<meta name="COPYRIGHT" content="Copyright (c) 2003-2005 NetXMS Team " />
+	<meta name="TITLE" content="NetXMS" />
+	<meta name="ABSTRACT" content="NetXMS" />
+	<meta name="DESCRIPTION" content="NetXMS: Open Source Monitoring System" />
+	<meta name="KEYWORDS" content="netxms, network monitor, system monitor, monitoring, linux, unix, freebsd, windows, free network monitor" />
 </head>
 <div id="header">
     <div class="midHeader">

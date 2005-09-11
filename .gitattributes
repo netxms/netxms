@@ -951,6 +951,9 @@ tools/sharIt -text
 tools/stub.sh -text
 www/.cvsignore -text
 www/.htpasswd.digest -text
+www/cgi-bin/Net/Cmd.pm -text
+www/cgi-bin/Net/Config.pm -text
+www/cgi-bin/Net/SMTP.pm -text
 www/cgi-bin/matrix -text
 www/cgi-bin/matrixEdit -text
 www/cgi-bin/news.pl -text
@@ -989,6 +992,8 @@ www/data/documentation/index.shtml -text
 www/data/documentation/install.shtml -text
 www/data/documentation/macros.shtml -text
 www/data/documentation/matrix.shtml -text
+www/data/documentation/netxms-ppt.zip -text
+www/data/documentation/netxms.ppt -text
 www/data/documentation/ping_subagent.shtml -text
 www/data/documentation/ping_subagent.txt -text
 www/data/documentation/upgrade.shtml -text

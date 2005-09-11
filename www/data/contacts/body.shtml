@@ -26,7 +26,7 @@
 	</p>
 
 	<hr noshade="" width="70%" align="left" />
-	<h2>Send note to developers team directly from this page</h2>
+	<h2>Send your comments to developers team directly from this page</h2>
 	<p>
 		<form action="/cgi-bin/sendmail.pl">
 			<table border="0">
@@ -52,13 +52,13 @@
 				</tr>
 				<tr>
 					<td align="right">
-						<input type="submit" value="Send mail to team" /><br />
+						<input type="submit" value="Send" /><br />
 					</td>
 				</tr>
 			</table>
 		</form>
 	</p>
 	<p>
-	When note is send, you'll be redirected back to this page.
+	When the note is sent, you'll be redirected back to this page.
 	</p>
 </div>

@@ -1,3 +1,5 @@
+12-Sep-2005|Changes in roadmap|Due to popular demand, log monitoring (Windows event log, UNIX syslog proxy, plain text files) will be added in the near future.
+10-Sep-2005|"Linux - modern technology" conference|NetXMS was presented at "<a href="http://www.ibm.com/news/lv/lv/2005/09/lv_lv_news_20050902.html">Linux - modern technology</a>" conference, organized by IBM, Oracle, SuSe and Novell. You can download presentation used during Victor's speech in <a href="http://netxms.org/documentation/">documentation</a> section.
 24-Aug-2005|Mail archives|Archives of <a href="http://www.netxms.org/archive/netxms-dev/summary.html">netxms-dev</a>, <a href="http://www.netxms.org/archive/netxms-users/summary.html">netxms-users</a> and <a href="http://www.netxms.org/archive/netxms-cvs/summary.html">netxms-cvs</a> piped through hypermail.
 24-Aug-2005|0.2.4 released|Version 0.2.4 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 13-Aug-2005|0.2.3 released|Version 0.2.3 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>

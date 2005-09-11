@@ -11,11 +11,11 @@ if (defined $q->param('contact') && defined $q->param('text'))
 	my $smtp = Net::SMTP->new('mail.alk.lv');
 
 	$smtp->mail($ENV{USER});
-	$smtp->to('alk@alk.lv');
+	$smtp->to('team@netxms.org');
 
 	$smtp->data();
 	$smtp->datasend("From: web\@netxms.org\n");
-	$smtp->datasend("To: alk\@alk.lv\n");
+	$smtp->datasend("To: team\@netxms.org\n");
 	$smtp->datasend("Subject: [web form]\n");
 	my $date = `date "+%a, %d %b %Y %d %R:%S %z"`;
 	$smtp->datasend("Content-Type: text/plain; charset=utf-8\n");
