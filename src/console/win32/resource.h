@@ -25,6 +25,7 @@
 #define ID_EDIT_CTRL                    121
 #define IDC_SPLITTER                    122
 #define ID_WAIT_VIEW                    123
+#define ID_BROWSER_CTRL                 124
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -418,6 +419,7 @@
 #define IDC_APPLY                       1284
 #define IDC_DISCARD                     1285
 #define IDC_SAVE                        1286
+#define IDR_WEB_BROWSER                 8100
 #define IDR_EVENT_EDITOR                8105
 #define IDR_USER_EDITOR                 8106
 #define IDR_NETWORK_SUMMARY             8107
@@ -573,6 +575,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        285
 #define _APS_NEXT_COMMAND_VALUE         32956
 #define _APS_NEXT_CONTROL_VALUE         1287
-#define _APS_NEXT_SYMED_VALUE           124
+#define _APS_NEXT_SYMED_VALUE           125
 #endif
 #endif

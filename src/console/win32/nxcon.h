@@ -105,6 +105,7 @@ public:
 
 // Implementation
 protected:
+	void ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL);
 	void ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId);
 	void CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId, TCHAR *pszSubTitle, HMENU hMenu, HACCEL hAccel);
 	void CreateObject(NXC_OBJECT_CREATE_INFO *pInfo);
@@ -206,6 +207,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void StartWebBrowser(TCHAR *pszURL);
 	void ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex);
 	void CreateVPNConnector(DWORD dwParent);
 	void ExportDCIData(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom, DWORD dwTimeTo, int iSeparator, int iTimeStampFormat, const TCHAR *pszFile);

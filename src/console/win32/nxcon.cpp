@@ -24,6 +24,7 @@
 #include "AddrChangeDlg.h"
 #include "AgentCfgEditor.h"
 #include "TableView.h"
+#include "WebBrowser.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -2117,6 +2118,9 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
             m_pMainWnd->MessageBox(_T("Node doesn't have SNMP agent"), _T("Error"), MB_OK | MB_ICONSTOP);
          }
          break;
+      case TOOL_TYPE_URL:
+         ExecuteWebTool(pObject, g_pObjectToolList[dwIndex].pszData);
+         break;
       default:
          m_pMainWnd->MessageBox(_T("This type of tool is not implemented yet"), _T("Warning"), MB_OK | MB_ICONSTOP);
          break;
@@ -2136,4 +2140,34 @@ void CConsoleApp::ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId)
    CreateChildFrameWithSubtitle(pWnd, IDR_TABLE_VIEW,
                                 pNode->szName, m_hMDIMenu, m_hMDIAccel);
 //   return pWnd;
+}
+
+
+//
+// Execute web tool (open specified URL)
+//
+
+void CConsoleApp::ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL)
+{
+   TCHAR szRealURL[4096];
+
+   _stprintf(szRealURL, _T("%lu"), pObject->dwId);
+   SetEnvironmentVariable(_T("OBJECT_ID"), szRealURL);
+   SetEnvironmentVariable(_T("OBJECT_IP_ADDR"), IpToStr(pObject->dwIpAddr, szRealURL));
+   SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
+   ExpandEnvironmentStrings(pszURL, szRealURL, 4096);
+   StartWebBrowser(szRealURL);
+}
+
+
+//
+// Start embedded web browser
+//
+
+void CConsoleApp::StartWebBrowser(TCHAR *pszURL)
+{
+   CWebBrowser *pWnd;
+
+   pWnd = new CWebBrowser(pszURL);
+   CreateChildFrameWithSubtitle(pWnd, IDR_WEB_BROWSER, pszURL, m_hMDIMenu, m_hMDIAccel);
 }

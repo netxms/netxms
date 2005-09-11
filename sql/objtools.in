@@ -43,6 +43,11 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (7,3,'Module handle','',CFMT_STRING,3);
 
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+	VALUES (8,'&Connect->Open &web browser',TOOL_TYPE_URL,'http://%OBJECT_IP_ADDR%',0,'Open embedded web browser to node');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
+	VALUES (9,'&Connect->Open &web browser (HTTPS)',TOOL_TYPE_URL,'https://%OBJECT_IP_ADDR%',0,'Open embedded web browser to node using HTTPS');
+
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);

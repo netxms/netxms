@@ -496,6 +496,10 @@ SOURCE=.\VPNCPropsGeneral.cpp
 
 SOURCE=.\WaitView.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\WebBrowser.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -903,6 +907,10 @@ SOURCE=.\VPNCPropsGeneral.h
 # Begin Source File
 
 SOURCE=.\WaitView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\WebBrowser.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
