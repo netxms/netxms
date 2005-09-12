@@ -82,6 +82,63 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 static BOOL H_UpgradeFromV32(void)
 {
+   static TCHAR m_szBatch[] =
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (5,'&Info->&Switch forwarding database (FDB)',2 ,'Forwarding database',0,'Show switch forwarding database')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (5,0,'MAC Address','.1.3.6.1.2.1.17.4.3.1.1',4 ,0)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (5,1,'Port','.1.3.6.1.2.1.17.4.3.1.2',1 ,0)\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (6,'&Connect->Open &web browser',4 ,'http://%OBJECT_IP_ADDR%',0,'Open embedded web browser to node')\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (7,'&Connect->Open &web browser (HTTPS)',4 ,'https://%OBJECT_IP_ADDR%',0,'Open embedded web browser to node using HTTPS')\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (8,'&Info->&Agent->&Subagent list',3 ,'Subagent List#7FAgent.SubAgentList#7F^(.*) (.*) (.*) (.*)',0,'Show list of loaded subagents')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (8,0,'Name','',0 ,1)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (8,1,'Version','',0 ,2)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (8,2,'File','',0 ,4)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (8,3,'Module handle','',0 ,3)\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (9,'&Info->&Agent->Supported &parameters',3 ,'Supported parameters#7FAgent.SupportedParameters#7F^(.*)',0,'Show list of parameters supported by agent')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (9,0,'Parameter','',0 ,1)\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (10,'&Info->&Agent->Supported &enums',3 ,'Supported enums#7FAgent.SupportedEnums#7F^(.*)',0,'Show list of enums supported by agent')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (10,0,'Parameter','',0 ,1)\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (11,'&Info->&Agent->Supported &actions',3 ,'Supported actions#7FAgent.ActionList#7F^(.*) (.*) #22(.*)#22.*',0,'Show list of actions supported by agent')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (11,0,'Name','',0 ,1)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (11,1,'Type','',0 ,2)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (11,2,'Data','',0 ,3)\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
+	      "VALUES (12,'&Info->&Agent->Configured &ICMP targets',3 ,'Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*)',0,'Show list of actions supported by agent')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (12,0,'IP Address','',0 ,1)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (12,1,'Name','',0 ,4)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (12,2,'Last RTT','',0 ,2)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (12,4,'Average RTT','',0 ,3)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (5,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (6,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (7,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (8,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (9,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (10,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (11,-2147483648)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (12,-2147483648)\n"
+      "<END>";
+
    if (!CreateTable(_T("CREATE TABLE object_tools_table_columns ("
                   	  "tool_id integer not null,"
 		                 "col_number integer not null,"
@@ -90,6 +147,10 @@ static BOOL H_UpgradeFromV32(void)
 		                 "col_format integer,"
 		                 "col_substr integer,"
 		                 "PRIMARY KEY(tool_id,col_number))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
       if (!g_bIgnoreErrors)
          return FALSE;
 

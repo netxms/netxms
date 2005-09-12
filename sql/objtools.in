@@ -46,9 +46,13 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (10,0,'Parameter','',CFMT_STRING,1);
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (11,'&Info->&Agent->Supported &actions',TOOL_TYPE_TABLE_AGENT,'Supported actions#7FAgent.ActionList#7F^(.*)',0,'Show list of actions supported by agent');
+	VALUES (11,'&Info->&Agent->Supported &actions',TOOL_TYPE_TABLE_AGENT,'Supported actions#7FAgent.ActionList#7F^(.*) (.*) #22(.*)#22.*',0,'Show list of actions supported by agent');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (11,0,'Parameter','',CFMT_STRING,1);
+	VALUES (11,0,'Name','',CFMT_STRING,1);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (11,1,'Type','',CFMT_STRING,2);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (11,2,'Data','',CFMT_STRING,3);
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
 	VALUES (12,'&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_TABLE_AGENT,'Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*)',0,'Show list of actions supported by agent');
