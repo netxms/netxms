@@ -15,19 +15,6 @@
 # Servers = 127.0.0.1, srv1.domain.com, srv2.domain.com
 
 #
-# InstallationServers
-#
-# List of management servers which can upload files to agent and initiate
-# agent upgrade. Hosts listed in this parameter also have read access to agent.
-# Both IP addresses and DNS names can be used. Multiple servers can be
-# specified in one line, separated by commas. If this parameter used more
-# than once, servers listed in all occurences will have access to agent.
-#
-# Examples:
-# InstallationServers = 10.0.0.1
-# InstallationServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
-
-#
 # ControlServers
 #
 # List of management servers which can execute actions on agent and change
@@ -39,6 +26,20 @@
 # Examples:
 # ControlServers = 10.0.0.1
 # ControlServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
+
+#
+# MasterServers
+#
+# List of management servers which have full access to agent. Hostss listed
+# in this group can  upload files to agent and initiate agent upgrade, as well
+# as perform any task allowed for hosts listed in Servers and ControlServers.
+# Both IP addresses and DNS names can be used. Multiple servers can be
+# specified in one line, separated by commas. If this parameter used more
+# than once, servers listed in all occurences will have access to agent.
+#
+# Examples:
+# MasterServers = 10.0.0.1
+# MasterServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
 
 #
 # LogFile
