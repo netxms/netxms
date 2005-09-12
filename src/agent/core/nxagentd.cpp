@@ -266,6 +266,9 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 
 static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *pData)
 {
+#ifdef _NETWARE
+   return ERR_NOT_IMPLEMENTED;
+#else
    TCHAR szCmdLine[4096];
 #ifdef _WIN32
    TCHAR szExecName[MAX_PATH];
@@ -320,6 +323,7 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
               (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""), m_pid);
    return ExecuteCommand(szCmdLine, NULL);
 #endif
+#endif  /* _NETWARE */
 }
 
 
