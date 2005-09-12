@@ -654,6 +654,17 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
          hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0644);
          if (hFile != -1)
          {
+#if !defined(_WIN32) && !defined(_NETWARE)
+            if (dwSize > 0)
+            {
+               for(DWORD i = 0; i < dwSize - 1; i++)
+                  if ((pConfig[i] == 0x0D) && (pConfig[i + 1] == 0x0A))
+                  {
+                     dwSize--;
+                     memmove(&pConfig[i], &pConfig[i + 1], dwSize - i);
+                  }
+            }
+#endif
             write(hFile, pConfig, dwSize);
             close(hFile);
             pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
