@@ -44,15 +44,14 @@ static MUTEX m_hSessionListAccess;
 // Validates server's address
 //
 
-static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbInstallationServer,
-                              BOOL *pbControlServer)
+static BOOL IsValidServerAddr(DWORD dwAddr, BOOL *pbMasterServer, BOOL *pbControlServer)
 {
    DWORD i;
 
    for(i=0; i < g_dwServerCount; i++)
       if (dwAddr == g_pServerList[i].dwIpAddr)
       {
-         *pbInstallationServer = g_pServerList[i].bInstallationServer;
+         *pbMasterServer = g_pServerList[i].bMasterServer;
          *pbControlServer = g_pServerList[i].bControlServer;
          return TRUE;
       }

@@ -103,7 +103,7 @@ DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR,
 static char *m_pszActionList = NULL;
 static char *m_pszServerList = NULL;
 static char *m_pszControlServerList = NULL;
-static char *m_pszInstallServerList = NULL;
+static char *m_pszMasterServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -126,10 +126,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
-   { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszInstallServerList },
+   { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
+   { "MasterServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList },
    { "MaxSessions", CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions },
    { "PlatformSuffix", CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
@@ -461,7 +462,7 @@ BOOL Initialize(void)
          }
          else
          {
-            g_pServerList[g_dwServerCount].bInstallationServer = FALSE;
+            g_pServerList[g_dwServerCount].bMasterServer = FALSE;
             g_pServerList[g_dwServerCount].bControlServer = FALSE;
             g_dwServerCount++;
          }
@@ -469,12 +470,12 @@ BOOL Initialize(void)
       free(m_pszServerList);
    }
 
-   // Parse installation server list
-   if (m_pszInstallServerList != NULL)
+   // Parse master server list
+   if (m_pszMasterServerList != NULL)
    {
       DWORD i, dwAddr;
 
-      for(pItem = m_pszInstallServerList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = m_pszMasterServerList; *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, ',');
          if (pEnd != NULL)
@@ -497,17 +498,18 @@ BOOL Initialize(void)
             if (i == g_dwServerCount)
             {
                g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
-               g_pServerList[g_dwServerCount].bInstallationServer = TRUE;
-               g_pServerList[g_dwServerCount].bControlServer = FALSE;
+               g_pServerList[g_dwServerCount].bMasterServer = TRUE;
+               g_pServerList[g_dwServerCount].bControlServer = TRUE;
                g_dwServerCount++;
             }
             else
             {
-               g_pServerList[i].bInstallationServer = TRUE;
+               g_pServerList[i].bMasterServer = TRUE;
+               g_pServerList[i].bControlServer = TRUE;
             }
          }
       }
-      free(m_pszInstallServerList);
+      free(m_pszMasterServerList);
    }
 
    // Parse control server list
@@ -538,7 +540,7 @@ BOOL Initialize(void)
             if (i == g_dwServerCount)
             {
                g_pServerList[g_dwServerCount].dwIpAddr = dwAddr;
-               g_pServerList[g_dwServerCount].bInstallationServer = FALSE;
+               g_pServerList[g_dwServerCount].bMasterServer = FALSE;
                g_pServerList[g_dwServerCount].bControlServer = TRUE;
                g_dwServerCount++;
             }

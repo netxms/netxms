@@ -81,7 +81,7 @@ THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
 //
 
 CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
-                         BOOL bInstallationServer, BOOL bControlServer)
+                         BOOL bMasterServer, BOOL bControlServer)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -92,7 +92,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_dwHostAddr = dwHostAddr;
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
-   m_bInstallationServer = bInstallationServer;
+   m_bMasterServer = bMasterServer;
    m_bControlServer = bControlServer;
    m_hCurrFile = -1;
    m_pCtx = NULL;
@@ -559,7 +559,7 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
 
-   if (m_bInstallationServer)
+   if (m_bMasterServer)
    {
       szFileName[0] = 0;
       pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
@@ -600,7 +600,7 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 DWORD CommSession::Upgrade(CSCPMessage *pRequest)
 {
-   if (m_bInstallationServer)
+   if (m_bMasterServer)
    {
       TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
 
@@ -622,7 +622,7 @@ DWORD CommSession::Upgrade(CSCPMessage *pRequest)
 
 void CommSession::GetConfig(CSCPMessage *pMsg)
 {
-   if (m_bInstallationServer)
+   if (m_bMasterServer)
    {
       pMsg->SetVariable(VID_RCC, 
          pMsg->SetVariableFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
@@ -640,7 +640,7 @@ void CommSession::GetConfig(CSCPMessage *pMsg)
 
 void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   if (m_bInstallationServer)
+   if (m_bMasterServer)
    {
       BYTE *pConfig;
       int hFile;

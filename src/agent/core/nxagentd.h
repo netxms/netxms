@@ -192,7 +192,7 @@ struct SUBAGENT
 struct SERVER_INFO
 {
    DWORD dwIpAddr;
-   BOOL bInstallationServer;
+   BOOL bMasterServer;
    BOOL bControlServer;
 };
 
@@ -213,7 +213,7 @@ private:
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    DWORD m_dwIndex;
    BOOL m_bIsAuthenticated;
-   BOOL m_bInstallationServer;
+   BOOL m_bMasterServer;
    BOOL m_bControlServer;
    int m_hCurrFile;
    DWORD m_dwFileRqId;
@@ -238,7 +238,7 @@ private:
    static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bInstallServer, BOOL bControlServer);
+   CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
    ~CommSession();
 
    void Run(void);
