@@ -1377,6 +1377,7 @@ static struct
    { 29, H_UpgradeFromV29 },
    { 30, H_UpgradeFromV30 },
    { 31, H_UpgradeFromV31 },
+   { 32, H_UpgradeFromV32 },
    { 0, NULL }
 };
 
