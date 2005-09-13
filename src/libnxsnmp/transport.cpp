@@ -317,11 +317,15 @@ DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponse,
       return SNMP_ERR_PARAM;
 
    *ppResponse = NULL;
-   if (Send(pRequest) <= 0)
-      return SNMP_ERR_COMM;
 
    while(dwNumRetries-- > 0)
    {
+      if (Send(pRequest) <= 0)
+      {
+         dwResult = SNMP_ERR_COMM;
+         break;
+      }
+
       iBytes = Read(ppResponse, dwTimeout);
       if (iBytes > 0)
       {
