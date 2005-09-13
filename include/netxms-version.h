@@ -30,8 +30,8 @@
 
 #define NETXMS_VERSION_MAJOR        0
 #define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        5
-#define NETXMS_VERSION_STRING       _T("0.2.5")
+#define NETXMS_VERSION_BUILD        6
+#define NETXMS_VERSION_STRING       _T("0.2.6-dev")
 
 
 //
