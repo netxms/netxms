@@ -11,6 +11,7 @@
 	- Added node tree in alarm browser
 	- Added possibility to copy DCIs to template
 - Fixed bug in core agent causing incorrect update of configuration file
+- Fixed incorrect interface aliases detection in Linux subagent
 - Fixed issues: #36, #39, #42, #45
 
 
