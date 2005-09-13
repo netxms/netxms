@@ -115,6 +115,7 @@ IDI_PENDING             ICON    DISCARDABLE     "icons\\pending.ico"
 IDI_TIPS                ICON    DISCARDABLE     "icons\\Tips.ico"
 IDI_DESKTOP             ICON    DISCARDABLE     "icons\\desktop.ico"
 IDI_EDITOR              ICON    DISCARDABLE     "icons\\editor.ico"
+IDI_IEXPLORER           ICON    DISCARDABLE     "icons\\iexplore.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

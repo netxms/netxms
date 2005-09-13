@@ -1002,6 +1002,10 @@ SOURCE=.\icons\graph.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\iexplore.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\log.ico
 # End Source File
 # Begin Source File

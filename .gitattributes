@@ -606,6 +606,7 @@ src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/editor.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/graph.ico -text
+src/console/win32/icons/iexplore.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/nack.ico -text
 src/console/win32/icons/ovl_status_critical.ico -text
