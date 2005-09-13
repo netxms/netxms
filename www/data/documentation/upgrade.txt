@@ -1,5 +1,7 @@
 NetXMS Server Upgrade Procedure
 
+I. On UNIX systems
+
 1. Unpack source package
 2. Run ./configure --with-agent --with-server --with-<your_db_driver>
 3. Run make
@@ -8,6 +10,14 @@ NetXMS Server Upgrade Procedure
 6. Run "nxdbmgr check"
 7. Run make install
 8. Run "nxdbmgr upgrade"
-9. Unpack new image and MIB files to appropriate directories (usually under /var/netxms)
-10. Start NetXMS agent
-11. Start NetXMS server
+9. Start NetXMS agent
+10. Start NetXMS server
+
+
+II. On Windows systems
+
+1. Stop NetXMS server
+2. Run "nxdbmgr check"
+3. Run NetXMS installer (for example, netxms-0.2.5.exe)
+4. Run "nxdbmgr upgrade"
+5. Start NetXMS server
