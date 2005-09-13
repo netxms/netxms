@@ -334,6 +334,7 @@ DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponse,
          else
          {
             dwResult = SNMP_ERR_PARSE;
+            break;
          }
       }
       else
