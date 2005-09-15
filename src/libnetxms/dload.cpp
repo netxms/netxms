@@ -55,11 +55,14 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
 
 void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 {
+   if (hModule != NULL)
+   {
 #ifdef _WIN32
-   FreeLibrary(hModule);
+      FreeLibrary(hModule);
 #else    /* _WIN32 */
-   dlclose(hModule);
+      dlclose(hModule);
 #endif
+   }
 }
 
 
