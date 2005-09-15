@@ -36,6 +36,78 @@ static SUBAGENT *m_pSubAgentList = NULL;
 
 
 //
+// Initialize subagent
+//
+
+BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
+                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *))
+{
+   NETXMS_SUBAGENT_INFO *pInfo;
+   BOOL bSuccess = FALSE;
+
+   if (SubAgentInit(&pInfo, g_szConfigFile))
+   {
+      // Check if information structure is valid
+      if (pInfo->dwMagic == NETXMS_SUBAGENT_INFO_MAGIC)
+      {
+         DWORD i;
+
+         // Add subagent to subagent's list
+         m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
+                                               sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
+         m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
+         strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH - 1);
+         m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
+         m_dwNumSubAgents++;
+
+         // Add parameters provided by this subagent to common list
+         for(i = 0; i < pInfo->dwNumParameters; i++)
+            AddParameter(pInfo->pParamList[i].szName, 
+                         pInfo->pParamList[i].fpHandler,
+                         pInfo->pParamList[i].pArg,
+                         pInfo->pParamList[i].iDataType,
+                         pInfo->pParamList[i].szDescription);
+
+         // Add enums provided by this subagent to common list
+         for(i = 0; i < pInfo->dwNumEnums; i++)
+            AddEnum(pInfo->pEnumList[i].szName, 
+                    pInfo->pEnumList[i].fpHandler,
+                    pInfo->pEnumList[i].pArg);
+
+         // Add actions provided by this subagent to common list
+         for(i = 0; i < pInfo->dwNumActions; i++)
+            AddAction(pInfo->pActionList[i].szName,
+                      AGENT_ACTION_SUBAGENT,
+                      pInfo->pActionList[i].pArg,
+                      pInfo->pActionList[i].fpHandler,
+                      pInfo->szName,
+                      pInfo->pActionList[i].szDescription);
+
+         WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
+                  "s", pszModuleName);
+         bSuccess = TRUE;
+      }
+      else
+      {
+         WriteLog(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
+                  "s", pszModuleName);
+         // We shouldn't unload subagent after call to Init(),
+         // because subagent may already start worker threads
+         //DLClose(hModule);
+      }
+   }
+   else
+   {
+      WriteLog(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
+               "s", pszModuleName);
+      DLClose(hModule);
+   }
+
+   return bSuccess;
+}
+
+
+//
 // Load subagent
 //
 
@@ -48,7 +120,7 @@ BOOL LoadSubAgent(char *szModuleName)
    hModule = DLOpen(szModuleName, szErrorText);
    if (hModule != NULL)
    {
-      BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *pszConfigFile);
+      BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *);
 
       // Under NetWare, we have slightly different subagent
       // initialization procedure. Because normally two NLMs
@@ -74,65 +146,7 @@ BOOL LoadSubAgent(char *szModuleName)
 
       if (SubAgentInit != NULL)
       {
-         NETXMS_SUBAGENT_INFO *pInfo;
-
-         if (SubAgentInit(&pInfo, g_szConfigFile))
-         {
-            // Check if information structure is valid
-            if (pInfo->dwMagic == NETXMS_SUBAGENT_INFO_MAGIC)
-            {
-               DWORD i;
-
-               // Add subagent to subagent's list
-               m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
-                                                     sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
-               m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-               strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, szModuleName, MAX_PATH - 1);
-               m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
-               m_dwNumSubAgents++;
-
-               // Add parameters provided by this subagent to common list
-               for(i = 0; i < pInfo->dwNumParameters; i++)
-                  AddParameter(pInfo->pParamList[i].szName, 
-                               pInfo->pParamList[i].fpHandler,
-                               pInfo->pParamList[i].pArg,
-                               pInfo->pParamList[i].iDataType,
-                               pInfo->pParamList[i].szDescription);
-
-               // Add enums provided by this subagent to common list
-               for(i = 0; i < pInfo->dwNumEnums; i++)
-                  AddEnum(pInfo->pEnumList[i].szName, 
-                          pInfo->pEnumList[i].fpHandler,
-                          pInfo->pEnumList[i].pArg);
-
-               // Add actions provided by this subagent to common list
-               for(i = 0; i < pInfo->dwNumActions; i++)
-                  AddAction(pInfo->pActionList[i].szName,
-                            AGENT_ACTION_SUBAGENT,
-                            pInfo->pActionList[i].pArg,
-                            pInfo->pActionList[i].fpHandler,
-                            pInfo->szName,
-                            pInfo->pActionList[i].szDescription);
-
-               WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
-                        "s", szModuleName);
-               bSuccess = TRUE;
-            }
-            else
-            {
-               WriteLog(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
-                        "s", szModuleName);
-               // We shouldn't unload subagent after call to Init(),
-               // because subagent may already start worker threads
-               //DLClose(hModule);
-            }
-         }
-         else
-         {
-            WriteLog(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
-                     "s", szModuleName);
-            DLClose(hModule);
-         }
+         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit);
       }
       else
       {

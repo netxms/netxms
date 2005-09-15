@@ -281,6 +281,8 @@ void GetParameterList(CSCPMessage *pMsg);
 
 BOOL LoadSubAgent(char *szModuleName);
 void UnloadAllSubAgents(void);
+BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
+                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *));
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse);
 
 BOOL AddAction(char *pszName, int iType, char *pArg, 
