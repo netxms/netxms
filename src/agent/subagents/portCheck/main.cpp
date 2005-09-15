@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.10 2005-08-17 12:09:23 victor Exp $ */
+/* $Id: main.cpp,v 1.11 2005-09-15 21:47:03 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -150,7 +150,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+DECLARE_SUBAGENT_INIT(PORTCHECK)
 {
    *ppInfo = &m_info;
 
@@ -161,6 +161,9 @@ extern "C" BOOL PORTCHECK_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInf
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/08/17 12:09:23  victor
+responce changed to response (issue #37)
+
 Revision 1.9  2005/08/13 16:03:01  victor
 Init structure changed to the new format
 

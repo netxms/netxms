@@ -150,7 +150,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+DECLARE_SUBAGENT_INIT(SUNOS)
 {
 	m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
 

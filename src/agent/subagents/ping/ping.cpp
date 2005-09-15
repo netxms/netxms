@@ -268,11 +268,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 // Entry point for NetXMS agent
 //
 
-#ifdef _NETWARE
-extern "C" BOOL PING_EXPORTABLE NxSubAgentInit_PING(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
-#else
-extern "C" BOOL PING_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
-#endif
+DECLARE_SUBAGENT_INIT(PING)
 {
    DWORD i, dwResult;
 

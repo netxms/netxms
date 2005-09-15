@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.6 2005-08-22 23:00:05 alk Exp $ */
+/* $Id: freebsd.cpp,v 1.7 2005-09-15 21:47:02 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -121,10 +121,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+DECLARE_SUBAGENT_INIT(FREEBSD)
 {
    *ppInfo = &m_info;
-
    return TRUE;
 }
 
@@ -132,6 +131,9 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/08/22 23:00:05  alk
+Net.IP.RoutingTable added
+
 Revision 1.5  2005/03/10 19:04:07  alk
 implemented:
 	Net.Interface.AdminStatus(*)

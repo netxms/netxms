@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.21 2005-09-15 21:24:54 victor Exp $ */
+/* $Id: linux.cpp,v 1.22 2005-09-15 21:47:02 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -158,28 +158,19 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-#ifdef _STATIC_AGENT
-
-extern "C" BOOL NxSubAgentInit_LINUX(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+DECLARE_SUBAGENT_INIT(LINUX)
 {
    *ppInfo = &m_info;
    return TRUE;
 }
-
-#else
-
-extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
-{
-   *ppInfo = &m_info;
-   return TRUE;
-}
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2005/09/15 21:24:54  victor
+Minor changes
+
 Revision 1.20  2005/09/15 21:22:58  victor
 Added possibility to build statically linked agents (with platform subagent linked in)
 For now, agent has to be linked manually. I'll fix it later.

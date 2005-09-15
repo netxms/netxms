@@ -105,11 +105,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-#ifdef _NETWARE
-extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit_SKELETON(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
-#else
-extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
-#endif
+DECLARE_SUBAGENT_INIT(SKELETON)
 {
    *ppInfo = &m_info;
    return TRUE;

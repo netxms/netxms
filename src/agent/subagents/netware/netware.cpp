@@ -288,8 +288,6 @@ extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *psz
 // NetWare library entry point
 //
 
-#ifdef _NETWARE
-
 int _init(void)
 {
    return 0;
@@ -299,5 +297,3 @@ int _fini(void)
 {
    return 0;
 }
-
-#endif
