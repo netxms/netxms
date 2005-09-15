@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.20 2005-09-15 21:22:58 victor Exp $ */
+/* $Id: linux.cpp,v 1.21 2005-09-15 21:24:54 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -160,7 +160,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 #ifdef _STATIC_AGENT
 
-extern "C" BOOL NxSubAgentInit_LINUX(NETXMS_SUBAGENT_INFO **ppInfo)
+extern "C" BOOL NxSubAgentInit_LINUX(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -168,7 +168,7 @@ extern "C" BOOL NxSubAgentInit_LINUX(NETXMS_SUBAGENT_INFO **ppInfo)
 
 #else
 
-extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
+extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -180,6 +180,10 @@ extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2005/09/15 21:22:58  victor
+Added possibility to build statically linked agents (with platform subagent linked in)
+For now, agent has to be linked manually. I'll fix it later.
+
 Revision 1.19  2005/08/22 00:11:46  alk
 Net.IP.RoutingTable added
 
