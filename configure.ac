@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.102 2005-09-13 11:10:36 victor Exp $
+# $Id: configure.ac,v 1.103 2005-09-15 21:22:56 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -17,16 +17,12 @@ AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_INSTALL
 
-AC_DISABLE_STATIC
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
-
-
 # --------------------------------------------------------------------------
 # disable C++ exceptions
 CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
 LDFLAGS="$LDFLAGS"
+SUBAGENT_LIBS=""
 
 # --------------------------------------------------------------------------
 # misc
@@ -65,6 +61,7 @@ AC_ARG_WITH(odbc,
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
    fi
+   DYNAMIC_COMPONENTS="yes"
 	with_odbc="yes"
 	AC_DEFINE(WITH_ODBC,,[with odbc])
 	DB_DRIVERS="$DB_DRIVERS odbc"
@@ -84,6 +81,7 @@ AC_ARG_WITH(mysql,
 		LDFLAGS="$LDFLAGS -L/usr/local/mysql/lib -L/usr/lib/mysql -L/usr/mysql/lib -L/usr/local/lib/mysql -L/usr/local/mysql/lib/mysql -L/usr/mysql/lib/mysql"
 		CPPFLAGS="$CPPFLAGS -I/usr/local/mysql/include -I/usr/include/mysql -I/usr/mysql/include -I/usr/local/include/mysql -I/usr/local/mysql/include/mysql -I/usr/mysql/include/mysql"
 	fi
+   DYNAMIC_COMPONENTS="yes"
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(z, gzclose)
 	with_mysql="yes"
@@ -120,6 +118,7 @@ AC_ARG_WITH(pgsql,
 		LDFLAGS="$LDFLAGS -L/usr/local/pgsql/lib -L/usr/lib/pgsql -L/usr/pgsql/lib -L/usr/local/lib/pgsql -L/usr/local/pgsql/lib/pgsql -L/usr/pgsql/lib/pgsql -L/usr/local/postgresql/lib -L/usr/lib/postgresql -L/usr/postgresql/lib -L/usr/local/lib/postgresql -L/usr/local/postgresql/lib/postgresql -L/usr/postgresql/lib/postgresql"
 		CPPFLAGS="$CPPFLAGS -I/usr/local/pgsql/include -I/usr/include/pgsql -I/usr/pgsql/include -I/usr/local/include/pgsql -I/usr/local/pgsql/include/pgsql -I/usr/pgsql/include/pgsql -I/usr/local/postgresql/include -I/usr/include/postgresql -I/usr/postgresql/include -I/usr/local/include/postgresql -I/usr/local/postgresql/include/postgresql -I/usr/postgresql/include/postgresql"
 	fi
+   DYNAMIC_COMPONENTS="yes"
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(z, gzclose)
 	with_pgsql="yes"
@@ -150,6 +149,7 @@ AC_ARG_WITH(server,
    TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
    CONTRIB_MODULES="$CONTRIB_MODULES mibs"
 	BUILD_SERVER="yes"
+   DYNAMIC_COMPONENTS="yes"
 ])
 
 
@@ -158,6 +158,7 @@ AC_ARG_WITH(client,
 [
 	MODULES="$MODULES libnxcl nxevent nxreport console"
 	BUILD_CLIENT="yes"
+   DYNAMIC_COMPONENTS="yes"
 ])
 
 
@@ -181,6 +182,37 @@ AC_ARG_WITH(agent,
 			# unknown
 			;;
 	esac
+   DYNAMIC_COMPONENTS="yes"
+])
+
+AC_ARG_WITH(static-agent,
+[AS_HELP_STRING(--with-static-agent,build statically linked agent)],
+[
+	BUILD_STATIC_AGENT="yes"
+	MODULES="$MODULES agent"
+   CFLAGS="$CFLAGS -D_STATIC_AGENT"
+   CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
+#   STATIC_SUBAGENT_LIST="ping portcheck"
+	case `uname -s` in
+		Linux)
+			SUBAGENT_DIRS="linux"
+         SUBAGENT_LIBS="../subagents/linux/libnsm_linux.la"
+         STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
+			;;
+		FreeBSD)
+			SUBAGENT_DIRS="freebsd"
+         SUBAGENT_LIBS="../subagents/freebsd/libnsm_freebsd.la"
+         STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
+			;;
+		SunOS)
+			SUBAGENT_DIRS="sunos"
+         SUBAGENT_LIBS="../subagents/sunos/libnsm_sunos.la"
+         STATIC_SUBAGENT_LIST="sunos $STATIC_SUBAGENT_LIST"
+			;;
+		*)
+			# unknown
+			;;
+	esac
 ])
 
 AC_ARG_WITH(dist,
@@ -198,6 +230,7 @@ AC_ARG_WITH(nxsm,
 [
 	MODULES="$MODULES www"
 	BUILD_CLIENT="yes"
+   DYNAMIC_COMPONENTS="yes"
 ])
 
 AC_ARG_WITH(openssl,
@@ -250,6 +283,23 @@ AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(NXCONFIG)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
+AC_SUBST(STATIC_SUBAGENT_LIST)
+AC_SUBST(SUBAGENT_LIBS)
+
+# --------------------------------------------------------------------------
+# If --with-static-agent selected, other components cannot be selected
+# Select shared or static libraries depending on agent build type
+if test "x$BUILD_STATIC_AGENT" = "xyes" ; then
+   if test "x$DYNAMIC_COMPONENTS" = "xyes" ; then
+      AC_MSG_ERROR(Static agent and other components are mutally exclusive.)
+   fi
+   AC_DISABLE_SHARED
+else
+   AC_DISABLE_STATIC
+fi
+
+AC_LIBTOOL_DLOPEN
+AC_PROG_LIBTOOL
 
 # --------------------------------------------------------------------------
 # checks for libs.
@@ -568,4 +618,10 @@ if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Subagents list      : ${SUBAGENT_DIRS}"
 else
 	echo "Build Agent         : NO"
+fi
+if test "x${BUILD_STATIC_AGENT}" = "xyes"; then
+	echo "Build Static Agent  : YES"
+	echo "Subagents list      : ${STATIC_SUBAGENT_LIST}"
+else
+	echo "Build Static Agent  : NO"
 fi

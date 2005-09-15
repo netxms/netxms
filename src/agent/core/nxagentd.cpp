@@ -31,12 +31,14 @@
 # include <sys/wait.h>
 #endif
 
+
 //
 // Externals
 //
 
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
+void InitStaticSubagents(void);
 
 
 //
@@ -561,6 +563,7 @@ BOOL Initialize(void)
    AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
 
    // Load subagents
+   InitStaticSubagents();
 #ifdef _WIN32
    LoadWindowsSubagent();
 #endif

@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.19 2005-08-22 00:11:46 alk Exp $ */
+/* $Id: linux.cpp,v 1.20 2005-09-15 21:22:58 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -158,17 +158,31 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
+#ifdef _STATIC_AGENT
+
+extern "C" BOOL NxSubAgentInit_LINUX(NETXMS_SUBAGENT_INFO **ppInfo)
+{
+   *ppInfo = &m_info;
+   return TRUE;
+}
+
+#else
+
 extern "C" BOOL NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo)
 {
    *ppInfo = &m_info;
-
    return TRUE;
 }
+
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2005/08/22 00:11:46  alk
+Net.IP.RoutingTable added
+
 Revision 1.18  2005/08/19 15:23:50  victor
 Added new parameters
 

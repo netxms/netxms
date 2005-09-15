@@ -945,6 +945,7 @@ src/server/tools/nxupload/nxupload.cpp -text
 src/server/tools/nxupload/nxupload.dsp -text
 src/server/tools/nxupload/nxupload.dsw -text
 tools/Makefile.am -text
+tools/create_ssa_list.sh -text
 tools/mc.pl -text
 tools/nwmkimp.pl -text
 tools/patch_libtool.pl -text
