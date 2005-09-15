@@ -38,7 +38,10 @@
 
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
+
+#if !defined(_WIN32) && !defined(_NETWARE)
 void InitStaticSubagents(void);
+#endif
 
 
 //
@@ -563,7 +566,9 @@ BOOL Initialize(void)
    AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
 
    // Load subagents
+#if !defined(_WIN32) && !defined(_NETWARE)
    InitStaticSubagents();
+#endif
 #ifdef _WIN32
    LoadWindowsSubagent();
 #endif
