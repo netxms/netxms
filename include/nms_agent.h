@@ -31,15 +31,14 @@
 // Initialization function declaration macro
 //
 
+#if defined(_STATIC_AGENT) || defined(_NETWARE)
+#define DECLARE_SUBAGENT_INIT(name) extern "C" BOOL NxSubAgentInit_##name(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+#else
 #ifdef _WIN32
-#define DECLSPEC_EXPORT __declspec(dllexport)
+#define DECLSPEC_EXPORT __declspec(dllexport) __cdecl
 #else
 #define DECLSPEC_EXPORT
 #endif
-
-#if defined(_STATIC_AGENT) || defined(_NETWARE)
-#define DECLARE_SUBAGENT_INIT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentInit_##name(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
-#else
 #define DECLARE_SUBAGENT_INIT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 #endif
 
