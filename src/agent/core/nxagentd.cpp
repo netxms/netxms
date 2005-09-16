@@ -732,7 +732,7 @@ void Main(void)
 
 static void DoRestartActions(DWORD dwOldPID)
 {
-#ifdef _WIN32
+#if defined(_WIN32)
    if (dwOldPID == 0)
    {
       // Service
@@ -755,6 +755,8 @@ static void DoRestartActions(DWORD dwOldPID)
          CloseHandle(hProcess);
       }
    }
+#elif defined(_NETWARE)
+   /* TODO: implement restart for NetWare */
 #else
    kill(dwOldPID, SIGTERM);
    sleep(10);
