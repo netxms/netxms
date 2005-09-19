@@ -43,6 +43,7 @@ struct PING_TARGET
 {
    DWORD dwIpAddr;
    TCHAR szName[MAX_DB_STRING];
+   DWORD dwPacketSize;
    DWORD dwAvgRTT;
    DWORD dwLastRTT;
    DWORD pdwHistory[POLLS_PER_MINUTE];

@@ -33,6 +33,7 @@
 //
 
 #define MAX_PING_SIZE      8192
+#define ICMP_REQUEST_ID    0x5050
 
 
 //
@@ -124,6 +125,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
    DWORD dwTimeLeft, dwElapsedTime;
    int nBytes;
    INT64 qwStartTime;
+   static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
 
    // Check packet size
    if (dwPacketSize < sizeof(ICMPHDR) + sizeof(IPHDR))
@@ -146,16 +148,18 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
    // Fill in request structure
    request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
    request.m_icmpHdr.m_cCode = 0;
-   request.m_icmpHdr.m_wId = 0x1020;
+   request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
    request.m_icmpHdr.m_wSeq = 0;
+   memcpy(request.m_cData, szPayload, min(dwPacketSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
    // Do ping
+   nBytes = dwPacketSize - sizeof(IPHDR);
    while(iNumRetries--)
    {
+      request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
-      request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
-      nBytes = dwPacketSize - sizeof(IPHDR);
+      request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, nBytes);
       if (sendto(sock, (char *)&request, nBytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == nBytes)
       {
 #ifdef USE_KQUEUE
@@ -222,7 +226,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
                   // Check response
                   if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
                       (reply.m_icmpHdr.m_cType == 0) &&
-                      (reply.m_icmpHdr.m_wId == request.m_icmpHdr.m_wId) &&
+                      (reply.m_icmpHdr.m_wId == ICMP_REQUEST_ID) &&
                       (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
                   {
 #ifdef USE_KQUEUE

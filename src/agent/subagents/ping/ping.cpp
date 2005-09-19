@@ -38,6 +38,7 @@ static BOOL m_bShutdown = FALSE;
 static DWORD m_dwNumTargets = 0;
 static PING_TARGET *m_pTargetList = NULL;
 static DWORD m_dwTimeout = 3000;    // Default timeout is 3 seconds
+static DWORD m_dwDefPacketSize = 46;
 
 
 //
@@ -52,7 +53,9 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
    while(!m_bShutdown)
    {
       qwStartTime = GetCurrentTimeMs();
-      if (IcmpPing(((PING_TARGET *)pArg)->dwIpAddr, 3, m_dwTimeout, &((PING_TARGET *)pArg)->dwLastRTT) != ICMP_SUCCESS)
+      if (IcmpPing(((PING_TARGET *)pArg)->dwIpAddr, 3, m_dwTimeout,
+                   &((PING_TARGET *)pArg)->dwLastRTT, 
+                   ((PING_TARGET *)pArg)->dwPacketSize) != ICMP_SUCCESS)
          ((PING_TARGET *)pArg)->dwLastRTT = 10000;
 
       ((PING_TARGET *)pArg)->pdwHistory[((PING_TARGET *)pArg)->iBufPos++] = ((PING_TARGET *)pArg)->dwLastRTT;
@@ -77,8 +80,8 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 
 static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
-   TCHAR szHostName[256], szTimeOut[32];
-   DWORD dwAddr, dwTimeOut = 1000, dwRTT;
+   TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
+   DWORD dwAddr, dwTimeOut = 1000, dwRTT, dwPacketSize = m_dwDefPacketSize;
 
    if (!NxGetParameterArg(pszParam, 1, szHostName, 256))
       return SYSINFO_RC_UNSUPPORTED;
@@ -86,6 +89,9 @@ static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    if (!NxGetParameterArg(pszParam, 2, szTimeOut, 256))
       return SYSINFO_RC_UNSUPPORTED;
    StrStrip(szTimeOut);
+   if (!NxGetParameterArg(pszParam, 3, szPacketSize, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+   StrStrip(szPacketSize);
 
    dwAddr = _t_inet_addr(szHostName);
    if (szTimeOut[0] != 0)
@@ -96,8 +102,12 @@ static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       if (dwTimeOut > 5000)
          dwTimeOut = 5000;
    }
+   if (szPacketSize[0] != 0)
+   {
+      dwPacketSize = _tcstoul(szPacketSize, NULL, 0);
+   }
 
-   if (IcmpPing(dwAddr, 1, dwTimeOut, &dwRTT) != ICMP_SUCCESS)
+   if (IcmpPing(dwAddr, 1, dwTimeOut, &dwRTT, dwPacketSize) != ICMP_SUCCESS)
       dwRTT = 10000;
    ret_uint(pValue, dwRTT);
    return SYSINFO_RC_SUCCESS;
@@ -159,9 +169,9 @@ static LONG H_TargetList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
    for(i = 0; i < m_dwNumTargets; i++)
    {
-      _stprintf(szBuffer, _T("%s %lu %lu %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
+      _stprintf(szBuffer, _T("%s %lu %lu %lu %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
                 m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, 
-                m_pTargetList[i].szName);
+                m_pTargetList[i].dwPacketSize, m_pTargetList[i].szName);
       NxAddResultString(pValue, szBuffer);
    }
 
@@ -190,8 +200,8 @@ static void UnloadHandler(void)
 
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
-   TCHAR *ptr, *pszLine;
-   DWORD dwIpAddr;
+   TCHAR *ptr, *pszLine, *pszName = NULL;
+   DWORD dwIpAddr, dwPacketSize = m_dwDefPacketSize;
    BOOL bResult = FALSE;
 
    pszLine = _tcsdup(pszCfg);
@@ -201,6 +211,18 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
       *ptr = 0;
       ptr++;
       StrStrip(ptr);
+      pszName = ptr;
+
+      // Packet size
+      ptr = _tcschr(pszName, _T(':'));
+      if (ptr != NULL)
+      {
+         *ptr = 0;
+         ptr++;
+         StrStrip(ptr);
+         StrStrip(pszName);
+         dwPacketSize = _tcstoul(ptr, NULL, 0);
+      }
    }
    StrStrip(pszLine);
 
@@ -210,10 +232,11 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
       m_pTargetList = (PING_TARGET *)realloc(m_pTargetList, sizeof(PING_TARGET) * (m_dwNumTargets + 1));
       memset(&m_pTargetList[m_dwNumTargets], 0, sizeof(PING_TARGET));
       m_pTargetList[m_dwNumTargets].dwIpAddr = dwIpAddr;
-      if (ptr != NULL)
-         _tcsncpy(m_pTargetList[m_dwNumTargets].szName, ptr, MAX_DB_STRING);
+      if (pszName != NULL)
+         _tcsncpy(m_pTargetList[m_dwNumTargets].szName, pszName, MAX_DB_STRING);
       else
          IpToStr(ntohl(dwIpAddr), m_pTargetList[m_dwNumTargets].szName);
+      m_pTargetList[m_dwNumTargets].dwPacketSize = dwPacketSize;
       m_dwNumTargets++;
       bResult = TRUE;
    }
@@ -258,6 +281,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 static TCHAR *m_pszTargetList = NULL;
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
+   { _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_dwDefPacketSize },
    { _T("Target"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszTargetList },
    { _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwTimeout },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
