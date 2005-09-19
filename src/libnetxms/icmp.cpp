@@ -32,7 +32,7 @@
 // Constants
 //
 
-#define PING_SIZE    62
+#define MAX_PING_SIZE      8192
 
 
 //
@@ -42,7 +42,7 @@
 struct ECHOREQUEST
 {
    ICMPHDR m_icmpHdr;
-   BYTE m_cData[PING_SIZE - 1];
+   BYTE m_cData[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
 };
 
 
@@ -54,7 +54,7 @@ struct ECHOREPLY
 {
    IPHDR m_ipHdr;
    ICMPHDR m_icmpHdr;
-   BYTE m_cData[256];
+   BYTE m_cData[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
 };
 
 
@@ -112,7 +112,9 @@ static WORD IPChecksum(WORD *addr, int len)
 //             dwTimeout - Timeout waiting for response in milliseconds
 //
 
-DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout, DWORD *pdwRTT)
+DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
+                                    DWORD dwTimeout, DWORD *pdwRTT,
+                                    DWORD dwPacketSize)
 {
    SOCKET sock;
    struct sockaddr_in saDest;
@@ -120,7 +122,14 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
    ECHOREQUEST request;
    ECHOREPLY reply;
    DWORD dwTimeLeft, dwElapsedTime;
+   int nBytes;
    INT64 qwStartTime;
+
+   // Check packet size
+   if (dwPacketSize < sizeof(ICMPHDR) + sizeof(IPHDR))
+      dwPacketSize = sizeof(ICMPHDR) + sizeof(IPHDR);
+   else if (dwPacketSize > MAX_PING_SIZE)
+      dwPacketSize = MAX_PING_SIZE;
 
    // Create raw socket
    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -146,7 +155,8 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
       request.m_icmpHdr.m_wChecksum = IPChecksum((WORD *)&request, sizeof(ECHOREQUEST));
-      if (sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == sizeof(ECHOREQUEST))
+      nBytes = dwPacketSize - sizeof(IPHDR);
+      if (sendto(sock, (char *)&request, nBytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == nBytes)
       {
 #ifdef USE_KQUEUE
 			int kq;
@@ -215,6 +225,9 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                       (reply.m_icmpHdr.m_wId == request.m_icmpHdr.m_wId) &&
                       (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
                   {
+#ifdef USE_KQUEUE
+			            close(kq);
+#endif
                      dwResult = ICMP_SUCCESS;   // We succeed
                      if (pdwRTT != NULL)
                         *pdwRTT = dwElapsedTime;
@@ -227,6 +240,9 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeo
                   {
                      if (((IPHDR *)reply.m_icmpHdr.m_cData)->m_iaDst.s_addr == dwAddr)
                      {
+#ifdef USE_KQUEUE
+			               close(kq);
+#endif
                         dwResult = ICMP_UNREACHEABLE;
                         goto stop_ping;      // Host unreacheable, stop trying
                      }

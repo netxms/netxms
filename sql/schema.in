@@ -710,3 +710,40 @@ CREATE TABLE object_tools_table_columns
 	col_substr integer,	// Number of matching substring in regexp
 	PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
+
+
+/*
+** Log processing policy
+*/
+
+CREATE TABLE lpp
+(
+	lpp_id integer not null,
+	lpp_name varchar(63) not null,
+	lpp_version integer not null,
+	PRIMARY KEY(lpp_id)
+) TABLE_TYPE;
+
+
+/*
+** Nodes associated with log processing policy
+*/
+
+CREATE TABLE lpp_nodes
+(
+	lpp_id integer not null,
+	node_id integer not null,
+	PRIMARY KEY(lpp_id,node_id)
+) TABLE_TYPE;
+
+
+/*
+** Matching rules for log processing policies
+*/
+
+CREATE TABLE lpp_rules
+(
+	lpp_id integer not null,
+	rule_number integer not null,
+	PRIMARY KEY(lpp_id,rule_number)
+) TABLE_TYPE;
