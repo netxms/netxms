@@ -970,6 +970,10 @@ SOURCE=.\icons\disabled.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\document.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\down_arrow.bmp
 # End Source File
 # Begin Source File

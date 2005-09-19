@@ -81,6 +81,15 @@ void CTableView::RequestData()
 /////////////////////////////////////////////////////////////////////////////
 // CTableView message handlers
 
+BOOL CTableView::PreCreateWindow(CREATESTRUCT& cs) 
+{
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
+                                         NULL, NULL,
+                                         AfxGetApp()->LoadIcon(IDI_DOCUMENT));
+	return CMDIChildWnd::PreCreateWindow(cs);
+}
+
 
 //
 // WM_CREATE message handler
