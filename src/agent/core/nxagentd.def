@@ -19,7 +19,7 @@ EXIT _LibCPostlude
 # NLM header
 OUTPUT nxagentd.nlm
 TYPE 0
-VERSION 0,2,1
+VERSION 0,2,6
 COPYRIGHT "Copyright (c) 2004, 2005 NetXMS Team"
 DESCRIPTION "NetXMS Core Agent"
 SCREENNAME "NetXMS Agent"
