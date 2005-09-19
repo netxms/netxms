@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.15 2005-09-19 08:40:56 victor Exp $ -->
+<!-- $Id: body.shtml,v 1.16 2005-09-19 09:24:53 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -42,9 +42,9 @@
 	<a href="netxms-0.2.5-wce-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
 	<p>
-	<a href="netxms-0.2.5-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
-	<a href="netxms-0.2.5-netware-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.5-netware-binary.tar.gz.asc">(PGP sign)</a><br />
+	<a href="netxms-0.2.5-hf1-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
+	<a href="netxms-0.2.5-hf1-netware-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.5-hf1-netware-binary.tar.gz.asc">(PGP sign)</a><br />
 	</p>
 
 
