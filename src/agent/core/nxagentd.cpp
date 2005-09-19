@@ -765,6 +765,21 @@ static void DoRestartActions(DWORD dwOldPID)
 
 
 //
+// NetWare exit handler
+//
+
+#ifdef _NETWARE
+
+static void ExitHandler(int nSig)
+{
+   ConsolePrintf("Unloading NetXMS agent...\n");
+   Shutdown();
+}
+
+#endif
+
+
+//
 // Startup
 //
 
@@ -903,7 +918,9 @@ int main(int argc, char *argv[])
 #endif
                if (Initialize())
                {
-#ifndef _NETWARE
+#ifdef _NETWARE
+                  signal(SIGTERM, ExitHandler);
+#else
                   FILE *fp;
 
                   // Write PID file
@@ -915,7 +932,7 @@ int main(int argc, char *argv[])
                   }   
 #endif
                   Main();
-						Shutdown();
+                  Shutdown();
                }
                else
                {
