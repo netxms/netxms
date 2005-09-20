@@ -1,4 +1,16 @@
 *
+* 0.2.6
+*
+
+- Added possibility to change size of ICMP echo request packets sent by server
+- PING subagent:
+	- Ported to NetWare
+	- Added "packet size" argument to Icmp.Ping(*) parameter
+	- Added "packet size" option to target configuration
+	- Added DefaultPacketSize configuration parameter
+
+
+*
 * 0.2.5
 *
 
