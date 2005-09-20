@@ -223,6 +223,7 @@ src/agent/subagents/netware/nwagent.h -text
 src/agent/subagents/ping/Makefile.am -text
 src/agent/subagents/ping/Makefile.nw -text
 src/agent/subagents/ping/ping.cpp -text
+src/agent/subagents/ping/ping.def -text
 src/agent/subagents/ping/ping.dsp -text
 src/agent/subagents/ping/ping.dsw -text
 src/agent/subagents/ping/ping.h -text

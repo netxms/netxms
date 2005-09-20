@@ -1,0 +1,27 @@
+#
+# netware.def - NLM Header definition file for nlmconv
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+# define startup object files
+INPUT c:/novell/ndk/libc/imports/libcpre.gcc.o   # clib startup code
+INPUT ping.o
+
+# Import/Export
+IMPORT @c:/novell/ndk/libc/imports/libc.imp
+IMPORT @../../../libnetxms/netxms.imp
+EXPORT NxSubAgentInit_PING
+
+# Entry points
+START _LibCPrelude
+EXIT _LibCPostlude
+
+# NLM header
+OUTPUT ping.nsm
+TYPE 0
+VERSION 0,2,6
+COPYRIGHT "Copyright (c) 2004, 2005 NetXMS Team"
+DESCRIPTION "NetXMS PING Subagent"
+SCREENNAME "System Console"
+
+MODULE LIBC, NETXMS
