@@ -281,7 +281,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQ
             (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
       {
          SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
-         dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL);
+         dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
          if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
             WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
          m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;

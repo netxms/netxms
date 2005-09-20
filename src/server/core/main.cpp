@@ -68,6 +68,7 @@ DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
 DWORD g_dwRoutingTableUpdateInterval;
+DWORD g_dwPingSize;
 int g_iStatusAlgorithm = SA_WORST_STATUS;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
@@ -187,6 +188,7 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
    g_iStatusAlgorithm = ConfigReadInt("StatusCalculationAlgorithm", SA_WORST_STATUS);
+   g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
 }
 
 

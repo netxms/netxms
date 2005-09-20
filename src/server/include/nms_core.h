@@ -540,6 +540,7 @@ extern char g_szDataDir[];
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
 extern int g_iStatusAlgorithm;
+extern DWORD g_dwPingSize;
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
