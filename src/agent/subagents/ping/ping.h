@@ -48,6 +48,7 @@ struct PING_TARGET
    DWORD dwLastRTT;
    DWORD pdwHistory[POLLS_PER_MINUTE];
    int iBufPos;
+   THREAD hThread;
 };
 
 

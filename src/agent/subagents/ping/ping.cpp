@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -185,10 +185,15 @@ static LONG H_TargetList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
 static void UnloadHandler(void)
 {
+   DWORD i;
+
    m_bShutdown = TRUE;
    if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
       ConditionSet(m_hCondShutdown);
-   ThreadSleepMs(500);
+
+   for(i = 0; i < m_dwNumTargets; i++)
+      ThreadJoin(m_pTargetList[i].hThread);
+   safe_free(m_pTargetList);
 }
 
 
@@ -322,7 +327,7 @@ DECLARE_SUBAGENT_INIT(PING)
       // Create shutdown condition and start poller threads
       m_hCondShutdown = ConditionCreate(TRUE);
       for(i = 0; i < m_dwNumTargets; i++)
-         ThreadCreate(PollerThread, 0, &m_pTargetList[i]);
+         m_pTargetList[i].hThread = ThreadCreateEx(PollerThread, 0, &m_pTargetList[i]);
    }
    else
    {
