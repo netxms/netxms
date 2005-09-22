@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.104 2005-09-20 21:58:20 victor Exp $
+# $Id: configure.ac,v 1.105 2005-09-22 05:27:56 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -23,6 +23,17 @@ CFLAGS="$CFLAGS -fno-exceptions"
 CPPFLAGS="$CPPFLAGS -fno-exceptions"
 LDFLAGS="$LDFLAGS"
 SUBAGENT_LIBS=""
+
+# --------------------------------------------------------------------------
+# set LDFLAGS depending on OS
+
+case `uname -s` in
+   AIX)
+      LDFLAGS="-no-undefined $LDFLAGS"
+      ;;
+   *)
+      ;;
+esac
 
 # --------------------------------------------------------------------------
 # misc
