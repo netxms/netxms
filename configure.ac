@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.105 2005-09-22 05:27:56 victor Exp $
+# $Id: configure.ac,v 1.106 2005-09-23 22:02:02 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -230,7 +230,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql"
 	MODULES="libnxsnmp server agent libnxcl nxevent nxreport console www"
-	SUBAGENT_DIRS="linux freebsd sunos"
+	SUBAGENT_DIRS="linux freebsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
    CONTRIB_MODULES="mibs"
