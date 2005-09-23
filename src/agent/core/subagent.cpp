@@ -37,10 +37,12 @@ static SUBAGENT *m_pSubAgentList = NULL;
 
 //
 // Initialize subagent
+// Note: pszEntryPoint ignored on all pltforms except NetWare
 //
 
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
-                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *))
+                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
+                  TCHAR *pszEntryPoint)
 {
    NETXMS_SUBAGENT_INFO *pInfo;
    BOOL bSuccess = FALSE;
@@ -56,8 +58,11 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
          m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
                                                sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
          m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-         strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH - 1);
+         strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH );
          m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
+#ifdef _NETWARE
+         strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
+#endif
          m_dwNumSubAgents++;
 
          // Add parameters provided by this subagent to common list
@@ -146,7 +151,11 @@ BOOL LoadSubAgent(char *szModuleName)
 
       if (SubAgentInit != NULL)
       {
-         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit);
+#ifdef _NETWARE
+         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit, szEntryPoint);
+#else
+         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit, NULL);
+#endif
       }
       else
       {
@@ -178,7 +187,11 @@ void UnloadAllSubAgents(void)
    {
       if (m_pSubAgentList[i].pInfo->pUnloadHandler != NULL)
          m_pSubAgentList[i].pInfo->pUnloadHandler();
+#ifdef _NETWARE
+      UnImportPublicObject(m_pSubAgentList[i].hModule, m_pSubAgentList[i].szEntryPoint);
+#else
       DLClose(m_pSubAgentList[i].hModule);
+#endif
    }
 }
 

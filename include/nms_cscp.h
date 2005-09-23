@@ -361,6 +361,7 @@ typedef struct
 #define CMD_GET_ROUTING_TABLE       0x0086
 #define CMD_EXEC_TABLE_TOOL         0x0087
 #define CMD_TABLE_DATA              0x0088
+#define CMD_APPLY_LOG_POLICY        0x0089
 
 
 //

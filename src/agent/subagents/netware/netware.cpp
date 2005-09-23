@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for Novell NetWare
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -241,9 +241,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage5(*)", H_CpuUsage, (char *)300, DCI_DT_FLOAT, "Average CPU {instance} utilization for last 5 minutes" },
    { "System.CPU.Usage15(*)", H_CpuUsage, (char *)900, DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
    { "System.Hostname", H_HostName, NULL, DCI_DT_STRING, "Host name" },
-	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
-	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
-	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
+   { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
+   { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
+   { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
    { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, NULL }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -253,14 +253,14 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
+   NETXMS_SUBAGENT_INFO_MAGIC,
    "NETWARE", 
    NETXMS_VERSION_STRING,
    NULL, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+   sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+   m_parameters,
+   sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+   m_enums
 };
 
 

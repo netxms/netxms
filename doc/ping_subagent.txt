@@ -54,7 +54,7 @@ DefaultPacketSize = <bytes>
 Set default packet size.
 
 
-Target = <ip>:<name>
+Target = <ip>:<name>:<bytes>
 
 Add target with IP address <ip> to background ping target list and assign a 
 name <name> to it. Name field is optional and can be omited.

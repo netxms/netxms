@@ -100,6 +100,10 @@ BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 #endif   /* _WIN32 */
 
+#ifdef _NETWARE
+int g_nThreadCount = 0;
+#endif
+
 
 //
 // Static variables
@@ -346,7 +350,7 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 // Signal handler for UNIX platforms
 //
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_NETWARE)
 
 static int m_XXX = 0;
 
@@ -366,12 +370,10 @@ void OnSignal(int iSignal)
 		case SIGSEGV:
 			abort();
 			break;
-#ifndef _NETWARE
 		case SIGCHLD:
 			while (waitpid(-1, NULL, WNOHANG) > 0)
 				;
 			break;
-#endif
 		default:
 			break;
 	}
@@ -669,7 +671,9 @@ void Shutdown(void)
    CloseLog();
 
    // Notify main thread about shutdown
+#ifndef _NETWARE
    ConditionSet(m_hCondShutdown);
+#endif
    
    // Remove PID file
 #if !defined(_WIN32) && !defined(_NETWARE)
@@ -772,8 +776,10 @@ static void DoRestartActions(DWORD dwOldPID)
 
 static void ExitHandler(int nSig)
 {
-   ConsolePrintf("Unloading NetXMS agent...\n");
-   Shutdown();
+   printf("\n*** Unloading NetXMS agent ***\n");
+   ConditionSet(m_hCondShutdown);
+   while(g_nThreadCount > 0)
+      pthread_yield();
 }
 
 #endif
@@ -793,6 +799,7 @@ int main(int argc, char *argv[])
 #endif
    
 #ifdef _NETWARE
+   g_nThreadCount++;
    setscreenmode(SCR_AUTOCLOSE_ON_EXIT | SCR_COLOR_ATTRS);
 #endif
 
@@ -989,6 +996,7 @@ int main(int argc, char *argv[])
    if ((iExitCode != 0) || (iAction == ACTION_NONE) || 
        (iAction == ACTION_CHECK_CONFIG))
       setscreenmode(SCR_NO_MODE);
+   g_nThreadCount--;
 #endif
 
    return iExitCode;

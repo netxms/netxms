@@ -182,6 +182,9 @@ struct SUBAGENT
    HMODULE hModule;              // Subagent's module handle
    NETXMS_SUBAGENT_INFO *pInfo;  // Information provided by subagent
    char szName[MAX_PATH];        // Name of the module
+#ifdef _NETWARE
+   char szEntryPoint[256];       // Name of agent's entry point
+#endif
 };
 
 
@@ -282,7 +285,8 @@ void GetParameterList(CSCPMessage *pMsg);
 BOOL LoadSubAgent(char *szModuleName);
 void UnloadAllSubAgents(void);
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
-                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *));
+                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
+                  TCHAR *pszEntryPoint);
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse);
 
 BOOL AddAction(char *pszName, int iType, char *pArg, 
