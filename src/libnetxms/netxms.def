@@ -9,6 +9,7 @@ INPUT netxms_r.o
 
 # Imports/Exports
 IMPORT @c:/novell/ndk/libc/imports/libc.imp
+IMPORT @c:/novell/ndk/libc/imports/netware.imp
 EXPORT @netxms.imp
 
 # Entry points

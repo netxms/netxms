@@ -23,7 +23,9 @@
 
 #include "libnetxms.h"
 
-#ifndef _WIN32
+#if defined(_NETWARE)
+#include <netware.h>
+#elif !defined(_WIN32)
 #include <dlfcn.h>
 #endif
 
@@ -36,10 +38,23 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
 {
    HMODULE hModule;
 
-#ifdef _WIN32
+#if defined(_WIN32)
    hModule = LoadLibrary(szLibName);
    if (hModule == NULL)
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
+#elif defined(_NETWARE)
+   TCHAR szBuffer[MAX_PATH + 4];
+
+   _tcsncpy(&szBuffer[4], szLibName, MAX_PATH);
+   if (LoadModule(getscreenhandle(), &szBuffer[4], LO_RETURN_HANDLE) == 0)
+   {
+      hModule = *((HMODULE *)szBuffer);
+   }
+   else
+   {
+      hModule = NULL;
+      *pszErrorText = 0;
+   }
 #else    /* _WIN32 */
    hModule = dlopen(szLibName, RTLD_NOW | RTLD_GLOBAL);
    if (hModule == NULL)
@@ -57,9 +72,15 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 {
    if (hModule != NULL)
    {
-#ifdef _WIN32
+#if defined(_WIN32)
       FreeLibrary(hModule);
-#else    /* _WIN32 */
+#elif defined(_NETWARE)
+      char szName[MAX_PATH], szTemp[1024];
+
+      GetNLMNames(hModule, szName, szTemp);
+      szName[szName[0] + 1] = 0;
+      UnloadModule(getscreenhandle(), &szName[1]);
+#else
       dlclose(hModule);
 #endif
    }
@@ -76,7 +97,7 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
 {
    void *pAddr;
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #if !defined(UNDER_CE) && defined(UNICODE)
    char szBuffer[256];
 
@@ -88,6 +109,9 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
 #endif
    if (pAddr == NULL)
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
+#elif defined(_NETWARE)
+   pAddr = ImportPublicObject(hModule, pszSymbol);
+   *pszErrorText = 0;
 #else    /* _WIN32 */
    pAddr = dlsym(hModule, pszSymbol);
    if (pAddr == NULL)
