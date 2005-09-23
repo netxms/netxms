@@ -992,8 +992,6 @@ int main(int argc, char *argv[])
          break;
    }
 
-char buf[128];
-gets(buf);
 #ifdef _NETWARE
    if ((iExitCode != 0) || (iAction == ACTION_NONE) || 
        (iAction == ACTION_CHECK_CONFIG))

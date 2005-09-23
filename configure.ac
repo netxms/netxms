@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.106 2005-09-23 22:02:02 victor Exp $
+# $Id: configure.ac,v 1.107 2005-09-23 22:52:36 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -189,6 +189,9 @@ AC_ARG_WITH(agent,
 		SunOS)
 			SUBAGENT_DIRS="sunos"
 			;;
+		AIX)
+			SUBAGENT_DIRS="aix"
+			;;
 		*)
 			# unknown
 			;;
@@ -207,18 +210,23 @@ AC_ARG_WITH(static-agent,
 	case `uname -s` in
 		Linux)
 			SUBAGENT_DIRS="linux"
-         SUBAGENT_LIBS="../subagents/linux/libnsm_linux.la"
-         STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
+			SUBAGENT_LIBS="../subagents/linux/libnsm_linux.la"
+			STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
-         SUBAGENT_LIBS="../subagents/freebsd/libnsm_freebsd.la"
-         STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
+			SUBAGENT_LIBS="../subagents/freebsd/libnsm_freebsd.la"
+			STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
 			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
-         SUBAGENT_LIBS="../subagents/sunos/libnsm_sunos.la"
-         STATIC_SUBAGENT_LIST="sunos $STATIC_SUBAGENT_LIST"
+			SUBAGENT_LIBS="../subagents/sunos/libnsm_sunos.la"
+			STATIC_SUBAGENT_LIST="sunos $STATIC_SUBAGENT_LIST"
+			;;
+		AIX)
+			SUBAGENT_DIRS="aix"
+			SUBAGENT_LIBS="../subagents/aix/libnsm_aix.la"
+			STATIC_SUBAGENT_LIST="aix $STATIC_SUBAGENT_LIST"
 			;;
 		*)
 			# unknown
@@ -563,6 +571,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/Makefile
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/sunos/Makefile
+	src/agent/subagents/aix/Makefile
 	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/netware/Makefile
