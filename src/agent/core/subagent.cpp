@@ -24,6 +24,7 @@
 
 #ifdef _NETWARE
 #include <fsio.h>
+#include <library.h>
 #endif
 
 
@@ -153,6 +154,8 @@ BOOL LoadSubAgent(char *szModuleName)
       {
 #ifdef _NETWARE
          bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit, szEntryPoint);
+         if (bSuccess)
+            setdontunloadflag(hModule);
 #else
          bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit, NULL);
 #endif
@@ -185,11 +188,13 @@ void UnloadAllSubAgents(void)
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
-      if (m_pSubAgentList[i].pInfo->pUnloadHandler != NULL)
-         m_pSubAgentList[i].pInfo->pUnloadHandler();
 #ifdef _NETWARE
       UnImportPublicObject(m_pSubAgentList[i].hModule, m_pSubAgentList[i].szEntryPoint);
-#else
+      cleardontunloadflag(m_pSubAgentList[i].hModule);
+#endif
+      if (m_pSubAgentList[i].pInfo->pUnloadHandler != NULL)
+         m_pSubAgentList[i].pInfo->pUnloadHandler();
+#ifndef _NETWARE
       DLClose(m_pSubAgentList[i].hModule);
 #endif
    }

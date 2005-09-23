@@ -27,6 +27,9 @@
 // Static data
 //
 
+static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
+static THREAD m_hCollectorThread = INVALID_THREAD_HANDLE;
 static int m_iCpuUtilHistory[MAX_CPU][CPU_HISTORY_SIZE];
 static int m_iCpuHPos = 0;
 
@@ -200,7 +203,8 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *pArg)
    while(1)
    {
       // Sleep one second
-      ThreadSleep(1);
+      if (ConditionWait(m_hCondShutdown, 1000))
+         break;
 
       // CPU utilization
       iNumCpu = NXGetCpuCount();
@@ -221,6 +225,21 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *pArg)
          m_iCpuHPos = 0;
    }
    return THREAD_OK;
+}
+
+
+//
+// Called by master agent at unload
+//
+
+static void UnloadHandler(void)
+{
+   if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
+      ConditionSet(m_hCondShutdown);
+   ThreadJoin(m_hCollectorThread);
+
+   // Notify main thread that NLM can exit
+   ConditionSet(m_hCondTerminate);
 }
 
 
@@ -256,7 +275,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
    "NETWARE", 
    NETXMS_VERSION_STRING,
-   NULL, NULL,
+   UnloadHandler, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -278,22 +297,23 @@ extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *psz
    memset(m_iCpuUtilHistory, 0, sizeof(int) * CPU_HISTORY_SIZE * MAX_CPU);
 
    // Start collecto thread
-   ThreadCreate(CollectorThread, 0, NULL);
+   m_hCollectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
 
    return TRUE;
 }
 
 
 //
-// NetWare library entry point
+// NetWare entry point
+// We use main() instead of _init() and _fini() to implement
+// automatic unload of the subagent after unload handler is called
 //
 
-int _init(void)
+int main(int argc, char *argv[])
 {
-   return 0;
-}
-
-int _fini(void)
-{
+   m_hCondTerminate = ConditionCreate(TRUE);
+   ConditionWait(m_hCondTerminate, INFINITE);
+   ConditionDestroy(m_hCondTerminate);
+   sleep(1);
    return 0;
 }

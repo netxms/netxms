@@ -17,7 +17,6 @@ GENERAL:
   event configuration to allow sending of new events
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
-- Possibility to tune ICMP packet size on server and ping subagent
 
 
 SERVER:
@@ -39,12 +38,6 @@ SERVER:
 - OSPF discovery
 - Add MIB parsing to libnxsnmp
 - Add support for 64 bit counters to libnxsnmp
-
-
-CORE AGENT:
-
-- Check shutdown procedure on different platforms
-- Remote config editing
 
 
 LINUX AGENT:

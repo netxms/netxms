@@ -21,7 +21,7 @@ OUTPUT netware.nsm
 TYPE 0
 VERSION 0,2,6
 COPYRIGHT "Copyright (c) 2004, 2005 NetXMS Team"
-DESCRIPTION "NetXMS NetWare Subagent"
+DESCRIPTION "NetXMS NetWare Platform Subagent"
 SCREENNAME "System Console"
 
 MODULE LIBC, NETXMS

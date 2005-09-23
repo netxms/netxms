@@ -34,6 +34,9 @@
 //
 
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+#ifdef _NETWARE
+static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
+#endif
 static BOOL m_bShutdown = FALSE;
 static DWORD m_dwNumTargets = 0;
 static PING_TARGET *m_pTargetList = NULL;
@@ -194,6 +197,11 @@ static void UnloadHandler(void)
    for(i = 0; i < m_dwNumTargets; i++)
       ThreadJoin(m_pTargetList[i].hThread);
    safe_free(m_pTargetList);
+
+#ifdef _NETWARE
+   // Notify main thread that NLM can exit
+   ConditionSet(m_hCondTerminate);
+#endif
 }
 
 
@@ -354,18 +362,19 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 
 
 //
-// NetWare library entry point
+// NetWare entry point
+// We use main() instead of _init() and _fini() to implement
+// automatic unload of the subagent after unload handler is called
 //
 
 #ifdef _NETWARE
 
-int _init(void)
+int main(int argc, char *argv[])
 {
-   return 0;
-}
-
-int _fini(void)
-{
+   m_hCondTerminate = ConditionCreate(TRUE);
+   ConditionWait(m_hCondTerminate, INFINITE);
+   ConditionDestroy(m_hCondTerminate);
+   sleep(1);
    return 0;
 }
 
