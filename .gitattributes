@@ -140,6 +140,7 @@ include/nxclapi.h -text
 include/nxcscpapi.h -text
 include/nxevent.h -text
 include/nximage.h -text
+include/nxlog.h -text
 include/nxnt.h -text
 include/nxqueue.h -text
 include/nxsnmp.h -text
