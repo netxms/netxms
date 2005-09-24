@@ -6,9 +6,14 @@
 CREATE TABLE config
 (
 	var_name varchar(63) not null,
-	var_value varchar(255),
-	is_visible integer DEFAULT 1,
-	need_server_restart integer DEFAULT 0,
+	var_value varchar(255) not null,
+#ifdef DB_ORACLE
+	is_visible integer default 1 not null,
+	need_server_restart integer default 0 not null,
+#else
+	is_visible integer not null default 1,
+	need_server_restart integer not null default 0,
+#endif
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
@@ -20,15 +25,15 @@ CREATE TABLE config
 CREATE TABLE modules
 (
 	module_id integer not null,
-	module_name varchar(63),
-	exec_name varchar(255),
+	module_name varchar(63) not null,
+	exec_name varchar(255) not null,
 #ifdef DB_ORACLE
 	module_flags integer default 0 not null,
 #else
 	module_flags integer not null default 0,
 #endif
-	description SQL_TEXT,
-	license_key varchar(255),
+	description SQL_TEXT not null,
+	license_key varchar(255) not null,
 	PRIMARY KEY(module_id)
 ) TABLE_TYPE;
 
@@ -721,6 +726,8 @@ CREATE TABLE lpp
 	lpp_id integer not null,
 	lpp_name varchar(63) not null,
 	lpp_version integer not null,
+	lpp_flags integer not null,
+	log_name varchar(255),
 	PRIMARY KEY(lpp_id)
 ) TABLE_TYPE;
 
@@ -745,5 +752,11 @@ CREATE TABLE lpp_rules
 (
 	lpp_id integer not null,
 	rule_number integer not null,
+	msg_id_start integer not null,
+	msg_id_end integer not null,
+	severity integer not null,
+	source_name varchar(255) not null,
+	regexp varchar(255) not null,
+	event_code integer not null,
 	PRIMARY KEY(lpp_id,rule_number)
 ) TABLE_TYPE;
