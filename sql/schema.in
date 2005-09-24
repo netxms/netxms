@@ -760,3 +760,21 @@ CREATE TABLE lpp_rules
 	event_code integer not null,
 	PRIMARY KEY(lpp_id,rule_number)
 ) TABLE_TYPE;
+
+
+/*
+** Stored syslog messages
+*/
+
+CREATE TABLE syslog
+(
+	msg_id SQL_BIGINT not null,
+	timestamp integer not null,
+	facility integer not null,
+	severity integer not null,
+	source_object_id integer not null,
+	hostname varchar(127) not null,
+	msg_tag varchar(32) not null,
+	msg_text SQL_TEXT not null,
+	PRIMARY KEY(msg_id)
+) TABLE_TYPE;
