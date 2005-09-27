@@ -48,6 +48,14 @@
 
 
 //
+// Policy flags
+//
+
+#define NX_LPPF_WINDOWS_EVENT_LOG      0x0001
+#define NX_LPPF_REPORT_UNMATCHED       0x0002
+
+
+//
 // Unified log record structure
 //
 
@@ -61,6 +69,38 @@ typedef struct
    TCHAR szTag[MAX_SYSLOG_TAG_LEN];
    TCHAR szMessage[MAX_LOG_MSG_LENGTH];
 } NX_LOG_RECORD;
+
+
+//
+// Rule of log processing policy
+//
+
+typedef struct
+{
+   DWORD dwMsgIdFrom;
+   DWORD dwMsgIdTo;
+   int nFacility;
+   int nSeverity;
+   TCHAR szSource[MAX_DB_STRING];
+   TCHAR szRegExp[MAX_DB_STRING];
+   DWORD dwEvent;
+} NX_LPP_RULE;
+
+
+//
+// Log processing policy
+//
+
+typedef struct
+{
+   DWORD dwId;
+   TCHAR szName[MAX_OBJECT_NAME];
+   DWORD dwVersion;
+   DWORD dwFlags;
+   TCHAR szLogName[MAX_DB_STRING];
+   DWORD dwNumRules;
+   NX_LPP_RULE *pRuleList;
+} NX_LPP;
 
 
 #endif
