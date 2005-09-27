@@ -198,6 +198,10 @@ SOURCE=.\locks.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\lpp.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -271,6 +275,10 @@ SOURCE=.\subnet.cpp
 # Begin Source File
 
 SOURCE=.\syncer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\syslogd.cpp
 # End Source File
 # Begin Source File
 
@@ -407,6 +415,10 @@ SOURCE=..\..\..\include\nxevent.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nximage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxlog.h
 # End Source File
 # Begin Source File
 

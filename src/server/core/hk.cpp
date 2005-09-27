@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    time_t currTime;
    char szQuery[256];
-   DWORD i, dwEventLogRetentionTime, dwInterval;
+   DWORD i, dwRetentionTime, dwInterval;
 
    // Establish separate connection to database if needed
    if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
@@ -123,7 +123,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
    // Load configuration
    dwInterval = ConfigReadULong("HouseKeepingInterval", 3600);
-   dwEventLogRetentionTime = ConfigReadULong("EventLogRetentionTime", 5184000);
 
    // Housekeeping loop
    while(!ShutdownInProgress())
@@ -133,9 +132,18 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          break;      // Shutdown has arrived
 
       // Remove outdated event log records
-      if (dwEventLogRetentionTime > 0)
+      dwRetentionTime = ConfigReadULong("EventLogRetentionTime", 5184000);
+      if (dwRetentionTime > 0)
       {
-         sprintf(szQuery, "DELETE FROM event_log WHERE event_timestamp<%ld", currTime - dwEventLogRetentionTime);
+         sprintf(szQuery, "DELETE FROM event_log WHERE event_timestamp<%ld", currTime - dwRetentionTime);
+         DBQuery(m_hdb, szQuery);
+      }
+
+      // Remove outdated syslog records
+      dwRetentionTime = ConfigReadULong("SyslogRetentionTime", 5184000);
+      if (dwRetentionTime > 0)
+      {
+         sprintf(szQuery, "DELETE FROM syslog WHERE msg_timestamp<%ld", currTime - dwRetentionTime);
          DBQuery(m_hdb, szQuery);
       }
 

@@ -51,6 +51,7 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
 THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
+THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
 
 
 //
@@ -438,6 +439,10 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    InitTraps();
    if (ConfigReadInt("EnableSNMPTraps", 1))
       ThreadCreate(SNMPTrapReceiver, 0, NULL);
+
+   // Start built-in syslog daemon
+   if (ConfigReadInt("EnableSyslogDaemon", 0))
+      ThreadCreate(SyslogDaemon, 0, NULL);
 
    // Start database "lazy" write thread
    StartDBWriter();

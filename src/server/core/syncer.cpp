@@ -1,5 +1,5 @@
 /* 
-** Project X - Network Management System
+** NetXMS - Network Management System
 ** Copyright (C) 2003 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify

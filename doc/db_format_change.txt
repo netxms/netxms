@@ -5,6 +5,27 @@
 - Added configuration variable IcmpPingSize
 	INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 		VALUES ('IcmpPingSize','46',1,1);
+- Added table for storing syslog messages
+	CREATE TABLE syslog
+	(
+		msg_id SQL_BIGINT not null,
+		msg_timestamp integer not null,
+		facility integer not null,
+		severity integer not null,
+		source_object_id integer not null,
+		hostname varchar(127) not null,
+		msg_tag varchar(32) not null,
+		msg_text SQL_TEXT not null,
+		PRIMARY KEY(msg_id)
+	) TABLE_TYPE;
+- New syslog-related parameters added:
+	INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+		VALUES ('EnableSyslogDaemon','46',1,1);
+	INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+		VALUES ('SyslogListenPort','514',1,1);
+	INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+		VALUES ('SyslogRetentionTime','5184000',1,0);
+
 
 
 *************

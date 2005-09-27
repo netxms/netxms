@@ -762,6 +762,7 @@ src/server/core/id.cpp -text
 src/server/core/image.cpp -text
 src/server/core/interface.cpp -text
 src/server/core/locks.cpp -text
+src/server/core/lpp.cpp -text
 src/server/core/main.cpp -text
 src/server/core/modules.cpp -text
 src/server/core/netinfo.cpp -text
@@ -784,6 +785,7 @@ src/server/core/snmp.cpp -text
 src/server/core/snmptrap.cpp -text
 src/server/core/subnet.cpp -text
 src/server/core/syncer.cpp -text
+src/server/core/syslogd.cpp -text
 src/server/core/template.cpp -text
 src/server/core/tools.cpp -text
 src/server/core/tracert.cpp -text

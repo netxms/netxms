@@ -107,6 +107,9 @@ typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
+#define INT64_FMT    _T("%I64d")
+#define UINT64_FMT   _T("%I64u")
+
 // Socket compatibility
 #define SHUT_RD      0
 #define SHUT_WR      1
@@ -154,6 +157,9 @@ typedef X_UINT64_X QWORD;
 #else
 #error Target system does not have unsigned 64bit integer type
 #endif
+
+#define INT64_FMT    _T("%lld")
+#define UINT64_FMT   _T("%llu")
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
@@ -250,6 +256,8 @@ typedef u_int64_t QWORD;
 #error Target system does not have unsigned 64bit integer type
 #endif
 
+#define INT64_FMT    _T("%lld")
+#define UINT64_FMT   _T("%llu")
 
 #define TRUE   1
 #define FALSE  0
