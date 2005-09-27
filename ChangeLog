@@ -3,11 +3,14 @@
 *
 
 - Added possibility to change size of ICMP echo request packets sent by server
+- Added built-in syslog server
+- Core agent ported to AIX
 - PING subagent:
-	- Ported to NetWare
+	- Ported to NetWare and AIX
 	- Added "packet size" argument to Icmp.Ping(*) parameter
 	- Added "packet size" option to target configuration
 	- Added DefaultPacketSize configuration parameter
+- Port checker subagent ported to AIX
 
 
 *

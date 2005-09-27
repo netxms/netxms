@@ -121,6 +121,10 @@ SOURCE=.\log.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\lpp.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\netinfo.cpp
 # End Source File
 # Begin Source File
@@ -146,6 +150,10 @@ SOURCE=.\sysinfo.cpp
 # Begin Source File
 
 SOURCE=.\tools.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\trap.cpp
 # End Source File
 # Begin Source File
 
@@ -198,6 +206,10 @@ SOURCE=..\..\..\include\nxclapi.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxcscpapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxlog.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

@@ -178,6 +178,7 @@ src/agent/core/exec.cpp -text
 src/agent/core/getparam.cpp -text
 src/agent/core/hddinfo.cpp -text
 src/agent/core/log.cpp -text
+src/agent/core/lpp.cpp -text
 src/agent/core/messages.mc -text
 src/agent/core/netinfo.cpp -text
 src/agent/core/nxagentd.cpp -text
@@ -192,6 +193,7 @@ src/agent/core/session.cpp -text
 src/agent/core/subagent.cpp -text
 src/agent/core/sysinfo.cpp -text
 src/agent/core/tools.cpp -text
+src/agent/core/trap.cpp -text
 src/agent/core/upgrade.cpp -text
 src/agent/core/win32.cpp -text
 src/agent/install/Makefile.am -text

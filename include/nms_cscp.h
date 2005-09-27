@@ -536,6 +536,9 @@ typedef struct
 #define VID_NUM_COLUMNS             ((DWORD)166)
 #define VID_NUM_ROWS                ((DWORD)167)
 #define VID_TABLE_TITLE             ((DWORD)168)
+#define VID_LPP_ID                  ((DWORD)169)
+#define VID_LPP_VERSION             ((DWORD)170)
+#define VID_LOG_NAME                ((DWORD)171)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -604,6 +607,9 @@ typedef struct
 #define VID_COLUMN_NAME_BASE        ((DWORD)0x10000000)
 #define VID_COLUMN_FMT_BASE         ((DWORD)0x20000000)
 #define VID_ROW_DATA_BASE           ((DWORD)0x30000000)
+
+// Base value for log policy rules
+#define VID_LPP_RULE_BASE           ((DWORD)0x10000000)
 
 
 //

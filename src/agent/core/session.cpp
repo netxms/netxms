@@ -385,6 +385,9 @@ void CommSession::ProcessingThread(void)
             case CMD_UPDATE_AGENT_CONFIG:
                UpdateConfig(pMsg, &msg);
                break;
+            case CMD_APPLY_LOG_POLICY:
+               msg.SetVariable(VID_RCC, ApplyLogPolicy(pMsg));
+               break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))
@@ -686,4 +689,52 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+
+//
+// Apply log processing policy
+//
+
+DWORD CommSession::ApplyLogPolicy(CSCPMessage *pRequest)
+{
+   DWORD i, dwResult, dwId;
+   NX_LPP *pPolicy;
+
+   if (m_bMasterServer)
+   {
+      pPolicy = (NX_LPP *)malloc(sizeof(NX_LPP));
+      memset(pPolicy, 0, sizeof(NX_LPP));
+
+      pPolicy->dwFlags = pRequest->GetVariableLong(VID_FLAGS);
+      pPolicy->dwId = pRequest->GetVariableLong(VID_LPP_ID);
+      pPolicy->dwNumRules = pRequest->GetVariableLong(VID_NUM_RULES);
+      pPolicy->dwVersion = pRequest->GetVariableLong(VID_LPP_VERSION);
+      pRequest->GetVariableStr(VID_LOG_NAME, pPolicy->szLogName, MAX_DB_STRING);
+      pRequest->GetVariableStr(VID_NAME, pPolicy->szName, MAX_OBJECT_NAME);
+
+      pPolicy->pRuleList = (NX_LPP_RULE *)malloc(pPolicy->dwNumRules * sizeof(NX_LPP_RULE));
+      for(i = 0, dwId = VID_LPP_RULE_BASE; i < pPolicy->dwNumRules; i++, dwId += 10)
+      {
+         pPolicy->pRuleList[i].dwEvent = pRequest->GetVariableLong(dwId);
+         pPolicy->pRuleList[i].dwMsgIdFrom = pRequest->GetVariableLong(dwId + 1);
+         pPolicy->pRuleList[i].dwMsgIdTo = pRequest->GetVariableLong(dwId + 2);
+         pPolicy->pRuleList[i].nFacility = (int)pRequest->GetVariableShort(dwId + 3);
+         pPolicy->pRuleList[i].nSeverity = (int)pRequest->GetVariableShort(dwId + 4);
+         pRequest->GetVariableStr(dwId + 5, pPolicy->pRuleList[i].szRegExp, MAX_DB_STRING);
+         pRequest->GetVariableStr(dwId + 6, pPolicy->pRuleList[i].szSource, MAX_DB_STRING);
+      }
+
+      dwResult = InstallLogPolicy(pPolicy);
+      if (dwResult != ERR_SUCCESS)
+      {
+         safe_free(pPolicy->pRuleList);
+         free(pPolicy);
+      }
+   }
+   else
+   {
+      dwResult = ERR_ACCESS_DENIED;
+   }
+   return dwResult;
 }

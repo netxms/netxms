@@ -28,6 +28,7 @@
 // Constants
 //
 
+#define MAX_OBJECT_NAME          64
 #define MAX_LOG_MSG_LENGTH       1024
 #define MAX_SYSLOG_HOSTNAME_LEN  128
 #define MAX_SYSLOG_TAG_LEN       33

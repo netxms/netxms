@@ -194,7 +194,6 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
    }
    nLen = min(nMsgLen - nPos, MAX_LOG_MSG_LENGTH);
    memcpy(pRec->szMessage, pCurr, nLen);
-   pRec->szMessage[nLen] = 0;
 
    return TRUE;
 }

@@ -30,6 +30,7 @@
 #include <nms_cscp.h>
 #include <stdio.h>
 #include <nxqueue.h>
+#include <nxlog.h>
 #include "messages.h"
 
 #define LIBNXCL_NO_DECLARATIONS
@@ -231,6 +232,7 @@ private:
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    DWORD Upgrade(CSCPMessage *pRequest);
+   DWORD ApplyLogPolicy(CSCPMessage *pRequest);
 
    void ReadThread(void);
    void WriteThread(void);
@@ -298,6 +300,8 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
 
 DWORD UpgradeAgent(TCHAR *pszPkgFile);
+
+DWORD InstallLogPolicy(NX_LPP *pPolicy);
 
 #ifdef _WIN32
 

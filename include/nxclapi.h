@@ -30,6 +30,7 @@
 #include <nximage.h>
 #include <nxcscpapi.h>
 #include <nxtools.h>
+#include <nxlog.h>
 
 #ifdef _WIN32
 #ifdef LIBNXCL_EXPORTS
@@ -53,7 +54,6 @@ typedef void * NXC_SESSION;
 // Some constants
 //
 
-#define MAX_OBJECT_NAME          64
 #define MAX_COMMUNITY_LENGTH     32
 #define MAX_OID_LENGTH           1024
 #define MAX_EVENT_MSG_LENGTH     256
