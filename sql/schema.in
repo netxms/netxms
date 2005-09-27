@@ -768,7 +768,7 @@ CREATE TABLE lpp_rules
 
 CREATE TABLE syslog
 (
-	msg_id SQL_BIGINT not null,
+	msg_id SQL_INT64 not null,
 	timestamp integer not null,
 	facility integer not null,
 	severity integer not null,
