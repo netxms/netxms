@@ -197,6 +197,11 @@ src/agent/core/win32.cpp -text
 src/agent/install/Makefile.am -text
 src/agent/install/nxagent.iss -text
 src/agent/subagents/Makefile.am -text
+src/agent/subagents/aix/Makefile.am -text
+src/agent/subagents/aix/aix_subagent.h -text
+src/agent/subagents/aix/mac_dlpi.cpp -text
+src/agent/subagents/aix/main.cpp -text
+src/agent/subagents/aix/system.cpp -text
 src/agent/subagents/freebsd/Makefile.am -text
 src/agent/subagents/freebsd/disk.cpp -text
 src/agent/subagents/freebsd/disk.h -text
