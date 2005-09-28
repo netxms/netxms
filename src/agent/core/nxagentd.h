@@ -303,6 +303,9 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile);
 
 DWORD InstallLogPolicy(NX_LPP *pPolicy);
 
+void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList);
+void SendTrap(DWORD dwEventCode, char *pszFormat, ...);
+
 #ifdef _WIN32
 
 void InitService(void);

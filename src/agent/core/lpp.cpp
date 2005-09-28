@@ -26,6 +26,10 @@
 //
 // Install log processing policy
 //
+// Note: policy passed to this function is dynamivally allocated. It
+// will be destroyed by caller if InstallLogPolicy will return anything
+// except ERR_SUCCESS.
+//
 
 DWORD InstallLogPolicy(NX_LPP *pPolicy)
 {

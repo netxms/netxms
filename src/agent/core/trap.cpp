@@ -38,6 +38,7 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, ppArgList[i]);
+   //msg.CreateMessage();
 }
 
 
@@ -54,12 +55,13 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 //        i - Object ID
 //
 
-void SendTrap(DWORD dwEventCode, TCHAR *pszFormat, ...)
+void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
 {
    int i, iNumArgs;
    TCHAR *ppArgList[64];
    va_list args;
 
+   va_start(args, pszFormat);
    iNumArgs = (pszFormat == NULL) ? 0 : strlen(pszFormat);
    for(i = 0; i < iNumArgs; i++)
    {
@@ -86,6 +88,12 @@ void SendTrap(DWORD dwEventCode, TCHAR *pszFormat, ...)
             break;
       }
    }
+   va_end(args);
 
    SendTrap(dwEventCode, iNumArgs, ppArgList);
+
+   for(i = 0; i < iNumArgs; i++)
+      if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
+          (pszFormat[i] == 'i') || (pszFormat[i] == 'a'))
+         free(ppArgList[i]);
 }
