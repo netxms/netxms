@@ -117,6 +117,8 @@ static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
+static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
+static THREAD m_thListener = INVALID_THREAD_HANDLE;
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 static pid_t m_pid;
@@ -646,8 +648,8 @@ BOOL Initialize(void)
    g_dwAgentStartTime = time(NULL);
 
    // Start network listener and session watchdog
-   ThreadCreate(ListenerThread, 0, NULL);
-   ThreadCreate(SessionWatchdog, 0, NULL);
+   m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
+   m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
 
    m_hCondShutdown = ConditionCreate(TRUE);
    ThreadSleep(1);
@@ -665,7 +667,8 @@ void Shutdown(void)
    // Set shutdowm flag and sleep for some time
    // to allow other threads to finish
    g_dwFlags |= AF_SHUTDOWN;
-   ThreadSleep(5);
+   ThreadJoin(m_thSessionWatchdog);
+   ThreadJoin(m_thListener);
 
    UnloadAllSubAgents();
    CloseLog();

@@ -103,11 +103,13 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
    SOCKET hSocket, hClientSocket;
    struct sockaddr_in servAddr;
-   int iNumErrors = 0;
+   int iNumErrors = 0, nRet;
    socklen_t iSize;
    CommSession *pSession;
    char szBuffer[256];
-   BOOL bInstallationServer, bControlServer;
+   BOOL bMasterServer, bControlServer;
+   struct timeval tv;
+   fd_set rdfs;
 
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -146,54 +148,73 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Wait for connection requests
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      iSize = sizeof(struct sockaddr_in);
-      if ((hClientSocket = accept(hSocket, (struct sockaddr *)&servAddr, &iSize)) == -1)
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+      FD_ZERO(&rdfs);
+      FD_SET(hSocket, &rdfs);
+      nRet = select(hSocket + 1, &rdfs, NULL, NULL, &tv);
+      if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
+      {
+         iSize = sizeof(struct sockaddr_in);
+         if ((hClientSocket = accept(hSocket, (struct sockaddr *)&servAddr, &iSize)) == -1)
+         {
+            int error = WSAGetLastError();
+
+            if (error != WSAEINTR)
+               WriteLog(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            iNumErrors++;
+            g_dwAcceptErrors++;
+            if (iNumErrors > 1000)
+            {
+               WriteLog(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+               iNumErrors = 0;
+            }
+            ThreadSleepMs(500);
+            continue;
+         }
+
+         // Socket should be closed on successful exec
+#ifndef _WIN32
+         fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+#endif
+
+         iNumErrors = 0;     // Reset consecutive errors counter
+         DebugPrintf("Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
+
+         if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bMasterServer, &bControlServer))
+         {
+            g_dwAcceptedConnections++;
+            DebugPrintf("Connection from %s accepted", szBuffer);
+
+            // Create new session structure and threads
+            pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
+                                       bMasterServer, bControlServer);
+            if (!RegisterSession(pSession))
+            {
+               delete pSession;
+            }
+            else
+            {
+               pSession->Run();
+            }
+         }
+         else     // Unauthorized connection
+         {
+            g_dwRejectedConnections++;
+            shutdown(hClientSocket, SHUT_RDWR);
+            closesocket(hClientSocket);
+            DebugPrintf("Connection from %s rejected", szBuffer);
+         }
+      }
+      else if (nRet == -1)
       {
          int error = WSAGetLastError();
 
          if (error != WSAEINTR)
-            WriteLog(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
-         iNumErrors++;
-         g_dwAcceptErrors++;
-         if (iNumErrors > 1000)
          {
-            WriteLog(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
-            iNumErrors = 0;
+            WriteLog(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            ThreadSleep(100);
          }
-         ThreadSleepMs(500);
-      }
-
-      // Socket should be closed on successful exec
-#ifndef _WIN32
-      fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
-#endif
-
-      iNumErrors = 0;     // Reset consecutive errors counter
-      DebugPrintf("Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
-
-      if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bInstallationServer, &bControlServer))
-      {
-         g_dwAcceptedConnections++;
-         DebugPrintf("Connection from %s accepted", szBuffer);
-
-         // Create new session structure and threads
-         pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
-                                    bInstallationServer, bControlServer);
-         if (!RegisterSession(pSession))
-         {
-            delete pSession;
-         }
-         else
-         {
-            pSession->Run();
-         }
-      }
-      else     // Unauthorized connection
-      {
-         g_dwRejectedConnections++;
-         shutdown(hClientSocket, SHUT_RDWR);
-         closesocket(hClientSocket);
-         DebugPrintf("Connection from %s rejected", szBuffer);
       }
    }
 
@@ -228,6 +249,15 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
          }
       MutexUnlock(m_hSessionListAccess);
    }
+
+   // Disconnect all sessions
+   MutexLock(m_hSessionListAccess, INFINITE);
+   for(i = 0; i < g_dwMaxSessions; i++)
+      if (m_pSessionList[i] != NULL)
+         m_pSessionList[i]->Disconnect();
+   MutexUnlock(m_hSessionListAccess);
+   ThreadSleep(1);
+
    return THREAD_OK;
 }
 

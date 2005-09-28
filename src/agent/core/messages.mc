@@ -188,4 +188,10 @@ Language=English
 Unable to deterime OS version (GetVersionEx() failed: %1)
 .
 
+MessageId=
+SymbolicName=MSG_SELECT_ERROR
+Language=English
+Call to select() failed: %1
+.
+
 ;#endif
