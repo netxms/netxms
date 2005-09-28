@@ -200,16 +200,48 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
 
 
 //
+// Bind syslog message to NetXMS node object
+// dwSourceIP is an IP address from which we receive message
+//
+
+static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
+{
+   Node *pNode;
+   DWORD dwIpAddr;
+
+   // Determine IP address of a source
+   if (pRec->szHostName[0] == 0)
+   {
+      // Hostname was not defined in the message
+      dwIpAddr = dwSourceIP;
+   }
+   else
+   {
+      dwIpAddr = ResolveHostName(pRec->szHostName);
+   }
+
+   // Match source IP to NetXMS object
+   if (dwIpAddr != INADDR_NONE)
+   {
+      pNode = FindNodeByIP(dwIpAddr);
+      if (pNode != NULL)
+         pRec->dwSourceObject = pNode->Id();
+   }
+}
+
+
+//
 // Process syslog message
 //
 
-static void ProcessSyslogMessage(char *psMsg, int nMsgLen)
+static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 {
    NX_LOG_RECORD record;
    TCHAR *pszEscMsg, szQuery[4096];
 
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
+      BindMsgToNode(&record, dwSourceIP);
       pszEscMsg = EncodeSQLString(record.szMessage);
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
@@ -286,7 +318,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
                         (struct sockaddr *)&addr, &nAddrLen);
       if (nBytes > 0)
       {
-         ProcessSyslogMessage(sMsg, nBytes);
+         ProcessSyslogMessage(sMsg, nBytes, ntohl(addr.sin_addr.s_addr));
       }
       else
       {

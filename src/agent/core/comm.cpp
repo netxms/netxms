@@ -212,7 +212,11 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          int error = WSAGetLastError();
 
          // On AIX, select() returns ENOENT after SIGINT for unknown reason
-         if ((error != WSAEINTR) && (error != ENOENT))
+#ifdef _WIN32
+         if (error != WSAEINTR)
+#else
+         if ((error != EINTR) && (error != ENOENT))
+#endif
          {
             WriteLog(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
             ThreadSleepMs(100);

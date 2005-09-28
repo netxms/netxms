@@ -296,7 +296,7 @@ extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *psz
    // Setup internal variables
    memset(m_iCpuUtilHistory, 0, sizeof(int) * CPU_HISTORY_SIZE * MAX_CPU);
 
-   // Start collecto thread
+   // Start collector thread
    m_hCollectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
 
    return TRUE;
