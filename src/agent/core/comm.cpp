@@ -38,6 +38,7 @@ DWORD g_dwRejectedConnections = 0;
 
 static CommSession **m_pSessionList = NULL;
 static MUTEX m_hSessionListAccess;
+static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
 
 
 //
@@ -210,17 +211,24 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       {
          int error = WSAGetLastError();
 
-         if (error != WSAEINTR)
+         // On AIX, select() returns ENOENT after SIGINT for unknown reason
+         if ((error != WSAEINTR) && (error != ENOENT))
          {
             WriteLog(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
-            ThreadSleep(100);
+            ThreadSleepMs(100);
          }
       }
    }
 
+   // Wait for watchdog thread
+   MutexLock(m_mutexWatchdogActive, INFINITE);
+   MutexUnlock(m_mutexWatchdogActive);
+   MutexDestroy(m_mutexWatchdogActive);
+
    MutexDestroy(m_hSessionListAccess);
    free(m_pSessionList);
    closesocket(hSocket);
+   DebugPrintf("Listener thread terminated");
    return THREAD_OK;
 }
 
@@ -233,6 +241,9 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 {
    DWORD i;
    time_t now;
+
+   m_mutexWatchdogActive = MutexCreate();
+   MutexLock(m_mutexWatchdogActive, INFINITE);
 
    ThreadSleep(5);
    while(!(g_dwFlags & AF_SHUTDOWN))
@@ -256,7 +267,10 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
       if (m_pSessionList[i] != NULL)
          m_pSessionList[i]->Disconnect();
    MutexUnlock(m_hSessionListAccess);
+
    ThreadSleep(1);
+   MutexUnlock(m_mutexWatchdogActive);
+   DebugPrintf("Session Watchdog thread terminated");
 
    return THREAD_OK;
 }

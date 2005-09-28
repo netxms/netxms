@@ -163,7 +163,9 @@ void CommSession::ReadThread(void)
    {
       if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE,
                                   &m_pCtx, pDecryptionBuffer)) <= 0)
+      {
          break;
+      }
 
       // Check if message is too large
       if (iErr == 1)
@@ -333,7 +335,6 @@ void CommSession::ProcessingThread(void)
       pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-
       dwCommand = pMsg->GetCode();
       DebugPrintf("Received message %s", CSCPMessageCodeName((WORD)dwCommand, szBuffer));
 
