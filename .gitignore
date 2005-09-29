@@ -15,6 +15,7 @@ sql/dbinit_pgsql.sql
 src/agent/core/messages.c
 src/agent/core/messages.h
 src/agent/core/nxagentd
+src/agent/core/static_subagents.cpp
 src/server/core/netxmsd
 src/server/include/messages.h
 src/server/libnxsrv/messages.c
