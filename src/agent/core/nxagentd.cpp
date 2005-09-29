@@ -115,10 +115,13 @@ static char *m_pszControlServerList = NULL;
 static char *m_pszMasterServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
-static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
+
+#if defined(_WIN32) || defined(_NETWARE)
+static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+#endif
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 static pid_t m_pid;
@@ -354,31 +357,51 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 
-static int m_XXX = 0;
-
-void OnSignal(int iSignal)
+static void SignalHandler(void)
 {
-	//WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
-	switch(iSignal)
-	{
-		case SIGTERM:
-		case SIGINT:
-			if (m_XXX == 0)
-			{
-				ConditionSet(m_hCondShutdown);
-				m_XXX = 1;
-			}
-			break;
-		case SIGSEGV:
-			abort();
-			break;
-		case SIGCHLD:
-			while (waitpid(-1, NULL, WNOHANG) > 0)
-				;
-			break;
-		default:
-			break;
-	}
+   sigset_t signals;
+   int nSignal;
+
+   sigemptyset(&signals);
+   sigaddset(&signals, SIGTERM);
+   sigaddset(&signals, SIGINT);
+   sigaddset(&signals, SIGPIPE);
+   sigaddset(&signals, SIGSEGV);
+   sigaddset(&signals, SIGCHLD);
+   sigaddset(&signals, SIGHUP);
+   sigaddset(&signals, SIGUSR1);
+   sigaddset(&signals, SIGUSR2);
+
+   sigprocmask(SIG_BLOCK, &signals, NULL);
+
+   while(1)
+   {
+      if (sigwait(&signals, &nSignal) == 0)
+      {
+         switch(nSignal)
+         {
+            case SIGTERM:
+            case SIGINT:
+               goto stop_handler;
+	   	   case SIGSEGV:
+		   	   abort();
+			      break;
+   		   case SIGCHLD:
+	   		   while (waitpid(-1, NULL, WNOHANG) > 0)
+		   		   ;
+			      break;
+            default:
+               break;
+         }
+      }
+      else
+      {
+         ThreadSleepMs(100);
+      }
+   }
+
+stop_handler:
+   sigprocmask(SIG_UNBLOCK, &signals, NULL);
 }
 
 #endif
@@ -651,7 +674,9 @@ BOOL Initialize(void)
    m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
    m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
 
+#if defined(_WIN32) || defined(_NETWARE)
    m_hCondShutdown = ConditionCreate(TRUE);
+#endif
    ThreadSleep(1);
 
    return TRUE;
@@ -674,7 +699,7 @@ void Shutdown(void)
    CloseLog();
 
    // Notify main thread about shutdown
-#ifndef _NETWARE
+#ifdef _WIN32
    ConditionSet(m_hCondShutdown);
 #endif
    
@@ -695,7 +720,11 @@ void Main(void)
 
    if (g_dwFlags & AF_DAEMON)
    {
+#if defined(_WIN32) || defined(_NETWARE)
       ConditionWait(m_hCondShutdown, INFINITE);
+#else
+      SignalHandler();
+#endif
    }
    else
    {
@@ -726,7 +755,7 @@ void Main(void)
       ConditionWait(m_hCondShutdown, INFINITE);
 #else
       printf("Agent running. Press Ctrl+C to shutdown.\n");
-      ConditionWait(m_hCondShutdown, INFINITE);
+      SignalHandler();
       printf("\nStopping agent...\n");
 #endif
    }
@@ -912,14 +941,6 @@ int main(int argc, char *argv[])
                   perror("Unable to setup itself as a daemon");
                   iExitCode = 4;
                }
-				// Setup signal handlers
-				//for(int i = 0; i < 32; i++)
-				//	signal(i, SIG_IGN);
-				signal(SIGPIPE, SIG_IGN);
-				signal(SIGINT, OnSignal);
-				signal(SIGTERM, OnSignal);
-				signal(SIGSEGV, OnSignal);
-				signal(SIGCHLD, OnSignal);
 #endif
             if (iExitCode == 0)
             {
@@ -953,8 +974,10 @@ int main(int argc, char *argv[])
             }
 #endif   /* _WIN32 */
 
+#if defined(_WIN32) || defined(_NETWARE)
             if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
                ConditionDestroy(m_hCondShutdown);
+#endif
          }
          else
          {
