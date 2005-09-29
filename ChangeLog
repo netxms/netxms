@@ -4,7 +4,9 @@
 
 - Added possibility to change size of ICMP echo request packets sent by server
 - Added built-in syslog server
-- Core agent ported to AIX
+- Core agent:
+	- Ported to AIX
+	- Fixed bug in signal handling causing agent to crash on shutdown
 - PING subagent:
 	- Ported to NetWare and AIX
 	- Added "packet size" argument to Icmp.Ping(*) parameter
