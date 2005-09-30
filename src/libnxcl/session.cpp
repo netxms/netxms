@@ -798,7 +798,7 @@ DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
    PrepareForSync();
    DestroyUserDB();
 
-   msg.SetCode(CMD_LOAD_USER_DB);
+   msg.SetCode(CMD_CHANGE_SUBSCRIPTION);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_FLAGS, dwChannels);
    msg.SetVariable(VID_OPERATION, (WORD)nOperation);

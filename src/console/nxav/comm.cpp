@@ -83,6 +83,12 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, FALSE, FALSE);
 
+   // Set subscriptions
+   if (dwResult == RCC_SUCCESS)
+   {
+      dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_OBJECTS | NXC_CHANNEL_ALARMS);
+   }
+
    // Synchronize objects
    if (dwResult == RCC_SUCCESS)
    {
