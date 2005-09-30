@@ -38,7 +38,7 @@ typedef struct
 // Static data
 //
 
-static Queue *m_pMsgQueue;
+static Queue *m_pMsgQueue = NULL;
 static BOOL (* m_DrvSendMsg)(TCHAR *, TCHAR *);
 static void (* m_DrvUnload)(void);
 static THREAD m_hThread = INVALID_THREAD_HANDLE;
@@ -144,8 +144,11 @@ void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText)
 {
    SMS *pMsg;
 
-   pMsg = (SMS *)malloc(sizeof(SMS));
-   _tcsncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
-   _tcsncpy(pMsg->szText, pszText, 160);
-   m_pMsgQueue->Put(pMsg);
+	if (m_pMsgQueue != NULL)
+	{
+		pMsg = (SMS *)malloc(sizeof(SMS));
+		_tcsncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
+		_tcsncpy(pMsg->szText, pszText, 160);
+		m_pMsgQueue->Put(pMsg);
+	}
 }
