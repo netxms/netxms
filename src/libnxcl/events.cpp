@@ -88,7 +88,7 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
 // This function is NOT REENTRANT
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession)
+DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
@@ -98,6 +98,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession)
 
    msg.SetCode(CMD_GET_EVENTS);
    msg.SetId(dwRqId);
+   msg.SetVariable(VID_MAX_RECORDS, dwMaxRecords);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

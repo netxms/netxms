@@ -296,6 +296,7 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction);
 
 extern NXC_SESSION g_hSession;
 extern DWORD g_dwOptions;
+extern DWORD g_dwMaxLogRecords;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];

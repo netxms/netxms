@@ -618,7 +618,7 @@ void ClientSession::ProcessingThread(void)
             SendAllObjects(pMsg);
             break;
          case CMD_GET_EVENTS:
-            SendAllEvents(pMsg->GetId());
+            SendAllEvents(pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars(pMsg->GetId());
@@ -1336,14 +1336,20 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
 // Send all events to client
 //
 
-void ClientSession::SendAllEvents(DWORD dwRqId)
+void ClientSession::SendAllEvents(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DB_ASYNC_RESULT hResult;
+   DB_ASYNC_RESULT hResult = NULL;
+   DB_RESULT hTempResult;
    NXC_EVENT event;
+   DWORD dwRqId, dwMaxRecords, dwNumRows;
+   TCHAR szQuery[1024];
 #ifndef UNICODE
    char szBuffer[MAX_EVENT_MSG_LENGTH];
 #endif
+
+   dwRqId = pRequest->GetId();
+   dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
 
    // Send confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1355,9 +1361,43 @@ void ClientSession::SendAllEvents(DWORD dwRqId)
    MutexLock(m_mutexSendEvents, INFINITE);
 
    // Retrieve events from database
-   hResult = DBAsyncSelect(g_hCoreDB, "SELECT event_id,event_code,event_timestamp,event_source,"
-                                      "event_severity,event_message FROM event_log "
-                                      "ORDER BY event_timestamp");
+   switch(g_dwDBSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM event_log"));
+         if (hTempResult != NULL)
+         {
+            if (DBGetNumRows(hTempResult) > 0)
+            {
+               dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
+            }
+            else
+            {
+               dwNumRows = 0;
+            }
+            DBFreeResult(hTempResult);
+         }
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
+                    _T("event_severity,event_message FROM event_log ")
+                    _T("ORDER BY event_timestamp LIMIT %lu OFFSET %lu"),
+                    dwMaxRecords, dwNumRows - dwMaxRecords);
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
+                    _T("event_severity,event_message INTO temp_log_%ld FROM event_log ")
+                    _T("ORDER BY event_timestamp DESC LIMIT %lu;"),
+                    _T("SELECT * FROM temp_log_%ld ORDER BY event_timestamp;")
+                    _T("DROP TABLE temp_log_%ld"),
+                    m_dwIndex, dwMaxRecords, m_dwIndex, m_dwIndex);
+         break;
+      default:
+         szQuery[0] = 0;
+         break;
+   }
+   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
       // Send events, one per message

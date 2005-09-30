@@ -306,7 +306,7 @@ private:
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(CSCPMessage *pRequest);
-   void SendAllEvents(DWORD dwRqId);
+   void SendAllEvents(CSCPMessage *pRequest);
    void SendAllConfigVars(DWORD dwRqId);
    void SetConfigVariable(CSCPMessage *pRequest);
    void DeleteConfigVariable(CSCPMessage *pRequest);

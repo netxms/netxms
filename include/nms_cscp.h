@@ -543,6 +543,7 @@ typedef struct
 #define VID_LPP_VERSION             ((DWORD)170)
 #define VID_LOG_NAME                ((DWORD)171)
 #define VID_OPERATION               ((DWORD)172)
+#define VID_MAX_RECORDS             ((DWORD)173)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

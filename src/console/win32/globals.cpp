@@ -55,6 +55,7 @@ TCHAR g_szPassword[MAX_PASSWORD_LEN] = _T("");
 
 DWORD g_dwOptions = 0;
 TCHAR g_szWorkDir[MAX_PATH] = _T("");
+DWORD g_dwMaxLogRecords = 1000;
 
 
 //

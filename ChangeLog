@@ -4,6 +4,7 @@
 
 - Added possibility to change size of ICMP echo request packets sent by server
 - Added built-in syslog server
+- Implemented retrieving of only last N records from event log
 - Core agent:
 	- Ported to AIX
 	- Fixed bug in signal handling causing agent to crash on shutdown

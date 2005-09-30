@@ -167,7 +167,9 @@ static DWORD WINAPI LoginThread(void *pArg)
       _tcscat(szCacheFile, g_szLogin);
       if (m_bClearCache)
          DeleteFile(szCacheFile);
-      dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
+      dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_OBJECTS);
+      if (dwResult == RCC_SUCCESS)
+         dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
    }
 
    if (dwResult == RCC_SUCCESS)

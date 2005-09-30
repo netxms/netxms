@@ -62,6 +62,7 @@ BOOL CEventBrowser::PreCreateWindow(CREATESTRUCT& cs)
 int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   DWORD dwResult;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -87,6 +88,11 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENTS, this);
+   dwResult = DoRequestArg2(NXCSubscribe, g_hSession,
+                            (void *)NXC_CHANNEL_EVENTS,
+                            _T("Changing event subscription..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Error changing event subscription: %s"));
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	return 0;
@@ -99,6 +105,8 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CEventBrowser::OnDestroy() 
 {
+   DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_EVENTS,
+                 _T("Changing event subscription..."));
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_EVENTS, this);
 	CMDIChildWnd::OnDestroy();
 }
@@ -165,7 +173,7 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
 
 static void LoadEvents(void *pArg)
 {
-   NXCSyncEvents(g_hSession);
+   NXCSyncEvents(g_hSession, g_dwMaxLogRecords);
    PostMessage((HWND)pArg, WM_REQUEST_COMPLETED, 0, 0);
 }
 
