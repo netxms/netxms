@@ -280,6 +280,7 @@ private:
    DWORD m_dwEncryptionRqId;
    DWORD m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
+   DWORD m_dwActiveChannels;     // Active data channels
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -372,6 +373,7 @@ private:
    void ExecuteAction(CSCPMessage *pRequest);
    void SendObjectTools(DWORD dwRqId);
    void ExecTableTool(CSCPMessage *pRequest);
+   void ChangeSubscription(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

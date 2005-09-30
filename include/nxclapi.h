@@ -456,6 +456,16 @@ typedef void * NXC_SESSION;
 
 
 //
+// Session subscription codes (data channels)
+//
+
+#define NXC_CHANNEL_EVENTS       0x0001
+#define NXC_CHANNEL_SYSLOG       0x0002
+#define NXC_CHANNEL_ALARMS       0x0004
+#define NXC_CHANNEL_OBJECTS      0x0008
+
+
+//
 // IP network
 //
 

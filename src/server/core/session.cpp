@@ -203,6 +203,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_dwRefCount = 0;
    m_dwEncryptionRqId = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
+   m_dwActiveChannels = 0;
 }
 
 
@@ -520,30 +521,39 @@ void ClientSession::UpdateThread(void)
       switch(pUpdate->dwCategory)
       {
          case INFO_CAT_EVENT:
-            MutexLock(m_mutexSendEvents, INFINITE);
-            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
-            MutexUnlock(m_mutexSendEvents);
+            if (m_dwActiveChannels & NXC_CHANNEL_EVENTS)
+            {
+               MutexLock(m_mutexSendEvents, INFINITE);
+               m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+               MutexUnlock(m_mutexSendEvents);
+            }
             free(pUpdate->pData);
             break;
          case INFO_CAT_OBJECT_CHANGE:
-            MutexLock(m_mutexSendObjects, INFINITE);
-            msg.SetCode(CMD_OBJECT_UPDATE);
-            msg.SetId(0);
-            ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
-            SendMessage(&msg);
-            MutexUnlock(m_mutexSendObjects);
-            msg.DeleteAllVariables();
+            if (m_dwActiveChannels & NXC_CHANNEL_OBJECTS)
+            {
+               MutexLock(m_mutexSendObjects, INFINITE);
+               msg.SetCode(CMD_OBJECT_UPDATE);
+               msg.SetId(0);
+               ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
+               SendMessage(&msg);
+               MutexUnlock(m_mutexSendObjects);
+               msg.DeleteAllVariables();
+            }
             ((NetObj *)pUpdate->pData)->DecRefCount();
             break;
          case INFO_CAT_ALARM:
-            MutexLock(m_mutexSendAlarms, INFINITE);
-            msg.SetCode(CMD_ALARM_UPDATE);
-            msg.SetId(0);
-            msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
-            SendMessage(&msg);
-            MutexUnlock(m_mutexSendAlarms);
-            msg.DeleteAllVariables();
+            if (m_dwActiveChannels & NXC_CHANNEL_ALARMS)
+            {
+               MutexLock(m_mutexSendAlarms, INFINITE);
+               msg.SetCode(CMD_ALARM_UPDATE);
+               msg.SetId(0);
+               msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
+               FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
+               SendMessage(&msg);
+               MutexUnlock(m_mutexSendAlarms);
+               msg.DeleteAllVariables();
+            }
             free(pUpdate->pData);
             break;
          case INFO_CAT_ACTION:
@@ -845,6 +855,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_EXEC_TABLE_TOOL:
             ExecTableTool(pMsg);
+            break;
+         case CMD_CHANGE_SUBSCRIPTION:
+            ChangeSubscription(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -5065,5 +5078,32 @@ void ClientSession::ExecTableTool(CSCPMessage *pRequest)
    }
 
    // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Change current subscription
+//
+
+void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwFlags;
+
+   dwFlags = pRequest->GetVariableLong(VID_FLAGS);
+   if (pRequest->GetVariableShort(VID_OPERATION) != 0)
+   {
+      m_dwActiveChannels |= dwFlags;   // Subscribe
+   }
+   else
+   {
+      m_dwActiveChannels &= ~dwFlags;   // Unsubscribe
+   }
+
+   // Send response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
    SendMessage(&msg);
 }

@@ -186,6 +186,8 @@ public:
 
    void SetTimeStamp(DWORD dwTimeStamp) { m_dwTimeStamp = dwTimeStamp; }
    DWORD GetTimeStamp(void) { return m_dwTimeStamp; }
+
+   DWORD SetSubscriptionStatus(DWORD dwChannels, int nOperation);
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

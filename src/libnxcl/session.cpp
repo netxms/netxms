@@ -783,3 +783,26 @@ DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
 {
    return SendFileOverCSCP(m_hSocket, dwRqId, pszFileName, m_pCtx) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
+
+
+//
+// Set subscription status for given channel(s)
+//
+
+DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = CreateRqId();
+   PrepareForSync();
+   DestroyUserDB();
+
+   msg.SetCode(CMD_LOAD_USER_DB);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_FLAGS, dwChannels);
+   msg.SetVariable(VID_OPERATION, (WORD)nOperation);
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
+}

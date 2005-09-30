@@ -756,7 +756,7 @@ CREATE TABLE lpp_rules
 	msg_id_end integer not null,
 	severity integer not null,
 	source_name varchar(255) not null,
-	regexp varchar(255) not null,
+	msg_text_regexp varchar(255) not null,
 	event_code integer not null,
 	PRIMARY KEY(lpp_id,rule_number)
 ) TABLE_TYPE;

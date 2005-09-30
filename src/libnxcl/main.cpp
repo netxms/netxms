@@ -121,6 +121,26 @@ void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId)
 
 
 //
+// Subscribe to channel
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels)
+{
+   return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 1);
+}
+
+
+//
+// Unsubscribe from channel
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels)
+{
+   return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 0);
+}
+
+
+//
 // Get text for error
 //
 
