@@ -446,6 +446,10 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SyslogBrowser.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\TableView.cpp
 # End Source File
 # Begin Source File
@@ -762,6 +766,10 @@ SOURCE=.\nxcon.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxlog.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nxsnmp.h
 # End Source File
 # Begin Source File
@@ -859,6 +867,10 @@ SOURCE=.\ServerCfgEditor.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SyslogBrowser.h
 # End Source File
 # Begin Source File
 

@@ -181,6 +181,7 @@ BEGIN
         MENUITEM "&Network Summary\tF7",        ID_VIEW_NETWORKSUMMARY
         MENUITEM "&Alarms\tF8",                 ID_VIEW_ALARMS
         MENUITEM "&Event Log\tCtrl+F8",         ID_VIEW_EVENTS
+        MENUITEM "S&yslog\tAlt+F8",             ID_VIEW_SYSLOG
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
         MENUITEM "&Debug\tCtrl+Shift+F12",      ID_VIEW_DEBUG
         MENUITEM SEPARATOR
@@ -756,6 +757,7 @@ BEGIN
     VK_F7,          ID_VIEW_NETWORKSUMMARY, VIRTKEY, NOINVERT
     VK_F8,          ID_VIEW_ALARMS,         VIRTKEY, NOINVERT
     VK_F8,          ID_VIEW_EVENTS,         VIRTKEY, CONTROL, NOINVERT
+    VK_F8,          ID_VIEW_SYSLOG,         VIRTKEY, ALT, NOINVERT
     VK_F9,          ID_VIEW_CONTROLPANEL,   VIRTKEY, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
@@ -2634,6 +2636,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDR_WEB_BROWSER         "\nWeb Browser\nWeb Browser"
+    IDR_SYSLOG_BROWSER      "\nSyslog\nSyslog"
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"

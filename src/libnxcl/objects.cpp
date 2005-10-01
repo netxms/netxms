@@ -384,6 +384,8 @@ DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
    // If request was successful, wait for object list end or for disconnection
    if (dwRetCode == RCC_SUCCESS)
       dwRetCode = WaitForSync(INFINITE);
+   else
+      UnlockSyncOp();
 
    return dwRetCode;
 }

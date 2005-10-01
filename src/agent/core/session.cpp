@@ -203,7 +203,7 @@ void CommSession::ReadThread(void)
             {
                if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
                {
-                  if (wFlags & MF_EOF)
+                  if (wFlags & MF_END_OF_FILE)
                   {
                      CSCPMessage msg;
 

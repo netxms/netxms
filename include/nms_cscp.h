@@ -217,8 +217,9 @@ typedef struct
 //
 
 #define MF_BINARY          0x0001
-#define MF_EOF             0x0002
+#define MF_END_OF_FILE     0x0002
 #define MF_DONT_ENCRYPT    0x0004
+#define MF_END_OF_SEQUENCE 0x0008
 
 
 //
@@ -544,6 +545,7 @@ typedef struct
 #define VID_LOG_NAME                ((DWORD)171)
 #define VID_OPERATION               ((DWORD)172)
 #define VID_MAX_RECORDS             ((DWORD)173)
+#define VID_NUM_RECORDS             ((DWORD)174)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -615,6 +617,9 @@ typedef struct
 
 // Base value for log policy rules
 #define VID_LPP_RULE_BASE           ((DWORD)0x10000000)
+
+// Base value for syslog records
+#define VID_SYSLOG_MSG_BASE         ((DWORD)0x10000000)
 
 
 //

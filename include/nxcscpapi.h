@@ -66,10 +66,10 @@ class LIBNXCSCP_EXPORTABLE CSCPMessage
 {
 private:
    WORD m_wCode;
+   WORD m_wFlags;
    DWORD m_dwId;
    DWORD m_dwNumVar;    // Number of variables
    CSCP_DF **m_ppVarList;   // List of variables
-   BOOL m_bDontEncrypt;
 
    void *Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
    void *Get(DWORD dwVarId, BYTE bType);
@@ -89,6 +89,7 @@ public:
    void SetId(DWORD dwId) { m_dwId = dwId; }
 
    BOOL IsVariableExist(DWORD dwVarId) { return (FindVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
+   BOOL IsEndOfSequence(void) { return (m_wFlags & MF_END_OF_SEQUENCE) ? TRUE : FALSE; }
 
    void SetVariable(DWORD dwVarId, WORD wValue) { Set(dwVarId, CSCP_DT_INT16, &wValue); }
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
@@ -109,7 +110,8 @@ public:
 
    void DeleteAllVariables(void);
 
-   void DisableEncryption(void) { m_bDontEncrypt = TRUE; }
+   void DisableEncryption(void) { m_wFlags |= MF_DONT_ENCRYPT; }
+   void SetEndOfSequence(void) { m_wFlags |= MF_END_OF_SEQUENCE; }
 };
 
 

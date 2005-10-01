@@ -93,6 +93,36 @@ TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP
 TCHAR *g_szDeploymentStatus[] = { _T("Pending"), _T("Uploading package"),
                                   _T("Installing"), _T("Completed"), _T("Failed"),
                                   _T("Initializing") };
+TCHAR *g_szSyslogSeverity[] = { _T("Emergency"), _T("Alert"), _T("Critical"),
+                                _T("Error"), _T("Warning"), _T("Notice"),
+                                _T("Informational"), _T("Debug") };
+TCHAR *g_szSyslogFacility[] =
+{
+   _T("Kernel"),
+   _T("User"),
+   _T("Mail"),
+   _T("System"),
+   _T("Auth"),
+   _T("Syslog"),
+   _T("Lpr"),
+   _T("News"),
+   _T("UUCP"),
+   _T("Cron"),
+   _T("Security"),
+   _T("FTP daemon"),
+   _T("NTP"),
+   _T("Log audit"),
+   _T("Log alert"),
+   _T("Clock daemon"),
+   _T("Local0"),
+   _T("Local1"),
+   _T("Local2"),
+   _T("Local3"),
+   _T("Local4"),
+   _T("Local5"),
+   _T("Local6"),
+   _T("Local7")
+};
 TCHAR *g_szInterfaceTypes[] = 
 {
    "Unknown",

@@ -231,6 +231,17 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
 
 
 //
+// Handler for EnumerateSessions()
+//
+
+static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
+{
+   if (pSession->IsAuthenticated())
+      pSession->OnSyslogMessage((NX_LOG_RECORD *)pArg);
+}
+
+
+//
 // Process syslog message
 //
 
@@ -241,17 +252,21 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
+      record.qwMsgId = m_qwMsgId++;
       BindMsgToNode(&record, dwSourceIP);
       pszEscMsg = EncodeSQLString(record.szMessage);
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
                  _T("(" UINT64_FMT ",%ld,%d,%d,%ld,'%s','%s','%s')"),
-                 m_qwMsgId++, record.dwTimeStamp, record.nFacility,
+                 record.qwMsgId, record.dwTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
                  record.szHostName, record.szTag, pszEscMsg);
       free(pszEscMsg);
       DBQuery(g_hCoreDB, szQuery);
+
+      // Send message to all connected clients
+      EnumerateClientSessions(BroadcastSyslogMessage, &record);
    }
 }
 
@@ -327,6 +342,26 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
       }
    }
 
-   DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver terminated"));
+   DbgPrintf(AF_DEBUG_MISC, _T("Syslog Daemon stopped"));
    return THREAD_OK;
+}
+
+
+//
+// Create NXCP message from NX_LOG_RECORd structure
+//
+
+void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec)
+{
+   DWORD dwId = VID_SYSLOG_MSG_BASE;
+
+   pMsg->SetVariable(VID_NUM_RECORDS, (DWORD)1);
+   pMsg->SetVariable(dwId++, pRec->qwMsgId);
+   pMsg->SetVariable(dwId++, pRec->dwTimeStamp);
+   pMsg->SetVariable(dwId++, (WORD)pRec->nFacility);
+   pMsg->SetVariable(dwId++, (WORD)pRec->nSeverity);
+   pMsg->SetVariable(dwId++, pRec->dwSourceObject);
+   pMsg->SetVariable(dwId++, pRec->szHostName);
+   pMsg->SetVariable(dwId++, pRec->szTag);
+   pMsg->SetVariable(dwId++, pRec->szMessage);
 }

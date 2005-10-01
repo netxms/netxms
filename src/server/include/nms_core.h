@@ -214,6 +214,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_OBJECT_CHANGE   2
 #define INFO_CAT_ALARM           3
 #define INFO_CAT_ACTION          4
+#define INFO_CAT_SYSLOG_MSG      5
 
 
 //
@@ -260,6 +261,7 @@ private:
    THREAD m_hProcessingThread;
    THREAD m_hUpdateThread;
    MUTEX m_mutexSendEvents;
+   MUTEX m_mutexSendSyslog;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
@@ -374,6 +376,7 @@ private:
    void SendObjectTools(DWORD dwRqId);
    void ExecTableTool(CSCPMessage *pRequest);
    void ChangeSubscription(CSCPMessage *pRequest);
+   void SendSyslog(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -400,6 +403,7 @@ public:
    void Notify(DWORD dwCode, DWORD dwData = 0);
 
    void OnNewEvent(Event *pEvent);
+   void OnSyslogMessage(NX_LOG_RECORD *pRec);
    void OnObjectChange(NetObj *pObject);
    void OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
@@ -508,6 +512,8 @@ DWORD DeleteTrap(DWORD dwId);
 BOOL IsTableTool(DWORD dwToolId);
 BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
+
+void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 
 #ifdef _WIN32
 

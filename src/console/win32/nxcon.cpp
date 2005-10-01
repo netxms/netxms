@@ -68,6 +68,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_SNMPTRAPS, OnControlpanelSnmptraps)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTPKG, OnControlpanelAgentpkg)
 	ON_COMMAND(ID_CONTROLPANEL_SERVERCFG, OnControlpanelServercfg)
+	ON_COMMAND(ID_VIEW_SYSLOG, OnViewSyslog)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -83,6 +84,7 @@ CConsoleApp::CConsoleApp()
    m_bCtrlPanelActive = FALSE;
    m_bAlarmBrowserActive = FALSE;
    m_bEventBrowserActive = FALSE;
+   m_bSyslogBrowserActive = FALSE;
    m_bEventEditorActive = FALSE;
    m_bUserEditorActive = FALSE;
    m_bObjectBrowserActive = FALSE;
@@ -506,6 +508,11 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_pwndEventBrowser = (CEventBrowser *)pWnd;
          m_hwndEventBrowser = pWnd->m_hWnd;
          break;
+      case IDR_SYSLOG_BROWSER:
+         m_bSyslogBrowserActive = TRUE;
+         m_pwndSyslogBrowser = (CSyslogBrowser *)pWnd;
+         m_hwndSyslogBrowser = pWnd->m_hWnd;
+         break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = TRUE;
          m_pwndObjectBrowser = (CObjectBrowser *)pWnd;
@@ -583,6 +590,10 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bEventBrowserActive = FALSE;
          m_hwndEventBrowser = NULL;
          break;
+      case IDR_SYSLOG_BROWSER:
+         m_bSyslogBrowserActive = FALSE;
+         m_hwndSyslogBrowser = NULL;
+         break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = FALSE;
          break;
@@ -655,12 +666,46 @@ CMDIChildWnd *CConsoleApp::ShowEventBrowser(void)
 
 
 //
+// Show syslog browser window
+//
+
+CMDIChildWnd *CConsoleApp::ShowSyslogBrowser(void)
+{
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CMDIChildWnd *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_bSyslogBrowserActive)
+   {
+      m_pwndSyslogBrowser->BringWindowToTop();
+      pWnd = m_pwndSyslogBrowser;
+   }
+   else
+   {
+	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CSyslogBrowser), IDR_SYSLOG_BROWSER,
+                                    m_hMDIMenu, m_hMDIAccel);
+   }
+   return pWnd;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_EVENTS message handler
 //
 
 void CConsoleApp::OnViewEvents() 
 {
    ShowEventBrowser();
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_SYSLOG message handler
+//
+
+void CConsoleApp::OnViewSyslog() 
+{
+   ShowSyslogBrowser();
 }
 
 
@@ -757,6 +802,20 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             pData = nx_memdup(pArg, sizeof(NXC_EVENT));
             if (!PostMessage(m_hwndEventBrowser, WM_NETXMS_EVENT, 0, (LPARAM)pData))
                free(pData);
+         }
+         break;
+      case NXC_EVENT_NEW_SYSLOG_RECORD:
+         if (m_bSyslogBrowserActive)
+         {
+            NXC_SYSLOG_RECORD *pRec;
+
+            pRec = (NXC_SYSLOG_RECORD *)nx_memdup(pArg, sizeof(NXC_SYSLOG_RECORD));
+            pRec->pszText = _tcsdup(((NXC_SYSLOG_RECORD *)pArg)->pszText);
+            if (!PostMessage(m_hwndSyslogBrowser, WM_SYSLOG_RECORD, 0, (LPARAM)pRec))
+            {
+               safe_free(pRec->pszText);
+               free(pRec);
+            }
          }
          break;
       case NXC_EVENT_OBJECT_CHANGED:

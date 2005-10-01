@@ -89,6 +89,7 @@ EXTRA_DIST = \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \
 	StdAfx.cpp StdAfx.h \
+	SyslogBrowser.cpp SyslogBrowser.h \
 	TableView.cpp TableView.h \
 	ThresholdDlg.cpp ThresholdDlg.h \
 	ToolBox.cpp ToolBox.h \

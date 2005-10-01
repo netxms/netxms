@@ -61,6 +61,7 @@ extern CConsoleApp theApp;
 #define WNDC_ALARM_BROWSER    5
 #define WNDC_EVENT_BROWSER    6
 #define WNDC_OBJECT_BROWSER   7
+#define WNDC_SYSLOG_BROWSER   8
 
 
 //
@@ -107,6 +108,7 @@ extern CConsoleApp theApp;
 #define WM_GET_SAVE_INFO         (WM_USER + 14)
 #define WM_TABLE_DATA            (WM_USER + 15)
 #define WM_NETXMS_EVENT          (WM_USER + 16)
+#define WM_SYSLOG_RECORD         (WM_USER + 17)
 
 
 //
@@ -306,6 +308,8 @@ extern TCHAR *g_szStatusTextSmall[];
 extern TCHAR *g_szActionType[];
 extern TCHAR *g_szServiceType[];
 extern TCHAR *g_szDeploymentStatus[];
+extern TCHAR *g_szSyslogSeverity[];
+extern TCHAR *g_szSyslogFacility[];
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];

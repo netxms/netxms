@@ -186,6 +186,7 @@ typedef void * NXC_SESSION;
 #define NXC_EVENT_OBJECT_CHANGED       4
 #define NXC_EVENT_NOTIFICATION         5
 #define NXC_EVENT_DEPLOYMENT_STATUS    6
+#define NXC_EVENT_NEW_SYSLOG_RECORD    7
 
 
 //
@@ -606,6 +607,23 @@ struct NXC_TRAP_CFG_ENTRY
 
 typedef void (* NXC_EVENT_HANDLER)(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg);
 typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
+
+
+//
+// Syslog record structure
+//
+
+typedef struct
+{
+   QWORD qwMsgId;
+   DWORD dwTimeStamp;
+   WORD wFacility;
+   WORD wSeverity;
+   DWORD dwSourceObject;
+   TCHAR szHost[MAX_SYSLOG_HOSTNAME_LEN];
+   TCHAR szTag[MAX_SYSLOG_TAG_LEN];
+   TCHAR *pszText;
+} NXC_SYSLOG_RECORD;
 
 
 //
@@ -1140,6 +1158,8 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, DWORD dwId, TCHA
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
 DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, DWORD dwObjectId, int iNumArgs, TCHAR **pArgList);
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(NXC_SESSION hSession);
 NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, DWORD dwId);

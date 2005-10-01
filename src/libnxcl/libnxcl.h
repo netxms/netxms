@@ -98,6 +98,7 @@ private:
    DWORD m_dwNumObjects;
    INDEX *m_pIndexById;
    MUTEX m_mutexIndexAccess;
+   MUTEX m_mutexSyncOpAccess;
    SOCKET m_hSocket;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
    MsgWaitQueue m_msgWaitQueue;
@@ -159,6 +160,7 @@ public:
    DWORD WaitForSync(DWORD dwTimeOut);
    void PrepareForSync(void);
    void CompleteSync(DWORD dwRetCode);
+   void UnlockSyncOp(void) { MutexUnlock(m_mutexSyncOpAccess); }
 
    DWORD OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 
@@ -206,6 +208,7 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser);
 
 void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg);
+void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);

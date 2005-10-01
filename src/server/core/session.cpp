@@ -187,6 +187,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_hUpdateThread = INVALID_THREAD_HANDLE;
    m_mutexSendEvents = MutexCreate();
+   m_mutexSendSyslog = MutexCreate();
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
@@ -220,6 +221,7 @@ ClientSession::~ClientSession()
    delete m_pUpdateQueue;
    safe_free(m_pMsgBuffer);
    MutexDestroy(m_mutexSendEvents);
+   MutexDestroy(m_mutexSendSyslog);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
@@ -340,7 +342,7 @@ void ClientSession::ReadThread(void)
                {
                   if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
                   {
-                     if (wFlags & MF_EOF)
+                     if (wFlags & MF_END_OF_FILE)
                      {
                         CSCPMessage msg;
 
@@ -521,45 +523,41 @@ void ClientSession::UpdateThread(void)
       switch(pUpdate->dwCategory)
       {
          case INFO_CAT_EVENT:
-            if (m_dwActiveChannels & NXC_CHANNEL_EVENTS)
-            {
-               MutexLock(m_mutexSendEvents, INFINITE);
-               m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
-               MutexUnlock(m_mutexSendEvents);
-            }
+            MutexLock(m_mutexSendEvents, INFINITE);
+            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+            MutexUnlock(m_mutexSendEvents);
+            free(pUpdate->pData);
+            break;
+         case INFO_CAT_SYSLOG_MSG:
+            MutexLock(m_mutexSendSyslog, INFINITE);
+            msg.SetCode(CMD_SYSLOG_RECORDS);
+            CreateMessageFromSyslogMsg(&msg, (NX_LOG_RECORD *)pUpdate->pData);
+            SendMessage(&msg);
+            MutexUnlock(m_mutexSendSyslog);
             free(pUpdate->pData);
             break;
          case INFO_CAT_OBJECT_CHANGE:
-            if (m_dwActiveChannels & NXC_CHANNEL_OBJECTS)
-            {
-               MutexLock(m_mutexSendObjects, INFINITE);
-               msg.SetCode(CMD_OBJECT_UPDATE);
-               msg.SetId(0);
-               ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
-               SendMessage(&msg);
-               MutexUnlock(m_mutexSendObjects);
-               msg.DeleteAllVariables();
-            }
+            MutexLock(m_mutexSendObjects, INFINITE);
+            msg.SetCode(CMD_OBJECT_UPDATE);
+            ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
+            SendMessage(&msg);
+            MutexUnlock(m_mutexSendObjects);
+            msg.DeleteAllVariables();
             ((NetObj *)pUpdate->pData)->DecRefCount();
             break;
          case INFO_CAT_ALARM:
-            if (m_dwActiveChannels & NXC_CHANNEL_ALARMS)
-            {
-               MutexLock(m_mutexSendAlarms, INFINITE);
-               msg.SetCode(CMD_ALARM_UPDATE);
-               msg.SetId(0);
-               msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-               FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
-               SendMessage(&msg);
-               MutexUnlock(m_mutexSendAlarms);
-               msg.DeleteAllVariables();
-            }
+            MutexLock(m_mutexSendAlarms, INFINITE);
+            msg.SetCode(CMD_ALARM_UPDATE);
+            msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
+            FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
+            SendMessage(&msg);
+            MutexUnlock(m_mutexSendAlarms);
+            msg.DeleteAllVariables();
             free(pUpdate->pData);
             break;
          case INFO_CAT_ACTION:
             MutexLock(m_mutexSendActions, INFINITE);
             msg.SetCode(CMD_ACTION_DB_UPDATE);
-            msg.SetId(0);
             msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
             msg.SetVariable(VID_ACTION_ID, ((NXC_ACTION *)pUpdate->pData)->dwId);
             if (pUpdate->dwCode != NX_NOTIFY_ACTION_DELETED)
@@ -858,6 +856,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_CHANGE_SUBSCRIPTION:
             ChangeSubscription(pMsg);
+            break;
+         case CMD_GET_SYSLOG:
+            SendSyslog(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -1382,7 +1383,7 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
                     _T("SELECT event_id,event_code,event_timestamp,event_source,")
                     _T("event_severity,event_message FROM event_log ")
                     _T("ORDER BY event_timestamp LIMIT %lu OFFSET %lu"),
-                    dwMaxRecords, dwNumRows - dwMaxRecords);
+                    dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
          break;
       case DB_SYNTAX_MSSQL:
          _sntprintf(szQuery, 1024,
@@ -1565,12 +1566,30 @@ void ClientSession::OnNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated())
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_EVENT;
       pUpdate->pData = malloc(sizeof(NXC_EVENT));
       pEvent->PrepareMessage((NXC_EVENT *)pUpdate->pData);
+      m_pUpdateQueue->Put(pUpdate);
+   }
+}
+
+
+//
+// Handler for new syslog messages
+//
+
+void ClientSession::OnSyslogMessage(NX_LOG_RECORD *pRec)
+{
+   UPDATE_INFO *pUpdate;
+
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SYSLOG))
+   {
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
+      pUpdate->pData = nx_memdup(pRec, sizeof(NX_LOG_RECORD));
       m_pUpdateQueue->Put(pUpdate);
    }
 }
@@ -1584,7 +1603,7 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated())
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
@@ -3162,7 +3181,7 @@ void ClientSession::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
    UPDATE_INFO *pUpdate;
    NetObj *pObject;
 
-   if (IsAuthenticated())
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
    {
       pObject = FindObjectById(pAlarm->dwSourceObject);
       if (pObject != NULL)
@@ -5146,4 +5165,105 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    SendMessage(&msg);
+}
+
+
+//
+// Get latest syslog records
+//
+
+void ClientSession::SendSyslog(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwRqId, dwMaxRecords, dwNumRows, dwId;
+   DB_RESULT hTempResult;
+   DB_ASYNC_RESULT hResult;
+   TCHAR szQuery[1024], szBuffer[1024];
+
+   dwRqId = pRequest->GetId();
+   dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
+
+   // Send confirmation message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
+   msg.DeleteAllVariables();
+   msg.SetCode(CMD_SYSLOG_RECORDS);
+
+   MutexLock(m_mutexSendSyslog, INFINITE);
+
+   // Retrieve events from database
+   switch(g_dwDBSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM syslog"));
+         if (hTempResult != NULL)
+         {
+            if (DBGetNumRows(hTempResult) > 0)
+            {
+               dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
+            }
+            else
+            {
+               dwNumRows = 0;
+            }
+            DBFreeResult(hTempResult);
+         }
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
+                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
+                    _T("ORDER BY msg_timestamp LIMIT %lu OFFSET %lu"),
+                    dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
+                    _T("source_object_id,hostname,msg_tag,msg_text ")
+                    _T("INTO temp_syslog_%ld FROM syslog ")
+                    _T("ORDER BY msg_timestamp DESC LIMIT %lu;"),
+                    _T("SELECT * FROM temp_syslog_%ld ORDER BY msg_timestamp;")
+                    _T("DROP TABLE temp_syslog_%ld"),
+                    m_dwIndex, dwMaxRecords, m_dwIndex, m_dwIndex);
+         break;
+      default:
+         szQuery[0] = 0;
+         break;
+   }
+   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      // Send events, one per message
+      for(dwId = VID_SYSLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
+      {
+         if (dwNumRows == 10)
+         {
+            msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+            SendMessage(&msg);
+            msg.DeleteAllVariables();
+            dwNumRows = 0;
+            dwId = VID_SYSLOG_MSG_BASE;
+         }
+         msg.SetVariable(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 1));
+         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 2));
+         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 3));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 4));
+         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
+         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 6, szBuffer, 1024));
+         DBGetFieldAsync(hResult, 7, szBuffer, 1024);
+         DecodeSQLString(szBuffer);
+         msg.SetVariable(dwId++, szBuffer);
+      }
+      DBFreeAsyncResult(hResult);
+
+      // Send remaining records with End-Of-Sequence notification
+      msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+      msg.SetEndOfSequence();
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+
+   MutexUnlock(m_mutexSendSyslog);
 }

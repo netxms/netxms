@@ -104,6 +104,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
       dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(INFINITE);
+   else
+      ((NXCL_Session *)hSession)->UnlockSyncOp();
 
    return dwRetCode;
 }
@@ -132,4 +134,65 @@ DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode,
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Process syslog records coming from server
+//
+
+void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
+{
+   DWORD i, dwNumRecords, dwId;
+   NXC_SYSLOG_RECORD rec;
+
+   dwNumRecords = pMsg->GetVariableLong(VID_NUM_RECORDS);
+   DebugPrintf(_T("ProcessSyslogRecords(): %d records in message"), dwNumRecords);
+   for(i = 0, dwId = VID_SYSLOG_MSG_BASE; i < dwNumRecords; i++)
+   {
+      rec.qwMsgId = pMsg->GetVariableInt64(dwId++);
+      rec.dwTimeStamp = pMsg->GetVariableLong(dwId++);
+      rec.wFacility = pMsg->GetVariableShort(dwId++);
+      rec.wSeverity = pMsg->GetVariableShort(dwId++);
+      rec.dwSourceObject = pMsg->GetVariableLong(dwId++);
+      pMsg->GetVariableStr(dwId++, rec.szHost, MAX_SYSLOG_HOSTNAME_LEN);
+      pMsg->GetVariableStr(dwId++, rec.szTag, MAX_SYSLOG_TAG_LEN);
+      rec.pszText = pMsg->GetVariableStr(dwId++);
+
+      // Call client's callback to handle new record
+      pSession->CallEventHandler(NXC_EVENT_NEW_SYSLOG_RECORD, 0, &rec);
+      free(rec.pszText);
+   }
+
+   // Notify requestor thread if all messages was received
+   if (pMsg->IsEndOfSequence())
+      pSession->CompleteSync(RCC_SUCCESS);
+}
+
+
+//
+// Synchronize syslog
+// This function is NOT REENTRANT
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords)
+{
+   CSCPMessage msg;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+   ((NXCL_Session *)hSession)->PrepareForSync();
+
+   msg.SetCode(CMD_GET_SYSLOG);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_MAX_RECORDS, dwMaxRecords);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   if (dwRetCode == RCC_SUCCESS)
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(INFINITE);
+   else
+      ((NXCL_Session *)hSession)->UnlockSyncOp();
+
+   return dwRetCode;
 }

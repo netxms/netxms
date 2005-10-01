@@ -132,6 +132,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_EVENT_LIST_END:
                ProcessEvent(pSession, pMsg, NULL);
                break;
+            case CMD_SYSLOG_RECORDS:
+               ProcessSyslogRecords(pSession, pMsg);
+               break;
             case CMD_EVENT_DB_RECORD:
                ProcessEventDBRecord(pSession, pMsg);
                break;

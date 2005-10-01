@@ -156,6 +156,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    RECT rect;
    int i;
    LVCOLUMN lvCol;
+   DWORD dwResult;
    static int widths[6] = { 50, 100, 150, 200, 250, -1 };
    static int icons[5] = { IDI_SEVERITY_NORMAL, IDI_SEVERITY_WARNING, IDI_SEVERITY_MINOR,
                            IDI_SEVERITY_MAJOR, IDI_SEVERITY_CRITICAL };
@@ -237,6 +238,10 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    }
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_ALARMS, this);
+   dwResult = DoRequestArg2(NXCSubscribe, g_hSession, (void *)NXC_CHANNEL_ALARMS,
+                            _T("Subscribing to ALARMS channel..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot subscribe to ALARMS channel: %s"));
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	return 0;
@@ -249,6 +254,8 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CAlarmBrowser::OnDestroy() 
 {
+   DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_ALARMS,
+                 _T("Unsubscribing from ALARMS channel..."));
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_ALARMS, this);
 	CMDIChildWnd::OnDestroy();
 }

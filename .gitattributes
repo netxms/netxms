@@ -563,6 +563,8 @@ src/console/win32/ServerCfgEditor.cpp -text
 src/console/win32/ServerCfgEditor.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
+src/console/win32/SyslogBrowser.cpp -text
+src/console/win32/SyslogBrowser.h -text
 src/console/win32/TableView.cpp -text
 src/console/win32/TableView.h -text
 src/console/win32/ThresholdDlg.cpp -text

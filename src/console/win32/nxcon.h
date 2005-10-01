@@ -52,6 +52,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "TrapEditor.h"
 #include "PackageMgr.h"
 #include "ServerCfgEditor.h"
+#include "SyslogBrowser.h"
 
 
 //
@@ -115,10 +116,12 @@ protected:
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
    HWND m_hwndEventBrowser;
+   HWND m_hwndSyslogBrowser;
    CActionEditor *m_pwndActionEditor;
    CTrapEditor *m_pwndTrapEditor;
 	CAlarmBrowser *m_pwndAlarmBrowser;
 	CEventBrowser *m_pwndEventBrowser;
+	CSyslogBrowser *m_pwndSyslogBrowser;
    CEventEditor *m_pwndEventEditor;
    CUserEditor *m_pwndUserEditor;
 	CObjectBrowser *m_pwndObjectBrowser;
@@ -187,6 +190,7 @@ public:
 	afx_msg void OnControlpanelSnmptraps();
 	afx_msg void OnControlpanelAgentpkg();
 	afx_msg void OnControlpanelServercfg();
+	afx_msg void OnViewSyslog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -194,6 +198,7 @@ private:
 	BOOL m_bTrapEditorActive;
 	BOOL m_bAlarmBrowserActive;
 	BOOL m_bEventBrowserActive;
+	BOOL m_bSyslogBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bUserEditorActive;
 	BOOL m_bObjectBrowserActive;
@@ -216,6 +221,7 @@ public:
 	void UnbindObject(NXC_OBJECT *pObject);
 	void BindObject(NXC_OBJECT *pObject);
 	CMDIChildWnd *ShowEventBrowser(void);
+	CMDIChildWnd *ShowSyslogBrowser(void);
 	CMDIChildWnd *ShowAlarmBrowser(TCHAR *pszParams = NULL);
 	CMDIChildWnd *ShowNetworkSummary(void);
 	void ApplyTemplate(NXC_OBJECT *pObject);

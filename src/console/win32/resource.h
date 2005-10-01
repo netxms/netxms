@@ -422,6 +422,7 @@
 #define IDC_DISCARD                     1285
 #define IDC_SAVE                        1286
 #define IDR_WEB_BROWSER                 8100
+#define IDR_SYSLOG_BROWSER              8101
 #define IDR_EVENT_EDITOR                8105
 #define IDR_USER_EDITOR                 8106
 #define IDR_NETWORK_SUMMARY             8107
@@ -566,6 +567,7 @@
 #define ID_CONFIG_SAVEANDAPPLY          32952
 #define ID_ALARM_SHOWNODES              32953
 #define ID_ITEM_MOVETOTEMPLATE          32954
+#define ID_VIEW_SYSLOG                  32956
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -575,7 +577,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
-#define _APS_NEXT_COMMAND_VALUE         32956
+#define _APS_NEXT_COMMAND_VALUE         32957
 #define _APS_NEXT_CONTROL_VALUE         1287
 #define _APS_NEXT_SYMED_VALUE           125
 #endif

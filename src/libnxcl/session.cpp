@@ -39,6 +39,7 @@ NXCL_Session::NXCL_Session()
    m_dwNumObjects = 0;
    m_pIndexById = NULL;
    m_mutexIndexAccess = MutexCreate();
+   m_mutexSyncOpAccess = MutexCreate();
    m_dwReceiverBufferSize = 4194304;     // 4MB
    m_hSocket = -1;
    m_pItemList = NULL;
@@ -75,6 +76,7 @@ NXCL_Session::~NXCL_Session()
       ThreadJoin(m_hRecvThread);
 
    MutexDestroy(m_mutexIndexAccess);
+   MutexDestroy(m_mutexSyncOpAccess);
 
    MutexLock(m_mutexEventAccess, INFINITE);
    MutexUnlock(m_mutexEventAccess);
@@ -224,6 +226,7 @@ DWORD NXCL_Session::WaitForSync(DWORD dwTimeOut)
    DWORD dwRetCode;
 
    dwRetCode = WaitForSingleObject(m_condSyncOp, dwTimeOut);
+   MutexUnlock(m_mutexSyncOpAccess);
    return (dwRetCode == WAIT_TIMEOUT) ? RCC_TIMEOUT : m_dwSyncExitCode;
 #else
    int iRetCode;
@@ -261,6 +264,7 @@ DWORD NXCL_Session::WaitForSync(DWORD dwTimeOut)
       dwResult = m_dwSyncExitCode;
    }
    pthread_mutex_unlock(&m_mutexSyncOp);
+   MutexUnlock(m_mutexSyncOpAccess);
    return dwResult;
 #endif
 }
@@ -272,6 +276,7 @@ DWORD NXCL_Session::WaitForSync(DWORD dwTimeOut)
 
 void NXCL_Session::PrepareForSync(void)
 {
+   MutexLock(m_mutexSyncOpAccess, INFINITE);
    m_dwSyncExitCode = RCC_SYSTEM_FAILURE;
 #ifdef _WIN32
    ResetEvent(m_condSyncOp);
@@ -415,6 +420,7 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
    }
    else
    {
+      UnlockSyncOp();
       free(m_pItemList);
    }
 
@@ -447,6 +453,8 @@ DWORD NXCL_Session::LoadEventDB(void)
    /* TODO: this probably should be recoded as loop with calls to WaitForMessage() */
    if (dwRetCode == RCC_SUCCESS)
       dwRetCode = WaitForSync(INFINITE);
+   else
+      UnlockSyncOp();
 
    MutexUnlock(m_mutexEventAccess);
    return dwRetCode;
@@ -770,6 +778,10 @@ DWORD NXCL_Session::LoadUserDB(void)
       if (dwRetCode == RCC_SUCCESS)
          m_dwFlags |= NXC_SF_USERDB_LOADED;
    }
+   else
+   {
+      UnlockSyncOp();
+   }
 
    return dwRetCode;
 }
@@ -795,8 +807,6 @@ DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
    DWORD dwRqId;
 
    dwRqId = CreateRqId();
-   PrepareForSync();
-   DestroyUserDB();
 
    msg.SetCode(CMD_CHANGE_SUBSCRIPTION);
    msg.SetId(dwRqId);
