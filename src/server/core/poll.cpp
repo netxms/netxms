@@ -445,11 +445,13 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
 
    // Wait for all pollers
+   DbgPrintf(AF_DEBUG_MISC, "NodePollManager: waiting for poller threads");
    for(i = 0; i < m_iNumPollers; i++)
       ThreadJoin(m_pPollerState[i].handle);
 
    m_iNumPollers = 0;
    safe_free(m_pPollerState);
 
+   DbgPrintf(AF_DEBUG_MISC, "NodePollManager: main thread terminated");
    return THREAD_OK;
 }

@@ -166,5 +166,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    {
       DBDisconnect(m_hdb);
    }
+   DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Housekeeper thread terminated");
    return THREAD_OK;
 }

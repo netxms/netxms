@@ -32,10 +32,23 @@
 
 
 //
+// Queued syslog message structure
+//
+
+struct QUEUED_SYSLOG_MESSAGE
+{
+   DWORD dwSourceIP;
+   int nBytes;
+   char *psMsg;
+};
+
+
+//
 // Static data
 //
 
 static QWORD m_qwMsgId = 1;
+static Queue *m_pSyslogQueue = NULL;
 
 
 //
@@ -272,6 +285,44 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 
 
 //
+// Syslog processing thread
+//
+
+static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
+{
+   QUEUED_SYSLOG_MESSAGE *pMsg;
+
+   while(1)
+   {
+      pMsg = (QUEUED_SYSLOG_MESSAGE *)m_pSyslogQueue->GetOrBlock();
+      if (pMsg == INVALID_POINTER_VALUE)
+         break;
+
+      ProcessSyslogMessage(pMsg->psMsg, pMsg->nBytes, pMsg->dwSourceIP);
+      free(pMsg->psMsg);
+      free(pMsg);
+   }
+   return THREAD_OK;
+}
+
+
+//
+// Queue syslog message for processing
+//
+
+static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
+{
+   QUEUED_SYSLOG_MESSAGE *pMsg;
+
+   pMsg = (QUEUED_SYSLOG_MESSAGE *)malloc(sizeof(QUEUED_SYSLOG_MESSAGE));
+   pMsg->dwSourceIP = dwSourceIP;
+   pMsg->nBytes = nMsgLen;
+   pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen);
+   m_pSyslogQueue->Put(pMsg);
+}
+
+
+//
 // Syslog messages receiver thread
 //
 
@@ -279,10 +330,13 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 {
    SOCKET hSocket;
    struct sockaddr_in addr;
-   int nBytes, nPort;
+   int nBytes, nPort, nRet;
    socklen_t nAddrLen;
    char sMsg[MAX_SYSLOG_MSG_LEN];
    DB_RESULT hResult;
+   THREAD hProcessingThread;
+   struct fd_set rdfs;
+   struct timeval tv;
 
    // Determine first available message id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(msg_id) FROM syslog"));
@@ -323,24 +377,46 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
       return THREAD_OK;
    }
 
+   // Start processing thread
+   m_pSyslogQueue = new Queue(1000, 100);
+   hProcessingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
+
    DbgPrintf(AF_DEBUG_MISC, _T("Syslog Daemon started"));
 
    // Wait for packets
    while(!ShutdownInProgress())
    {
-      nAddrLen = sizeof(struct sockaddr_in);
-      nBytes = recvfrom(hSocket, sMsg, MAX_SYSLOG_MSG_LEN, 0,
-                        (struct sockaddr *)&addr, &nAddrLen);
-      if (nBytes > 0)
+      FD_ZERO(&rdfs);
+      FD_SET(hSocket, &rdfs);
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+      nRet = select(hSocket + 1, &rdfs, NULL, NULL, &tv);
+      if (nRet > 0)
       {
-         ProcessSyslogMessage(sMsg, nBytes, ntohl(addr.sin_addr.s_addr));
+         nAddrLen = sizeof(struct sockaddr_in);
+         nBytes = recvfrom(hSocket, sMsg, MAX_SYSLOG_MSG_LEN, 0,
+                           (struct sockaddr *)&addr, &nAddrLen);
+         if (nBytes > 0)
+         {
+            QueueSyslogMessage(sMsg, nBytes, ntohl(addr.sin_addr.s_addr));
+         }
+         else
+         {
+            // Sleep on error
+            ThreadSleepMs(100);
+         }
       }
-      else
+      else if (nRet == -1)
       {
          // Sleep on error
          ThreadSleepMs(100);
       }
    }
+
+   // Stop processing thread
+   m_pSyslogQueue->Put(INVALID_POINTER_VALUE);
+   ThreadJoin(hProcessingThread);
+   delete m_pSyslogQueue;
 
    DbgPrintf(AF_DEBUG_MISC, _T("Syslog Daemon stopped"));
    return THREAD_OK;

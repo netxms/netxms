@@ -84,6 +84,7 @@ static CONDITION m_hEventShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thNodePollMgr = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
+static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
 
 
 //
@@ -442,7 +443,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 
    // Start built-in syslog daemon
    if (ConfigReadInt("EnableSyslogDaemon", 0))
-      ThreadCreate(SyslogDaemon, 0, NULL);
+      m_thSyslogDaemon = ThreadCreateEx(SyslogDaemon, 0, NULL);
 
    // Start database "lazy" write thread
    StartDBWriter();
@@ -500,6 +501,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
    ThreadJoin(m_thHouseKeeper);
    ThreadJoin(m_thNodePollMgr);
    ThreadJoin(m_thSyncer);
+   ThreadJoin(m_thSyslogDaemon);
 
    SaveObjects(g_hCoreDB);
    DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
