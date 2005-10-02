@@ -522,6 +522,9 @@ void CMainFrame::OnDesktopRestore()
                case WNDC_EVENT_BROWSER:
                   pWnd = theApp.ShowEventBrowser();
                   break;
+               case WNDC_SYSLOG_BROWSER:
+                  pWnd = theApp.ShowSyslogBrowser();
+                  break;
                case WNDC_OBJECT_BROWSER:
                   pWnd = theApp.ShowObjectBrowser(pWndInfo[i].szParameters);
                   break;
