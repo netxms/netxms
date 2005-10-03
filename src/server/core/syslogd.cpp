@@ -178,9 +178,16 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
       for(i = 0; isalnum(*pCurr) && (i < MAX_SYSLOG_HOSTNAME_LEN) && (nPos < nMsgLen); i++, nPos++, pCurr++)
          pRec->szHostName[i] = *pCurr;
       if ((nPos >= nMsgLen) || (*pCurr != ' '))
-         return FALSE;  // space should follow host name
-      pCurr++;
-      nPos++;
+      {
+         // Not a valid hostname, assuming to be a part of message
+         pCurr -= i;
+         nPos -= i;
+      }
+      else
+      {
+         pCurr++;
+         nPos++;
+      }
    }
    else
    {
@@ -193,18 +200,10 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
    if ((i == MAX_SYSLOG_TAG_LEN) || (nPos >= nMsgLen))
    {
       // Too long tag, assuming that it's a part of message
-      pCurr -= i;
-      nPos -= i;
       pRec->szTag[0] = 0;
    }
-   else
-   {
-      if (*pCurr == ' ')
-      {
-         pCurr++;
-         nPos++;
-      }
-   }
+   pCurr -= i;
+   nPos -= i;
    nLen = min(nMsgLen - nPos, MAX_LOG_MSG_LENGTH);
    memcpy(pRec->szMessage, pCurr, nLen);
 
@@ -238,7 +237,16 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
    {
       pNode = FindNodeByIP(dwIpAddr);
       if (pNode != NULL)
+      {
          pRec->dwSourceObject = pNode->Id();
+         if (pRec->szHostName[0] == 0)
+            _tcsncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+      }
+      else
+      {
+         if (pRec->szHostName[0] == 0)
+            IpToStr(dwSourceIP, pRec->szHostName);
+      }
    }
 }
 
