@@ -81,7 +81,8 @@ static DWORD WINAPI LoginThread(void *pArg)
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
    DWORD dwResult;
 
-   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, FALSE, FALSE);
+   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, 
+                         _T("Alarm Viewer/") NETXMS_VERSION_STRING, FALSE, FALSE);
 
    // Set subscriptions
    if (dwResult == RCC_SUCCESS)

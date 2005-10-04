@@ -366,6 +366,9 @@ typedef struct
 #define CMD_CHANGE_SUBSCRIPTION     0x008A
 #define CMD_GET_SYSLOG              0x008B
 #define CMD_SYSLOG_RECORDS          0x008C
+#define CMD_GET_LPP_LIST            0x008D
+#define CMD_OPEN_LOG_POLICY         0x008E
+#define CMD_CLOSE_LOG_POLICY        0x008F
 
 
 //
@@ -546,6 +549,9 @@ typedef struct
 #define VID_OPERATION               ((DWORD)172)
 #define VID_MAX_RECORDS             ((DWORD)173)
 #define VID_NUM_RECORDS             ((DWORD)174)
+#define VID_CLIENT_INFO             ((DWORD)175)
+#define VID_OS_INFO                 ((DWORD)176)
+#define VID_LIBNXCL_VERSION         ((DWORD)177)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -617,6 +623,7 @@ typedef struct
 
 // Base value for log policy rules
 #define VID_LPP_RULE_BASE           ((DWORD)0x10000000)
+#define VID_LPP_LIST_BASE           ((DWORD)0x10000000)
 
 // Base value for syslog records
 #define VID_SYSLOG_MSG_BASE         ((DWORD)0x10000000)

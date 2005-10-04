@@ -268,6 +268,7 @@ private:
    MUTEX m_mutexPollerInit;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    TCHAR m_szUserName[256];   // String in form login_name@host
+   TCHAR m_szClientInfo[96];  // Client app info string
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
    DWORD *m_pOpenDCIList;     // List of nodes with DCI lists open
    DWORD m_dwNumRecordsToUpload; // Number of records to be uploaded
@@ -377,6 +378,7 @@ private:
    void ExecTableTool(CSCPMessage *pRequest);
    void ChangeSubscription(CSCPMessage *pRequest);
    void SendSyslog(CSCPMessage *pRequest);
+   void SendLogPoliciesList(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -393,7 +395,8 @@ public:
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
    int GetState(void) { return m_iState; }
-   const char *GetUserName(void) { return m_szUserName; }
+   const TCHAR *GetUserName(void) { return m_szUserName; }
+   const TCHAR *GetClientInfo(void) { return m_szClientInfo; }
    DWORD GetUserId(void) { return m_dwUserId; }
    BOOL IsAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
    WORD GetCurrentCmd(void) { return m_wCurrentCmd; }

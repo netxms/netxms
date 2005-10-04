@@ -201,6 +201,7 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName);
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
+   void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer);
    
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, DWORD dwSize, DWORD dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, unsigned char *hash);

@@ -28,6 +28,10 @@
 #include <sys/time.h>
 #endif
 
+#if HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #ifdef _WIN32
 # ifndef __GNUC__
 #  define EPOCHFILETIME (116444736000000000i64)
@@ -698,4 +702,47 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
    }
 
    return dwAddr;
+}
+
+
+//
+// Get OS name and version
+//
+
+void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer)
+{
+   *pszBuffer = 0;
+
+#if defined(_WIN32)
+   OSVERSIONINFO ver;
+
+   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   GetVersionEx(&ver);
+   switch(ver.dwPlatformId)
+   {
+      case VER_PLATFORM_WIN32_WINDOWS:
+         _stprintf(pszBuffer, _T("Win%s"), ver.dwMinorVersion == 0 ? _T("95") :
+                   (ver.dwMinorVersion == 10 ? _T("98") :
+                   (ver.dwMinorVersion == 90 ? _T("Me") : _T("9x"))));
+         break;
+      case VER_PLATFORM_WIN32_NT:
+         _stprintf(pszBuffer, _T("WinNT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+         break;
+      default:
+         _stprintf(pszBuffer, _T("WinX %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+         break;
+   }
+#elif defined(_NETWARE)
+   struct utsname un;
+
+   uname(&un);
+   _stprintf(pszBuffer, _T("NetWare %d.%d"), un.netware_major, un.netware_minor);
+   if (un.servicepack > 0)
+      _stprintf(&pszBuffer[_tcslen(pszBuffer)], _T(" sp%d"), un.servicepack);
+#else
+   struct utsname un;
+
+   uname(&un);
+   _stprintf(pszBuffer, _T("%s %s.%s"), un.sysname, un.version, un.release);
+#endif
 }

@@ -197,7 +197,8 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin, 
                                     TCHAR *pszPassword, NXC_SESSION *phSession,
-                                    BOOL bExactVersionMatch, BOOL bEncrypt)
+                                    TCHAR *pszClientInfo, BOOL bExactVersionMatch,
+                                    BOOL bEncrypt)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
@@ -206,6 +207,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
    SOCKET hSocket;
    THREAD hThread;
    char *pServer;
+   TCHAR szBuffer[64];
 #ifdef UNICODE
    char szMHost[64];
 
@@ -317,7 +319,10 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                         CalculateSHA1Hash((BYTE *)pszPassword, strlen(pszPassword), szPasswordHash);
 #endif
                         msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
-
+                        msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
+                        msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
+                        GetOSVersionString(szBuffer);
+                        msg.SetVariable(VID_OS_INFO, szBuffer);
                         if (pSession->SendMsg(&msg))
                         {
                            // Receive response message

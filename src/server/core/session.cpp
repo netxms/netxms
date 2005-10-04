@@ -860,6 +860,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_SYSLOG:
             SendSyslog(pMsg);
             break;
+         case CMD_GET_LPP_LIST:
+            SendLogPoliciesList(pMsg->GetId());
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -947,6 +950,18 @@ void ClientSession::Login(CSCPMessage *pRequest)
    // Prepare response message
    msg.SetCode(CMD_LOGIN_RESP);
    msg.SetId(pRequest->GetId());
+
+   // Get client info string
+   if (pRequest->IsVariableExist(VID_CLIENT_INFO))
+   {
+      TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
+      
+      pRequest->GetVariableStr(VID_CLIENT_INFO, szClientInfo, 32);
+      pRequest->GetVariableStr(VID_OS_INFO, szOSInfo, 32);
+      pRequest->GetVariableStr(VID_LIBNXCL_VERSION, szLibVersion, 16);
+      _sntprintf(m_szClientInfo, 96, _T("%s (%s; libnxcl %s)"),
+                 szClientInfo, szOSInfo, szLibVersion);
+   }
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
@@ -5266,4 +5281,47 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    }
 
    MutexUnlock(m_mutexSendSyslog);
+}
+
+
+//
+// Send list of log policies
+//
+
+void ClientSession::SendLogPoliciesList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD i, dwNumRows, dwId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_LPP)
+   {
+      hResult = DBSelect(g_hCoreDB, _T("SELECT lpp_id,lpp_name,lpp_version,lpp_flags FROM lpp"));
+      if (hResult != NULL)
+      {
+         dwNumRows = DBGetNumRows(hResult);
+         msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+         for(i = 0, dwId = VID_LPP_LIST_BASE; i < dwNumRows; i++)
+         {
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
 }

@@ -331,8 +331,9 @@ typedef void * NXC_SESSION;
 #define SYSTEM_ACCESS_MANAGE_ACTIONS      0x0080
 #define SYSTEM_ACCESS_DELETE_ALARMS       0x0100
 #define SYSTEM_ACCESS_MANAGE_PACKAGES     0x0200
+#define SYSTEM_ACCESS_MANAGE_LPP          0x0400
 
-#define SYSTEM_ACCESS_FULL                0x03FF
+#define SYSTEM_ACCESS_FULL                0x07FF
 
 
 //
@@ -1095,7 +1096,8 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin,
                                     TCHAR *szPassword, NXC_SESSION *phSession,
-                                    BOOL bExactVersionMatch, BOOL bEncrypt);
+                                    TCHAR *pszClientInfo, BOOL bExactVersionMatch,
+                                    BOOL bEncrypt);
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout);

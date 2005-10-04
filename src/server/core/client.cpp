@@ -213,17 +213,18 @@ void DumpSessions(CONSOLE_CTX pCtx)
    static TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
    static TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BLOWFISH"), _T("IDEA"), _T("3DES") };
 
-   ConsolePrintf(pCtx, "ID  STATE                    CIPHER   USER\n");
+   ConsolePrintf(pCtx, "ID  STATE                    CIPHER   USER [CLIENT]\n");
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
       {
-         ConsolePrintf(pCtx, "%-3d %-24s %-8s %s\n", i, 
+         ConsolePrintf(pCtx, "%-3d %-24s %-8s %s [%s]\n", i, 
                        (m_pSessionList[i]->GetState() != SESSION_STATE_PROCESSING) ?
                          pszStateName[m_pSessionList[i]->GetState()] :
                          CSCPMessageCodeName(m_pSessionList[i]->GetCurrentCmd(), szBuffer),
-					   pszCipherName[m_pSessionList[i]->GetCipher() + 1],
-                       m_pSessionList[i]->GetUserName());
+					        pszCipherName[m_pSessionList[i]->GetCipher() + 1],
+                       m_pSessionList[i]->GetUserName(),
+                       m_pSessionList[i]->GetClientInfo());
          iCount++;
       }
    RWLockUnlock(m_rwlockSessionListAccess);
