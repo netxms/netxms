@@ -237,6 +237,7 @@ public:
 
 BOOL InitDataCollector(void);
 void DeleteAllItemsForNode(DWORD dwNodeId);
+void WriteFullParamListToMessage(CSCPMessage *pMsg);
 
 
 //

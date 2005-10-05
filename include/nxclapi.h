@@ -1080,6 +1080,30 @@ typedef struct
 
 
 //
+// Log processing policy info
+//
+
+typedef struct
+{
+   DWORD dwId;
+   TCHAR szName[MAX_OBJECT_NAME];
+   DWORD dwVersion;
+   DWORD dwFlags;
+} NXC_LPP_INFO;
+
+
+//
+// Log processing policy list
+//
+
+typedef struct
+{
+   DWORD dwNumEntries;
+   NXC_LPP_INFO *pList;
+} NXC_LPP_LIST;
+
+
+//
 // Functions
 //
 
@@ -1262,6 +1286,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
 DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
                                              DWORD dwToolId, NXC_TABLE_DATA **ppData);
 void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData);
+
+DWORD LIBNXCL_EXPORTABLE NXCLoadLPPList(NXC_SESSION hSession, NXC_LPP_LIST **ppList);
+void LIBNXCL_EXPORTABLE NXCDestroyLPPList(NXC_LPP_LIST *pList);
 
 #ifdef __cplusplus
 }

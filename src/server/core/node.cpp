@@ -1803,6 +1803,18 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
 
 
 //
+// Open list of supported parameters for reading
+//
+
+void Node::OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
+{
+   LockData();
+   *pdwNumParams = m_dwNumParams;
+   *ppParamList = m_pParamList;
+}
+
+
+//
 // Check status of network service
 //
 

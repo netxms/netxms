@@ -4265,14 +4265,19 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
-      if (pObject->Type() == OBJECT_NODE)
+      switch(pObject->Type())
       {
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         ((Node *)pObject)->WriteParamListToMessage(&msg);
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         case OBJECT_NODE:
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            ((Node *)pObject)->WriteParamListToMessage(&msg);
+            break;
+         case OBJECT_TEMPLATE:
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            WriteFullParamListToMessage(&msg);
+            break;
+         default:
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            break;
       }
    }
    else

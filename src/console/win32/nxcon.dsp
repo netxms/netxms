@@ -1030,6 +1030,10 @@ SOURCE=.\res\login.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\lpp.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\nack.ico
 # End Source File
 # Begin Source File

@@ -605,6 +605,9 @@ public:
    void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
    void UpdateDCICache(void);
 
+   void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
+   void CloseParamList(void) { UnlockData(); }
+
    AgentConnection *CreateAgentConnection(void);
 
    virtual void CreateMessage(CSCPMessage *pMsg);

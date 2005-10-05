@@ -244,3 +244,51 @@ BOOL InitDataCollector(void)
 
    return TRUE;
 }
+
+
+//
+// Write full list of supported parameters (from all nodes) to message
+//
+
+void WriteFullParamListToMessage(CSCPMessage *pMsg)
+{
+   DWORD i, j, k, dwNumParams, dwFullListSize;
+   NXC_AGENT_PARAM *pParamList, *pFullList;
+
+   // Gather full parameter list
+   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
+   for(i = 0, dwFullListSize = 0, pFullList = NULL; i < g_dwNodeAddrIndexSize; i++)
+   {
+      ((Node *)g_pNodeIndexByAddr[i].pObject)->OpenParamList(&dwNumParams, &pParamList);
+      if ((dwNumParams > 0) && (pParamList != NULL))
+      {
+         pFullList = (NXC_AGENT_PARAM *)realloc(pFullList, sizeof(NXC_AGENT_PARAM) * (dwFullListSize + dwNumParams));
+         for(j = 0; j < dwNumParams; j++)
+         {
+            for(k = 0; k < dwFullListSize; k++)
+            {
+               if (!_tcsicmp(pFullList[k].szName, pParamList[j].szName))
+                  break;
+            }
+            if (k == dwFullListSize)
+            {
+               memcpy(&pFullList[k], &pParamList[j], sizeof(NXC_AGENT_PARAM));
+               dwFullListSize++;
+            }
+         }
+      }
+      ((Node *)g_pNodeIndexByAddr[i].pObject)->CloseParamList();
+   }
+   RWLockUnlock(g_rwlockNodeIndex);
+
+   // Put list into the message
+   pMsg->SetVariable(VID_NUM_PARAMETERS, dwFullListSize);
+   for(i = 0, j = VID_PARAM_LIST_BASE; i < dwFullListSize; i++)
+   {
+      pMsg->SetVariable(j++, pFullList[i].szName);
+      pMsg->SetVariable(j++, pFullList[i].szDescription);
+      pMsg->SetVariable(j++, (WORD)pFullList[i].iDataType);
+   }
+
+   safe_free(pFullList);
+}
