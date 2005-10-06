@@ -11,8 +11,8 @@
 EXTRA_DIST = \
 	ack.ico active.ico alarm.ico connect.ico datacoll.ico \
 	dctemplate.ico deploy.ico disabled.ico document.ico \
-	EARTH.ICO e-mail.ico editor.ico exec.ico \
-	graph.ico iexplore.ico log.ico NetMap.ICO ovl_status_critical.ico \
+	EARTH.ICO e-mail.ico editor.ico exec.ico graph.ico \
+	iexplore.ico log.ico lpp.ico NetMap.ICO ovl_status_critical.ico \
 	ovl_status_disabled.ico ovl_status_major.ico ovl_status_minor.ico \
 	ovl_status_testing.ico ovl_status_unknown.ico ovl_status_unmanaged.ico \
 	ovl_status_warning.ico passwd.ico question.ico rexec.ico RuleManager.ico \
