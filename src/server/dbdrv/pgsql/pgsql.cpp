@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.5 2005-08-24 16:19:49 alk Exp $ */
+/* $Id: pgsql.cpp,v 1.6 2005-10-06 08:14:04 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -227,6 +227,8 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
 {
 	BOOL bStatus = FALSE;
+   char *pszReq;
+   static char szDeclareCursor[] = "DECLARE cur1 CURSOR FOR ";
 
 	if (pConn == NULL)
 	{
@@ -235,25 +237,20 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
 
 	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
 
-	if (UnsafeDrvQuery(pConn, "BEGIN"))
+	pszReq = (char *)malloc(strlen(szQuery) + strlen(szDeclareCursor) + 1);
+	if (pszReq != NULL)
 	{
-		char *szReq =
-			(char *)malloc( strlen(szQuery)+strlen("DECLARE cur1 CURSOR FOR ")+1 );
-		if (szReq != NULL)
+		strcpy(pszReq, szDeclareCursor);
+		strcat(pszReq, szQuery);
+		if (UnsafeDrvQuery(pConn, pszReq))
 		{
-			strcpy(szReq, "DECLARE cur1 CURSOR FOR ");
-			strcat(szReq, szQuery);
-			if (UnsafeDrvQuery(pConn, szReq))
-			{
-				bStatus = TRUE;
-			}
-			free(szReq);
+			bStatus = TRUE;
 		}
+		free(pszReq);
 	}
 
 	if (bStatus != TRUE)
 	{
-		UnsafeDrvQuery(pConn, "ROLLBACK");
 		MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 		return NULL;
 	}
@@ -302,7 +299,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(
 	int nLen;
 	char *szResult;
 
-	if (pConn == NULL || ((PG_CONN *)pConn)->pFetchBuffer)
+	if ((pConn == NULL) || (((PG_CONN *)pConn)->pFetchBuffer == NULL))
 	{
 		return NULL;
 	}
@@ -348,7 +345,6 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT pConn)
    {
 		PQclear(((PG_CONN *)pConn)->pFetchBuffer);
 		UnsafeDrvQuery((DB_HANDLE)pConn, "CLOSE cur1");
-		UnsafeDrvQuery((DB_HANDLE)pConn, "ROLLBACK");
    }
 	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 }
