@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.6 2005-10-06 08:14:04 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.7 2005-10-06 19:45:46 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -226,7 +226,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
 {
-	BOOL bStatus = FALSE;
+	BOOL bSuccess = FALSE;
    char *pszReq;
    static char szDeclareCursor[] = "DECLARE cur1 CURSOR FOR ";
 
@@ -237,19 +237,25 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
 
 	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
 
-	pszReq = (char *)malloc(strlen(szQuery) + strlen(szDeclareCursor) + 1);
-	if (pszReq != NULL)
-	{
-		strcpy(pszReq, szDeclareCursor);
-		strcat(pszReq, szQuery);
-		if (UnsafeDrvQuery(pConn, pszReq))
-		{
-			bStatus = TRUE;
-		}
-		free(pszReq);
-	}
+	if (UnsafeDrvQuery(pConn, "BEGIN"))
+   {
+   	pszReq = (char *)malloc(strlen(szQuery) + strlen(szDeclareCursor) + 1);
+	   if (pszReq != NULL)
+	   {
+		   strcpy(pszReq, szDeclareCursor);
+		   strcat(pszReq, szQuery);
+		   if (UnsafeDrvQuery(pConn, pszReq))
+		   {
+			   bSuccess = TRUE;
+		   }
+		   free(pszReq);
+	   }
 
-	if (bStatus != TRUE)
+      if (!bSuccess)
+         UnsafeDrvQuery(pConn, "ROLLBACK");
+   }
+
+	if (!bSuccess)
 	{
 		MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 		return NULL;
@@ -275,12 +281,18 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
    {
 		((PG_CONN *)pConn)->pFetchBuffer =
 			(PGresult *)UnsafeDrvSelect((PG_CONN *)pConn, "FETCH cur1");
-		if (
-				((PG_CONN *)pConn)->pFetchBuffer == NULL
-				|| DrvGetNumRows(((PG_CONN *)pConn)->pFetchBuffer) <= 0)
-		{
-			bResult = FALSE;
-		}
+		if (((PG_CONN *)pConn)->pFetchBuffer != NULL)
+      {
+         if (DrvGetNumRows(((PG_CONN *)pConn)->pFetchBuffer) <= 0)
+		   {
+            PQclear(((PG_CONN *)pConn)->pFetchBuffer);
+			   bResult = FALSE;
+		   }
+      }
+      else
+      {
+         bResult = FALSE;
+      }
    }
    return bResult;
 }
@@ -345,6 +357,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT pConn)
    {
 		PQclear(((PG_CONN *)pConn)->pFetchBuffer);
 		UnsafeDrvQuery((DB_HANDLE)pConn, "CLOSE cur1");
+		UnsafeDrvQuery((DB_HANDLE)pConn, "COMMIT");
    }
 	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
 }
