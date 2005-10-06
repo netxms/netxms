@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.5
-AppVersion=0.2.5
+AppVerName=NetXMS Agent 0.2.6
+AppVersion=0.2.6
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.5
+OutputBaseFilename=nxagent-0.2.6
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -35,7 +35,7 @@ Name: "{app}\etc"
 Name: "{app}\var"
 
 [Run]
-Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c {app}\etc\nxagentd.conf -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
 
 [UninstallRun]

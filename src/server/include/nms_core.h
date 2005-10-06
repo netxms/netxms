@@ -188,13 +188,12 @@ typedef void * HSNMPSESSION;
 
 #define CSF_EVENT_DB_LOCKED      ((DWORD)0x0001)
 #define CSF_EPP_LOCKED           ((DWORD)0x0002)
-#define CSF_EVENT_DB_MODIFIED    ((DWORD)0x0004)
+#define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0004)
 #define CSF_USER_DB_LOCKED       ((DWORD)0x0008)
 #define CSF_EPP_UPLOAD           ((DWORD)0x0010)
 #define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
-#define CSF_PACKAGE_DB_LOCKED    ((DWORD)0x0100)
 
 
 //

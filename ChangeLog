@@ -15,7 +15,10 @@
 	- Added "packet size" option to target configuration
 	- Added DefaultPacketSize configuration parameter
 - Port checker subagent ported to AIX
+- Added possibility to build statically linked agents
+- Event configuration improved
 - Added BGP4 MIB
+- Fixed issues: #49, #50
 
 
 *

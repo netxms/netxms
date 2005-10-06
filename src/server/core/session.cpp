@@ -1076,8 +1076,6 @@ void ClientSession::LockEventDB(DWORD dwRqId)
    else
    {
       m_dwFlags |= CSF_EVENT_DB_LOCKED;
-      m_dwFlags &= ~CSF_EVENT_DB_MODIFIED;
-
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
    }
    SendMessage(&msg);
@@ -1097,14 +1095,6 @@ void ClientSession::UnlockEventDB(DWORD dwRqId)
 
    if (m_dwFlags & CSF_EVENT_DB_LOCKED)
    {
-      // Check if event configuration DB has been modified
-      if (m_dwFlags & CSF_EVENT_DB_MODIFIED)
-      {
-         ReloadEvents();
-
-         // Notify clients on event database change
-         EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_EVENTDB_CHANGED);
-      }
       UnlockComponent(CID_EVENT_DB);
       m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -1191,7 +1181,8 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
                if (DBQuery(g_hCoreDB, szQuery))
                {
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                  m_dwFlags |= CSF_EVENT_DB_MODIFIED;
+                  ReloadEvents();
+                  EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_EVENTDB_CHANGED);
                }
                else
                {

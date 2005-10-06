@@ -13,8 +13,6 @@ GENERAL:
 - Add check for read/write locks support to configure script
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
-- Rewrite event management in a way to eliminate the need to unlock
-  event configuration to allow sending of new events
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
 
