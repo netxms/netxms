@@ -84,6 +84,7 @@ contrib/mibs/UCD-IPFILTER-MIB.txt -text
 contrib/mibs/UCD-IPFWACC-MIB.txt -text
 contrib/mibs/UCD-SNMP-MIB.txt -text
 contrib/mibs/UDP-MIB.txt -text
+contrib/mibs/UPS-MIB.txt -text
 contrib/mibs/WF-COM.txt -text
 contrib/netxmsd.conf-dist -text
 contrib/nxagentd.conf-dist -text

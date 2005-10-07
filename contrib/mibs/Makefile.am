@@ -75,6 +75,7 @@ mibs_DATA = \
 	UCD-IPFWACC-MIB.txt \
 	UCD-SNMP-MIB.txt \
 	UDP-MIB.txt \
+	UPS-MIB.txt \
 	WF-COM.txt
 
 EXTRA_DIST=$(mibs_DATA)
