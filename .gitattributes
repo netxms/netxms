@@ -63,6 +63,7 @@ contrib/mibs/NOKIA-IPSO-SYSTEM-MIB.txt -text
 contrib/mibs/OPTIMUX-MIB.txt -text
 contrib/mibs/OSPF-MIB.txt -text
 contrib/mibs/PerfHist-TC-MIB.txt -text
+contrib/mibs/PowerNet-MIB.txt -text
 contrib/mibs/Printer-MIB.txt -text
 contrib/mibs/RAPID-CITY.txt -text
 contrib/mibs/RFC-1215.txt -text

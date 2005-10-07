@@ -54,6 +54,7 @@ mibs_DATA = \
 	OPTIMUX-MIB.txt \
 	OSPF-MIB.txt \
 	PerfHist-TC-MIB.txt \
+	PowerNet-MIB.txt \
 	Printer-MIB.txt \
 	RAPID-CITY.txt \
 	RFC-1215.txt \
