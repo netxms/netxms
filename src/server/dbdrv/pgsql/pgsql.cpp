@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.7 2005-10-06 19:45:46 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.8 2005-10-07 08:01:04 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -74,6 +74,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(
 		else
 		{
    		pConn->mutexQueryLock = MutexCreate();
+         pConn->pFetchBuffer = NULL;
 		}
 	}
 
@@ -91,6 +92,7 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE pConn)
 	{
    	PQfinish(((PG_CONN *)pConn)->pHandle);
      	MutexDestroy(((PG_CONN *)pConn)->mutexQueryLock);
+      free(pConn);
 	}
 }
 
@@ -239,7 +241,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
 
 	if (UnsafeDrvQuery(pConn, "BEGIN"))
    {
-   	pszReq = (char *)malloc(strlen(szQuery) + strlen(szDeclareCursor) + 1);
+   	pszReq = (char *)malloc(strlen(szQuery) + sizeof(szDeclareCursor));
 	   if (pszReq != NULL)
 	   {
 		   strcpy(pszReq, szDeclareCursor);
@@ -279,6 +281,8 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
    }
    else
    {
+      if (((PG_CONN *)pConn)->pFetchBuffer != NULL)
+         PQclear(((PG_CONN *)pConn)->pFetchBuffer);
 		((PG_CONN *)pConn)->pFetchBuffer =
 			(PGresult *)UnsafeDrvSelect((PG_CONN *)pConn, "FETCH cur1");
 		if (((PG_CONN *)pConn)->pFetchBuffer != NULL)
@@ -286,6 +290,7 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
          if (DrvGetNumRows(((PG_CONN *)pConn)->pFetchBuffer) <= 0)
 		   {
             PQclear(((PG_CONN *)pConn)->pFetchBuffer);
+            ((PG_CONN *)pConn)->pFetchBuffer = NULL;
 			   bResult = FALSE;
 		   }
       }
@@ -309,7 +314,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(
 		int nBufSize)
 {
 	int nLen;
-	char *szResult;
+	char *pszResult;
 
 	if ((pConn == NULL) || (((PG_CONN *)pConn)->pFetchBuffer == NULL))
 	{
@@ -317,7 +322,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(
 	}
 
 	// validate column index
-	if (nColumn > PQnfields(((PG_CONN *)pConn)->pFetchBuffer))
+	if (nColumn >= PQnfields(((PG_CONN *)pConn)->pFetchBuffer))
 	{
 		return NULL;
 	}
@@ -331,16 +336,16 @@ extern "C" char EXPORT *DrvGetFieldAsync(
 		return NULL;
 	}
 
-	szResult = PQgetvalue(((PG_CONN *)pConn)->pFetchBuffer, 0, nColumn);
-	if (szResult == NULL)
+	pszResult = PQgetvalue(((PG_CONN *)pConn)->pFetchBuffer, 0, nColumn);
+	if (pszResult == NULL)
 	{
 		return NULL;
 	}
 
 	// Now get column data
-	nLen = min((int)strlen(szResult), nBufSize - 1);
+	nLen = min((int)strlen(pszResult), nBufSize - 1);
 	if (nLen > 0)
-		memcpy(pBuffer, szResult, nLen);
+		memcpy(pBuffer, pszResult, nLen);
 	pBuffer[nLen] = 0;
 
 	return pBuffer;
@@ -353,9 +358,13 @@ extern "C" char EXPORT *DrvGetFieldAsync(
 
 extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT pConn)
 {
-   if (pConn != NULL && ((PG_CONN *)pConn)->pFetchBuffer != NULL)
+   if (pConn != NULL)
    {
-		PQclear(((PG_CONN *)pConn)->pFetchBuffer);
+      if (((PG_CONN *)pConn)->pFetchBuffer != NULL)
+      {
+		   PQclear(((PG_CONN *)pConn)->pFetchBuffer);
+         ((PG_CONN *)pConn)->pFetchBuffer = NULL;
+      }
 		UnsafeDrvQuery((DB_HANDLE)pConn, "CLOSE cur1");
 		UnsafeDrvQuery((DB_HANDLE)pConn, "COMMIT");
    }
