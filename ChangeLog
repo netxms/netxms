@@ -17,7 +17,7 @@
 - Port checker subagent ported to AIX
 - Added possibility to build statically linked agents
 - Event configuration improved
-- Added BGP4 MIB
+- New MIBs added: BGP4, PRINTER
 - Fixed issues: #46, #48, #49, #50
 
 
