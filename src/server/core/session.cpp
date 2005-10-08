@@ -2419,6 +2419,10 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                   if (pDestination->Id() != pSource->Id())
                      ((Template *)pDestination)->UnlockDCIList(m_dwIndex);
                   msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
+
+                  // Queue template update
+                  if (pDestination->Type() == OBJECT_TEMPLATE)
+                     ((Template *)pDestination)->QueueUpdate();
                }
                else  // Destination's DCI list already locked by someone else
                {

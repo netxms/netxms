@@ -1052,15 +1052,16 @@ DWORD CDataCollectionEditor::MoveItemsToTemplate(DWORD dwTemplate,
          dwResult = NXCCloseNodeDCIList(g_hSession, m_pItemList);
          if (dwResult == RCC_SUCCESS)
          {
-            dwResult = NXCApplyTemplate(g_hSession, dwTemplate, dwNode);
+            m_pItemList = NULL;
+            Sleep(750);    // Allow template apply operation to complete
+            dwResult = NXCOpenNodeDCIList(g_hSession, dwNode, &m_pItemList);
             if (dwResult == RCC_SUCCESS)
             {
-               Sleep(750);    // Allow template apply operation to complete
-               dwResult = NXCOpenNodeDCIList(g_hSession, dwNode, &m_pItemList);
-               if (dwResult == RCC_SUCCESS)
-               {
-                  RefreshItemList();
-               }
+               RefreshItemList();
+            }
+            else
+            {
+               m_wndListCtrl.DeleteAllItems();
             }
          }
       }
