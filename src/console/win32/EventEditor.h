@@ -21,6 +21,7 @@ public:
 
 // Operations
 public:
+   DWORD DeleteEvents(DWORD dwNumEvents, DWORD *pdwEventList);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

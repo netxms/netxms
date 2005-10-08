@@ -1240,8 +1240,9 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
          _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%ld"), dwEventCode);
          if (DBQuery(g_hCoreDB, szQuery))
          {
+            DeleteEventTemplateFromList(dwEventCode);
+            EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_EVENTDB_CHANGED);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            m_dwFlags |= CSF_EVENT_DB_LOCKED;
          }
          else
          {

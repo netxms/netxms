@@ -179,6 +179,7 @@ BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
                  TCHAR *pszFormat, ...);
 void ResendEvents(Queue *pQueue);
 void ReloadEvents(void);
+void DeleteEventTemplateFromList(DWORD dwEventCode);
 void CorrelateEvent(Event *pEvent);
 
 

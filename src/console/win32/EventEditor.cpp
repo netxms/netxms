@@ -332,9 +332,66 @@ void CEventEditor::OnEventNew()
 
 
 //
+// Worker function for deleting event templates
+//
+
+DWORD CEventEditor::DeleteEvents(DWORD dwNumEvents, DWORD *pdwEventList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+   int iItem;
+   LVFINDINFO lvfi;
+
+   for(i = 0; i < dwNumEvents; i++)
+   {
+      dwResult = NXCDeleteEventTemplate(g_hSession, pdwEventList[i]);
+      if (dwResult != RCC_SUCCESS)
+         break;
+      NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
+      lvfi.flags = LVFI_PARAM;
+      lvfi.lParam = pdwEventList[i];
+      iItem = m_wndListCtrl.FindItem(&lvfi);
+      if (iItem != -1)
+         m_wndListCtrl.DeleteItem(iItem);
+   }
+   return dwResult;
+}
+
+
+//
+// Wrapper for DeleteEvents()
+//
+
+static DWORD StartDeleteEvents(CEventEditor *pWnd, DWORD dwNumEvents, DWORD *pdwEventList)
+{
+   return pWnd->DeleteEvents(dwNumEvents, pdwEventList);
+}
+
+
+//
 // WM_COMMAND::ID_EVENT_DELETE message handler
 //
 
 void CEventEditor::OnEventDelete() 
 {
+   int iItem;
+   DWORD i, dwNumEvents, *pdwEventList, dwResult;
+
+   dwNumEvents = m_wndListCtrl.GetSelectedCount();
+   pdwEventList = (DWORD *)malloc(sizeof(DWORD) * dwNumEvents);
+   memset(pdwEventList, 0, sizeof(DWORD) * dwNumEvents);
+   for(i = 0, iItem = -1; i < dwNumEvents; i++)
+   {
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      if (iItem == -1)
+         break;   // Shouldn't be
+      pdwEventList[i] = m_wndListCtrl.GetItemData(iItem);
+   }
+
+   dwResult = DoRequestArg3(StartDeleteEvents, this, (void *)dwNumEvents,
+                            pdwEventList, _T("Deleting event templates..."));
+   if (dwResult != RCC_SUCCESS)
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot delete event template: %s"));
+   }
+   safe_free(pdwEventList);
 }

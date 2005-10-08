@@ -447,6 +447,29 @@ void ReloadEvents(void)
 
 
 //
+// Delete event template from list
+//
+
+void DeleteEventTemplateFromList(DWORD dwEventCode)
+{
+   DWORD i;
+
+   RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
+   for(i = 0; i < m_dwNumTemplates; i++)
+   {
+      if (m_pEventTemplates[i].dwCode == dwEventCode)
+      {
+         m_dwNumTemplates--;
+         memmove(&m_pEventTemplates[i], &m_pEventTemplates[i + 1],
+                 sizeof(EVENT_TEMPLATE) * (m_dwNumTemplates - i));
+         break;
+      }
+   }
+   RWLockUnlock(m_rwlockTemplateAccess);
+}
+
+
+//
 // Perform binary search on event template by id
 // Returns INULL if key not found or pointer to appropriate template
 //
