@@ -569,6 +569,8 @@
 #define ID_ALARM_SHOWNODES              32953
 #define ID_ITEM_MOVETOTEMPLATE          32954
 #define ID_VIEW_SYSLOG                  32956
+#define ID_CONTROLPANEL_LOGPROCESSING   32957
+#define ID_OBJECT_MOVE                  32958
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -578,7 +580,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        288
-#define _APS_NEXT_COMMAND_VALUE         32957
+#define _APS_NEXT_COMMAND_VALUE         32959
 #define _APS_NEXT_CONTROL_VALUE         1287
 #define _APS_NEXT_SYMED_VALUE           125
 #endif

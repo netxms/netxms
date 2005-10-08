@@ -2230,3 +2230,43 @@ void CConsoleApp::StartWebBrowser(TCHAR *pszURL)
    pWnd = new CWebBrowser(pszURL);
    CreateChildFrameWithSubtitle(pWnd, IDR_WEB_BROWSER, pszURL, m_hMDIMenu, m_hMDIAccel);
 }
+
+
+//
+// Execute object move
+//
+
+static DWORD DoObjectMove(DWORD dwObject, DWORD dwOldParent, DWORD dwNewParent)
+{
+   DWORD dwResult;
+
+   dwResult = NXCBindObject(g_hSession, dwNewParent, dwObject);
+   if (dwResult == RCC_SUCCESS)
+   {
+      dwResult = NXCUnbindObject(g_hSession, dwOldParent, dwObject);
+      if (dwResult != RCC_SUCCESS)
+         NXCUnbindObject(g_hSession, dwNewParent, dwObject);   // Undo binding to new parent
+   }
+   return dwResult;
+}
+
+
+//
+// Move object between containers
+//
+
+void CConsoleApp::MoveObject(DWORD dwObjectId, DWORD dwParentId)
+{
+   CObjectSelDlg dlg;
+   DWORD dwResult;
+
+   dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
+   dlg.m_bSingleSelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      dwResult = DoRequestArg3(DoObjectMove, (void *)dwObjectId, (void *)dwParentId,
+                               (void *)dlg.m_pdwObjectList[0], _T("Moving object..."));
+      if (dwResult != RCC_SUCCESS)
+         ErrorBox(dwResult, _T("Error moving object: %s"));
+   }
+}

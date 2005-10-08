@@ -51,6 +51,7 @@ EXTRA_DIST = \
 	GraphSettingsPage.cpp GraphSettingsPage.h \
 	LastValuesView.cpp LastValuesView.h \
 	LoginDialog.cpp LoginDialog.h \
+	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \
 	MapFrame.cpp MapFrame.h \
 	MapView.cpp MapView.h \

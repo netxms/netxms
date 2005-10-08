@@ -488,6 +488,8 @@ src/console/win32/InputBox.cpp -text
 src/console/win32/InputBox.h -text
 src/console/win32/InternalItemSelDlg.cpp -text
 src/console/win32/InternalItemSelDlg.h -text
+src/console/win32/LPPList.cpp -text
+src/console/win32/LPPList.h -text
 src/console/win32/LastValuesPropDlg.cpp -text
 src/console/win32/LastValuesPropDlg.h -text
 src/console/win32/LastValuesView.cpp -text

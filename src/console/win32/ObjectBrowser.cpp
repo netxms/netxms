@@ -209,6 +209,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_AGENTCFG, OnUpdateObjectAgentcfg)
 	ON_COMMAND(ID_OBJECT_AGENTCFG, OnObjectAgentcfg)
 	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
+	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
@@ -1352,6 +1354,31 @@ void CObjectBrowser::OnUpdateObjectChangeipaddress(CCmdUI* pCmdUI)
    pCmdUI->Enable(CurrObjectIsNode());
 }
 
+void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI) 
+{
+   BOOL bEnable = FALSE;
+
+   if ((m_pCurrentObject != NULL) && (m_dwFlags & VIEW_OBJECTS_AS_TREE))
+   {
+      HTREEITEM hItem;
+
+      hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
+      if (hItem != NULL)
+      {
+         NXC_OBJECT *pObject;
+
+         pObject = NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
+         if (pObject != NULL)
+         {
+            if ((pObject->iClass == OBJECT_CONTAINER) ||
+                (pObject->iClass == OBJECT_SERVICEROOT))
+               bEnable = TRUE;
+         }
+      }
+   }
+   pCmdUI->Enable(bEnable);
+}
+
 
 //
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
@@ -1783,6 +1810,25 @@ void CObjectBrowser::OnObjectTool(UINT nID)
          pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
          theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_MENU_FIRST_ID);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_MOVE message handler
+//
+
+void CObjectBrowser::OnObjectMove() 
+{
+   HTREEITEM hItem;
+
+   if ((m_dwFlags & VIEW_OBJECTS_AS_TREE) && (m_pCurrentObject != NULL))
+   {
+      hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
+      if (hItem != NULL)
+      {
+         theApp.MoveObject(m_pCurrentObject->dwId, m_wndTreeCtrl.GetItemData(hItem));
       }
    }
 }

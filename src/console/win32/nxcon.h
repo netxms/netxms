@@ -212,6 +212,7 @@ private:
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
+	void MoveObject(DWORD dwObjectId, DWORD dwParentId);
 	void StartWebBrowser(TCHAR *pszURL);
 	void ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex);
 	void CreateVPNConnector(DWORD dwParent);

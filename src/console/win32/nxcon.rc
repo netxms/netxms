@@ -250,6 +250,7 @@ BEGIN
         MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM "M&ove to another container...", ID_OBJECT_MOVE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
         MENUITEM SEPARATOR
         MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
@@ -341,6 +342,8 @@ BEGIN
         MENUITEM "Agent Pac&kages",             ID_CONTROLPANEL_AGENTPKG
         MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
+        MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
+
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
@@ -369,6 +372,7 @@ BEGIN
         MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM "M&ove to another container...", ID_OBJECT_MOVE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
         MENUITEM SEPARATOR
         MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
@@ -507,6 +511,7 @@ BEGIN
         MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM "M&ove to another container...", ID_OBJECT_MOVE
         MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
         MENUITEM SEPARATOR
         MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG

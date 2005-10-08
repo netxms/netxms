@@ -293,6 +293,10 @@ SOURCE=.\LoginDialog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\LPPList.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
@@ -691,6 +695,10 @@ SOURCE=.\LastValuesView.h
 # Begin Source File
 
 SOURCE=.\LoginDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LPPList.h
 # End Source File
 # Begin Source File
 
