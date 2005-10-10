@@ -17,7 +17,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	enterprises, Counter, NetworkAddress
 		FROM RFC1155-SMI
 	OBJECT-TYPE
-		FROM RFC1212;
+		FROM RFC-1212;
 
   -- additional textual conventions
 

@@ -59,6 +59,7 @@ mibs_DATA = \
 	RAPID-CITY.txt \
 	RFC-1215.txt \
 	RFC1155-SMI.txt \
+	RFC-1212.txt \
 	RFC1213-MIB.txt \
 	RMON-MIB.txt \
 	SNMPv2-CONF.txt \
