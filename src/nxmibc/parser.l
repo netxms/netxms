@@ -87,15 +87,12 @@ static void _pop_state()
 
 static void _count_newlines( char *str, int len )
 {
-    /* 
-	 * I hate, just hate, empty initializers in loops. Even if not needed
-	 */
-    for ( NULL ; len >= 0 ; len--)
+    for ( ; len >= 0 ; len--)
     {
 	    switch( str[len] )
 		{
 		    case '\n':
-		    case '\r':
+//		    case '\r':
                 mpLineNoG++;
 				break;
 			default:
@@ -382,16 +379,22 @@ static void _count_newlines( char *str, int len )
           mplval.charPtr[mpleng] = '\0';
           return MODULE_SYM;}
 
-<INITIAL,KEYWORD>\'[0-1]*\'B {
+<INITIAL,KEYWORD>\'[0-1]*\'[Bb] {
           mplval.charPtr = (char*)malloc (mpleng);
-          strncpy (mplval.charPtr, mptext+1, mpleng -1);  /* strip "'"s */
-          mplval.charPtr[mpleng-2] = '\0';
+          strncpy (mplval.charPtr, mptext + 1, mpleng -1);  /* strip "'"s */
+          mplval.charPtr[mpleng - 3] = '\0';
           return BSTRING_SYM;}
 
-<INITIAL,KEYWORD>\'[0-9A-Fa-f]*\'H {
+<INITIAL,KEYWORD>\'[0-9A-Fa-f]*\'[Hh] {
           mplval.charPtr = (char*)malloc (mpleng);
-          strncpy (mplval.charPtr, mptext+1, mpleng -1);   /* strip "'"s */
-          mplval.charPtr[mpleng-2] = '\0';
+          strncpy (mplval.charPtr, mptext + 1, mpleng - 1);   /* strip "'"s */
+          mplval.charPtr[mpleng - 3] = '\0';
+          if (strlen(mplval.charPtr) <= 8)
+          {
+		        mplval.numberVal.data.intVal = strtoul(mplval.charPtr, NULL, 16);
+		        mplval.numberVal.type = SNMP_INTEGER32;
+              return NUMBER_SYM;
+          }
           return HSTRING_SYM;}
 
 <INITIAL,KEYWORD>\"([^\"]|"\"\"")*\"  {

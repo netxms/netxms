@@ -24,9 +24,13 @@
 #ifndef _nxmibc_h_
 #define _nxmibc_h_
 
+#ifdef __cplusplus
+
 #include <nms_common.h>
 #include <getopt.h>
 #include <nxsnmp.h>
+
+#endif
 
 
 //
@@ -35,13 +39,21 @@
 
 #define ERR_UNRESOLVED_SYMBOL    1
 #define ERR_UNRESOLVED_MODULE    2
+#define ERR_PARSER_ERROR         3
 
 
 //
 // Functions
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void Error(int nError, char *pszModule, ...);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

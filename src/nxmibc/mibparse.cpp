@@ -114,7 +114,7 @@ static TypeOrValueType create_builtin_type(char *name, TypeOrValue **item)
         }
         else if (!stricmp( name, "zerodotzero" ) ) 
         {
-            parentName="zerodotzero";
+            parentName="ccitt";
             parentValue=0;
             oidPtr->oidVal = 0;
         }
@@ -2086,7 +2086,7 @@ static void resolve_agent_capabilities(SnmpParseTree *parseTree)
             char *name = varianceItem->object_name;
             ubi_dlListPtr itemList=NULL;
 
-                itemType=find_mib_object_by_name(parseTree,name,&listItem);
+                itemType = find_mib_object_by_name(parseTree, name, &listItem);
                 switch(itemType)
                 {
                     case DATATYPE_IMPORT:
@@ -2116,6 +2116,79 @@ static void resolve_agent_capabilities(SnmpParseTree *parseTree)
         }
     }
     return;
+}
+
+
+//
+// Object status
+//
+
+static int MIB_ObjectStatus(TypeOrValue *pItem)
+{
+   if (pItem->dataType == DATATYPE_VALUE)
+   {
+      if ((pItem->data.value->valueType == VALUETYPE_OBJECT_TYPE) ||
+          (pItem->data.value->valueType == VALUETYPE_GROUP_VALUE) ||
+          (pItem->data.value->valueType == VALUETYPE_NOTIFICATION))
+      {
+         return pItem->data.value->value.object->status;
+      }
+   }
+   return -1;
+}
+
+
+//
+// Object access
+//
+
+static int MIB_ObjectAccess(TypeOrValue *pItem)
+{
+   if (pItem->dataType == DATATYPE_VALUE)
+   {
+      if (pItem->data.value->valueType == VALUETYPE_OBJECT_TYPE)
+      {
+         return pItem->data.value->value.object->access;
+      }
+   }
+   return -1;
+}
+
+
+//
+// Object type
+//
+
+static int MIB_ObjectType(TypeOrValue *pItem)
+{
+   if (pItem->dataType == DATATYPE_VALUE)
+   {
+      if (pItem->data.value->valueType == VALUETYPE_OBJECT_TYPE)
+      {
+         return pItem->data.value->value.object->syntax->type;
+      }
+   }
+   return -1;
+}
+
+
+//
+// Object description
+//
+
+static char *MIB_ObjectDescription(TypeOrValue *pItem)
+{
+   if (pItem->dataType == DATATYPE_VALUE)
+   {
+      if ((pItem->data.value->valueType == VALUETYPE_OBJECT_TYPE) ||
+          (pItem->data.value->valueType == VALUETYPE_GROUP_VALUE) ||
+          (pItem->data.value->valueType == VALUETYPE_NOTIFICATION) ||
+          (pItem->data.value->valueType == VALUETYPE_MODULE))
+      {
+         return pItem->data.value->value.object->description;
+      }
+   }
+   return NULL;
 }
 
 
@@ -2190,6 +2263,63 @@ restart_search:
 
 
 //
+// Build MIB tree from item list
+//
+
+static void BuildMIBTree(SNMP_MIBObject *pRoot, SnmpParseTree *pTree, ubi_dlList *pList)
+{
+   TypeOrValue *pItem;
+   OID *oid;
+   ubi_dlList *oidListPtr = NULL;
+   SNMP_MIBObject *pCurrObj, *pNewObj;
+
+   if (pList == NULL)
+      return;
+   for(pItem = (TypeOrValue *)ubi_dlFirst(pList); pItem != NULL; pItem = (TypeOrValue *)ubi_dlNext(pItem))
+   {
+      oid = oid_value(pItem, &oidListPtr);
+      if(oid != NULL)
+      {
+         ubi_dlListPtr pFullOID;
+
+         pFullOID = BuildFullOID(pTree, oid);
+         oid = (OID *)ubi_dlFirst(pFullOID);
+         pCurrObj = pRoot;
+         while(oid != NULL)
+         {
+            pNewObj = pCurrObj->FindChildByID(oid->oidVal);
+            if (pNewObj == NULL)
+            {
+               if (ubi_dlNext(oid) == NULL)
+                  pNewObj = new SNMP_MIBObject(oid->oidVal, oid->nodeName,
+                                               MIB_ObjectType(pItem),
+                                               MIB_ObjectStatus(pItem),
+                                               MIB_ObjectAccess(pItem),
+                                               MIB_ObjectDescription(pItem));
+               else
+                  pNewObj = new SNMP_MIBObject(oid->oidVal, oid->nodeName);
+               pCurrObj->AddChild(pNewObj);
+            }
+            else
+            {
+               if (ubi_dlNext(oid) == NULL)
+               {
+                  // Last OID in chain, pItem contains actual object information
+                  pNewObj->SetInfo(MIB_ObjectType(pItem),
+                                   MIB_ObjectStatus(pItem),
+                                   MIB_ObjectAccess(pItem),
+                                   MIB_ObjectDescription(pItem));
+               }
+            }
+            pCurrObj = pNewObj;
+            oid = (OID *)ubi_dlNext(oid);
+         }
+      }
+   }
+}
+
+
+//
 // Interface to parser
 //
 
@@ -2197,11 +2327,12 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList)
 {
    int i, nRet;
    SnmpParseTree *pTree;
+   SNMP_MIBObject *pRoot;
 
    printf("Parsing source files:\n");
    for(i = 0; i < nNumFiles; i++)
    {
-      printf("   -> %s\n", ppszFileList[i]);
+      printf("   %s\n", ppszFileList[i]);
       pTree = mpParseMib(ppszFileList[i]);
       if (pTree == NULL)
       {
@@ -2215,7 +2346,7 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList)
    for(pTree = (SnmpParseTree *)ubi_dlFirst(&mibList); pTree != NULL;
        pTree = (SnmpParseTree *)ubi_dlNext(pTree))
    {
-      printf("   -> %s\n", pTree->name->name);
+      printf("   %s\n", pTree->name->name);
       resolve_oid_values(pTree);
       resolve_module_identity(pTree);
       resolve_imports(pTree);
@@ -2223,32 +2354,18 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList)
    }
 
    printf("Creating MIB tree:\n");
+   pRoot = new SNMP_MIBObject;
    for(pTree = (SnmpParseTree *)ubi_dlFirst(&mibList); pTree != NULL;
        pTree = (SnmpParseTree *)ubi_dlNext(pTree))
    {
-      TypeOrValue *pItem;
-      OID *oid;
-      ubi_dlList *oidListPtr = NULL;
-
-      printf("   -> %s\n", pTree->name->name);
-      for(pItem = (TypeOrValue *)ubi_dlFirst(pTree->objects); pItem != NULL;
-          pItem = (TypeOrValue *)ubi_dlNext(pItem))
-      {
-         oid = oid_value(pItem, &oidListPtr);
-         if(oid != NULL)
-         {
-            ubi_dlListPtr pFullOID;
-
-            pFullOID = BuildFullOID(pTree, oid);
-            oid = (OID *)ubi_dlFirst(pFullOID);
-            while(oid != NULL)
-            {
-//               printf(".%d", oid->oidVal);
-               oid = (OID *)ubi_dlNext(oid);
-            }
-         }
-      }
+      printf("   %s\n", pTree->name->name);
+      BuildMIBTree(pRoot, pTree, pTree->groups);
+      BuildMIBTree(pRoot, pTree, pTree->tables);
+      BuildMIBTree(pRoot, pTree, pTree->objects);
+      BuildMIBTree(pRoot, pTree, pTree->notifications);
    }
+
+   pRoot->Print(0);
    return SNMP_MPE_SUCCESS;
 
 parse_error:

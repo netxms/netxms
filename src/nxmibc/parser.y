@@ -41,6 +41,7 @@
 #include <time.h>
 #include "ubi_dLinkList.h"
 #include "mibparse.h"
+#include "nxmibc.h"
 
 #ifdef YYTEXT_POINTER
     extern char *mptext;
@@ -273,7 +274,7 @@ void *mpalloc(int size)
 %token <numberVal> NUMBER_SYM
 %type <numberVal> Number
 
-%type <charPtr> UCidentifier LCidentifier Symbol
+%type <charPtr> UCidentifier LCidentifier Identifier Symbol
 %type <charPtr> BinaryString HexString CharString
 
 %type <listPtr> AssignedIdentifier
@@ -2345,7 +2346,7 @@ NumericValue:
         $$->value.rangeValue.upperEndValue = $4.data.intVal;
 	}
 }
-| LCidentifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
+| Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
 {
     $$ = MT( Value );
     $$->valueType = VALUETYPE_NAMED_NUMBER;
@@ -2362,6 +2363,11 @@ Number:
 {
     $$=$1;
 }
+;
+
+Identifier:
+   UCidentifier
+|  LCidentifier
 ;
 
 UCidentifier:
@@ -2405,6 +2411,6 @@ int mpwrap()
 
 int mperror(char *s)
 {
-    fprintf(stderr,"Error %s at line %ld\n",s,mpLineNoG);
-	exit(1);
+   Error(ERR_PARSER_ERROR, currentFilename, s, mpLineNoG);
+   return 0;
 }

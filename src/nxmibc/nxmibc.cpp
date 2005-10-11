@@ -52,7 +52,8 @@ static struct
 {
    { MIBC_INFO, "Operation completed successfully" },
    { MIBC_ERROR, "Import symbol \"%s\" unresolved" },
-   { MIBC_ERROR, "Import module \"%s\" unresolved" }
+   { MIBC_ERROR, "Import module \"%s\" unresolved" },
+   { MIBC_ERROR, "Parser error - %s in line %d" }
 };
 
 
@@ -60,7 +61,7 @@ static struct
 // Display error text and abort compilation
 //
 
-void Error(int nError, char *pszModule, ...)
+extern "C" void Error(int nError, char *pszModule, ...)
 {
    va_list args;
    static char *m_szSeverityText[] = { "INFO", "WARNING", "ERROR" };
@@ -81,6 +82,18 @@ void Error(int nError, char *pszModule, ...)
 
 int main(int argc, char *argv[])
 {
+   printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
+          "Copyright (c) 2005 Victor Kirhenshtein\n\n");
+   if (argc == 1)
+   {
+      printf("Usage:\n\n"
+             "nxmibc [options] source1 ... sourceN\n\n"
+             "Valid options:\n"
+             "   -d           : Source is a directory\n"
+             "   -o <file>    : Set output file name (default is netxms.mib)\n"
+             "\n");
+      return 255;
+   }
    ParseMIBFiles(argc - 1, &argv[1]);
    return 0;
 }
