@@ -11,6 +11,7 @@
 mibsdir=$(pkgdatadir)/mibs
 
 mibs_DATA = \
+	ARCADA-MIB.txt \
 	BGP4-MIB.txt \
 	BRIDGE-MIB.txt \
 	CDX-6500-COMMON-MIB.txt \

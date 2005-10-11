@@ -1,0 +1,1086 @@
+ARCADA-MIB DEFINITIONS ::= BEGIN
+
+	--
+	-- $Logfile:   E:/code/arcada/arcada.mib  $ $Revision: 1.1 $
+	--
+
+	IMPORTS
+		enterprises
+			FROM RFC1155-SMI
+		OBJECT-TYPE
+			FROM RFC-1212
+		TRAP-TYPE
+			FROM RFC-1215
+		DisplayString
+			FROM RFC1213-MIB;
+	
+	
+	arcada			OBJECT IDENTIFIER ::= { enterprises 1302 }
+	open			OBJECT IDENTIFIER ::= { arcada 1 }
+	instprods		OBJECT IDENTIFIER ::= { arcada 2 }
+	products		OBJECT IDENTIFIER ::= { arcada 3 }
+	backupexec		OBJECT IDENTIFIER ::= { products 1 }
+	devices			OBJECT IDENTIFIER ::= { products 2 }
+	backupconfig	OBJECT IDENTIFIER ::= { backupexec 1 }
+	backupjobs		OBJECT IDENTIFIER ::= { backupexec 2 }
+	backupcatalog	OBJECT IDENTIFIER ::= { backupexec 3 }
+	deviceconfig	OBJECT IDENTIFIER ::= { devices 1 }
+	pvr				OBJECT IDENTIFIER ::= { devices 2 }
+	pvl				OBJECT IDENTIFIER ::= { devices 3 }
+	loader			OBJECT IDENTIFIER ::= { devices 4 }
+	tape			OBJECT IDENTIFIER ::= { devices 5 }
+
+--	Installed Products Group
+
+	ipProductTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF IpProductEntry
+		ACCESS  not-accessible
+		STATUS  mandatory
+		DESCRIPTION
+			"Installed products table."
+		INDEX   { ipProductName }
+		::= { instprods 1 }
+	
+	ipProductEntry	OBJECT-TYPE
+		SYNTAX	IpProductEntry
+		ACCESS	not-accessible
+		STATUS	mandatory
+		::= { ipProductTable 1 }
+	
+	IpProductEntry ::= SEQUENCE {
+		ipProductName			DisplayString,
+		ipProductOptions		DisplayString,
+		ipInstallPath			DisplayString,
+		ipMajorRevision			DisplayString,
+		ipMinorRevision			DisplayString,
+		ipBuildNumber			DisplayString,
+		ipSerialNumber			DisplayString,
+		ipInstallDate			DateAndTime
+		}
+	
+	ipProductName	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Product name."
+		::= { ipProductEntry 1 }
+	
+	ipProductOptions	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Optional installed features."
+		::= { ipProductEntry 2 }
+	
+	ipInstallPath		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Installation path."
+		::= { ipProductEntry 3 }
+	
+	ipMajorRevision		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Major revision."
+		::= { ipProductEntry 4 }
+	
+	ipMinorRevision		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Minor revision."
+		::= { ipProductEntry 5 }
+	
+	ipBuildNumber		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Engineering build number."
+		::= { ipProductEntry 6 }
+	
+	ipSerialNumber		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Serial number."
+		::= { ipProductEntry 7 }
+	
+	ipInstallDate		OBJECT-TYPE
+		SYNTAX	DateAndTime
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Installation or upgrade date and time."
+		::= { ipProductEntry 8 }
+
+--	Configuration Group
+	
+	cgCatalogPath			OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Path to the catalog files for the backup service."
+		::= { backupconfig 1 }
+	
+	cgReportPath			OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Path to the report files for the backup service."
+		::= { backupconfig 2 }
+	
+	cgTempFilesPath			OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Path to the temporary files for the backup service."
+		::= { backupconfig 3 }
+	
+	cgHistoryPath			OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Path to the history files for the backup service."
+		::= { backupconfig 4 }
+	
+	cgTapeRotationPath		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Path to the tape rotation files for the backup service."
+		::= { backupconfig 5 }
+	
+	cgHistoryFileEntryLimit	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Maximum number of history file entries to allow."
+		::= { backupconfig 6 }
+	
+	cgCatalogEntryAgeLimit	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of days to retain catalog entries."
+		::= { backupconfig 7 }
+	
+	cgState	OBJECT-TYPE
+		SYNTAX	INTEGER {
+			running(0),
+			stopped(1)
+			}
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Current state of BackupExec."
+		::= { backupconfig 8 }
+
+	cgtraps	OBJECT IDENTIFIER ::= { backupconfig 9 }
+	cgstart	OBJECT IDENTIFIER ::= { cgtraps 1 }
+	cgstop	OBJECT IDENTIFIER ::= { cgtraps 2 }
+
+	cgStartTrap	TRAP-TYPE
+		ENTERPRISE	cgstart
+		VARIABLES	{ cgProductName }
+		DESCRIPTION
+			"Product start trap."
+		::= 1
+
+	cgStopTrap	TRAP-TYPE
+		ENTERPRISE	cgstop
+		VARIABLES	{ cgProductName }
+		DESCRIPTION
+			"Product stop trap."
+		::= 2
+	
+--	Jobs Group
+
+	cjStatisticsStartTime	OBJECT-TYPE
+		SYNTAX	DateAndTime
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Date and time job statistics collection began."
+		::= { backupjobs 1 }
+
+	cjJobsProcessed			OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of jobs processed since start of statistics."
+		::= { backupjobs 2 }
+
+	cjJobsComplete			OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of successfully completed jobs since start of statistics."
+		::= { backupjobs 3 }
+
+	cjJobsFailed			OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of failed jobs since start of statistics."
+		::= { backupjobs 4 }
+
+	cjAbortedJobs			OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of aborted jobs since start of statistics."
+		::= { backupjobs 5 }
+
+	cjMBWrittenRead			OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of megabytes written to or read from tape since start of statistics."
+		::= { backupjobs 6 }
+
+	cjJobTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF CjJobEntry
+		ACCESS  not-accessible
+		STATUS  mandatory
+		DESCRIPTION
+			"Jobs table."
+		INDEX   { cjJobID }
+		::= { backupjobs 7 }
+	
+	cjJobEntry	OBJECT-TYPE
+		SYNTAX	CjJobEntry
+		ACCESS	not-accessible
+		STATUS	mandatory
+		::= { cjJobTable 1 }
+	
+	CjJobEntry ::= SEQUENCE {
+		cjJobID					DisplayString,
+		cjJobName				DisplayString,
+		cjJobType				DisplayString,
+		cjJobStatus				DisplayString,
+		cjJobSubmitter			DisplayString,
+		cjJobDestination		DisplayString,
+		cjJobLogFile			DisplayString,
+		cjJobStartTime			DateAndTime,
+		cjJobElapsedTime		Gauge32,
+		cjJobPercentComplete	Gauge32,
+		cjJobEstMB				Gauge32,
+		cjJobActMB				Gauge32,
+		cjJobXferRate			Gauge32,
+		cjJobScheduleFrequency	DisplayString
+		}
+	
+	cjJobID					OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Unique ID for the job."
+		::= { cjJobEntry 1 }
+	
+	cjJobName				OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Name of the job."
+		::= { cjJobEntry 2 }
+	
+	cjJobType				OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Type of job."
+		::= { cjJobEntry 3 }
+	
+	cjJobStatus				OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Status of the job."
+		::= { cjJobEntry 4 }
+	
+	cjJobSubmitter			OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"ID of the person that submitted the job."
+		::= { cjJobEntry 5 }
+	
+	cjJobDestination		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Name of the resources used by the job."
+		::= { cjJobEntry 6 }
+	
+	cjJobLogFile			OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Name of the logfile for the job."
+		::= { cjJobEntry 7 }
+	
+	cjJobStartTime			OBJECT-TYPE
+		SYNTAX	DateAndTime
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Start time for this job."
+		::= { cjJobEntry 8 }
+	
+	cjJobElapsedTime		OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of seconds job has been running."
+		::= { cjJobEntry 9 }
+	
+	cjJobPercentComplete	OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Percent complete."
+		::= { cjJobEntry 10 }
+	
+	cjJobEstMB				OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Estimated total megabytes for this job."
+		::= { cjJobEntry 11 }
+	
+	cjJobActMB				OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Actual number of megabytes for this job."
+		::= { cjJobEntry 12 }
+	
+	cjJobXferRate			OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Megabytes per minute transferred."
+		::= { cjJobEntry 13 }
+	
+	cjJobScheduleFrequency	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Job schedule frequency."
+		::= { cjJobEntry 14 }
+
+	cjtraps		OBJECT IDENTIFIER ::= { backupjobs 8 }
+	cjfailure	OBJECT IDENTIFIER ::= { cjtraps 1 }
+	cjabort		OBJECT IDENTIFIER ::= { cjtraps 2 }
+
+	cjJobFailureMessage		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Message buffer for job failure cause."
+		::= { cjfailure 1 }
+
+	cjJobAbortOperatorID	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Message buffer for ID of operator aborting job."
+		::= { cjabort 1 }
+
+	cjFailureTrap			TRAP-TYPE
+		ENTERPRISE	cjfailure
+		VARIABLES	{ cjJobName, cjJobID, cjJobFailureMessage }
+		DESCRIPTION
+			"Job failed trap."
+		::= 1
+
+	cjAbortTrap				TRAP-TYPE
+		ENTERPRISE	cjabort
+		VARIABLES	{ cjJobName, cjJobID, cjJobAbortOperatorID }
+		DESCRIPTION
+			"Job aborted trap."
+		::= 2
+
+--	Catalog Group
+
+	catMBSpaceUsed	OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Megabytes of disk space used by the catalogs on this machine."
+		::= { backupcatalog 1 }
+
+--	Device and Media Management Group
+
+	cgDataBasePath	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Device and media management database path."
+		::= { deviceconfig 1 }
+
+--	PVR Group
+
+	pvrNumber	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of PVRs running on this machine."
+		::= { pvr 1 }
+
+	pvrTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF PvrEntry
+		ACCESS  not-accessible
+		STATUS  mandatory
+		DESCRIPTION
+			"PVR table."
+		INDEX   { pvrName }
+		::= { pvr 2 }
+	
+	pvrEntry	OBJECT-TYPE
+		SYNTAX	PvrEntry
+		ACCESS	not-accessible
+		STATUS	mandatory
+		::= { pvrTable 1 }
+	
+	PvrEntry ::= SEQUENCE {
+		pvrName		DisplayString,
+		pvrSlots	UInteger32,
+		pvrScratchAvail	Gauge32,
+		pvrScratchLow	UInteger32
+		}
+	
+	pvrName	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"PVR name."
+		::= { pvrEntry 1 }
+	
+	pvrSlots	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of slots."
+		::= { pvrEntry 2 }
+	
+	pvrScratchAvail	OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of scratch tapes resident in the PVR."
+		::= { pvrEntry 3 }
+	
+	pvrScratchLow	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Low water mark threshold for free scratch tapes."
+		::= { pvrEntry 4 }
+
+	pvrtraps	OBJECT IDENTIFIER ::= { pvr 3 }
+	pvrlow		OBJECT IDENTIFIER ::= { pvrtraps 1 }
+	pvrout		OBJECT IDENTIFIER ::= { pvrtraps 2 }
+
+	pvrLowActionString		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Recommended action to address trap."
+		::= { pvrlow 1 }
+
+	pvrOutActionString		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Recommended action to address trap."
+		::= { pvrout 1 }
+
+	pvrLowTrap	TRAP-TYPE
+		ENTERPRISE	pvrlow
+		VARIABLES	{ pvrName, pvrLowActionString }
+		DESCRIPTION
+			"PVR low on scratch tapes trap."
+		::= 1
+
+	pvrOutTrap	TRAP-TYPE
+		ENTERPRISE	pvrout
+		VARIABLES	{ pvrName, pvrOutActionString }
+		DESCRIPTION
+			"PVR out of scratch tapes trap."
+		::= 2
+
+--	PVL Group
+
+	pvlNumber	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of PVLs."
+		::= { pvl 1 }
+
+	pvlTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF PvlEntry
+		ACCESS  not-accessible
+		STATUS  mandatory
+		DESCRIPTION
+			"PVL table."
+		INDEX   { pvlName }
+		::= { pvl 2 }
+	
+	pvlEntry	OBJECT-TYPE
+		SYNTAX	PvlEntry
+		ACCESS	not-accessible
+		STATUS	mandatory
+		::= { pvlTable 1 }
+	
+	PvlEntry ::= SEQUENCE {
+		pvlName					DisplayString,
+		pvlVolumesTracked		Gauge32,
+		pvlScratchPoolSize		Gauge32,
+		pvlToBeRecycled			Gauge32,
+		pvlToBeDiscarded		Gauge32,
+		pvlToBeShipped			Gauge32,
+		pvlToBeReturned			Gauge32,
+		pvlScratchLowerLimit	UInteger32
+		}
+	
+	pvlName					OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"PVL name."
+		::= { pvlEntry 1 }
+	
+	pvlVolumesTracked		OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape volumes tracked in the PVL."
+		::= { pvlEntry 2 }
+	
+	pvlScratchPoolSize		OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape volumes in the scratch pool."
+		::= { pvlEntry 3 }
+	
+	pvlToBeRecycled			OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape volumes to be returned to the scratch pool."
+		::= { pvlEntry 4 }
+	
+	pvlToBeDiscarded		OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape volumes to be discarded."
+		::= { pvlEntry 5 }
+	
+	pvlToBeShipped			OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape volumes to be shipped to off-site location."
+		::= { pvlEntry 6 }
+	
+	pvlToBeReturned			OBJECT-TYPE
+		SYNTAX	Gauge32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape volumes to be returned from off-site location."
+		::= { pvlEntry 7 }
+	
+	pvlScratchLowerLimit	OBJECT-TYPE
+		SYNTAX	Counter
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Low watermark threshold for free scratch tape volumes."
+		::= { pvlEntry 8 }
+
+	pvltraps	OBJECT IDENTIFIER ::= { pvl 3 }
+	pvllow		OBJECT IDENTIFIER ::= { pvltraps 1 }
+	pvlout		OBJECT IDENTIFIER ::= { pvltraps 2 }
+	pvlservice	OBJECT IDENTIFIER ::= { pvltraps 3 }
+
+	pvlActionString		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Recommended action to address trap."
+		::= { pvlservice 1 }
+
+	pvlLowTrap	TRAP-TYPE
+		ENTERPRISE	pvllow
+		VARIABLES	{ pvlName, pvlScratchLowerLimit }
+		DESCRIPTION
+			"PVL low on scratch tapes trap."
+		::= 1
+
+	pvlOutTrap	TRAP-TYPE
+		ENTERPRISE	pvlout
+		VARIABLES	{ pvlName }
+		DESCRIPTION
+			"PVL out of scratch tapes trap."
+		::= 2
+
+	pvlServiceTrap	TRAP-TYPE
+		ENTERPRISE	pvlservice
+		VARIABLES	{ pvlName, pvlActionString }
+		DESCRIPTION
+			"PVL device needs service trap."
+		::= 3
+
+--	Loader Group
+
+	ldNumber	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of loaders."
+		::= { loader 1 }
+
+	ldTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF LdEntry
+		ACCESS  not-accessible
+		STATUS  mandatory
+		DESCRIPTION
+			"Loader table."
+		INDEX   { ldSCSIDeviceID }
+		::= { loader 2 }
+	
+	ldEntry	OBJECT-TYPE
+		SYNTAX	LdEntry
+		ACCESS	not-accessible
+		STATUS	mandatory
+		::= { ldTable 1 }
+	
+	LdEntry ::= SEQUENCE {
+		ldSCSIDeviceID			DisplayString,
+		ldName					DisplayString,
+		ldVendorProductID		DisplayString,
+		ldMaxDrives				UInteger32,
+		ldMaxSlots				UInteger32,
+		ldStatus				INTEGER,
+		ldMoveMediumCount		Counter32,
+		ldHasImportExportPorts	INTEGER,
+		ldTransportErrors		Counter32,
+		ldImportExportErrors	Counter32,
+		ldHasBarCodeReader		INTEGER,
+		ldBarCodeReadErrors		Counter32,
+		ldDoorOpen				INTEGER,
+		ldIntervention			INTEGER
+		}
+	
+	ldSCSIDeviceID		OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"SCSI device name of the loader."
+		::= { ldEntry 1 }
+	
+	ldName				OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Loader name."
+		::= { ldEntry 2 }
+	
+	ldVendorProductID	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Vendor and product ID."
+		::= { ldEntry 3 }
+	
+	ldMaxDrives	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Maximum mumber of drives."
+		::= { ldEntry 4 }
+	
+	ldMaxSlots	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Maximum number of slots."
+		::= { ldEntry 5 }
+	
+	ldStatus	OBJECT-TYPE
+		SYNTAX	INTEGER { offline(0), online(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Loader status."
+		::= { ldEntry 6 }
+	
+	ldMoveMediumCount	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of 'MoveMedium' operations performed."
+		::= { ldEntry 7 }
+	
+	ldHasImportExportPorts	OBJECT-TYPE
+		SYNTAX	INTEGER { False(0), True(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Has Import/Export ports flag."
+		::= { ldEntry 8 }
+	
+	ldTransportErrors	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of Transport errors."
+		::= { ldEntry 9 }
+	
+	ldImportExportErrors	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of Import/Export errors."
+		::= { ldEntry 10 }
+	
+	ldHasBarCodeReader	OBJECT-TYPE
+		SYNTAX	INTEGER { False(0), True(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Has bar-code reader flag."
+		::= { ldEntry 11 }
+
+	ldBarCodeReadErrors	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of bar-code read errors."
+		::= { ldEntry 12 }
+	
+	ldDoorOpen	OBJECT-TYPE
+		SYNTAX	INTEGER { False(0), True(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Door open status."
+		::= { ldEntry 13 }
+	
+	ldIntervention	OBJECT-TYPE
+		SYNTAX	INTEGER { False(0), True(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Intervention required flag."
+		::= { ldEntry 14 }
+
+	ldtraps		OBJECT IDENTIFIER ::= { loader 3 }
+	ldoffline	OBJECT IDENTIFIER ::= { ldtraps 1 }
+	ldonline	OBJECT IDENTIFIER ::= { ldtraps 2 }
+	ldhuman		OBJECT IDENTIFIER ::= { ldtraps 3 }
+	
+	ldActionString	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Intervention required string."
+		::= { ldhuman 1 }
+
+	ldOfflineTrap	TRAP-TYPE
+		ENTERPRISE	ldoffline
+		VARIABLES	{ ldName }
+		DESCRIPTION
+			"Loader going offline trap."
+		::= 1
+
+	ldOnlineTrap	TRAP-TYPE
+		ENTERPRISE	ldonline
+		VARIABLES	{ ldName }
+		DESCRIPTION
+			"Loader going online trap."
+		::= 2
+
+	ldHumanTrap	TRAP-TYPE
+		ENTERPRISE	ldhuman
+		VARIABLES	{ ldName, ldActionString }
+		DESCRIPTION
+			"Loader needs human intervention trap."
+		::= 3
+
+--	Tape Drive Group
+
+	tdNumber	OBJECT-TYPE
+		SYNTAX	UInteger32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of tape drives local to this machine."
+		::= { tape 1 }
+
+	tdTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF TdEntry
+		ACCESS  not-accessible
+		STATUS  mandatory
+		DESCRIPTION
+			"Tape Drive table."
+		INDEX   { tdSCSIDeviceID }
+		::= { tape 2 }
+	
+	tdEntry	OBJECT-TYPE
+		SYNTAX	TdEntry
+		ACCESS	not-accessible
+		STATUS	mandatory
+		::= { tdTable 1 }
+	
+	TdEntry ::= SEQUENCE {
+		tdSCSIDeviceID		DisplayString,
+		tdDeviceName		DisplayString,
+		tdVendorProductID	DisplayString,
+		tdCleaningRequired	INTEGER,
+		tdHWCompression		INTEGER,
+		tdStatus			INTEGER,
+		tdStatisticsBase	DateAndTime,
+		tdMBWritten			Counter32,
+		tdWriteErrors		Counter32,
+		tdWriteCorrected	Counter32,
+		tdWriteUncorrected	Counter32,
+		tdMBRead			Counter32,
+		tdReadErrors		Counter32,
+		tdReadCorrected		Counter32,
+		tdReadUncorrected	Counter32,
+		tdInterventionRequired	INTEGER
+		}
+	
+	tdSCSIDeviceID	OBJECT-TYPE
+		SYNTAX	DisplayName
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"SCSI device name of the tape drive."
+		::= { tdEntry 1 }
+
+	tdDeviceName	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Name of the device."
+		::= { tdEntry 2 }
+	
+	tdVendorProductID	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Vendor product ID."
+		::= { tdEntry 3 }
+	
+	tdCleaningRequired	OBJECT-TYPE
+		SYNTAX	INTEGER { False(0), True(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Drive cleaning status."
+		::= { tdEntry 4 }
+	
+	tdHWCompression	OBJECT-TYPE
+		SYNTAX	INTEGER { Off(0), On(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Hardware compression flag for this tape drive."
+		::= { tdEntry 5 }
+	
+	tdStatus	OBJECT-TYPE
+		SYNTAX	INTEGER { offline(0), online(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Status of the tape drive."
+		::= { tdEntry 6 }
+	
+	tdStatisticsBase	OBJECT-TYPE
+		SYNTAX	DateAndTime
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Date and time when statistics began for the tape drive."
+		::= { tdEntry 7 }
+	
+	tdMBWritten	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of megabytes written to the tape drive."
+		::= { tdEntry 8 }
+	
+	tdWriteErrors	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of write errors."
+		::= { tdEntry 9 }
+	
+	tdWriteCorrected	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of write errors corrected."
+		::= { tdEntry 10 }
+	
+	tdWriteUncorrected	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of write errors uncorrected."
+		::= { tdEntry 11 }
+	
+	tdMBRead	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of megabytes read from the tape drive."
+		::= { tdEntry 12 }
+	
+	tdReadErrors	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of read errors."
+		::= { tdEntry 13 }
+	
+	tdReadCorrected	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of read errors corrected."
+		::= { tdEntry 14 }
+	
+	tdReadUncorrected	OBJECT-TYPE
+		SYNTAX	Counter32
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Number of read errors uncorrected."
+		::= { tdEntry 15 }
+	
+	tdInterventionRequired	OBJECT-TYPE
+		SYNTAX	INTEGER { False(0), True(1) }
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Intervention required flag."
+		::= { tdEntry 16 }
+
+	tdtraps		OBJECT IDENTIFIER ::= { tape 3 }
+	tdoffline	OBJECT IDENTIFIER ::= { tdtraps 1 }
+	tdonline	OBJECT IDENTIFIER ::= { tdtraps 2 }
+	tdhuman		OBJECT IDENTIFIER ::= { tdtraps 3 }
+	
+	tdActionString	OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION
+			"Intervention required string."
+		::= { tdhuman 1 }
+
+	tdOfflineTrap	TRAP-TYPE
+		ENTERPRISE	tdoffline
+		VARIABLES	{ tdName }
+		DESCRIPTION
+			"Tape drive going offline trap."
+		::= 1
+
+	tdOnlineTrap	TRAP-TYPE
+		ENTERPRISE	tdonline
+		VARIABLES	{ tdName }
+		DESCRIPTION
+			"Tape drive going online trap."
+		::= 2
+
+	tdHumanTrap	TRAP-TYPE
+		ENTERPRISE	tdhuman
+		VARIABLES	{ tdName, tdActionString }
+		DESCRIPTION
+			"Tape drive needs human intervention trap."
+		::= 3
+
+END

@@ -1622,10 +1622,9 @@ dsx3TransmitClockSource OBJECT-TYPE
 
                  ds3Conformance OBJECT IDENTIFIER ::= { ds3 14 }
 
-                 ds3Groups      OBJECT IDENTIFIER ::= {
-                 ds3Conformance 1 } ds3Compliances OBJECT
-                 IDENTIFIER ::= { ds3Conformance 2 }
+                 ds3Groups      OBJECT IDENTIFIER ::= { ds3Conformance 1 }
 
+                 ds3Compliances OBJECT IDENTIFIER ::= { ds3Conformance 2 }
 
 
                  -- compliance statements
