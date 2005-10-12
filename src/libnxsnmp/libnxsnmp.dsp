@@ -110,6 +110,10 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\mib.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\oid.cpp
 # End Source File
 # Begin Source File
@@ -135,10 +139,6 @@ SOURCE=..\..\include\getopt.h
 # Begin Source File
 
 SOURCE=.\libnxsnmp.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\md5.h
 # End Source File
 # Begin Source File
 

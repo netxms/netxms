@@ -1027,7 +1027,7 @@ TextualConventionAssignment:
 ;
 
 ObjectTypeAssignment:
-    LCidentifier OBJECT_TYPE_SYM
+    Identifier OBJECT_TYPE_SYM
     SnmpSyntaxPart
     SnmpUnitsPart
     SnmpAccessPart
@@ -2109,7 +2109,7 @@ DefinedValue:
 
 
 SequenceItem:
-    LCidentifier LineNo Type 
+    Identifier LineNo Type 
 {
     $$ = MT (SnmpSequenceItemType);
     $$->name = $1;
@@ -2390,7 +2390,7 @@ Begin:
 
 SnmpParseTree *mpParseMib(char *filename)
 {
-   mpLineNoG = 0;
+   mpLineNoG = 1;
    mpin = fopen(filename, "r");
    if(mpin != NULL)
    {
@@ -2399,6 +2399,7 @@ SnmpParseTree *mpParseMib(char *filename)
    }
    else
    {
+      Error(ERR_CANNOT_OPEN_FILE, filename, strerror(errno));
       return NULL;
    }
    return mibTree;

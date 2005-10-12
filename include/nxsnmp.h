@@ -54,8 +54,9 @@
 // Various constants
 //
 
-#define MAX_OID_LEN        128
-#define SNMP_DEFAULT_PORT  161
+#define MAX_OID_LEN           128
+#define MAX_MIB_OBJECT_NAME   64
+#define SNMP_DEFAULT_PORT     161
 
 
 //
@@ -73,17 +74,28 @@
 // libnxsnmp error codes
 //
 
-#define SNMP_ERR_SUCCESS   0     /* success */
-#define SNMP_ERR_TIMEOUT   1     /* request timeout */
-#define SNMP_ERR_PARAM     2     /* invalid parameters passed to function */
-#define SNMP_ERR_SOCKET    3     /* unable to create socket */
-#define SNMP_ERR_COMM      4     /* send/receive error */
-#define SNMP_ERR_PARSE     5     /* error parsing PDU */
-#define SNMP_ERR_NO_OBJECT 6     /* given object doesn't exist on agent */
-#define SNMP_ERR_HOSTNAME  7     /* invalid hostname or IP address */
-#define SNMP_ERR_BAD_OID   8     /* object id is incorrect */
-#define SNMP_ERR_AGENT     9     /* agent returns an error */
-#define SNMP_ERR_BAD_TYPE  10    /* unknown variable data type */
+#define SNMP_ERR_SUCCESS            0     /* success */
+#define SNMP_ERR_TIMEOUT            1     /* request timeout */
+#define SNMP_ERR_PARAM              2     /* invalid parameters passed to function */
+#define SNMP_ERR_SOCKET             3     /* unable to create socket */
+#define SNMP_ERR_COMM               4     /* send/receive error */
+#define SNMP_ERR_PARSE              5     /* error parsing PDU */
+#define SNMP_ERR_NO_OBJECT          6     /* given object doesn't exist on agent */
+#define SNMP_ERR_HOSTNAME           7     /* invalid hostname or IP address */
+#define SNMP_ERR_BAD_OID            8     /* object id is incorrect */
+#define SNMP_ERR_AGENT              9     /* agent returns an error */
+#define SNMP_ERR_BAD_TYPE           10    /* unknown variable data type */
+#define SNMP_ERR_FILE_IO            11    /* file I/O error */
+#define SNMP_ERR_BAD_FILE_HEADER    12    /* file header is invalid */
+#define SNMP_ERR_BAD_FILE_DATA      13    /* file data is invalid or corrupted */
+
+
+//
+// MIB parser error codes
+//
+
+#define SNMP_MPE_SUCCESS      0
+#define SNMP_MPE_PARSE_ERROR  1
 
 
 //
@@ -150,7 +162,86 @@
 #define ASN_TRAP_V2_PDU             0xA7
 
 
+//
+// MIB object access types
+//
+
+#define MIB_ACCESS_READONLY      0
+#define MIB_ACCESS_READWRITE     1
+#define MIB_ACCESS_WRITEONLY     5
+#define MIB_ACCESS_NOACCESS      3
+#define MIB_ACCESS_NOTIFY        4
+#define MIB_ACCESS_CREATE        2
+
+
+//
+// MIB object status codes
+//
+
+#define MIB_STATUS_MANDATORY     0
+#define MIB_STATUS_OPTIONAL      1
+#define MIB_STATUS_OBSOLETE      2
+#define MIB_STATUS_DEPRECATED    3
+#define MIB_STATUS_CURRENT       4
+
+
+//
+// Flags for SNMPSaveMIBTree
+//
+
+#define SMT_COMPRESS_DATA        0x01
+#define SMT_SKIP_DESCRIPTIONS    0x02
+
+
 #endif      /* NXSNMP_WITH_NET_SNMP */
+
+
+//
+// MIB tree node
+//
+
+class LIBNXSNMP_EXPORTABLE SNMP_MIBObject
+{
+private:
+   SNMP_MIBObject *m_pParent;
+   SNMP_MIBObject *m_pNext;
+   SNMP_MIBObject *m_pPrev;
+   SNMP_MIBObject *m_pFirst;    // First child
+   SNMP_MIBObject *m_pLast;     // Last child
+
+   DWORD m_dwOID;
+   TCHAR *m_pszName;
+   TCHAR *m_pszDescription;
+   int m_iType;
+   int m_iStatus;
+   int m_iAccess;
+
+   void Initialize(void);
+
+public:
+   SNMP_MIBObject(void);
+   SNMP_MIBObject(DWORD dwOID, TCHAR *pszName);
+   SNMP_MIBObject(DWORD dwOID, TCHAR *pszName, int iType, 
+                  int iStatus, int iAccess, TCHAR *pszDescription);
+   ~SNMP_MIBObject();
+
+   void SetParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
+   void AddChild(SNMP_MIBObject *pObject);
+   void SetInfo(int iType, int iStatus, int iAccess, TCHAR *pszDescription);
+
+   SNMP_MIBObject *Parent(void) { return m_pParent; }
+   SNMP_MIBObject *Next(void) { return m_pNext; }
+   SNMP_MIBObject *Prev(void) { return m_pPrev; }
+   SNMP_MIBObject *FirstChild(void) { return m_pFirst; }
+   SNMP_MIBObject *LastChild(void) { return m_pLast; }
+
+   SNMP_MIBObject *FindChildByID(DWORD dwOID);
+
+   void Print(int nIndent);
+
+   void WriteToFile(FILE *pFile, DWORD dwFlags);
+   BOOL ReadFromFile(FILE *pFile);
+};
 
 
 //
@@ -307,6 +398,8 @@ void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, 
 DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, DWORD dwBufferSize);
 BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText);
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError);
+DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot, DWORD dwFlags);
+DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRoot);
 
 
 #endif

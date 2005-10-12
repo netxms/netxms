@@ -110,7 +110,7 @@ static void _count_newlines( char *str, int len )
      _count_newlines(mptext,mpleng);
      while( mpleng-- )
 	 {
-    	 if ( (*mptext == '\r') || (*mptext == '\n') )
+    	 if (*mptext == '\n')
     	 {
             switch( YYSTATE )
             {
@@ -416,7 +416,7 @@ static void _count_newlines( char *str, int len )
           mplval.charPtr[mpleng] = '\0';
           return LCASEFIRST_IDENT_SYM;}
 
-<INITIAL>([-]|0x)*[1-9][0-9]* {
+<INITIAL>([-]|0x)?[1-9][0-9]* {
 		  QWORD qwVal = strtoull(mptext, NULL, 0);
           long int intVal = strtol(mptext, NULL, 0);
 /*		  if ((intVal == LONG_MAX) && (qwVal == 0xFFFFFFFFFFFFFFFF))

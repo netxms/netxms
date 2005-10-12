@@ -27,6 +27,7 @@
 #ifdef __cplusplus
 
 #include <nms_common.h>
+#include <nms_util.h>
 #include <getopt.h>
 #include <nxsnmp.h>
 
@@ -40,6 +41,7 @@
 #define ERR_UNRESOLVED_SYMBOL    1
 #define ERR_UNRESOLVED_MODULE    2
 #define ERR_PARSER_ERROR         3
+#define ERR_CANNOT_OPEN_FILE     4
 
 
 //

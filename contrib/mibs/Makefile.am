@@ -23,6 +23,7 @@ mibs_DATA = \
 	CISCO-PING-MIB.txt \
 	CISCO-PROCESS-MIB.txt \
 	CISCO-PRODUCTS-MIB.txt \
+	CISCO-QOS-PIB-MIB.txt \
 	CISCO-SMI.txt \
 	CISCO-SYSLOG-MIB.txt \
 	CISCO-TC.txt \
@@ -63,6 +64,7 @@ mibs_DATA = \
 	RFC-1212.txt \
 	RFC1213-MIB.txt \
 	RMON-MIB.txt \
+	SNMP-FRAMEWORK-MIB.txt \
 	SNMPv2-CONF.txt \
 	SNMPv2-MIB.txt \
 	SNMPv2-SMI.txt \

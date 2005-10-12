@@ -106,10 +106,13 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
       _T("Invalid hostname or IP address"),
       _T("OID is incorrect"),
       _T("Agent error"),
-      _T("Unknown variable data type")
+      _T("Unknown variable data type"),
+      _T("File I/O error"),
+      _T("Invalid file header"),
+      _T("Invalid or corrupted file data")
    };
 
-   return ((dwError >= SNMP_ERR_SUCCESS) && (dwError <= SNMP_ERR_BAD_TYPE)) ?
+   return ((dwError >= SNMP_ERR_SUCCESS) && (dwError <= SNMP_ERR_BAD_FILE_DATA)) ?
       pszErrorText[dwError] : _T("Unknown error");
 }
 

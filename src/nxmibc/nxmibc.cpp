@@ -37,7 +37,16 @@
 // Externals
 //
 
-int ParseMIBFiles(int nNumFiles, char **ppszFileList);
+int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot);
+
+
+//
+// Static data
+//
+
+static char m_szOutFile[MAX_PATH] = "netxms.mib";
+static int m_iNumFiles = 0;
+static char **m_ppFileList = NULL;
 
 
 //
@@ -53,7 +62,8 @@ static struct
    { MIBC_INFO, "Operation completed successfully" },
    { MIBC_ERROR, "Import symbol \"%s\" unresolved" },
    { MIBC_ERROR, "Import module \"%s\" unresolved" },
-   { MIBC_ERROR, "Parser error - %s in line %d" }
+   { MIBC_ERROR, "Parser error - %s in line %d" },
+   { MIBC_ERROR, "Cannot open input file (%s)" }
 };
 
 
@@ -77,23 +87,128 @@ extern "C" void Error(int nError, char *pszModule, ...)
 
 
 //
+// Display help and exit
+//
+
+static void Help(void)
+{
+   printf("Usage:\n\n"
+          "nxmibc [options] source1 ... sourceN\n\n"
+          "Valid options:\n"
+          "   -d <dir>  : Include all MIB files from given directory to compilation\n"
+          "   -o <file> : Set output file name (default is netxms.mib)\n"
+          "   -s        : Strip descriptions from MIB objects\n"
+          "   -z        : Compress output file\n"
+          "\n");
+   exit(255);
+}
+
+
+//
+// Add file to compilation list
+//
+
+static void AddFileToList(char *pszFile)
+{
+   m_ppFileList = (char **)realloc(m_ppFileList, sizeof(char *) * (m_iNumFiles + 1));
+   m_ppFileList[m_iNumFiles++] = strdup(pszFile);
+}
+
+
+//
+// Scan directory for MIB files
+//
+
+static void ScanDirectory(char *pszPath)
+{
+   DIR *pDir;
+   struct dirent *pFile;
+   char szBuffer[MAX_PATH];
+
+   pDir = opendir(pszPath);
+   if (pDir != NULL)
+   {
+      while(1)
+      {
+         pFile = readdir(pDir);
+         if (pFile == NULL)
+            break;
+         if (strcmp(pFile->d_name, ".") && strcmp(pFile->d_name, ".."))
+         {
+            if (MatchString("*.txt", pFile->d_name, FALSE))
+            {
+               sprintf(szBuffer, "%s" FS_PATH_SEPARATOR "%s",
+                       pszPath, pFile->d_name);
+               AddFileToList(szBuffer);
+            }
+         }
+      }
+      closedir(pDir);
+   }
+}
+
+
+//
 // Entry point
 //
 
 int main(int argc, char *argv[])
 {
+   SNMP_MIBObject *pRoot;
+   DWORD dwFlags = 0, dwRet;
+   int i, ch;
+
    printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
           "Copyright (c) 2005 Victor Kirhenshtein\n\n");
-   if (argc == 1)
+
+   // Parse command line
+   opterr = 1;
+   while((ch = getopt(argc, argv, "d:ho:sz")) != -1)
    {
-      printf("Usage:\n\n"
-             "nxmibc [options] source1 ... sourceN\n\n"
-             "Valid options:\n"
-             "   -d           : Source is a directory\n"
-             "   -o <file>    : Set output file name (default is netxms.mib)\n"
-             "\n");
+      switch(ch)
+      {
+         case 'h':   // Display help and exit
+            Help();
+            break;
+         case 'd':
+            ScanDirectory(optarg);
+            break;
+         case 'o':
+            strncpy(m_szOutFile, optarg, MAX_PATH);
+            break;
+         case 's':
+            dwFlags |= SMT_SKIP_DESCRIPTIONS;
+            break;
+         case 'z':
+            dwFlags |= SMT_COMPRESS_DATA;
+            break;
+         case '?':
+            return 255;
+         default:
+            break;
+      }
+   }
+
+   for(i = optind; i < argc; i++)
+      AddFileToList(argv[i]);
+   
+   if (m_iNumFiles > 0)
+   {
+      ParseMIBFiles(m_iNumFiles, m_ppFileList, &pRoot);
+
+      if (pRoot != NULL)
+      {
+         dwRet = SNMPSaveMIBTree(m_szOutFile, pRoot, dwFlags);
+         if (dwRet != SNMP_ERR_SUCCESS)
+            printf("ERROR: Cannot save output file %s (%s)\n", m_szOutFile,
+                   SNMPGetErrorText(dwRet));
+      }
+   }
+   else
+   {
+      printf("ERROR: No source files given\n");
       return 255;
    }
-   ParseMIBFiles(argc - 1, &argv[1]);
+
    return 0;
 }

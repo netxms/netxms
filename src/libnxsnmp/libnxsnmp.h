@@ -45,6 +45,45 @@ typedef struct
 
 
 //
+// Header structure for compiled MIB file
+//
+
+typedef struct
+{
+   char chMagic[6];
+   BYTE bHeaderSize;    // Header size in bytes
+   BYTE bVersion;
+   BYTE bReserved[4];
+   DWORD dwTimeStamp;   // Server's timestamp
+} SNMP_MIB_HEADER;
+
+
+//
+// MIB file header constants
+//
+
+#define MIB_FILE_MAGIC     "NXMIB "
+#define MIB_FILE_VERSION   1
+
+
+//
+// Tags for compiled MIB file
+//
+
+#define MIB_TAG_OBJECT        0x01
+#define MIB_TAG_NAME          0x02
+#define MIB_TAG_DESCRIPTION   0x03
+#define MIB_TAG_ACCESS        0x04
+#define MIB_TAG_STATUS        0x05
+#define MIB_TAG_TYPE          0x06
+#define MIB_TAG_BYTE_OID      0x07     /* Used if OID < 256 */
+#define MIB_TAG_WORD_OID      0x08     /* Used if OID < 65536 */
+#define MIB_TAG_DWORD_OID     0x09
+
+#define MIB_END_OF_TAG        0x80
+
+
+//
 // Functions
 //
 

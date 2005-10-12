@@ -31,6 +31,7 @@ contrib/mibs/CISCO-MEMORY-POOL-MIB.txt -text
 contrib/mibs/CISCO-PING-MIB.txt -text
 contrib/mibs/CISCO-PROCESS-MIB.txt -text
 contrib/mibs/CISCO-PRODUCTS-MIB.txt -text
+contrib/mibs/CISCO-QOS-PIB-MIB.txt -text
 contrib/mibs/CISCO-SMI.txt -text
 contrib/mibs/CISCO-SYSLOG-MIB.txt -text
 contrib/mibs/CISCO-TC.txt -text
@@ -72,6 +73,7 @@ contrib/mibs/RFC-1215.txt -text
 contrib/mibs/RFC1155-SMI.txt -text
 contrib/mibs/RFC1213-MIB.txt -text
 contrib/mibs/RMON-MIB.txt -text
+contrib/mibs/SNMP-FRAMEWORK-MIB.txt -text
 contrib/mibs/SNMPv2-CONF.txt -text
 contrib/mibs/SNMPv2-MIB.txt -text
 contrib/mibs/SNMPv2-SMI.txt -text
@@ -737,6 +739,7 @@ src/libnxsnmp/libnxsnmp.dsp -text
 src/libnxsnmp/libnxsnmp.dsw -text
 src/libnxsnmp/libnxsnmp.h -text
 src/libnxsnmp/main.cpp -text
+src/libnxsnmp/mib.cpp -text
 src/libnxsnmp/oid.cpp -text
 src/libnxsnmp/pdu.cpp -text
 src/libnxsnmp/transport.cpp -text

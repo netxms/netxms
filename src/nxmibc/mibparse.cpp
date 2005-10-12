@@ -2323,7 +2323,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, SnmpParseTree *pTree, ubi_dlList
 // Interface to parser
 //
 
-int ParseMIBFiles(int nNumFiles, char **ppszFileList)
+int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
 {
    int i, nRet;
    SnmpParseTree *pTree;
@@ -2365,9 +2365,10 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList)
       BuildMIBTree(pRoot, pTree, pTree->notifications);
    }
 
-   pRoot->Print(0);
+   *ppRoot = pRoot;
    return SNMP_MPE_SUCCESS;
 
 parse_error:
+   *ppRoot = NULL;
    return nRet;
 }

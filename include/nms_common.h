@@ -90,6 +90,7 @@
 
 #include <winsock2.h>
 #include <windows.h>
+#include <stdlib.h>
 
 #ifndef UNDER_CE
 #include <sys/stat.h>
