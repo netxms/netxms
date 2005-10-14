@@ -39,102 +39,49 @@
 
 #include <string.h>
 #include <time.h>
-#include "ubi_dLinkList.h"
 #include "mibparse.h"
 #include "nxmibc.h"
+#include "nxsnmp.h"
 
 #ifdef YYTEXT_POINTER
-    extern char *mptext;
+extern char *mptext;
 #else
 extern char mptext[];
 #endif
 
 extern FILE *mpin, *mpout;
+extern int g_nCurrLine;
 
-static SnmpParseTree *mibTree;
-static char *currentFilename;
+static MP_MODULE *m_pModule;
+static char *m_pszCurrentFilename;
 
 int mperror(char *pszMsg);
 int mplex(void);
 
-/*
-* Binds keywords to the following object during the parsing phase
-*/
-
-void bind_keywords( ubi_dlListPtr itemList, TypeOrValue *mibItem )
+void *mpalloc(int nSize)
 {
-    SnmpCommentType *keyword = NULL; 
-	TypeOrValue *item = NULL;
+   void *p;
 
-    if ( ( mibItem->dataType == DATATYPE_VALUE ) &&
-         ( ( mibItem->data.value->valueType == VALUETYPE_MODULE ) ||
-           ( mibItem->data.value->valueType == VALUETYPE_IMPORTS ) ) )
-    {
-        /*
-         * In the case of objects at the top of the mib
-         * these will bind to the first object in the mib
-         * ( Hopefully a module identity but you never know )
-         * rather than to the mib module definition which is the true first
-         * item in the mib - so we skip over it at this point.
-		 *
-		 * we also skip over the imports clause for the same reason
-		 *
-		 * This causes a problem with the check at the END symbol in the 
-		 * ModuleDefinition. If a mib consists solely of a
-		 * Module Identifier, Imports, a keyword and the END symbol then
-		 * the keyword will not be be bound to the mib. It will sit
-		 * lonely in the object list staring with longing at the other
-		 * bound keywords and wonder why not it?
-		 *
-		 * On the other hand there's no good reason to do that
-		 * I can think of so Tough Darts, Farmer!
-         */
-        mibItem->hasKeyword = FALSE;
-	    return;
-    }
-	for( item = ( TypeOrValue *)ubi_dlFirst(itemList);
-	     item;
-		 item = ( TypeOrValue *)ubi_dlNext(item) )
-    {
-	    if ( ( item->dataType == DATATYPE_VALUE ) &&
-	         ( item->data.value->valueType == VALUETYPE_KEYWORD ) )
-	    {
-            keyword = item->data.value->value.keywordValue;
-
-    	    if( ( keyword->type == VALUETYPE_KEYWORD ) &&
-    	        ( keyword->data.keyword.bindings == NULL ) )
-            {
-                SnmpSymbolType *binding=MT (SnmpSymbolType);
-    
-    		    keyword->data.keyword.bindings = lstNew();
-    			if ( mibItem->dataType == DATATYPE_VALUE )
-                {
-                    binding->name = mibItem->data.value->name;
-                    binding->lineNo =  mibItem->data.value->lineNo;
-                }
-    			else if ( mibItem->dataType == DATATYPE_TYPE )
-                {
-                    binding->name = mibItem->data.type->name;
-                    binding->lineNo =  mibItem->data.type->lineNo;
-                }
-                binding->resolved = TRUE;
-    			mibItem->hasKeyword = TRUE;
-                ubi_dlAddTail(keyword->data.keyword.bindings,binding);
-    	    }
-	    }
-	}
+   p = malloc(nSize);
+   if (p != NULL)
+      memset(p, 0, nSize);
+   return p;
 }
 
-void *mpalloc(int size)
+static int AccessFromText(char *pszText)
 {
-    void *t_ptr=malloc(size);
-	if ( t_ptr == NULL )
-	{
-	    fprintf(stderr,"Malloc Failed for %d bytes errno=%d\n",size,errno);
-		exit(1);
-	}
-	memset(t_ptr, 0, size);
-	return t_ptr;
+   static char *pText[] = { "read-only", "read-write", "write-only",
+                            "not-accessible", "accessible-for-notify",
+                            "read-create", NULL };
+   char szBuffer[256];
+   int i;
+
+   for(i = 0; pText[i] != NULL; i++)
+      if (strcmp(pszText, pText[i]))
+         return i + 1;
+   sprintf(szBuffer, "Invalid ACCESS value \"%s\"", pszText);
+   mperror(szBuffer);
+   return -1;
 }
 
 %}
@@ -146,37 +93,13 @@ void *mpalloc(int size)
 
 %union
 {
-    char            *charPtr;
-    SnmpNumberType  numberVal;
-    SnmpAccess      accessVal;
-    SnmpModuleType           *modulePtr;
-    SnmpImportModuleType           *importModulePtr;
-    SnmpModuleIdentityType   *moduleIdentity;
-    SnmpObjectComplianceType *objectCompliancePtr;
-    OID             *oidPtr;
-    SnmpRevisionInfoType    *revisionPtr;
-    SnmpSymbolType      *symbolPtr;
-    SnmpObjectType  *objectTypePtr;
-    SnmpStatus      statusVal;
-    ubi_dlList      *listPtr;
-    Type            *typePtr;
-    Value           *valuePtr;
-    SnmpDefValType *defValPtr;
-    LineNumber      lineNoVal;
-    SnmpValueConstraintType *constraintPtr;
-    SnmpSequenceType *sequencePtr;
-    SnmpTextualConventionType *textualConventionPtr;
-    SnmpNotificationType *trapTypePtr;
-    SnmpGroupType *groupTypePtr;
-    SnmpCommentType *commentPtr;
-    SnmpModuleCapabilitiesType *moduleCapabilitiesPtr;
-    SnmpVariationType *variationPtr;
-    SnmpAgentCapabilitiesType *agentCapabilitiesPtr;
-    SnmpSequenceItemType *sequenceItemPtr;
-    SnmpModuleComplianceType *moduleCompliancePtr;
-    SnmpModuleComplianceObject *moduleComplianceObjPtr;
-    SnmpTagType *tagPtr;
-    TypeOrValue *typeOrValuePtr;
+   int nInteger;
+   char *pszString;
+   MP_NUMERIC_VALUE number;
+   DynArray *pList;
+   MP_IMPORT_MODULE *pImports;
+   MP_OBJECT *pObject;
+   MP_SUBID *pSubId;
 }
 
 %token ENTERPRISE_SYM
@@ -220,7 +143,6 @@ void *mpalloc(int size)
 %token INTEGER_SYM
 %token INTEGER32_SYM
 %token UNSIGNED32_SYM
-%token GAUGE_SYM
 %token GAUGE32_SYM
 %token COUNTER_SYM
 %token COUNTER32_SYM
@@ -264,110 +186,36 @@ void *mpalloc(int size)
 %token OBJECT_SYM
 %token TAGS_SYM
 %token AUTOMATIC_SYM
+%token MAX_ACCESS_SYM 
+%token ACCESS_SYM
+%token MIN_ACCESS_SYM
 
-%token <charPtr> MACRO_SYM
-%token <charPtr> MODULE_SYM
-%token <charPtr> UCASEFIRST_IDENT_SYM LCASEFIRST_IDENT_SYM
-%token <charPtr> BSTRING_SYM HSTRING_SYM CSTRING_SYM DISPLAY_HINT_SYM
-%token <accessVal> MAX_ACCESS_SYM ACCESS_SYM MIN_ACCESS_SYM
+%token <pszString> MACRO_SYM
+%token <pszString> MODULE_SYM
+%token <pszString> UCASEFIRST_IDENT_SYM LCASEFIRST_IDENT_SYM
+%token <pszString> BSTRING_SYM HSTRING_SYM CSTRING_SYM DISPLAY_HINT_SYM
+%token <pszString> TOKEN_SYM
 
-%token <numberVal> NUMBER_SYM
-%type <numberVal> Number
+%token <number> NUMBER_SYM
 
-%type <charPtr> UCidentifier LCidentifier Identifier Symbol
-%type <charPtr> BinaryString HexString CharString
+%type <nInteger> SnmpStatusPart SnmpAccessPart SnmpSyntaxPart SnmpSyntax
+%type <nInteger> Type BuiltInType NamedType
 
-%type <listPtr> AssignedIdentifier
-%type <listPtr> AssignedIdentifierList
+%type <pszString> UCidentifier LCidentifier Identifier
+%type <pszString> ModuleIdentifier DefinedValue SnmpIdentityPart
+%type <pszString> Symbol CharString
+%type <pszString> SnmpDescriptionPart BuiltInTypeAssignment
 
-%type <modulePtr> ModuleIdentifier
-%type <modulePtr> ModuleIdentifierAssignment
-%type <importModulePtr> SymbolsFromModule
+%type <number> Number
 
-%type <moduleIdentity> ModuleIdentityAssignment
-
-%type <lineNoVal> LineNo
-
-
-%type <listPtr> ImportsAssignment SymbolList SnmpObjectsPart SnmpCreationPart
-%type <listPtr>  SymbolsFromModuleList
-
-%token <charPtr> TOKEN_SYM /* used by macro processing */
-%type <listPtr>  TokenList /* used by macro processing */
-%type <symbolPtr>  TokenObject /* used by macro processing */
-
-%type <revisionPtr> SnmpRevisionObject
-%type <accessVal> SnmpAccessPart
-%type <charPtr> SnmpUnitsPart
-%type <listPtr> SnmpRevisionList
-%type <listPtr> SnmpRevisionPart
-%type <charPtr> SnmpOrganisationPart
-%type <charPtr> SnmpContactInfoPart
-%type <charPtr> SnmpUpdatePart
-%type <charPtr> SnmpDescriptionPart
-%type <charPtr> SnmpIdentityPart
-%type <charPtr> SnmpReferencePart
-%type <charPtr> SnmpDisplayHintPart
-%type <typePtr> SnmpSyntax SnmpSyntaxPart SnmpWriteSyntaxPart
-%type <statusVal> SnmpStatusPart
-%type <listPtr> SnmpIndexPart
-
-%type <charPtr> DefinedValue
-%type <typePtr> BuiltInType
-%type <typePtr> Type
-%type <typePtr> NamedType
-%type <typePtr> OctetStringType
-%type <typePtr> SequenceAssignment
-%type <sequenceItemPtr> SequenceItem
-
-%type <listPtr> SnmpTypeTagPart
-%type <listPtr> SnmpTypeTagList
-%type <tagPtr> SnmpTypeTagItem
-
-%type <textualConventionPtr> TextualConventionAssignment
-
-%type <valuePtr> Value NumericValue NumericValueItem
-%type <defValPtr> SnmpDefValPart
-%type <typeOrValuePtr> Assignment MacroAssignment  TypeOrValueAssignment
-%type <typeOrValuePtr> BuiltInTypeAssignment
-%type <trapTypePtr> SnmpNotificationTypeAssignment
-
-%type <listPtr> ObjectIdentifierList
-%type <oidPtr> ObjectIdentifier
-%type <objectTypePtr> ObjectIdentifierAssignment
-%type <objectTypePtr> ObjectTypeAssignment 
-%type <objectTypePtr> ObjectIdentityAssignment
-
-%type <listPtr> SequenceList
-%type <listPtr> AssignmentList
-%type <listPtr> SnmpVariationsList
-%type <listPtr> SnmpVariationsListPart
-%type <listPtr> ModuleCapabilitiesList
-%type <listPtr> SnmpTrapVariablePart
-%type <listPtr> SnmpTrapVariableList
-
-%type <listPtr> NumericValueConstraintList
-%type <constraintPtr> ValueConstraint
-
-%type <groupTypePtr> SnmpObjectGroupAssignment SnmpNotificationGroupAssignment
-
-%type <listPtr> SnmpModuleComplianceList
-%type <moduleComplianceObjPtr> SnmpModuleComplianceObject
-
-%type <listPtr> SnmpCompliancePart SnmpComplianceList
-%type <objectCompliancePtr> SnmpComplianceObject
-
-%type <groupTypePtr> SnmpMandatoryGroup
-%type <listPtr> SnmpMandatoryGroupPart SnmpMandatoryGroupList
-
-%type <moduleCompliancePtr> ModuleComplianceAssignment
-%type <commentPtr> SnmpKeywordAssignment
-%type <charPtr> SnmpKeywordName
-%type <charPtr> SnmpKeywordValue
-%type <listPtr> SnmpKeywordBinding
-%type <variationPtr> SnmpVariationPart
-%type <agentCapabilitiesPtr> AgentCapabilitiesAssignment
-%type <moduleCapabilitiesPtr> ModuleCapabilitiesAssignment
+%type <pList> SymbolList SymbolsFromModuleList
+%type <pList> AssignedIdentifierList AssignedIdentifier ObjectIdentifierList
+%type <pImports> SymbolsFromModule
+%type <pObject> ObjectIdentifierAssignment ObjectIdentityAssignment ObjectTypeAssignment
+%type <pObject> MacroAssignment TypeOrValueAssignment ModuleIdentityAssignment
+%type <pObject> SnmpObjectGroupAssignment SnmpNotificationGroupAssignment
+%type <pObject> SnmpNotificationTypeAssignment AgentCapabilitiesAssignment
+%type <pSubId> ObjectIdentifier
 
 /*
  *  Type definitions of non-terminal symbols
@@ -376,653 +224,206 @@ void *mpalloc(int size)
 %start ModuleDefinition
 %%
 
-LineNo:
-{
-    $$ = mpLineNoG;
-}
-
 /*-----------------------------------------------------------------------*/
 /* Module def/import/export productions */
 /*-----------------------------------------------------------------------*/
 
 ModuleDefinition:
-    AssignmentList
+    ModuleIdentifierAssignment AssignmentList
     End
+;
+
+AssignmentList:
+    AssignmentList Assignment
+|   Assignment
+;
+
+Assignment:
+    ObjectIdentifierAssignment
 {
-    ubi_dlListPtr itemList = $1;
-    TypeOrValue *item = NULL;
-
-    mibTree = MT (SnmpParseTree);
-
-	for( item = ( TypeOrValue *)ubi_dlFirst(itemList);
-	     item;
-		 item = ( TypeOrValue *)ubi_dlNext(item) )
-    {
-	    if ( ( item->dataType == DATATYPE_VALUE ) &&
-	         ( item->data.value->valueType == VALUETYPE_MODULE ) )
-		{
-		    if( mibTree->name == NULL )
-            {
-                mibTree->name = item->data.value->value.moduleValue;
-			    ubi_dlRemThis( itemList, item );
-            }
-			else
-            {
-                mperror("Multiple Module Identifier Values Found");
-            }
-			
-		}
-	    else if ( ( item->dataType == DATATYPE_VALUE ) &&
-	         ( item->data.value->valueType == VALUETYPE_IMPORTS ) )
-		{
-		    if( mibTree->imports == NULL )
-            {
-                mibTree->imports = item->data.value->value.importListPtr;
-			    ubi_dlRemThis( itemList, item );
-            }
-			else
-            {
-                mperror("Multiple Module Import Statements Found");
-            }
-			
-		}
-	}
-	/*
-	 * Any keywords between the final object and the END_SYM are bound
-	 * to the last object 
-	 */
-	for( item = ( TypeOrValue *)ubi_dlLast(itemList);
-	     item;
-		 item = ( TypeOrValue *)ubi_dlPrev(item) )
-    {
-	    if ( ( item->dataType != DATATYPE_VALUE ) ||
-	         ( item->data.value->valueType != VALUETYPE_KEYWORD ) )
-	    {
-	        bind_keywords(itemList,item);
-	    }
-    }
-    mibTree->objects = $1;
-    if ( mibTree->name == NULL )
-    {
-       mperror("Invalid Module No Module Identifier Found");
-    }
+   da_add(m_pModule->pObjectList, $1);
 }
+|   ObjectIdentityAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   ObjectTypeAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   MacroAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   TypeOrValueAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   SnmpNotificationTypeAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   ModuleComplianceAssignment
+|   SnmpNotificationGroupAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   SnmpObjectGroupAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   SnmpKeywordAssignment
+|   AgentCapabilitiesAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   ModuleIdentityAssignment
+{
+   da_add(m_pModule->pObjectList, $1);
+}
+|   ImportsAssignment
+|   ExportsAssignment
 ;
 
 ModuleIdentifierAssignment:
     ModuleIdentifier
 {
-    switch( $1->type )
-	{
-	    case VALUETYPE_MODULE:
-		    $$ = $1;
-			break;
-	    case VALUETYPE_MODULE_IDENTITY:
-	    case VALUETYPE_OID:
-		default:
-		    mperror("Invalid Module Identifier Assignment");
-	        break;
-	}
+   m_pModule = CREATE(MP_MODULE);
+   m_pModule->pszName = $1;
+   m_pModule->pObjectList = da_create();
 }
+;
 
 ModuleIdentifier:
-UCidentifier DEFINITIONS_SYM ASSIGNMENT_SYM Begin LineNo
+    UCidentifier DEFINITIONS_SYM ASSIGNMENT_SYM Begin
 {
-    $$ = MT (SnmpModuleType);
-    $$->name = $1;
-    $$->type = VALUETYPE_MODULE;
-    $$->tagStrategy = TAG_STRATEGY_UNKNOWN;
-    $$->lineNo = $5;
+   $$ = $1;
 }
-| UCidentifier DEFINITIONS_SYM ASSIGNMENT_SYM AUTOMATIC_SYM TAGS_SYM Begin LineNo
+|   UCidentifier DEFINITIONS_SYM ASSIGNMENT_SYM AUTOMATIC_SYM TAGS_SYM Begin
 {
-    $$ = MT (SnmpModuleType);
-    $$->name = $1;
-    $$->type = VALUETYPE_MODULE;
-    $$->tagStrategy = TAG_STRATEGY_AUTOMATIC;
-    $$->lineNo = $7;
-}
-| UCidentifier OBJECT_IDENTIFIER_SYM AssignedIdentifier LineNo
-{
-    $$ = MT (SnmpModuleType);
-    $$->name = $1;
-    $$->type = VALUETYPE_OID;
-    $$->oidListPtr = $3;
-    $$->tagStrategy = TAG_STRATEGY_UNKNOWN;
-    $$->lineNo = $4;
-}
-| SUPPORTS_SYM UCidentifier LineNo
-{
-    $$ = MT (SnmpModuleType);
-    $$->name = $2;
-    $$->type = VALUETYPE_MODULE_IDENTITY;
-    $$->tagStrategy = TAG_STRATEGY_UNKNOWN;
-    $$->lineNo = $3;
-}
-| MODULE_SYM LineNo
-{
-    $$ = MT (SnmpModuleType);
-    $$->name = $1;
-    $$->type = VALUETYPE_MODULE_IDENTITY;
-    $$->tagStrategy = TAG_STRATEGY_UNKNOWN;
-    $$->lineNo = $2;
+   $$ = $1;
 }
 ;
 
-ModuleIdentityAssignment:
-    SnmpIdentityPart
-    SnmpUpdatePart
-    SnmpOrganisationPart
-    SnmpContactInfoPart
-    SnmpDescriptionPart
-    SnmpRevisionPart
-    AssignedIdentifier
-	LineNo
+ObjectIdentifierAssignment:
+    LCidentifier OBJECT_IDENTIFIER_SYM AssignedIdentifier
 {
-    $$ = MT (SnmpModuleIdentityType);
-    $$->name = $1;
-    $$->last_update = $2;
-    $$->organization = $3;
-    $$->contact_info = $4;
-    $$->description = $5;
-    $$->revisions = $6;
-    $$->oidListPtr = $7;
-    $$->lineNo = $8;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->pOID = $3;
+}
+|   LCidentifier AssignedIdentifier
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->pOID = $2;
 }
 ;
 
-ImportsAssignment:
-    IMPORTS_SYM SymbolsFromModuleList SEMI_COLON_SYM
+AssignedIdentifier:
+    ASSIGNMENT_SYM AssignedIdentifierList
 {
-    $$ = $2;
+   $$ = $2;
+}
+|   ASSIGNMENT_SYM Number
+{
+   MP_SUBID *subid;
+
+   subid = CREATE(MP_SUBID);
+   subid->dwValue = $2.value.nInt32;
+   subid->pszName = NULL;
+   subid->bResolved = TRUE;
+   $$ = da_create();
+   da_add($$, subid);
 }
 ;
 
-ExportsAssignment:
-    EXPORTS_SYM DummySymbolList SEMI_COLON_SYM
-;
-
-SnmpRevisionPart:
-    SnmpRevisionList
-| { $$ = NULL; }
-;
-
-SnmpRevisionList:
-    SnmpRevisionList SnmpRevisionObject
+AssignedIdentifierList:
+    LEFT_BRACE_SYM ObjectIdentifierList RIGHT_BRACE_SYM
 {
-    ubi_dlAddTail($1,$2);
-}
-| SnmpRevisionObject
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
+   $$ = $2;
 }
 ;
 
-SnmpRevisionObject:
-    REVISION_SYM CharString
-    SnmpDescriptionPart
+ObjectIdentifierList:
+    ObjectIdentifierList ObjectIdentifier
 {
-    $$ = MT(SnmpRevisionInfoType);
-    $$->revision = $2;
-    $$->description = $3;
+   da_add($$, $2);
+}
+|   ObjectIdentifier
+{
+   $$ = da_create();
+   da_add($$, $1);
 }
 ;
 
-SnmpIdentityPart:
-    LCidentifier MODULE_IDENTITY_SYM
+ObjectIdentifier:
+    Number
 {
-	    $$ = $1;
+   $$ = CREATE(MP_SUBID);
+   $$->dwValue = $1.value.nInt32;
+   $$->pszName = NULL;
+   $$->bResolved = TRUE;
+}
+|   DefinedValue
+{
+   $$ = CREATE(MP_SUBID);
+   $$->dwValue = 0;
+   $$->pszName = $1;
+   $$->bResolved = FALSE;
+}
+|   Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
+{
+   $$ = CREATE(MP_SUBID);
+   $$->dwValue = $3.value.nInt32;
+   $$->pszName = $1;
+   $$->bResolved = TRUE;
 }
 ;
 
-SnmpOrganisationPart:
-    ORGANIZATION_SYM CharString
+NumericValue:
+    Number
+|   DefinedValue
+|   Number DOT_SYM DOT_SYM Number 
+|   Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
+;
+
+DefinedValue:
+    UCidentifier DOT_SYM LCidentifier
 {
-	    $$ = $2;
+   $$ = (char *)malloc(strlen($1) + strlen($3) + 2);
+   sprintf($$, "%s.%s", $1, $3);
+   free($1);
+   free($3);
+}
+|   LCidentifier
+{
+   $$ = $1;
 }
 ;
 
-SnmpContactInfoPart:
-    CONTACT_SYM CharString
+Number:
+    NUMBER_SYM
 {
-	    $$ = $2;
+   $$ = $1;
 }
 ;
 
-SnmpUpdatePart:
-    UPDATE_SYM CharString
-{
-	    $$ = $2;
-}
-;
-
-SnmpDescriptionPart:
-    DESCRIPTION_SYM CharString
-{
-	    $$ = $2;
-}
-| { $$ = NULL; }
-;
-
-ValueConstraint:
-    LEFT_PAREN_SYM NumericValueConstraintList RIGHT_PAREN_SYM
-{
-    $$ = MT (SnmpValueConstraintType);
-    $$->type = SNMP_RANGE_CONSTRAINT;
-    $$->a.valueList = $2;
-}
-| LEFT_PAREN_SYM SIZE_SYM LEFT_PAREN_SYM NumericValueConstraintList RIGHT_PAREN_SYM RIGHT_PAREN_SYM
-{
-    $$ = MT (SnmpValueConstraintType);
-    $$->type = SNMP_SIZE_CONSTRAINT;
-    $$->a.valueList = $4;
-}
-| LEFT_BRACE_SYM NumericValueConstraintList RIGHT_BRACE_SYM
-{
-    $$ = MT (SnmpValueConstraintType);
-    $$->type = SNMP_RANGE_CONSTRAINT;
-    $$->a.valueList = $2;
-}
-;
-
-NumericValueConstraintList:
-    NumericValueConstraintList BAR_SYM NumericValue 
-{
-    ubi_dlAddTail($1,$3);
-}
-| NumericValueConstraintList COMMA_SYM NumericValue 
-{
-    ubi_dlAddTail($1,$3);
-}
-| NumericValue 
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
-;
-
-SnmpKeywordAssignment:
-    SnmpKeywordName LineNo
-{
-    $$= MT (SnmpCommentType);
-    $$->type = VALUETYPE_KEYWORD;
-    $$->data.keyword.name = $1;
-    $$->lineNo = $2;
-}
-|   SnmpKeywordName SnmpKeywordValue LineNo
-{
-    $$= MT (SnmpCommentType);
-    $$->type = VALUETYPE_KEYWORD;
-    $$->data.keyword.name = $1;
-    $$->data.keyword.value = $2;
-    $$->lineNo = $3;
-}
-|   SnmpKeywordName SnmpKeywordBinding SnmpKeywordValue LineNo
-{
-    $$= MT (SnmpCommentType);
-    $$->type = VALUETYPE_KEYWORD;
-    $$->data.keyword.name = $1;
-    $$->data.keyword.bindings = $2;
-    $$->data.keyword.value = $3;
-    $$->lineNo = $4;
-}
-;
-
-SnmpKeywordName:
-    KEYWORD_SYM ASSIGNMENT_SYM CharString
-{
-    $$ = $3;
-}
-;
-
-SnmpKeywordValue:
-    KEYWORD_VALUE_SYM ASSIGNMENT_SYM CharString
-{
-    $$ = $3;
-}
-;
-
-SnmpKeywordBinding:
-    KEYWORD_BIND_SYM ASSIGNMENT_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
-{
-    $$ = $4;
-}
-;
-
-SnmpSyntax:
-    SYNTAX_SYM Type
-{
-    $$ = $2;
-}
-;
-
-SnmpSyntaxPart:
-    SnmpSyntax
-  { $$=$1; }
-| { $$ = NULL; }
-;
-
-SnmpUnitsPart:
-    UNITS_SYM CharString
-{
-    $$ = $2;
-}
-| { $$ = NULL; }
-;
-
-SnmpWriteSyntaxPart:
-    WRITE_SYNTAX_SYM Type
-{
-    $$ = $2;
-}
-| { $$ = NULL; }
-;
-
-SnmpCreationPart:
-    CREATION_REQUIRES_SYM SymbolList
-{
-    $$ = $2;
-}
-| { $$ = NULL; }
-;
-
-TypeOrValueAssignment:
-    BuiltInTypeAssignment
-{
-    $$=$1;
-}
-| UCidentifier ASSIGNMENT_SYM TextualConventionAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = $1;
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-	/* propagate the implicit application tag (base type) up */
-    $$->data.type->implicit = $3->syntax->implicit;
-    $$->data.type->lineNo = $4;
-    $$->data.type->typeData.tcValue = $3;
-}
-| UCidentifier ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = $1;
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = $1;
-}
-| UCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = $4;
-    $$->data.type->lineNo = $5;
-    $$->data.type->name = $1;
-    $$->data.type->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->data.type->implicit.className = strdup("UNIVERSAL");
-    $$->data.type->implicit.tagVal = 16;
-    $$->data.type->typeData.sequence->name = $1;
-}
-| UCidentifier ASSIGNMENT_SYM CHOICE_SYM SequenceAssignment LineNo
-{
-    /* 
-	 * I'm not sure this is used outside of the SMI specification 
-	 * documents. However the goal of the parser is to parse MIBs
-	 * on a specification independent basis, setting aside the
-	 * macro assignment problem. This puts the burden on the user
-	 * to specify all relevant mibs (or the calling program to embed
-	 * known specification mibs).
-	 */
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = $4;
-    $$->data.type->lineNo = $5;
-    $$->data.type->name = $1;
-    $$->data.type->type = SNMP_CHOICE;
-    $$->data.type->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->data.type->implicit.className = strdup("UNIVERSAL");
-    $$->data.type->implicit.tagVal = 16;
-    $$->data.type->typeData.sequence->name = $1;
-}
-| UCidentifier ASSIGNMENT_SYM Value
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = $3;
-}
-;
-
-BuiltInTypeAssignment:
-    IP_ADDRESS_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("IpAddress");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("IpAddress");
-}
-| OPAQUE_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Opaque");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Opaque");
-}
-| INTEGER32_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Integer32");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Integer32");
-}
-| UNSIGNED32_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Unsigned32");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Unsigned32");
-}
-| TIMETICKS_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("TimeTicks");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("TimeTicks");
-}
-| COUNTER_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Counter");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Counter");
-}
-| COUNTER32_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Counter32");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Counter32");
-}
-| COUNTER64_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Counter64");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Counter64");
-}
-| GAUGE_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Gauge");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Gauge");
-}
-| GAUGE32_SYM ASSIGNMENT_SYM Type LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT( Type );
-    $$->data.type->name = strdup("Gauge32");
-    $$->data.type->type = SNMP_TEXTUAL_CONVENTION;
-    $$->data.type->implicit = $3->implicit;
-    $$->data.type->lineNo = $4;
-
-    $$->data.type->typeData.tcValue = MT (SnmpTextualConventionType);
-    $$->data.type->typeData.tcValue->syntax = $3;
-    $$->data.type->typeData.tcValue->name = strdup("Gauge32");
-}
-;
-
-MacroAssignment:
-MACRO_SYM ASSIGNMENT_SYM Begin TokenList End LineNo 
-{
-    /* This is the macro specification problem. The simple
-	 * parser does not support dynamic grammar specifications
-	 * consequently all we can do is preserve the macro definition
-	 * in the parse, however the parser will not process new values
-	 * using a macro which is not known.
-	 * 
-	 * I think the future of ASN.1 macros, outside of new SNMP
-	 * specifications is rather limited so all we do is preserve the
-	 * token list so the macro definition can be reconstructed using
-	 * the line numbers of the tokens.
-	 * 
-	 * It would not be that difficult to put in something to parse
-	 * the macro body for syntax, its a simple assignment list. A more
-	 * complex parser (check the bison docs for context dependent grammars)
-	 * might be able to parse and implement macros dynamically.
-	 */
-    /* Known Macro Type */
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT (Type);
-    $$->data.type->name = $1;
-    $$->data.type->lineNo = $6;
-    $$->data.type->type = SNMP_MACRO_DEFINITION;
-    $$->data.type->resolved = TRUE;
-    $$->data.type->typeData.macro_tokens = $4;
-}
-;
-
-TokenList:
-    TokenList TokenObject
-{
-    ubi_dlAddTail($1 ,$2);
-}
-| TokenObject
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
-
-TokenObject:
-TOKEN_SYM LineNo
-{
-    $$ = MT (SnmpSymbolType);
-    $$->name = $1;
-    $$->lineNo = $2;
-}
-;
-
-TextualConventionAssignment:
-    TEXTUAL_CONVENTION_SYM
-    SnmpDisplayHintPart
+ObjectIdentityAssignment:
+    LCidentifier OBJECT_IDENTITY_SYM
     SnmpStatusPart
     SnmpDescriptionPart
     SnmpReferencePart
-    SnmpSyntaxPart
+    AssignedIdentifier
 {
-    $$ = MT( SnmpTextualConventionType );
-    $$->displayHint=$2;
-    $$->status=$3;
-    $$->description=$4;
-    $$->reference=$5;
-    $$->syntax=$6;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iStatus = $3;
+   $$->pszDescription = $4;
+   $$->pOID = $6;
 }
 ;
 
@@ -1038,70 +439,334 @@ ObjectTypeAssignment:
     SnmpDefValPart
     AssignedIdentifier
 {
-    $$ = MT (SnmpObjectType);
-    $$->name = $1;
-    $$->syntax = $3;
-    $$->units = $4;
-    $$->access = $5;
-    $$->status = $6;
-    $$->description = $7;
-    $$->reference = $8;
-	/*
-	 * When resolving index (post-parse) its important to differentiate between
-	 * an INDEX and an AUGMENTS entry. If the index list has exactly
-	 * one element and if that element is a table (SNMP_SEQUENCE_IDENTIFIER)
-	 * then this is an AUGMENTS clause. Else if the index list element(s)
-	 * point to one or more type values its an index.
-	 */
-    $$->index = $9;
-	if ( $$->index != NULL )
-	{
-	Type *syntax = $$->syntax;
-	    /*
-		 * We have an augments or index entry. In that case update the 
-		 * type value to indicate a sequence identifier type rather than
-		 * a vanilla namedType. I'm not sure if its legal to have an
-		 * augments or index entry for a named type. An example might
-		 * be adding a single element to an existing table. In that case
-		 * its logical to combine the OBJECT-TYPE declaration and the
-		 * row entry rather than creating a seperate SEQUENCE and column
-		 * object.
-		 */
-		 if ( syntax->type == SNMP_NAMED_TYPE )
-		 {
-		     syntax->type = SNMP_SEQUENCE_IDENTIFIER;
-		 }
-		 else if ( syntax->type != SNMP_SEQUENCE_IDENTIFIER )
-		 {
-         char tPtr[200];
-              sprintf(tPtr,"Invalid SYNTAX %s Type (%d) for element %s",
-                           $$->name,syntax->type,syntax->name);
-              mperror(tPtr);
-          }
-	}
-    $$->defVal = $10;
-    $$->oidListPtr = $11;
-    $$->hasGroup = FALSE;
-    $$->resolved = FALSE;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iSyntax = $3;
+   $$->iAccess = $5;
+   $$->iStatus = $6;
+   $$->pszDescription = $7;
+   $$->pOID = $11;
 }
 ;
 
-ObjectIdentityAssignment:
-    LCidentifier OBJECT_IDENTITY_SYM
+ModuleIdentityAssignment:
+    SnmpIdentityPart
+    SnmpUpdatePart
+    SnmpOrganisationPart
+    SnmpContactInfoPart
+    SnmpDescriptionPart
+    SnmpRevisionPart
+    AssignedIdentifier
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->iSyntax = MIB_TYPE_MODID;
+   $$->pszName = $1;
+   $$->pszDescription = $5;
+   $$->pOID = $7;
+}
+;
+
+ImportsAssignment:
+    IMPORTS_SYM SymbolsFromModuleList SEMI_COLON_SYM
+{
+   m_pModule->pImportList = $2;
+}
+;
+
+ExportsAssignment:
+    EXPORTS_SYM SymbolList SEMI_COLON_SYM
+;
+
+SnmpRevisionPart:
+    SnmpRevisionList
+|
+;
+
+SnmpRevisionList:
+    SnmpRevisionList SnmpRevisionObject
+|   SnmpRevisionObject
+;
+
+SnmpRevisionObject:
+    REVISION_SYM CharString
+    SnmpDescriptionPart
+;
+
+SnmpIdentityPart:
+    LCidentifier MODULE_IDENTITY_SYM
+{
+   $$ = $1;
+}
+;
+
+SnmpOrganisationPart:
+    ORGANIZATION_SYM CharString
+;
+
+SnmpContactInfoPart:
+    CONTACT_SYM CharString
+;
+
+SnmpUpdatePart:
+    UPDATE_SYM CharString
+;
+
+SnmpDescriptionPart:
+    DESCRIPTION_SYM CharString
+{
+   $$ = $2;
+}
+|
+{
+   $$ = NULL;
+}
+;
+
+ValueConstraint:
+    LEFT_PAREN_SYM NumericValueConstraintList RIGHT_PAREN_SYM
+|   LEFT_PAREN_SYM SIZE_SYM LEFT_PAREN_SYM NumericValueConstraintList RIGHT_PAREN_SYM RIGHT_PAREN_SYM
+|   LEFT_BRACE_SYM NumericValueConstraintList RIGHT_BRACE_SYM
+;
+
+NumericValueConstraintList:
+    NumericValueConstraintList BAR_SYM NumericValue 
+|   NumericValueConstraintList COMMA_SYM NumericValue 
+|   NumericValue 
+;
+
+SnmpKeywordAssignment:
+    SnmpKeywordName
+|   SnmpKeywordName SnmpKeywordValue
+|   SnmpKeywordName SnmpKeywordBinding SnmpKeywordValue
+;
+
+SnmpKeywordName:
+    KEYWORD_SYM ASSIGNMENT_SYM CharString
+;
+
+SnmpKeywordValue:
+    KEYWORD_VALUE_SYM ASSIGNMENT_SYM CharString
+;
+
+SnmpKeywordBinding:
+    KEYWORD_BIND_SYM ASSIGNMENT_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+;
+
+SnmpSyntax:
+    SYNTAX_SYM Type
+{
+   $$ = $2;
+}
+;
+
+SnmpSyntaxPart:
+    SnmpSyntax
+{
+   $$ = $1;
+}
+|
+{
+   $$ = MIB_TYPE_OTHER;
+}
+;
+
+SnmpUnitsPart:
+    UNITS_SYM CharString
+|
+;
+
+SnmpWriteSyntaxPart:
+    WRITE_SYNTAX_SYM Type
+|
+;
+
+SnmpCreationPart:
+    CREATION_REQUIRES_SYM SymbolList
+|
+;
+
+TypeOrValueAssignment:
+    BuiltInTypeAssignment
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_TYPEDEF;
+   $$->pszName = $1;
+}
+|   UCidentifier ASSIGNMENT_SYM TextualConventionAssignment
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_TEXTUAL_CONVENTION;
+   $$->pszName = $1;
+}
+|   UCidentifier ASSIGNMENT_SYM Type
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_TYPEDEF;
+   $$->pszName = $1;
+}
+|   UCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_SEQUENCE;
+   $$->pszName = $1;
+}
+|   UCidentifier ASSIGNMENT_SYM CHOICE_SYM SequenceAssignment
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_CHOICE;
+   $$->pszName = $1;
+}
+|   UCidentifier ASSIGNMENT_SYM Value
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_VALUE;
+   $$->pszName = $1;
+}
+;
+
+Type:
+    BuiltInType
+{
+   $$ = $1;
+}
+|   NamedType
+{
+   $$ = $1;
+}
+|   BuiltInType ValueConstraint
+{
+   $$ = $1;
+}
+|   NamedType ValueConstraint
+{
+   $$ = $1;
+}
+;
+
+NamedType:
+    SnmpTypeTagPart UCidentifier
+{
+   $$ = MIB_TYPE_OTHER;    /* TODO: resolve named types */
+}
+;
+
+BuiltInType:
+    SnmpTypeTagPart INTEGER_SYM
+{
+   $$ = MIB_TYPE_INTEGER;
+}
+|   SnmpTypeTagPart IMPLICIT_SYM INTEGER_SYM
+{
+   $$ = MIB_TYPE_INTEGER;
+}
+|   SnmpTypeTagPart INTEGER32_SYM
+{
+   $$ = MIB_TYPE_INTEGER32;
+}
+|   SnmpTypeTagPart UNSIGNED32_SYM
+{
+   $$ = MIB_TYPE_UNSIGNED32;
+}
+|   SnmpTypeTagPart COUNTER_SYM
+{
+   $$ = MIB_TYPE_COUNTER;
+}
+|   SnmpTypeTagPart COUNTER32_SYM
+{
+   $$ = MIB_TYPE_COUNTER32;
+}
+|   SnmpTypeTagPart COUNTER64_SYM
+{
+   $$ = MIB_TYPE_COUNTER64;
+}
+|   SnmpTypeTagPart GAUGE32_SYM
+{
+   $$ = MIB_TYPE_GAUGE32;
+}
+|   SnmpTypeTagPart TIMETICKS_SYM
+{
+   $$ = MIB_TYPE_TIMETICKS;
+}
+|   SEQUENCE_SYM OF_SYM NamedType
+{
+   $$ = MIB_TYPE_SEQUENCE;
+}
+|   SnmpTypeTagPart OBJECT_IDENTIFIER_SYM
+{
+   $$ = MIB_TYPE_OBJID;
+}
+|   SnmpTypeTagPart OctetStringType
+{
+   $$ = MIB_TYPE_OCTETSTR;
+}
+;
+
+BuiltInTypeAssignment:
+    IP_ADDRESS_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("IpAddress");
+}
+|   OPAQUE_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Opaque");
+}
+|   INTEGER32_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Integer32");
+}
+|   UNSIGNED32_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Unsigned32");
+}
+|   TIMETICKS_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("TimeTicks");
+}
+|   COUNTER_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Counter");
+}
+|   COUNTER32_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Counter32");
+}
+|   COUNTER64_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Counter64");
+}
+|   GAUGE32_SYM ASSIGNMENT_SYM Type
+{
+   $$ = strdup("Gauge32");
+}
+;
+
+MacroAssignment:
+    MACRO_SYM ASSIGNMENT_SYM Begin TokenList End
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_MACRO;
+   $$->pszName = $1;
+}
+;
+
+TokenList:
+    TokenList TokenObject
+|   TokenObject
+;
+
+TokenObject:
+    TOKEN_SYM
+;
+
+TextualConventionAssignment:
+    TEXTUAL_CONVENTION_SYM
+    SnmpDisplayHintPart
     SnmpStatusPart
     SnmpDescriptionPart
     SnmpReferencePart
-    AssignedIdentifier
-{
-    $$ = MT (SnmpObjectType);
-    $$->name = $1;
-    $$->status = $3;
-    $$->description = $4;
-    $$->reference = $5;
-    $$->oidListPtr = $6;
-    $$->hasGroup = FALSE;
-    $$->resolved = FALSE;
-}
+    SnmpSyntaxPart
 ;
 
 SnmpNotificationTypeAssignment:
@@ -1112,89 +777,75 @@ SnmpNotificationTypeAssignment:
     SnmpReferencePart
     AssignedIdentifier
 {
-    $$ = MT (SnmpNotificationType);
-    $$->name = $1;
-    $$->objects = $3;
-    $$->status = $4;
-    $$->description = $5;
-    $$->reference = $6;
-    $$->oidListPtr = $7;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iSyntax = MIB_TYPE_NOTIFTYPE;
+   $$->iStatus = $4;
+   $$->pszDescription = $5;
+   $$->pOID = $7;
 }
-| LCidentifier TRAP_TYPE_SYM
-  ENTERPRISE_SYM LCidentifier
-  SnmpTrapVariablePart
-  SnmpDescriptionPart
-  AssignedIdentifier
+|   LCidentifier TRAP_TYPE_SYM
+    ENTERPRISE_SYM LCidentifier
+    SnmpTrapVariablePart
+    SnmpDescriptionPart
+    AssignedIdentifier
 {
-    OID *enterpriseOid = MT (OID);
-    $$ = MT (SnmpNotificationType);
-    $$->name = $1;
-    $$->enterprise = $4;
-    $$->objects = $5;
-    $$->description = $6;
-    $$->oidListPtr = $7;
-	/* now synthesize the parent oid value */
-    enterpriseOid->nodeName = $4;
-    enterpriseOid->resolved = FALSE;
-    ubi_dlAddHead($$->oidListPtr,enterpriseOid);
+   MP_SUBID *pSubId;
+
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iSyntax = MIB_TYPE_TRAPTYPE;
+   $$->pszDescription = $6;
+
+   pSubId = CREATE(MP_SUBID);
+   pSubId->pszName = $4;
+   $$->pOID = da_create();
+   da_add($$->pOID, pSubId);
+
+   pSubId = CREATE(MP_SUBID);
+   pSubId->pszName = (char *)malloc(strlen($4) + 3);
+   sprintf(pSubId->pszName, "%s#0", $4);
+   pSubId->bResolved = TRUE;
+   da_add($$->pOID, pSubId);
+
+   da_join($$->pOID, $7);
+   da_destroy($7);
 }
 ;
 
 SnmpTrapVariablePart:
     SnmpTrapVariableList
-| { $$ = NULL }
+|
 ;
 
 SnmpTrapVariableList:
     VARIABLES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
-{
-    $$ = $3;
-}
 ;
 
 SnmpMandatoryGroupPart:
     SnmpMandatoryGroupList
-| { $$ = NULL }
+|
 ;
 
 SnmpMandatoryGroupList:
     SnmpMandatoryGroupList SnmpMandatoryGroup
-{
-    ubi_dlAddTail($1 ,$2);
-}
-| SnmpMandatoryGroup
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
+|   SnmpMandatoryGroup
 ;
 
 SnmpMandatoryGroup:
     MANDATORY_GROUPS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
-{
-    $$ = MT (SnmpGroupType);
-    $$->type = SNMP_GROUP_TYPE_MANDATORY;
-    $$->objects = $3;
-    $$->resolved = FALSE;
-    $$->supported = FALSE;
-}
 ;
 
 SnmpCompliancePart:
     SnmpComplianceList
-| { $$ = NULL }
+|
 ;
 
 SnmpComplianceList:
     SnmpComplianceList SnmpComplianceObject
-{
-    ubi_dlAddTail($1 ,$2);
-}
-| SnmpComplianceObject
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
+|   SnmpComplianceObject
 ;
 
 SnmpComplianceObject:
@@ -1203,30 +854,14 @@ SnmpComplianceObject:
     SnmpWriteSyntaxPart
     SnmpAccessPart
     SnmpDescriptionPart
-{
-    $$ = MT (SnmpObjectComplianceType);
-    $$->name = $2;
-    $$->type = COMPLIANCE_ITEM_OBJECT;
-    $$->syntax = $3;
-    $$->write_syntax = $4;
-    $$->status = $5;
-    $$->description = $6;
-}
-| GROUP_SYM LCidentifier SnmpDescriptionPart
-{
-    $$ = MT (SnmpObjectComplianceType);
-    $$->name = $2;
-    $$->type = COMPLIANCE_ITEM_GROUP;
-    $$->description = $3;
-    $$->resolved = FALSE;
-    $$->supported = FALSE;
-}
+|   GROUP_SYM LCidentifier SnmpDescriptionPart
 ;
 
 SnmpObjectsPart:
-    OBJECTS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM { $$ = $3 }
-| NOTIFICATIONS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM { $$ = $3 }
-| { $$ = NULL }
+    OBJECTS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+|   NOTIFICATIONS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+|
+;
 
 SnmpObjectGroupAssignment:
     LCidentifier OBJECT_GROUP_SYM
@@ -1235,15 +870,13 @@ SnmpObjectGroupAssignment:
     SnmpDescriptionPart
     AssignedIdentifier
 {
-    $$ = MT (SnmpGroupType);
-    $$->name = $1;
-    $$->type = SNMP_GROUP_TYPE_OBJECT;
-    $$->objects = $3;
-    $$->status = $4;
-    $$->description = $5;
-    $$->resolved = FALSE;
-    $$->supported = FALSE;
-    $$->oidListPtr = $6;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iStatus = $4;
+   $$->iSyntax = MIB_TYPE_OBJGROUP;
+   $$->pszDescription = $5;
+   $$->pOID = $6;
 }
 ;
 
@@ -1254,15 +887,12 @@ SnmpNotificationGroupAssignment:
     SnmpDescriptionPart
     AssignedIdentifier
 {
-    $$ = MT (SnmpGroupType);
-    $$->name = $1;
-    $$->type = SNMP_GROUP_TYPE_NOTIFICATION;
-    $$->objects = $3;
-    $$->status = $4;
-    $$->description = $5;
-    $$->resolved = FALSE;
-    $$->supported = FALSE;
-    $$->oidListPtr = $6;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iStatus = $4;
+   $$->pszDescription = $5;
+   $$->pOID = $6;
 }
 ;
 
@@ -1273,56 +903,27 @@ ModuleComplianceAssignment:
     SnmpReferencePart
     SnmpModuleComplianceList
     AssignedIdentifier
-{
-    $$ = MT (SnmpModuleComplianceType);
-    $$->name = $1;
-    $$->status = $3;
-    $$->description = $4;
-    $$->reference = $5;
-    $$->compliance_objects = $6;
-    $$->oidListPtr = $7;
-}
 ;
 
 SnmpModuleComplianceList:
     SnmpModuleComplianceList SnmpModuleComplianceObject
-{
-    ubi_dlAddTail($1,$2);
-}
-| SnmpModuleComplianceObject
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
+|   SnmpModuleComplianceObject
 ;
 
 SnmpModuleComplianceObject:
-    ModuleIdentifier
+    MODULE_SYM
     SnmpMandatoryGroupPart
     SnmpCompliancePart
-{
-    $$ = MT (SnmpModuleComplianceObject);
-    $$->module = $1;
-    $$->mandatory_groups = $2;
-    $$->compliance_items = $3;
-}
 ;
 
 SnmpVariationsListPart:
     SnmpVariationsList
-| { $$ = NULL }
+|
 ;
 
 SnmpVariationsList:
     SnmpVariationsList SnmpVariationPart
-{
-    ubi_dlAddTail($1,$2);
-}
-| SnmpVariationPart
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
+|   SnmpVariationPart
 ;
 
 SnmpVariationPart:
@@ -1332,39 +933,15 @@ SnmpVariationPart:
     SnmpAccessPart
     SnmpCreationPart
     SnmpDefValPart
-{
-    $$ = MT (SnmpVariationType);
-    $$->object_name = $2;
-    $$->syntax = $3;
-    $$->write_syntax = $4;
-    $$->access = $5;
-    $$->creation = $6;
-    $$->defval = $7;
-}
 ;
 
 ModuleCapabilitiesList:
     ModuleCapabilitiesList ModuleCapabilitiesAssignment
-{
-    ubi_dlAddTail($1,$2);
-}
-| ModuleCapabilitiesAssignment
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
+|   ModuleCapabilitiesAssignment
 ;
 
 ModuleCapabilitiesAssignment:
-	ModuleIdentifier
-    INCLUDES_SYM SymbolList
-    SnmpVariationsListPart
-{
-    $$ = MT (SnmpModuleCapabilitiesType);
-    $$->module = $1;
-    $$->supported_groups = $3;
-    $$->variations = $4;
-}
+    ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
 ;
 
 AgentCapabilitiesAssignment:
@@ -1375,187 +952,82 @@ AgentCapabilitiesAssignment:
     ModuleCapabilitiesList
     AssignedIdentifier
 {
-    $$ = MT (SnmpAgentCapabilitiesType);
-    $$->name = $1;
-    $$->product_release = $4;
-    $$->status = $5;
-    $$->description = $6;
-    $$->module_capabilities = $7;
-    $$->oidListPtr = $8;
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_OBJECT;
+   $$->pszName = $1;
+   $$->iStatus = $5;
+   $$->iSyntax = MIB_TYPE_AGENTCAP;
+   $$->pszDescription = $6;
+   $$->pOID = $8;
 }
 ;
 
 SnmpAccessPart:
-  ACCESS_SYM LCidentifier
-| MAX_ACCESS_SYM LCidentifier
-| MIN_ACCESS_SYM LCidentifier
+    ACCESS_SYM LCidentifier
 {
-    if (strcmp ($2, "read-only") == 0)
-    $$ = SNMP_READ_ONLY;
-    else if (strcmp ($2, "read-write") == 0)
-    $$ = SNMP_READ_WRITE;
-    else if (strcmp ($2, "read-create") == 0)
-    $$ = SNMP_READ_WRITE;
-    else if (strcmp ($2, "not-accessible") == 0)
-    $$ = SNMP_NOT_ACCESSIBLE;
-    else if (strcmp ($2, "accessible-for-notify") == 0)
-    $$ = SNMP_ACCESSIBLE_FOR_NOTIFY;
-    else
-    {
-        mperror ("ACCESS field can only be one of \"read-write\", \"write-only\" , \"not-accessible\" , \"accessible-for-notify\" or \"not-implemented\"");
-        $$ = -1;
-    }
+   $$ = AccessFromText($2);
 }
-| { $$ = SNMP_ACCESS_VALUE_NULL; }
+|   MAX_ACCESS_SYM LCidentifier
+{
+   $$ = AccessFromText($2);
+}
+|   MIN_ACCESS_SYM LCidentifier
+{
+   $$ = AccessFromText($2);
+}
+|
+{
+   $$ = 0;
+}
 ;
-
 
 SnmpStatusPart:
     STATUS_SYM LCidentifier
 {
-    if (strcmp ($2, "mandatory") == 0)
-    $$ = SNMP_MANDATORY;
-    else if (strcmp ($2, "optional") == 0)
-    $$ = SNMP_OPTIONAL;
-    else if (strcmp ($2, "obsolete") == 0)
-    $$ = SNMP_OBSOLETE;
-    else if (strcmp ($2, "current") == 0)
-    $$ = SNMP_CURRENT;
-    else if (strcmp ($2, "deprecated") == 0)
-    $$ = SNMP_DEPRECATED;
-    else
-    {
-        mperror ("STATUS field can only be one of \"optional\", \"obsolete\" or \"deprecated\" \"current\"");
-        $$ = -1;
+   static char *pStatusText[] = { "mandatory", "optional", "obsolete",
+                                  "deprecated", "current", NULL };
+   int i;
+
+   for(i = 0; pStatusText[i] != NULL; i++)
+      if (!stricmp(pStatusText[i], $2))
+      {
+         $$ = i + 1;
+         break;
+      }
+   if (pStatusText[i] == NULL)
+   {
+      char szBuffer[256];
+
+      sprintf(szBuffer, "Invalid STATUS value \"%s\"", $2);
+      mperror(szBuffer);
    }
 }
 ;
 
 SnmpReferencePart:
     REFERENCE_SYM CharString
-{ $$ = $2; }
-| { $$ = NULL; }
+|
 ;
 
 SnmpDisplayHintPart:
     DISPLAY_HINT_SYM CharString
-{
-    $$ = $2;
-}
-| { $$ = NULL; }
+|
 ;
 
 SnmpIndexPart:
     INDEX_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
-{
-    $$  = $3;
-}
-| AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM LineNo
-{
-    SnmpSymbolType *ie=MT (SnmpSymbolType);
-    ie->name = $3;
-    ie->resolved = FALSE;
-    ie->lineNo = $5;
-    $$ = lstNew();
-    ubi_dlAddTail($$,ie);
-}
-| { $$ = NULL; }
+|   AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM
+|
 ;
 
 SnmpDefValPart:
     DEFVAL_SYM LEFT_BRACE_SYM NumericValueItem RIGHT_BRACE_SYM
-{
-    $$ = MT( SnmpDefValType );
-
-    if ( $3->valueType == VALUETYPE_INTEGER )
-	{
-        $$->type = VALUETYPE_INTEGER;
-        $$->defVal.intVal = $3->value.intVal;
-	}
-    else if ( $3->valueType == VALUETYPE_NAMED_NUMBER )
-	{
-        $$->type = VALUETYPE_NAMED_NUMBER;
-        $$->defVal.namedNumber.name = $3->name;
-        $$->defVal.namedNumber.intVal = $3->value.intVal;
-	}
-    else if ( $3->valueType == VALUETYPE_NAMED_VALUE )
-	{
-	int len=$3->value.strVal.len;
-	char *src = $3->value.strVal.text;
-	char *dst = $$->defVal.strVal.text;
-
-        $$->type = VALUETYPE_NAMED_VALUE;
-        $$->defVal.strVal.type = SNMP_ASCII_STRING;
-        $$->defVal.strVal.text = (char *)malloc( len );
-        $$->defVal.strVal.len = len;
-		/* yes, this is exactly to make this fit on one line */
-		memcpy(src, dst, len);
-	}
-    else if ( $3->valueType == VALUETYPE_RANGE_VALUE )
-	{
-	   char tPtr[200];
-	   sprintf(tPtr,"Invalid DEFVAL Specification %ld...%ld",
-                    $3->value.rangeValue.lowerEndValue,
-	                $3->value.rangeValue.upperEndValue );
-	    mperror(tPtr);
-		$$=NULL;
-	}
-	free($3);
-
-}
-|  DEFVAL_SYM LEFT_BRACE_SYM BinaryString RIGHT_BRACE_SYM
-{
-    $$ = MT( SnmpDefValType );
-    $$->type = VALUETYPE_OCTET_STRING;
-    $$->defVal.strVal.type = SNMP_BINARY_STRING;
-    $$->defVal.strVal.text = $3;
-    $$->defVal.strVal.len = strlen($3);
-}
-| DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
-{
-    $$ = MT( SnmpDefValType );
-    $$->type = VALUETYPE_OCTET_STRING;
-    $$->defVal.strVal.type = SNMP_HEX_STRING;
-    $$->defVal.strVal.text = $3;
-    $$->defVal.strVal.len = strlen($3);
-}
-| DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
-{
-    $$ = MT( SnmpDefValType );
-    $$->type = VALUETYPE_OCTET_STRING;
-    $$->defVal.strVal.type = SNMP_ASCII_STRING;
-    $$->defVal.strVal.text = $3;
-    $$->defVal.strVal.len = strlen($3);
-}
-| DEFVAL_SYM AssignedIdentifierList
-{
-    /* This is the default value type for Object Identifier types */
-    $$ = MT( SnmpDefValType );
-    $$->type = VALUETYPE_OID;
-    $$->defVal.oidListPtr = $2;
-}
-| { $$ = NULL; }
+|   DEFVAL_SYM LEFT_BRACE_SYM BinaryString RIGHT_BRACE_SYM
+|   DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
+|   DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
+|   DEFVAL_SYM AssignedIdentifierList
+|
 ;
-
-ObjectIdentifierAssignment:
-    LCidentifier OBJECT_IDENTIFIER_SYM AssignedIdentifier LineNo
-{
-    $$ = MT (SnmpObjectType);
-    $$->name = $1;
-    $$->oidListPtr = $3;
-    $$->hasGroup = FALSE;
-    $$->resolved = FALSE;
-}
-| LCidentifier AssignedIdentifier LineNo
-{
-    $$ = MT (SnmpObjectType);
-    $$->name = $1;
-    $$->oidListPtr = $2;
-    $$->hasGroup = FALSE;
-    $$->resolved = FALSE;
-}
-;
-
 
 BinaryString:
     BSTRING_SYM
@@ -1567,815 +1039,130 @@ HexString:
 
 CharString:
     CSTRING_SYM
-;
-
-AssignedIdentifierList:
-    LEFT_BRACE_SYM ObjectIdentifierList RIGHT_BRACE_SYM
 {
-    $$ = $2;
-}
-;
-
-AssignedIdentifier:
-    ASSIGNMENT_SYM AssignedIdentifierList
-{
-    $$ = $2;
-}
-| ASSIGNMENT_SYM Number
-{
-    OID *oid = MT (OID);
-    oid->nodeName = NULL;
-	if ( $2.type == SNMP_INTEGER32 )
-	{
-        oid->oidVal = $2.data.intVal;
-	}
-    $$ = lstNew();
-    ubi_dlAddTail($$,oid);
-}
-;
-
-ObjectIdentifierList:
-    ObjectIdentifierList ObjectIdentifier
-{
-    ubi_dlAddTail($1 ,$2);
-}
-| ObjectIdentifier
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
-;
-
-ObjectIdentifier:
-    NumericValue
-{
-    $$ = MT (OID);
-    if ( $1->valueType == VALUETYPE_INTEGER )
-	{
-        $$->nodeName = NULL;
-        $$->oidVal = $1->value.intVal;
-	}
-    else if ( $1->valueType == VALUETYPE_NAMED_NUMBER )
-	{
-        $$->nodeName = $1->name;
-        $$->oidVal = $1->value.intVal;
-	}
-    else if ( $1->valueType == VALUETYPE_NAMED_VALUE )
-	{
-        $$->nodeName = (char *)malloc( $1->value.strVal.len + 1 );
-		sprintf($$->nodeName,"%.*s",$1->value.strVal.len,$1->value.strVal.text);
-        $$->oidVal = 0;
-	}
-    else if ( $1->valueType == VALUETYPE_RANGE_VALUE )
-	{
-	   char tPtr[200];
-	   sprintf(tPtr,"Invalid OID Specification %ld...%ld",
-                    $1->value.rangeValue.lowerEndValue,
-	                $1->value.rangeValue.upperEndValue );
-	    mperror(tPtr);
-		$$=NULL;
-	}
-	free($1);
+   $$ = $1;
 }
 ;
 
 SymbolsFromModuleList:
     SymbolsFromModuleList SymbolsFromModule
 {
-    ubi_dlAddTail($1 ,$2);
+   da_add($$, $2);
 }
-| SymbolsFromModule
+|   SymbolsFromModule
 {
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
+   $$ = da_create();
+   da_add($$, $1);
 }
 ;
 
 SymbolsFromModule:
-    SymbolList FROM_SYM LineNo UCidentifier
+    SymbolList FROM_SYM UCidentifier
 {
-    $$ = MT (SnmpImportModuleType);
-    $$->module.name   = $4;
-    $$->lineNo = $3;
-    $$->imports = $1;
+   $$ = CREATE(MP_IMPORT_MODULE);
+   $$->pszName = $3;
+   $$->pSymbols = $1;
 }
 ;
 
 SymbolList:
-    SymbolList COMMA_SYM Symbol LineNo
+    SymbolList COMMA_SYM Symbol
 {
-    SnmpSymbolType *ie=MT (SnmpSymbolType);
-    ie->name = $3;
-    ie->resolved = FALSE;
-    ie->lineNo = $4;
-    ubi_dlAddTail($1,ie);
-	$$=$1
+   da_add($$, $3);
 }
-| Symbol LineNo
+|   Symbol
 {
-    SnmpSymbolType *ie=MT (SnmpSymbolType);
-    ie->name = $1;
-    ie->resolved = FALSE;
-    ie->lineNo = $2;
-    /* called for the first element only, so create list head */
-    $$ = lstNew();
-    ubi_dlAddTail($$,ie);
+   $$ = da_create();
+   da_add($$, $1);
 }
 ;
 
 Symbol:
-  UCidentifier { $$ = $1 }
-| LCidentifier { $$ = $1 }
-| IMPLIED_SYM LCidentifier { $$ = $2 }
-;
-
-DummySymbolList:
-    DummySymbolList COMMA_SYM DummySymbol LineNo
-| DummySymbol LineNo
-;
-
-DummySymbol:
-  UCidentifier
-| LCidentifier
-| IMPLIED_SYM LCidentifier
-;
-
-AssignmentList:
-    AssignmentList Assignment
+    UCidentifier
 {
-    ubi_dlAddTail($1,$2);
-	if ( ( $2->dataType != DATATYPE_VALUE ) ||
-	     ( $2->data.value->valueType != VALUETYPE_KEYWORD ) )
-	{
-	    bind_keywords($1,$2);
-	}
-    $$ = $1;
+   $$ = $1;
 }
-| Assignment
+|   LCidentifier
 {
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-	if ( ( $1->dataType != DATATYPE_VALUE ) ||
-	     ( $1->data.value->valueType != VALUETYPE_KEYWORD ) )
-	{
-	    bind_keywords($$,$1);
-	}
+   $$ = $1;
+}
+|   IMPLIED_SYM LCidentifier
+{
+   $$ = $2;
 }
 ;
-
-Assignment:
-    ObjectIdentifierAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_OID;
-    $$->data.value->value.oidListPtr = $1->oidListPtr;
-    $$->data.value->lineNo = $2;
-}
-| ObjectIdentityAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_OID;
-    $$->data.value->value.oidListPtr = $1->oidListPtr;
-    $$->data.value->lineNo = $2;
-}
-| ObjectTypeAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT(Value);
-    $$->data.value->valueType = VALUETYPE_OBJECT_TYPE;
-    $$->data.value->name = $1->name;
-    $$->data.value->lineNo = $2;
-    $$->data.value->value.object = $1;
-}
-| MacroAssignment LineNo
-{
-    $$=$1;
-    $$->data.value->lineNo = $2;
-}
-| TypeOrValueAssignment LineNo
-{
-    $$=$1;
-    $$->data.value->lineNo = $2;
-}
-| SnmpNotificationTypeAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_NOTIFICATION;
-    $$->data.value->value.notificationInfo = $1;
-    $$->data.value->lineNo = $2;
-}
-| ModuleComplianceAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_TYPE;
-    $$->hasKeyword = FALSE;
-    $$->data.type = MT ( Type );
-    $$->data.type->name = $1->name;
-    $$->data.type->type = SNMP_MODULE_COMPLIANCE;
-    $$->data.type->typeData.moduleCompliance = $1;
-    $$->data.type->lineNo = $2;
-}
-| SnmpNotificationGroupAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_GROUP_VALUE;
-    $$->data.value->value.group = $1;
-    $$->data.value->lineNo = $2;
-}
-| SnmpObjectGroupAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_GROUP_VALUE;
-    $$->data.value->value.group = $1;
-    $$->data.value->lineNo = $2;
-}
-| SnmpKeywordAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->data.keyword.name;
-    $$->data.value->valueType = VALUETYPE_KEYWORD;
-    $$->data.value->value.keywordValue = $1;
-    $$->data.value->lineNo = $2;
-}
-| AgentCapabilitiesAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_CAPABILITIES;
-    $$->data.value->value.agentCapabilitiesValue = $1;
-    $$->data.value->lineNo = $2;
-}
-| ModuleIdentityAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_MODULE_IDENTITY;
-    $$->data.value->value.moduleIdentityValue = $1;
-    $$->data.value->lineNo = $2;
-}
-| ModuleIdentifierAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = $1->name;
-    $$->data.value->valueType = VALUETYPE_MODULE;
-    $$->data.value->value.moduleValue = $1;
-    $$->data.value->lineNo = $2;
-}
-| ImportsAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_VALUE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = NULL;
-    $$->data.value->valueType = VALUETYPE_IMPORTS;
-    $$->data.value->value.importListPtr = $1;
-    $$->data.value->lineNo = $2;
-}
-| ExportsAssignment LineNo
-{
-    $$ = MT (TypeOrValue);
-    $$->dataType = DATATYPE_NONE;
-    $$->hasKeyword = FALSE;
-    $$->data.value = MT( Value );
-    $$->data.value->name = NULL;
-    $$->data.value->valueType = VALUETYPE_NULL;
-    $$->data.value->lineNo = $2;
-}
-;
-
-Type:
-    BuiltInType
-{
-    $$=$1;
-}
-| NamedType
-{
-    $$=$1;
-}
-| BuiltInType ValueConstraint
-{
-    $$=$1;
-    $$->typeData.values=$2;
-}
-| NamedType ValueConstraint
-{
-    $$=$1;
-    $$->typeData.values=$2;
-}
-;
-
-NamedType:
-    SnmpTypeTagPart UCidentifier LineNo
-{
-    $$ = MT (Type);
-    $$->tags = $1;
-    $$->name = $2;
-    $$->lineNo = $3;
-    $$->type = SNMP_NAMED_TYPE;
-    $$->resolved = FALSE;
-	/* the base type of named types is unknown
-	 * until post parse resolution
-	 */
-}
-;
-
-BuiltInType:
-    SnmpTypeTagPart INTEGER_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->name = strdup("INTEGER");
-    $$->type = SNMP_INTEGER;
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 2;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart IMPLICIT_SYM INTEGER_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->name = strdup("INTEGER");
-    $$->type = SNMP_INTEGER;
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 2;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $4;
-}
-| SnmpTypeTagPart INTEGER32_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_INTEGER32;
-    $$->name = strdup("Integer32");
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 2;
-    $$->resolved = TRUE;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue = 0x80000000;
-    $$->typeData.values->a.valueRange.upperEndValue = 0x7FFFFFFF;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart UNSIGNED32_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_UNSIGNED32;
-    $$->name = strdup("Unsigned32");
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 2;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0xFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart COUNTER_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_COUNTER;
-    $$->name = strdup("Counter");
-    $$->implicit.tagClass = TAG_TYPE_APPLICATION;
-    $$->implicit.className = strdup("APPLICATION");
-    $$->implicit.tagVal = 1;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0xFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart COUNTER32_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_COUNTER32;
-    $$->name = strdup("Counter32");
-    $$->implicit.tagClass = TAG_TYPE_APPLICATION;
-    $$->implicit.className = strdup("APPLICATION");
-    $$->implicit.tagVal = 1;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0xFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart COUNTER64_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_COUNTER64;
-    $$->name = strdup("Counter64");
-    $$->implicit.tagClass = TAG_TYPE_APPLICATION;
-    $$->implicit.className = strdup("APPLICATION");
-    $$->implicit.tagVal = 6;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.bigValueRange.lowerEndValue = 0;
-    $$->typeData.values->a.bigValueRange.upperEndValue = 0xFFFFFFFFFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart GAUGE_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_GAUGE;
-    $$->name = strdup("Gauge");
-    $$->implicit.tagClass = TAG_TYPE_APPLICATION;
-    $$->implicit.className = strdup("APPLICATION");
-    $$->implicit.tagVal = 2;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0xFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart GAUGE32_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_GAUGE32;
-    $$->name = strdup("Gauge32");
-    $$->implicit.tagClass = TAG_TYPE_APPLICATION;
-    $$->implicit.className = strdup("APPLICATION");
-    $$->implicit.tagVal = 2;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0xFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart TIMETICKS_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_TIME_TICKS;
-    $$->name = strdup("TimeTicks");
-    $$->implicit.tagClass = TAG_TYPE_APPLICATION;
-    $$->implicit.className = strdup("APPLICATION");
-    $$->implicit.tagVal = 3;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0xFFFFFFFF;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SEQUENCE_SYM OF_SYM NamedType
-{
-    $$ = $3;
-	/*
-	 * This does not just identify a named type, it identifies
-	 * a specific class of named type.
-	 */
-	$$->type = SNMP_SEQUENCE_IDENTIFIER;
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 16;
-}
-| SnmpTypeTagPart OBJECT_IDENTIFIER_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_OID;
-    $$->name = strdup("OBJECT IDENTIFIER");
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 6;
-    $$->resolved = TRUE;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-| SnmpTypeTagPart OctetStringType LineNo
-{
-    $$ = $2;
-    $$->implicit.tagClass = TAG_TYPE_UNIVERSAL;
-    $$->implicit.className = strdup("UNIVERSAL");
-    $$->implicit.tagVal = 4;
-    $$->tags = $1;
-    $$->lineNo = $3;
-}
-;
-
-DefinedValue:
-    UCidentifier DOT_SYM LCidentifier
-{
-    void *t_ptr=(void *)mpalloc(strlen((void *)$1)+strlen((void *)$3)+2);
-    sprintf(t_ptr,"%s.%s",$1,$3);
-    $$=t_ptr;
-}
-| LCidentifier  /* a named elmt ref  */
-{
-    $$=$1;
-}
-;
-
 
 SequenceItem:
-    Identifier LineNo Type 
-{
-    $$ = MT (SnmpSequenceItemType);
-    $$->name = $1;
-    $$->resolved = FALSE;
-/* 
- * Both the sequence item and the sequence item
- * type should be resolvable (and resolved) by the post parser.
- * otherwise there is probably a syntax error in the mib
- */
-    $$->lineNo = $2;
-    $$->type = $3;
-}
+    Identifier Type
 ;
 
 SequenceList:
     SequenceItem
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
 | SequenceList COMMA_SYM SequenceItem
-{
-    ubi_dlAddTail( $1, $3 );
-    $$ = $1;
-}
 ;
 
 SequenceAssignment:
     LEFT_BRACE_SYM SequenceList RIGHT_BRACE_SYM
-{
-    $$ = MT (Type);
-    $$->type = SNMP_SEQUENCE;
-    $$->resolved = TRUE;
-    $$->typeData.sequence = MT(SnmpSequenceType);
-    $$->typeData.sequence->sequence = $2;
-}
 ;
 
 SnmpTypeTagPart:
     SnmpTypeTagList
-| { $$ = NULL; }
+|
 ;
 
 SnmpTypeTagList:
     SnmpTypeTagList SnmpTypeTagItem 
-{
-    ubi_dlAddTail( $1, $2 );
-    $$ = $1;
-}
-| SnmpTypeTagItem
-{
-    $$ = lstNew();
-    ubi_dlAddTail($$,$1);
-}
+|   SnmpTypeTagItem
 ;
 
 SnmpTypeTagItem:
     LEFT_BRACKET_SYM UCidentifier Number RIGHT_BRACKET_SYM
-{
-    $$ = MT( SnmpTagType );
-
-    if( strcmp( $2, "UNIVERSAL" ) )
-    {
-         $$->tagClass = TAG_TYPE_UNIVERSAL;
-         $$->className = strdup("UNIVERSAL");
-    }
-    else if( strcmp( $2, "APPLICATION" ) )
-    {
-         $$->tagClass = TAG_TYPE_APPLICATION;
-         $$->className = strdup("APPLICATION");
-    }
-    else if( strcmp( $2, "PRIVATE" ) )
-    {
-         $$->tagClass = TAG_TYPE_PRIVATE;
-         $$->className = strdup("PRIVATE");
-    }
-    else
-    {
-         $$->tagClass = TAG_TYPE_CONTEXT;
-         $$->className = strdup($2);
-    }
-	if ( $3.type == SNMP_INTEGER32 )
-	{
-        $$->tagVal = $3.data.intVal;
-	}
-}
 ;
 
 OctetStringType:
-    OCTET_SYM STRING_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_OCTET_STRING;
-    $$->name = strdup("OCTET STRING");
-    $$->resolved = TRUE;
-    $$->implied = FALSE;
-    $$->lineNo = $3;
-}
-| EXPLICIT_SYM OCTET_SYM STRING_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->name = strdup("EXPLICIT OCTET STRING");
-    $$->type = SNMP_OCTET_STRING;
-    $$->resolved = TRUE;
-    $$->implied = FALSE;
-    $$->lineNo = $4;
-}
-| IMPLICIT_SYM OCTET_SYM STRING_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_OCTET_STRING;
-    $$->name = strdup("IMPLICIT OCTET STRING");
-    $$->resolved = TRUE;
-    $$->implied = FALSE;
-    $$->lineNo = $4;
-}
-| IP_ADDRESS_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_IP_ADDR;
-    $$->name = strdup("IpAddress");
-    $$->resolved = TRUE;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0x4;
-    $$->lineNo = $2;
-}
-| NETWORK_ADDRESS_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->name = strdup("NetworkAddress");
-    $$->type = SNMP_NETWORK_ADDR;
-    $$->resolved = TRUE;
-	$$->typeData.values = MT ( SnmpValueConstraintType );
-    $$->typeData.values->a.valueRange.lowerEndValue  = 0;
-    $$->typeData.values->a.valueRange.upperEndValue = 0x4;
-    $$->lineNo = $2;
-}
-| OPAQUE_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_OPAQUE_DATA;
-    $$->name = strdup("Opaque");
-    $$->resolved = TRUE;
-    $$->lineNo = $2;
-}
-| BITS_SYM LineNo
-{
-    $$ = MT (Type);
-    $$->type = SNMP_BITS;
-    $$->name = strdup("BITS");
-    $$->resolved = TRUE;
-    $$->lineNo = $2;
-}
+    OCTET_SYM STRING_SYM
+|   EXPLICIT_SYM OCTET_SYM STRING_SYM
+|   IMPLICIT_SYM OCTET_SYM STRING_SYM
+|   IP_ADDRESS_SYM
+|   NETWORK_ADDRESS_SYM
+|   OPAQUE_SYM
+|   BITS_SYM
 ;
 
 Value:
-    Number         /* IntegerValue  or "0" real val*/
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_INTEGER;
-	if ( $1.type == SNMP_INTEGER32 )
-	{
-        $$->value.int32Val = $1.data.intVal;
-	}
-}
-| HexString    /* OctetStringValue or BinaryStringValue */
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_OCTET_STRING;
-    $$->value.strVal.type = SNMP_HEX_STRING;
-    $$->value.strVal.text = $1;
-    $$->value.strVal.len = strlen($1);
-}
-| BinaryString    /*  BinaryStringValue */
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_OCTET_STRING;
-    $$->value.strVal.type = SNMP_BINARY_STRING;
-    $$->value.strVal.text = $1;
-    $$->value.strVal.len = strlen($1);
-}
-| CharString
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_OCTET_STRING;
-    $$->value.strVal.type = SNMP_ASCII_STRING;
-    $$->value.strVal.text = $1;
-    $$->value.strVal.len = strlen($1);
-}
+    Number
+|   HexString
+|   BinaryString
+|   CharString
 ;
 
 NumericValueItem:
     LEFT_BRACE_SYM NumericValue RIGHT_BRACE_SYM
-{
-    /* 
-	 * This is actually required (I guess) by the compiler
-	 * Otherwise the DEFVAL clause can't tell the difference
-	 * between a default value which is a numeric value and
-	 * an OID List
-	 */
-    $$ = $2;
-}
-;
-
-NumericValue:
-    Number
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_INTEGER;
-	if ( $1.type == SNMP_INTEGER32 )
-	{
-        $$->value.int32Val = $1.data.intVal;
-	}
-}
-| DefinedValue
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_NAMED_VALUE;
-    $$->value.strVal.type = SNMP_ASCII_STRING;
-    $$->value.strVal.text = (char *)$1;
-    $$->value.strVal.len = strlen((char *)$1);
-}
-| Number DOT_SYM DOT_SYM Number 
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_RANGE_VALUE;
-	if ( $1.type == SNMP_INTEGER32 )
-	{
-        $$->value.rangeValue.lowerEndValue  = $1.data.intVal;
-	}
-	if ( $4.type == SNMP_INTEGER32 )
-	{
-        $$->value.rangeValue.upperEndValue = $4.data.intVal;
-	}
-}
-| Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
-{
-    $$ = MT( Value );
-    $$->valueType = VALUETYPE_NAMED_NUMBER;
-    $$->name = $1;
-	if ( $3.type == SNMP_INTEGER32 )
-	{
-        $$->value.int32Val = $3.data.intVal;
-	}
-}
-;
-
-Number:
-    NUMBER_SYM
-{
-    $$=$1;
-}
 ;
 
 Identifier:
    UCidentifier
+{
+   $$ = $1;
+}
 |  LCidentifier
+{
+   $$ = $1;
+}
 ;
 
 UCidentifier:
     UCASEFIRST_IDENT_SYM
+{
+   $$ = $1;
+}
 ;
 
 LCidentifier:
     LCASEFIRST_IDENT_SYM
+{
+   $$ = $1;
+}
 ;
 
 End:
@@ -2388,30 +1175,32 @@ Begin:
 
 %%
 
-SnmpParseTree *mpParseMib(char *filename)
+MP_MODULE *ParseMIB(char *pszFilename)
 {
-   mpLineNoG = 1;
-   mpin = fopen(filename, "r");
+   m_pModule = NULL;
+   mpin = fopen(pszFilename, "r");
    if(mpin != NULL)
    {
-	   currentFilename = filename;
+	   m_pszCurrentFilename = pszFilename;
+      g_nCurrLine = 1;
+      InitStateStack();
 	   mpparse();
    }
    else
    {
-      Error(ERR_CANNOT_OPEN_FILE, filename, strerror(errno));
+      Error(ERR_CANNOT_OPEN_FILE, pszFilename, strerror(errno));
       return NULL;
    }
-   return mibTree;
+   return m_pModule;
 }
 
 int mpwrap()
 {
-	return(1);
+	return 1;
 }
 
-int mperror(char *s)
+int mperror(char *pszMsg)
 {
-   Error(ERR_PARSER_ERROR, currentFilename, s, mpLineNoG);
+   Error(ERR_PARSER_ERROR, m_pszCurrentFilename, pszMsg, g_nCurrLine);
    return 0;
 }

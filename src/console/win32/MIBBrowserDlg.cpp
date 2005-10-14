@@ -14,14 +14,6 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
-// Externals
-//
-
-void BuildOIDString(struct tree *pNode, char *pszBuffer);
-char *BuildSymbolicOIDString(struct tree *pNode, DWORD dwInstance);
-
-
-//
 // Control id's in expandable area
 //
 
@@ -43,6 +35,7 @@ CMIBBrowserDlg::CMIBBrowserDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
    m_bIsExpanded = FALSE;
    m_bDisableOIDUpdate = FALSE;
+   m_bDisableSelUpdate = FALSE;
    m_pNode = NULL;
    m_bUseInstance = TRUE;
    m_iOrigin = DS_SNMP_AGENT;
@@ -90,8 +83,7 @@ END_MESSAGE_MAP()
 BOOL CMIBBrowserDlg::OnInitDialog() 
 {
    RECT rect1, rect2;
-   oid oidName[MAX_OID_LEN];
-   unsigned int uNameLen = MAX_OID_LEN;
+   DWORD dwOIDLen, oid[MAX_OID_LEN];
 
 	CDialog::OnInitDialog();
 
@@ -110,15 +102,13 @@ BOOL CMIBBrowserDlg::OnInitDialog()
    Collapse();
 
    // Fill MIB tree
-   memset(&m_mibTreeRoot, 0, sizeof(struct tree));
-   m_mibTreeRoot.label = "[root]";
-   m_mibTreeRoot.child_list = get_tree_head();
-	AddTreeNode(TVI_ROOT, &m_mibTreeRoot);
+	AddTreeNode(TVI_ROOT, g_pMIBRoot);
 
    // Select node with given OID (or closest match)
-   if (read_objid((LPCTSTR)m_strOID, oidName, &uNameLen) != 0)
+   dwOIDLen = SNMPParseOID(m_strOID, oid, MAX_OID_LEN);
+   if (dwOIDLen > 0)
    {
-      SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oidName, uNameLen);
+      SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oid, dwOIDLen);
    }
 
    // Change dialog title
@@ -158,14 +148,14 @@ BOOL CMIBBrowserDlg::OnInitDialog()
 // Add node to tree
 //
 
-void CMIBBrowserDlg::AddTreeNode(HTREEITEM hRoot, tree *pCurrNode)
+void CMIBBrowserDlg::AddTreeNode(HTREEITEM hRoot, SNMP_MIBObject *pCurrNode)
 {
-   struct tree *pNode;
+   SNMP_MIBObject *pNode;
    HTREEITEM hItem;
 
-   hItem = m_wndTreeCtrl.InsertItem(pCurrNode->label, 0, 0, hRoot, TVI_LAST);
+   hItem = m_wndTreeCtrl.InsertItem(CHECK_NULL(pCurrNode->Name()), 0, 0, hRoot, TVI_LAST);
    m_wndTreeCtrl.SetItemData(hItem, (DWORD)pCurrNode);
-   for(pNode = pCurrNode->child_list; pNode != NULL; pNode = pNode->next_peer)
+   for(pNode = pCurrNode->FirstChild(); pNode != NULL; pNode = pNode->Next())
       AddTreeNode(hItem, pNode);
    m_wndTreeCtrl.SortChildren(hItem);
 }
@@ -178,25 +168,27 @@ void CMIBBrowserDlg::AddTreeNode(HTREEITEM hRoot, tree *pCurrNode)
 void CMIBBrowserDlg::OnSelchangedTreeMib(NMHDR *pNMHDR, LRESULT *pResult) 
 {
 	NMTREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
-   struct tree *pNode;
+   SNMP_MIBObject *pNode;
    char *pszTemp, szBuffer[MAX_OID_LEN * 8];
 
-   pNode = (struct tree *)m_wndTreeCtrl.GetItemData(pNMTreeView->itemNew.hItem);
+   pNode = (SNMP_MIBObject *)m_wndTreeCtrl.GetItemData(pNMTreeView->itemNew.hItem);
 
    if (!m_bDisableOIDUpdate)
    {
       BuildOIDString(pNode, szBuffer);
+      m_bDisableSelUpdate = TRUE;
       m_wndEditOID.SetWindowText(szBuffer);
+      m_bDisableSelUpdate = FALSE;
    }
 
-   pszTemp = TranslateUNIXText(pNode->description != NULL ? pNode->description : "");
+   pszTemp = TranslateUNIXText(CHECK_NULL_EX(pNode->Description()));
    m_wndEditDescription.SetWindowText(pszTemp);
    free(pszTemp);
 
-   m_wndEditStatus.SetWindowText(CodeToText(pNode->status, g_ctSnmpMibStatus, ""));
-   m_wndEditAccess.SetWindowText(CodeToText(pNode->access, g_ctSnmpMibAccess, ""));
-   m_wndEditType.SetWindowText(CodeToText(pNode->type, g_ctSnmpMibType, ""));
-   m_iSnmpDataType = pNode->type;   // Store data type of current node
+   m_wndEditStatus.SetWindowText(CodeToText(pNode->Status(), g_ctSnmpMibStatus, _T("")));
+   m_wndEditAccess.SetWindowText(CodeToText(pNode->Access(), g_ctSnmpMibAccess, _T("")));
+   m_wndEditType.SetWindowText(CodeToText(pNode->Type(), g_ctSnmpMibType, _T("")));
+   m_iSnmpDataType = pNode->Type();   // Store data type of current node
 
    pszTemp = BuildSymbolicOIDString(pNode, m_dwInstance);
    m_wndEditOIDText.SetWindowText(pszTemp);
@@ -288,23 +280,23 @@ HBRUSH CMIBBrowserDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 // Select node with given OID
 //
 
-void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, oid *oidName, unsigned int uNameLen)
+void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, DWORD *pdwOID, unsigned int uNameLen)
 {
    HTREEITEM hItem;
-   struct tree *pNode;
+   SNMP_MIBObject *pNode;
    BOOL bMatch = FALSE;
 
    for(hItem = m_wndTreeCtrl.GetChildItem(hRoot); hItem != NULL; 
        hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT))
    {
-      pNode = (struct tree *)m_wndTreeCtrl.GetItemData(hItem);
-      if (pNode->subid == oidName[0])
+      pNode = (SNMP_MIBObject *)m_wndTreeCtrl.GetItemData(hItem);
+      if (pNode->OID() == pdwOID[0])
       {
          bMatch = TRUE;
          if (uNameLen == 1)
             m_wndTreeCtrl.SelectItem(hItem);
          else
-            SelectNode(hItem, &oidName[1], uNameLen - 1);
+            SelectNode(hItem, &pdwOID[1], uNameLen - 1);
       }
    }
    if ((!bMatch) && (hRoot != TVI_ROOT))
@@ -319,16 +311,19 @@ void CMIBBrowserDlg::SelectNode(HTREEITEM hRoot, oid *oidName, unsigned int uNam
 void CMIBBrowserDlg::OnChangeEditOid() 
 {
    TCHAR szBuffer[1024];
-   oid oidName[MAX_OID_LEN];
-   unsigned int uNameLen = MAX_OID_LEN;
+   DWORD dwOIDLen, oid[MAX_OID_LEN];
 
    // Select node with given OID (or closest match)
-   m_wndEditOID.GetWindowText(szBuffer, 1024);
-   if (read_objid(szBuffer, oidName, &uNameLen) != 0)
+   if (!m_bDisableSelUpdate)
    {
-      m_bDisableOIDUpdate = TRUE;   // Prevent edit box text replacement when tree selection changes
-      SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oidName, uNameLen);
-      m_bDisableOIDUpdate = FALSE;
+      m_wndEditOID.GetWindowText(szBuffer, 1024);
+      dwOIDLen = SNMPParseOID(szBuffer, oid, MAX_OID_LEN);
+      if (dwOIDLen > 0)
+      {
+         m_bDisableOIDUpdate = TRUE;   // Prevent edit box text replacement when tree selection changes
+         SelectNode(m_wndTreeCtrl.GetChildItem(TVI_ROOT), oid, dwOIDLen);
+         m_bDisableOIDUpdate = FALSE;
+      }
    }
 }
 
@@ -349,10 +344,10 @@ void CMIBBrowserDlg::OnChangeEditInstance()
    hItem = m_wndTreeCtrl.GetNextItem(NULL, TVGN_CARET);
    if (hItem != NULL)
    {
-      struct tree *pNode;
+      SNMP_MIBObject *pNode;
       char *pszTemp;
 
-      pNode = (struct tree *)m_wndTreeCtrl.GetItemData(hItem);
+      pNode = (SNMP_MIBObject *)m_wndTreeCtrl.GetItemData(hItem);
 
       pszTemp = BuildSymbolicOIDString(pNode, m_dwInstance);
       m_wndEditOIDText.SetWindowText(pszTemp);
@@ -421,18 +416,20 @@ void CMIBBrowserDlg::OnOK()
    // Convert SNMP data type to NetXMS data type
    switch(m_iSnmpDataType)
    {
-      case TYPE_INTEGER:
-      case TYPE_INTEGER32:
+      case MIB_TYPE_INTEGER:
+      case MIB_TYPE_INTEGER32:
          m_iDataType = DCI_DT_INT;
          break;
-      case TYPE_COUNTER:
-      case TYPE_GAUGE:
-      case TYPE_TIMETICKS:
-      case TYPE_UINTEGER:
-      case TYPE_UNSIGNED32:
+      case MIB_TYPE_COUNTER:
+      case MIB_TYPE_COUNTER32:
+      case MIB_TYPE_GAUGE:
+      case MIB_TYPE_GAUGE32:
+      case MIB_TYPE_TIMETICKS:
+      case MIB_TYPE_UINTEGER:
+      case MIB_TYPE_UNSIGNED32:
          m_iDataType = DCI_DT_UINT;
          break;
-      case TYPE_COUNTER64:
+      case MIB_TYPE_COUNTER64:
          m_iDataType = DCI_DT_UINT64;
          break;
       default:

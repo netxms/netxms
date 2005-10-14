@@ -23,8 +23,10 @@
 #ifndef _nxsnmp_h_
 #define _nxsnmp_h_
 
+#ifdef __cplusplus
 #include <nms_common.h>
 #include <nms_threads.h>
+#endif
 
 #ifdef _WIN32
 #ifdef LIBNXSNMP_EXPORTS
@@ -166,23 +168,64 @@
 // MIB object access types
 //
 
-#define MIB_ACCESS_READONLY      0
-#define MIB_ACCESS_READWRITE     1
-#define MIB_ACCESS_WRITEONLY     5
-#define MIB_ACCESS_NOACCESS      3
-#define MIB_ACCESS_NOTIFY        4
-#define MIB_ACCESS_CREATE        2
+#define MIB_ACCESS_READONLY      1
+#define MIB_ACCESS_READWRITE     2
+#define MIB_ACCESS_WRITEONLY     3
+#define MIB_ACCESS_NOACCESS      4
+#define MIB_ACCESS_NOTIFY        5
+#define MIB_ACCESS_CREATE        6
 
 
 //
 // MIB object status codes
 //
 
-#define MIB_STATUS_MANDATORY     0
-#define MIB_STATUS_OPTIONAL      1
-#define MIB_STATUS_OBSOLETE      2
-#define MIB_STATUS_DEPRECATED    3
-#define MIB_STATUS_CURRENT       4
+#define MIB_STATUS_MANDATORY     1
+#define MIB_STATUS_OPTIONAL      2
+#define MIB_STATUS_OBSOLETE      3
+#define MIB_STATUS_DEPRECATED    4
+#define MIB_STATUS_CURRENT       5
+
+
+//
+// MIB object data types
+//
+
+#define MIB_TYPE_OTHER                 0
+#define MIB_TYPE_IMPORT_ITEM           1
+#define MIB_TYPE_OBJID                 2
+#define MIB_TYPE_BITSTRING             3
+#define MIB_TYPE_INTEGER               4
+#define MIB_TYPE_INTEGER32             5
+#define MIB_TYPE_INTEGER64             6
+#define MIB_TYPE_UNSIGNED32            7
+#define MIB_TYPE_COUNTER               8
+#define MIB_TYPE_COUNTER32             9
+#define MIB_TYPE_COUNTER64             10
+#define MIB_TYPE_GAUGE                 11
+#define MIB_TYPE_GAUGE32               12
+#define MIB_TYPE_TIMETICKS             13
+#define MIB_TYPE_OCTETSTR              14
+#define MIB_TYPE_OPAQUE                15
+#define MIB_TYPE_IPADDR                16
+#define MIB_TYPE_PHYSADDR              17
+#define MIB_TYPE_NETADDR               18
+#define MIB_TYPE_NAMED_TYPE            19
+#define MIB_TYPE_SEQID                 20
+#define MIB_TYPE_SEQUENCE              21
+#define MIB_TYPE_CHOICE                22
+#define MIB_TYPE_TEXTUAL_CONVENTION    23
+#define MIB_TYPE_MACRO_DEFINITION      24
+#define MIB_TYPE_MODCOMP               25
+#define MIB_TYPE_TRAPTYPE              26
+#define MIB_TYPE_NOTIFTYPE             27
+#define MIB_TYPE_MODID                 28
+#define MIB_TYPE_NSAPADDRESS           29
+#define MIB_TYPE_AGENTCAP              30
+#define MIB_TYPE_UINTEGER              31
+#define MIB_TYPE_NULL                  32
+#define MIB_TYPE_OBJGROUP              33
+#define MIB_TYPE_NOTIFGROUP            34
 
 
 //
@@ -195,6 +238,8 @@
 
 #endif      /* NXSNMP_WITH_NET_SNMP */
 
+
+#ifdef __cplusplus
 
 //
 // MIB tree node
@@ -228,12 +273,20 @@ public:
    void SetParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
    void AddChild(SNMP_MIBObject *pObject);
    void SetInfo(int iType, int iStatus, int iAccess, TCHAR *pszDescription);
+   void SetName(TCHAR *pszName) { safe_free(m_pszName); m_pszName = _tcsdup(pszName); }
 
    SNMP_MIBObject *Parent(void) { return m_pParent; }
    SNMP_MIBObject *Next(void) { return m_pNext; }
    SNMP_MIBObject *Prev(void) { return m_pPrev; }
    SNMP_MIBObject *FirstChild(void) { return m_pFirst; }
    SNMP_MIBObject *LastChild(void) { return m_pLast; }
+
+   DWORD OID(void) { return m_dwOID; }
+   const TCHAR *Name(void) { return m_pszName; }
+   const TCHAR *Description(void) { return m_pszDescription; }
+   int Type(void) { return m_iType; }
+   int Status(void) { return m_iStatus; }
+   int Access(void) { return m_iAccess; }
 
    SNMP_MIBObject *FindChildByID(DWORD dwOID);
 
@@ -401,5 +454,6 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError);
 DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot, DWORD dwFlags);
 DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRoot);
 
+#endif   /* __cplusplus */
 
 #endif

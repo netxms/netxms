@@ -259,6 +259,14 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
 
 
 //
+// MIB functions
+//
+
+void BuildOIDString(SNMP_MIBObject *pNode, char *pszBuffer);
+char *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance);
+
+
+//
 // Utility functions
 //
 
@@ -274,14 +282,6 @@ long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault);
 DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
 void CopyMenuItems(CMenu *pDst, CMenu *pSrc);
 CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart);
-
-
-//
-// MIB functions
-//
-
-BOOL CreateMIBTree(void);
-void DestroyMIBTree(void);
 
 
 //
@@ -337,6 +337,7 @@ extern CODE_TO_TEXT g_ctNodeType[];
 extern DWORD g_dwNumObjectTools;
 extern NXC_OBJECT_TOOL *g_pObjectToolList;
 extern CMenu *g_pObjectToolsMenu;
+extern SNMP_MIBObject *g_pMIBRoot;
 
 
 //

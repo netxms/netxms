@@ -200,7 +200,16 @@ static DWORD WINAPI LoginThread(void *pArg)
                break;
          NXCDestroyMIBList(pMibList);
          if (dwResult == RCC_SUCCESS)
-            CreateMIBTree();
+         {
+            if (SNMPLoadMIBTree("C:\\netxms.mib", &g_pMIBRoot) == SNMP_ERR_SUCCESS)
+            {
+               g_pMIBRoot->SetName(_T("[root]"));
+            }
+            else
+            {
+               g_pMIBRoot = new SNMP_MIBObject(0, _T("[root]"));
+            }
+         }
       }
    }
 

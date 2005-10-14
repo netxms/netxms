@@ -3,9 +3,9 @@
           CDX-6500-COMMON-MIB DEFINITIONS ::= BEGIN
 
           IMPORTS
-                  mgmt, NetworkAddress, IpAddress, Counter, Gauge,
+                  mgmt, IpAddress, NetworkAddress, Counter, Gauge,
                           TimeTicks, OBJECT-TYPE, enterprises
-                      FROM SNMPv2-SMI;
+                      FROM RFC1155-SMI;
 
                -- Codex MIB Group definitions
 

@@ -63,7 +63,8 @@ static struct
    { MIBC_ERROR, "Import symbol \"%s\" unresolved" },
    { MIBC_ERROR, "Import module \"%s\" unresolved" },
    { MIBC_ERROR, "Parser error - %s in line %d" },
-   { MIBC_ERROR, "Cannot open input file (%s)" }
+   { MIBC_ERROR, "Cannot open input file (%s)" },
+   { MIBC_ERROR, "Cannot resolve symbol %s" }
 };
 
 

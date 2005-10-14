@@ -26,18 +26,19 @@
 #include "nxcon.h"
 #include <nxnt.h>
 
-#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
-#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/mib_api.h>
-#include <net-snmp/config_api.h>
-
 
 //
 // Session handle
 //
 
 NXC_SESSION g_hSession = NULL;
+
+
+//
+// MIB tree
+//
+
+SNMP_MIBObject *g_pMIBRoot = NULL;
 
 
 //
@@ -222,30 +223,32 @@ CODE_TO_TEXT g_ctSnmpMibAccess[] =
 };
 CODE_TO_TEXT g_ctSnmpMibType[] =
 {
-   { TYPE_OTHER, "Other" },
-   { TYPE_OBJID, "Object ID" }, 
-   { TYPE_OCTETSTR, "Octet String" },
-   { TYPE_INTEGER, "Integer" },
-   { TYPE_NETADDR, "Net Address" },
-   { TYPE_IPADDR, "IP Address" },
-   { TYPE_COUNTER, "Counter" },
-   { TYPE_GAUGE, "Gauge" },
-   { TYPE_TIMETICKS, "Timeticks" },
-   { TYPE_OPAQUE, "Opaque" },
-   { TYPE_NULL, "Null" },
-   { TYPE_COUNTER64, "Counter 64bit" },
-   { TYPE_BITSTRING, "Bit String" },
-   { TYPE_NSAPADDRESS, "NSAP Address" },
-   { TYPE_UINTEGER, "Unsigned Integer" },
-   { TYPE_UNSIGNED32, "Unsigned Integer 32bit" },
-   { TYPE_INTEGER32, "Integer 32bit" },
-   { TYPE_TRAPTYPE, "TRAPTYPE" },
-   { TYPE_NOTIFTYPE, "NOTIFTYPE" },
-   { TYPE_OBJGROUP, "Object Group" },
-   { TYPE_NOTIFGROUP, "NOTIFGROUP" },
-   { TYPE_MODID, "Module ID" },
-   { TYPE_AGENTCAP, "AGENTCAP" },
-   { TYPE_MODCOMP, "MODCOMP" },
+   { MIB_TYPE_OTHER, "Other" },
+   { MIB_TYPE_OBJID, "Object ID" }, 
+   { MIB_TYPE_OCTETSTR, "Octet String" },
+   { MIB_TYPE_INTEGER, "Integer" },
+   { MIB_TYPE_NETADDR, "Net Address" },
+   { MIB_TYPE_IPADDR, "IP Address" },
+   { MIB_TYPE_COUNTER, "Counter" },
+   { MIB_TYPE_COUNTER32, "Counter" },
+   { MIB_TYPE_GAUGE, "Gauge" },
+   { MIB_TYPE_GAUGE32, "Gauge" },
+   { MIB_TYPE_TIMETICKS, "Timeticks" },
+   { MIB_TYPE_OPAQUE, "Opaque" },
+   { MIB_TYPE_NULL, "Null" },
+   { MIB_TYPE_COUNTER64, "Counter 64bit" },
+   { MIB_TYPE_BITSTRING, "Bit String" },
+   { MIB_TYPE_NSAPADDRESS, "NSAP Address" },
+   { MIB_TYPE_UINTEGER, "Unsigned Integer" },
+   { MIB_TYPE_UNSIGNED32, "Unsigned Integer 32bit" },
+   { MIB_TYPE_INTEGER32, "Integer 32bit" },
+   { MIB_TYPE_TRAPTYPE, "Trap" },
+   { MIB_TYPE_NOTIFTYPE, "Notification" },
+   { MIB_TYPE_OBJGROUP, "Object Group" },
+   { MIB_TYPE_NOTIFGROUP, "NOTIFGROUP" },
+   { MIB_TYPE_MODID, "Module ID" },
+   { MIB_TYPE_AGENTCAP, "AGENTCAP" },
+   { MIB_TYPE_MODCOMP, "MODCOMP" },
    { 0, NULL }    // End of list
 };
 

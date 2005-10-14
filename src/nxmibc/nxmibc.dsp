@@ -97,6 +97,10 @@ PostBuild_Cmds=copy Debug\nxmibc.exe ..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\array.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\lex.mp.c
 # End Source File
 # Begin Source File
@@ -110,10 +114,6 @@ SOURCE=.\nxmibc.cpp
 # Begin Source File
 
 SOURCE=.\parser.tab.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\ubi_dLinkList.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -146,14 +146,6 @@ SOURCE=..\..\include\nxsnmp.h
 # Begin Source File
 
 SOURCE=.\parser.tab.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\ubi_dLinkList.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\ubi_null.h
 # End Source File
 # Begin Source File
 

@@ -25,12 +25,6 @@
 #include "stdafx.h"
 #include "nxcon.h"
 
-#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
-#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/mib_api.h>
-#include <net-snmp/config_api.h>
-
 
 //
 // Format time stamp
@@ -99,51 +93,23 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem)
 
 
 //
-// Create SNMP MIB tree
-//
-
-BOOL CreateMIBTree(void)
-{
-   char szBuffer[MAX_PATH + 32];
-
-   init_mib();
-   netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_SAVE_MIB_DESCRS, TRUE);
-   strcpy(szBuffer, g_szWorkDir);
-   strcat(szBuffer, WORKDIR_MIBCACHE);
-   add_mibdir(szBuffer);
-   read_all_mibs();
-   return TRUE;
-}
-
-
-//
-// Destroy previously created MIB tree
-//
-
-void DestroyMIBTree(void)
-{
-   //shutdown_mib();
-}
-
-
-//
 // Build full OID for MIB tree leaf
 //
 
-void BuildOIDString(struct tree *pNode, char *pszBuffer)
+void BuildOIDString(SNMP_MIBObject *pNode, TCHAR *pszBuffer)
 {
    DWORD dwPos, dwSubIdList[MAX_OID_LEN];
    int iBufPos = 0;
-   struct tree *pCurr;
+   SNMP_MIBObject *pCurr;
 
-   if (!strcmp(pNode->label, "[root]"))
+   if (pNode->Parent() == NULL)
    {
       pszBuffer[0] = 0;
    }
    else
    {
-      for(dwPos = 0, pCurr = pNode; pCurr != NULL; pCurr = pCurr->parent)
-         dwSubIdList[dwPos++] = pCurr->subid;
+      for(dwPos = 0, pCurr = pNode; pCurr->Parent() != NULL; pCurr = pCurr->Parent())
+         dwSubIdList[dwPos++] = pCurr->OID();
       while(dwPos > 0)
       {
          sprintf(&pszBuffer[iBufPos], ".%u", dwSubIdList[--dwPos]);
@@ -157,24 +123,26 @@ void BuildOIDString(struct tree *pNode, char *pszBuffer)
 // Build full symbolic OID for MIB tree leaf
 //
 
-char *BuildSymbolicOIDString(struct tree *pNode, DWORD dwInstance)
+TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
 {
    DWORD dwPos, dwSize;
-   char *pszBuffer, *pszSubIdList[MAX_OID_LEN];
+   TCHAR *pszBuffer;
+   const TCHAR *pszSubIdList[MAX_OID_LEN];
    int iBufPos = 0;
-   struct tree *pCurr;
+   SNMP_MIBObject *pCurr;
 
-   if (!strcmp(pNode->label, "[root]"))
+   if (pNode->Parent() == NULL)
    {
       pszBuffer = (char *)malloc(4);
       pszBuffer[0] = 0;
    }
    else
    {
-      for(dwPos = 0, dwSize = 0, pCurr = pNode; pCurr != NULL; pCurr = pCurr->parent)
+      for(dwPos = 0, dwSize = 0, pCurr = pNode; pCurr->Parent() != NULL; pCurr = pCurr->Parent())
       {
-         pszSubIdList[dwPos++] = pCurr->label;
-         dwSize += strlen(pCurr->label) + 1;
+         pszSubIdList[dwPos] = CHECK_NULL(pCurr->Name());
+         dwSize += strlen(pszSubIdList[dwPos]) + 1;
+         dwPos++;
       }
       pszBuffer = (char *)malloc(dwSize + 16);
       for(iBufPos = 0; dwPos > 0;)

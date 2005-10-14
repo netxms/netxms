@@ -38,10 +38,11 @@
 // Error codes
 //
 
-#define ERR_UNRESOLVED_SYMBOL    1
+#define ERR_UNRESOLVED_IMPORT    1
 #define ERR_UNRESOLVED_MODULE    2
 #define ERR_PARSER_ERROR         3
 #define ERR_CANNOT_OPEN_FILE     4
+#define ERR_UNRESOLVED_SYMBOL    5
 
 
 //

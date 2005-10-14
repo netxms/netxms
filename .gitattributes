@@ -749,6 +749,7 @@ src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
 src/nxevent/nxevent.h -text
+src/nxmibc/array.cpp -text
 src/nxmibc/mibparse.cpp -text
 src/nxmibc/mibparse.h -text
 src/nxmibc/nxmibc.cpp -text
@@ -757,9 +758,6 @@ src/nxmibc/nxmibc.dsw -text
 src/nxmibc/nxmibc.h -text
 src/nxmibc/parser.l -text
 src/nxmibc/parser.y -text
-src/nxmibc/ubi_dLinkList.c -text
-src/nxmibc/ubi_dLinkList.h -text
-src/nxmibc/ubi_null.h -text
 src/nxreport/Makefile.am -text
 src/nxreport/nx_strict_tree.cpp -text
 src/nxreport/nx_strict_tree.h -text

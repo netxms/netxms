@@ -47,6 +47,7 @@ WHITESPC  [[:blank:]\t\n\r]
  */
 
 #define YY_NEVER_INTERACTIVE 1
+#define ECHO
 
 #include "mibparse.h"
 #include "parser.tab.h"/* token codes from the parser */
@@ -54,51 +55,51 @@ WHITESPC  [[:blank:]\t\n\r]
 
 int mperror(char *pszMsg);
 
-LineNumber  mpLineNoG = 1;
+int g_nCurrLine;
 
-static ubi_dlList _state;
 
-typedef struct state_stack_struct {
-    ubi_dlNode node;
-	int state;
-} StkVal;
+//
+// State stack
+//
 
-static void _push_state(int x)
+static int m_nStateStack[32];
+static int m_nCurrStackPos;
+
+void InitStateStack(void)
 {
-    StkVal *p = MT ( StkVal );
-	p->state = YYSTATE;
-	ubi_dlPush(&_state,p);
-	BEGIN(x);
+   m_nCurrStackPos = 0;
 }
 
-static void _pop_state()
+static void PushState(int nState)
 {
-    StkVal *p=(StkVal *)ubi_dlPop(&_state);
-	if( p != NULL )
-	{
-	    BEGIN(p->state);
-		free(p);
-	}
+   m_nStateStack[m_nCurrStackPos++] = YYSTATE;
+   BEGIN(nState);
+}
+
+static void PopState(void)
+{
+   if (m_nCurrStackPos > 0)
+   {
+      BEGIN(m_nStateStack[--m_nCurrStackPos]);
+   }
 	else
 	{
-	    BEGIN(INITIAL);
+      BEGIN(INITIAL);
 	}
 }
 
-static void _count_newlines( char *str, int len )
+
+//
+// Coint newlines in a text block
+//
+
+static void CountNewlines(char *pszStr, int len)
 {
-    for ( ; len >= 0 ; len--)
-    {
-	    switch( str[len] )
-		{
-		    case '\n':
-//		    case '\r':
-                mpLineNoG++;
-				break;
-			default:
-			    break;
-		}
-    }
+   int i;
+
+   for(i = 0; i < len; i++)
+      if (pszStr[i] == '\n')
+         g_nCurrLine++;
 }
 
 %}
@@ -106,63 +107,66 @@ static void _count_newlines( char *str, int len )
 
 %%
 
-<INITIAL,COMMENT,KEYWORD,IMPORTS,EXPORTS,MACRO_BODY>{WHITESPC}+ {
-     _count_newlines(mptext,mpleng);
-     while( mpleng-- )
-	 {
-    	 if (*mptext == '\n')
-    	 {
-            switch( YYSTATE )
-            {
-                case INITIAL:
-                    break;
-                case COMMENT:
-   					_pop_state();
-                    break;
-                case KEYWORD:
-					/* Terminate the keyword state and revert to comment */
-					_pop_state();
-					/* Terminate the comment state and revert to previous */
-					_pop_state();
-                    break;
-                case IMPORTS:
-                case EXPORTS:
-                    break;
-                case MACRO:
-                case MACRO_BODY:
-                    break;
-                default:
-					_pop_state();
-                    break;
-            }
-        }
-		mptext++;
-    }
-}
-
-<INITIAL,COMMENT,KEYWORD,IMPORTS,EXPORTS>"--" {
-        switch( YYSTATE )
-        {
+<INITIAL,COMMENT,KEYWORD,IMPORTS,EXPORTS,MACRO,MACRO_BODY>{WHITESPC}+ {
+   CountNewlines(mptext, mpleng);
+   while(mpleng--)
+	{
+      if (*mptext == '\n')
+    	{
+         switch( YYSTATE )
+         {
             case INITIAL:
             case IMPORTS:
             case EXPORTS:
-		        /* first one shifts us into comment mode */
-     				_push_state(COMMENT);
-                break;
+            case MACRO:
+            case MACRO_BODY:
+               break;
             case COMMENT:
-   				_pop_state();
-                break;
+               PopState();
+               break;
             case KEYWORD:
-                /* Ignore other states for now */
-		       mperror("Cannot Embed Comments Within Keyword Definition");
+               /* Terminate the keyword state and revert to comment */
+               PopState();
+               /* Terminate the comment state and revert to previous */
+               PopState();
+               break;
             default:
-                break;
-        }
+               PopState();
+               break;
+         }
+      }
+      mptext++;
+   }
 }
 
-<COMMENT>KEYWORD { _push_state(KEYWORD); return KEYWORD_SYM; }
-<KEYWORD>VALUE { return KEYWORD_VALUE_SYM; }
-<KEYWORD>BINDING { return KEYWORD_BIND_SYM; }
+<INITIAL,COMMENT,KEYWORD,IMPORTS,EXPORTS>"--" {
+   switch(YYSTATE)
+   {
+      case INITIAL:
+      case IMPORTS:
+      case EXPORTS:
+         /* first one shifts us into comment mode */
+         PushState(COMMENT);
+         break;
+      case COMMENT:
+         PopState();
+         break;
+      case KEYWORD:
+         /* Ignore other states for now */
+         mperror("Cannot embed comments within keyword definition");
+         break;
+      default:
+         break;
+   }
+}
+
+<COMMENT>KEYWORD {
+   PushState(KEYWORD);
+   return KEYWORD_SYM; 
+}
+
+<KEYWORD>VALUE    return KEYWORD_VALUE_SYM;
+<KEYWORD>BINDING  return KEYWORD_BIND_SYM;
 
 <INITIAL,IMPORTS,EXPORTS,KEYWORD>"," return COMMA_SYM;
 
@@ -170,23 +174,12 @@ static void _count_newlines( char *str, int len )
 	if ((YYSTATE == IMPORTS) || (YYSTATE == EXPORTS))
 	{
 	    /* a semi colon terminates the import or export state */
-		_pop_state();
+		PopState();
 	}
 	return SEMI_COLON_SYM;
 }
 
 <IMPORTS>FROM return FROM_SYM;
-
-<IMPORTS,EXPORTS,KEYWORD>[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
-          mplval.charPtr = (char*)malloc (mpleng+1);
-		  sprintf(mplval.charPtr,"%*s",mpleng,mptext);
-          mplval.charPtr[mpleng] = '\0';
-          return UCASEFIRST_IDENT_SYM;}
-
-<IMPORTS,EXPORTS,KEYWORD>[a-z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
-          mplval.charPtr = (char*)malloc (mpleng+1);
-		  sprintf(mplval.charPtr,"%*s",mpleng,mptext);
-          return LCASEFIRST_IDENT_SYM;}
 
 <INITIAL,KEYWORD>"{"      return LEFT_BRACE_SYM;
 <INITIAL,KEYWORD>"}"      return RIGHT_BRACE_SYM;
@@ -199,8 +192,14 @@ static void _count_newlines( char *str, int len )
 <INITIAL>DEFINITIONS return DEFINITIONS_SYM;
 <INITIAL,KEYWORD,MACRO>"::=" return ASSIGNMENT_SYM;
 <INITIAL>FROM return FROM_SYM;
-<INITIAL>IMPORTS { BEGIN(IMPORTS); return IMPORTS_SYM; }
-<INITIAL>EXPORTS { BEGIN(EXPORTS); return EXPORTS_SYM; }
+<INITIAL>IMPORTS {
+   BEGIN(IMPORTS);
+   return IMPORTS_SYM; 
+}
+<INITIAL>EXPORTS { 
+   BEGIN(EXPORTS);
+   return EXPORTS_SYM;
+}
 <INITIAL>REVISION return REVISION_SYM;
 <INITIAL>ORGANIZATION return ORGANIZATION_SYM;
 <INITIAL>CONTACT-INFO return CONTACT_SYM;
@@ -261,8 +260,8 @@ static void _count_newlines( char *str, int len )
 <INITIAL>TRAP-TYPE return TRAP_TYPE_SYM;
 <INITIAL>PRODUCT-RELEASE return PRODUCT_RELEASE_SYM;
 <INITIAL>CREATION-REQUIRES return CREATION_REQUIRES_SYM;
-<INITIAL>OBJECT[ ]*IDENTIFIER { return OBJECT_IDENTIFIER_SYM;}
-<INITIAL>OBJECT { return OBJECT_SYM;}
+<INITIAL>OBJECT[ ]*IDENTIFIER return OBJECT_IDENTIFIER_SYM;
+<INITIAL>OBJECT return OBJECT_SYM;
 
 <INITIAL>[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]*{WHITESPC}*MACRO {
 /*
@@ -278,59 +277,42 @@ static void _count_newlines( char *str, int len )
  * be incorrect and it may be necessary to preserve and switch back to the
  * preceeding state.
  */
-          int length=0; /* length of the output string */
-          int count=0;  /* loop control variable */
-		  int multiSpace=0; /* multiple space compression */
-          mplval.charPtr = (char *)malloc(mpleng); /* this is over allocated */
-		  mptext += 5; /* skip MACRO */
-		  mpleng -= 5; /* skip MACRO */
-          _count_newlines(mptext,mpleng);
-		  while ( count < mpleng )
-		  {
-			  switch( *mptext)
-			  {
-				  case '\n':
-				  case '\r':
-				  /*
-				   * I'm not sure if the return/newlines are strictly
-				   * legal
-				   */
-				  case '\t':
-				  case ' ':
-				  /*
-				   * In any event compress them, tabs and spaces 
-				   */
-				      if( multiSpace == 0 )
-					  {
-					      mplval.charPtr[length++] = *mptext;
-						  multiSpace = 1;
-					  }
-					  break;
-				  default:
-                      mplval.charPtr[length++] = *mptext;
-                      multiSpace = 0; /* reset multi space flag */
-					  break;
-			  }
-			  count++;
-			  mptext++;
-		  }
-		  _push_state(MACRO);
-          mplval.charPtr[length] = '\0';
-          return MACRO_SYM; }
+   int length, count, multiSpace;
+
+   mpleng -= 5;   // Strip trailing MACRO
+   mplval.pszString = (char *)malloc(mpleng);
+   CountNewlines(mptext, mpleng);
+   for(length = 0, count = 0, multiSpace = 0; count < mpleng; count++)
+   {
+      switch(mptext[count])
+      {
+         case '\n':
+         case '\r':
+         case '\t':
+         case ' ':
+            if (multiSpace == 0)
+            {
+               mplval.pszString[length++] = ' ';
+               multiSpace = 1;
+            }
+            break;
+         default:
+            mplval.pszString[length++] = mptext[count];
+            multiSpace = 0;
+         break;
+      }
+   }
+   PushState(MACRO);
+   mplval.pszString[length] = 0;
+   StrStrip(mplval.pszString);
+   return MACRO_SYM;
+}
 
 <INITIAL,MACRO>BEGIN {
-        switch( YYSTATE )
-          {
-              case MACRO:
-			      _push_state(MACRO_BODY);
-                  break;
-              case INITIAL:
-              case KEYWORD:
-              case COMMENT:
-              default:
-                  break;
-          }
-          return BEGIN_SYM;}
+   if (YYSTATE == MACRO)
+      PushState(MACRO_BODY);
+   return BEGIN_SYM;
+}
 
 <INITIAL,MACRO_BODY>END {
 /*
@@ -338,112 +320,105 @@ static void _count_newlines( char *str, int len )
  * the state will be reverted to initial. To revert to the previous state
  * it must be preserved in the MACRO detection and reassigned here 
  */
-        switch( YYSTATE )
-          {
-              case COMMENT:
-                  break;
-              case INITIAL:
-              case KEYWORD:
-                  break;
-              case MACRO_BODY:
-			      _pop_state(); /* should revert to MACRO and fall through */
-              case MACRO:
-			      _pop_state(); /* should clear the MACRO state */
-                  break;
-              default:
-                  break;
-          }
-          return END_SYM;}
+   switch( YYSTATE )
+   {
+      case MACRO_BODY:
+         PopState(); /* should revert to MACRO and fall through */
+      case MACRO:
+         PopState(); /* should clear the MACRO state */
+         break;
+      default:
+         break;
+   }
+   return END_SYM;
+}
 
 <MACRO_BODY>([[:alnum:][:punct:]]*) {
-          mplval.charPtr = (char*)malloc (mpleng+1);
-          strcpy (mplval.charPtr, mptext);
-          mplval.charPtr[mpleng] = '\0';
-          return TOKEN_SYM;}
+   mplval.pszString = strdup(mptext);
+   return TOKEN_SYM;
+}
 
 <INITIAL>MODULE {
-          mplval.charPtr = NULL;
-          return MODULE_SYM;}
+   mplval.pszString = NULL;
+   return MODULE_SYM;
+}
 
 <INITIAL>MODULE[[:blank:]]+[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
-		  mptext += 6; /* skip past "MODULE" */
-		  mpleng -= 6; /* skip past "MODULE" */
-          _count_newlines(mptext,mpleng);
-		  while( isspace(*mptext) )
-		  {
-		      mptext++;
-			  mpleng--;
-		  }
-          mplval.charPtr = (char*)malloc(mpleng+1);
-          strncpy (mplval.charPtr, mptext, mpleng);
-          mplval.charPtr[mpleng] = '\0';
-          return MODULE_SYM;}
+   mptext += 6; /* skip past "MODULE" */
+   mpleng -= 6; /* skip past "MODULE" */
+   CountNewlines(mptext, mpleng);
+   while(isspace(*mptext))
+   {
+      mptext++;
+      mpleng--;
+   }
+   mplval.pszString = strdup(mptext);
+   return MODULE_SYM;
+}
 
 <INITIAL,KEYWORD>\'[0-1]*\'[Bb] {
-          mplval.charPtr = (char*)malloc (mpleng);
-          strncpy (mplval.charPtr, mptext + 1, mpleng -1);  /* strip "'"s */
-          mplval.charPtr[mpleng - 3] = '\0';
-          return BSTRING_SYM;}
+   mplval.pszString = (char *)malloc(mpleng);
+   strncpy(mplval.pszString, mptext + 1, mpleng -1);  // strip "'"s
+   mplval.pszString[mpleng - 3] = '\0';
+   return BSTRING_SYM;
+}
 
 <INITIAL,KEYWORD>\'[0-9A-Fa-f]*\'[Hh] {
-          mplval.charPtr = (char*)malloc (mpleng);
-          strncpy (mplval.charPtr, mptext + 1, mpleng - 1);   /* strip "'"s */
-          mplval.charPtr[mpleng - 3] = '\0';
-          if (strlen(mplval.charPtr) <= 8)
-          {
-		        mplval.numberVal.data.intVal = strtoul(mplval.charPtr, NULL, 16);
-		        mplval.numberVal.type = SNMP_INTEGER32;
-              return NUMBER_SYM;
-          }
-          return HSTRING_SYM;}
+   mplval.pszString = (char*)malloc(mpleng);
+   strncpy(mplval.pszString, mptext + 1, mpleng - 1);   // strip "'"s
+   mplval.pszString[mpleng - 3] = '\0';
+   if (strlen(mplval.pszString) <= 8)
+   {
+     mplval.number.value.nInt32 = strtoul(mplval.pszString, NULL, 16);
+     mplval.number.nType = 0;
+     return NUMBER_SYM;
+   }
+   return HSTRING_SYM;
+}
 
 <INITIAL,KEYWORD>\"([^\"]|"\"\"")*\"  {
-          _count_newlines( mptext, mpleng );
-          mplval.charPtr = (char*)malloc (mpleng);
-          strncpy (mplval.charPtr, mptext+1, mpleng -1);       /* strip '"'s */
-          mplval.charPtr[mpleng-2] = '\0'; /* 2 quotes == quote in a quote */
-          return CSTRING_SYM;}
+   CountNewlines(mptext, mpleng);
+   mplval.pszString = (char*)malloc(mpleng);
+   strncpy(mplval.pszString, mptext + 1, mpleng - 1);  // strip '"'s
+   mplval.pszString[mpleng - 2] = 0;
+   return CSTRING_SYM;
+}
 
-<INITIAL>[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
-          mplval.charPtr = (char*)malloc (mpleng+1);
-          strcpy (mplval.charPtr, mptext);
-          mplval.charPtr[mpleng] = '\0';
-          return UCASEFIRST_IDENT_SYM;}
+<INITIAL,IMPORTS,EXPORTS,KEYWORD>[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
+   mplval.pszString = strdup(mptext);
+   return UCASEFIRST_IDENT_SYM;
+}
 
-<INITIAL>[a-z](-[a-zA-Z0-9]|[a-zA-Z0-9])* {
-          mplval.charPtr = (char*)malloc (mpleng+1);
-          strcpy (mplval.charPtr, mptext);
-          mplval.charPtr[mpleng] = '\0';
-          return LCASEFIRST_IDENT_SYM;}
+<INITIAL,IMPORTS,EXPORTS,KEYWORD>[a-z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
+   mplval.pszString = strdup(mptext);
+   return LCASEFIRST_IDENT_SYM;
+}
 
 <INITIAL>([-]|0x)?[1-9][0-9]* {
-		  QWORD qwVal = strtoull(mptext, NULL, 0);
-          long int intVal = strtol(mptext, NULL, 0);
-/*		  if ((intVal == LONG_MAX) && (qwVal == 0xFFFFFFFFFFFFFFFF))
-		  {
-		  char tPtr[200];
-		    sprintf(tPtr,"Numeric Overflow - Value %.*s", mpleng,mptext);
-		    mperror(tPtr);
-		  }*/
-		  if( intVal == LONG_MAX )
-		  {
-		        mplval.numberVal.type = SNMP_INTEGER64;
-		        mplval.numberVal.data.qwVal = qwVal;
-		  }
-		  else
-		  {
-		        mplval.numberVal.type = SNMP_INTEGER32;
-		        mplval.numberVal.data.intVal = intVal;
-		  }
-  		  return NUMBER_SYM;}
+   INT64 nInt64 = strtoull(mptext, NULL, 0);
+   long nInt32 = strtol(mptext, NULL, 0);
+
+   if (nInt32 == LONG_MAX)
+   {
+      mplval.number.nType = 1;
+      mplval.number.value.nInt64 = nInt64;
+   }
+   else
+   {
+      mplval.number.nType = 0;
+      mplval.number.value.nInt32 = nInt32;
+   }
+   return NUMBER_SYM;
+}
 
 <INITIAL>0 {  /*allow zero as first digit on single digit #'s*/
-         mplval.numberVal.type = SNMP_INTEGER32;
-         mplval.numberVal.data.intVal = 0;
-         return NUMBER_SYM;}
-
+   mplval.number.nType = 0;
+   mplval.number.value.nInt32 = 0;
+   return NUMBER_SYM;
+}
 
 <INITIAL,COMMENT,KEYWORD,EXPORTS>. { 
-    _count_newlines( mptext, mpleng );
+   CountNewlines(mptext, mpleng);
 }
+
 %%

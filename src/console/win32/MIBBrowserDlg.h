@@ -7,12 +7,6 @@
 // MIBBrowserDlg.h : header file
 //
 
-#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
-#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
-#include <net-snmp/net-snmp-config.h>
-#include <net-snmp/mib_api.h>
-#include <net-snmp/config_api.h>
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 
 /////////////////////////////////////////////////////////////////////////////
 // CMIBBrowserDlg dialog
@@ -53,7 +47,8 @@ public:
 
 // Implementation
 protected:
-	void SelectNode(HTREEITEM hRoot, oid *oidName, unsigned int iNameLen);
+	BOOL m_bDisableSelUpdate;
+	void SelectNode(HTREEITEM hRoot, DWORD *pdwOID, unsigned int iNameLen);
 
 	// Generated message map functions
 	//{{AFX_MSG(CMIBBrowserDlg)
@@ -76,8 +71,7 @@ private:
 	void Collapse(void);
 	void Expand(void);
 	BOOL m_bIsExpanded;
-	struct tree m_mibTreeRoot;
-	void AddTreeNode(HTREEITEM hRoot, struct tree *pCurrNode);
+	void AddTreeNode(HTREEITEM hRoot, SNMP_MIBObject *pCurrNode);
 };
 
 //{{AFX_INSERT_LOCATION}}
