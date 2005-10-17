@@ -314,6 +314,7 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
 
 			fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
 			fclose(hPipe);
+         pValue[MAX_RESULT_LENGTH - 1] = 0;
 			if ((pTmp = strchr(pValue, '\n')) != NULL)
 			{
 				*pTmp = 0;
@@ -327,7 +328,6 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
          iStatus = SYSINFO_RC_ERROR;
 		}
 	}
-//EXEC::popen
 #endif
 
    free(pszCmdLine);
