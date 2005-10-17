@@ -61,6 +61,7 @@
 # define DDIR_IMAGES           "\\images"
 # define DDIR_PACKAGES         "\\packages"
 # define DFILE_KEYS            "\\server_key"
+# define DFILE_COMPILED_MIB    "\\mibs\\netxms.mib"
 
 #else    /* _WIN32 */
 
@@ -79,6 +80,7 @@
 # define DDIR_IMAGES           "/images"
 # define DDIR_PACKAGES         "/packages"
 # define DFILE_KEYS            "/.server_key"
+# define DFILE_COMPILED_MIB    "/mibs/netxms.mib"
 
 #endif   /* _WIN32 */
 

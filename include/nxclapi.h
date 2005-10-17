@@ -276,6 +276,9 @@ typedef void * NXC_SESSION;
 #define RCC_SNMP_ERROR              ((DWORD)49)
 #define RCC_BAD_REGEXP              ((DWORD)50)
 #define RCC_UNKNOWN_PARAMETER       ((DWORD)51)
+#define RCC_FILE_IO_ERROR           ((DWORD)52)
+#define RCC_CORRUPTED_MIB_FILE      ((DWORD)53)
+#define RCC_TRANSFER_IN_PROGRESS    ((DWORD)54)
 
 
 //
@@ -1226,9 +1229,8 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD 
 DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId, int iOrigin, TCHAR *pszParameter,
                                            TCHAR *pszBuffer, DWORD dwBufferSize);
 
-DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_SESSION hSession, NXC_MIB_LIST **ppMibList);
-void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList);
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName, TCHAR *pszDestDir);
+DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp);
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession);

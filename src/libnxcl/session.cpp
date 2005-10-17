@@ -54,6 +54,11 @@ NXCL_Session::NXCL_Session()
    m_hRecvThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
 
+   m_hCurrFile = -1;
+   m_dwFileRqId = 0;
+   m_condFileRq = ConditionCreate(FALSE);
+   m_mutexFileRq = MutexCreate();
+
 #ifdef _WIN32
    m_condSyncOp = CreateEvent(NULL, FALSE, FALSE, NULL);
 #else
@@ -81,6 +86,12 @@ NXCL_Session::~NXCL_Session()
    MutexLock(m_mutexEventAccess, INFINITE);
    MutexUnlock(m_mutexEventAccess);
    MutexDestroy(m_mutexEventAccess);
+
+   ConditionSet(m_condFileRq);
+   MutexLock(m_mutexFileRq, INFINITE);
+   MutexUnlock(m_mutexFileRq);
+   MutexDestroy(m_mutexFileRq);
+   ConditionDestroy(m_condFileRq);
 
 #ifdef _WIN32
    CloseHandle(m_condSyncOp);
@@ -815,4 +826,83 @@ DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
    SendMsg(&msg);
 
    return WaitForRCC(dwRqId);
+}
+
+
+//
+// Prepares file transfer from server to client
+//
+
+DWORD NXCL_Session::PrepareFileTransfer(TCHAR *pszFile, DWORD dwRqId)
+{
+   DWORD dwResult;
+
+   MutexLock(m_mutexFileRq, INFINITE);
+   if (m_hCurrFile == -1)
+   {
+      m_hCurrFile = _topen(pszFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
+                           S_IRUSR | S_IWUSR);
+      dwResult = (m_hCurrFile != -1) ? RCC_SUCCESS : RCC_FILE_IO_ERROR;
+      m_dwFileRqId = dwRqId;
+      ConditionReset(m_condFileRq);
+   }
+   else
+   {
+      dwResult = RCC_TRANSFER_IN_PROGRESS;
+   }
+   MutexUnlock(m_mutexFileRq);
+   return dwResult;
+}
+
+
+//
+// Wait for file transfer completion
+//
+
+DWORD NXCL_Session::WaitForFileTransfer(DWORD dwTimeout)
+{
+   DWORD dwResult;
+   BOOL bSuccess;
+
+   MutexLock(m_mutexFileRq, INFINITE);
+   if (m_hCurrFile != -1)
+   {
+      MutexUnlock(m_mutexFileRq);
+      bSuccess = ConditionWait(m_condFileRq, dwTimeout);
+      MutexLock(m_mutexFileRq, INFINITE);
+      if (bSuccess)
+      {
+         dwResult = m_dwFileRqCompletion;
+      }
+      else
+      {
+         dwResult = RCC_TIMEOUT;
+         if (m_hCurrFile != -1)
+            close(m_hCurrFile);
+      }
+      m_hCurrFile = -1;
+   }
+   else
+   {
+      dwResult = RCC_INCOMPATIBLE_OPERATION;
+   }
+   MutexUnlock(m_mutexFileRq);
+   return dwResult;
+}
+
+
+//
+// Abort file transfer
+//
+
+void NXCL_Session::AbortFileTransfer(void)
+{
+   MutexLock(m_mutexFileRq, INFINITE);
+   if (m_hCurrFile != -1)
+   {
+      close(m_hCurrFile);
+      m_hCurrFile = -1;
+      m_dwFileRqId = 0;
+   }
+   MutexUnlock(m_mutexFileRq);
 }

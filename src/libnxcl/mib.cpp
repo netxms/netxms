@@ -29,127 +29,55 @@
 
 
 //
-// Get list of available MIB files from server
+// Download MIB file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetMIBList(NXC_SESSION hSession, NXC_MIB_LIST **ppMibList)
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName)
 {
-   DWORD i, dwRqId, dwRetCode, dwId1, dwId2;
-   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwRetCode;
+   CSCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-
-   msg.SetCode(CMD_GET_MIB_LIST);
-   msg.SetId(dwRqId);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
-
-   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB_LIST, dwRqId, 
-                                       ((NXCL_Session *)hSession)->m_dwCommandTimeout * 2);
-   if (pResponse != NULL)
+   dwRetCode = ((NXCL_Session *)hSession)->PrepareFileTransfer(pszName, dwRqId);
+   if (dwRetCode == RCC_SUCCESS)
    {
-      *ppMibList = (NXC_MIB_LIST *)malloc(sizeof(NXC_MIB_LIST));
-      (*ppMibList)->dwNumFiles = pResponse->GetVariableLong(VID_NUM_MIBS);
-      (*ppMibList)->ppszName = (TCHAR **)malloc(sizeof(TCHAR *) * (*ppMibList)->dwNumFiles);
-      (*ppMibList)->ppHash = (BYTE **)malloc(sizeof(BYTE *) * (*ppMibList)->dwNumFiles);
-      for(i = 0, dwId1 = VID_MIB_NAME_BASE, dwId2 = VID_MIB_HASH_BASE; 
-          i < (*ppMibList)->dwNumFiles; i++, dwId1++, dwId2++)
-      {
-         (*ppMibList)->ppszName[i] = pResponse->GetVariableStr(dwId1);
-         (*ppMibList)->ppHash[i] = (BYTE *)malloc(MD5_DIGEST_SIZE);
-         pResponse->GetVariableBinary(dwId2, (*ppMibList)->ppHash[i], MD5_DIGEST_SIZE);
-      }
-      delete pResponse;
-      dwRetCode = RCC_SUCCESS;
-   }
-   else
-   {
-      dwRetCode = RCC_TIMEOUT;
-   }
+      msg.SetCode(CMD_GET_MIB);
+      msg.SetId(dwRqId);
+      ((NXCL_Session *)hSession)->SendMsg(&msg);
 
+      // Loading file can take time, so timeout is 300 sec. instead of default
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForFileTransfer(300000);
+   }
    return dwRetCode;
 }
 
 
 //
-// Destroy MIB list
+// Get timestamp of server's MIB file
 //
 
-void LIBNXCL_EXPORTABLE NXCDestroyMIBList(NXC_MIB_LIST *pMibList)
+DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp)
 {
-   DWORD i;
-
-   for(i = 0; i < pMibList->dwNumFiles; i++)
-   {
-      safe_free(pMibList->ppHash[i]);
-      safe_free(pMibList->ppszName[i]);
-   }
-   safe_free(pMibList->ppHash);
-   safe_free(pMibList->ppszName);
-   free(pMibList);
-}
-
-
-//
-// Download MIB file from server
-//
-
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName, TCHAR *pszDestDir)
-{
-   DWORD i, dwRqId, dwRetCode, dwFileSize, dwNumBytes;
+   DWORD dwRqId, dwRetCode;
    CSCPMessage msg, *pResponse;
-   BYTE *pBuffer;
-   TCHAR cLastChar, szFileName[MAX_PATH];
-   FILE *hFile;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_MIB);
+   msg.SetCode(CMD_GET_MIB_TIMESTAMP);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_MIB_NAME, pszName);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   // Loading file can take time, so timeout is 60 sec. instead of default
-   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_MIB, dwRqId, 60000);
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
       dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-      {
-         dwFileSize = pResponse->GetVariableLong(VID_MIB_FILE_SIZE);
-         pBuffer = (BYTE *)malloc(dwFileSize);
-         if (pBuffer != NULL)
-         {
-            pResponse->GetVariableBinary(VID_MIB_FILE, pBuffer, dwFileSize);
-            cLastChar = pszDestDir[_tcslen(pszDestDir) - 1];
-            _stprintf(szFileName, _T("%s%s%s"), pszDestDir, 
-                    (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : _T("/"), pszName);
-			   hFile = _tfopen(szFileName, _T("wb"));
-            if (hFile != NULL)
-            {
-               for(i = 0; i < dwFileSize; i += dwNumBytes)
-               {
-                  dwNumBytes = min(16384, dwFileSize - i);
-                  fwrite(&pBuffer[i], 1, dwNumBytes, hFile);
-               }
-               fclose(hFile);
-            }
-            else
-            {
-               dwRetCode = RCC_IO_ERROR;
-            }
-            free(pBuffer);
-         }
-         else
-         {
-            dwRetCode = RCC_OUT_OF_MEMORY;
-         }
-      }
+         *pdwTimeStamp = pResponse->GetVariableLong(VID_TIMESTAMP);
       delete pResponse;
    }
    else
    {
       dwRetCode = RCC_TIMEOUT;
    }
-
    return dwRetCode;
 }

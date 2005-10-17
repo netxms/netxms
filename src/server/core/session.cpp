@@ -707,11 +707,11 @@ void ClientSession::ProcessingThread(void)
          case CMD_EPP_RECORD:
             ProcessEPPRecord(pMsg);
             break;
-         case CMD_GET_MIB_LIST:
-            SendMIBList(pMsg->GetId());
+         case CMD_GET_MIB_TIMESTAMP:
+            SendMIBTimestamp(pMsg->GetId());
             break;
          case CMD_GET_MIB:
-            SendMIB(pMsg);
+            SendMIB(pMsg->GetId());
             break;
          case CMD_CREATE_OBJECT:
             CreateObject(pMsg);
@@ -2829,95 +2829,56 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
 
 
 //
-// Send list of available MIB files to client
+// Send compiled MIB file to client
 //
 
-void ClientSession::SendMIBList(DWORD dwRqId)
+void ClientSession::SendMIB(DWORD dwRqId)
 {
-   CSCPMessage msg;
-   DWORD dwId1, dwId2, dwNumFiles;
-   DIR *dir;
-   int iBufPos;
-   struct dirent *dptr;
    char szBuffer[MAX_PATH];
-   BYTE md5Hash[MD5_DIGEST_SIZE];
 
-   // Prepare response message
-   msg.SetCode(CMD_MIB_LIST);
-   msg.SetId(dwRqId);
-
-   // Read directory
-   dwNumFiles = 0;
+   // Send compiled MIB file
    strcpy(szBuffer, g_szDataDir);
-   strcat(szBuffer, DDIR_MIBS);
-   dir = opendir(szBuffer);
-   if (dir != NULL)
-   {
-      strcat(szBuffer, FS_PATH_SEPARATOR);
-      iBufPos = strlen(szBuffer);
-      dwId1 = VID_MIB_NAME_BASE;
-      dwId2 = VID_MIB_HASH_BASE;
-      while((dptr = readdir(dir)) != NULL)
-      {
-         if (dptr->d_name[0] == '.')
-            continue;
-
-         strcpy(&szBuffer[iBufPos], dptr->d_name);
-         if (CalculateFileMD5Hash(szBuffer, md5Hash))
-         {
-            msg.SetVariable(dwId1++, dptr->d_name);
-            msg.SetVariable(dwId2++, md5Hash, MD5_DIGEST_SIZE);
-            dwNumFiles++;
-         }
-      }
-      closedir(dir);
-   }
-
-   msg.SetVariable(VID_NUM_MIBS, dwNumFiles);
-
-   // Send response
-   SendMessage(&msg);
+   strcat(szBuffer, DFILE_COMPILED_MIB);
+   SendFileOverCSCP(m_hSocket, dwRqId, szBuffer, m_pCtx);
 }
 
 
 //
-// Send requested MIB file to client
+// Send timestamp of compiled MIB file to client
 //
 
-void ClientSession::SendMIB(CSCPMessage *pRequest)
+void ClientSession::SendMIBTimestamp(DWORD dwRqId)
 {
    CSCPMessage msg;
-   BYTE *pFile;
-   DWORD dwFileSize;
-   char szBuffer[MAX_PATH], szMIB[MAX_PATH];
+   char szBuffer[MAX_PATH];
+   DWORD dwResult, dwTimeStamp;
 
    // Prepare response message
-   msg.SetCode(CMD_MIB);
-   msg.SetId(pRequest->GetId());
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
 
-   // Get name of the requested file
-   pRequest->GetVariableStr(VID_MIB_NAME, szMIB, MAX_PATH);
-
-   // Load file into memory
    strcpy(szBuffer, g_szDataDir);
-   strcat(szBuffer, DDIR_MIBS);
-#ifdef _WIN32
-   strcat(szBuffer, "\\");
-#else
-   strcat(szBuffer, "/");
-#endif
-   strcat(szBuffer, szMIB);
-   pFile = LoadFile(szBuffer, &dwFileSize);
-   if (pFile != NULL)
+   strcat(szBuffer, DFILE_COMPILED_MIB);
+   dwResult = SNMPGetMIBTreeTimestamp(szBuffer, &dwTimeStamp);
+   if (dwResult == SNMP_ERR_SUCCESS)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      msg.SetVariable(VID_MIB_FILE_SIZE, dwFileSize);
-      msg.SetVariable(VID_MIB_FILE, pFile, dwFileSize);
-      free(pFile);
+      msg.SetVariable(VID_TIMESTAMP, dwTimeStamp);
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_SYSTEM_FAILURE);
+      switch(dwResult)
+      {
+         case SNMP_ERR_FILE_IO:
+            msg.SetVariable(VID_RCC, RCC_FILE_IO_ERROR);
+            break;
+         case SNMP_ERR_BAD_FILE_HEADER:
+            msg.SetVariable(VID_RCC, RCC_CORRUPTED_MIB_FILE);
+            break;
+         default:
+            msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+            break;
+      }
    }
 
    // Send response

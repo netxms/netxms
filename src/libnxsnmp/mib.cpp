@@ -458,3 +458,35 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRo
    }
    return dwRet;
 }
+
+
+//
+// Get timestamp from saved MIB tree
+//
+
+DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(TCHAR *pszFile, DWORD *pdwTimestamp)
+{
+   FILE *pFile;
+   SNMP_MIB_HEADER header;
+   DWORD dwRet = SNMP_ERR_SUCCESS;
+
+   pFile = _tfopen(pszFile, _T("rb"));
+   if (pFile != NULL)
+   {
+      fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile);
+      if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
+      {
+         *pdwTimestamp = ntohl(header.dwTimeStamp);
+      }
+      else
+      {
+         dwRet = SNMP_ERR_BAD_FILE_HEADER;
+      }
+      fclose(pFile);
+   }
+   else
+   {
+      dwRet = SNMP_ERR_FILE_IO;
+   }
+   return dwRet;
+}

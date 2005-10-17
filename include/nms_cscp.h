@@ -276,10 +276,10 @@ typedef struct
 #define CMD_CREATE_NEW_DCI          0x0030
 #define CMD_GET_DCI_DATA            0x0031
 #define CMD_DCI_DATA                0x0032
-#define CMD_GET_MIB_LIST            0x0033
+#define CMD_GET_MIB_TIMESTAMP       0x0033
 #define CMD_GET_MIB                 0x0034
-#define CMD_MIB_LIST                0x0035
-#define CMD_MIB                     0x0036
+//#define CMD_MIB_LIST                0x0035
+//#define CMD_MIB                     0x0036
 #define CMD_CREATE_OBJECT           0x0037
 #define CMD_GET_EVENT_NAMES         0x0038
 #define CMD_EVENT_NAME_LIST         0x0039

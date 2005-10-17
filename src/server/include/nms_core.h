@@ -339,8 +339,8 @@ private:
    void CloseEPP(DWORD dwRqId);
    void SaveEPP(CSCPMessage *pRequest);
    void ProcessEPPRecord(CSCPMessage *pRequest);
-   void SendMIBList(DWORD dwRqId);
-   void SendMIB(CSCPMessage *pRequest);
+   void SendMIBTimestamp(DWORD dwRqId);
+   void SendMIB(DWORD dwRqId);
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void DeleteObject(CSCPMessage *pRequest);

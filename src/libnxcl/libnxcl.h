@@ -106,6 +106,12 @@ private:
    NXC_DCI_LIST *m_pItemList;
    THREAD m_hRecvThread;
 
+   int m_hCurrFile;
+   DWORD m_dwFileRqId;
+   DWORD m_dwFileRqCompletion;
+   CONDITION m_condFileRq;
+   MUTEX m_mutexFileRq;
+
    NXC_EVENT_TEMPLATE **m_ppEventTemplates;
    DWORD m_dwNumTemplates;
    MUTEX m_mutexEventAccess;
@@ -190,6 +196,10 @@ public:
    DWORD GetTimeStamp(void) { return m_dwTimeStamp; }
 
    DWORD SetSubscriptionStatus(DWORD dwChannels, int nOperation);
+
+   DWORD PrepareFileTransfer(TCHAR *pszFile, DWORD dwRqId);
+   DWORD WaitForFileTransfer(DWORD dwTimeout);
+   void AbortFileTransfer(void);
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

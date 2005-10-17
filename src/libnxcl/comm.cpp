@@ -98,6 +98,40 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_EVENT:
                ProcessEvent(pSession, NULL, pRawMsg);
                break;
+            case CMD_FILE_DATA:
+               MutexLock(pSession->m_mutexFileRq, INFINITE);
+               if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
+               {
+                  if (write(pSession->m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  {
+                     if (pRawMsg->wFlags & MF_END_OF_FILE)
+                     {
+                        close(pSession->m_hCurrFile);
+                        pSession->m_dwFileRqCompletion = RCC_SUCCESS;
+                        ConditionSet(pSession->m_condFileRq);
+                     }
+                  }
+                  else
+                  {
+                     // I/O error
+                     close(pSession->m_hCurrFile);
+                     pSession->m_dwFileRqCompletion = RCC_FILE_IO_ERROR;
+                     ConditionSet(pSession->m_condFileRq);
+                  }
+               }
+               MutexUnlock(pSession->m_mutexFileRq);
+               break;
+            case CMD_ABORT_FILE_TRANSFER:
+               MutexLock(pSession->m_mutexFileRq, INFINITE);
+               if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
+               {
+                  // I/O error
+                  close(pSession->m_hCurrFile);
+                  pSession->m_dwFileRqCompletion = RCC_FILE_IO_ERROR;
+                  ConditionSet(pSession->m_condFileRq);
+               }
+               MutexUnlock(pSession->m_mutexFileRq);
+               break;
             default:    // Put unknown raw messages into the wait queue
                pSession->m_msgWaitQueue.Put((CSCP_MESSAGE *)nx_memdup(pRawMsg, pRawMsg->dwSize));
                break;
