@@ -51,38 +51,6 @@ inline void SetInfoText(HWND hWnd, char *pszText)
 
 
 //
-// Check if MIB file is exist and up-to-date
-//
-
-static DWORD CheckMIBFile(char *pszName, BYTE *pHash)
-{
-   char szFileName[MAX_PATH];
-   BYTE currHash[MD5_DIGEST_SIZE];
-   BOOL bNeedUpdate = TRUE;
-   DWORD dwResult = RCC_SUCCESS;
-
-   // Build full file name
-   strcpy(szFileName, g_szWorkDir);
-   strcat(szFileName, WORKDIR_MIBCACHE);
-   strcat(szFileName, "\\");
-   strcat(szFileName, pszName);
-
-   // Check file hash
-   if (CalculateFileMD5Hash(szFileName, currHash))
-      bNeedUpdate = memcmp(currHash, pHash, MD5_DIGEST_SIZE);
-
-   // Download file from server if needed
-   if (bNeedUpdate)
-   {
-      strcpy(szFileName, g_szWorkDir);
-      strcat(szFileName, WORKDIR_MIBCACHE);
-      dwResult = NXCDownloadMIBFile(g_hSession, pszName, szFileName);
-   }
-   return dwResult;
-}
-
-
-//
 // Wrapper for client library event handler
 //
 
@@ -189,26 +157,49 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    if (dwResult == RCC_SUCCESS)
    {
-      NXC_MIB_LIST *pMibList;
+      DWORD dwServerTS, dwLocalTS;
+      TCHAR szFileName[MAX_PATH];
+      BOOL bNeedDownload;
 
       SetInfoText(hWnd, "Loading and initializing MIB files...");
-      dwResult = NXCGetMIBList(g_hSession, &pMibList);
+      _tcscpy(szFileName, g_szWorkDir);
+      _tcscat(szFileName, WORKDIR_MIBCACHE);
+      _tcscat(szFileName, _T("\\netxms.mib"));
+      if (SNMPGetMIBTreeTimestamp(szFileName, &dwLocalTS) == SNMP_ERR_SUCCESS)
+      {
+         if (NXCGetMIBFileTimeStamp(g_hSession, &dwServerTS) == RCC_SUCCESS)
+         {
+            bNeedDownload = (dwServerTS > dwLocalTS);
+         }
+         else
+         {
+            bNeedDownload = FALSE;
+         }
+      }
+      else
+      {
+         bNeedDownload = TRUE;
+      }
+
+      if (bNeedDownload)
+      {
+         dwResult = NXCDownloadMIBFile(g_hSession, szFileName);
+         if (dwResult != RCC_SUCCESS)
+         {
+            theApp.ErrorBox(dwResult, _T("Error downloading MIB file from server: %s"));
+            dwResult = RCC_SUCCESS;
+         }
+      }
+
       if (dwResult == RCC_SUCCESS)
       {
-         for(i = 0; i < pMibList->dwNumFiles; i++)
-            if ((dwResult = CheckMIBFile(pMibList->ppszName[i], pMibList->ppHash[i])) != RCC_SUCCESS)
-               break;
-         NXCDestroyMIBList(pMibList);
-         if (dwResult == RCC_SUCCESS)
+         if (SNMPLoadMIBTree(szFileName, &g_pMIBRoot) == SNMP_ERR_SUCCESS)
          {
-            if (SNMPLoadMIBTree("C:\\netxms.mib", &g_pMIBRoot) == SNMP_ERR_SUCCESS)
-            {
-               g_pMIBRoot->SetName(_T("[root]"));
-            }
-            else
-            {
-               g_pMIBRoot = new SNMP_MIBObject(0, _T("[root]"));
-            }
+            g_pMIBRoot->SetName(_T("[root]"));
+         }
+         else
+         {
+            g_pMIBRoot = new SNMP_MIBObject(0, _T("[root]"));
          }
       }
    }

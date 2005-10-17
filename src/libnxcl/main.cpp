@@ -199,9 +199,12 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Invalid object tool ID"),
       _T("SNMP protocol error"),
       _T("Incorrect regular expression"),
-      _T("Parameter is not supported by agent")
+      _T("Parameter is not supported by agent"),
+      _T("File I/O operation failed"),
+      _T("MIB file is corrupted"),
+      _T("File transfer operation already in progress")
    };
-   return ((dwError >= 0) && (dwError <= RCC_UNKNOWN_PARAMETER)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_TRANSFER_IN_PROGRESS)) ? pszErrorText[dwError] : _T("Unknown error code");
 }
 
 
