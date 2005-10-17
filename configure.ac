@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.108 2005-10-17 09:30:24 victor Exp $
+# $Id: configure.ac,v 1.109 2005-10-17 10:10:48 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -16,6 +16,8 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_INSTALL
+AC_PROG_LEX
+AC_PROG_YACC
 
 # --------------------------------------------------------------------------
 # disable C++ exceptions

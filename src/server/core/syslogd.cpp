@@ -343,7 +343,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    char sMsg[MAX_SYSLOG_MSG_LEN];
    DB_RESULT hResult;
    THREAD hProcessingThread;
-   struct fd_set rdfs;
+   fd_set rdfs;
    struct timeval tv;
 
    // Determine first available message id
