@@ -1,7 +1,7 @@
 ARCADA-MIB DEFINITIONS ::= BEGIN
 
 	--
-	-- $Logfile:   E:/code/arcada/arcada.mib  $ $Revision: 1.1 $
+	-- $Logfile:   E:/code/arcada/arcada.mib  $ $Revision: 1.2 $
 	--
 
 	IMPORTS
@@ -12,7 +12,9 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		TRAP-TYPE
 			FROM RFC-1215
 		DisplayString
-			FROM RFC1213-MIB;
+			FROM RFC1213-MIB
+		DateAndTime
+			FROM SNMPv2-TC;
 	
 	
 	arcada			OBJECT IDENTIFIER ::= { enterprises 1302 }
@@ -922,7 +924,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		}
 	
 	tdSCSIDeviceID	OBJECT-TYPE
-		SYNTAX	DisplayName
+		SYNTAX	DisplayString
 		ACCESS	read-only
 		STATUS	mandatory
 		DESCRIPTION

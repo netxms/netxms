@@ -854,7 +854,7 @@ ipsoAssetGroup OBJECT-GROUP
         ::= { ipsoAssetTable 1 }
 
 IpsoAssetEntry ::= SEQUENCE {
-        ipsoPkgIndex            Integer,
+        ipsoPkgIndex            INTEGER,
         ipsoPkgName             DisplayString,
         ipsoPkgMajorVersion     DisplayString,
         ipsoPkgMinorVersion     DisplayString,
@@ -862,7 +862,7 @@ IpsoAssetEntry ::= SEQUENCE {
 }
 
         ipsoPkgIndex OBJECT-TYPE
-        SYNTAX Integer
+        SYNTAX INTEGER
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -989,7 +989,7 @@ ipsoLicenseGroup OBJECT-GROUP
         ::= { ipsoLicenseGroup 1 }
 
     ipsoDaysToExpire OBJECT-TYPE
-        SYNTAX Integer
+        SYNTAX INTEGER
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
