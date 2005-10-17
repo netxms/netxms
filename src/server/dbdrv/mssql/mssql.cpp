@@ -146,10 +146,10 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
          pConn->hProcess = hProcess;
          pConn->mutexQueryLock = MutexCreate();
          pConn->bProcessDead = FALSE;
-         strncpy(pConn->szHost, szHost, MAX_CONN_STRING);
-         strncpy(pConn->szLogin, szLogin, MAX_CONN_STRING);
-         strncpy(pConn->szPassword, szPassword, MAX_CONN_STRING);
-         strncpy(pConn->szDatabase, CHECK_NULL_EX(szDatabase), MAX_CONN_STRING);
+         nx_strncpy(pConn->szHost, szHost, MAX_CONN_STRING);
+         nx_strncpy(pConn->szLogin, szLogin, MAX_CONN_STRING);
+         nx_strncpy(pConn->szPassword, szPassword, MAX_CONN_STRING);
+         nx_strncpy(pConn->szDatabase, CHECK_NULL_EX(szDatabase), MAX_CONN_STRING);
 
          dbsetuserdata(hProcess, pConn);
       }

@@ -401,11 +401,11 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *),
                   sizeof(NETXMS_SUBAGENT_PARAM) * m_info.dwNumParameters);
    }
 
-   _tcsncpy(m_info.pParamList[i].szName, pszName, MAX_PARAM_NAME);
+   nx_strncpy(m_info.pParamList[i].szName, pszName, MAX_PARAM_NAME);
    m_info.pParamList[i].fpHandler = fpHandler;
    m_info.pParamList[i].pArg = pArg;
    m_info.pParamList[i].iDataType = iDataType;
-   _tcsncpy(m_info.pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
+   nx_strncpy(m_info.pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
    
    return TRUE;
 }

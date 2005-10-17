@@ -312,13 +312,13 @@ int main(int argc, char *argv[])
             m_bVerbose = FALSE;
             break;
          case 'r':   // Service check request string
-            strncpy(szRequest, optarg, MAX_DB_STRING);
+            nx_strncpy(szRequest, optarg, MAX_DB_STRING);
             break;
          case 'R':   // Service check response string
-            strncpy(szResponse, optarg, MAX_DB_STRING);
+            nx_strncpy(szResponse, optarg, MAX_DB_STRING);
             break;
          case 's':   // Shared secret
-            strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
+            nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
             break;
          case 'S':   // Check service
             iCommand = CMD_CHECK_SERVICE;
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
             }
             break;
          case 'K':
-            strncpy(szKeyFile, optarg, MAX_PATH);
+            nx_strncpy(szKeyFile, optarg, MAX_PATH);
             break;
 #else
          case 'e':

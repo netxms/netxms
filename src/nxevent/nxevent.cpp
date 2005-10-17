@@ -120,10 +120,10 @@ int main(int argc, char *argv[])
             m_dwObjectId = _tcstoul(optarg, NULL, 0);
             break;
          case 'u':
-            _tcsncpy(m_szLogin, optarg, MAX_DB_STRING);
+            nx_strncpy(m_szLogin, optarg, MAX_DB_STRING);
             break;
          case 'P':
-            _tcsncpy(m_szPassword, optarg, MAX_DB_STRING);
+            nx_strncpy(m_szPassword, optarg, MAX_DB_STRING);
             break;
          case 'w':
             m_dwTimeOut = _tcstoul(optarg, NULL, 0);
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
             return 4;
          }
 #endif
-         strncpy(m_szServer, argv[optind], 256);
+         nx_strncpy(m_szServer, argv[optind], 256);
          m_dwEventCode = _tcstoul(argv[optind + 1], NULL, 0);
          SendEvent(argc - optind - 2, &argv[optind + 2]);
       }

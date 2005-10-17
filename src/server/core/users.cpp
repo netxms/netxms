@@ -71,7 +71,7 @@ BOOL LoadUsers(void)
    for(i = 0; i < g_dwNumUsers; i++)
    {
       g_pUserList[i].dwId = DBGetFieldULong(hResult, i, 0);
-      strncpy(g_pUserList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
+      nx_strncpy(g_pUserList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
       if (StrToBin(DBGetField(hResult, i, 2), g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
       {
          WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
@@ -82,8 +82,8 @@ BOOL LoadUsers(void)
       else
          g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
-      strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
-      strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
+      nx_strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
+      nx_strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
    }
 
    DBFreeResult(hResult);
@@ -117,10 +117,10 @@ BOOL LoadUsers(void)
    for(i = 0; i < g_dwNumGroups; i++)
    {
       g_pGroupList[i].dwId = DBGetFieldULong(hResult, i, 0);
-      strncpy(g_pGroupList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
+      nx_strncpy(g_pGroupList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
       g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
       g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
-      strncpy(g_pGroupList[i].szDescription, DBGetField(hResult, i, 4), MAX_USER_DESCR);
+      nx_strncpy(g_pGroupList[i].szDescription, DBGetField(hResult, i, 4), MAX_USER_DESCR);
       g_pGroupList[i].dwNumMembers = 0;
       g_pGroupList[i].pMembers = NULL;
    }
@@ -519,7 +519,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pGroupList[i].dwId = dwNewId = CreateUniqueId(IDG_USER_GROUP);
          g_pGroupList[i].dwNumMembers = 0;
          g_pGroupList[i].pMembers = NULL;
-         strncpy(g_pGroupList[i].szName, pszName, MAX_USER_NAME);
+         nx_strncpy(g_pGroupList[i].szName, pszName, MAX_USER_NAME);
          g_pGroupList[i].wFlags = UF_MODIFIED;
          g_pGroupList[i].wSystemRights = 0;
          g_pGroupList[i].szDescription[0] = 0;
@@ -548,7 +548,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_dwNumUsers++;
          g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
          g_pUserList[i].dwId = dwNewId = CreateUniqueId(IDG_USER);
-         strncpy(g_pUserList[i].szName, pszName, MAX_USER_NAME);
+         nx_strncpy(g_pUserList[i].szName, pszName, MAX_USER_NAME);
          g_pUserList[i].wFlags = UF_MODIFIED;
          g_pUserList[i].wSystemRights = 0;
          g_pUserList[i].szFullName[0] = 0;

@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <dbdrv.h>
 #include <nms_threads.h>
+#include <nms_util.h>
 #include <sqlfront.h>
 #include <sqldb.h>
 

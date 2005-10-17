@@ -125,7 +125,7 @@ void CheckForMgmtNode(void)
 
 static void SetPollerState(int nIdx, char *pszMsg)
 {
-   strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
+   nx_strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
    m_pPollerState[nIdx].szInfo[0] = 0;
    m_pPollerState[nIdx].timestamp = time(NULL);
 }
@@ -139,7 +139,7 @@ void SetPollerInfo(int nIdx, char *pszMsg)
 {
    if (nIdx != -1)
    {
-      strncpy(m_pPollerState[nIdx].szInfo, pszMsg, 128);
+      nx_strncpy(m_pPollerState[nIdx].szInfo, pszMsg, 128);
       m_pPollerState[nIdx].timestamp = time(NULL);
    }
 }

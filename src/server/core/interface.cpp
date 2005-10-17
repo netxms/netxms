@@ -62,7 +62,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask)
 Interface::Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType)
           : NetObj()
 {
-   strncpy(m_szName, szName, MAX_OBJECT_NAME);
+   nx_strncpy(m_szName, szName, MAX_OBJECT_NAME);
    m_dwIfIndex = dwIndex;
    m_dwIfType = dwType;
    m_dwIpAddr = dwAddr;

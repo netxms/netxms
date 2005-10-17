@@ -110,7 +110,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    DB_RESULT hRawResult;
 
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
-   strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
+   nx_strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
    DecodeSQLString(m_szName);
    m_iSource = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_iDataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
@@ -121,9 +121,9 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_pszFormula = strdup(DBGetField(hResult, iRow, 8));
    DecodeSQLString(m_pszFormula);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
-   strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
+   nx_strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
    DecodeSQLString(m_szDescription);
-   strncpy(m_szInstance, DBGetField(hResult, iRow, 11), MAX_DB_STRING);
+   nx_strncpy(m_szInstance, DBGetField(hResult, iRow, 11), MAX_DB_STRING);
    DecodeSQLString(m_szInstance);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_iBusy = 0;
@@ -164,9 +164,9 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_dwId = dwId;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-   strncpy(m_szName, szName, MAX_ITEM_NAME);
+   nx_strncpy(m_szName, szName, MAX_ITEM_NAME);
    if (pszDescription != NULL)
-      strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
+      nx_strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
    else
       strcpy(m_szDescription, m_szName);
    m_szInstance[0] = 0;

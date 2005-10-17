@@ -45,7 +45,7 @@ ItemValue::ItemValue()
 
 ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
 {
-   strncpy(m_szString, pszValue, MAX_DB_STRING);
+   nx_strncpy(m_szString, pszValue, MAX_DB_STRING);
    m_iInt32 = strtol(m_szString, NULL, 0);
    m_iInt64 = strtoll(m_szString, NULL, 0);
    m_dwInt32 = strtoul(m_szString, NULL, 0);
@@ -101,7 +101,7 @@ const ItemValue& ItemValue::operator=(const ItemValue &src)
 
 const ItemValue& ItemValue::operator=(const TCHAR *pszStr)
 {
-   strncpy(m_szString, pszStr, MAX_DB_STRING);
+   nx_strncpy(m_szString, pszStr, MAX_DB_STRING);
    m_iInt32 = strtol(m_szString, NULL, 0);
    m_iInt64 = strtoll(m_szString, NULL, 0);
    m_dwInt32 = strtoul(m_szString, NULL, 0);

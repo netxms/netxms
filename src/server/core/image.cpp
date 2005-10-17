@@ -149,8 +149,8 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
       for(i = 0; i < dwNumImages; i++)
       {
          pImageList[i].dwId = htonl(DBGetFieldULong(hResult, i, 0));
-         strncpy(pImageList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
-         strncpy(szHashText, DBGetField(hResult, i, 2), MD5_DIGEST_SIZE * 2 + 1);
+         nx_strncpy(pImageList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         nx_strncpy(szHashText, DBGetField(hResult, i, 2), MD5_DIGEST_SIZE * 2 + 1);
          for(j = 0, k = 0; j < MD5_DIGEST_SIZE; j++)
          {
             char ch1, ch2;

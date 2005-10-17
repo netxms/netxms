@@ -1468,7 +1468,7 @@ void ClientSession::SendAllConfigVars(DWORD dwRqId)
          for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++)
          {
             msg.SetVariable(dwId++, DBGetField(hResult, i, 0));
-            _tcsncpy(szBuffer, DBGetField(hResult, i, 1), MAX_DB_STRING);
+            nx_strncpy(szBuffer, DBGetField(hResult, i, 1), MAX_DB_STRING);
             DecodeSQLString(szBuffer);
             msg.SetVariable(dwId++, szBuffer);
             msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
@@ -4281,9 +4281,9 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          hResult = DBSelect(g_hCoreDB, szQuery);
          if ((hResult != NULL) && (DBGetNumRows(hResult) > 0))
          {
-            _tcsncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
-            _tcsncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
-            _tcsncpy(szVersion, DBGetField(hResult, 0, 2), MAX_AGENT_VERSION_LEN);
+            nx_strncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
+            nx_strncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
+            nx_strncpy(szVersion, DBGetField(hResult, 0, 2), MAX_AGENT_VERSION_LEN);
 
             // Create list of nodes to be upgraded
             dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);

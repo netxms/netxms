@@ -59,10 +59,10 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
          m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
                                                sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
          m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-         strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH );
+         nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH );
          m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
 #ifdef _NETWARE
-         strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
+         nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
 #endif
          m_dwNumSubAgents++;
 

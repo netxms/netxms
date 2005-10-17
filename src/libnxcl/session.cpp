@@ -577,7 +577,7 @@ BOOL NXCL_Session::GetEventNameEx(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwId)
       {
-         _tcsncpy(pszBuffer, m_ppEventTemplates[i]->szName, dwBufSize);
+         nx_strncpy(pszBuffer, m_ppEventTemplates[i]->szName, dwBufSize);
          MutexUnlock(m_mutexEventAccess);
          return TRUE;
       }
@@ -620,7 +620,7 @@ BOOL NXCL_Session::GetEventText(DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize)
    for(i = 0; i < m_dwNumTemplates; i++)
       if (m_ppEventTemplates[i]->dwCode == dwId)
       {
-         _tcsncpy(pszBuffer, m_ppEventTemplates[i]->pszMessage, dwBufSize);
+         nx_strncpy(pszBuffer, m_ppEventTemplates[i]->pszMessage, dwBufSize);
          MutexUnlock(m_mutexEventAccess);
          return TRUE;
       }

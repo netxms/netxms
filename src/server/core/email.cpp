@@ -337,8 +337,8 @@ void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText)
    MAIL_ENVELOPE *pEnvelope;
 
    pEnvelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
-   strncpy(pEnvelope->szRcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
-   strncpy(pEnvelope->szSubject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
+   nx_strncpy(pEnvelope->szRcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
+   nx_strncpy(pEnvelope->szSubject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
    pEnvelope->pszText = strdup(pszText);
    m_pMailerQueue->Put(pEnvelope);
 }

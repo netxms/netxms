@@ -187,7 +187,8 @@ typedef struct
 
 inline void ret_string(TCHAR *rbuf, TCHAR *value)
 {
-   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH);
+   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH - 1);
+   rbuf[MAX_RESULT_LENGTH - 1] = 0;
 }
 
 inline void ret_int(TCHAR *rbuf, long value)

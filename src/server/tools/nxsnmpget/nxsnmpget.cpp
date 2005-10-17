@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
          case 'c':   // Community
-            strncpy(m_szCommunity, optarg, 256);
+            nx_strncpy(m_szCommunity, optarg, 256);
             break;
          case 'p':   // Port number
             dwValue = strtoul(optarg, &eptr, 0);

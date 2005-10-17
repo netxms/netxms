@@ -246,7 +246,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
       memset(&m_pTargetList[m_dwNumTargets], 0, sizeof(PING_TARGET));
       m_pTargetList[m_dwNumTargets].dwIpAddr = dwIpAddr;
       if (pszName != NULL)
-         _tcsncpy(m_pTargetList[m_dwNumTargets].szName, pszName, MAX_DB_STRING);
+         nx_strncpy(m_pTargetList[m_dwNumTargets].szName, pszName, MAX_DB_STRING);
       else
          IpToStr(ntohl(dwIpAddr), m_pTargetList[m_dwNumTargets].szName);
       m_pTargetList[m_dwNumTargets].dwPacketSize = dwPacketSize;

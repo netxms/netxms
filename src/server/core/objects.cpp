@@ -551,7 +551,7 @@ BOOL LoadObjects(void)
       for(i = 0; i < (int)g_dwNumCategories; i++)
       {
          g_pContainerCatList[i].dwCatId = DBGetFieldULong(hResult, i, 0);
-         strncpy(g_pContainerCatList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         nx_strncpy(g_pContainerCatList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
          g_pContainerCatList[i].dwImageId = DBGetFieldULong(hResult, i, 2);
          g_pContainerCatList[i].pszDescription = strdup(DBGetField(hResult, i, 3));
       }

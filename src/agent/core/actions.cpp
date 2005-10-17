@@ -49,9 +49,9 @@ BOOL AddAction(char *pszName, int iType, char *pArg,
    // Create new entry in action list
    m_dwNumActions++;
    m_pActionList = (ACTION *)realloc(m_pActionList, sizeof(ACTION) * m_dwNumActions);
-   strncpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
+   nx_strncpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
    m_pActionList[i].iType = iType;
-   strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
+   nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
    switch(iType)
    {
       case AGENT_ACTION_EXEC:
@@ -60,7 +60,7 @@ BOOL AddAction(char *pszName, int iType, char *pArg,
       case AGENT_ACTION_SUBAGENT:
          m_pActionList[i].handler.sa.fpHandler = fpHandler;
          m_pActionList[i].handler.sa.pArg = pArg;
-         strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
+         nx_strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
          break;
       default:
          break;

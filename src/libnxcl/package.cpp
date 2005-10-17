@@ -233,23 +233,23 @@ DWORD LIBNXCL_EXPORTABLE NXCParseNPIFile(TCHAR *pszInfoFile, NXC_PACKAGE_INFO *p
 
          if (!_tcscmp(szTag, _T("NAME")))
          {
-            _tcsncpy(pInfo->szName, ptr, MAX_PACKAGE_NAME_LEN);
+            nx_strncpy(pInfo->szName, ptr, MAX_PACKAGE_NAME_LEN);
          }
          else if (!_tcscmp(szTag, _T("PLATFORM")))
          {
-            _tcsncpy(pInfo->szPlatform, ptr, MAX_PLATFORM_NAME_LEN);
+            nx_strncpy(pInfo->szPlatform, ptr, MAX_PLATFORM_NAME_LEN);
          }
          else if (!_tcscmp(szTag, _T("VERSION")))
          {
-            _tcsncpy(pInfo->szVersion, ptr, MAX_AGENT_VERSION_LEN);
+            nx_strncpy(pInfo->szVersion, ptr, MAX_AGENT_VERSION_LEN);
          }
          else if (!_tcscmp(szTag, _T("DESCRIPTION")))
          {
-            _tcsncpy(pInfo->szDescription, ptr, MAX_DB_STRING);
+            nx_strncpy(pInfo->szDescription, ptr, MAX_DB_STRING);
          }
          else if (!_tcscmp(szTag, _T("FILE")))
          {
-            _tcsncpy(pInfo->szFileName, GetCleanFileName(ptr), MAX_DB_STRING);
+            nx_strncpy(pInfo->szFileName, GetCleanFileName(ptr), MAX_DB_STRING);
          }
          else
          {

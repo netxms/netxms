@@ -1,6 +1,6 @@
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -336,7 +336,8 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
    pEventData->dwSourceId = htonl(m_dwSource);
 
 #ifdef UNICODE
-   _tcsncpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText), MAX_EVENT_MSG_LENGTH);
+   wcsncpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText), MAX_EVENT_MSG_LENGTH - 1);
+   pEventData->szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #else
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL(m_pszMessageText), -1, 
                        (WCHAR *)pEventData->szMessage, MAX_EVENT_MSG_LENGTH);

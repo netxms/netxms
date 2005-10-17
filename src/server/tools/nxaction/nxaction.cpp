@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
             bVerbose = FALSE;
             break;
          case 's':   // Shared secret
-            strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
+            nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
          case 'v':   // Print version and exit
             printf("NetXMS ACTION command-line utility Version " NETXMS_VERSION_STRING "\n");
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
             }
             break;
          case 'K':
-            strncpy(szKeyFile, optarg, MAX_PATH);
+            nx_strncpy(szKeyFile, optarg, MAX_PATH);
             break;
 #else
          case 'e':

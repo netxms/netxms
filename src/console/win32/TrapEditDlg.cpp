@@ -241,7 +241,7 @@ void CTrapEditDlg::OnButtonAdd()
    {
       m_trap.pMaps = 
          (NXC_OID_MAP *)realloc(m_trap.pMaps, sizeof(NXC_OID_MAP) * (m_trap.dwNumMaps + 1));
-      _tcsncpy(m_trap.pMaps[m_trap.dwNumMaps].szDescription, 
+      nx_strncpy(m_trap.pMaps[m_trap.dwNumMaps].szDescription, 
                dlg.m_strDescription, MAX_DB_STRING);
       m_trap.pMaps[m_trap.dwNumMaps].dwOidLen = 
          SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
@@ -298,7 +298,7 @@ void CTrapEditDlg::OnButtonEdit()
          dlg.m_strOID = szBuffer;
          if (dlg.DoModal() == IDOK)
          {
-            _tcsncpy(m_trap.pMaps[iItem].szDescription, 
+            nx_strncpy(m_trap.pMaps[iItem].szDescription, 
                      dlg.m_strDescription, MAX_DB_STRING);
             m_trap.pMaps[iItem].dwOidLen = 
                SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);

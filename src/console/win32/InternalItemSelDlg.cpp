@@ -118,8 +118,8 @@ void CInternalItemSelDlg::OnOK()
       DWORD dwIndex;
 
       dwIndex = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
-      _tcsncpy(m_szItemName, m_itemList[dwIndex].pszName, MAX_DB_STRING);
-      _tcsncpy(m_szItemDescription, m_itemList[dwIndex].pszDescription, MAX_DB_STRING);
+      nx_strncpy(m_szItemName, m_itemList[dwIndex].pszName, MAX_DB_STRING);
+      nx_strncpy(m_szItemDescription, m_itemList[dwIndex].pszDescription, MAX_DB_STRING);
       m_iDataType = m_itemList[dwIndex].iDataType;
 	   CDialog::OnOK();
    }

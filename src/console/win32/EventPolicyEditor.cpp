@@ -861,9 +861,9 @@ void CEventPolicyEditor::EditAlarm(int iRow)
       {
          m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_GENERATE_ALARM;
          m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = dlg.m_iSeverity;
-         strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmMessage, (LPCTSTR)dlg.m_strMessage, MAX_DB_STRING);
-         strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strKey, MAX_DB_STRING);
-         strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmAckKey, (LPCTSTR)dlg.m_strAckKey, MAX_DB_STRING);
+         nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmMessage, (LPCTSTR)dlg.m_strMessage, MAX_DB_STRING);
+         nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strKey, MAX_DB_STRING);
+         nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmAckKey, (LPCTSTR)dlg.m_strAckKey, MAX_DB_STRING);
       }
       else
       {

@@ -139,7 +139,7 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo,
    if (m_locks[dwId].dwLockStatus == UNLOCKED)
    {
       m_locks[dwId].dwLockStatus = dwLockBy;
-      strncpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
+      nx_strncpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
       bSuccess = TRUE;
    }
    else

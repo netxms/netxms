@@ -543,7 +543,7 @@ int CRuleList::InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD 
               sizeof(RL_COLUMN) * (m_iNumColumns - iNewCol));
    m_iNumColumns++;
    m_pColList[iNewCol].m_iWidth = iWidth;
-   strncpy(m_pColList[iNewCol].m_szName, pszText, MAX_COLUMN_NAME);
+   nx_strncpy(m_pColList[iNewCol].m_szName, pszText, MAX_COLUMN_NAME);
    m_pColList[iNewCol].m_dwFlags = dwFlags;
 
    // Insert new item into header control

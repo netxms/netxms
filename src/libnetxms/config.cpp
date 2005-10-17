@@ -128,7 +128,7 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
                      }
                      break;
                   case CT_STRING:
-                     _tcsncpy((TCHAR *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
+                     nx_strncpy((TCHAR *)pTemplateList[i].pBuffer, ptr, pTemplateList[i].dwBufferSize);
                      break;
                   case CT_STRING_LIST:
                      iLength = _tcslen(ptr) + 2;

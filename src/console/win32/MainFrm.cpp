@@ -392,7 +392,7 @@ void CMainFrame::OnDesktopSaveas()
    {
       TCHAR szName[MAX_OBJECT_NAME];
 
-      _tcsncpy(szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
+      nx_strncpy(szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
       StrStrip(szName);
       if (szName[0] != 0)
       {
@@ -489,7 +489,7 @@ void CMainFrame::OnDesktopRestore()
    dlg.m_bRestore = TRUE;
    if (dlg.DoModal() == IDOK)
    {
-      _tcsncpy(szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
+      nx_strncpy(szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
       StrStrip(szName);
 
       // Close existing windows

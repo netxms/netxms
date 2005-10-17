@@ -128,7 +128,7 @@ BOOL NetObj::LoadCommonProperties(void)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         _tcsncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+         nx_strncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
          m_iStatus = DBGetFieldLong(hResult, 0, 1);
          m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
          m_dwImageId = DBGetFieldULong(hResult, 0, 3);

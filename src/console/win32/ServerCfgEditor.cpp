@@ -228,7 +228,7 @@ void CServerCfgEditor::OnVariableEdit()
       dlg.m_strValue = szValue;
       if (dlg.DoModal() == IDOK)
       {
-         _tcsncpy(szValue, (LPCTSTR)dlg.m_strValue, MAX_DB_STRING);
+         nx_strncpy(szValue, (LPCTSTR)dlg.m_strValue, MAX_DB_STRING);
          dwResult = DoRequestArg3(NXCSetServerVariable, g_hSession,
                                   szName, szValue, _T("Updating configuration variable..."));
          if (dwResult == RCC_SUCCESS)
@@ -258,8 +258,8 @@ void CServerCfgEditor::OnVariableNew()
    dlg.m_bNewVariable = TRUE;
    if (dlg.DoModal() == IDOK)
    {
-      _tcsncpy(szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
-      _tcsncpy(szValue, (LPCTSTR)dlg.m_strValue, MAX_DB_STRING);
+      nx_strncpy(szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
+      nx_strncpy(szValue, (LPCTSTR)dlg.m_strValue, MAX_DB_STRING);
 
       lvfi.flags = LVFI_STRING;
       lvfi.psz = szName;

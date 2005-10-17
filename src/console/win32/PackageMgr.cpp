@@ -210,7 +210,7 @@ static DWORD InstallPackage(TCHAR *pszPkgFile, NXC_PACKAGE_INFO *pInfo)
    dwResult = NXCParseNPIFile(pszPkgFile, pInfo);
    if (dwResult == RCC_SUCCESS)
    {
-      _tcsncpy(szDataFile, pszPkgFile, MAX_PATH);
+      nx_strncpy(szDataFile, pszPkgFile, MAX_PATH);
       ptr = _tcsrchr(szDataFile, _T('\\'));
       ASSERT(ptr != NULL);
       if (ptr == NULL)  // Normally we should receive full path, so it's just a paranoid check

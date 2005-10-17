@@ -71,7 +71,7 @@ static BOOL LoadTrapCfg(void)
             bResult = FALSE;
          }
          m_pTrapCfg[i].dwEventCode = DBGetFieldULong(hResult, i, 2);
-         _tcsncpy(m_pTrapCfg[i].szDescription, DBGetField(hResult, i, 3), MAX_DB_STRING);
+         nx_strncpy(m_pTrapCfg[i].szDescription, DBGetField(hResult, i, 3), MAX_DB_STRING);
          DecodeSQLString(m_pTrapCfg[i].szDescription);
       }
       DBFreeResult(hResult);
@@ -100,7 +100,7 @@ static BOOL LoadTrapCfg(void)
                            DBGetField(hResult, j, 0), m_pTrapCfg[i].dwId);
                   bResult = FALSE;
                }
-               _tcsncpy(m_pTrapCfg[i].pMaps[j].szDescription, DBGetField(hResult, j, 1), MAX_DB_STRING);
+               nx_strncpy(m_pTrapCfg[i].pMaps[j].szDescription, DBGetField(hResult, j, 1), MAX_DB_STRING);
                DecodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
             }
             DBFreeResult(hResult);

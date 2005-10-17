@@ -335,8 +335,8 @@ static DWORD __stdcall WorkerThread(void *pArg)
    if (bResult)
    {
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Loading database driver"));
-      _tcsncpy(g_szDbDriver, pc->m_szDBDriver, MAX_PATH);
-      _tcsncpy(g_szDbServer, pc->m_szDBServer, MAX_PATH);
+      nx_strncpy(g_szDbDriver, pc->m_szDBDriver, MAX_PATH);
+      nx_strncpy(g_szDbServer, pc->m_szDBServer, MAX_PATH);
       bResult = DBInit(FALSE, FALSE, FALSE);
       if (!bResult)
          _tcscpy(g_szWizardErrorText, _T("Error loading database driver"));

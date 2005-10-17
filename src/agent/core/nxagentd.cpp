@@ -852,11 +852,11 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_DEBUG;
             break;
          case 'c':   // Configuration file
-            strncpy(g_szConfigFile, optarg, MAX_PATH - 1);
+            nx_strncpy(g_szConfigFile, optarg, MAX_PATH - 1);
             break;
 #if !defined(_WIN32) && !defined(_NETWARE)
          case 'p':   // PID file
-            strncpy(g_szPidFile, optarg, MAX_PATH - 1);
+            nx_strncpy(g_szPidFile, optarg, MAX_PATH - 1);
             break;
 #endif
          case 'C':   // Configuration check only

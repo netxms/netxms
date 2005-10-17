@@ -414,7 +414,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            _tcsncpy(szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+            nx_strncpy(szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
             bIsDeleted = DBGetFieldLong(hResult, 0, 1) ? TRUE : FALSE;
             dwImageId = DBGetFieldULong(hResult, 0, 2);
             dwStatus = bIsTemplate ? STATUS_UNKNOWN : DBGetFieldULong(hResult, 0, 3);

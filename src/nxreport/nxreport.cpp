@@ -184,10 +184,10 @@ int main(int argc, char *argv[])
             gs_dwRootObj = _tcstoul(optarg, NULL, 0);
             break;
          case 'P':
-            _tcsncpy(szPassword, optarg, MAX_DB_STRING);
+            nx_strncpy(szPassword, optarg, MAX_DB_STRING);
             break;
          case 'u':
-            _tcsncpy(szLogin, optarg, MAX_DB_STRING);
+            nx_strncpy(szLogin, optarg, MAX_DB_STRING);
             break;
          case 'v':
             printf("NetXMS Event Sender  Version " NETXMS_VERSION_STRING "\n");
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
             return 4;
          }
 #endif
-         strncpy(szServer, argv[optind], 256);
+         nx_strncpy(szServer, argv[optind], 256);
          
          if (!NXCInitialize())
 			{

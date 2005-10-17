@@ -27,7 +27,7 @@ CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName)
 {
    m_dwNodeId = dwNodeId;
    m_dwItemId = dwItemId;
-   _tcsncpy(m_szItemName, pszItemName, MAX_OBJECT_NAME + MAX_ITEM_NAME + 4);
+   nx_strncpy(m_szItemName, pszItemName, MAX_OBJECT_NAME + MAX_ITEM_NAME + 4);
 }
 
 CDCIDataView::CDCIDataView(TCHAR *pszParams)

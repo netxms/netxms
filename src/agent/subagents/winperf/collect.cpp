@@ -159,10 +159,10 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
                   switch(iField)
                   {
                      case 0:  // Parameter name
-                        _tcsncpy(szParamName, pszCurrField, MAX_PARAM_NAME);
+                        nx_strncpy(szParamName, pszCurrField, MAX_PARAM_NAME);
                         break;
                      case 1:  // Counter path
-                        _tcsncpy(szCounterPath, pszCurrField, MAX_PATH);
+                        nx_strncpy(szCounterPath, pszCurrField, MAX_PATH);
                         break;
                      case 2:  // Number of samples
                         iNumSamples = _tcstol(pszCurrField, &eptr, 0);
@@ -181,7 +181,7 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
                            iState = 255;
                         break;
                      case 5:  // Description
-                        _tcsncpy(szDescription, pszCurrField, MAX_DB_STRING);
+                        nx_strncpy(szDescription, pszCurrField, MAX_DB_STRING);
                         break;
                      default:
                         iState = 255;  // Error

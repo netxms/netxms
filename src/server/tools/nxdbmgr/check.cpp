@@ -72,7 +72,7 @@ static void CheckNodes(void)
             }
             else
             {
-               _tcsncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
+               nx_strncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
                bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
             }
             DBFreeResult(hResult2);
@@ -150,7 +150,7 @@ static void CheckInterfaces(void)
             }
             else
             {
-               _tcsncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
+               nx_strncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
                bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
             }
             DBFreeResult(hResult2);
@@ -265,7 +265,7 @@ void CheckDatabase(void)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            _tcsncpy(szLockStatus, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+            nx_strncpy(szLockStatus, DBGetField(hResult, 0, 0), MAX_DB_STRING);
             DecodeSQLString(szLockStatus);
             bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
          }
@@ -278,7 +278,7 @@ void CheckDatabase(void)
             {
                if (DBGetNumRows(hResult) > 0)
                {
-                  _tcsncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+                  nx_strncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
                   DecodeSQLString(szLockInfo);
                }
                DBFreeResult(hResult);

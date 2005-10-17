@@ -120,7 +120,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 						if (pEnt != NULL)
 						{
 							(*pEnt)[nFound].nPid = strtoul(pNameList[nCount]->d_name, NULL, 10);
-							strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
+							nx_strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
 									  sizeof((*pEnt)[nFound].szProcName));
 						}
 						nFound++;

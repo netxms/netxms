@@ -106,7 +106,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHA
       WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
                           pszSecret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
 #else
-      strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH);
+      nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH);
 #endif
    }
    else
@@ -498,7 +498,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
          }
 
          // Name
-         _tcsncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
+         nx_strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
       }
 
       Lock();

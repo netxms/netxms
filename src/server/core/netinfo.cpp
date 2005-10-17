@@ -251,13 +251,13 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
             }
             else
             {
-               strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+               nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
-            strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
          }
 
          BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
@@ -267,7 +267,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
          {
             pIfList->pInterfaces = (INTERFACE_INFO *)realloc(pIfList->pInterfaces,
                                           sizeof(INTERFACE_INFO) * (pIfList->iNumEntries + 1));
-            _tcsncpy(pIfList->pInterfaces[pIfList->iNumEntries].szName, szAdapterName, MAX_OBJECT_NAME);
+            nx_strncpy(pIfList->pInterfaces[pIfList->iNumEntries].szName, szAdapterName, MAX_OBJECT_NAME);
             memcpy(pIfList->pInterfaces[pIfList->iNumEntries].bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
             pIfList->pInterfaces[pIfList->iNumEntries].dwIndex = pInfo->Index;
             pIfList->pInterfaces[pIfList->iNumEntries].dwIpAddr = ntohl(_t_inet_addr(pAddr->IpAddress.String));

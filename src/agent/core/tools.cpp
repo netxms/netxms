@@ -82,7 +82,7 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
       _tcscat(pszFullPath, FS_PATH_SEPARATOR);
       nLen++;
    }
-   _tcsncpy(&pszFullPath[nLen], &pszFileName[i + 1], MAX_PATH - nLen);
+   nx_strncpy(&pszFullPath[nLen], &pszFileName[i + 1], MAX_PATH - nLen);
 }
 
 
@@ -108,7 +108,7 @@ char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize)
                      (LPSTR)&msgBuf, 0, NULL)>0)
    {
       msgBuf[strcspn(msgBuf, "\r\n")] = 0;
-      strncpy(pszBuffer, msgBuf, iBufSize);
+      nx_strncpy(pszBuffer, msgBuf, iBufSize);
       LocalFree(msgBuf);
    }
    else

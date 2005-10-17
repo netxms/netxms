@@ -147,8 +147,8 @@ void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText)
 	if (m_pMsgQueue != NULL)
 	{
 		pMsg = (SMS *)malloc(sizeof(SMS));
-		_tcsncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
-		_tcsncpy(pMsg->szText, pszText, 160);
+		nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
+		nx_strncpy(pMsg->szText, pszText, 160);
 		m_pMsgQueue->Put(pMsg);
 	}
 }

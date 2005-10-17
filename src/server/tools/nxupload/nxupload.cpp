@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
             bVerbose = FALSE;
             break;
          case 's':   // Shared secret
-            strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
+            nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH - 1);
             break;
          case 'u':   // Upgrade agent
             bUpgrade = TRUE;
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
             }
             break;
          case 'K':
-            strncpy(szKeyFile, optarg, MAX_PATH);
+            nx_strncpy(szKeyFile, optarg, MAX_PATH);
             break;
 #else
          case 'e':

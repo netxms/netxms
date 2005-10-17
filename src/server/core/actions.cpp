@@ -86,7 +86,7 @@ static BOOL LoadActions(void)
       for(i = 0; i < m_dwNumActions; i++)
       {
          m_pActionList[i].dwId = DBGetFieldULong(hResult, i, 0);
-         strncpy(m_pActionList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         nx_strncpy(m_pActionList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
          m_pActionList[i].iType = DBGetFieldLong(hResult, i, 2);
          m_pActionList[i].bIsDisabled = DBGetFieldLong(hResult, i, 3);
 
@@ -285,7 +285,7 @@ DWORD CreateNewAction(char *pszName, DWORD *pdwId)
       m_dwNumActions++;
       m_pActionList = (NXC_ACTION *)realloc(m_pActionList, sizeof(NXC_ACTION) * m_dwNumActions);
       m_pActionList[i].dwId = CreateUniqueId(IDG_ACTION);
-      strncpy(m_pActionList[i].szName, pszName, MAX_OBJECT_NAME);
+      nx_strncpy(m_pActionList[i].szName, pszName, MAX_OBJECT_NAME);
       m_pActionList[i].bIsDisabled = TRUE;
       m_pActionList[i].iType = ACTION_EXEC;
       m_pActionList[i].szEmailSubject[0] = 0;

@@ -430,7 +430,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, 
                      (LPTSTR)&msgBuf, 0, NULL) > 0)
    {
       msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
-      _tcsncpy(pszBuffer, msgBuf, iBufSize);
+      nx_strncpy(pszBuffer, msgBuf, iBufSize);
       LocalFree(msgBuf);
    }
    else

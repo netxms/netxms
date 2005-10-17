@@ -50,7 +50,7 @@ char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error)
                      (LPSTR)&msgBuf,0,NULL)>0)
    {
       msgBuf[strcspn(msgBuf,"\r\n")]=0;
-      strncpy(staticBuffer,msgBuf,1023);
+      nx_strncpy(staticBuffer,msgBuf,1023);
       LocalFree(msgBuf);
    }
    else
@@ -142,7 +142,7 @@ void GetSysInfoStr(char *pszBuffer)
 #if HAVE_STRERROR_R
 		strerror_r(errno, pszBuffer, 512);
 #else
-		strncpy(pszBuffer, strerror(errno), 512);
+		nx_strncpy(pszBuffer, strerror(errno), 512);
 #endif
 	}
 # else

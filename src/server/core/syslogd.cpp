@@ -240,7 +240,7 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
       {
          pRec->dwSourceObject = pNode->Id();
          if (pRec->szHostName[0] == 0)
-            _tcsncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+            nx_strncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
       }
       else
       {

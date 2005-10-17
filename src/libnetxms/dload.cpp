@@ -45,7 +45,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
 #elif defined(_NETWARE)
    TCHAR szBuffer[MAX_PATH + 4];
 
-   _tcsncpy(&szBuffer[4], szLibName, MAX_PATH);
+   nx_strncpy(&szBuffer[4], szLibName, MAX_PATH);
    if (LoadModule(getscreenhandle(), &szBuffer[4], LO_RETURN_HANDLE) == 0)
    {
       hModule = *((HMODULE *)szBuffer);
@@ -58,7 +58,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
 #else    /* _WIN32 */
    hModule = dlopen(szLibName, RTLD_NOW | RTLD_GLOBAL);
    if (hModule == NULL)
-      strncpy(pszErrorText, dlerror(), 255);
+      nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
    return hModule;
 }
@@ -115,7 +115,7 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
 #else    /* _WIN32 */
    pAddr = dlsym(hModule, pszSymbol);
    if (pAddr == NULL)
-      _tcsncpy(pszErrorText, dlerror(), 255);
+      nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
    return pAddr;
 }

@@ -99,10 +99,10 @@ BOOL AlarmManager::Init(void)
          m_pAlarmList[i].dwSourceObject = DBGetFieldULong(hResult, i, 2);
          m_pAlarmList[i].dwSourceEventCode = DBGetFieldULong(hResult, i, 3);
          m_pAlarmList[i].qwSourceEventId = DBGetFieldUInt64(hResult, i, 4);
-         strncpy(m_pAlarmList[i].szMessage, DBGetField(hResult, i, 5), MAX_DB_STRING);
+         nx_strncpy(m_pAlarmList[i].szMessage, DBGetField(hResult, i, 5), MAX_DB_STRING);
          DecodeSQLString(m_pAlarmList[i].szMessage);
          m_pAlarmList[i].wSeverity = (WORD)DBGetFieldLong(hResult, i, 6);
-         strncpy(m_pAlarmList[i].szKey, DBGetField(hResult, i, 7), MAX_DB_STRING);
+         nx_strncpy(m_pAlarmList[i].szKey, DBGetField(hResult, i, 7), MAX_DB_STRING);
          DecodeSQLString(m_pAlarmList[i].szKey);
          m_pAlarmList[i].wIsAck = 0;
          m_pAlarmList[i].dwAckByUser = 0;
@@ -137,8 +137,8 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    alarm.dwAckByUser = 0;
    alarm.wIsAck = bIsAck;
    alarm.wSeverity = iSeverity;
-   strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
-   strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
+   nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
+   nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
    free(pszExpMsg);
    free(pszExpKey);
 

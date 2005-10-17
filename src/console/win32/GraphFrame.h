@@ -106,7 +106,7 @@ private:
 	CGraph m_wndGraph;
 
 public:
-   void SetSubTitle(TCHAR *pszText) { _tcsncpy(m_szSubTitle, pszText, 256); }
+   void SetSubTitle(TCHAR *pszText) { nx_strncpy(m_szSubTitle, pszText, 256); }
    TCHAR *GetSubTitle(void) { return m_szSubTitle; }
 };
 

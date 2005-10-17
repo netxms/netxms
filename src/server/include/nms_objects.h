@@ -251,7 +251,7 @@ public:
 
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
    void SetMgmtStatus(BOOL bIsManaged);
-   void SetName(char *pszName) { strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
+   void SetName(char *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
 
    virtual void CalculateCompoundStatus(void);

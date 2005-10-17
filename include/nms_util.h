@@ -167,6 +167,19 @@ typedef struct _dir_struc
 #endif
 
 #ifdef __cplusplus
+#ifndef LIBNETXMS_INLINE
+   inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen)
+   {
+      _tcsncpy(pszDest, pszSrc, nLen - 1);
+      pszDest[nLen - 1] = 0;
+      return pszDest;
+   }
+#endif
+#else
+   TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, TCHAR *pszSrc, int nLen);
+#endif
+
+#ifdef __cplusplus
 extern "C"
 {
 #endif

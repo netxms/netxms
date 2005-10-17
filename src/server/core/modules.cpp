@@ -85,7 +85,7 @@ void LoadNetXMSModules(void)
                         memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
                         g_pModuleList[g_dwNumModules].hModule = hModule;
                         g_pModuleList[g_dwNumModules].dwFlags = dwFlags;
-                        strncpy(g_pModuleList[g_dwNumModules].szName, DBGetField(hResult, i, 0), MAX_OBJECT_NAME);
+                        nx_strncpy(g_pModuleList[g_dwNumModules].szName, DBGetField(hResult, i, 0), MAX_OBJECT_NAME);
 
                         // Start module's main thread
                         ThreadCreate(ModuleThreadStarter, 0, &g_pModuleList[g_dwNumModules]);

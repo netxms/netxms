@@ -101,9 +101,9 @@ BOOL CAlarmViewApp::InitInstance()
          dlg.m_szPassword = g_szPassword;
          if (dlg.DoModal() != IDOK)
             return FALSE;
-         _tcsncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
-         _tcsncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
-         _tcsncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
+         nx_strncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
+         nx_strncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
+         nx_strncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
       }
 
       // Save last connection parameters

@@ -197,7 +197,7 @@ BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *p
    TCHAR szQuery[256];
    BOOL bSuccess = FALSE;
 
-   _tcsncpy(pszBuffer, pszDefault, iBufSize);
+   nx_strncpy(pszBuffer, pszDefault, iBufSize);
    if (_tcslen(pszVar) > 127)
       return FALSE;
 
@@ -208,7 +208,7 @@ BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *p
 
    if (DBGetNumRows(hResult) > 0)
    {
-      _tcsncpy(pszBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      nx_strncpy(pszBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
       DecodeSQLString(pszBuffer);
       bSuccess = TRUE;
    }
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
          case 'c':
-            _tcsncpy(szConfigFile, optarg, MAX_PATH);
+            nx_strncpy(szConfigFile, optarg, MAX_PATH);
             break;
          case 'f':
             m_bForce = TRUE;
@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         _tcsncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
+         nx_strncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
          DecodeSQLString(szSyntaxId);
       }
       else

@@ -102,13 +102,13 @@ LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
             }
             else
             {
-               strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+               nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
-            strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
          }
 
          BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
@@ -197,13 +197,13 @@ static DWORD AdapterNameToIndex(char *pszName)
             }
             else
             {
-               strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+               nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
             }
          }
          else
          {
             // We don't have a GUID resolving function, use GUID as name
-            strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
          }
 
          if (!stricmp(szAdapterName, pszName))

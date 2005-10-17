@@ -178,7 +178,7 @@ BOOL CEventEditor::EditEvent(int iItem)
          evt.dwSeverity = dlgEditEvent.m_dwSeverity;
          evt.pszDescription = _tcsdup((LPCTSTR)dlgEditEvent.m_strDescription);
          evt.pszMessage = _tcsdup((LPCTSTR)dlgEditEvent.m_strMessage);
-         _tcsncpy(evt.szName, (LPCTSTR)dlgEditEvent.m_strName, MAX_EVENT_NAME);
+         nx_strncpy(evt.szName, (LPCTSTR)dlgEditEvent.m_strName, MAX_EVENT_NAME);
 
          dwResult = DoRequestArg2(NXCSetEventInfo, g_hSession, 
                                   &evt, _T("Updating event configuration database..."));

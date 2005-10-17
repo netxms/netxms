@@ -283,7 +283,7 @@ void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char 
       // Replace existing handler and attributes
       m_pParamList[i].fpHandler = fpHandler;
       m_pParamList[i].iDataType = iDataType;
-      strncpy(m_pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
+      nx_strncpy(m_pParamList[i].szDescription, pszDescription, MAX_DB_STRING);
 
       // If we are replacing System.PlatformName, add pointer to
       // platform suffix as argument, otherwise, use supplied pArg
@@ -300,11 +300,11 @@ void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char 
    {
       // Add new parameter
       m_pParamList = (NETXMS_SUBAGENT_PARAM *)realloc(m_pParamList, sizeof(NETXMS_SUBAGENT_PARAM) * (m_iNumParams + 1));
-      strncpy(m_pParamList[m_iNumParams].szName, pszName, MAX_PARAM_NAME - 1);
+      nx_strncpy(m_pParamList[m_iNumParams].szName, pszName, MAX_PARAM_NAME - 1);
       m_pParamList[m_iNumParams].fpHandler = fpHandler;
       m_pParamList[m_iNumParams].pArg = pArg;
       m_pParamList[m_iNumParams].iDataType = iDataType;
-      strncpy(m_pParamList[m_iNumParams].szDescription, pszDescription, MAX_DB_STRING);
+      nx_strncpy(m_pParamList[m_iNumParams].szDescription, pszDescription, MAX_DB_STRING);
       m_iNumParams++;
    }
 }
@@ -332,7 +332,7 @@ void AddEnum(char *pszName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST 
    {
       // Add new enum
       m_pEnumList = (NETXMS_SUBAGENT_ENUM *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_ENUM) * (m_iNumEnums + 1));
-      strncpy(m_pEnumList[m_iNumEnums].szName, pszName, MAX_PARAM_NAME - 1);
+      nx_strncpy(m_pEnumList[m_iNumEnums].szName, pszName, MAX_PARAM_NAME - 1);
       m_pEnumList[m_iNumEnums].fpHandler = fpHandler;
       m_pEnumList[m_iNumEnums].pArg = pArg;
       m_iNumEnums++;

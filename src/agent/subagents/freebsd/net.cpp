@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.9 2005-08-22 23:00:05 alk Exp $ */
+/* $Id: net.cpp,v 1.10 2005-10-17 20:45:46 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -119,7 +119,7 @@ LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
 				int flags;
 
 				memset(&ifr, 0, sizeof(ifr));
-				strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
+				nx_strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
 				if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 				{
 					flags = (ifr.ifr_flags & 0xffff) | (ifr.ifr_flagshigh << 16);
@@ -174,7 +174,7 @@ LONG H_NetIfLink(char *pszParam, char *pArg, char *pValue)
 				struct ifmediareq ifmr;
 
 				memset(&ifmr, 0, sizeof(ifmr));
-				strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				nx_strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
 					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
@@ -533,6 +533,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/08/22 23:00:05  alk
+Net.IP.RoutingTable added
+
 Revision 1.8  2005/06/12 17:58:36  victor
 Net.Interface.AdminStatus should return 2 for disabled interfaces
 

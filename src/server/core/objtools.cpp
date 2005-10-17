@@ -161,7 +161,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
             pnSubstrPos = (int *)malloc(sizeof(int) * dwNumCols);
             for(i = 0; i < dwNumCols; i++)
             {
-               _tcsncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+               nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);
                DecodeSQLString(szBuffer);
                msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
                msg.SetVariable(VID_COLUMN_FMT_BASE + i, DBGetFieldULong(hResult, i, 1));
@@ -367,7 +367,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          args.values.ppStringList = NULL;
          for(i = 0; i < dwNumCols; i++)
          {
-            _tcsncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+            nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);
             DecodeSQLString(szBuffer);
             msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
             args.ppszOidList[i] = _tcsdup(DBGetField(hResult, i, 1));

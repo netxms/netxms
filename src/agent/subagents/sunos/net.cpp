@@ -137,7 +137,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 					strcpy(rq.lifr_name, lc.lifc_req[i].lifr_name);
 					if (ioctl(nFd, SIOCGLIFADDR, &rq) == 0)
 					{
-						strncpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
+						nx_strncpy(szIpAddr, inet_ntoa(((struct sockaddr_in *)&rq.lifr_addr)->sin_addr), sizeof(szIpAddr));
 					}
 					else
 					{

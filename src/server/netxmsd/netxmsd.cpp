@@ -99,7 +99,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--config"))  // Config file
       {
          i++;
-         strncpy(g_szConfigFile, argv[i], MAX_PATH);     // Next word should contain name of the config file
+         nx_strncpy(g_szConfigFile, argv[i], MAX_PATH);     // Next word should contain name of the config file
       }
 #ifndef _WIN32
       else if (!strcmp(argv[i], "--pid-file"))  // PID file
@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 #else
    pszEnv = getenv("NETXMSD_CONFIG");
    if (pszEnv != NULL)
-      strncpy(g_szConfigFile, pszEnv, MAX_PATH);
+      nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
 #endif
 
    if (!ParseCommandLine(argc, argv))

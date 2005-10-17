@@ -273,7 +273,7 @@ void CActionEditor::OnActionNew()
             memset(&g_pActionList[i], 0, sizeof(NXC_ACTION));
             g_pActionList[i].dwId = dwActionId;
             g_pActionList[i].iType = ACTION_EXEC;
-            strncpy(g_pActionList[i].szName, dlg.m_strName, MAX_OBJECT_NAME);
+            nx_strncpy(g_pActionList[i].szName, dlg.m_strName, MAX_OBJECT_NAME);
             g_pActionList[i].pszData = strdup("");
          }
 
@@ -329,9 +329,9 @@ void CActionEditor::OnActionProperties()
                action.dwId = m_wndListCtrl.GetItemData(iItem);
                action.iType = dlg.m_iType;
                action.pszData = strdup((LPCTSTR)dlg.m_strData);
-               strncpy(action.szEmailSubject, (LPCTSTR)dlg.m_strSubject, MAX_EMAIL_SUBJECT_LEN);
-               strncpy(action.szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
-               strncpy(action.szRcptAddr, (LPCTSTR)dlg.m_strRcpt, MAX_RCPT_ADDR_LEN);
+               nx_strncpy(action.szEmailSubject, (LPCTSTR)dlg.m_strSubject, MAX_EMAIL_SUBJECT_LEN);
+               nx_strncpy(action.szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
+               nx_strncpy(action.szRcptAddr, (LPCTSTR)dlg.m_strRcpt, MAX_RCPT_ADDR_LEN);
 
                dwResult = DoRequestArg2(NXCModifyAction, g_hSession, &action, "Updating action configuration...");
                if (dwResult == RCC_SUCCESS)

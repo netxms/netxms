@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.1.1.1 2005-02-01 20:18:04 alk Exp $ */
+/* $Id: main.cpp,v 1.2 2005-10-17 20:45:47 victor Exp $ */
 
 //#include <windows.h>
 #include <Python.h>
@@ -100,7 +100,7 @@ extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo
 			bRet = TRUE;
 
 			m_info.dwNumParameters = 1;
-			strncpy(m_param[0].szName, szCommand, sizeof(m_param[0].szName));
+			nx_strncpy(m_param[0].szName, szCommand, sizeof(m_param[0].szName));
 			m_param[0].iDataType = m_nRetType;
 			
 	   	*ppInfo = &m_info;
@@ -148,5 +148,10 @@ int _fini(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1.1.1  2005/02/01 20:18:04  alk
+initial import
+
+nb! NOT WORKING!
+
 
 */

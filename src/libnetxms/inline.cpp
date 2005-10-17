@@ -31,7 +31,8 @@
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value)
 {
-   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH);
+   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH - 1);
+   rbuf[MAX_RESULT_LENGTH - 1] = 0;
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value)
@@ -65,4 +66,11 @@ extern "C" void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value)
 #else    /* _WIN32 */
    _stprintf(rbuf, _T("%llu"), value);
 #endif   /* _WIN32 */
+}
+
+extern "C" TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen)
+{
+   _tcsncpy(pszDest, pszSrc, nLen - 1);
+   pszDest[nLen - 1] = 0;
+   return pszDest;
 }

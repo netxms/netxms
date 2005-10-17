@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.2 2005-01-18 17:09:33 alk Exp $ */
+/* $Id: proc.cpp,v 1.3 2005-10-17 20:45:46 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -120,7 +120,7 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 									if (pEnt != NULL)
 									{
 										(*pEnt)[nFound].nPid = nPid;
-										strncpy((*pEnt)[nFound].szProcName, pProcName,
+										nx_strncpy((*pEnt)[nFound].szProcName, pProcName,
 												sizeof((*pEnt)[nFound].szProcName));
 									}
 								}
@@ -143,6 +143,9 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/01/18 17:09:33  alk
+process name matching chaged from patern to exact match
+
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:

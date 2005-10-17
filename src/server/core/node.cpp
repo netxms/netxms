@@ -157,17 +157,17 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_iSNMPVersion = DBGetFieldLong(hResult, 0, 2);
    m_dwDiscoveryFlags = DBGetFieldULong(hResult, 0, 3);
    m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
-   strncpy(m_szSharedSecret, DBGetField(hResult, 0, 5), MAX_SECRET_LENGTH);
+   nx_strncpy(m_szSharedSecret, DBGetField(hResult, 0, 5), MAX_SECRET_LENGTH);
    m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 7);
-   strncpy(m_szCommunityString, DBGetField(hResult, 0, 8), MAX_COMMUNITY_LENGTH);
-   strncpy(m_szObjectId, DBGetField(hResult, 0, 9), MAX_OID_LEN * 4);
+   nx_strncpy(m_szCommunityString, DBGetField(hResult, 0, 8), MAX_COMMUNITY_LENGTH);
+   nx_strncpy(m_szObjectId, DBGetField(hResult, 0, 9), MAX_OID_LEN * 4);
    m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 10)));
    DecodeSQLString(m_pszDescription);
    m_dwNodeType = DBGetFieldULong(hResult, 0, 11);
-   _tcsncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 12)), MAX_AGENT_VERSION_LEN);
+   nx_strncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 12)), MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
-   _tcsncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 13)), MAX_PLATFORM_NAME_LEN);
+   nx_strncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 13)), MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 14);
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 15);
@@ -930,7 +930,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
             if (strcmp(m_szObjectId, szBuffer))
             {
-               strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+               nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
                bHasChanges = TRUE;
             }
 
@@ -985,7 +985,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                LockData();
                if (strcmp(m_szObjectId, ".1.3.6.1.4.1.2620.1.1"))
                {
-                  strncpy(m_szObjectId, ".1.3.6.1.4.1.2620.1.1", MAX_OID_LEN * 4);
+                  nx_strncpy(m_szObjectId, ".1.3.6.1.4.1.2620.1.1", MAX_OID_LEN * 4);
                   bHasChanges = TRUE;
                }
 

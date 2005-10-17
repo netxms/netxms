@@ -39,7 +39,7 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize)
                      (LPTSTR)&pszMsg, 0, NULL)>0)
    {
       TranslateStr(pszMsg, _T("\r\n"), _T(""));
-      _tcsncpy(pszBuffer, pszMsg, iBufferSize);
+      nx_strncpy(pszBuffer, pszMsg, iBufferSize);
       LocalFree(pszMsg);
    }
    else

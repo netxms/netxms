@@ -112,14 +112,14 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
          case 'p':   // Password
-            strncpy(szPassword, optarg, 255);
+            nx_strncpy(szPassword, optarg, 255);
             bPasswordProvided = TRUE;
             break;
          case 's':   // Server
-            strncpy(szServer, optarg, 255);
+            nx_strncpy(szServer, optarg, 255);
             break;
          case 'u':   // Login
-            strncpy(szLogin, optarg, 255);
+            nx_strncpy(szLogin, optarg, 255);
             break;
          case '?':
             bStart = FALSE;
@@ -161,7 +161,8 @@ int main(int argc, char *argv[])
       NXCSetDebugCallback(DebugCallback);
 
    printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
-   dwResult = NXCConnect(szServer, szLogin, szPassword, &g_hSession, FALSE, FALSE);
+   dwResult = NXCConnect(szServer, szLogin, szPassword, &g_hSession, 
+                         "nxcmd/" NETXMS_VERSION_STRING, FALSE, FALSE);
    if (dwResult != RCC_SUCCESS)
    {
       printf("Unable to connect to server: %s\n", NXCGetErrorText(dwResult));

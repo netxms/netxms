@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
             ScanDirectory(optarg);
             break;
          case 'o':
-            strncpy(m_szOutFile, optarg, MAX_PATH);
+            nx_strncpy(m_szOutFile, optarg, MAX_PATH);
             break;
          case 's':
             dwFlags |= SMT_SKIP_DESCRIPTIONS;

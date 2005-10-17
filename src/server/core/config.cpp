@@ -75,7 +75,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, 
    char szQuery[256];
    BOOL bSuccess = FALSE;
 
-   strncpy(szBuffer, szDefault, iBufSize);
+   nx_strncpy(szBuffer, szDefault, iBufSize);
    if (strlen(szVar) > 127)
       return FALSE;
 
@@ -86,7 +86,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, 
 
    if (DBGetNumRows(hResult) > 0)
    {
-      strncpy(szBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      nx_strncpy(szBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
       DecodeSQLString(szBuffer);
       bSuccess = TRUE;
    }

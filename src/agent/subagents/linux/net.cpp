@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.9 2005-09-08 16:26:31 alk Exp $ */
+/* $Id: net.cpp,v 1.10 2005-10-17 20:45:46 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -127,7 +127,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 						continue;
 					}
 
-					strncpy(irq.ifr_name, szIf, IFNAMSIZ);
+					nx_strncpy(irq.ifr_name, szIf, IFNAMSIZ);
 					if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
 					{
 						perror("ioctl()");
@@ -203,7 +203,7 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 					int nIndex;
 					struct ifreq irq;
 
-					strncpy(irq.ifr_name, szIF, IFNAMSIZ);
+					nx_strncpy(irq.ifr_name, szIF, IFNAMSIZ);
 					if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
 					{
 						perror("ioctl()");
@@ -361,7 +361,7 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
    else
    {
       // Name passed as argument
-      strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
+      nx_strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
    }
 
    // Get interface information
@@ -446,7 +446,7 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
    else
    {
       // Name passed as argument
-      strncpy(szName, szBuffer, IFNAMSIZ);
+      nx_strncpy(szName, szBuffer, IFNAMSIZ);
    }
 
    // Get interface information
@@ -526,6 +526,10 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2005/09/08 16:26:31  alk
+Net.InterfaceList now use alternative way and works with virtual
+interfaces under 2.6
+
 Revision 1.8  2005/08/22 00:11:47  alk
 Net.IP.RoutingTable added
 
