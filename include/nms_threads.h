@@ -451,6 +451,8 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
 
 		   if (retcode == 0)
 		   {
+            if (!cond->broadcast)
+               cond->isSet = FALSE;
 			   ret = TRUE;
 		   }
       }
