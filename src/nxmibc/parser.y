@@ -58,6 +58,15 @@ static char *m_pszCurrentFilename;
 int mperror(char *pszMsg);
 int mplex(void);
 
+MP_SYNTAX *create_std_syntax(int nSyntax)
+{
+   MP_SYNTAX *p;
+
+   p = CREATE(MP_SYNTAX);
+   p->nSyntax = nSyntax;
+   return p;
+}
+
 void *mpalloc(int nSize)
 {
    void *p;
@@ -100,6 +109,7 @@ static int AccessFromText(char *pszText)
    MP_IMPORT_MODULE *pImports;
    MP_OBJECT *pObject;
    MP_SUBID *pSubId;
+   MP_SYNTAX *pSyntax;
 }
 
 %token ENTERPRISE_SYM
@@ -198,13 +208,15 @@ static int AccessFromText(char *pszText)
 
 %token <number> NUMBER_SYM
 
-%type <nInteger> SnmpStatusPart SnmpAccessPart SnmpSyntaxPart SnmpSyntax
-%type <nInteger> Type BuiltInType NamedType
+%type <nInteger> SnmpStatusPart SnmpAccessPart
+
+%type <pSyntax> SnmpSyntaxPart SnmpSyntax Type BuiltInType NamedType
+%type <pSyntax> TextualConventionAssignment BuiltInTypeAssignment
 
 %type <pszString> UCidentifier LCidentifier Identifier
 %type <pszString> ModuleIdentifier DefinedValue SnmpIdentityPart
-%type <pszString> Symbol CharString
-%type <pszString> SnmpDescriptionPart BuiltInTypeAssignment
+%type <pszString> Symbol CharString NumericValue
+%type <pszString> SnmpDescriptionPart
 
 %type <number> Number
 
@@ -385,9 +397,21 @@ ObjectIdentifier:
 
 NumericValue:
     Number
+{
+   $$ = NULL;
+}
 |   DefinedValue
+{
+   $$ = NULL;
+}
 |   Number DOT_SYM DOT_SYM Number 
+{
+   $$ = NULL;
+}
 |   Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
+{
+   $$ = NULL;
+}
 ;
 
 DefinedValue:
@@ -442,7 +466,9 @@ ObjectTypeAssignment:
    $$ = CREATE(MP_OBJECT);
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
-   $$->iSyntax = $3;
+   $$->iSyntax = $3->nSyntax;
+   $$->pszDataType = $3->pszStr;
+   safe_free($3);
    $$->iAccess = $5;
    $$->iStatus = $6;
    $$->pszDescription = $7;
@@ -568,7 +594,8 @@ SnmpSyntaxPart:
 }
 |
 {
-   $$ = MIB_TYPE_OTHER;
+   $$ = CREATE(MP_SYNTAX);
+   $$->nSyntax = MIB_TYPE_OTHER;
 }
 ;
 
@@ -592,19 +619,36 @@ TypeOrValueAssignment:
 {
    $$ = CREATE(MP_OBJECT);
    $$->iType = MIBC_TYPEDEF;
-   $$->pszName = $1;
+   if ($1 != NULL)
+   {
+      $$->pszName = $1->pszStr;
+      $$->iSyntax = $1->nSyntax;
+      free($1);
+   }
 }
 |   UCidentifier ASSIGNMENT_SYM TextualConventionAssignment
 {
    $$ = CREATE(MP_OBJECT);
    $$->iType = MIBC_TEXTUAL_CONVENTION;
    $$->pszName = $1;
+   if ($3 != NULL)
+   {
+      $$->iSyntax = $3->nSyntax;
+      $$->pszDataType = $3->pszStr;
+      free($3);
+   }
 }
 |   UCidentifier ASSIGNMENT_SYM Type
 {
    $$ = CREATE(MP_OBJECT);
    $$->iType = MIBC_TYPEDEF;
    $$->pszName = $1;
+   if ($3 != NULL)
+   {
+      $$->iSyntax = $3->nSyntax;
+      $$->pszDataType = $3->pszStr;
+      free($3);
+   }
 }
 |   UCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
 {
@@ -648,97 +692,108 @@ Type:
 NamedType:
     SnmpTypeTagPart UCidentifier
 {
-   $$ = MIB_TYPE_OTHER;    /* TODO: resolve named types */
+   $$ = CREATE(MP_SYNTAX);
+   $$->nSyntax = -1;
+   $$->pszStr = $2;
 }
 ;
 
 BuiltInType:
     SnmpTypeTagPart INTEGER_SYM
 {
-   $$ = MIB_TYPE_INTEGER;
+   $$ = create_std_syntax(MIB_TYPE_INTEGER);
 }
 |   SnmpTypeTagPart IMPLICIT_SYM INTEGER_SYM
 {
-   $$ = MIB_TYPE_INTEGER;
+   $$ = create_std_syntax(MIB_TYPE_INTEGER);
 }
 |   SnmpTypeTagPart INTEGER32_SYM
 {
-   $$ = MIB_TYPE_INTEGER32;
+   $$ = create_std_syntax(MIB_TYPE_INTEGER32);
 }
 |   SnmpTypeTagPart UNSIGNED32_SYM
 {
-   $$ = MIB_TYPE_UNSIGNED32;
+   $$ = create_std_syntax(MIB_TYPE_UNSIGNED32);
 }
 |   SnmpTypeTagPart COUNTER_SYM
 {
-   $$ = MIB_TYPE_COUNTER;
+   $$ = create_std_syntax(MIB_TYPE_COUNTER);
 }
 |   SnmpTypeTagPart COUNTER32_SYM
 {
-   $$ = MIB_TYPE_COUNTER32;
+   $$ = create_std_syntax(MIB_TYPE_COUNTER32);
 }
 |   SnmpTypeTagPart COUNTER64_SYM
 {
-   $$ = MIB_TYPE_COUNTER64;
+   $$ = create_std_syntax(MIB_TYPE_COUNTER64);
 }
 |   SnmpTypeTagPart GAUGE32_SYM
 {
-   $$ = MIB_TYPE_GAUGE32;
+   $$ = create_std_syntax(MIB_TYPE_GAUGE32);
 }
 |   SnmpTypeTagPart TIMETICKS_SYM
 {
-   $$ = MIB_TYPE_TIMETICKS;
+   $$ = create_std_syntax(MIB_TYPE_TIMETICKS);
 }
 |   SEQUENCE_SYM OF_SYM NamedType
 {
-   $$ = MIB_TYPE_SEQUENCE;
+   $$ = create_std_syntax(MIB_TYPE_SEQUENCE);
 }
 |   SnmpTypeTagPart OBJECT_IDENTIFIER_SYM
 {
-   $$ = MIB_TYPE_OBJID;
+   $$ = create_std_syntax(MIB_TYPE_OBJID);
 }
 |   SnmpTypeTagPart OctetStringType
 {
-   $$ = MIB_TYPE_OCTETSTR;
+   $$ = create_std_syntax(MIB_TYPE_OCTETSTR);
 }
 ;
 
 BuiltInTypeAssignment:
     IP_ADDRESS_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("IpAddress");
+   $$ = create_std_syntax(MIB_TYPE_IPADDR);
+   $$->pszStr = strdup("IpAddress");
 }
 |   OPAQUE_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Opaque");
+   $$ = create_std_syntax(MIB_TYPE_OPAQUE);
+   $$->pszStr = strdup("Opaque");
 }
 |   INTEGER32_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Integer32");
+   $$ = create_std_syntax(MIB_TYPE_INTEGER32);
+   $$->pszStr = strdup("Integer32");
 }
 |   UNSIGNED32_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Unsigned32");
+   $$ = create_std_syntax(MIB_TYPE_UNSIGNED32);
+   $$->pszStr = strdup("Unsigned32");
 }
 |   TIMETICKS_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("TimeTicks");
+   $$ = create_std_syntax(MIB_TYPE_TIMETICKS);
+   $$->pszStr = strdup("TimeTicks");
 }
 |   COUNTER_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Counter");
+   $$ = create_std_syntax(MIB_TYPE_COUNTER);
+   $$->pszStr = strdup("Counter");
 }
 |   COUNTER32_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Counter32");
+   $$ = create_std_syntax(MIB_TYPE_COUNTER32);
+   $$->pszStr = strdup("Counter32");
 }
 |   COUNTER64_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Counter64");
+   $$ = create_std_syntax(MIB_TYPE_COUNTER64);
+   $$->pszStr = strdup("Counter64");
 }
 |   GAUGE32_SYM ASSIGNMENT_SYM Type
 {
-   $$ = strdup("Gauge32");
+   $$ = create_std_syntax(MIB_TYPE_GAUGE32);
+   $$->pszStr = strdup("Gauge32");
 }
 ;
 
@@ -767,6 +822,9 @@ TextualConventionAssignment:
     SnmpDescriptionPart
     SnmpReferencePart
     SnmpSyntaxPart
+{
+   $$ = $6;
+}
 ;
 
 SnmpNotificationTypeAssignment:

@@ -57,6 +57,17 @@ typedef struct
 
 
 //
+// Object syntax
+//
+
+typedef struct mp_syntax
+{
+   int nSyntax;
+   char *pszStr;
+} MP_SYNTAX;
+
+
+//
 // Numeric value
 //
 
@@ -93,6 +104,7 @@ typedef struct mp_object
    char *pszName;
    char *pszDescription;
    int iSyntax;
+   char *pszDataType;   // For defined types
    int iStatus;
    int iAccess;
    DynArray *pOID;

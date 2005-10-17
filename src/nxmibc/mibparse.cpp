@@ -77,7 +77,7 @@ static MP_MODULE *FindModuleByName(DynArray *pModuleList, char *pszName)
 
    iNumModules = da_size(pModuleList);
    for(i = 0; i < iNumModules; i++)
-      if (!stricmp(((MP_MODULE *)da_get(pModuleList, i))->pszName, pszName))
+      if (!strcmp(((MP_MODULE *)da_get(pModuleList, i))->pszName, pszName))
          return (MP_MODULE *)da_get(pModuleList, i);
    return NULL;
 }
@@ -94,7 +94,7 @@ static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName)
    iNumObjects = da_size(pModule->pObjectList);
    for(i = 0; i < iNumObjects; i++)
    {
-      if (!stricmp(((MP_OBJECT *)da_get(pModule->pObjectList, i))->pszName, pszName))
+      if (!strcmp(((MP_OBJECT *)da_get(pModule->pObjectList, i))->pszName, pszName))
          return (MP_OBJECT *)da_get(pModule->pObjectList, i);
    }
    return NULL;
@@ -265,6 +265,43 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
 
 
 //
+// Resolve syntax for object
+//
+
+static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
+{
+   MP_OBJECT *pType;
+   MP_MODULE *pCurrModule = pModule;
+   char *pszType;
+
+   if ((pObject->iSyntax != -1) || (pObject->pszDataType == NULL))
+      return;
+
+   pszType = pObject->pszDataType;
+   do
+   {
+      pType = FindObjectByName(pCurrModule, CHECK_NULL(pszType));
+      if (pType == NULL)
+         pType = FindImportedObjectByName(pCurrModule,
+                                          CHECK_NULL(pszType),
+                                          &pCurrModule);
+      if (pType == NULL)
+         break;
+      pszType = pType->pszDataType;
+   } while(pType->iSyntax == -1);
+
+   if (pType != NULL)
+   {
+      pObject->iSyntax = pType->iSyntax;
+   }
+   else
+   {
+      Error(ERR_UNRESOLVED_SYNTAX, pModule->pszName, pObject->pszDataType, pObject->pszName);
+   }
+}
+
+
+//
 // Resolve object identifiers
 //
 
@@ -278,7 +315,10 @@ static void ResolveObjects(DynArray *pModuleList, MP_MODULE *pModule)
    {
       pObject = (MP_OBJECT *)da_get(pModule->pObjectList, i);
       if (pObject->iType == MIBC_OBJECT)
+      {
          BuildFullOID(pModule, pObject);
+         ResolveSyntax(pModule, pObject);
+      }
    }
 }
 

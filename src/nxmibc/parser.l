@@ -218,6 +218,7 @@ static void CountNewlines(char *pszStr, int len)
 <INITIAL>NOTIFICATION-TYPE return NOTIFICATION_TYPE_SYM;
 <INITIAL>INTEGER return INTEGER_SYM;
 <INITIAL>Integer32 return INTEGER32_SYM;
+<INITIAL>UInteger32 return UNSIGNED32_SYM;
 <INITIAL>Unsigned32 return UNSIGNED32_SYM;
 <INITIAL>Counter return COUNTER_SYM;
 <INITIAL>Counter32 return COUNTER32_SYM;

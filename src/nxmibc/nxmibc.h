@@ -43,6 +43,7 @@
 #define ERR_PARSER_ERROR         3
 #define ERR_CANNOT_OPEN_FILE     4
 #define ERR_UNRESOLVED_SYMBOL    5
+#define ERR_UNRESOLVED_SYNTAX    6
 
 
 //
