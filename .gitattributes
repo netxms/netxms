@@ -749,6 +749,8 @@ src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
 src/nxevent/nxevent.h -text
+src/nxmibc/.cvsignore -text
+src/nxmibc/Makefile.am -text
 src/nxmibc/array.cpp -text
 src/nxmibc/mibparse.cpp -text
 src/nxmibc/mibparse.h -text

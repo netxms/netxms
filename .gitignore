@@ -16,6 +16,12 @@ src/agent/core/messages.c
 src/agent/core/messages.h
 src/agent/core/nxagentd
 src/agent/core/static_subagents.cpp
+src/nxmibc/Makefile
+src/nxmibc/Makefile.in
+src/nxmibc/lex.mp.c
+src/nxmibc/parser.output
+src/nxmibc/parser.tab.c
+src/nxmibc/parser.tab.h
 src/server/core/netxmsd
 src/server/include/messages.h
 src/server/libnxsrv/messages.c

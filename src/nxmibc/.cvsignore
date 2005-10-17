@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+lex.mp.c
+parser.output
+parser.tab.c
+parser.tab.h

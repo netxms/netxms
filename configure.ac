@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.107 2005-09-23 22:52:36 victor Exp $
+# $Id: configure.ac,v 1.108 2005-10-17 09:30:24 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -156,7 +156,7 @@ fi ])
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	MODULES="$MODULES libnxsnmp server"
+	MODULES="$MODULES libnxsnmp server nxmibc"
    TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
    CONTRIB_MODULES="$CONTRIB_MODULES mibs"
 	BUILD_SERVER="yes"
@@ -544,6 +544,7 @@ AC_CONFIG_FILES([
 	src/console/PocketPC/res/Makefile
 	src/nxevent/Makefile
 	src/nxreport/Makefile
+	src/nxmibc/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
 	src/server/netxmsd/Makefile
