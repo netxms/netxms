@@ -1034,8 +1034,24 @@ DWORD CDataCollectionEditor::MoveItemsToTemplate(DWORD dwTemplate,
                                                  DWORD dwNumItems, DWORD *pdwItemList)
 {
    DWORD i, dwResult, dwNode;
+   NXC_OBJECT *pObject;
+   BOOL bNeedApply = TRUE;
 
    dwNode = m_pItemList->dwNodeId;
+
+   // Check if node already bound to template
+   pObject = NXCFindObjectById(g_hSession, dwTemplate);
+   if (pObject != NULL)
+   {
+      for(i = 0; i < pObject->dwNumChilds; i++)
+         if (pObject->pdwChildList[i] == dwNode)
+         {
+            bNeedApply = FALSE;
+            break;
+         }
+   }
+
+   // Copy DCIs to template
    dwResult = NXCCopyDCI(g_hSession, dwNode, dwTemplate, dwNumItems, pdwItemList);
    if (dwResult == RCC_SUCCESS)
    {
@@ -1050,6 +1066,14 @@ DWORD CDataCollectionEditor::MoveItemsToTemplate(DWORD dwTemplate,
       {
          // Close node's DCI list
          dwResult = NXCCloseNodeDCIList(g_hSession, m_pItemList);
+         
+         // Apply template to item if needed
+         if ((dwResult == RCC_SUCCESS) && (bNeedApply))
+         {
+            dwResult = NXCApplyTemplate(g_hSession, dwTemplate, dwNode);
+         }
+
+         // Re-open DCI list
          if (dwResult == RCC_SUCCESS)
          {
             m_pItemList = NULL;
