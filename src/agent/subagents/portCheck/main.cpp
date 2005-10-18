@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.11 2005-09-15 21:47:03 victor Exp $ */
+/* $Id: main.cpp,v 1.12 2005-10-18 09:01:16 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -124,7 +124,10 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "ServiceCheck.POP3(*)",         H_CheckPOP3,       NULL },
+   { "ServiceCheck.SMTP(*)",         H_CheckSMTP,       NULL },
    { "ServiceCheck.SSH(*)",          H_CheckSSH,        NULL },
+   { "ServiceCheck.HTTP(*)",         H_CheckHTTP,       NULL },
+   { "ServiceCheck.Custom(*)",       H_CheckCustom,     NULL },
 };
 
 /*static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -161,6 +164,9 @@ DECLARE_SUBAGENT_INIT(PORTCHECK)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2005/09/15 21:47:03  victor
+Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
+
 Revision 1.10  2005/08/17 12:09:23  victor
 responce changed to response (issue #37)
 

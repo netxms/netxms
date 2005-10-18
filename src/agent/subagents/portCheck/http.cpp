@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.4 2005-08-17 12:09:23 victor Exp $ */
+/* $Id: http.cpp,v 1.5 2005-10-18 09:01:16 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -15,14 +15,21 @@ LONG H_CheckHTTP(char *pszParam, char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
-	char szHost[256];
-	char szPort[256];
+	char szHost[1024];
+	char szPort[1024];
+	char szURI[1024];
+	char szHeader[1024];
+	char szMatch[1024];
 	unsigned short nPort;
 
    NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
    NxGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
+   NxGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
+   NxGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
+   NxGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
 
-	if (szHost[0] == 0)
+	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0 || szHeader[0] == 0
+			|| szMatch[0] == 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
@@ -33,7 +40,7 @@ LONG H_CheckHTTP(char *pszParam, char *pArg, char *pValue)
 		nPort = 22;
 	}
 
-	if (CheckSSH(szHost, 0, nPort, NULL, NULL) == 0)
+	if (CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch) == 0)
 	{
 		ret_int(pValue, 0);
 	}
@@ -96,6 +103,9 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/08/17 12:09:23  victor
+responce changed to response (issue #37)
+
 Revision 1.3  2005/01/31 15:29:31  victor
 Regular expressions implemented under Windows
 
