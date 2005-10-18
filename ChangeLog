@@ -6,6 +6,9 @@
 - Added built-in syslog server
 - Implemented retrieving of only last N records from event log
 - Implemented "Select DCI" function for templates
+- Implemented own MIB compiler, removing last dependency from Net-SNMP library
+- MIBs now transferred to client in compiled form, reducing network traffic
+  and making console startup faster
 - Core agent:
 	- Ported to AIX
 	- Fixed bug in signal handling causing agent to crash on shutdown
@@ -17,7 +20,8 @@
 - Port checker subagent ported to AIX
 - Added possibility to build statically linked agents
 - Event configuration improved
-- New MIBs added: BGP4, PowerNet (APC), PRINTER, UPS
+- New MIBs added: BGP4, PowerNet (APC), PRINTER,
+  Synoptics (now part of Nortel Networks), UPS
 - Fixed issues: #12, #46, #48, #49, #50, #51, #54
 
 

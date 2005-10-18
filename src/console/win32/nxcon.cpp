@@ -69,6 +69,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTPKG, OnControlpanelAgentpkg)
 	ON_COMMAND(ID_CONTROLPANEL_SERVERCFG, OnControlpanelServercfg)
 	ON_COMMAND(ID_VIEW_SYSLOG, OnViewSyslog)
+	ON_COMMAND(ID_CONTROLPANEL_LOGPROCESSING, OnControlpanelLogprocessing)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -91,6 +92,7 @@ CConsoleApp::CConsoleApp()
    m_bDebugWindowActive = FALSE;
    m_bNetSummaryActive = FALSE;
    m_bEventPolicyEditorActive = FALSE;
+   m_bLPPEditorActive = FALSE;
    m_bPackageMgrActive = FALSE;
    m_bServerCfgEditorActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
@@ -307,6 +309,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
    InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 18), "&Config");
 
+   m_hLPPEditorMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   //InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -323,6 +329,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hLastValuesAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_LAST_VALUES));
 	m_hServerCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SERVER_CFG_EDITOR));
 	m_hAgentCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
+	m_hLPPEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -399,6 +406,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hServerCfgEditorAccel);
    SafeFreeResource(m_hAgentCfgEditorMenu);
    SafeFreeResource(m_hAgentCfgEditorAccel);
+   SafeFreeResource(m_hLPPEditorMenu);
+   SafeFreeResource(m_hLPPEditorAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -564,6 +573,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bServerCfgEditorActive = TRUE;
          m_pwndServerCfgEditor = (CServerCfgEditor *)pWnd;
          break;
+      case IDR_LPP_EDITOR:
+         m_bLPPEditorActive = TRUE;
+         m_pwndLPPEditor = (CLPPList *)pWnd;
+         break;
       default:
          break;
    }
@@ -634,6 +647,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_SERVER_CFG_EDITOR:
          m_bServerCfgEditorActive = FALSE;
+         break;
+      case IDR_LPP_EDITOR:
+         m_bLPPEditorActive = FALSE;
          break;
       default:
          break;
@@ -1245,6 +1261,27 @@ void CConsoleApp::OnControlpanelEventpolicy()
       {
          ErrorBox(dwResult, "Unable to load event processing policy:\n%s");
       }
+   }
+}
+
+
+//
+// Show log processing policy list
+//
+
+void CConsoleApp::OnControlpanelLogprocessing() 
+{
+	// create a new MDI child window or open existing
+   if (m_bLPPEditorActive)
+   {
+      m_pwndLPPEditor->BringWindowToTop();
+   }
+   else
+   {
+   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CLPPList), IDR_LPP_EDITOR,
+                             m_hLPPEditorMenu, m_hLPPEditorAccel);
    }
 }
 

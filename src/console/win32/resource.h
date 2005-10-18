@@ -424,6 +424,7 @@
 #define IDC_SAVE                        1286
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
+#define IDR_LPP_EDITOR                  8102
 #define IDR_EVENT_EDITOR                8105
 #define IDR_USER_EDITOR                 8106
 #define IDR_NETWORK_SUMMARY             8107

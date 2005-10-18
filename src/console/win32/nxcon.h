@@ -54,6 +54,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "PackageMgr.h"
 #include "ServerCfgEditor.h"
 #include "SyslogBrowser.h"
+#include "LPPList.h"
 
 
 //
@@ -132,6 +133,7 @@ protected:
    CEventPolicyEditor *m_pwndEventPolicyEditor;
    CPackageMgr *m_pwndPackageMgr;
    CServerCfgEditor *m_pwndServerCfgEditor;
+   CLPPList *m_pwndLPPEditor;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -147,6 +149,8 @@ protected:
 	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
 	HMENU m_hDCEditorMenu;        // Menu for data collection editor
 	HACCEL m_hDCEditorAccel;      // Accelerator for data collection editor
+	HMENU m_hLPPEditorMenu;       // Menu for log processing policy editor
+	HACCEL m_hLPPEditorAccel;     // Accelerator for log processing policy editor
 	HMENU m_hPolicyEditorMenu;    // Menu for event policy editor
 	HACCEL m_hPolicyEditorAccel;  // Accelerator for event policy editor
 	HMENU m_hMapMenu;             // Menu for map view
@@ -192,6 +196,7 @@ public:
 	afx_msg void OnControlpanelAgentpkg();
 	afx_msg void OnControlpanelServercfg();
 	afx_msg void OnViewSyslog();
+	afx_msg void OnControlpanelLogprocessing();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -207,6 +212,7 @@ private:
    BOOL m_bDebugWindowActive;
    BOOL m_bNetSummaryActive;
    BOOL m_bEventPolicyEditorActive;
+   BOOL m_bLPPEditorActive;
    BOOL m_bPackageMgrActive;
    BOOL m_bServerCfgEditorActive;
 

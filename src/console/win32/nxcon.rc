@@ -2643,6 +2643,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDR_WEB_BROWSER         "\nWeb Browser\nWeb Browser"
     IDR_SYSLOG_BROWSER      "\nSyslog\nSyslog"
+    IDR_LPP_EDITOR          "\nLog Processing Configuration\nLog Processing Configuration"
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"
