@@ -258,8 +258,29 @@ int main(int argc, char *argv[])
    int ch;
    TCHAR szSyntaxId[16], szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
    DB_RESULT hResult;
+#ifdef _WIN32
+   HKEY hKey;
+   DWORD dwSize;
+#else
+   char *pszEnv;
+#endif
 
    printf("NetXMS Database Manager Version " NETXMS_VERSION_STRING "\n\n");
+
+   // Check for alternate config file location
+#ifdef _WIN32
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
+                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      dwSize = MAX_PATH * sizeof(TCHAR);
+      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)szConfigFile, &dwSize);
+      RegCloseKey(hKey);
+   }
+#else
+   pszEnv = getenv("NETXMSD_CONFIG");
+   if (pszEnv != NULL)
+      nx_strncpy(szConfigFile, pszEnv, MAX_PATH);
+#endif
 
    // Parse command line
    opterr = 1;
