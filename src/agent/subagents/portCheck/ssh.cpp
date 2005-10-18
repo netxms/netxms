@@ -1,4 +1,4 @@
-/* $Id: ssh.cpp,v 1.4 2005-01-28 23:45:01 alk Exp $ */
+/* $Id: ssh.cpp,v 1.5 2005-10-18 21:33:26 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -28,15 +28,7 @@ LONG H_CheckSSH(char *pszParam, char *pArg, char *pValue)
 		nPort = 22;
 	}
 
-	if (CheckSSH(szHost, 0, nPort, NULL, NULL) == 0)
-	{
-		ret_int(pValue, 0);
-	}
-	else
-	{
-		ret_int(pValue, 1);
-	}
-
+	ret_int(pValue, CheckSSH(szHost, 0, nPort, NULL, NULL));
 	return nRet;
 }
 
@@ -82,6 +74,9 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/01/28 23:45:01  alk
+SMTP check added, requst string == rcpt to
+
 Revision 1.3  2005/01/28 23:19:36  alk
 VID_SERVICE_STATUS set
 

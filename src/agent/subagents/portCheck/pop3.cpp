@@ -1,4 +1,4 @@
-/* $Id: pop3.cpp,v 1.7 2005-08-17 12:09:23 victor Exp $ */
+/* $Id: pop3.cpp,v 1.8 2005-10-18 21:33:26 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -23,15 +23,7 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	if (CheckPOP3(szHost, 0, 110, szUser, szPassword) == 0)
-	{
-		ret_int(pValue, 0);
-	}
-	else
-	{
-		ret_int(pValue, 1);
-	}
-
+	ret_int(pValue, CheckPOP3(szHost, 0, 110, szUser, szPassword));
 	return nRet;
 }
 
@@ -84,6 +76,9 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/08/17 12:09:23  victor
+responce changed to response (issue #37)
+
 Revision 1.6  2005/05/23 21:03:41  alk
 SMTP checker now supports multiline responses
 

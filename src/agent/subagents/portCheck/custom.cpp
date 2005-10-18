@@ -1,4 +1,4 @@
-/* $Id: custom.cpp,v 1.3 2005-10-18 09:01:16 alk Exp $ */
+/* $Id: custom.cpp,v 1.4 2005-10-18 21:33:26 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -28,15 +28,7 @@ LONG H_CheckCustom(char *pszParam, char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	if (CheckCustom(szHost, 0, nPort, NULL, NULL) == 0)
-	{
-		ret_int(pValue, 0);
-	}
-	else
-	{
-		ret_int(pValue, 1);
-	}
-
+	ret_int(pValue, CheckCustom(szHost, 0, nPort, NULL, NULL));
 	return nRet;
 }
 
@@ -66,6 +58,12 @@ int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/10/18 09:01:16  alk
+Added commands (ServiceCheck.*) for
+	http
+	smtp
+	custom
+
 Revision 1.2  2005/08/17 12:09:23  victor
 responce changed to response (issue #37)
 

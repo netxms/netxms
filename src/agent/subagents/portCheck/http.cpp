@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.5 2005-10-18 09:01:16 alk Exp $ */
+/* $Id: http.cpp,v 1.6 2005-10-18 21:33:26 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -37,18 +37,10 @@ LONG H_CheckHTTP(char *pszParam, char *pArg, char *pValue)
 	nPort = (unsigned short)atoi(szPort);
 	if (nPort == 0)
 	{
-		nPort = 22;
+		nPort = 80;
 	}
 
-	if (CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch) == 0)
-	{
-		ret_int(pValue, 0);
-	}
-	else
-	{
-		ret_int(pValue, 1);
-	}
-
+	ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch));
 	return nRet;
 }
 
@@ -103,6 +95,12 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/10/18 09:01:16  alk
+Added commands (ServiceCheck.*) for
+	http
+	smtp
+	custom
+
 Revision 1.4  2005/08/17 12:09:23  victor
 responce changed to response (issue #37)
 

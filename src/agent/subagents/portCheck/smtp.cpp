@@ -19,15 +19,7 @@ LONG H_CheckSMTP(char *pszParam, char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 
-	if (CheckSMTP(szHost, 0, 25, szTo) == 0)
-	{
-		ret_int(pValue, 0);
-	}
-	else
-	{
-		ret_int(pValue, 1);
-	}
-
+	ret_int(pValue, CheckSMTP(szHost, 0, 25, szTo));
 	return nRet;
 }
 
