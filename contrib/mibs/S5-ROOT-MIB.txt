@@ -1,0 +1,67 @@
+-- SECTION 1: Top Level Definitions
+
+S5-ROOT-MIB DEFINITIONS ::= BEGIN
+
+
+-- 5000 Root MIB Release 1.1.5
+-- Revision 05/07/98
+
+-- Copyright 1998 Bay Networks, Inc.
+-- All rights reserved.
+-- This Bay Networks SNMP Management Information Base Specification
+-- (Specification) embodies Bay Networks' confidential and
+-- proprietary intellectual property. Bay Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Bay Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+-- Imports
+
+IMPORTS
+	series5000
+		FROM SYNOPTICS-ROOT-MIB;
+
+-- Branches under "series5000"
+
+-- branch for registration of values for objects
+--   with syntax of OBJECT IDENTIFIER
+  s5reg		OBJECT IDENTIFIER ::= { series5000 1 }
+
+-- Branch for 'Enterprise' field values in traps
+  s5Traps	OBJECT IDENTIFIER ::= { series5000 2 }
+    s5EthTrap	-- Ethernet
+		OBJECT IDENTIFIER ::= { s5Traps 1 }
+    s5TokTrap	-- Token Ring
+		OBJECT IDENTIFIER ::= { s5Traps 2 }
+    s5FddTrap	-- FDDI
+		OBJECT IDENTIFIER ::= { s5Traps 3 }
+    s5ChaTrap	-- Chassis
+		OBJECT IDENTIFIER ::= { s5Traps 4 }
+    s5ComTrap	-- Common
+		OBJECT IDENTIFIER ::= { s5Traps 5 }
+    s5EcellTrap	-- EtherCell
+		OBJECT IDENTIFIER ::= { s5Traps 6 }
+    atmTraps  -- Atm
+                OBJECT IDENTIFIER ::= { s5Traps 7 }
+     remoteLoginTrap    -- Remote Login
+                OBJECT IDENTIFIER ::= { s5Traps 8 }
+     
+-- Major 5000 MIB branches
+  s5Chassis	OBJECT IDENTIFIER ::= { series5000 3 }
+  s5Agent	OBJECT IDENTIFIER ::= { series5000 4 }
+  s5Com		OBJECT IDENTIFIER ::= { series5000 5 }
+  s5Eth		OBJECT IDENTIFIER ::= { series5000 6 }
+  s5Tok		OBJECT IDENTIFIER ::= { series5000 7 }
+  s5Fddi	OBJECT IDENTIFIER ::= { series5000 8 }
+  s5EnTop	OBJECT IDENTIFIER ::= { series5000 9 }
+  s5TrTop	OBJECT IDENTIFIER ::= { series5000 10 }
+  s5FdTop	OBJECT IDENTIFIER ::= { series5000 11 }
+  s5EnMsTop	OBJECT IDENTIFIER ::= { series5000 13 }
+  s5AtmTop	OBJECT IDENTIFIER ::= { series5000 14 }
+  s5IfExt	OBJECT IDENTIFIER ::= { series5000 15 }
+END
+
+

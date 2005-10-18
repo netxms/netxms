@@ -1,0 +1,82 @@
+
+-- SECTION 1: Top Level Definitions
+
+S5-CHASSIS-TRAP-MIB DEFINITIONS ::= BEGIN
+
+
+-- 5000 Chassis Trap MIB Release 1.1.0
+-- Revision 11/15/93
+
+-- Copyright 1993 SynOptics Communications, Inc.
+-- All rights reserved.
+-- This SynOptics SNMP Management Information Base Specification
+-- (Specification) embodies SynOptics' confidential and
+-- proprietary intellectual property. SynOptics retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and SynOptics makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+
+-- Imports
+
+IMPORTS
+	TRAP-TYPE	FROM RFC-1215
+	s5ChaTrap	FROM S5-ROOT-MIB
+	s5ChasComType, s5ChasComOperState
+			FROM S5-CHASSIS-MIB;
+
+
+
+-- SECTION 2: SynOptics 5000 Chassis Trap Definitions
+
+-- All chassis traps are numbered uniquely with ENTERPRISE
+-- field value of s5ChaTrap.
+
+s5CtrHotSwap TRAP-TYPE
+	ENTERPRISE	s5ChaTrap
+	VARIABLES	{ s5ChasComType,
+			  s5ChasComOperState }
+--	STATUS		mandatory
+	DESCRIPTION
+		"A component or sub-component was inserted or
+		deinserted in the chassis. This trap is sent only
+		once when the condition is first detected. The
+		following values are returned:
+		  s5ChasComType........the type of the component
+		    (or sub-component) that was inserted or
+		    deinserted, with the instance identifying
+		    the group, component, and sub-component.
+		  s5ChasComOperState...the operational status of
+		    the component or sub-component, with the
+		    instance identifying the group, component,
+		    and sub-component. The value is removed(3)
+		    when the item is removed."
+	::= 1	-- 0x01
+
+
+s5CtrProblem TRAP-TYPE
+	ENTERPRISE	s5ChaTrap
+	VARIABLES	{ s5ChasComType,
+			  s5ChasComOperState }
+--	STATUS		mandatory
+	DESCRIPTION
+		"A component or sub-component has a problem
+		condition, either warning, nonfatal, or fatal.
+		This trap is sent only once when the condition
+		is first detected. The following values are
+		returned:
+		  s5ChasComType........the type of the component
+		    (or sub-component) that has the problem
+		    condition, with the instance identifying
+		    the group, component, and sub-component.
+		  s5ChasComOperState...the operational status of
+		    the component or sub-component, with the
+		    instance identifying the group, component,
+		    and sub-component."
+	::= 2	-- 0x02
+
+
+END

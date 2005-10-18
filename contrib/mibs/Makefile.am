@@ -1,4 +1,4 @@
-# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+# Copyright (C) 2004, 2005 NetXMS Team <bugs@netxms.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -64,6 +64,16 @@ mibs_DATA = \
 	RFC-1212.txt \
 	RFC1213-MIB.txt \
 	RMON-MIB.txt \
+	S5-CHASSIS-MIB.txt \
+	S5-CHASSIS-TRAP-MIB.txt \
+	S5-ETH-REDUNDANT-LINKS-MIB.txt \
+	S5-ETHERNET-COMMON-MIB.txt \
+	S5-ETHERNET-MIB.txt \
+	S5-ETHERNET-TRAP-MIB.txt \
+	S5-REG-MIB.txt \
+	S5-ROOT-MIB.txt \
+	S5-SWITCH-BAYSECURE-MIB.txt \
+	S5-TCS-MIB.txt \
 	SNMP-FRAMEWORK-MIB.txt \
 	SNMPv2-CONF.txt \
 	SNMPv2-MIB.txt \
@@ -71,6 +81,7 @@ mibs_DATA = \
 	SNMPv2-TC.txt \
 	SNMPv2-TM.txt \
 	SW-MIB.txt \
+	SYNOPTICS-COMMON-MIB.txt \
 	SYNOPTICS-ROOT-MIB.txt \
 	TCP-MIB.txt \
 	TUNNEL-MIB.txt \

@@ -1,0 +1,708 @@
+-- SECTION 1: Top Level Definitions
+
+S5-SWITCH-BAYSECURE-MIB DEFINITIONS ::= BEGIN
+
+-- 5000 Switch BaySecure MIB Release 1.0.2
+-- Revision 4/19/2000
+
+-- Copyright 1999 Bay Networks, Inc.
+-- All rights reserved.
+-- This Bay Networks SNMP Management Information Base Specification
+-- (Specification) embodies Bay Networks' confidential and
+-- proprietary intellectual property. Bay Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Bay Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+
+-- Imports
+
+IMPORTS
+	IpAddress
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212
+	s5Com
+		FROM S5-ROOT-MIB;
+--	MacAddress
+--		FROM S5-TCS-MIB;
+
+MacAddress ::= OCTET STRING (SIZE (6))
+-- 
+-- The string is 32 octets long, for a total of 256 bits. Each bit 
+-- corresponds to a port, as represented by its ifIndex value . When a 
+-- bit has the value one(1), the corresponding port is a member of the 
+-- set. When a bit has the value zero(0), the corresponding port is not 
+-- a member of the set. The encoding is such that the most significant 
+-- bit of octet #1 corresponds to ifIndex 0, while the least significant 
+-- bit of octet #32 corresponds to ifIndex 255." 
+-- 
+PortSet 	::= OCTET STRING (SIZE (32))
+
+
+-- Groups
+	s5SbsAuth		OBJECT IDENTIFIER  ::=  { s5Com 3 }
+
+-- SECTION 2: MIB Objects
+
+
+-- Switch BaySecure MIB Group 
+			
+
+
+
+s5SbsAuthSecurityLock OBJECT-TYPE
+	SYNTAX	INTEGER {
+		other(1),
+		locked(2),
+		notlocked(3)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"If s5SbsAuthSecurityLock is locked(2), the agent will refuse
+		all requests to modify the 'security configuration'. 
+		Objects in s5SbsAuth, the Switch BaySecure MIB Group
+		that are part of the 'security configuration', includes
+		s5SbsAuthCtlPartTime, objects in s5SbsAuthCfgTable,
+		Set requests for all read/write objects in s5SbsAuth group 
+		excluding this object will result in a BadValue return value."
+	::= { s5SbsAuth 1 }
+
+ 
+s5SbsAuthCtlPartTime OBJECT-TYPE
+	SYNTAX	INTEGER (0..65535)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"If the value of s5SbsAuthCfgActionMode is partitionPort or 
+		partitionPortAndSendTrap, time partition will be done if this
+		value is greater than 0.  The value indicates the duration of 
+		the time for port partitioning in seconds. The default value is
+		zero. When this value is zero, port remians partitioned until
+		manually re-enabled."
+	DEFVAL {0}
+	::= { s5SbsAuth 2 }
+
+
+s5SbsSecurityStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+		enable(1),
+		disable(2)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates whether the switch security feature is enabled or not."
+	::= {  s5SbsAuth 3 }
+
+
+s5SbsSecurityMode OBJECT-TYPE
+        SYNTAX  INTEGER {
+                singleMACperPort(1),
+                macList(2),
+				autoLearn(3)
+        }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The mode of switch security. singleMACperPort(1) indicates
+                that the switch is in single-MAC-per-port mode which means it
+                allows to configure only one MAC address per port. macList(2)
+                indicates that the switch is in MAC-List mode, user can
+                configure more than one MAC address per port, the maximum numbers
+                of MAC address per port vary from switch to switch. autoLearn(3)
+		indicates that the switch will learn the first MAC address on each 
+		port as an allowed address of that port. Change made between 
+		singleMACperPort(1), macList(2) and autoLearn(3) 
+		will erase all the data in s5SbsAuthCfgTable."
+        ::= {  s5SbsAuth 4 }
+
+
+s5SbsSecurityAction OBJECT-TYPE
+	SYNTAX	INTEGER{
+		noAction(1),
+		trap(2),
+		partitionPort(3),
+		partitionPortAndsendTrap(4),
+		daFiltering(5),
+		daFilteringAndsendTrap(6),
+		partitionPortAnddaFiltering(7),
+		partitionPortdaFilteringAndsendTrap(8)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Action performed by software when a violation occurs (if
+		s5SbsSecurityStatus is enabled).  The security action specified
+		here applies to all ports of the switch.
+		
+		NOTE: da means destination address.
+
+		A blocked address will always cause the port to be partitioned
+		when unauthorized access is attempted. See
+		s5SbsAuthCfgAccessCtrlType for more information on allowed
+		and blocked addresses."
+	::= { s5SbsAuth 5 }		
+
+
+s5SbsCurrNodesAllowed OBJECT-TYPE
+	SYNTAX	INTEGER (0..2147483647)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The current number of entries of the nodes allowed in the
+		s5SbsAuthCfgTable."
+	::= {  s5SbsAuth 6 }
+
+
+s5SbsMaxNodesAllowed OBJECT-TYPE
+	SYNTAX	INTEGER (0..2147483647)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The maximum number of entries of the nodes allowed in the
+		s5SbsAuthCfgTable."
+	::= {  s5SbsAuth 7 }
+
+s5SbsCurrNodesBlocked OBJECT-TYPE
+	SYNTAX	INTEGER (0..2147483647)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The current number of entries of the nodes blocked in the
+		s5SbsAuthCfgTable."
+	::= {  s5SbsAuth 8 }
+
+
+s5SbsMaxNodesBlocked OBJECT-TYPE
+	SYNTAX	INTEGER (0..2147483647)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The maximum number of entries of the nodes blocked 
+		in the s5SbsAuthCfgTable."
+	::= {  s5SbsAuth 9 }
+
+
+
+
+-- Authorized Board and Port Configuration Table
+
+
+s5SbsAuthCfgTable OBJECT-TYPE
+	SYNTAX	SEQUENCE OF S5SbsAuthCfgEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A table containing a list of boards and ports and MAC
+		addresses that constitute the security configuration."
+	::= { s5SbsAuth 10 }
+
+
+s5SbsAuthCfgEntry OBJECT-TYPE
+	SYNTAX	S5SbsAuthCfgEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"An entry in this table indicates the security 
+		configuration for a specified MAC address and a specified
+		port and a specified board. A SNMP SET PDU for a row of the
+		s5SbsAuthCfgTable requires the entired sequence of the
+		MIB Objects in each s5SbsAuthCfgEntry stored in one PDU.
+		Otherwise, GENERR return-value will be returned."
+	INDEX	{  
+		s5SbsAuthCfgBrdIndx,
+		s5SbsAuthCfgPortIndx,
+		s5SbsAuthCfgMACIndx 
+		}
+	::= { s5SbsAuthCfgTable 1 }
+
+S5SbsAuthCfgEntry ::= 
+	SEQUENCE{
+	s5SbsAuthCfgBrdIndx  
+		INTEGER,
+	s5SbsAuthCfgPortIndx  
+		INTEGER,
+	s5SbsAuthCfgMACIndx  
+		MacAddress,
+	s5SbsAuthCfgAccessCtrlType  
+		INTEGER,
+	s5SbsAuthCfgStatus  
+		INTEGER,
+	s5SbsAuthCfgSecureList
+		INTEGER
+	}
+
+
+
+s5SbsAuthCfgBrdIndx OBJECT-TYPE
+	SYNTAX	INTEGER (0..65535)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the slot containing the board on which the
+		port is located. This value is meaningful --NEW
+		only if s5SbsAuthCfgSecureList value is zero. --NEW
+		For other SecureList values it should have the value of zero. "
+	::= { s5SbsAuthCfgEntry 1}
+
+
+s5SbsAuthCfgPortIndx OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of the port on the board. This value is meaningful
+        only if s5SbsAuthCfgSecureList value is zero. --NEW
+        For other SecureList values it should have the value of zero. "
+    ::= { s5SbsAuthCfgEntry 2 }
+
+
+s5SbsAuthCfgMACIndx OBJECT-TYPE
+    SYNTAX  MacAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of source MAC address of allowed station or
+		not-allowed station."
+    ::= { s5SbsAuthCfgEntry 3 }
+
+
+s5SbsAuthCfgAccessCtrlType OBJECT-TYPE
+    SYNTAX  INTEGER {
+        allowed(1),
+        blocked(2)
+        }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "This Node Access Control Type represents whether 
+        the node entry is node allowed or node blocked type.
+
+    	A MAC address may be allowed on multiple ports."
+    ::= { s5SbsAuthCfgEntry 4 }
+
+
+s5SbsAuthCfgStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+		valid(1),
+		create(2),
+		delete(3),
+		modify(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The status of the AuthCfg entry.  The primary use of 
+		this object is for modifying the AuthCfg table.  Values 
+		that can be written create(2), delete(3), modify(4).  
+		Values that can be read: valid(1).  Setting this entry 
+		to delete(3) causes the entry to be deleted from the 
+		table.  Setting a new entry with create(2) causes the 
+		entry to be created in the table. Setting an entry with 
+		modify(4) causes the entry to be modified. The response 
+		to a get request or get-next request will always indicate 
+		a status of valid (1), since invalid entries are removed 
+		from the table. "
+	::= { s5SbsAuthCfgEntry 5 } 
+
+
+s5SbsAuthCfgSecureList OBJECT-TYPE
+    SYNTAX	INTEGER(0..65535)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of the security list. This value is meaningful
+        only if s5SbsAuthCfgBrdIndx and s5SbsAuthCfgPortIndx values
+        are zero. For other board and port index values 
+        it should have the value of zero. This value is used
+        as an index into s5SbsSecurityListTable.
+        The corresponding MAC Address of this entry is allowed or blocked
+        on all the ports of that port list. "
+    ::= { s5SbsAuthCfgEntry 6 }
+
+
+
+-- Authorized Board and Port Status Table
+
+
+
+s5SbsAuthStatusTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF S5SbsAuthStatusEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "A table containing a snapshot of the authorized boards 
+        and ports status data collection. Port security 
+        information consists of an action to be performed when 
+        an unAuthorized station is detected and the current 
+        security status of a port."
+        ::= { s5SbsAuth 11}
+
+
+s5SbsAuthStatusEntry OBJECT-TYPE
+    SYNTAX  S5SbsAuthStatusEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "An entry in this table may represent a single MAC address, 
+		all MAC addresses on a single port, a single port, 
+        all the ports on a single board, a particuler port on all 
+        the boards, or all the ports on all the boards."
+    INDEX   {  
+        s5SbsAuthStatusBrdIndx,
+        s5SbsAuthStatusPortIndx,
+		s5SbsAuthStatusMACIndx
+        }
+    ::= { s5SbsAuthStatusTable 1 }
+
+
+S5SbsAuthStatusEntry ::= 
+	SEQUENCE {
+	s5SbsAuthStatusBrdIndx  
+		INTEGER,
+	s5SbsAuthStatusPortIndx  
+		INTEGER,
+	s5SbsAuthStatusMACIndx  
+		MacAddress,
+	s5SbsCurrentAccessCtrlType 
+		INTEGER,
+	s5SbsCurrentActionMode   
+		INTEGER,
+	s5SbsCurrentPortSecurStatus
+		INTEGER
+	}
+
+
+
+s5SbsAuthStatusBrdIndx OBJECT-TYPE
+	SYNTAX	INTEGER(0..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the board.  This corresponds to the index of 
+		the slot containing the board if the index is greater 
+		than zero.  A zero index is a wild card."
+	::= { s5SbsAuthStatusEntry 1 }
+
+
+s5SbsAuthStatusPortIndx OBJECT-TYPE
+	SYNTAX	INTEGER(0..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the port on the board.  This corresponds to 
+		the index of the last manageable port on the board if 
+		the index is greater than zero.  A zero index is a wild 
+		card."
+	::= { s5SbsAuthStatusEntry 2 }
+
+
+s5SbsAuthStatusMACIndx OBJECT-TYPE
+    SYNTAX  MacAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of MAC address on the port.  This corresponds to 
+		the index of the MAC address on the port if 
+		the index is greater than zero.  A zero index is a wild 
+		card."
+    ::= { s5SbsAuthStatusEntry 3 }
+
+
+s5SbsCurrentAccessCtrlType OBJECT-TYPE
+    SYNTAX  INTEGER {
+         allow(1),
+         block(2)
+         }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "This Node Access Control Type represents whether 
+        the node entry is node allowed or node blocked type."
+    ::= { s5SbsAuthStatusEntry 4 }
+
+
+s5SbsCurrentActionMode OBJECT-TYPE
+	SYNTAX	INTEGER{
+		noAction(1),
+		partitionPort(2),
+		partitionPortAndsendTrap(3),
+		daFiltering(4),
+		daFilteringAndsendTrap(5),
+		sendTrap(6),
+		partitionPortAnddaFiltering(7),
+		partitionPortdaFilteringAndsendTrap(8)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"An integer value representing the type of information
+		contained in this s5SbsAuthStatusEntry.
+		noAction(1) represents that port does not have any security
+		assigned or the security is turned off.
+
+		partitionPort(2) represents port is partitioned.
+
+		partitionPortAndsendTrap(3) represents port is partitioned
+		and a trap will be sent to trap receive station(s).
+
+		daFiltering(4) represents port will filter out the frames with
+		the desitnation address field is the MAC address of unauthorized
+		station.
+
+		daFilteringAndsendTrap(5) represents port will filter out the 
+		frames with the desitnation address field is the MAC address 
+		of unauthorized station and a trap will be sent to trap receive 
+		station(s).
+		
+		sendtrap(6) represents a trap will be sent to trap receive station(s).
+		
+		partitionPortAnddaFiltering(7) represents port is partitioned and
+		port will filter out the frames with the destination address field
+		is the MAC address of unauthorized station.
+	
+		partitionPortdaFilteringAndsendTrap(8) represents port is partitioned,
+		port will filter out the frames with the destination address field
+		is the MAC address of unauthorized station and a trap will be sent to
+		trap receive station(s)."
+	::= { s5SbsAuthStatusEntry 5 }
+
+
+s5SbsCurrentPortSecurStatus  OBJECT-TYPE
+	SYNTAX	INTEGER{
+		notApplicable(1),
+		portSecure(2),  
+		portPartition(3)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"This represents the current port security status.  
+		If s5SbsSecurityStatus is disable, notApplicable(1) will
+		be returned. The port in a normal situation returns the 
+		status with portSecure(2). portPartition(3) will be returned
+		only if the port is partitioned."
+	::= { s5SbsAuthStatusEntry 6 }
+
+
+-- Violation Board and Port Status Table
+
+
+
+s5SbsViolationStatusTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF S5SbsViolationStatusEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "A table containing a list of boards, ports where
+		network access violations have occurred.  Information
+		also contains the offending MAC addrersses."
+    ::= { s5SbsAuth 12}
+
+
+s5SbsViolationStatusEntry OBJECT-TYPE
+    SYNTAX  S5SbsViolationStatusEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "An entry in this table "
+    INDEX   {  
+        s5SbsViolationStatusBrdIndx,
+        s5SbsViolationStatusPortIndx
+        }
+    ::= { s5SbsViolationStatusTable 1 }
+
+S5SbsViolationStatusEntry ::= 
+	SEQUENCE {
+	s5SbsViolationStatusBrdIndx  
+		INTEGER,
+	s5SbsViolationStatusPortIndx  
+		INTEGER,
+	s5SbsViolationStatusMACAddress
+		MacAddress
+	}
+
+
+
+s5SbsViolationStatusBrdIndx OBJECT-TYPE
+	SYNTAX	INTEGER(1..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the board.  This corresponds to the
+		slot containing the board.  This index will be 1 where
+		it is not applicable, e.g., ByaStack 303/304."
+	::= { s5SbsViolationStatusEntry 1 }
+
+
+s5SbsViolationStatusPortIndx OBJECT-TYPE
+	SYNTAX	INTEGER(1..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The index of the port on the board.  This corresponds to 
+		the port on which a security violation was seen."
+	::= { s5SbsViolationStatusEntry 2 }
+
+
+s5SbsViolationStatusMACAddress OBJECT-TYPE
+    SYNTAX  MacAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The MAC address of the device attempting unauthorized 
+		network access. (MAC addrees-based security)"
+    ::= { s5SbsViolationStatusEntry 3 }
+
+
+s5SbsMgmViolationType OBJECT-TYPE
+	SYNTAX	INTEGER{
+		snmp(1),
+		web(2),
+		telnet(3)
+		}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Type of management access attempted when the violation
+		occurred."
+	::= { s5SbsAuth 13 }
+
+
+s5SbsMgmViolationIpAddress OBJECT-TYPE
+	SYNTAX	IpAddress
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"IP Address of the station attempting unauthorized
+		management access."
+	::= { s5SbsAuth 14 }
+
+
+s5SbsPortSecurityStatus OBJECT-TYPE
+	SYNTAX	PortSet
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The set of ports for which security is enabled.
+		The bitwise AND of s5SbsPortSecurityStatus and 
+		s5SbsPortLearnStatus must be the empty set."
+	::= {  s5SbsAuth 15 }
+
+
+s5SbsPortLearnStatus OBJECT-TYPE
+	SYNTAX	PortSet
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The set of ports for which auto learning is enabled."
+	::= {  s5SbsAuth 16 }
+
+
+s5SbsCurrSecurityLists OBJECT-TYPE
+	SYNTAX	INTEGER (0..65535)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The current number of entries of the Security lists in the
+		s5SbsSecurityListTable."
+	::= {  s5SbsAuth 17 }
+
+
+s5SbsMaxSecurityLists OBJECT-TYPE
+	SYNTAX	INTEGER (0..65535)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The maximum number of entries of the Security lists in the
+		s5SbsSecurityListTable."
+	::= {  s5SbsAuth 18 }
+
+
+-- Port Security Lists Table
+
+
+
+s5SbsSecurityListTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF S5SbsSecurityListEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "A table containing a list of Security port lists."
+    ::= { s5SbsAuth 19}
+
+
+s5SbsSecurityListEntry OBJECT-TYPE
+    SYNTAX  S5SbsSecurityListEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+        "An entry in this table "
+    INDEX   {  
+        s5SbsSecurityListIndx
+        }
+    ::= { s5SbsSecurityListTable 1 }
+
+S5SbsSecurityListEntry ::= 
+	SEQUENCE {
+	s5SbsSecurityListIndx
+		INTEGER,
+	s5SbsSecurityListMembers  
+		PortSet,
+	s5SbsSecurityListStatus
+		INTEGER
+	}
+
+
+
+s5SbsSecurityListIndx OBJECT-TYPE
+	SYNTAX	INTEGER(1..255)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+        "The index of the security list.  This corresponds to the
+		Security port list which can be used as index into 
+		s5SbsAuthCfgTable. "
+	::= { s5SbsSecurityListEntry 1 }
+
+
+s5SbsSecurityListMembers OBJECT-TYPE
+	SYNTAX	PortSet
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The set of ports that are currently members in  
+		this Port list."
+	::= { s5SbsSecurityListEntry 2 }
+
+
+s5SbsSecurityListStatus OBJECT-TYPE
+	SYNTAX	INTEGER {
+		valid(1),
+		create(2),
+		delete(3),
+		modify(4)
+		}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The status of the SecurityList entry.  The primary use of 
+		this object is for modifying the SecurityList table.  Values 
+		that can be written create(2), delete(3), modify(4).  
+		Values that can be read: valid(1).  Setting this entry 
+		to delete(3) causes the entry to be deleted from the 
+		table.  Setting a new entry with create(2) causes the 
+		entry to be created in the table. Setting an entry with 
+		modify(4) causes the entry to be modified. The response 
+		to a get request or get-next request will always indicate 
+		a status of valid (1), since invalid entries are removed 
+		from the table. "
+	::= { s5SbsSecurityListEntry 3 } 
+
+
+END

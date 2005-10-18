@@ -1,0 +1,3215 @@
+-- SECTION 1: Top Level Definitions
+
+S5-REG-MIB DEFINITIONS ::= BEGIN
+
+-- 5000 Registration MIB Release 1.7.10
+-- Revision 09/11/00
+
+-- Copyright 1996 - 1999 Nortel Networks, Inc.
+-- All rights reserved.
+-- This Bay Networks SNMP Management Information Base Specification
+-- (Specification) embodies Bay Networks' confidential and
+-- proprietary intellectual property. Bay Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Bay Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+-- Imports
+
+IMPORTS
+s5reg
+FROM S5-ROOT-MIB;
+
+-- Registrations for Chassis Types
+-- (values for object s5ChasType)
+s5ChasTypeVal OBJECT IDENTIFIER ::= { s5reg 1 }
+
+-- Unknown or unavailable chassis type
+s5ChasTypeUnknown
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 1 }
+
+-- The chassis type for the 3000
+s5ChasTypeM3000-Orig
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 2 }
+
+-- The chassis type for the 3030
+s5ChasTypeM3030
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 3 }
+
+-- The original chassis for the 5000
+s5ChasTypeM5000
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 12 }
+
+-- The chassis type for EtherCell
+s5ChasTypeM1032x
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 16 }
+
+-- The chassis type for the 5005
+s5ChasTypeM5005
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 17 }
+
+-- The chassis types for Distributed 5000
+s5ChasType5DN000
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 24 }
+s5ChasType5DN002Unit-1U2 -- Model 5DN002 Hub 1.5U with 2 MDA Slots
+OBJECT IDENTIFIER ::= { s5ChasType5DN000 1 }
+s5ChasType5DN003Unit-2U3 -- Model 5DN003 Hub 2.5U with 3 MDA Slots
+OBJECT IDENTIFIER ::= { s5ChasType5DN000 2 }
+s5ChasType5DN001-08Unit-2U0 -- Model 5DN001-08 D-Day Hub 1.5U fixed config RJ-45
+OBJECT IDENTIFIER ::= { s5ChasType5DN000 3 }
+
+-- The chassis types for BayStack Ethernet
+s5ChasTypeNBayStack
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 25 }
+s5ChasTypeNBayStackUnit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeNBayStack 1 }
+s5ChasTypeNBayStackUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeNBayStack 2}
+
+-- The chassis types for the BayStack 100BASE-T Hub Stack
+s5ChasTypeBayStack100Hub
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 27 }
+s5ChasTypeBayStack100Unit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack100Hub 1 }
+
+-- The chassis type for the 3000 Fast Ethernet
+s5ChasTypeM3000
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 28 }
+
+-- Orion switch chassis type
+s5ChasTypeXedia
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 29 }
+
+-- Unused Chassis type
+s5ChasTypeNotUsed
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 30 }
+
+-- Chassis types for 28200 Ethernet Switch
+s5ChasType28200
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 31 }
+s5ChasType28200Unit-4slot --Model 28200 Ethernet Switch with 4 - MDA slots
+OBJECT IDENTIFIER ::= { s5ChasType28200 1 }
+
+-- Chassis types for Centillion
+s5ChasTypeCent-sixSlot
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 32 }
+s5ChasTypeCent-twelveSlot
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 33 }
+s5ChasTypeCent-singleSlot
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 34 }
+
+-- Chassis type for Bay Stack 301
+s5ChasTypeBayStack301
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 35 }
+
+-- Chassis type for Bay Stack Token Ring
+s5ChasTypeBayStackTr
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 36 }
+s5ChasTypeBayStackTrUnit-24-port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStackTr 1 }
+
+-- Chassis type for FVC Multimedia switch
+s5ChasTypeFVC10625
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 37 }
+
+-- Chassis type for Switch Node
+s5ChasTypeSwitchNode
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 38 }
+
+-- Chassis types for BayStack302
+s5ChasTypeBayStack302
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 39 }
+s5ChasTypeBayStack302-ethSwitch
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack302 1 }
+
+-- Chassis types for BayStack350
+s5ChasTypeBayStack350
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 40 }
+s5ChasTypeBayStack350-ethSwitch
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack350 1 }
+
+-- The chassis types for BayStack150 Ethernet
+s5ChasTypeBayStack150
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 41 }
+s5ChasTypeBayStack150MasterUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack150 1 }
+s5ChasTypeBayStack150MasterUnit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack150 2 }
+s5ChasTypeBayStack150SlaveUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack150 3 }
+s5ChasTypeBayStack150SlaveUnit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack150 4 }
+
+--The chassis type for C50N switch
+s5ChasTypeC50N
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 42 }
+--The chassis type for C50T switch
+s5ChasTypeC50T
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 43 }
+
+-- Chassis type for BayStacks 303 and 304
+s5ChasTypeBayStack303-304
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 44 }
+
+-- The chassis types for BayStack200 Ethernet
+s5ChasTypeBayStack200
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 45 }
+s5ChasTypeBayStack200NMMHostUnit-12TxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack200 1 }
+s5ChasTypeBayStack200NMMHostUnit-12Tx1FxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack200 2 }
+s5ChasTypeBayStack200HostUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack200 3 }
+s5ChasTypeBayStack200HostUnit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack200 4 }
+
+-- The chassis types for BayStack250 10/100BASE-T Hub
+s5ChasTypeBayStack250
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 46 }
+s5ChasTypeBayStack250NMMHostUnit-12TxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack250 1 }
+s5ChasTypeBayStack250HostUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack250 2 }
+s5ChasTypeBayStack250HostUnit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack250 3 }
+s5ChasTypeBayStack250NMMHostUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack250 4 }
+s5ChasTypeBayStack254HostUnit-12Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack250 5 }
+s5ChasTypeBayStack255HostUnit-24Port
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack250 6 }
+
+-- The chassis types for stackProbes RMON probes
+
+s5ChasTypeStackProbe
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 47 }
+
+s5ChasTypeStackProbeOgp -- OGP Probes
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe 1 }
+
+s5ChasTypeStackProbeOgpEth -- OGP Ethernet
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgp 1 }
+s5ChasTypeStackProbeOgpEth-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpEth 1 }
+s5ChasTypeStackProbeOgpEth-2Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpEth 2 }
+s5ChasTypeStackProbeOgpEth-4Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpEth 4 }
+
+s5ChasTypeStackProbeOgpTr -- OGP Token Ring
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgp 2 }
+s5ChasTypeStackProbeOgpTr-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpTr 1 }
+s5ChasTypeStackProbeOgpTr-2Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpTr 2 }
+
+s5ChasTypeStackProbeOgpFddi -- OGP FDDI
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgp 3 }
+s5ChasTypeStackProbeOgpFddiSas
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpFddi 1 }
+s5ChasTypeStackProbeOgpFddiDas
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpFddi 2 }
+
+s5ChasTypeStackProbeOgpFeth --OGP Fast-Ethernet
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgp 4 }
+s5ChasTypeStackProbeOgpFeth-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpFeth 1 }
+s5ChasTypeStackProbeOgpFeth-2Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbeOgpFeth 2 }
+
+s5ChasTypeStackProbe1000 -- Series 1000 Probes (Pocket Probes)
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe 2 }
+s5ChasTypeStackProbe1000Eth
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe1000 1 }
+s5ChasTypeStackProbe1000Eth-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe1000Eth 1 }
+s5ChasTypeStackProbe1000Feth
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe1000 2 }
+s5ChasTypeStackProbe1000Feth-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe1000Feth 1 }
+
+s5ChasTypeStackProbe2000 -- Series 2000 Probes
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe 3 }
+s5ChasTypeStackProbe2000Eth
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000 1 }
+s5ChasTypeStackProbe2000Eth-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000Eth 1 }
+s5ChasTypeStackProbe2000Eth-2Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000Eth 2 }
+s5ChasTypeStackProbe2000Eth-4Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000Eth 4 }
+s5ChasTypeStackProbe2000Fddi
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000 2 }
+s5ChasTypeStackProbe2000FddiSas
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000Fddi 1 }
+s5ChasTypeStackProbe2000FddiDas
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe2000Fddi 2 }
+
+s5ChasTypeStackProbe3000 -- Series 3000 Probes
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe 4 }
+s5ChasTypeStackProbe3000Geth
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe3000 1 }
+s5ChasTypeStackProbe3000Geth-1Port
+OBJECT IDENTIFIER ::= { s5ChasTypeStackProbe3000Geth 1 }
+
+-- The chassis types for BayStack 450
+s5ChasTypeBayStack450
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 48 }
+s5ChasTypeBayStack450-12TxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack450 1 }
+s5ChasTypeBayStack450-24TxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack450 2 }
+
+-- The chassis types for BayStack 303-24T
+s5ChasTypeBayStack303-24T
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 49 }
+
+-- The chassis types for Accelar 8010
+s5ChasTypeAccelar8010
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 58 }
+
+-- The chassis types for Accelar 8006
+s5ChasTypeAccelar8006
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 59 }
+
+-- The chassis types for BayStack 670
+s5ChasTypeBayStack670
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 60 }
+
+-- The chassis types for Business Policy Switch 2000
+s5ChasTypeBPS2000
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 64 }
+s5ChasTypeBPS2000-24TxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBPS2000 1 }
+
+-- The chassis types for BayStack 3580
+s5ChasTypeBayStack3580
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 67 }
+s5ChasTypeBayStack3580-16F
+OBJECT IDENTIFIER ::= {s5ChasTypeBayStack3580 1 }
+
+-- The chassis types for BayStack 420
+s5ChasTypeBayStack420
+OBJECT IDENTIFIER ::= { s5ChasTypeVal 69 }
+s5ChasTypeBayStack420-24TxPort
+OBJECT IDENTIFIER ::= { s5ChasTypeBayStack420 1 }
+
+-- Registrations for Chassis Group Types
+-- (values for object s5ChasGrpType)
+s5ChasGrpTypeVal
+OBJECT IDENTIFIER ::= { s5reg 2 }
+
+-- Supervisor group
+s5ChasGrpSup OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 1 }
+
+-- Backplane group
+s5ChasGrpBkpl OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 2 }
+
+-- Board (or slots) group
+s5ChasGrpBrd OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 3 }
+
+-- Power supply group
+s5ChasGrpPwr OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 4 }
+
+-- Chassis level temperature sensor group
+s5ChasGrpTmpSnr
+OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 5 }
+
+-- Chassis level fan group
+s5ChasGrpFan OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 6 }
+
+-- Chassis level clock group
+s5ChasGrpClk OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 7 }
+
+-- Virtual chassis unit group
+s5ChasGrpUnit OBJECT IDENTIFIER ::= { s5ChasGrpTypeVal 8 }
+
+-- Registrations for Chassis Components and Sub-components
+-- (values for object s5ChasComType)
+s5ChasComTypeVal
+OBJECT IDENTIFIER ::= { s5reg 3 }
+
+-- Backplanes
+s5ChasComBkpl OBJECT IDENTIFIER ::= { s5ChasComTypeVal 1 }
+
+-- Model 5000 Lower Backplane
+s5ChasComBkplM5000low
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 1 }
+-- Model 5000(920-209) Ethernet/Token Ring/CMB Backplane
+s5ChasComBkplM5000lowCmbEthTok
+OBJECT IDENTIFIER ::= { s5ChasComBkplM5000low 4 }
+
+-- Model 5000(920-???) Ethernet/CMB Backplane
+s5ChasComBkplM5000lowCmbEth
+OBJECT IDENTIFIER ::= { s5ChasComBkplM5000low 5 }
+
+-- Model 5000 Middle Left Backplane
+s5ChasComBkplM5000midLeft
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 2 }
+
+-- Model 5000(920-241) Full Size FDDI Backplane
+s5ChasComBkplM5000midLeftFddiFull
+OBJECT IDENTIFIER ::= { s5ChasComBkplM5000midLeft 0 }
+
+-- Model 5000 Middle Right Backplane
+s5ChasComBkplM5000midRight
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 3 }
+
+-- Model 5000 Upper Left Backplane
+s5ChasComBkplM5000highLeft
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 4 }
+
+-- Model 5000 Upper Right Backplane
+s5ChasComBkplM5000highRight
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 5 }
+
+-- Centillion Backplane
+s5ChasComBkplCentATM
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 6 }
+
+-- BH/Catapult Backplane
+s5ChasComBkpl2x65000BH
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 7 }
+s5ChasComBkpl1x125000BH
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 8 }
+
+-- C50N/C50T Backplane
+s5ChasComBkplC50
+OBJECT IDENTIFIER ::= { s5ChasComBkpl 9 }
+
+-- Backplanes (NEW names)
+s5ChasComMBkpl OBJECT IDENTIFIER ::= { s5ChasComTypeVal 7 }
+
+s5ChasComM5000Bkpl -- 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 12 }
+
+s5ChasComM5005Bkpl -- 5005 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 17 }
+
+s5ChasComM5Dx000Bkpl -- Distributed 5000 Hub Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 24 }
+s5ChasComM5DN000BkplEth3
+OBJECT IDENTIFIER ::= { s5ChasComM5Dx000Bkpl 1 }
+
+s5ChasComMNBayStackBkpl -- BayStack Ethernet Stack
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 25 }
+s5ChasComMNBayStackBkplEth3
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackBkpl 1 }
+
+s5ChasComBayStack100Bkpl -- BayStack 100BASE-T Hub Stack
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 27 }
+
+s5ChasComM3000Bkpl -- 3000 Chassis Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 28 }
+
+s5ChasCom28200Bkpl -- 28200 Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 30 }
+
+s5ChasComMBayStackTrBkpl -- BayStack Token Ring Hub Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 36 }
+s5ChasComMBayStackTrBkplTr1 -- BayStack Token Ring Stack
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrBkpl 1 }
+
+s5ChasComM3030Bkpl -- 3030 Chassis Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 39 }
+
+s5ChasComSwitchNodeBkpl -- Switch Node Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 40 }
+
+s5ChasComBayStack150Bkpl -- BayStack150 Ethernet Stack
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 41 }
+s5ChasComBayStack150BkplEth
+OBJECT IDENTIFIER ::= { s5ChasComBayStack150Bkpl 1 }
+
+s5ChasComMBayStack303-304Bkpl -- BayStack 303/304 Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 42 }
+
+s5ChasComBayStack200Bkpl -- BayStack200 Ethernet Stack
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 43 }
+s5ChasComBayStack200BkplEth
+OBJECT IDENTIFIER ::= { s5ChasComBayStack200Bkpl 1 }
+
+s5ChasComBayStack250Bkpl -- BayStack250 Ethernet Stack
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 44 }
+s5ChasComBayStack250BkplEth10 -- 10Mb Bkpl
+OBJECT IDENTIFIER ::= { s5ChasComBayStack250Bkpl 1 }
+s5ChasComBayStack250BkplEth100 -- 100Mb Bkpl
+OBJECT IDENTIFIER ::= { s5ChasComBayStack250Bkpl 2 }
+
+s5ChasComMAccelar8010Bkpl -- Accelar 8010 Chassis Backplane
+OBJECT IDENTIFIER ::= { s5ChasComMBkpl 45 }
+
+--- Model 3000 Ethernet Backplane
+s5ChasComM3000EthBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 2 }
+s5ChasComM3000-1Bkpl -- Model 3000-1 Ethernet Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthBkpl 0 }
+s5ChasComM3000NBkpl -- Model 3000N Multi-Segment Ethernet Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthBkpl 7 }
+
+--- Model 3000 Ethernet/Token Ring Backplane
+s5ChasComM3000EthTokBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 3 }
+s5ChasComM3000-4Bkpl -- Model 3000-4 Enet/Token Ring Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokBkpl 4 }
+s5ChasComM3000NTBkpl -- Model 3000NT Multi-Segment Enet/TR Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokBkpl 5 }
+
+--- Model 3000 Ethernet/FDDI Backplane
+s5ChasComM3000EthFddiBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 4 }
+
+--- Model 3000 Ethernet/Token Ring/FDDI Backplane
+s5ChasComM3000EthTokFddiBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 5 }
+s5ChasComM3000-5Bkpl -- Model 3000-5 Enet/Token Ring/FDDI Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokFddiBkpl 2 }
+s5ChasComM3000SBkpl -- Model 3000S Multi-Segment Enet/TR/FDDI Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokFddiBkpl 6 }
+
+--- Model 3000 Ethernet/Token Ring Backplane with Redundant Power
+s5ChasComM3000EthTokRedBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 6 }
+s5ChasComM3000-4RBkpl -- Model 3000-4R Multi-Segment Enet/TR Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokRedBkpl 1 }
+s5ChasComM3000NTRBkpl -- Model 3000NTR Multi-Segment Ethernet/TR Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokRedBkpl 9 }
+
+--- Model 3000 Ethernet/Token Ring/FDDI Backplane with Redundant Power
+s5ChasComM3000EthTokFddiRedBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 7 }
+s5ChasComM3000-5RBkpl -- Model 3000-5R Multi-Segment Enet/TR/FDDI Backplane
+
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokFddiRedBkpl 3 }
+s5ChasComM3000SRBkpl -- Model 3000SR Multi-Segment Enet/TR/FDDI Backplane
+OBJECT IDENTIFIER ::= { s5ChasComM3000EthTokFddiRedBkpl 8 }
+
+--- Model 3000 Token Ring Backplane
+s5ChasComM3000TokBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 8 }
+
+--- Model 3000CT Multi-Segment Ethernet/Token Ring/Fast Ethernet Backplane
+s5ChasComM3000CTBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 9 }
+
+--- Model 3000C Multi-Segment Ethernet/Fast Ethernet Backplane
+s5ChasComM3000CBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 10 }
+
+--- Model 3000CTR Multi-Segment Ethernet/Token Ring/Fast Ethernet Backplane
+
+--- with Redundant Power
+s5ChasComM3000CTRBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3000Bkpl 11 }
+
+--- Model 3030 Ethernet Backplane
+s5ChasComM3030EthBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3030Bkpl 1 }
+
+--- Model 3030C Ethernet/Token Ring Backplane
+s5ChasComM3030EthTrBkpl
+OBJECT IDENTIFIER ::= { s5ChasComM3030Bkpl 5 }
+
+-- Model 5000 Lower Backplane
+s5ChasComM5000BkplLow
+OBJECT IDENTIFIER ::= { s5ChasComM5000Bkpl 1 }
+-- Model 5000(920-209) Ethernet/Token Ring/CMB Backplane
+s5ChasComM5000BkplLowCmbEthTok
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplLow 4 }
+
+-- Model 5000(920-303) Ethernet/CMB Backplane
+s5ChasComM5000BkplLowCmbEth
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplLow 5 }
+
+-- Model 5000 Middle Left Backplane
+s5ChasComM5000BkplMidLeft
+OBJECT IDENTIFIER ::= { s5ChasComM5000Bkpl 2 }
+
+-- Model 5000(920-241) Full Size FDDI Backplane
+s5ChasComM5000BkplMidLeftFddiFull
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplMidLeft 0 }
+
+-- Model 5000 Full Size 100Mbps Ethernet Backplane
+s5ChasComM5000BkplMidLeftEth100MbsFull
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplMidLeft 4 }
+
+-- Model 5000 8 slots Size 100Mbps Ethernet Backplane
+s5ChasComM5000BkplMidLeftEth100Mbs
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplMidLeft 7 }
+
+-- Model 5000 Middle Right Backplane
+s5ChasComM5000BkplMidRight
+OBJECT IDENTIFIER ::= { s5ChasComM5000Bkpl 3 }
+
+-- Model 5000 6 slot Size FDDI Backplane
+s5ChasComBkplM5000midRightFddi
+OBJECT IDENTIFIER ::= { s5ChasComBkplM5000midRight 0 }
+
+-- Model 5000 Upper Left Backplane
+s5ChasComM5000BkplHighLeft
+OBJECT IDENTIFIER ::= { s5ChasComM5000Bkpl 4 }
+-- Model 5000 100MBps Ethernet Backplane
+s5ChasComM5000BkplHighLeftEth100Mbs
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplHighLeft 4 }
+-- Model 5000 Switched Packet Bus (GPB) Backplane
+s5ChasComM5000BkplHighLeftSwitchedPktBusFull
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplHighLeft 5 }
+-- Model 5000 ATM 16 Port Backplane
+s5ChasComM5000BkplHighLeftAtm16
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplHighLeft 8 }
+-- Model 5000 ATM 64 Port Backplane
+s5ChasComM5000BkplHighLeftAtm64
+OBJECT IDENTIFIER ::= { s5ChasComM5000BkplHighLeft 9 }
+
+-- Model 5000 Upper Right Backplane
+s5ChasComM5000BkplHighRight
+OBJECT IDENTIFIER ::= { s5ChasComM5000Bkpl 5 }
+
+-- Model 5005 Lower Backplane
+s5ChasComM5005BkplLow
+OBJECT IDENTIFIER ::= { s5ChasComM5005Bkpl 1 }
+-- Model 5005(920-305) Ethernet/Token Ring/CMB Backplane
+s5ChasComM5005BkplLowCmbEthTok
+OBJECT IDENTIFIER ::= { s5ChasComM5005BkplLow 4 }
+
+-- Model 5005(920-316) Ethernet/CMB Backplane
+s5ChasComM5005BkplLowCmbEth
+OBJECT IDENTIFIER ::= { s5ChasComM5005BkplLow 5 }
+
+-- Model 5005 Middle Backplane
+s5ChasComM5005BkplMidLeft
+OBJECT IDENTIFIER ::= { s5ChasComM5005Bkpl 2 }
+-- Model 5005 Fddi Backplane
+s5ChasComM5005BkplMidLeftFddi
+OBJECT IDENTIFIER ::= { s5ChasComM5005BkplMidLeft 1 }
+
+-- Model 5005 100 Mbps Backplane
+s5ChasComM5005BkplMidLeftEth100Mbs
+OBJECT IDENTIFIER ::= { s5ChasComM5005BkplMidLeft 5 }
+
+-- Model 5005 Upper Backplane
+s5ChasComM5005BkplHighLeft
+OBJECT IDENTIFIER ::= { s5ChasComM5005Bkpl 4 }
+-- Model 5005 Switched Packet Bus (GPB) Backplane
+s5ChasComM5005BkplHighLeftSwitchedPktBus
+OBJECT IDENTIFIER ::= { s5ChasComM5005BkplHighLeft 6 }
+
+-- Power supplies
+s5ChasComPwr OBJECT IDENTIFIER ::= { s5ChasComTypeVal 2 }
+
+-- Model 5000 950 Watt AC Chassis Power Supply with
+-- internal fan and temperature sensor
+s5ChasComPwrM5000-950A
+OBJECT IDENTIFIER ::= { s5ChasComPwr 0 }
+s5ChasComPwrM5000-950AFan -- Internal Fan
+OBJECT IDENTIFIER ::= { s5ChasComPwrM5000-950A 1 }
+s5ChasComPwrM5000-950ATmpSnr -- Internal Temerature Sensor
+OBJECT IDENTIFIER ::= { s5ChasComPwrM5000-950A 2 }
+
+-- Model 5000 (721-018) 950 Watt AC Chassis Power Supply with
+-- internal fan and temperature sensor
+s5ChasComPwrM5000-950
+OBJECT IDENTIFIER ::= { s5ChasComPwr 1 }
+s5ChasComPwrM5000-950Fan -- Internal Fan
+OBJECT IDENTIFIER ::= { s5ChasComPwrM5000-950 1 }
+s5ChasComPwrM5000-950TmpSnr -- Internal Temerature Sensor
+OBJECT IDENTIFIER ::= { s5ChasComPwrM5000-950 2 }
+
+-- Centillion AC Chassis Power Supply
+s5ChasComPwrCent OBJECT IDENTIFIER ::= { s5ChasComPwr 2 }
+--Centillion 50N Chassis Power Supply
+s5ChasComPwrCent50N OBJECT IDENTIFIER ::= { s5ChasComPwr 3 }
+--Centillion 50T Chassis Power Supply
+s5ChasComPwrCent50T OBJECT IDENTIFIER ::= { s5ChasComPwr 4 }
+
+-- Power supplies (NEW names)
+s5ChasComMPwr OBJECT IDENTIFIER ::= { s5ChasComTypeVal 8 }
+
+s5ChasComM5000Pwr -- 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 12 }
+
+s5ChasComM5005Pwr -- 5005 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 17 }
+
+s5ChasComM1032xPwr -- 1032x Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 16 }
+
+s5ChasComM5DN000Pwr -- Distributed 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 24 }
+
+s5ChasComMNBayStackPwr -- BayStack Ethernet Hub Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 25 }
+
+s5ChasComMBayStack100Pwr -- BayStack 100BASE-T Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 27 }
+
+s5ChasComM3000Pwr -- 3000 Chassis Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 28 }
+
+s5ChasComMBayStackTrPwr -- BayStack Token Ring Hub Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 36 }
+
+s5ChasComM28200Pwr -- 28200 Chassis Power Supplies
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 30 }
+
+s5ChasComMBayStack301Pwr -- BayStack 301 Chassis Power Supplies
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 31 }
+
+s5ChasComSwitchNodePwr -- Switch Node Chassis Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 32 }
+
+s5ChasComBayStack150Pwr -- BayStack150 Ethernet Hub Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 41 }
+
+s5ChasComMBayStack303-304Pwr -- BayStack 303/304 Chassis Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 42 }
+
+s5ChasComBayStack200Pwr -- BayStack200 Ethernet Hub Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 43 }
+
+s5ChasComBayStack250Pwr -- BayStack250 Ethernet Hub Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 44 }
+
+s5ChasComMAccelar8001Pwr -- Accelar 8010 Chassis AC Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 45 }
+
+s5ChasComMAccelar8002Pwr -- Accelar 8010 Chassis DC Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 46 }
+
+s5ChasComBPS2000Pwr -- BPS 2000 24 port Switch Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 47 }
+
+s5ChasComBayStack450Pwr -- BayStack450 Switch Family Power Supply (includes BayStack 350 and 410)
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 48 }
+
+s5ChasComBayStack3580Pwr -- BayStack3580 Gigabit Switch Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 49 }
+
+s5ChasComBayStack420Pwr -- BayStack420 24 Port Switch Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComMPwr 50 }
+
+-- Model 5000 (721-018) 950 Watt AC Chassis Power Supply with
+-- internal fan and temperature sensor (but returning a differnt ID)
+s5ChasComM5000Pwr-950A
+OBJECT IDENTIFIER ::= { s5ChasComM5000Pwr 0 }
+
+-- Model 5000 (721-018) 950 Watt AC Chassis Power Supply with
+-- internal fan and temperature sensor
+s5ChasComM5000Pwr-950
+OBJECT IDENTIFIER ::= { s5ChasComM5000Pwr 1 }
+
+-- Model 5000 1400 Watt DC Chassis Power Supply
+s5ChasComM5000Pwr-1400WDC
+OBJECT IDENTIFIER ::= { s5ChasComM5000Pwr 3 }
+
+-- Model 5005 (721-029) 600 Watt AC Chassis Power Supply with
+-- internal fan and temperature sensor
+s5ChasComM5005Pwr-600
+OBJECT IDENTIFIER ::= { s5ChasComM5005Pwr 1 }
+
+-- Model 5005 900 Watt AC Chassis Power Supply
+s5ChasComM5005Pwr-900WAC
+OBJECT IDENTIFIER ::= { s5ChasComM5005Pwr 2 }
+
+-- Model 5005 900 Watt DC Chassis Power Supply
+s5ChasComM5005Pwr-900WDC
+OBJECT IDENTIFIER ::= { s5ChasComM5005Pwr 3 }
+
+-- Model 1032x (721-???) ??? Watt AC Chassis Power Supply
+s5ChasComM1032xPwr-A
+OBJECT IDENTIFIER ::= { s5ChasComM1032xPwr 1 }
+
+-- Stackable Redundant Power Supply Feed
+s5ChasCom5DN000Pwr-RedundFeed
+OBJECT IDENTIFIER ::= { s5ChasComM5DN000Pwr 1 }
+
+-- Model 5DN002 Hub 50W AC Chassis Power Supply
+s5ChasComM5DN002Pwr-50W
+OBJECT IDENTIFIER ::= { s5ChasComM5DN000Pwr 2 }
+
+-- Model 5DN003 Hub 110W AC Chassis Power Supply
+s5ChasComM5DN003Pwr-110W
+OBJECT IDENTIFIER ::= { s5ChasComM5DN000Pwr 3 }
+
+-- Stackable Redundant Power Supply Feed
+s5ChasComMNBayStackPwr-RedundFeed
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackPwr 1 }
+
+-- BayStack Ethernet Hub 50W AC Chassis Power Supply
+s5ChasComMNBayStackPwr-50W
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackPwr 2 }
+
+-- BayStack 100BASE-T Hub 110W AC Chassis Power Supply
+s5ChasComMBayStack100Pwr-110W
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100Pwr 2 }
+
+-- BayStack 100BASE-T Hub Redundant Power Supply Feed
+s5ChasComMBayStack100Pwr-RedundFeed
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100Pwr 1 }
+
+-- Model 3001 360 Watt Power Supply Module
+s5ChasComM3000360Pwr
+OBJECT IDENTIFIER ::= { s5ChasComM3000Pwr 1 }
+
+-- Model 3002/3002DC 460 Watt Power Supply Module
+s5ChasComM3000460Pwr
+OBJECT IDENTIFIER ::= { s5ChasComM3000Pwr 2 }
+
+-- Model 3003 460 Watt DC/DC Power Supply Module
+s5ChasComM3003-460Pwr
+OBJECT IDENTIFIER ::= { s5ChasComM3000Pwr 3 }
+
+-- Stackable Redundant Power supply Feed
+s5ChasComMBayStackTrPwr-RedundFeed
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrPwr 1 }
+
+-- Module BayStack TR (721-048-A) 150W AC/DC Chassis PowerSupply
+s5ChasComMBayStackTrPwr-150W
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrPwr 2 }
+
+-- Model 28200 Ethernet Switch 182W AC Chassis Power Supply
+s5ChasComM28200Pwr-182W
+OBJECT IDENTIFIER ::= { s5ChasComM28200Pwr 2 }
+-- Model 28200 Ethernet Switch Redundant Power Supply Feed
+s5ChasComM28200Pwr-RedundFeed
+OBJECT IDENTIFIER ::= { s5ChasComM28200Pwr 1 }
+
+-- BayStack 301 Internal Power Supply
+s5ChasComMBayStack301IntPwr
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301Pwr 1 }
+-- BayStack 301 External Power Supply
+s5ChasComMBayStack301ExtPwr
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301Pwr 2 }
+
+-- BayStack150 Ethernet Hub Chassis Power Supply
+s5ChasComBayStack150MasterPwr -- Master Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack150Pwr 1 }
+s5ChasComBayStack150SlavePwr -- Slave unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack150Pwr 2 }
+
+-- BayStack200 Ethernet Hub Chassis Power Supply
+s5ChasComBayStack200MasterPwr -- Master Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack200Pwr 1 }
+
+-- BayStack250 Ethernet Hub Chassis Power Supply
+s5ChasComBayStack250MasterPwr -- Master Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack250Pwr 1 }
+s5ChasComBayStack250SlavePwr -- Slave Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack250Pwr 2 }
+
+-- BPS 2000 24 port switch Chassis Power Supply
+s5ChasComBPS2000Pwr-Main -- Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBPS2000Pwr 1 }
+s5ChasComBPS2000Pwr-RedundFeed -- Redundant Power Supply Feed
+OBJECT IDENTIFIER ::= { s5ChasComBPS2000Pwr 2 }
+
+-- BayStack450 Switch Family Chassis Power Supply
+s5ChasComBayStack450Pwr-Main -- Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack450Pwr 1 }
+s5ChasComBayStack450Pwr-RedundFeed -- Redundant Power Supply Feed
+OBJECT IDENTIFIER ::= { s5ChasComBayStack450Pwr 2 }
+
+-- BayStack3580 Gigabit switch Chassis Power Supply
+s5ChasComBayStack3580Pwr-Main -- Unit Power Supply
+OBJECT IDENTIFIER ::= { s5ChasComBayStack3580Pwr 1 }
+s5ChasComBayStack3580Pwr-RedundFeed -- Redundant Power Supply Feed
+OBJECT IDENTIFIER ::= {s5ChasComBayStack3580Pwr 2 }
+
+-- Chassis level Temperature Sensors
+s5ChasComTmpSnr OBJECT IDENTIFIER ::= { s5ChasComTypeVal 3 }
+
+-- Model 5000 Chassis temperature sensor
+s5ChasComTmpSnrM5000
+OBJECT IDENTIFIER ::= { s5ChasComTmpSnr 1 }
+
+-- Chassis level Temperature Sensors (NEW names)
+s5ChasComMTmpSnr OBJECT IDENTIFIER ::= { s5ChasComTypeVal 9 }
+s5ChasComM5000TmpSnr -- 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMTmpSnr 12 }
+s5ChasComM5005TmpSnr -- 5005 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMTmpSnr 17 }
+
+-- Model 5000 (900-???) Chassis temperature sensor
+s5ChasComM5000TmpSnrA
+OBJECT IDENTIFIER ::= { s5ChasComM5000TmpSnr 1 }
+
+-- Model 5005 (900-???) Chassis temperature sensor
+s5ChasComM5005TmpSnrA
+OBJECT IDENTIFIER ::= { s5ChasComM5005TmpSnr 1 }
+
+-- Chassis level Fans
+s5ChasComFan OBJECT IDENTIFIER ::= { s5ChasComTypeVal 4 }
+
+-- Model 5000 (900-003) Chassis fan
+s5ChasComFanM5000
+OBJECT IDENTIFIER ::= { s5ChasComFan 1 }
+
+-- Centillion Chassis fan
+s5ChasComFanCent OBJECT IDENTIFIER ::= { s5ChasComFan 2 }
+--Centillion 50N Chassis Power Supply
+s5ChasComCent50NFan OBJECT IDENTIFIER ::= { s5ChasComFan 3 }
+--Centillion 50T Chassis Power Supply
+s5ChasComCent50TFan OBJECT IDENTIFIER ::= { s5ChasComFan 4 }
+
+-- Chassis level Fans (NEW names)
+s5ChasComMFan OBJECT IDENTIFIER ::= { s5ChasComTypeVal 10 }
+
+s5ChasComM5000Fan -- 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMFan 12 }
+
+s5ChasComM5005Fan -- 5005 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMFan 17 }
+
+s5ChasComM1032xFan -- 1032x Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMFan 16 }
+
+s5ChasComM5DN000Fan -- Distributed 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMFan 24 }
+
+s5ChasComMNBayStackFan -- BayStack Ethernet Hub Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 25 }
+
+s5ChasComMBayStack100Fan -- BayStack 100BASE-T Hub Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 27 }
+
+s5ChasComM3000Fan -- 3000 Chassis Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 28 }
+
+s5ChasComM28200Fan --Model 28200 Ethernet Switch Chassis Level Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 30 }
+
+s5ChasComMBayStack301Fan -- Bay Stack 301 Chassis Level Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 31 }
+
+s5ChasComSwitchNodeFan -- Switch Node Chassis Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 32 }
+
+s5ChasComMBayStackTrFan -- BayStack Token Ring hub Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 36 }
+
+s5ChasComBayStack150Fan -- BayStack150 Ethernet Hub Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 41 }
+
+s5ChasComMBayStack303-304Fan -- Bay Stack 303/304 Chassis Level Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 42 }
+
+s5ChasComBayStack200Fan -- BayStack200 Ethernet Hub Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 43 }
+
+s5ChasComBayStack250Fan -- BayStack250 Ethernet Hub Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 44 }
+
+s5ChasComMAccelar8010Fan -- Accelar 8010 Chassis Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 45 }
+
+s5ChasComBPS2000Fan -- BPS 2000 Ethernet Switch Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 47 }
+
+s5ChasComBayStack450Fan -- BayStack450 Switch Family Fan (includes BayStack 350 and 410)
+OBJECT IDENTIFIER ::= { s5ChasComMFan 48 }
+
+s5ChasComBayStack3580Fan -- BayStack3580 Gigabit Switch Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 49 }
+
+s5ChasComBayStack420Fan -- BayStack420 Ethernet Switch Fan
+OBJECT IDENTIFIER ::= { s5ChasComMFan 50 }
+
+-- Model 5000 (900-003) Chassis fan
+s5ChasComM5000FanA
+OBJECT IDENTIFIER ::= { s5ChasComM5000Fan 1 }
+
+-- Model 5000 (900-003) Chassis fan (real return code)
+s5ChasComM5000FanAA
+OBJECT IDENTIFIER ::= { s5ChasComM5000Fan 2 }
+
+-- Model 5005 Chassis fan
+s5ChasComM5005FanA
+OBJECT IDENTIFIER ::= { s5ChasComM5005Fan 1 }
+
+-- Model 1032x Chassis fan
+s5ChasComM1032xFanA
+OBJECT IDENTIFIER ::= { s5ChasComM1032xFan 1 }
+
+-- Model 3000 Chassis Fan
+s5ChasComM3000FanA
+OBJECT IDENTIFIER ::= { s5ChasComM3000Fan 1 }
+
+-- Model 5DN002 Hub 2.5 inch Fan
+s5ChasComM5DN002Fan-1U
+OBJECT IDENTIFIER ::= { s5ChasComM5DN000Fan 1 }
+
+-- Model 5DN003 Hub 3.5 inch Fan
+s5ChasComM5DN003Fan-2U
+OBJECT IDENTIFIER ::= { s5ChasComM5DN000Fan 2 }
+
+-- BayStack Ethernet Hub Fan
+s5ChasComMNBayStackFanA
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackFan 1 }
+
+-- BayStack 100BASE-T Hub Fan
+s5ChasComMBayStack100FanA
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100Fan 1 }
+
+-- BayStack Token Hub Fan Type A
+s5ChasComMBayStackTrFanA
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrFan 1 }
+-- Model 28200 Ethernet Switch Fan
+s5ChasComM28200FanA
+OBJECT IDENTIFIER ::= { s5ChasComM28200Fan 1 }
+-- BayStack 301 Fan A
+s5ChasComMBayStack301FanA
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301Fan 1 }
+
+-- BayStack150 Ethernet Master Hub Fan
+s5ChasComBayStack150MasterFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack150Fan 1 }
+
+-- BayStack200 Ethernet Master Hub Fan
+s5ChasComBayStack200MasterFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack200Fan 1 }
+
+-- BayStack250 10/100 Ethernet Master Hub Fan
+s5ChasComBayStack250MasterFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack250Fan 1 }
+-- BayStack250 10/100 Ethernet Slave Hub Fan
+s5ChasComBayStack250SlaveFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack250Fan 2 }
+
+-- BPS 2000 24 port switch Fan
+s5ChasComBPS2000UnitFan
+OBJECT IDENTIFIER ::= { s5ChasComBPS2000Fan 1 }
+
+-- BayStack450 Switch Family Fan
+s5ChasComBayStack450UnitFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack450Fan 1 }
+s5ChasComBayStack450RedundPwrFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack450Fan 2 }
+
+-- BayStack3580 Gigabit eternet switch Fan
+s5ChasComBayStack3580UnitFan
+OBJECT IDENTIFIER ::= { s5ChasComBayStack3580Fan 1 }
+
+-- Chassis level Backplane Clocks
+s5ChasComClk OBJECT IDENTIFIER ::= { s5ChasComTypeVal 5 }
+
+-- Model 5000 Backplane Clock
+s5ChasComClkM5000
+OBJECT IDENTIFIER ::= { s5ChasComClk 1 }
+
+-- Chassis level Backplane Clocks (NEW names)
+s5ChasComMClk OBJECT IDENTIFIER ::= { s5ChasComTypeVal 11 }
+s5ChasComM5000Clk -- 5000 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMClk 12 }
+s5ChasComM5005Clk -- 5005 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMClk 17 }
+s5ChasComMAccelar8010Clk -- Accelar 8010 Chassis
+OBJECT IDENTIFIER ::= { s5ChasComMClk 18 }
+
+-- Model 5000 (900-???) Backplane Clock
+s5ChasComM5000ClkA
+OBJECT IDENTIFIER ::= { s5ChasComM5000Clk 1 }
+
+-- Model 5005 (900-???) Backplane Clock
+s5ChasComM5005ClkA
+OBJECT IDENTIFIER ::= { s5ChasComM5005Clk 1 }
+
+-- Supervisor Module and Boards in Slots
+s5ChasComMod OBJECT IDENTIFIER ::= { s5ChasComTypeVal 6 }
+
+-- Model 331X Ethernet Network Management Module
+s5ChasComM331X
+OBJECT IDENTIFIER ::= { s5ChasComMod 1 }
+s5ChasComMDA331X
+OBJECT IDENTIFIER ::= { s5ChasComM331X 255 }
+
+-- Model 3302 Shielded Twisted Pair (STP) Host Module
+s5ChasComM3302
+OBJECT IDENTIFIER ::= { s5ChasComMod 2 }
+s5ChasComMDA3302
+OBJECT IDENTIFIER ::= { s5ChasComM3302 255 }
+
+-- Model 33XX Ethernet Local Bridge
+s5ChasComM33XX
+OBJECT IDENTIFIER ::= { s5ChasComMod 3 }
+s5ChasComMDA3324-ST -- Model 3324-ST Ethernet Local Bridge with FOIRL FiberPort
+OBJECT IDENTIFIER ::= { s5ChasComM33XX 0 }
+s5ChasComMDA3323 -- Model 3323 Ethernet Local Bridge with AUI Port
+OBJECT IDENTIFIER ::= { s5ChasComM33XX 3 }
+
+-- Model 3304-ST FOIRL Fiber Optic Host Module
+s5ChasComM3304
+OBJECT IDENTIFIER ::= { s5ChasComMod 4 }
+s5ChasComMDA3304
+OBJECT IDENTIFIER ::= { s5ChasComM3304 255 }
+
+-- Model 3305 Unshielded Twisted Pair (UTP) Host Module
+s5ChasComM3305
+OBJECT IDENTIFIER ::= { s5ChasComMod 5 }
+s5ChasComMDA3305
+OBJECT IDENTIFIER ::= { s5ChasComM3305 255 }
+
+-- Model 333X Ethernet Retiming Unit
+s5ChasComM333X
+OBJECT IDENTIFIER ::= { s5ChasComMod 6 }
+s5ChasComMDA3334-ST -- Model 3334-ST Ethernet Retiming Unit with FOIRL
+OBJECT IDENTIFIER ::= { s5ChasComM333X 0 }
+s5ChasComMDA3333 -- Model 3333 Ethernet Retiming Unit with AUI
+OBJECT IDENTIFIER ::= { s5ChasComM333X 3 }
+
+-- Model 3307 10BASE-T 50 Pin Host Module
+s5ChasComM3307
+OBJECT IDENTIFIER ::= { s5ChasComMod 7 }
+s5ChasComMDA3307
+OBJECT IDENTIFIER ::= { s5ChasComM3307 255 }
+
+-- Model 3308 10BASE-T Host Module
+s5ChasComM3308
+OBJECT IDENTIFIER ::= { s5ChasComMod 8 }
+s5ChasComMDA3308
+OBJECT IDENTIFIER ::= { s5ChasComM3308 255 }
+
+-- Model 3301 Thin Net Host Module
+s5ChasComM3301
+OBJECT IDENTIFIER ::= { s5ChasComMod 9 }
+s5ChasComMDA3301
+OBJECT IDENTIFIER ::= { s5ChasComM3301 255 }
+
+-- Model 3904 FDDI fiber host module
+s5ChasComM3904
+OBJECT IDENTIFIER ::= { s5ChasComMod 10 }
+s5ChasComMDA3904
+OBJECT IDENTIFIER ::= { s5ChasComM3904 85 }
+s5ChasComMDA3904-2SM
+OBJECT IDENTIFIER ::= { s5ChasComM3904 90 }
+s5ChasComMDA3904-4SM
+OBJECT IDENTIFIER ::= { s5ChasComM3904 170 }
+
+-- Model 3902 FDDI STP host module
+s5ChasComM3902
+OBJECT IDENTIFIER ::= { s5ChasComMod 11 }
+s5ChasComMDA3902
+OBJECT IDENTIFIER ::= { s5ChasComM3902 255 }
+
+-- Model 3910S Network Management Module
+s5ChasComM3910S
+OBJECT IDENTIFIER ::= { s5ChasComMod 12 }
+s5ChasComMDA3910S -- Model 3910 Super NMM
+OBJECT IDENTIFIER ::= { s5ChasComM3910S 80 }
+s5ChasComMDA3910S-SM -- Model 3910S-SM FDDI Single Mode Fiber NMM
+OBJECT IDENTIFIER ::= { s5ChasComM3910S 160 }
+
+-- Model 331XS Ethernet Network Management Module
+s5ChasComM331XS
+OBJECT IDENTIFIER ::= { s5ChasComMod 14 }
+s5ChasComMDA3314S -- Model 3314S Ethernet NMM with ST FORIL Fiber Port
+OBJECT IDENTIFIER ::= { s5ChasComM331XS 0 }
+s5ChasComMDA3313S -- Model 3313S Ethernet NMM with AUI Port
+OBJECT IDENTIFIER ::= { s5ChasComM331XS 3 }
+
+-- Model 3100R Summing Module
+s5ChasComM3100R
+OBJECT IDENTIFIER ::= { s5ChasComMod 15 }
+s5ChasComMDA3100R
+OBJECT IDENTIFIER ::= { s5ChasComM3100R 255 }
+
+-- Model 3502 Shielded Twisted Pair Token Ring Host Module
+s5ChasComM3502
+OBJECT IDENTIFIER ::= { s5ChasComMod 16 }
+s5ChasComMDA3502
+OBJECT IDENTIFIER ::= { s5ChasComM3502 255 }
+
+-- Model 3502A Shielded Twisted Pair Token Ring Host Module
+s5ChasComM3502A
+OBJECT IDENTIFIER ::= { s5ChasComMod 17 }
+s5ChasComMDA3502A
+OBJECT IDENTIFIER ::= { s5ChasComM3502A 255 }
+
+-- Model 353X Repeater Module
+s5ChasComM353X
+OBJECT IDENTIFIER ::= { s5ChasComMod 18 }
+s5ChasComMDA3532 -- Model 3532 Shielded Twisted Pair Repeater Module
+OBJECT IDENTIFIER ::= { s5ChasComM353X 2 }
+s5ChasComMDA3534 -- Model 3534 FOIRL Fiber Repeater Module
+OBJECT IDENTIFIER ::= { s5ChasComM353X 4 }
+
+-- Model 3040 Network Control Engine
+s5ChasComM3040
+OBJECT IDENTIFIER ::= { s5ChasComMod 19 }
+s5ChasComMDA3040
+OBJECT IDENTIFIER ::= { s5ChasComM3040 255 }
+
+-- Model 3505 Unshielded Twisted Pair Token Ring Host Module
+s5ChasComM3505
+OBJECT IDENTIFIER ::= { s5ChasComMod 20 }
+s5ChasComMDA3505
+OBJECT IDENTIFIER ::= { s5ChasComM3505 255 }
+
+-- Model 3505A Unshielded Twisted Pair Token Ring Host Module
+s5ChasComM3505A
+OBJECT IDENTIFIER ::= { s5ChasComMod 21 }
+s5ChasComMDA3505A
+OBJECT IDENTIFIER ::= { s5ChasComM3505A 255 }
+
+-- Model 355X FOIRL Fiber Ring-In/Ring-Out Module
+s5ChasComM355X
+OBJECT IDENTIFIER ::= { s5ChasComMod 22 }
+s5ChasComMDA3552 -- Model 3552 STP Ring-In/Ring-Out Module
+OBJECT IDENTIFIER ::= { s5ChasComM355X 2 }
+s5ChasComMDA3554 -- Model 3554 FOIRL Fiber Ring-In/Ring-Out Module
+OBJECT IDENTIFIER ::= { s5ChasComM355X 4 }
+
+-- Model 3040S Network Control Engine
+s5ChasComM3040S
+OBJECT IDENTIFIER ::= { s5ChasComMod 23 }
+s5ChasComMDA3040S
+OBJECT IDENTIFIER ::= { s5ChasComM3040S 255 }
+
+-- Model 351X Token Ring Network Management Module
+s5ChasComM351X
+OBJECT IDENTIFIER ::= { s5ChasComMod 24 }
+s5ChasComMDA3512 -- Model 3512 Token Ring NMM with STP RI/RO
+OBJECT IDENTIFIER ::= { s5ChasComM351X 2 }
+s5ChasComMDA3513 -- Model 3513 Token Ring NMM with STP Repeater
+OBJECT IDENTIFIER ::= { s5ChasComM351X 3 }
+s5ChasComMDA3514 -- Model 3514 Token Ring NMM with Fiber RI/RO
+OBJECT IDENTIFIER ::= { s5ChasComM351X 4 }
+
+-- Model 33XXS Ethernet High Speed Local Bridge
+s5ChasComM33XXS
+OBJECT IDENTIFIER ::= { s5ChasComMod 25 }
+s5ChasComMDA3324S -- Model 3324S Ethernet High Speed Local Bridge with FOIRLFiber Port
+OBJECT IDENTIFIER ::= { s5ChasComM33XXS 0 }
+s5ChasComMDA3323S -- Model 3323S Ethernet High Speed Local Bridge with AUI
+OBJECT IDENTIFIER ::= { s5ChasComM33XXS 3 }
+
+-- Model 3386 Ethernet Remote Router
+s5ChasComM338X
+OBJECT IDENTIFIER ::= { s5ChasComMod 26 }
+s5ChasComMDA3384 -- Model 3384 Ethernet Local Router with FOIRL Fiber Port
+OBJECT IDENTIFIER ::= { s5ChasComM338X 0 }
+s5ChasComMDA3383 -- Model 3383 Ethernet Local Router with AUI Port
+OBJECT IDENTIFIER ::= { s5ChasComM338X 3 }
+s5ChasComMDA3386 -- Model 3386 Ethernet Remote Router with Universal Port
+OBJECT IDENTIFIER ::= { s5ChasComM338X 4 }
+
+-- Model 3328 EtherSwitch Module
+s5ChasComM3328
+OBJECT IDENTIFIER ::= { s5ChasComMod 27 }
+s5ChasComMDA3328
+OBJECT IDENTIFIER ::= { s5ChasComM3328 255 }
+
+-- Model 3395 Ethernet terminal server
+s5ChasComM3395
+OBJECT IDENTIFIER ::= { s5ChasComMod 28 }
+s5ChasComMDA3395
+OBJECT IDENTIFIER ::= { s5ChasComM3395 255 }
+
+-- Model 3394 Ethernet LocalTalk Router/Repeater
+s5ChasComM3394
+OBJECT IDENTIFIER ::= { s5ChasComMod 29 }
+s5ChasComMDA3394
+OBJECT IDENTIFIER ::= { s5ChasComM3394 255 }
+
+-- Model 3522 Token Ring Bridge
+s5ChasComM3522
+OBJECT IDENTIFIER ::= { s5ChasComMod 30 }
+s5ChasComMDA3522
+OBJECT IDENTIFIER ::= { s5ChasComM3522 255 }
+
+-- Model 3395A Ethernet terminal server
+s5ChasComM3395A
+OBJECT IDENTIFIER ::= { s5ChasComMod 31 }
+s5ChasComMDA3395A
+OBJECT IDENTIFIER ::= { s5ChasComM3395A 255 }
+
+-- Model 3800 Multi Media Router Module
+s5ChasComM3800
+OBJECT IDENTIFIER ::= { s5ChasComMod 32 }
+s5ChasComMDA3803 -- Model 3803 Ethernet Media Adapter
+OBJECT IDENTIFIER ::= { s5ChasComM3800 0 }
+s5ChasComMDA3805 -- Model 3805 Token Ring Media Adapter
+OBJECT IDENTIFIER ::= { s5ChasComM3800 1 }
+s5ChasComMDA3809 -- Model 3809 FDDI Media Adapter
+OBJECT IDENTIFIER ::= { s5ChasComM3800 2 }
+s5ChasComMDA3806 -- Model 3806 Serial WAN Media Adapter
+OBJECT IDENTIFIER ::= { s5ChasComM3800 3 }
+s5ChasComMDA3800 -- Model 3800 Multi Media Router Module
+OBJECT IDENTIFIER ::= { s5ChasComM3800 255 }
+
+-- Model 3368 10BASE-T LattisSecure Host Module
+s5ChasComM3368
+OBJECT IDENTIFIER ::= { s5ChasComMod 36 }
+s5ChasComMDA3368
+OBJECT IDENTIFIER ::= { s5ChasComM3368 255 }
+
+-- Model 3307A 10BASE-T with Amp Connector Host Module
+s5ChasComM3307A
+OBJECT IDENTIFIER ::= { s5ChasComMod 37 }
+s5ChasComMDA3307A
+OBJECT IDENTIFIER ::= { s5ChasComM3307A 255 }
+
+-- Model 3308A 10BASE-T Host Module
+s5ChasComM3308A
+OBJECT IDENTIFIER ::= { s5ChasComMod 38 }
+s5ChasComMDA3308A
+OBJECT IDENTIFIER ::= { s5ChasComM3308A 255 }
+
+-- Model 3301-75 Ohms Thin Net Host Module
+s5ChasComM3301-75
+OBJECT IDENTIFIER ::= { s5ChasComMod 41 }
+s5ChasComMDA3301-75
+OBJECT IDENTIFIER ::= { s5ChasComM3301-75 255 }
+
+-- Model 3301-93 Ohms Thin Net Host Module
+s5ChasComM3301-93
+OBJECT IDENTIFIER ::= { s5ChasComMod 42 }
+s5ChasComMDA3301-93
+OBJECT IDENTIFIER ::= { s5ChasComM3301-93 255 }
+
+-- Model 3502B Unshielded Twisted Pair Token Ring Host Module
+s5ChasComM3502B
+OBJECT IDENTIFIER ::= { s5ChasComMod 45 }
+s5ChasComMDA3502B
+OBJECT IDENTIFIER ::= { s5ChasComM3502B 255 }
+
+-- Model 3505B Unshielded Twisted Pair Token Ring Host Module
+s5ChasComM3505B
+OBJECT IDENTIFIER ::= { s5ChasComMod 46 }
+s5ChasComMDA3505B
+OBJECT IDENTIFIER ::= { s5ChasComM3505B 255 }
+
+-- Model 3307HD 10BASE-T 50 Pin 24 Port Host Module
+s5ChasComM3307HD
+OBJECT IDENTIFIER ::= { s5ChasComMod 47 }
+s5ChasComMDA3307HD
+OBJECT IDENTIFIER ::= { s5ChasComM3307HD 255 }
+
+-- Model 3356 Ethernet Remote Bridge
+s5ChasComM3356
+OBJECT IDENTIFIER ::= { s5ChasComMod 56 }
+s5ChasSubComMDA3356X21 -- Model 3356-X.21(barrier) Enet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 1 }
+s5ChasSubComMDA3356X21U -- Model 3356-X.21(unbarrier) Enet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 2 }
+s5ChasSubComMDA3356RS232 -- Model 3356-RS232 Ethernet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 3 }
+s5ChasSubComMDA3356RS449 -- Model 3356-RS449 Ethernet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 4 }
+s5ChasSubComMDA3356V35 -- Model 3356-V.35 Ethernet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 5 }
+s5ChasSubComMDA3356G703 -- Model 3356G703 Ethernet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 6 }
+s5ChasSubComMDA3356T1 -- Model 3356-T1 Ethernet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 7 }
+s5ChasSubComMDA3356 -- Model 3356 Ethernet Remote Bridge
+OBJECT IDENTIFIER ::= { s5ChasComM3356 255 }
+
+-- Model 3902A FDDI SDDI host module
+s5ChasComM3902A
+OBJECT IDENTIFIER ::= { s5ChasComMod 63 }
+s5ChasComMDA3902A
+OBJECT IDENTIFIER ::= { s5ChasComM3902A 255 }
+
+-- Model 3910S-SD FDDI SDDI Network Management Module
+s5ChasComM3910S-SD
+OBJECT IDENTIFIER ::= { s5ChasComMod 67 }
+s5ChasComMDA3910S-SD
+OBJECT IDENTIFIER ::= { s5ChasComM3910S-SD 255 }
+
+-- Model 3313A Ethernet Network Management Module with AUI Port
+s5ChasComM3313A
+OBJECT IDENTIFIER ::= { s5ChasComMod 68 }
+s5ChasComMDA3313A
+OBJECT IDENTIFIER ::= { s5ChasComM3313A 255 }
+
+-- Model 3314A Ethernet Network Management Module with 10BASE-FL Port
+s5ChasComM3314A
+OBJECT IDENTIFIER ::= { s5ChasComMod 69 }
+s5ChasComMDA3314A
+OBJECT IDENTIFIER ::= { s5ChasComM3314A 255 }
+
+-- Model 3304A FOIRL Fiber Optic Host Module
+s5ChasComM3304A
+OBJECT IDENTIFIER ::= { s5ChasComMod 70 }
+s5ChasComMDA3304A
+OBJECT IDENTIFIER ::= { s5ChasComM3304A 255 }
+
+-- Model 3910SA FDDI Network Management Module
+s5ChasComM3910SA
+OBJECT IDENTIFIER ::= { s5ChasComMod 71 }
+s5ChasComMDA3910SA -- Model 3910SA FDDI NMM
+OBJECT IDENTIFIER ::= { s5ChasComM3910SA 80 }
+s5ChasComMDA3910SA-SM -- Model 3910SA-SM FDDI NMM
+OBJECT IDENTIFIER ::= { s5ChasComM3910SA 160 }
+
+-- Model 3905 UTP FDDI Host Module
+s5ChasComM3905
+OBJECT IDENTIFIER ::= { s5ChasComMod 73 }
+s5ChasComMDA3905
+OBJECT IDENTIFIER ::= { s5ChasComM3905 0 }
+
+-- Model 3486 LattisEngine/486
+s5ChasComM3486
+OBJECT IDENTIFIER ::= { s5ChasComMod 82 }
+s5ChasComMDA3486
+OBJECT IDENTIFIER ::= { s5ChasComM3486 255 }
+
+-- Model 3504-ST Token Ring Fiber Host Module
+s5ChasComM3504-ST
+OBJECT IDENTIFIER ::= { s5ChasComMod 83 }
+s5ChasComMDA3504-ST
+OBJECT IDENTIFIER ::= { s5ChasComM3504-ST 255 }
+
+-- Model 3517SA Token Ring Network Management Module
+s5ChasComM3517SA
+OBJECT IDENTIFIER ::= { s5ChasComMod 101 }
+s5ChasComMDA3517SA
+OBJECT IDENTIFIER ::= { s5ChasComM3517SA 255 }
+
+-- Model 3308B 10BASE-T Host Module
+s5ChasComM3308B
+OBJECT IDENTIFIER ::= { s5ChasComMod 102 }
+s5ChasComMDA3308B
+OBJECT IDENTIFIER ::= { s5ChasComM3308B 255 }
+
+-- Model 3313SA Ethernet Network Management Module with AUI Port
+s5ChasComM3313SA
+OBJECT IDENTIFIER ::= { s5ChasComMod 105 }
+s5ChasComMDA3313SA
+OBJECT IDENTIFIER ::= { s5ChasComM3313SA 255 }
+
+-- Model 3314SA Ethernet Network Management Module with 10BASE-FL Port
+s5ChasComM3314SA
+OBJECT IDENTIFIER ::= { s5ChasComMod 106 }
+s5ChasComMDA3314SA
+OBJECT IDENTIFIER ::= { s5ChasComM3314SA 255 }
+
+-- Model 3174 Communications Controller Module
+s5ChasComM3174
+OBJECT IDENTIFIER ::= { s5ChasComMod 107 }
+s5ChasComMDA3174
+OBJECT IDENTIFIER ::= { s5ChasComM3174 255 }
+
+-- Model 3522A Token Ring Bridge
+s5ChasComM3522A
+OBJECT IDENTIFIER ::= { s5ChasComMod 108 }
+s5ChasComMDA3522A
+OBJECT IDENTIFIER ::= { s5ChasComM3522A 255 }
+
+-- Model 3299-C Terminal Multiplexor Adapter Module
+s5ChasComM3299-C
+OBJECT IDENTIFIER ::= { s5ChasComMod 116 }
+s5ChasComMDA3299-C
+OBJECT IDENTIFIER ::= { s5ChasComM3299-C 255 }
+
+-- Model 3299-U UTP Terminal Multiplexor Adapter Module
+s5ChasComM3299-U
+OBJECT IDENTIFIER ::= { s5ChasComMod 117 }
+s5ChasComMDA3299-U
+OBJECT IDENTIFIER ::= { s5ChasComM3299-U 255 }
+
+-- Model 3299-F Fiber Optic Terminal Adapter Module
+s5ChasComM3299-F
+OBJECT IDENTIFIER ::= { s5ChasComMod 119 }
+s5ChasComMDA3299-F
+OBJECT IDENTIFIER ::= { s5ChasComM3299-F 255 }
+
+-- Model 3410 Fast Ethernet Network Management Module
+s5ChasComM3410
+OBJECT IDENTIFIER ::= { s5ChasComMod 120 }
+s5ChasComM3410Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM3410 0 }
+s5ChasComM3410StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComM3410Store 1 }
+s5ChasComM3410StoreFlash -- FLASH Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM3410Store 2 }
+s5ChasComM3410StoreDram -- DRAM Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM3410Store 3 }
+
+-- Model 3405 Fast Ethernet Host Module with 12 100Base-TX Ports
+s5ChasComM3405Tx12
+OBJECT IDENTIFIER ::= { s5ChasComMod 121 }
+s5ChasComM3405Tx12Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM3405Tx12 0 }
+s5ChasComM3405Tx12StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComM3405Tx12Store 1 }
+
+-- Model 3475-FX Fast Ethernet Host Module with 11 100Base-TX Ports
+-- and 1 100Base-FX Port
+s5ChasComM3475FxTx11
+OBJECT IDENTIFIER ::= { s5ChasComMod 122 }
+s5ChasComM3475FxTx11Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM3475FxTx11 0 }
+s5ChasComM3475FxTx11StoreRom -- ROM HostFirmware
+OBJECT IDENTIFIER ::= { s5ChasComM3475FxTx11Store 1 }
+
+-- Model 3308S Desktop Switching Host Module with 22 10Base-TX Ports
+-- and 2 10/100 Ethernet Ports
+s5ChasComM3308S
+OBJECT IDENTIFIER ::= { s5ChasComMod 130 }
+s5ChasComM3308SStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM3308S 0 }
+s5ChasComM3308SStoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComM3308SStore 1 }
+s5ChasComM3308SStoreFlash1 -- FLASH Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM3308SStore 2 }
+s5ChasComM3308SStoreFlash2 -- FLASH Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM3308SStore 3 }
+s5ChasComM3308SStoreFlash3 -- FLASH Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComM3308SStore 4 }
+s5ChasComM3308SStoreFlash4 -- FLASH Boot
+OBJECT IDENTIFIER ::= { s5ChasComM3308SStore 5 }
+
+-- OpenBay Eversys S3000 Application Server Module
+s5ChasComM3000ASM
+OBJECT IDENTIFIER ::= { s5ChasComMod 200 }
+s5ChasComMDA3000ASM
+OBJECT IDENTIFIER ::= { s5ChasComM3000ASM 255 }
+
+-- Model 5110 Supervisory Module
+s5ChasComSupM5110
+OBJECT IDENTIFIER ::= { s5ChasComMod 258 }
+s5ChasComSupM5110Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComSupM5110 0 }
+s5ChasComSupM5110StoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComSupM5110Store 1 }
+s5ChasComSupM5110StoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComSupM5110Store 2 }
+s5ChasComSupM5110StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComSupM5110Store 3 }
+s5ChasComSupM5110StoreChaEeProm -- Chassis EEProm
+OBJECT IDENTIFIER ::= { s5ChasComSupM5110Store 4 }
+
+-- Model 5304P Ethernet Host Module
+s5ChasComBrdM5304P
+OBJECT IDENTIFIER ::= { s5ChasComMod 259 }
+s5ChasComBrdM5304PStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5304P 0 }
+s5ChasComBrdM5304PStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5304PStore 1 }
+s5ChasComBrdM5304PStoreDspRom -- DSP Frimware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5304PStore 2 }
+
+-- Model 5308 Ethernet Host Module
+s5ChasComBrdM5308
+OBJECT IDENTIFIER ::= { s5ChasComMod 260 }
+s5ChasComBrdM5308Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308 0 }
+s5ChasComBrdM5308Store8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308Store 1 }
+s5ChasComBrdM5308StoreDspRom -- DSP Frimware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308Store 2 }
+
+-- Model 5308-AF Ethernet Host Module
+s5ChasComBrdM5308AF
+OBJECT IDENTIFIER ::= { s5ChasComMod 261 }
+s5ChasComBrdM5308AFStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308AF 0 }
+s5ChasComBrdM5308AFStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308AFStore 1 }
+s5ChasComBrdM5308AFStoreDspRom -- DSP Frimware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308AFStore 2 }
+
+-- Model 5378-F Ethernet Host Module
+s5ChasComBrdM5378F
+OBJECT IDENTIFIER ::= { s5ChasComMod 262 }
+s5ChasComBrdM5378FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5378F 0 }
+s5ChasComBrdM5378FStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5378FStore 1 }
+s5ChasComBrdM5378FStoreDspRom -- DSP Frimware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5378FStore 2 }
+
+-- Model 5502 Token Ring Host Module
+s5ChasComBrdM5502
+OBJECT IDENTIFIER ::= { s5ChasComMod 263 }
+s5ChasComBrdM5502Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5502 0 }
+s5ChasComBrdM5502Store8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5502Store 1 }
+
+-- Model 5505P Token Ring Host Module
+s5ChasComBrdM5505P
+OBJECT IDENTIFIER ::= { s5ChasComMod 264 }
+s5ChasComBrdM5505PStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5505P 0 }
+s5ChasComBrdM5505PStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5505PStore 1 }
+
+-- Model 5575-F Token Ring Host Module
+s5ChasComBrdM5575F
+OBJECT IDENTIFIER ::= { s5ChasComMod 265 }
+s5ChasComBrdM5575FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5575F 0 }
+s5ChasComBrdM5575FStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5575FStore 1 }
+
+-- Model 5902 FDDI Host Module
+s5ChasComBrdM5902
+OBJECT IDENTIFIER ::= { s5ChasComMod 266 }
+s5ChasComBrdM5902Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5902 0 }
+s5ChasComBrdM5902StoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5902Store 1 }
+s5ChasComBrdM5902StoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5902Store 2 }
+s5ChasComBrdM5902StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5902Store 3 }
+
+-- Model 5904 FDDI Host Module
+s5ChasComBrdM5904
+OBJECT IDENTIFIER ::= { s5ChasComMod 267 }
+s5ChasComBrdM5904Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5904 0 }
+s5ChasComBrdM5904StoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5904Store 1 }
+s5ChasComBrdM5904StoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5904Store 2 }
+s5ChasComBrdM5904StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5904Store 3 }
+
+-- Model 5904-2SM FDDI Host Module
+s5ChasComBrdM59042SM
+OBJECT IDENTIFIER ::= { s5ChasComMod 268 }
+s5ChasComBrdM59042SMStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM59042SM 0 }
+s5ChasComBrdM59042SMStoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM59042SMStore 1 }
+s5ChasComBrdM59042SMStoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM59042SMStore 2 }
+s5ChasComBrdM59042SMStoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM59042SMStore 3 }
+
+-- Model 5310 Ethernet Network Management Module
+s5ChasComBrdM5310
+OBJECT IDENTIFIER ::= { s5ChasComMod 269 }
+s5ChasComBrdM5310Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310 0 }
+s5ChasComBrdM5310StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310 1 }
+s5ChasComBrdM5310StoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310Store 2 }
+s5ChasComBrdM5310StoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310Store 3 }
+
+-- Model 5510 Token Ring Network Management Module
+s5ChasComBrdM5510
+OBJECT IDENTIFIER ::= { s5ChasComMod 270 }
+s5ChasComBrdM5510Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5510 0 }
+s5ChasComBrdM5510StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5510Store 1 }
+s5ChasComBrdM5510StoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5510Store 2 }
+s5ChasComBrdM5510StoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5510Store 3 }
+
+-- Model 5910S FDDI Network Management Module
+s5ChasComBrdM5910S
+OBJECT IDENTIFIER ::= { s5ChasComMod 271 }
+s5ChasComBrdM5910SStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910S 0 }
+s5ChasComBrdM5910SStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SStore 1 }
+s5ChasComBrdM5910SStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SStore 2 }
+s5ChasComBrdM5910SStoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SStore 3 }
+
+-- Model 5910S-SM FDDI Network Management Module
+s5ChasComBrdM5910SSM
+OBJECT IDENTIFIER ::= { s5ChasComMod 272 }
+s5ChasComBrdM5910SSMStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SSM 0 }
+s5ChasComBrdM5910SSMStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SSMStore 1 }
+s5ChasComBrdM5910SSMStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SSMStore 2 }
+s5ChasComBrdM5910SSMStoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5910SSMStore 3 }
+
+-- Model 5311 Ethernet Data Collection Engine
+s5ChasComBrdSubM5311
+OBJECT IDENTIFIER ::= { s5ChasComMod 273 }
+
+-- Model 5511 Token Ring Data Collection Engine
+s5ChasComBrdSubM5511
+OBJECT IDENTIFIER ::= { s5ChasComMod 274 }
+
+-- Model 5905 FDDI Host Module
+s5ChasComBrdM5905
+OBJECT IDENTIFIER ::= { s5ChasComMod 275 }
+s5ChasComBrdM5905Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5905 0 }
+s5ChasComBrdM5905StoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5905Store 1 }
+s5ChasComBrdM5905StoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5905Store 2 }
+s5ChasComBrdM5905StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5905Store 3 }
+
+-- Model 5574-C Token Ring Cluster Repeater/Host Module
+s5ChasComBrdM5575C
+OBJECT IDENTIFIER ::= { s5ChasComMod 276 }
+s5ChasComBrdM5575CStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5575C 0 }
+s5ChasComBrdM5575CStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5575CStore 1 }
+
+-- Model 559 Token Ring De-jitterizer/FPU Submodule
+s5ChasComBrdM559
+OBJECT IDENTIFIER ::= { s5ChasComMod 277 }
+
+-- Model 5390 Communications Server Module
+s5ChasComBrdM5390
+OBJECT IDENTIFIER ::= { s5ChasComMod 278 }
+s5ChasComBrdM5390Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5390 0 }
+s5ChasComBrdM5390StoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5390Store 1 }
+s5ChasComBrdM5390StoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5390Store 2 }
+s5ChasComBrdM5390StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5390Store 3 }
+
+-- Model 5307 Ethernet Telco Host Module
+s5ChasComBrdM5307
+OBJECT IDENTIFIER ::= { s5ChasComMod 279 }
+s5ChasComBrdM5307Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5307 0 }
+s5ChasComBrdM5307Store8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5307Store 1 }
+s5ChasComBrdM5307StoreDspRom -- DSP Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5307Store 2 }
+
+-- Model 5308 Ethernet Host Module (Cost Reduced)
+s5ChasComBrdMCR5308
+OBJECT IDENTIFIER ::= { s5ChasComMod 280 }
+s5ChasComBrdMCR5308Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdMCR5308 0 }
+s5ChasComBrdMCR5308Store8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdMCR5308Store 1 }
+s5ChasComBrdMCR5308StoreDspRom -- DSP Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdMCR5308Store 2 }
+
+-- Model 5378-F Ethernet Cluster Host Module (Cost Reduced)
+s5ChasComBrdMCR5378F
+OBJECT IDENTIFIER ::= { s5ChasComMod 281 }
+s5ChasComBrdMCR5378FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdMCR5378F 0 }
+s5ChasComBrdMCR5378FStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdMCR5378FStore 1 }
+s5ChasComBrdMCR5378FStoreDspRom -- DSP Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdMCR5378FStore 2 }
+
+-- Model 5505 Token Ring STP/UTP Host Module
+s5ChasComBrdM5505
+OBJECT IDENTIFIER ::= { s5ChasComMod 282 }
+s5ChasComBrdM5505Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5505 0 }
+s5ChasComBrdM5505Store8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5505Store 1 }
+
+-- Model 5115 Supervisory Module
+s5ChasComSupM5115
+OBJECT IDENTIFIER ::= { s5ChasComMod 284 }
+s5ChasComSupM5115Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComSupM5115 0 }
+s5ChasComSupM5115StoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComSupM5115Store 1 }
+s5ChasComSupM5115StoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComSupM5115Store 2 }
+s5ChasComSupM5115StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComSupM5115Store 3 }
+s5ChasComSupM5115StoreChaEeProm -- Chassis EEProm
+OBJECT IDENTIFIER ::= { s5ChasComSupM5115Store 4 }
+
+-- Model 5740 ATM Switch Control Module
+s5ChasComBrdM5740
+OBJECT IDENTIFIER ::= { s5ChasComMod 285 }
+s5ChasComBrdM5740Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740 0 }
+s5ChasComBrdM5740Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740Store 1 }
+s5ChasComBrdM5740StoreBoot -- EPROM boot firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740Store 2 }
+s5ChasComBrdM5740StoreDram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740Store 3 }
+s5ChasComBrdM5740StoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740Store 4 }
+s5ChasComBrdM5740StoreDisk1 -- disk drive #1
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740Store 5 }
+s5ChasComBrdM5740StoreDisk2 -- disk drive #2
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5740Store 6 }
+
+-- Model 5720 ATM 12 Port Switch Fabric Module
+s5ChasComBrdM5720
+OBJECT IDENTIFIER ::= { s5ChasComMod 287 }
+s5ChasComBrdM5720Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5720 0 }
+s5ChasComBrdM5720Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5720Store 1 }
+s5ChasComBrdM5720StoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5720Store 2 }
+s5ChasComBrdM5720StoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5720Store 3 }
+
+-- Model 5700 ATM MDA Host Board
+s5ChasComBrdM5700
+OBJECT IDENTIFIER ::= { s5ChasComMod 288 }
+s5ChasComBrdM5700Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5700 0 }
+s5ChasComBrdM5700Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5700Store 1 }
+s5ChasComBrdM5700StoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5700Store 2 }
+s5ChasComBrdM5700StoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5700Store 3 }
+
+-- Model 5700-17 ATM 155M SONET OC-3C SMF-SC MDA
+s5ChasComBrdSubM5700-17
+OBJECT IDENTIFIER ::= { s5ChasComMod 289 }
+
+-- Model 5700-24 ATM 100M TAXI MMF-MIC MDA
+s5ChasComBrdSubM5700-24
+OBJECT IDENTIFIER ::= { s5ChasComMod 290 }
+
+-- Model 5700-14 ATM 155M SONET OC-3C MMF-ST MDA
+s5ChasComBrdSubM5700-14
+OBJECT IDENTIFIER ::= { s5ChasComMod 291 }
+
+-- Model 5700-31 ATM 45M B3ZS 75BNC-MDA
+s5ChasComBrdSubM5700-31
+OBJECT IDENTIFIER ::= { s5ChasComMod 292 }
+
+-- Model 5700-15 ATM 155M SONET OC-3C CAT5-RJ45 MDA
+s5ChasComBrdSubM5700-15
+OBJECT IDENTIFIER ::= { s5ChasComMod 293 }
+
+-- Model 5715 ATM 155M SONET OC-3C 8 CAT5-RJ-45 Host Board
+s5ChasComBrdM5715
+OBJECT IDENTIFIER ::= { s5ChasComMod 294 }
+s5ChasComBrdM5715Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5715 0 }
+s5ChasComBrdM5715Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5715Store 1 }
+s5ChasComBrdM5715StoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5715Store 2 }
+s5ChasComBrdM5715StoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5715Store 3 }
+
+-- Model 5714 ATM 155M SONET OC-3C 8 MMF-ST Host Board
+s5ChasComBrdM5714
+OBJECT IDENTIFIER ::= { s5ChasComMod 295 }
+s5ChasComBrdM5714Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5714 0 }
+s5ChasComBrdM5714Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5714Store 1 }
+s5ChasComBrdM5714StoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5714Store 2 }
+s5ChasComBrdM5714StoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5714Store 3 }
+
+-- Model 5328 ATM Ethernet Switch 24 Port 10BaseT Host
+s5ChasComBrdM5328
+OBJECT IDENTIFIER ::= { s5ChasComMod 296 }
+s5ChasComBrdM5328Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328 0 }
+s5ChasComBrdM5328Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328Store 1 }
+s5ChasComBrdM5328StoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328Store 2 }
+s5ChasComBrdM5328StoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328Store 3 }
+
+-- Model 5324 ATM Ethernet Switch 10 Port 10BaseF Host
+s5ChasComBrdM5324
+OBJECT IDENTIFIER ::= { s5ChasComMod 297 }
+s5ChasComBrdM5324Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5324 0 }
+s5ChasComBrdM5324Store8051Rom -- 8051 firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5324Store 1 }
+s5ChasComBrdM5324StoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5324Store 2 }
+s5ChasComBrdM5324StoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5324Store 3 }
+
+-- Model 10328-F EtherCell Concentrator
+s5ChasComBrdM10328F
+OBJECT IDENTIFIER ::= { s5ChasComMod 298 }
+s5ChasComBrdM10328FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328F 0 }
+s5ChasComBrdM10328FStoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328FStore 1 }
+s5ChasComBrdM10328FStoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328FStore 2 }
+s5ChasComBrdM10328FStoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328FStore 3 }
+s5ChasComBrdM10328FStoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328FStore 4 }
+s5ChasComBrdM10328FStoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328FStore 5 }
+
+-- Model 10328-SM EtherCEll Concentrator
+s5ChasComBrdM10328SM OBJECT IDENTIFIER ::= { s5ChasComMod 301 }
+s5ChasComBrdM10328SMStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328SM 0 }
+s5ChasComBrdM10328SMStoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328SMStore 1 }
+s5ChasComBrdM10328SMStoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328SMStore 2 }
+s5ChasComBrdM10328SMStoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328SMStore 3 }
+s5ChasComBrdM10328SMStoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328SMStore 4 }
+s5ChasComBrdM10328SMStoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10328SMStore 5 }
+
+-- Model 10324-F EtherCEll Concentrator
+s5ChasComBrdM10324F OBJECT IDENTIFIER ::= { s5ChasComMod 302 }
+s5ChasComBrdM10324FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10324F 0 }
+s5ChasComBrdM10324FStoreSram -- SRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10324FStore 1 }
+s5ChasComBrdM10324FStoreDram -- DRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10324FStore 2 }
+s5ChasComBrdM10324FStoreNvram -- NVRAM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10324FStore 3 }
+s5ChasComBrdM10324FStoreEprom -- EPROM
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10324FStore 4 }
+s5ChasComBrdM10324FStoreFlash -- FLASH
+OBJECT IDENTIFIER ::= { s5ChasComBrdM10324FStore 5 }
+
+-- Model 5308P Ethernet Host Module
+s5ChasComBrdM5308P OBJECT IDENTIFIER ::= { s5ChasComMod 306 }
+s5ChasComBrdM5308PStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308P 0 }
+s5ChasComBrdM5308PStore8051Rom -- 8051 Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5308PStore 1 }
+
+-- Model 5310A Ethernet Network Management Mother Board Module for 5310A/5310SA
+s5ChasComBrdM5310ASA OBJECT IDENTIFIER ::= { s5ChasComMod 317 }
+s5ChasComBrdM5310ASAStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310ASA 0 }
+s5ChasComBrdM5310ASAStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310ASAStore 1 }
+s5ChasComBrdM5310ASAStoreFlash -- FLASH Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310ASAStore 2 }
+s5ChasComBrdM5310ASAStoreDram -- DRAM Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5310ASAStore 3 }
+
+-- Ethernet Management Communications Engine Submodule
+s5ChasComBrdSubMMCE OBJECT IDENTIFIER ::= { s5ChasComMod 318 }
+
+-- (Not an external product) 920-370 5740 ATM Backplane Interface
+s5ChasComBrdSubM5740AtmBkplIntf
+OBJECT IDENTIFIER ::= { s5ChasComMod 319 }
+
+-- Model 5DN002 Hub 2-Slot Conectivity Motherboard
+s5ChasComM5DN002m
+OBJECT IDENTIFIER ::= { s5ChasComMod 342 }
+s5ChasComM5DN002mStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM5DN002m 0 }
+s5ChasComM5DN002mStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN002mStore 1 }
+s5ChasComM5DN002mStoreBoot -- Boot Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN002mStore 2 }
+
+-- Model 5DN003 Hub 3-Slot Conectivity Motherboard
+s5ChasComM5DN003m
+OBJECT IDENTIFIER ::= { s5ChasComMod 343 }
+s5ChasComM5DN003mStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM5DN003m 0 }
+s5ChasComM5DN003mStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN003mStore 1 }
+s5ChasComM5DN003mStoreBoot -- Boot Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN003mStore 2 }
+
+-- Model 5DN308P D-Day Hub 12-port RJ-45 10Base-T Module
+s5ChasComM5DN308P
+OBJECT IDENTIFIER ::= { s5ChasComMod 344 }
+
+-- Model 5DN304P D-Day Hub 3-port 10Base-FL Fiber Module
+s5ChasComM5DN304P
+OBJECT IDENTIFIER ::= { s5ChasComMod 345 }
+
+-- Model 5DN378P-F D-Day Hub 10Base-FL/10Base-T Module
+s5ChasComM5DN378P-F
+OBJECT IDENTIFIER ::= { s5ChasComMod 346 }
+
+-- Model 5DN307P D-Day Hub 12-port Telco 10Base-T Module
+s5ChasComM5DN307P
+OBJECT IDENTIFIER ::= { s5ChasComMod 347 }
+
+-- Model 5DN310 Ethernet Network Management Module
+s5ChasComM5DN310
+OBJECT IDENTIFIER ::= { s5ChasComMod 348 }
+s5ChasComM5DN310Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM5DN310 0 }
+s5ChasComM5DN310StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComM5DN310Store 1 }
+s5ChasComM5DN310StoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN310Store 2 }
+s5ChasComM5DN310StoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN310Store 3 }
+
+-- Model N11 Data Collection Module
+s5ChasComMN11
+OBJECT IDENTIFIER ::= { s5ChasComMod 349 }
+s5ChasComMN11Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMN11 0 }
+s5ChasComMN11StoreFlash -- FLASH N11 image
+OBJECT IDENTIFIER ::= { s5ChasComMN11Store 1 }
+s5ChasComMN11StoreDram -- DRAM N11 image
+OBJECT IDENTIFIER ::= { s5ChasComMN11Store 2 }
+
+-- BayStack Ethernet Hub 12-Port RJ-45 10Base-T mother board
+s5ChasComMNBayStackm1
+OBJECT IDENTIFIER ::= { s5ChasComMod 350}
+s5ChasComMNBayStackm1Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm1 0 }
+s5ChasComMNBayStackm1StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm1Store 1 }
+
+-- BayStack Ethernet Hub 24-Port RJ-45 10Base-T mother board
+s5ChasComMNBayStackm2
+OBJECT IDENTIFIER ::= { s5ChasComMod 351}
+s5ChasComMNBayStackm2Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm2 0 }
+s5ChasComMNBayStackm2StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm2Store 1 }
+
+-- BayStack Ethernet Hub AUI Media Adapter
+s5ChasComMNBayStackAui
+OBJECT IDENTIFIER ::= { s5ChasComMod 352 }
+
+-- BayStack Ethernet Hub 10Base-2 Media Adapter
+s5ChasComMNBayStackThin
+OBJECT IDENTIFIER ::= { s5ChasComMod 353 }
+
+-- BayStack Ethernet Hub 10Base-FL Media Adapter
+s5ChasComMNBayStackFL
+OBJECT IDENTIFIER ::= { s5ChasComMod 354 }
+
+-- BayStack Ethernet Hub Standard Ethernet Network Management Module
+s5ChasComMNBayStackStdNmm
+OBJECT IDENTIFIER ::= { s5ChasComMod 355 }
+s5ChasComMNBayStackStdNmmStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackStdNmm 0 }
+s5ChasComMNBayStackStdnmmStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackStdNmmStore 1 }
+s5ChasComMNBayStackStdNmmStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackStdNmmStore 2 }
+s5ChasComMNBayStackStdNmmStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackStdNmmStore 3 }
+
+-- BayStack Ethernet Hub Advanced Ethernet Network Management Module
+s5ChasComMNBayStackAdvNmm
+OBJECT IDENTIFIER ::= { s5ChasComMod 356 }
+s5ChasComMNBayStackAdvNmmStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackAdvNmm 0 }
+s5ChasComMNBayStackAdvNmmStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackAdvNmmStore 1 }
+s5ChasComMNBayStackAdvNmmStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackAdvNmmStore 2 }
+s5ChasComMNBayStackAdvNmmStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackAdvNmmStore 3 }
+
+-- Model BayStack Ethernet Hub 10Base-T Media Adapter
+s5ChasComMF-10BaseT
+OBJECT IDENTIFIER ::= { s5ChasComMod 357 }
+
+-- Model 58000 1/100 Ethernet Switch Management Module
+s5ChasComBrdM58000
+OBJECT IDENTIFIER ::= { s5ChasComMod 359 }
+s5ChasComBrdM58000Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM58000 0 }
+s5ChasComBrdM58000StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM58000Store 1 }
+s5ChasComBrdM58000StoreFlash -- FLASH Switch Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM58000Store 2 }
+
+-- Model 58000-14 2 Port 100BASE-F MDA with SC connectors
+s5ChasComBrdSubM5800014
+OBJECT IDENTIFIER ::= { s5ChasComMod 360 }
+
+-- Model 58000-15 2 Port 100BASE-T MDA with RJ45 connectors
+s5ChasComBrdSubM5800015
+OBJECT IDENTIFIER ::= { s5ChasComMod 361 }
+
+-- Model 58000-16 2 Port 100BASE-T/100BASE-F MDA with one RJ45 and SC connector
+s5ChasComBrdSubM5800016
+OBJECT IDENTIFIER ::= { s5ChasComMod 362 }
+
+-- Model 58000 MDA expansion module for model 58000 Ethernet Switch
+s5ChasComBrdSubM58000MdaExp
+OBJECT IDENTIFIER ::= { s5ChasComMod 363 }
+
+-- Model 5DN378P-A D-Day Hub 10Base-AUI/10Base-T Module
+s5ChasComM5DN378P-A
+OBJECT IDENTIFIER ::= { s5ChasComMod 364 }
+
+-- Mother Board for BayStack 12 Port 100BAST-T Hub
+s5ChasComMBayStack100m1
+OBJECT IDENTIFIER ::= { s5ChasComMod 365 }
+s5ChasComMBayStack100m1Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100m1 0 }
+s5ChasComMBayStack100m1StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100m1Store 1 }
+
+-- Advanced NMM for BayStack 100BAST-T Hub
+s5ChasComMBayStack100Nmm
+OBJECT IDENTIFIER ::= { s5ChasComMod 366 }
+s5ChasComMBayStack100NmmStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100Nmm 0 }
+s5ChasComMBayStack100NmmStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100NmmStore 1 }
+s5ChasComMBayStack100NmmStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100NmmStore 2 }
+s5ChasComMBayStack100NmmStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack100NmmStore 3 }
+
+-- 100BASE-FX MDA with SC connector for BayStack 100BASE-T Hub
+s5ChasComMBayStack100-FxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 368 }
+
+-- 100BASE-TX MDA with RJ/45 connector for BayStack 100BASE-T Hub
+s5ChasComMBayStack100-TxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 369 }
+
+-- 12 port 100BASE-TX expansion module for BayStack 100BASE-T Hub
+s5ChasComMBayStack100-Tx12
+OBJECT IDENTIFIER ::= { s5ChasComMod 371 }
+
+-- D5000 Model 5DN301P 4 port ThinNet module with BNC coax connectors
+s5ChasComM5DN301P
+OBJECT IDENTIFIER ::= { s5ChasComMod 372 }
+
+--5000 Model 5307PS-HD Ethernet Host Module (36 Ports with Telco & BaySecure)
+s5ChasComBrdM5307PS-HD
+OBJECT IDENTIFIER ::= {s5ChasComMod 373}
+s5ChasComBrdM5307PS-HDStore
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5307PS-HD 0}
+s5ChasComBrdM5307PS-HDStore8051Rom
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5307PS-HDStore 1}
+
+--5000 Model 5300P Ethernet Host Module with 4 MDA sockets
+s5ChasComBrdM5300P
+OBJECT IDENTIFIER ::= {s5ChasComMod 374}
+s5ChasComBrdM5300PStore
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5300P 0}
+s5ChasComBrdM5300PStore8051Rom
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5300PStore 1}
+
+-- BH/Catapult Modules
+s5ChasComMod-5328mEther16PC10BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 375 }
+s5ChasComMod-5724mATM4PMMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 376 }
+s5ChasComMod-5724MmATMMCP4PMMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 377 }
+
+s5ChasComMod-5328MmEtherMCP8PC10BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 378 }
+s5ChasComMod-5328FXmEther12P2FXP
+OBJECT IDENTIFIER ::= { s5ChasComMod 379 }
+-- 5000BH Model 5324 12 port 10Base-FL Ethernet Switching Host
+s5ChasComMod-5324mEther12PFL
+OBJECT IDENTIFIER ::= { s5ChasComMod 380 }
+
+s5ChasComMod-5525mTR8PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 381 }
+s5ChasComMod-5525MmTRMCP4PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 382 }
+s5ChasComMod-5524mTR8PFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 383 }
+s5ChasComMod-5524MmTR4PFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 384 }
+s5ChasComMod-5924mFDDI1P
+OBJECT IDENTIFIER ::= { s5ChasComMod 385 }
+s5ChasComMod-5824mEther4PFX
+OBJECT IDENTIFIER ::= { s5ChasComMod 386 }
+s5ChasComMod-5828FmEther2PTX2PFX
+OBJECT IDENTIFIER ::= { s5ChasComMod 387 }
+s5ChasComMod-5824MmEtherMCP2PFX
+OBJECT IDENTIFIER ::= { s5ChasComMod 388 }
+s5ChasComMod-5724SMmATM4PSMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 389 }
+s5ChasComMod-5725mATM4PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 390 }
+s5ChasComMod-5721DS3mATM2P
+OBJECT IDENTIFIER ::= { s5ChasComMod 391 }
+s5ChasComMod-5721E3mATM2P
+OBJECT IDENTIFIER ::= { s5ChasComMod 392 }
+-- 5380 Ethernet Router Base Module with connections for 4 Enet backplanes and 2 Net Modules
+s5ChasComMod-5380E4Bkp2N
+OBJECT IDENTIFIER ::= { s5ChasComMod 395 }
+-- 5580 Token Ring Router Base Module with connections for 4 TR backplanes and 2 Net Modules
+s5ChasComMod-5380TR4Bkp2N
+OBJECT IDENTIFIER ::= { s5ChasComMod 396 }
+
+-- 5000 Router Dual Ethernet Net Module with 2 AUI/10BASE-T ports
+s5ChasComMod-5000ENetD10-T
+OBJECT IDENTIFIER ::= { s5ChasComMod 397 }
+-- 5000 Router 100BASE-T Net Module with Single MII/100BASE-TX port
+s5ChasComMod-5000ENetS100-T
+OBJECT IDENTIFIER ::= { s5ChasComMod 398 }
+-- 5000 Router Dual Token Ring Net Module with 2 Token Ring DB-9 ports
+s5ChasComMod-5000TRNetD-DB9
+OBJECT IDENTIFIER ::= { s5ChasComMod 399 }
+-- 5000 Router Multi Mode FDDI Net Module with one DAS port with MIC connectors
+s5ChasComMod-5000MMFibNetD-DASMIC
+OBJECT IDENTIFIER ::= { s5ChasComMod 400 }
+-- 5000 Router Single Mode FDDI Net Module with one DAS port with MIC connectors
+s5ChasComMod-5000SMFibNetS-DASMIC
+OBJECT IDENTIFIER ::= { s5ChasComMod 401 }
+-- 5000 Router Single/Multi Mode FDDI Net Module with one DAS port with MIC connectors
+s5ChasComMod-5000SMMMFibNetS-DASMIC
+OBJECT IDENTIFIER ::= { s5ChasComMod 402 }
+-- 5000 Router Multi/Single Mode FDDI Net Module with one DAS port with MIC connectors
+s5ChasComMod-5000MMSMFibNetS-DASMIC
+OBJECT IDENTIFIER ::= { s5ChasComMod 403 }
+-- 5000 Router Dual Sync Net Module with 2 Sync WAN ports through two 44-pin connectors
+s5ChasComMod-5000SynNetD-WAN44
+OBJECT IDENTIFIER ::= { s5ChasComMod 404 }
+-- 5000 Router Quad BRI Net Module with four 8 pin modular ISDN BRI ports
+s5ChasComMod-5000SynNetQ-ISDNBRI8
+OBJECT IDENTIFIER ::= { s5ChasComMod 405 }
+-- 5000 Router MCE1 Net Module with one Multi-Channel 75/120 Ohm E1 port
+s5ChasComMod-5000MCE1NetQ-75120
+OBJECT IDENTIFIER ::= { s5ChasComMod 406 }
+-- 5000 Router MCT1 Net Module with one Multi-Channel RJ-48C T1 port
+s5ChasComMod-5000MCT1NetQ-RJ48C
+OBJECT IDENTIFIER ::= { s5ChasComMod 407 }
+-- 5000 Router Quad Sync Net Module with four 50 pin connectors
+s5ChasComMod-5000SynNet4-50Pin
+OBJECT IDENTIFIER ::= { s5ChasComMod 408 }
+-- 5000 Router Compression Co-Processor Module, occupying 1 net module location
+s5ChasComMod-5000Co-Processor
+OBJECT IDENTIFIER ::= { s5ChasComMod 409 }
+-- 5000 Router Multi Mode 155M OC3 ATM Net Module with one SC port
+s5ChasComMod-5000ATMNet1-MMOC3
+OBJECT IDENTIFIER ::= { s5ChasComMod 410 }
+-- 5000 Router Single Mode 155M OC3 ATM Net Module with one SC port
+s5ChasComMod-5000ATMNet1-SMOC3
+OBJECT IDENTIFIER ::= { s5ChasComMod 411 }
+-- 5000 Router DS3 ATM Net Module with one DS3 ATM port
+s5ChasComMod-5000ATMNet1-DS3
+OBJECT IDENTIFIER ::= { s5ChasComMod 412 }
+-- 5000 Router E3 ATM Net Module with one E3 ATM port
+s5ChasComMod-5000ATMNet1-E3
+OBJECT IDENTIFIER ::= { s5ChasComMod 413 }
+-- Model 58000-109 2 port FDDI MDA with MIC Connectors
+s5ChasComBrdSubM58000Fddi
+OBJECT IDENTIFIER ::= { s5ChasComMod 414 }
+
+-- Model 28200 10/100 Ethernet Switch Mother board and Backplane
+s5ChasComBrdM28200
+OBJECT IDENTIFIER ::= { s5ChasComMod 415 }
+s5ChasComBrdM28200Store -- Storage Areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM28200 0 }
+s5ChasComBrdM28200StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM28200Store 1 }
+s5ChasComBrdM28200StoreFlash -- Flash Switch Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM28200Store 2 }
+s5ChasComBrdM28200StoreDram -- DRAM Switch Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM28200Store 3 }
+
+-- Model 28200-15 8 port 10 Base-T MDA with RJ45 Connectors
+s5ChasComBrdSubM2820015
+OBJECT IDENTIFIER ::= { s5ChasComMod 416 }
+
+-- Model 28200-14 4 port 10 Base-FL MDA with ST Connectors
+s5ChasComBrdSubM2820014
+OBJECT IDENTIFIER ::= { s5ChasComMod 417 }
+
+-- Model 28200-105 2 port 100 Base-TX MDA with RJ45 Connectors
+s5ChasComBrdSubM28200105
+OBJECT IDENTIFIER ::= { s5ChasComMod 418 }
+
+-- Model 28200-104 2 port 100 Base-FX MDA with SC Connectors
+s5ChasComBrdSubM28200104
+OBJECT IDENTIFIER ::= { s5ChasComMod 419 }
+
+-- Model 28200-106 2 port MDA with one100 Base-TX RJ45 port
+-- and one 100Base-FX SC port
+s5ChasComBrdSubM28200106
+OBJECT IDENTIFIER ::= { s5ChasComMod 420 }
+
+-- Model 28200-EXP 2 port expansion MDA for Bay Networks
+-- proprietary trunk connection.
+s5ChasComBrdSubM28200Exp
+OBJECT IDENTIFIER ::= { s5ChasComMod 421 }
+
+-- Model 28200-724 Single port ATM 155Mb MMF OC3 MDA with MIC connectors
+s5ChasComBrdSubM28200Atm
+OBJECT IDENTIFIER ::= { s5ChasComMod 422 }
+
+-- Model 28200-109 2 port FDDI MDA
+-- with MIC Connectors
+s5ChasComBrdSubM28200Fddi
+OBJECT IDENTIFIER ::= { s5ChasComMod 423 }
+
+-- Model 28200-N11 10Mb Data Collection Module
+s5ChasComBrdSubM28200N11
+OBJECT IDENTIFIER ::= { s5ChasComMod 424 }
+
+-- Model 28200-N111 10/100Mb Data Collection Module
+s5ChasComBrdSubM28200N111
+OBJECT IDENTIFIER ::= { s5ChasComMod 425 }
+
+-- Centillion Component Modules
+s5ChasComMod-c100mTR4PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 426 }
+s5ChasComMod-c100mTRMCP4PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 427 }
+s5ChasComMod-c100mATM
+OBJECT IDENTIFIER ::= { s5ChasComMod 428 }
+s5ChasComMod-c100mTRFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 429 }
+s5ChasComMod-c100mTRMCPFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 430 }
+s5ChasComMod-c100mEther16PC10BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 431 }
+s5ChasComMod-c100mEtherMCP8PC10BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 432 }
+s5ChasComMod-c100mATM2PSMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 433 }
+s5ChasComMod-c100mATM2PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 434 }
+s5ChasComMod-c100mATM4PMMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 435 }
+s5ChasComMod-c100mATM4PSMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 436 }
+s5ChasComMod-c100mATM4PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 437 }
+s5ChasComMod-c100mATMMCP2PSMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 438 }
+s5ChasComMod-c100mATMMCP2PMMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 439 }
+s5ChasComMod-c100mATMMCP2PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 440 }
+s5ChasComMod-c100mATMMCP4PSMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 441 }
+s5ChasComMod-c100mATMMCP4PMMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 442 }
+s5ChasComMod-c100mATMMCP4PCopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 443 }
+s5ChasComMod-c100mATM2PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 444 }
+s5ChasComMod-c100mATM4PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 445 }
+s5ChasComMod-c100mATMMCP2PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 446 }
+s5ChasComMod-c100mATMMCP4PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 447 }
+
+--5300P Model Dummy OID No Media Adapter Fitted
+s5ChasComBrdSubDummy
+OBJECT IDENTIFIER ::= { s5ChasComMod 448 }
+--5300P Model 5300-T 10BASE-T Media Adapter
+s5ChasComBrdSub5300-T
+OBJECT IDENTIFIER ::= { s5ChasComMod 449 }
+--5300P Model 5300-A AUI Media Adapter (Female)
+s5ChasComBrdSub5300-A
+OBJECT IDENTIFIER ::= { s5ChasComMod 450 }
+--5300P Model 5300-D Male AUI Media Adapter
+s5ChasComBrdSub5300-D
+OBJECT IDENTIFIER ::= { s5ChasComMod 451 }
+--5300P Model 5300-F 10BASE-F Media Adapter
+s5ChasComBrdSub5300-F
+OBJECT IDENTIFIER ::= { s5ChasComMod 452 }
+--5300P Model 5300-S Single Mode Fiber Media Adapter
+s5ChasComBrdSub5300-S
+OBJECT IDENTIFIER ::= { s5ChasComMod 453 }
+--5300P Model 5300-2 10BASE-2 Thinnet Media Adapter
+s5ChasComBrdSub5300-2
+OBJECT IDENTIFIER ::= { s5ChasComMod 454 }
+
+-- BayStack Token Ring Hub 24 port Motherboard
+s5ChasComMBayStackTrm1
+OBJECT IDENTIFIER ::= { s5ChasComMod 456 }
+s5ChasComMBayStackTrm1Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrm1 0 }
+s5ChasComMBayStackTrm1StoreFlash -- FLASH Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrm1Store 1 }
+s5ChasComMBayStackTrm1StoreBoot -- BOOT Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrm1Store 2 }
+
+-- BayStack Token Ring Network Management Module
+s5ChasComMBayStackTrNmm
+OBJECT IDENTIFIER ::= { s5ChasComMod 457 }
+s5ChasComMBayStackTrNmmStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrNmm 0 }
+s5ChasComMBayStackTrNmmStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrNmmStore 1 }
+s5ChasComMBayStackTrNmmStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrNmmStore 2 }
+s5ChasComMBayStackTrNmmStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComMBayStackTrNmmStore 3 }
+
+-- BayStack Token Ring Hub Fiber MDA module
+s5ChasComMBayStackTrMDAFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 458 }
+
+-- BayStack Token Ring Hub Copper MDA module
+s5ChasComMBayStackTrMDACopper
+OBJECT IDENTIFIER ::= { s5ChasComMod 459 }
+
+-- BayStack Token Ring Hub DCM module
+s5ChasComMBayStackTrDCM
+OBJECT IDENTIFIER ::= { s5ChasComMod 460 }
+
+-- BayStack Token Ring Hub Multi-Ring module
+s5ChasComMBayStackTrMRM
+OBJECT IDENTIFIER ::= { s5ChasComMod 461 }
+
+-- BayStack Ethernet Hub 24-port Telco 10Base-T motherboard
+s5ChasComMNBayStackm3
+OBJECT IDENTIFIER ::= { s5ChasComMod 462 }
+s5ChasComMNBayStackm3Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm3 0 }
+s5ChasComMNBayStackm3StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm3Store 1 }
+
+-- BayStack Ethernet Hub 8 port 10Base-2 motherboard
+s5ChasComMNBayStackm4
+OBJECT IDENTIFIER ::= { s5ChasComMod 463 }
+s5ChasComMNBayStackm4Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm4 0 }
+s5ChasComMNBayStackm4StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComMNBayStackm4Store 1 }
+
+-- BayStack Ethernet Hub Redundant Link Capable 10Base-FL Media Adapter
+s5ChasComMNBayStackRedFL
+OBJECT IDENTIFIER ::= { s5ChasComMod 464 }
+
+-- BayStack Ethernet Hub Single Mode Fiber Media Adapter
+s5ChasComMNBayStackSMFL
+OBJECT IDENTIFIER ::= {s5ChasComMod 465 }
+
+-- BayStack Ethernet Hub Redundant-Link Capable Single Mode Fiber Media Adapter
+s5ChasComMNBayStackSMRedFL
+OBJECT IDENTIFIER ::= {s5ChasComMod 466 }
+
+--5000 Model 5308S Ethernet Host Module with BaySecure
+s5ChasComBrdM5308S
+OBJECT IDENTIFIER ::= {s5ChasComMod 467}
+s5ChasComBrdM5308SStore
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5308S 0}
+s5ChasComBrdM5308SStore8051Rom
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5308SStore 1}
+
+--5000 Model 5307S Ethernet Host Module with BaySecure
+s5ChasComBrdM5307S
+OBJECT IDENTIFIER ::= {s5ChasComMod 468}
+s5ChasComBrdM5307SStore
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5307S 0}
+s5ChasComBrdM5307SStore8051Rom
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5307SStore 1}
+
+--5000 Model 5308PS Ethernet Host Module with BaySecure
+s5ChasComBrdM5308PS
+OBJECT IDENTIFIER ::= {s5ChasComMod 469}
+s5ChasComBrdM5308PSStore
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5308PS 0}
+s5ChasComBrdM5308PSStore8051Rom
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5308PSStore 1}
+
+--5000 Model 5307PS Ethernet Host Module with BaySecure
+s5ChasComBrdM5307PS
+OBJECT IDENTIFIER ::= {s5ChasComMod 470}
+s5ChasComBrdM5307PSStore
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5307PS 0}
+s5ChasComBrdM5307PSStore8051Rom
+OBJECT IDENTIFIER ::= {s5ChasComBrdM5307PSStore 1}
+
+-- Model 5DN308PS D5000 Ethernet Host MDA with BaySecure
+s5ChasComM5DN308PS
+OBJECT IDENTIFIER ::= { s5ChasComMod 471 }
+
+-- Model 5DN307PS D5000 Ethernet Host MDA with BaySecure
+s5ChasComM5DN307PS
+OBJECT IDENTIFIER ::= { s5ChasComMod 472 }
+
+-- Model 5DN378P-SM D5000 Ethernet Host MDA with BaySecure
+s5ChasComM5DN378P-SM
+OBJECT IDENTIFIER ::= { s5ChasComMod 473 }
+
+-- BayStack Ethernet Hub 6 port 10BaseFL motherboard
+s5ChasComMNBayStackm5
+OBJECT IDENTIFIER ::= {s5ChasComMod 477}
+s5ChasComMNBayStackm5Store -- Storage areas
+OBJECT IDENTIFIER ::= {s5ChasComMNBayStackm5 0 }
+s5ChasComMNBayStackm5StoreRom -- ROM Host Firmware
+OBJECT IDENTIFIER ::= {s5ChasComMNBayStackm5Store 1 }
+
+-- BayStack 301 Ethernet Switch
+s5ChasComMBayStack301
+OBJECT IDENTIFIER ::= { s5ChasComMod 478 }
+s5ChasComMBayStack301Store
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301 0 }
+s5ChasComMBayStack301MaxRAM
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301Store 1 }
+s5ChasComMBayStack301InstalledRAM
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301Store 2 }
+s5ChasComMBayStack301Flash
+OBJECT IDENTIFIER ::= { s5ChasComMBayStack301Store 3 }
+
+-- Model 5DN003A Hub 3-Slot Connectivity Motherboard
+-- with Temperature Sensor
+s5ChasComM5DN003Am
+OBJECT IDENTIFIER ::= { s5ChasComMod 485 }
+s5ChasComM5DN003AmStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM5DN003Am 0 }
+s5ChasComM5DN003AmStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN003AmStore 1 }
+s5ChasComM5DN003AmStoreBoot -- Boot Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN003AmStore 2 }
+
+-- Model 5DN002A Hub 2-Slot Connectivity Motherboard
+-- with Temperature Sensor
+s5ChasComM5DN002Am
+OBJECT IDENTIFIER ::= { s5ChasComMod 486 }
+s5ChasComM5DN002AmStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM5DN002Am 0 }
+s5ChasComM5DN002AmStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN002AmStore 1 }
+s5ChasComM5DN002AmStoreBoot -- Boot Agent Image
+OBJECT IDENTIFIER ::= { s5ChasComM5DN002AmStore 2 }
+
+-- 5000 Model 5405 Fast Ethernet Host Module
+s5ChasComBrdM5405
+OBJECT IDENTIFIER ::= { s5ChasComMod 500 }
+s5ChasComBrdM5405Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5405 0 }
+s5ChasComBrdM5405StoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5405Store 1 }
+s5ChasComBrdM5405StoreFlash -- FLASH Host Firmware Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5405Store 2 }
+s5ChasComBrdM5405StoreDram -- DRAM Host Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5405Store 3 }
+
+-- 5000 Model 5475-FX Fast Ethernet Host Module
+s5ChasComBrdM5475FX
+OBJECT IDENTIFIER ::= { s5ChasComMod 501 }
+s5ChasComBrdM5475FXStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5475FX 0 }
+s5ChasComBrdM5475FXStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5475FXStore 1 }
+s5ChasComBrdM5475FXStoreFlash -- FLASH Host Firmware Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5475FXStore 2 }
+s5ChasComBrdM5475FXStoreDram -- DRAM Host Image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5475FXStore 3 }
+
+s5ChasComMod-c100mEther12P2FXP
+OBJECT IDENTIFIER ::= { s5ChasComMod 507}
+s5ChasComMod-c100mEther14P2TXP
+OBJECT IDENTIFIER ::= { s5ChasComMod 508}
+
+--Model 5605P Fast Ethernet Host Module
+s5ChasComBrdM5605P
+OBJECT IDENTIFIER ::= { s5ChasComMod 510 }
+s5ChasComBrdM5605PStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5605P 0 }
+s5ChasComBrdM5605PStoreBoot -- Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5605PStore 1 }
+s5ChasComBrdM5605PStoreFlash -- Flash Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5605PStore 2 }
+s5ChasComBrdM5605PStoreDram -- DRAM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5605PStore 3 }
+
+-- Model 5675P-FX Fast Ethernet Host Module
+s5ChasComBrdM5675PFX
+OBJECT IDENTIFIER ::= { s5ChasComMod 511 }
+s5ChasComBrdM5675PFXStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5675PFX 0 }
+s5ChasComBrdM5675PFXStoreBoot -- Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5675PFXStore 1 }
+s5ChasComBrdM5675PFXStoreFlash -- Flash Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5675PFXStore 2 }
+s5ChasComBrdM5675PFXStoreDram -- DRAM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5675PFXStore 3 }
+
+-- Model 5616 Fast Ethernet Network Management Module
+s5ChasComBrdM5616
+OBJECT IDENTIFIER ::= { s5ChasComMod 512 }
+s5ChasComBrdM5616Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5616 0 }
+s5ChasComBrdM5616StoreBoot -- FLASH Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5616 1 }
+s5ChasComBrdM5616StoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5616Store 2 }
+s5ChasComBrdM5616StoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5616Store 3 }
+
+-- Model 5316 Ethernet Network Management Module
+s5ChasComBrdM5316
+OBJECT IDENTIFIER ::= { s5ChasComMod 513 }
+s5ChasComBrdM5316Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5316 0 }
+s5ChasComBrdM5316StoreBoot -- FLASH Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5316 1 }
+s5ChasComBrdM5316StoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5316Store 2 }
+s5ChasComBrdM5316StoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5316Store 3 }
+
+-- 100Base-FX MDA for 3308S Desktop Switching Host
+s5ChasComM3308S-FxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 514 }
+
+-- BayStack302T Board (or slots) group
+s5ChasComBrdBayStack302T
+OBJECT IDENTIFIER ::= { s5ChasComMod 515 }
+s5ChasComBrdBayStack302TStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack302T 0 }
+s5ChasComBrdBayStack302TFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack302TStore 1 }
+s5ChasComBrdBayStack302TDram -- DRAM image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack302TStore 2 }
+
+-- BayStack302F Board (or slots) group
+s5ChasComBrdBayStack302F
+OBJECT IDENTIFIER ::= { s5ChasComMod 516 }
+s5ChasComBrdBayStack302FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack302F 0 }
+s5ChasComBrdBayStack302FFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack302FStore 1 }
+s5ChasComBrdBayStack302FDram -- DRAM image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack302FStore 2 }
+
+--C100 8Port 10 Base FL switching Module
+s5ChasComMod-c100mEther8P10FL
+OBJECT IDENTIFIER ::= { s5ChasComMod 517}
+
+--C100 14 port 12x10BT/2x100BT Fiber
+s5ChasComMod-c100mEther12P2BTP
+OBJECT IDENTIFIER ::= { s5ChasComMod 518}
+
+--C100 4 port 100BT Enet slave card
+s5ChasComMod-c100mEther4P100BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 519}
+
+-- 5000BH Model 5425 4 port 100 Base TX Ethernet Switching Host Module
+s5ChasComMod-5425mEther4PC100BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 520 }
+
+--C100 8/2 ethernet combo card (8 port 10BT, 2 port 100TX)
+s5ChasComMod-c100mEther8P2TXP
+OBJECT IDENTIFIER ::= { s5ChasComMod 527 }
+
+-- BayStack350 Switch Board (or slots) group
+s5ChasComBrdBayStack350T
+OBJECT IDENTIFIER ::= { s5ChasComMod 528 }
+s5ChasComBrdBayStack350TStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350T 0 }
+s5ChasComBrdBayStack350TFlash -- Flash image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350TStore 1 }
+s5ChasComBrdBayStack350TBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350TStore 2 }
+s5ChasComBrdBayStack350TDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350TStore 3 }
+
+s5ChasComBrdBayStack350F
+OBJECT IDENTIFIER ::= { s5ChasComMod 529 }
+s5ChasComBrdBayStack350FStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350F 0 }
+s5ChasComBrdBayStack350FFlash -- Flash image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FStore 1 }
+s5ChasComBrdBayStack350FBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FStore 2 }
+s5ChasComBrdBayStack350FDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FStore 3 }
+
+s5ChasComBrdBayStack350FHD
+OBJECT IDENTIFIER ::= { s5ChasComMod 530 }
+s5ChasComBrdBayStack350FHDStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FHD 0 }
+s5ChasComBrdBayStack350FHDFlash -- Flash image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FHDStore 1 }
+s5ChasComBrdBayStack350FHDBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FHDStore 2 }
+s5ChasComBrdBayStack350FHDDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350FHDStore 3 }
+
+s5ChasComBrdBayStack350THD
+OBJECT IDENTIFIER ::= { s5ChasComMod 531 }
+s5ChasComBrdBayStack350THDStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350THD 0 }
+s5ChasComBrdBayStack350THDFlash -- Flash image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350THDStore 1 }
+s5ChasComBrdBayStack350THDBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350THDStore 2 }
+s5ChasComBrdBayStack350THDDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350THDStore 3 }
+
+-- 5000BH module 5724M/SM 4 port SMF ATM MCP
+s5ChasComMod-5724M-SMmATMMCP4PSMFiber
+OBJECT IDENTIFIER ::= { s5ChasComMod 533 }
+
+-- Switch Node Component Modules
+-- Switch Node 16 Port 10BASET Switch Net Module
+s5ChasComMod-SwNode10t16
+OBJECT IDENTIFIER ::= { s5ChasComMod 534 }
+
+-- Switch Node 2 port 100BASET Switch Net Module
+s5ChasComMod-SwNode100tx2
+OBJECT IDENTIFIER ::= { s5ChasComMod 535 }
+
+-- Switch Node 8 port 10 Meg Fiber Switch Net Module
+s5ChasComMod-SwNode10f8
+OBJECT IDENTIFIER ::= { s5ChasComMod 536 }
+
+-- Switch Node 16 port 100BASET Switch Net Module
+s5ChasComMod-SwNode100tx16
+OBJECT IDENTIFIER ::= { s5ChasComMod 537 }
+
+-- Switch Node 3 port 100 Meg Fiber Switch Net Module
+s5ChasComMod-SwNode100fx3
+OBJECT IDENTIFIER ::= { s5ChasComMod 541 }
+
+-- Switch Node DCM module
+s5ChasComDCMX220SwNode
+OBJECT IDENTIFIER ::= { s5ChasComMod 542 }
+
+-- C100 16 port 4x4 100 Base TX Ethernet Bank Switching Host Module
+s5ChasComMod-c100mEther4x4P100BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 544 }
+
+-- C100 4 port 100FX Ethernet Switching Host Module
+s5ChasComMod-c100mEther4P100FX
+OBJECT IDENTIFIER ::= { s5ChasComMod 545 }
+
+s5ChasComBrdBayStack150 -- BayStack150 24 port Master Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 546 }
+
+s5ChasComBrdBayStack152 -- BayStack150 12 port Master Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 547 }
+
+s5ChasComBrdBayStack151 -- BayStack150 24 port Slave Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 548 }
+
+s5ChasComBrdBayStack153 -- BayStack150 12 port Slave Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 549 }
+
+s5ChasComBrdBayStack150NMM -- BayStack150 NMM in the Master unit
+OBJECT IDENTIFIER ::= { s5ChasComMod 550 }
+s5ChasComBrdBayStack150NMMStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack150NMM 0 }
+s5ChasComBrdBayStack150NMMStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack150NMMStore 1 }
+s5ChasComBrdBayStack150NMMStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack150NMMStore 2 }
+s5ChasComBrdBayStack150NMMStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack150NMMStore 3 }
+
+-- BayStack150 Expansion Module on NMM
+s5ChasComBrdBayStack150NMMExpMod
+OBJECT IDENTIFIER ::= { s5ChasComMod 551 }
+
+-- C100 ATMSpeed MDA Switch Host Module
+s5ChasComMod-C100ATMMDAhost
+OBJECT IDENTIFIER ::= { s5ChasComMod 552 }
+-- C100 ATMSpeed MDA MCP Module
+s5ChasComMod-C100ATMMDAMcp
+OBJECT IDENTIFIER ::= { s5ChasComMod 553 }
+-- 5720 ATM MDA switch host module
+s5ChasComMod-5720ATMMDAhost
+OBJECT IDENTIFIER ::= { s5ChasComMod 554 }
+-- 5720M ATM MDA MCP module
+s5ChasComMod-5720MATMMDAMcp
+OBJECT IDENTIFIER ::= { s5ChasComMod 555 }
+-- 5720-14 Multimode fiber MDA
+s5ChasComMod-5720-14MultiModeMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 556 }
+-- 5720-15 Unshielded twisted pair MDA
+s5ChasComMod-5720-15UTPMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 557 }
+-- 5720-17 Singlemode Fiber MDA
+s5ChasComMod-5720-17SingleModeMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 558 }
+-- 5720-31 DS3 MDA 980-714-B
+s5ChasComMod-5720-31DS3Mda
+OBJECT IDENTIFIER ::= { s5ChasComMod 559 }
+-- 5720-41 E3 MDA 980-797-A
+s5ChasComMod-5720-41E3Mda
+OBJECT IDENTIFIER ::= { s5ChasComMod 560 }
+
+-- Switch Node CPU Module
+s5ChasComMod-SwNodeCPU
+OBJECT IDENTIFIER ::= { s5ChasComMod 561 }
+
+-- 8 Port UTP TokenSpeed MCP for the C100
+s5ChasComMod-c1008PUTPTRMcp
+OBJECT IDENTIFIER ::= { s5ChasComMod 562 }
+-- 8 Port UTP TokenSpeed Switch Host Module for the C100
+s5ChasComMod-c1008PUTPTR
+OBJECT IDENTIFIER ::= { s5ChasComMod 563 }
+
+-- Model 5328-HD Ethernet 24 Port 10Base-T Switch Host Module
+s5ChasComBrdM5328-HD
+OBJECT IDENTIFIER ::= { s5ChasComMod 564 }
+s5ChasComBrdM5328-HDStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328-HD 0 }
+s5ChasComBrdM5328-HDStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328-HDStore 1 }
+s5ChasComBrdM5328-HDStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5328-HDStore 2 }
+
+-- 5000BH Model 5625 24 port 10/100 Ethernet Copper Switch Host
+s5ChasComBrdM5625
+OBJECT IDENTIFIER ::= { s5ChasComMod 565 }
+
+-- Model 5455 Ethernet 16 port 4 * 4 100BASE-TX Bank Switch Net Module
+s5ChasComBrdM5455
+OBJECT IDENTIFIER ::= { s5ChasComMod 568 }
+s5ChasComBrdM5455Store -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5455 0 }
+s5ChasComBrdM5455StoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5455Store 1 }
+s5ChasComBrdM5455StoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5455Store 2 }
+
+-- Model 5611-DCM Data Collection Module for 5616SA
+s5ChasComM5611-DCM
+OBJECT IDENTIFIER ::= { s5ChasComMod 569 }
+s5ChasComM5611-DCMStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComM5611-DCM 0 }
+s5ChasComM5611-DCMStoreFlash -- FLASH image
+OBJECT IDENTIFIER ::= { s5ChasComM5611-DCMStore 1 }
+s5ChasComM5611-DCMStoreDram -- DRAM image
+OBJECT IDENTIFIER ::= { s5ChasComM5611-DCMStore 2 }
+
+s5ChasComBrdBayStack202 -- BayStack200 12Tx port Host Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 570 }
+
+s5ChasComBrdBayStack203 -- BayStack200 12Tx 1Fx port Host Unit Repeater Brd
+
+OBJECT IDENTIFIER ::= { s5ChasComMod 571 }
+
+s5ChasComBrdBayStack204 -- BayStack200 24 port Host Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 572 }
+
+s5ChasComBrdBayStack205 -- BayStack200 12 port Host Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 573 }
+
+s5ChasComBrdBayStack200NMM -- BayStack200 NMM in the NMM Host Unit
+OBJECT IDENTIFIER ::= { s5ChasComMod 574 }
+s5ChasComBrdBayStack200NMMStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack200NMM 0 }
+s5ChasComBrdBayStack200NMMStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack200NMMStore 1 }
+s5ChasComBrdBayStack200NMMStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack200NMMStore 2 }
+
+-- BayStack 303 24+1 10BASE-T/100BASE-T Switch with 1 MDA
+s5ChasComMBayStack303
+OBJECT IDENTIFIER ::= { s5ChasComMod 575 }
+
+-- BayStack 304 12+1 10BASE-T/100BASE-T Switch with 1 MDA
+s5ChasComMBayStack304
+OBJECT IDENTIFIER ::= { s5ChasComMod 576 }
+
+-- BayStack 303A 24+1 10BASE-T/100BASE-T Switch with 1 MDA
+s5ChasComMBayStack303A
+OBJECT IDENTIFIER ::= { s5ChasComMod 577 }
+
+-- BayStack 304A 12+1 10BASE-T/100BASE-T Switch with 1 MDA
+s5ChasComMBayStack304A
+OBJECT IDENTIFIER ::= { s5ChasComMod 578 }
+
+-- Model MFX-1 100BASE-FX MDA for BayStack 303 and 304
+s5ChasComMBayStack303-304FxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 579 }
+
+-- Model MTX-1 10/100 MDA for BayStack 303 and 304
+s5ChasComMBayStack303-304TxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 580 }
+
+-- Model 5665 10/100 Ethernet Switch Host Module
+s5ChasComBrdM5665
+OBJECT IDENTIFIER ::= { s5ChasComMod 581 }
+s5ChasComBrdM5665Store -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5665 0 }
+s5ChasComBrdM5665StoreFlash -- Flash Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5665Store 1 }
+s5ChasComBrdM5665StoreDram -- DRAM Host Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5665Store 2 }
+
+-- Model 5660-FX 100Base-FX Up-link Segment Switch NMM Module
+-- with "S", "C", and "N" bus connections.
+s5ChasComBrdM5660FX
+OBJECT IDENTIFIER ::= { s5ChasComMod 583 }
+s5ChasComBrdM5660FXStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5660FX 0 }
+s5ChasComBrdM5660FXStoreFlash -- Flash Agent Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5660FXStore 1 }
+s5ChasComBrdM5660FXStoreDram -- DRAM Agent Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5660FXStore 2 }
+
+-- Model 5620-FX 10/100Base-FX Up-link Segment Switch NMM Module
+-- with "C" and "N" bus connections.
+s5ChasComBrdM5620FX
+OBJECT IDENTIFIER ::= { s5ChasComMod 584 }
+s5ChasComBrdM5620FXStore -- Storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5620FX 0 }
+s5ChasComBrdM5620FXStoreFlash -- Flash Agent Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5620FXStore 1 }
+s5ChasComBrdM5620FXStoreDram -- DRAM Agent Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdM5620FXStore 2 }
+
+s5ChasComBrdBayStack250 -- BayStack250 12 port NMM Host Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 595 }
+
+s5ChasComBrdBayStack251 -- BayStack250 12 port Host Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 596 }
+
+s5ChasComBrdBayStack252 -- BayStack250 24 port Host Unit Repeater Brd
+OBJECT IDENTIFIER ::= { s5ChasComMod 597 }
+
+s5ChasComBrdBayStack250NMM -- BayStack250 NMM in the NMM Host Unit
+OBJECT IDENTIFIER ::= { s5ChasComMod 598 }
+s5ChasComBrdBayStack250NMMStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack250NMM 0 }
+s5ChasComBrdBayStack250NMMStoreFlash -- FLASH Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack250NMMStore 1 }
+s5ChasComBrdBayStack250NMMStoreDram -- DRAM Agent image
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack250NMMStore 2 }
+s5ChasComBrdBayStack250NMMStoreBoot -- EPROM Boot Firmware
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack250NMMStore 3 }
+
+--C100 24 Port 10BASE-T Switch Host Module with 2 Telco Connectors
+s5ChasComMod-c100mEther24P10BT
+OBJECT IDENTIFIER ::= { s5ChasComMod 631 }
+
+-- C100 Multimode fiber MDA
+s5ChasComMod-C100ATMMultiModeMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 632 }
+-- C100 Unshielded twisted pair MDA
+s5ChasComMod-C100ATMUTPMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 633 }
+-- C100 Singlemode Fiber MDA
+s5ChasComMod-C100ATMSingleModeMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 634 }
+-- C100 DS3 MDA
+s5ChasComMod-C100ATMDS3Mda
+OBJECT IDENTIFIER ::= { s5ChasComMod 635 }
+-- C100 E3 MDA
+s5ChasComMod-C100ATME3Mda
+OBJECT IDENTIFIER ::= { s5ChasComMod 636 }
+
+-- 5000BH Token Ring 24 Port Host
+s5ChasComBrdTR24PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 637 }
+
+-- C100 Token Ring 16 Port Host
+s5ChasComBrd-C100TR16PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 638 }
+
+-- 5000BH 57622M-SM 1 Port 622 Mbps 0C12-C ATM SMF MCP Module
+s5ChasComBrd57622M-SM
+OBJECT IDENTIFIER ::= { s5ChasComMod 645 }
+
+-- 5000BH 57622M-MM 1 Port 622 Mbps 0C12-C ATM MMF MCP Module
+s5ChasComBrd57622M-MM
+OBJECT IDENTIFIER ::= { s5ChasComMod 646 }
+
+-- 5000BH 57622-MM 1 Port 622 Mbps 0C12-C ATM MMF Switch Host
+s5ChasComBrd57622-MM
+OBJECT IDENTIFIER ::= { s5ChasComMod 647 }
+
+-- C100 1 Port 622 Mbps 0C12-C ATM SMF MCP Module
+s5ChasComBrd-C100ATMMCP1PSM
+OBJECT IDENTIFIER ::= { s5ChasComMod 648 }
+
+-- C100 1 Port 622 Mbps 0C12-C ATM MMF MCP Module
+s5ChasComBrd-C100ATMMCP1PMM
+OBJECT IDENTIFIER ::= { s5ChasComMod 649 }
+
+-- C100 1 Port 622 Mbps 0C12-C ATM MMF Switch Host
+s5ChasComBrd-C100ATM1PMM
+OBJECT IDENTIFIER ::= { s5ChasComMod 650 }
+
+s5ChasComBrdBayStack450-24T -- BayStack450-24T
+OBJECT IDENTIFIER ::= { s5ChasComMod 653 }
+s5ChasComBrdBayStack450-24TStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-24T 0 }
+s5ChasComBrdBayStack450-24TStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-24TStore 1 }
+s5ChasComBrdBayStack450-24TStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-24TStore 2 }
+s5ChasComBrdBayStack450-24TStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-24TStore 3 }
+
+s5ChasComBrdBayStack450-12T -- BayStack450-12T
+OBJECT IDENTIFIER ::= { s5ChasComMod 654 }
+s5ChasComBrdBayStack450-12TStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12T 0 }
+s5ChasComBrdBayStack450-12TStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12TStore 1 }
+s5ChasComBrdBayStack450-12TStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12TStore 2 }
+s5ChasComBrdBayStack450-12TStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12TStore 3 }
+
+s5ChasComBrdBayStack410-24T -- BayStack410-24T
+OBJECT IDENTIFIER ::= { s5ChasComMod 655 }
+
+s5ChasComBrdBayStack450-1SX -- 1 port 1000Base-SX MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 656 }
+
+s5ChasComBrdBayStack450-1SR -- 1 port 1000Base-SX MDA with LinkSafe
+OBJECT IDENTIFIER ::= { s5ChasComMod 657 }
+ 
+s5ChasComBrdBayStack400-4TX -- 4 port 10/100 autosense MDA with RJ/45 connectors
+OBJECT IDENTIFIER ::= { s5ChasComMod 658 }
+
+s5ChasComBrdBayStack400-2FX -- 2 port 100Base-FX MDA with SC connectors
+OBJECT IDENTIFIER ::= { s5ChasComMod 659 }
+
+s5ChasComBrdBayStack400-ST1 -- Stacking MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 660 }
+
+s5ChasComBrdBayStack400-ST2 -- Dual ring stacking MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 661 }
+
+s5ChasComBrdBayStack450-1LX -- 1 port 1000Base-LX MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 662 }
+
+s5ChasComBrdBayStack450-1LR -- 1 port 1000Base-LX MDA with LinkSafe
+OBJECT IDENTIFIER ::= { s5ChasComMod 663 }
+
+s5ChasComBrdBayStack450-2SX -- 2 port 1000Base-SX MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 664 }
+
+s5ChasComBrdBayStack450-2LX -- 2 port 1000Base-LX MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 665 }
+
+s5ChasComBrdBayStack450-OC3 -- 2 port 155 Mbps OC3 Multi Mode ATM MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 666 }
+
+-- BayStack 450-24TQP Chameleon 200 or 201 designated as "QP" to
+-- differentiate from BayStack 450-24T Chameleon 100
+s5ChasComBrdBayStack450-24TQP -- quad phy
+OBJECT IDENTIFIER ::= { s5ChasComMod 667 }
+
+s5ChasComBrdBPS2000-24T -- BPS 2000-24T
+OBJECT IDENTIFIER ::= { s5ChasComMod 668 }
+s5ChasComBrdBPS2000-24TStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBPS2000-24T 0 }
+s5ChasComBrdBPS2000-24TStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBPS2000-24TStore 1 }
+s5ChasComBrdBPS2000-24TStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBPS2000-24TStore 2 }
+s5ChasComBrdBPS2000-24TStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBPS2000-24TStore 3 }
+
+-- 5000BH Model 5424 24 Port 100BaseFx Host
+s5ChasComBrd5424
+OBJECT IDENTIFIER ::= { s5ChasComMod 669 }
+
+-- BayStack 525 Token Ring Switch
+s5ChasComBrdBayStack525
+OBJECT IDENTIFIER ::= { s5ChasComMod 670 }
+
+-- BayStack 350-24T (Non-Stackable) Chameleon 100
+s5ChasComBrdBayStack350-24T -- BayStack350-24T
+OBJECT IDENTIFIER ::= { s5ChasComMod 671 }
+s5ChasComBrdBayStack350-24TStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24T 0 }
+s5ChasComBrdBayStack350-24TStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TStore 1 }
+s5ChasComBrdBayStack350-24TStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TStore 2 }
+s5ChasComBrdBayStack350-24TStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TStore 3 }
+
+-- BayStack 350-12T (Non-Stackable) Chameleon 100
+s5ChasComBrdBayStack350-12T -- BayStack350-12T
+OBJECT IDENTIFIER ::= { s5ChasComMod 672 }
+s5ChasComBrdBayStack350-12TStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12T 0 }
+s5ChasComBrdBayStack350-12TStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TStore 1 }
+s5ChasComBrdBayStack350-12TStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TStore 2 }
+s5ChasComBrdBayStack350-12TStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TStore 3 }
+
+-- BayStack250 24 port NMM Host Unit Repeater Brd
+s5ChasComBrdBayStack253
+OBJECT IDENTIFIER ::= { s5ChasComMod 673 }
+
+-- BayStack 450-12TQP Chameleon 200 or 201 designated as "QP" to
+-- differentiate from BayStack 450-12T Chameleon 100
+s5ChasComBrdBayStack450-12TQP -- quad phy
+OBJECT IDENTIFIER ::= { s5ChasComMod 674 }
+
+-- BayStack 350-24TQP (Non-Stackable) Chameleon 200 or 201
+-- The official product name is BayStack 350-24T. Registered here as "QP"
+-- to avoid naming conflict with Chameleon 100 BayStack 350-24T
+s5ChasComBrdBayStack350-24TQP -- BayStack350-24TQP
+OBJECT IDENTIFIER ::= { s5ChasComMod 675 }
+s5ChasComBrdBayStack350-24TQPStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TQP 0 }
+s5ChasComBrdBayStack350-24TQPStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TQPStore 1 }
+s5ChasComBrdBayStack350-24TQPStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TQPStore 2 }
+s5ChasComBrdBayStack350-24TQPStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-24TQPStore 3 }
+
+-- BayStack 350-12TQP (Non-Stackable) Chameleon 200 or 201
+-- The official product name is BayStack 350-12T. Registered here as "QP"
+-- to avoid naming conflict with Chameleon 100 BayStack 350-12T
+s5ChasComBrdBayStack350-12TQP -- BayStack350-12TQP
+OBJECT IDENTIFIER ::= { s5ChasComMod 676 }
+s5ChasComBrdBayStack350-12TQPStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TQP 0 }
+s5ChasComBrdBayStack350-12TQPStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TQPStore 1 }
+s5ChasComBrdBayStack350-12TQPStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TQPStore 2 }
+s5ChasComBrdBayStack350-12TQPStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack350-12TQPStore 3 }
+
+-- BayStack 450-12F "Firefly" 12 Fiber Ports + MDA Slot
+s5ChasComBrdBayStack450-12F -- BayStack450-12F
+OBJECT IDENTIFIER ::= { s5ChasComMod 681 }
+s5ChasComBrdBayStack450-12FStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12F 0 }
+s5ChasComBrdBayStack450-12FStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12FStore 1 }
+s5ChasComBrdBayStack450-12FStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12FStore 2 }
+s5ChasComBrdBayStack450-12FStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-12FStore 3 }
+
+s5ChasComBrdBayStack400-4FX -- 4 port 100Base-FX MDA with MT-RJ connectors
+OBJECT IDENTIFIER ::= { s5ChasComMod 682 }
+
+-- BayStack 303-24T 24+1 10BASE-T/100BASE-T Switch with 2 MDA
+s5ChasComMBayStack303-24T
+OBJECT IDENTIFIER ::= { s5ChasComMod 691 }
+
+-- BayStack 253 10/100 Hub 100Base-FX Media Adapter
+s5ChasComBrdBayStack-100FxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 692 }
+
+-- Accelar 8010 chassis 32 port 10/100 switch host module with MDA slot
+s5ChasComBrdAccelar8132TX
+OBJECT IDENTIFIER ::= { s5ChasComMod 693 }
+
+-- Accelar 8010 chassis 48 port 10/100 switch host module
+s5ChasComBrdAccelar8148TX
+OBJECT IDENTIFIER ::= { s5ChasComMod 694 }
+
+-- BayStack250 12 port Slave Unit Repeater Brd
+s5ChasComBrdBayStack254
+OBJECT IDENTIFIER ::= { s5ChasComMod 695 }
+
+-- BayStack250 24 port Slave Unit Repeater Brd
+s5ChasComBrdBayStack255
+OBJECT IDENTIFIER ::= { s5ChasComMod 696 }
+
+-- 1 port 100Base-FX MDA for BayStack 25x 10/100 Hub
+s5ChasComBrdBayStack25x-100FxMda
+OBJECT IDENTIFIER ::= { s5ChasComMod 697 }
+
+-- 5000BH Model 5625HD 24-port 10/100 Ethernet Copper Switch Host
+s5ChasComBrdM5625HD
+OBJECT IDENTIFIER ::= { s5ChasComMod 701 }
+
+-- 5000BH Model 5424HD 24-port 100BaseFX Switch Host
+s5ChasComBrdM5424HD
+OBJECT IDENTIFIER ::= { s5ChasComMod 702 }
+
+-- C50/C100 20-port 10/100 Ethernet Copper Switch Host
+s5ChasComMod-C100mEther20PC
+OBJECT IDENTIFIER ::= { s5ChasComMod 703 }
+
+-- C50/C100 16-port 100BaseFX Switch Host
+s5ChasComMod-C100mEther16P100FX
+OBJECT IDENTIFIER ::= { s5ChasComMod 704 }
+
+s5ChasComBrdBayStack670 -- BayStack670 11 Mb/s wireless access point
+OBJECT IDENTIFIER ::= { s5ChasComMod 705 }
+s5ChasComBrdBayStack670Store -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack670 0 }
+s5ChasComBrdBayStack670StoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack670Store 1 }
+
+-- 500xBH Model 5420 3-port GBIC Ethernet Switch Module
+s5ChasComBrdM5420
+OBJECT IDENTIFIER ::= { s5ChasComMod 706 }
+
+-- C50/C100 3-port EtherSpeedII GBIC Switch Module
+s5ChasComMod-C100mEther3PGBIC
+OBJECT IDENTIFIER ::= { s5ChasComMod 707 }
+
+s5ChasComBrdBPS2000-4TX -- 4 port 10/100 MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 708 }
+
+s5ChasComBrdBPS2000-4FX -- 4 port 100Base-FX MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 709 }
+
+s5ChasComBrdBPS2000-2FX -- 2 port 100Base-FX MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 710 }
+
+s5ChasComBrdBayStack3580-16F -- BayStack3580-16F
+OBJECT IDENTIFIER ::= { s5ChasComMod 711 }
+s5ChasComBrdBayStack3580-16FStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack3580-16F 0 }
+s5ChasComBrdBayStack3580-16FStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack3580-16FStore 1 }
+s5ChasComBrdBayStack3580-16FStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack3580-16FStore 2 }
+s5ChasComBrdBayStack3580-16FStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack3580-16FStore 3 }
+
+-- BayStack 450 ATM MDAs. There is also an s5ChasComBrdBayStack450-OC3
+-- defined above as:
+--
+
+s5ChasComBrdBayStack450-OC3S -- 2 port 155 Mbps OC3 Single Mode ATM MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 717 }
+
+s5ChasComBrdBayStack450-OC12 -- 2 port 622 Mbps OC12 Multi Mode ATM MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 718 }
+
+s5ChasComBrdBayStack450-OC12S -- 2 port 622 Mbps OC12 Single Mode ATM MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 719 }
+
+-- BayStack 420-24T 24-Port 10/100 Ethernet Switch
+s5ChasComBrdBayStack420-24T -- BayStack420-24T
+OBJECT IDENTIFIER ::= { s5ChasComMod 720 }
+s5ChasComBrdBayStack420-24TStore -- storage areas
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack420-24T 0 }
+s5ChasComBrdBayStack420-24TStoreFlash -- FLASH image storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack420-24TStore 1 }
+s5ChasComBrdBayStack420-24TStoreBootFW -- Boot Firmware storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack420-24TStore 2 }
+s5ChasComBrdBayStack420-24TStoreDram -- DRAM storage
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack420-24TStore 3 }
+
+-- BayStack 450 and BPS2000 1 port 1 Phy packet bus II GBIC MDA.
+s5ChasComBrdBayStack450-GBIC -- BayStack 450 and BPS2000 single port single Phy GBIC MDA
+OBJECT IDENTIFIER ::= { s5ChasComMod 721 }
+s5ChasComBrdBayStack450-GBICno -- No Transceiver present
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-GBIC 1 }
+s5ChasComBrdBayStack450-GBICun -- Unsupported Transceiver
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-GBIC 2 }
+s5ChasComBrdBayStack450-GBICsx -- Short Distance
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-GBIC 3 }
+s5ChasComBrdBayStack450-GBIClx -- Long Distance
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-GBIC 4 }
+s5ChasComBrdBayStack450-GBICzx -- 50 Kilometers
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-GBIC 5 }
+s5ChasComBrdBayStack450-GBICxd -- 70 Kilometers
+OBJECT IDENTIFIER ::= { s5ChasComBrdBayStack450-GBIC 6 }
+
+END

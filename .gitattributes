@@ -73,6 +73,16 @@ contrib/mibs/RFC-1215.txt -text
 contrib/mibs/RFC1155-SMI.txt -text
 contrib/mibs/RFC1213-MIB.txt -text
 contrib/mibs/RMON-MIB.txt -text
+contrib/mibs/S5-CHASSIS-MIB.txt -text
+contrib/mibs/S5-CHASSIS-TRAP-MIB.txt -text
+contrib/mibs/S5-ETH-REDUNDANT-LINKS-MIB.txt -text
+contrib/mibs/S5-ETHERNET-COMMON-MIB.txt -text
+contrib/mibs/S5-ETHERNET-MIB.txt -text
+contrib/mibs/S5-ETHERNET-TRAP-MIB.txt -text
+contrib/mibs/S5-REG-MIB.txt -text
+contrib/mibs/S5-ROOT-MIB.txt -text
+contrib/mibs/S5-SWITCH-BAYSECURE-MIB.txt -text
+contrib/mibs/S5-TCS-MIB.txt -text
 contrib/mibs/SNMP-FRAMEWORK-MIB.txt -text
 contrib/mibs/SNMPv2-CONF.txt -text
 contrib/mibs/SNMPv2-MIB.txt -text
@@ -80,6 +90,7 @@ contrib/mibs/SNMPv2-SMI.txt -text
 contrib/mibs/SNMPv2-TC.txt -text
 contrib/mibs/SNMPv2-TM.txt -text
 contrib/mibs/SW-MIB.txt -text
+contrib/mibs/SYNOPTICS-COMMON-MIB.txt -text
 contrib/mibs/SYNOPTICS-ROOT-MIB.txt -text
 contrib/mibs/TCP-MIB.txt -text
 contrib/mibs/TUNNEL-MIB.txt -text
