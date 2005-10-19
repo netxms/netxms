@@ -336,6 +336,11 @@ BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
       // For standard trap types, create standard V2 Enterprise ID
       m_pEnterprise->SetValue(pdwStdOid[m_iTrapType], 10);
    }
+   else
+   {
+      m_pEnterprise->Extend(0);
+      m_pEnterprise->Extend(m_iSpecificTrap);
+   }
 
    return bResult;
 }

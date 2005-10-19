@@ -114,3 +114,14 @@ void SNMP_ObjectId::SetValue(DWORD *pdwValue, DWORD dwLength)
    m_pdwValue = (DWORD *)nx_memdup(pdwValue, sizeof(DWORD) * dwLength);
    ConvertToText();
 }
+
+
+//
+// Extend value by one subid
+//
+
+void SNMP_ObjectId::Extend(DWORD dwSubId)
+{
+   m_pdwValue = (DWORD *)realloc(m_pdwValue, sizeof(DWORD) * (m_dwLength + 1));
+   m_pdwValue[m_dwLength++] = dwSubId;
+}

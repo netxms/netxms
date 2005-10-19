@@ -9,6 +9,7 @@
 - Implemented own MIB compiler, removing last dependency from Net-SNMP library
 - MIBs now transferred to client in compiled form, reducing network traffic
   and making console startup faster
+- Implemented correct translation of SNMPv1 trap id to SNMPv2 trap id
 - Core agent:
 	- Ported to AIX
 	- Fixed bug in signal handling causing agent to crash on shutdown

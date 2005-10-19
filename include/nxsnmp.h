@@ -319,6 +319,7 @@ public:
    const DWORD *GetValue(void) { return m_pdwValue; }
    const TCHAR *GetValueAsText(void) { return CHECK_NULL(m_pszTextValue); }
    void SetValue(DWORD *pdwValue, DWORD dwLength);
+   void Extend(DWORD dwSubId);
 
    int Compare(TCHAR *pszOid);
    int Compare(DWORD *pdwOid, DWORD dwLen);
