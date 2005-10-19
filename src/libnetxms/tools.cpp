@@ -746,3 +746,55 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer)
    _stprintf(pszBuffer, _T("%s %s.%s"), un.sysname, un.version, un.release);
 #endif
 }
+
+
+//
+// open/read/write for Windows CE
+//
+
+#ifdef UNDER_CE
+
+int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...)
+{
+   HANDLE hFile;
+   DWORD dwAccess, dwDisp;
+
+   dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ : 
+                 (nFlags & O_WRONLY) ? GENERIC_WRITE : 
+                    (nFlags & O_RDWR) ? (GENERIC_READ | GENERIC_WRITE) : 0;
+   if ((nFlags & (O_CREAT | O_TRUNC)) == (O_CREAT | O_TRUNC))
+      dwDisp = CREATE_ALWAYS;
+   else if ((nFlags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
+      dwDisp = CREATE_NEW;
+   else if ((nFlags & O_CREAT) == O_CREAT)
+      dwDisp = OPEN_ALWAYS;
+   else if ((nFlags & O_TRUNC) == O_TRUNC)
+      dwDisp = TRUNCATE_EXISTING;
+   else
+      dwDisp = OPEN_EXISTING;
+   hFile = CreateFile(pszName, dwAccess, FILE_SHARE_READ, NULL, dwDisp,
+                      FILE_ATTRIBUTE_NORMAL, NULL);
+   return (hFile == INVALID_HANDLE_VALUE) ? -1 : (int)hFile;
+}
+
+int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes)
+{
+   DWORD dwBytes;
+
+   if (ReadFile((HANDLE)hFile, pBuffer, nBytes, &dwBytes, NULL))
+      return dwBytes;
+   else
+      return -1;
+}
+
+int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes)
+{
+   DWORD dwBytes;
+
+   if (WriteFile((HANDLE)hFile, pBuffer, nBytes, &dwBytes, NULL))
+      return dwBytes;
+   else
+      return -1;
+}
+
+#endif   /* UNDER_CE */

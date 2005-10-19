@@ -166,6 +166,10 @@ typedef struct _dir_struc
 #define SwapWideString(x)  __bswap_wstr(x)
 #endif
 
+#ifdef UNDER_CE
+#define close(x)        CloseHandle((HANDLE)(x))
+#endif
+
 #ifdef __cplusplus
 #ifndef LIBNETXMS_INLINE
    inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen)
@@ -273,6 +277,12 @@ extern "C"
                int (*select)(const struct dirent *),
                int (*compar)(const struct dirent **, const struct dirent **));
    int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
+#endif
+
+#ifdef UNDER_CE
+   int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...);
+   int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes);
+   int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
 #endif
 
 #ifdef __cplusplus
