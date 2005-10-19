@@ -31,11 +31,17 @@ public:
 
 // Implementation
 protected:
+	void AddListEntry(DWORD dwId, TCHAR *pszName, DWORD dwVersion, DWORD dwFlags);
+	CListCtrl m_wndListCtrl;
 	virtual ~CLPPList();
 
 	// Generated message map functions
 	//{{AFX_MSG(CLPPList)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnDestroy();
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

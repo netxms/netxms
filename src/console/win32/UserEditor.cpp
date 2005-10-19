@@ -142,7 +142,6 @@ void CUserEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
 void CUserEditor::OnSize(UINT nType, int cx, int cy) 
 {
 	CMDIChildWnd::OnSize(nType, cx, cy);
-	
    m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }
 
@@ -321,7 +320,6 @@ void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
 void CUserEditor::OnSetFocus(CWnd* pOldWnd) 
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
-
    m_wndListCtrl.SetFocus();
 }
 

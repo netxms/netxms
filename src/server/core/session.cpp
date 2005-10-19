@@ -863,6 +863,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_LPP_LIST:
             SendLogPoliciesList(pMsg->GetId());
             break;
+         case CMD_REQUEST_NEW_LPP_ID:
+            CreateNewLPPID(pMsg->GetId());
+            break;
+         case CMD_OPEN_LPP:
+            OpenLPP(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -5285,5 +5291,136 @@ void ClientSession::SendLogPoliciesList(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
+   SendMessage(&msg);
+}
+
+
+//
+// Create ID for new LPP
+//
+
+void ClientSession::CreateNewLPPID(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DWORD dwId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_LPP)
+   {
+      dwId = CreateUniqueId(IDG_LPP);
+      if (dwId != 0)
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_LPP_ID, dwId);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Open LPP for modification
+//
+
+void ClientSession::OpenLPP(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD i, dwNumRows, dwId, dwPolicy;
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bSuccess = FALSE;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_LPP)
+   {
+      dwPolicy = pRequest->GetVariableLong(VID_LPP_ID);
+      if (LockLPP(dwPolicy, m_dwIndex))
+      {
+         sprintf(szQuery, "SELECT lpp_name,lpp_version,lpp_flags,log_name FROM lpp WHERE lpp_id=%ld", dwPolicy);
+         hResult = DBSelect(g_hCoreDB, szQuery);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               msg.SetVariable(VID_LPP_ID, dwPolicy);
+               msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0));
+               msg.SetVariable(VID_VERSION, DBGetFieldULong(hResult, 0, 1));
+               msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 2));
+               msg.SetVariable(VID_LOG_FILE, DBGetField(hResult, 0, 3));
+               DBFreeResult(hResult);
+
+               sprintf(szQuery, "SELECT node_id FROM lpp_nodes WHERE lpp_id=%ld", dwPolicy);
+               hResult = DBSelect(g_hCoreDB, szQuery);
+               if (hResult != NULL)
+               {
+                  dwNumRows = DBGetNumRows(hResult);
+                  msg.SetVariable(VID_NUM_NODES, dwNumRows);
+                  for(i = 0, dwId = VID_LPP_NODE_LIST_BASE; i < dwNumRows; i++, dwId++)
+                     msg.SetVariable(dwId, DBGetFieldULong(hResult, i, 0));
+                  DBFreeResult(hResult);
+
+                  sprintf(szQuery, "SELECT msg_id_start,msg_id_end,severity,event_code,source_name,msg_text_regexp "
+                                   "FROM lpp_rules WHERE lpp_id=%ld ORDER BY rule_number", dwPolicy);
+                  hResult = DBSelect(g_hCoreDB, szQuery);
+                  if (hResult != NULL)
+                  {
+                     dwNumRows = DBGetNumRows(hResult);
+                     msg.SetVariable(VID_NUM_RULES, dwNumRows);
+                     for(i = 0, dwId = VID_LPP_RULE_BASE; i < dwNumRows; i++, dwId += 4)
+                     {
+                        msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+                        msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 1));
+                        msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
+                        msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
+                        msg.SetVariable(dwId++, DBGetField(hResult, i, 4));
+                        msg.SetVariable(dwId++, DBGetField(hResult, i, 5));
+                     }
+
+                     DBFreeResult(hResult);
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                     bSuccess = TRUE;
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+                  }
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+               }
+            }
+            else
+            {
+               DBFreeResult(hResult);
+               msg.SetVariable(VID_RCC, RCC_INVALID_LPP_ID);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+         if (!bSuccess)
+            UnlockLPP(dwPolicy, m_dwIndex);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
    SendMessage(&msg);
 }

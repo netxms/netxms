@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   14
+#define NUMBER_OF_GROUPS   15
 
 
 //
@@ -37,14 +37,14 @@
 static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1000, 1, 0x80000000,
-                                                   1, 1, 0x80000001, 1, 1, 1 };
+                                                   1, 1, 0x80000001, 1, 1, 1, 1 };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE, 0xFFFFFFFE
+                                                0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
-static char *m_pszGroupNames[] =
+static char *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
    "Network Objects",
    "Container Categories",
@@ -59,7 +59,8 @@ static char *m_pszGroupNames[] =
    "User Groups",
    "Alarms",
    "Alarm Notes",
-   "Packages"
+   "Packages",
+   "Log Processing Policies"
 };
 
 
@@ -261,6 +262,16 @@ BOOL InitIdTable(void)
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_PACKAGE] = max(m_dwFreeIdTable[IDG_PACKAGE], 
                                             DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available log processing policy id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(lpp_id) FROM lpp");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_LPP] = max(m_dwFreeIdTable[IDG_LPP], 
+                                        DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

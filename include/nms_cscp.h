@@ -278,8 +278,8 @@ typedef struct
 #define CMD_DCI_DATA                0x0032
 #define CMD_GET_MIB_TIMESTAMP       0x0033
 #define CMD_GET_MIB                 0x0034
-//#define CMD_MIB_LIST                0x0035
-//#define CMD_MIB                     0x0036
+#define CMD_REQUEST_NEW_LPP_ID      0x0035
+#define CMD_OPEN_LPP                0x0036
 #define CMD_CREATE_OBJECT           0x0037
 #define CMD_GET_EVENT_NAMES         0x0038
 #define CMD_EVENT_NAME_LIST         0x0039
@@ -552,6 +552,9 @@ typedef struct
 #define VID_CLIENT_INFO             ((DWORD)175)
 #define VID_OS_INFO                 ((DWORD)176)
 #define VID_LIBNXCL_VERSION         ((DWORD)177)
+#define VID_VERSION                 ((DWORD)178)
+#define VID_NUM_NODES               ((DWORD)179)
+#define VID_LOG_FILE                ((DWORD)180)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -624,6 +627,7 @@ typedef struct
 // Base value for log policy rules
 #define VID_LPP_RULE_BASE           ((DWORD)0x10000000)
 #define VID_LPP_LIST_BASE           ((DWORD)0x10000000)
+#define VID_LPP_NODE_LIST_BASE      ((DWORD)0x01000000)
 
 // Base value for syslog records
 #define VID_SYSLOG_MSG_BASE         ((DWORD)0x10000000)

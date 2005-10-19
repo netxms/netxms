@@ -279,6 +279,7 @@ typedef void * NXC_SESSION;
 #define RCC_FILE_IO_ERROR           ((DWORD)52)
 #define RCC_CORRUPTED_MIB_FILE      ((DWORD)53)
 #define RCC_TRANSFER_IN_PROGRESS    ((DWORD)54)
+#define RCC_INVALID_LPP_ID          ((DWORD)55)
 
 
 //
@@ -1107,6 +1108,39 @@ typedef struct
 
 
 //
+// Log processing policy rule
+//
+
+typedef struct
+{
+   DWORD dwMsgIdStart;
+   DWORD dwMsgIdEnd;
+   DWORD dwSeverity;
+   TCHAR szSourceName[MAX_DB_STRING];
+   TCHAR szMsgText[MAX_DB_STRING];
+   DWORD dwEventCode;
+} NXC_LPP_RULE;
+
+
+//
+// Log processing policy
+//
+
+typedef struct
+{
+   DWORD dwId;
+   TCHAR szName[MAX_OBJECT_NAME];
+   DWORD dwVersion;
+   DWORD dwFlags;
+   TCHAR szLogFile[MAX_DB_STRING];
+   DWORD dwNumNodes;
+   DWORD *pdwNodeList;
+   DWORD dwNumRules;
+   NXC_LPP_RULE *pRuleList;
+} NXC_LPP;
+
+
+//
 // Functions
 //
 
@@ -1291,6 +1325,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadLPPList(NXC_SESSION hSession, NXC_LPP_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyLPPList(NXC_LPP_LIST *pList);
+DWORD LIBNXCL_EXPORTABLE NXCRequestNewLPPID(NXC_SESSION hSession, DWORD *pdwId);
+DWORD LIBNXCL_EXPORTABLE NXCOpenLPP(NXC_SESSION hSession, NXC_LPP **ppPolicy);
+void LIBNXCL_EXPORTABLE NXCDestroyLPP(NXC_LPP *pPolicy);
 
 #ifdef __cplusplus
 }

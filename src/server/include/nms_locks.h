@@ -49,6 +49,8 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
 BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
 void UnlockComponent(DWORD dwId);
 void RemoveAllSessionLocks(DWORD dwSessionId);
+BOOL LockLPP(DWORD dwPolicyId, DWORD dwSessionId);
+void UnlockLPP(DWORD dwPolicyId, DWORD dwSessionId);
 void NXCORE_EXPORTABLE UnlockDB(void);
 
 #endif

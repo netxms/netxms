@@ -148,6 +148,7 @@ typedef void * HSNMPSESSION;
 #define IDG_ALARM             11
 #define IDG_ALARM_NOTE        12
 #define IDG_PACKAGE           13
+#define IDG_LPP               14
 
 
 //
@@ -378,6 +379,8 @@ private:
    void ChangeSubscription(CSCPMessage *pRequest);
    void SendSyslog(CSCPMessage *pRequest);
    void SendLogPoliciesList(DWORD dwRqId);
+   void CreateNewLPPID(DWORD dwRqId);
+   void OpenLPP(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
