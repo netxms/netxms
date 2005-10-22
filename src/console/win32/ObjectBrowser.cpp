@@ -213,6 +213,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
+   ON_NOTIFY(TVN_GETDISPINFO, IDC_TREE_VIEW, OnTreeViewGetDispInfo)
+   ON_NOTIFY(TVN_ITEMEXPANDING, IDC_TREE_VIEW, OnTreeViewItemExpanding)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
@@ -391,6 +393,7 @@ void CObjectBrowser::OnViewRefresh()
    DWORD i, j, dwNumObjects, dwNumRootObj;
    
    // Populate object's list and select root objects
+
    m_wndListCtrl.DeleteAllItems();
    NXCLockObjectIndex(g_hSession);
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
@@ -450,11 +453,26 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    m_dwTreeHashSize++;
 
    // Add object's childs
-   for(i = 0; i < pObject->dwNumChilds; i++)
+   // For node objects, don't add childs if node has more than 10 childs to
+   // prevent adding millions of items if node has thousands of interfaces in
+   // thousands subnets. Childs will be added only if user expands node.
+   if ((pObject->iClass != OBJECT_NODE) || (pObject->dwNumChilds <= 10))
    {
-      NXC_OBJECT *pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
-      if (pChildObject != NULL)
-         AddObjectToTree(pChildObject, hItem);
+      for(i = 0; i < pObject->dwNumChilds; i++)
+      {
+         NXC_OBJECT *pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
+         if (pChildObject != NULL)
+            AddObjectToTree(pChildObject, hItem);
+      }
+   }
+   else
+   {
+      TVITEM tvi;
+
+      tvi.mask = TVIF_CHILDREN;
+      tvi.hItem = hItem;
+      tvi.cChildren = I_CHILDRENCALLBACK;
+      m_wndTreeCtrl.SetItem(&tvi);
    }
 
    // Sort childs
@@ -1831,4 +1849,43 @@ void CObjectBrowser::OnObjectMove()
          theApp.MoveObject(m_pCurrentObject->dwId, m_wndTreeCtrl.GetItemData(hItem));
       }
    }
+}
+
+
+//
+// Handler for TVN_GETDISPINFO notification from tree view control
+//
+
+void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult)
+{
+   if (lpdi->item.mask == TVIF_CHILDREN)
+      lpdi->item.cChildren = 1;
+   *pResult = 0;
+}
+
+
+//
+// Handler for TVN_ITEMEXPANDING notification from tree view control
+//
+
+void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+{
+   if (lpnmt->action == TVE_EXPAND)
+   {
+      NXC_OBJECT *pObject, *pChildObject;
+      DWORD i;
+
+      pObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
+      if ((pObject != NULL) && (m_wndTreeCtrl.GetChildItem(lpnmt->itemNew.hItem) == NULL))
+      {
+         for(i = 0; i < pObject->dwNumChilds; i++)
+         {
+            pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
+            if (pChildObject != NULL)
+               AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
+         }
+         m_wndTreeCtrl.SortChildren(lpnmt->itemNew.hItem);
+      }
+   }
+   *pResult = 0;
 }
