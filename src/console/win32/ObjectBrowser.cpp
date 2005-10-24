@@ -128,6 +128,8 @@ CObjectBrowser::CObjectBrowser()
    m_dwSortMode = OBJECT_SORT_BY_NAME;
    m_pCurrentObject = NULL;
    m_bRestoredDesktop = FALSE;
+   m_bImmediateSorting = TRUE;
+   m_nTimer = 0;
 }
 
 CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
@@ -149,6 +151,8 @@ CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
       m_pCurrentObject = NULL;
    }
    m_bRestoredDesktop = TRUE;
+   m_bImmediateSorting = TRUE;
+   m_nTimer = 0;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -211,6 +215,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
 	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, IDC_TREE_VIEW, OnTreeViewGetDispInfo)
@@ -234,6 +239,8 @@ END_MESSAGE_MAP()
 
 void CObjectBrowser::OnDestroy() 
 {
+   if (m_nTimer != 0)
+      KillTimer(m_nTimer);
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_OBJECTS, this);
 	CMDIChildWnd::OnDestroy();
 }
@@ -337,6 +344,8 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
       delete pwp;
    }
 
+   m_nTimer = SetTimer(1, 1000, NULL);
+
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_OBJECTS, this);
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	return 0;
@@ -423,8 +432,6 @@ void CObjectBrowser::OnViewRefresh()
    for(i = 0; i < dwNumRootObj; i++)
       AddObjectToTree(ppRootObjects[i], TVI_ROOT);
    safe_free(ppRootObjects);
-   
-   qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
 }
 
 
@@ -434,8 +441,8 @@ void CObjectBrowser::OnViewRefresh()
 
 void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 {
-   DWORD i;
    HTREEITEM hItem;
+   TVITEM tvi;
    char szBuffer[512];
    int iImage;
 
@@ -443,20 +450,17 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    CreateTreeItemText(pObject, szBuffer);
    iImage = GetObjectImageIndex(pObject);
    hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImage, iImage, hParent);
-   m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
+   m_wndTreeCtrl.SetItemData(hItem, (LPARAM)pObject);
    m_wndTreeCtrl.SetItemState(hItem, INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
 
    // Add to hash
-   m_pTreeHash = (OBJ_TREE_HASH *)realloc(m_pTreeHash, sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize + 1));
-   m_pTreeHash[m_dwTreeHashSize].dwObjectId = pObject->dwId;
-   m_pTreeHash[m_dwTreeHashSize].hTreeItem = hItem;
-   m_dwTreeHashSize++;
+   AddObjectEntryToHash(pObject, hItem);
 
    // Add object's childs
    // For node objects, don't add childs if node has more than 10 childs to
    // prevent adding millions of items if node has thousands of interfaces in
    // thousands subnets. Childs will be added only if user expands node.
-   if ((pObject->iClass != OBJECT_NODE) || (pObject->dwNumChilds <= 10))
+/*   if ((pObject->iClass != OBJECT_NODE) || (pObject->dwNumChilds <= 10))
    {
       for(i = 0; i < pObject->dwNumChilds; i++)
       {
@@ -465,18 +469,11 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
             AddObjectToTree(pChildObject, hItem);
       }
    }
-   else
-   {
-      TVITEM tvi;
-
-      tvi.mask = TVIF_CHILDREN;
-      tvi.hItem = hItem;
-      tvi.cChildren = I_CHILDRENCALLBACK;
-      m_wndTreeCtrl.SetItem(&tvi);
-   }
-
-   // Sort childs
-   SortTreeItems(hItem);
+   else*/
+   tvi.mask = TVIF_CHILDREN;
+   tvi.hItem = hItem;
+   tvi.cChildren = I_CHILDRENCALLBACK;
+   m_wndTreeCtrl.SetItem(&tvi);
 }
 
 
@@ -543,7 +540,7 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
    {
-      m_pCurrentObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
+      m_pCurrentObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
       m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
    }
    *pResult = 0;
@@ -602,13 +599,34 @@ static DWORD SearchTreeHash(OBJ_TREE_HASH *pBase, DWORD dwHashSize, DWORD dwKey)
 
 DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
 {
-   DWORD dwIndex;
+   // First, check for built-in objects
+   // If they presented, they will be located in first 10 positions
+   if (dwObjectId < 10)
+   {
+      DWORD i, dwLimit;
 
-   dwIndex = SearchTreeHash(m_pTreeHash, m_dwTreeHashSize, dwObjectId);
-   if (dwIndex != INVALID_INDEX)
-      while((dwIndex > 0) && (m_pTreeHash[dwIndex - 1].dwObjectId == dwObjectId))
-         dwIndex--;
-   return dwIndex;
+      dwLimit = min(m_dwTreeHashSize, dwObjectId);
+      for(i = 0; i < dwLimit; i++)
+         if (m_pTreeHash[i].dwObjectId == dwObjectId)
+         {
+            return i;
+         }
+      return INVALID_INDEX;
+   }
+
+   // Second, check two common cases - object is last added, i.e. it
+   // will be located in last cell, and object is newly created -
+   // then it's id will be greater than last cell value
+   if (m_dwTreeHashSize > 0)
+   {
+      if (m_pTreeHash[m_dwTreeHashSize - 1].dwObjectId == dwObjectId)
+         return m_dwTreeHashSize - 1;
+      if (m_pTreeHash[m_dwTreeHashSize - 1].dwObjectId < dwObjectId)
+         return INVALID_INDEX;
+   }
+
+   // Do binary search on a hash array as last resort
+   return SearchTreeHash(m_pTreeHash, m_dwTreeHashSize, dwObjectId);
 }
 
 
@@ -647,7 +665,8 @@ void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer)
 void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
 {
    HTREEITEM hItem;
-   DWORD dwIndex, dwId;
+   DWORD i, dwIndex;
+   NXC_OBJECT *pObject;
 
    // Delete all child items
    hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
@@ -658,17 +677,31 @@ void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
    }
 
    // Find hash record for current item
-   dwId = m_wndTreeCtrl.GetItemData(hRootItem);
-   dwIndex = FindObjectInTree(dwId);
+   pObject = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hRootItem);
+   dwIndex = FindObjectInTree(pObject->dwId);
    if (dwIndex != INVALID_INDEX)
    {
-      while((dwIndex < m_dwTreeHashSize) && (m_pTreeHash[dwIndex].hTreeItem != hRootItem))
-         dwIndex++;
-      // Delete appropriate record in tree hash list
-      if (dwIndex < m_dwTreeHashSize - 1)
-         memmove(&m_pTreeHash[dwIndex], &m_pTreeHash[dwIndex + 1], 
-                 sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize - dwIndex - 1));
-      m_dwTreeHashSize--;
+      for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
+         if (m_pTreeHash[dwIndex].phTreeItemList[i] == hRootItem)
+         {
+            if (m_pTreeHash[dwIndex].dwNumEntries == 1)
+            {
+               // Last entry, delete entire record in tree hash list
+               free(m_pTreeHash[dwIndex].phTreeItemList);
+               m_dwTreeHashSize--;
+               if (dwIndex < m_dwTreeHashSize)
+                  memmove(&m_pTreeHash[dwIndex], &m_pTreeHash[dwIndex + 1], 
+                          sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize - dwIndex));
+            }
+            else
+            {
+               m_pTreeHash[dwIndex].dwNumEntries--;
+               memmove(&m_pTreeHash[dwIndex].phTreeItemList[i],
+                       &m_pTreeHash[dwIndex].phTreeItemList[i + 1],
+                       sizeof(HTREEITEM) * (m_pTreeHash[dwIndex].dwNumEntries - i));
+            }
+            break;
+         }
    }
 
    // Delete item from tree control
@@ -689,37 +722,43 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
 
    if (pObject->bIsDeleted)
    {
-      // Delete all tree items
-      while(dwIndex != INVALID_INDEX)
+      if (dwIndex != INVALID_INDEX)
       {
-         DeleteObjectTreeItem(m_pTreeHash[dwIndex].hTreeItem);
-         dwIndex = FindObjectInTree(dwObjectId);
+         HTREEITEM *phItemList;
+         DWORD dwNumItems;
+
+         dwNumItems = m_pTreeHash[dwIndex].dwNumEntries;
+         phItemList = (HTREEITEM *)nx_memdup(m_pTreeHash[dwIndex].phTreeItemList, sizeof(HTREEITEM) * dwNumItems);
+         // Delete all tree items
+         for(i = 0; i < dwNumItems; i++)
+            DeleteObjectTreeItem(phItemList[i]);
+         free(phItemList);
       }
    }
    else
    {
       HTREEITEM hItem;
+      NXC_OBJECT *pParent;
 
       if (dwIndex != INVALID_INDEX)
       {
          char szBuffer[256];
-         DWORD j, dwId, *pdwParentList;
+         DWORD j, *pdwParentList;
 
          // Create a copy of object's parent list
          pdwParentList = (DWORD *)nx_memdup(pObject->pdwParentList, 
                                             sizeof(DWORD) * pObject->dwNumParents);
 
          CreateTreeItemText(pObject, szBuffer);
-restart_parent_check:;
-         for(i = dwIndex; (i < m_dwTreeHashSize) && (m_pTreeHash[i].dwObjectId == dwObjectId); i++)
+         for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
          {
             // Check if this item's parent still in object's parents list
-            hItem = m_wndTreeCtrl.GetParentItem(m_pTreeHash[i].hTreeItem);
+            hItem = m_wndTreeCtrl.GetParentItem(m_pTreeHash[dwIndex].phTreeItemList[i]);
             if (hItem != NULL)
             {
-               dwId = m_wndTreeCtrl.GetItemData(hItem);
+               pParent = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem);
                for(j = 0; j < pObject->dwNumParents; j++)
-                  if (pObject->pdwParentList[j] == dwId)
+                  if (pObject->pdwParentList[j] == pParent->dwId)
                   {
                      pdwParentList[j] = 0;   // Mark this parent as presented
                      break;
@@ -727,21 +766,24 @@ restart_parent_check:;
                if (j == pObject->dwNumParents)  // Not a parent anymore
                {
                   // Delete this tree item
-                  DeleteObjectTreeItem(m_pTreeHash[i].hTreeItem);
-                  goto restart_parent_check;   // Restart loop, because m_dwTreeHashSize was changed
+                  BOOL bStop = (m_pTreeHash[dwIndex].dwNumEntries == 1);
+                  DeleteObjectTreeItem(m_pTreeHash[dwIndex].phTreeItemList[i]);
+                  if (bStop)
+                     break;
+                  i--;
                }
                else  // Current tree item is still valid
                {
-                  m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
-                  m_wndTreeCtrl.SetItemState(m_pTreeHash[i].hTreeItem,
+                  m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], szBuffer);
+                  m_wndTreeCtrl.SetItemState(m_pTreeHash[dwIndex].phTreeItemList[i],
                                     INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
                   SortTreeItems(hItem);
                }
             }
             else  // Current tree item has no parent
             {
-               m_wndTreeCtrl.SetItemText(m_pTreeHash[i].hTreeItem, szBuffer);
-               m_wndTreeCtrl.SetItemState(m_pTreeHash[i].hTreeItem,
+               m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], szBuffer);
+               m_wndTreeCtrl.SetItemState(m_pTreeHash[dwIndex].phTreeItemList[i],
                                        INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
             }
          }
@@ -755,13 +797,15 @@ restart_parent_check:;
                if (dwIndex != INVALID_INDEX)
                {
                   // Walk through all occurences of current parent object
-                  for(j = dwIndex; (j < m_dwTreeHashSize) && 
-                                   (m_pTreeHash[j].dwObjectId == pdwParentList[i]); j++)
+                  for(j = 0; j < m_pTreeHash[dwIndex].dwNumEntries; j++)
                   {
-                     AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
-                     SortTreeItems(m_pTreeHash[j].hTreeItem);
+                     if (m_wndTreeCtrl.GetItemState(m_pTreeHash[dwIndex].phTreeItemList[j], TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE)
+                     {
+                        AddObjectToTree(pObject, m_pTreeHash[dwIndex].phTreeItemList[j]);
+                        dwIndex = AdjustIndex(dwIndex, pObject->pdwParentList[i]);
+                        SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j]);
+                     }
                   }
-                  qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
                }
             }
 
@@ -777,13 +821,15 @@ restart_parent_check:;
             if (dwIndex != INVALID_INDEX)
             {
                // Walk through all occurences of current parent object
-               for(j = dwIndex; (j < m_dwTreeHashSize) && 
-                                (m_pTreeHash[j].dwObjectId == pObject->pdwParentList[i]); j++)
+               for(j = 0; j < m_pTreeHash[dwIndex].dwNumEntries; j++)
                {
-                  AddObjectToTree(pObject, m_pTreeHash[j].hTreeItem);
-                  SortTreeItems(m_pTreeHash[j].hTreeItem);
+                  if (m_wndTreeCtrl.GetItemState(m_pTreeHash[dwIndex].phTreeItemList[j], TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE)
+                  {
+                     AddObjectToTree(pObject, m_pTreeHash[dwIndex].phTreeItemList[j]);
+                     dwIndex = AdjustIndex(dwIndex, pObject->pdwParentList[i]);
+                     SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j]);
+                  }
                }
-               qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
             }
          }
       }
@@ -794,7 +840,7 @@ restart_parent_check:;
          {
             dwIndex = FindObjectInTree(dwObjectId);
             if (dwIndex != INVALID_INDEX)    // Shouldn't happen
-               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
+               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
          }
          else
          {
@@ -802,7 +848,7 @@ restart_parent_check:;
             hItem = m_wndTreeCtrl.GetSelectedItem();
             if (hItem != NULL)
             {
-               if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
+               if (((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId == dwObjectId)
                   m_wndPreviewPane.Refresh();
             }
          }
@@ -863,7 +909,7 @@ void CObjectBrowser::OnObjectViewViewastree()
 
    // Display currenly selected item in preview pane
    hItem = m_wndTreeCtrl.GetSelectedItem();
-   m_pCurrentObject = (hItem == NULL) ? NULL : NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
+   m_pCurrentObject = (hItem == NULL) ? NULL : (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem);
    m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
 }
 
@@ -953,7 +999,7 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
 
             dwIndex = FindObjectInTree(pObject->dwId);
             if (dwIndex != INVALID_INDEX)
-               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].hTreeItem, TVGN_CARET);
+               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
             else
                MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
                           "Find", MB_OK | MB_ICONEXCLAMATION);
@@ -1083,19 +1129,17 @@ DWORD CObjectBrowser::GetSelectedObject()
 
       hItem = m_wndTreeCtrl.GetSelectedItem();
       if (hItem != NULL)
-         dwId = m_wndTreeCtrl.GetItemData(hItem);
+         dwId = ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId;
    }
    else
    {
       if (m_wndListCtrl.GetSelectedCount() == 1)
       {
          int iItem;
-         NXC_OBJECT *pObject;
 
          iItem = m_wndListCtrl.GetSelectionMark();
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         if (pObject != NULL)
-            dwId = pObject->dwId;
+         if (iItem != -1)
+            dwId = ((NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem))->dwId;
       }
    }
    return dwId;
@@ -1385,7 +1429,7 @@ void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI)
       {
          NXC_OBJECT *pObject;
 
-         pObject = NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
+         pObject = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem);
          if (pObject != NULL)
          {
             if ((pObject->iClass == OBJECT_CONTAINER) ||
@@ -1723,11 +1767,18 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 
 void CObjectBrowser::SortTreeItems(HTREEITEM hItem)
 {
-   TVSORTCB tvs;
+   if (m_bImmediateSorting)
+   {
+      TVSORTCB tvs;
 
-   tvs.hParent = hItem;
-   tvs.lpfnCompare = CompareTreeItems;
-   m_wndTreeCtrl.SortChildrenCB(&tvs);
+      tvs.hParent = hItem;
+      tvs.lpfnCompare = CompareTreeItems;
+      m_wndTreeCtrl.SortChildrenCB(&tvs);
+      m_bImmediateSorting = FALSE;
+   }
+   else
+   {
+   }
 }
 
 
@@ -1846,7 +1897,8 @@ void CObjectBrowser::OnObjectMove()
       hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
       if (hItem != NULL)
       {
-         theApp.MoveObject(m_pCurrentObject->dwId, m_wndTreeCtrl.GetItemData(hItem));
+         theApp.MoveObject(m_pCurrentObject->dwId, 
+                           ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId);
       }
    }
 }
@@ -1858,8 +1910,20 @@ void CObjectBrowser::OnObjectMove()
 
 void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult)
 {
+   NXC_OBJECT *pObject;
+
    if (lpdi->item.mask == TVIF_CHILDREN)
-      lpdi->item.cChildren = 1;
+   {
+      pObject = (NXC_OBJECT *)lpdi->item.lParam;
+      if (pObject != NULL)
+      {
+         lpdi->item.cChildren = (pObject->dwNumChilds > 0) ? 1 : 0;
+      }
+      else
+      {
+         lpdi->item.cChildren = 0;
+      }
+   }
    *pResult = 0;
 }
 
@@ -1870,13 +1934,15 @@ void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult
 
 void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
-   if (lpnmt->action == TVE_EXPAND)
+   if ((lpnmt->action == TVE_EXPAND) ||
+       (lpnmt->action == TVE_EXPANDPARTIAL) ||
+       (lpnmt->action == TVE_TOGGLE))
    {
       NXC_OBJECT *pObject, *pChildObject;
       DWORD i;
 
-      pObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
-      if ((pObject != NULL) && (m_wndTreeCtrl.GetChildItem(lpnmt->itemNew.hItem) == NULL))
+      pObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
+      if ((pObject != NULL) && ((m_wndTreeCtrl.GetItemState(lpnmt->itemNew.hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE) == 0))
       {
          for(i = 0; i < pObject->dwNumChilds; i++)
          {
@@ -1884,8 +1950,68 @@ void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResul
             if (pChildObject != NULL)
                AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
          }
-         m_wndTreeCtrl.SortChildren(lpnmt->itemNew.hItem);
+         SortTreeItems(lpnmt->itemNew.hItem);
       }
    }
    *pResult = 0;
+}
+
+
+//
+// Add new object entry to hash
+// Return TRUE if hash array needs to be resorted
+//
+
+void CObjectBrowser::AddObjectEntryToHash(NXC_OBJECT *pObject, HTREEITEM hItem)
+{
+   DWORD dwIndex, dwEntry;
+
+   dwIndex = FindObjectInTree(pObject->dwId);
+   if (dwIndex == INVALID_INDEX)
+   {
+      m_pTreeHash = (OBJ_TREE_HASH *)realloc(m_pTreeHash, sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize + 1));
+      m_pTreeHash[m_dwTreeHashSize].dwObjectId = pObject->dwId;
+      m_pTreeHash[m_dwTreeHashSize].dwNumEntries = 1;
+      m_pTreeHash[m_dwTreeHashSize].phTreeItemList = (HTREEITEM *)malloc(sizeof(HTREEITEM));
+      m_pTreeHash[m_dwTreeHashSize].phTreeItemList[0] = hItem;
+      m_dwTreeHashSize++;
+      if ((m_dwTreeHashSize > 1) && 
+          (m_pTreeHash[m_dwTreeHashSize - 1].dwObjectId < m_pTreeHash[m_dwTreeHashSize - 2].dwObjectId))
+      {
+         qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+      }
+   }
+   else
+   {
+      // Object already presented in hash array, just add new HTREEITEM
+      dwEntry = m_pTreeHash[dwIndex].dwNumEntries;
+      m_pTreeHash[dwIndex].dwNumEntries++;
+      m_pTreeHash[dwIndex].phTreeItemList = (HTREEITEM *)realloc(m_pTreeHash[dwIndex].phTreeItemList, sizeof(HTREEITEM)  * m_pTreeHash[dwIndex].dwNumEntries);
+      m_pTreeHash[dwIndex].phTreeItemList[dwEntry] = hItem;
+   }
+}
+
+
+//
+// Adjust object index after new object insertion into tree
+//
+
+DWORD CObjectBrowser::AdjustIndex(DWORD dwIndex, DWORD dwObjectId)
+{
+   if (m_pTreeHash[dwIndex].dwObjectId == dwObjectId)
+      return dwIndex;
+   if ((dwIndex > 0) && (m_pTreeHash[dwIndex - 1].dwObjectId == dwObjectId))
+      return dwIndex - 1;
+   else
+      return dwIndex + 1;
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CObjectBrowser::OnTimer(UINT nIDEvent) 
+{
+   m_bImmediateSorting = TRUE;
 }
