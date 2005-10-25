@@ -30,6 +30,7 @@ EXTRA_DIST = \
 	DataQueryDlg.cpp DataQueryDlg.h \
 	DCIDataView.cpp DCIDataView.h \
 	DCIPropPage.cpp DCIPropPage.h \
+	DCISchedulePage.cpp DCISchedulePage.h \
 	DCIThresholdsPage.cpp DCIThresholdsPage.h \
 	DCITransformPage.cpp DCITransformPage.h \
 	DebugFrame.cpp DebugFrame.h \

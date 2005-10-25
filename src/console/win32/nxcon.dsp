@@ -193,6 +193,10 @@ SOURCE=.\DCIPropPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DCISchedulePage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DCIThresholdsPage.cpp
 # End Source File
 # Begin Source File
@@ -599,6 +603,10 @@ SOURCE=.\DCIDataView.h
 # Begin Source File
 
 SOURCE=.\DCIPropPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DCISchedulePage.h
 # End Source File
 # Begin Source File
 

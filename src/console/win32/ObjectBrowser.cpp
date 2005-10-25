@@ -128,8 +128,6 @@ CObjectBrowser::CObjectBrowser()
    m_dwSortMode = OBJECT_SORT_BY_NAME;
    m_pCurrentObject = NULL;
    m_bRestoredDesktop = FALSE;
-   m_bImmediateSorting = TRUE;
-   m_nTimer = 0;
 }
 
 CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
@@ -151,8 +149,6 @@ CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
       m_pCurrentObject = NULL;
    }
    m_bRestoredDesktop = TRUE;
-   m_bImmediateSorting = TRUE;
-   m_nTimer = 0;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -215,7 +211,6 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
 	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
-	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, IDC_TREE_VIEW, OnTreeViewGetDispInfo)
@@ -239,8 +234,6 @@ END_MESSAGE_MAP()
 
 void CObjectBrowser::OnDestroy() 
 {
-   if (m_nTimer != 0)
-      KillTimer(m_nTimer);
    ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_OBJECTS, this);
 	CMDIChildWnd::OnDestroy();
 }
@@ -343,8 +336,6 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
       }
       delete pwp;
    }
-
-   m_nTimer = SetTimer(1, 1000, NULL);
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_OBJECTS, this);
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -777,7 +768,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                   m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], szBuffer);
                   m_wndTreeCtrl.SetItemState(m_pTreeHash[dwIndex].phTreeItemList[i],
                                     INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
-                  SortTreeItems(hItem);
+                  SortTreeItems(hItem, FALSE);
                }
             }
             else  // Current tree item has no parent
@@ -803,7 +794,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                      {
                         AddObjectToTree(pObject, m_pTreeHash[dwIndex].phTreeItemList[j]);
                         dwIndex = AdjustIndex(dwIndex, pObject->pdwParentList[i]);
-                        SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j]);
+                        SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j], FALSE);
                      }
                   }
                }
@@ -827,7 +818,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                   {
                      AddObjectToTree(pObject, m_pTreeHash[dwIndex].phTreeItemList[j]);
                      dwIndex = AdjustIndex(dwIndex, pObject->pdwParentList[i]);
-                     SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j]);
+                     SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j], FALSE);
                   }
                }
             }
@@ -1755,8 +1746,8 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 {
    TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
 
-   NXCGetComparableObjectName(g_hSession, lParam1, szName1);
-   NXCGetComparableObjectName(g_hSession, lParam2, szName2);
+   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam1, szName1);
+   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam2, szName2);
    return _tcsicmp(szName1, szName2);
 }
 
@@ -1765,20 +1756,13 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 // Sort childs of given tree item
 //
 
-void CObjectBrowser::SortTreeItems(HTREEITEM hItem)
+void CObjectBrowser::SortTreeItems(HTREEITEM hItem, BOOL bForcedSort)
 {
-   if (m_bImmediateSorting)
-   {
-      TVSORTCB tvs;
+   TVSORTCB tvs;
 
-      tvs.hParent = hItem;
-      tvs.lpfnCompare = CompareTreeItems;
-      m_wndTreeCtrl.SortChildrenCB(&tvs);
-      m_bImmediateSorting = FALSE;
-   }
-   else
-   {
-   }
+   tvs.hParent = hItem;
+   tvs.lpfnCompare = CompareTreeItems;
+   m_wndTreeCtrl.SortChildrenCB(&tvs);
 }
 
 
@@ -1950,7 +1934,7 @@ void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResul
             if (pChildObject != NULL)
                AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
          }
-         SortTreeItems(lpnmt->itemNew.hItem);
+         SortTreeItems(lpnmt->itemNew.hItem, TRUE);
       }
    }
    *pResult = 0;
@@ -2006,12 +1990,3 @@ DWORD CObjectBrowser::AdjustIndex(DWORD dwIndex, DWORD dwObjectId)
       return dwIndex + 1;
 }
 
-
-//
-// WM_TIMER message handler
-//
-
-void CObjectBrowser::OnTimer(UINT nIDEvent) 
-{
-   m_bImmediateSorting = TRUE;
-}

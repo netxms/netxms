@@ -865,9 +865,12 @@ typedef struct
    BYTE iDataType;
    BYTE iStatus;
    BYTE iDeltaCalculation;
+   BYTE iAdvSchedule;
    DWORD dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
    TCHAR *pszFormula;
+   DWORD dwNumSchedules;
+   TCHAR **ppScheduleList;
 } NXC_DCI;
 
 

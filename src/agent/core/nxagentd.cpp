@@ -76,7 +76,7 @@ void InitStaticSubagents(void);
 // Global variables
 //
 
-DWORD g_dwFlags = 0;
+DWORD g_dwFlags = AF_ENABLE_ACTIONS;
 char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;

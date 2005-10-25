@@ -52,6 +52,10 @@ DCItem::DCItem()
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
+   m_iAdvSchedule = 0;
+   m_dwNumSchedules = 0;
+   m_ppScheduleList = NULL;
+   m_tLastCheck = 0;
 }
 
 
@@ -84,6 +88,14 @@ DCItem::DCItem(const DCItem *pSrc)
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
+   m_tLastCheck = 0;
+   m_iAdvSchedule = pSrc->m_iAdvSchedule;
+
+   // Copy schedules
+   m_dwNumSchedules = pSrc->m_dwNumSchedules;
+   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+   for(i = 0; i < m_dwNumSchedules; i++)
+      m_ppScheduleList[i] = _tcsdup(pSrc->m_ppScheduleList[i]);
 
    // Copy thresholds
    m_dwNumThresholds = pSrc->m_dwNumThresholds;
@@ -101,13 +113,14 @@ DCItem::DCItem(const DCItem *pSrc)
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
 // delta_calculation,transformation,template_id,description,instance,
-// template_item_id
+// template_item_id,adv_schedule
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 {
    char szQuery[256];
-   DB_RESULT hRawResult;
+   DB_RESULT hTempResult;
+   DWORD i;
 
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    nx_strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
@@ -136,19 +149,48 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
+   m_tLastCheck = 0;
+   m_iAdvSchedule = (BYTE)DBGetFieldLong(hResult, iRow, 13);
+
+   if (m_iAdvSchedule)
+   {
+      sprintf(szQuery, "SELECT schedule FROM dci_schedules WHERE item_id=%ld", m_dwId);
+      hTempResult = DBSelect(g_hCoreDB, szQuery);
+      if (hTempResult != NULL)
+      {
+         m_dwNumSchedules = DBGetNumRows(hTempResult);
+         m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+         for(i = 0; i < m_dwNumSchedules; i++)
+         {
+            m_ppScheduleList[i] = _tcsdup(DBGetField(hTempResult, i, 0));
+            DecodeSQLString(m_ppScheduleList[i]);
+         }
+         DBFreeResult(hTempResult);
+      }
+      else
+      {
+         m_dwNumSchedules = 0;
+         m_ppScheduleList = NULL;
+      }
+   }
+   else
+   {
+      m_dwNumSchedules = 0;
+      m_ppScheduleList = NULL;
+   }
 
    // Load last raw value from database
    sprintf(szQuery, "SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%ld", m_dwId);
-   hRawResult = DBSelect(g_hCoreDB, szQuery);
-   if (hRawResult != NULL)
+   hTempResult = DBSelect(g_hCoreDB, szQuery);
+   if (hTempResult != NULL)
    {
-      if (DBGetNumRows(hRawResult) > 0)
+      if (DBGetNumRows(hTempResult) > 0)
       {
-         m_prevRawValue = DBGetField(hRawResult, 0, 0);
-         m_tPrevValueTimeStamp = DBGetFieldULong(hRawResult, 0, 1);
+         m_prevRawValue = DBGetField(hTempResult, 0, 0);
+         m_tPrevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
          m_tLastPoll = m_tPrevValueTimeStamp;
       }
-      DBFreeResult(hRawResult);
+      DBFreeResult(hTempResult);
    }
 }
 
@@ -187,6 +229,10 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
+   m_iAdvSchedule = 0;
+   m_dwNumSchedules = 0;
+   m_ppScheduleList = NULL;
+   m_tLastCheck = 0;
 
    UpdateCacheSize();
 }
@@ -203,6 +249,9 @@ DCItem::~DCItem()
    for(i = 0; i < m_dwNumThresholds; i++)
       delete m_ppThresholdList[i];
    safe_free(m_ppThresholdList);
+   for(i = 0; i < m_dwNumSchedules; i++)
+      free(m_ppScheduleList[i]);
+   safe_free(m_ppScheduleList);
    safe_free(m_pszFormula);
    ClearCache();
    MutexDestroy(m_hMutex);
@@ -265,7 +314,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[1024];
+   TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[2048];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
@@ -289,22 +338,23 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation,instance,template_item_id)"
+                       "transformation,instance,template_item_id,adv_schedule)"
                        " VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,"
-                       "%d,'%s','%s',%ld)",
+                       "%d,'%s','%s',%ld,%d)",
                        m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
-                       pszEscFormula, pszEscInstance, m_dwTemplateItemId);
+                       pszEscFormula, pszEscInstance, m_dwTemplateItemId, m_iAdvSchedule);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%ld,template_id=%ld,name='%s',source=%d,"
                        "datatype=%d,polling_interval=%ld,retention_time=%ld,status=%d,"
                        "delta_calculation=%d,transformation='%s',description='%s',"
-                       "instance='%s',template_item_id=%ld WHERE item_id=%ld",
+                       "instance='%s',template_item_id=%ld,adv_schedule=%d WHERE item_id=%ld",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
-                       pszEscDescr, pszEscInstance, m_dwTemplateItemId, m_dwId);
+                       pszEscDescr, pszEscInstance, m_dwTemplateItemId,
+                       m_iAdvSchedule, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscName);
    free(pszEscFormula);
@@ -361,6 +411,24 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
          DBQuery(hdb, szQuery);
       }
       DBFreeResult(hResult);
+   }
+
+   // Save schedules
+   sprintf(szQuery, "DELETE FROM dci_schedules WHERE item_id=%ld", m_dwId);
+   DBQuery(hdb, szQuery);
+   if (m_iAdvSchedule)
+   {
+      TCHAR *pszEscSchedule;
+      DWORD i;
+
+      for(i = 0; i < m_dwNumSchedules; i++)
+      {
+         pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
+         sprintf(szQuery, "INSERT INTO dci_schedules (item_id,schedule) VALUES (%ld,'%s')",
+                 m_dwId, pszEscSchedule);
+         free(pszEscSchedule);
+         DBQuery(hdb, szQuery);
+      }
    }
 
    Unlock();
@@ -429,6 +497,13 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
       m_ppThresholdList[i]->CreateMessage(&dct);
       pMsg->SetVariable(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
    }
+   pMsg->SetVariable(VID_ADV_SCHEDULE, (WORD)m_iAdvSchedule);
+   if (m_iAdvSchedule)
+   {
+      pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
+      for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
+         pMsg->SetVariable(dwId, m_ppScheduleList[i]);
+   }
    Unlock();
 }
 
@@ -460,6 +535,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    DWORD i, j, dwNum, dwId;
    DCI_THRESHOLD *pNewThresholds;
    Threshold **ppNewList;
+   TCHAR *pszStr;
 
    Lock();
 
@@ -474,6 +550,37 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    m_iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
    safe_free(m_pszFormula);
    m_pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
+
+   // Update schedules
+   for(i = 0; i < m_dwNumSchedules; i++)
+      free(m_ppScheduleList[i]);
+   m_iAdvSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
+   if (m_iAdvSchedule)
+   {
+      m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+      m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
+      for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
+      {
+         pszStr = pMsg->GetVariableStr(dwId);
+         if (pszStr != NULL)
+         {
+            m_ppScheduleList[i] = pszStr;
+         }
+         else
+         {
+            m_ppScheduleList[i] = _tcsdup(_T("(null)"));
+         }
+      }
+   }
+   else
+   {
+      if (m_ppScheduleList != NULL)
+      {
+         free(m_ppScheduleList);
+         m_ppScheduleList = NULL;
+      }
+      m_dwNumSchedules = 0;
+   }
 
    // Update thresholds
    dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
@@ -897,4 +1004,106 @@ void DCItem::PrepareForReplacement(DCItem *pItem, int iStatus)
    m_prevRawValue = pItem->m_prevRawValue;
    m_tPrevValueTimeStamp = pItem->m_tPrevValueTimeStamp;
    m_iStatus = iStatus;
+}
+
+
+//
+// Match schedule to current time
+//
+
+static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
+{
+   TCHAR *pszCurr, szValue[256];
+
+   // Minute
+   pszCurr = ExtractWord(pszSchedule, szValue);
+   if (szValue[0] != '*')
+   {
+      if (atoi(szValue) != pCurrTime->tm_min)
+         return FALSE;
+   }
+
+   // Hour
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (szValue[0] != '*')
+   {
+      if (atoi(szValue) != pCurrTime->tm_hour)
+         return FALSE;
+   }
+
+   // Day of month
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (szValue[0] != '*')
+   {
+      if (atoi(szValue) != pCurrTime->tm_mday)
+         return FALSE;
+   }
+
+   // Month
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (szValue[0] != '*')
+   {
+      if (atoi(szValue) != pCurrTime->tm_mon + 1)
+         return FALSE;
+   }
+
+   // Day of week
+   pszCurr = ExtractWord(pszCurr, szValue);
+   if (szValue[0] != '*')
+   {
+      int nValue;
+
+      nValue = atoi(szValue);
+      if (nValue == 7)
+         nValue = 0;
+      if (nValue != pCurrTime->tm_wday)
+         return FALSE;
+   }
+
+   return TRUE;
+}
+
+
+//
+// Check if DCI have to be polled
+//
+
+BOOL DCItem::ReadyForPolling(time_t currTime)
+{
+   BOOL bResult;
+
+   Lock();
+   if ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) && m_bCacheLoaded)
+   {
+      if (m_iAdvSchedule)
+      {
+         DWORD i;
+         struct tm tmCurrLocal, tmLastLocal;
+
+         memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
+         memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
+         for(i = 0, bResult = FALSE; i < m_dwNumSchedules; i++)
+         {
+            if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i]))
+            {
+               if (!MatchSchedule(&tmLastLocal, m_ppScheduleList[i]))
+               {
+                  bResult = TRUE;
+                  break;
+               }
+            }
+         }
+         m_tLastCheck = currTime;
+      }
+      else
+      {
+         bResult = (m_tLastPoll + m_iPollingInterval <= currTime);
+      }
+   }
+   else
+   {
+      bResult = FALSE;
+   }
+   Unlock();
+   return bResult;
 }

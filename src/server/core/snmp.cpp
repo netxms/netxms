@@ -396,6 +396,20 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
    INTERFACE_LIST *pIfList = NULL;
    BOOL bSuccess = FALSE;
 
+/*pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
+pIfList->iNumEntries = 4000;
+pIfList->iEnumPos = 0;
+pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * 4000);
+memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * pIfList->iNumEntries);
+for(i = 0; i < 4000; i++)
+{
+sprintf(pIfList->pInterfaces[i].szName,"Ethernet/%d",i+1);
+pIfList->pInterfaces[i].dwIndex = i + 1;
+pIfList->pInterfaces[i].dwIpAddr = ((i + 1) << 16) + i + 123;
+pIfList->pInterfaces[i].dwIpNetMask = 0xFFFFFF00;
+}
+return pIfList;*/
+
    // Get number of interfaces
    if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
                 &iNumIf, sizeof(long), FALSE, FALSE) != SNMP_ERR_SUCCESS)

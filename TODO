@@ -31,10 +31,8 @@ SERVER:
 - Implement reconnect in all database drivers
 - Network service autodiscovery
 - New attribute: disable status/configuration poll
-- Override Net.IP.Forward
 - NxDbMgr -- backup before db recover
 - OSPF discovery
-- Add MIB parsing to libnxsnmp
 - Add support for 64 bit counters to libnxsnmp
 
 

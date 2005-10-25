@@ -614,12 +614,10 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    NetObjInsert(pInterface, TRUE);
    AddInterface(pInterface);
    if (!m_bIsHidden)
-   {
       pInterface->Unhide();
-      PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-                pInterface->Name(), pInterface->IpAddr(),
-                pInterface->IpNetMask(), pInterface->IfIndex());
-   }
+   PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
+             pInterface->Name(), pInterface->IpAddr(),
+             pInterface->IpNetMask(), pInterface->IfIndex());
 
    // Bind node to appropriate subnet
    if (pSubnet != NULL)
@@ -915,6 +913,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    }
    else
    {
+//      Hide();  // Prevent multiple updates
+
       // Check node's capabilities
       SetPollerInfo(nPoller, "capability check");
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
@@ -1115,6 +1115,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          // Delete non-existent interfaces
          if (iDelCount > 0)
          {
+//            Unhide();
             for(j = 0; j < iDelCount; j++)
             {
                SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
@@ -1123,6 +1124,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                          ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->IpNetMask());
                DeleteInterface(ppDeleteList[j]);
             }
+//            Hide();
             bHasChanges = TRUE;
          }
          safe_free(ppDeleteList);
@@ -1274,6 +1276,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                                "Finished configuration poll for node %s\r\n"
                                "Node configuration was%schanged after poll\r\n"),
                     m_szName, bHasChanges ? _T(" ") : _T(" not "));
+//      Unhide();
    }
 
    // Finish configuration poll

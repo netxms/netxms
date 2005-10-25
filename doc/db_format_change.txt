@@ -28,7 +28,14 @@
 		VALUES ('SyslogListenPort','514',1,1);
 	INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 		VALUES ('SyslogRetentionTime','5184000',1,0);
-
+- New field adv_schedule of type integer added to table items. Existing items
+  should have this field set to 0.
+- New table for advanced DCI schedules
+	CREATE TABLE dci_schedules
+	(
+		item_id integer not null,
+		schedule varchar(255) not null
+	) TABLE_TYPE;
 
 
 *************

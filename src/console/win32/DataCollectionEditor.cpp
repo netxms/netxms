@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "DataCollectionEditor.h"
 #include "DCIPropPage.h"
+#include "DCISchedulePage.h"
 #include "DCIThresholdsPage.h"
 #include "DCITransformPage.h"
 #include "DataExportDlg.h"
@@ -419,6 +420,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    BOOL bSuccess = FALSE;
    CPropertySheet dlg;
    CDCIPropPage pgCollection;
+   CDCISchedulePage pgSchedule;
    CDCITransformPage pgTransform;
    CDCIThresholdsPage pgThresholds;
 
@@ -427,10 +429,23 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_iOrigin = pItem->iSource;
    pgCollection.m_iPollingInterval = pItem->iPollingInterval;
    pgCollection.m_iRetentionTime = pItem->iRetentionTime;
+   pgCollection.m_bAdvSchedule = pItem->iAdvSchedule ? TRUE : FALSE;
    pgCollection.m_iStatus = pItem->iStatus;
    pgCollection.m_strName = pItem->szName;
    pgCollection.m_strDescription = pItem->szDescription;
    pgCollection.m_pNode = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
+
+   // Setup schedule page
+   if (pItem->iAdvSchedule)
+   {
+      pgSchedule.m_dwNumSchedules = pItem->dwNumSchedules;
+      pgSchedule.m_ppScheduleList = CopyStringList(pItem->ppScheduleList, pItem->dwNumSchedules);
+   }
+   else
+   {
+      pgSchedule.m_dwNumSchedules = 0;
+      pgSchedule.m_ppScheduleList = NULL;
+   }
 
    // Setup "Transformation" page
    pgTransform.m_iDeltaProc = pItem->iDeltaCalculation;
@@ -444,6 +459,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    dlg.SetTitle("Data Collection Item");
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    dlg.AddPage(&pgCollection);
+   dlg.AddPage(&pgSchedule);
    dlg.AddPage(&pgTransform);
    dlg.AddPage(&pgThresholds);
    if (dlg.DoModal() == IDOK)
@@ -463,6 +479,18 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       pItem->pszFormula = strdup((LPCTSTR)pgTransform.m_strFormula);
       strcpy(pItem->szInstance, (LPCTSTR)pgThresholds.m_strInstance);
       StrStrip(pItem->szInstance);
+      DestroyStringList(pItem->ppScheduleList, pItem->dwNumSchedules);
+      pItem->iAdvSchedule = pgCollection.m_bAdvSchedule;
+      if (pItem->iAdvSchedule)
+      {
+         pItem->dwNumSchedules = pgSchedule.m_dwNumSchedules;
+         pItem->ppScheduleList = CopyStringList(pgSchedule.m_ppScheduleList, pItem->dwNumSchedules);
+      }
+      else
+      {
+         pItem->dwNumSchedules = 0;
+         pItem->ppScheduleList = NULL;
+      }
       bSuccess = TRUE;
    }
    return bSuccess;

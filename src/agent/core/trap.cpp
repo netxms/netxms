@@ -24,6 +24,33 @@
 
 
 //
+// Static data
+//
+
+static Queue *m_pTrapQueue = NULL;
+
+
+//
+// Trap sender
+//
+
+THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
+{
+   CSCP_MESSAGE *pMsg;
+
+   m_pTrapQueue = new Queue;
+   while(1)
+   {
+      pMsg = m_pTrapQueue->GetOrBlock();
+      if (pMsg == INVALID_POINTER_VALUE)
+         break;
+   }
+   delete m_pTrapQueue;
+   m_pTrapQueue = NULL;
+}
+
+
+//
 // Send trap to server
 //
 
@@ -38,7 +65,8 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, ppArgList[i]);
-   //msg.CreateMessage();
+   if (m_pTrapQueue != NULL)
+      m_pTrapQueue->Put(msg.CreateMessage());
 }
 
 

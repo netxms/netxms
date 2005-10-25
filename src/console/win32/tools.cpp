@@ -643,3 +643,33 @@ CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart)
    *pdwStart = i;
    return pMenu;
 }
+
+
+//
+// Copy list of dynamic strings
+//
+
+TCHAR **CopyStringList(TCHAR **ppList, DWORD dwSize)
+{
+   DWORD i;
+   TCHAR **ppDst;
+
+   ppDst = (TCHAR **)malloc(sizeof(TCHAR *) * dwSize);
+   for(i = 0; i < dwSize; i++)
+      ppDst[i] = _tcsdup(ppList[i]);
+   return ppDst;
+}
+
+
+//
+// Destroy list of dynamic strings
+//
+
+void DestroyStringList(TCHAR **ppList, DWORD dwSize)
+{
+   DWORD i;
+
+   for(i = 0; i < dwSize; i++)
+      free(ppList[i]);
+   safe_free(ppList);
+}

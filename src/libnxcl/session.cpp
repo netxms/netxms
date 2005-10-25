@@ -345,12 +345,17 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
             m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
             m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
+            m_pItemList->pItems[i].iAdvSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
             m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
             pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription,
                                  MAX_DB_STRING);
             pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance,
                                  MAX_DB_STRING);
+            m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+            m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
+            for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
+               m_pItemList->pItems[i].ppScheduleList[j] = pMsg->GetVariableStr(dwId);
             m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
             m_pItemList->pItems[i].pThresholdList = 
                (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);

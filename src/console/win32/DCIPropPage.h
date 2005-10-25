@@ -35,6 +35,7 @@ public:
 	int		m_iOrigin;
 	int		m_iStatus;
 	CString	m_strDescription;
+	BOOL	m_bAdvSchedule;
 	//}}AFX_DATA
 
 
@@ -47,6 +48,7 @@ public:
 
 // Implementation
 protected:
+	void EnablePollingInterval(BOOL bEnable);
 	NXC_AGENT_PARAM *m_pParamList;
 	DWORD m_dwNumParams;
 	void SelectAgentItem(void);
@@ -58,6 +60,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnButtonSelect();
 	afx_msg void OnSelchangeComboOrigin();
+	afx_msg void OnCheckSchedule();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

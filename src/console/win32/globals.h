@@ -282,6 +282,8 @@ long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault);
 DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
 void CopyMenuItems(CMenu *pDst, CMenu *pSrc);
 CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart);
+TCHAR **CopyStringList(TCHAR **ppList, DWORD dwSize);
+void DestroyStringList(TCHAR **ppList, DWORD dwSize);
 
 
 //

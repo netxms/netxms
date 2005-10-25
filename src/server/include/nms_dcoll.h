@@ -154,6 +154,7 @@ private:
    BYTE m_iDataType;
    BYTE m_iStatus;            // Item status: active, disabled or not supported
    BYTE m_iBusy;              // 1 when item is queued for polling, 0 if not
+   BYTE m_iAdvSchedule;       // 1 if item has advanced schedule
    DWORD m_dwTemplateId;      // Related template's id
    DWORD m_dwTemplateItemId;  // Related template item's id
    DWORD m_dwNumThresholds;
@@ -166,6 +167,9 @@ private:
    ItemValue m_prevRawValue;  // Previous raw value (used for delta calculation)
    time_t m_tPrevValueTimeStamp;
    BOOL m_bCacheLoaded;
+   DWORD m_dwNumSchedules;
+   TCHAR **m_ppScheduleList;
+   time_t m_tLastCheck;       // Last schedule checking time
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
@@ -201,18 +205,7 @@ public:
    DWORD TemplateId(void) { return m_dwTemplateId; }
    DWORD TemplateItemId(void) { return m_dwTemplateItemId; }
 
-   BOOL ReadyForPolling(time_t currTime) 
-   {
-      BOOL bResult;
-
-      Lock();
-      bResult = ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) &&
-                 (m_tLastPoll + m_iPollingInterval <= currTime) &&
-                 (m_bCacheLoaded));
-      Unlock();
-      return bResult;
-   }
-
+   BOOL ReadyForPolling(time_t currTime);
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }

@@ -555,6 +555,8 @@ typedef struct
 #define VID_VERSION                 ((DWORD)178)
 #define VID_NUM_NODES               ((DWORD)179)
 #define VID_LOG_FILE                ((DWORD)180)
+#define VID_ADV_SCHEDULE            ((DWORD)181)
+#define VID_NUM_SCHEDULES           ((DWORD)182)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -569,6 +571,8 @@ typedef struct
 // Variable range for data collection thresholds
 #define VID_DCI_THRESHOLD_BASE      ((DWORD)0x00005000)
 #define VID_DCI_THRESHOLD_LAST      ((DWORD)0x00005FFF)
+#define VID_DCI_SCHEDULE_BASE       ((DWORD)0x0000A000)
+#define VID_DCI_SCHEDULE_LAST       ((DWORD)0x0000AFFF)
 
 // Variable range for MIB list
 #define VID_MIB_NAME_BASE           ((DWORD)0x00006000)

@@ -457,6 +457,8 @@ src/console/win32/DCIDataView.cpp -text
 src/console/win32/DCIDataView.h -text
 src/console/win32/DCIPropPage.cpp -text
 src/console/win32/DCIPropPage.h -text
+src/console/win32/DCISchedulePage.cpp -text
+src/console/win32/DCISchedulePage.h -text
 src/console/win32/DCIThresholdsPage.cpp -text
 src/console/win32/DCIThresholdsPage.h -text
 src/console/win32/DCITransformPage.cpp -text

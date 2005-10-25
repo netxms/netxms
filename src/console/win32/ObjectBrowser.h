@@ -96,12 +96,10 @@ public:
 
 // Implementation
 protected:
-	UINT m_nTimer;
-	BOOL m_bImmediateSorting;
 	DWORD AdjustIndex(DWORD dwIndex, DWORD dwObjectId);
 	void AddObjectEntryToHash(NXC_OBJECT *pObject, HTREEITEM hItem);
 	BOOL m_bRestoredDesktop;
-	void SortTreeItems(HTREEITEM hItem);
+	void SortTreeItems(HTREEITEM hItem, BOOL bForcedSort);
 	int m_iStatusImageBase;
 	void ChangeMgmtStatus(BOOL bIsManaged);
 	NXC_OBJECT * m_pCurrentObject;
@@ -172,7 +170,6 @@ protected:
 	afx_msg void OnObjectCreateVpnconnector();
 	afx_msg void OnObjectMove();
 	afx_msg void OnUpdateObjectMove(CCmdUI* pCmdUI);
-	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);

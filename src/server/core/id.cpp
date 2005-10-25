@@ -266,6 +266,7 @@ BOOL InitIdTable(void)
    }
 
    // Get first available log processing policy id
+/*
    hResult = DBSelect(g_hCoreDB, "SELECT max(lpp_id) FROM lpp");
    if (hResult != NULL)
    {
@@ -274,6 +275,7 @@ BOOL InitIdTable(void)
                                         DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+*/
 
    return TRUE;
 }

@@ -163,6 +163,7 @@
 #define IDI_IEXPLORER                   285
 #define IDI_DOCUMENT                    286
 #define IDI_LPP                         287
+#define IDD_DCI_SCHEDULE                288
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -203,6 +204,7 @@
 #define IDC_LIST_DESKTOPS               1024
 #define IDC_LIST_DCI                    1024
 #define IDC_LIST_LOCAL                  1024
+#define IDC_LIST_SCHEDULES              1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -422,6 +424,8 @@
 #define IDC_APPLY                       1284
 #define IDC_DISCARD                     1285
 #define IDC_SAVE                        1286
+#define IDC_CHECK_SCHEDULE              1287
+#define IDC_STATIC_INTERVAL             1291
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -580,9 +584,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        288
+#define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         32959
-#define _APS_NEXT_CONTROL_VALUE         1287
+#define _APS_NEXT_CONTROL_VALUE         1292
 #define _APS_NEXT_SYMED_VALUE           125
 #endif
 #endif

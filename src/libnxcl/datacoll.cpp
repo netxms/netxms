@@ -42,7 +42,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId
 
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList)
 {
-   DWORD i, dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;
+   DWORD i, j, dwRetCode = RCC_INVALID_ARGUMENT, dwRqId;
    CSCPMessage msg;
 
    if (pItemList != NULL)
@@ -58,6 +58,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST 
 
       for(i = 0; i < pItemList->dwNumItems; i++)
       {
+         for(j = 0; j < pItemList->pItems[i].dwNumSchedules; j++)
+            free(pItemList->pItems[i].ppScheduleList[j]);
+         safe_free(pItemList->pItems[i].ppScheduleList);
          safe_free(pItemList->pItems[i].pThresholdList);
          safe_free(pItemList->pItems[i].pszFormula);
       }
@@ -102,6 +105,9 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pIt
          pItemList->pItems[pItemList->dwNumItems].iPollingInterval = 60;
          pItemList->pItems[pItemList->dwNumItems].iRetentionTime = 30;
          pItemList->pItems[pItemList->dwNumItems].iDeltaCalculation = DCM_ORIGINAL_VALUE;
+         pItemList->pItems[pItemList->dwNumItems].iAdvSchedule = 0;
+         pItemList->pItems[pItemList->dwNumItems].dwNumSchedules = 0;
+         pItemList->pItems[pItemList->dwNumItems].ppScheduleList = NULL;
          pItemList->dwNumItems++;
       }
       delete pResponse;
@@ -141,6 +147,17 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_DESCRIPTION, pItem->szDescription);
    msg.SetVariable(VID_INSTANCE, pItem->szInstance);
    msg.SetVariable(VID_DCI_FORMULA, pItem->pszFormula);
+   msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);
+   if (pItem->iAdvSchedule)
+   {
+      msg.SetVariable(VID_NUM_SCHEDULES, pItem->dwNumSchedules);
+      for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < pItem->dwNumSchedules; i++, dwId++)
+         msg.SetVariable(dwId, pItem->ppScheduleList[i]);
+   }
+   else
+   {
+      msg.SetVariable(VID_NUM_SCHEDULES, (DWORD)0);
+   }
    msg.SetVariable(VID_NUM_THRESHOLDS, pItem->dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < pItem->dwNumThresholds; i++, dwId++)
    {
@@ -213,7 +230,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
 DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, 
                                       DWORD dwItemId)
 {
-   DWORD i, dwRqId, dwResult = RCC_INVALID_DCI_ID;
+   DWORD i, j, dwRqId, dwResult = RCC_INVALID_DCI_ID;
    CSCPMessage msg;
 
    // Find item with given ID in list
@@ -232,6 +249,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemL
          if (dwResult == RCC_SUCCESS)
          {
             // Item was successfully deleted on server, delete it from our list
+            for(j = 0; j < pItemList->pItems[i].dwNumSchedules; j++)
+               free(pItemList->pItems[i].ppScheduleList[j]);
+            safe_free(pItemList->pItems[i].ppScheduleList);
             safe_free(pItemList->pItems[i].pThresholdList);
             safe_free(pItemList->pItems[i].pszFormula);
             pItemList->dwNumItems--;

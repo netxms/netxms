@@ -30,6 +30,7 @@ CDCIPropPage::CDCIPropPage()
 	m_iOrigin = -1;
 	m_iStatus = -1;
 	m_strDescription = _T("");
+	m_bAdvSchedule = FALSE;
 	//}}AFX_DATA_INIT
    
    m_pNode = NULL;
@@ -61,6 +62,7 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RADIO_ACTIVE, m_iStatus);
 	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
 	DDV_MaxChars(pDX, m_strDescription, 255);
+	DDX_Check(pDX, IDC_CHECK_SCHEDULE, m_bAdvSchedule);
 	//}}AFX_DATA_MAP
 }
 
@@ -69,6 +71,7 @@ BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCIPropPage)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT, OnButtonSelect)
 	ON_CBN_SELCHANGE(IDC_COMBO_ORIGIN, OnSelchangeComboOrigin)
+	ON_BN_CLICKED(IDC_CHECK_SCHEDULE, OnCheckSchedule)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -95,6 +98,9 @@ BOOL CDCIPropPage::OnInitDialog()
    for(i = 0; i < 6; i++)
       m_wndTypeList.AddString(g_pszItemDataType[i]);
    m_wndTypeList.SelectString(-1, g_pszItemDataType[m_iDataType]);
+
+   if (m_bAdvSchedule)
+      EnablePollingInterval(FALSE);
 	
 	return TRUE;
 }
@@ -267,4 +273,26 @@ void CDCIPropPage::SelectAgentItem(void)
          }
       }
    }
+}
+
+
+//
+// Enable or disable polling interval entry field
+//
+
+void CDCIPropPage::EnablePollingInterval(BOOL bEnable)
+{
+   EnableDlgItem(this, IDC_EDIT_INTERVAL, bEnable);
+   EnableDlgItem(this, IDC_STATIC_INTERVAL, bEnable);
+   EnableDlgItem(this, IDC_STATIC_SECONDS, bEnable);
+}
+
+
+//
+// Handle click on "advanced schedule" checkbox
+//
+
+void CDCIPropPage::OnCheckSchedule() 
+{
+   EnablePollingInterval(SendDlgItemMessage(IDC_CHECK_SCHEDULE, BM_GETCHECK) != BST_CHECKED);
 }
