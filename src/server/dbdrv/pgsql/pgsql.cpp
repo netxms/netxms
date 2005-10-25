@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.8 2005-10-07 08:01:04 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.9 2005-10-25 21:48:38 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -330,8 +330,8 @@ extern "C" char EXPORT *DrvGetFieldAsync(
 	// FIXME: correct processing of binary fields
 	if (PQfformat(((PG_CONN *)pConn)->pFetchBuffer, nColumn) != 0)
 	{
-		fprintf(stderr, "db:postgres:binary fields not supported\n");
-		fflush(stderr);
+		//fprintf(stderr, "db:postgres:binary fields not supported\n");
+		//fflush(stderr);
 		// abort();
 		return NULL;
 	}
