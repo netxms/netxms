@@ -1054,9 +1054,16 @@ static BOOL ObjectHasDefaultName(NXC_OBJECT *pObject)
 
 void LIBNXCL_EXPORTABLE NXCGetComparableObjectName(NXC_SESSION hSession, DWORD dwObjectId, TCHAR *pszName)
 {
-   NXC_OBJECT *pObject;
+   NXCGetComparableObjectNameEx(((NXCL_Session *)hSession)->FindObjectById(dwObjectId, TRUE), pszName);
+}
 
-   pObject = ((NXCL_Session *)hSession)->FindObjectById(dwObjectId, TRUE);
+
+//
+// Get object name suitable for comparision
+//
+
+void LIBNXCL_EXPORTABLE NXCGetComparableObjectNameEx(NXC_OBJECT *pObject, TCHAR *pszName)
+{
    if (pObject != NULL)
    {
       // If object has an IP address as name, we sort as numbers
