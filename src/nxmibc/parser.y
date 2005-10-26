@@ -149,6 +149,7 @@ static int AccessFromText(char *pszText)
 %token KEYWORD_SYM
 %token KEYWORD_VALUE_SYM
 %token KEYWORD_BIND_SYM
+%token TOKEN_SYM
 
 %token INTEGER_SYM
 %token INTEGER32_SYM
@@ -204,7 +205,6 @@ static int AccessFromText(char *pszText)
 %token <pszString> MODULE_SYM
 %token <pszString> UCASEFIRST_IDENT_SYM LCASEFIRST_IDENT_SYM
 %token <pszString> BSTRING_SYM HSTRING_SYM CSTRING_SYM DISPLAY_HINT_SYM
-%token <pszString> TOKEN_SYM
 
 %token <number> NUMBER_SYM
 
@@ -1242,6 +1242,7 @@ MP_MODULE *ParseMIB(char *pszFilename)
 	   m_pszCurrentFilename = pszFilename;
       g_nCurrLine = 1;
       InitStateStack();
+      /*mpdebug=1;*/
 	   mpparse();
    }
    else

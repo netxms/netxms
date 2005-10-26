@@ -108,10 +108,13 @@ static void CountNewlines(char *pszStr, int len)
 %%
 
 <INITIAL,COMMENT,KEYWORD,IMPORTS,EXPORTS,MACRO,MACRO_BODY>{WHITESPC}+ {
+   int i;
+   char *ptr;
+
    CountNewlines(mptext, mpleng);
-   while(mpleng--)
+   for(i = 0, ptr = mptext; i < mpleng; i++, ptr++)
 	{
-      if (*mptext == '\n')
+      if (*ptr == '\n')
     	{
          switch( YYSTATE )
          {
@@ -135,7 +138,6 @@ static void CountNewlines(char *pszStr, int len)
                break;
          }
       }
-      mptext++;
    }
 }
 
@@ -278,12 +280,12 @@ static void CountNewlines(char *pszStr, int len)
  * be incorrect and it may be necessary to preserve and switch back to the
  * preceeding state.
  */
-   int length, count, multiSpace;
+   int length, tl, count, multiSpace;
 
-   mpleng -= 5;   // Strip trailing MACRO
+   tl = mpleng - 5;   // Strip trailing MACRO
    mplval.pszString = (char *)malloc(mpleng);
    CountNewlines(mptext, mpleng);
-   for(length = 0, count = 0, multiSpace = 0; count < mpleng; count++)
+   for(length = 0, count = 0, multiSpace = 0; count < tl; count++)
    {
       switch(mptext[count])
       {
@@ -300,7 +302,7 @@ static void CountNewlines(char *pszStr, int len)
          default:
             mplval.pszString[length++] = mptext[count];
             multiSpace = 0;
-         break;
+            break;
       }
    }
    PushState(MACRO);
@@ -335,7 +337,6 @@ static void CountNewlines(char *pszStr, int len)
 }
 
 <MACRO_BODY>([[:alnum:][:punct:]]*) {
-   mplval.pszString = strdup(mptext);
    return TOKEN_SYM;
 }
 
@@ -345,15 +346,18 @@ static void CountNewlines(char *pszStr, int len)
 }
 
 <INITIAL>MODULE[[:blank:]]+[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
-   mptext += 6; /* skip past "MODULE" */
-   mpleng -= 6; /* skip past "MODULE" */
-   CountNewlines(mptext, mpleng);
-   while(isspace(*mptext))
+   char *ptr = mptext;
+   int leng = mpleng;
+
+   ptr += 6; /* skip past "MODULE" */
+   leng -= 6; /* skip past "MODULE" */
+   CountNewlines(ptr, leng);
+   while(isspace(*ptr))
    {
-      mptext++;
-      mpleng--;
+      ptr++;
+      leng--;
    }
-   mplval.pszString = strdup(mptext);
+   mplval.pszString = strdup(ptr);
    return MODULE_SYM;
 }
 
