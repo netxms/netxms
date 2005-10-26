@@ -99,7 +99,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IcmpPingSize','46',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('EnableSyslogDaemon','46',1,1);
+	VALUES ('EnableSyslogDaemon','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyslogListenPort','514',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
