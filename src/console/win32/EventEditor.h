@@ -54,6 +54,7 @@ protected:
 	afx_msg void OnUpdateEventDelete(CCmdUI* pCmdUI);
 	afx_msg void OnEventNew();
 	afx_msg void OnEventDelete();
+	afx_msg void OnUpdateEventList();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

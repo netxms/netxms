@@ -853,7 +853,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
                break;
             case NX_NOTIFY_EVENTDB_CHANGED:
-               m_pMainWnd->PostMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0);
+               m_pMainWnd->PostMessage(WM_UPDATE_EVENT_LIST);
                break;
             case NX_NOTIFY_NEW_ALARM:
             case NX_NOTIFY_ALARM_DELETED:

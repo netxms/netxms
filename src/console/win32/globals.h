@@ -109,6 +109,7 @@ extern CConsoleApp theApp;
 #define WM_TABLE_DATA            (WM_USER + 15)
 #define WM_NETXMS_EVENT          (WM_USER + 16)
 #define WM_SYSLOG_RECORD         (WM_USER + 17)
+#define WM_UPDATE_EVENT_LIST     (WM_USER + 18)
 
 
 //

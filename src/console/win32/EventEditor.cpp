@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(CEventEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_EVENT_DELETE, OnUpdateEventDelete)
 	ON_COMMAND(ID_EVENT_NEW, OnEventNew)
 	ON_COMMAND(ID_EVENT_DELETE, OnEventDelete)
+	ON_COMMAND(ID_UPDATE_EVENT_LIST, OnUpdateEventList)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDoubleClick)
 END_MESSAGE_MAP()
@@ -185,18 +186,21 @@ BOOL CEventEditor::EditEvent(int iItem)
          if (dwResult == RCC_SUCCESS)
          {
             // Record was successfully updated on server, update local copy
-            safe_free(m_ppEventTemplates[dwIndex]->pszDescription);
-            safe_free(m_ppEventTemplates[dwIndex]->pszMessage);
-            memcpy(m_ppEventTemplates[dwIndex], &evt, sizeof(NXC_EVENT_TEMPLATE));
-            UpdateItem(iItem, m_ppEventTemplates[dwIndex]);
+            //safe_free(m_ppEventTemplates[dwIndex]->pszDescription);
+            //safe_free(m_ppEventTemplates[dwIndex]->pszMessage);
+            //memcpy(m_ppEventTemplates[dwIndex], &evt, sizeof(NXC_EVENT_TEMPLATE));
+            //UpdateItem(iItem, m_ppEventTemplates[dwIndex]);
+            UpdateItem(iItem, &evt);
             bResult = TRUE;
          }
          else
          {
             theApp.ErrorBox(dwResult, _T("Unable to update event configuration record: %s"));
-            safe_free(evt.pszDescription);
-            safe_free(evt.pszMessage);
+            //safe_free(evt.pszDescription);
+            //safe_free(evt.pszMessage);
          }
+         safe_free(evt.pszDescription);
+         safe_free(evt.pszMessage);
       }
    }
    return bResult;
@@ -394,4 +398,14 @@ void CEventEditor::OnEventDelete()
       theApp.ErrorBox(dwResult, _T("Cannot delete event template: %s"));
    }
    safe_free(pdwEventList);
+}
+
+
+//
+// WM_COMMAND::ID_UPDATE_EVENT_LIST message handler
+//
+
+void CEventEditor::OnUpdateEventList() 
+{
+   NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
 }

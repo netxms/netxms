@@ -25,7 +25,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
-	ON_COMMAND(ID_UPDATE_EVENT_LIST, OnUpdateEventList)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_DESKTOP_SAVE, OnDesktopSave)
 	ON_COMMAND(ID_DESKTOP_SAVEAS, OnDesktopSaveas)
@@ -38,6 +37,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(WM_STATE_CHANGE, OnStateChange)
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
    ON_MESSAGE(WM_DEPLOYMENT_INFO, OnDeploymentInfo)
+   ON_MESSAGE(WM_UPDATE_EVENT_LIST, OnUpdateEventList)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -202,12 +202,14 @@ void CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
 
 
 //
-// WM_COMMAND::ID_UPDATE_EVENT_LIST message handler
+// WM_UPDATE_EVENT_LIST message handler
 //
 
-void CMainFrame::OnUpdateEventList(void) 
+void CMainFrame::OnUpdateEventList(WPARAM wParam, LPARAM lParam)
 {
-   DoRequestArg1(NXCLoadEventDB, g_hSession, "Reloading event information...");
+theApp.DebugPrintf("WM_UPDATE_EVENT_LIST");
+   DoRequestArg1(NXCLoadEventDB, g_hSession, _T("Reloading event information..."));
+   BroadcastMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0, TRUE);
 }
 
 

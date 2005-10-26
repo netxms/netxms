@@ -51,7 +51,6 @@ protected:
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
-	afx_msg void OnUpdateEventList();
 	afx_msg void OnClose();
 	afx_msg void OnDesktopSave();
 	afx_msg void OnDesktopSaveas();
@@ -63,6 +62,7 @@ protected:
    afx_msg void OnUserDBChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
    afx_msg void OnDeploymentInfo(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnUpdateEventList(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 
