@@ -34,11 +34,12 @@
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 int g_iSyntax;
-TCHAR *g_pszSqlType[3][2] = 
+TCHAR *g_pszSqlType[4][2] = 
 {
    { _T("blob"), _T("bigint") },     // MySQL
    { _T("varchar"), _T("bigint") },  // PostgreSQL
-   { _T("text"), _T("bigint") }      // Microsoft SQL
+   { _T("text"), _T("bigint") },     // Microsoft SQL
+   { _T("clob"), _T("number(20)") }  // Oracle
 };
 
 

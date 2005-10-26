@@ -35,6 +35,7 @@ static BOOL CreateTable(TCHAR *pszQuery)
    pszBuffer = (TCHAR *)malloc(_tcslen(pszQuery) * sizeof(TCHAR) + 256);
    _tcscpy(pszBuffer, pszQuery);
    TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   TranslateStr(pszBuffer, _T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
    if (g_iSyntax == DB_SYNTAX_MYSQL)
       _tcscat(pszBuffer, _T(" type=InnoDB"));
    bResult = SQLQuery(pszBuffer);
@@ -73,6 +74,68 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
       bResult = SQLQuery(szQuery);
    }
    return bResult;
+}
+
+
+//
+// Upgrade from V33 to V34
+//
+
+static BOOL H_UpgradeFromV33(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE items ADD adv_schedule integer\n"
+      "UPDATE items SET adv_schedule=0\n"
+      "<END>";
+   
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE dci_schedules ("
+		                 "item_id integer not null,"
+                       "schedule varchar(255) not null)")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE syslog ("
+                       "msg_id $SQL:INT64 not null,"
+		                 "msg_timestamp integer not null,"
+		                 "facility integer not null,"
+		                 "severity integer not null,"
+		                 "source_object_id integer not null,"
+		                 "hostname varchar(127) not null,"
+		                 "msg_tag varchar(32) not null,"
+		                 "msg_text $SQL:TEXT not null,"
+		                 "PRIMARY KEY(msg_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("IcmpPingSize"), _T("46"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SMSDrvConfig"), _T(""), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("EnableSyslogDaemon"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SyslogListenPort"), _T("514"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("SyslogRetentionTime"), _T("5184000"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='34' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -1378,6 +1441,7 @@ static struct
    { 30, H_UpgradeFromV30 },
    { 31, H_UpgradeFromV31 },
    { 32, H_UpgradeFromV32 },
+   { 33, H_UpgradeFromV33 },
    { 0, NULL }
 };
 

@@ -41,12 +41,15 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    m_pTrapQueue = new Queue;
    while(1)
    {
-      pMsg = m_pTrapQueue->GetOrBlock();
+      pMsg = (CSCP_MESSAGE *)m_pTrapQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
+
+      free(pMsg);
    }
    delete m_pTrapQueue;
    m_pTrapQueue = NULL;
+   return THREAD_OK;
 }
 
 
