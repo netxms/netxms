@@ -207,7 +207,6 @@ void CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnUpdateEventList(WPARAM wParam, LPARAM lParam)
 {
-theApp.DebugPrintf("WM_UPDATE_EVENT_LIST");
    DoRequestArg1(NXCLoadEventDB, g_hSession, _T("Reloading event information..."));
    BroadcastMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0, TRUE);
 }

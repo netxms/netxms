@@ -42,6 +42,8 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnButtonAdd();
 	afx_msg void OnButtonModify();
+	afx_msg void OnButtonDelete();
+	afx_msg void OnItemchangedListSchedules(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
