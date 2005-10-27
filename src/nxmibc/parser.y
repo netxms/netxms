@@ -560,6 +560,8 @@ NumericValueConstraintList:
     NumericValueConstraintList BAR_SYM NumericValue 
 |   NumericValueConstraintList COMMA_SYM NumericValue 
 |   NumericValue 
+{
+}
 ;
 
 SnmpKeywordAssignment:
@@ -961,6 +963,10 @@ ModuleComplianceAssignment:
     SnmpReferencePart
     SnmpModuleComplianceList
     AssignedIdentifier
+{
+   free($1);
+   safe_free($4);
+}
 ;
 
 SnmpModuleComplianceList:
@@ -972,6 +978,9 @@ SnmpModuleComplianceObject:
     MODULE_SYM
     SnmpMandatoryGroupPart
     SnmpCompliancePart
+{
+   free($1);
+}
 ;
 
 SnmpVariationsListPart:
@@ -1000,6 +1009,9 @@ ModuleCapabilitiesList:
 
 ModuleCapabilitiesAssignment:
     ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
+{
+   safe_free($1);
+}
 ;
 
 AgentCapabilitiesAssignment:
@@ -1069,6 +1081,9 @@ SnmpReferencePart:
 
 SnmpDisplayHintPart:
     DISPLAY_HINT_SYM CharString
+{
+   safe_free($2);
+}
 |
 ;
 
@@ -1089,10 +1104,16 @@ SnmpDefValPart:
 
 BinaryString:
     BSTRING_SYM
+{
+   safe_free($1);
+}
 ;
 
 HexString:
     HSTRING_SYM
+{
+   safe_free($1);
+}
 ;
 
 CharString:
@@ -1152,6 +1173,14 @@ Symbol:
 
 SequenceItem:
     Identifier Type
+{
+   safe_free($1);
+   if ($2 != NULL)
+   {
+      safe_free($2->pszStr);
+      free($2);
+   }
+}
 ;
 
 SequenceList:
@@ -1189,9 +1218,14 @@ OctetStringType:
 
 Value:
     Number
+{
+}
 |   HexString
 |   BinaryString
 |   CharString
+{
+   safe_free($1);
+}
 ;
 
 NumericValueItem:

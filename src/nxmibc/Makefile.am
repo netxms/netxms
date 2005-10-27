@@ -12,7 +12,7 @@ INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxmibc
 nxmibc_SOURCES = array.cpp lex.mp.c mibparse.cpp nxmibc.cpp parser.tab.c
-nxmibc_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxcl/libnxsnmp.la
+nxmibc_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = nxmibc.dsp nxmibc.dsw nxmibc.h mibparse.h
 
@@ -20,4 +20,4 @@ lex.mp.c: parser.l parser.tab.c
 	$(LEX) -Pmp parser.l
 
 parser.tab.c: parser.y
-	$(YACC) -d -p mp -t -v parser.y
+	$(YACC) -b parser -d -p mp -t -v parser.y
