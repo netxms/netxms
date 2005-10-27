@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.110 2005-10-26 20:43:06 victor Exp $
+# $Id: configure.ac,v 1.111 2005-10-27 10:38:26 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -462,7 +462,7 @@ AC_SUBST(PTHREAD_LIBS)
 AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
 # misc
-CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\""
+CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 # --------------------------------------------------------------------------
 

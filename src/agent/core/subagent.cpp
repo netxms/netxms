@@ -55,43 +55,63 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
       {
          DWORD i;
 
-         // Add subagent to subagent's list
-         m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
-                                               sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
-         m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-         nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH );
-         m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
+         // Check if subagent with given name alreay loaded
+         for(i = 0; i < m_dwNumSubAgents; i++)
+            if (!stricmp(m_pSubAgentList[i].pInfo->szName, pInfo->szName))
+               break;
+         if (i == m_dwNumSubAgents)
+         {
+            // Add subagent to subagent's list
+            m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
+                                    sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
+            m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
+            nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH);
+            m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
 #ifdef _NETWARE
-         nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
+            nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
 #endif
-         m_dwNumSubAgents++;
+            m_dwNumSubAgents++;
 
-         // Add parameters provided by this subagent to common list
-         for(i = 0; i < pInfo->dwNumParameters; i++)
-            AddParameter(pInfo->pParamList[i].szName, 
-                         pInfo->pParamList[i].fpHandler,
-                         pInfo->pParamList[i].pArg,
-                         pInfo->pParamList[i].iDataType,
-                         pInfo->pParamList[i].szDescription);
+            // Add parameters provided by this subagent to common list
+            for(i = 0; i < pInfo->dwNumParameters; i++)
+               AddParameter(pInfo->pParamList[i].szName, 
+                            pInfo->pParamList[i].fpHandler,
+                            pInfo->pParamList[i].pArg,
+                            pInfo->pParamList[i].iDataType,
+                            pInfo->pParamList[i].szDescription);
 
-         // Add enums provided by this subagent to common list
-         for(i = 0; i < pInfo->dwNumEnums; i++)
-            AddEnum(pInfo->pEnumList[i].szName, 
-                    pInfo->pEnumList[i].fpHandler,
-                    pInfo->pEnumList[i].pArg);
+            // Add enums provided by this subagent to common list
+            for(i = 0; i < pInfo->dwNumEnums; i++)
+               AddEnum(pInfo->pEnumList[i].szName, 
+                       pInfo->pEnumList[i].fpHandler,
+                       pInfo->pEnumList[i].pArg);
 
-         // Add actions provided by this subagent to common list
-         for(i = 0; i < pInfo->dwNumActions; i++)
-            AddAction(pInfo->pActionList[i].szName,
-                      AGENT_ACTION_SUBAGENT,
-                      pInfo->pActionList[i].pArg,
-                      pInfo->pActionList[i].fpHandler,
-                      pInfo->szName,
-                      pInfo->pActionList[i].szDescription);
+            // Add actions provided by this subagent to common list
+            for(i = 0; i < pInfo->dwNumActions; i++)
+               AddAction(pInfo->pActionList[i].szName,
+                         AGENT_ACTION_SUBAGENT,
+                         pInfo->pActionList[i].pArg,
+                         pInfo->pActionList[i].fpHandler,
+                         pInfo->szName,
+                         pInfo->pActionList[i].szDescription);
 
-         WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
-                  "s", pszModuleName);
-         bSuccess = TRUE;
+            WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
+                     "s", pszModuleName);
+            bSuccess = TRUE;
+         }
+         else
+         {
+            WriteLog(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
+                     "ss", pInfo->szName, m_pSubAgentList[i].szName);
+            if (pInfo->pUnloadHandler != NULL)
+               pInfo->pUnloadHandler();
+            // On NetWare, DLClose will unload module, and if first instance
+            // was loaded from the same module, it will be killed, so
+            // we don't call DLClose on NetWare
+#ifndef _NETWARE
+            DLClose(hModule);
+#endif
+         }
       }
       else
       {

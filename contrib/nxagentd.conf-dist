@@ -152,6 +152,15 @@
 # PlatformSuffix = dbg
 
 #
+# EnableSubagentAutoload
+#
+# Enable or disable autoloading of platform subagent(s).
+# Default value is "yes".
+#
+# Example:
+# EnableSubagentAutoload = yes
+
+#
 # SubAgent
 #
 # Subagent to load. To load multiple subagents, you should use multiple

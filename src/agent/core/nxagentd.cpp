@@ -27,8 +27,12 @@
 #elif defined(_NETWARE)
 #include <screen.h>
 #else
-# include <signal.h>
-# include <sys/wait.h>
+#include <signal.h>
+#include <sys/wait.h>
+#endif
+
+#if HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
 #endif
 
 
@@ -76,7 +80,7 @@ void InitStaticSubagents(void);
 // Global variables
 //
 
-DWORD g_dwFlags = AF_ENABLE_ACTIONS;
+DWORD g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
 char g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
@@ -138,6 +142,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
+   { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
@@ -408,7 +413,7 @@ stop_handler:
 
 
 //
-// Load subagent for Windows NT or Windows 9x
+// Load subagent for Windows NT or Windows 9x or platform subagent on UNIX
 //
 
 #ifdef _WIN32
@@ -436,6 +441,28 @@ void LoadWindowsSubagent(void)
    {
       WriteLog(MSG_GETVERSION_FAILED, EVENTLOG_WARNING_TYPE, "e", GetLastError());
    }
+}
+
+#else
+
+void LoadPlatformSubagent(void)
+{
+#if defined(_NETWARE)
+   LoadSubAgent("NETWARE.NSM");
+#elif HAVE_SYS_UTSNAME_H && !defined(_STATIC_AGENT)
+   struct utsname un;
+   char szName[MAX_PATH];
+   int i;
+
+   if (uname(&un) == 0)
+   {
+      // Convert system name to lowercase
+      for(i = 0; un.sysname[i] != 0; i++)
+         un.sysname[i] = tolower(un.sysname[i]);
+      sprintf(szName, LIBDIR "/libnsm_%s.so", un.sysname);
+      LoadSubAgent(szName);
+   }
+#endif
 }
 
 #endif
@@ -596,9 +623,14 @@ BOOL Initialize(void)
 #if !defined(_WIN32) && !defined(_NETWARE)
    InitStaticSubagents();
 #endif
+   if (g_dwFlags & AF_ENABLE_AUTOLOAD)
+   {
 #ifdef _WIN32
-   LoadWindowsSubagent();
+      LoadWindowsSubagent();
+#else
+      LoadPlatformSubagent();
 #endif
+   }
    if (m_pszSubagentList != NULL)
    {
       for(pItem = m_pszSubagentList; *pItem != 0; pItem = pEnd + 1)

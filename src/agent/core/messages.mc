@@ -194,4 +194,10 @@ Language=English
 Call to select() failed: %1
 .
 
+MessageId=
+SymbolicName=MSG_SUBAGENT_ALREADY_LOADED
+Language=English
+Subagent "%1" already loaded from module "%2"
+.
+
 ;#endif
