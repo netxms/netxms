@@ -1402,10 +1402,9 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          _sntprintf(szQuery, 1024,
                     _T("SELECT TOP %lu event_id,event_code,event_timestamp,event_source,")
                     _T("event_severity,event_message INTO temp_log_%ld FROM event_log ")
-                    _T("ORDER BY event_timestamp DESC;")
-                    _T("SELECT * FROM temp_log_%ld ORDER BY event_timestamp;")
-                    _T("DROP TABLE temp_log_%ld"),
-                    dwMaxRecords, m_dwIndex, m_dwIndex, m_dwIndex);
+                    _T("ORDER BY event_timestamp DESC"), dwMaxRecords, m_dwIndex);
+         DBQuery(g_hCoreDB, szQuery);
+         _sntprintf(szQuery, 1024, _T("SELECT * FROM temp_log_%ld ORDER BY event_timestamp"), m_dwIndex);
          break;
       default:
          szQuery[0] = 0;
@@ -1443,6 +1442,12 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
    SendMessage(&msg);
 
    MutexUnlock(m_mutexSendEvents);
+
+   if (g_dwDBSyntax == DB_SYNTAX_MSSQL)
+   {
+      _stprintf(szQuery, _T("DROP TABLE temp_log_%ld"), m_dwIndex);
+      DBQuery(g_hCoreDB, szQuery);
+   }
 }
 
 
@@ -5205,10 +5210,10 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
                     _T("SELECT TOP %ld msg_id,msg_timestamp,facility,severity,")
                     _T("source_object_id,hostname,msg_tag,msg_text ")
                     _T("INTO temp_syslog_%ld FROM syslog ")
-                    _T("ORDER BY msg_timestamp DESC;")
-                    _T("SELECT * FROM temp_syslog_%ld ORDER BY msg_timestamp;")
-                    _T("DROP TABLE temp_syslog_%ld"),
-                    dwMaxRecords, m_dwIndex, m_dwIndex, m_dwIndex);
+                    _T("ORDER BY msg_timestamp DESC"), dwMaxRecords, m_dwIndex);
+         DBQuery(g_hCoreDB, szQuery);
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT * FROM temp_syslog_%ld ORDER BY msg_timestamp"), m_dwIndex);
          break;
       default:
          szQuery[0] = 0;
@@ -5249,6 +5254,12 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    }
 
    MutexUnlock(m_mutexSendSyslog);
+
+   if (g_dwDBSyntax == DB_SYNTAX_MSSQL)
+   {
+      _stprintf(szQuery, _T("DROP TABLE temp_syslog_%ld"), m_dwIndex);
+      DBQuery(g_hCoreDB, szQuery);
+   }
 }
 
 
