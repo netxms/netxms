@@ -61,6 +61,7 @@
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
+#define GROUP_FLAG               ((DWORD)0x80000000)
 
 #define NETXMS_MAX_CIPHERS       4
 #define NETXMS_RSA_KEYLEN        2048
