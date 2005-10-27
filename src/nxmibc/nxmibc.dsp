@@ -196,7 +196,7 @@ SOURCE=.\parser.y
 InputPath=.\parser.y
 
 BuildCmds= \
-	bison -d -p mp -t -v $(InputPath)
+	bison -b parser -d -p mp -t -v $(InputPath)
 
 "parser.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -211,7 +211,7 @@ BuildCmds= \
 InputPath=.\parser.y
 
 BuildCmds= \
-	bison -d -p mp -t -v $(InputPath)
+	bison -b parser -d -p mp -t -v $(InputPath)
 
 "parser.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
