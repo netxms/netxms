@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.3 2005-10-17 20:45:46 victor Exp $ */
+/* $Id: proc.cpp,v 1.4 2005-10-27 08:24:06 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <nms_util.h>
 
 #include "proc.h"
 
@@ -143,6 +144,9 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/10/17 20:45:46  victor
+Fixed incorrect usage of strncpy
+
 Revision 1.2  2005/01/18 17:09:33  alk
 process name matching chaged from patern to exact match
 
