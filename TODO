@@ -15,6 +15,7 @@ GENERAL:
 - Add possibility to set different polling timeouts for different nodes
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
+- SMART (HDD diagnostics) subagent
 
 
 SERVER:
