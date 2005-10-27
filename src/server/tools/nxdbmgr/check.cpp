@@ -110,18 +110,19 @@ static void CheckNodes(void)
 
 
 //
-// Check interface objects
+// Check node component objects
 //
 
-static void CheckInterfaces(void)
+static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
    TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
    BOOL bIsDeleted;
 
-   _tprintf(_T("Checking interface objects...\n"));
-   hResult = SQLSelect(_T("SELECT id,node_id FROM interfaces"));
+   _tprintf(_T("Checking %s objects...\n"), pszDisplayName);
+   _stprintf(szQuery, _T("SELECT id,node_id FROM %s"), pszTable);
+   hResult = SQLSelect(szQuery);
    if (hResult != NULL)
    {
       dwNumObjects = DBGetNumRows(hResult);
@@ -137,15 +138,18 @@ static void CheckInterfaces(void)
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Missing interface object %ld properties. Create? (Y/N) "), dwId);
+               _tprintf(_T("Missing %s object %ld properties. Create? (Y/N) "),
+                        pszDisplayName, dwId);
                if (GetYesNo())
                {
                   _sntprintf(szQuery, 256, 
                              _T("INSERT INTO object_properties (object_id,name,"
                                 "status,is_deleted,image_id,inherit_access_rights,"
-                                "last_access) VALUES(%ld,'lost_node_%ld',5,0,0,1,0)"), dwId, dwId);
+                                "last_access) VALUES(%ld,'lost_%s_%ld',5,0,0,1,0)"),
+                             dwId, pszDisplayName, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
+                  szName[0] = 0;
                }
             }
             else
@@ -154,6 +158,10 @@ static void CheckInterfaces(void)
                bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
             }
             DBFreeResult(hResult2);
+         }
+         else
+         {
+            szName[0] = 0;
          }
 
          // Check if referred node exists
@@ -166,13 +174,17 @@ static void CheckInterfaces(void)
             {
                m_iNumErrors++;
                dwId = DBGetFieldULong(hResult, i, 0);
-               _tprintf(_T("Unlinked interface object %ld (\"%s\"). Delete? (Y/N) "),
-                        dwId, DBGetField(hResult, i, 1));
+               _tprintf(_T("Unlinked %s object %ld (\"%s\"). Delete? (Y/N) "),
+                        pszDisplayName, dwId, szName);
                if (GetYesNo())
                {
-                  _sntprintf(szQuery, 256, _T("DELETE FROM interfaces WHERE id=%ld"), dwId);
+                  _sntprintf(szQuery, 256, _T("DELETE FROM %s WHERE id=%ld"), pszTable, dwId);
                   if (SQLQuery(szQuery))
+                  {
+                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%ld"), dwId);
+                     SQLQuery(szQuery);
                      m_iNumFixes++;
+                  }
                }
             }
             DBFreeResult(hResult2);
@@ -212,6 +224,116 @@ static void CheckObjectProperties(void)
             {
                _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%ld"),
                           time(NULL), dwObjectId);
+               if (SQLQuery(szQuery))
+                  m_iNumFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
+// Returns TRUE if SELECT returns non-empty set
+//
+
+static BOOL CheckResultSet(TCHAR *pszQuery)
+{
+   DB_RESULT hResult;
+   BOOL bResult = FALSE;
+
+   hResult = SQLSelect(pszQuery);
+   if (hResult != NULL)
+   {
+      bResult = (DBGetNumRows(hResult) > 0);
+      DBFreeResult(hResult);
+   }
+   return bResult;
+}
+
+
+//
+// Check event processing policy
+//
+
+static void CheckEPP(void)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[1024];
+   int i, iNumRows;
+   DWORD dwId;
+
+   _tprintf(_T("Checking event processing policy...\n"));
+   
+   // Check source object ID's
+   hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
+   if (hResult != NULL)
+   {
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         _stprintf(szQuery, _T("SELECT object_id FROM object_properties WHERE object_id=%ld"), dwId);
+         if (!CheckResultSet(szQuery))
+         {
+            m_iNumErrors++;
+            _tprintf(_T("Invalid object ID %ld used. Correct? (Y/N) "), dwId);
+            if (GetYesNo())
+            {
+               _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%ld"), dwId);
+               if (SQLQuery(szQuery))
+                  m_iNumFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Check event ID's
+   hResult = SQLSelect(_T("SELECT event_code FROM policy_event_list"));
+   if (hResult != NULL)
+   {
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         if (dwId & GROUP_FLAG)
+            _stprintf(szQuery, _T("SELECT id FROM event_groups WHERE id=%ld"), dwId);
+         else
+            _stprintf(szQuery, _T("SELECT event_code FROM event_cfg WHERE event_code=%ld"), dwId);
+         if (!CheckResultSet(szQuery))
+         {
+            m_iNumErrors++;
+            _tprintf(_T("Invalid event%s ID 0x%08X used. Correct? (Y/N) "),
+                     (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId);
+            if (GetYesNo())
+            {
+               _stprintf(szQuery, _T("DELETE FROM policy_event_list WHERE event_code=%ld"), dwId);
+               if (SQLQuery(szQuery))
+                  m_iNumFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Check action ID's
+   hResult = SQLSelect(_T("SELECT action_id FROM policy_action_list"));
+   if (hResult != NULL)
+   {
+      iNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < iNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         _stprintf(szQuery, _T("SELECT action_id FROM actions WHERE action_id=%ld"), dwId);
+         if (!CheckResultSet(szQuery))
+         {
+            m_iNumErrors++;
+            _tprintf(_T("Invalid action ID %ld used. Correct? (Y/N) "), dwId);
+            if (GetYesNo())
+            {
+               _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%ld"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -304,8 +426,10 @@ void CheckDatabase(void)
       if (!bLocked)
       {
          CheckNodes();
-         CheckInterfaces();
+         CheckComponents(_T("interface"), _T("interfaces"));
+         CheckComponents(_T("network service"), _T("network_services"));
          CheckObjectProperties();
+         CheckEPP();
 
          if (m_iNumErrors == 0)
          {
