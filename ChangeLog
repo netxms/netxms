@@ -15,6 +15,7 @@
 	- Ported to AIX
 	- Fixed bug in signal handling causing agent to crash on shutdown
 	- Implemented autoloading of platform subagent on UNIX and NetWare
+	- Fixed broken under NT4 Net.InterfaceList enum
 - PING subagent:
 	- Ported to NetWare and AIX
 	- Added "packet size" argument to Icmp.Ping(*) parameter
