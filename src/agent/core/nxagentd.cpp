@@ -481,12 +481,26 @@ BOOL Initialize(void)
 
 #ifdef _WIN32
    WSADATA wsaData;
+   OSVERSIONINFO ver;
+
    if (WSAStartup(2, &wsaData) != 0)
    {
       WriteLog(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
    }
+
+   // Set NT4 flag
+   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   if (GetVersionEx(&ver))
+   {
+      if ((ver.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
+          (ver.dwMajorVersion <= 4))
+      {
+         g_dwFlags |= AF_RUNNING_ON_NT4;
+      }
+   }
 #endif
+
 
    // Initialize logger for subagents
    InitSubAgentsLogger(WriteSubAgentMsg);

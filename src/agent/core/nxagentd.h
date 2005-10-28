@@ -94,6 +94,7 @@
 #define AF_HIDE_WINDOW              0x0080
 #define AF_ENABLE_AUTOLOAD          0x0100
 #define AF_SHUTDOWN                 0x1000
+#define AF_RUNNING_ON_NT4           0x2000
 
 
 #ifdef _WIN32

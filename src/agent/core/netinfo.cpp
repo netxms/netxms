@@ -67,10 +67,10 @@ LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
 
 //
-// Send IP interface list to server
+// Send IP interface list to server (Win2K+ version)
 //
 
-LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_InterfaceListW2K(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 {
    DWORD dwSize;
    IP_ADAPTER_INFO *pBuffer, *pInfo;
@@ -131,6 +131,63 @@ LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 
    free(pBuffer);
    return iResult;
+}
+
+
+//
+// Send IP interface list to server (NT4 version)
+//
+
+static LONG H_InterfaceListNT4(char *cmd, char *arg, NETXMS_VALUES_LIST *pValue)
+{
+   LONG nRet = SYSINFO_RC_SUCCESS;
+   MIB_IPADDRTABLE *ifTable;
+   MIB_IFROW ifRow;
+   DWORD i, dwSize, dwError;
+   TCHAR szBuffer[2048], szIpAddr[16], szMACAddr[32];
+
+   ifTable = (MIB_IPADDRTABLE *)malloc(SIZEOF_IPADDRTABLE(256));
+   if (ifTable == NULL)
+      return SYSINFO_RC_ERROR;
+
+   dwSize = SIZEOF_IPADDRTABLE(256);
+   dwError = GetIpAddrTable(ifTable, &dwSize, FALSE);
+   if (dwError == NO_ERROR)
+   {
+      for(i = 0; i < ifTable->dwNumEntries; i++)
+      {
+         ifRow.dwIndex = ifTable->table[i].dwIndex;
+         if (GetIfEntry(&ifRow) == NO_ERROR)
+         {
+            BinToStr(ifRow.bPhysAddr, 6, szMACAddr);
+            sprintf(szBuffer, "%d %s/%d %d %s %s", ifTable->table[i].dwIndex,
+                    IpToStr(ntohl(ifTable->table[i].dwAddr), szIpAddr),
+                    BitsInMask(ntohl(ifTable->table[i].dwMask)), ifRow.dwType,
+                    szMACAddr, ifRow.bDescr);
+            NxAddResultString(pValue, szBuffer);
+         }
+      }
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+   free(ifTable);
+   return nRet;
+}
+
+
+//
+// Send interface list to server
+// (selects appropriate method for different Windows versions)
+//
+
+LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *pValue)
+{
+   if (g_dwFlags & AF_RUNNING_ON_NT4)
+      return H_InterfaceListNT4(cmd, arg, pValue);
+   else
+      return H_InterfaceListW2K(cmd, arg, pValue);
 }
 
 
