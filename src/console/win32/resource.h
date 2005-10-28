@@ -450,6 +450,7 @@
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
+#define ID_REQUEST_COMPLETED            32125
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
 #define ID_VIEW_MAP                     32776
@@ -587,6 +588,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         32959
 #define _APS_NEXT_CONTROL_VALUE         1292
-#define _APS_NEXT_SYMED_VALUE           125
+#define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

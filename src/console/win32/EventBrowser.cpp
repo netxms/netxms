@@ -36,8 +36,8 @@ BEGIN_MESSAGE_MAP(CEventBrowser, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_COMMAND(ID_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
-   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(WM_NETXMS_EVENT, OnNetXMSEvent)
 END_MESSAGE_MAP()
 
@@ -174,7 +174,7 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
 static void LoadEvents(void *pArg)
 {
    NXCSyncEvents(g_hSession, g_dwMaxLogRecords);
-   PostMessage((HWND)pArg, WM_REQUEST_COMPLETED, 0, 0);
+   PostMessage((HWND)pArg, WM_COMMAND, ID_REQUEST_COMPLETED, 0);
 }
 
 

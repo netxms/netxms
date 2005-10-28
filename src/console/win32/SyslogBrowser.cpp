@@ -36,8 +36,8 @@ BEGIN_MESSAGE_MAP(CSyslogBrowser, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_COMMAND(ID_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
-   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(WM_SYSLOG_RECORD, OnSyslogRecord)
 END_MESSAGE_MAP()
 
@@ -149,7 +149,7 @@ void CSyslogBrowser::OnSetFocus(CWnd* pOldWnd)
 static void LoadMessages(void *pArg)
 {
    NXCSyncSyslog(g_hSession, g_dwMaxLogRecords);
-   PostMessage((HWND)pArg, WM_REQUEST_COMPLETED, 0, 0);
+   PostMessage((HWND)pArg, WM_COMMAND, ID_REQUEST_COMPLETED, 0);
 }
 
 
