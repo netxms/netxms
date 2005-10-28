@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.112 2005-10-27 12:18:56 victor Exp $
+# $Id: configure.ac,v 1.113 2005-10-28 16:04:48 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -240,7 +240,7 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql"
-	MODULES="libnxsnmp server agent libnxcl nxevent nxreport console www"
+	MODULES="libnxsnmp server agent libnxcl nxevent nxreport nxmibc console www"
 	SUBAGENT_DIRS="linux freebsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
