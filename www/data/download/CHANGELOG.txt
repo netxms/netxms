@@ -1,4 +1,39 @@
 *
+* 0.2.6
+*
+
+- Added possibility to change size of ICMP echo request packets sent by server
+- Added built-in syslog server
+- Implemented retrieving of only last N records from event log
+- Implemented "Select DCI" function for templates
+- Implemented own MIB compiler, removing last dependency from Net-SNMP library
+- MIBs now transferred to client in compiled form, reducing network traffic
+  and making console startup faster
+- Implemented correct translation of SNMPv1 trap id to SNMPv2 trap id
+- Added advanced DCI collection scheduling
+- Core agent:
+	- Ported to AIX
+	- Fixed bug in signal handling causing agent to crash on shutdown
+	- Implemented autoloading of platform subagent on UNIX and NetWare
+	- Fixed broken under NT4 Net.InterfaceList enum
+- PING subagent:
+	- Ported to NetWare and AIX
+	- Added "packet size" argument to Icmp.Ping(*) parameter
+	- Added "packet size" option to target configuration
+	- Added DefaultPacketSize configuration parameter
+- Port checker subagent ported to AIX
+- Added possibility to build statically linked agents
+- Event configuration improved
+- New MIBs added: BGP4, PowerNet (APC), PRINTER,
+  Synoptics (now part of Nortel Networks), UPS
+- Windows console:
+	- Improved handling of large number of objects
+	- Status and configuration poll windows improved
+- Database checker improved
+- Fixed issues: #12, #46, #48, #49, #50, #51, #54
+
+
+*
 * 0.2.5
 *
 
