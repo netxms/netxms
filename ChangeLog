@@ -28,6 +28,7 @@
 - Windows console:
 	- Improved handling of large number of objects
 	- Status and configuration poll windows improved
+- Database checker improved
 - Fixed issues: #12, #46, #48, #49, #50, #51, #54
 
 
