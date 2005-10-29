@@ -54,6 +54,7 @@
 #define IDC_COMBO_SMSDRV                1029
 #define IDC_COMBO_PORT                  1030
 #define IDC_STATIC_PORT                 1031
+#define IDC_STATIC_DBNAME               1032
 #define ID_FILE_CFG_WIZARD              32771
 
 // Next default values for new objects
@@ -63,7 +64,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        146
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1032
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

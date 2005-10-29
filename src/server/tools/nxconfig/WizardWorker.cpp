@@ -146,14 +146,21 @@ static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
       fprintf(pf, _T("DBDriver = %s\n"), pc->m_szDBDriver);
       if (pc->m_szDBDrvParams[0] != 0)
          fprintf(pf, _T("DBDrvParams = %s\n"), pc->m_szDBDrvParams);
-      if (pc->m_szDBServer[0] != 0)
-         fprintf(pf, _T("DBServer = %s\n"), pc->m_szDBServer);
-      if ((pc->m_szDBName[0] != 0) && (stricmp(pc->m_szDBDriver, _T("odbc.ddr"))))
-         fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
-      if (pc->m_szDBLogin[0] != 0)
-         fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
-      if (pc->m_szDBPassword[0] != 0)
-         fprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
+      if (!_tcsicmp(pc->m_szDBDriver, _T("sqlite.ddr")))
+      {
+         fprintf(pf, _T("DBName = %s\\database\\%s\n"), pc->m_szInstallDir, pc->m_szDBName);
+      }
+      else
+      {
+         if (pc->m_szDBServer[0] != 0)
+            fprintf(pf, _T("DBServer = %s\n"), pc->m_szDBServer);
+         if ((pc->m_szDBName[0] != 0) && (_tcsicmp(pc->m_szDBDriver, _T("odbc.ddr"))))
+            fprintf(pf, _T("DBName = %s\n"), pc->m_szDBName);
+         if (pc->m_szDBLogin[0] != 0)
+            fprintf(pf, _T("DBLogin = %s\n"), pc->m_szDBLogin);
+         if (pc->m_szDBPassword[0] != 0)
+            fprintf(pf, _T("DBPassword = %s\n"), pc->m_szDBPassword);
+      }
       fprintf(pf, _T("LogFailedSQLQueries = %s\n"), pc->m_bLogFailedSQLQueries ? _T("yes") : _T("no"));
       fclose(pf);
       bResult = TRUE;
@@ -273,6 +280,29 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 
 
 //
+// Create SQLite embedded database
+//
+
+static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
+{
+   TCHAR szBaseDir[MAX_PATH];
+   DB_HANDLE hConn;
+   BOOL bResult = FALSE;
+
+   _stprintf(szBaseDir, _T("%s\\database"), pc->m_szInstallDir);
+   SetCurrentDirectory(szBaseDir);
+   DeleteFile(pc->m_szDBName);
+   hConn = DBConnectEx(NULL, pc->m_szDBName, NULL, NULL);
+   if (hConn != NULL)
+   {
+      DBDisconnect(hConn);
+      bResult = TRUE;
+   }
+   return bResult;
+}
+
+
+//
 // Create database
 //
 
@@ -281,36 +311,44 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
    DB_HANDLE hConn;
    BOOL bResult = FALSE;
 
-   PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
-   hConn = DBConnectEx(pc->m_szDBServer, NULL, pc->m_szDBALogin, pc->m_szDBAPassword);
-   if (hConn != NULL)
+   if (pc->m_iDBEngine == DB_ENGINE_SQLITE)
    {
-      PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Creating database"));
-
-      switch(pc->m_iDBEngine)
-      {
-         case DB_ENGINE_MYSQL:
-            bResult = CreateDBMySQL(pc, hConn);
-            break;
-         case DB_ENGINE_MSSQL:
-            bResult = CreateDBMSSQL(pc, hConn);
-            break;
-         case DB_ENGINE_PGSQL:
-            bResult = CreateDBPostgreSQL(pc, hConn);
-            break;
-         default:
-            bResult = FALSE;
-            _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
-                       _T("Unsupported database engine code %d"), pc->m_iDBEngine);
-            break;
-      }
-
-      DBDisconnect(hConn);
+      bResult = CreateSQLiteDB(pc);
    }
    else
    {
-      _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));
+      PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
+      hConn = DBConnectEx(pc->m_szDBServer, NULL, pc->m_szDBALogin, pc->m_szDBAPassword);
+      if (hConn != NULL)
+      {
+         PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
+         PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Creating database"));
+
+         switch(pc->m_iDBEngine)
+         {
+            case DB_ENGINE_MYSQL:
+               bResult = CreateDBMySQL(pc, hConn);
+               break;
+            case DB_ENGINE_MSSQL:
+               bResult = CreateDBMSSQL(pc, hConn);
+               break;
+            case DB_ENGINE_PGSQL:
+               bResult = CreateDBPostgreSQL(pc, hConn);
+               break;
+            default:
+               bResult = FALSE;
+               _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
+                          _T("Unsupported database engine code %d"), pc->m_iDBEngine);
+               break;
+         }
+
+         DBDisconnect(hConn);
+      }
+      else
+      {
+         _tcscpy(g_szWizardErrorText, _T("Unable to connect to database"));
+      }
    }
 
    PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
@@ -362,7 +400,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
    if ((pc->m_bCreateDB || pc->m_bInitDB) && bResult)
    {
       TCHAR szInitFile[MAX_PATH];
-      static TCHAR *szEngineName[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle") };
+      static TCHAR *szEngineName[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle"), _T("sqlite") };
 
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Initializing database"));
 

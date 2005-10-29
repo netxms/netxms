@@ -101,6 +101,10 @@ SOURCE=.\check.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\init.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxdbmgr.cpp
 # End Source File
 # Begin Source File

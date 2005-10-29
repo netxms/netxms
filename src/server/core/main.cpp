@@ -320,6 +320,10 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    {
       g_dwDBSyntax = DB_SYNTAX_ORACLE;
    }
+   else if (!stricmp(szInfo, "SQLITE"))
+   {
+      g_dwDBSyntax = DB_SYNTAX_SQLITE;
+   }
    else
    {
       g_dwDBSyntax = DB_SYNTAX_GENERIC;

@@ -868,6 +868,7 @@ void DCItem::UpdateCacheSize(void)
                break;
             case DB_SYNTAX_MYSQL:
             case DB_SYNTAX_PGSQL:
+            case DB_SYNTAX_SQLITE:
                sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
                                  "WHERE item_id=%ld ORDER BY idata_timestamp DESC LIMIT %ld",
                        m_pNode->Id(), m_dwId, dwRequiredSize);

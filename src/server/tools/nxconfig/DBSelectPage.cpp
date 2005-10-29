@@ -16,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 // Constants
 //
 
-#define MAX_DB_ENGINES     4
+#define MAX_DB_ENGINES     5
 #define MAX_DB_DRIVERS     2
 
 
@@ -25,7 +25,8 @@ static char THIS_FILE[] = __FILE__;
 //
 
 TCHAR *g_pszDBEngines[MAX_DB_ENGINES] = { _T("MySQL"), _T("PostgreSQL"),
-                                          _T("Microsoft SQL Server"), _T("Oracle") };
+                                          _T("Microsoft SQL Server"), _T("Oracle"),
+                                          _T("SQLite Embedded DB") };
 
 
 //
@@ -37,7 +38,8 @@ static TCHAR *m_pszValidDrivers[MAX_DB_ENGINES][MAX_DB_DRIVERS] =
    { _T("mysql.ddr"), _T("odbc.ddr") },
    { _T("pgsql.ddr"), _T("odbc.ddr") },
    { _T("mssql.ddr"), _T("odbc.ddr") },
-   { _T("odbc.ddr"), NULL }
+   { _T("odbc.ddr"), NULL },
+   { _T("sqlite.ddr"), NULL }
 };
 
 
@@ -202,8 +204,16 @@ void CDBSelectPage::OnDBCreationSelect()
    if (pc->m_bCreateDB)
    {
       EnableDlgItem(this, IDC_CHECK_INITDB, FALSE);
-      EnableDlgItem(this, IDC_EDIT_DBA_LOGIN, TRUE);
-      EnableDlgItem(this, IDC_EDIT_DBA_PASSWORD, TRUE);
+      if (!_tcscmp(pc->m_szDBDriver, _T("sqlite.ddr")))
+      {
+         EnableDlgItem(this, IDC_EDIT_DBA_LOGIN, FALSE);
+         EnableDlgItem(this, IDC_EDIT_DBA_PASSWORD, FALSE);
+      }
+      else
+      {
+         EnableDlgItem(this, IDC_EDIT_DBA_LOGIN, TRUE);
+         EnableDlgItem(this, IDC_EDIT_DBA_PASSWORD, TRUE);
+      }
    }
    else
    {
@@ -278,17 +288,37 @@ void CDBSelectPage::OnDriverSelect()
    if (!_tcscmp(pc->m_szDBDriver, _T("odbc.ddr")))
    {
       SetDlgItemText(IDC_STATIC_SERVER, _T("ODBC data source"));
+      SetDlgItemText(IDC_STATIC_DBNAME, _T("Database name"));
+      EnableDlgItem(this, IDC_EDIT_SERVER, TRUE);
       EnableDlgItem(this, IDC_EDIT_DB_NAME, FALSE);
+      EnableDlgItem(this, IDC_EDIT_DB_LOGIN, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DB_PASSWORD, TRUE);
       SendDlgItemMessage(IDC_RADIO_NEWDB, BM_SETCHECK, BST_UNCHECKED);
       SendDlgItemMessage(IDC_RADIO_EXISTINGDB, BM_SETCHECK, BST_CHECKED);
       pc->m_bCreateDB = FALSE;
       EnableDlgItem(this, IDC_RADIO_NEWDB, FALSE);
       OnDBCreationSelect();
    }
+   else if (!_tcscmp(pc->m_szDBDriver, _T("sqlite.ddr")))
+   {
+      SetDlgItemText(IDC_STATIC_SERVER, _T("Database server"));
+      SetDlgItemText(IDC_STATIC_DBNAME, _T("Database file"));
+      EnableDlgItem(this, IDC_EDIT_SERVER, FALSE);
+      EnableDlgItem(this, IDC_EDIT_DB_LOGIN, FALSE);
+      EnableDlgItem(this, IDC_EDIT_DB_PASSWORD, FALSE);
+      EnableDlgItem(this, IDC_EDIT_DB_NAME, TRUE);
+      EnableDlgItem(this, IDC_RADIO_NEWDB, TRUE);
+      OnDBCreationSelect();
+   }
    else
    {
       SetDlgItemText(IDC_STATIC_SERVER, _T("Database server"));
+      SetDlgItemText(IDC_STATIC_DBNAME, _T("Database name"));
+      EnableDlgItem(this, IDC_EDIT_SERVER, TRUE);
       EnableDlgItem(this, IDC_EDIT_DB_NAME, TRUE);
       EnableDlgItem(this, IDC_RADIO_NEWDB, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DB_LOGIN, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DB_PASSWORD, TRUE);
+      OnDBCreationSelect();
    }
 }

@@ -6,10 +6,6 @@
 ** ex: syntax=c
 */
 
-#if !defined(DB_MSSQL) && !defined(DB_POSTGRESQL) && !defined(DB_MYSQL) && !defined(DB_ORACLE)
-#error Database type should be defined
-#endif
-
 // Common constants
 #include <nxevent.h>
 #include <nms_locks.h>
@@ -41,22 +37,39 @@
 #define SQL_INT64	number(20)
 #define TABLE_TYPE
 
-#else
+#elif defined(DB_SQLITE)
+
+#define DB_SYNTAX	'SQLITE'
+#define SQL_TEXT	varchar
+#define SQL_INT64	number(20)
+#define TABLE_TYPE
+
+#elif defined(DB_MYSQL)
 
 #define DB_SYNTAX	'MYSQL'
 #define SQL_TEXT	blob
 #define SQL_INT64	bigint
 #define TABLE_TYPE	TYPE=InnoDB
 
+#else
+
+#error Database type should be defined
+
 #endif
 
 // String concatenation for multi-line texts
 #if defined(DB_MSSQL)
 #define CONCAT +
-#elif defined(DB_ORACLE)
+#elif defined(DB_ORACLE) || defined(DB_SQLITE)
 #define CONCAT ||
 #else
 #define CONCAT
+#endif
+
+// Start transaction
+
+#if defined(DB_POSTGRESQL) || defined(DB_SQLITE)
+BEGIN TRANSACTION;
 #endif
 
 // Actual SQL queries
@@ -67,3 +80,8 @@
 #include "policy.in"
 #include "traps.in"
 #include "objtools.in"
+
+// End transaction
+#if defined(DB_POSTGRESQL) || defined(DB_SQLITE)
+COMMIT TRANSACTION;
+#endif

@@ -976,6 +976,7 @@ src/server/tools/nxconfig/tools.h -text
 src/server/tools/nxdbmgr/.cvsignore -text
 src/server/tools/nxdbmgr/Makefile.am -text
 src/server/tools/nxdbmgr/check.cpp -text
+src/server/tools/nxdbmgr/init.cpp -text
 src/server/tools/nxdbmgr/nxdbmgr.cpp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsw -text

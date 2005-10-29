@@ -95,7 +95,7 @@ BEGIN
     LTEXT           "Database server",IDC_STATIC_SERVER,90,32,222,8
     LTEXT           "DBA login name",IDC_STATIC,90,103,52,8
     LTEXT           "DBA password",IDC_STATIC,90,120,48,8
-    LTEXT           "Database name",IDC_STATIC,89,148,51,8
+    LTEXT           "Database name",IDC_STATIC_DBNAME,89,148,51,8
     LTEXT           "DB login name",IDC_STATIC,89,166,47,8
     LTEXT           "DB password",IDC_STATIC,89,184,43,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,90,138,222,1

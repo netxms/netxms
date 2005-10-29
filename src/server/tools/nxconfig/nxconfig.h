@@ -37,6 +37,7 @@
 #define DB_ENGINE_PGSQL    1
 #define DB_ENGINE_MSSQL    2
 #define DB_ENGINE_ORACLE   3
+#define DB_ENGINE_SQLITE   4
 
 
 //

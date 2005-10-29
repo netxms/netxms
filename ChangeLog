@@ -1,4 +1,11 @@
 *
+* 0.2.7
+*
+
+- Added support for SQLite embedded database engine
+
+
+*
 * 0.2.6
 *
 

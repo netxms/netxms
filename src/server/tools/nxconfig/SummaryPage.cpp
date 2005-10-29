@@ -77,11 +77,25 @@ BOOL CSummaryPage::OnSetActive()
    if (!pc->m_bCreateDB)
       AddParam(szBuffer, _T("Initalize database: %s\r\n"), pc->m_bInitDB ? _T("yes") : _T("no"));
 
-   AddParam(szBuffer, _T("\r\nDatabase server: %s\r\n"), pc->m_szDBServer);
-   AddParam(szBuffer, _T("Database name: %s\r\n"), pc->m_szDBName);
-   AddParam(szBuffer, _T("Database user: %s\r\n"), pc->m_szDBLogin);
-   if (pc->m_bCreateDB)
-      AddParam(szBuffer, _T("Database administrator: %s\r\n"), pc->m_szDBALogin);
+   if (!_tcsicmp(pc->m_szDBDriver, _T("sqlite.ddr")))
+   {
+      AddParam(szBuffer, _T("\r\nDatabase file: %s\r\n"), pc->m_szDBName);
+   }
+   else
+   {
+      if (!_tcsicmp(pc->m_szDBDriver, _T("odbc.ddr")))
+      {
+         AddParam(szBuffer, _T("\r\nODBC data source: %s\r\n"), pc->m_szDBServer);
+      }
+      else
+      {
+         AddParam(szBuffer, _T("\r\nDatabase server: %s\r\n"), pc->m_szDBServer);
+         AddParam(szBuffer, _T("Database name: %s\r\n"), pc->m_szDBName);
+      }
+      AddParam(szBuffer, _T("Database user: %s\r\n"), pc->m_szDBLogin);
+      if (pc->m_bCreateDB)
+         AddParam(szBuffer, _T("Database administrator: %s\r\n"), pc->m_szDBALogin);
+   }
 
    AddParam(szBuffer, _T("\r\nRun IP autodiscovery: %s\r\n"), pc->m_bRunAutoDiscovery ? _T("yes") : _T("no"));
    if (pc->m_bRunAutoDiscovery)

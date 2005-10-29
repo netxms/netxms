@@ -1379,6 +1379,7 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
    {
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
          hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM event_log"));
          if (hTempResult != NULL)
          {
@@ -5186,6 +5187,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    {
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
          hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM syslog"));
          if (hTempResult != NULL)
          {

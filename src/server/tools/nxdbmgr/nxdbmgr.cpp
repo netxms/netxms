@@ -34,12 +34,13 @@
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 int g_iSyntax;
-TCHAR *g_pszSqlType[4][2] = 
+TCHAR *g_pszSqlType[5][2] = 
 {
-   { _T("blob"), _T("bigint") },     // MySQL
-   { _T("varchar"), _T("bigint") },  // PostgreSQL
-   { _T("text"), _T("bigint") },     // Microsoft SQL
-   { _T("clob"), _T("number(20)") }  // Oracle
+   { _T("blob"), _T("bigint") },       // MySQL
+   { _T("varchar"), _T("bigint") },    // PostgreSQL
+   { _T("text"), _T("bigint") },       // Microsoft SQL
+   { _T("clob"), _T("number(20)") },   // Oracle
+   { _T("varchar"), _T("number(20)") } // SQLite
 };
 
 
@@ -293,6 +294,7 @@ int main(int argc, char *argv[])
             _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n"
                         "Valid commands are:\n"
                         "   check        : Check database for errors\n"
+                        "   init <file>  : Initialize database\n"
                         "   upgrade      : Upgrade database to new version\n"
                         "Valid options are:\n"
                         "   -c <config>  : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
@@ -332,9 +334,16 @@ int main(int argc, char *argv[])
       _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
       return 1;
    }
-   if (strcmp(argv[optind], "check") && strcmp(argv[optind], "upgrade"))
+   if (strcmp(argv[optind], "check") && 
+       strcmp(argv[optind], "upgrade") &&
+       strcmp(argv[optind], "init"))
    {
       _tprintf(_T("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
+      return 1;
+   }
+   if ((!strcmp(argv[optind], "init")) && (argc - optind < 2))
+   {
+      _tprintf("Required command argument missing\n");
       return 1;
    }
 
@@ -361,58 +370,69 @@ int main(int argc, char *argv[])
       return 4;
    }
 
-   // Get database syntax
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
-   if (hResult != NULL)
+   if (!strcmp(argv[optind], "init"))
    {
-      if (DBGetNumRows(hResult) > 0)
+      InitDatabase(argv[optind + 1]);
+   }
+   else
+   {
+      // Get database syntax
+      hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
+      if (hResult != NULL)
       {
-         nx_strncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
-         DecodeSQLString(szSyntaxId);
+         if (DBGetNumRows(hResult) > 0)
+         {
+            nx_strncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
+            DecodeSQLString(szSyntaxId);
+         }
+         else
+         {
+            _tcscpy(szSyntaxId, _T("UNKNOWN"));
+         }
+         DBFreeResult(hResult);
       }
       else
       {
-         _tcscpy(szSyntaxId, _T("UNKNOWN"));
+         _tprintf(_T("Unable to determine database syntax\n"));
+         DBDisconnect(g_hCoreDB);
+         DBUnloadDriver();
+         return 5;
       }
-      DBFreeResult(hResult);
-   }
-   else
-   {
-      _tprintf(_T("Unable to determine database syntax\n"));
-      DBDisconnect(g_hCoreDB);
-      DBUnloadDriver();
-      return 5;
-   }
 
-   if (!_tcscmp(szSyntaxId, _T("MYSQL")))
-   {
-      g_iSyntax = DB_SYNTAX_MYSQL;
-   }
-   else if (!_tcscmp(szSyntaxId, _T("PGSQL")))
-   {
-      g_iSyntax = DB_SYNTAX_PGSQL;
-   }
-   else if (!_tcscmp(szSyntaxId, _T("MSSQL")))
-   {
-      g_iSyntax = DB_SYNTAX_MSSQL;
-   }
-   else if (!_tcscmp(szSyntaxId, _T("ORACLE")))
-   {
-      g_iSyntax = DB_SYNTAX_ORACLE;
-   }
-   else
-   {
-      _tprintf(_T("Unknown database syntax %s\n"), szSyntaxId);
-      DBDisconnect(g_hCoreDB);
-      DBUnloadDriver();
-      return 6;
-   }
+      if (!_tcscmp(szSyntaxId, _T("MYSQL")))
+      {
+         g_iSyntax = DB_SYNTAX_MYSQL;
+      }
+      else if (!_tcscmp(szSyntaxId, _T("PGSQL")))
+      {
+         g_iSyntax = DB_SYNTAX_PGSQL;
+      }
+      else if (!_tcscmp(szSyntaxId, _T("MSSQL")))
+      {
+         g_iSyntax = DB_SYNTAX_MSSQL;
+      }
+      else if (!_tcscmp(szSyntaxId, _T("ORACLE")))
+      {
+         g_iSyntax = DB_SYNTAX_ORACLE;
+      }
+      else if (!_tcscmp(szSyntaxId, _T("SQLITE")))
+      {
+         g_iSyntax = DB_SYNTAX_SQLITE;
+      }
+      else
+      {
+         _tprintf(_T("Unknown database syntax %s\n"), szSyntaxId);
+         DBDisconnect(g_hCoreDB);
+         DBUnloadDriver();
+         return 6;
+      }
 
-   // Do requested operation
-   if (!strcmp(argv[optind], "check"))
-      CheckDatabase();
-   else if (!strcmp(argv[optind], "upgrade"))
-      UpgradeDatabase();
+      // Do requested operation
+      if (!strcmp(argv[optind], "check"))
+         CheckDatabase();
+      else if (!strcmp(argv[optind], "upgrade"))
+         UpgradeDatabase();
+   }
 
    // Shutdown
    DBDisconnect(g_hCoreDB);

@@ -37,6 +37,7 @@
 #define DB_SYNTAX_PGSQL    1
 #define DB_SYNTAX_MSSQL    2
 #define DB_SYNTAX_ORACLE   3
+#define DB_SYNTAX_SQLITE   4
 
 
 //
@@ -52,6 +53,7 @@
 //
 
 void CheckDatabase(void);
+void InitDatabase(TCHAR *pszInitFile);
 void UpgradeDatabase(void);
 DB_RESULT SQLSelect(TCHAR *pszQuery);
 BOOL SQLQuery(TCHAR *pszQuery);
