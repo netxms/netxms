@@ -536,6 +536,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 

@@ -368,6 +368,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 

@@ -34,6 +34,8 @@
 
 #include <dbdrv.h>
 #include <nms_threads.h>
+
+#undef GROUP_FLAG
 #include <mysql.h>
 
 
