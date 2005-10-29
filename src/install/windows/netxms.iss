@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.6
-AppVersion=0.2.6
+AppVerName=NetXMS 0.2.7-dev
+AppVersion=0.2.7-dev
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.6
+OutputBaseFilename=netxms-0.2.7-dev
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -42,6 +42,7 @@ Source: "..\..\server\dbdrv\mysql\Release\mysql.ddr"; DestDir: "{app}\bin"; Flag
 Source: "..\..\server\dbdrv\mssql\Release\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\dbdrv\odbc\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\dbdrv\pgsql\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\server\dbdrv\sqlite\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\smsdrv\generic\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxaction\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxadm\Release\nxadm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -90,6 +91,7 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; F
 
 [Dirs]
 Name: "{app}\etc"
+Name: "{app}\database"
 Name: "{app}\var\packages"
 
 [Registry]
