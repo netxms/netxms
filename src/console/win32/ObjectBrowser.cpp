@@ -617,7 +617,7 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
    }
 
    // Do binary search on a hash array as last resort
-   return SearchTreeHash(m_pTreeHash, m_dwTreeHashSize, dwObjectId);
+   return (m_pTreeHash != NULL) ? SearchTreeHash(m_pTreeHash, m_dwTreeHashSize, dwObjectId) : INVALID_INDEX;
 }
 
 
