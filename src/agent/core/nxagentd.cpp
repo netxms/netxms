@@ -301,8 +301,8 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
 #endif
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" %s%s-X %lu"), szExecName, 
-              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s-X %lu"), szExecName,
+              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 
@@ -338,8 +338,8 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" %s-X %lu"), szExecName,
-              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""), m_pid);
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s-X %lu"), szExecName,
+              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""), m_pid);
    return ExecuteCommand(szCmdLine, NULL);
 #endif
 #endif  /* _NETWARE */
