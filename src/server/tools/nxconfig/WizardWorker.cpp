@@ -319,7 +319,9 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
    else
    {
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Connecting to database server as DBA"));
-      hConn = DBConnectEx(pc->m_szDBServer, NULL, pc->m_szDBALogin, pc->m_szDBAPassword);
+      hConn = DBConnectEx(pc->m_szDBServer, 
+                          (pc->m_iDBEngine == DB_ENGINE_PGSQL) ? _T("template1") : NULL,
+                          pc->m_szDBALogin, pc->m_szDBAPassword);
       if (hConn != NULL)
       {
          PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, TRUE, 0);
