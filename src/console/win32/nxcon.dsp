@@ -397,6 +397,10 @@ SOURCE=.\ObjectPropsSecurity.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsStatus.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectSearchBox.cpp
 # End Source File
 # Begin Source File
@@ -823,6 +827,10 @@ SOURCE=.\ObjectPropsRelations.h
 # Begin Source File
 
 SOURCE=.\ObjectPropsSecurity.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropsStatus.h
 # End Source File
 # Begin Source File
 
