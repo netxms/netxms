@@ -48,6 +48,7 @@ contrib/mibs/IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt -text
 contrib/mibs/IANA-LANGUAGE-MIB.txt -text
 contrib/mibs/IANAifType-MIB.txt -text
 contrib/mibs/IEEE8021-PAE-MIB.txt -text
+contrib/mibs/IEEE802dot11-MIB.txt -text
 contrib/mibs/IF-MIB.txt -text
 contrib/mibs/INET-ADDRESS-MIB.txt -text
 contrib/mibs/IP-MIB.txt -text

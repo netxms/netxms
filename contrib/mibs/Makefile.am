@@ -40,6 +40,7 @@ mibs_DATA = \
 	IANA-LANGUAGE-MIB.txt \
 	IANAifType-MIB.txt \
 	IEEE8021-PAE-MIB.txt \
+	IEEE802dot11-MIB.txt \
 	IF-MIB.txt \
 	INET-ADDRESS-MIB.txt \
 	IP-MIB.txt \
