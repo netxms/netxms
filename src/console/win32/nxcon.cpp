@@ -25,6 +25,7 @@
 #include "AgentCfgEditor.h"
 #include "TableView.h"
 #include "WebBrowser.h"
+#include "ObjectPropsStatus.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -987,6 +988,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CObjectPropsRelations wndObjectRelations;
    CNodePropsPolling wndNodePolling;
    CVPNCPropsGeneral wndVPNCGeneral;
+   CObjectPropsStatus wndStatus;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1046,6 +1048,14 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       // Create "Relations" tab
       wndObjectRelations.m_pObject = pObject;
       wndPropSheet.AddPage(&wndObjectRelations);
+
+      // Create "Status Calculation" tab
+      if ((pObject->iClass != OBJECT_TEMPLATEROOT) &&
+          (pObject->iClass != OBJECT_TEMPLATEGROUP) &&
+          (pObject->iClass != OBJECT_TEMPLATE))
+      {
+         wndPropSheet.AddPage(&wndStatus);
+      }
 
       // Create "Security" tab
       wndObjectSecurity.m_pObject = pObject;

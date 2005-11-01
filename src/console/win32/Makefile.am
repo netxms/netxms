@@ -78,6 +78,7 @@ EXTRA_DIST = \
 	ObjectPropsPresentation.cpp ObjectPropsPresentation.h \
 	ObjectPropsRelations.cpp ObjectPropsRelations.h \
 	ObjectPropsSecurity.cpp ObjectPropsSecurity.h \
+	ObjectPropsStatus.cpp ObjectPropsStatus.h \
 	ObjectSearchBox.cpp ObjectSearchBox.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
 	PackageMgr.cpp PackageMgr.h \

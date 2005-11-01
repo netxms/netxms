@@ -164,6 +164,7 @@
 #define IDI_DOCUMENT                    286
 #define IDI_LPP                         287
 #define IDD_DCI_SCHEDULE                288
+#define IDD_OBJECT_STATUS               289
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -243,6 +244,7 @@
 #define IDC_RADIO_MSG                   1068
 #define IDC_RADIO_EVENT                 1068
 #define IDC_RADIO_TEXT                  1068
+#define IDC_RADIO_MULTIPLE              1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
@@ -307,6 +309,7 @@
 #define IDC_RADIO4                      1150
 #define IDC_RADIO_SMS                   1150
 #define IDC_RADIO_SEMICOLON             1150
+#define IDC_RADIO_MOST_CRITICAL         1150
 #define IDC_LIST_ACTIONS                1152
 #define IDC_COMBO_CATEGORY              1154
 #define IDC_ICON_PARENT                 1155
@@ -426,6 +429,21 @@
 #define IDC_SAVE                        1286
 #define IDC_CHECK_SCHEDULE              1287
 #define IDC_STATIC_INTERVAL             1291
+#define IDC_RADIO_UNCHANGED             1292
+#define IDC_RADIO_RELATIVE              1294
+#define IDC_COMBO_FIXED                 1296
+#define IDC_EDIT_RELATIVE               1297
+#define IDC_RADIO_SINGLE                1298
+#define IDC_EDIT_THRESHOLD              1299
+#define IDC_EDIT_T1                     1300
+#define IDC_EDIT_T2                     1301
+#define IDC_EDIT_T3                     1302
+#define IDC_EDIT_T4                     1303
+#define IDC_RADIO_SEVERITY              1304
+#define IDC_COMBO_S1                    1305
+#define IDC_COMBO_S2                    1306
+#define IDC_COMBO_S3                    1307
+#define IDC_COMBO_S4                    1308
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -585,9 +603,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        289
+#define _APS_NEXT_RESOURCE_VALUE        290
 #define _APS_NEXT_COMMAND_VALUE         32959
-#define _APS_NEXT_CONTROL_VALUE         1292
+#define _APS_NEXT_CONTROL_VALUE         1310
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

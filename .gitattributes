@@ -559,6 +559,8 @@ src/console/win32/ObjectPropsRelations.cpp -text
 src/console/win32/ObjectPropsRelations.h -text
 src/console/win32/ObjectPropsSecurity.cpp -text
 src/console/win32/ObjectPropsSecurity.h -text
+src/console/win32/ObjectPropsStatus.cpp -text
+src/console/win32/ObjectPropsStatus.h -text
 src/console/win32/ObjectSearchBox.cpp -text
 src/console/win32/ObjectSearchBox.h -text
 src/console/win32/ObjectSelDlg.cpp -text
