@@ -28,7 +28,7 @@
 //
 
 #define MAX_OWNER_INFO     256
-#define NUMBER_OF_LOCKS    6
+#define NUMBER_OF_LOCKS    7
 
 
 //
@@ -66,7 +66,8 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
    { UNLOCKED, _T("Event Configuration Database"), _T("") },
    { UNLOCKED, _T("Action Configuration Database"), _T("") },
    { UNLOCKED, _T("SNMP Trap Configuration"), _T("") },
-   { UNLOCKED, _T("Package Database"), _T("") }
+   { UNLOCKED, _T("Package Database"), _T("") },
+   { UNLOCKED, _T("Object Tools Configuration"), _T("") }
 };
 static LPP_LOCK_INFO *m_pLockedLPP = NULL;
 static DWORD m_dwNumLockedLPP = 0;

@@ -16,6 +16,8 @@ GENERAL:
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
 - SMART (HDD diagnostics) subagent
+- Add SNMP SET functionality
+- Add SNMP WALK functionality
 
 
 SERVER:
@@ -64,6 +66,9 @@ WINDOWS CONSOLE:
 - Add "Copy value to clipboard" to "Collected data" window
 - Implement drag-and-drop editing in policy editor
 - Add "previous value" and "delta" fields to last values view
+- Add option to split exported DCI data into several files or limit export
+  file size
+- Add possibility to define custom graph presets
 
 
 POCKET PC CONSOLE:

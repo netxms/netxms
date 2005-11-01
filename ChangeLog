@@ -3,6 +3,7 @@
 *
 
 - Added support for SQLite embedded database engine
+- New MIBs added: IEEE 802.11
 
 
 *

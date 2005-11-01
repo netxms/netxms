@@ -150,6 +150,7 @@ typedef void * HSNMPSESSION;
 #define IDG_ALARM_NOTE        12
 #define IDG_PACKAGE           13
 #define IDG_LPP               14
+#define IDG_OBJECT_TOOL       15
 
 
 //
@@ -196,6 +197,7 @@ typedef void * HSNMPSESSION;
 #define CSF_ACTION_DB_LOCKED     ((DWORD)0x0020)
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
+#define CSF_OBJECT_TOOLS_LOCKED  ((DWORD)0x0100)
 
 
 //
@@ -377,6 +379,7 @@ private:
    void ExecuteAction(CSCPMessage *pRequest);
    void SendObjectTools(DWORD dwRqId);
    void ExecTableTool(CSCPMessage *pRequest);
+   void LockObjectTools(DWORD dwRqId, BOOL bLock);
    void ChangeSubscription(CSCPMessage *pRequest);
    void SendSyslog(CSCPMessage *pRequest);
    void SendLogPoliciesList(DWORD dwRqId);

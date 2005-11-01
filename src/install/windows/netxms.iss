@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.7-dev
-AppVersion=0.2.7-dev
+AppVerName=NetXMS 0.2.6-hf1
+AppVersion=0.2.6-hf1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.7-dev
+OutputBaseFilename=netxms-0.2.6-hf1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none

@@ -369,6 +369,11 @@ typedef struct
 #define CMD_GET_LPP_LIST            0x008D
 #define CMD_OPEN_LOG_POLICY         0x008E
 #define CMD_CLOSE_LOG_POLICY        0x008F
+#define CMD_GET_OBJECT_TOOL_DETAILS 0x0090
+#define CMD_LOCK_OBJECT_TOOLS       0x0091
+#define CMD_UNLOCK_OBJECT_TOOLS     0x0092
+#define CMD_UPDATE_OBJECT_TOOL      0x0093
+#define CMD_DELETE_OBJECT_TOOL      0x0094
 
 
 //

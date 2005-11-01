@@ -854,6 +854,18 @@ void ClientSession::ProcessingThread(void)
          case CMD_EXEC_TABLE_TOOL:
             ExecTableTool(pMsg);
             break;
+         case CMD_LOCK_OBJECT_TOOLS:
+            LockObjectTools(pMsg->GetId(), TRUE);
+            break;
+         case CMD_UNLOCK_OBJECT_TOOLS:
+            LockObjectTools(pMsg->GetId(), FALSE);
+            break;
+         case CMD_GET_OBJECT_TOOL_DETAILS:
+            break;
+         case CMD_UPDATE_OBJECT_TOOL:
+            break;
+         case CMD_DELETE_OBJECT_TOOL:
+            break;
          case CMD_CHANGE_SUBSCRIPTION:
             ChangeSubscription(pMsg);
             break;
@@ -5068,6 +5080,55 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
    else
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Lock/unlock object tools configuration
+//
+
+void ClientSession::LockObjectTools(DWORD dwRqId, BOOL bLock)
+{
+   CSCPMessage msg;
+   char szBuffer[256];
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      if (bLock)
+      {
+         if (!LockComponent(CID_OBJECT_TOOLS, m_dwIndex, m_szUserName, NULL, szBuffer))
+         {
+            msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+            msg.SetVariable(VID_LOCKED_BY, szBuffer);
+         }
+         else
+         {
+            m_dwFlags |= CSF_OBJECT_TOOLS_LOCKED;
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+      }
+      else
+      {
+         if (m_dwFlags & CSF_OBJECT_TOOLS_LOCKED)
+         {
+            UnlockComponent(CID_OBJECT_TOOLS);
+            m_dwFlags &= ~CSF_OBJECT_TOOLS_LOCKED;
+         }
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+   }
+   else
+   {
+      // Current user has no rights for object tools management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
