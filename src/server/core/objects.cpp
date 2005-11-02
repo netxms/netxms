@@ -64,6 +64,19 @@ char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
 
 
 //
+// Static data
+//
+
+static int m_iStatusCalcAlg = SA_CALCULATE_MOST_CRITICAL;
+static int m_iStatusPropAlg = SA_PROPAGATE_UNCHANGED;
+static int m_iFixedStatus;        // Status if propagation is "Fixed"
+static int m_iStatusShift;        // Shift value for "shifted" status propagation
+static int m_iStatusTranslation[4];
+static int m_iStatusSingleThreshold;
+static int m_iStatusThresholds[4];
+
+
+//
 // Thread which apply template updates
 //
 
@@ -157,6 +170,15 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 
 void ObjectsInit(void)
 {
+   // Load default status calculation info
+   m_iStatusCalcAlg = ConfigReadInt("StatusCalculationAlgorithm", SA_CALCULATE_MOST_CRITICAL);
+   m_iStatusPropAlg = ConfigReadInt("StatusPropagationAlgorithm", SA_PROPAGATE_UNCHANGED);
+   m_iFixedStatus = ConfigReadInt("FixedStatusValue", STATUS_NORMAL);
+   m_iStatusShift = ConfigReadInt("StatusShift", 0);
+   ConfigReadByteArray("StatusTranslation", m_iStatusTranslation, 4, STATUS_WARNING);
+   m_iStatusSingleThreshold = ConfigReadInt("StatusSingleThreshold", 75);
+   ConfigReadByteArray("StatusThresholds", m_iStatusThresholds, 4, 50);
+
    g_pTemplateUpdateQueue = new Queue;
 
    g_rwlockIdIndex = RWLockCreate();
@@ -1004,4 +1026,64 @@ void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
       AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, dwNewIpAddr, pObject);
    }
    RWLockUnlock(g_rwlockNodeIndex);
+}
+
+
+//
+// Calculate propagated status for object using default algorithm
+//
+
+int DefaultPropagatedStatus(int iObjectStatus)
+{
+   int iStatus;
+
+   switch(m_iStatusPropAlg)
+   {
+      case SA_PROPAGATE_UNCHANGED:
+         iStatus = iObjectStatus;
+         break;
+      case SA_PROPAGATE_FIXED:
+         iStatus = (iObjectStatus < STATUS_UNKNOWN) ? m_iFixedStatus : iObjectStatus;
+         break;
+      case SA_PROPAGATE_RELATIVE:
+         if (iObjectStatus < STATUS_UNKNOWN)
+         {
+            iStatus = iObjectStatus + m_iStatusShift;
+            if (iStatus < 0)
+               iStatus = 0;
+            if (iStatus > STATUS_CRITICAL)
+               iStatus = STATUS_CRITICAL;
+         }
+         else
+         {
+            iStatus = iObjectStatus;
+         }
+         break;
+      case SA_PROPAGATE_TRANSLATED:
+         if ((iObjectStatus > STATUS_NORMAL) && (iObjectStatus < STATUS_UNKNOWN))
+         {
+            iStatus = m_iStatusTranslation[iObjectStatus - 1];
+         }
+         else
+         {
+            iStatus = iObjectStatus;
+         }
+         break;
+      default:
+         iStatus = STATUS_UNKNOWN;
+         break;
+   }
+   return iStatus;
+}
+
+
+//
+// Get default data for status calculation
+//
+
+int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
+{
+   *pnSingleThreshold = m_iStatusSingleThreshold;
+   *ppnThresholds = m_iStatusThresholds;
+   return m_iStatusCalcAlg;
 }

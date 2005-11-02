@@ -188,6 +188,19 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
    pObject->bIsDeleted = pMsg->GetVariableShort(VID_IS_DELETED);
    pObject->dwImage = pMsg->GetVariableLong(VID_IMAGE_ID);
+   pObject->iStatusCalcAlg = (int)pMsg->GetVariableShort(VID_STATUS_CALCULATION_ALG);
+   pObject->iStatusPropAlg = (int)pMsg->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
+   pObject->iFixedStatus = (int)pMsg->GetVariableShort(VID_FIXED_STATUS);
+   pObject->iStatusShift = (int)pMsg->GetVariableShort(VID_STATUS_SHIFT);
+   pObject->iStatusTrans[0] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_1);
+   pObject->iStatusTrans[1] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_2);
+   pObject->iStatusTrans[2] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_3);
+   pObject->iStatusTrans[3] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_4);
+   pObject->iStatusSingleTh = (int)pMsg->GetVariableShort(VID_STATUS_SINGLE_THRESHOLD);
+   pObject->iStatusThresholds[0] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_1);
+   pObject->iStatusThresholds[1] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_2);
+   pObject->iStatusThresholds[2] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_3);
+   pObject->iStatusThresholds[3] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_4);
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
@@ -618,6 +631,22 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->dwFlags & OBJ_UPDATE_PEER_GATEWAY)
       msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
+   if (pUpdate->dwFlags & OBJ_UPDATE_STATUS_ALG)
+   {
+      msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);
+      msg.SetVariable(VID_STATUS_PROPAGATION_ALG, (WORD)pUpdate->iStatusPropAlg);
+      msg.SetVariable(VID_FIXED_STATUS, (WORD)pUpdate->iFixedStatus);
+      msg.SetVariable(VID_STATUS_SHIFT, (WORD)pUpdate->iStatusShift);
+      msg.SetVariable(VID_STATUS_TRANSLATION_1, (WORD)pUpdate->iStatusTrans[0]);
+      msg.SetVariable(VID_STATUS_TRANSLATION_2, (WORD)pUpdate->iStatusTrans[1]);
+      msg.SetVariable(VID_STATUS_TRANSLATION_3, (WORD)pUpdate->iStatusTrans[2]);
+      msg.SetVariable(VID_STATUS_TRANSLATION_4, (WORD)pUpdate->iStatusTrans[3]);
+      msg.SetVariable(VID_STATUS_SINGLE_THRESHOLD, (WORD)pUpdate->iStatusSingleTh);
+      msg.SetVariable(VID_STATUS_THRESHOLD_1, (WORD)pUpdate->iStatusThresholds[0]);
+      msg.SetVariable(VID_STATUS_THRESHOLD_2, (WORD)pUpdate->iStatusThresholds[1]);
+      msg.SetVariable(VID_STATUS_THRESHOLD_3, (WORD)pUpdate->iStatusThresholds[2]);
+      msg.SetVariable(VID_STATUS_THRESHOLD_4, (WORD)pUpdate->iStatusThresholds[3]);
+   }
    if (pUpdate->dwFlags & OBJ_UPDATE_NETWORK_LIST)
    {
       msg.SetVariable(VID_NUM_LOCAL_NETS, pUpdate->dwNumLocalNets);

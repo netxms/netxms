@@ -326,6 +326,38 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
 
 
 //
+// Get field's value as integer array from byte array encoded in hex
+//
+
+BOOL LIBNXSRV_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
+                                             int *pnArray, int nSize, int nDefault)
+{
+   char *pszVal, pbBytes[128];
+   BOOL bResult;
+   int i, nLen;
+
+   pszVal = DBGetField(hResult, iRow, iColumn);
+   if (pszVal != NULL)
+   {
+      StrToBin(pszVal, (BYTE *)pbBytes, 128);
+      nLen = strlen(pszVal) / 2;
+      for(i = 0; (i < nSize) && (i < nLen); i++)
+         pnArray[i] = pbBytes[i];
+      for(; i < nSize; i++)
+         pnArray[i] = nDefault;
+      bResult = TRUE;
+   }
+   else
+   {
+      for(i = 0; i < nSize; i++)
+         pnArray[i] = nDefault;
+      bResult = FALSE;
+   }
+   return bResult;
+}
+
+
+//
 // Get number of rows in result
 //
 

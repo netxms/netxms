@@ -427,9 +427,11 @@ public:
 BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 int NXCORE_EXPORTABLE ConfigReadInt(char *szVar, int iDefault);
 DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault);
+BOOL NXCORE_EXPORTABLE ConfigReadByteArray(char *pszVar, int *pnArray, int nSize, int nDefault);
 BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
 BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
 BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(char *pszVar, int *pnArray, int nSize, BOOL bCreate);
 
 BOOL NXCORE_EXPORTABLE LoadConfig(void);
 
@@ -556,7 +558,6 @@ extern char NXCORE_EXPORTABLE g_szPIDFile[];
 extern char g_szDataDir[];
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
-extern int g_iStatusAlgorithm;
 extern DWORD g_dwPingSize;
 
 extern DB_HANDLE g_hCoreDB;

@@ -95,8 +95,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfDatabaseWriters','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('StatusCalculationAlgorithm','0',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IcmpPingSize','46',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EnableSyslogDaemon','0',1,1);
@@ -104,6 +102,20 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyslogListenPort','514',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyslogRetentionTime','5184000',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusCalculationAlgorithm','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusPropagationAlgorithm','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('FixedStatusValue','0',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusShift','0',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusTranslation','01020304',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusSingleThreshold','75',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('StatusThresholds','503C2814',1,1);
 
 
 /*

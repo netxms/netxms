@@ -164,6 +164,22 @@ typedef void * NXC_SESSION;
 
 
 //
+// Status calculation and propagation algorithms
+//
+
+#define SA_CALCULATE_DEFAULT              0
+#define SA_CALCULATE_MOST_CRITICAL        1
+#define SA_CALCULATE_SINGLE_THRESHOLD     2
+#define SA_CALCULATE_MULTIPLE_THRESHOLDS  3
+
+#define SA_PROPAGATE_DEFAULT              0
+#define SA_PROPAGATE_UNCHANGED            1
+#define SA_PROPAGATE_FIXED                2
+#define SA_PROPAGATE_RELATIVE             3
+#define SA_PROPAGATE_TRANSLATED           4
+
+
+//
 // Service types
 //
 
@@ -315,9 +331,10 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_IP_ADDR          ((DWORD)0x008000)
 #define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x010000)
 #define OBJ_UPDATE_NETWORK_LIST     ((DWORD)0x020000)
+#define OBJ_UPDATE_STATUS_ALG       ((DWORD)0x040000)
 
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0041FF)
-#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x00FEC1)
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0441FF)
+#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x04FEC1)
 
 
 //
@@ -704,6 +721,13 @@ typedef struct
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
    DWORD dwImage;       // Image ID or IMG_DEFAULT for default image
+   int iStatusCalcAlg;  // Status calculation algorithm
+   int iStatusPropAlg;  // Status propagation alhorithm
+   int iFixedStatus;    // Status to be propagated if alg = SA_PROPAGATE_FIXED
+   int iStatusShift;    // Status shift for SA_PROPAGATE_RELATIVE
+   int iStatusTrans[4];
+   int iStatusSingleTh;
+   int iStatusThresholds[4];
    union
    {
       struct
@@ -806,6 +830,13 @@ typedef struct
    DWORD dwNumRemoteNets;
    IP_NETWORK *pLocalNetList;
    IP_NETWORK *pRemoteNetList;
+   int iStatusCalcAlg;  // Status calculation algorithm
+   int iStatusPropAlg;  // Status propagation alhorithm
+   int iFixedStatus;    // Status to be propagated if alg = SA_PROPAGATE_FIXED
+   int iStatusShift;    // Status shift for SA_PROPAGATE_RELATIVE
+   int iStatusTrans[4];
+   int iStatusSingleTh;
+   int iStatusThresholds[4];
 } NXC_OBJECT_UPDATE;
 
 

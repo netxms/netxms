@@ -60,7 +60,7 @@ public:
 
    NetObj *GetAlarmSourceObject(DWORD dwAlarmId);
 
-   int GetWorstStatusForObject(DWORD dwObjectId);
+   int GetMostCriticalStatusForObject(DWORD dwObjectId);
 };
 
 

@@ -404,11 +404,11 @@ NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
 
 
 //
-// Get worst status among active alarms for given object
+// Get most critical status among active alarms for given object
 // Will return STATUS_UNKNOWN if there are no active alarms
 //
 
-int AlarmManager::GetWorstStatusForObject(DWORD dwObjectId)
+int AlarmManager::GetMostCriticalStatusForObject(DWORD dwObjectId)
 {
    DWORD i;
    int iStatus = STATUS_UNKNOWN;

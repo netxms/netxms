@@ -127,6 +127,36 @@ DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault)
 
 
 //
+// Read byte array (in hex form) from configuration table into integer array
+//
+
+BOOL NXCORE_EXPORTABLE ConfigReadByteArray(char *pszVar, int *pnArray, int nSize, int nDefault)
+{
+   char szBuffer[256], pbBytes[128];
+   BOOL bResult;
+   int i, nLen;
+
+   if (ConfigReadStr(pszVar, szBuffer, 256, ""))
+   {
+      StrToBin(szBuffer, (BYTE *)pbBytes, 128);
+      nLen = strlen(szBuffer) / 2;
+      for(i = 0; (i < nSize) && (i < nLen); i++)
+         pnArray[i] = pbBytes[i];
+      for(; i < nSize; i++)
+         pnArray[i] = nDefault;
+      bResult = TRUE;
+   }
+   else
+   {
+      for(i = 0; i < nSize; i++)
+         pnArray[i] = nDefault;
+      bResult = FALSE;
+   }
+   return bResult;
+}
+
+
+//
 // Write string value to configuration table
 //
 
@@ -190,4 +220,19 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate
 
    sprintf(szBuffer, "%lu", dwValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate);
+}
+
+
+//
+// Write integer array to configuration table
+//
+
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(char *pszVar, int *pnArray, int nSize, BOOL bCreate)
+{
+   char szBuffer[256];
+   int i, j;
+
+   for(i = 0, j = 0; (i < nSize) && (i < 127); i++, j += 2)
+      sprintf(&szBuffer[j], "%02X", (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
+   return ConfigWriteStr(pszVar, szBuffer, bCreate);
 }

@@ -121,7 +121,13 @@ CREATE TABLE object_properties
 	image_id integer,
 	last_modified integer not null,
 	inherit_access_rights integer not null,
-	status_alg integer not null,
+	status_calc_alg integer not null,
+	status_prop_alg integer not null,
+	status_fixed_val integer not null,
+	status_shift integer not null,
+	status_translation varchar(8) not null,
+	status_single_threshold integer not null,
+	status_thresholds varchar(8) not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

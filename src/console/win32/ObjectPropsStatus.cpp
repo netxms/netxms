@@ -55,8 +55,8 @@ void CObjectPropsStatus::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxDouble(pDX, m_dThreshold3, 0., 1.);
 	DDX_Text(pDX, IDC_EDIT_T4, m_dThreshold4);
 	DDV_MinMaxDouble(pDX, m_dThreshold4, 0., 1.);
-	DDX_Radio(pDX, IDC_RADIO_MOST_CRITICAL, m_iCalcAlg);
-	DDX_Radio(pDX, IDC_RADIO_UNCHANGED, m_iPropAlg);
+	DDX_Radio(pDX, IDC_RADIO_CALC_DEFAULT, m_iCalcAlg);
+	DDX_Radio(pDX, IDC_RADIO_PROP_DEFAULT, m_iPropAlg);
 	//}}AFX_DATA_MAP
 }
 

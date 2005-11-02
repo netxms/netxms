@@ -49,7 +49,8 @@ NetObj::NetObj()
    m_bInheritAccessRights = TRUE;
    m_dwImageId = IMG_DEFAULT;    // Default image
    m_pPollRequestor = NULL;
-   m_iStatusAlgorithm = SA_DEFAULT;
+   m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
+   m_iStatusPropAlg = SA_PROPAGATE_DEFAULT;
 }
 
 
@@ -121,8 +122,11 @@ BOOL NetObj::LoadCommonProperties(void)
 
    // Load access options
    _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,image_id,"
-                               "inherit_access_rights,last_modified,status_alg "
-                               "FROM object_properties WHERE object_id=%ld"), m_dwId);
+                               "inherit_access_rights,last_modified,status_calc_alg,"
+                               "status_prop_alg,status_fixed_val,status_shift,"
+                               "status_translation,status_single_threshold,"
+                               "status_thresholds FROM object_properties "
+                               "WHERE object_id=%ld"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -134,7 +138,13 @@ BOOL NetObj::LoadCommonProperties(void)
          m_dwImageId = DBGetFieldULong(hResult, 0, 3);
          m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 4) ? TRUE : FALSE;
          m_dwTimeStamp = DBGetFieldULong(hResult, 0, 5);
-         m_iStatusAlgorithm = DBGetFieldLong(hResult, 0, 6);
+         m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 6);
+         m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 7);
+         m_iFixedStatus = DBGetFieldLong(hResult, 0, 8);
+         m_iStatusShift = DBGetFieldLong(hResult, 0, 9);
+         DBGetFieldByteArray(hResult, 0, 10, m_iStatusTranslation, 4, STATUS_WARNING);
+         m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 11);
+         DBGetFieldByteArray(hResult, 0, 12, m_iStatusThresholds, 4, 50);
          bResult = TRUE;
       }
       DBFreeResult(hResult);
@@ -149,29 +159,43 @@ BOOL NetObj::LoadCommonProperties(void)
 
 BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 {
-   TCHAR szQuery[512];
+   TCHAR szQuery[512], szTranslation[16], szThresholds[16];
    DB_RESULT hResult;
    BOOL bResult = FALSE;
+   int i, j;
 
    // Save access options
    _sntprintf(szQuery, 512, _T("SELECT object_id FROM object_properties WHERE object_id=%ld"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
+      for(i = 0, j = 0; i < 4; i++, j += 2)
+      {
+         _stprintf(&szTranslation[j], _T("%02X"), (char)m_iStatusTranslation[i]);
+         _stprintf(&szThresholds[j], _T("%02X"), (char)m_iStatusThresholds[i]);
+      }
       if (DBGetNumRows(hResult) > 0)
          _sntprintf(szQuery, 512, 
                     _T("UPDATE object_properties SET name='%s',status=%d,"
                        "is_deleted=%d,image_id=%ld,inherit_access_rights=%d,"
-                       "last_modified=%ld,status_alg=%d WHERE object_id=%ld"),
+                       "last_modified=%ld,status_calc_alg=%d,status_prop_alg=%d,"
+                       "status_fixed_val=%d,status_shift=%d,status_translation='%s',"
+                       "status_single_threshold=%d,status_thresholds='%s' WHERE object_id=%ld"),
                     m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
-                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusAlgorithm, m_dwId);
+                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
+                    m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
+                    szTranslation, m_iStatusSingleThreshold, szThresholds, m_dwId);
       else
          _sntprintf(szQuery, 512, 
                     _T("INSERT INTO object_properties (object_id,name,status,is_deleted,"
-                       "image_id,inherit_access_rights,last_modified,status_alg) "
-                       "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld,%d)"),
+                       "image_id,inherit_access_rights,last_modified,status_calc_alg,"
+                       "status_prop_alg,status_fixed_val,status_shift,status_translation,"
+                       "status_single_threshold,status_thresholds) "
+                       "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld,%d,%d,%d,%d,'%s',%d,'%s')"),
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
-                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusAlgorithm);
+                    m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
+                    m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
+                    szTranslation, m_iStatusSingleThreshold, szThresholds);
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
    }
@@ -418,40 +442,95 @@ const char *NetObj::ParentList(char *szBuffer)
 void NetObj::CalculateCompoundStatus(void)
 {
    DWORD i;
-   int iWorstAlarm, iWorstStatus, iCount, iStatusAlg, iOldStatus = m_iStatus;
+   int iMostCriticalAlarm, iMostCriticalStatus, iCount, iStatusAlg;
+   int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
+   int nRating[5], iChildStatus, nThresholds[4];
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      iWorstAlarm = g_alarmMgr.GetWorstStatusForObject(m_dwId);
+      iMostCriticalAlarm = g_alarmMgr.GetMostCriticalStatusForObject(m_dwId);
 
       LockData();
-      iStatusAlg = (m_iStatusAlgorithm == SA_DEFAULT) ? g_iStatusAlgorithm : m_iStatusAlgorithm;
+      if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
+      {
+         iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
+      }
+      else
+      {
+         iStatusAlg = m_iStatusCalcAlg;
+         nSingleThreshold = m_iStatusSingleThreshold;
+         pnThresholds = m_iStatusThresholds;
+      }
+      if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
+      {
+         for(i = 0; i < 4; i++)
+            nThresholds[i] = nSingleThreshold;
+         pnThresholds = nThresholds;
+      }
 
       switch(iStatusAlg)
       {
-         case SA_WORST_STATUS:
+         case SA_CALCULATE_MOST_CRITICAL:
             LockChildList(FALSE);
-            for(i = 0, iCount = 0, iWorstStatus = -1; i < m_dwChildCount; i++)
-               if ((m_pChildList[i]->Status() < STATUS_UNKNOWN) &&
-                   (m_pChildList[i]->Status() > iWorstStatus))
+            for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < m_dwChildCount; i++)
+            {
+               iChildStatus = m_pChildList[i]->PropagatedStatus();
+               if ((iChildStatus < STATUS_UNKNOWN) && 
+                   (iChildStatus > iMostCriticalStatus))
                {
-                  iWorstStatus = m_pChildList[i]->Status();
+                  iMostCriticalStatus = iChildStatus;
                   iCount++;
                }
+            }
+            m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN;
+            UnlockChildList();
+            break;
+         case SA_CALCULATE_SINGLE_THRESHOLD:
+         case SA_CALCULATE_MULTIPLE_THRESHOLDS:
+            // Step 1: calculate severity raitings
+            memset(nRating, 0, sizeof(int) * 5);
+            LockChildList(FALSE);
+            for(i = 0, iCount = 0; i < m_dwChildCount; i++)
+            {
+               iChildStatus = m_pChildList[i]->PropagatedStatus();
+               if (iChildStatus < STATUS_UNKNOWN)
+               {
+                  while(iChildStatus >= 0)
+                     nRating[iChildStatus--]++;
+                  iCount++;
+               }
+            }
             UnlockChildList();
 
+            // Step 2: check what severity rating is above threshold
             if (iCount > 0)
             {
-               m_iStatus = (iWorstAlarm != STATUS_UNKNOWN) ? max(iWorstStatus, iWorstAlarm) : iWorstStatus;
+               for(i = 4; i > 0; i--)
+                  if (nRating[i] * 100 / iCount >= pnThresholds[i - 1])
+                     break;
+               m_iStatus = i;
             }
             else
             {
-               m_iStatus = iWorstAlarm;
+               m_iStatus = STATUS_UNKNOWN;
             }
             break;
          default:
             m_iStatus = STATUS_UNKNOWN;
             break;
+      }
+
+      // If alarms exist for object, apply alarm severity to object's status
+      if (iMostCriticalAlarm != STATUS_UNKNOWN)
+      {
+         if (m_iStatus == STATUS_UNKNOWN)
+         {
+            m_iStatus = iMostCriticalAlarm;
+         }
+         else
+         {
+            m_iStatus = max(m_iStatus, iMostCriticalAlarm);
+         }
       }
       UnlockData();
 
@@ -569,7 +648,19 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
       pMsg->SetVariable(dwId, m_pChildList[i]->Id());
    pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
    pMsg->SetVariable(VID_IMAGE_ID, m_dwImageId);
-   pMsg->SetVariable(VID_STATUS_ALGORITHM, (WORD)m_iStatusAlgorithm);
+   pMsg->SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
+   pMsg->SetVariable(VID_STATUS_PROPAGATION_ALG, (WORD)m_iStatusPropAlg);
+   pMsg->SetVariable(VID_FIXED_STATUS, (WORD)m_iFixedStatus);
+   pMsg->SetVariable(VID_STATUS_SHIFT, (WORD)m_iStatusShift);
+   pMsg->SetVariable(VID_STATUS_TRANSLATION_1, (WORD)m_iStatusTranslation[0]);
+   pMsg->SetVariable(VID_STATUS_TRANSLATION_2, (WORD)m_iStatusTranslation[1]);
+   pMsg->SetVariable(VID_STATUS_TRANSLATION_3, (WORD)m_iStatusTranslation[2]);
+   pMsg->SetVariable(VID_STATUS_TRANSLATION_4, (WORD)m_iStatusTranslation[3]);
+   pMsg->SetVariable(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_iStatusSingleThreshold);
+   pMsg->SetVariable(VID_STATUS_THRESHOLD_1, (WORD)m_iStatusThresholds[0]);
+   pMsg->SetVariable(VID_STATUS_THRESHOLD_2, (WORD)m_iStatusThresholds[1]);
+   pMsg->SetVariable(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
+   pMsg->SetVariable(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
    m_pAccessList->CreateMessage(pMsg);
 }
 
@@ -621,9 +712,23 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_IMAGE_ID))
       m_dwImageId = pRequest->GetVariableLong(VID_IMAGE_ID);
 
-   // Change object's status calculation algorithm
-   if (pRequest->IsVariableExist(VID_STATUS_ALGORITHM))
-      m_iStatusAlgorithm = (int)pRequest->GetVariableShort(VID_STATUS_ALGORITHM);
+   // Change object's status calculation/propagation algorithms
+   if (pRequest->IsVariableExist(VID_STATUS_CALCULATION_ALG))
+   {
+      m_iStatusCalcAlg = (int)pRequest->GetVariableShort(VID_STATUS_CALCULATION_ALG);
+      m_iStatusPropAlg = (int)pRequest->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
+      m_iFixedStatus = (int)pRequest->GetVariableShort(VID_FIXED_STATUS);
+      m_iStatusShift = (int)pRequest->GetVariableShort(VID_STATUS_SHIFT);
+      m_iStatusTranslation[0] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_1);
+      m_iStatusTranslation[1] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_2);
+      m_iStatusTranslation[2] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_3);
+      m_iStatusTranslation[3] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_4);
+      m_iStatusSingleThreshold = (int)pRequest->GetVariableShort(VID_STATUS_SINGLE_THRESHOLD);
+      m_iStatusThresholds[0] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_1);
+      m_iStatusThresholds[1] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_2);
+      m_iStatusThresholds[2] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_3);
+      m_iStatusThresholds[3] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_4);
+   }
 
    // Change object's ACL
    if (pRequest->IsVariableExist(VID_ACL_SIZE))
@@ -887,4 +992,59 @@ void NetObj::Unhide(void)
 
    UnlockChildList();
    UnlockData();
+}
+
+
+//
+// Return status propagated to parent
+//
+
+int NetObj::PropagatedStatus(void)
+{
+   int iStatus;
+
+   if (m_iStatusPropAlg == SA_PROPAGATE_DEFAULT)
+   {
+      iStatus = DefaultPropagatedStatus(m_iStatus);
+   }
+   else
+   {
+      switch(m_iStatusPropAlg)
+      {
+         case SA_PROPAGATE_UNCHANGED:
+            iStatus = m_iStatus;
+            break;
+         case SA_PROPAGATE_FIXED:
+            iStatus = (m_iStatus < STATUS_UNKNOWN) ? m_iFixedStatus : m_iStatus;
+            break;
+         case SA_PROPAGATE_RELATIVE:
+            if (m_iStatus < STATUS_UNKNOWN)
+            {
+               iStatus = m_iStatus + m_iStatusShift;
+               if (iStatus < 0)
+                  iStatus = 0;
+               if (iStatus > STATUS_CRITICAL)
+                  iStatus = STATUS_CRITICAL;
+            }
+            else
+            {
+               iStatus = m_iStatus;
+            }
+            break;
+         case SA_PROPAGATE_TRANSLATED:
+            if ((m_iStatus > STATUS_NORMAL) && (m_iStatus < STATUS_UNKNOWN))
+            {
+               iStatus = m_iStatusTranslation[m_iStatus - 1];
+            }
+            else
+            {
+               iStatus = m_iStatus;
+            }
+            break;
+         default:
+            iStatus = STATUS_UNKNOWN;
+            break;
+      }
+   }
+   return iStatus;
 }
