@@ -32,7 +32,7 @@
 // Constants
 //
 
-#define POLLS_PER_MINUTE      4
+#define MAX_POLLS_PER_MINUTE     60
 
 
 //
@@ -46,7 +46,7 @@ struct PING_TARGET
    DWORD dwPacketSize;
    DWORD dwAvgRTT;
    DWORD dwLastRTT;
-   DWORD pdwHistory[POLLS_PER_MINUTE];
+   DWORD pdwHistory[MAX_POLLS_PER_MINUTE];
    int iBufPos;
    THREAD hThread;
 };

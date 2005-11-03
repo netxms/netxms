@@ -42,6 +42,7 @@ static DWORD m_dwNumTargets = 0;
 static PING_TARGET *m_pTargetList = NULL;
 static DWORD m_dwTimeout = 3000;    // Default timeout is 3 seconds
 static DWORD m_dwDefPacketSize = 46;
+static DWORD m_dwPollsPerMinute = 4;
 
 
 //
@@ -62,15 +63,15 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
          ((PING_TARGET *)pArg)->dwLastRTT = 10000;
 
       ((PING_TARGET *)pArg)->pdwHistory[((PING_TARGET *)pArg)->iBufPos++] = ((PING_TARGET *)pArg)->dwLastRTT;
-      if (((PING_TARGET *)pArg)->iBufPos == POLLS_PER_MINUTE)
+      if (((PING_TARGET *)pArg)->iBufPos == (int)m_dwPollsPerMinute)
          ((PING_TARGET *)pArg)->iBufPos = 0;
-      for(i = 0, dwSum = 0; i < POLLS_PER_MINUTE; i++)
+      for(i = 0, dwSum = 0; i < m_dwPollsPerMinute; i++)
          dwSum += ((PING_TARGET *)pArg)->pdwHistory[i];
-      ((PING_TARGET *)pArg)->dwAvgRTT = dwSum / POLLS_PER_MINUTE;
+      ((PING_TARGET *)pArg)->dwAvgRTT = dwSum / m_dwPollsPerMinute;
 
       dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
 
-      if (ConditionWait(m_hCondShutdown, 60000 / POLLS_PER_MINUTE - dwElapsedTime))
+      if (ConditionWait(m_hCondShutdown, 60000 / m_dwPollsPerMinute - dwElapsedTime))
          break;
    }
    return THREAD_OK;
@@ -295,6 +296,7 @@ static TCHAR *m_pszTargetList = NULL;
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
    { _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_dwDefPacketSize },
+   { _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &m_dwPollsPerMinute },
    { _T("Target"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszTargetList },
    { _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwTimeout },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -314,6 +316,11 @@ DECLARE_SUBAGENT_INIT(PING)
    if (dwResult == NXCFG_ERR_OK)
    {
       TCHAR *pItem, *pEnd;
+
+      if (m_dwPollsPerMinute == 0)
+         m_dwPollsPerMinute = 1;
+      if (m_dwPollsPerMinute > MAX_POLLS_PER_MINUTE)
+         m_dwPollsPerMinute = MAX_POLLS_PER_MINUTE;
 
       // Parse target list
       if (m_pszTargetList != NULL)

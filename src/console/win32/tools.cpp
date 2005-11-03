@@ -72,6 +72,16 @@ void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable)
 
 
 //
+// Check if dialog button is checked
+//
+
+BOOL IsButtonChecked(CDialog *pWnd, int nCtrl)
+{
+   return pWnd->SendDlgItemMessage(nCtrl, BM_GETCHECK) == BST_CHECKED;
+}
+
+
+//
 // Select given item in list view
 // Will remove selection from all currently selected items and set
 // LVIS_SELECTED and LVIS_FOCUSED flags to specified item

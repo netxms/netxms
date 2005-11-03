@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -191,7 +191,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatusCalcAlg = (int)pMsg->GetVariableShort(VID_STATUS_CALCULATION_ALG);
    pObject->iStatusPropAlg = (int)pMsg->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
    pObject->iFixedStatus = (int)pMsg->GetVariableShort(VID_FIXED_STATUS);
-   pObject->iStatusShift = (int)pMsg->GetVariableShort(VID_STATUS_SHIFT);
+   pObject->iStatusShift = pMsg->GetVariableShortAsInt32(VID_STATUS_SHIFT);
    pObject->iStatusTrans[0] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_1);
    pObject->iStatusTrans[1] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_2);
    pObject->iStatusTrans[2] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_3);

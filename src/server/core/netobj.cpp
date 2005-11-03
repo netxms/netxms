@@ -29,6 +29,8 @@
 
 NetObj::NetObj()
 {
+   int i;
+
    m_dwRefCount = 0;
    m_mutexData = MutexCreate();
    m_mutexRefCount = MutexCreate();
@@ -51,6 +53,14 @@ NetObj::NetObj()
    m_pPollRequestor = NULL;
    m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
    m_iStatusPropAlg = SA_PROPAGATE_DEFAULT;
+   m_iFixedStatus = STATUS_WARNING;
+   m_iStatusShift = 0;
+   m_iStatusSingleThreshold = 75;
+   for(i = 0; i < 4; i++)
+   {
+      m_iStatusTranslation[i] = i + 1;
+      m_iStatusThresholds[i] = 80 - i * 20;
+   }
 }
 
 
@@ -439,7 +449,7 @@ const char *NetObj::ParentList(char *szBuffer)
 // Calculate status for compound object based on childs' status
 //
 
-void NetObj::CalculateCompoundStatus(void)
+void NetObj::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
    DWORD i;
    int iMostCriticalAlarm, iMostCriticalStatus, iCount, iStatusAlg;
@@ -535,7 +545,7 @@ void NetObj::CalculateCompoundStatus(void)
       UnlockData();
 
       // Cause parent object(s) to recalculate it's status
-      if (iOldStatus != m_iStatus)
+      if ((iOldStatus != m_iStatus) || bForcedRecalc)
       {
          LockParentList(FALSE);
          for(i = 0; i < m_dwParentCount; i++)
@@ -701,6 +711,8 @@ void NetObj::Modify(void)
 
 DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
+   BOOL bRecalcStatus = FALSE;
+
    if (!bAlreadyLocked)
       LockData();
 
@@ -718,7 +730,7 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       m_iStatusCalcAlg = (int)pRequest->GetVariableShort(VID_STATUS_CALCULATION_ALG);
       m_iStatusPropAlg = (int)pRequest->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
       m_iFixedStatus = (int)pRequest->GetVariableShort(VID_FIXED_STATUS);
-      m_iStatusShift = (int)pRequest->GetVariableShort(VID_STATUS_SHIFT);
+      m_iStatusShift = pRequest->GetVariableShortAsInt32(VID_STATUS_SHIFT);
       m_iStatusTranslation[0] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_1);
       m_iStatusTranslation[1] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_2);
       m_iStatusTranslation[2] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_3);
@@ -728,6 +740,7 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       m_iStatusThresholds[1] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_2);
       m_iStatusThresholds[2] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_3);
       m_iStatusThresholds[3] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_4);
+      bRecalcStatus = TRUE;
    }
 
    // Change object's ACL
@@ -747,6 +760,9 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    Modify();
    UnlockData();
+
+   if (bRecalcStatus)
+      CalculateCompoundStatus(TRUE);
 
    return RCC_SUCCESS;
 }
@@ -1015,10 +1031,10 @@ int NetObj::PropagatedStatus(void)
             iStatus = m_iStatus;
             break;
          case SA_PROPAGATE_FIXED:
-            iStatus = (m_iStatus < STATUS_UNKNOWN) ? m_iFixedStatus : m_iStatus;
+            iStatus = ((m_iStatus > STATUS_NORMAL) && (m_iStatus < STATUS_UNKNOWN)) ? m_iFixedStatus : m_iStatus;
             break;
          case SA_PROPAGATE_RELATIVE:
-            if (m_iStatus < STATUS_UNKNOWN)
+            if ((m_iStatus > STATUS_NORMAL) && (m_iStatus < STATUS_UNKNOWN))
             {
                iStatus = m_iStatus + m_iStatusShift;
                if (iStatus < 0)

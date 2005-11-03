@@ -103,6 +103,7 @@ public:
    DWORD GetVariableLong(DWORD dwVarId);
    QWORD GetVariableInt64(DWORD dwVarId);
    WORD GetVariableShort(DWORD dwVarId);
+   LONG GetVariableShortAsInt32(DWORD dwVarId);
    double GetVariableDouble(DWORD dwVarId);
    TCHAR *GetVariableStr(DWORD dwVarId, TCHAR *szBuffer = NULL, DWORD dwBufSize = 0);
    DWORD GetVariableBinary(DWORD dwVarId, BYTE *pBuffer, DWORD dwBufSize);

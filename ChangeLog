@@ -2,8 +2,10 @@
 * 0.2.7
 *
 
+- Advanced status calculation mechanism implemented
 - Added support for SQLite embedded database engine
 - New MIBs added: IEEE 802.11
+- PING subagent: added "PacketRate" configuration parameter
 
 
 *

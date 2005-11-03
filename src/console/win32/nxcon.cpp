@@ -1054,6 +1054,19 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
           (pObject->iClass != OBJECT_TEMPLATEGROUP) &&
           (pObject->iClass != OBJECT_TEMPLATE))
       {
+         wndStatus.m_iCalcAlg = pObject->iStatusCalcAlg;
+         wndStatus.m_iPropAlg = pObject->iStatusPropAlg;
+         wndStatus.m_iRelChange = pObject->iStatusShift;
+         wndStatus.m_iFixedStatus = pObject->iFixedStatus;
+         wndStatus.m_iStatusTranslation1 = pObject->iStatusTrans[0];
+         wndStatus.m_iStatusTranslation2 = pObject->iStatusTrans[1];
+         wndStatus.m_iStatusTranslation3 = pObject->iStatusTrans[2];
+         wndStatus.m_iStatusTranslation4 = pObject->iStatusTrans[3];
+         wndStatus.m_dSingleThreshold = (double)pObject->iStatusSingleTh / 100;
+         wndStatus.m_dThreshold1 = (double)pObject->iStatusThresholds[0] / 100;
+         wndStatus.m_dThreshold2 = (double)pObject->iStatusThresholds[1] / 100;
+         wndStatus.m_dThreshold3 = (double)pObject->iStatusThresholds[2] / 100;
+         wndStatus.m_dThreshold4 = (double)pObject->iStatusThresholds[3] / 100;
          wndPropSheet.AddPage(&wndStatus);
       }
 

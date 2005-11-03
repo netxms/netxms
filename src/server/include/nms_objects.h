@@ -253,7 +253,7 @@ public:
    void SetName(char *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
 
-   virtual void CalculateCompoundStatus(void);
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);

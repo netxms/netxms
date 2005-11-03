@@ -1043,10 +1043,10 @@ int DefaultPropagatedStatus(int iObjectStatus)
          iStatus = iObjectStatus;
          break;
       case SA_PROPAGATE_FIXED:
-         iStatus = (iObjectStatus < STATUS_UNKNOWN) ? m_iFixedStatus : iObjectStatus;
+         iStatus = ((iObjectStatus > STATUS_NORMAL) && (iObjectStatus < STATUS_UNKNOWN)) ? m_iFixedStatus : iObjectStatus;
          break;
       case SA_PROPAGATE_RELATIVE:
-         if (iObjectStatus < STATUS_UNKNOWN)
+         if ((iObjectStatus > STATUS_NORMAL) && (iObjectStatus < STATUS_UNKNOWN))
          {
             iStatus = iObjectStatus + m_iStatusShift;
             if (iStatus < 0)
