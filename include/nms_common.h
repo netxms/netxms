@@ -150,8 +150,16 @@ typedef int socklen_t;
 #include <netdb.h>
 
 typedef int BOOL;
-typedef long int LONG;
+#if (SIZEOF_LONG == 4)
+typedef long LONG;
+#else
+typedef int LONG;
+#endif
+#if (SIZEOF_LONG == 4)
 typedef unsigned long DWORD;
+#else
+typedef unsigned int DWORD;
+#endif
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
@@ -246,8 +254,16 @@ typedef int SOCKET;
 #include <dirent.h>
 
 typedef int BOOL;
-typedef long int LONG;
+#if (SIZEOF_LONG == 4)
+typedef long LONG;
+#else
+typedef int LONG;
+#endif
+#if (SIZEOF_LONG == 4)
 typedef unsigned long DWORD;
+#else
+typedef unsigned int DWORD;
+#endif
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
