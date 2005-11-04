@@ -98,7 +98,7 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
                switch(pTemplateList[i].iType)
                {
                   case CT_LONG:
-                     *((long *)pTemplateList[i].pBuffer) = _tcstol(ptr, &eptr, 0);
+                     *((LONG *)pTemplateList[i].pBuffer) = _tcstol(ptr, &eptr, 0);
                      if (*eptr != 0)
                      {
                         iErrors++;

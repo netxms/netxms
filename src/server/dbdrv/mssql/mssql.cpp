@@ -288,7 +288,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
                         break;
                      case SQLINT4:
                         pResult->pValues[iCurrPos] = (char *)malloc(16);
-                        sprintf(pResult->pValues[iCurrPos], "%ld", *((long *)pData));
+                        sprintf(pResult->pValues[iCurrPos], "%d", *((LONG *)pData));
                         break;
                      case SQLFLT4:
                         pResult->pValues[iCurrPos] = (char *)malloc(32);
@@ -480,7 +480,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, c
             sprintf(pBuffer, "%d", *((short *)pData));
             break;
          case SQLINT4:
-            sprintf(pBuffer, "%ld", *((long *)pData));
+            sprintf(pBuffer, "%d", *((LONG *)pData));
             break;
          case SQLFLT4:
             sprintf(pBuffer, "%f", *((float *)pData));

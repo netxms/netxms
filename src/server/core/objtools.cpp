@@ -69,7 +69,7 @@ BOOL IsTableTool(DWORD dwToolId)
    LONG nType;
    BOOL bResult = FALSE;
 
-   _stprintf(szBuffer, _T("SELECT tool_type FROM object_tools WHERE tool_id=%ld"), dwToolId);
+   _stprintf(szBuffer, _T("SELECT tool_type FROM object_tools WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
@@ -97,7 +97,7 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId)
    if (dwUserId == 0)
       return TRUE;
 
-   _stprintf(szBuffer, _T("SELECT tool_id FROM object_tools_acl WHERE tool_id=%ld AND user_id=%ld"),
+   _stprintf(szBuffer, _T("SELECT tool_id FROM object_tools_acl WHERE tool_id=%d AND user_id=%d"),
              dwToolId, dwUserId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
@@ -150,7 +150,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    if ((pszEnum != NULL) && (pszRegEx != NULL))
    {
       // Load column information
-      _stprintf(szBuffer, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=%ld ORDER BY col_number"),
+      _stprintf(szBuffer, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
                 ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
       hResult = DBSelect(g_hCoreDB, szBuffer);
       if (hResult != NULL)
@@ -287,7 +287,7 @@ static void TableHandler(DWORD dwVersion, DWORD dwAddr, WORD wPort,
    // Create index (OID suffix) for columns
    if (((SNMP_ENUM_ARGS *)pArg)->dwFlags & TF_SNMP_INDEXED_BY_VALUE)
    {
-      _stprintf(szSuffix, _T(".%lu"), pVar->GetValueAsUInt());
+      _stprintf(szSuffix, _T(".%u"), pVar->GetValueAsUInt());
    }
    else
    {
@@ -350,7 +350,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    msg.SetCode(CMD_TABLE_DATA);
    msg.SetId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
 
-   _stprintf(szBuffer, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=%ld ORDER BY col_number"),
+   _stprintf(szBuffer, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=%d ORDER BY col_number"),
              ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
@@ -432,7 +432,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
    TCHAR szBuffer[256];
    DB_RESULT hResult;
 
-   _stprintf(szBuffer, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=%ld"), dwToolId);
+   _stprintf(szBuffer, _T("SELECT tool_type,tool_data,flags FROM object_tools WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {

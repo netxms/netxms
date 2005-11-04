@@ -141,7 +141,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "description,node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid"
-                            " FROM nodes WHERE id=%ld", dwId);
+                            " FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -177,7 +177,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    if (!m_bIsDeleted)
    {
       // Link node to subnets
-      sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%ld", dwId);
+      sprintf(szQuery, "SELECT subnet_id FROM nsmap WHERE node_id=%d", dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult == NULL)
          return FALSE;     // Query failed
@@ -247,7 +247,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM nodes WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM nodes WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -266,8 +266,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "node_flags,snmp_version,community,discovery_flags,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,"
                "description,node_type,agent_version,platform_name,"
-               "poller_node_id,zone_guid) VALUES (%ld,'%s',%ld,%d,'%s',%ld,%d,%d,%d,"
-               "'%s','%s','%s',%ld,'%s','%s',%ld,%ld)",
+               "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,"
+               "'%s','%s','%s',%d,'%s','%s',%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_szObjectId,
@@ -276,11 +276,11 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
-               "node_flags=%ld,snmp_version=%d,community='%s',discovery_flags=%d,"
+               "node_flags=%d,snmp_version=%d,community='%s',discovery_flags=%d,"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
-               "snmp_oid='%s',description='%s',node_type=%ld,"
-               "agent_version='%s',platform_name='%s',poller_node_id=%ld,zone_guid=%ld"
-               " WHERE id=%ld",
+               "snmp_oid='%s',description='%s',node_type=%d,"
+               "agent_version='%s',platform_name='%s',poller_node_id=%d,zone_guid=%d"
+               " WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
@@ -323,11 +323,11 @@ BOOL Node::DeleteFromDB(void)
    bSuccess = Template::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM nodes WHERE id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM nodes WHERE id=%d", m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DELETE FROM nsmap WHERE node_id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM nsmap WHERE node_id=%d", m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DROP TABLE idata_%ld", m_dwId);
+      sprintf(szQuery, "DROP TABLE idata_%d", m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -1492,7 +1492,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       }
       else if (!stricmp(szParam, "Server.AverageDCIQueuingTime"))
       {
-         sprintf(szBuffer, "%lu", g_dwAvgDCIQueuingTime);
+         sprintf(szBuffer, "%u", g_dwAvgDCIQueuingTime);
       }
       else
       {
@@ -1738,7 +1738,7 @@ int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
    int iStatus;
 
    // Get administrative status
-   sprintf(szParam, "Net.Interface.AdminStatus(%lu)", dwIndex);
+   sprintf(szParam, "Net.Interface.AdminStatus(%u)", dwIndex);
    if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
    {
       dwAdminStatus = strtoul(szBuffer, NULL, 0);
@@ -1753,7 +1753,7 @@ int Node::GetInterfaceStatusFromAgent(DWORD dwIndex)
             iStatus = STATUS_DISABLED;
             break;
          case 1:     // Interface administratively up, check link state
-            sprintf(szParam, "Net.Interface.Link(%lu)", dwIndex);
+            sprintf(szParam, "Net.Interface.Link(%u)", dwIndex);
             if (GetItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
             {
                dwLinkState = strtoul(szBuffer, NULL, 0);
@@ -1857,7 +1857,7 @@ void Node::OnObjectDelete(DWORD dwObjectId)
       /* LOCK? */
       m_dwPollerNode = 0;
       Modify();
-      DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
+      DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
 }
 
@@ -1868,10 +1868,10 @@ void Node::OnObjectDelete(DWORD dwObjectId)
 
 void Node::CheckOSPFSupport(void)
 {
-   long nAdminStatus;
+   LONG nAdminStatus;
 
    if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
-               ".1.3.6.1.2.1.14.1.2.0", NULL, 0, &nAdminStatus, sizeof(long),
+               ".1.3.6.1.2.1.14.1.2.0", NULL, 0, &nAdminStatus, sizeof(LONG),
                FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
       if (nAdminStatus)

@@ -60,7 +60,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       // Check if we get too large message
       if (iErr == 1)
       {
-         DebugPrintf(_T("Received too large message %s (%ld bytes)"), 
+         DebugPrintf(_T("Received too large message %s (%d bytes)"), 
                      CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
@@ -90,7 +90,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
 
-         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%ld)"), CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
+         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%d)"), CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
 
          // Process message
          switch(pRawMsg->wCode)
@@ -141,7 +141,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       {
          pMsg = new CSCPMessage(pRawMsg);
          bMsgNotNeeded = TRUE;
-         DebugPrintf(_T("RecvMsg(\"%s\", id:%ld)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+         DebugPrintf(_T("RecvMsg(\"%s\", id:%d)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
 
          // Process message
          switch(pMsg->GetCode())

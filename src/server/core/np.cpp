@@ -102,7 +102,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
             PollNewNode(dwIpAddr, dwNetMask, dwFlags, NULL);
 
             // Delete processed node
-            sprintf(szQuery, "DELETE FROM new_nodes WHERE id=%ld", dwId);
+            sprintf(szQuery, "DELETE FROM new_nodes WHERE id=%d", dwId);
             DBQuery(g_hCoreDB, szQuery);
          }
          DBFreeResult(hResult);

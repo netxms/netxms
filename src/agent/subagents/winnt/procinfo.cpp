@@ -344,12 +344,12 @@ LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
                   TCHAR szBaseName[MAX_PATH];
 
                   GetModuleBaseName(hProcess, phModList[0], szBaseName, MAX_PATH);
-                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu %s"), pdwProcList[i], szBaseName);
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%u %s"), pdwProcList[i], szBaseName);
                   NxAddResultString(value, szBuffer);
                }
                else
                {
-                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unknown>"), pdwProcList[i]);
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%u <unknown>"), pdwProcList[i]);
                   NxAddResultString(value, szBuffer);
                }
             }
@@ -361,7 +361,7 @@ LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
                }
                else
                {
-                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%lu <unknown>"), pdwProcList[i]);
+                  _sntprintf(szBuffer, MAX_PATH + 64, _T("%u <unknown>"), pdwProcList[i]);
                   NxAddResultString(value, szBuffer);
                }
             }

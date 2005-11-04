@@ -78,6 +78,67 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V34 to V35
+//
+
+static BOOL H_UpgradeFromV34(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE object_properties DROP COLUMN status_alg\n"
+      "ALTER TABLE object_properties ADD status_calc_alg integer\n"
+	   "ALTER TABLE object_properties ADD status_prop_alg integer\n"
+	   "ALTER TABLE object_properties ADD status_fixed_val integer\n"
+	   "ALTER TABLE object_properties ADD status_shift integer\n"
+	   "ALTER TABLE object_properties ADD status_translation varchar(8)\n"
+	   "ALTER TABLE object_properties ADD status_single_threshold integer\n"
+	   "ALTER TABLE object_properties ADD status_thresholds varchar(8)\n"
+      "UPDATE object_properties SET status_calc_alg=0,status_prop_alg=0,"
+         "status_fixed_val=0,status_shift=0,status_translation='01020304',"
+         "status_single_threshold=75,status_thresholds='503C2814'\n"
+      "DELETE FROM config WHERE var_name='StatusCalculationAlgorithm'\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusCalculationAlgorithm"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusPropagationAlgorithm"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("FixedStatusValue"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusShift"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusTranslation"), _T("01020304"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusSingleThreshold"), _T("75"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("StatusThresholds"), _T("503C2814"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='35' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V33 to V34
 //
 
@@ -469,7 +530,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    for(i = 0; (!bRead) && (m_pszTableNames[i] != NULL); i++)
    {
       bIsTemplate = !_tcscmp(m_pszTableNames[i], _T("templates"));
-      _sntprintf(szQuery, 1024, _T("SELECT name,is_deleted,image_id%s FROM %s WHERE id=%ld"),
+      _sntprintf(szQuery, 1024, _T("SELECT name,is_deleted,image_id%s FROM %s WHERE id=%d"),
                  bIsTemplate ? _T("") : _T(",status"),
                  m_pszTableNames[i], dwId);
       hResult = SQLSelect(szQuery);
@@ -496,7 +557,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    {
       _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
                                    "status,is_deleted,image_id,inherit_access_rights,"
-                                   "last_modified) VALUES (%ld,'%s',%d,%d,%ld,%d,%ld)"),
+                                   "last_modified) VALUES (%d,'%s',%d,%d,%d,%d,%ld)"),
                  dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights, time(NULL));
 
       if (!SQLQuery(szQuery))
@@ -505,7 +566,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    }
    else
    {
-      _tprintf(_T("WARNING: object with ID %ld presented in access control tables but cannot be found in data tables\n"), dwId);
+      _tprintf(_T("WARNING: object with ID %d presented in access control tables but cannot be found in data tables\n"), dwId);
    }
 
    return TRUE;
@@ -629,7 +690,7 @@ static BOOL H_UpgradeFromV26(void)
             {
                _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,"
                                             "status,is_deleted,image_id,inherit_access_rights,"
-                                            "last_modified) VALUES (%ld,'%s',5,0,%ld,%d,%ld)"),
+                                            "last_modified) VALUES (%d,'%s',5,0,%d,%d,%ld)"),
                           dwId, szName, dwImageId,
                           DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE,
                           time(NULL));
@@ -694,7 +755,7 @@ static BOOL H_UpgradeFromV25(void)
    }
 
    if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), 
-                          _T("CREATE INDEX idx_timestamp ON idata_%ld(idata_timestamp)"), 0, 1))
+                          _T("CREATE INDEX idx_timestamp ON idata_%d(idata_timestamp)"), 0, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -727,8 +788,8 @@ static BOOL H_UpgradeFromV24(void)
          for(i = 0; i < iNumRows; i++)
          {
             dwNodeId = DBGetFieldULong(hResult, i, 0);
-            _tprintf(_T("Creating indexes for table \"idata_%ld\"...\n"), dwNodeId);
-            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_timestamp ON idata_%ld(idata_timestamp)"), dwNodeId);
+            _tprintf(_T("Creating indexes for table \"idata_%d\"...\n"), dwNodeId);
+            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_timestamp ON idata_%d(idata_timestamp)"), dwNodeId);
             if (!SQLQuery(szQuery))
                if (!g_bIgnoreErrors)
                {
@@ -784,7 +845,7 @@ static BOOL H_UpgradeFromV23(void)
       for(i = 0; i < iNumRows; i++)
       {
          _stprintf(szQuery, _T("INSERT INTO raw_dci_values (item_id,"
-                               "raw_value,last_poll_time) VALUES (%ld,'#00',1)"),
+                               "raw_value,last_poll_time) VALUES (%d,'#00',1)"),
                    DBGetFieldULong(hResult, i, 0));
          if (!SQLQuery(szQuery))
             if (!g_bIgnoreErrors)
@@ -932,7 +993,7 @@ static BOOL H_UpgradeFromV20(void)
          for(j = 1; j <= 6; j++)
             if (DBGetFieldLong(hResult, i, j))
                dwFlags |= m_dwFlag[j - 1];
-         _sntprintf(szQuery, 256, _T("UPDATE nodes SET node_flags=%ld WHERE id=%ld"),
+         _sntprintf(szQuery, 256, _T("UPDATE nodes SET node_flags=%d WHERE id=%d"),
                     dwFlags, DBGetFieldULong(hResult, i, 0));
          if (!SQLQuery(szQuery))
             if (!g_bIgnoreErrors)
@@ -963,8 +1024,8 @@ static BOOL H_UpgradeFromV20(void)
          for(i = 0; i < iNumRows; i++)
          {
             dwNodeId = DBGetFieldULong(hResult, i, 0);
-            _tprintf(_T("Creating indexes for table \"idata_%ld\"...\n"), dwNodeId);
-            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"), dwNodeId);
+            _tprintf(_T("Creating indexes for table \"idata_%d\"...\n"), dwNodeId);
+            _sntprintf(szQuery, 256, _T("CREATE INDEX idx_item_id ON idata_%d(item_id)"), dwNodeId);
             if (!SQLQuery(szQuery))
                if (!g_bIgnoreErrors)
                {
@@ -987,7 +1048,7 @@ static BOOL H_UpgradeFromV20(void)
    if (!CreateConfigParam(_T("NumberOfConfigurationPollers"), _T("4"), 1, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
-   if (!CreateConfigParam(_T("IDataIndexCreationCommand"), _T("CREATE INDEX idx_item_id ON idata_%ld(item_id)"), 0, 1))
+   if (!CreateConfigParam(_T("IDataIndexCreationCommand"), _T("CREATE INDEX idx_item_id ON idata_%d(item_id)"), 0, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -1169,7 +1230,7 @@ static BOOL H_UpgradeFromV17(void)
       dwNumRows = DBGetNumRows(hResult);
       for(i = 0; i < dwNumRows; i++)
       {
-         _sntprintf(szQuery, 4096, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%ld,%ld)"),
+         _sntprintf(szQuery, 4096, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
                     DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
          if (!SQLQuery(szQuery))
             if (!g_bIgnoreErrors)
@@ -1442,6 +1503,7 @@ static struct
    { 31, H_UpgradeFromV31 },
    { 32, H_UpgradeFromV32 },
    { 33, H_UpgradeFromV33 },
+   { 34, H_UpgradeFromV34 },
    { 0, NULL }
 };
 
@@ -1453,7 +1515,7 @@ static struct
 void UpgradeDatabase(void)
 {
    DB_RESULT hResult;
-   long i, iVersion = 0;
+   LONG i, iVersion = 0;
    BOOL bLocked = FALSE;
 
    _tprintf(_T("Upgrading database...\n"));

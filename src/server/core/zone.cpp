@@ -68,7 +68,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
       return FALSE;
 
    _stprintf(szQuery, _T("SELECT zone_guid,zone_type,controller_ip,"
-                         "description FROM zones WHERE id=%ld"), dwId);
+                         "description FROM zones WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -103,7 +103,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
    // Load IP address list
    if (m_iZoneType == ZONE_TYPE_PASSIVE)
    {
-      _stprintf(szQuery, _T("SELECT ip_addr FROM zone_ip_addr_list WHERE zone_id=%ld"), m_dwId);
+      _stprintf(szQuery, _T("SELECT ip_addr FROM zone_ip_addr_list WHERE zone_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -138,7 +138,7 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
    
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM zones WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM zones WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -151,25 +151,25 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
    pszEscDescr = EncodeSQLString(m_pszDescription);
    if (bNewObject)
       _sntprintf(szQuery, 8192, "INSERT INTO zones (id,zone_guid,zone_type,controller_ip,"
-                          "description) VALUES (%ld,%ld,%d,'%s','%s')",
+                          "description) VALUES (%d,%d,%d,'%s','%s')",
                  m_dwId, m_dwZoneGUID, m_iZoneType,
                  IpToStr(m_dwControllerIpAddr, szIpAddr), pszEscDescr);
    else
-      _sntprintf(szQuery, 8192, "UPDATE zones SET zone_guid=%ld,zone_type=%d,"
-                                "controller_ip='%s',description='%s' WHERE id=%ld",
+      _sntprintf(szQuery, 8192, "UPDATE zones SET zone_guid=%d,zone_type=%d,"
+                                "controller_ip='%s',description='%s' WHERE id=%d",
                  m_dwZoneGUID, m_iZoneType,
                  IpToStr(m_dwControllerIpAddr, szIpAddr), pszEscDescr, m_dwId);
    free(pszEscDescr);
    DBQuery(hdb, szQuery);
 
    // Save ip address list
-   _stprintf(szQuery, _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%ld"), m_dwId);
+   _stprintf(szQuery, _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%d"), m_dwId);
    DBQuery(hdb, szQuery);
    if (m_iZoneType == ZONE_TYPE_PASSIVE)
    {
       for(i = 0; i < m_dwAddrListSize; i++)
       {
-         _stprintf(szQuery, _T("INSERT INTO zone_ip_addr_list (zone_id,ip_addr) VALUES (%ld,'%s')"),
+         _stprintf(szQuery, _T("INSERT INTO zone_ip_addr_list (zone_id,ip_addr) VALUES (%d,'%s')"),
                    m_dwId, IpToStr(m_pdwIpAddrList[i], szIpAddr));
          DBQuery(hdb, szQuery);
       }
@@ -196,9 +196,9 @@ BOOL Zone::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      _stprintf(szQuery, _T("DELETE FROM zones WHERE id=%ld"), m_dwId);
+      _stprintf(szQuery, _T("DELETE FROM zones WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
-      _stprintf(szQuery, _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%ld"), m_dwId);
+      _stprintf(szQuery, _T("DELETE FROM zone_ip_addr_list WHERE zone_id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

@@ -35,14 +35,14 @@ extern "C" void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value)
    rbuf[MAX_RESULT_LENGTH - 1] = 0;
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, LONG value)
 {
-   _stprintf(rbuf, _T("%ld"), value);
+   _stprintf(rbuf, _T("%d"), value);
 }
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, DWORD value)
 {
-   _stprintf(rbuf, _T("%lu"), value);
+   _stprintf(rbuf, _T("%u"), value);
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value)

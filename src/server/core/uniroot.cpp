@@ -94,7 +94,7 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
+      sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();

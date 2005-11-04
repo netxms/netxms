@@ -203,7 +203,7 @@ void AgentConnection::ReceiverThread(void)
       // Check if we get too large message
       if (iErr == 1)
       {
-         PrintMsg(_T("Received too large message %s (%ld bytes)"), 
+         PrintMsg(_T("Received too large message %s (%d bytes)"), 
                   CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;

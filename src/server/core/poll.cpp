@@ -195,7 +195,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((int)arg, szBuffer);
       pNode->StatusPoll(NULL, 0, (int)arg);
@@ -230,7 +230,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((int)arg, szBuffer);
       pNode->ConfigurationPoll(NULL, 0, (int)arg);
@@ -262,7 +262,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((int)arg, szBuffer);
       pNode->UpdateRoutingTable();
@@ -295,7 +295,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%ld]",
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((int)arg, szBuffer);
 

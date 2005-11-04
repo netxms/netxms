@@ -104,7 +104,7 @@ static BOOL WriteConfigInt(DB_HANDLE hConn, TCHAR *pszVar, int iValue,
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%ld"), iValue);
+   _stprintf(szBuffer, _T("%d"), iValue);
    return WriteConfigStr(hConn, pszVar, szBuffer, bIsVisible, bNeedRestart);
 }
 
@@ -118,7 +118,7 @@ static BOOL WriteConfigULong(DB_HANDLE hConn, TCHAR *pszVar, DWORD dwValue,
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%lu"), dwValue);
+   _stprintf(szBuffer, _T("%u"), dwValue);
    return WriteConfigStr(hConn, pszVar, szBuffer, bIsVisible, bNeedRestart);
 }
 

@@ -52,16 +52,16 @@ static void CleanDeletedObjects(void)
          dwObjectId = DBGetFieldULong(hResult, i, 0);
 
          // Check if there are references to this object in event log
-         sprintf(szQuery, "SELECT event_source FROM event_log WHERE event_source=%ld", dwObjectId);
+         sprintf(szQuery, "SELECT event_source FROM event_log WHERE event_source=%d", dwObjectId);
          hAsyncResult = DBAsyncSelect(m_hdb, szQuery);
          if (hAsyncResult != NULL)
          {
             if (!DBFetch(hAsyncResult))
             {
                // No records with that source ID, so we can purge this object
-               sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%ld", dwObjectId);
+               sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%d", dwObjectId);
                QueueSQLRequest(szQuery);
-               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %ld was purged", dwObjectId);
+               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %d was purged", dwObjectId);
             }
             DBFreeAsyncResult(hAsyncResult);
          }

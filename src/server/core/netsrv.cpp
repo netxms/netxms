@@ -87,7 +87,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM network_services WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM network_services WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -103,15 +103,15 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
       _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
                                     "service_type,ip_bind_addr,ip_proto,ip_port,"
                                     "check_request,check_responce,poller_node_id) VALUES "
-                                    "(%ld,%ld,%d,'%s',%d,%d,'%s','%s',%ld)"),
+                                    "(%d,%d,%d,'%s',%d,%d,'%s','%s',%d)"),
                  m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode);
    else
-      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%ld,"
+      _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,"
                                     "service_type=%d,ip_bind_addr='%s',"
                                     "ip_proto=%d,ip_port=%d,check_request='%s',"
-                                    "check_responce='%s',poller_node_id=%ld WHERE id=%ld"),
+                                    "check_responce='%s',poller_node_id=%d WHERE id=%d"),
                  m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode, m_dwId);
@@ -148,7 +148,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,"
                                "ip_bind_addr,ip_proto,ip_port,check_request,check_responce,"
-                               "poller_node_id FROM network_services WHERE id=%ld"), dwId);
+                               "poller_node_id FROM network_services WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -232,7 +232,7 @@ BOOL NetworkService::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      _sntprintf(szQuery, 128, _T("DELETE FROM network_services WHERE id=%ld"), m_dwId);
+      _sntprintf(szQuery, 128, _T("DELETE FROM network_services WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
@@ -420,6 +420,6 @@ void NetworkService::OnObjectDelete(DWORD dwObjectId)
       // If deleted object is our poller node, change it to default
       m_dwPollerNode = 0;
       Modify();
-      DbgPrintf(AF_DEBUG_MISC, _T("Service \"%s\": poller node %ld deleted"), m_szName, dwObjectId);
+      DbgPrintf(AF_DEBUG_MISC, _T("Service \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
 }

@@ -30,7 +30,7 @@
 
 void DestroyObject(NXC_OBJECT *pObject)
 {
-   DebugPrintf(_T("DestroyObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
+   DebugPrintf(_T("DestroyObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
    {
       case OBJECT_CONTAINER:
@@ -116,7 +116,7 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 
 void NXCL_Session::AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 {
-   DebugPrintf(_T("AddObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
+   DebugPrintf(_T("AddObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    LockObjectIndex();
    m_pIndexById = (INDEX *)realloc(m_pIndexById, sizeof(INDEX) * (m_dwNumObjects + 1));
    m_pIndexById[m_dwNumObjects].dwKey = pObject->dwId;
@@ -134,7 +134,7 @@ void NXCL_Session::AddObject(NXC_OBJECT *pObject, BOOL bSortIndex)
 
 static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 {
-   DebugPrintf(_T("ReplaceObject(id:%ld, name:\"%s\")"), pObject->dwId, pObject->szName);
+   DebugPrintf(_T("ReplaceObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
    {
       case OBJECT_CONTAINER:

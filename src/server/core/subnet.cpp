@@ -114,7 +114,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM subnets WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM subnets WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -126,12 +126,12 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid) "
-                       "VALUES (%ld,'%s','%s',%ld)",
+                       "VALUES (%d,'%s','%s',%d)",
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID);
    else
       sprintf(szQuery, "UPDATE subnets SET ip_addr='%s',"
-                       "ip_netmask='%s',zone_guid=%ld WHERE id=%ld",
+                       "ip_netmask='%s',zone_guid=%d WHERE id=%d",
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_dwId);
    DBQuery(hdb, szQuery);
@@ -142,7 +142,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO nsmap (subnet_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
+      sprintf(szQuery, "INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -170,9 +170,9 @@ BOOL Subnet::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM subnets WHERE id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM subnets WHERE id=%d", m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM nsmap WHERE subnet_id=%d", m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

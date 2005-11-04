@@ -205,7 +205,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
 {
    char szBuffer[64];
 
-   sprintf(szBuffer, "%ld", iValue);
+   sprintf(szBuffer, "%d", iValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate);
 }
 
@@ -218,7 +218,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate
 {
    char szBuffer[64];
 
-   sprintf(szBuffer, "%lu", dwValue);
+   sprintf(szBuffer, "%u", dwValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate);
 }
 

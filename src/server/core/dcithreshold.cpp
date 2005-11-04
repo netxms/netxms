@@ -112,7 +112,7 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
    BOOL bNewObject = TRUE;
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE threshold_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE threshold_id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -125,13 +125,13 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,"
                        "check_function,check_operation,parameter_1,parameter_2,event_code,"
-                       "sequence_number) VALUES (%ld,%ld,'%s','',%d,%d,%ld,%ld,%ld,%ld)", 
+                       "sequence_number) VALUES (%d,%d,'%s','',%d,%d,%d,%d,%d,%d)", 
               m_dwId, m_dwItemId, m_value.String(), m_iFunction, m_iOperation, m_iParam1,
               m_iParam2, m_dwEventCode, dwIndex);
    else
-      sprintf(szQuery, "UPDATE thresholds SET item_id=%ld,fire_value='%s',check_function=%d,"
-                       "check_operation=%d,parameter_1=%ld,parameter_2=%ld,event_code=%ld,"
-                       "sequence_number=%ld WHERE threshold_id=%ld", m_dwItemId, 
+      sprintf(szQuery, "UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,"
+                       "check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,"
+                       "sequence_number=%d WHERE threshold_id=%d", m_dwItemId, 
               m_value.String(), m_iFunction, m_iOperation, m_iParam1, m_iParam2, m_dwEventCode, 
               dwIndex, m_dwId);
    return DBQuery(hdb, szQuery);
@@ -179,7 +179,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          switch(iDataType)
          {
             case DCI_DT_INT:
-               bMatch = ((long)fvalue < (long)m_value);
+               bMatch = ((LONG)fvalue < (LONG)m_value);
                break;
             case DCI_DT_UINT:
                bMatch = ((DWORD)fvalue < (DWORD)m_value);
@@ -199,7 +199,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          switch(iDataType)
          {
             case DCI_DT_INT:
-               bMatch = ((long)fvalue <= (long)m_value);
+               bMatch = ((LONG)fvalue <= (LONG)m_value);
                break;
             case DCI_DT_UINT:
                bMatch = ((DWORD)fvalue <= (DWORD)m_value);
@@ -219,7 +219,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          switch(iDataType)
          {
             case DCI_DT_INT:
-               bMatch = ((long)fvalue == (long)m_value);
+               bMatch = ((LONG)fvalue == (LONG)m_value);
                break;
             case DCI_DT_UINT:
                bMatch = ((DWORD)fvalue == (DWORD)m_value);
@@ -242,7 +242,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          switch(iDataType)
          {
             case DCI_DT_INT:
-               bMatch = ((long)fvalue >= (long)m_value);
+               bMatch = ((LONG)fvalue >= (LONG)m_value);
                break;
             case DCI_DT_UINT:
                bMatch = ((DWORD)fvalue >= (DWORD)m_value);
@@ -262,7 +262,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          switch(iDataType)
          {
             case DCI_DT_INT:
-               bMatch = ((long)fvalue > (long)m_value);
+               bMatch = ((LONG)fvalue > (LONG)m_value);
                break;
             case DCI_DT_UINT:
                bMatch = ((DWORD)fvalue > (DWORD)m_value);
@@ -282,7 +282,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          switch(iDataType)
          {
             case DCI_DT_INT:
-               bMatch = ((long)fvalue != (long)m_value);
+               bMatch = ((LONG)fvalue != (LONG)m_value);
                break;
             case DCI_DT_UINT:
                bMatch = ((DWORD)fvalue != (DWORD)m_value);
@@ -337,7 +337,7 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
    switch(m_iDataType)
    {
       case DCI_DT_INT:
-         pData->value.dwInt32 = htonl((long)m_value);
+         pData->value.dwInt32 = htonl((LONG)m_value);
          break;
       case DCI_DT_UINT:
          pData->value.dwInt32 = htonl((DWORD)m_value);
@@ -374,7 +374,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
    switch(m_iDataType)
    {
       case DCI_DT_INT:
-         m_value = (long)ntohl(pData->value.dwInt32);
+         m_value = (LONG)ntohl(pData->value.dwInt32);
          break;
       case DCI_DT_UINT:
          m_value = (DWORD)ntohl(pData->value.dwInt32);
@@ -424,7 +424,7 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    switch(m_iDataType)
    {
       case DCI_DT_INT:
-         CALC_AVG_VALUE(long);
+         CALC_AVG_VALUE(LONG);
          break;
       case DCI_DT_UINT:
          CALC_AVG_VALUE(DWORD);
@@ -456,7 +456,7 @@ void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValu
    switch(m_iDataType)
    {
       case DCI_DT_INT:
-         *pResult = (long)lastValue - (long)(*ppPrevValues[0]);
+         *pResult = (LONG)lastValue - (LONG)(*ppPrevValues[0]);
          break;
       case DCI_DT_UINT:
          *pResult = (DWORD)lastValue - (DWORD)(*ppPrevValues[0]);
@@ -471,7 +471,7 @@ void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValu
          *pResult = (double)lastValue - (double)(*ppPrevValues[0]);
          break;
       case DCI_DT_STRING:
-         *pResult = (long)((_tcscmp((const TCHAR *)lastValue, (const TCHAR *)(*ppPrevValues[0])) == 0) ? 0 : 1);
+         *pResult = (LONG)((_tcscmp((const TCHAR *)lastValue, (const TCHAR *)(*ppPrevValues[0])) == 0) ? 0 : 1);
          break;
       default:
          // Delta calculation is not supported for other types

@@ -108,7 +108,7 @@ void CLastValuesView::OnViewRefresh()
    {
       for(i = 0; i < dwNumItems; i++)
       {
-         _sntprintf(szBuffer, 256, _T("%ld"), pItemList[i].dwId);
+         _sntprintf(szBuffer, 256, _T("%d"), pItemList[i].dwId);
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
          if (iItem != -1)
          {

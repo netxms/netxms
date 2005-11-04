@@ -76,7 +76,7 @@ typedef struct mp_numeric_value
    int nType;
    union
    {
-      long nInt32;
+      LONG nInt32;
       INT64 nInt64;
    } value;
 } MP_NUMERIC_VALUE;

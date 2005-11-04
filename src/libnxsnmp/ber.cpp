@@ -174,9 +174,9 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
 // Encode content
 //
 
-static long EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *pResult)
+static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *pResult)
 {
-   long nBytes = 0;
+   LONG nBytes = 0;
    int i, iOidLength;
 
    switch(dwType)
@@ -256,7 +256,7 @@ DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength,
 {
    DWORD dwBytes = 0;
    BYTE *pbCurrPos = pBuffer, *pEncodedData;
-   long nDataBytes;
+   LONG nDataBytes;
 
    if (dwBufferSize < 2)
       return 0;
@@ -277,7 +277,7 @@ DWORD BER_Encode(DWORD dwType, BYTE *pData, DWORD dwDataLength,
    else
    {
       BYTE bLength[8];
-      long nHdrBytes;
+      LONG nHdrBytes;
       int i;
 
       *((DWORD *)bLength) = htonl((DWORD)nDataBytes);

@@ -136,7 +136,7 @@ BOOL NetObj::LoadCommonProperties(void)
                                "status_prop_alg,status_fixed_val,status_shift,"
                                "status_translation,status_single_threshold,"
                                "status_thresholds FROM object_properties "
-                               "WHERE object_id=%ld"), m_dwId);
+                               "WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -175,7 +175,7 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
    int i, j;
 
    // Save access options
-   _sntprintf(szQuery, 512, _T("SELECT object_id FROM object_properties WHERE object_id=%ld"), m_dwId);
+   _sntprintf(szQuery, 512, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
@@ -187,10 +187,10 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
       if (DBGetNumRows(hResult) > 0)
          _sntprintf(szQuery, 512, 
                     _T("UPDATE object_properties SET name='%s',status=%d,"
-                       "is_deleted=%d,image_id=%ld,inherit_access_rights=%d,"
-                       "last_modified=%ld,status_calc_alg=%d,status_prop_alg=%d,"
+                       "is_deleted=%d,image_id=%d,inherit_access_rights=%d,"
+                       "last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,"
                        "status_fixed_val=%d,status_shift=%d,status_translation='%s',"
-                       "status_single_threshold=%d,status_thresholds='%s' WHERE object_id=%ld"),
+                       "status_single_threshold=%d,status_thresholds='%s' WHERE object_id=%d"),
                     m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
@@ -201,7 +201,7 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                        "image_id,inherit_access_rights,last_modified,status_calc_alg,"
                        "status_prop_alg,status_fixed_val,status_shift,status_translation,"
                        "status_single_threshold,status_thresholds) "
-                       "VALUES (%ld,'%s',%d,%d,%ld,%d,%ld,%d,%d,%d,%d,'%s',%d,'%s')"),
+                       "VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s')"),
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,

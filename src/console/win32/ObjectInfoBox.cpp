@@ -98,7 +98,7 @@ void CObjectInfoBox::OnPaint()
       cy += step;
 
       // Object's ID and class
-      sprintf(szBuffer, "Identifier: %ld", m_pCurrObject->dwId);
+      sprintf(szBuffer, "Identifier: %d", m_pCurrObject->dwId);
       dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
       cy += step;
       sprintf(szBuffer, "Class: %s", g_szObjectClass[m_pCurrObject->iClass]);

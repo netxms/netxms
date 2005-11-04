@@ -6,6 +6,8 @@
 - Added support for SQLite embedded database engine
 - New MIBs added: IEEE 802.11
 - PING subagent: added "PacketRate" configuration parameter
+- Fixed some portability issues for 64bit platforms
+- Fixed issues: #55, #59, #60
 
 
 *

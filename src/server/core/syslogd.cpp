@@ -279,7 +279,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
-                 _T("(" UINT64_FMT ",%ld,%d,%d,%ld,'%s','%s','%s')"),
+                 _T("(" UINT64_FMT ",%d,%d,%d,%d,'%s','%s','%s')"),
                  record.qwMsgId, record.dwTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
                  record.szHostName, record.szTag, pszEscMsg);

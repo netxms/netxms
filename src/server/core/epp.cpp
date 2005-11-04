@@ -273,7 +273,7 @@ BOOL EPRule::LoadFromDB(void)
    DWORD i;
    
    // Load rule's sources
-   sprintf(szQuery, "SELECT object_id FROM policy_source_list WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT object_id FROM policy_source_list WHERE rule_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -289,7 +289,7 @@ BOOL EPRule::LoadFromDB(void)
    }
 
    // Load rule's events
-   sprintf(szQuery, "SELECT event_code FROM policy_event_list WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT event_code FROM policy_event_list WHERE rule_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -305,7 +305,7 @@ BOOL EPRule::LoadFromDB(void)
    }
 
    // Load rule's actions
-   sprintf(szQuery, "SELECT action_id FROM policy_action_list WHERE rule_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT action_id FROM policy_action_list WHERE rule_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -340,7 +340,7 @@ void EPRule::SaveToDB(void)
    pszEscMessage = EncodeSQLString(m_szAlarmMessage);
    sprintf(szQuery, "INSERT INTO event_policy (rule_id,flags,comments,alarm_message,"
                     "alarm_severity,alarm_key,alarm_ack_key) "
-                    "VALUES (%ld,%ld,'%s','%s',%d,'%s','%s')",
+                    "VALUES (%d,%d,'%s','%s',%d,'%s','%s')",
            m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
            pszEscKey, pszEscAck);
    free(pszComment);
@@ -352,7 +352,7 @@ void EPRule::SaveToDB(void)
    // Actions
    for(i = 0; i < m_dwNumActions; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_action_list (rule_id,action_id) VALUES (%ld,%ld)",
+      sprintf(szQuery, "INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)",
               m_dwId, m_pdwActionList[i]);
       DBQuery(g_hCoreDB, szQuery);
    }
@@ -360,7 +360,7 @@ void EPRule::SaveToDB(void)
    // Events
    for(i = 0; i < m_dwNumEvents; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_event_list (rule_id,event_code) VALUES (%ld,%ld)",
+      sprintf(szQuery, "INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)",
               m_dwId, m_pdwEventList[i]);
       DBQuery(g_hCoreDB, szQuery);
    }
@@ -368,7 +368,7 @@ void EPRule::SaveToDB(void)
    // Sources
    for(i = 0; i < m_dwNumSources; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_source_list (rule_id,object_id) VALUES (%ld,%ld)",
+      sprintf(szQuery, "INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)",
               m_dwId, m_pdwSourceList[i]);
       DBQuery(g_hCoreDB, szQuery);
    }

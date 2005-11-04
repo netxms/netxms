@@ -211,7 +211,7 @@ void CLastValuesView::OnViewRefresh()
          iItem = m_wndListCtrl.FindItem(&lvfi, -1);
          if (iItem == -1)
          {
-            _sntprintf(szBuffer, 256, _T("%ld"), m_pItemList[i].dwId);
+            _sntprintf(szBuffer, 256, _T("%d"), m_pItemList[i].dwId);
             iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
             m_wndListCtrl.SetItemData(iItem, m_pItemList[i].dwId);
          }
@@ -274,7 +274,7 @@ LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
    pInfo->iWndClass = WNDC_LAST_VALUES;
    GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("F:%ld\x7FN:%ld\x7FS:%ld"),
+   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("F:%d\x7FN:%d\x7FS:%d"),
               m_dwFlags, m_dwNodeId, m_dwSeconds);
    return 1;
 }

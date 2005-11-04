@@ -683,7 +683,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                      {
                         sprintf(szBuffer, "%s/%d", IpToStr(pRT->pRoutes[i].dwDestAddr, szIpAddr),
                                 BitsInMask(pRT->pRoutes[i].dwDestMask));
-                        ConsolePrintf(pCtx, "%-18s %-15s %-6ld %ld\n", szBuffer,
+                        ConsolePrintf(pCtx, "%-18s %-15s %-6d %d\n", szBuffer,
                                       IpToStr(pRT->pRoutes[i].dwNextHop, szIpAddr),
                                       pRT->pRoutes[i].dwIfIndex, pRT->pRoutes[i].dwRouteType);
                      }
@@ -701,7 +701,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsolePrintf(pCtx, "ERROR: Object with ID %ld does not exist\n\n", dwNode);
+               ConsolePrintf(pCtx, "ERROR: Object with ID %d does not exist\n\n", dwNode);
             }
          }
          else
@@ -754,14 +754,14 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          pObject1 = FindObjectById(dwNode1);
          if (pObject1 == NULL)
          {
-            ConsolePrintf(pCtx, "ERROR: Object with ID %ld does not exist\n\n", dwNode1);
+            ConsolePrintf(pCtx, "ERROR: Object with ID %d does not exist\n\n", dwNode1);
          }
          else
          {
             pObject2 = FindObjectById(dwNode2);
             if (pObject2 == NULL)
             {
-               ConsolePrintf(pCtx, "ERROR: Object with ID %ld does not exist\n\n", dwNode2);
+               ConsolePrintf(pCtx, "ERROR: Object with ID %d does not exist\n\n", dwNode2);
             }
             else
             {
@@ -774,7 +774,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                      ConsolePrintf(pCtx, "Trace from %s to %s (%d hops):\n",
                                    pObject1->Name(), pObject2->Name(), pTrace->iNumHops);
                      for(i = 0; i < pTrace->iNumHops; i++)
-                        ConsolePrintf(pCtx, "[%ld] %s %s %s %d\n",
+                        ConsolePrintf(pCtx, "[%d] %s %s %s %d\n",
                                       pTrace->pHopList[i].pObject->Id(),
                                       pTrace->pHopList[i].pObject->Name(),
                                       IpToStr(pTrace->pHopList[i].dwNextHop, szNextHop),

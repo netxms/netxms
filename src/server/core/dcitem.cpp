@@ -154,7 +154,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 
    if (m_iAdvSchedule)
    {
-      sprintf(szQuery, "SELECT schedule FROM dci_schedules WHERE item_id=%ld", m_dwId);
+      sprintf(szQuery, "SELECT schedule FROM dci_schedules WHERE item_id=%d", m_dwId);
       hTempResult = DBSelect(g_hCoreDB, szQuery);
       if (hTempResult != NULL)
       {
@@ -180,7 +180,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    }
 
    // Load last raw value from database
-   sprintf(szQuery, "SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d", m_dwId);
    hTempResult = DBSelect(g_hCoreDB, szQuery);
    if (hTempResult != NULL)
    {
@@ -287,7 +287,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
    sprintf(szQuery, "SELECT threshold_id,fire_value,rearm_value,check_function,"
                     "check_operation,parameter_1,parameter_2,event_code FROM thresholds "
-                    "WHERE item_id=%ld ORDER BY sequence_number", m_dwId);
+                    "WHERE item_id=%d ORDER BY sequence_number", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -321,7 +321,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    Lock();
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT item_id FROM items WHERE item_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -339,17 +339,17 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
                        "transformation,instance,template_item_id,adv_schedule)"
-                       " VALUES (%ld,%ld,%ld,'%s','%s',%d,%d,%ld,%ld,%d,"
-                       "%d,'%s','%s',%ld,%d)",
-                       m_dwId, (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
+                       " VALUES (%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,"
+                       "%d,'%s','%s',%d,%d)",
+                       m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
                        pszEscFormula, pszEscInstance, m_dwTemplateItemId, m_iAdvSchedule);
    else
-      sprintf(szQuery, "UPDATE items SET node_id=%ld,template_id=%ld,name='%s',source=%d,"
-                       "datatype=%d,polling_interval=%ld,retention_time=%ld,status=%d,"
+      sprintf(szQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
+                       "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
                        "delta_calculation=%d,transformation='%s',description='%s',"
-                       "instance='%s',template_item_id=%ld,adv_schedule=%d WHERE item_id=%ld",
+                       "instance='%s',template_item_id=%d,adv_schedule=%d WHERE item_id=%d",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
@@ -371,7 +371,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    }
 
    // Delete non-existing thresholds
-   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -387,7 +387,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
                break;
          if (j == m_dwNumThresholds)
          {
-            sprintf(szQuery, "DELETE FROM thresholds WHERE threshold_id=%ld", dwId);
+            sprintf(szQuery, "DELETE FROM thresholds WHERE threshold_id=%d", dwId);
             DBQuery(hdb, szQuery);
          }
       }
@@ -395,7 +395,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    }
 
    // Create record in raw_dci_values if needed
-   sprintf(szQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -405,7 +405,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 
          pszEscValue = EncodeSQLString(m_prevRawValue.String());
          sprintf(szQuery, "INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time)"
-                          " VALUES (%ld,'%s',%ld)",
+                          " VALUES (%d,'%s',%ld)",
                  m_dwId, pszEscValue, m_tPrevValueTimeStamp);
          free(pszEscValue);
          DBQuery(hdb, szQuery);
@@ -414,7 +414,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    }
 
    // Save schedules
-   sprintf(szQuery, "DELETE FROM dci_schedules WHERE item_id=%ld", m_dwId);
+   sprintf(szQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
    DBQuery(hdb, szQuery);
    if (m_iAdvSchedule)
    {
@@ -424,7 +424,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       for(i = 0; i < m_dwNumSchedules; i++)
       {
          pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
-         sprintf(szQuery, "INSERT INTO dci_schedules (item_id,schedule) VALUES (%ld,'%s')",
+         sprintf(szQuery, "INSERT INTO dci_schedules (item_id,schedule) VALUES (%d,'%s')",
                  m_dwId, pszEscSchedule);
          free(pszEscSchedule);
          DBQuery(hdb, szQuery);
@@ -647,7 +647,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 // Process new value
 //
 
-void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
+void DCItem::NewValue(time_t nTimeStamp, const char *pszOriginalValue)
 {
    char *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
@@ -664,24 +664,24 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 
    // Save raw value into database
    pszEscValue = EncodeSQLString(pszOriginalValue);
-   sprintf(szQuery, "UPDATE raw_dci_values SET raw_value='%s',last_poll_time=%ld WHERE item_id=%ld",
-           pszEscValue, dwTimeStamp, m_dwId);
+   sprintf(szQuery, "UPDATE raw_dci_values SET raw_value='%s',last_poll_time=%ld WHERE item_id=%d",
+           pszEscValue, nTimeStamp, m_dwId);
    free(pszEscValue);
    QueueSQLRequest(szQuery);
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(pszOriginalValue, dwTimeStamp);
+   pValue = new ItemValue(pszOriginalValue, nTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
-   Transform(*pValue, (long)(dwTimeStamp - m_tPrevValueTimeStamp));
+   Transform(*pValue, nTimeStamp - m_tPrevValueTimeStamp);
    m_prevRawValue = rawValue;
-   m_tPrevValueTimeStamp = dwTimeStamp;
+   m_tPrevValueTimeStamp = nTimeStamp;
 
    // Save transformed value to database
    pszEscValue = EncodeSQLString(pValue->String());
-   sprintf(szQuery, "INSERT INTO idata_%ld (item_id,idata_timestamp,idata_value)"
-                    " VALUES (%ld,%ld,'%s')", m_pNode->Id(), m_dwId, dwTimeStamp, pszEscValue);
+   sprintf(szQuery, "INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)"
+                    " VALUES (%d,%ld,'%s')", m_pNode->Id(), m_dwId, nTimeStamp, pszEscValue);
    free(pszEscValue);
    QueueSQLRequest(szQuery);
 
@@ -707,7 +707,7 @@ void DCItem::NewValue(DWORD dwTimeStamp, const char *pszOriginalValue)
 // Transform received value
 //
 
-void DCItem::Transform(ItemValue &value, long nElapsedTime)
+void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
 {
    switch(m_iDeltaCalculation)
    {
@@ -715,7 +715,7 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
          switch(m_iDataType)
          {
             case DCI_DT_INT:
-               value = (long)value - (long)m_prevRawValue;
+               value = (LONG)value - (LONG)m_prevRawValue;
                break;
             case DCI_DT_UINT:
                value = (DWORD)value - (DWORD)m_prevRawValue;
@@ -730,7 +730,7 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
                value = (double)value - (double)m_prevRawValue;
                break;
             case DCI_DT_STRING:
-               value = (long)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (LONG)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -747,7 +747,7 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
          switch(m_iDataType)
          {
             case DCI_DT_INT:
-               value = ((long)value - (long)m_prevRawValue) / nElapsedTime;
+               value = ((LONG)value - (LONG)m_prevRawValue) / (LONG)nElapsedTime;
                break;
             case DCI_DT_UINT:
                value = ((DWORD)value - (DWORD)m_prevRawValue) / (DWORD)nElapsedTime;
@@ -765,7 +765,7 @@ void DCItem::Transform(ItemValue &value, long nElapsedTime)
                // I don't see any meaning in "average delta per second (minute)" for string
                // values, so result will be 0 if there are no difference between
                // current and previous values, and 1 otherwise
-               value = (long)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (LONG)((strcmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -857,25 +857,25 @@ void DCItem::UpdateCacheSize(void)
          switch(g_dwDBSyntax)
          {
             case DB_SYNTAX_MSSQL:
-               sprintf(szBuffer, "SELECT TOP %ld idata_value,idata_timestamp FROM idata_%ld "
-                                 "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
+               sprintf(szBuffer, "SELECT TOP %d idata_value,idata_timestamp FROM idata_%d "
+                                 "WHERE item_id=%d ORDER BY idata_timestamp DESC",
                        dwRequiredSize, m_pNode->Id(), m_dwId);
                break;
             case DB_SYNTAX_ORACLE:
-               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
-                                 "WHERE item_id=%ld AND ROWNUM <= %ld ORDER BY idata_timestamp DESC",
+               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%d "
+                                 "WHERE item_id=%d AND ROWNUM <= %d ORDER BY idata_timestamp DESC",
                        m_pNode->Id(), m_dwId, dwRequiredSize);
                break;
             case DB_SYNTAX_MYSQL:
             case DB_SYNTAX_PGSQL:
             case DB_SYNTAX_SQLITE:
-               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
-                                 "WHERE item_id=%ld ORDER BY idata_timestamp DESC LIMIT %ld",
+               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%d "
+                                 "WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d",
                        m_pNode->Id(), m_dwId, dwRequiredSize);
                break;
             default:
-               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%ld "
-                                 "WHERE item_id=%ld ORDER BY idata_timestamp DESC",
+               sprintf(szBuffer, "SELECT idata_value,idata_timestamp FROM idata_%d "
+                                 "WHERE item_id=%d ORDER BY idata_timestamp DESC",
                        m_pNode->Id(), m_dwId);
                break;
          }
@@ -958,8 +958,8 @@ void DCItem::CleanData(void)
 
    now = time(NULL);
    Lock();
-   _sntprintf(szQuery, 256, _T("DELETE FROM idata_%ld WHERE (item_id=%ld) AND (idata_timestamp<%ld)"),
-              m_pNode->Id(), m_dwId, now - (DWORD)m_iRetentionTime * 86400);
+   _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE (item_id=%d) AND (idata_timestamp<%ld)"),
+              m_pNode->Id(), m_dwId, now - (time_t)m_iRetentionTime * 86400);
    Unlock();
    QueueSQLRequest(szQuery);
 }

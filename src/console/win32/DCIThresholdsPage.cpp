@@ -128,10 +128,10 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    switch(m_pItem->iDataType)
    {
       case DCI_DT_INT:
-         sprintf(szValue, "%ld", m_pItem->pThresholdList[dwIndex].value.dwInt32);
+         sprintf(szValue, "%d", m_pItem->pThresholdList[dwIndex].value.dwInt32);
          break;
       case DCI_DT_UINT:
-         sprintf(szValue, "%lu", m_pItem->pThresholdList[dwIndex].value.dwInt32);
+         sprintf(szValue, "%u", m_pItem->pThresholdList[dwIndex].value.dwInt32);
          break;
       case DCI_DT_INT64:
          sprintf(szValue, "%I64d", m_pItem->pThresholdList[dwIndex].value.qwInt64);

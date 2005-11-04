@@ -394,7 +394,7 @@ void CMIBBrowserDlg::OnButtonGet()
       dlg.m_dwObjectId = m_pNode->dwId;
       dlg.m_strNode = (LPCTSTR)m_pNode->szName;
       dlg.m_strParameter = (LPCTSTR)szBuffer;
-      _stprintf(szBuffer, _T(".%ld"), m_dwInstance);
+      _stprintf(szBuffer, _T(".%d"), m_dwInstance);
       dlg.m_strParameter += szBuffer;
       dlg.m_iOrigin = m_iOrigin;
       dlg.DoModal();

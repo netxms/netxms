@@ -81,7 +81,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   _stprintf(szQuery, _T("SELECT version,description FROM templates WHERE id=%ld"), dwId);
+   _stprintf(szQuery, _T("SELECT version,description FROM templates WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -161,7 +161,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   _stprintf(szQuery, _T("SELECT id FROM templates WHERE id=%ld"), m_dwId);
+   _stprintf(szQuery, _T("SELECT id FROM templates WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -174,10 +174,10 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO templates (id,version,"
-                       "description) VALUES (%ld,%ld,'%s')",
+                       "description) VALUES (%d,%d,'%s')",
               m_dwId, m_dwVersion, pszEscDescr);
    else
-      sprintf(szQuery, "UPDATE templates SET version=%ld,description='%s' WHERE id=%ld",
+      sprintf(szQuery, "UPDATE templates SET version=%d,description='%s' WHERE id=%d",
               m_dwVersion, pszEscDescr, m_dwId);
    DBQuery(hdb, szQuery);
    free(pszEscDescr);
@@ -188,7 +188,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO dct_node_map (template_id,node_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
+      sprintf(szQuery, "INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -222,19 +222,19 @@ BOOL Template::DeleteFromDB(void)
    {
       if (Type() == OBJECT_TEMPLATE)
       {
-         sprintf(szQuery, "DELETE FROM templates WHERE id=%ld", m_dwId);
+         sprintf(szQuery, "DELETE FROM templates WHERE id=%d", m_dwId);
          QueueSQLRequest(szQuery);
-         sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%ld", m_dwId);
+         sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
          QueueSQLRequest(szQuery);
       }
       else
       {
-         sprintf(szQuery, "DELETE FROM dct_node_map WHERE node_id=%ld", m_dwId);
+         sprintf(szQuery, "DELETE FROM dct_node_map WHERE node_id=%d", m_dwId);
          QueueSQLRequest(szQuery);
       }
-      sprintf(szQuery, "DELETE FROM items WHERE node_id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM items WHERE node_id=%d", m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "UPDATE items SET template_id=0 WHERE template_id=%ld", m_dwId);
+      sprintf(szQuery, "UPDATE items SET template_id=0 WHERE template_id=%d", m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

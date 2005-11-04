@@ -241,7 +241,7 @@ char LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
 
 DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
 {
-   long iVal;
+   LONG iVal;
    DWORD dwVal;
    char *szVal;
 
@@ -249,7 +249,7 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColu
    if (szVal == NULL)
       return 0;
    iVal = strtol(szVal, NULL, 10);
-   memcpy(&dwVal, &iVal, sizeof(long));   // To prevent possible conversion
+   memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
    return dwVal;
 }
 
@@ -277,7 +277,7 @@ QWORD LIBNXSRV_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iCol
 // Get field's value as signed long
 //
 
-long LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
+LONG LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 {
    char *szVal;
 
@@ -429,14 +429,14 @@ char LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
 
 DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
 {
-   long iVal;
+   LONG iVal;
    DWORD dwVal;
    char szBuffer[64];
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
    iVal = strtol(szBuffer, NULL, 10);
-   memcpy(&dwVal, &iVal, sizeof(long));   // To prevent possible conversion
+   memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
    return dwVal;
 }
 
@@ -463,7 +463,7 @@ QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCo
 // Get field's value as signed long from asynchronous SELECT result
 //
 
-long LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
+LONG LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 {
    char szBuffer[64];
    

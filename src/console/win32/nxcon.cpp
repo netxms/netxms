@@ -2092,11 +2092,11 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
                   write(hFile, pRow->value.szString, strlen(pRow->value.szString));
                   break;
                case DCI_DT_INT:
-                  sprintf(szBuffer, "%ld", pRow->value.dwInt32);
+                  sprintf(szBuffer, "%d", pRow->value.dwInt32);
                   write(hFile, szBuffer, strlen(szBuffer));
                   break;
                case DCI_DT_UINT:
-                  sprintf(szBuffer, "%lu", pRow->value.dwInt32);
+                  sprintf(szBuffer, "%u", pRow->value.dwInt32);
                   write(hFile, szBuffer, strlen(szBuffer));
                   break;
                case DCI_DT_INT64:

@@ -83,7 +83,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
       return FALSE;
 
    // Load network lists
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%ld AND network_type=0"), m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=0"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -96,7 +96,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
    }
    DBFreeResult(hResult);
 
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%ld AND network_type=1"), m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=1"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -110,7 +110,7 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
    DBFreeResult(hResult);
    
    // Load custom properties
-   _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%ld"), dwId);
+   _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -173,7 +173,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM vpn_connectors WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM vpn_connectors WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -192,21 +192,21 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO vpn_connectors (id,node_id,peer_gateway) "
-                       "VALUES (%ld,%ld,%ld)",
+                       "VALUES (%d,%d,%d)",
               m_dwId, dwNodeId, m_dwPeerGateway);
    else
-      sprintf(szQuery, "UPDATE vpn_connectors SET node_id=%ld,"
-                       "peer_gateway=%ld WHERE id=%ld",
+      sprintf(szQuery, "UPDATE vpn_connectors SET node_id=%d,"
+                       "peer_gateway=%d WHERE id=%d",
               dwNodeId, m_dwPeerGateway, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save network list
-   sprintf(szQuery, "DELETE FROM vpn_connector_networks WHERE vpn_id=%ld", m_dwId);
+   sprintf(szQuery, "DELETE FROM vpn_connector_networks WHERE vpn_id=%d", m_dwId);
    DBQuery(hdb, szQuery);
    for(i = 0; i < m_dwNumLocalNets; i++)
    {
       sprintf(szQuery, "INSERT INTO vpn_connector_networks (vpn_id,network_type,"
-                       "ip_addr,ip_netmask) VALUES (%ld,0,'%s','%s')",
+                       "ip_addr,ip_netmask) VALUES (%d,0,'%s','%s')",
               m_dwId, IpToStr(m_pLocalNetList[i].dwAddr, szIpAddr),
               IpToStr(m_pLocalNetList[i].dwMask, szNetMask));
       DBQuery(hdb, szQuery);
@@ -214,7 +214,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    for(i = 0; i < m_dwNumRemoteNets; i++)
    {
       sprintf(szQuery, "INSERT INTO vpn_connector_networks (vpn_id,network_type,"
-                       "ip_addr,ip_netmask) VALUES (%ld,1,'%s','%s')",
+                       "ip_addr,ip_netmask) VALUES (%d,1,'%s','%s')",
               m_dwId, IpToStr(m_pRemoteNetList[i].dwAddr, szIpAddr),
               IpToStr(m_pRemoteNetList[i].dwMask, szNetMask));
       DBQuery(hdb, szQuery);
@@ -243,9 +243,9 @@ BOOL VPNConnector::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM vpn_connectors WHERE id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM vpn_connectors WHERE id=%d", m_dwId);
       QueueSQLRequest(szQuery);
-      sprintf(szQuery, "DELETE FROM vpn_connector_networks WHERE vpn_id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM vpn_connector_networks WHERE vpn_id=%d", m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

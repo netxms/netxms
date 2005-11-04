@@ -203,7 +203,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    BOOL bResult;
    TCHAR szBuffer[128];
 
-   DebugPrintf(_T("SendMsg(\"%s\"), id:%ld)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+   DebugPrintf(_T("SendMsg(\"%s\"), id:%d)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    if (m_pCtx != NULL)
    {

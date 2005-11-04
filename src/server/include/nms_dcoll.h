@@ -50,7 +50,7 @@ class ItemValue
 {
 private:
    double m_dFloat;
-   long m_iInt32;
+   LONG m_iInt32;
    INT64 m_iInt64;
    DWORD m_dwInt32;
    QWORD m_qwInt64;
@@ -71,14 +71,14 @@ public:
    operator double() { return m_dFloat; }
    operator DWORD() { return m_dwInt32; }
    operator QWORD() { return m_qwInt64; }
-   operator long() { return m_iInt32; }
+   operator LONG() { return m_iInt32; }
    operator INT64() { return m_iInt64; }
    operator const char*() const { return m_szString; }
 
    const ItemValue& operator=(const ItemValue &src);
    const ItemValue& operator=(const TCHAR *pszStr);
    const ItemValue& operator=(double dFloat);
-   const ItemValue& operator=(long iInt32);
+   const ItemValue& operator=(LONG iInt32);
    const ItemValue& operator=(INT64 iInt64);
    const ItemValue& operator=(DWORD dwInt32);
    const ItemValue& operator=(QWORD qwInt64);
@@ -174,7 +174,7 @@ private:
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
 
-   void Transform(ItemValue &value, long nElapsedTime);
+   void Transform(ItemValue &value, time_t nElapsedTime);
    void CheckThresholds(ItemValue &value);
    void ClearCache(void);
 
@@ -213,7 +213,7 @@ public:
    void SetTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
-   void NewValue(DWORD dwTimeStamp, const char *pszValue);
+   void NewValue(time_t nTimeStamp, const char *pszValue);
 
    void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
 

@@ -334,8 +334,8 @@ int main(int argc, char *argv[])
                             "%llu"
 #endif
                             " bytes in %d.%03d seconds (%.2f KB/sec)\n",
-                            qwBytes, (long)(nElapsedTime / 1000), 
-                            (long)(nElapsedTime % 1000), 
+                            qwBytes, (LONG)(nElapsedTime / 1000), 
+                            (LONG)(nElapsedTime % 1000), 
                             ((double)((INT64)qwBytes / 1024) / (double)nElapsedTime) * 1000);
                   }
                   else

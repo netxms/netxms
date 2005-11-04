@@ -130,8 +130,8 @@ void ShowServerStats(CONSOLE_CTX pCtx)
       dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->GetItemCount();
    RWLockUnlock(g_rwlockNodeIndex);
 
-   ConsolePrintf(pCtx, "Total number of objects:     %ld\n"
-                       "Number of monitored nodes:   %ld\n"
-                       "Number of collectable DCIs:  %ld\n\n",
+   ConsolePrintf(pCtx, "Total number of objects:     %d\n"
+                       "Number of monitored nodes:   %d\n"
+                       "Number of collectable DCIs:  %d\n\n",
                  g_dwIdIndexSize, g_dwNodeAddrIndexSize, dwNumItems);
 }

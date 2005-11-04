@@ -127,10 +127,10 @@ void CDataView::OnViewRefresh()
                switch(pData->wDataType)
                {
                   case DCI_DT_INT:
-                     _stprintf(szBuffer, _T("%ld"), pRow->value.dwInt32);
+                     _stprintf(szBuffer, _T("%d"), pRow->value.dwInt32);
                      break;
                   case DCI_DT_UINT:
-                     _stprintf(szBuffer, _T("%lu"), pRow->value.dwInt32);
+                     _stprintf(szBuffer, _T("%u"), pRow->value.dwInt32);
                      break;
                   case DCI_DT_INT64:
                      _stprintf(szBuffer, _T("%I64d"), pRow->value.qwInt64);

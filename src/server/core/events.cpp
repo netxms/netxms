@@ -227,7 +227,7 @@ char *Event::ExpandText(char *szTemplate)
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
-                  sprintf(&pText[dwPos], "%lu", m_dwCode);
+                  sprintf(&pText[dwPos], "%u", m_dwCode);
                   dwPos = strlen(pText);
                   break;
                case 's':   // Severity code

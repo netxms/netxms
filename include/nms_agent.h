@@ -191,14 +191,14 @@ inline void ret_string(TCHAR *rbuf, TCHAR *value)
    rbuf[MAX_RESULT_LENGTH - 1] = 0;
 }
 
-inline void ret_int(TCHAR *rbuf, long value)
+inline void ret_int(TCHAR *rbuf, LONG value)
 {
-   _stprintf(rbuf, _T("%ld"), value);
+   _stprintf(rbuf, _T("%d"), value);
 }
 
-inline void ret_uint(TCHAR *rbuf, unsigned long value)
+inline void ret_uint(TCHAR *rbuf, DWORD value)
 {
-   _stprintf(rbuf, _T("%lu"), value);
+   _stprintf(rbuf, _T("%u"), value);
 }
 
 inline void ret_double(TCHAR *rbuf, double value)

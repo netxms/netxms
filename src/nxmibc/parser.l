@@ -401,7 +401,7 @@ static void CountNewlines(char *pszStr, int len)
 
 <INITIAL>([-]|0x)?[1-9][0-9]* {
    INT64 nInt64 = strtoull(mptext, NULL, 0);
-   long nInt32 = strtol(mptext, NULL, 0);
+   LONG nInt32 = strtol(mptext, NULL, 0);
 
    if (nInt32 == LONG_MAX)
    {

@@ -917,7 +917,7 @@ void ClientSession::OnFileUpload(BOOL bSuccess)
          {
             TCHAR szQuery[256];
 
-            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%ld"), m_dwUploadData);
+            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_dwUploadData);
             DBQuery(g_hCoreDB, szQuery);
          }
          break;
@@ -1154,7 +1154,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
          // Check if event with specific code exists
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-         sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%ld", dwEventCode);
+         sprintf(szQuery, "SELECT event_code FROM event_cfg WHERE event_code=%d", dwEventCode);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -1181,14 +1181,14 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
 
                if (bEventExist)
                {
-                  sprintf(szQuery, "UPDATE event_cfg SET event_name='%s',severity=%ld,flags=%ld,message='%s',description='%s' WHERE event_code=%ld",
+                  sprintf(szQuery, "UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d",
                           szName, pRequest->GetVariableLong(VID_SEVERITY), pRequest->GetVariableLong(VID_FLAGS),
                           pszEscMsg, pszEscDescr, dwEventCode);
                }
                else
                {
                   sprintf(szQuery, "INSERT INTO event_cfg (event_code,event_name,severity,flags,"
-                                   "message,description) VALUES (%ld,'%s',%ld,%ld,'%s','%s')",
+                                   "message,description) VALUES (%d,'%s',%d,%d,'%s','%s')",
                           dwEventCode, szName, pRequest->GetVariableLong(VID_SEVERITY),
                           pRequest->GetVariableLong(VID_FLAGS), pszEscMsg, pszEscDescr);
                }
@@ -1255,7 +1255,7 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
       {
          TCHAR szQuery[256];
 
-         _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%ld"), dwEventCode);
+         _stprintf(szQuery, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
          if (DBQuery(g_hCoreDB, szQuery))
          {
             DeleteEventTemplateFromList(dwEventCode);
@@ -1408,16 +1408,16 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          _sntprintf(szQuery, 1024,
                     _T("SELECT event_id,event_code,event_timestamp,event_source,")
                     _T("event_severity,event_message FROM event_log ")
-                    _T("ORDER BY event_timestamp LIMIT %lu OFFSET %lu"),
+                    _T("ORDER BY event_timestamp LIMIT %u OFFSET %u"),
                     dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
          break;
       case DB_SYNTAX_MSSQL:
          _sntprintf(szQuery, 1024,
-                    _T("SELECT TOP %lu event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message INTO temp_log_%ld FROM event_log ")
+                    _T("SELECT TOP %u event_id,event_code,event_timestamp,event_source,")
+                    _T("event_severity,event_message INTO temp_log_%d FROM event_log ")
                     _T("ORDER BY event_timestamp DESC"), dwMaxRecords, m_dwIndex);
          DBQuery(g_hCoreDB, szQuery);
-         _sntprintf(szQuery, 1024, _T("SELECT * FROM temp_log_%ld ORDER BY event_timestamp"), m_dwIndex);
+         _sntprintf(szQuery, 1024, _T("SELECT * FROM temp_log_%d ORDER BY event_timestamp"), m_dwIndex);
          break;
       default:
          szQuery[0] = 0;
@@ -1458,7 +1458,7 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
 
    if (g_dwDBSyntax == DB_SYNTAX_MSSQL)
    {
-      _stprintf(szQuery, _T("DROP TABLE temp_log_%ld"), m_dwIndex);
+      _stprintf(szQuery, _T("DROP TABLE temp_log_%d"), m_dwIndex);
       DBQuery(g_hCoreDB, szQuery);
    }
 }
@@ -2535,16 +2535,17 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             switch(g_dwDBSyntax)
             {
                case DB_SYNTAX_MSSQL:
-                  sprintf(szQuery, "SELECT TOP %ld idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
+                  sprintf(szQuery, "SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
                           dwMaxRows, dwObjectId, dwItemId, szCond);
                   break;
                case DB_SYNTAX_ORACLE:
-                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %ld ORDER BY idata_timestamp DESC",
+                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC",
                           dwObjectId, dwItemId, szCond, dwMaxRows);
                   break;
                case DB_SYNTAX_MYSQL:
                case DB_SYNTAX_PGSQL:
-                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %ld",
+               case DB_SYNTAX_SQLITE:
+                  sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d",
                           dwObjectId, dwItemId, szCond, dwMaxRows);
                   break;
                default:
@@ -4147,7 +4148,7 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
                         pszEscDescr = EncodeSQLString(szDescription);
                         _sntprintf(szQuery, 2048, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,"
                                                      "version,description,platform,pkg_file) "
-                                                     "VALUES (%ld,'%s','%s','%s','%s','%s')"),
+                                                     "VALUES (%d,'%s','%s','%s','%s','%s')"),
                                    m_dwUploadData, szPkgName, szPkgVersion, pszEscDescr,
                                    szPlatform, pszCleanFileName);
                         free(pszEscDescr);
@@ -4301,7 +4302,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
       if (IsValidPackageId(dwPkgId))
       {
          // Read package information
-         _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+         _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if ((hResult != NULL) && (DBGetNumRows(hResult) > 0))
          {
@@ -4510,7 +4511,7 @@ void ClientSession::GetUserVariable(CSCPMessage *pRequest)
    // Try to read variable from database
    pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
    _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-              _T("SELECT var_value FROM user_profiles WHERE user_id=%ld AND var_name='%s'"),
+              _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
               m_dwUserId, szVarName);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -4562,7 +4563,7 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
    {
       // Check if variable already exist in database
       _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                 _T("SELECT var_value FROM user_profiles WHERE user_id=%ld AND var_name='%s'"),
+                 _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
                  m_dwUserId, szVarName);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
@@ -4580,11 +4581,11 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
       free(pszRawValue);
       if (bExist)
          _sntprintf(szQuery, 8192,
-                    _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%ld AND var_name='%s'"),
+                    _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
                     pszValue, m_dwUserId, szVarName);
       else
          _sntprintf(szQuery, 8192,
-                    _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%ld,'%s','%s')"),
+                    _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
                     m_dwUserId, szVarName, pszValue);
       free(pszValue);
       if (DBQuery(g_hCoreDB, szQuery))
@@ -4622,7 +4623,7 @@ void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    pRequest->GetVariableStr(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
-   _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%ld"), m_dwUserId);
+   _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), m_dwUserId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -4666,7 +4667,7 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
    // Try to read variable from database
    pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
    _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-              _T("DELETE FROM user_profiles WHERE user_id=%ld AND var_name='%s'"),
+              _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
               m_dwUserId, szVarName);
    if (DBQuery(g_hCoreDB, szQuery))
    {
@@ -5265,18 +5266,18 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
          _sntprintf(szQuery, 1024,
                     _T("SELECT msg_id,msg_timestamp,facility,severity,")
                     _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
-                    _T("ORDER BY msg_timestamp LIMIT %lu OFFSET %lu"),
+                    _T("ORDER BY msg_timestamp LIMIT %u OFFSET %u"),
                     dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
          break;
       case DB_SYNTAX_MSSQL:
          _sntprintf(szQuery, 1024,
-                    _T("SELECT TOP %ld msg_id,msg_timestamp,facility,severity,")
+                    _T("SELECT TOP %d msg_id,msg_timestamp,facility,severity,")
                     _T("source_object_id,hostname,msg_tag,msg_text ")
-                    _T("INTO temp_syslog_%ld FROM syslog ")
+                    _T("INTO temp_syslog_%d FROM syslog ")
                     _T("ORDER BY msg_timestamp DESC"), dwMaxRecords, m_dwIndex);
          DBQuery(g_hCoreDB, szQuery);
          _sntprintf(szQuery, 1024,
-                    _T("SELECT * FROM temp_syslog_%ld ORDER BY msg_timestamp"), m_dwIndex);
+                    _T("SELECT * FROM temp_syslog_%d ORDER BY msg_timestamp"), m_dwIndex);
          break;
       default:
          szQuery[0] = 0;
@@ -5320,7 +5321,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
 
    if (g_dwDBSyntax == DB_SYNTAX_MSSQL)
    {
-      _stprintf(szQuery, _T("DROP TABLE temp_syslog_%ld"), m_dwIndex);
+      _stprintf(szQuery, _T("DROP TABLE temp_syslog_%d"), m_dwIndex);
       DBQuery(g_hCoreDB, szQuery);
    }
 }
@@ -5420,7 +5421,7 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
       dwPolicy = pRequest->GetVariableLong(VID_LPP_ID);
       if (LockLPP(dwPolicy, m_dwIndex))
       {
-         sprintf(szQuery, "SELECT lpp_name,lpp_version,lpp_flags,log_name FROM lpp WHERE lpp_id=%ld", dwPolicy);
+         sprintf(szQuery, "SELECT lpp_name,lpp_version,lpp_flags,log_name FROM lpp WHERE lpp_id=%d", dwPolicy);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -5433,7 +5434,7 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
                msg.SetVariable(VID_LOG_FILE, DBGetField(hResult, 0, 3));
                DBFreeResult(hResult);
 
-               sprintf(szQuery, "SELECT node_id FROM lpp_nodes WHERE lpp_id=%ld", dwPolicy);
+               sprintf(szQuery, "SELECT node_id FROM lpp_nodes WHERE lpp_id=%d", dwPolicy);
                hResult = DBSelect(g_hCoreDB, szQuery);
                if (hResult != NULL)
                {
@@ -5444,7 +5445,7 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
                   DBFreeResult(hResult);
 
                   sprintf(szQuery, "SELECT msg_id_start,msg_id_end,severity,event_code,source_name,msg_text_regexp "
-                                   "FROM lpp_rules WHERE lpp_id=%ld ORDER BY rule_number", dwPolicy);
+                                   "FROM lpp_rules WHERE lpp_id=%d ORDER BY rule_number", dwPolicy);
                   hResult = DBSelect(g_hCoreDB, szQuery);
                   if (hResult != NULL)
                   {

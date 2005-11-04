@@ -100,7 +100,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,"
-                               "mac_addr FROM interfaces WHERE id=%ld"), dwId);
+                               "mac_addr FROM interfaces WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -166,7 +166,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM interfaces WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM interfaces WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -187,14 +187,14 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO interfaces (id,ip_addr,"
                        "ip_netmask,node_id,if_type,if_index,mac_addr) "
-                       "VALUES (%ld,'%s','%s',%ld,%ld,%ld,'%s')",
+                       "VALUES (%d,'%s','%s',%d,%d,%d,'%s')",
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, szMacStr);
    else
       sprintf(szQuery, "UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',"
-                       "node_id=%ld,if_type=%ld,if_index=%ld,"
-                       "mac_addr='%s' WHERE id=%ld",
+                       "node_id=%d,if_type=%d,if_index=%d,"
+                       "mac_addr='%s' WHERE id=%d",
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, szMacStr, m_dwId);
@@ -223,7 +223,7 @@ BOOL Interface::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM interfaces WHERE id=%ld", m_dwId);
+      sprintf(szQuery, "DELETE FROM interfaces WHERE id=%d", m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;

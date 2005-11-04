@@ -1114,6 +1114,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,139,106,10
     CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,150,82,10
+    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,161,95,10
     CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,117,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
@@ -1122,6 +1124,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,139,79,10
     CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,150,86,10
+    CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,161,86,10
     DEFPUSHBUTTON   "OK",IDOK,110,180,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,165,180,50,14
     LTEXT           "Login name:",IDC_STATIC,7,10,40,8
@@ -1129,16 +1133,12 @@ BEGIN
     LTEXT           "Description:",IDC_STATIC,7,48,38,8
     GROUPBOX        "Flags",IDC_STATIC,7,63,208,38
     GROUPBOX        "System Rights",IDC_STATIC,7,106,208,70
-    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,161,95,10
-    CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,161,86,10
 END
 
 IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 266
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
@@ -1152,6 +1152,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,112,106,10
     CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,123,82,10
+    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,135,95,10
     CONTROL         "D&rop client connections",IDC_CHECK_DROP_CONN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,90,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
@@ -1160,6 +1162,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,112,79,10
     CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,119,123,67,10
+    CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,119,135,86,10
     CONTROL         "List1",IDC_LIST_MEMBERS,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
                     LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,12,
@@ -1173,10 +1177,6 @@ BEGIN
     GROUPBOX        "System Rights",IDC_STATIC,7,79,208,71
     GROUPBOX        "Flags",IDC_STATIC,7,46,208,27
     GROUPBOX        "Members",IDC_STATIC,7,153,208,86
-    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,135,95,10
-    CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,135,86,10
 END
 
 IDD_SET_PASSWORD DIALOGEX 0, 0, 251, 63

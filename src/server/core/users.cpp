@@ -175,9 +175,9 @@ void SaveUsers(DB_HANDLE hdb)
       if (g_pUserList[i].wFlags & UF_DELETED)
       {
          // Delete user record from database
-         sprintf(szQuery, "DELETE FROM users WHERE id=%ld", g_pUserList[i].dwId);
+         sprintf(szQuery, "DELETE FROM users WHERE id=%d", g_pUserList[i].dwId);
          DBQuery(hdb, szQuery);
-         sprintf(szQuery, "DELETE FROM user_profiles WHERE user_id=%ld", g_pUserList[i].dwId);
+         sprintf(szQuery, "DELETE FROM user_profiles WHERE user_id=%d", g_pUserList[i].dwId);
          DBQuery(hdb, szQuery);
 
          // Delete user record from memory

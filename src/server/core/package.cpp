@@ -63,7 +63,7 @@ BOOL IsValidPackageId(DWORD dwPkgId)
    TCHAR szQuery[256];
    BOOL bResult = FALSE;
 
-   _sntprintf(szQuery, 256, _T("SELECT pkg_name FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+   _sntprintf(szQuery, 256, _T("SELECT pkg_name FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -100,7 +100,7 @@ DWORD UninstallPackage(DWORD dwPkgId)
    DB_RESULT hResult;
    DWORD dwResult;
 
-   _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+   _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -114,7 +114,7 @@ DWORD UninstallPackage(DWORD dwPkgId)
          if (_tunlink(szFileName) == 0)
          {
             // Delete record from database
-            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%ld"), dwPkgId);
+            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
             DBQuery(g_hCoreDB, szQuery);
             dwResult = RCC_SUCCESS;
          }

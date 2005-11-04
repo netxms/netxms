@@ -114,17 +114,17 @@ const ItemValue& ItemValue::operator=(double dFloat)
 {
    m_dFloat = dFloat;
    sprintf(m_szString, "%f", m_dFloat);
-   m_iInt32 = (long)m_dFloat;
+   m_iInt32 = (LONG)m_dFloat;
    m_iInt64 = (INT64)m_dFloat;
    m_dwInt32 = (DWORD)m_dFloat;
    m_qwInt64 = (QWORD)m_dFloat;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(long iInt32)
+const ItemValue& ItemValue::operator=(LONG iInt32)
 {
    m_iInt32 = iInt32;
-   sprintf(m_szString, "%ld", m_iInt32);
+   sprintf(m_szString, "%d", m_iInt32);
    m_dFloat = (double)m_iInt32;
    m_iInt64 = (INT64)m_iInt32;
    m_dwInt32 = (DWORD)m_iInt32;
@@ -135,13 +135,9 @@ const ItemValue& ItemValue::operator=(long iInt32)
 const ItemValue& ItemValue::operator=(INT64 iInt64)
 {
    m_iInt64 = iInt64;
-#ifdef _WIN32
-   sprintf(m_szString, "%I64d", m_iInt64);
-#else    /* _WIN32 */
-   sprintf(m_szString, "%lld", m_iInt64);
-#endif
+   sprintf(m_szString, INT64_FMT, m_iInt64);
    m_dFloat = (double)m_iInt64;
-   m_iInt32 = (long)m_iInt64;
+   m_iInt32 = (LONG)m_iInt64;
    m_dwInt32 = (DWORD)m_iInt64;
    m_qwInt64 = (QWORD)m_iInt64;
    return *this;
@@ -150,9 +146,9 @@ const ItemValue& ItemValue::operator=(INT64 iInt64)
 const ItemValue& ItemValue::operator=(DWORD dwInt32)
 {
    m_dwInt32 = dwInt32;
-   sprintf(m_szString, "%lu", m_dwInt32);
+   sprintf(m_szString, "%u", m_dwInt32);
    m_dFloat = (double)m_dwInt32;
-   m_iInt32 = (long)m_dwInt32;
+   m_iInt32 = (LONG)m_dwInt32;
    m_iInt64 = (INT64)m_dwInt32;
    m_qwInt64 = (QWORD)m_dwInt32;
    return *this;
@@ -161,13 +157,9 @@ const ItemValue& ItemValue::operator=(DWORD dwInt32)
 const ItemValue& ItemValue::operator=(QWORD qwInt64)
 {
    m_qwInt64 = qwInt64;
-#ifdef _WIN32
-   sprintf(m_szString, "%I64u", m_qwInt64);
-#else    /* _WIN32 */
-   sprintf(m_szString, "%llu", m_qwInt64);
-#endif
+   sprintf(m_szString, UINT64_FMT, m_qwInt64);
    m_dFloat = (double)((INT64)m_qwInt64);
-   m_iInt32 = (long)m_qwInt64;
+   m_iInt32 = (LONG)m_qwInt64;
    m_iInt64 = (INT64)m_qwInt64;
    return *this;
 }

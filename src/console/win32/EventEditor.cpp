@@ -84,7 +84,7 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
-      _stprintf(szBuffer, _T("%ld"), m_ppEventTemplates[i]->dwCode);
+      _stprintf(szBuffer, _T("%d"), m_ppEventTemplates[i]->dwCode);
       m_wndListCtrl.InsertItem(i, szBuffer, m_ppEventTemplates[i]->dwSeverity);
       m_wndListCtrl.SetItemData(i, m_ppEventTemplates[i]->dwCode);
       UpdateItem(i, m_ppEventTemplates[i]);
@@ -105,7 +105,7 @@ void CEventEditor::UpdateItem(int iItem, NXC_EVENT_TEMPLATE *pData)
    m_wndListCtrl.SetItem(iItem, 0, LVIF_IMAGE, NULL, pData->dwSeverity, 0, 0, 0);
    m_wndListCtrl.SetItemText(iItem, 1, pData->szName);
    m_wndListCtrl.SetItemText(iItem, 2, g_szStatusTextSmall[pData->dwSeverity]);
-   _stprintf(szBuffer, _T("%ld"), pData->dwFlags);
+   _stprintf(szBuffer, _T("%d"), pData->dwFlags);
    m_wndListCtrl.SetItemText(iItem, 3, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 4, pData->pszMessage);
    m_wndListCtrl.SetItemText(iItem, 5, pData->pszDescription);
@@ -307,7 +307,7 @@ void CEventEditor::OnEventNew()
    if (dwResult == RCC_SUCCESS)
    {
       // Create new item in list view
-      _stprintf(szBuffer, _T("%ld"), dwNewCode);
+      _stprintf(szBuffer, _T("%d"), dwNewCode);
       iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
       m_wndListCtrl.SetItemData(iItem, dwNewCode);
 

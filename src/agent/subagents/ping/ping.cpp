@@ -173,7 +173,7 @@ static LONG H_TargetList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
    for(i = 0; i < m_dwNumTargets; i++)
    {
-      _stprintf(szBuffer, _T("%s %lu %lu %lu %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
+      _stprintf(szBuffer, _T("%s %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
                 m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, 
                 m_pTargetList[i].dwPacketSize, m_pTargetList[i].szName);
       NxAddResultString(pValue, szBuffer);

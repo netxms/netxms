@@ -94,7 +94,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT category,description FROM containers WHERE id=%ld", dwId);
+   sprintf(szQuery, "SELECT category,description FROM containers WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -153,7 +153,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM containers WHERE id=%ld", m_dwId);
+   sprintf(szQuery, "SELECT id FROM containers WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -165,11 +165,11 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO containers (id,category,"
-                       "description,object_class) VALUES (%ld,%ld,'%s',%d)",
+                       "description,object_class) VALUES (%d,%d,'%s',%d)",
               m_dwId, m_dwCategory, CHECK_NULL(m_pszDescription), Type());
    else
-      sprintf(szQuery, "UPDATE containers SET category=%ld,"
-                       "description='%s',object_class=%d WHERE id=%ld",
+      sprintf(szQuery, "UPDATE containers SET category=%d,"
+                       "description='%s',object_class=%d WHERE id=%d",
               m_dwCategory, CHECK_NULL(m_pszDescription), Type(), m_dwId);
    DBQuery(hdb, szQuery);
 
@@ -179,7 +179,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%ld,%ld)", m_dwId, m_pChildList[i]->Id());
+      sprintf(szQuery, "INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();

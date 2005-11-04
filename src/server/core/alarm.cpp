@@ -160,7 +160,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    pszExpKey = EncodeSQLString(alarm.szKey);
    sprintf(szQuery, "INSERT INTO alarms (alarm_id,alarm_timestamp,source_object_id,"
                     "source_event_code,message,severity,alarm_key,is_ack,ack_by,"
-                    "source_event_id) VALUES (%ld,%ld,%ld,%ld,'%s',%d,'%s',%d,%ld,"
+                    "source_event_id) VALUES (%d,%d,%d,%d,'%s',%d,'%s',%d,%d,"
 #ifdef _WIN32
                     "%I64d)",
 #else
@@ -271,7 +271,7 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
    Unlock();
 
    // Delete from database
-   sprintf(szQuery, "DELETE FROM alarms WHERE alarm_id=%ld", dwAlarmId);
+   sprintf(szQuery, "DELETE FROM alarms WHERE alarm_id=%d", dwAlarmId);
    DBQuery(g_hCoreDB, szQuery);
 
    UpdateObjectStatus(dwObject);
@@ -286,7 +286,7 @@ void AlarmManager::AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId)
 {
    char szQuery[256];
 
-   sprintf(szQuery, "UPDATE alarms SET is_ack=1,ack_by=%ld WHERE alarm_id=%ld",
+   sprintf(szQuery, "UPDATE alarms SET is_ack=1,ack_by=%d WHERE alarm_id=%d",
            dwUserId, dwAlarmId);
    DBQuery(g_hCoreDB, szQuery);
 }
@@ -387,7 +387,7 @@ NetObj *AlarmManager::GetAlarmSourceObject(DWORD dwAlarmId)
    // If not found, search database
    if (i == m_dwNumAlarms)
    {
-      sprintf(szQuery, "SELECT source_object_id FROM alarms WHERE alarm_id=%ld", dwAlarmId);
+      sprintf(szQuery, "SELECT source_object_id FROM alarms WHERE alarm_id=%d", dwAlarmId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {

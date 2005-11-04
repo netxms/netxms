@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.4 2005-10-27 08:24:06 victor Exp $ */
+/* $Id: proc.cpp,v 1.5 2005-11-04 23:00:07 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -100,7 +100,7 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 				if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
 				{
 					char *pProcName;
-					unsigned int nPid;
+					unsigned long nPid;
 
 					if (sscanf(szBuff, "%lu ", &nPid) == 1)
 					{
@@ -144,6 +144,9 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/10/27 08:24:06  victor
+Minor changes
+
 Revision 1.3  2005/10/17 20:45:46  victor
 Fixed incorrect usage of strncpy
 

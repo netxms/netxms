@@ -52,20 +52,20 @@ static void CheckNodes(void)
          dwId = DBGetFieldULong(hResult, i, 0);
 
          // Check appropriate record in object_properties table
-         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%ld"), dwId);
+         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%d"), dwId);
          hResult2 = SQLSelect(szQuery);
          if (hResult2 != NULL)
          {
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Missing node object %ld properties. Create? (Y/N) "), dwId);
+               _tprintf(_T("Missing node object %d properties. Create? (Y/N) "), dwId);
                if (GetYesNo())
                {
                   _sntprintf(szQuery, 256, 
                              _T("INSERT INTO object_properties (object_id,name,"
                                 "status,is_deleted,image_id,inherit_access_rights,"
-                                "last_access) VALUES(%ld,'lost_node_%ld',5,0,0,1,0)"), dwId, dwId);
+                                "last_access) VALUES(%d,'lost_node_%d',5,0,0,1,0)"), dwId, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -80,22 +80,22 @@ static void CheckNodes(void)
 
          if (!bIsDeleted)
          {
-            _sntprintf(szQuery, 256, _T("SELECT subnet_id FROM nsmap WHERE node_id=%ld"), dwId);
+            _sntprintf(szQuery, 256, _T("SELECT subnet_id FROM nsmap WHERE node_id=%d"), dwId);
             hResult2 = SQLSelect(szQuery);
             if (hResult2 != NULL)
             {
                if ((DBGetNumRows(hResult2) == 0) && (DBGetFieldIPAddr(hResult, i, 1) != 0))
                {
                   m_iNumErrors++;
-                  _tprintf(_T("Unlinked node object %ld (\"%s\"). Delete? (Y/N) "),
+                  _tprintf(_T("Unlinked node object %d (\"%s\"). Delete? (Y/N) "),
                            dwId, szName);
                   if (GetYesNo())
                   {
-                     _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%ld"), dwId);
+                     _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%d"), dwId);
                      bResult = SQLQuery(szQuery);
-                     _sntprintf(szQuery, 256, _T("DELETE FROM acl WHERE object_id=%ld"), dwId);
+                     _sntprintf(szQuery, 256, _T("DELETE FROM acl WHERE object_id=%d"), dwId);
                      bResult = bResult && SQLQuery(szQuery);
-                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%ld"), dwId);
+                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), dwId);
                      if (SQLQuery(szQuery) && bResult)
                         m_iNumFixes++;
                   }
@@ -131,21 +131,21 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
          dwId = DBGetFieldULong(hResult, i, 0);
 
          // Check appropriate record in object_properties table
-         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%ld"), dwId);
+         _sntprintf(szQuery, 256, _T("SELECT name,is_deleted FROM object_properties WHERE object_id=%d"), dwId);
          hResult2 = SQLSelect(szQuery);
          if (hResult2 != NULL)
          {
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Missing %s object %ld properties. Create? (Y/N) "),
+               _tprintf(_T("Missing %s object %d properties. Create? (Y/N) "),
                         pszDisplayName, dwId);
                if (GetYesNo())
                {
                   _sntprintf(szQuery, 256, 
                              _T("INSERT INTO object_properties (object_id,name,"
                                 "status,is_deleted,image_id,inherit_access_rights,"
-                                "last_access) VALUES(%ld,'lost_%s_%ld',5,0,0,1,0)"),
+                                "last_access) VALUES(%d,'lost_%s_%d',5,0,0,1,0)"),
                              dwId, pszDisplayName, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
@@ -165,7 +165,7 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
          }
 
          // Check if referred node exists
-         _sntprintf(szQuery, 256, _T("SELECT name FROM object_properties WHERE object_id=%ld AND is_deleted=0"),
+         _sntprintf(szQuery, 256, _T("SELECT name FROM object_properties WHERE object_id=%d AND is_deleted=0"),
                     DBGetFieldULong(hResult, i, 1));
          hResult2 = SQLSelect(szQuery);
          if (hResult2 != NULL)
@@ -174,14 +174,14 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
             {
                m_iNumErrors++;
                dwId = DBGetFieldULong(hResult, i, 0);
-               _tprintf(_T("Unlinked %s object %ld (\"%s\"). Delete? (Y/N) "),
+               _tprintf(_T("Unlinked %s object %d (\"%s\"). Delete? (Y/N) "),
                         pszDisplayName, dwId, szName);
                if (GetYesNo())
                {
-                  _sntprintf(szQuery, 256, _T("DELETE FROM %s WHERE id=%ld"), pszTable, dwId);
+                  _sntprintf(szQuery, 256, _T("DELETE FROM %s WHERE id=%d"), pszTable, dwId);
                   if (SQLQuery(szQuery))
                   {
-                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%ld"), dwId);
+                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), dwId);
                      SQLQuery(szQuery);
                      m_iNumFixes++;
                   }
@@ -218,11 +218,11 @@ static void CheckObjectProperties(void)
          if (DBGetFieldULong(hResult, i, 2) == 0)
          {
             m_iNumErrors++;
-            _tprintf(_T("Object %ld [%s] has invalid timestamp. Correct? (Y/N) "),
+            _tprintf(_T("Object %d [%s] has invalid timestamp. Correct? (Y/N) "),
                      dwObjectId, DBGetField(hResult, i, 1));
             if (GetYesNo())
             {
-               _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%ld"),
+               _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%d"),
                           time(NULL), dwObjectId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
@@ -274,14 +274,14 @@ static void CheckEPP(void)
       for(i = 0; i < iNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         _stprintf(szQuery, _T("SELECT object_id FROM object_properties WHERE object_id=%ld"), dwId);
+         _stprintf(szQuery, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("Invalid object ID %ld used. Correct? (Y/N) "), dwId);
+            _tprintf(_T("Invalid object ID %d used. Correct? (Y/N) "), dwId);
             if (GetYesNo())
             {
-               _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%ld"), dwId);
+               _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -299,9 +299,9 @@ static void CheckEPP(void)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          if (dwId & GROUP_FLAG)
-            _stprintf(szQuery, _T("SELECT id FROM event_groups WHERE id=%ld"), dwId);
+            _stprintf(szQuery, _T("SELECT id FROM event_groups WHERE id=%d"), dwId);
          else
-            _stprintf(szQuery, _T("SELECT event_code FROM event_cfg WHERE event_code=%ld"), dwId);
+            _stprintf(szQuery, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
@@ -309,7 +309,7 @@ static void CheckEPP(void)
                      (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId);
             if (GetYesNo())
             {
-               _stprintf(szQuery, _T("DELETE FROM policy_event_list WHERE event_code=%ld"), dwId);
+               _stprintf(szQuery, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -326,14 +326,14 @@ static void CheckEPP(void)
       for(i = 0; i < iNumRows; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         _stprintf(szQuery, _T("SELECT action_id FROM actions WHERE action_id=%ld"), dwId);
+         _stprintf(szQuery, _T("SELECT action_id FROM actions WHERE action_id=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("Invalid action ID %ld used. Correct? (Y/N) "), dwId);
+            _tprintf(_T("Invalid action ID %d used. Correct? (Y/N) "), dwId);
             if (GetYesNo())
             {
-               _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%ld"), dwId);
+               _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
                if (SQLQuery(szQuery))
                   m_iNumFixes++;
             }
@@ -351,7 +351,7 @@ static void CheckEPP(void)
 void CheckDatabase(void)
 {
    DB_RESULT hResult;
-   long iVersion = 0;
+   LONG iVersion = 0;
    BOOL bCompleted = FALSE;
 
    _tprintf(_T("Checking database...\n"));

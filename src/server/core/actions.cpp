@@ -149,7 +149,7 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    TCHAR *pszEscRcpt, *pszEscSubj, *pszEscData, szQuery[4096];
 
    // Check if action with given ID already exist in database
-   sprintf(szQuery, "SELECT action_id FROM actions WHERE action_id=%ld", pAction->dwId);
+   sprintf(szQuery, "SELECT action_id FROM actions WHERE action_id=%d", pAction->dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -164,13 +164,13 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    if (bExist)
       sprintf(szQuery, "UPDATE actions SET action_name='%s',action_type=%d,is_disabled=%d,"
                        "rcpt_addr='%s',email_subject='%s',action_data='%s'"
-                       "WHERE action_id=%ld",
+                       "WHERE action_id=%d",
               pAction->szName, pAction->iType, pAction->bIsDisabled,
               pszEscRcpt, pszEscSubj, pszEscData, pAction->dwId);
    else
       sprintf(szQuery, "INSERT INTO actions (action_id,action_name,action_type,"
                        "is_disabled,rcpt_addr,email_subject,action_data) VALUES"
-                       " (%ld,'%s',%d,%d,'%s','%s','%s')",
+                       " (%d,'%s',%d,%d,'%s','%s','%s')",
               pAction->dwId,pAction->szName, pAction->iType, pAction->bIsDisabled,
               pszEscRcpt, pszEscSubj, pszEscData);
    DBQuery(g_hCoreDB, szQuery);
@@ -325,7 +325,7 @@ DWORD DeleteActionFromDB(DWORD dwActionId)
          m_dwNumActions--;
          safe_free(m_pActionList[i].pszData);
          memmove(&m_pActionList[i], &m_pActionList[i + 1], sizeof(NXC_ACTION) * (m_dwNumActions - i));
-         sprintf(szQuery, "DELETE FROM actions WHERE action_id=%ld", dwActionId);
+         sprintf(szQuery, "DELETE FROM actions WHERE action_id=%d", dwActionId);
          DBQuery(g_hCoreDB, szQuery);
 
          dwResult = RCC_SUCCESS;

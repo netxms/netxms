@@ -353,7 +353,7 @@ public:
    const BYTE *GetValue(void) { return m_pValue; }
 
    DWORD GetValueAsUInt(void);
-   long GetValueAsInt(void);
+   LONG GetValueAsInt(void);
    TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
    SNMP_ObjectId *GetValueAsObjectId(void);
    TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);

@@ -381,9 +381,9 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    pInfo->iWndClass = WNDC_GRAPH;
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
-              _T("F:%ld\x7FN:%ld\x7FTS:%ld\x7FTF:%ld\x7F" "A:%ld\x7F"
-                 "TFT:%d\x7FTU:%d\x7FNTU:%ld\x7FS:%d\x7F"
-                 "CA:%lu\x7F" "CB:%lu\x7F" "CG:%lu\x7F" "CK:%lu\x7F" "CL:%lu\x7F" "CT:%lu"),
+              _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F" "A:%d\x7F"
+                 "TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F"
+                 "CA:%u\x7F" "CB:%u\x7F" "CG:%u\x7F" "CK:%u\x7F" "CL:%u\x7F" "CT:%u"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 

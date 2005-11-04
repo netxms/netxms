@@ -857,7 +857,7 @@ void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
    int iItem;
    char szBuffer[16];
 
-   sprintf(szBuffer, "%ld", pObject->dwId);
+   sprintf(szBuffer, "%d", pObject->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, GetObjectImageIndex(pObject));
    if (iItem != -1)
    {

@@ -167,10 +167,10 @@ void CDCIDataView::OnViewRefresh()
                switch(pData->wDataType)
                {
                   case DCI_DT_INT:
-                     sprintf(szBuffer, "%ld", pRow->value.dwInt32);
+                     sprintf(szBuffer, "%d", pRow->value.dwInt32);
                      break;
                   case DCI_DT_UINT:
-                     sprintf(szBuffer, "%lu", pRow->value.dwInt32);
+                     sprintf(szBuffer, "%u", pRow->value.dwInt32);
                      break;
                   case DCI_DT_INT64:
                      sprintf(szBuffer, "%I64d", pRow->value.qwInt64);
@@ -236,7 +236,7 @@ LRESULT CDCIDataView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
    pInfo->iWndClass = WNDC_DCI_DATA;
    GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%ld\x7FI:%ld\x7FIN:%s"),
+   _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%d\x7FI:%d\x7FIN:%s"),
               m_dwNodeId, m_dwItemId, m_szItemName);
    return 1;
 }

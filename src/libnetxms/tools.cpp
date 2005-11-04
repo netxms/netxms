@@ -72,7 +72,7 @@ TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
    TCHAR *szBufPtr;
 
    szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
-   _stprintf(szBufPtr, _T("%ld.%ld.%ld.%ld"), dwAddr >> 24, (dwAddr >> 16) & 255,
+   _stprintf(szBufPtr, _T("%d.%d.%d.%d"), dwAddr >> 24, (dwAddr >> 16) & 255,
              (dwAddr >> 8) & 255, dwAddr & 255);
    return szBufPtr;
 }

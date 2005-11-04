@@ -170,10 +170,10 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity
                         case ASN_COUNTER32:
                         case ASN_GAUGE32:
                         case ASN_TIMETICKS:
-                           *((long *)pValue) = pVar->GetValueAsInt();
+                           *((LONG *)pValue) = pVar->GetValueAsInt();
                            break;
                         case ASN_IP_ADDR:
-                           *((long *)pValue) = ntohl(pVar->GetValueAsUInt());
+                           *((DWORD *)pValue) = ntohl(pVar->GetValueAsUInt());
                            break;
                         case ASN_OCTET_STRING:
                            pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
@@ -391,7 +391,7 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, WORD wPort,
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
                                      const char *szCommunity, DWORD dwNodeType)
 {
-   long i, iNumIf;
+   LONG i, iNumIf;
    char szOid[128], szBuffer[256];
    INTERFACE_LIST *pIfList = NULL;
    BOOL bSuccess = FALSE;
@@ -412,7 +412,7 @@ return pIfList;*/
 
    // Get number of interfaces
    if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
-                &iNumIf, sizeof(long), FALSE, FALSE) != SNMP_ERR_SUCCESS)
+                &iNumIf, sizeof(LONG), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return NULL;
 
    // Create empty list
@@ -549,7 +549,7 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, DWORD dwNodeAddr, WORD wPort,
    char szOid[256];
 
    // Interface administrative status
-   sprintf(szOid, ".1.3.6.1.2.1.2.2.1.7.%ld", dwIfIndex);
+   sprintf(szOid, ".1.3.6.1.2.1.2.2.1.7.%d", dwIfIndex);
    SnmpGet(dwVersion, dwNodeAddr, wPort, pszCommunity, szOid, NULL, 0,
            &dwAdminStatus, sizeof(DWORD), FALSE, FALSE);
 
@@ -563,7 +563,7 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, DWORD dwNodeAddr, WORD wPort,
          break;
       case 1:     // Interface administratively up, check operational status
          // Get interface operational status
-         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.8.%ld", dwIfIndex);
+         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.8.%d", dwIfIndex);
          SnmpGet(dwVersion, dwNodeAddr, wPort, pszCommunity, szOid, NULL, 0,
                  &dwOperStatus, sizeof(DWORD), FALSE, FALSE);
          switch(dwOperStatus)

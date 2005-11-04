@@ -183,9 +183,9 @@ DWORD SNMP_Variable::GetValueAsUInt(void)
 // Get value as signed integer
 //
 
-long SNMP_Variable::GetValueAsInt(void)
+LONG SNMP_Variable::GetValueAsInt(void)
 {
-   long iValue;
+   LONG iValue;
 
    switch(m_dwType)
    {
@@ -195,7 +195,7 @@ long SNMP_Variable::GetValueAsInt(void)
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
       case ASN_IP_ADDR:
-         iValue = *((long *)m_pValue);
+         iValue = *((LONG *)m_pValue);
          break;
       default:
          iValue = 0;
@@ -218,13 +218,13 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
    switch(m_dwType)
    {
       case ASN_INTEGER:
-         _sntprintf(pszBuffer, dwBufferSize, _T("%ld"), *((long *)m_pValue));
+         _sntprintf(pszBuffer, dwBufferSize, _T("%d"), *((LONG *)m_pValue));
          break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         _sntprintf(pszBuffer, dwBufferSize, _T("%lu"), *((DWORD *)m_pValue));
+         _sntprintf(pszBuffer, dwBufferSize, _T("%u"), *((DWORD *)m_pValue));
          break;
       case ASN_IP_ADDR:
          if (dwBufferSize >= 16)

@@ -55,7 +55,7 @@ void UpdateImageHashes(void)
             {
                // Convert MD5 hash to text form and update database
                BinToStr(hash, MD5_DIGEST_SIZE, szHashText);
-               sprintf(szQuery, "UPDATE images SET file_hash_%s='%s' WHERE image_id=%ld",
+               sprintf(szQuery, "UPDATE images SET file_hash_%s='%s' WHERE image_id=%d",
                        szExt[iFormat], szHashText, dwImageId);
                DBQuery(g_hCoreDB, szQuery);
             }
@@ -192,7 +192,7 @@ void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD 
    msg.SetId(dwRqId);
    msg.SetCode(CMD_IMAGE_FILE);
 
-   sprintf(szQuery, "SELECT file_name_%s FROM images WHERE image_id=%ld", 
+   sprintf(szQuery, "SELECT file_name_%s FROM images WHERE image_id=%d", 
            (wFormat == IMAGE_FORMAT_PNG) ? "png" : "ico", dwImageId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)

@@ -80,7 +80,7 @@ static BOOL LoadTrapCfg(void)
       for(i = 0; i < m_dwNumTraps; i++)
       {
          sprintf(szQuery, "SELECT snmp_oid,description FROM snmp_trap_pmap "
-                          "WHERE trap_id=%ld ORDER BY parameter", m_pTrapCfg[i].dwId);
+                          "WHERE trap_id=%d ORDER BY parameter", m_pTrapCfg[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -387,9 +387,9 @@ DWORD DeleteTrap(DWORD dwId)
          memmove(&m_pTrapCfg[i], &m_pTrapCfg[i + 1], sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps - i));
 
          // Remove trap entry from database
-         _stprintf(szQuery, _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%ld"), dwId);
+         _stprintf(szQuery, _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), dwId);
          QueueSQLRequest(szQuery);
-         _stprintf(szQuery, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%ld"), dwId);
+         _stprintf(szQuery, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), dwId);
          QueueSQLRequest(szQuery);
          dwResult = RCC_SUCCESS;
          break;
@@ -422,7 +422,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
    MutexUnlock(m_mutexTrapCfgAccess);
 
    _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description) ")
-                      _T("VALUES (%ld,'',%d,'')"), *pdwTrapId, EVENT_SNMP_UNMATCHED_TRAP);
+                      _T("VALUES (%d,'',%d,'')"), *pdwTrapId, (DWORD)EVENT_SNMP_UNMATCHED_TRAP);
    if (!DBQuery(g_hCoreDB, szQuery))
       dwResult = RCC_DB_FAILURE;
 
@@ -476,13 +476,13 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          // Update database
          pszEscDescr = EncodeSQLString(m_pTrapCfg[i].szDescription);
          SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
-         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%ld,description='%s' WHERE trap_id=%ld"),
+         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description='%s' WHERE trap_id=%d"),
                     szOID, m_pTrapCfg[i].dwEventCode, pszEscDescr, m_pTrapCfg[i].dwId);
          free(pszEscDescr);
          bSuccess = DBQuery(g_hCoreDB, szQuery);
          if (bSuccess)
          {
-            _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%ld"), m_pTrapCfg[i].dwId);
+            _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), m_pTrapCfg[i].dwId);
             bSuccess = DBQuery(g_hCoreDB, szQuery);
             if (bSuccess)
             {
@@ -493,7 +493,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
                                        szOID, 1024);
                   pszEscDescr = EncodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
                   _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
-                                            _T("snmp_oid,description) VALUES (%ld,%ld,'%s','%s')"),
+                                            _T("snmp_oid,description) VALUES (%d,%d,'%s','%s')"),
                              m_pTrapCfg[i].dwId, j + 1, szOID, pszEscDescr);
                   free(pszEscDescr);
                   bSuccess = DBQuery(g_hCoreDB, szQuery);
