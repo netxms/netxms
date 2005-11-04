@@ -1,3 +1,5 @@
+04-Nov-2005|0.2.6 warning|We declare version 0.2.6 as a worst version ever, which cannot be built. Blame the packager :). 0.2.7 will be released tonight. Stay tuned.
+28-Oct-2005|0.2.6 released|Version 0.2.6 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 12-Sep-2005|0.2.5 released|Version 0.2.5 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 12-Sep-2005|Changes in roadmap|Due to popular demand, log monitoring (Windows event log, UNIX syslog proxy, plain text files) will be added in the near future.
 10-Sep-2005|"Linux - modern technology" conference|NetXMS was presented at "<a href="http://www.ibm.com/news/lv/lv/2005/09/lv_lv_news_20050902.html">Linux - modern technology</a>" conference, organized by IBM, Oracle, SuSe and Novell. You can download presentation used during Victor's speech in <a href="http://netxms.org/documentation/">documentation</a> section.
