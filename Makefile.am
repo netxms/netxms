@@ -11,3 +11,6 @@
 EXTRA_DIST = reconf configure include netxms.dsw
 SUBDIRS = m4 contrib src doc tools netware
 SUBDIRS += @TOP_LEVEL_MODULES@
+
+install-exec-hook:
+	if test "x@BUILD_SERVER@" = "xyes"; then $(bindir)/nxmibc -d $(pkgdatadir)/mibs -o $(pkgdatadir)/mibs/netxms.mib; fi

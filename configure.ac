@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.114 2005-11-05 12:39:35 victor Exp $
+# $Id: configure.ac,v 1.115 2005-11-05 22:32:17 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -255,7 +255,7 @@ AC_ARG_WITH(static-agent,
 
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS="mysql pgsql odbc mssql"
+	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
 	MODULES="libnxsnmp server agent libnxcl nxevent nxreport nxmibc console www"
 	SUBAGENT_DIRS="linux freebsd sunos aix"
 	NXCONFIG="nxconfig"
@@ -323,6 +323,7 @@ AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
+AC_SUBST(BUILD_SERVER)
 
 # --------------------------------------------------------------------------
 # If --with-static-agent selected, other components cannot be selected
