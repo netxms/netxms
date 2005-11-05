@@ -24,6 +24,7 @@
 
 #if defined(_WIN32)
 #include <conio.h>
+#include <locale.h>
 #elif defined(_NETWARE)
 #include <screen.h>
 #else
@@ -880,6 +881,14 @@ int main(int argc, char *argv[])
 #ifdef _NETWARE
    g_nThreadCount++;
    setscreenmode(SCR_AUTOCLOSE_ON_EXIT | SCR_COLOR_ATTRS);
+#endif
+
+   // Set locale to C. It shouldn't be needed, according to
+   // documentation, but I've seen the cases when agent formats
+   // floating point numbers by sprintf inserting comma in place
+   // of a dot, as set by system's regional settings.
+#ifdef _WIN32
+   setlocale(LC_ALL, "C");
 #endif
 
    // Parse command line
