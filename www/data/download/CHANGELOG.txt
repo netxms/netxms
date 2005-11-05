@@ -1,4 +1,17 @@
 *
+* 0.2.7
+*
+
+- Advanced status calculation mechanism implemented
+- Added support for SQLite embedded database engine
+- New MIBs added: IEEE 802.11
+- PING subagent: added "PacketRate" configuration parameter
+- Fixed some portability issues for 64bit platforms
+- Fixed build problems with version 0.2.6
+- Fixed issues: #53, #55, #59, #60
+
+
+*
 * 0.2.6
 *
 
