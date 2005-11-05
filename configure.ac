@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.113 2005-10-28 16:04:48 victor Exp $
+# $Id: configure.ac,v 1.114 2005-11-05 12:39:35 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.6], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.7], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -66,6 +66,22 @@ AC_CHECK_HEADERS([/usr/include/pthread.h])
 
 # --------------------------------------------------------------------------
 # command line options
+
+AC_ARG_WITH(sqlite,
+[AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+   fi
+   DYNAMIC_COMPONENTS="yes"
+	with_sqlite="yes"
+	AC_DEFINE(WITH_SQLITE,,[with sqlite])
+	DB_DRIVERS="$DB_DRIVERS sqlite"
+	AC_CHECK_LIB(sqlite3, sqlite3_open, ,
+		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
+fi ])
 
 AC_ARG_WITH(odbc,
 [AS_HELP_STRING(--with-odbc,build ODBC database driver)],
@@ -556,6 +572,7 @@ AC_CONFIG_FILES([
 	src/server/dbdrv/mssql/Makefile
 	src/server/dbdrv/mysql/Makefile
 	src/server/dbdrv/pgsql/Makefile
+	src/server/dbdrv/sqlite/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/generic/Makefile
 	src/server/tools/Makefile
