@@ -540,6 +540,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "sqlite"=.\src\server\dbdrv\sqlite\sqlite.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsrv
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "win9x"=.\src\agent\subagents\win9x\win9x.dsp - Package Owner=<4>
 
 Package=<5>
