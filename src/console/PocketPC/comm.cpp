@@ -100,6 +100,13 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
    }
 
+   // Set subscriptions
+   if (dwResult == RCC_SUCCESS)
+   {
+      SetInfoText(hWnd, _T("Subscribing to notifications..."));
+      dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_OBJECTS | NXC_CHANNEL_ALARMS);
+   }
+
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
    {
