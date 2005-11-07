@@ -7,12 +7,12 @@
 	If you have any questions, please contact us.
 	</p>
 
-	<h2>Mailing lists</h2>
+	<h2>Documentation Wiki</h2>
 	<p>
-	See &quot;<a href="/contacts/">Contacts</a>&quot; section.
+	This is the <a href="/wiki/">NetXMS Wiki</a>.
 	</p>
 
-	<!--
+	<h2>Mailing lists</h2>	<p>	See &quot;<a href="/contacts/">Contacts</a>&quot; section.	</p>	<!--
 	<h2>System Manuals</h2>
 	<ul>
 		<li/><a href="manual/">NetXMS Manual</a>
