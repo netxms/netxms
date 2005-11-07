@@ -61,7 +61,7 @@ typedef struct
    MYSQL_ROW pCurrRow;
    BOOL bNoMoreRows;
    int iNumCols;
-   DWORD *pdwColLengths;
+   unsigned long *pulColLengths;
 } MYSQL_ASYNC_RESULT;
 
 #endif   /* _mysqldrv_h_ */

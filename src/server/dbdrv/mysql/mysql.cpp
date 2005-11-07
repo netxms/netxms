@@ -178,7 +178,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
          pResult->bNoMoreRows = FALSE;
          pResult->iNumCols = mysql_num_fields(pResult->pHandle);
          pResult->pCurrRow = NULL;
-         pResult->pdwColLengths = (DWORD *)malloc(sizeof(DWORD) * pResult->iNumCols);
+         pResult->pulColLengths = (unsigned long *)malloc(sizeof(unsigned long) * pResult->iNumCols);
       }
       else
       {
@@ -216,19 +216,19 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
       }
       else
       {
-         DWORD *pLen;
+         unsigned long *pLen;
 
          // Get column lengths for current row
          pLen = mysql_fetch_lengths(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
          if (pLen != NULL)
          {
-            memcpy(((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths, pLen, 
-                   sizeof(DWORD) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
+            memcpy(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths, pLen, 
+                   sizeof(unsigned long) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
          }
          else
          {
-            memset(((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths, 0, 
-                   sizeof(DWORD) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
+            memset(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths, 0, 
+                   sizeof(unsigned long) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
          }
       }
    }
@@ -240,7 +240,8 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field from current row in async query result
 //
 
-extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
+                                         char *pBuffer, int iBufSize)
 {
    int iLen;
 
@@ -258,7 +259,7 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, c
       return NULL;
 
    // Now get column data
-   iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths[iColumn], iBufSize - 1);
+   iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn], iBufSize - 1);
    if (iLen > 0)
       memcpy(pBuffer, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn], iLen);
    pBuffer[iLen] = 0;
@@ -286,8 +287,8 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
       }
 
       // Free allocated memory
-      if (((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths != NULL)
-         free(((MYSQL_ASYNC_RESULT *)hResult)->pdwColLengths);
+      if (((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths != NULL)
+         free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
       free(hResult);
    }
 }
