@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.18 2005-11-05 23:36:27 victor Exp $ -->
+<!-- $Id: body.shtml,v 1.19 2005-11-07 07:53:00 victor Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -37,9 +37,9 @@
 	<a href="netxms-0.2.7-win32-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
 	<p>
-	<a href="netxms-0.2.6-wce-binary.tar.gz">PocketPC Precompiled Binaries (not changed since 0.2.6)</a>
-	<a href="netxms-0.2.6-wce-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.6-wce-binary.tar.gz.asc">(PGP sign)</a>
+	<a href="netxms-0.2.7-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
+	<a href="netxms-0.2.7-wce-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.7-wce-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
 	<p>
 	<a href="netxms-0.2.6-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher) (not changed since 0.2.6)</a>
