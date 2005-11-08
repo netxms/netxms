@@ -12,6 +12,7 @@ sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_oracle.sql
 sql/dbinit_pgsql.sql
+sql/dbinit_sqlite.sql
 src/agent/core/messages.c
 src/agent/core/messages.h
 src/agent/core/nxagentd
