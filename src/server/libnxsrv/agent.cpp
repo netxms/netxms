@@ -88,6 +88,7 @@ AgentConnection::AgentConnection()
    m_hReceiverThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
+   m_bUseProxy = FALSE;
 }
 
 
@@ -95,7 +96,8 @@ AgentConnection::AgentConnection()
 // Normal constructor for AgentConnection
 //
 
-AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHAR *pszSecret)
+AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
+                                 int iAuthMethod, TCHAR *pszSecret)
 {
    m_dwAddr = dwAddr;
    m_wPort = wPort;
@@ -125,6 +127,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHA
    m_hReceiverThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
+   m_bUseProxy = FALSE;
 }
 
 
@@ -263,7 +266,7 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
-   BOOL bSuccess = FALSE, bForceEncryption = FALSE;
+   BOOL bSuccess = FALSE, bForceEncryption = FALSE, bSecondPass = FALSE;
    DWORD dwError = 0;
 
    if (pdwError != NULL)
@@ -291,15 +294,24 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
 
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
-   sa.sin_addr.s_addr = m_dwAddr;
    sa.sin_family = AF_INET;
-   sa.sin_port = htons(m_wPort);
+   if (m_bUseProxy)
+   {
+      sa.sin_addr.s_addr = m_dwProxyAddr;
+      sa.sin_port = htons(m_wProxyPort);
+   }
+   else
+   {
+      sa.sin_addr.s_addr = m_dwAddr;
+      sa.sin_port = htons(m_wPort);
+   }
 
    // Connect to server
    if (connect(m_hSocket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
       if (bVerbose)
-         PrintMsg(_T("Cannot establish connection with agent %s"), IpToStr(ntohl(m_dwAddr), szBuffer));
+         PrintMsg(_T("Cannot establish connection with agent %s"),
+                  IpToStr(ntohl(m_bUseProxy ? m_dwProxyAddr : m_dwAddr), szBuffer));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
@@ -331,7 +343,7 @@ setup_encryption:
    }
 
    // Authenticate itself to agent
-   if ((dwError = Authenticate()) != ERR_SUCCESS)
+   if ((dwError = Authenticate(m_bUseProxy && !bSecondPass)) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -356,6 +368,18 @@ setup_encryption:
       PrintMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
+   }
+
+   if (m_bUseProxy && !bSecondPass)
+   {
+      dwError = SetupProxyConnection();
+      if (dwError != ERR_SUCCESS)
+         goto connect_cleanup;
+      DestroyEncryptionContext(m_pCtx);
+      m_pCtx = NULL;
+      bSecondPass = TRUE;
+      bForceEncryption = FALSE;
+      goto setup_encryption;
    }
 
    bSuccess = TRUE;
@@ -750,38 +774,40 @@ DWORD AgentConnection::GetList(TCHAR *pszParam)
 // Authenticate to agent
 //
 
-DWORD AgentConnection::Authenticate(void)
+DWORD AgentConnection::Authenticate(BOOL bProxyData)
 {
    CSCPMessage msg;
    DWORD dwRqId;
    BYTE hash[32];
+   int iAuthMethod = bProxyData ? m_iProxyAuth : m_iAuthMethod;
+   char *pszSecret = bProxyData ? m_szProxySecret : m_szSecret;
 #ifdef UNICODE
    WCHAR szBuffer[MAX_SECRET_LENGTH];
 #endif
 
-   if (m_iAuthMethod == AUTH_NONE)
+   if (iAuthMethod == AUTH_NONE)
       return ERR_SUCCESS;  // No authentication required
 
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_AUTHENTICATE);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_AUTH_METHOD, (WORD)m_iAuthMethod);
-   switch(m_iAuthMethod)
+   msg.SetVariable(VID_AUTH_METHOD, (WORD)iAuthMethod);
+   switch(iAuthMethod)
    {
       case AUTH_PLAINTEXT:
 #ifdef UNICODE
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_szSecret, -1, szBuffer, MAX_SECRET_LENGTH);
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszSecret, -1, szBuffer, MAX_SECRET_LENGTH);
          msg.SetVariable(VID_SHARED_SECRET, szBuffer);
 #else
-         msg.SetVariable(VID_SHARED_SECRET, m_szSecret);
+         msg.SetVariable(VID_SHARED_SECRET, pszSecret);
 #endif
          break;
       case AUTH_MD5_HASH:
-         CalculateMD5Hash((BYTE *)m_szSecret, strlen(m_szSecret), hash);
+         CalculateMD5Hash((BYTE *)pszSecret, strlen(pszSecret), hash);
          msg.SetVariable(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
          break;
       case AUTH_SHA1_HASH:
-         CalculateSHA1Hash((BYTE *)m_szSecret, strlen(m_szSecret), hash);
+         CalculateSHA1Hash((BYTE *)pszSecret, strlen(pszSecret), hash);
          msg.SetVariable(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
          break;
       default:
@@ -1245,4 +1271,51 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
    }
 
    return pRT;
+}
+
+
+//
+// Set proxy information
+//
+
+void AgentConnection::SetProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHAR *pszSecret)
+{
+   m_dwProxyAddr = dwAddr;
+   m_wProxyPort = wPort;
+   m_iProxyAuth = iAuthMethod;
+   if (pszSecret != NULL)
+   {
+#ifdef UNICODE
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                          pszSecret, -1, m_szProxySecret, MAX_SECRET_LENGTH, NULL, NULL);
+#else
+      nx_strncpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
+#endif
+   }
+   else
+   {
+      m_szProxySecret[0] = 0;
+   }
+   m_bUseProxy = TRUE;
+}
+
+
+//
+// Setup proxy connection
+//
+
+DWORD AgentConnection::SetupProxyConnection(void)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_SETUP_PROXY_CONNECTION);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_IP_ADDRESS, ntohl(m_dwAddr));
+   msg.SetVariable(VID_AGENT_PORT, m_wPort);
+   if (SendMessage(&msg))
+      return WaitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect
+   else
+      return ERR_CONNECTION_BROKEN;
 }

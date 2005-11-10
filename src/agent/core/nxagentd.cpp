@@ -143,6 +143,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
+   { "EnableProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
    { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },

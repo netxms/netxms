@@ -77,6 +77,17 @@ THREAD_RESULT THREAD_CALL CommSession::ProcessingThreadStarter(void *pArg)
 
 
 //
+// Client communication write thread
+//
+
+THREAD_RESULT THREAD_CALL CommSession::ProxyReadThreadStarter(void *pArg)
+{
+   ((CommSession *)pArg)->ProxyReadThread();
+   return THREAD_OK;
+}
+
+
+//
 // Client session class constructor
 //
 
@@ -94,6 +105,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
    m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
    m_bMasterServer = bMasterServer;
    m_bControlServer = bControlServer;
+   m_bProxyConnection = FALSE;
    m_hCurrFile = -1;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -108,6 +120,8 @@ CommSession::~CommSession()
 {
    shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
+   if (m_hProxySocket != -1)
+      closesocket(m_hProxySocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
    safe_free(m_pMsgBuffer);
@@ -136,6 +150,8 @@ void CommSession::Run(void)
 void CommSession::Disconnect(void)
 {
    shutdown(m_hSocket, SHUT_RDWR);
+   if (m_hProxySocket != -1)
+      shutdown(m_hProxySocket, SHUT_RDWR);
 }
 
 
@@ -188,70 +204,78 @@ void CommSession::ReadThread(void)
       // Update activity timestamp
       m_ts = time(NULL);
 
-      wFlags = ntohs(pRawMsg->wFlags);
-      if (wFlags & MF_BINARY)
+      if (m_bProxyConnection)
       {
-         // Convert message header to host format
-         pRawMsg->dwId = ntohl(pRawMsg->dwId);
-         pRawMsg->wCode = ntohs(pRawMsg->wCode);
-         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf("Received raw message %s", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
-
-         if (pRawMsg->wCode == CMD_FILE_DATA)
+         // Forward received message to remote peer
+         SendEx(m_hProxySocket, (char *)pRawMsg, iErr, 0);
+      }
+      else
+      {
+         wFlags = ntohs(pRawMsg->wFlags);
+         if (wFlags & MF_BINARY)
          {
-            if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
+            // Convert message header to host format
+            pRawMsg->dwId = ntohl(pRawMsg->dwId);
+            pRawMsg->wCode = ntohs(pRawMsg->wCode);
+            pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+            DebugPrintf("Received raw message %s", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
+
+            if (pRawMsg->wCode == CMD_FILE_DATA)
             {
-               if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+               if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
                {
-                  if (wFlags & MF_END_OF_FILE)
+                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
                   {
+                     if (wFlags & MF_END_OF_FILE)
+                     {
+                        CSCPMessage msg;
+
+                        close(m_hCurrFile);
+                        m_hCurrFile = -1;
+                  
+                        msg.SetCode(CMD_REQUEST_COMPLETED);
+                        msg.SetId(pRawMsg->dwId);
+                        msg.SetVariable(VID_RCC, ERR_SUCCESS);
+                        SendMessage(&msg);
+                     }
+                  }
+                  else
+                  {
+                     // I/O error
                      CSCPMessage msg;
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
-                  
+               
                      msg.SetCode(CMD_REQUEST_COMPLETED);
                      msg.SetId(pRawMsg->dwId);
-                     msg.SetVariable(VID_RCC, ERR_SUCCESS);
+                     msg.SetVariable(VID_RCC, ERR_IO_FAILURE);
                      SendMessage(&msg);
                   }
                }
-               else
-               {
-                  // I/O error
-                  CSCPMessage msg;
-
-                  close(m_hCurrFile);
-                  m_hCurrFile = -1;
-               
-                  msg.SetCode(CMD_REQUEST_COMPLETED);
-                  msg.SetId(pRawMsg->dwId);
-                  msg.SetVariable(VID_RCC, ERR_IO_FAILURE);
-                  SendMessage(&msg);
-               }
             }
-         }
-      }
-      else
-      {
-         // Create message object from raw message
-         pMsg = new CSCPMessage(pRawMsg);
-         if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
-         {
-            DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
-            if (m_pCtx == NULL)
-            {
-               CSCPMessage *pResponse;
-
-               SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL);
-               SendMessage(pResponse);
-               delete pResponse;
-            }
-            delete pMsg;
          }
          else
          {
-            m_pMessageQueue->Put(pMsg);
+            // Create message object from raw message
+            pMsg = new CSCPMessage(pRawMsg);
+            if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
+            {
+               DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+               if (m_pCtx == NULL)
+               {
+                  CSCPMessage *pResponse;
+
+                  SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL);
+                  SendMessage(pResponse);
+                  delete pResponse;
+               }
+               delete pMsg;
+            }
+            else
+            {
+               m_pMessageQueue->Put(pMsg);
+            }
          }
       }
    }
@@ -265,12 +289,53 @@ void CommSession::ReadThread(void)
    // Notify other threads to exit
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   if (m_hProxySocket != -1)
+      shutdown(m_hProxySocket, SHUT_RDWR);
 
    // Wait for other threads to finish
    ThreadJoin(m_hWriteThread);
    ThreadJoin(m_hProcessingThread);
+   if (m_bProxyConnection)
+      ThreadJoin(m_hProxyReadThread);
 
    DebugPrintf("Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
+}
+
+
+//
+// Send prepared raw message over the network and destroy it
+//
+
+BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx)
+{
+   BOOL bResult = TRUE;
+   char szBuffer[128];
+
+   DebugPrintf("Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
+   if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
+   {
+      CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+
+      pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
+      free(pMsg);
+      if (pEnMsg != NULL)
+      {
+         if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) <= 0)
+         {
+            bResult = FALSE;
+         }
+         free(pEnMsg);
+      }
+   }
+   else
+   {
+      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
+      {
+         bResult = FALSE;
+      }
+      free(pMsg);
+   }
+   return bResult;
 }
 
 
@@ -281,7 +346,6 @@ void CommSession::ReadThread(void)
 void CommSession::WriteThread(void)
 {
    CSCP_MESSAGE *pMsg;
-   char szBuffer[128];
 
    while(1)
    {
@@ -289,33 +353,10 @@ void CommSession::WriteThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
-      if (m_pCtx != NULL)
-      {
-         CSCP_ENCRYPTED_MESSAGE *pEnMsg;
-
-         pEnMsg = CSCPEncryptMessage(m_pCtx, pMsg);
-         free(pMsg);
-         if (pEnMsg != NULL)
-         {
-            if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0) <= 0)
-            {
-               free(pEnMsg);
-               break;
-            }
-            free(pEnMsg);
-         }
-      }
-      else
-      {
-         if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->dwSize), 0) <= 0)
-         {
-            free(pMsg);
-            break;
-         }
-         free(pMsg);
-      }
+      if (!SendRawMessage(pMsg, m_pCtx))
+         break;
    }
+   m_pSendQueue->Clear();
 }
 
 
@@ -328,7 +369,7 @@ void CommSession::ProcessingThread(void)
    CSCPMessage *pMsg;
    char szBuffer[128];
    CSCPMessage msg;
-   DWORD dwCommand;
+   DWORD dwCommand, dwRet;
 
    while(1)
    {
@@ -389,6 +430,15 @@ void CommSession::ProcessingThread(void)
             case CMD_APPLY_LOG_POLICY:
                msg.SetVariable(VID_RCC, ApplyLogPolicy(pMsg));
                break;
+            case CMD_SETUP_PROXY_CONNECTION:
+               dwRet = SetupProxyConnection(pMsg);
+               // Proxy session established, incoming messages will
+               // not be processed locally. Acknowlegement message sent
+               // by SetupProxyConnection() in case of success.
+               if (dwRet == ERR_SUCCESS)
+                  goto stop_processing;
+               msg.SetVariable(VID_RCC, dwRet);
+               break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))
@@ -402,6 +452,9 @@ void CommSession::ProcessingThread(void)
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
+
+stop_processing:
+   ;
 }
 
 
@@ -738,4 +791,107 @@ DWORD CommSession::ApplyLogPolicy(CSCPMessage *pRequest)
       dwResult = ERR_ACCESS_DENIED;
    }
    return dwResult;
+}
+
+
+//
+// Setup proxy connection
+//
+
+DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
+{
+   DWORD dwResult, dwAddr;
+   WORD wPort;
+   struct sockaddr_in sa;
+   CSCP_ENCRYPTION_CONTEXT *pSavedCtx;
+
+   if (m_bMasterServer && (g_dwFlags & AF_ENABLE_PROXY))
+   {
+      dwAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+      wPort = pRequest->GetVariableShort(VID_AGENT_PORT);
+      m_hProxySocket = socket(AF_INET, SOCK_STREAM, 0);
+      if (m_hProxySocket != -1)
+      {
+         // Fill in address structure
+         memset(&sa, 0, sizeof(sa));
+         sa.sin_addr.s_addr = htonl(dwAddr);
+         sa.sin_family = AF_INET;
+         sa.sin_port = htons(wPort);
+         if (connect(m_hProxySocket, (struct sockaddr *)&sa, sizeof(sa)) != -1)
+         {
+            CSCPMessage msg;
+            CSCP_MESSAGE *pRawMsg;
+
+            // Stop writing thread
+            m_pSendQueue->Put(INVALID_POINTER_VALUE);
+
+            // Wait while all queued messages will be sent
+            while(m_pSendQueue->Size() > 0)
+               ThreadSleepMs(100);
+
+            // Finish proxy connection setup
+            pSavedCtx = m_pCtx;
+            m_pCtx = PROXY_ENCRYPTION_CTX;
+            m_bProxyConnection = TRUE;
+            dwResult = ERR_SUCCESS;
+            m_hProxyReadThread = ThreadCreateEx(ProxyReadThreadStarter, 0, this);
+
+            // Send confirmation message
+            // We cannot use SendMessage() and writing thread, because
+            // encryption context already overriden, and writing thread
+            // already stopped
+            msg.SetCode(CMD_REQUEST_COMPLETED);
+            msg.SetId(pRequest->GetId());
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            pRawMsg = msg.CreateMessage();
+            SendRawMessage(pRawMsg, pSavedCtx);
+            DestroyEncryptionContext(pSavedCtx);
+         }
+         else
+         {
+            dwResult = ERR_CONNECT_FAILED;
+         }
+      }
+      else
+      {
+         dwResult = ERR_SOCKET_ERROR;
+      }
+   }
+   else
+   {
+      dwResult = ERR_ACCESS_DENIED;
+   }
+   return dwResult;
+}
+
+
+//
+// Proxy reading thread
+//
+
+void CommSession::ProxyReadThread(void)
+{
+   fd_set rdfs;
+   struct timeval tv;
+   char pBuffer[8192];
+   int nRet;
+
+   while(1)
+   {
+      FD_ZERO(&rdfs);
+      FD_SET(m_hProxySocket, &rdfs);
+      tv.tv_sec = 0;
+      tv.tv_usec = 5000000;   // Half-second timeout
+      nRet = select(m_hProxySocket + 1, &rdfs, NULL, NULL, &tv);
+      if (nRet < 0)
+         break;
+      if (nRet > 0)
+      {
+         nRet = recv(m_hProxySocket, pBuffer, 8192, 0);
+         if (nRet <= 0)
+            break;
+         SendEx(m_hSocket, pBuffer, nRet, 0);
+      }
+   }
+   Disconnect();
 }

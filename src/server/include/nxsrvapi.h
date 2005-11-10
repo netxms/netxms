@@ -216,6 +216,11 @@ private:
    THREAD m_hReceiverThread;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
    int m_iEncryptionPolicy;
+   BOOL m_bUseProxy;
+   DWORD m_dwProxyAddr;
+   WORD m_wProxyPort;
+   int m_iProxyAuth;
+   char m_szProxySecret[MAX_SECRET_LENGTH];
 
    void ReceiverThread(void);
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
@@ -225,8 +230,9 @@ protected:
    BOOL SendMessage(CSCPMessage *pMsg);
    CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut) { return m_pMsgWaitQueue->WaitForMessage(wCode, dwId, dwTimeOut); }
    DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut);
-   DWORD Authenticate(void);
    DWORD SetupEncryption(RSA *pServerKey);
+   DWORD Authenticate(BOOL bProxyData);
+   DWORD SetupProxyConnection(void);
 
    virtual void PrintMsg(TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
@@ -236,7 +242,8 @@ protected:
 
 public:
    AgentConnection();
-   AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT, int iAuthMethod = AUTH_NONE, TCHAR *szSecret = NULL);
+   AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+                   int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
    ~AgentConnection();
 
    BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
@@ -263,6 +270,8 @@ public:
 
    void SetCommandTimeout(DWORD dwTimeout) { if (dwTimeout > 500) m_dwCommandTimeout = dwTimeout; }
    void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
+   void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+                 int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
 };
 
 

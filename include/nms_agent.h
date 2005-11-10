@@ -83,6 +83,7 @@
 #define ERR_INVALID_SESSION_KEY     ((DWORD)909)
 #define ERR_CONNECT_FAILED          ((DWORD)910)
 #define ERR_MAILFORMED_COMMAND      ((DWORD)911)
+#define ERR_SOCKET_ERROR            ((DWORD)912)
 
 
 //

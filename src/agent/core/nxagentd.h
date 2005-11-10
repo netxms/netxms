@@ -93,6 +93,7 @@
 #define AF_REQUIRE_ENCRYPTION       0x0040
 #define AF_HIDE_WINDOW              0x0080
 #define AF_ENABLE_AUTOLOAD          0x0100
+#define AF_ENABLE_PROXY             0x0200
 #define AF_SHUTDOWN                 0x1000
 #define AF_RUNNING_ON_NT4           0x2000
 
@@ -216,16 +217,20 @@ private:
    CSCP_BUFFER *m_pMsgBuffer;
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
+   THREAD m_hProxyReadThread;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
    DWORD m_dwIndex;
    BOOL m_bIsAuthenticated;
    BOOL m_bMasterServer;
    BOOL m_bControlServer;
+   BOOL m_bProxyConnection;
    int m_hCurrFile;
    DWORD m_dwFileRqId;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
    time_t m_ts;               // Last command timestamp
+   SOCKET m_hProxySocket;     // Socket for proxy connection
 
+   BOOL SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pCtx);
    void Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void GetConfig(CSCPMessage *pMsg);
    void UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);
@@ -235,14 +240,17 @@ private:
    void RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    DWORD Upgrade(CSCPMessage *pRequest);
    DWORD ApplyLogPolicy(CSCPMessage *pRequest);
+   DWORD SetupProxyConnection(CSCPMessage *pRequest);
 
    void ReadThread(void);
    void WriteThread(void);
    void ProcessingThread(void);
+   void ProxyReadThread(void);
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL ProxyReadThreadStarter(void *);
 
 public:
    CommSession(SOCKET hSocket, DWORD dwHostAddr, BOOL bMasterServer, BOOL bControlServer);

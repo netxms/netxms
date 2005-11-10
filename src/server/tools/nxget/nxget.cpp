@@ -48,7 +48,6 @@
 // Static data
 //
 
-static DWORD m_dwAddr;
 static int m_iAuthMethod = AUTH_NONE;
 static BOOL m_bVerbose = TRUE;
 
@@ -192,23 +191,25 @@ static int GetConfig(AgentConnection *pConn)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE;
+   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE, bUseProxy = FALSE;
    int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
-   int iAuthMethod = AUTH_NONE, iServiceType = NETSRV_SSH;
+   int iAuthMethod = AUTH_NONE, iProxyAuth = AUTH_NONE, iServiceType = NETSRV_SSH;
 #ifdef _WITH_ENCRYPTION
    int iEncryptionPolicy = ENCRYPTION_ALLOWED;
 #else
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
-   WORD wAgentPort = AGENT_LISTEN_PORT, wServicePort = 0, wServiceProto = 0;
-   DWORD dwTimeout = 3000, dwServiceAddr = 0, dwError;
+   WORD wAgentPort = AGENT_LISTEN_PORT, wProxyPort = AGENT_LISTEN_PORT;
+   WORD wServicePort = 0, wServiceProto = 0;
+   DWORD dwTimeout = 3000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
    char szSecret[MAX_SECRET_LENGTH] = "", szRequest[MAX_DB_STRING] = "";
    char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = "";
+   char szProxy[MAX_OBJECT_NAME] = "", szProxySecret[MAX_SECRET_LENGTH] = "";
    RSA *pServerKey = NULL;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:bCe:hi:IK:lnp:P:qr:R:s:S:t:vw:")) != -1)
+   while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lnO:p:P:qr:R:s:S:t:vw:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -217,6 +218,7 @@ int main(int argc, char *argv[])
                    "Valid options are:\n"
                    "   -a <auth>    : Authentication method. Valid methods are \"none\",\n"
                    "                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n"
+                   "   -A <auth>    : Authentication method for proxy agent.\n"
                    "   -b           : Batch mode - get all parameters listed on command line.\n"
                    "   -C           : Get agent's configuration file\n"
 #ifdef _WITH_ENCRYPTION
@@ -236,34 +238,42 @@ int main(int argc, char *argv[])
 #endif
                    "   -l           : Get list of values for enum parameter.\n"
                    "   -n           : Show parameter's name in result.\n"
-                   "   -p <port>    : Specify agent's port number. Default is %d.\n"
-                   "   -P <port>    : Specify network service port (to be used wth -S option).\n"
+                   "   -O <port>    : Proxy agent's port number. Default is %d.\n"
+                   "   -p <port>    : Agent's port number. Default is %d.\n"
+                   "   -P <port>    : Network service port (to be used wth -S option).\n"
                    "   -q           : Quiet mode.\n"
                    "   -r <string>  : Service check request string.\n"
                    "   -R <string>  : Service check expected response string.\n"
-                   "   -s <secret>  : Specify shared secret for authentication.\n"
+                   "   -s <secret>  : Shared secret for authentication.\n"
                    "   -S <addr>    : Check state of network service at given address.\n"
                    "   -t <type>    : Set type of service to be checked.\n"
                    "   -T <proto>   : Protocol number to be used for service check.\n"
                    "   -v           : Display version and exit.\n"
                    "   -w <seconds> : Specify command timeout (default is 3 seconds).\n"
-                   "\n", wAgentPort);
+                   "   -X <addr>    : Use proxy agent at given address.\n"
+                   "   -Z <secret>  : Shared secret for proxy agent authentication.\n"
+                   "\n", wAgentPort, wAgentPort);
             bStart = FALSE;
             break;
          case 'a':   // Auth method
+         case 'A':
             if (!strcmp(optarg, "none"))
-               iAuthMethod = AUTH_NONE;
+               i = AUTH_NONE;
             else if (!strcmp(optarg, "plain"))
-               iAuthMethod = AUTH_PLAINTEXT;
+               i = AUTH_PLAINTEXT;
             else if (!strcmp(optarg, "md5"))
-               iAuthMethod = AUTH_MD5_HASH;
+               i = AUTH_MD5_HASH;
             else if (!strcmp(optarg, "sha1"))
-               iAuthMethod = AUTH_SHA1_HASH;
+               i = AUTH_SHA1_HASH;
             else
             {
                printf("Invalid authentication method \"%s\"\n", optarg);
                bStart = FALSE;
             }
+            if (ch == 'a')
+               iAuthMethod = i;
+            else
+               iProxyAuth = i;
             break;
          case 'b':   // Batch mode
             bBatchMode = TRUE;
@@ -294,6 +304,7 @@ int main(int argc, char *argv[])
             break;
          case 'p':   // Agent's port number
          case 'P':   // Port number for service check
+         case 'O':   // Proxy agent's port number
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
@@ -304,6 +315,8 @@ int main(int argc, char *argv[])
             {
                if (ch == 'p')
                   wAgentPort = (WORD)i;
+               else if (ch == 'O')
+                  wProxyPort = (WORD)i;
                else
                   wServicePort = (WORD)i;
             }
@@ -385,6 +398,13 @@ int main(int argc, char *argv[])
             bStart = FALSE;
             break;
 #endif
+         case 'X':   // Use proxy
+            strncpy(szProxy, optarg, MAX_OBJECT_NAME);
+            bUseProxy = TRUE;
+            break;
+         case 'Z':   // Shared secret for proxy agent
+            nx_strncpy(szProxySecret, optarg, MAX_SECRET_LENGTH);
+            break;
          case '?':
             bStart = FALSE;
             break;
@@ -438,17 +458,25 @@ int main(int argc, char *argv[])
          WSADATA wsaData;
          WSAStartup(2, &wsaData);
 #endif
-         m_dwAddr = ResolveHostName(argv[optind]);
-         if ((m_dwAddr == INADDR_ANY) || (m_dwAddr == INADDR_NONE))
+         dwAddr = ResolveHostName(argv[optind]);
+         if (bUseProxy)
+            dwProxyAddr = ResolveHostName(szProxy);
+         if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
          {
-            fprintf(stderr, "Invalid host name or address specified\n");
+            fprintf(stderr, "Invalid host name or address \"%s\"\n", argv[optind]);
+         }
+         else if (bUseProxy && ((dwProxyAddr == INADDR_ANY) || (dwProxyAddr == INADDR_NONE)))
+         {
+            fprintf(stderr, "Invalid host name or address \"%s\"\n", szProxy);
          }
          else
          {
-            AgentConnection conn(m_dwAddr, wAgentPort, iAuthMethod, szSecret);
+            AgentConnection conn(dwAddr, wAgentPort, iAuthMethod, szSecret);
 
             conn.SetCommandTimeout(dwTimeout);
             conn.SetEncryptionPolicy(iEncryptionPolicy);
+            if (bUseProxy)
+               conn.SetProxy(dwProxyAddr, wProxyPort, iProxyAuth, szProxySecret);
             if (conn.Connect(pServerKey, m_bVerbose, &dwError))
             {
                do
