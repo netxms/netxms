@@ -26,6 +26,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CObjectPropsSecurity)
 	enum { IDD = IDD_OBJECT_SECURITY };
+	CButton	m_wndCheckSend;
+	CButton	m_wndCheckControl;
 	CButton	m_wndCheckAckAlarms;
 	CButton	m_wndCheckViewAlarms;
 	CButton	m_wndCheckAccess;
@@ -63,6 +65,8 @@ protected:
 	afx_msg void OnCheckAccess();
 	afx_msg void OnCheckViewAlarms();
 	afx_msg void OnCheckAckAlarms();
+	afx_msg void OnCheckSend();
+	afx_msg void OnCheckControl();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

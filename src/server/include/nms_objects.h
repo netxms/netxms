@@ -513,6 +513,7 @@ protected:
    MUTEX m_mutexRTAccess;
    AgentConnection *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
+   DWORD m_dwProxyNode;       // Node used as proxy for agent connection
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
 
@@ -526,6 +527,7 @@ protected:
    void RTUnlock(void) { MutexUnlock(m_mutexRTAccess); }
 
    void CheckOSPFSupport(void);
+   void SetAgentProxy(AgentConnection *pConn);
 
    DWORD GetInterfaceCount(Interface **ppInterface);
 

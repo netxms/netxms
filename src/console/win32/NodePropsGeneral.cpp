@@ -74,6 +74,7 @@ BEGIN_MESSAGE_MAP(CNodePropsGeneral, CPropertyPage)
 	ON_BN_CLICKED(IDC_RADIO_VERSION_2C, OnRadioVersion2c)
 	ON_BN_CLICKED(IDC_RADIO_VERSION1, OnRadioVersion1)
 	ON_BN_CLICKED(IDC_SELECT_IP, OnSelectIp)
+	ON_BN_CLICKED(IDC_SELECT_PROXY, OnSelectProxy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -95,6 +96,26 @@ BOOL CNodePropsGeneral::OnInitDialog()
    for(i = 0; i < 4; i++)
       m_wndAuthList.AddString(m_pszAuthStrings[i]);
    m_wndAuthList.SelectString(-1, m_pszAuthStrings[m_iAuthType]);
+
+   // Proxy node
+   if (m_dwProxyNode != 0)
+   {
+      NXC_OBJECT *pNode;
+
+      pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
+      if (pNode != NULL)
+      {
+         SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
+      }
+      else
+      {
+         SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
+      }
+   }
+   else
+   {
+      SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+   }
 
    return TRUE;
 }
@@ -165,6 +186,7 @@ void CNodePropsGeneral::OnOK()
    m_pUpdate->pszSecret = (char *)((LPCTSTR)m_strSecret);
    m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
    m_pUpdate->dwIpAddr = m_dwIpAddr;
+   m_pUpdate->dwProxyNode = m_dwProxyNode;
 
    // Authentication type
    m_wndAuthList.GetWindowText(szBuffer, 255);
@@ -201,6 +223,45 @@ void CNodePropsGeneral::OnSelectIp()
          SetDlgItemText(IDC_EDIT_PRIMARY_IP, IpToStr(m_dwIpAddr, szBuffer));
       }
       m_pUpdate->dwFlags |= OBJ_UPDATE_IP_ADDR;
+      SetModified();
+   }
+}
+
+
+//
+// Handler for "Select proxy" button
+//
+
+void CNodePropsGeneral::OnSelectProxy() 
+{
+   CObjectSelDlg dlg;
+
+   dlg.m_dwAllowedClasses = SCL_NODE;
+   dlg.m_bSingleSelection = TRUE;
+   dlg.m_bAllowEmptySelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      if (dlg.m_dwNumObjects != 0)
+      {
+         NXC_OBJECT *pNode;
+
+         m_dwProxyNode = dlg.m_pdwObjectList[0];
+         pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
+         if (pNode != NULL)
+         {
+            SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
+         }
+         else
+         {
+            SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
+         }
+      }
+      else
+      {
+         m_dwProxyNode = 0;
+         SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+      }
+      m_pUpdate->dwFlags |= OBJ_UPDATE_PROXY_NODE;
       SetModified();
    }
 }

@@ -332,8 +332,9 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x010000)
 #define OBJ_UPDATE_NETWORK_LIST     ((DWORD)0x020000)
 #define OBJ_UPDATE_STATUS_ALG       ((DWORD)0x040000)
+#define OBJ_UPDATE_PROXY_NODE       ((DWORD)0x080000)
 
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0441FF)
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0C41FF)
 #define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x04FEC1)
 
 
@@ -366,9 +367,10 @@ typedef void * NXC_SESSION;
 #define OBJECT_ACCESS_CREATE        0x00000004
 #define OBJECT_ACCESS_DELETE        0x00000008
 #define OBJECT_ACCESS_READ_ALARMS   0x00000010
-#define OBJECT_ACCESS_CONTROL       0x00000020
+#define OBJECT_ACCESS_ACL           0x00000020
 #define OBJECT_ACCESS_ACK_ALARMS    0x00000040
 #define OBJECT_ACCESS_SEND_EVENTS   0x00000080
+#define OBJECT_ACCESS_CONTROL       0x00000100
 
 
 //
@@ -743,6 +745,7 @@ typedef struct
          DWORD dwDiscoveryFlags;
          DWORD dwNodeType;
          DWORD dwPollerNode;
+         DWORD dwProxyNode;
          DWORD dwZoneGUID;
          TCHAR szSharedSecret[MAX_SECRET_LENGTH];
          TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
@@ -837,6 +840,7 @@ typedef struct
    int iStatusTrans[4];
    int iStatusSingleTh;
    int iStatusThresholds[4];
+   DWORD dwProxyNode;
 } NXC_OBJECT_UPDATE;
 
 

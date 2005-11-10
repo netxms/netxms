@@ -580,6 +580,7 @@ typedef struct
 #define VID_STATUS_THRESHOLD_2      ((DWORD)192)
 #define VID_STATUS_THRESHOLD_3      ((DWORD)193)
 #define VID_STATUS_THRESHOLD_4      ((DWORD)194)
+#define VID_PROXY_NODE              ((DWORD)195)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

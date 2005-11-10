@@ -804,6 +804,7 @@ DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
    WORD wPort;
    struct sockaddr_in sa;
    CSCP_ENCRYPTION_CONTEXT *pSavedCtx;
+   TCHAR szBuffer[32];
 
    if (m_bMasterServer && (g_dwFlags & AF_ENABLE_PROXY))
    {
@@ -846,6 +847,8 @@ DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
             pRawMsg = msg.CreateMessage();
             SendRawMessage(pRawMsg, pSavedCtx);
             DestroyEncryptionContext(pSavedCtx);
+
+            DebugPrintf("Established proxy connection to %s:%d", IpToStr(dwAddr, szBuffer), wPort);
          }
          else
          {

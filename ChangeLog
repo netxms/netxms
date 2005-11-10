@@ -3,6 +3,8 @@
 *
 
 - Implemented agent proxy
+- Windows console:
+	- Fixed inconsistencies in object access control configuration
 
 
 *

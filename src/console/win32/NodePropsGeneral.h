@@ -16,6 +16,7 @@ class CNodePropsGeneral : public CPropertyPage
 
 // Construction
 public:
+	DWORD m_dwProxyNode;
 	DWORD m_dwIpAddr;
 	CNodePropsGeneral();
 	~CNodePropsGeneral();
@@ -57,6 +58,7 @@ protected:
 	afx_msg void OnRadioVersion2c();
 	afx_msg void OnRadioVersion1();
 	afx_msg void OnSelectIp();
+	afx_msg void OnSelectProxy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

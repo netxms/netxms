@@ -185,6 +185,7 @@
 #define IDC_EDIT_PRIMARY_IP             1015
 #define IDC_SELECT_IP                   1016
 #define IDC_SELECT_POLLER               1017
+#define IDC_SELECT_PROXY                1017
 #define IDC_COMBO_AUTH                  1018
 #define IDC_EDIT_SECRET                 1019
 #define IDC_EDIT_PORT                   1020
@@ -446,6 +447,9 @@
 #define IDC_COMBO_S4                    1308
 #define IDC_RADIO_CALC_DEFAULT          1310
 #define IDC_RADIO_PROP_DEFAULT          1311
+#define IDC_EDIT_PROXY                  1311
+#define IDC_CHECK_SEND                  1312
+#define IDC_CHECK_CONTROL               1313
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -607,7 +611,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        290
 #define _APS_NEXT_COMMAND_VALUE         32959
-#define _APS_NEXT_CONTROL_VALUE         1311
+#define _APS_NEXT_CONTROL_VALUE         1314
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

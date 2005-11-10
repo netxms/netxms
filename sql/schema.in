@@ -182,6 +182,7 @@ CREATE TABLE nodes
 	platform_name varchar(63),
 	poller_node_id integer not null,
 	zone_guid integer not null,
+	proxy_node integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -239,6 +239,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong(VID_DISCOVERY_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
          pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
+         pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
          pObject->node.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
          pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
@@ -627,6 +628,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_SERVICE_TYPE, (WORD)pUpdate->iServiceType);
    if (pUpdate->dwFlags & OBJ_UPDATE_POLLER_NODE)
       msg.SetVariable(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
+   if (pUpdate->dwFlags & OBJ_UPDATE_PROXY_NODE)
+      msg.SetVariable(VID_PROXY_NODE, pUpdate->dwProxyNode);
    if (pUpdate->dwFlags & OBJ_UPDATE_IP_ADDR)
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->dwFlags & OBJ_UPDATE_PEER_GATEWAY)

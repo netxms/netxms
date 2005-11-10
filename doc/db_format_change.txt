@@ -1,4 +1,12 @@
 *************
+* 35 ==> 36 *
+*************
+
+- Added new column proxy_node to "nodes" table:
+	ALTER TABLE nodes ADD proxy_node integer not null
+
+
+*************
 * 34 ==> 35 *
 *************
 

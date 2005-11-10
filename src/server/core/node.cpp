@@ -56,6 +56,7 @@ Node::Node()
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
+   m_dwProxyNode = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_pRoutingTable = NULL;
 }
@@ -96,6 +97,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
+   m_dwProxyNode = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_bIsHidden = TRUE;
    m_pRoutingTable = NULL;
@@ -140,8 +142,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "snmp_version,discovery_flags,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "description,node_type,agent_version,"
-                            "platform_name,poller_node_id,zone_guid"
-                            " FROM nodes WHERE id=%d", dwId);
+                            "platform_name,poller_node_id,zone_guid,"
+                            "proxy_node FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -171,6 +173,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    DecodeSQLString(m_szPlatformName);
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 14);
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 15);
+   m_dwProxyNode = DBGetFieldULong(hResult, 0, 16);
 
    DBFreeResult(hResult);
 
@@ -264,28 +267,29 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
       snprintf(szQuery, 4096,
                "INSERT INTO nodes (id,primary_ip,"
                "node_flags,snmp_version,community,discovery_flags,status_poll_type,"
-               "agent_port,auth_method,secret,snmp_oid,"
+               "agent_port,auth_method,secret,snmp_oid,proxy_node,"
                "description,node_type,agent_version,platform_name,"
                "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,"
-               "'%s','%s','%s',%d,'%s','%s',%d,%d)",
+               "'%s','%s',%d,'%s',%d,'%s','%s',%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_szObjectId,
-               pszEscDescr, m_dwNodeType, pszEscVersion, pszEscPlatform,
-               m_dwPollerNode, m_dwZoneGUID);
+               m_dwProxyNode, pszEscDescr, m_dwNodeType, pszEscVersion,
+               pszEscPlatform, m_dwPollerNode, m_dwZoneGUID);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
                "node_flags=%d,snmp_version=%d,community='%s',discovery_flags=%d,"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
                "snmp_oid='%s',description='%s',node_type=%d,"
-               "agent_version='%s',platform_name='%s',poller_node_id=%d,zone_guid=%d"
-               " WHERE id=%d",
+               "agent_version='%s',platform_name='%s',poller_node_id=%d,"
+               "zone_guid=%d,proxy_node=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
                m_szObjectId, pszEscDescr, m_dwNodeType, 
-               pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID, m_dwId);
+               pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
+               m_dwProxyNode, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscDescr);
    free(pszEscVersion);
@@ -750,7 +754,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
       SetPollerInfo(nPoller, "check agent");
       SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
-      pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
+                                       m_wAuthMethod, m_szSharedSecret);
+      SetAgentProxy(pAgentConn);
       if (pAgentConn->Connect(g_pServerKey))
       {
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
@@ -1014,7 +1020,9 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
       if (!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)))
       {
-         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
+                                          m_wAuthMethod, m_szSharedSecret);
+         SetAgentProxy(pAgentConn);
          if (pAgentConn->Connect(g_pServerKey))
          {
             LockData();
@@ -1311,6 +1319,7 @@ BOOL Node::ConnectToAgent(void)
 
    // Close current connection or clean up after broken connection
    m_pAgentConnection->Disconnect();
+   SetAgentProxy(m_pAgentConnection);
    return m_pAgentConnection->Connect(g_pServerKey);
 }
 
@@ -1608,6 +1617,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
    pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
+   pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
 }
 
 
@@ -1687,6 +1697,10 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change SNMP community string
    if (pRequest->IsVariableExist(VID_COMMUNITY_STRING))
       pRequest->GetVariableStr(VID_COMMUNITY_STRING, m_szCommunityString, MAX_COMMUNITY_LENGTH);
+
+   // Change proxy node
+   if (pRequest->IsVariableExist(VID_PROXY_NODE))
+      m_dwProxyNode = pRequest->GetVariableLong(VID_PROXY_NODE);
 
    return Template::ModifyFromMessage(pRequest, TRUE);
 }
@@ -1831,14 +1845,15 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
        (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)) &&
        (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
    {
-      AgentConnection conn(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      AgentConnection *pConn;
 
-      // Establish connection with agent
-      if (conn.Connect(g_pServerKey))
+      pConn = CreateAgentConnection();
+      if (pConn != NULL)
       {
-         dwError = conn.CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
-                                            wPort, wProto, pszRequest, pszResponse);
-         conn.Disconnect();
+         dwError = pConn->CheckNetworkService(pdwStatus, dwIpAddr, iServiceType,
+                                              wPort, wProto, pszRequest, pszResponse);
+         pConn->Disconnect();
+         delete pConn;
       }
    }
    return dwError;
@@ -1899,7 +1914,9 @@ AgentConnection *Node::CreateAgentConnection(void)
        (m_dwDynamicFlags & NDF_UNREACHEABLE))
       return NULL;
 
-   pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
+                               m_wAuthMethod, m_szSharedSecret);
+   SetAgentProxy(pConn);
    if (!pConn->Connect(g_pServerKey))
    {
       delete pConn;
@@ -2249,4 +2266,24 @@ DWORD Node::CallSnmpEnumerate(char *pszRootOid,
                            m_szCommunityString, pszRootOid, pHandler, pArg, FALSE);
    else
       return SNMP_ERR_COMM;
+}
+
+
+//
+// Set proxy information for agent's connection
+//
+
+void Node::SetAgentProxy(AgentConnection *pConn)
+{
+   if (m_dwProxyNode != 0)
+   {
+      Node *pNode;
+
+      pNode = (Node *)FindObjectById(m_dwProxyNode);
+      if (pNode != NULL)
+      {
+         pConn->SetProxy(htonl(pNode->m_dwIpAddr), pNode->m_wAgentPort,
+                         pNode->m_wAuthMethod, pNode->m_szSharedSecret);
+      }
+   }
 }

@@ -1682,9 +1682,9 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          // If user attempts to change object's ACL, check
-         // if he has OBJECT_ACCESS_CONTROL permission
+         // if he has OBJECT_ACCESS_ACL permission
          if (pRequest->IsVariableExist(VID_ACL_SIZE))
-            if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+            if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
                dwResult = RCC_ACCESS_DENIED;
 
          // If allowed, change object and set completion code
