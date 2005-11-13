@@ -165,6 +165,7 @@
 #define IDI_LPP                         287
 #define IDD_DCI_SCHEDULE                288
 #define IDD_OBJECT_STATUS               289
+#define IDI_OBJTOOLS                    290
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -453,6 +454,7 @@
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
+#define IDR_OBJECT_TOOLS_EDITOR         8103
 #define IDR_EVENT_EDITOR                8105
 #define IDR_USER_EDITOR                 8106
 #define IDR_NETWORK_SUMMARY             8107
@@ -601,6 +603,7 @@
 #define ID_VIEW_SYSLOG                  32956
 #define ID_CONTROLPANEL_LOGPROCESSING   32957
 #define ID_OBJECT_MOVE                  32958
+#define ID_CONTROLPANEL_OBJECTTOOLS     32959
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -609,8 +612,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        290
-#define _APS_NEXT_COMMAND_VALUE         32959
+#define _APS_NEXT_RESOURCE_VALUE        291
+#define _APS_NEXT_COMMAND_VALUE         32960
 #define _APS_NEXT_CONTROL_VALUE         1314
 #define _APS_NEXT_SYMED_VALUE           126
 #endif

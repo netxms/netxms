@@ -237,33 +237,12 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR 
 
 
 //
-// Lock/unlock event DB
-//
-
-static DWORD DoEventDBLock(NXCL_Session *pSession, BOOL bLock)
-{
-   CSCPMessage msg;
-   DWORD dwRqId;
-
-   dwRqId = pSession->CreateRqId();
-
-   // Prepare message
-   msg.SetCode(bLock ? CMD_LOCK_EVENT_DB : CMD_UNLOCK_EVENT_DB);
-   msg.SetId(dwRqId);
-   pSession->SendMsg(&msg);
-   
-   // Wait for reply
-   return pSession->WaitForRCC(dwRqId);
-}
-
-
-//
 // Lock event DB
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(NXC_SESSION hSession)
 {
-   return DoEventDBLock((NXCL_Session *)hSession, TRUE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_EVENT_DB);
 }
 
 
@@ -273,5 +252,5 @@ DWORD LIBNXCL_EXPORTABLE NXCLockEventDB(NXC_SESSION hSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCUnlockEventDB(NXC_SESSION hSession)
 {
-   return DoEventDBLock((NXCL_Session *)hSession, FALSE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_EVENT_DB);
 }

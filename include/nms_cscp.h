@@ -581,6 +581,9 @@ typedef struct
 #define VID_STATUS_THRESHOLD_3      ((DWORD)193)
 #define VID_STATUS_THRESHOLD_4      ((DWORD)194)
 #define VID_PROXY_NODE              ((DWORD)195)
+#define VID_TOOL_TYPE               ((DWORD)196)
+#define VID_TOOL_DATA               ((DWORD)197)
+#define VID_ACL                     ((DWORD)198)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -648,6 +651,7 @@ typedef struct
 #define VID_OBJECT_TOOLS_BASE       ((DWORD)0x10000000)
 
 // Base values for table data
+#define VID_COLUMN_INFO_BASE        ((DWORD)0x10000000)
 #define VID_COLUMN_NAME_BASE        ((DWORD)0x10000000)
 #define VID_COLUMN_FMT_BASE         ((DWORD)0x20000000)
 #define VID_ROW_DATA_BASE           ((DWORD)0x30000000)

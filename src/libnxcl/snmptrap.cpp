@@ -25,31 +25,12 @@
 
 
 //
-// Lock/unlock trap configuration database
-//
-
-static DWORD LockTrapCfg(NXCL_Session *pSession, BOOL bLock)
-{
-   CSCPMessage msg;
-   DWORD dwRqId;
-
-   dwRqId = pSession->CreateRqId();
-
-   msg.SetCode(bLock ? CMD_LOCK_TRAP_CFG : CMD_UNLOCK_TRAP_CFG);
-   msg.SetId(dwRqId);
-   pSession->SendMsg(&msg);
-
-   return pSession->WaitForRCC(dwRqId);
-}
-
-
-//
 // Client interface: lock trap configuration database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession)
 {
-   return LockTrapCfg((NXCL_Session *)hSession, TRUE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_TRAP_CFG);
 }
 
 
@@ -59,7 +40,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(NXC_SESSION hSession)
 {
-   return LockTrapCfg((NXCL_Session *)hSession, FALSE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_TRAP_CFG);
 }
 
 

@@ -172,3 +172,118 @@ void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData)
    safe_free(pData->pszTitle);
    free(pData);
 }
+
+
+//
+// Lock object tools configuration
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCLockObjectTools(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_OBJECT_TOOLS);
+}
+
+
+//
+// Unlock object tools configuration
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUnlockObjectTools(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_OBJECT_TOOLS);
+}
+
+
+//
+// Delete object tool
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, DWORD dwToolId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_DELETE_OBJECT_TOOL);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_TOOL_ID, dwToolId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Get object tool details
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwToolId,
+                                                 NXC_OBJECT_TOOL_DETAILS **ppData)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_OBJECT_TOOL_DETAILS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_TOOL_ID, dwToolId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *ppData = (NXC_OBJECT_TOOL_DETAILS *)malloc(sizeof(NXC_OBJECT_TOOL_DETAILS));
+         memset(*ppData, 0, sizeof(NXC_OBJECT_TOOL_DETAILS));
+         (*ppData)->dwId = dwToolId;
+         (*ppData)->dwFlags = pResponse->GetVariableLong(VID_FLAGS);
+         (*ppData)->wType = pResponse->GetVariableShort(VID_TOOL_TYPE);
+         (*ppData)->pszData = pResponse->GetVariableStr(VID_TOOL_DATA);
+         pResponse->GetVariableStr(VID_NAME, (*ppData)->szName, MAX_DB_STRING);
+         pResponse->GetVariableStr(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
+         (*ppData)->dwACLSize = pResponse->GetVariableLong(VID_ACL_SIZE);
+         (*ppData)->pdwACL = (DWORD *)malloc(sizeof(DWORD) * (*ppData)->dwACLSize);
+         pResponse->GetVariableInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
+         if (((*ppData)->wType == TOOL_TYPE_TABLE_SNMP) ||
+             ((*ppData)->wType == TOOL_TYPE_TABLE_AGENT))
+         {
+            DWORD i, dwId;
+
+            (*ppData)->wNumColumns = pResponse->GetVariableShort(VID_NUM_COLUMNS);
+            (*ppData)->pColList = (NXC_OBJECT_TOOL_COLUMN *)malloc(sizeof(NXC_OBJECT_TOOL_COLUMN) * (*ppData)->wNumColumns);
+            for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (DWORD)(*ppData)->wNumColumns; i++)
+            {
+               pResponse->GetVariableStr(dwId++, (*ppData)->pColList[i].szName, MAX_DB_STRING);
+               pResponse->GetVariableStr(dwId++, (*ppData)->pColList[i].szOID, MAX_DB_STRING);
+               (*ppData)->pColList[i].nFormat = (int)pResponse->GetVariableShort(dwId++);
+               (*ppData)->pColList[i].nSubstr = (int)pResponse->GetVariableShort(dwId++);
+            }
+         }
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}
+
+
+//
+// Destroy object tool detailed info structure
+//
+
+void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pData)
+{
+   if (pData != NULL)
+   {
+      safe_free(pData->pColList);
+      safe_free(pData->pdwACL);
+      free(pData);
+   }
+}

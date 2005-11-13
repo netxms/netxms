@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_SERVERCFG, OnControlpanelServercfg)
 	ON_COMMAND(ID_VIEW_SYSLOG, OnViewSyslog)
 	ON_COMMAND(ID_CONTROLPANEL_LOGPROCESSING, OnControlpanelLogprocessing)
+	ON_COMMAND(ID_CONTROLPANEL_OBJECTTOOLS, OnControlpanelObjecttools)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -96,6 +97,7 @@ CConsoleApp::CConsoleApp()
    m_bLPPEditorActive = FALSE;
    m_bPackageMgrActive = FALSE;
    m_bServerCfgEditorActive = FALSE;
+   m_bObjToolsEditorActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    m_hwndEventBrowser = NULL;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
@@ -574,6 +576,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bServerCfgEditorActive = TRUE;
          m_pwndServerCfgEditor = (CServerCfgEditor *)pWnd;
          break;
+      case IDR_OBJECT_TOOLS_EDITOR:
+         m_bObjToolsEditorActive = TRUE;
+         m_pwndObjToolsEditor = (CObjectToolsEditor *)pWnd;
+         break;
       case IDR_LPP_EDITOR:
          m_bLPPEditorActive = TRUE;
          m_pwndLPPEditor = (CLPPList *)pWnd;
@@ -648,6 +654,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_SERVER_CFG_EDITOR:
          m_bServerCfgEditorActive = FALSE;
+         break;
+      case IDR_OBJECT_TOOLS_EDITOR:
+         m_bObjToolsEditorActive = FALSE;
          break;
       case IDR_LPP_EDITOR:
          m_bLPPEditorActive = FALSE;
@@ -916,7 +925,9 @@ void CConsoleApp::OnControlpanelUsers()
 
 	// create a new MDI child window or open existing
    if (m_bUserEditorActive)
+   {
       m_pwndUserEditor->BringWindowToTop();
+   }
    else
    {
       DWORD dwResult;
@@ -930,6 +941,38 @@ void CConsoleApp::OnControlpanelUsers()
       else
       {
          ErrorBox(dwResult, "Unable to lock user database:\n%s");
+      }
+   }
+}
+
+
+//
+// Handler for WM_COMMAND::ID_CONTROLPANEL_OBJECTTOOLS message
+//
+
+void CConsoleApp::OnControlpanelObjecttools() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bObjToolsEditorActive)
+   {
+      m_pwndObjToolsEditor->BringWindowToTop();
+   }
+   else
+   {
+      DWORD dwResult;
+
+      dwResult = DoRequestArg1(NXCLockObjectTools, g_hSession, _T("Locking object tools..."));
+      if (dwResult == RCC_SUCCESS)
+      {
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CObjectToolsEditor),
+                                IDR_OBJECT_TOOLS_EDITOR,
+                                m_hUserEditorMenu, m_hUserEditorAccel);
+      }
+      else
+      {
+         ErrorBox(dwResult, _T("Unable to lock object tools: %s"));
       }
    }
 }

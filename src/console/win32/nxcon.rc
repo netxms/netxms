@@ -118,6 +118,7 @@ IDI_EDITOR              ICON    DISCARDABLE     "icons\\editor.ico"
 IDI_IEXPLORER           ICON    DISCARDABLE     "icons\\iexplore.ico"
 IDI_DOCUMENT            ICON    DISCARDABLE     "icons\\document.ico"
 IDI_LPP                 ICON    DISCARDABLE     "icons\\lpp.ico"
+IDI_OBJTOOLS            ICON    DISCARDABLE     "icons\\objtools.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -344,6 +345,7 @@ BEGIN
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
 
+        MENUITEM "&Object Tools",               ID_CONTROLPANEL_OBJECTTOOLS
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
@@ -2740,6 +2742,7 @@ BEGIN
     IDR_WEB_BROWSER         "\nWeb Browser\nWeb Browser"
     IDR_SYSLOG_BROWSER      "\nSyslog\nSyslog"
     IDR_LPP_EDITOR          "\nLog Processing Configuration\nLog Processing Configuration"
+    IDR_OBJECT_TOOLS_EDITOR "\nObject Tools\nObject Tools"
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"

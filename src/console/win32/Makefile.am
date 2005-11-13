@@ -81,6 +81,7 @@ EXTRA_DIST = \
 	ObjectPropsStatus.cpp ObjectPropsStatus.h \
 	ObjectSearchBox.cpp ObjectSearchBox.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
+	ObjectToolsEditor.cpp ObjectToolsEditor.h \
 	PackageMgr.cpp PackageMgr.h \
 	PasswordChangeDlg.cpp PasswordChangeDlg.h \
 	RequestProcessingDlg.cpp RequestProcessingDlg.h \

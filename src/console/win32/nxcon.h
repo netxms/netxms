@@ -53,6 +53,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "TrapEditor.h"
 #include "PackageMgr.h"
 #include "ServerCfgEditor.h"
+#include "ObjectToolsEditor.h"
 #include "SyslogBrowser.h"
 #include "LPPList.h"
 
@@ -133,6 +134,7 @@ protected:
    CEventPolicyEditor *m_pwndEventPolicyEditor;
    CPackageMgr *m_pwndPackageMgr;
    CServerCfgEditor *m_pwndServerCfgEditor;
+   CObjectToolsEditor *m_pwndObjToolsEditor;
    CLPPList *m_pwndLPPEditor;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
@@ -197,6 +199,7 @@ public:
 	afx_msg void OnControlpanelServercfg();
 	afx_msg void OnViewSyslog();
 	afx_msg void OnControlpanelLogprocessing();
+	afx_msg void OnControlpanelObjecttools();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -215,6 +218,7 @@ private:
    BOOL m_bLPPEditorActive;
    BOOL m_bPackageMgrActive;
    BOOL m_bServerCfgEditorActive;
+   BOOL m_bObjToolsEditorActive;
 
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 

@@ -142,41 +142,22 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId)
 
 
 //
-// Lock/unlock user database
-//
-
-static DWORD LockUserDB(NXCL_Session *pSession, BOOL bLock)
-{
-   CSCPMessage msg;
-   DWORD dwRqId;
-
-   dwRqId = pSession->CreateRqId();
-
-   msg.SetCode(bLock ? CMD_LOCK_USER_DB : CMD_UNLOCK_USER_DB);
-   msg.SetId(dwRqId);
-   pSession->SendMsg(&msg);
-
-   return pSession->WaitForRCC(dwRqId);
-}
-
-
-//
-// Client interface: lock user database
+// Lock user database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCLockUserDB(NXC_SESSION hSession)
 {
-   return LockUserDB((NXCL_Session *)hSession, TRUE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_USER_DB);
 }
 
 
 //
-// Client interface: unlock user database
+// Unlock user database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(NXC_SESSION hSession)
 {
-   return LockUserDB((NXCL_Session *)hSession, FALSE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_USER_DB);
 }
 
 

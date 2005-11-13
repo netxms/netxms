@@ -117,41 +117,22 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActio
 
 
 //
-// Lock/unlock action configuration database
-//
-
-static DWORD LockActionDB(NXCL_Session *pSession, BOOL bLock)
-{
-   CSCPMessage msg;
-   DWORD dwRqId;
-
-   dwRqId = pSession->CreateRqId();
-
-   msg.SetCode(bLock ? CMD_LOCK_ACTION_DB : CMD_UNLOCK_ACTION_DB);
-   msg.SetId(dwRqId);
-   pSession->SendMsg(&msg);
-
-   return pSession->WaitForRCC(dwRqId);
-}
-
-
-//
-// Client interface: lock action configuration database
+// Lock action configuration database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(NXC_SESSION hSession)
 {
-   return LockActionDB((NXCL_Session *)hSession, TRUE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_LOCK_ACTION_DB);
 }
 
 
 //
-// Client interface: unlock action configuration database
+// Unlock action configuration database
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(NXC_SESSION hSession)
 {
-   return LockActionDB((NXCL_Session *)hSession, FALSE);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_UNLOCK_ACTION_DB);
 }
 
 

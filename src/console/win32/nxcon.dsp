@@ -409,6 +409,10 @@ SOURCE=.\ObjectSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectToolsEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PackageMgr.cpp
 # End Source File
 # Begin Source File
@@ -842,6 +846,10 @@ SOURCE=.\ObjectSelDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectToolsEditor.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\PackageMgr.h
 # End Source File
 # Begin Source File
@@ -1087,6 +1095,10 @@ SOURCE=.\res\nxcon.ico
 # Begin Source File
 
 SOURCE=.\res\nxcon.rc2
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\objtools.ico
 # End Source File
 # Begin Source File
 

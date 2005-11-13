@@ -563,6 +563,8 @@ src/console/win32/ObjectSearchBox.cpp -text
 src/console/win32/ObjectSearchBox.h -text
 src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
+src/console/win32/ObjectToolsEditor.cpp -text
+src/console/win32/ObjectToolsEditor.h -text
 src/console/win32/PackageMgr.cpp -text
 src/console/win32/PackageMgr.h -text
 src/console/win32/PasswordChangeDlg.cpp -text
@@ -647,6 +649,7 @@ src/console/win32/icons/iexplore.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/lpp.ico -text
 src/console/win32/icons/nack.ico -text
+src/console/win32/icons/objtools.ico -text
 src/console/win32/icons/ovl_status_critical.ico -text
 src/console/win32/icons/ovl_status_disabled.ico -text
 src/console/win32/icons/ovl_status_major.ico -text

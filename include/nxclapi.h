@@ -1122,6 +1122,38 @@ typedef struct
 
 
 //
+// Object tool column information
+//
+
+typedef struct
+{
+   TCHAR szName[MAX_DB_STRING];
+   TCHAR szOID[MAX_DB_STRING];
+   int nFormat;
+   int nSubstr;
+} NXC_OBJECT_TOOL_COLUMN;
+
+
+//
+// Object tool detailed information
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwFlags;
+   TCHAR szName[MAX_DB_STRING];
+   TCHAR szDescription[MAX_DB_STRING];
+   TCHAR *pszData;
+   DWORD *pdwACL;
+   DWORD dwACLSize;
+   WORD wType;
+   WORD wNumColumns;
+   NXC_OBJECT_TOOL_COLUMN *pColList;
+} NXC_OBJECT_TOOL_DETAILS;
+
+
+//
 // Log processing policy info
 //
 
@@ -1361,6 +1393,12 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
 DWORD LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, DWORD dwNodeId,
                                              DWORD dwToolId, NXC_TABLE_DATA **ppData);
 void LIBNXCL_EXPORTABLE NXCDestroyTableData(NXC_TABLE_DATA *pData);
+DWORD LIBNXCL_EXPORTABLE NXCLockObjectTools(NXC_SESSION hSession);
+DWORD LIBNXCL_EXPORTABLE NXCUnlockObjectTools(NXC_SESSION hSession);
+DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwToolId,
+                                                 NXC_OBJECT_TOOL_DETAILS **ppData);
+void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pData);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, DWORD dwToolId);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadLPPList(NXC_SESSION hSession, NXC_LPP_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyLPPList(NXC_LPP_LIST *pList);

@@ -94,6 +94,8 @@ TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP
 TCHAR *g_szDeploymentStatus[] = { _T("Pending"), _T("Uploading package"),
                                   _T("Installing"), _T("Completed"), _T("Failed"),
                                   _T("Initializing") };
+TCHAR *g_szToolType[] = { _T("Internal"), _T("Action"), _T("SNMP Table"),
+                          _T("Agent Table"), _T("URL"), _T("Command") };
 TCHAR *g_szSyslogSeverity[] = { _T("Emergency"), _T("Alert"), _T("Critical"),
                                 _T("Error"), _T("Warning"), _T("Notice"),
                                 _T("Informational"), _T("Debug") };

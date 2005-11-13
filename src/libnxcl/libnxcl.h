@@ -160,6 +160,7 @@ public:
    DWORD WaitForRCC(DWORD dwRqId, DWORD dwTimeOut = 0);
    DWORD CreateRqId(void) { return m_dwMsgId++; }
    DWORD SendFile(DWORD dwRqId, TCHAR *pszFileName);
+   DWORD SimpleCommand(WORD wCmd);
 
    void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 

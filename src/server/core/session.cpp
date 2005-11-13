@@ -861,6 +861,7 @@ void ClientSession::ProcessingThread(void)
             LockObjectTools(pMsg->GetId(), FALSE);
             break;
          case CMD_GET_OBJECT_TOOL_DETAILS:
+            SendObjectToolDetails(pMsg);
             break;
          case CMD_UPDATE_OBJECT_TOOL:
             break;
@@ -5015,6 +5016,7 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
    DB_RESULT hResult;
    DWORD i, j, dwAclSize, dwNumTools, dwNumMsgRec, dwToolId, dwId;
    OBJECT_TOOL_ACL *pAccessList;
+   TCHAR *pszStr;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5039,7 +5041,7 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
          for(i = 0, dwId = VID_OBJECT_TOOLS_BASE, dwNumMsgRec = 0; i < dwNumTools; i++)
          {
             dwToolId = DBGetFieldULong(hResult, i, 0);
-            if (m_dwUserId != 0)
+            if ((m_dwUserId != 0) && (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)))
             {
                for(j = 0; j < dwAclSize; j++)
                {
@@ -5055,14 +5057,26 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
                }
             }
 
-            if ((m_dwUserId == 0) || (j < dwAclSize))   // User has access to this tool
+            if ((m_dwUserId == 0) ||
+                (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS) ||
+                (j < dwAclSize))   // User has access to this tool
             {
                msg.SetVariable(dwId, dwToolId);
                msg.SetVariable(dwId + 1, DBGetField(hResult, i, 1));
                msg.SetVariable(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
-               msg.SetVariable(dwId + 3, DBGetField(hResult, i, 3));
+
+               pszStr = _tcsdup(DBGetField(hResult, i, 3));
+               DecodeSQLString(pszStr);
+               msg.SetVariable(dwId + 3, pszStr);
+               free(pszStr);
+
                msg.SetVariable(dwId + 4, DBGetFieldULong(hResult, i, 4));
-               msg.SetVariable(dwId + 5, DBGetField(hResult, i, 5));
+
+               pszStr = _tcsdup(DBGetField(hResult, i, 5));
+               DecodeSQLString(pszStr);
+               msg.SetVariable(dwId + 5, pszStr);
+               free(pszStr);
+
                dwNumMsgRec++;
                dwId += 10;
             }
@@ -5081,6 +5095,121 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
    else
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Send tool list to client
+//
+
+void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD dwToolId, dwId, *pdwAcl;
+   TCHAR *pszStr, szQuery[1024];
+   int i, iNumRows, nType;
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
+      _stprintf(szQuery, _T("SELECT tool_name,tool_type,tool_data,description,flags FROM object_tools WHERE tool_id=%d"), dwToolId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0));
+            nType = DBGetFieldLong(hResult, 0, 1);
+            msg.SetVariable(VID_TOOL_TYPE, (WORD)nType);
+
+            pszStr = _tcsdup(DBGetField(hResult, 0, 2));
+            DecodeSQLString(pszStr);
+            msg.SetVariable(VID_TOOL_DATA, pszStr);
+            free(pszStr);
+
+            pszStr = _tcsdup(DBGetField(hResult, 0, 3));
+            DecodeSQLString(pszStr);
+            msg.SetVariable(VID_DESCRIPTION, pszStr);
+            free(pszStr);
+
+            msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
+            DBFreeResult(hResult);
+
+            // Access list
+            _stprintf(szQuery, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+            hResult = DBSelect(g_hCoreDB, szQuery);
+            if (hResult != NULL)
+            {
+               iNumRows = DBGetNumRows(hResult);
+               msg.SetVariable(VID_ACL_SIZE, (DWORD)iNumRows);
+               if (iNumRows > 0)
+               {
+                  pdwAcl = (DWORD *)malloc(sizeof(DWORD) * iNumRows);
+                  for(i = 0; i < iNumRows; i++)
+                     pdwAcl[i] = DBGetFieldULong(hResult, i, 0);
+                  msg.SetVariableToInt32Array(VID_ACL, iNumRows, pdwAcl);
+                  free(pdwAcl);
+               }
+               DBFreeResult(hResult);
+
+               // Column information for table tools
+               if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
+               {
+                  _stprintf(szQuery, _T("SELECT col_name,col_oid,col_format,col_substr "
+                                        "FROM object_tools_table_columns WHERE tool_id=%d "
+                                        "ORDER BY col_number"), dwToolId);
+                  hResult = DBSelect(g_hCoreDB, szQuery);
+                  if (hResult != NULL)
+                  {
+                     TCHAR szBuffer[256];
+
+                     iNumRows = DBGetNumRows(hResult);
+                     msg.SetVariable(VID_NUM_COLUMNS, (WORD)iNumRows);
+                     for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < iNumRows; i++)
+                     {
+                        nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+                        DecodeSQLString(szBuffer);
+                        msg.SetVariable(dwId++, szBuffer);
+                        msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+                        msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
+                        msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 3));
+                     }
+                     DBFreeResult(hResult);
+                     msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                  }
+                  else
+                  {
+                     msg.DeleteAllVariables();
+                     msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+                  }
+               }
+            }
+            else
+            {
+               msg.DeleteAllVariables();
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+         }
+         else
+         {
+            DBFreeResult(hResult);
+            msg.SetVariable(VID_RCC, RCC_INVALID_TOOL_ID);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      // Current user has no rights for object tools management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response

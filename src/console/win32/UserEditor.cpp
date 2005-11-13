@@ -102,7 +102,7 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, IDC_LIST_VIEW);
-   m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | LVS_EX_FULLROWSELECT);
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Create image list

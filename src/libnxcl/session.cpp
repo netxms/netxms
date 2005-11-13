@@ -911,3 +911,22 @@ void NXCL_Session::AbortFileTransfer(void)
    }
    MutexUnlock(m_mutexFileRq);
 }
+
+
+//
+// Execute simple command (command without arguments and returnning only RCC)
+//
+
+DWORD NXCL_Session::SimpleCommand(WORD wCmd)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = CreateRqId();
+
+   msg.SetCode(wCmd);
+   msg.SetId(dwRqId);
+   SendMsg(&msg);
+
+   return WaitForRCC(dwRqId);
+}

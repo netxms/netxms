@@ -152,18 +152,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
 
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 {
-   CSCPMessage msg;
-   DWORD dwRqId;
-
-   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-
-   // Prepare message
-   msg.SetCode(CMD_CLOSE_EPP);
-   msg.SetId(dwRqId);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
-   
-   // Wait for reply
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   return ((NXCL_Session *)hSession)->SimpleCommand(CMD_CLOSE_EPP);
 }
 
 

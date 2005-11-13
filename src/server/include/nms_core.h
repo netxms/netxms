@@ -378,6 +378,7 @@ private:
    void UpdateAgentConfig(CSCPMessage *pRequest);
    void ExecuteAction(CSCPMessage *pRequest);
    void SendObjectTools(DWORD dwRqId);
+   void SendObjectToolDetails(CSCPMessage *pRequest);
    void ExecTableTool(CSCPMessage *pRequest);
    void LockObjectTools(DWORD dwRqId, BOOL bLock);
    void ChangeSubscription(CSCPMessage *pRequest);
