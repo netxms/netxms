@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "ObjectToolsEditor.h"
+#include "ObjToolPropGeneral.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,6 +37,10 @@ BEGIN_MESSAGE_MAP(CObjectToolsEditor, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_UPDATE_COMMAND_UI(ID_OBJECTTOOLS_DELETE, OnUpdateObjecttoolsDelete)
+	ON_UPDATE_COMMAND_UI(ID_OBJECTTOOLS_EDIT, OnUpdateObjecttoolsEdit)
+	ON_COMMAND(ID_OBJECTTOOLS_EDIT, OnObjecttoolsEdit)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -169,4 +174,74 @@ void CObjectToolsEditor::OnViewRefresh()
    {
       theApp.ErrorBox(dwResult, _T("Error loading object tools: %s"));
    }
+}
+
+
+//
+// UI update handlers
+//
+
+void CObjectToolsEditor::OnUpdateObjecttoolsDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+void CObjectToolsEditor::OnUpdateObjecttoolsEdit(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
+
+//
+// Edit object tool
+//
+
+void CObjectToolsEditor::OnObjecttoolsEdit() 
+{
+   int iItem;
+   DWORD dwToolId, dwResult;
+   NXC_OBJECT_TOOL_DETAILS *pData;
+   CObjToolPropGeneral pgGeneral;
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+   if (iItem != -1)
+   {
+      dwToolId = m_pToolList[m_wndListCtrl.GetItemData(iItem)].dwId;
+      dwResult = DoRequestArg3(NXCGetObjectToolDetails, g_hSession, (void *)dwToolId,
+                               &pData, _T("Loading tool data..."));
+      if (dwResult == RCC_SUCCESS)
+      {
+         TCHAR szBuffer[1024];
+
+         _stprintf(szBuffer, _T("Object Tool Properties (%s)"), g_szToolType[pData->wType]);
+         CPropertySheet psh(szBuffer, this, 0);
+
+         pgGeneral.m_iToolType = pData->wType;
+         pgGeneral.m_strName = pData->szName;
+         pgGeneral.m_strDescription = pData->szDescription;
+         psh.AddPage(&pgGeneral);
+         psh.m_psh.dwFlags |= PSH_NOAPPLYNOW;
+         if (psh.DoModal() == IDOK)
+         {
+         }
+         NXCDestroyObjectToolDetails(pData);
+      }
+      else
+      {
+         theApp.ErrorBox(dwResult, _T("Cannot load object tool data: %s"));
+      }
+   }
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CObjectToolsEditor::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(18);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }

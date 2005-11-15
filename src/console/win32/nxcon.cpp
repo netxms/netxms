@@ -316,6 +316,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    //InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
 
+   m_hObjToolsEditorMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), "&Object tools");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -333,6 +337,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hServerCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SERVER_CFG_EDITOR));
 	m_hAgentCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
 	m_hLPPEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hObjToolsEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_TOOLS_EDITOR));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -968,7 +973,7 @@ void CConsoleApp::OnControlpanelObjecttools()
       {
 	      pFrame->CreateNewChild(RUNTIME_CLASS(CObjectToolsEditor),
                                 IDR_OBJECT_TOOLS_EDITOR,
-                                m_hUserEditorMenu, m_hUserEditorAccel);
+                                m_hObjToolsEditorMenu, m_hObjToolsEditorAccel);
       }
       else
       {

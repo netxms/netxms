@@ -413,6 +413,10 @@ SOURCE=.\ObjectToolsEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjToolPropGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PackageMgr.cpp
 # End Source File
 # Begin Source File
@@ -847,6 +851,10 @@ SOURCE=.\ObjectSelDlg.h
 # Begin Source File
 
 SOURCE=.\ObjectToolsEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjToolPropGeneral.h
 # End Source File
 # Begin Source File
 

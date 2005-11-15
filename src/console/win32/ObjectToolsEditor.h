@@ -46,6 +46,10 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnClose();
 	afx_msg void OnViewRefresh();
+	afx_msg void OnUpdateObjecttoolsDelete(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateObjecttoolsEdit(CCmdUI* pCmdUI);
+	afx_msg void OnObjecttoolsEdit();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

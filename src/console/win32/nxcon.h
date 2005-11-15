@@ -171,6 +171,8 @@ protected:
 	HACCEL m_hServerCfgEditorAccel; // Accelerator for server configuration editor
 	HMENU m_hAgentCfgEditorMenu;  // Menu for agent configuration editor
 	HACCEL m_hAgentCfgEditorAccel;// Accelerator for agent configuration editor
+	HMENU m_hObjToolsEditorMenu;  // Menu for object tools editor
+	HACCEL m_hObjToolsEditorAccel;// Accelerator for object tools editor
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

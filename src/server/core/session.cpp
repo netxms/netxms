@@ -5114,6 +5114,10 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
    TCHAR *pszStr, szQuery[1024];
    int i, iNumRows, nType;
 
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);

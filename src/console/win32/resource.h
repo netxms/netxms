@@ -166,6 +166,8 @@
 #define IDD_DCI_SCHEDULE                288
 #define IDD_OBJECT_STATUS               289
 #define IDI_OBJTOOLS                    290
+#define IDA_OBJECT_TOOLS_EDITOR         291
+#define IDD_OBJTOOL_GENERAL             292
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -180,7 +182,6 @@
 #define IDC_EDIT_MESSAGE                1009
 #define IDC_EDIT_SUBJECT                1009
 #define IDC_EDIT_DESCRIPTION            1010
-#define IDC_EDIT_DATA                   1010
 #define IDC_COMBO_SEVERITY              1011
 #define IDC_CHECK_LOG                   1012
 #define IDC_EDIT_PRIMARY_IP             1015
@@ -413,7 +414,9 @@
 #define IDC_STATIC_SUBJ                 1262
 #define IDC_STATIC_DATA                 1263
 #define IDC_CHECK_ENCRYPT               1264
+#define IDC_STATIC_ENUM                 1264
 #define IDC_EDIT_FILE                   1265
+#define IDC_STATIC_REGEX                1265
 #define IDC_BROWSE                      1266
 #define IDC_RADIO_TAB                   1269
 #define IDC_RADIO_SPACE                 1270
@@ -451,6 +454,9 @@
 #define IDC_EDIT_PROXY                  1311
 #define IDC_CHECK_SEND                  1312
 #define IDC_CHECK_CONTROL               1313
+#define IDC_EDIT_DATA                   1316
+#define IDC_EDIT_ENUM                   1317
+#define IDC_EDIT_REGEX                  1318
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -604,6 +610,9 @@
 #define ID_CONTROLPANEL_LOGPROCESSING   32957
 #define ID_OBJECT_MOVE                  32958
 #define ID_CONTROLPANEL_OBJECTTOOLS     32959
+#define ID_OBJECTTOOLS_NEW              32960
+#define ID_OBJECTTOOLS_EDIT             32961
+#define ID_OBJECTTOOLS_DELETE           32962
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -612,9 +621,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        291
-#define _APS_NEXT_COMMAND_VALUE         32960
-#define _APS_NEXT_CONTROL_VALUE         1314
+#define _APS_NEXT_RESOURCE_VALUE        293
+#define _APS_NEXT_COMMAND_VALUE         32966
+#define _APS_NEXT_CONTROL_VALUE         1320
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif
