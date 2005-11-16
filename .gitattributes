@@ -172,6 +172,7 @@ netware/bin/.keep -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text
+sql/Makefile.msvc.w32 -text
 sql/Makefile.w32 -text
 sql/dbinit.in -text
 sql/drop.sh -text
