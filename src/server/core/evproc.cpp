@@ -48,6 +48,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
+      // Expand message text
+      // We cannot expand message text in PostEvent because of
+      // possible deadlock on g_rwlockIdIndex
+      pEvent->ExpandMessageText();
+
       // Attempt to correlate event to some of previous events
       CorrelateEvent(pEvent);
 

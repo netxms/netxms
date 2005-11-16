@@ -236,7 +236,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
 // Enumerate active sessions
 //
 
-void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
 {
    int i;
 
@@ -249,7 +249,7 @@ void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pA
 
 
 //
-// Send update notification to all clients
+// Send user database update notification to all clients
 //
 
 void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup)
@@ -260,5 +260,21 @@ void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
          m_pSessionList[i]->OnUserDBUpdate(iCode, dwUserId, pUser, pGroup);
+   RWLockUnlock(m_rwlockSessionListAccess);
+}
+
+
+//
+// Send notification to all active sessions
+//
+
+void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData)
+{
+   int i;
+
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] != NULL)
+         m_pSessionList[i]->Notify(dwCode, dwData);
    RWLockUnlock(m_rwlockSessionListAccess);
 }

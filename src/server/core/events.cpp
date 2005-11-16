@@ -58,6 +58,7 @@ Event::Event()
    m_dwNumParameters = 0;
    m_ppszParameters = NULL;
    m_pszMessageText = NULL;
+   m_pszMessageTemplate = NULL;
    m_tTimeStamp = 0;
 }
 
@@ -118,8 +119,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
       m_ppszParameters = NULL;
    }
 
-   // Create message text from template
-   ExpandMessageText(pTemplate->szMessageTemplate);
+   m_pszMessageTemplate = _tcsdup(pTemplate->szMessageTemplate);
 }
 
 
@@ -129,8 +129,8 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
 
 Event::~Event()
 {
-   if (m_pszMessageText != NULL)
-      free(m_pszMessageText);
+   safe_free(m_pszMessageText);
+   safe_free(m_pszMessageTemplate);
    if (m_ppszParameters != NULL)
    {
       DWORD i;
@@ -147,14 +147,19 @@ Event::~Event()
 // Create message text from template
 //
 
-void Event::ExpandMessageText(char *szMessageTemplate)
+void Event::ExpandMessageText(void)
 {
-   if (m_pszMessageText != NULL)
+   if (m_pszMessageTemplate != NULL)
    {
-      free(m_pszMessageText);
-      m_pszMessageText = NULL;
+      if (m_pszMessageText != NULL)
+      {
+         free(m_pszMessageText);
+         m_pszMessageText = NULL;
+      }
+      m_pszMessageText = ExpandText(m_pszMessageTemplate);
+      free(m_pszMessageTemplate);
+      m_pszMessageTemplate = NULL;
    }
-   m_pszMessageText = ExpandText(szMessageTemplate);
 }
 
 

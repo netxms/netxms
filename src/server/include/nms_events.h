@@ -61,11 +61,10 @@ private:
    DWORD m_dwFlags;
    DWORD m_dwSource;
    char *m_pszMessageText;
+   char *m_pszMessageTemplate;
    DWORD m_dwNumParameters;
    char **m_ppszParameters;
    time_t m_tTimeStamp;
-
-   void ExpandMessageText(char *szMessageTemplate);
 
 public:
    Event();
@@ -85,6 +84,7 @@ public:
 
    void PrepareMessage(NXC_EVENT *pEventData);
 
+   void ExpandMessageText(void);
    char *ExpandText(char *szTemplate);
 
    char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }

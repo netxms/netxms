@@ -470,3 +470,35 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
    }
    return dwRet;
 }
+
+
+//
+// Delete object tool from database
+//
+
+DWORD DeleteObjectToolFromDB(DWORD dwToolId)
+{
+   TCHAR szQuery[256];
+
+   _stprintf(szQuery, _T("DELETE FROM object_tools WHERE tool_id=%d"), dwToolId);
+   DBQuery(g_hCoreDB, szQuery);
+
+   _stprintf(szQuery, _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+   DBQuery(g_hCoreDB, szQuery);
+
+   _stprintf(szQuery, _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
+   DBQuery(g_hCoreDB, szQuery);
+
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, 0);
+   return RCC_SUCCESS;
+}
+
+
+//
+// Update object tool from message
+//
+
+DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
+{
+   return 0;
+}

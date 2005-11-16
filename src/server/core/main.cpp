@@ -463,16 +463,6 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 
 
 //
-// Handler for client notification
-//
-
-void NotifyClient(ClientSession *pSession, void *pArg)
-{
-   pSession->Notify((DWORD)pArg);
-}
-
-
-//
 // Server shutdown
 //
 
@@ -481,7 +471,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
    DWORD i, dwNumThreads;
 
    // Notify clients
-   EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_SHUTDOWN);
+   NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag

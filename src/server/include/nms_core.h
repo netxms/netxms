@@ -379,6 +379,8 @@ private:
    void ExecuteAction(CSCPMessage *pRequest);
    void SendObjectTools(DWORD dwRqId);
    void SendObjectToolDetails(CSCPMessage *pRequest);
+   void UpdateObjectTool(CSCPMessage *pRequest);
+   void DeleteObjectTool(CSCPMessage *pRequest);
    void ExecTableTool(CSCPMessage *pRequest);
    void LockObjectTools(DWORD dwRqId, BOOL bLock);
    void ChangeSubscription(CSCPMessage *pRequest);
@@ -486,8 +488,8 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 void CheckForMgmtNode(void);
 NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszName);
 
-void EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
-void NotifyClient(ClientSession *pSession, void *pArg);
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
+void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
 
 void GetSysInfoStr(char *pszBuffer);
 DWORD GetLocalIpAddr(void);
@@ -524,6 +526,8 @@ DWORD DeleteTrap(DWORD dwId);
 BOOL IsTableTool(DWORD dwToolId);
 BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
+DWORD DeleteObjectToolFromDB(DWORD dwToolId);
+DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 

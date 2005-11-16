@@ -670,11 +670,6 @@ void Node::DeleteInterface(Interface *pInterface)
          {
             DeleteParent(pSubnet);
             pSubnet->DeleteChild(this);
-            if ((pSubnet->IsEmpty()) && (g_dwFlags & AF_DELETE_EMPTY_SUBNETS))
-            {
-               PostEvent(EVENT_SUBNET_DELETED, pSubnet->Id(), NULL);
-               pSubnet->Delete(FALSE);
-            }
          }
       }
    }

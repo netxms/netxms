@@ -864,8 +864,10 @@ void ClientSession::ProcessingThread(void)
             SendObjectToolDetails(pMsg);
             break;
          case CMD_UPDATE_OBJECT_TOOL:
+            UpdateObjectTool(pMsg);
             break;
          case CMD_DELETE_OBJECT_TOOL:
+            DeleteObjectTool(pMsg);
             break;
          case CMD_CHANGE_SUBSCRIPTION:
             ChangeSubscription(pMsg);
@@ -1201,7 +1203,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
                {
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   ReloadEvents();
-                  EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_EVENTDB_CHANGED);
+                  NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
                }
                else
                {
@@ -1260,7 +1262,7 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
          if (DBQuery(g_hCoreDB, szQuery))
          {
             DeleteEventTemplateFromList(dwEventCode);
-            EnumerateClientSessions(NotifyClient, (void *)NX_NOTIFY_EVENTDB_CHANGED);
+            NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -5262,6 +5264,80 @@ void ClientSession::LockObjectTools(DWORD dwRqId, BOOL bLock)
    else
    {
       // Current user has no rights for object tools management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Update object tool
+//
+
+void ClientSession::UpdateObjectTool(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      if (m_dwFlags & CSF_OBJECT_TOOLS_LOCKED)
+      {
+         msg.SetVariable(VID_RCC, UpdateObjectToolFromMessage(pRequest));
+      }
+      else
+      {
+         // Object tools have to be locked before any
+         // changes can be made
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Delete object tool
+//
+
+void ClientSession::DeleteObjectTool(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwToolId;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Check user rights
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   {
+      if (m_dwFlags & CSF_OBJECT_TOOLS_LOCKED)
+      {
+         dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
+         msg.SetVariable(VID_RCC, DeleteObjectToolFromDB(dwToolId));
+      }
+      else
+      {
+         // Object tools have to be locked before any
+         // changes can be made
+         msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      }
+   }
+   else
+   {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
