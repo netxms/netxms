@@ -413,6 +413,10 @@ SOURCE=.\ObjectToolsEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjToolPropColumns.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjToolPropGeneral.cpp
 # End Source File
 # Begin Source File
@@ -851,6 +855,10 @@ SOURCE=.\ObjectSelDlg.h
 # Begin Source File
 
 SOURCE=.\ObjectToolsEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjToolPropColumns.h
 # End Source File
 # Begin Source File
 

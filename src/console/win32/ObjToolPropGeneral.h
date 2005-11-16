@@ -16,6 +16,8 @@ class CObjToolPropGeneral : public CPropertyPage
 
 // Construction
 public:
+	DWORD *m_pdwACL;
+	DWORD m_dwACLSize;
 	int m_iToolType;
 	CObjToolPropGeneral();
 	~CObjToolPropGeneral();
@@ -41,9 +43,12 @@ public:
 
 // Implementation
 protected:
+	CImageList m_imageList;
 	// Generated message map functions
 	//{{AFX_MSG(CObjToolPropGeneral)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -168,6 +168,7 @@
 #define IDI_OBJTOOLS                    290
 #define IDA_OBJECT_TOOLS_EDITOR         291
 #define IDD_OBJTOOL_GENERAL             292
+#define IDD_OBJTOOL_COLUMNS             293
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -209,6 +210,7 @@
 #define IDC_LIST_DCI                    1024
 #define IDC_LIST_LOCAL                  1024
 #define IDC_LIST_SCHEDULES              1024
+#define IDC_LIST_COLUMNS                1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -621,9 +623,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        293
+#define _APS_NEXT_RESOURCE_VALUE        294
 #define _APS_NEXT_COMMAND_VALUE         32966
-#define _APS_NEXT_CONTROL_VALUE         1320
+#define _APS_NEXT_CONTROL_VALUE         1323
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

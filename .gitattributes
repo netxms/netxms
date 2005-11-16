@@ -539,6 +539,8 @@ src/console/win32/NodePropsPolling.cpp -text
 src/console/win32/NodePropsPolling.h -text
 src/console/win32/NodeSummary.cpp -text
 src/console/win32/NodeSummary.h -text
+src/console/win32/ObjToolPropColumns.cpp -text
+src/console/win32/ObjToolPropColumns.h -text
 src/console/win32/ObjToolPropGeneral.cpp -text
 src/console/win32/ObjToolPropGeneral.h -text
 src/console/win32/ObjectBrowser.cpp -text

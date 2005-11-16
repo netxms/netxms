@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "ObjectToolsEditor.h"
 #include "ObjToolPropGeneral.h"
+#include "ObjToolPropColumns.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -42,6 +43,7 @@ BEGIN_MESSAGE_MAP(CObjectToolsEditor, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECTTOOLS_EDIT, OnObjecttoolsEdit)
 	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -69,11 +71,12 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_USER_EDITOR, this);
+   theApp.OnViewCreate(IDR_OBJECT_TOOLS_EDITOR, this);
 	
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT |
+                        LVS_SHOWSELALWAYS, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -143,6 +146,17 @@ void CObjectToolsEditor::OnClose()
 
 
 //
+// Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
+//
+
+void CObjectToolsEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_OBJECTTOOLS_EDIT, 0);
+   *pResult = 0;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_REFRESH message handler
 //
 
@@ -202,6 +216,7 @@ void CObjectToolsEditor::OnObjecttoolsEdit()
    DWORD dwToolId, dwResult;
    NXC_OBJECT_TOOL_DETAILS *pData;
    CObjToolPropGeneral pgGeneral;
+   CObjToolPropColumns pgColumns;
 
    iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
    if (iItem != -1)
@@ -216,10 +231,55 @@ void CObjectToolsEditor::OnObjecttoolsEdit()
          _stprintf(szBuffer, _T("Object Tool Properties (%s)"), g_szToolType[pData->wType]);
          CPropertySheet psh(szBuffer, this, 0);
 
+         // Setup "General" page
          pgGeneral.m_iToolType = pData->wType;
          pgGeneral.m_strName = pData->szName;
          pgGeneral.m_strDescription = pData->szDescription;
+         pgGeneral.m_dwACLSize = pData->dwACLSize;
+         pgGeneral.m_pdwACL = (DWORD *)nx_memdup(pData->pdwACL, sizeof(DWORD) * pData->dwACLSize);
+         if (pData->wType == TOOL_TYPE_TABLE_AGENT)
+         {
+            TCHAR *pszBuffer, *pCurr, *pEnd;
+
+            pszBuffer = _tcsdup(pData->pszData);
+            pEnd = _tcschr(pszBuffer, _T('\x7F'));
+            if (pEnd != NULL)
+               *pEnd = 0;
+            pgGeneral.m_strData = pszBuffer;
+
+            if (pEnd != NULL)
+            {
+               pCurr = pEnd + 1;
+               pEnd = _tcschr(pCurr, _T('\x7F'));
+               if (pEnd != NULL)
+                  *pEnd = 0;
+               pgGeneral.m_strEnum = pCurr;
+            }
+
+            if (pEnd != NULL)
+            {
+               pCurr = pEnd + 1;
+               pEnd = _tcschr(pCurr, _T('\x7F'));
+               if (pEnd != NULL)
+                  *pEnd = 0;
+               pgGeneral.m_strRegEx = pCurr;
+            }
+         }
+         else
+         {
+            pgGeneral.m_strData = pData->pszData;
+         }
          psh.AddPage(&pgGeneral);
+
+         // Setup "Columns" page
+         if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
+             (pData->wType == TOOL_TYPE_TABLE_AGENT))
+         {
+            pgColumns.m_iToolType = pData->wType;
+            psh.AddPage(&pgColumns);
+         }
+
+         // Execute property sheet
          psh.m_psh.dwFlags |= PSH_NOAPPLYNOW;
          if (psh.DoModal() == IDOK)
          {
