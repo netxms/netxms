@@ -500,5 +500,88 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId)
 
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
-   return 0;
+   DB_RESULT hResult;
+   BOOL bUpdate = FALSE;
+   TCHAR *pszName, *pszData, *pszDescription, *pszTmp;
+   TCHAR szBuffer[MAX_DB_STRING], szQuery[4096];
+   DWORD i, dwToolId, dwAclSize, *pdwAcl;
+   int nType;
+
+   // Check if tool already exist
+   dwToolId = pMsg->GetVariableLong(VID_TOOL_ID);
+   _stprintf(szQuery, _T("SELECT tool_id FROM object_tools WHERE tool_id=%d"), dwToolId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bUpdate = TRUE;
+      DBFreeResult(hResult);
+   }
+
+   // Insert or update common properties
+   pMsg->GetVariableStr(VID_NAME, szBuffer, MAX_DB_STRING);
+   pszName = EncodeSQLString(szBuffer);
+   pMsg->GetVariableStr(VID_DESCRIPTION, szBuffer, MAX_DB_STRING);
+   pszDescription = EncodeSQLString(szBuffer);
+   pszTmp = pMsg->GetVariableStr(VID_TOOL_DATA);
+   pszData = EncodeSQLString(pszTmp);
+   free(pszTmp);
+   nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
+   if (bUpdate)
+      _sntprintf(szQuery, 4096, _T("UPDATE object_tools SET tool_name='%s',tool_type=%d,"
+                                   "tool_data='%s',description='%s',flags=%d WHERE tool_id=%d"),
+                pszName, nType, pszData, pszDescription,
+                pMsg->GetVariableLong(VID_FLAGS), dwToolId);
+   else
+      _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,"
+                                   "tool_data,description,flags) VALUES (%d,'%s',%d,'%s','%s',%d)"),
+                dwToolId, pszName, nType, pszData,
+                pszDescription, pMsg->GetVariableLong(VID_FLAGS));
+   free(pszName);
+   free(pszDescription);
+   free(pszData);
+   DBQuery(g_hCoreDB, szQuery);
+
+   // Update ACL
+   _stprintf(szQuery, _T("DELETE FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
+   DBQuery(g_hCoreDB, szQuery);
+   dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
+   if (dwAclSize > 0)
+   {
+      pdwAcl = (DWORD *)malloc(sizeof(DWORD) * dwAclSize);
+      pMsg->GetVariableInt32Array(VID_ACL, dwAclSize, pdwAcl);
+      for(i = 0; i < dwAclSize; i++)
+      {
+         _stprintf(szQuery, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (%d,%d)"),
+                   dwToolId, pdwAcl[i]);
+         DBQuery(g_hCoreDB, szQuery);
+      }
+   }
+
+   // Update columns configuration
+   _stprintf(szQuery, _T("DELETE FROM object_tools_table_columns WHERE tool_id=%d"), dwToolId);
+   DBQuery(g_hCoreDB, szQuery);
+   if ((nType == TOOL_TYPE_TABLE_SNMP) ||
+       (nType == TOOL_TYPE_TABLE_AGENT))
+   {
+      DWORD dwId, dwNumColumns;
+
+      dwNumColumns = pMsg->GetVariableShort(VID_NUM_COLUMNS);
+      for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < dwNumColumns; i++, dwId += 2)
+      {
+         pMsg->GetVariableStr(dwId++, szBuffer, MAX_DB_STRING);
+         pszName = EncodeSQLString(szBuffer);
+         pMsg->GetVariableStr(dwId++, szBuffer, MAX_DB_STRING);
+         _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools_table_columns (tool_id,"
+                                      "col_number,col_name,col_oid,col_format,col_substr) "
+                                      "VALUES (%d,%d,'%s','%s',%d,%d)"),
+                    dwToolId, i, pszName, szBuffer, pMsg->GetVariableShort(dwId),
+                    pMsg->GetVariableShort(dwId + 1));
+         free(pszName);
+         DBQuery(g_hCoreDB, szQuery);
+      }
+   }
+
+   NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, 0);
+   return RCC_SUCCESS;
 }

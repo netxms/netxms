@@ -381,6 +381,7 @@ private:
    void SendObjectToolDetails(CSCPMessage *pRequest);
    void UpdateObjectTool(CSCPMessage *pRequest);
    void DeleteObjectTool(CSCPMessage *pRequest);
+   void GenerateObjectToolId(DWORD dwRqId);
    void ExecTableTool(CSCPMessage *pRequest);
    void LockObjectTools(DWORD dwRqId, BOOL bLock);
    void ChangeSubscription(CSCPMessage *pRequest);
@@ -548,6 +549,7 @@ void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
 void SetPollerInfo(int nIdx, char *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
+void DumpProcess(void);
 
 
 //

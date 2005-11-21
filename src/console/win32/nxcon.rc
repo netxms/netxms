@@ -2171,6 +2171,30 @@ BEGIN
     LTEXT           "Regular expression",IDC_STATIC_REGEX,7,123,61,8
 END
 
+IDD_NEW_OBJECT_TOOL DIALOG DISCARDABLE  0, 0, 210, 108
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Tool"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Action",IDC_RADIO_ACTION,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,13,54,36,10
+    CONTROL         "&Command",IDC_RADIO_COMMAND,"Button",BS_AUTORADIOBUTTON,
+                    13,69,47,10
+    CONTROL         "&Internal",IDC_RADIO_INTERNAL,"Button",
+                    BS_AUTORADIOBUTTON,13,84,39,10
+    CONTROL         "A&gent Table",IDC_RADIO_AGENT,"Button",
+                    BS_AUTORADIOBUTTON,67,54,55,10
+    CONTROL         "&SNMP Table",IDC_RADIO_SNMP,"Button",BS_AUTORADIOBUTTON,
+                    67,69,57,10
+    CONTROL         "Open &URL",IDC_RADIO_URL,"Button",BS_AUTORADIOBUTTON,67,
+                    84,50,10
+    EDITTEXT        IDC_EDIT_NAME,7,17,137,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,153,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,153,24,50,14
+    LTEXT           "Name",IDC_STATIC,7,7,20,8
+    GROUPBOX        "Tool Type",IDC_STATIC,7,41,137,59
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2661,6 +2685,14 @@ BEGIN
         RIGHTMARGIN, 250
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
+    END
+
+    IDD_NEW_OBJECT_TOOL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 101
     END
 END
 #endif    // APSTUDIO_INVOKED

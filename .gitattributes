@@ -530,6 +530,8 @@ src/console/win32/NetSummaryFrame.cpp -text
 src/console/win32/NetSummaryFrame.h -text
 src/console/win32/NewActionDlg.cpp -text
 src/console/win32/NewActionDlg.h -text
+src/console/win32/NewObjectToolDlg.cpp -text
+src/console/win32/NewObjectToolDlg.h -text
 src/console/win32/NewUserDlg.cpp -text
 src/console/win32/NewUserDlg.h -text
 src/console/win32/NodePoller.cpp -text

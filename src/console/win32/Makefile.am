@@ -61,6 +61,7 @@ EXTRA_DIST = \
 	NetSrvPropsGeneral.cpp NetSrvPropsGeneral.h \
 	NetSummaryFrame.cpp NetSummaryFrame.h \
 	NewActionDlg.cpp NewActionDlg.h \
+	NewObjectToolDlg.cpp NewObjectToolDlg.h \
 	NewUserDlg.cpp NewUserDlg.h \
 	NodePoller.cpp NodePoller.h \
 	NodePropsGeneral.cpp NodePropsGeneral.h \

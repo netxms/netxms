@@ -287,3 +287,80 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pDa
       free(pData);
    }
 }
+
+
+//
+// Generate ID for new object tool
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, DWORD *pdwToolId)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwRetCode;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Prepare message
+   msg.SetCode(CMD_GENERATE_OBJECT_TOOL_ID);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   
+   // Wait for reply
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+         *pdwToolId = pResponse->GetVariableLong(VID_TOOL_ID);
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Update object tool configuration
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
+                                             NXC_OBJECT_TOOL_DETAILS *pData)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Prepare message
+   msg.SetCode(CMD_UPDATE_OBJECT_TOOL);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_TOOL_ID, pData->dwId);
+   msg.SetVariable(VID_NAME, pData->szName);
+   msg.SetVariable(VID_TOOL_TYPE, pData->wType);
+   msg.SetVariable(VID_FLAGS, pData->dwFlags);
+   msg.SetVariable(VID_DESCRIPTION, pData->szDescription);
+   msg.SetVariable(VID_TOOL_DATA, pData->pszData);
+   msg.SetVariable(VID_ACL_SIZE, pData->dwACLSize);
+   msg.SetVariableToInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
+   if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
+       (pData->wType == TOOL_TYPE_TABLE_AGENT))
+   {
+      int i;
+      DWORD dwId;
+
+      msg.SetVariable(VID_NUM_COLUMNS, pData->wNumColumns);
+      for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (int)pData->wNumColumns; i++)
+      {
+         msg.SetVariable(dwId++, pData->pColList[i].szName);
+         msg.SetVariable(dwId++, pData->pColList[i].szOID);
+         msg.SetVariable(dwId++, (WORD)pData->pColList[i].nFormat);
+         msg.SetVariable(dwId++, (WORD)pData->pColList[i].nSubstr);
+      }
+   }
+
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

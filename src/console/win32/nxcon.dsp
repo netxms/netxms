@@ -333,6 +333,10 @@ SOURCE=.\NewActionDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NewObjectToolDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NewUserDlg.cpp
 # End Source File
 # Begin Source File
@@ -759,6 +763,10 @@ SOURCE="..\..\..\include\netxms-version.h"
 # Begin Source File
 
 SOURCE=.\NewActionDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NewObjectToolDlg.h
 # End Source File
 # Begin Source File
 

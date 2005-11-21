@@ -313,6 +313,7 @@ extern TCHAR *g_szActionType[];
 extern TCHAR *g_szServiceType[];
 extern TCHAR *g_szDeploymentStatus[];
 extern TCHAR *g_szToolType[];
+extern TCHAR *g_szToolColFmt[];
 extern TCHAR *g_szSyslogSeverity[];
 extern TCHAR *g_szSyslogFacility[];
 extern COLORREF g_statusColorTable[];

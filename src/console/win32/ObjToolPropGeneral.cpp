@@ -26,10 +26,12 @@ CObjToolPropGeneral::CObjToolPropGeneral() : CPropertyPage(CObjToolPropGeneral::
 	m_strEnum = _T("");
 	m_strData = _T("");
 	//}}AFX_DATA_INIT
+   m_pdwACL = NULL;
 }
 
 CObjToolPropGeneral::~CObjToolPropGeneral()
 {
+   safe_free(m_pdwACL);
 }
 
 void CObjToolPropGeneral::DoDataExchange(CDataExchange* pDX)

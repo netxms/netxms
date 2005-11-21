@@ -869,6 +869,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_OBJECT_TOOL:
             DeleteObjectTool(pMsg);
             break;
+         case CMD_GENERATE_OBJECT_TOOL_ID:
+            GenerateObjectToolId(pMsg->GetId());
+            break;
          case CMD_CHANGE_SUBSCRIPTION:
             ChangeSubscription(pMsg);
             break;
@@ -5064,7 +5067,12 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
                 (j < dwAclSize))   // User has access to this tool
             {
                msg.SetVariable(dwId, dwToolId);
-               msg.SetVariable(dwId + 1, DBGetField(hResult, i, 1));
+
+               pszStr = _tcsdup(DBGetField(hResult, i, 1));
+               DecodeSQLString(pszStr);
+               msg.SetVariable(dwId + 1, pszStr);
+               free(pszStr);
+
                msg.SetVariable(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
 
                pszStr = _tcsdup(DBGetField(hResult, i, 3));
@@ -5129,7 +5137,11 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0));
+            pszStr = _tcsdup(DBGetField(hResult, 0, 0));
+            DecodeSQLString(pszStr);
+            msg.SetVariable(VID_NAME, pszStr);
+            free(pszStr);
+
             nType = DBGetFieldLong(hResult, 0, 1);
             msg.SetVariable(VID_TOOL_TYPE, (WORD)nType);
 
@@ -5339,6 +5351,41 @@ void ClientSession::DeleteObjectTool(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Generate ID for new object tool
+//
+
+void ClientSession::GenerateObjectToolId(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Prepare reply message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   // Check if we have event configuration database opened
+   if (!(m_dwFlags & CSF_OBJECT_TOOLS_LOCKED))
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      // Check access rights
+      if (CheckSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
+      {
+         msg.SetVariable(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
 
    // Send response

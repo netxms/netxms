@@ -169,6 +169,7 @@
 #define IDA_OBJECT_TOOLS_EDITOR         291
 #define IDD_OBJTOOL_GENERAL             292
 #define IDD_OBJTOOL_COLUMNS             293
+#define IDD_NEW_OBJECT_TOOL             294
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -250,6 +251,7 @@
 #define IDC_RADIO_EVENT                 1068
 #define IDC_RADIO_TEXT                  1068
 #define IDC_RADIO_MULTIPLE              1068
+#define IDC_RADIO_URL                   1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
@@ -315,6 +317,7 @@
 #define IDC_RADIO_SMS                   1150
 #define IDC_RADIO_SEMICOLON             1150
 #define IDC_RADIO_MOST_CRITICAL         1150
+#define IDC_RADIO_AGENT                 1150
 #define IDC_LIST_ACTIONS                1152
 #define IDC_COMBO_CATEGORY              1154
 #define IDC_ICON_PARENT                 1155
@@ -459,6 +462,10 @@
 #define IDC_EDIT_DATA                   1316
 #define IDC_EDIT_ENUM                   1317
 #define IDC_EDIT_REGEX                  1318
+#define IDC_RADIO_ACTION                1324
+#define IDC_RADIO_COMMAND               1325
+#define IDC_RADIO_INTERNAL              1326
+#define IDC_RADIO_SNMP                  1327
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -623,9 +630,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        294
+#define _APS_NEXT_RESOURCE_VALUE        295
 #define _APS_NEXT_COMMAND_VALUE         32966
-#define _APS_NEXT_CONTROL_VALUE         1323
+#define _APS_NEXT_CONTROL_VALUE         1328
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

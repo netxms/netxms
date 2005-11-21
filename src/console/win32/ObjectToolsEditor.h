@@ -32,6 +32,7 @@ public:
 
 // Implementation
 protected:
+	void EditTool(NXC_OBJECT_TOOL_DETAILS *pData);
 	NXC_OBJECT_TOOL *m_pToolList;
 	DWORD m_dwNumTools;
 	CImageList m_imageList;
@@ -50,6 +51,8 @@ protected:
 	afx_msg void OnUpdateObjecttoolsEdit(CCmdUI* pCmdUI);
 	afx_msg void OnObjecttoolsEdit();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnObjecttoolsNew();
+	afx_msg void OnObjecttoolsDelete();
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()

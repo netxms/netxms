@@ -870,6 +870,8 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case NX_NOTIFY_EVENTDB_CHANGED:
                m_pMainWnd->PostMessage(WM_UPDATE_EVENT_LIST);
                break;
+            case NX_NOTIFY_OBJTOOLS_CHANGED:
+               break;
             case NX_NOTIFY_NEW_ALARM:
             case NX_NOTIFY_ALARM_DELETED:
             case NX_NOTIFY_ALARM_ACKNOWLEGED:

@@ -598,6 +598,12 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       ConsolePrintf(pCtx, "Proceeding with server shutdown...\n");
       bExitCode = TRUE;
    }
+   else if (IsCommand("DUMP", szBuffer, 4))
+   {
+      ConsolePrintf(pCtx, "Dumping process to disk...\n");
+      DumpProcess();
+      ConsolePrintf(pCtx, "Done.\n");
+   }
    else if (IsCommand("SHOW", szBuffer, 2))
    {
       // Get argument

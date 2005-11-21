@@ -1,6 +1,7 @@
 #if !defined(AFX_OBJTOOLPROPCOLUMNS_H__9C6A9169_AC06_48A9_9D74_D63CFECCC07E__INCLUDED_)
 #define AFX_OBJTOOLPROPCOLUMNS_H__9C6A9169_AC06_48A9_9D74_D63CFECCC07E__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -16,6 +17,8 @@ class CObjToolPropColumns : public CPropertyPage
 
 // Construction
 public:
+	NXC_OBJECT_TOOL_COLUMN *m_pColumnList;
+	DWORD m_dwNumColumns;
 	int m_iToolType;
 	CObjToolPropColumns();
 	~CObjToolPropColumns();
@@ -38,7 +41,7 @@ public:
 protected:
 	// Generated message map functions
 	//{{AFX_MSG(CObjToolPropColumns)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -22,6 +22,10 @@
 
 #include "nxcore.h"
 
+#ifdef _WIN32
+#include <dbghelp.h>
+#endif
+
 
 //
 // Test mutex state and print to stdout
@@ -135,3 +139,32 @@ void ShowServerStats(CONSOLE_CTX pCtx)
                        "Number of collectable DCIs:  %d\n\n",
                  g_dwIdIndexSize, g_dwNodeAddrIndexSize, dwNumItems);
 }
+
+
+//
+// Write process coredump
+//
+
+#ifdef _WIN32
+
+void DumpProcess(void)
+{
+   HANDLE hFile;
+
+   hFile = CreateFile(_T("C:\\netxmsd.core"), GENERIC_WRITE, 0, NULL,
+                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (hFile != INVALID_HANDLE_VALUE)
+   {
+      MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                        MiniDumpNormal, NULL, NULL, NULL);
+      CloseHandle(hFile);
+   }
+}
+
+#else
+
+void DumpProcess(void)
+{
+}
+
+#endif
