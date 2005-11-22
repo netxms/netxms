@@ -3,29 +3,29 @@
 ** ex: syntax=sql
 */
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (1,'&Shutdown system',TOOL_TYPE_ACTION,'System.Shutdown',0,'Shutdown target node via NetXMS agent');
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (2,'&Restart system',TOOL_TYPE_ACTION,'System.Restart',0,'Restart target node via NetXMS agent');
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (3,'&Wakeup node',TOOL_TYPE_INTERNAL,'wakeup',0,'Wakeup node using Wake-On-LAN magic packet');
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (4,'Restart &agent',TOOL_TYPE_ACTION,'Agent.Restart',0,'Restart NetXMS agent on target node');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (1,'&Shutdown system',TOOL_TYPE_ACTION,'System.Shutdown',0,'','Shutdown target node via NetXMS agent');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (2,'&Restart system',TOOL_TYPE_ACTION,'System.Restart',0,'','Restart target node via NetXMS agent');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (3,'&Wakeup node',TOOL_TYPE_INTERNAL,'wakeup',0,'','Wakeup node using Wake-On-LAN magic packet');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (4,'Restart &agent',TOOL_TYPE_ACTION,'Agent.Restart',0,'','Restart NetXMS agent on target node');
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (5,'&Info->&Switch forwarding database (FDB)',TOOL_TYPE_TABLE_SNMP,'Forwarding database',0,'Show switch forwarding database');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (5,'&Info->&Switch forwarding database (FDB)',TOOL_TYPE_TABLE_SNMP,'Forwarding database',0,'','Show switch forwarding database');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (5,0,'MAC Address','.1.3.6.1.2.1.17.4.3.1.1',CFMT_MAC_ADDR,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (5,1,'Port','.1.3.6.1.2.1.17.4.3.1.2',CFMT_INTEGER,0);
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (6,'&Connect->Open &web browser',TOOL_TYPE_URL,'http://%OBJECT_IP_ADDR%',0,'Open embedded web browser to node');
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (7,'&Connect->Open &web browser (HTTPS)',TOOL_TYPE_URL,'https://%OBJECT_IP_ADDR%',0,'Open embedded web browser to node using HTTPS');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (6,'&Connect->Open &web browser',TOOL_TYPE_URL,'http://%OBJECT_IP_ADDR%',0,'','Open embedded web browser to node');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (7,'&Connect->Open &web browser (HTTPS)',TOOL_TYPE_URL,'https://%OBJECT_IP_ADDR%',0,'','Open embedded web browser to node using HTTPS');
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (8,'&Info->&Agent->&Subagent list',TOOL_TYPE_TABLE_AGENT,'Subagent List#7FAgent.SubAgentList#7F^(.*) (.*) (.*) (.*)',0,'Show list of loaded subagents');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (8,'&Info->&Agent->&Subagent list',TOOL_TYPE_TABLE_AGENT,'Subagent List#7FAgent.SubAgentList#7F^(.*) (.*) (.*) (.*)',0,'','Show list of loaded subagents');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (8,0,'Name','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -35,18 +35,18 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (8,3,'Module handle','',CFMT_STRING,3);
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (9,'&Info->&Agent->Supported &parameters',TOOL_TYPE_TABLE_AGENT,'Supported parameters#7FAgent.SupportedParameters#7F^(.*)',0,'Show list of parameters supported by agent');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (9,'&Info->&Agent->Supported &parameters',TOOL_TYPE_TABLE_AGENT,'Supported parameters#7FAgent.SupportedParameters#7F^(.*)',0,'','Show list of parameters supported by agent');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (9,0,'Parameter','',CFMT_STRING,1);
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (10,'&Info->&Agent->Supported &enums',TOOL_TYPE_TABLE_AGENT,'Supported enums#7FAgent.SupportedEnums#7F^(.*)',0,'Show list of enums supported by agent');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (10,'&Info->&Agent->Supported &enums',TOOL_TYPE_TABLE_AGENT,'Supported enums#7FAgent.SupportedEnums#7F^(.*)',0,'','Show list of enums supported by agent');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (10,0,'Parameter','',CFMT_STRING,1);
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (11,'&Info->&Agent->Supported &actions',TOOL_TYPE_TABLE_AGENT,'Supported actions#7FAgent.ActionList#7F^(.*) (.*) #22(.*)#22.*',0,'Show list of actions supported by agent');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (11,'&Info->&Agent->Supported &actions',TOOL_TYPE_TABLE_AGENT,'Supported actions#7FAgent.ActionList#7F^(.*) (.*) #22(.*)#22.*',0,'','Show list of actions supported by agent');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (11,0,'Name','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -54,8 +54,8 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (11,2,'Data','',CFMT_STRING,3);
 
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description)
-	VALUES (12,'&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_TABLE_AGENT,'Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*)',0,'Show list of actions supported by agent');
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (12,'&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_TABLE_AGENT,'Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*)',0,'','Show list of actions supported by agent');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (12,0,'IP Address','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)

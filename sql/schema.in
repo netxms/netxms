@@ -704,6 +704,7 @@ CREATE TABLE object_tools
 	tool_data SQL_TEXT,
 	description varchar(255),
 	flags integer not null,
+	matching_oid varchar(255),
 	PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
 
