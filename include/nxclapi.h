@@ -1103,6 +1103,7 @@ typedef struct
    WORD wType;
    TCHAR szName[MAX_DB_STRING];
    TCHAR szDescription[MAX_DB_STRING];
+   TCHAR *pszMatchingOID;
    TCHAR *pszData;
 } NXC_OBJECT_TOOL;
 
@@ -1145,6 +1146,7 @@ typedef struct
    DWORD dwFlags;
    TCHAR szName[MAX_DB_STRING];
    TCHAR szDescription[MAX_DB_STRING];
+   TCHAR *pszMatchingOID;
    TCHAR *pszData;
    DWORD *pdwACL;
    DWORD dwACLSize;
@@ -1403,6 +1405,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, DWORD dwToolI
 DWORD LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, DWORD *pdwToolId);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
                                              NXC_OBJECT_TOOL_DETAILS *pData);
+BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT *pObject);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadLPPList(NXC_SESSION hSession, NXC_LPP_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyLPPList(NXC_LPP_LIST *pList);

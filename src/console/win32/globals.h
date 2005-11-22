@@ -110,6 +110,7 @@ extern CConsoleApp theApp;
 #define WM_NETXMS_EVENT          (WM_USER + 116)
 #define WM_SYSLOG_RECORD         (WM_USER + 117)
 #define WM_UPDATE_EVENT_LIST     (WM_USER + 118)
+#define WM_UPDATE_OBJECT_TOOLS   (WM_USER + 119)
 
 
 //
@@ -283,9 +284,16 @@ BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iS
 long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault);
 DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
 void CopyMenuItems(CMenu *pDst, CMenu *pSrc);
-CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart);
 TCHAR **CopyStringList(TCHAR **ppList, DWORD dwSize);
 void DestroyStringList(TCHAR **ppList, DWORD dwSize);
+
+
+//
+// Object tools functions
+//
+
+DWORD LoadObjectTools(void);
+CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwStart);
 
 
 //

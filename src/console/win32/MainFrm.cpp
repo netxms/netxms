@@ -213,6 +213,16 @@ void CMainFrame::OnUpdateEventList(WPARAM wParam, LPARAM lParam)
 
 
 //
+// WM_UPDATE_OBJECT_TOOLS message handler
+//
+
+void CMainFrame::OnUpdateObjectTools(WPARAM wParam, LPARAM lParam)
+{
+   DoRequest(LoadObjectTools, _T("Reloading object tools information..."));
+}
+
+
+//
 // Handler for WM_STATE_CHANGE message
 //
 

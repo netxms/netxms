@@ -60,6 +60,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTo
             (*ppToolList)[i].pszData = pResponse->GetVariableStr(dwId + 3);
             (*ppToolList)[i].dwFlags = pResponse->GetVariableLong(dwId + 4);
             pResponse->GetVariableStr(dwId + 5, (*ppToolList)[i].szDescription, MAX_DB_STRING);
+            (*ppToolList)[i].pszMatchingOID = pResponse->GetVariableStr(dwId + 6);
          }
       }
       delete pResponse;
@@ -83,7 +84,10 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
    if (pList != NULL)
    {
       for(i = 0; i < dwNumTools; i++)
+      {
          safe_free(pList[i].pszData);
+         safe_free(pList[i].pszMatchingOID);
+      }
       free(pList);
    }
 }
@@ -245,6 +249,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwT
          (*ppData)->pszData = pResponse->GetVariableStr(VID_TOOL_DATA);
          pResponse->GetVariableStr(VID_NAME, (*ppData)->szName, MAX_DB_STRING);
          pResponse->GetVariableStr(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
+         (*ppData)->pszMatchingOID = pResponse->GetVariableStr(VID_TOOL_OID);
          (*ppData)->dwACLSize = pResponse->GetVariableLong(VID_ACL_SIZE);
          (*ppData)->pdwACL = (DWORD *)malloc(sizeof(DWORD) * (*ppData)->dwACLSize);
          pResponse->GetVariableInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
@@ -282,6 +287,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pDa
 {
    if (pData != NULL)
    {
+      safe_free(pData->pszData);
+      safe_free(pData->pszMatchingOID);
       safe_free(pData->pColList);
       safe_free(pData->pdwACL);
       free(pData);
@@ -363,4 +370,43 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Check if given object tool is appropriate for given node
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT *pObject)
+{
+   BOOL bResult;
+
+   if (pObject == NULL)
+      return FALSE;
+
+   if (pObject->iClass == OBJECT_NODE)
+   {
+      bResult = TRUE;
+
+      if ((pTool->dwFlags & TF_REQUIRES_SNMP) && (!(pObject->node.dwFlags & NF_IS_SNMP)))
+         bResult = FALSE;
+      if ((pTool->dwFlags & TF_REQUIRES_AGENT) &&
+          (!(pObject->node.dwFlags & NF_IS_NATIVE_AGENT)))
+         bResult = FALSE;
+      if (pTool->dwFlags & TF_REQUIRES_OID_MATCH)
+      {
+         TCHAR *pszPattern;
+
+         pszPattern = CHECK_NULL_EX(pTool->pszMatchingOID);
+         if (*pszPattern == 0)
+            pszPattern = _T("*");
+         if (!MatchString(pszPattern, pObject->node.szObjectId, TRUE))
+            bResult = FALSE;
+      }
+   }
+   else
+   {
+      bResult = FALSE;
+   }
+   return bResult;
 }

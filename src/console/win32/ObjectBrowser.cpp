@@ -1056,8 +1056,10 @@ void CObjectBrowser::ClearListSelection()
 
 void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
-   CMenu *pMenu;
+   CMenu *pMenu, *pToolsMenu;
    CPoint pt;
+   DWORD dwTemp;
+   BOOL bMenuInserted = FALSE;
 
    pt = point;
    pWnd->ScreenToClient(&pt);
@@ -1071,7 +1073,21 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
       if ((iItem != -1) && (uFlags & LVHT_ONITEM))
       {
          pMenu = theApp.GetContextMenu(1);
+         dwTemp = 0;
+         pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp);
+         if (pToolsMenu->GetMenuItemCount() > 0)
+         {
+            pMenu->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                              (UINT)pToolsMenu->GetSafeHmenu(), _T("&Tools"));
+            pToolsMenu->Detach();
+            bMenuInserted = TRUE;
+         }
+         delete pToolsMenu;
          pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+         if (bMenuInserted)
+         {
+            pMenu->DeleteMenu(14, MF_BYPOSITION);
+         }
       }
    }
    else if (pWnd->GetDlgCtrlID() == IDC_TREE_VIEW)
@@ -1085,7 +1101,21 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
          m_wndTreeCtrl.Select(hItem, TVGN_CARET);
 
          pMenu = theApp.GetContextMenu(1);
+         dwTemp = 0;
+         pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp);
+         if (pToolsMenu->GetMenuItemCount() > 0)
+         {
+            pMenu->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                              (UINT)pToolsMenu->GetSafeHmenu(), _T("&Tools"));
+            pToolsMenu->Detach();
+            bMenuInserted = TRUE;
+         }
+         delete pToolsMenu;
          pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+         if (bMenuInserted)
+         {
+            pMenu->DeleteMenu(14, MF_BYPOSITION);
+         }
       }
    }
 }

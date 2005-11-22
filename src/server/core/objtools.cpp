@@ -503,7 +503,7 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    DB_RESULT hResult;
    BOOL bUpdate = FALSE;
    TCHAR *pszName, *pszData, *pszDescription, *pszTmp;
-   TCHAR szBuffer[MAX_DB_STRING], szQuery[4096];
+   TCHAR szBuffer[MAX_DB_STRING], szQuery[4096], szOID[MAX_DB_STRING];
    DWORD i, dwToolId, dwAclSize, *pdwAcl;
    int nType;
 
@@ -529,14 +529,18 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
    if (bUpdate)
       _sntprintf(szQuery, 4096, _T("UPDATE object_tools SET tool_name='%s',tool_type=%d,"
-                                   "tool_data='%s',description='%s',flags=%d WHERE tool_id=%d"),
+                                   "tool_data='%s',description='%s',flags=%d,"
+                                   "matching_oid='%s' WHERE tool_id=%d"),
                 pszName, nType, pszData, pszDescription,
-                pMsg->GetVariableLong(VID_FLAGS), dwToolId);
+                pMsg->GetVariableLong(VID_FLAGS),
+                pMsg->GetVariableStr(VID_TOOL_OID, szOID, MAX_DB_STRING), dwToolId);
    else
       _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,"
-                                   "tool_data,description,flags) VALUES (%d,'%s',%d,'%s','%s',%d)"),
+                                   "tool_data,description,flags,matching_oid) VALUES "
+                                   "(%d,'%s',%d,'%s','%s',%d,'%s')"),
                 dwToolId, pszName, nType, pszData,
-                pszDescription, pMsg->GetVariableLong(VID_FLAGS));
+                pszDescription, pMsg->GetVariableLong(VID_FLAGS),
+                pMsg->GetVariableStr(VID_TOOL_OID, szOID, MAX_DB_STRING));
    free(pszName);
    free(pszDescription);
    free(pszData);

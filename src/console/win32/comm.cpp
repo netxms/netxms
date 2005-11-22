@@ -98,6 +98,25 @@ static int CompareTools(const void *p1, const void *p2)
 
 
 //
+// (Re)load object tools
+//
+
+DWORD LoadObjectTools(void)
+{
+   DWORD dwResult;
+
+   NXCDestroyObjectToolList(g_dwNumObjectTools, g_pObjectToolList);
+   dwResult = NXCGetObjectTools(g_hSession, &g_dwNumObjectTools, &g_pObjectToolList);
+   if (dwResult == RCC_SUCCESS)
+   {
+      // Sort tools in alphabetical order
+      qsort(g_pObjectToolList, g_dwNumObjectTools, sizeof(NXC_OBJECT_TOOL), CompareTools);
+   }
+   return dwResult;
+}
+
+
+//
 // Login thread
 //
 
@@ -248,22 +267,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Loading object tools information...");
-      dwResult = NXCGetObjectTools(g_hSession, &g_dwNumObjectTools, &g_pObjectToolList);
-      if (dwResult == RCC_SUCCESS)
-      {
-         // Sort tools in alphabetical order and create pop-up menu
-         qsort(g_pObjectToolList, g_dwNumObjectTools, sizeof(NXC_OBJECT_TOOL), CompareTools);
-         i = 0;
-         g_pObjectToolsMenu = CreateToolsSubmenu(_T(""), &i);
-
-         // Insert tools submenu into various menus
-         theApp.GetContextMenu(1)->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
-                                              (UINT)g_pObjectToolsMenu->GetSafeHmenu(),
-                                              _T("&Tools"));
-         InsertMenu(GetSubMenu(theApp.m_hObjectBrowserMenu, LAST_APP_MENU - 1),
-                    18, MF_BYPOSITION | MF_STRING | MF_POPUP,
-                    (UINT)g_pObjectToolsMenu->GetSafeHmenu(), _T("&Tools"));
-      }
+      dwResult = LoadObjectTools();
    }
 
    // Disconnect if some of post-login operations was failed

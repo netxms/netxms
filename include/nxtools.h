@@ -40,6 +40,9 @@
 // SNMP tool flags
 //
 
+#define TF_REQUIRES_SNMP            ((DWORD)0x00000001)
+#define TF_REQUIRES_AGENT           ((DWORD)0x00000002)
+#define TF_REQUIRES_OID_MATCH       ((DWORD)0x00000004)
 #define TF_SNMP_INDEXED_BY_VALUE    ((DWORD)0x00010000)
 
 

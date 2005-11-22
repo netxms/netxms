@@ -4,6 +4,8 @@
 
 - Added new column proxy_node to "nodes" table:
 	ALTER TABLE nodes ADD proxy_node integer not null
+- Added new column matching_oid to "object_tools" table:
+	ALTER TABLE object_tools ADD matching_oid varchar(255) not null
 
 
 *************

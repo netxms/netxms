@@ -585,6 +585,7 @@ typedef struct
 #define VID_TOOL_TYPE               ((DWORD)196)
 #define VID_TOOL_DATA               ((DWORD)197)
 #define VID_ACL                     ((DWORD)198)
+#define VID_TOOL_OID                ((DWORD)199)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

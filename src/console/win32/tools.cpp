@@ -584,7 +584,7 @@ void CopyMenuItems(CMenu *pDst, CMenu *pSrc)
 // Create object tools pop-up menu
 //
 
-CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart)
+CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwStart)
 {
    CMenu *pMenu;
    TCHAR szName[MAX_DB_STRING], szPath[MAX_DB_STRING];
@@ -596,57 +596,60 @@ CMenu *CreateToolsSubmenu(TCHAR *pszCurrPath, DWORD *pdwStart)
    pMenu->CreatePopupMenu();
    for(i = *pdwStart, nId = OBJTOOL_MENU_FIRST_ID + *pdwStart; i < g_dwNumObjectTools; i++, nId++)
    {
-      // Separate item name and path
-      memset(szPath, 0, sizeof(TCHAR) * MAX_DB_STRING);
-      if (_tcsstr(g_pObjectToolList[i].szName, _T("->")) != NULL)
+      if (NXCIsAppropriateTool(&g_pObjectToolList[i], pObject))
       {
-         for(j = _tcslen(g_pObjectToolList[i].szName) - 1; j > 0; j--)
-            if ((g_pObjectToolList[i].szName[j] == _T('>')) &&
-                (g_pObjectToolList[i].szName[j - 1] == _T('-')))
-            {
-               _tcscpy(szName, &g_pObjectToolList[i].szName[j + 1]);
-               j--;
-               break;
-            }
-         memcpy(szPath, g_pObjectToolList[i].szName, j * sizeof(TCHAR));
-      }
-      else
-      {
-         _tcscpy(szName, g_pObjectToolList[i].szName);
-      }
-
-      if (!_tcsicmp(szPath, pszCurrPath))
-      {
-         StrStrip(szName);
-         pMenu->AppendMenu(MF_ENABLED | MF_STRING, nId, szName);
-      }
-      else
-      {
-         for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
-         if ((*pszCurrPath == 0) ||
-             ((!memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
-              (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
+         // Separate item name and path
+         memset(szPath, 0, sizeof(TCHAR) * MAX_DB_STRING);
+         if (_tcsstr(g_pObjectToolList[i].szName, _T("->")) != NULL)
          {
-            CMenu *pSubMenu;
-            TCHAR *pszName;
-
-            // Submenu of current menu
-            if (*pszCurrPath != 0)
-               j += 2;
-            pszName = &szPath[j];
-            for(; (szPath[j] != 0) && (memcmp(&szPath[j], _T("->"), sizeof(TCHAR) * 2)); j++);
-            szPath[j] = 0;
-            pSubMenu = CreateToolsSubmenu(szPath, &i);
-            nId = OBJTOOL_MENU_FIRST_ID + i;
-            StrStrip(pszName);
-            pMenu->AppendMenu(MF_ENABLED | MF_STRING | MF_POPUP,
-                              (UINT)pSubMenu->Detach(), pszName);
-            delete pSubMenu;
+            for(j = _tcslen(g_pObjectToolList[i].szName) - 1; j > 0; j--)
+               if ((g_pObjectToolList[i].szName[j] == _T('>')) &&
+                   (g_pObjectToolList[i].szName[j - 1] == _T('-')))
+               {
+                  _tcscpy(szName, &g_pObjectToolList[i].szName[j + 1]);
+                  j--;
+                  break;
+               }
+            memcpy(szPath, g_pObjectToolList[i].szName, j * sizeof(TCHAR));
          }
          else
          {
-            i--;
-            break;
+            _tcscpy(szName, g_pObjectToolList[i].szName);
+         }
+
+         if (!_tcsicmp(szPath, pszCurrPath))
+         {
+            StrStrip(szName);
+            pMenu->AppendMenu(MF_ENABLED | MF_STRING, nId, szName);
+         }
+         else
+         {
+            for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
+            if ((*pszCurrPath == 0) ||
+                ((!memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
+                 (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
+            {
+               CMenu *pSubMenu;
+               TCHAR *pszName;
+
+               // Submenu of current menu
+               if (*pszCurrPath != 0)
+                  j += 2;
+               pszName = &szPath[j];
+               for(; (szPath[j] != 0) && (memcmp(&szPath[j], _T("->"), sizeof(TCHAR) * 2)); j++);
+               szPath[j] = 0;
+               pSubMenu = CreateToolsSubmenu(pObject, szPath, &i);
+               nId = OBJTOOL_MENU_FIRST_ID + i;
+               StrStrip(pszName);
+               pMenu->AppendMenu(MF_ENABLED | MF_STRING | MF_POPUP,
+                                 (UINT)pSubMenu->Detach(), pszName);
+               delete pSubMenu;
+            }
+            else
+            {
+               i--;
+               break;
+            }
          }
       }
    }

@@ -5039,7 +5039,7 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
       }
       DBFreeResult(hResult);
 
-      hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description FROM object_tools"));
+      hResult = DBSelect(g_hCoreDB, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid FROM object_tools"));
       if (hResult != NULL)
       {
          dwNumTools = DBGetNumRows(hResult);
@@ -5087,6 +5087,8 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
                msg.SetVariable(dwId + 5, pszStr);
                free(pszStr);
 
+               msg.SetVariable(dwId + 6, DBGetField(hResult, i, 6));
+
                dwNumMsgRec++;
                dwId += 10;
             }
@@ -5131,7 +5133,7 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
-      _stprintf(szQuery, _T("SELECT tool_name,tool_type,tool_data,description,flags FROM object_tools WHERE tool_id=%d"), dwToolId);
+      _stprintf(szQuery, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid FROM object_tools WHERE tool_id=%d"), dwToolId);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -5156,6 +5158,7 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
             free(pszStr);
 
             msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
+            msg.SetVariable(VID_TOOL_OID, DBGetField(hResult, 0, 5));
             DBFreeResult(hResult);
 
             // Access list
