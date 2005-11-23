@@ -382,7 +382,7 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
    BOOL bResult;
 
    if (pObject == NULL)
-      return FALSE;
+      return TRUE;
 
    if (pObject->iClass == OBJECT_NODE)
    {

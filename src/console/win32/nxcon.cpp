@@ -2289,6 +2289,9 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
             m_pMainWnd->MessageBox(_T("Node doesn't have SNMP agent"), _T("Error"), MB_OK | MB_ICONSTOP);
          }
          break;
+      case TOOL_TYPE_COMMAND:
+         ExecuteCmdTool(pObject, g_pObjectToolList[dwIndex].pszData);
+         break;
       case TOOL_TYPE_URL:
          ExecuteWebTool(pObject, g_pObjectToolList[dwIndex].pszData);
          break;
@@ -2328,6 +2331,47 @@ void CConsoleApp::ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL)
    SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
    ExpandEnvironmentStrings(pszURL, szRealURL, 4096);
    StartWebBrowser(szRealURL);
+}
+
+
+//
+// Execute external command tool
+//
+
+void CConsoleApp::ExecuteCmdTool(NXC_OBJECT *pObject, TCHAR *pszCmd)
+{
+   TCHAR szCmdLine[4096];
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   // Prepare command
+   _stprintf(szCmdLine, _T("%lu"), pObject->dwId);
+   SetEnvironmentVariable(_T("OBJECT_ID"), szCmdLine);
+   SetEnvironmentVariable(_T("OBJECT_IP_ADDR"), IpToStr(pObject->dwIpAddr, szCmdLine));
+   SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
+   ExpandEnvironmentStrings(pszCmd, szCmdLine, 4096);
+
+   // Fill in process startup info structure
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+   si.dwFlags = 0;
+
+   // Create new process
+   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 
+                      0, NULL, NULL, &si, &pi))
+   {
+      TCHAR szError[256], szMsg[4096];
+
+      GetSystemErrorText(GetLastError(), szError, 256);
+      _sntprintf(szMsg, 4096, _T("Cannot execute command \"%s\":\n%s"), szCmdLine, szError);
+      m_pMainWnd->MessageBox(szMsg, _T("Error"), MB_OK | MB_ICONSTOP);
+   }
+   else
+   {
+      // Close all handles
+      CloseHandle(pi.hThread);
+      CloseHandle(pi.hProcess);
+   }
 }
 
 

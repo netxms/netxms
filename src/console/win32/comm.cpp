@@ -103,7 +103,10 @@ static int CompareTools(const void *p1, const void *p2)
 
 DWORD LoadObjectTools(void)
 {
-   DWORD dwResult;
+   DWORD dwResult, dwTemp;
+   CMenu *pMenu;
+   HMENU hObjMenu;
+   static BOOL bReload = FALSE;
 
    NXCDestroyObjectToolList(g_dwNumObjectTools, g_pObjectToolList);
    dwResult = NXCGetObjectTools(g_hSession, &g_dwNumObjectTools, &g_pObjectToolList);
@@ -111,6 +114,18 @@ DWORD LoadObjectTools(void)
    {
       // Sort tools in alphabetical order
       qsort(g_pObjectToolList, g_dwNumObjectTools, sizeof(NXC_OBJECT_TOOL), CompareTools);
+
+      // Create tools submenu
+      dwTemp = 0;
+      pMenu = CreateToolsSubmenu(NULL, _T(""), &dwTemp);
+      hObjMenu = GetSubMenu(theApp.m_hObjectBrowserMenu, LAST_APP_MENU - 1);
+      if (bReload)
+         DeleteMenu(hObjMenu, 18, MF_BYPOSITION);
+      InsertMenu(hObjMenu, 18, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                 (UINT)pMenu->GetSafeHmenu(), _T("&Tools"));
+      pMenu->Detach();
+      delete pMenu;
+      bReload = TRUE;
    }
    return dwResult;
 }

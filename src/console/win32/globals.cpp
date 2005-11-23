@@ -299,4 +299,3 @@ CODE_TO_TEXT g_ctNodeType[] =
 
 DWORD g_dwNumObjectTools = 0;
 NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
-CMenu *g_pObjectToolsMenu = NULL;

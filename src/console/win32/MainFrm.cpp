@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
    ON_MESSAGE(WM_DEPLOYMENT_INFO, OnDeploymentInfo)
    ON_MESSAGE(WM_UPDATE_EVENT_LIST, OnUpdateEventList)
+   ON_MESSAGE(WM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =

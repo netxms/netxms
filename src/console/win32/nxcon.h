@@ -94,6 +94,7 @@ struct DC_EDITOR
 class CConsoleApp : public CWinApp
 {
    friend DWORD WINAPI LoginThread(void *pArg);
+   friend DWORD LoadObjectTools(void);
 
 public:
 	CConsoleApp();
@@ -109,6 +110,7 @@ public:
 
 // Implementation
 protected:
+	void ExecuteCmdTool(NXC_OBJECT *pObject, TCHAR *pszCmd);
 	void ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL);
 	void ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId);
 	void CreateChildFrameWithSubtitle(CMDIChildWnd *pWnd, UINT nId, TCHAR *pszSubTitle, HMENU hMenu, HACCEL hAccel);

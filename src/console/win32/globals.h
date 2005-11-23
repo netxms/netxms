@@ -350,7 +350,6 @@ extern NXC_CC_LIST *g_pCCList;
 extern CODE_TO_TEXT g_ctNodeType[];
 extern DWORD g_dwNumObjectTools;
 extern NXC_OBJECT_TOOL *g_pObjectToolList;
-extern CMenu *g_pObjectToolsMenu;
 extern SNMP_MIBObject *g_pMIBRoot;
 
 
