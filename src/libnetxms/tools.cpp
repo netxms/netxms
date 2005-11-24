@@ -728,9 +728,11 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer)
       case VER_PLATFORM_WIN32_NT:
          _stprintf(pszBuffer, _T("WinNT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
+#ifdef VER_PLATFORM_WIN32_CE
       case VER_PLATFORM_WIN32_CE:
          _stprintf(pszBuffer, _T("WinCE %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
+#endif
       default:
          _stprintf(pszBuffer, _T("WinX %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
