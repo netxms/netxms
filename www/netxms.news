@@ -1,3 +1,5 @@
+24-Nov-2005|Windows installer 0.2.7-r1 published|Windows installer repacked, the only change: added scheme file for sqlite that was missing in the 0.2.7 release.
+07-Nov-2005|NetXMS.org Maintenance|Web server maintenance in progress (13:42 EET), some links (bugtrack/wiki/e.t.c) can be broken for a short period of time
 05-Nov-2005|0.2.7 released|Version 0.2.7 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 04-Nov-2005|0.2.6 warning|We declare version 0.2.6 as a worst version ever, which cannot be built. Blame the packager :). 0.2.7 will be released tonight. Stay tuned.
 28-Oct-2005|0.2.6 released|Version 0.2.6 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>

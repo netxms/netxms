@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.19 2005-11-07 07:53:00 victor Exp $ -->
+<!-- $Id: body.shtml,v 1.20 2005-11-24 11:21:00 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -20,9 +20,9 @@
 	<a href="agent_packages/nxagent-0.2.7.sh.asc">(PGP sign)</a><br />
 	</p>
 	<p>
-	<a href="netxms-0.2.7.exe">WIN32 Installer</a>
-	<a href="netxms-0.2.7.exe.md5">(MD5)</a>
-	<a href="netxms-0.2.7.exe.asc">(PGP sign)</a>
+	<a href="netxms-0.2.7-r1.exe">WIN32 Installer</a>
+	<a href="netxms-0.2.7-r1.exe.md5">(MD5)</a>
+	<a href="netxms-0.2.7-r1.exe.asc">(PGP sign)</a>
 	</p>
 	<p>
 	<a href="agent_packages/nxagent-0.2.7.exe">WIN32 Agent Installer</a>

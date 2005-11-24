@@ -1031,6 +1031,7 @@ www/cgi-bin/news.pl -text
 www/cgi-bin/quote.pl -text
 www/cgi-bin/sendmail.pl -text
 www/data/.cvsignore -text
+www/data/.htaccess -text
 www/data/about/body.shtml -text
 www/data/about/index.shtml -text
 www/data/body.shtml -text
