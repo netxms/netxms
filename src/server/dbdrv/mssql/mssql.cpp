@@ -56,8 +56,15 @@ static BOOL Reconnect(MSDB_CONN *pConn)
    BOOL bResult = FALSE;
 
    loginrec = dblogin();
-   DBSETLUSER(loginrec, pConn->szLogin);
-   DBSETLPWD(loginrec, pConn->szPassword);
+   if (!strcmp(pConn->szLogin, "*"))
+   {
+      DBSETLSECURE(loginrec);
+   }
+   else
+   {
+      DBSETLUSER(loginrec, pConn->szLogin);
+      DBSETLPWD(loginrec, pConn->szPassword);
+   }
    DBSETLAPP(loginrec, "NetXMS");
    hProcess = dbopen(loginrec, pConn->szHost);
 
@@ -121,8 +128,15 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
    PDBPROCESS hProcess;
 
    loginrec = dblogin();
-   DBSETLUSER(loginrec, szLogin);
-   DBSETLPWD(loginrec, szPassword);
+   if (!strcmp(szLogin, "*"))
+   {
+      DBSETLSECURE(loginrec);
+   }
+   else
+   {
+      DBSETLUSER(loginrec, szLogin);
+      DBSETLPWD(loginrec, szPassword);
+   }
    DBSETLAPP(loginrec, "NetXMS");
    hProcess = dbopen(loginrec, szHost);
 
