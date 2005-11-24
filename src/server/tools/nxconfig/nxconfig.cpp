@@ -14,6 +14,7 @@
 #include "SummaryPage.h"
 #include "ProcessingPage.h"
 #include "ConfigFilePage.h"
+#include "WinSrvPage.h"
 #include "LoggingPage.h"
 #include "FinishPage.h"
 
@@ -154,6 +155,7 @@ void CNxconfigApp::OnFileCfgWizard()
    CPollCfgPage pgPollConfig;
    CSMTPPage pgSMTP;
    CLoggingPage pgLogging;
+   CWinSrvPage pgWinSrv;
    CSummaryPage pgSummary;
    CProcessingPage pgProcessing;
    CFinishPage pgFinish;
@@ -166,6 +168,7 @@ void CNxconfigApp::OnFileCfgWizard()
    dlg.AddPage(&pgPollConfig);
    dlg.AddPage(&pgSMTP);
    dlg.AddPage(&pgLogging);
+   dlg.AddPage(&pgWinSrv);
    dlg.AddPage(&pgSummary);
    dlg.AddPage(&pgProcessing);
    dlg.AddPage(&pgFinish);

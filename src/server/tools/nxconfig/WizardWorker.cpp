@@ -41,6 +41,99 @@ static HWND m_hStatusWnd = NULL;
 
 
 //
+// Install event source
+//
+
+static BOOL InstallEventSource(TCHAR *pszPath)
+{
+   HKEY hKey;
+   TCHAR szBuffer[256];
+   DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+
+   if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+         "System\\CurrentControlSet\\Services\\EventLog\\System\\" CORE_EVENT_SOURCE,
+         0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL))
+   {
+      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, 
+                 _T("Unable to create registry key: %s"),
+                 GetSystemErrorText(GetLastError(), szBuffer, 256));
+      return FALSE;
+   }
+
+   RegSetValueEx(hKey, _T("TypesSupported"), 0, REG_DWORD,(BYTE *)&dwTypes, sizeof(DWORD));
+   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ,
+                 (BYTE *)pszPath, (_tcslen(pszPath) + 1) * sizeof(TCHAR));
+
+   RegCloseKey(hKey);
+   return TRUE;
+}
+
+
+//
+// Install Windows service
+//
+
+static BOOL InstallService(WIZARD_CFG_INFO *pc)
+{
+   SC_HANDLE hMgr, hService;
+   TCHAR szCmdLine[MAX_PATH * 2], *pszLogin, *pszPassword, szBuffer[256];
+   BOOL bResult = FALSE;
+
+   hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
+   if (hMgr == NULL)
+   {
+      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, 
+                 _T("Cannot connect to Service Manager: %s"),
+                 GetSystemErrorText(GetLastError(), szBuffer, 256));
+      return FALSE;
+   }
+
+   if (pc->m_szServiceLogin[0] == 0)
+   {
+      pszLogin = NULL;
+      pszPassword = NULL;
+   }
+   else
+   {
+      pszLogin = pc->m_szServiceLogin;
+      pszPassword = pc->m_szServicePassword;
+   }
+   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\\bin\\netxmsd.exe\" --config \"%s\""), 
+              pc->m_szInstallDir, pc->m_szConfigFile);
+   hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
+                            GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
+                            SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+                            szCmdLine, NULL, NULL, NULL, pszLogin, pszPassword);
+   if (hService == NULL)
+   {
+      DWORD dwCode = GetLastError();
+
+      if (dwCode == ERROR_SERVICE_EXISTS)
+      {
+         _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
+                    _T("Service named '") CORE_SERVICE_NAME _T("' already exist"));
+      }
+      else
+      {
+         _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
+                    _T("Cannot create service: %s"),
+                    GetSystemErrorText(dwCode, szBuffer, 256));
+      }
+   }
+   else
+   {
+      CloseServiceHandle(hService);
+      bResult = TRUE;
+      _sntprintf(szCmdLine, MAX_PATH, _T("%s\\bin\\nxcore.dll"), pc->m_szInstallDir);
+   }
+
+   CloseServiceHandle(hMgr);
+
+   return bResult ? InstallEventSource(szCmdLine) : FALSE;
+}
+
+
+//
 // Execute query and set error text
 //
 
@@ -240,7 +333,7 @@ static BOOL CreateDBPostgreSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 
 static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 {
-   TCHAR szQuery[256];
+   TCHAR szQuery[512], *pszLogin;
    BOOL bResult;
 
    bResult = DBQueryEx(hConn, _T("USE master"));
@@ -258,20 +351,29 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("sp_addlogin @loginame = '%s', @passwd = '%s', @defdb = '%s'"),
-                pc->m_szDBLogin, pc->m_szDBPassword, pc->m_szDBName);
+      if (!strcmp(pc->m_szDBLogin, _T("*")))
+      {
+         // Use Windows authentication
+         pszLogin = pc->m_szServiceLogin;
+      }
+      else
+      {
+         _sntprintf(szQuery, 512, _T("sp_addlogin @loginame = '%s', @passwd = '%s', @defdb = '%s'"),
+                    pc->m_szDBLogin, pc->m_szDBPassword, pc->m_szDBName);
+         bResult = DBQueryEx(hConn, szQuery);
+         pszLogin = pc->m_szDBLogin;
+      }
+   }
+
+   if (bResult)
+   {
+      _sntprintf(szQuery, 512, _T("sp_grantdbaccess @loginame = '%s'"), pszLogin);
       bResult = DBQueryEx(hConn, szQuery);
    }
 
    if (bResult)
    {
-      _stprintf(szQuery, _T("sp_grantdbaccess @loginame = '%s'"), pc->m_szDBLogin);
-      bResult = DBQueryEx(hConn, szQuery);
-   }
-
-   if (bResult)
-   {
-      _stprintf(szQuery, _T("GRANT ALL TO %s"), pc->m_szDBLogin);
+      _stprintf(szQuery, _T("GRANT ALL TO %s"), pszLogin);
       bResult = DBQueryEx(hConn, szQuery);
    }
 
@@ -446,6 +548,14 @@ static DWORD __stdcall WorkerThread(void *pArg)
    // Cleanup
    if (hConn != NULL)
       DBDisconnect(hConn);
+
+   // Install service
+   if (bResult)
+   {
+      PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Installing service"));
+      bResult = InstallService(pc);
+      PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
+   }
 
    // Notify UI that job is finished
    PostMessage(m_hStatusWnd, WM_JOB_FINISHED, bResult, 0);

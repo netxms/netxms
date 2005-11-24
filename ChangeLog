@@ -5,6 +5,8 @@
 - Implemented agent proxy
 - Windows console:
 	- Fixed inconsistencies in object access control configuration
+- Added support for Windows authentication in Microsoft SQL driver
+- Server configuration wizard: added possibility to configure service account
 - Fixed issues: #61
 
 

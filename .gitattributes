@@ -966,6 +966,8 @@ src/server/tools/nxconfig/StdAfx.cpp -text
 src/server/tools/nxconfig/StdAfx.h -text
 src/server/tools/nxconfig/SummaryPage.cpp -text
 src/server/tools/nxconfig/SummaryPage.h -text
+src/server/tools/nxconfig/WinSrvPage.cpp -text
+src/server/tools/nxconfig/WinSrvPage.h -text
 src/server/tools/nxconfig/WizardWorker.cpp -text
 src/server/tools/nxconfig/nxconfig.clw -text
 src/server/tools/nxconfig/nxconfig.cpp -text

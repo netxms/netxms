@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.7
-AppVersion=0.2.7
+AppVerName=NetXMS 0.2.8
+AppVersion=0.2.8
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.7
+OutputBaseFilename=netxms-0.2.8
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -107,7 +107,7 @@ Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; Working
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "--config ""{app}\etc\netxmsd.conf"" install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
+;Filename: "{app}\bin\netxmsd.exe"; Parameters: "--config ""{app}\etc\netxmsd.conf"" install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "start"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
 
 [UninstallRun]

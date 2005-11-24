@@ -29,11 +29,12 @@
 #ifdef _WIN32
 
 void InitService(void);
-void InstallService(char *execName, char *dllName);
+void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
+                    TCHAR *pszLogin, TCHAR *pszPassword);
 void RemoveService(void);
 void StartCoreService(void);
 void StopCoreService(void);
-void InstallEventSource(char *path);
+void InstallEventSource(TCHAR *pszPath);
 void RemoveEventSource(void);
 
 #endif   /* _WIN32 */

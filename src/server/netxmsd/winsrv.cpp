@@ -131,22 +131,26 @@ void InitService(void)
 // Create service
 //
 
-void InstallService(char *execName, char *dllName)
+void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
+                    TCHAR *pszLogin, TCHAR *pszPassword)
 {
-   SC_HANDLE mgr,service;
-   char cmdLine[MAX_PATH*2];
+   SC_HANDLE hMgr, hService;
+   TCHAR szCmdLine[MAX_PATH * 2];
 
-   mgr=OpenSCManager(NULL,NULL,GENERIC_WRITE);
-   if (mgr==NULL)
+   hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
+   if (hMgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n",GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n",
+             GetSystemErrorText(GetLastError()));
       return;
    }
 
-   sprintf(cmdLine, "\"%s\" --config \"%s\"", execName, g_szConfigFile);
-   service = CreateService(mgr, CORE_SERVICE_NAME, "NetXMS Core", GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
-                           SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmdLine, NULL, NULL, NULL, NULL, NULL);
-   if (service == NULL)
+   sprintf(szCmdLine, "\"%s\" --config \"%s\"", pszExecName, g_szConfigFile);
+   hService = CreateService(hMgr, CORE_SERVICE_NAME, "NetXMS Core",
+                            GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
+                            SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+                            szCmdLine, NULL, NULL, NULL, pszLogin, pszPassword);
+   if (hService == NULL)
    {
       DWORD code = GetLastError();
 
@@ -158,12 +162,12 @@ void InstallService(char *execName, char *dllName)
    else
    {
       printf("NetXMS Core service created successfully\n");
-      CloseServiceHandle(service);
+      CloseServiceHandle(hService);
    }
 
-   CloseServiceHandle(mgr);
+   CloseServiceHandle(hMgr);
 
-   InstallEventSource(dllName);
+   InstallEventSource(pszDllName);
 }
 
 

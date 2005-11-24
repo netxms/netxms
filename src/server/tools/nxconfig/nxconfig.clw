@@ -2,42 +2,44 @@
 
 [General Info]
 Version=1
-LastClass=CSMTPPage
+LastClass=CWinSrvPage
 LastTemplate=CPropertyPage
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxconfig.h"
 LastPage=0
 
-ClassCount=15
+ClassCount=16
 Class1=CNxconfigApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=12
-Resource1=IDD_ODBC (English (U.S.))
-Resource2=IDR_MAINFRAME (English (U.S.))
+ResourceCount=13
+Resource1=IDD_SELECT_DB (English (U.S.))
+Resource2=IDD_CFG_FILE (English (U.S.))
 Class2=CChildView
-Resource3=IDD_INTRO (English (U.S.))
-Resource4=IDD_POLLING (English (U.S.))
+Resource3=IDD_LOG_FILE (English (U.S.))
+Resource4=IDD_FINISH (English (U.S.))
 Class5=CIntroPage
 Class6=CConfigWizard
-Resource5=IDD_CFG_FILE (English (U.S.))
+Resource5=IDD_SUMMARY (English (U.S.))
 Class7=CDBSelectPage
-Resource6=IDD_SUMMARY (English (U.S.))
+Resource6=IDD_POLLING (English (U.S.))
 Class8=CFinishPage
-Resource7=IDD_SELECT_DB (English (U.S.))
+Resource7=IDD_ODBC (English (U.S.))
 Class9=CODBCPage
 Resource8=IDD_ABOUTBOX (English (U.S.))
 Class10=CPollCfgPage
-Resource9=IDD_FINISH (English (U.S.))
+Resource9=IDD_INTRO (English (U.S.))
 Class11=CSMTPPage
-Resource10=IDD_SMTP (English (U.S.))
+Resource10=IDR_MAINFRAME (English (U.S.))
 Class12=CSummaryPage
-Resource11=IDD_PROCESSING (English (U.S.))
+Resource11=IDD_SMTP (English (U.S.))
 Class13=CProcessingPage
 Class14=CConfigFilePage
 Class15=CLoggingPage
-Resource12=IDD_LOG_FILE (English (U.S.))
+Resource12=IDD_PROCESSING (English (U.S.))
+Class16=CWinSrvPage
+Resource13=IDD_SERVICE (English (U.S.))
 
 [CLS:CNxconfigApp]
 Type=0
@@ -242,6 +244,7 @@ ImplementationFile=PollCfgPage.cpp
 BaseClass=CPropertyPage
 Filter=D
 VirtualFilter=idWC
+LastObject=CPollCfgPage
 
 [DLG:IDD_SMTP (English (U.S.))]
 Type=1
@@ -338,6 +341,30 @@ Control6=IDC_STATIC,static,1342308352
 Type=0
 HeaderFile=LoggingPage.h
 ImplementationFile=LoggingPage.cpp
+BaseClass=CPropertyPage
+Filter=D
+VirtualFilter=idWC
+
+[DLG:IDD_SERVICE (English (U.S.))]
+Type=1
+Class=CWinSrvPage
+ControlCount=11
+Control1=IDC_RADIO_SYSTEM,button,1342373897
+Control2=IDC_RADIO_USER,button,1342242825
+Control3=IDC_EDIT_LOGIN,edit,1350631552
+Control4=IDC_EDIT_PASSWD1,edit,1350631584
+Control5=IDC_EDIT_PASSWD2,edit,1350631584
+Control6=IDC_STATIC,static,1342177806
+Control7=IDC_STATIC,static,1342308352
+Control8=IDC_STATIC,static,1342308352
+Control9=IDC_STATIC,static,1342308352
+Control10=IDC_ICON_WARNING,static,1342177283
+Control11=IDC_STATIC_WARNING,static,1342308352
+
+[CLS:CWinSrvPage]
+Type=0
+HeaderFile=WinSrvPage.h
+ImplementationFile=WinSrvPage.cpp
 BaseClass=CPropertyPage
 Filter=D
 VirtualFilter=idWC

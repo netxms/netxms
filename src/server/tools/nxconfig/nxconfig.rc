@@ -239,6 +239,31 @@ BEGIN
     LTEXT           "Select logging method:",IDC_STATIC,89,7,73,8
 END
 
+IDD_SERVICE DIALOGEX 0, 0, 319, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Windows Service Configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Local System account",IDC_RADIO_SYSTEM,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,99,22,86,10
+    CONTROL         "&Custom account",IDC_RADIO_USER,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,99,39,67,10
+    EDITTEXT        IDC_EDIT_LOGIN,113,69,199,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PASSWD1,113,103,199,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PASSWD2,113,122,199,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    CONTROL         131,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,7,7,
+                    75,188,WS_EX_CLIENTEDGE
+    LTEXT           "Run NetXMS core service under:",IDC_STATIC,91,7,106,8
+    LTEXT           "Login (use form DOMAIN\\USER for domain accounts)",
+                    IDC_STATIC,113,57,174,8
+    LTEXT           "Password (with verification)",IDC_STATIC,113,91,86,8
+    ICON            IDI_WARN,IDC_ICON_WARNING,99,148,20,20
+    LTEXT           "NOTE: You should use custom account if NetXMS server is configured to use Microsoft SQL with Windows authentication.",
+                    IDC_STATIC_WARNING,125,147,187,29
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -367,6 +392,14 @@ BEGIN
     END
 
     IDD_LOG_FILE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+
+    IDD_SERVICE, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 312

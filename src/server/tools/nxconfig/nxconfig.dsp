@@ -175,6 +175,10 @@ SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\WinSrvPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\WizardWorker.cpp
 # End Source File
 # End Group
@@ -260,6 +264,10 @@ SOURCE=.\SummaryPage.h
 # Begin Source File
 
 SOURCE=.\tools.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\WinSrvPage.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
