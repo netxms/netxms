@@ -5158,7 +5158,11 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
             free(pszStr);
 
             msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
-            msg.SetVariable(VID_TOOL_OID, DBGetField(hResult, 0, 5));
+
+            pszStr = _tcsdup(DBGetField(hResult, 0, 5));
+            DecodeSQLString(pszStr);
+            msg.SetVariable(VID_TOOL_OID, pszStr);
+            free(pszStr);
             DBFreeResult(hResult);
 
             // Access list

@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "ObjectToolsEditor.h"
 #include "ObjToolPropGeneral.h"
+#include "ObjToolPropOptions.h"
 #include "ObjToolPropColumns.h"
 #include "NewObjectToolDlg.h"
 
@@ -142,10 +143,10 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 250);
-   m_wndListCtrl.InsertColumn(2, "Type", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(3, "Description", LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 250);
+   m_wndListCtrl.InsertColumn(2, _T("Type"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(3, _T("Description"), LVCFMT_LEFT, 300);
 
    // Mark sorting column
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
@@ -349,7 +350,7 @@ void CObjectToolsEditor::OnObjecttoolsNew()
 //
 
 static DWORD DeleteObjectTools(DWORD dwNumTools, DWORD *pdwToolList,
-                               CListCtrl *pwndListCtrl)
+                               CListCtrl *pwndListCtrl, CObjectToolsEditor *pWnd)
 {
    DWORD i, dwResult;
    LVFINDINFO lvfi;
@@ -366,6 +367,9 @@ static DWORD DeleteObjectTools(DWORD dwNumTools, DWORD *pdwToolList,
       if (iItem != -1)
          pwndListCtrl->DeleteItem(iItem);
    }
+
+   pWnd->RefreshInternalToolList();
+
    return dwResult;
 }
 
@@ -389,8 +393,9 @@ void CObjectToolsEditor::OnObjecttoolsDelete()
          pdwList[i] = m_wndListCtrl.GetItemData(iItem);
          iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
       }
-      dwResult = DoRequestArg3(DeleteObjectTools, (void *)dwNumItems,
-                               pdwList, &m_wndListCtrl, _T("Deleting object tools..."));
+      dwResult = DoRequestArg4(DeleteObjectTools, (void *)dwNumItems,
+                               pdwList, &m_wndListCtrl, this,
+                               _T("Deleting object tools..."));
       if (dwResult != RCC_SUCCESS)
       {
          theApp.ErrorBox(dwResult, _T("Cannot delete object tool: %s"));
@@ -407,6 +412,7 @@ void CObjectToolsEditor::OnObjecttoolsDelete()
 void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
 {
    CObjToolPropGeneral pgGeneral;
+   CObjToolPropOptions pgOptions;
    CObjToolPropColumns pgColumns;
    TCHAR szBuffer[1024];
    DWORD dwResult;
@@ -454,6 +460,15 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
    }
    psh.AddPage(&pgGeneral);
 
+   // Setup "Options" page
+   pgOptions.m_bNeedAgent = (pData->dwFlags & TF_REQUIRES_AGENT) ? TRUE : FALSE;
+   pgOptions.m_bNeedSNMP = (pData->dwFlags & TF_REQUIRES_SNMP) ? TRUE : FALSE;
+   pgOptions.m_bMatchOID = (pData->dwFlags & TF_REQUIRES_OID_MATCH) ? TRUE : FALSE;
+   pgOptions.m_strMatchingOID = CHECK_NULL_EX(pData->pszMatchingOID);
+   pgOptions.m_nIndexType = (pData->dwFlags & TF_SNMP_INDEXED_BY_VALUE) ? 1 : 0;
+   pgOptions.m_iToolType = (int)pData->wType;
+   psh.AddPage(&pgOptions);
+
    // Setup "Columns" page
    if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
        (pData->wType == TOOL_TYPE_TABLE_AGENT))
@@ -482,6 +497,25 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
          pgGeneral.m_strData += pgGeneral.m_strRegEx;
       }
       pData->pszData = _tcsdup((LPCTSTR)pgGeneral.m_strData);
+
+      pData->dwFlags = 0;
+      if (pgOptions.m_bNeedAgent)
+         pData->dwFlags |= TF_REQUIRES_AGENT;
+      if (pgOptions.m_bNeedSNMP)
+         pData->dwFlags |= TF_REQUIRES_SNMP;
+      safe_free(pData->pszMatchingOID);
+      if (pgOptions.m_bMatchOID)
+      {
+         pData->dwFlags |= TF_REQUIRES_OID_MATCH;
+         pData->pszMatchingOID = _tcsdup((LPCTSTR)pgOptions.m_strMatchingOID);
+      }
+      else
+      {
+         pData->pszMatchingOID = NULL;
+      }
+      if (pgOptions.m_nIndexType == 1)
+         pData->dwFlags |= TF_SNMP_INDEXED_BY_VALUE;
+
       if ((pData->wType == TOOL_TYPE_TABLE_AGENT) ||
           (pData->wType == TOOL_TYPE_TABLE_SNMP))
       {
@@ -493,7 +527,56 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
 
       dwResult = DoRequestArg2(NXCUpdateObjectTool, g_hSession, pData,
                                _T("Updating object tool configuration..."));
-      if (dwResult != RCC_SUCCESS)
+      if (dwResult == RCC_SUCCESS)
+      {
+         int iItem;
+         LVFINDINFO lvfi;
+         NXC_OBJECT_TOOL *pTool;
+
+         // Update internal tool list
+         pTool = GetToolById(pData->dwId);
+         if (pTool == NULL)
+         {
+            // New tool, create new record in internal list
+            m_pToolList = (NXC_OBJECT_TOOL *)realloc(m_pToolList, sizeof(NXC_OBJECT_TOOL) * (m_dwNumTools + 1));
+            pTool = &m_pToolList[m_dwNumTools];
+            m_dwNumTools++;
+
+            memset(pTool, 0, sizeof(NXC_OBJECT_TOOL));
+            pTool->dwId = pData->dwId;
+            pTool->wType = pData->wType;
+         }
+         else
+         {
+            safe_free(pTool->pszData);
+            safe_free(pTool->pszMatchingOID);
+         }
+         pTool->dwFlags = pData->dwFlags;
+         _tcscpy(pTool->szName, pData->szName);
+         _tcscpy(pTool->szDescription, pData->szDescription);
+         pTool->pszData = _tcsdup(pData->pszData);
+         pTool->pszMatchingOID = (pData->pszMatchingOID == NULL) ? NULL : _tcsdup(pData->pszMatchingOID);
+
+         // Update list control
+         lvfi.flags = LVFI_PARAM;
+         lvfi.lParam = pData->dwId;
+         iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+         if (iItem == -1)
+         {
+            _stprintf(szBuffer, _T("%d"), pData->dwId);
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pData->wType);
+            if (iItem != -1)
+               m_wndListCtrl.SetItemData(iItem, pData->dwId);
+         }
+         if (iItem != -1)
+         {
+            m_wndListCtrl.SetItemText(iItem, 1, pData->szName);
+            m_wndListCtrl.SetItemText(iItem, 2, g_szToolType[pData->wType]);
+            m_wndListCtrl.SetItemText(iItem, 3, pData->szDescription);
+            m_wndListCtrl.SortItems(ToolCompareProc, (LPARAM)this);
+         }
+      }
+      else
       {
          theApp.ErrorBox(dwResult, _T("Cannot update object tool configuration: %s"));
       }
@@ -550,4 +633,15 @@ void CObjectToolsEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pRe
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
    *pResult = 0;
+}
+
+
+//
+// Reload internal tool list from server
+//
+
+void CObjectToolsEditor::RefreshInternalToolList()
+{
+   NXCDestroyObjectToolList(m_dwNumTools, m_pToolList);
+   NXCGetObjectTools(g_hSession, &m_dwNumTools, &m_pToolList);
 }

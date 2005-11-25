@@ -2177,6 +2177,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Create New Tool"
 FONT 8, "MS Sans Serif"
 BEGIN
+    EDITTEXT        IDC_EDIT_NAME,7,17,137,14,ES_AUTOHSCROLL
     CONTROL         "&Action",IDC_RADIO_ACTION,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP | WS_TABSTOP,13,54,36,10
     CONTROL         "&Command",IDC_RADIO_COMMAND,"Button",BS_AUTORADIOBUTTON,
@@ -2189,11 +2190,34 @@ BEGIN
                     67,69,57,10
     CONTROL         "Open &URL",IDC_RADIO_URL,"Button",BS_AUTORADIOBUTTON,67,
                     84,50,10
-    EDITTEXT        IDC_EDIT_NAME,7,17,137,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,153,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,153,24,50,14
     LTEXT           "Name",IDC_STATIC,7,7,20,8
     GROUPBOX        "Tool Type",IDC_STATIC,7,41,137,59
+END
+
+IDD_OBJTOOL_OPTIONS DIALOG DISCARDABLE  0, 0, 257, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "NetXMS &agent should be presented",IDC_CHECK_AGENT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,19,129,10
+    CONTROL         "Node should support &SNMP",IDC_CHECK_SNMP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,104,10
+    CONTROL         "Node &OID should match with given template",
+                    IDC_CHECK_MATCH_OID,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,45,155,10
+    EDITTEXT        IDC_EDIT_TEMPLATE,65,58,178,14,ES_AUTOHSCROLL
+    CONTROL         "&OID suffix of first column",IDC_RADIO_SUFFIX,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,24,110,92,10
+    CONTROL         "&Value of first column",IDC_RADIO_VALUE,"Button",
+                    BS_AUTORADIOBUTTON,24,122,79,10
+    GROUPBOX        "Availability rules",IDC_STATIC,7,7,243,73
+    LTEXT           "Template:",IDC_STATIC_TEMPLATE,29,60,32,8
+    GROUPBOX        "SNMP table options",IDC_STATIC_SNMP_OPTIONS,7,87,243,52
+    LTEXT           "Use as index for second and subsequent columns:",
+                    IDC_STATIC_SNMP_INDEX,13,99,160,8
 END
 
 
@@ -2694,6 +2718,14 @@ BEGIN
         RIGHTMARGIN, 203
         TOPMARGIN, 7
         BOTTOMMARGIN, 101
+    END
+
+    IDD_OBJTOOL_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -502,8 +502,8 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
    DB_RESULT hResult;
    BOOL bUpdate = FALSE;
-   TCHAR *pszName, *pszData, *pszDescription, *pszTmp;
-   TCHAR szBuffer[MAX_DB_STRING], szQuery[4096], szOID[MAX_DB_STRING];
+   TCHAR *pszName, *pszData, *pszDescription, *pszOID, *pszTmp;
+   TCHAR szBuffer[MAX_DB_STRING], szQuery[4096];
    DWORD i, dwToolId, dwAclSize, *pdwAcl;
    int nType;
 
@@ -523,6 +523,8 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    pszName = EncodeSQLString(szBuffer);
    pMsg->GetVariableStr(VID_DESCRIPTION, szBuffer, MAX_DB_STRING);
    pszDescription = EncodeSQLString(szBuffer);
+   pMsg->GetVariableStr(VID_TOOL_OID, szBuffer, MAX_DB_STRING);
+   pszOID = EncodeSQLString(szBuffer);
    pszTmp = pMsg->GetVariableStr(VID_TOOL_DATA);
    pszData = EncodeSQLString(pszTmp);
    free(pszTmp);
@@ -532,18 +534,17 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
                                    "tool_data='%s',description='%s',flags=%d,"
                                    "matching_oid='%s' WHERE tool_id=%d"),
                 pszName, nType, pszData, pszDescription,
-                pMsg->GetVariableLong(VID_FLAGS),
-                pMsg->GetVariableStr(VID_TOOL_OID, szOID, MAX_DB_STRING), dwToolId);
+                pMsg->GetVariableLong(VID_FLAGS), pszOID, dwToolId);
    else
       _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,"
                                    "tool_data,description,flags,matching_oid) VALUES "
                                    "(%d,'%s',%d,'%s','%s',%d,'%s')"),
                 dwToolId, pszName, nType, pszData,
-                pszDescription, pMsg->GetVariableLong(VID_FLAGS),
-                pMsg->GetVariableStr(VID_TOOL_OID, szOID, MAX_DB_STRING));
+                pszDescription, pMsg->GetVariableLong(VID_FLAGS), pszOID);
    free(pszName);
    free(pszDescription);
    free(pszData);
+   free(pszOID);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update ACL

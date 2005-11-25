@@ -425,6 +425,10 @@ SOURCE=.\ObjToolPropGeneral.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjToolPropOptions.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PackageMgr.cpp
 # End Source File
 # Begin Source File
@@ -871,6 +875,10 @@ SOURCE=.\ObjToolPropColumns.h
 # Begin Source File
 
 SOURCE=.\ObjToolPropGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjToolPropOptions.h
 # End Source File
 # Begin Source File
 

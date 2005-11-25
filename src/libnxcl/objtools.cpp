@@ -350,6 +350,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
    msg.SetVariable(VID_DESCRIPTION, pData->szDescription);
    msg.SetVariable(VID_TOOL_DATA, pData->pszData);
    msg.SetVariable(VID_ACL_SIZE, pData->dwACLSize);
+   msg.SetVariable(VID_TOOL_OID, CHECK_NULL_EX(pData->pszMatchingOID));
    msg.SetVariableToInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
    if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
        (pData->wType == TOOL_TYPE_TABLE_AGENT))

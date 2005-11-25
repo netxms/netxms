@@ -85,6 +85,7 @@ EXTRA_DIST = \
 	ObjectToolsEditor.cpp ObjectToolsEditor.h \
 	ObjToolPropColumns.cpp ObjToolPropColumns.h \
 	ObjToolPropGeneral.cpp ObjToolPropGeneral.h \
+	ObjToolPropOptions.cpp ObjToolPropOptions.h \
 	PackageMgr.cpp PackageMgr.h \
 	PasswordChangeDlg.cpp PasswordChangeDlg.h \
 	RequestProcessingDlg.cpp RequestProcessingDlg.h \

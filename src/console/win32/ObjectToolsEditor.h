@@ -62,6 +62,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	void RefreshInternalToolList(void);
 	NXC_OBJECT_TOOL * GetToolById(DWORD dwId);
    int SortMode(void) { return m_iSortMode; }
    int SortDir(void) { return m_iSortDir; }

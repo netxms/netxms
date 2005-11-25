@@ -3,6 +3,7 @@
 *
 
 - Implemented agent proxy
+- Object tools fully implemented (including configuration)
 - Windows console:
 	- Fixed inconsistencies in object access control configuration
 - Added support for Windows authentication in Microsoft SQL driver

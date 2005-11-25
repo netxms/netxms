@@ -546,6 +546,8 @@ src/console/win32/ObjToolPropColumns.cpp -text
 src/console/win32/ObjToolPropColumns.h -text
 src/console/win32/ObjToolPropGeneral.cpp -text
 src/console/win32/ObjToolPropGeneral.h -text
+src/console/win32/ObjToolPropOptions.cpp -text
+src/console/win32/ObjToolPropOptions.h -text
 src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
 src/console/win32/ObjectInfoBox.cpp -text

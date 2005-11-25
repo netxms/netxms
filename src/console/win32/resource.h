@@ -171,6 +171,7 @@
 #define IDD_OBJTOOL_COLUMNS             293
 #define IDD_NEW_OBJECT_TOOL             294
 #define IDI_COMMAND                     295
+#define IDD_OBJTOOL_OPTIONS             296
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -467,6 +468,15 @@
 #define IDC_RADIO_COMMAND               1325
 #define IDC_RADIO_INTERNAL              1326
 #define IDC_RADIO_SNMP                  1327
+#define IDC_CHECK_AGENT                 1328
+#define IDC_CHECK_SNMP                  1329
+#define IDC_CHECK_MATCH_OID             1330
+#define IDC_EDIT_TEMPLATE               1331
+#define IDC_RADIO_SUFFIX                1332
+#define IDC_RADIO_VALUE                 1333
+#define IDC_STATIC_SNMP_INDEX           1334
+#define IDC_STATIC_SNMP_OPTIONS         1335
+#define IDC_STATIC_TEMPLATE             1336
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -631,9 +641,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        296
+#define _APS_NEXT_RESOURCE_VALUE        297
 #define _APS_NEXT_COMMAND_VALUE         32966
-#define _APS_NEXT_CONTROL_VALUE         1328
+#define _APS_NEXT_CONTROL_VALUE         1337
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif
