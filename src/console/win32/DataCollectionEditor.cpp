@@ -67,7 +67,7 @@ static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
       default:
          break;
    }
-   return (((CDataCollectionEditor *)lParamSort)->SortDir() == 1) ? iResult : -iResult;
+   return (((CDataCollectionEditor *)lParamSort)->SortDir() == 0) ? iResult : -iResult;
 }
 
 
@@ -82,7 +82,7 @@ CDataCollectionEditor::CDataCollectionEditor()
    m_bIsTemplate = FALSE;
 
    m_iSortMode = theApp.GetProfileInt(_T("DCEditor"), _T("SortMode"), 0);
-   m_iSortDir = theApp.GetProfileInt(_T("DCEditor"), _T("SortDir"), 1);
+   m_iSortDir = theApp.GetProfileInt(_T("DCEditor"), _T("SortDir"), 0);
 }
 
 CDataCollectionEditor::CDataCollectionEditor(NXC_DCI_LIST *pList)

@@ -170,6 +170,7 @@
 #define IDD_OBJTOOL_GENERAL             292
 #define IDD_OBJTOOL_COLUMNS             293
 #define IDD_NEW_OBJECT_TOOL             294
+#define IDI_COMMAND                     295
 #define ID_EDIT_BOX                     525
 #define IDC_EDIT_SERVER                 1000
 #define IDC_EDIT_LOGIN                  1001
@@ -630,7 +631,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        295
+#define _APS_NEXT_RESOURCE_VALUE        296
 #define _APS_NEXT_COMMAND_VALUE         32966
 #define _APS_NEXT_CONTROL_VALUE         1328
 #define _APS_NEXT_SYMED_VALUE           126

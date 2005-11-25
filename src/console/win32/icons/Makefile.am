@@ -19,4 +19,5 @@ EXTRA_DIST = \
 	setup.ico SeverityCritical.ico SeverityMajor.ico SeverityMinor.ico \
 	SeverityNormal.ico SeverityWarning.ico sms.ico sortdown.ico \
 	sort_up.ico tree.ico unsupported.ico user.ico users.ico \
-	nack.ico running.ico pending.ico Tips.ico objtools.ico
+	nack.ico running.ico pending.ico Tips.ico objtools.ico \
+	command.ico

@@ -32,6 +32,9 @@ public:
 
 // Implementation
 protected:
+	int m_iSortDir;
+	int m_iSortMode;
+	int m_iSortImageBase;
 	void EditTool(NXC_OBJECT_TOOL_DETAILS *pData);
 	NXC_OBJECT_TOOL *m_pToolList;
 	DWORD m_dwNumTools;
@@ -55,7 +58,13 @@ protected:
 	afx_msg void OnObjecttoolsDelete();
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
+
+public:
+	NXC_OBJECT_TOOL * GetToolById(DWORD dwId);
+   int SortMode(void) { return m_iSortMode; }
+   int SortDir(void) { return m_iSortDir; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

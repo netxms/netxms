@@ -1010,6 +1010,10 @@ SOURCE=.\res\bmp00001.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\command.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\connect.ico
 # End Source File
 # Begin Source File

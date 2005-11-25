@@ -119,6 +119,7 @@ IDI_IEXPLORER           ICON    DISCARDABLE     "icons\\iexplore.ico"
 IDI_DOCUMENT            ICON    DISCARDABLE     "icons\\document.ico"
 IDI_LPP                 ICON    DISCARDABLE     "icons\\lpp.ico"
 IDI_OBJTOOLS            ICON    DISCARDABLE     "icons\\objtools.ico"
+IDI_COMMAND             ICON    DISCARDABLE     "icons\\command.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

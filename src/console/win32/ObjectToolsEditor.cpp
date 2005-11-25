@@ -14,6 +14,43 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Compare two list view items
+//
+
+static int CALLBACK ToolCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   int iResult;
+   NXC_OBJECT_TOOL *pItem1, *pItem2;
+
+   pItem1 = ((CObjectToolsEditor *)lParamSort)->GetToolById(lParam1);
+   pItem2 = ((CObjectToolsEditor *)lParamSort)->GetToolById(lParam2);
+   if ((pItem1 == NULL) || (pItem2 == NULL))
+      return 0;   // Just a paranoid check, shouldn't happen
+
+   switch(((CObjectToolsEditor *)lParamSort)->SortMode())
+   {
+      case 0:  // ID
+         iResult = COMPARE_NUMBERS(lParam1, lParam2);
+         break;
+      case 1:  // Name
+         iResult = _tcsicmp(pItem1->szName, pItem2->szName);
+         break;
+      case 2:  // Type
+         iResult = _tcsicmp(g_szToolType[pItem1->wType], g_szToolType[pItem2->wType]);
+         break;
+      case 3:  // Description
+         iResult = _tcsicmp(pItem1->szDescription, pItem2->szDescription);
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+   return (((CObjectToolsEditor *)lParamSort)->SortDir() == 0) ? iResult : -iResult;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CObjectToolsEditor
 
@@ -23,11 +60,16 @@ CObjectToolsEditor::CObjectToolsEditor()
 {
    m_dwNumTools = 0;
    m_pToolList = NULL;
+
+   m_iSortMode = theApp.GetProfileInt(_T("ObjToolEditor"), _T("SortMode"), 1);
+   m_iSortDir = theApp.GetProfileInt(_T("ObjToolEditor"), _T("SortDir"), 0);
 }
 
 CObjectToolsEditor::~CObjectToolsEditor()
 {
    NXCDestroyObjectToolList(m_dwNumTools, m_pToolList);
+   theApp.WriteProfileInt(_T("ObjToolEditor"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("ObjToolEditor"), _T("SortDir"), m_iSortDir);
 }
 
 
@@ -47,6 +89,7 @@ BEGIN_MESSAGE_MAP(CObjectToolsEditor, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECTTOOLS_DELETE, OnObjecttoolsDelete)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -70,6 +113,7 @@ BOOL CObjectToolsEditor::PreCreateWindow(CREATESTRUCT& cs)
 int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   LVCOLUMN lvCol;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -79,7 +123,8 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT |
-                        LVS_SHOWSELALWAYS, rect, this, IDC_LIST_VIEW);
+                        LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS,
+                        rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -90,7 +135,10 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_DOCUMENT));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_DOCUMENT));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_IEXPLORER));
-   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_UNKNOWN));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_COMMAND));
+   m_iSortImageBase = m_imageList.GetImageCount();
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
@@ -98,6 +146,12 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 250);
    m_wndListCtrl.InsertColumn(2, "Type", LVCFMT_LEFT, 80);
    m_wndListCtrl.InsertColumn(3, "Description", LVCFMT_LEFT, 300);
+
+   // Mark sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -190,6 +244,7 @@ void CObjectToolsEditor::OnViewRefresh()
             m_wndListCtrl.SetItemText(iItem, 3, m_pToolList[i].szDescription);
          }
       }
+      m_wndListCtrl.SortItems(ToolCompareProc, (LPARAM)this);
    }
    else
    {
@@ -444,4 +499,55 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
       }
    }
    NXCDestroyObjectToolDetails(pData);
+}
+
+
+//
+// Get object tool by it's id
+//
+
+NXC_OBJECT_TOOL *CObjectToolsEditor::GetToolById(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumTools; i++)
+      if (m_pToolList[i].dwId == dwId)
+         return &m_pToolList[i];
+   return NULL;
+}
+
+
+//
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
+//
+
+void CObjectToolsEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = 1 - m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   m_wndListCtrl.SortItems(ToolCompareProc, (LPARAM)this);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
 }
