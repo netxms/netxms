@@ -78,6 +78,31 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V35 to V36
+//
+
+static BOOL H_UpgradeFromV35(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE nodes ADD proxy_node integer\n"
+      "UPDATE nodes SET proxy_node=0\n"
+      "ALTER TABLE object_tools ADD matching_oid varchar(255)\n"
+      "UPDATE object_tools SET matching_oid='#00'\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='36' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V34 to V35
 //
 
@@ -1504,6 +1529,7 @@ static struct
    { 32, H_UpgradeFromV32 },
    { 33, H_UpgradeFromV33 },
    { 34, H_UpgradeFromV34 },
+   { 35, H_UpgradeFromV35 },
    { 0, NULL }
 };
 
@@ -1563,10 +1589,18 @@ void UpgradeDatabase(void)
                break;
             }
             printf("Upgrading from version %d to %d\n", iVersion, iVersion + 1);
+            SQLQuery(_T("BEGIN"));
             if (m_dbUpgradeMap[i].fpProc())
+            {
+               SQLQuery(_T("COMMIT"));
                iVersion++;
+            }
             else
+            {
+               printf("Rolling back last stage due to upgrade errors...\n");
+               SQLQuery(_T("ROLLBACK"));
                break;
+            }
          }
 
          _tprintf(_T("Database upgrade %s\n"), (iVersion == DB_FORMAT_VERSION) ? _T("succeeded") : _T("failed"));

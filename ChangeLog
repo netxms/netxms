@@ -8,6 +8,7 @@
 	- Fixed inconsistencies in object access control configuration
 - Added support for Windows authentication in Microsoft SQL driver
 - Server configuration wizard: added possibility to configure service account
+- Added support for transactions in database manager
 - Fixed issues: #61
 
 

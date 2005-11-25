@@ -425,6 +425,8 @@ void CheckDatabase(void)
 
       if (!bLocked)
       {
+         SQLQuery(_T("BEGIN"));
+
          CheckNodes();
          CheckComponents(_T("interface"), _T("interfaces"));
          CheckComponents(_T("network service"), _T("network_services"));
@@ -434,6 +436,7 @@ void CheckDatabase(void)
          if (m_iNumErrors == 0)
          {
             _tprintf(_T("Database doesn't contain any errors\n"));
+            SQLQuery(_T("COMMIT"));
          }
          else
          {
@@ -442,6 +445,26 @@ void CheckDatabase(void)
                _tprintf(_T("All errors in database was fixed\n"));
             else
                _tprintf(_T("Database still contain errors\n"));
+            if (m_iNumFixes > 0)
+            {
+               _tprintf(_T("Commit changes (Y/N) "));
+               if (GetYesNo())
+               {
+                  _tprintf(_T("Committing changes...\n"));
+                  if (SQLQuery(_T("COMMIT")))
+                     _tprintf(_T("Changes was successfully committed to database\n"));
+               }
+               else
+               {
+                  _tprintf(_T("Rolling back changes...\n"));
+                  if (SQLQuery(_T("ROLLBACK")))
+                     _tprintf(_T("All changes made to database was cancelled\n"));
+               }
+            }
+            else
+            {
+               SQLQuery(_T("ROLLBACK"));
+            }
          }
          bCompleted = TRUE;
       }
