@@ -5087,7 +5087,10 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
                msg.SetVariable(dwId + 5, pszStr);
                free(pszStr);
 
-               msg.SetVariable(dwId + 6, DBGetField(hResult, i, 6));
+               pszStr = _tcsdup(DBGetField(hResult, i, 6));
+               DecodeSQLString(pszStr);
+               msg.SetVariable(dwId + 6, pszStr);
+               free(pszStr);
 
                dwNumMsgRec++;
                dwId += 10;
