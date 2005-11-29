@@ -3,9 +3,14 @@
 *************
 
 - Added new column proxy_node to "nodes" table:
-	ALTER TABLE nodes ADD proxy_node integer not null
+	ALTER TABLE nodes ADD proxy_node integer not null;
+	UPDATE nodes SET proxy_node=0;
 - Added new column matching_oid to "object_tools" table:
-	ALTER TABLE object_tools ADD matching_oid varchar(255) not null
+	ALTER TABLE object_tools ADD matching_oid varchar(255) not null;
+	UPDATE object_tools SET matching_oid='#00';
+- New configuration parameters added:
+	INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+		VALUES ('CapabilityExpirationTime','604800',1,0);
 
 
 *************

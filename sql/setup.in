@@ -116,6 +116,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('StatusSingleThreshold','75',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('StatusThresholds','503C2814',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('CapabilityExpirationTime','604800',1,0);  // In seconds
 
 
 /*
