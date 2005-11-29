@@ -209,6 +209,9 @@ BOOL CConsoleApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
+   // Initialize speach engine
+   SpeakerInit();
+
 	// Change the registry key under which our settings are stored.
 	SetRegistryKey(_T("NetXMS"));
 
@@ -418,6 +421,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hLPPEditorAccel);
 
    CloseHandle(g_mutexActionListAccess);
+
+   SpeakerShutdown();
 
    return CWinApp::ExitInstance();
 }

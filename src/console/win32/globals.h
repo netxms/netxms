@@ -305,6 +305,15 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction);
 
 
 //
+// Speach functions
+//
+
+void SpeakerInit(void);
+void SpeakerShutdown(void);
+BOOL SpeakText(TCHAR *pszText);
+
+
+//
 // Variables
 //
 

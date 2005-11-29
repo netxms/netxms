@@ -333,6 +333,8 @@ BEGIN
         MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
         MENUITEM SEPARATOR
         MENUITEM "&Show nodes\tAlt+N",          ID_ALARM_SHOWNODES
+        MENUITEM "Enable &voice announcements\tAlt+V", 
+                                                ID_ALARM_ENABLE_SPEAKER
     END
     POPUP "Hidden"
     BEGIN

@@ -96,6 +96,7 @@ EXTRA_DIST = \
 	RuleList.cpp RuleList.h \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \
+	speaker.cpp \
 	StdAfx.cpp StdAfx.h \
 	SyslogBrowser.cpp SyslogBrowser.h \
 	TableView.cpp TableView.h \

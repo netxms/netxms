@@ -39,6 +39,7 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bEnableSpeaker;
 	void RefreshAlarmList(void);
 	BOOL IsNodeExist(DWORD dwNodeId);
 	void AddNodeToTree(DWORD dwNodeId);
@@ -80,6 +81,8 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnAlarmShownodes();
 	afx_msg void OnUpdateAlarmShownodes(CCmdUI* pCmdUI);
+	afx_msg void OnAlarmEnableSpeaker();
+	afx_msg void OnUpdateAlarmEnableSpeaker(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

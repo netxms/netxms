@@ -633,6 +633,7 @@
 #define ID_OBJECTTOOLS_NEW              32960
 #define ID_OBJECTTOOLS_EDIT             32961
 #define ID_OBJECTTOOLS_DELETE           32962
+#define ID_ALARM_ENABLE_SPEAKER         32966
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -642,7 +643,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        297
-#define _APS_NEXT_COMMAND_VALUE         32966
+#define _APS_NEXT_COMMAND_VALUE         32967
 #define _APS_NEXT_CONTROL_VALUE         1337
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
