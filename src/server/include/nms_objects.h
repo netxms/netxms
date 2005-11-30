@@ -508,6 +508,8 @@ protected:
    time_t m_tLastStatusPoll;
    time_t m_tLastConfigurationPoll;
    time_t m_tLastRTUpdate;
+   time_t m_tFailTimeSNMP;
+   time_t m_tFailTimeAgent;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_mutexRTAccess;

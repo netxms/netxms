@@ -700,16 +700,21 @@ void Node::CalculateCompoundStatus(void)
 
 void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
-   DWORD i, dwPollListSize;
+   DWORD i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
    BOOL bAllDown;
    Queue *pQueue;    // Delayed event queue
+   time_t tNow, tExpire;
 
    pQueue = new Queue;
    SetPollerInfo(nPoller, "wait for lock");
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, "Starting status poll for node %s\r\n", m_szName);
+
+   // Read capability expiration time and current time
+   tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
+   tNow = time(NULL);
 
    // Check SNMP agent connectivity
    if (m_dwFlags & NF_IS_SNMP)
@@ -733,11 +738,23 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       }
       else
       {
-         if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))
+         SendPollerMsg(dwRqId, "SNMP agent unreacheable\r\n");
+         if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
+         {
+            if ((tNow > m_tFailTimeSNMP + tExpire) &&
+                (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+            {
+               m_dwFlags &= ~NF_IS_SNMP;
+               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+               m_szObjectId[0] = 0;
+               SendPollerMsg(dwRqId, "Attribute isSNMP set to FALSE\r\n");
+            }
+         }
+         else
          {
             m_dwDynamicFlags |= NDF_SNMP_UNREACHEABLE;
             PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
-            SendPollerMsg(dwRqId, "SNMP agent unreacheable\r\n");
+            m_tFailTimeSNMP = tNow;
          }
       }
    }
@@ -764,11 +781,24 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       }
       else
       {
-         if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))
+         SendPollerMsg(dwRqId, "NetXMS agent unreacheable\r\n");
+         if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
+         {
+            if ((tNow > m_tFailTimeAgent + tExpire) &&
+                (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+            {
+               m_dwFlags &= ~NF_IS_NATIVE_AGENT;
+               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+               m_szPlatformName[0] = 0;
+               m_szAgentVersion[0] = 0;
+               SendPollerMsg(dwRqId, "Attribute isNetXMSAgent set to FALSE\r\n");
+            }
+         }
+         else
          {
             m_dwDynamicFlags |= NDF_AGENT_UNREACHEABLE;
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
-            SendPollerMsg(dwRqId, "NetXMS agent unreacheable\r\n");
+            m_tFailTimeAgent = tNow;
          }
       }
       delete pAgentConn;
@@ -875,6 +905,14 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    SetPollerInfo(nPoller, "cleanup");
    if (pPollerNode != NULL)
       pPollerNode->DecRefCount();
+
+   if (dwOldFlags != m_dwFlags)
+   {
+      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
+      LockData();
+      Modify();
+      UnlockData();
+   }
 
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);

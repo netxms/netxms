@@ -4,6 +4,7 @@
 
 - Implemented agent proxy
 - Object tools fully implemented (including configuration)
+- Added "node capability expiration" feature
 - Windows console:
 	- Fixed inconsistencies in object access control configuration
 	- Added voice notifications for alarms (using SAPI)

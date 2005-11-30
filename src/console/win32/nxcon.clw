@@ -2185,8 +2185,9 @@ Type=1
 Class=?
 Command1=ID_ALARM_ACKNOWLEGE
 Command2=ID_ALARM_SHOWNODES
-Command3=ID_ALARM_DELETE
-CommandCount=3
+Command3=ID_ALARM_ENABLE_SPEAKER
+Command4=ID_ALARM_DELETE
+CommandCount=4
 
 [DLG:IDD_EDIT_RULE_SEVERITY (English (U.S.))]
 Type=1
