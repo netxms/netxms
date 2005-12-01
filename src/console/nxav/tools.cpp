@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Alarm Viewer
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,18 +99,4 @@ void CreateMonitorList(void)
 {
    g_dwNumMonitors = 0;
    EnumDisplayMonitors(NULL, NULL, MonitorEnumCallback, 0);
-}
-
-
-//
-// Enable or disable dialog item
-//
-
-void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable)
-{
-   CWnd *pCtrl;
-
-   pCtrl = pWnd->GetDlgItem(nCtrl);
-   if (pCtrl != NULL)
-      pCtrl->EnableWindow(bEnable);
 }

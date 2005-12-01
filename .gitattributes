@@ -378,8 +378,6 @@ src/console/nxav/FlatButton.cpp -text
 src/console/nxav/FlatButton.h -text
 src/console/nxav/InfoLine.cpp -text
 src/console/nxav/InfoLine.h -text
-src/console/nxav/LoginDialog.cpp -text
-src/console/nxav/LoginDialog.h -text
 src/console/nxav/MainFrm.cpp -text
 src/console/nxav/MainFrm.h -text
 src/console/nxav/Makefile.am -text
@@ -408,7 +406,6 @@ src/console/nxav/res/ack.png -text
 src/console/nxav/res/alarm.wav -text svneol=unset#unset
 src/console/nxav/res/background.jpg -text
 src/console/nxav/res/critical.ico -text
-src/console/nxav/res/login.bmp -text
 src/console/nxav/res/major.ico -text
 src/console/nxav/res/minor.ico -text
 src/console/nxav/res/normal.ico -text
@@ -419,6 +416,23 @@ src/console/nxav/res/small_logo.bmp -text
 src/console/nxav/res/warning.ico -text
 src/console/nxav/resource.h -text
 src/console/nxav/tools.cpp -text
+src/console/nxuilib/LoginDialog.cpp -text
+src/console/nxuilib/LoginDialog.h -text
+src/console/nxuilib/Makefile.am -text
+src/console/nxuilib/StdAfx.cpp -text
+src/console/nxuilib/StdAfx.h -text
+src/console/nxuilib/nxuilib.clw -text
+src/console/nxuilib/nxuilib.cpp -text
+src/console/nxuilib/nxuilib.def -text
+src/console/nxuilib/nxuilib.dsp -text
+src/console/nxuilib/nxuilib.dsw -text
+src/console/nxuilib/nxuilib.h -text
+src/console/nxuilib/nxuilib.rc -text
+src/console/nxuilib/res/Makefile.am -text
+src/console/nxuilib/res/login.bmp -text
+src/console/nxuilib/res/nxuilib.rc2 -text
+src/console/nxuilib/resource.h -text
+src/console/nxuilib/tools.cpp -text
 src/console/win32/ActionEditor.cpp -text
 src/console/win32/ActionEditor.h -text
 src/console/win32/ActionSelDlg.cpp -text
@@ -511,8 +525,6 @@ src/console/win32/LastValuesPropDlg.cpp -text
 src/console/win32/LastValuesPropDlg.h -text
 src/console/win32/LastValuesView.cpp -text
 src/console/win32/LastValuesView.h -text
-src/console/win32/LoginDialog.cpp -text
-src/console/win32/LoginDialog.h -text
 src/console/win32/MIBBrowserDlg.cpp -text
 src/console/win32/MIBBrowserDlg.h -text
 src/console/win32/MainFrm.cpp -text
@@ -693,7 +705,6 @@ src/console/win32/res/Makefile.am -text
 src/console/win32/res/Toolbar.bmp -text
 src/console/win32/res/any.bmp -text
 src/console/win32/res/down_arrow.bmp -text
-src/console/win32/res/login.bmp -text
 src/console/win32/res/none.bmp -text
 src/console/win32/res/nxcon.ico -text
 src/console/win32/res/nxcon.rc2 -text

@@ -58,20 +58,6 @@ CSize GetWindowSize(CWnd *pWnd)
 
 
 //
-// Enable or disable dialog item
-//
-
-void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable)
-{
-   CWnd *pCtrl;
-
-   pCtrl = pWnd->GetDlgItem(nCtrl);
-   if (pCtrl != NULL)
-      pCtrl->EnableWindow(bEnable);
-}
-
-
-//
 // Check if dialog button is checked
 //
 

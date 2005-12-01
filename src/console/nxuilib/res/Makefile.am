@@ -8,21 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
-	SeverityCritical.ico \
-	SeverityMajor.ico \
-	SeverityMinor.ico \
-	SeverityNormal.ico \
-	SeverityWarning.ico \
-	ack.png \
-	alarm.wav \
-	background.jpg \
-	critical.ico \
-	major.ico \
-	minor.ico \
-	normal.ico \
-	nxav.ico \
-	nxav.rc2 \
-	processing.ico \
-	small_logo.bmp \
-	warning.ico
+EXTRA_DIST = login.bmp nxuilib.rc2

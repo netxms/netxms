@@ -5,7 +5,6 @@
 #include "nxcon.h"
 
 #include "MainFrm.h"
-#include "LoginDialog.h"
 #include "CreateContainerDlg.h"
 #include "CreateNodeDlg.h"
 #include "CreateTemplateDlg.h"

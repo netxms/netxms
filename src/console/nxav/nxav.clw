@@ -8,31 +8,28 @@ NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxav.h"
 LastPage=0
 
-ClassCount=11
+ClassCount=10
 Class1=CAlarmViewApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=11
+ResourceCount=10
 Resource1=IDD_REQUEST_WAIT
 Resource2=IDD_ABOUTBOX
 Class2=CChildView
 Class5=CAlarmList
 Class6=CInfoLine
 Class7=CRequestProcessingDlg
-Class8=CLoginDialog
-Resource3=IDD_LOGIN
+Resource3=IDR_MAINFRAME (English (U.S.))
 Resource4=IDR_MAINFRAME
-Class9=CAlarmBrowser
-Class10=CFlatButton
+Class9=CFlatButton
+Class10=CSettingsDlg
 Resource5=IDM_CONTEXT
-Resource6=IDD_LOGIN (English (U.S.))
 Resource7=IDD_ABOUTBOX (English (U.S.))
-Resource8=IDR_MAINFRAME (English (U.S.))
+Resource8=IDD_SETTINGS (English (U.S.))
 Resource9=IDD_REQUEST_WAIT (English (U.S.))
-Resource10=IDD_SETTINGS (English (U.S.))
-Class11=CSettingsDlg
-Resource11=IDM_CONTEXT (English (U.S.))
+Resource10=IDM_CONTEXT (English (U.S.))
+Class8=CAlarmBrowser
 
 [CLS:CAlarmViewApp]
 Type=0
@@ -122,14 +119,6 @@ BaseClass=CDialog
 Filter=D
 LastObject=CRequestProcessingDlg
 
-[CLS:CLoginDialog]
-Type=0
-HeaderFile=LoginDialog.h
-ImplementationFile=LoginDialog.cpp
-BaseClass=CDialog
-Filter=D
-LastObject=CLoginDialog
-
 [MNU:IDM_CONTEXT]
 Type=1
 Class=?
@@ -137,26 +126,6 @@ Command1=ID_VIEW_REFRESH
 Command2=ID_CMD_EXIT
 Command3=ID_CMD_SETTINGS
 CommandCount=3
-
-[DLG:IDD_LOGIN]
-Type=1
-Class=CLoginDialog
-ControlCount=15
-Control1=IDC_EDIT_SERVER,edit,1350631552
-Control2=IDC_EDIT_LOGIN,edit,1350631552
-Control3=IDC_EDIT_PASSWORD,edit,1350631584
-Control4=IDOK,button,1342242817
-Control5=IDCANCEL,button,1342242816
-Control6=IDC_STATIC,static,1342179342
-Control7=IDC_STATIC,static,1342308352
-Control8=IDC_STATIC,static,1342177296
-Control9=IDC_STATIC,static,1342308352
-Control10=IDC_STATIC,static,1342308352
-Control11=IDC_STATIC,static,1342308352
-Control12=IDC_STATIC,static,1342308352
-Control13=IDC_STATIC,static,1342177296
-Control14=IDC_RADIO_CLEAR,button,1342308361
-Control15=IDC_RADIO_BLOWFISH,button,1342177289
 
 [CLS:CAlarmBrowser]
 Type=0
@@ -207,26 +176,6 @@ ControlCount=2
 Control1=IDC_STATIC,static,1342177283
 Control2=IDC_INFO_TEXT,static,1342308352
 
-[DLG:IDD_LOGIN (English (U.S.))]
-Type=1
-Class=CLoginDialog
-ControlCount=15
-Control1=IDC_EDIT_SERVER,edit,1350631552
-Control2=IDC_EDIT_LOGIN,edit,1350631552
-Control3=IDC_EDIT_PASSWORD,edit,1350631584
-Control4=IDOK,button,1342242817
-Control5=IDCANCEL,button,1342242816
-Control6=IDC_STATIC,static,1342179342
-Control7=IDC_STATIC,static,1342308352
-Control8=IDC_STATIC,static,1342177296
-Control9=IDC_STATIC,static,1342308352
-Control10=IDC_STATIC,static,1342308352
-Control11=IDC_STATIC,static,1342308352
-Control12=IDC_STATIC,static,1342308352
-Control13=IDC_STATIC,static,1342177296
-Control14=IDC_RADIO_CLEAR,button,1342308361
-Control15=IDC_RADIO_BLOWFISH,button,1342177289
-
 [MNU:IDM_CONTEXT (English (U.S.))]
 Type=1
 Class=?
@@ -240,9 +189,9 @@ Type=1
 Class=CSettingsDlg
 ControlCount=10
 Control1=IDC_CHECK_AUTOLOGIN,button,1342242819
-Control2=IDC_EDIT_SERVER,edit,1350631552
+Control2=IDC_EDIT_SERVER_NAME,edit,1350631552
 Control3=IDC_EDIT_USER,edit,1350631552
-Control4=IDC_EDIT_PASSWORD,edit,1350631584
+Control4=IDC_EDIT_PASSWD,edit,1350631584
 Control5=IDOK,button,1342242817
 Control6=IDCANCEL,button,1342242816
 Control7=IDC_STATIC,button,1342177287

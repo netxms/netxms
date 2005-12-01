@@ -16,6 +16,7 @@
 
 #include <nms_common.h>
 #include <nxclapi.h>
+#include <nxwinui.h>
 
 #include "globals.h"
 

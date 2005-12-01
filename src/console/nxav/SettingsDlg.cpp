@@ -32,9 +32,9 @@ void CSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSettingsDlg)
 	DDX_Check(pDX, IDC_CHECK_AUTOLOGIN, m_bAutoLogin);
-	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_strPassword);
+	DDX_Text(pDX, IDC_EDIT_PASSWD, m_strPassword);
 	DDV_MaxChars(pDX, m_strPassword, 63);
-	DDX_Text(pDX, IDC_EDIT_SERVER, m_strServer);
+	DDX_Text(pDX, IDC_EDIT_SERVER_NAME, m_strServer);
 	DDV_MaxChars(pDX, m_strServer, 63);
 	DDX_Text(pDX, IDC_EDIT_USER, m_strUser);
 	DDV_MaxChars(pDX, m_strUser, 63);
@@ -72,7 +72,7 @@ void CSettingsDlg::EnableControls()
    EnableDlgItem(this, IDC_STATIC_SERVER, bEnable);
    EnableDlgItem(this, IDC_STATIC_USER, bEnable);
    EnableDlgItem(this, IDC_STATIC_PASSWORD, bEnable);
-   EnableDlgItem(this, IDC_EDIT_SERVER, bEnable);
+   EnableDlgItem(this, IDC_EDIT_SERVER_NAME, bEnable);
    EnableDlgItem(this, IDC_EDIT_USER, bEnable);
-   EnableDlgItem(this, IDC_EDIT_PASSWORD, bEnable);
+   EnableDlgItem(this, IDC_EDIT_PASSWD, bEnable);
 }

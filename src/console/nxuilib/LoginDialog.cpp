@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "nxcon.h"
+#include "nxuilib.h"
 #include "LoginDialog.h"
 
 #ifdef _DEBUG
@@ -34,6 +34,8 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
    lb.lbStyle = BS_NULL;
    lb.lbHatch = 0;
    m_hNullBrush = CreateBrushIndirect(&lb);
+
+   m_dwFlags = 0;
 }
 
 CLoginDialog::~CLoginDialog()
@@ -86,6 +88,16 @@ BOOL CLoginDialog::OnInitDialog()
                         VARIABLE_PITCH | FF_DONTCARE, "Verdana");
 
    SetDlgItemText(IDC_STATIC_VERSION, _T("Ver. ") NETXMS_VERSION_STRING);
+
+   if (m_dwFlags & LOGIN_DLG_NO_OBJECT_CACHE)
+   {
+      EnableDlgItem(this, IDC_CHECK_CACHE, FALSE);
+      EnableDlgItem(this, IDC_CHECK_NOCACHE, FALSE);
+   }
+   if (m_dwFlags & LOGIN_DLG_NO_ENCRYPTION)
+   {
+      EnableDlgItem(this, IDC_CHECK_ENCRYPT, FALSE);
+   }
 	
    if (m_szLogin.IsEmpty() || m_szServer.IsEmpty())
 		return TRUE;

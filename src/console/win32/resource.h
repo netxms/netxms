@@ -34,10 +34,9 @@
 #define IDI_RULEMGR                     134
 #define IDI_EVENT                       135
 #define IDI_USER_GROUP                  136
+#define IDC_EDIT_LOGIN_NAME             137
 #define IDS_MAPFRAME                    138
 #define IDI_NETMAP                      139
-#define IDD_LOGIN                       140
-#define IDB_LOGIN                       142
 #define IDD_PROGRESS                    143
 #define IDI_TREE                        148
 #define IDD_OBJECT_PROPERTIES           149
@@ -173,9 +172,6 @@
 #define IDI_COMMAND                     295
 #define IDD_OBJTOOL_OPTIONS             296
 #define ID_EDIT_BOX                     525
-#define IDC_EDIT_SERVER                 1000
-#define IDC_EDIT_LOGIN                  1001
-#define IDC_EDIT_PASSWORD               1002
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
 #define IDC_LIST_VIEW                   1005
@@ -399,8 +395,6 @@
 #define IDC_EDIT_IPADDR                 1233
 #define IDC_BUTTON_UNBIND_PARENT        1236
 #define IDC_BUTTON_UNBIND_CHILD         1237
-#define IDC_STATIC_VERSION              1237
-#define IDC_CHECK_CACHE                 1239
 #define IDC_RADIO_FIXED                 1240
 #define IDC_RADIO_FROM_NOW              1241
 #define IDC_DATE_FROM                   1242
@@ -411,8 +405,6 @@
 #define IDC_COMBO_UNITS                 1247
 #define IDC_STATIC_FROM                 1248
 #define IDC_STATIC_TO                   1249
-#define IDC_CHECK_VERSION_MATCH         1250
-#define IDC_CHECK_NOCACHE               1253
 #define IDC_RADIO_UNBIND                1254
 #define IDC_RADIO_REMOVE                1255
 #define IDC_EDIT_TIME                   1258
@@ -420,7 +412,6 @@
 #define IDC_STATIC_RCPT                 1261
 #define IDC_STATIC_SUBJ                 1262
 #define IDC_STATIC_DATA                 1263
-#define IDC_CHECK_ENCRYPT               1264
 #define IDC_STATIC_ENUM                 1264
 #define IDC_EDIT_FILE                   1265
 #define IDC_STATIC_REGEX                1265

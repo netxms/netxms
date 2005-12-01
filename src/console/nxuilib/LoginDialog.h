@@ -7,13 +7,18 @@
 // LoginDialog.h : header file
 //
 
+#define LOGIN_DLG_NO_OBJECT_CACHE   0x0001
+#define LOGIN_DLG_NO_ENCRYPTION     0x0002
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CLoginDialog dialog
 
-class CLoginDialog : public CDialog
+class NXUILIB_EXPORTABLE CLoginDialog : public CDialog
 {
 // Construction
 public:
+	DWORD m_dwFlags;
 	CLoginDialog(CWnd* pParent = NULL);   // standard constructor
    virtual ~CLoginDialog();
 

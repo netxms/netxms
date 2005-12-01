@@ -5,7 +5,6 @@
 #include "nxav.h"
 
 #include "MainFrm.h"
-#include "LoginDialog.h"
 #include "SettingsDlg.h"
 
 #ifdef _DEBUG
@@ -80,6 +79,7 @@ BOOL CAlarmViewApp::InitInstance()
    _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    _tcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
+   g_dwOptions = GetProfileInt(_T("Connection"), _T("Options"), 0);
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
@@ -96,20 +96,33 @@ BOOL CAlarmViewApp::InitInstance()
       {
          CLoginDialog dlg;
 
+         dlg.m_dwFlags = LOGIN_DLG_NO_OBJECT_CACHE;
          dlg.m_szServer = g_szServer;
          dlg.m_szLogin = g_szLogin;
          dlg.m_szPassword = g_szPassword;
+         dlg.m_bEncrypt = (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE;
+         dlg.m_bNoCache = FALSE;
+         dlg.m_bClearCache = FALSE;
+         dlg.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
          if (dlg.DoModal() != IDOK)
             return FALSE;
          nx_strncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
          nx_strncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
          nx_strncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
+         if (dlg.m_bEncrypt)
+            g_dwOptions |= OPT_ENCRYPT_CONNECTION;
+         else
+            g_dwOptions &= ~OPT_ENCRYPT_CONNECTION;
+         if (dlg.m_bMatchVersion)
+            g_dwOptions |= OPT_MATCH_SERVER_VERSION;
+         else
+            g_dwOptions &= ~OPT_MATCH_SERVER_VERSION;
       }
 
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
-      //WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
+      WriteProfileInt(_T("Connection"), _T("Options"), g_dwOptions);
 
       // Connect
       dwResult = DoLogin();

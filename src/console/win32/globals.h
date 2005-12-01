@@ -278,7 +278,6 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText = "Unknown");
 char *TranslateUNIXText(const char *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
-void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 BOOL IsButtonChecked(CDialog *pWnd, int nCtrl);
 BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize);
 long ExtractWindowParamLong(TCHAR *pszStr, TCHAR *pszParam, long nDefault);

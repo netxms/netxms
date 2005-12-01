@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnetxms.lib libnxcl.lib winmm.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
+# ADD LINK32 libnetxms.lib libnxcl.lib nxuilib.lib winmm.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release" /libpath:"..\nxuilib\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -84,7 +84,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnetxms.lib libnxcl.lib winmm.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
+# ADD LINK32 libnetxms.lib libnxcl.lib nxuilib.lib winmm.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug" /libpath:"..\nxuilib\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -119,10 +119,6 @@ SOURCE=.\globals.cpp
 # Begin Source File
 
 SOURCE=.\InfoLine.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\LoginDialog.cpp
 # End Source File
 # Begin Source File
 
@@ -175,10 +171,6 @@ SOURCE=.\InfoLine.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\LoginDialog.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\MainFrm.h
 # End Source File
 # Begin Source File
@@ -219,15 +211,19 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\ack.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\alarm.wav
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\background.jpg
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\critical.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\login.bmp
 # End Source File
 # Begin Source File
 
@@ -282,37 +278,5 @@ SOURCE=.\res\small_logo.bmp
 SOURCE=.\res\warning.ico
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\res\ack.png
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\alarm.wav
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\critical.png
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\major.png
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\minor.png
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\normal.png
-# End Source File
-# Begin Source File
-
-SOURCE=.\ReadMe.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\warning.png
-# End Source File
 # End Target
 # End Project

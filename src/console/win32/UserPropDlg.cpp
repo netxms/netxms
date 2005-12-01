@@ -50,7 +50,7 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_VIEW_EVENTDB, m_bViewEventDB);
 	DDX_Text(pDX, IDC_EDIT_DESCRIPTION, m_strDescription);
 	DDV_MaxChars(pDX, m_strDescription, 255);
-	DDX_Text(pDX, IDC_EDIT_LOGIN, m_strLogin);
+	DDX_Text(pDX, IDC_EDIT_LOGIN_NAME, m_strLogin);
 	DDV_MaxChars(pDX, m_strLogin, 63);
 	DDX_Text(pDX, IDC_EDIT_NAME, m_strFullName);
 	DDV_MaxChars(pDX, m_strFullName, 127);

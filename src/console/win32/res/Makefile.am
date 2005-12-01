@@ -9,5 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	any.bmp down_arrow.bmp login.bmp none.bmp \
+	any.bmp down_arrow.bmp none.bmp \
 	nxcon.ico nxcon.rc2 Toolbar.bmp up_arrow.bmp

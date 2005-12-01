@@ -42,6 +42,14 @@
 
 
 //
+// Login options
+//
+
+#define OPT_MATCH_SERVER_VERSION    0x0001
+#define OPT_ENCRYPT_CONNECTION      0x0002
+
+
+//
 // Functions
 //
 
@@ -55,7 +63,6 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
                     void *pArg5, void *pArg6, char *pszInfoText);
 BOOL FileFromResource(UINT nResId, TCHAR *pszFileName);
 void CreateMonitorList(void);
-void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 
 
 //
@@ -72,6 +79,7 @@ extern TCHAR g_szWorkDir[];
 extern COLORREF g_rgbInfoLineButtons;
 extern COLORREF g_rgbInfoLineBackground;
 extern DWORD g_dwFlags;
+extern DWORD g_dwOptions;
 extern MONITORINFOEX *g_pMonitorList;
 extern DWORD g_dwNumMonitors;
 

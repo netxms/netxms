@@ -18,8 +18,7 @@
 #define IDI_SEVERITY_MAJOR              137
 #define IDI_SEVERITY_MINOR              138
 #define IDI_SEVERITY_NORMAL             139
-#define IDD_LOGIN                       140
-#define IDB_LOGIN                       140
+#define IDC_EDIT_PASSWD                 140
 #define IDF_BACKGROUND                  141
 #define IDF_WARNING                     142
 #define IDF_CRITICAL                    143
@@ -28,12 +27,10 @@
 #define IDF_NORMAL                      146
 #define IDF_ACK                         147
 #define IDR_SND_ALARM                   149
+#define IDC_EDIT_SERVER_NAME            150
 #define IDD_SETTINGS                    151
 #define IDC_INFO_TEXT                   1000
-#define IDC_EDIT_SERVER                 1000
-#define IDC_EDIT_LOGIN                  1001
 #define IDC_CHECK_AUTOLOGIN             1001
-#define IDC_EDIT_PASSWORD               1002
 #define IDC_STATIC_SERVER               1003
 #define IDC_STATIC_USER                 1004
 #define IDC_STATIC_PASSWORD             1005

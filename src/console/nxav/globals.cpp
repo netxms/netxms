@@ -39,6 +39,7 @@ NXC_SESSION g_hSession = NULL;
 TCHAR g_szServer[MAX_PATH] = _T("localhost");
 TCHAR g_szLogin[MAX_USER_NAME] = _T("guest");
 TCHAR g_szPassword[MAX_SECRET_LENGTH] = _T("");
+DWORD g_dwOptions = 0;
 
 
 //

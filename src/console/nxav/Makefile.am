@@ -13,7 +13,6 @@ EXTRA_DIST = \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	FlatButton.cpp FlatButton.h \
 	InfoLine.cpp InfoLine.h \
-	LoginDialog.cpp LoginDialog.h \
 	MainFrm.cpp MainFrm.h \
 	RequestProcessingDlg.cpp RequestProcessingDlg.h \
 	SettingsDlg.cpp SettingsDlg.h \
