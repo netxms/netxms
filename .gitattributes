@@ -163,6 +163,7 @@ include/nxnt.h -text
 include/nxqueue.h -text
 include/nxsnmp.h -text
 include/nxtools.h -text
+include/nxwinui.h -text
 include/unicode.h -text
 m4/Makefile.am -text
 netware/Makefile.am -text
