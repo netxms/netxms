@@ -45,4 +45,9 @@
 
 void NXUILIB_EXPORTABLE EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 
+void NXUILIB_EXPORTABLE SpeakerInit(void);
+void NXUILIB_EXPORTABLE SpeakerShutdown(void);
+BOOL NXUILIB_EXPORTABLE SpeakText(TCHAR *pszText);
+
+
 #endif

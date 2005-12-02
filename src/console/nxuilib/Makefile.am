@@ -11,11 +11,12 @@
 SUBDIRS = res
 EXTRA_DIST = \
 	LoginDialog.cpp LoginDialog.h \
-	StdAfx.cpp StdAfx.h \
 	nxuilib.clw \
 	nxuilib.cpp \
 	nxuilib.def \
 	nxuilib.dsp nxuilib.dsw \
 	nxuilib.h \
 	nxuilib.rc resource.h \
+	speaker.cpp \
+	StdAfx.cpp StdAfx.h \
 	tools.cpp

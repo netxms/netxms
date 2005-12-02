@@ -12,7 +12,6 @@
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 #define _WINSOCKAPI_    /* Prevent inclusion of winsock.h in windows.h */
-#define _WIN32_DCOM
 
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
@@ -25,7 +24,6 @@
 #include <winsock2.h>
 #include <afxsock.h>		// MFC socket extensions
 #include <afxhtml.h>
-#include <comdef.h>
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

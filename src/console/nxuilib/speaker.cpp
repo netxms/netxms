@@ -23,7 +23,7 @@
 **/
 
 #include "stdafx.h"
-#include "nxcon.h"
+#include "nxuilib.h"
 #include <nxqueue.h>
 #include <sphelper.h>
 
@@ -83,7 +83,7 @@ static void SpeakerThread(void *pArg)
 // Initialize speaker
 //
 
-void SpeakerInit(void)
+void NXUILIB_EXPORTABLE SpeakerInit(void)
 {
    _beginthread(SpeakerThread, 0, NULL);
 }
@@ -93,7 +93,7 @@ void SpeakerInit(void)
 // Shutdown speaker
 //
 
-void SpeakerShutdown(void)
+void NXUILIB_EXPORTABLE SpeakerShutdown(void)
 {
    m_pSpeakerQueue->Clear();
    m_pSpeakerQueue->Put(INVALID_POINTER_VALUE);
@@ -104,7 +104,7 @@ void SpeakerShutdown(void)
 // Queue text for processing by speaker
 //
 
-BOOL SpeakText(TCHAR *pszText)
+BOOL NXUILIB_EXPORTABLE SpeakText(TCHAR *pszText)
 {
    if (m_pSpeakerQueue == NULL)
       return FALSE;

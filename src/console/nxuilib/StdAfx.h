@@ -11,6 +11,7 @@
 #endif // _MSC_VER > 1000
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
+#define _WIN32_DCOM
 
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
@@ -34,6 +35,8 @@
 #ifndef _AFX_NO_AFXCMN_SUPPORT
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
+
+#include <comdef.h>
 
 
 //{{AFX_INSERT_LOCATION}}
