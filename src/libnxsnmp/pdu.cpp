@@ -321,25 +321,28 @@ BOOL SNMP_PDU::ParseTrapPDU(BYTE *pData, DWORD dwPDULength)
    if (bResult)
       bResult = ParseVarBinds(pbCurrPos, dwPDULength);
 
-   if (bResult && (m_iTrapType < 6))
+   if (bResult)
    {
-      static DWORD pdwStdOid[6][10] =
+      if (m_iTrapType < 6)
       {
-         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 1 },   // cold start
-         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 2 },   // warm start
-         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 3 },   // link down
-         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 4 },   // link up
-         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 5 },   // authentication failure
-         { 1, 3, 6, 1, 6, 3, 1, 1, 5, 6 }    // EGP neighbor loss (obsolete)
-      };
+         static DWORD pdwStdOid[6][10] =
+         {
+            { 1, 3, 6, 1, 6, 3, 1, 1, 5, 1 },   // cold start
+            { 1, 3, 6, 1, 6, 3, 1, 1, 5, 2 },   // warm start
+            { 1, 3, 6, 1, 6, 3, 1, 1, 5, 3 },   // link down
+            { 1, 3, 6, 1, 6, 3, 1, 1, 5, 4 },   // link up
+            { 1, 3, 6, 1, 6, 3, 1, 1, 5, 5 },   // authentication failure
+            { 1, 3, 6, 1, 6, 3, 1, 1, 5, 6 }    // EGP neighbor loss (obsolete)
+         };
 
-      // For standard trap types, create standard V2 Enterprise ID
-      m_pEnterprise->SetValue(pdwStdOid[m_iTrapType], 10);
-   }
-   else
-   {
-      m_pEnterprise->Extend(0);
-      m_pEnterprise->Extend(m_iSpecificTrap);
+         // For standard trap types, create standard V2 Enterprise ID
+         m_pEnterprise->SetValue(pdwStdOid[m_iTrapType], 10);
+      }
+      else
+      {
+         m_pEnterprise->Extend(0);
+         m_pEnterprise->Extend(m_iSpecificTrap);
+      }
    }
 
    return bResult;
