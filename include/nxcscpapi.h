@@ -183,7 +183,7 @@ extern "C" {
 int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
                                          CSCP_ENCRYPTION_CONTEXT **ppCtx,
-                                         BYTE *pDecryptionBuffer);
+                                         BYTE *pDecryptionBuffer, DWORD dwTimeout);
 CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);

@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.12 2005-08-17 12:09:25 victor Exp $ */
+/* $Id: admin.cpp,v 1.13 2005-12-03 22:53:04 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -50,13 +50,13 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL);
+   RecvCSCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
    ctx.hSocket = sock;
    ctx.pMsg = &response;
 
    while(1)
    {
-      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL);
+      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, 0);
       if (iError <= 0)
          break;   // Communication error or closed connection
 
@@ -164,6 +164,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/08/17 12:09:25  victor
+responce changed to response (issue #37)
+
 Revision 1.11  2005/06/19 21:39:20  victor
 Encryption between server and agent fully working
 

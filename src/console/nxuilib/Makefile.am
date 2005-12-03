@@ -10,6 +10,7 @@
 
 SUBDIRS = res
 EXTRA_DIST = \
+	AlarmSoundDlg.cpp AlarmSoundDlg.h \
 	LoginDialog.cpp LoginDialog.h \
 	nxuilib.clw \
 	nxuilib.cpp \

@@ -417,6 +417,8 @@ src/console/nxav/res/small_logo.bmp -text
 src/console/nxav/res/warning.ico -text
 src/console/nxav/resource.h -text
 src/console/nxav/tools.cpp -text
+src/console/nxuilib/AlarmSoundDlg.cpp -text
+src/console/nxuilib/AlarmSoundDlg.h -text
 src/console/nxuilib/LoginDialog.cpp -text
 src/console/nxuilib/LoginDialog.h -text
 src/console/nxuilib/Makefile.am -text

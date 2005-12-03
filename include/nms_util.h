@@ -187,7 +187,9 @@ typedef struct _dir_struc
 extern "C"
 {
 #endif
-	int LIBNETXMS_EXPORTABLE SendEx(int, const void *, size_t, int);
+	int LIBNETXMS_EXPORTABLE SendEx(SOCKET, const void *, size_t, int);
+   int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
+                                   size_t nSize, int nFlags, DWORD dwTimeout);
 
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);

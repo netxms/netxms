@@ -40,7 +40,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL);
+   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(pSession->m_dwReceiverBufferSize);
@@ -54,7 +54,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       // Receive raw message
       if ((iErr = RecvCSCPMessage(pSession->m_hSocket, pRawMsg, 
                                   pMsgBuffer, pSession->m_dwReceiverBufferSize,
-                                  &pSession->m_pCtx, pDecryptionBuffer)) <= 0)
+                                  &pSession->m_pCtx, pDecryptionBuffer, 0)) <= 0)
          break;
 
       // Check if we get too large message

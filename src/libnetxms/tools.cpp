@@ -651,7 +651,7 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText)
 // cannot handle them all
 //
 
-int LIBNETXMS_EXPORTABLE SendEx(int nSocket, const void *pBuff,
+int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff,
 		                          size_t nSize, int nFlags)
 {
 	int nLeft = nSize;
@@ -668,6 +668,53 @@ int LIBNETXMS_EXPORTABLE SendEx(int nSocket, const void *pBuff,
 	} while (nLeft > 0);
 
 	return nLeft == 0 ? nSize : nRet;
+}
+
+
+//
+// Extended recv() - receive data with timeout
+//
+
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
+                                size_t nSize, int nFlags, DWORD dwTimeout)
+{
+   int iErr;
+#if HAVE_POLL
+   struct pollfd fds;
+#else
+   struct timeval tv;
+   fd_set rdfs;
+#endif
+
+   if (dwTimeout > 0)
+   {
+#if HAVE_POLL
+      fds.fd = nSocket;
+      fds.events = POLLIN;
+      fds.revents = POLLIN;
+	   iErr = poll(&fds, 1, dwTimeout);
+#else
+	   FD_ZERO(&rdfs);
+	   FD_SET(nSocket, &rdfs);
+      tv.tv_sec = dwTimeout / 1000;
+      tv.tv_usec = (dwTimeout % 1000) * 1000;
+      iErr = select(nSocket + 1, &rdfs, NULL, NULL, &tv);
+#endif
+      if (iErr > 0)
+      {
+         iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+      }
+      else
+      {
+         iErr = -2;
+      }
+   }
+   else
+   {
+      iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+   }
+
+   return iErr;
 }
 
 

@@ -105,6 +105,41 @@ BEGIN
     LTEXT           "Options",IDC_STATIC,7,134,25,8
 END
 
+IDD_ALARM_SOUNDS DIALOG DISCARDABLE  0, 0, 175, 214
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarm Sounds Configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&No alarm sounds",IDC_RADIO_NO_SOUND,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,69,10
+    CONTROL         "&Play sound",IDC_RADIO_SOUND,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,7,21,51,10
+    COMBOBOX        IDC_COMBO_SOUND1,25,47,125,66,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BROWSE_1,154,46,14,12
+    COMBOBOX        IDC_COMBO_SOUND2,25,79,125,75,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_BROWSE_2,154,78,14,12
+    CONTROL         "Include &severity",IDC_CHECK_SEVERITY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,115,65,10
+    CONTROL         "Include s&ource",IDC_CHECK_SOURCE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,129,63,10
+    CONTROL         "Include &message",IDC_CHECK_MESSAGE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,143,69,10
+    CONTROL         "Play notification when alarm being acknowleged",
+                    IDC_CHECK_ACK,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,25,156,143,17
+    DEFPUSHBUTTON   "OK",IDOK,62,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,118,193,50,14
+    LTEXT           "When new alarm arrives:",IDC_STATIC,25,36,79,8
+    CONTROL         "Use &voice notifications",IDC_RADIO_SPEECH,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,7,100,87,10
+    LTEXT           "When alarm being acknowleged:",IDC_STATIC,25,68,105,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,57,26,111,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,94,105,74,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,182,161,1
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -127,6 +162,14 @@ BEGIN
         RIGHTMARGIN, 208
         TOPMARGIN, 7
         BOTTOMMARGIN, 210
+    END
+
+    IDD_ALARM_SOUNDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 168
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 207
     END
 END
 #endif    // APSTUDIO_INVOKED

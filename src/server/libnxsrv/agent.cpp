@@ -89,6 +89,7 @@ AgentConnection::AgentConnection()
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
    m_bUseProxy = FALSE;
+   m_dwRecvTimeout = 420000;  // 7 minutes
 }
 
 
@@ -128,6 +129,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
    m_bUseProxy = FALSE;
+   m_dwRecvTimeout = 420000;  // 7 minutes
 }
 
 
@@ -187,7 +189,7 @@ void AgentConnection::ReceiverThread(void)
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL);
+   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
@@ -200,7 +202,7 @@ void AgentConnection::ReceiverThread(void)
    {
       // Receive raw message
       if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
-                                  &m_pCtx, pDecryptionBuffer)) <= 0)
+                                  &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
          break;
 
       // Check if we get too large message
@@ -217,6 +219,13 @@ void AgentConnection::ReceiverThread(void)
       {
          PrintMsg(_T("Unable to decrypt received message"));
          continue;
+      }
+
+      // Check for timeout
+      if (iErr == 3)
+      {
+         PrintMsg(_T("Timed out waiting for message"));
+         break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
