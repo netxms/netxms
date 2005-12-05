@@ -20,16 +20,16 @@ Class2=CChildView
 Class5=CAlarmList
 Class6=CInfoLine
 Class7=CRequestProcessingDlg
-Resource3=IDR_MAINFRAME (English (U.S.))
+Resource3=IDD_SETTINGS (English (U.S.))
 Resource4=IDR_MAINFRAME
 Class9=CFlatButton
 Class10=CSettingsDlg
 Resource5=IDM_CONTEXT
-Resource7=IDD_ABOUTBOX (English (U.S.))
-Resource8=IDD_SETTINGS (English (U.S.))
-Resource9=IDD_REQUEST_WAIT (English (U.S.))
-Resource10=IDM_CONTEXT (English (U.S.))
+Resource7=IDR_MAINFRAME (English (U.S.))
+Resource8=IDD_REQUEST_WAIT (English (U.S.))
+Resource9=IDD_ABOUTBOX (English (U.S.))
 Class8=CAlarmBrowser
+Resource10=IDM_CONTEXT (English (U.S.))
 
 [CLS:CAlarmViewApp]
 Type=0
@@ -187,17 +187,19 @@ CommandCount=3
 [DLG:IDD_SETTINGS (English (U.S.))]
 Type=1
 Class=CSettingsDlg
-ControlCount=10
+ControlCount=12
 Control1=IDC_CHECK_AUTOLOGIN,button,1342242819
 Control2=IDC_EDIT_SERVER_NAME,edit,1350631552
 Control3=IDC_EDIT_USER,edit,1350631552
 Control4=IDC_EDIT_PASSWD,edit,1350631584
-Control5=IDOK,button,1342242817
-Control6=IDCANCEL,button,1342242816
-Control7=IDC_STATIC,button,1342177287
-Control8=IDC_STATIC_SERVER,static,1342308352
-Control9=IDC_STATIC_USER,static,1342308352
-Control10=IDC_STATIC_PASSWORD,static,1342308352
+Control5=IDC_CONFIGURE_SOUNDS,button,1342242816
+Control6=IDOK,button,1342242817
+Control7=IDCANCEL,button,1342242816
+Control8=IDC_STATIC,button,1342177287
+Control9=IDC_STATIC_SERVER,static,1342308352
+Control10=IDC_STATIC_USER,static,1342308352
+Control11=IDC_STATIC_PASSWORD,static,1342308352
+Control12=IDC_STATIC,button,1342177287
 
 [CLS:CSettingsDlg]
 Type=0

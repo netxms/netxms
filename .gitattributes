@@ -435,6 +435,18 @@ src/console/nxuilib/res/Makefile.am -text
 src/console/nxuilib/res/login.bmp -text
 src/console/nxuilib/res/nxuilib.rc2 -text
 src/console/nxuilib/resource.h -text
+src/console/nxuilib/sounds/alarm1.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/alarm2.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/beep.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/misc1.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/misc2.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/misc3.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/misc4.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/misc5.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/ring1.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/ring2.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/siren1.wav -text svneol=unset#unset
+src/console/nxuilib/sounds/siren2.wav -text svneol=unset#unset
 src/console/nxuilib/speaker.cpp -text
 src/console/nxuilib/tools.cpp -text
 src/console/win32/ActionEditor.cpp -text

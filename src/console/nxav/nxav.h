@@ -12,6 +12,9 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
+// Registry key for saving alarm sound configuration
+#define NXAV_ALARM_SOUND_KEY  _T("Software\\NetXMS\\NetXMS Alarm Viewer\\Sounds")
+
 #include "resource.h"       // main symbols
 
 #include <nms_common.h>
@@ -19,6 +22,7 @@
 #include <nxwinui.h>
 
 #include "globals.h"
+#include "..\..\..\INCLUDE\nxwinui.h"	// Added by ClassView
 
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmViewApp:
@@ -41,6 +45,7 @@ public:
 // Implementation
 
 public:
+	ALARM_SOUND_CFG m_soundCfg;
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	//{{AFX_MSG(CAlarmViewApp)

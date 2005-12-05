@@ -13,6 +13,18 @@
 #define IDC_CHECK_NOCACHE               5008
 #define IDC_CHECK_ENCRYPT               5009
 #define IDD_ALARM_SOUNDS                5010
+#define IDR_SND_ALARM1                  5011
+#define IDR_SND_SIREN2                  5012
+#define IDR_SND_ALARM2                  5013
+#define IDR_SND_BEEP                    5014
+#define IDR_SND_MISC1                   5015
+#define IDR_SND_MISC2                   5016
+#define IDR_SND_MISC3                   5017
+#define IDR_SND_MISC4                   5018
+#define IDR_SND_MISC5                   5019
+#define IDR_SND_RING1                   5020
+#define IDR_SND_RING2                   5021
+#define IDR_SND_SIREN1                  5022
 #define IDC_RADIO_NO_SOUND              5200
 #define IDC_RADIO_SOUND                 5201
 #define IDC_COMBO_SOUND1                5202
@@ -29,7 +41,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        5011
+#define _APS_NEXT_RESOURCE_VALUE        5023
 #define _APS_NEXT_COMMAND_VALUE         28000
 #define _APS_NEXT_CONTROL_VALUE         5212
 #define _APS_NEXT_SYMED_VALUE           5700

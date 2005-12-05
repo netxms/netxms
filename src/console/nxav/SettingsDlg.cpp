@@ -24,6 +24,7 @@ CSettingsDlg::CSettingsDlg(CWnd* pParent /*=NULL*/)
 	m_strServer = _T("");
 	m_strUser = _T("");
 	//}}AFX_DATA_INIT
+   memset(&m_soundCfg, 0, sizeof(ALARM_SOUND_CFG));
 }
 
 
@@ -45,6 +46,7 @@ void CSettingsDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CSettingsDlg, CDialog)
 	//{{AFX_MSG_MAP(CSettingsDlg)
 	ON_BN_CLICKED(IDC_CHECK_AUTOLOGIN, OnCheckAutologin)
+	ON_BN_CLICKED(IDC_CONFIGURE_SOUNDS, OnConfigureSounds)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -75,4 +77,14 @@ void CSettingsDlg::EnableControls()
    EnableDlgItem(this, IDC_EDIT_SERVER_NAME, bEnable);
    EnableDlgItem(this, IDC_EDIT_USER, bEnable);
    EnableDlgItem(this, IDC_EDIT_PASSWD, bEnable);
+}
+
+
+//
+// Handler for "Configure sounds..." button
+//
+
+void CSettingsDlg::OnConfigureSounds() 
+{
+   ConfigureAlarmSounds(&m_soundCfg);
 }

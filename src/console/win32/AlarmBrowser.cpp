@@ -376,8 +376,6 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
             AddAlarmToList(pAlarm);
             UpdateStatusBar();
             m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
-//            if (g_dwFlags & AF_PLAY_SOUND)
-//               PlaySound(MAKEINTRESOURCE(IDR_SND_ALARM), GetModuleHandle(NULL), SND_ASYNC | SND_NODEFAULT | SND_RESOURCE);
 
             if (m_bEnableSpeaker)
             {

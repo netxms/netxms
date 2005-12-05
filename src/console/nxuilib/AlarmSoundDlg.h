@@ -19,6 +19,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAlarmSoundDlg)
 	enum { IDD = IDD_ALARM_SOUNDS };
+	CComboBox	m_wndCombo2;
+	CComboBox	m_wndCombo1;
 	int		m_iSoundType;
 	CString	m_strSound1;
 	CString	m_strSound2;
@@ -38,10 +40,13 @@ public:
 
 // Implementation
 protected:
+	void SelectFile(int nCtrl);
 
 	// Generated message map functions
 	//{{AFX_MSG(CAlarmSoundDlg)
-		// NOTE: the ClassWizard will add member functions here
+	afx_msg void OnBrowse1();
+	afx_msg void OnBrowse2();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.117 2005-12-01 22:19:32 victor Exp $
+# $Id: configure.ac,v 1.118 2005-12-05 23:34:47 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -555,6 +555,7 @@ AC_CONFIG_FILES([
 	src/console/Makefile
 	src/console/nxuilib/Makefile
 	src/console/nxuilib/res/Makefile
+	src/console/nxuilib/sounds/Makefile
 	src/console/win32/Makefile
 	src/console/win32/icons/Makefile
 	src/console/win32/res/Makefile

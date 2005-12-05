@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 libnxcscp.lib sapi.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"..\..\libnxcscp\Release"
+# ADD LINK32 libnxcscp.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"..\..\libnxcscp\Release" /libpath:"..\..\libnxcl\Release"
 
 !ELSEIF  "$(CFG)" == "nxuilib - Win32 Debug"
 
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnxcscp.lib sapi.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcscp\Debug"
+# ADD LINK32 libnxcscp.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcscp\Debug" /libpath:"..\..\libnxcl\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -162,16 +162,64 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\sounds\alarm1.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\alarm2.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\beep.wav
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\login.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\misc1.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\misc2.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\misc3.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\misc4.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\misc5.wav
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\nxuilib.rc2
 # End Source File
-# End Group
 # Begin Source File
 
 SOURCE=.\ReadMe.txt
 # End Source File
+# Begin Source File
+
+SOURCE=.\sounds\ring1.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\ring2.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\siren1.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\sounds\siren2.wav
+# End Source File
+# End Group
 # End Target
 # End Project

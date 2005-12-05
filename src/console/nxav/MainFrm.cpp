@@ -243,8 +243,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
             memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
             m_dwNumAlarms++;
             SortAlarms();
-            if (g_dwFlags & AF_PLAY_SOUND)
-               PlaySound(MAKEINTRESOURCE(IDR_SND_ALARM), GetModuleHandle(NULL), SND_ASYNC | SND_NODEFAULT | SND_RESOURCE);
+            PlayAlarmSound(pAlarm, TRUE, g_hSession, &theApp.m_soundCfg);
          }
          break;
       case NX_NOTIFY_ALARM_DELETED:
@@ -252,6 +251,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          for(i = 0; i < m_dwNumAlarms; i++)
             if (m_pAlarmList[i].dwAlarmId == pAlarm->dwAlarmId)
             {
+               PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &theApp.m_soundCfg);
                m_iNumAlarms[m_pAlarmList[i].wSeverity]--;
                m_dwNumAlarms--;
                if (m_dwNumAlarms > 0)

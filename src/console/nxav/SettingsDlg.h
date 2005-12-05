@@ -1,6 +1,7 @@
 #if !defined(AFX_SETTINGSDLG_H__D71A958C_F19C_49E9_8763_060B6CBDF888__INCLUDED_)
 #define AFX_SETTINGSDLG_H__D71A958C_F19C_49E9_8763_060B6CBDF888__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxwinui.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -14,6 +15,7 @@ class CSettingsDlg : public CDialog
 {
 // Construction
 public:
+	ALARM_SOUND_CFG m_soundCfg;
 	CSettingsDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
@@ -41,6 +43,7 @@ protected:
 	//{{AFX_MSG(CSettingsDlg)
 	afx_msg void OnCheckAutologin();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnConfigureSounds();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

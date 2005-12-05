@@ -37,6 +37,7 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
 #include <comdef.h>
+#include <mmsystem.h>
 
 
 //{{AFX_INSERT_LOCATION}}

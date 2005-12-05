@@ -75,6 +75,7 @@ BOOL CAlarmViewApp::InitInstance()
 	SetRegistryKey(_T("NetXMS"));
 
    // Load settings
+   LoadAlarmSoundCfg(&m_soundCfg, NXAV_ALARM_SOUND_KEY);
    bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
    _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
@@ -135,6 +136,9 @@ BOOL CAlarmViewApp::InitInstance()
          bAutoLogin = FALSE;
       }
    } while(dwResult != RCC_SUCCESS);
+
+   // Start background text-to-speach processor
+   SpeakerInit();
 
    // Create files from resources
    FileFromResource(IDF_BACKGROUND, _T("background.jpg"));
@@ -309,7 +313,7 @@ void CAlarmViewApp::DeleteWorkDir()
 int CAlarmViewApp::ExitInstance() 
 {
    DeleteWorkDir();
-   
+   SpeakerShutdown();
 	return CWinApp::ExitInstance();
 }
 
@@ -353,8 +357,11 @@ void CAlarmViewApp::OnCmdSettings()
    dlg.m_strServer = (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost"));
    dlg.m_strUser = (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL);
    dlg.m_strPassword = (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL);
+   memcpy(&dlg.m_soundCfg, &m_soundCfg, sizeof(ALARM_SOUND_CFG));
    if (dlg.DoModal() == IDOK)
    {
+      memcpy(&m_soundCfg, &dlg.m_soundCfg, sizeof(ALARM_SOUND_CFG));
+      SaveAlarmSoundCfg(&m_soundCfg, NXAV_ALARM_SOUND_KEY);
       WriteProfileInt(_T("Connection"), _T("AutoLogin"), dlg.m_bAutoLogin);
       if (dlg.m_bAutoLogin)
       {

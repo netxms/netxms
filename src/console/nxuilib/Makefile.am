@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = res
+SUBDIRS = res sounds
 EXTRA_DIST = \
 	AlarmSoundDlg.cpp AlarmSoundDlg.h \
 	LoginDialog.cpp LoginDialog.h \

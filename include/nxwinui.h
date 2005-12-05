@@ -24,6 +24,9 @@
 #ifndef _nxwinui_h_
 #define _nxwinui_h_
 
+#include <nxclapi.h>
+
+
 #ifdef NXUILIB_EXPORTS
 #define NXUILIB_EXPORTABLE __declspec(dllexport)
 #else
@@ -77,6 +80,10 @@ void NXUILIB_EXPORTABLE SpeakerShutdown(void);
 BOOL NXUILIB_EXPORTABLE SpeakText(TCHAR *pszText);
 
 BOOL NXUILIB_EXPORTABLE ConfigureAlarmSounds(ALARM_SOUND_CFG *pCfg);
+BOOL NXUILIB_EXPORTABLE SaveAlarmSoundCfg(ALARM_SOUND_CFG *pCfg, TCHAR *pszKey);
+BOOL NXUILIB_EXPORTABLE LoadAlarmSoundCfg(ALARM_SOUND_CFG *pCfg, TCHAR *pszKey);
+void NXUILIB_EXPORTABLE PlayAlarmSound(NXC_ALARM *pAlarm, BOOL bNewAlarm,
+                                       NXC_SESSION hSession, ALARM_SOUND_CFG *pCfg);
 
 
 #endif

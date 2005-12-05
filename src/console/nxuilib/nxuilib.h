@@ -6,4 +6,14 @@
 #include <nxwinui.h>
 #include "resource.h"
 
+
+//
+// Global variables
+//
+
+extern TCHAR *g_pszSoundNames[];
+extern int g_nSoundId[];
+extern HINSTANCE g_hInstance;
+
+
 #endif
