@@ -686,7 +686,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    fd_set rdfs;
 #endif
 
-   if (dwTimeout > 0)
+   if (dwTimeout != INFINITE)
    {
 #if HAVE_POLL
       fds.fd = nSocket;
