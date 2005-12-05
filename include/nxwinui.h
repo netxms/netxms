@@ -32,6 +32,33 @@
 
 
 //
+// Alarm sounds configuration
+//
+
+typedef struct
+{
+   BYTE nSoundType;
+   BYTE nFlags;
+   TCHAR szSound1[MAX_PATH];
+   TCHAR szSound2[MAX_PATH];
+} ALARM_SOUND_CFG;
+
+
+//
+// Alarm sound configuration flags and sound types
+//
+
+#define AST_NONE        0
+#define AST_SOUND       1
+#define AST_VOICE       2
+
+#define ASF_INCLUDE_SEVERITY  0x01
+#define ASF_INCLUDE_SOURCE    0x02
+#define ASF_INCLUDE_MESSAGE   0x04
+#define ASF_VOICE_ON_ACK      0x08
+
+
+//
 // Exportable classes
 //
 
@@ -48,6 +75,8 @@ void NXUILIB_EXPORTABLE EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
 void NXUILIB_EXPORTABLE SpeakerInit(void);
 void NXUILIB_EXPORTABLE SpeakerShutdown(void);
 BOOL NXUILIB_EXPORTABLE SpeakText(TCHAR *pszText);
+
+BOOL NXUILIB_EXPORTABLE ConfigureAlarmSounds(ALARM_SOUND_CFG *pCfg);
 
 
 #endif

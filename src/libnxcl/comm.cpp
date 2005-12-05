@@ -54,7 +54,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       // Receive raw message
       if ((iErr = RecvCSCPMessage(pSession->m_hSocket, pRawMsg, 
                                   pMsgBuffer, pSession->m_dwReceiverBufferSize,
-                                  &pSession->m_pCtx, pDecryptionBuffer, 0)) <= 0)
+                                  &pSession->m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
          break;
 
       // Check if we get too large message

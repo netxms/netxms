@@ -24,6 +24,7 @@
 
 #include "stdafx.h"
 #include "nxuilib.h"
+#include "AlarmSoundDlg.h"
 
 
 //
@@ -37,4 +38,50 @@ void NXUILIB_EXPORTABLE EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable)
    pCtrl = pWnd->GetDlgItem(nCtrl);
    if (pCtrl != NULL)
       pCtrl->EnableWindow(bEnable);
+}
+
+
+//
+// Configure alarm sound settings
+//
+
+BOOL NXUILIB_EXPORTABLE ConfigureAlarmSounds(ALARM_SOUND_CFG *pCfg)
+{
+   CAlarmSoundDlg dlg;
+   BOOL bResult = FALSE;
+
+   dlg.m_iSoundType = pCfg->nSoundType;
+   dlg.m_strSound1 = pCfg->szSound1;
+   dlg.m_strSound2 = pCfg->szSound2;
+   dlg.m_bIncludeMessage = (pCfg->nFlags & ASF_INCLUDE_MESSAGE) ? TRUE : FALSE;
+   dlg.m_bIncludeSeverity = (pCfg->nFlags & ASF_INCLUDE_SEVERITY) ? TRUE : FALSE;
+   dlg.m_bIncludeSource = (pCfg->nFlags & ASF_INCLUDE_SOURCE) ? TRUE : FALSE;
+   dlg.m_bNotifyOnAck = (pCfg->nFlags & ASF_VOICE_ON_ACK) ? TRUE : FALSE;
+   if (dlg.DoModal() == IDOK)
+   {
+      pCfg->nSoundType = dlg.m_iSoundType;
+      nx_strncpy(pCfg->szSound1, (LPCTSTR)dlg.m_strSound1, MAX_PATH);
+      nx_strncpy(pCfg->szSound2, (LPCTSTR)dlg.m_strSound2, MAX_PATH);
+      pCfg->nFlags = 0;
+      if (dlg.m_bIncludeMessage)
+         pCfg->nFlags |= ASF_INCLUDE_MESSAGE;
+      if (dlg.m_bIncludeSeverity)
+         pCfg->nFlags |= ASF_INCLUDE_SEVERITY;
+      if (dlg.m_bIncludeSource)
+         pCfg->nFlags |= ASF_INCLUDE_SOURCE;
+      if (dlg.m_bNotifyOnAck)
+         pCfg->nFlags |= ASF_VOICE_ON_ACK;
+      bResult = TRUE;
+   }
+   return bResult;
+}
+
+
+//
+// Save alarm sound configuration to registry
+//
+
+BOOL NXUILIB_EXPORTABLE SaveAlarmSoundCfg(ALARM_SOUND_CFG *pCfg, TCHAR *pszKey)
+{
+   HKEY hKey;
 }

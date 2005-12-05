@@ -297,7 +297,7 @@ void ClientSession::ReadThread(void)
    {
       if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, 
                                   m_pMsgBuffer, RAW_MSG_SIZE, 
-                                  &m_pCtx, pDecryptionBuffer, 0)) <= 0)
+                                  &m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
          break;
 
       // Check if message is too large

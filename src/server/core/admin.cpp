@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.13 2005-12-03 22:53:04 victor Exp $ */
+/* $Id: admin.cpp,v 1.14 2005-12-05 20:28:47 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -56,7 +56,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
    while(1)
    {
-      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, 0);
+      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (iError <= 0)
          break;   // Communication error or closed connection
 
@@ -164,6 +164,11 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2005/12/03 22:53:04  victor
+- Added function RecvEx
+- Added timeout parameter to RecvCSCPMessage
+- Other minor changes
+
 Revision 1.12  2005/08/17 12:09:25  victor
 responce changed to response (issue #37)
 
