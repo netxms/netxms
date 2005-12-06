@@ -690,6 +690,10 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    struct timeval tv;
    fd_set rdfs;
 #endif
+#ifndef _WIN32
+   QWORD qwStartTime;
+   DWORD dwElapsed;
+#endif
 
    if (dwTimeout != INFINITE)
    {
@@ -697,17 +701,46 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
       fds.fd = nSocket;
       fds.events = POLLIN;
       fds.revents = POLLIN;
-	   iErr = poll(&fds, 1, dwTimeout);
+      do
+      {
+         qwStartTime = GetCurrentTimeMs();
+	      iErr = poll(&fds, 1, dwTimeout);
+         if ((iErr != -1) || (errno != EINTR))
+            break;
+         dwElapsed = GetCurrentTimeMs() - qwStartTime;
+         dwTimeout -= min(dwTimeout, dwElapsed);
+      } while(dwTimeout > 0);
 #else
 	   FD_ZERO(&rdfs);
 	   FD_SET(nSocket, &rdfs);
+#ifdef _WIN32
       tv.tv_sec = dwTimeout / 1000;
       tv.tv_usec = (dwTimeout % 1000) * 1000;
       iErr = select(nSocket + 1, &rdfs, NULL, NULL, &tv);
+#else
+      do
+      {
+         tv.tv_sec = dwTimeout / 1000;
+         tv.tv_usec = (dwTimeout % 1000) * 1000;
+         qwStartTime = GetCurrentTimeMs();
+         iErr = select(nSocket + 1, &rdfs, NULL, NULL, &tv);
+         if ((iErr != -1) || (errno != EINTR))
+            break;
+         dwElapsed = GetCurrentTimeMs() - qwStartTime;
+         dwTimeout -= min(dwTimeout, dwElapsed);
+      } while(dwTimeout > 0);
+#endif
 #endif
       if (iErr > 0)
       {
+#ifdef _WIN32
          iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+#else
+         do
+         {
+            iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+         } while((iErr == -1) && (errno == EINTR));
+#endif
       }
       else
       {
@@ -716,7 +749,14 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    }
    else
    {
+#ifdef _WIN32
       iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+#else
+      do
+      {
+         iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+      } while((iErr == -1) && (errno == EINTR));
+#endif
    }
 
    return iErr;
