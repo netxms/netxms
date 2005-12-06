@@ -7,7 +7,11 @@
 - Added "node capability expiration" feature
 - Windows console:
 	- Fixed inconsistencies in object access control configuration
+	- Now can play sounds when new alarm arrives
 	- Added voice notifications for alarms (using SAPI)
+- Alarm viewer: 
+	- The same audio notification options added
+	- Current time display added
 - Added support for Windows authentication in Microsoft SQL driver
 - Server configuration wizard: added possibility to configure service account
 - Added support for transactions in database manager

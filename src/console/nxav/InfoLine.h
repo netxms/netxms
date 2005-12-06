@@ -38,6 +38,8 @@ public:
 
 	// Generated message map functions
 protected:
+	UINT m_nTimer;
+	CStatic m_wndTimer;
 	CFlatButton m_wndButtonSettings;
 	CFlatButton m_wndButtonClose;
 	CFont m_fontSmall;
@@ -45,6 +47,9 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnDestroy();
+	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

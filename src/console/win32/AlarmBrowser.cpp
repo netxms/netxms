@@ -79,7 +79,6 @@ CAlarmBrowser::CAlarmBrowser()
    m_iSortDir = theApp.GetProfileInt(_T("AlarmBrowser"), _T("SortDir"), 1);
    m_iSortMode = theApp.GetProfileInt(_T("AlarmBrowser"), _T("SortMode"), 0);
    m_bShowNodes = theApp.GetProfileInt(_T("AlarmBrowser"), _T("ShowNodes"), FALSE);
-   m_bEnableSpeaker = theApp.GetProfileInt(_T("AlarmBrowser"), _T("EnableSpeaker"), FALSE);
    m_bRestoredDesktop = FALSE;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
@@ -98,7 +97,6 @@ CAlarmBrowser::CAlarmBrowser(TCHAR *pszParams)
    m_iSortMode = ExtractWindowParamLong(pszParams, _T("SM"), 0);
    m_iSortDir = ExtractWindowParamLong(pszParams, _T("SD"), 0);
    m_bShowNodes = ExtractWindowParamLong(pszParams, _T("SN"), 0);
-   m_bEnableSpeaker = ExtractWindowParamLong(pszParams, _T("V"), 0);
 }
 
 CAlarmBrowser::~CAlarmBrowser()
@@ -122,8 +120,7 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_ALARM_SHOWNODES, OnAlarmShownodes)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_SHOWNODES, OnUpdateAlarmShownodes)
-	ON_COMMAND(ID_ALARM_ENABLE_SPEAKER, OnAlarmEnableSpeaker)
-	ON_UPDATE_COMMAND_UI(ID_ALARM_ENABLE_SPEAKER, OnUpdateAlarmEnableSpeaker)
+	ON_COMMAND(ID_ALARM_SOUNDCONFIGURATION, OnAlarmSoundconfiguration)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
@@ -376,19 +373,7 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
             AddAlarmToList(pAlarm);
             UpdateStatusBar();
             m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
-
-            if (m_bEnableSpeaker)
-            {
-               TCHAR szText[1024];
-               NXC_OBJECT *pObject;
-
-               pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
-               _sntprintf(szText, 1024, _T("%s ALARM. %s: %s"),
-                          m_szAlarmText[pAlarm->wSeverity],
-                          (pObject != NULL) ? pObject->szName : _T("unknown node"),
-                          pAlarm->szMessage);
-               SpeakText(szText);
-            }
+            PlayAlarmSound(pAlarm, TRUE, g_hSession, &g_soundCfg);
          }
          break;
       case NX_NOTIFY_ALARM_ACKNOWLEGED:
@@ -550,7 +535,6 @@ void CAlarmBrowser::OnClose()
    theApp.WriteProfileInt(_T("AlarmBrowser"), _T("SortMode"), m_iSortMode);
    theApp.WriteProfileInt(_T("AlarmBrowser"), _T("SortDir"), m_iSortDir);
    theApp.WriteProfileInt(_T("AlarmBrowser"), _T("ShowNodes"), m_bShowNodes);
-   theApp.WriteProfileInt(_T("AlarmBrowser"), _T("EnableSpeaker"), m_bEnableSpeaker);
 	CMDIChildWnd::OnClose();
 }
 
@@ -563,8 +547,8 @@ LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 {
    pInfo->iWndClass = WNDC_ALARM_BROWSER;
    GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("SM:%d\x7FSD:%d\x7FSN:%d\x7FV:%d"),
-              m_iSortMode, m_iSortDir, m_bShowNodes, m_bEnableSpeaker);
+   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("SM:%d\x7FSD:%d\x7FSN:%d"),
+              m_iSortMode, m_iSortDir, m_bShowNodes);
    return 1;
 }
 
@@ -616,6 +600,7 @@ void CAlarmBrowser::DeleteAlarmFromList(DWORD dwAlarmId)
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
+         PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &g_soundCfg);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1],
                  sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
@@ -759,15 +744,13 @@ void CAlarmBrowser::RefreshAlarmList()
 
 
 //
-// Enable or disable alarm speaker
+// Configure sounds
 //
 
-void CAlarmBrowser::OnAlarmEnableSpeaker() 
+void CAlarmBrowser::OnAlarmSoundconfiguration() 
 {
-   m_bEnableSpeaker = !m_bEnableSpeaker;
-}
-
-void CAlarmBrowser::OnUpdateAlarmEnableSpeaker(CCmdUI* pCmdUI) 
-{
-   pCmdUI->SetCheck(m_bEnableSpeaker);
+   if (ConfigureAlarmSounds(&g_soundCfg))
+   {
+      SaveAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
+   }
 }

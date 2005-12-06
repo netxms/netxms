@@ -7,6 +7,7 @@
 #define IDC_INFO_LINE                   102
 #define ID_CMD_SETTINGS                 103
 #define ID_CMD_EXIT                     104
+#define IDC_STATIC_TIMER                105
 #define IDR_MAINFRAME                   128
 #define IDR_NXAVTYPE                    129
 #define IDD_REQUEST_WAIT                130
@@ -52,6 +53,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1009
-#define _APS_NEXT_SYMED_VALUE           105
+#define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

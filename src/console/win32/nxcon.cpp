@@ -221,6 +221,7 @@ BOOL CConsoleApp::InitInstance()
    g_dwOptions = GetProfileInt(_T("General"), _T("Options"), 0);
    strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   LoadAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
 
    // Create mutex for action list access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);

@@ -332,8 +332,8 @@ BEGIN
         MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
         MENUITEM SEPARATOR
         MENUITEM "&Show nodes\tAlt+N",          ID_ALARM_SHOWNODES
-        MENUITEM "Enable &voice announcements\tAlt+V", 
-                                                ID_ALARM_ENABLE_SPEAKER
+        MENUITEM "S&ound configuration...\tAlt+S", 
+                                                ID_ALARM_SOUNDCONFIGURATION
     END
     POPUP "Hidden"
     BEGIN
@@ -831,7 +831,7 @@ IDA_ALARM_BROWSER ACCELERATORS DISCARDABLE
 BEGIN
     "A",            ID_ALARM_ACKNOWLEGE,    VIRTKEY, CONTROL, NOINVERT
     "N",            ID_ALARM_SHOWNODES,     VIRTKEY, ALT, NOINVERT
-    "V",            ID_ALARM_ENABLE_SPEAKER, VIRTKEY, ALT, NOINVERT
+    "S",            ID_ALARM_SOUNDCONFIGURATION, VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_ALARM_DELETE,        VIRTKEY, NOINVERT
 END
 

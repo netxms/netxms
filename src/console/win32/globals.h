@@ -49,6 +49,8 @@ extern CConsoleApp theApp;
 #define OBJTOOL_MENU_FIRST_ID 4000
 #define OBJTOOL_MENU_LAST_ID  4999
 
+#define NXCON_ALARM_SOUND_KEY _T("Software\\NetXMS\\NetXMS Console\\AlarmSounds")
+
 
 //
 // Window classes
@@ -350,6 +352,7 @@ extern CODE_TO_TEXT g_ctNodeType[];
 extern DWORD g_dwNumObjectTools;
 extern NXC_OBJECT_TOOL *g_pObjectToolList;
 extern SNMP_MIBObject *g_pMIBRoot;
+extern ALARM_SOUND_CFG g_soundCfg;
 
 
 //

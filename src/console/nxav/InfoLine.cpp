@@ -16,6 +16,7 @@ static char THIS_FILE[] = __FILE__;
 
 CInfoLine::CInfoLine()
 {
+   m_nTimer = 0;
 }
 
 CInfoLine::~CInfoLine()
@@ -28,6 +29,9 @@ BEGIN_MESSAGE_MAP(CInfoLine, CWnd)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_WM_DESTROY()
+	ON_WM_TIMER()
+	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -66,7 +70,10 @@ int CInfoLine::OnCreate(LPCREATESTRUCT lpCreateStruct)
                            rect, this, ID_CMD_SETTINGS);
    m_wndButtonClose.Create(NULL, _T("Exit"), WS_CHILD | WS_VISIBLE,
                            rect, this, ID_CMD_EXIT);
+   m_wndTimer.Create(_T(""), WS_CHILD | WS_VISIBLE, rect, this, IDC_STATIC_TIMER);
+   m_wndTimer.SetFont(&m_fontSmall);
 
+   m_nTimer = SetTimer(1, 1000, NULL);
 	return 0;
 }
 
@@ -117,6 +124,8 @@ void CInfoLine::OnSize(UINT nType, int cx, int cy)
 	
    m_wndButtonSettings.MoveWindow(cx - 100, 10, 90, 24);
    m_wndButtonClose.MoveWindow(cx - 100, 44, 90, 24);
+
+   m_wndTimer.MoveWindow(cx - 260, 20, 150, cy - 40);
 }
 
 
@@ -130,4 +139,55 @@ BOOL CInfoLine::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* 
       return TRUE;
 	
 	return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CInfoLine::OnDestroy() 
+{
+   if (m_nTimer != 0)
+      KillTimer(m_nTimer);
+	CWnd::OnDestroy();
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CInfoLine::OnTimer(UINT nIDEvent) 
+{
+   time_t now;
+   struct tm *ptm;
+   TCHAR szBuffer[256];
+
+   now = time(NULL);
+   ptm = localtime(&now);
+   _tcsftime(szBuffer, 256, _T("%A\n%d %B %Y\n%H:%M:%S"), ptm);
+   m_wndTimer.SetWindowText(szBuffer);
+}
+
+
+//
+// WM_CTLCOLOR message handler
+//
+
+HBRUSH CInfoLine::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) 
+{
+   HBRUSH hbr;
+
+   if (pWnd->GetDlgCtrlID() == IDC_STATIC_TIMER)
+   {
+      hbr = CreateSolidBrush(g_rgbInfoLineBackground);
+      pDC->SetBkColor(g_rgbInfoLineBackground);
+      pDC->SetTextColor(g_rgbInfoLineTimer);
+   }
+   else
+   {
+   	hbr = CWnd::OnCtlColor(pDC, pWnd, nCtlColor);
+   }
+	return hbr;
 }

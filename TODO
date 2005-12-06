@@ -61,7 +61,6 @@ WINDOWS CONSOLE:
 - Find good graph creation library
 - Enlarge 16x16 status overlay icons
 - Add real-time graphs
-- Play sound on new alarms
 - Add sorting to all list views
 - Add "Copy value to clipboard" to "Collected data" window
 - Implement drag-and-drop editing in policy editor
