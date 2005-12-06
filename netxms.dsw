@@ -230,6 +230,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnxcscp
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name nxuilib
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -253,6 +256,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name nxuilib
     End Project Dependency
 }}}
 
@@ -409,6 +415,27 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxuilib"=.\src\console\nxuilib\nxuilib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
     End Project Dependency
 }}}
 

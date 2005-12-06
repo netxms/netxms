@@ -54,6 +54,11 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
 # ADD LINK32 libnxcscp.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"..\..\libnxcscp\Release" /libpath:"..\..\libnxcl\Release"
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Release\nxuilib.dll C:\NetXMS\bin
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxuilib - Win32 Debug"
 
