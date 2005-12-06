@@ -94,6 +94,10 @@ static BOOL H_UpgradeFromV35(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
+   if (!CreateConfigParam(_T("CapabilityExpirationTime"), _T("604800"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
    if (!SQLQuery(_T("UPDATE config SET var_value='36' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
