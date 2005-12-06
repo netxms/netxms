@@ -15,7 +15,6 @@ EXTRA_DIST = \
 	SeverityNormal.ico \
 	SeverityWarning.ico \
 	ack.png \
-	alarm.wav \
 	background.jpg \
 	critical.ico \
 	major.ico \

@@ -105,7 +105,7 @@ BEGIN
     LTEXT           "Options",IDC_STATIC,7,134,25,8
 END
 
-IDD_ALARM_SOUNDS DIALOG DISCARDABLE  0, 0, 175, 214
+IDD_ALARM_SOUNDS DIALOG DISCARDABLE  0, 0, 193, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarm Sounds Configuration"
 FONT 8, "MS Sans Serif"
@@ -117,9 +117,11 @@ BEGIN
     COMBOBOX        IDC_COMBO_SOUND1,25,47,125,66,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_BROWSE_1,154,46,14,12
+    PUSHBUTTON      "",IDC_BUTTON_PLAY_1,172,46,14,12,BS_ICON
     COMBOBOX        IDC_COMBO_SOUND2,25,79,125,75,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_BROWSE_2,154,78,14,12
+    PUSHBUTTON      "",IDC_BUTTON_PLAY_2,172,78,14,12,BS_ICON
     CONTROL         "Use &voice notifications",IDC_RADIO_SPEECH,"Button",
                     BS_AUTORADIOBUTTON | WS_TABSTOP,7,100,87,10
     CONTROL         "Include &severity",IDC_CHECK_SEVERITY,"Button",
@@ -130,14 +132,16 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,25,143,69,10
     CONTROL         "Play notification when alarm being acknowleged",
                     IDC_CHECK_ACK,"Button",BS_AUTOCHECKBOX | BS_TOP | 
-                    BS_MULTILINE | WS_TABSTOP,25,156,143,17
-    DEFPUSHBUTTON   "OK",IDOK,62,193,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,118,193,50,14
-    LTEXT           "When new alarm arrives:",IDC_STATIC,25,36,79,8
-    LTEXT           "When alarm being acknowleged:",IDC_STATIC,25,68,105,8
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,57,26,111,1
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,94,105,74,1
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,182,161,1
+                    BS_MULTILINE | WS_TABSTOP,25,156,161,17
+    DEFPUSHBUTTON   "OK",IDOK,80,194,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,136,194,50,14
+    LTEXT           "When new alarm arrives:",IDC_STATIC_NEW_ALARM,25,36,79,
+                    8
+    LTEXT           "When alarm being acknowleged:",IDC_STATIC_ALARM_ACK,25,
+                    68,105,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,56,26,130,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,92,105,94,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,182,179,1
 END
 
 
@@ -167,9 +171,9 @@ BEGIN
     IDD_ALARM_SOUNDS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 168
+        RIGHTMARGIN, 186
         TOPMARGIN, 7
-        BOTTOMMARGIN, 207
+        BOTTOMMARGIN, 208
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -192,6 +196,15 @@ IDR_SND_MISC5           WAVE    DISCARDABLE     "sounds\\misc5.wav"
 IDR_SND_RING1           WAVE    DISCARDABLE     "sounds\\ring1.wav"
 IDR_SND_RING2           WAVE    DISCARDABLE     "sounds\\ring2.wav"
 IDR_SND_SIREN1          WAVE    DISCARDABLE     "sounds\\siren1.wav"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_PLAY                ICON    DISCARDABLE     "res\\play.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

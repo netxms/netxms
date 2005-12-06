@@ -35,13 +35,6 @@
 
 
 //
-// Application flags
-//
-
-#define AF_PLAY_SOUND            0x0001
-
-
-//
 // Login options
 //
 
@@ -78,7 +71,6 @@ extern TCHAR *g_szStatusTextSmall[];
 extern TCHAR g_szWorkDir[];
 extern COLORREF g_rgbInfoLineButtons;
 extern COLORREF g_rgbInfoLineBackground;
-extern DWORD g_dwFlags;
 extern DWORD g_dwOptions;
 extern MONITORINFOEX *g_pMonitorList;
 extern DWORD g_dwNumMonitors;

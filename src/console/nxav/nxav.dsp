@@ -219,10 +219,6 @@ SOURCE=.\res\ack.png
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\alarm.wav
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\background.jpg
 # End Source File
 # Begin Source File

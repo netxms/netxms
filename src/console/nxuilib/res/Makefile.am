@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = login.bmp nxuilib.rc2
+EXTRA_DIST = login.bmp nxuilib.rc2 play.ico

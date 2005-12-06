@@ -19,6 +19,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAlarmSoundDlg)
 	enum { IDD = IDD_ALARM_SOUNDS };
+	CButton	m_wndButtonPlay2;
+	CButton	m_wndButtonPlay1;
 	CComboBox	m_wndCombo2;
 	CComboBox	m_wndCombo1;
 	int		m_iSoundType;
@@ -40,6 +42,8 @@ public:
 
 // Implementation
 protected:
+	void PlayDemoSound(TCHAR *pszSound);
+	void EnableItems(int nSoundType);
 	void SelectFile(int nCtrl);
 
 	// Generated message map functions
@@ -47,6 +51,11 @@ protected:
 	afx_msg void OnBrowse1();
 	afx_msg void OnBrowse2();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnRadioNoSound();
+	afx_msg void OnRadioSound();
+	afx_msg void OnRadioSpeech();
+	afx_msg void OnButtonPlay1();
+	afx_msg void OnButtonPlay2();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

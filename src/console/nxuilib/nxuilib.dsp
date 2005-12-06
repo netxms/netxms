@@ -174,6 +174,10 @@ SOURCE=.\sounds\beep.wav
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\bitmap1.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\login.bmp
 # End Source File
 # Begin Source File
@@ -199,6 +203,10 @@ SOURCE=.\sounds\misc5.wav
 # Begin Source File
 
 SOURCE=.\res\nxuilib.rc2
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\play.ico
 # End Source File
 # Begin Source File
 
