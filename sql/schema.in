@@ -759,6 +759,7 @@ CREATE TABLE syslog
 ** Log processing policy
 */
 
+/*
 CREATE TABLE lpp
 (
 	lpp_id integer not null,
@@ -767,36 +768,42 @@ CREATE TABLE lpp
 	lpp_flags integer not null,
 	PRIMARY KEY(lpp_id)
 ) TABLE_TYPE;
+*/
 
 
 /*
 ** Nodes associated with log processing policy
 */
 
+/*
 CREATE TABLE lpp_associations
 (
 	lpp_id integer not null,
 	node_id integer not null,
 	log_file varchar(255) not null
 ) TABLE_TYPE;
+*/
 
 
 /*
 ** Rulesets for log processing policies
 */
 
+/*
 CREATE TABLE lpp_rulesets
 (
 	ruleset_id integer not null,
 	ruleset_name varchar(63),
 	PRIMARY KEY(ruleset_id)
 ) TABLE_TYPE;
+*/
 
 
 /*
 ** Matching rules for log processing policies
 */
 
+/*
 CREATE TABLE lpp_rules
 (
 	lpp_id integer not null,
@@ -810,3 +817,4 @@ CREATE TABLE lpp_rules
 	event_code integer not null,
 	PRIMARY KEY(lpp_id,rule_number)
 ) TABLE_TYPE;
+*/
