@@ -1321,7 +1321,7 @@ DWORD AgentConnection::SetupProxyConnection(void)
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_SETUP_PROXY_CONNECTION);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_IP_ADDRESS, ntohl(m_dwAddr));
+   msg.SetVariable(VID_IP_ADDRESS, (DWORD)ntohl(m_dwAddr));
    msg.SetVariable(VID_AGENT_PORT, m_wPort);
    if (SendMessage(&msg))
       return WaitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect

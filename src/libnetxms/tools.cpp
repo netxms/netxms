@@ -23,6 +23,7 @@
 #include "libnetxms.h"
 #include <stdarg.h>
 #include <nms_agent.h>
+#include <nms_threads.h>
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
 #include <sys/time.h>
@@ -30,6 +31,10 @@
 
 #if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
+#endif
+
+#if HAVE_POLL_H
+#include <poll.h>
 #endif
 
 #ifdef _WIN32
