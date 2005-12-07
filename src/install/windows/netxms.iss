@@ -51,6 +51,7 @@ Source: "..\..\server\tools\nxdbmgr\Release\nxdbmgr.exe"; DestDir: "{app}\bin"; 
 Source: "..\..\server\tools\nxget\Release\nxget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxsnmpget\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxsnmpwalk\Release\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\server\tools\nxsnmpset\Release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxupload\Release\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\nxmibc\Release\nxmibc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\console\nxuilib\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
