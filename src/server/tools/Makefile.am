@@ -8,5 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxget nxadm nxaction nxdbmgr nxsnmpget nxsnmpwalk nxupload
+SUBDIRS = nxget nxadm nxaction nxdbmgr nxsnmpget nxsnmpwalk nxsnmpset nxupload
 SUBDIRS += @NXCONFIG@

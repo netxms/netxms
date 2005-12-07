@@ -212,6 +212,8 @@ LONG SNMP_Variable::GetValueAsInt(void)
 
 TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
 {
+   DWORD dwLen;
+
    if ((pszBuffer == NULL) || (dwBufferSize == 0))
       return NULL;
 
@@ -237,8 +239,14 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
                               pszBuffer, dwBufferSize);
          break;
       case ASN_OCTET_STRING:
-         memcpy(pszBuffer, m_pValue, min(dwBufferSize - 1, m_dwValueLength));
-         pszBuffer[min(dwBufferSize - 1, m_dwValueLength)] = 0;
+         dwLen = min(dwBufferSize - 1, m_dwValueLength);
+#ifdef UNICODE
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_pValue, dwLen,
+                             pszBuffer, dwBufferSize);
+#else
+         memcpy(pszBuffer, m_pValue, dwLen);
+#endif
+         pszBuffer[dwLen] = 0;
          break;
       default:
          pszBuffer[0] = 0;
@@ -290,7 +298,7 @@ TCHAR *SNMP_Variable::GetValueAsMACAddr(TCHAR *pszBuffer)
 
 //
 // Encode variable using BER
-// Normally buffer provided should be at least m_dwValueLength+ (name_length * 4) + 12 bytes
+// Normally buffer provided should be at least m_dwValueLength + (name_length * 4) + 12 bytes
 // Return value is number of bytes actually used in buffer
 //
 
@@ -309,4 +317,68 @@ DWORD SNMP_Variable::Encode(BYTE *pBuffer, DWORD dwBufferSize)
    dwBytes = BER_Encode(ASN_SEQUENCE, pWorkBuf, dwBytes, pBuffer, dwBufferSize);
    free(pWorkBuf);
    return dwBytes;
+}
+
+
+//
+// Set variable from string
+//
+
+void SNMP_Variable::SetValueFromString(DWORD dwType, TCHAR *pszValue)
+{
+   DWORD *pdwBuffer, dwLen;
+
+   m_dwType = dwType;
+   switch(m_dwType)
+   {
+      case ASN_INTEGER:
+         m_dwValueLength = sizeof(LONG);
+         m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
+         *((LONG *)m_pValue) = _tcstol(pszValue, NULL, 0);
+         break;
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
+         m_dwValueLength = sizeof(DWORD);
+         m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
+         *((DWORD *)m_pValue) = _tcstoul(pszValue, NULL, 0);
+         break;
+      case ASN_IP_ADDR:
+         m_dwValueLength = sizeof(DWORD);
+         m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
+         *((DWORD *)m_pValue) = _t_inet_addr(pszValue);
+         break;
+      case ASN_OBJECT_ID:
+         pdwBuffer = (DWORD *)malloc(sizeof(DWORD) * 256);
+         dwLen = SNMPParseOID(pszValue, pdwBuffer, 256);
+         if (dwLen > 0)
+         {
+            m_dwValueLength = dwLen * sizeof(DWORD);
+            safe_free(m_pValue);
+            m_pValue = (BYTE *)nx_memdup(pdwBuffer, m_dwValueLength);
+         }
+         else
+         {
+            // OID parse error, set to .ccitt.zeroDotZero (.0.0)
+            m_dwValueLength = sizeof(DWORD) * 2;
+            m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
+            memset(m_pValue, 0, m_dwValueLength);
+         }
+         break;
+      case ASN_OCTET_STRING:
+         m_dwValueLength = _tcslen(pszValue);
+#ifdef UNICODE
+         m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                             pszValue, m_dwValueLength, (char *)m_pValue,
+                             m_dwValueLength, NULL, NULL);
+#else
+         safe_free(m_pValue);
+         m_pValue = (BYTE *)nx_memdup(pszValue, m_dwValueLength);
+#endif
+         break;
+      default:
+         break;
+   }
 }

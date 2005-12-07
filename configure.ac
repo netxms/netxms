@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.119 2005-12-06 22:07:06 victor Exp $
+# $Id: configure.ac,v 1.120 2005-12-07 22:25:46 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -588,6 +588,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxsnmpget/Makefile
 	src/server/tools/nxsnmpwalk/Makefile
+	src/server/tools/nxsnmpset/Makefile
 	src/server/tools/nxupload/Makefile
 	src/server/libnxsrv/Makefile
 	src/agent/Makefile

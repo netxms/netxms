@@ -1036,6 +1036,10 @@ src/server/tools/nxsnmpget/Makefile.am -text
 src/server/tools/nxsnmpget/nxsnmpget.cpp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsw -text
+src/server/tools/nxsnmpset/Makefile.am -text
+src/server/tools/nxsnmpset/nxsnmpset.cpp -text
+src/server/tools/nxsnmpset/nxsnmpset.dsp -text
+src/server/tools/nxsnmpset/nxsnmpset.dsw -text
 src/server/tools/nxsnmpwalk/.cvsignore -text
 src/server/tools/nxsnmpwalk/Makefile.am -text
 src/server/tools/nxsnmpwalk/nxsnmpwalk.cpp -text
