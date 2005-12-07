@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
                    "   -c <string>  : Specify community string. Default is \"public\".\n"
                    "   -h           : Display help and exit.\n"
                    "   -p <port>    : Specify agent's port number. Default is 161.\n"
-                   "   -v           : Specify SNMP version (valid values is 1 and 2c).\n"
+                   "   -v <version> : Specify SNMP version (valid values is 1 and 2c).\n"
                    "   -w <seconds> : Specify request timeout (default is 3 seconds)\n"
                    "\n");
             iExit = 0;

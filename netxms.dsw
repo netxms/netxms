@@ -402,6 +402,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "nxsnmpset"=.\src\server\tools\nxsnmpset\nxsnmpset.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsnmp
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "nxsnmpwalk"=.\src\server\tools\nxsnmpwalk\nxsnmpwalk.dsp - Package Owner=<4>
 
 Package=<5>
