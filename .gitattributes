@@ -161,6 +161,7 @@ include/nximage.h -text
 include/nxlog.h -text
 include/nxnt.h -text
 include/nxqueue.h -text
+include/nxsl.h -text
 include/nxsnmp.h -text
 include/nxtools.h -text
 include/nxwinui.h -text
@@ -789,6 +790,15 @@ src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
+src/libnxsl/compiler.cpp -text
+src/libnxsl/lexer.cpp -text
+src/libnxsl/libnxsl.dsp -text
+src/libnxsl/libnxsl.dsw -text
+src/libnxsl/libnxsl.h -text
+src/libnxsl/main.cpp -text
+src/libnxsl/parser.l -text
+src/libnxsl/parser.y -text
+src/libnxsl/program.cpp -text
 src/libnxsnmp/Makefile.am -text
 src/libnxsnmp/ber.cpp -text
 src/libnxsnmp/libnxsnmp.dsp -text
@@ -823,6 +833,10 @@ src/nxreport/nxreport.cpp -text
 src/nxreport/nxreport.dsp -text
 src/nxreport/nxreport.dsw -text
 src/nxreport/nxreport.h -text
+src/nxscript/nxscript.cpp -text
+src/nxscript/nxscript.dsp -text
+src/nxscript/nxscript.dsw -text
+src/nxscript/nxscript.h -text
 src/server/Makefile.am -text
 src/server/core/.cvsignore -text
 src/server/core/Makefile.am -text
