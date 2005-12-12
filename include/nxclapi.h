@@ -21,6 +21,15 @@
 **
 **/
 
+/*
+** WARNING !!!
+**
+** If structures in this file being changed, don't forget to change
+** NXSM wrapper files accordingly!
+**
+*/
+
+
 #ifndef _nxclapi_h_
 #define _nxclapi_h_
 

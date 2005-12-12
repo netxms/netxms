@@ -35,25 +35,27 @@
 
 
 //
-// Class representing compiled NXSL program
+// Script handle
 //
 
-class LIBNXSL_EXPORTABLE NXSL_Program
-{
-public:
-   NXSL_Program(void);
-   ~NXSL_Program();
-
-   int Run(void);
-};
+typedef void * NXSL_SCRIPT;
 
 
 //
 // Functions
 //
 
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompileScript(TCHAR *pszSource,
-                                                   TCHAR *pszError, int nBufSize);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+NXSL_SCRIPT LIBNXSL_EXPORTABLE NXSLCompileScript(TCHAR *pszSource,
+                                                 TCHAR *pszError, int nBufSize);
+int LIBNXSL_EXPORTABLE NXSLRunScript(NXSL_SCRIPT hScript);
+void LIBNXSL_EXPORTABLE NXSLDestroyScript(NXSL_SCRIPT hScript);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
