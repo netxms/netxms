@@ -142,6 +142,7 @@ images/vpnc.ico -text
 images/vpnc.png -text
 images/zone.ico -text
 images/zone.png -text
+include/FlexLexer.h -text
 include/Makefile.am -text
 include/ata.h -text
 include/config-netware.h -text
