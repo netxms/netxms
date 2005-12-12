@@ -100,8 +100,12 @@
 #include <fcntl.h>
 #endif
 
-#define S_IRUSR      0400
-#define S_IWUSR      0200
+#ifndef S_IRUSR
+# define S_IRUSR      0400
+#endif
+#ifndef S_IWUSR
+# define S_IWUSR      0200
+#endif
 
 #define snprintf  _snprintf
 

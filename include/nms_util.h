@@ -128,6 +128,8 @@ inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 
 #ifdef _WIN32
 
+#ifndef SWIGPERL
+
 typedef struct dirent
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
@@ -143,6 +145,8 @@ typedef struct _dir_struc
    long            nfiles; /* number if filenames in table */
    struct dirent   dirstr; /* Directory structure to return */
 } DIR;
+
+#endif
 
 #endif   /* _WIN32 */
 
@@ -269,9 +273,11 @@ extern "C"
 #endif
 
 #ifdef _WIN32
+#ifndef SWIGPERL
     DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
     struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
     int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
+#endif
 #endif
 
 #if defined(_WIN32) || !(HAVE_SCANDIR)
