@@ -76,6 +76,7 @@ union YYSTYPE;
 #define OPCODE_RET_NULL       28
 #define OPCODE_JZ             29
 #define OPCODE_PRINT          30
+#define OPCODE_CONCAT         31
 
 
 //
@@ -83,9 +84,9 @@ union YYSTYPE;
 //
 
 #define VALUE_IS_NULL         ((DWORD)0x0001)
-#define VALUE_VALID_STRING    ((DWORD)0x0002)
-#define VALUE_VALID_INT       ((DWORD)0x0004)
-#define VALUE_VALID_FLOAT     ((DWORD)0x0008)
+#define VALUE_STRING_IS_VALID ((DWORD)0x0002)
+#define VALUE_IS_NUMERIC      ((DWORD)0x0004)
+#define VALUE_IS_REAL         ((DWORD)0x0008)
 
 
 //
@@ -122,7 +123,9 @@ protected:
 
 public:
    NXSL_Value(void);
+   NXSL_Value(NXSL_Value *);
    NXSL_Value(int nValue);
+   NXSL_Value(double dValue);
    NXSL_Value(char *pszValue);
    ~NXSL_Value();
 
@@ -147,16 +150,17 @@ protected:
       NXSL_Value *m_pConstant;
       char *m_pszString;
       DWORD m_dwAddr;
-   } operand;
+   } m_operand;
    int m_nStackItems;
+   int m_nSourceLine;
 
 public:
-   NXSL_Instruction(int nOpCode);
-   NXSL_Instruction(int nOpCode, NXSL_Value *pValue);
-   NXSL_Instruction(int nOpCode, char *pszString);
-   NXSL_Instruction(int nOpCode, char *pszString, int nStackItems);
-   NXSL_Instruction(int nOpCode, DWORD dwAddr);
-   NXSL_Instruction(int nOpCode, int nStackItems);
+   NXSL_Instruction(int nLine, int nOpCode);
+   NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue);
+   NXSL_Instruction(int nLine, int nOpCode, char *pszString);
+   NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems);
+   NXSL_Instruction(int nLine, int nOpCode, DWORD dwAddr);
+   NXSL_Instruction(int nLine, int nOpCode, int nStackItems);
    ~NXSL_Instruction();
 };
 

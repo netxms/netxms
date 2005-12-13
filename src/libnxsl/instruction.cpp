@@ -28,42 +28,48 @@
 // Constructors
 //
 
-NXSL_Instruction::NXSL_Instruction(int nOpCode)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
 {
    m_nOpCode = nOpCode;
+   m_nSourceLine = nLine;
    m_nStackItems = 0;
 }
 
-NXSL_Instruction::NXSL_Instruction(int nOpCode, NXSL_Value *pValue)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
 {
    m_nOpCode = nOpCode;
-   operand.m_pConstant = pValue;
+   m_nSourceLine = nLine;
+   m_operand.m_pConstant = pValue;
    m_nStackItems = 0;
 }
 
-NXSL_Instruction::NXSL_Instruction(int nOpCode, char *pszString)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
 {
    m_nOpCode = nOpCode;
-   operand.m_pszString = pszString;
+   m_nSourceLine = nLine;
+   m_operand.m_pszString = pszString;
    m_nStackItems = 0;
 }
 
-NXSL_Instruction::NXSL_Instruction(int nOpCode, char *pszString, int nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems)
 {
    m_nOpCode = nOpCode;
-   operand.m_pszString = pszString;
+   m_nSourceLine = nLine;
+   m_operand.m_pszString = pszString;
    m_nStackItems = nStackItems;
 }
 
-NXSL_Instruction::NXSL_Instruction(int nOpCode, DWORD dwAddr)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, DWORD dwAddr)
 {
    m_nOpCode = nOpCode;
-   operand.m_dwAddr = dwAddr;
+   m_nSourceLine = nLine;
+   m_operand.m_dwAddr = dwAddr;
 }
 
-NXSL_Instruction::NXSL_Instruction(int nOpCode, int nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, int nStackItems)
 {
    m_nOpCode = nOpCode;
+   m_nSourceLine = nLine;
    m_nStackItems = nStackItems;
 }
 
@@ -74,4 +80,17 @@ NXSL_Instruction::NXSL_Instruction(int nOpCode, int nStackItems)
 
 NXSL_Instruction::~NXSL_Instruction()
 {
+   switch(m_nOpCode)
+   {
+      case OPCODE_PUSH_VARIABLE:
+      case OPCODE_CALL_EXTERNAL:
+      case OPCODE_SET:
+         safe_free(m_operand.m_pszString);
+         break;
+      case OPCODE_PUSH_CONSTANT:
+         delete m_operand.m_pConstant;
+         break;
+      default:
+         break;
+   }
 }

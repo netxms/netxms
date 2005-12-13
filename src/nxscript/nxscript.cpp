@@ -67,11 +67,19 @@ int main(int argc, char *argv[])
    DWORD dwSize;
    NXSL_SCRIPT hScript;
 
+   printf("NetXMS Scripting Host  Version " NETXMS_VERSION_STRING "\n"
+          "Copyright (c) 2005 Victor Kirhenshtein\n\n");
+
+   if (argc == 1)
+   {
+      printf("Usage: nxscript script [arg1 [... argN]]\n\n");
+      return 127;
+   }
+
    pszSource = LoadFile(argv[1], &dwSize);
    hScript = NXSLCompile(pszSource, szError, 1024);
    if (hScript != NULL)
    {
-      printf("Compiled successfuly\n");
       NXSLDump(hScript, stdout);
       if (NXSLRun(hScript) == -1)
       {

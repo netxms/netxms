@@ -39,6 +39,7 @@ escape		\\[bnrt\"]
 <INITIAL>">="	return T_GE;
 <INITIAL>"<<"	return T_LSHIFT;
 <INITIAL>">>"	return T_RSHIFT;
+<INITIAL>"."	return '.';
 <INITIAL>"{"	return '{';
 <INITIAL>"}"	return '}';
 <INITIAL>"("	return '(';

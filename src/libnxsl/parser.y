@@ -43,6 +43,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token <valStr> T_STRING
 
 %right '='
+%left '.'
 %left T_OR
 %left T_AND
 %left '|'
@@ -82,7 +83,7 @@ ModuleComponent:
 Function:
 	T_SUB FunctionName ParameterDeclaration Block
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_RET_NULL));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RET_NULL));
 }
 ;
 
@@ -100,7 +101,7 @@ Block:
 	'{' StatementList '}'
 |	'{' '}'
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_NOP));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NOP));
 }
 ;
 
@@ -117,12 +118,12 @@ StatementOrBlock:
 Statement:
 	Expression ';'
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_POP, (int)1));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_POP, (int)1));
 }
 |	BuiltinStatement
 |	';'
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_NOP));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NOP));
 }
 ;
 
@@ -130,82 +131,86 @@ Expression:
 	'(' Expression ')'
 |	T_IDENTIFIER '=' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_SET, $1));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SET, $1));
 }
 |	'-' Expression	%prec NEGATE
 |	'!' Expression	%prec NEGATE
 |	'~' Expression	%prec NEGATE
 |	Expression '+' Expression	
 { 
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_ADD));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_ADD));
 }
 |	Expression '-' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_SUB));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SUB));
 }
 |	Expression '*' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_MUL));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_MUL));
 }
 |	Expression '/' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_DIV));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_DIV));
 }
 |	Expression '%' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_REM));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_REM));
 }
 |	Expression T_EQ Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_EQ));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_EQ));
 }
 |	Expression T_NE Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_NE));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NE));
 }
 |	Expression '<' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_LT));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_LT));
 }
 |	Expression T_LE Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_LE));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_LE));
 }
 |	Expression '>' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_GT));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_GT));
 }
 |	Expression T_GE Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_GE));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_GE));
 }
 |	Expression '&' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_BIT_AND));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIT_AND));
 }
 |	Expression '|' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_BIT_OR));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIT_OR));
 }
 |	Expression '^' Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_BIT_XOR));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIT_XOR));
 }
 |	Expression T_AND Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_AND));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_AND));
 }
 |	Expression T_OR Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_OR));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_OR));
 }
 |	Expression T_LSHIFT Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_LSHIFT));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_LSHIFT));
 }
 |	Expression T_RSHIFT Expression
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_RSHIFT));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RSHIFT));
+}
+|	Expression '.' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CONCAT));
 }
 |	Operand
 ;
@@ -214,11 +219,11 @@ Operand:
 	FunctionCall
 |	T_IDENTIFIER
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_PUSH_VARIABLE, $1));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_VARIABLE, $1));
 }
 |	Constant
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_PUSH_CONSTANT, $1));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_CONSTANT, $1));
 }
 ;
 
@@ -234,7 +239,7 @@ SimpleStatement:
 }
 |	SimpleStatementKeyword
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_PUSH_CONSTANT, new NXSL_Value));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value));
 	pScript->AddInstruction($1);
 }
 ;
@@ -242,22 +247,22 @@ SimpleStatement:
 SimpleStatementKeyword:
 	T_EXIT
 {
-	$$ = new NXSL_Instruction(OPCODE_EXIT);
+	$$ = new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_EXIT);
 }
 |	T_RETURN
 {
-	$$ = new NXSL_Instruction(OPCODE_RETURN);
+	$$ = new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RETURN);
 }
 |	T_PRINT
 {
-	$$ = new NXSL_Instruction(OPCODE_PRINT);
+	$$ = new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PRINT);
 }
 ;
 
 IfStatement:
 	T_IF '(' Expression ')' 
 	{ 
-		pScript->AddInstruction(new NXSL_Instruction(OPCODE_JZ, INVALID_ADDRESS));
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
 	} 
 	IfBody
 ;
@@ -276,7 +281,7 @@ IfBody:
 ElseStatement:
 	T_ELSE
 	{
-		pScript->AddInstruction(new NXSL_Instruction(OPCODE_JMP, INVALID_ADDRESS));
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
 		pScript->ResolveLastJump(OPCODE_JZ);
 	}
 	StatementOrBlock
@@ -285,11 +290,11 @@ ElseStatement:
 FunctionCall:
 	FunctionName ParameterList ')'
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_CALL_EXTERNAL, $1, $2));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CALL_EXTERNAL, $1, $2));
 }
 |	FunctionName ')'
 {
-	pScript->AddInstruction(new NXSL_Instruction(OPCODE_CALL_EXTERNAL, $1, 0));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0));
 }
 ;
 

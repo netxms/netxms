@@ -30,26 +30,66 @@
 
 NXSL_Value::NXSL_Value(void)
 {
-   m_dwFlags = VALUE_IS_NULL | VALUE_VALID_INT | VALUE_VALID_FLOAT;
+   m_dwFlags = VALUE_IS_NULL;
    m_pszValStr = NULL;
-   m_iValInt = 0;
-   m_dValFloat = 0;
+}
+
+NXSL_Value::NXSL_Value(NXSL_Value *pValue)
+{
+   if (pValue != NULL)
+   {
+      m_dwFlags = pValue->m_dwFlags;
+      if (pValue->m_dwFlags & VALUE_STRING_IS_VALID)
+         m_pszValStr = _tcsdup(pValue->m_pszValStr);
+      else
+         m_pszValStr = NULL;
+      m_iValInt = pValue->m_iValInt;
+      m_dValFloat = pValue->m_dValFloat;
+   }
+   else
+   {
+      m_dwFlags = VALUE_IS_NULL;
+      m_pszValStr = NULL;
+   }
 }
 
 NXSL_Value::NXSL_Value(int nValue)
 {
-   m_dwFlags = VALUE_VALID_INT | VALUE_VALID_FLOAT;
+   m_dwFlags = VALUE_IS_NUMERIC;
    m_pszValStr = NULL;
    m_iValInt = nValue;
    m_dValFloat = nValue;
 }
 
+NXSL_Value::NXSL_Value(double dValue)
+{
+   m_dwFlags = VALUE_IS_NUMERIC | VALUE_IS_REAL;
+   m_pszValStr = NULL;
+   m_iValInt = (int)dValue;
+   m_dValFloat = dValue;
+}
+
 NXSL_Value::NXSL_Value(char *pszValue)
 {
-   m_dwFlags = VALUE_VALID_STRING | VALUE_VALID_INT | VALUE_VALID_FLOAT;
+   char *eptr;
+
+   m_dwFlags = VALUE_STRING_IS_VALID;
    m_pszValStr = strdup(pszValue);
-   m_iValInt = strtol(pszValue, NULL, 0);
-   m_dValFloat = strtod(pszValue, NULL);
+   m_iValInt = strtol(pszValue, &eptr, 0);
+   if (*eptr == 0)
+   {
+      m_dwFlags |= VALUE_IS_NUMERIC;
+      m_dValFloat = m_iValInt;
+   }
+   else
+   {
+      m_dValFloat = strtod(pszValue, &eptr);
+      if (*eptr == 0)
+      {
+         m_dwFlags |= VALUE_IS_NUMERIC | VALUE_IS_REAL;
+         m_iValInt = (int)m_dValFloat;
+      }
+   }
 }
 
 
@@ -74,17 +114,17 @@ char *NXSL_Value::GetValueAsString(void)
    if (m_dwFlags & VALUE_IS_NULL)
       return "";
 
-   if (!(m_dwFlags & VALUE_VALID_STRING))
+   if (!(m_dwFlags & VALUE_STRING_IS_VALID))
    {
       safe_free(m_pszValStr);
-      if (m_dwFlags & VALUE_VALID_FLOAT)
+      if (m_dwFlags & VALUE_IS_REAL)
          sprintf(szBuffer, "%f", m_dValFloat);
-      else if (m_dwFlags & VALUE_VALID_INT)
+      else if (m_dwFlags & VALUE_IS_NUMERIC)
          sprintf(szBuffer, "%d", m_iValInt);
       else
          szBuffer[0] = 0;
       m_pszValStr = strdup(szBuffer);
-      m_dwFlags |= VALUE_VALID_STRING;
+      m_dwFlags |= VALUE_STRING_IS_VALID;
    }
    return m_pszValStr;
 }
@@ -99,15 +139,5 @@ int NXSL_Value::GetValueAsInt(void)
    if (m_dwFlags & VALUE_IS_NULL)
       return 0;
 
-   if (!(m_dwFlags & VALUE_VALID_INT))
-   {
-      if (m_dwFlags & VALUE_VALID_FLOAT)
-         m_iValInt = (int)m_dValFloat;
-      else if (m_dwFlags & VALUE_VALID_STRING)
-         m_iValInt = strtol(m_pszValStr, NULL, 0);
-      else
-         m_iValInt = 0;
-      m_dwFlags |= VALUE_VALID_INT;
-   }
-   return m_iValInt;
+   return (m_dwFlags & VALUE_IS_NUMERIC) ? m_iValInt : 0;
 }

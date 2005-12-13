@@ -36,7 +36,7 @@ static char *m_pszCommandMnemonic[] =
    "EQ", "NE", "LT", "LE", "GT", "GE",
    "BITAND", "BITOR", "BITXOR",
    "AND", "OR", "LSHIFT", "RSHIFT",
-   "NRET", "JZ", "PRINT"
+   "NRET", "JZ", "PRINT", "CONCAT"
 };
 
 
@@ -97,9 +97,9 @@ void NXSL_Program::ResolveLastJump(int nOpCode)
    {
       i--;
       if ((m_ppInstructionSet[i]->m_nOpCode == nOpCode) &&
-          (m_ppInstructionSet[i]->operand.m_dwAddr == INVALID_ADDRESS))
+          (m_ppInstructionSet[i]->m_operand.m_dwAddr == INVALID_ADDRESS))
       {
-         m_ppInstructionSet[i]->operand.m_dwAddr = m_dwCodeSize;
+         m_ppInstructionSet[i]->m_operand.m_dwAddr = m_dwCodeSize;
          break;
       }
    }
@@ -121,27 +121,27 @@ void NXSL_Program::Dump(FILE *pFile)
       switch(m_ppInstructionSet[i]->m_nOpCode)
       {
          case OPCODE_CALL_EXTERNAL:
-            fprintf(pFile, "%s, %d\n", m_ppInstructionSet[i]->operand.m_pszString,
+            fprintf(pFile, "%s, %d\n", m_ppInstructionSet[i]->m_operand.m_pszString,
                     m_ppInstructionSet[i]->m_nStackItems);
             break;
          case OPCODE_CALL:
-            fprintf(pFile, "%04X, %d\n", m_ppInstructionSet[i]->operand.m_dwAddr,
+            fprintf(pFile, "%04X, %d\n", m_ppInstructionSet[i]->m_operand.m_dwAddr,
                     m_ppInstructionSet[i]->m_nStackItems);
             break;
          case OPCODE_JMP:
          case OPCODE_JZ:
-            fprintf(pFile, "%04X\n", m_ppInstructionSet[i]->operand.m_dwAddr);
+            fprintf(pFile, "%04X\n", m_ppInstructionSet[i]->m_operand.m_dwAddr);
             break;
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
-            fprintf(pFile, "%s\n", m_ppInstructionSet[i]->operand.m_pszString);
+            fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
-            if (m_ppInstructionSet[i]->operand.m_pConstant->IsNull())
+            if (m_ppInstructionSet[i]->m_operand.m_pConstant->IsNull())
                fprintf(pFile, "<null>\n");
             else
                fprintf(pFile, "\"%s\"\n", 
-                       m_ppInstructionSet[i]->operand.m_pConstant->GetValueAsString());
+                       m_ppInstructionSet[i]->m_operand.m_pConstant->GetValueAsString());
             break;
          case OPCODE_POP:
             fprintf(pFile, "%d\n", m_ppInstructionSet[i]->m_nStackItems);
@@ -168,6 +168,7 @@ void NXSL_Program::Error(TCHAR *pszFormat, ...)
    _vsntprintf(szBuffer, 1024, pszFormat, args);
    va_end(args);
    m_pszErrorText = _tcsdup(szBuffer);
+   m_dwCurrPos = INVALID_ADDRESS;
 }
 
 
@@ -205,21 +206,22 @@ void NXSL_Program::Execute(void)
    switch(cp->m_nOpCode)
    {
       case OPCODE_PUSH_CONSTANT:
-         m_pDataStack->Push(cp->operand.m_pConstant);
+         m_pDataStack->Push(new NXSL_Value(cp->m_operand.m_pConstant));
          break;
       case OPCODE_POP:
          for(i = 0; i < cp->m_nStackItems; i++)
             delete (NXSL_Value *)m_pDataStack->Pop();
          break;
       case OPCODE_JMP:
-         dwNext = cp->operand.m_dwAddr;
+         dwNext = cp->m_operand.m_dwAddr;
          break;
       case OPCODE_JZ:
          pValue = (NXSL_Value *)m_pDataStack->Pop();
          if (pValue != NULL)
          {
             if (pValue->GetValueAsInt() == 0)
-               dwNext = cp->operand.m_dwAddr;
+               dwNext = cp->m_operand.m_dwAddr;
+            delete pValue;
          }
          break;
       case OPCODE_PRINT:
@@ -227,11 +229,11 @@ void NXSL_Program::Execute(void)
          if (pValue != NULL)
          {
             fputs(pValue->GetValueAsString(), stdout);
+            delete pValue;
          }
          else
          {
             Error("Data stack underflow");
-            dwNext = INVALID_ADDRESS;
          }
          break;
       case OPCODE_EXIT:
@@ -239,15 +241,17 @@ void NXSL_Program::Execute(void)
          if (pValue != NULL)
          {
             dwNext = m_dwCodeSize;
+            delete pValue;
          }
          else
          {
             Error("Data stack underflow");
-            dwNext = INVALID_ADDRESS;
          }
          break;
       default:
          break;
    }
-   m_dwCurrPos = dwNext;
+
+   if (m_dwCurrPos != INVALID_ADDRESS)
+      m_dwCurrPos = dwNext;
 }
