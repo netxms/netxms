@@ -22,7 +22,7 @@
 **/
 
 #include "libnxsl.h"
-#include "parser.tab.h"
+#include "parser.tab.hpp"
 
 
 //
@@ -93,7 +93,8 @@ void NXSL_Lexer::LexerError(const char *pszMsg)
 // yylex() for Bison
 //
 
-extern "C" int yylex(YYSTYPE *lvalp, void *pLexer)
+int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer)
 {
-   return ((NXSL_Lexer *)pLexer)->yylex();
+   pLexer->SetLvalPtr(lvalp);
+   return pLexer->yylex();
 }

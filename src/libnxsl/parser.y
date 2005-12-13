@@ -1,31 +1,48 @@
 %{
 
+#pragma warning(disable : 4065 4102)
+
 #define YYERROR_VERBOSE
 #define YYDEBUG			1
 
 #include <nms_common.h>
-#include "parser.tab.h"
+#include "libnxsl.h"
+#include "parser.tab.hpp"
 
-void yyerror(void *pLexer, void *pCompiler, char *pszText);
-int yylex(YYSTYPE *lvalp, void *pLexer);
+void yyerror(NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
+             NXSL_Program *pScript, char *pszText);
+int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 
 %}
 
 %expect		1
 %pure-parser
-%lex-param	{void *pLexer}
-%parse-param	{void *pLexer}
-%parse-param	{void *pCompiler}
+%lex-param	{NXSL_Lexer *pLexer}
+%parse-param	{NXSL_Lexer *pLexer}
+%parse-param	{NXSL_Compiler *pCompiler}
+%parse-param	{NXSL_Program *pScript}
+
+%union
+{
+	int valInt;
+	char *valStr;
+	NXSL_Value *pConstant;
+	NXSL_Instruction *pInstruction;
+}
 
 %token T_ELSE
-%token T_FUNCTION
-%token T_IDENTIFIER
+%token T_EXIT
 %token T_IF
-%token T_INTEGER
+%token T_NULL
+%token T_PRINT
 %token T_RETURN
-%token T_STRING
 %token T_SUB
 
+%token <valStr> T_IDENTIFIER
+%token <valInt> T_INTEGER
+%token <valStr> T_STRING
+
+%right '='
 %left T_OR
 %left T_AND
 %left '|'
@@ -36,8 +53,14 @@ int yylex(YYSTYPE *lvalp, void *pLexer);
 %left T_LSHIFT T_RSHIFT
 %left '+' '-'
 %left '*' '/' '%'
-%right '='
-%right T_INC T_DEC '!' '~'
+%right T_INC T_DEC '!' '~' NEGATE
+
+%type <pConstant> Constant
+%type <valStr> FunctionName
+%type <valInt> ParameterList
+%type <pInstruction> SimpleStatementKeyword
+
+%start Script
 
 
 %%
@@ -57,7 +80,10 @@ ModuleComponent:
 ;
 
 Function:
-	T_SUB T_IDENTIFIER '(' ParameterDeclaration Block
+	T_SUB FunctionName ParameterDeclaration Block
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_RET_NULL));
+}
 ;
 
 ParameterDeclaration:
@@ -73,6 +99,9 @@ IdentifierList:
 Block:
 	'{' StatementList '}'
 |	'{' '}'
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_NOP));
+}
 ;
 
 StatementList:
@@ -87,17 +116,96 @@ StatementOrBlock:
 
 Statement:
 	Expression ';'
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_POP, (int)1));
+}
 |	BuiltinStatement
 |	';'
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_NOP));
+}
 ;
 
 Expression:
 	'(' Expression ')'
 |	T_IDENTIFIER '=' Expression
-|	UnaryOperation Expression
-|	Operand BinaryOperation Expression
 {
-printf("binary op: %d\n", $2);
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_SET, $1));
+}
+|	'-' Expression	%prec NEGATE
+|	'!' Expression	%prec NEGATE
+|	'~' Expression	%prec NEGATE
+|	Expression '+' Expression	
+{ 
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_ADD));
+}
+|	Expression '-' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_SUB));
+}
+|	Expression '*' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_MUL));
+}
+|	Expression '/' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_DIV));
+}
+|	Expression '%' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_REM));
+}
+|	Expression T_EQ Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_EQ));
+}
+|	Expression T_NE Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_NE));
+}
+|	Expression '<' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_LT));
+}
+|	Expression T_LE Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_LE));
+}
+|	Expression '>' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_GT));
+}
+|	Expression T_GE Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_GE));
+}
+|	Expression '&' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_BIT_AND));
+}
+|	Expression '|' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_BIT_OR));
+}
+|	Expression '^' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_BIT_XOR));
+}
+|	Expression T_AND Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_AND));
+}
+|	Expression T_OR Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_OR));
+}
+|	Expression T_LSHIFT Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_LSHIFT));
+}
+|	Expression T_RSHIFT Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_RSHIFT));
 }
 |	Operand
 ;
@@ -105,86 +213,106 @@ printf("binary op: %d\n", $2);
 Operand:
 	FunctionCall
 |	T_IDENTIFIER
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_PUSH_VARIABLE, $1));
+}
 |	Constant
-;
-
-/*PrefixOperation:
-	IncrementOrDecrement
-|
-;
-
-PostfixOperation:
-	IncrementOrDecrement
-|
-;
-
-
-IncrementOrDecrement:
-	T_INC
-|	T_DEC
-;*/
-
-UnaryOperation:
-	'!'
-|	'~'
-|	'-'
-;
-
-BinaryOperation:
-	'+' { $$ = 1; }
-|	'-' { $$ = 3; }
-|	'*' { $$ = 2; }
-|	'/' { $$ = 4; }
-|	'%'
-|	T_EQ
-|	T_NE
-|	'<'
-|	T_LE
-|	'>'
-|	T_GE
-|	'&'
-|	'|'
-|	'^'
-|	T_AND
-|	T_OR
-|	T_LSHIFT
-|	T_RSHIFT
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_PUSH_CONSTANT, $1));
+}
 ;
 
 BuiltinStatement:
-	ReturnStatement ';'
+	SimpleStatement ';'
 |	IfStatement
 ;
 
-ReturnStatement:
-	T_RETURN Expression
+SimpleStatement:
+	SimpleStatementKeyword Expression
+{
+	pScript->AddInstruction($1);
+}
+|	SimpleStatementKeyword
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_PUSH_CONSTANT, new NXSL_Value));
+	pScript->AddInstruction($1);
+}
+;
+
+SimpleStatementKeyword:
+	T_EXIT
+{
+	$$ = new NXSL_Instruction(OPCODE_EXIT);
+}
 |	T_RETURN
+{
+	$$ = new NXSL_Instruction(OPCODE_RETURN);
+}
+|	T_PRINT
+{
+	$$ = new NXSL_Instruction(OPCODE_PRINT);
+}
 ;
 
 IfStatement:
-	T_IF '(' Expression ')' {printf("if body\n"); } IfBody
+	T_IF '(' Expression ')' 
+	{ 
+		pScript->AddInstruction(new NXSL_Instruction(OPCODE_JZ, INVALID_ADDRESS));
+	} 
+	IfBody
 ;
 
 IfBody:
 	StatementOrBlock
+{
+	pScript->ResolveLastJump(OPCODE_JZ);
+}
 |	StatementOrBlock ElseStatement
+{
+	pScript->ResolveLastJump(OPCODE_JMP);
+}
 ;
 
 ElseStatement:
-	T_ELSE StatementOrBlock
+	T_ELSE
+	{
+		pScript->AddInstruction(new NXSL_Instruction(OPCODE_JMP, INVALID_ADDRESS));
+		pScript->ResolveLastJump(OPCODE_JZ);
+	}
+	StatementOrBlock
 ;
 
 FunctionCall:
-	T_IDENTIFIER '(' ParameterList ')'
-|	T_IDENTIFIER '(' ')'
+	FunctionName ParameterList ')'
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_CALL_EXTERNAL, $1, $2));
+}
+|	FunctionName ')'
+{
+	pScript->AddInstruction(new NXSL_Instruction(OPCODE_CALL_EXTERNAL, $1, 0));
+}
 ;
 
 ParameterList:
-	Expression ',' ParameterList
-|	Expression
+	Expression ',' ParameterList { $$ = $3 + 1; }
+|	Expression { $$ = 1; }
+;
+
+FunctionName:
+	T_IDENTIFIER '('
+{
+	$$ = $1;
+}
 ;
 
 Constant:
 	T_STRING
+{
+	$$ = new NXSL_Value($1);
+	free($1);
+}
 |	T_INTEGER
+{
+	$$ = new NXSL_Value($1);
+}
 ;

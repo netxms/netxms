@@ -99,6 +99,10 @@ SOURCE=.\compiler.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\instruction.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\lex.yy.cpp
 # End Source File
 # Begin Source File
@@ -111,11 +115,19 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\parser.tab.c
+SOURCE=.\parser.tab.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\program.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\stack.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\value.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -155,7 +167,7 @@ SOURCE=..\..\include\nxsl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\parser.tab.h
+SOURCE=.\parser.tab.hpp
 # End Source File
 # Begin Source File
 
@@ -206,12 +218,12 @@ SOURCE=.\parser.y
 InputPath=.\parser.y
 
 BuildCmds= \
-	bison -b parser -d -t -v $(InputPath)
+	bison -b parser -o parser.tab.cpp -d -t -v $(InputPath)
 
-"parser.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"parser.tab.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
-"parser.tab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"parser.tab.hpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
 
@@ -221,12 +233,12 @@ BuildCmds= \
 InputPath=.\parser.y
 
 BuildCmds= \
-	bison -b parser -d -t -v $(InputPath)
+	bison -b parser -o parser.tab.cpp -d -t -v $(InputPath)
 
-"parser.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"parser.tab.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
-"parser.tab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"parser.tab.hpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
 

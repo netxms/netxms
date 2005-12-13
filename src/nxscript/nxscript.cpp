@@ -65,14 +65,19 @@ int main(int argc, char *argv[])
 {
    char *pszSource, szError[1024];
    DWORD dwSize;
-   NXSL_Program *pScript;
+   NXSL_SCRIPT hScript;
 
    pszSource = LoadFile(argv[1], &dwSize);
-   pScript = NXSLCompileScript(pszSource, szError, 1024);
-   if (pScript != NULL)
+   hScript = NXSLCompile(pszSource, szError, 1024);
+   if (hScript != NULL)
    {
       printf("Compiled successfuly\n");
-      delete pScript;
+      NXSLDump(hScript, stdout);
+      if (NXSLRun(hScript) == -1)
+      {
+         printf("RUNTIME ERROR: %s\n", NXSLGetRuntimeError(hScript));
+      }
+      NXSLDestroy(hScript);
    }
    else
    {

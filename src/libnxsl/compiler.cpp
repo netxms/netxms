@@ -28,8 +28,8 @@
 // Externals
 //
 
-extern "C" int yyparse(void *, void *);
-extern "C" int yydebug;
+int yyparse(NXSL_Lexer *, NXSL_Compiler *, NXSL_Program *);
+extern int yydebug;
 
 
 //
@@ -62,16 +62,18 @@ void NXSL_Compiler::Error(const char *pszMsg)
 {
    char szText[1024];
 
-   snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->GetCurrLine(), pszMsg);
-   safe_free(m_pszErrorText);
+   if (m_pszErrorText == NULL)
+   {
+      snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->GetCurrLine(), pszMsg);
 #ifdef UNICODE
-   nLen = strlen(szText) + 1;
-   m_pszErrorText = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText,
-                       -1, m_pszErrorText, nLen, NULL, NULL);
+      nLen = strlen(szText) + 1;
+      m_pszErrorText = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText,
+                          -1, m_pszErrorText, nLen, NULL, NULL);
 #else
-   m_pszErrorText = strdup(szText);
+      m_pszErrorText = strdup(szText);
 #endif
+   }
 }
 
 
@@ -84,13 +86,11 @@ NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
    NXSL_Program *pResult;
 
    m_pLexer = new NXSL_Lexer(this, pszSourceCode);
-yydebug=1;
-   if (yyparse(m_pLexer, this) == 0)
+   pResult = new NXSL_Program;
+//yydebug=1;
+   if (yyparse(m_pLexer, this, pResult) != 0)
    {
-      pResult = new NXSL_Program;
-   }
-   else
-   {
+      delete pResult;
       pResult = NULL;
    }
    return pResult;
@@ -101,7 +101,8 @@ yydebug=1;
 // yyerror() for parser
 //
 
-extern "C" void yyerror(void *pLexer, void *pCompiler, char *pszText)
+void yyerror(NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
+             NXSL_Program *pScript, char *pszText)
 {
-   ((NXSL_Compiler *)pCompiler)->Error(pszText);
+   pCompiler->Error(pszText);
 }

@@ -30,6 +30,169 @@
 #include <nxsl.h>
 #include <FlexLexer.h>
 
+union YYSTYPE;
+
+
+//
+// Various defines
+//
+
+#define INVALID_ADDRESS    ((DWORD)0xFFFFFFFF)
+#define MAX_STRING_SIZE    8192
+
+
+//
+// Instruction opcodes
+//
+
+#define OPCODE_NOP            0
+#define OPCODE_RETURN         1
+#define OPCODE_JMP            2
+#define OPCODE_CALL           3
+#define OPCODE_CALL_EXTERNAL  4
+#define OPCODE_PUSH_CONSTANT  5
+#define OPCODE_PUSH_VARIABLE  6
+#define OPCODE_EXIT           7
+#define OPCODE_POP            8
+#define OPCODE_SET            9
+#define OPCODE_ADD            10
+#define OPCODE_SUB            11
+#define OPCODE_MUL            12
+#define OPCODE_DIV            13
+#define OPCODE_REM            14
+#define OPCODE_EQ             15
+#define OPCODE_NE             16
+#define OPCODE_LT             17
+#define OPCODE_LE             18
+#define OPCODE_GT             19
+#define OPCODE_GE             20
+#define OPCODE_BIT_AND        21
+#define OPCODE_BIT_OR         22
+#define OPCODE_BIT_XOR        23
+#define OPCODE_AND            24
+#define OPCODE_OR             25
+#define OPCODE_LSHIFT         26
+#define OPCODE_RSHIFT         27
+#define OPCODE_RET_NULL       28
+#define OPCODE_JZ             29
+#define OPCODE_PRINT          30
+
+
+//
+// Value flags
+//
+
+#define VALUE_IS_NULL         ((DWORD)0x0001)
+#define VALUE_VALID_STRING    ((DWORD)0x0002)
+#define VALUE_VALID_INT       ((DWORD)0x0004)
+#define VALUE_VALID_FLOAT     ((DWORD)0x0008)
+
+
+//
+// Simple stack class
+//
+
+class NXSL_Stack
+{
+private:
+   int m_nStackSize;
+   int m_nStackPos;
+   void **m_ppData;
+
+public:
+   NXSL_Stack(void);
+   ~NXSL_Stack();
+
+   void Push(void *pData);
+   void *Pop(void);
+};
+
+
+//
+// Variable or constant value
+//
+
+class NXSL_Value
+{
+protected:
+   DWORD m_dwFlags;
+   TCHAR *m_pszValStr;
+   int m_iValInt;
+   double m_dValFloat;
+
+public:
+   NXSL_Value(void);
+   NXSL_Value(int nValue);
+   NXSL_Value(char *pszValue);
+   ~NXSL_Value();
+
+   BOOL IsNull(void) { return (m_dwFlags & VALUE_IS_NULL) ? TRUE : FALSE; }
+   char *GetValueAsString(void);
+   int GetValueAsInt(void);
+};
+
+
+//
+// Single execution instruction
+//
+
+class NXSL_Instruction
+{
+   friend class NXSL_Program;
+
+protected:
+   int m_nOpCode;
+   union
+   {
+      NXSL_Value *m_pConstant;
+      char *m_pszString;
+      DWORD m_dwAddr;
+   } operand;
+   int m_nStackItems;
+
+public:
+   NXSL_Instruction(int nOpCode);
+   NXSL_Instruction(int nOpCode, NXSL_Value *pValue);
+   NXSL_Instruction(int nOpCode, char *pszString);
+   NXSL_Instruction(int nOpCode, char *pszString, int nStackItems);
+   NXSL_Instruction(int nOpCode, DWORD dwAddr);
+   NXSL_Instruction(int nOpCode, int nStackItems);
+   ~NXSL_Instruction();
+};
+
+
+//
+// Class representing compiled NXSL program
+//
+
+class NXSL_Program
+{
+protected:
+   NXSL_Instruction **m_ppInstructionSet;
+   DWORD m_dwCodeSize;
+   DWORD m_dwCurrPos;
+
+   NXSL_Stack *m_pDataStack;
+   NXSL_Stack *m_pCodeStack;
+
+   TCHAR *m_pszErrorText;
+
+   void Execute(void);
+   void Error(TCHAR *pszFormat, ...);
+
+public:
+   NXSL_Program(void);
+   ~NXSL_Program();
+
+   void AddInstruction(NXSL_Instruction *pInstruction);
+   void ResolveLastJump(int nOpCode);
+
+   int Run(void);
+
+   void Dump(FILE *pFile);
+   TCHAR *GetErrorText(void) { return m_pszErrorText; }
+};
+
 
 //
 // Modified lexer class
@@ -47,6 +210,9 @@ protected:
 
    int m_nCurrLine;
    int m_nCommentLevel;
+   int m_nStrSize;
+   char m_szStr[MAX_STRING_SIZE];
+   YYSTYPE *m_plval;
 
 	virtual int LexerInput(char *pBuffer, int nMaxSize);
    virtual void LexerError(const char *pszMsg);
@@ -56,6 +222,7 @@ public:
 	virtual ~NXSL_Lexer();
 
    virtual int yylex(void);
+   void SetLvalPtr(YYSTYPE *plval) { m_plval = plval; }
 
    int GetCurrLine(void) { return m_nCurrLine; }
 };
@@ -80,5 +247,6 @@ public:
 
    TCHAR *GetErrorText(void) { return CHECK_NULL(m_pszErrorText); }
 };
+
 
 #endif

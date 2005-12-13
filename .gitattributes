@@ -792,6 +792,7 @@ src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
 src/libnxsl/compiler.cpp -text
+src/libnxsl/instruction.cpp -text
 src/libnxsl/lexer.cpp -text
 src/libnxsl/libnxsl.dsp -text
 src/libnxsl/libnxsl.dsw -text
@@ -800,6 +801,8 @@ src/libnxsl/main.cpp -text
 src/libnxsl/parser.l -text
 src/libnxsl/parser.y -text
 src/libnxsl/program.cpp -text
+src/libnxsl/stack.cpp -text
+src/libnxsl/value.cpp -text
 src/libnxsnmp/Makefile.am -text
 src/libnxsnmp/ber.cpp -text
 src/libnxsnmp/libnxsnmp.dsp -text
