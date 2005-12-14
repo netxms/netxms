@@ -797,6 +797,13 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
 }
 
 
+#ifndef VER_PLATFORM_WIN32_WINDOWS
+#define VER_PLATFORM_WIN32_WINDOWS 1
+#endif
+#ifndef VER_PLATFORM_WIN32_CE
+#define VER_PLATFORM_WIN32_CE 3
+#endif
+
 //
 // Get OS name and version
 //
