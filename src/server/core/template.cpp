@@ -584,7 +584,6 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 BOOL Template::ApplyToNode(Node *pNode)
 {
    DWORD i, *pdwItemList;
-   DCItem *pDstItem;
    BOOL bErrors = FALSE;
 
    // Link node to template
@@ -604,12 +603,8 @@ BOOL Template::ApplyToNode(Node *pNode)
       if (m_ppItems[i] != NULL)
       {
          pdwItemList[i] = m_ppItems[i]->Id();
-         pDstItem = new DCItem(m_ppItems[i]);
-         pDstItem->SetTemplateId(m_dwId, m_ppItems[i]->Id());
-         pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM), pNode);
-         if (!pNode->ApplyTemplateItem(pDstItem))
+         if (!pNode->ApplyTemplateItem(m_dwId, m_ppItems[i]))
          {
-            delete pDstItem;
             bErrors = TRUE;
          }
       }

@@ -990,25 +990,6 @@ void DCItem::PrepareForDeletion(void)
 
 
 //
-// Prepare item for replacing an old one
-//
-
-void DCItem::PrepareForReplacement(DCItem *pItem, int iStatus)
-{
-   m_tLastPoll = pItem->m_tLastPoll;
-   m_dwId = pItem->m_dwId;
-   ClearCache();
-   m_dwCacheSize = pItem->m_dwCacheSize;
-   m_ppValueCache = pItem->m_ppValueCache;
-   pItem->m_ppValueCache = NULL;
-   pItem->m_dwCacheSize = 0;
-   m_prevRawValue = pItem->m_prevRawValue;
-   m_tPrevValueTimeStamp = pItem->m_tPrevValueTimeStamp;
-   m_iStatus = iStatus;
-}
-
-
-//
 // Match schedule to current time
 //
 
@@ -1107,4 +1088,63 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
    }
    Unlock();
    return bResult;
+}
+
+
+//
+// Update from template item
+//
+
+void DCItem::UpdateFromTemplate(DCItem *pItem)
+{
+   DWORD i, dwCount;
+
+   Lock();
+
+   m_iDataType = pItem->m_iDataType;
+   m_iPollingInterval = pItem->m_iPollingInterval;
+   m_iRetentionTime = pItem->m_iRetentionTime;
+   m_iDeltaCalculation = pItem->m_iDeltaCalculation;
+   m_iSource = pItem->m_iSource;
+   m_iStatus = pItem->m_iStatus;
+   _tcscpy(m_szName, pItem->m_szName);
+   _tcscpy(m_szDescription, pItem->m_szDescription);
+   _tcscpy(m_szInstance, pItem->m_szInstance);
+   safe_free(m_pszFormula);
+   m_pszFormula = _tcsdup(pItem->m_pszFormula);
+   m_iAdvSchedule = pItem->m_iAdvSchedule;
+
+   // Copy schedules
+   for(i = 0; i < m_dwNumSchedules; i++)
+      safe_free(m_ppScheduleList[i]);
+   safe_free(m_ppScheduleList);
+   m_dwNumSchedules = pItem->m_dwNumSchedules;
+   m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
+   for(i = 0; i < m_dwNumSchedules; i++)
+      m_ppScheduleList[i] = _tcsdup(pItem->m_ppScheduleList[i]);
+
+   // Copy thresholds
+   // ***************************
+   // First, skip matching thresholds
+   dwCount = min(m_dwNumThresholds, pItem->m_dwNumThresholds);
+   for(i = 0; i < dwCount; i++)
+      if (!m_ppThresholdList[i]->Compare(pItem->m_ppThresholdList[i]))
+         break;
+   dwCount = i;   // First unmatched threshold's position
+
+   // Delete all original thresholds starting from first unmatched
+   for(; i < m_dwNumThresholds; i++)
+      delete m_ppThresholdList[i];
+
+   // (Re)create thresholds starting from first unmatched
+   m_dwNumThresholds = pItem->m_dwNumThresholds;
+   m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
+   for(i = dwCount; i < m_dwNumThresholds; i++)
+   {
+      m_ppThresholdList[i] = new Threshold(pItem->m_ppThresholdList[i]);
+      m_ppThresholdList[i]->CreateId();
+      m_ppThresholdList[i]->BindToItem(m_dwId);
+   }
+   
+   Unlock();
 }

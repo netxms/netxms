@@ -479,3 +479,45 @@ void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValu
          break;
    }
 }
+
+
+//
+// Compare to another threshold
+//
+
+BOOL Threshold::Compare(Threshold *pThr)
+{
+   BOOL bMatch;
+
+   switch(m_iDataType)
+   {
+      case DCI_DT_INT:
+         bMatch = ((LONG)pThr->m_value == (LONG)m_value);
+         break;
+      case DCI_DT_UINT:
+         bMatch = ((DWORD)pThr->m_value == (DWORD)m_value);
+         break;
+      case DCI_DT_INT64:
+         bMatch = ((INT64)pThr->m_value == (INT64)m_value);
+         break;
+      case DCI_DT_UINT64:
+         bMatch = ((QWORD)pThr->m_value == (QWORD)m_value);
+         break;
+      case DCI_DT_FLOAT:
+         bMatch = ((double)pThr->m_value == (double)m_value);
+         break;
+      case DCI_DT_STRING:
+         bMatch = !strcmp(pThr->m_value.String(), m_value.String());
+         break;
+      default:
+         bMatch = TRUE;
+         break;
+   }
+   return bMatch &&
+          (pThr->m_dwEventCode == m_dwEventCode) &&
+          (pThr->m_iDataType == m_iDataType) &&
+          (pThr->m_iFunction == m_iFunction) &&
+          (pThr->m_iOperation == m_iOperation) &&
+          (pThr->m_iParam1 == m_iParam1) &&
+          (pThr->m_iParam2 == m_iParam2);
+}

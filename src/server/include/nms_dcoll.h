@@ -130,6 +130,8 @@ public:
 
    void CreateId(void);
    DWORD RequiredCacheSize(void) { return (m_iFunction == F_LAST) ? 0 : m_iParam1; }
+
+   BOOL Compare(Threshold *pThr);
 };
 
 
@@ -187,8 +189,8 @@ public:
           char *pszDescription = NULL);
    ~DCItem();
 
-   void PrepareForReplacement(DCItem *pItem, int iStatus);
    void PrepareForDeletion(void);
+   void UpdateFromTemplate(DCItem *pItem);
 
    BOOL SaveToDB(DB_HANDLE hdb);
    BOOL LoadThresholdsFromDB(void);

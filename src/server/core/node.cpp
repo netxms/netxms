@@ -1995,15 +1995,14 @@ void Node::CleanDCIData(void)
 
 //
 // Apply DCI from template
-// pItem passed to this method should be new DCI copied from template's DCI
-// with unique ID and correct template id and template item id.
+// pItem passed to this method should be a template's DCI
 //
 
-BOOL Node::ApplyTemplateItem(DCItem *pItem)
+BOOL Node::ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
 {
    BOOL bResult = TRUE;
    DWORD i;
-   int iStatus;
+   DCItem *pNewItem;
 
    LockData();
 
@@ -2011,23 +2010,22 @@ BOOL Node::ApplyTemplateItem(DCItem *pItem)
 
    // Check if that template item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if ((m_ppItems[i]->TemplateId() == pItem->TemplateId()) &&
-          (m_ppItems[i]->TemplateItemId() == pItem->TemplateItemId()))
+      if ((m_ppItems[i]->TemplateId() == dwTemplateId) &&
+          (m_ppItems[i]->TemplateItemId() == pItem->Id()))
          break;   // Item with specified id already exist
 
    if (i == m_dwNumItems)
    {
       // New item from template, just add it
-      bResult = AddItem(pItem, TRUE);
+      pNewItem = new DCItem(pItem);
+      pNewItem->SetTemplateId(dwTemplateId, pItem->Id());
+      pNewItem->ChangeBinding(CreateUniqueId(IDG_ITEM), this);
+      bResult = AddItem(pNewItem, TRUE);
    }
    else
    {
-      // Replace existing item
-      iStatus = m_ppItems[i]->Status();
-      m_ppItems[i]->PrepareForDeletion();
-      pItem->PrepareForReplacement(m_ppItems[i], iStatus);
-      delete m_ppItems[i];
-      m_ppItems[i] = pItem;
+      // Update existing item
+      m_ppItems[i]->UpdateFromTemplate(pItem);
       Modify();
    }
 

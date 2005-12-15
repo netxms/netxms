@@ -603,7 +603,7 @@ public:
    DWORD GetItemForClient(int iOrigin, const char *pszParam, char *pszBuffer, DWORD dwBufSize);
    DWORD GetLastValues(CSCPMessage *pMsg);
    void CleanDCIData(void);
-   BOOL ApplyTemplateItem(DCItem *pItem);
+   BOOL ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem);
    void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
    void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
    void UpdateDCICache(void);
