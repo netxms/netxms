@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
       NXSLDump(hScript, stdout);
       if (NXSLRun(hScript) == -1)
       {
-         printf("RUNTIME ERROR: %s\n", NXSLGetRuntimeError(hScript));
+         printf("%s\n", NXSLGetRuntimeError(hScript));
       }
       NXSLDestroy(hScript);
    }

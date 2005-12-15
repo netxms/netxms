@@ -71,25 +71,8 @@ NXSL_Value::NXSL_Value(double dValue)
 
 NXSL_Value::NXSL_Value(char *pszValue)
 {
-   char *eptr;
-
-   m_dwFlags = VALUE_STRING_IS_VALID;
    m_pszValStr = strdup(pszValue);
-   m_iValInt = strtol(pszValue, &eptr, 0);
-   if (*eptr == 0)
-   {
-      m_dwFlags |= VALUE_IS_NUMERIC;
-      m_dValFloat = m_iValInt;
-   }
-   else
-   {
-      m_dValFloat = strtod(pszValue, &eptr);
-      if (*eptr == 0)
-      {
-         m_dwFlags |= VALUE_IS_NUMERIC | VALUE_IS_REAL;
-         m_iValInt = (int)m_dValFloat;
-      }
-   }
+   UpdateNumbers();
 }
 
 
@@ -104,28 +87,63 @@ NXSL_Value::~NXSL_Value()
 
 
 //
+// Update flags and values after string change
+//
+
+void NXSL_Value::UpdateNumbers(void)
+{
+   char *eptr;
+
+   m_dwFlags = VALUE_STRING_IS_VALID;
+   m_iValInt = strtol(m_pszValStr, &eptr, 0);
+   if (*eptr == 0)
+   {
+      m_dwFlags |= VALUE_IS_NUMERIC;
+      m_dValFloat = m_iValInt;
+   }
+   else
+   {
+      m_dValFloat = strtod(m_pszValStr, &eptr);
+      if (*eptr == 0)
+      {
+         m_dwFlags |= VALUE_IS_NUMERIC | VALUE_IS_REAL;
+         m_iValInt = (int)m_dValFloat;
+      }
+   }
+}
+
+
+//
+// Update string value
+//
+
+void NXSL_Value::UpdateString(void)
+{
+   char szBuffer[64];
+
+   safe_free(m_pszValStr);
+   if (m_dwFlags & VALUE_IS_REAL)
+      sprintf(szBuffer, "%f", m_dValFloat);
+   else if (m_dwFlags & VALUE_IS_NUMERIC)
+      sprintf(szBuffer, "%d", m_iValInt);
+   else
+      szBuffer[0] = 0;
+   m_pszValStr = strdup(szBuffer);
+   m_dwFlags |= VALUE_STRING_IS_VALID;
+}
+
+
+//
 // Get value as string
 //
 
 char *NXSL_Value::GetValueAsString(void)
 {
-   char szBuffer[64];
-
    if (m_dwFlags & VALUE_IS_NULL)
       return "";
 
    if (!(m_dwFlags & VALUE_STRING_IS_VALID))
-   {
-      safe_free(m_pszValStr);
-      if (m_dwFlags & VALUE_IS_REAL)
-         sprintf(szBuffer, "%f", m_dValFloat);
-      else if (m_dwFlags & VALUE_IS_NUMERIC)
-         sprintf(szBuffer, "%d", m_iValInt);
-      else
-         szBuffer[0] = 0;
-      m_pszValStr = strdup(szBuffer);
-      m_dwFlags |= VALUE_STRING_IS_VALID;
-   }
+      UpdateString();
    return m_pszValStr;
 }
 
@@ -140,4 +158,18 @@ int NXSL_Value::GetValueAsInt(void)
       return 0;
 
    return (m_dwFlags & VALUE_IS_NUMERIC) ? m_iValInt : 0;
+}
+
+
+//
+// Concatenate string value
+//
+
+void NXSL_Value::Concatenate(char *pszString)
+{
+   if (!(m_dwFlags & VALUE_STRING_IS_VALID))
+      UpdateString();
+   m_pszValStr = (char *)realloc(m_pszValStr, strlen(m_pszValStr) + strlen(pszString) + 1);
+   strcat(m_pszValStr, pszString);
+   UpdateNumbers();
 }

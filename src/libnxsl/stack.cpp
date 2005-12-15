@@ -71,3 +71,15 @@ void *NXSL_Stack::Pop(void)
       return m_ppData[--m_nStackPos];
    return NULL;
 }
+
+
+//
+// Peek (get without removing) value from stack
+//
+
+void *NXSL_Stack::Peek(void)
+{
+   if (m_nStackPos > 0)
+      return m_ppData[m_nStackPos - 1];
+   return NULL;
+}

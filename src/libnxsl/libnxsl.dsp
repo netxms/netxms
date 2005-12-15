@@ -129,6 +129,10 @@ SOURCE=.\stack.cpp
 
 SOURCE=.\value.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\variable.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

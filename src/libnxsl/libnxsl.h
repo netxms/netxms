@@ -106,6 +106,7 @@ public:
 
    void Push(void *pData);
    void *Pop(void);
+   void *Peek(void);
 };
 
 
@@ -121,6 +122,9 @@ protected:
    int m_iValInt;
    double m_dValFloat;
 
+   void UpdateNumbers(void);
+   void UpdateString(void);
+
 public:
    NXSL_Value(void);
    NXSL_Value(NXSL_Value *);
@@ -130,8 +134,51 @@ public:
    ~NXSL_Value();
 
    BOOL IsNull(void) { return (m_dwFlags & VALUE_IS_NULL) ? TRUE : FALSE; }
+   BOOL IsNumeric(void) { return (m_dwFlags & VALUE_IS_NUMERIC) ? TRUE : FALSE; }
    char *GetValueAsString(void);
    int GetValueAsInt(void);
+
+   void Concatenate(char *pszString);
+};
+
+
+//
+// Runtime variable information
+//
+
+class NXSL_Variable
+{
+protected:
+   TCHAR *m_pszName;
+   NXSL_Value *m_pValue;
+
+public:
+   NXSL_Variable(TCHAR *pszName);
+   NXSL_Variable(TCHAR *pszName, NXSL_Value *pValue);
+   ~NXSL_Variable();
+
+   TCHAR *Name(void) { return m_pszName; }
+   NXSL_Value *Value(void) { return m_pValue; }
+   void Set(NXSL_Value *pValue);
+};
+
+
+//
+// Varable system
+//
+
+class NXSL_VariableSystem
+{
+protected:
+   DWORD m_dwNumVariables;
+   NXSL_Variable **m_ppVariableList;
+
+public:
+   NXSL_VariableSystem(void);
+   ~NXSL_VariableSystem();
+
+   NXSL_Variable *Find(TCHAR *pszName);
+   NXSL_Variable *Create(TCHAR *pszName, NXSL_Value *pValue = NULL);
 };
 
 
@@ -179,10 +226,18 @@ protected:
    NXSL_Stack *m_pDataStack;
    NXSL_Stack *m_pCodeStack;
 
+   NXSL_VariableSystem *m_pConstants;
+   NXSL_VariableSystem *m_pGlobals;
+   NXSL_VariableSystem *m_pLocals;
+
+   int m_nErrorCode;
    TCHAR *m_pszErrorText;
 
    void Execute(void);
-   void Error(TCHAR *pszFormat, ...);
+   void DoBinaryOperation(int nOpCode);
+   void Error(int nError);
+
+   NXSL_Variable *FindOrCreateVariable(TCHAR *pszName);
 
 public:
    NXSL_Program(void);
