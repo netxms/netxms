@@ -88,7 +88,11 @@ NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
    m_pLexer = new NXSL_Lexer(this, pszSourceCode);
    pResult = new NXSL_Program;
 //yydebug=1;
-   if (yyparse(m_pLexer, this, pResult) != 0)
+   if (yyparse(m_pLexer, this, pResult) == 0)
+   {
+      pResult->ResolveFunctions();
+   }
+   else
    {
       delete pResult;
       pResult = NULL;

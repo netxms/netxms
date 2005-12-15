@@ -39,6 +39,7 @@ union YYSTYPE;
 
 #define INVALID_ADDRESS    ((DWORD)0xFFFFFFFF)
 #define MAX_STRING_SIZE    8192
+#define MAX_FUNCTION_NAME  64
 
 
 //
@@ -87,6 +88,17 @@ union YYSTYPE;
 #define VALUE_STRING_IS_VALID ((DWORD)0x0002)
 #define VALUE_IS_NUMERIC      ((DWORD)0x0004)
 #define VALUE_IS_REAL         ((DWORD)0x0008)
+
+
+//
+// Function structure
+//
+
+struct NXSL_Function
+{
+   char m_szName[MAX_FUNCTION_NAME];
+   DWORD m_dwAddr;
+};
 
 
 //
@@ -230,6 +242,9 @@ protected:
    NXSL_VariableSystem *m_pGlobals;
    NXSL_VariableSystem *m_pLocals;
 
+   DWORD m_dwNumFunctions;
+   NXSL_Function *m_pFunctionList;
+
    int m_nErrorCode;
    TCHAR *m_pszErrorText;
 
@@ -243,6 +258,8 @@ public:
    NXSL_Program(void);
    ~NXSL_Program();
 
+   BOOL AddFunction(char *pszName, DWORD dwAddr, char *pszError);
+   void ResolveFunctions(void);
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
 
@@ -272,6 +289,7 @@ protected:
    int m_nStrSize;
    char m_szStr[MAX_STRING_SIZE];
    YYSTYPE *m_plval;
+   BOOL m_bErrorState;
 
 	virtual int LexerInput(char *pBuffer, int nMaxSize);
    virtual void LexerError(const char *pszMsg);
@@ -284,6 +302,9 @@ public:
    void SetLvalPtr(YYSTYPE *plval) { m_plval = plval; }
 
    int GetCurrLine(void) { return m_nCurrLine; }
+
+   void SetErrorState(void) { m_bErrorState = TRUE; }
+   BOOL IsErrorState(void) { return m_bErrorState; }
 };
 
 

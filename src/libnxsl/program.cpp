@@ -77,6 +77,8 @@ NXSL_Program::NXSL_Program(void)
    m_pConstants = new NXSL_VariableSystem;
    m_pGlobals = new NXSL_VariableSystem;
    m_pLocals = NULL;
+   m_dwNumFunctions = 0;
+   m_pFunctionList = NULL;
 }
 
 
@@ -98,6 +100,8 @@ NXSL_Program::~NXSL_Program(void)
    delete m_pConstants;
    delete m_pGlobals;
    delete m_pLocals;
+
+   safe_free(m_pFunctionList);
 
    safe_free(m_pszErrorText);
 }
@@ -131,6 +135,58 @@ void NXSL_Program::ResolveLastJump(int nOpCode)
       {
          m_ppInstructionSet[i]->m_operand.m_dwAddr = m_dwCodeSize;
          break;
+      }
+   }
+}
+
+
+//
+// Add new function to defined functions list
+// Will use first free address if dwAddr == INVALID_ADDRESS
+//
+
+BOOL NXSL_Program::AddFunction(char *pszName, DWORD dwAddr, char *pszError)
+{
+   DWORD i;
+
+   // Check for duplicate function names
+   for(i = 0; i < m_dwNumFunctions; i++)
+      if (!strcmp(m_pFunctionList[i].m_szName, pszName))
+      {
+         sprintf(pszError, "Duplicate function name: \"%s\"", pszName);
+         return FALSE;
+      }
+   m_dwNumFunctions++;
+   m_pFunctionList = (NXSL_Function *)realloc(m_pFunctionList, sizeof(NXSL_Function) * m_dwNumFunctions);
+   nx_strncpy(m_pFunctionList[i].m_szName, pszName, MAX_FUNCTION_NAME);
+   m_pFunctionList[i].m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_dwCodeSize : dwAddr;
+   return TRUE;
+}
+
+
+//
+// resolve local functions
+//
+
+void NXSL_Program::ResolveFunctions(void)
+{
+   DWORD i, j;
+
+   for(i = 0; i < m_dwCodeSize; i++)
+   {
+      if (m_ppInstructionSet[i]->m_nOpCode == OPCODE_CALL_EXTERNAL)
+      {
+         for(j = 0; j < m_dwNumFunctions; j++)
+         {
+            if (!strcmp(m_pFunctionList[j].m_szName,
+                        m_ppInstructionSet[i]->m_operand.m_pszString))
+            {
+               free(m_ppInstructionSet[i]->m_operand.m_pszString);
+               m_ppInstructionSet[i]->m_operand.m_dwAddr = m_pFunctionList[j].m_dwAddr;
+               m_ppInstructionSet[i]->m_nOpCode = OPCODE_CALL;
+               break;
+            }
+         }
       }
    }
 }

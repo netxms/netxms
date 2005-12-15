@@ -44,6 +44,7 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, TCHAR *pszCode)
    m_nCurrLine = 1;
    m_nSourcePos = 0;
    m_pCompiler = pCompiler;
+   m_bErrorState = FALSE;
 }
 
 
@@ -95,6 +96,9 @@ void NXSL_Lexer::LexerError(const char *pszMsg)
 
 int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer)
 {
+   if (pLexer->IsErrorState())
+      return -1;
+
    pLexer->SetLvalPtr(lvalp);
    return pLexer->yylex();
 }

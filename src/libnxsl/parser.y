@@ -69,6 +69,19 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 Script:
 	Module
 |	Expression
+{
+	char szErrorText[256];
+
+	// Add implicit return
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RETURN));
+
+	// Add implicit main() function
+	if (!pScript->AddFunction("main", 0, szErrorText))
+	{
+		pCompiler->Error(szErrorText);
+		pLexer->SetErrorState();
+	}
+}
 ;
 
 Module:
@@ -81,7 +94,18 @@ ModuleComponent:
 ;
 
 Function:
-	T_SUB FunctionName ParameterDeclaration Block
+	T_SUB FunctionName 
+	{
+		char szErrorText[256];
+
+		if (!pScript->AddFunction($2, INVALID_ADDRESS, szErrorText))
+		{
+			pCompiler->Error(szErrorText);
+			pLexer->SetErrorState();
+		}
+		free($2);
+	}
+	ParameterDeclaration Block
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RET_NULL));
 }
@@ -319,5 +343,9 @@ Constant:
 |	T_INTEGER
 {
 	$$ = new NXSL_Value($1);
+}
+|	T_NULL
+{
+	$$ = new NXSL_Value;
 }
 ;
