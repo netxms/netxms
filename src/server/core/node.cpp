@@ -2279,6 +2279,8 @@ void Node::UpdateRoutingTable(void)
       m_pRoutingTable = pRT;
       RTUnlock();
    }
+   m_tLastRTUpdate = time(NULL);
+   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
 }
 
 
