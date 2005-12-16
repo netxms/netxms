@@ -28,7 +28,8 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER   6
+#define MAX_ERROR_NUMBER         8
+#define CONTROL_STACK_LIMIT      32768
 
 
 //
@@ -43,7 +44,8 @@ static char *m_szCommandMnemonic[] =
    "EQ", "NE", "LT", "LE", "GT", "GE",
    "BITAND", "BITOR", "BITXOR",
    "AND", "OR", "LSHIFT", "RSHIFT",
-   "NRET", "JZ", "PRINT", "CONCAT"
+   "NRET", "JZ", "PRINT", "CONCAT",
+   "BIND"
 };
 
 
@@ -58,7 +60,9 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Condition value is not a number"),
    _T("Bad arithmetic conversion"),
    _T("Invalid operation with NULL value"),
-   _T("Internal error")
+   _T("Internal error"),
+   _T("main() function not presented"),
+   _T("Control stack overflow")
 };
 
 
@@ -70,6 +74,7 @@ NXSL_Program::NXSL_Program(void)
 {
    m_ppInstructionSet = NULL;
    m_dwCodeSize = 0;
+   m_dwCurrPos = INVALID_ADDRESS;
    m_pDataStack = NULL;
    m_pCodeStack = NULL;
    m_nErrorCode = 0;
@@ -79,6 +84,7 @@ NXSL_Program::NXSL_Program(void)
    m_pLocals = NULL;
    m_dwNumFunctions = 0;
    m_pFunctionList = NULL;
+   m_dwSubLevel = 0;    // Level of current subroutine
 }
 
 
@@ -220,6 +226,7 @@ void NXSL_Program::Dump(FILE *pFile)
             break;
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
+         case OPCODE_BIND:
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
@@ -249,8 +256,8 @@ void NXSL_Program::Error(int nError)
    TCHAR szBuffer[1024];
 
    safe_free(m_pszErrorText);
-   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"),
-              nError, m_ppInstructionSet[m_dwCurrPos]->m_nSourceLine,
+   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError,
+              (m_dwCurrPos == INVALID_ADDRESS) ? 0 : m_ppInstructionSet[m_dwCurrPos]->m_nSourceLine,
               ((nError > 0) && (nError <= MAX_ERROR_NUMBER)) ? m_szErrorMessage[nError - 1] : _T("Unknown error code"));
    m_pszErrorText = _tcsdup(szBuffer);
    m_dwCurrPos = INVALID_ADDRESS;
@@ -263,6 +270,8 @@ void NXSL_Program::Error(int nError)
 
 int NXSL_Program::Run(void)
 {
+   DWORD i;
+
    // Create stacks
    m_pDataStack = new NXSL_Stack;
    m_pCodeStack = new NXSL_Stack;
@@ -270,9 +279,21 @@ int NXSL_Program::Run(void)
    // Create local variable system for main()
    m_pLocals = new NXSL_VariableSystem;
 
-   m_dwCurrPos = 0;
-   while(m_dwCurrPos < m_dwCodeSize)
-      Execute();
+   // Locate main()
+   for(i = 0; i < m_dwNumFunctions; i++)
+      if (!strcmp(m_pFunctionList[i].m_szName, "main"))
+         break;
+   if (i < m_dwNumFunctions)
+   {
+      m_dwCurrPos = m_pFunctionList[i].m_dwAddr;
+      while(m_dwCurrPos < m_dwCodeSize)
+         Execute();
+   }
+   else
+   {
+      Error(7);
+      m_dwCurrPos = INVALID_ADDRESS;
+   }
 
    return (m_dwCurrPos == INVALID_ADDRESS) ? -1 : 0;
 }
@@ -313,6 +334,7 @@ void NXSL_Program::Execute(void)
    NXSL_Value *pValue;
    NXSL_Variable *pVar;
    DWORD dwNext = m_dwCurrPos + 1;
+   char szBuffer[256];
    int i;
 
    cp = m_ppInstructionSet[m_dwCurrPos];
@@ -364,6 +386,63 @@ void NXSL_Program::Execute(void)
             Error(1);
          }
          break;
+      case OPCODE_CALL:
+         if (m_dwSubLevel < CONTROL_STACK_LIMIT)
+         {
+            m_dwSubLevel++;
+            dwNext = cp->m_operand.m_dwAddr;
+            m_pCodeStack->Push((void *)(m_dwCurrPos + 1));
+            m_pCodeStack->Push(m_pLocals);
+            m_pLocals = new NXSL_VariableSystem;
+            m_nBindPos = 1;
+
+            // Bind arguments
+            for(i = cp->m_nStackItems; i > 0; i--)
+            {
+               pValue = (NXSL_Value *)m_pDataStack->Pop();
+               if (pValue != NULL)
+               {
+                  sprintf(szBuffer, "$%d", i);
+                  m_pLocals->Create(szBuffer, pValue);
+               }
+               else
+               {
+                  Error(1);
+                  break;
+               }
+            }
+         }
+         else
+         {
+            Error(8);
+         }
+         break;
+      case OPCODE_RET_NULL:
+         m_pDataStack->Push(new NXSL_Value);
+      case OPCODE_RETURN:
+         if (m_dwSubLevel > 0)
+         {
+            m_dwSubLevel--;
+            delete m_pLocals;
+            m_pLocals = (NXSL_VariableSystem *)m_pCodeStack->Pop();
+            dwNext = (DWORD)m_pCodeStack->Pop();
+         }
+         else
+         {
+            // Return from main(), terminate program
+            dwNext = m_dwCodeSize;
+         }
+         break;
+      case OPCODE_BIND:
+         sprintf(szBuffer, "$%d", m_nBindPos++);
+         pVar = m_pLocals->Find(szBuffer);
+         pValue = (pVar != NULL) ? new NXSL_Value(pVar->Value()) : new NXSL_Value;
+         pVar = m_pLocals->Find(cp->m_operand.m_pszString);
+         if (pVar == NULL)
+            m_pLocals->Create(cp->m_operand.m_pszString, pValue);
+         else
+            pVar->Set(pValue);
+         break;
       case OPCODE_PRINT:
          pValue = (NXSL_Value *)m_pDataStack->Pop();
          if (pValue != NULL)
@@ -392,7 +471,14 @@ void NXSL_Program::Execute(void)
       case OPCODE_SUB:
       case OPCODE_MUL:
       case OPCODE_DIV:
+      case OPCODE_REM:
       case OPCODE_CONCAT:
+      case OPCODE_EQ:
+      case OPCODE_NE:
+      case OPCODE_LT:
+      case OPCODE_LE:
+      case OPCODE_GT:
+      case OPCODE_GE:
          DoBinaryOperation(cp->m_nOpCode);
          break;
       default:
@@ -411,6 +497,7 @@ void NXSL_Program::Execute(void)
 void NXSL_Program::DoBinaryOperation(int nOpCode)
 {
    NXSL_Value *pVal1, *pVal2, *pRes = NULL;
+   int nResult;
 
    pVal2 = (NXSL_Value *)m_pDataStack->Pop();
    pVal1 = (NXSL_Value *)m_pDataStack->Pop();
@@ -439,8 +526,22 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
             switch(nOpCode)
             {
                case OPCODE_EQ:
-                  break;
                case OPCODE_NE:
+                  if (pVal1->IsNull() && pVal2->IsNull())
+                  {
+                     nResult = 1;
+                  }
+                  else if (pVal1->IsNull() || pVal2->IsNull())
+                  {
+                     nResult = 0;
+                  }
+                  else
+                  {
+                     nResult = !strcmp(pVal1->GetValueAsString(), pVal2->GetValueAsString());
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value((nOpCode == OPCODE_EQ) ? nResult : !nResult);
                   break;
                case OPCODE_CONCAT:
                   if (pVal1->IsNull() || pVal2->IsNull())

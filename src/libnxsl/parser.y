@@ -117,8 +117,15 @@ ParameterDeclaration:
 ;
 
 IdentifierList:
-	T_IDENTIFIER ',' IdentifierList
+	T_IDENTIFIER 
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIND, $1));
+	}
+	',' IdentifierList
 |	T_IDENTIFIER
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIND, $1));
+}
 ;
 
 Block:

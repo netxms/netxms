@@ -78,6 +78,7 @@ union YYSTYPE;
 #define OPCODE_JZ             29
 #define OPCODE_PRINT          30
 #define OPCODE_CONCAT         31
+#define OPCODE_BIND           32
 
 
 //
@@ -235,8 +236,10 @@ protected:
    DWORD m_dwCodeSize;
    DWORD m_dwCurrPos;
 
+   DWORD m_dwSubLevel;
    NXSL_Stack *m_pDataStack;
    NXSL_Stack *m_pCodeStack;
+   int m_nBindPos;
 
    NXSL_VariableSystem *m_pConstants;
    NXSL_VariableSystem *m_pGlobals;

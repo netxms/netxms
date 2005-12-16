@@ -5,7 +5,7 @@
 %x STR
 
 whitespace	[[:blank:]\t\r]+
-identifier	[A-Za-z_][A-Za-z_0-9]*
+identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
 integer		(0x)?[0-9]+
 escape		\\[bnrt\"]
 
