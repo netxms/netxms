@@ -22,6 +22,7 @@
 #define SCL_TEMPLATE          0x0100
 #define SCL_TEMPLATEGROUP     0x0200
 #define SCL_TEMPLATEROOT      0x0400
+#define SCL_VPNCONNECTOR      0x0800
 
 
 /////////////////////////////////////////////////////////////////////////////
