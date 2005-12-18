@@ -45,7 +45,8 @@ static char *m_szCommandMnemonic[] =
    "BITAND", "BITOR", "BITXOR",
    "AND", "OR", "LSHIFT", "RSHIFT",
    "NRET", "JZ", "PRINT", "CONCAT",
-   "BIND"
+   "BIND", "INC", "DEC", "NEG", "NOT",
+   "BITNOT"
 };
 
 
@@ -229,6 +230,8 @@ void NXSL_Program::Dump(FILE *pFile)
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
          case OPCODE_BIND:
+         case OPCODE_INC:
+         case OPCODE_DEC:
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
@@ -488,7 +491,36 @@ void NXSL_Program::Execute(void)
       case OPCODE_LE:
       case OPCODE_GT:
       case OPCODE_GE:
+      case OPCODE_AND:
+      case OPCODE_OR:
+      case OPCODE_BIT_AND:
+      case OPCODE_BIT_OR:
+      case OPCODE_BIT_XOR:
+      case OPCODE_LSHIFT:
+      case OPCODE_RSHIFT:
          DoBinaryOperation(cp->m_nOpCode);
+         break;
+      case OPCODE_NEG:
+      case OPCODE_NOT:
+      case OPCODE_BIT_NOT:
+         DoUnaryOperation(cp->m_nOpCode);
+         break;
+      case OPCODE_INC:
+      case OPCODE_DEC:
+         pVar = FindOrCreateVariable(cp->m_operand.m_pszString);
+         pValue = pVar->Value();
+         if (pValue->IsNumeric())
+         {
+            if (cp->m_nOpCode == OPCODE_INC)
+               pValue->Increment();
+            else
+               pValue->Decrement();
+            m_pDataStack->Push(new NXSL_Value(pValue));
+         }
+         else
+         {
+            Error(4);
+         }
          break;
       default:
          break;
@@ -653,6 +685,83 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                   delete pVal2;
                   pRes = new NXSL_Value(nResult);
                   break;
+               case OPCODE_LSHIFT:
+                  if (!bRealOp)
+                  {
+                     nResult = (pVal1->GetValueAsInt() << pVal2->GetValueAsInt());
+                     pRes = new NXSL_Value(nResult);
+                  }
+                  else
+                  {
+                     Error(10);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_RSHIFT:
+                  if (!bRealOp)
+                  {
+                     nResult = (pVal1->GetValueAsInt() >> pVal2->GetValueAsInt());
+                     pRes = new NXSL_Value(nResult);
+                  }
+                  else
+                  {
+                     Error(10);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_BIT_AND:
+                  if (!bRealOp)
+                  {
+                     nResult = (pVal1->GetValueAsInt() & pVal2->GetValueAsInt());
+                     pRes = new NXSL_Value(nResult);
+                  }
+                  else
+                  {
+                     Error(10);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_BIT_OR:
+                  if (!bRealOp)
+                  {
+                     nResult = (pVal1->GetValueAsInt() | pVal2->GetValueAsInt());
+                     pRes = new NXSL_Value(nResult);
+                  }
+                  else
+                  {
+                     Error(10);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_BIT_XOR:
+                  if (!bRealOp)
+                  {
+                     nResult = (pVal1->GetValueAsInt() ^ pVal2->GetValueAsInt());
+                     pRes = new NXSL_Value(nResult);
+                  }
+                  else
+                  {
+                     Error(10);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_AND:
+                  nResult = (pVal1->GetValueAsInt() && pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value(nResult);
+                  break;
+               case OPCODE_OR:
+                  nResult = (pVal1->GetValueAsInt() || pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value(nResult);
+                  break;
                default:
                   Error(6);
                   break;
@@ -698,6 +807,24 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                      delete pVal2;
                   }
                   break;
+               case OPCODE_ADD:
+               case OPCODE_SUB:
+               case OPCODE_MUL:
+               case OPCODE_DIV:
+               case OPCODE_REM:
+               case OPCODE_LT:
+               case OPCODE_LE:
+               case OPCODE_GT:
+               case OPCODE_GE:
+               case OPCODE_AND:
+               case OPCODE_OR:
+               case OPCODE_BIT_AND:
+               case OPCODE_BIT_OR:
+               case OPCODE_BIT_XOR:
+               case OPCODE_LSHIFT:
+               case OPCODE_RSHIFT:
+                  Error(4);
+                  break;
                default:
                   Error(6);
                   break;
@@ -716,4 +843,59 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
 
    if (pRes != NULL)
       m_pDataStack->Push(pRes);
+}
+
+
+//
+// Perform unary operation on operand from the stack and push result back to stack
+//
+
+void NXSL_Program::DoUnaryOperation(int nOpCode)
+{
+   NXSL_Value *pVal;
+
+   pVal = (NXSL_Value *)m_pDataStack->Peek();
+   if (pVal != NULL)
+   {
+      if (pVal->IsNumeric())
+      {
+         switch(nOpCode)
+         {
+            case OPCODE_NEG:
+               pVal->Negate();
+               break;
+            case OPCODE_NOT:
+               if (!pVal->IsReal())
+               {
+                  pVal->Set(!pVal->GetValueAsInt());
+               }
+               else
+               {
+                  Error(10);
+               }
+               break;
+            case OPCODE_BIT_NOT:
+               if (!pVal->IsReal())
+               {
+                  pVal->Set(~pVal->GetValueAsInt());
+               }
+               else
+               {
+                  Error(10);
+               }
+               break;
+            default:
+               Error(6);
+               break;
+         }
+      }
+      else
+      {
+         Error(4);
+      }
+   }
+   else
+   {
+      Error(1);
+   }
 }

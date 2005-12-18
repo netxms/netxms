@@ -79,6 +79,11 @@ union YYSTYPE;
 #define OPCODE_PRINT          30
 #define OPCODE_CONCAT         31
 #define OPCODE_BIND           32
+#define OPCODE_INC            33
+#define OPCODE_DEC            34
+#define OPCODE_NEG            35
+#define OPCODE_NOT            36
+#define OPCODE_BIT_NOT        37
 
 
 //
@@ -156,6 +161,10 @@ public:
    double GetValueAsReal(void);
 
    void Concatenate(char *pszString, DWORD dwLen);
+   void Increment(void);
+   void Decrement(void);
+   void Negate(void);
+   void Set(int nValue);
 };
 
 
@@ -256,6 +265,7 @@ protected:
    TCHAR *m_pszErrorText;
 
    void Execute(void);
+   void DoUnaryOperation(int nOpCode);
    void DoBinaryOperation(int nOpCode);
    void Error(int nError);
 

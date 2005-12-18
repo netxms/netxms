@@ -55,6 +55,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %left '+' '-'
 %left '*' '/' '%'
 %right T_INC T_DEC '!' '~' NEGATE
+%left T_POST_INC T_POST_DEC
 
 %type <pConstant> Constant
 %type <valStr> FunctionName
@@ -164,9 +165,34 @@ Expression:
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SET, $1));
 }
-|	'-' Expression	%prec NEGATE
-|	'!' Expression	%prec NEGATE
-|	'~' Expression	%prec NEGATE
+|	'-' Expression		%prec NEGATE
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NEG));
+}
+|	'!' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NOT));
+}
+|	'~' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIT_NOT));
+}
+|	T_INC T_IDENTIFIER
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_INC, $2));
+}
+|	T_DEC T_IDENTIFIER
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_DEC, $2));
+}
+|	T_IDENTIFIER T_INC	%prec T_POST_INC
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_INC, $1));
+}
+|	T_IDENTIFIER T_DEC	%prec T_POST_DEC
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_DEC, $1));
+}
 |	Expression '+' Expression	
 { 
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_ADD));

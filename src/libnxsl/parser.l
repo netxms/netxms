@@ -6,8 +6,8 @@
 
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
-integer		(0x)?[0-9]+
-escape		\\[bnrt\"]
+integer		\-?(0x)?[0-9]+
+escape		\\[bnrt0\"]
 
 %{
 
@@ -39,6 +39,10 @@ escape		\\[bnrt\"]
 <INITIAL>">="	return T_GE;
 <INITIAL>"<<"	return T_LSHIFT;
 <INITIAL>">>"	return T_RSHIFT;
+<INITIAL>"&&"	return T_AND;
+<INITIAL>"||"	return T_OR;
+<INITIAL>"++"	return T_INC;
+<INITIAL>"--"	return T_DEC;
 <INITIAL>"."	return '.';
 <INITIAL>"{"	return '{';
 <INITIAL>"}"	return '}';
@@ -52,6 +56,8 @@ escape		\\[bnrt\"]
 <INITIAL>"%"	return '%';
 <INITIAL>"="	return '=';
 <INITIAL>"!"	return '!';
+<INITIAL>"&"	return '&';
+<INITIAL>"|"	return '|';
 <INITIAL>"^"	return '^';
 <INITIAL>"~"	return '~';
 <INITIAL>","	return ',';
@@ -60,6 +66,8 @@ escape		\\[bnrt\"]
 
 <INITIAL>"/*"	{ m_nCommentLevel = 1; BEGIN COMMENT; }
 <INITIAL>\"	{ m_nStrSize = 0; BEGIN STR; }
+
+<INITIAL>"//".*$	;
 
 <INITIAL>\n	m_nCurrLine++;
 <INITIAL>{whitespace}	;
@@ -90,6 +98,9 @@ escape		\\[bnrt\"]
 					case 't':
 						m_szStr[m_nStrSize++] = '\t';
 						break;
+					case '0':
+						m_szStr[m_nStrSize++] = 0;
+						break;
 					default:
 						m_szStr[m_nStrSize++] = yytext[1];
 						break;
@@ -99,6 +110,27 @@ escape		\\[bnrt\"]
 			{
 				LexerError("String constant is too long");
 				return -1;
+			}
+		}
+<STR>\\x[0-9A-Fa-f][0-9A-Fa-f]? {
+			char *eptr;
+			int nVal;
+
+			nVal = strtol(&yytext[2], &eptr, 16);
+			if (*eptr == 0)
+			{
+				if ((nVal >= 0) && (nVal <= 255))
+				{
+					m_szStr[m_nStrSize++] = nVal;
+				}
+				else
+				{
+					LexerError("Character code must be in range 0x00 .. 0xFF");
+				}
+			}
+			else
+			{
+				LexerError("Invalid hex number");
 			}
 		}
 <STR>\"		{

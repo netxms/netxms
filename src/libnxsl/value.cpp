@@ -215,3 +215,92 @@ void NXSL_Value::Concatenate(char *pszString, DWORD dwLen)
    m_pszValStr[m_dwStrLen] = 0;
    UpdateNumbers();
 }
+
+
+//
+// Increment value
+//
+
+void NXSL_Value::Increment(void)
+{
+   if (m_dwFlags & VALUE_IS_NUMERIC)
+   {
+      if (m_dwFlags & VALUE_IS_REAL)
+      {
+         m_dValFloat++;
+         m_iValInt = (int)m_dValFloat;
+      }
+      else
+      {
+         m_iValInt++;
+         m_dValFloat = m_iValInt;
+      }
+      safe_free(m_pszValStr);
+      m_pszValStr = NULL;
+      m_dwFlags &= ~VALUE_STRING_IS_VALID;
+   }
+}
+
+
+//
+// Decrement value
+//
+
+void NXSL_Value::Decrement(void)
+{
+   if (m_dwFlags & VALUE_IS_NUMERIC)
+   {
+      if (m_dwFlags & VALUE_IS_REAL)
+      {
+         m_dValFloat--;
+         m_iValInt = (int)m_dValFloat;
+      }
+      else
+      {
+         m_iValInt--;
+         m_dValFloat = m_iValInt;
+      }
+      safe_free(m_pszValStr);
+      m_pszValStr = NULL;
+      m_dwFlags &= ~VALUE_STRING_IS_VALID;
+   }
+}
+
+
+//
+// Negate value
+//
+
+void NXSL_Value::Negate(void)
+{
+   if (m_dwFlags & VALUE_IS_NUMERIC)
+   {
+      if (m_dwFlags & VALUE_IS_REAL)
+      {
+         m_dValFloat = -m_dValFloat;
+         m_iValInt = (int)m_dValFloat;
+      }
+      else
+      {
+         m_iValInt = -m_iValInt;
+         m_dValFloat = m_iValInt;
+      }
+      safe_free(m_pszValStr);
+      m_pszValStr = NULL;
+      m_dwFlags &= ~VALUE_STRING_IS_VALID;
+   }
+}
+
+
+//
+// Set to numeric value
+//
+
+void NXSL_Value::Set(int nValue)
+{
+   safe_free(m_pszValStr);
+   m_dwFlags = VALUE_IS_NUMERIC;
+   m_pszValStr = NULL;
+   m_iValInt = nValue;
+   m_dValFloat = nValue;
+}
