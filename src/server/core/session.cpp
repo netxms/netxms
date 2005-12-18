@@ -22,7 +22,9 @@
 
 #include "nxcore.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <psapi.h>
+#else
 #include <dirent.h>
 #endif
 
@@ -886,6 +888,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_OPEN_LPP:
             OpenLPP(pMsg);
+            break;
+         case CMD_GET_SERVER_STATS:
+            SendServerStats(pMsg->GetId());
             break;
          default:
             // Pass message to loaded modules
@@ -5763,5 +5768,56 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
+   SendMessage(&msg);
+}
+
+
+//
+// Send server statistics
+//
+
+void ClientSession::SendServerStats(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DWORD i, dwNumItems;
+#ifdef _WIN32
+   PROCESS_MEMORY_COUNTERS mc;
+#endif
+
+   // Prepare response
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+   // Server version, etc.
+   msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
+   msg.SetVariable(VID_SERVER_UPTIME, (DWORD)(time(NULL) - g_tServerStartTime));
+
+   // Number of objects and DCIs
+   RWLockReadLock(g_rwlockNodeIndex, INFINITE);
+   for(i = 0, dwNumItems = 0; i < g_dwNodeAddrIndexSize; i++)
+      dwNumItems += ((Node *)g_pNodeIndexByAddr[i].pObject)->GetItemCount();
+   RWLockUnlock(g_rwlockNodeIndex);
+   msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
+   msg.SetVariable(VID_NUM_OBJECTS, g_dwIdIndexSize);
+   msg.SetVariable(VID_NUM_NODES, g_dwNodeAddrIndexSize);
+
+   // Client sessions
+   msg.SetVariable(VID_NUM_SESSIONS, (DWORD)GetSessionCount());
+
+   // Alarms
+   g_alarmMgr.GetAlarmStats(&msg);
+
+   // Process info
+#ifdef _WIN32
+   mc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
+   if (GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
+   {
+      msg.SetVariable(VID_NETXMSD_PROCESS_WKSET, (DWORD)(mc.WorkingSetSize / 1024));
+      msg.SetVariable(VID_NETXMSD_PROCESS_VMSIZE, (DWORD)(mc.PagefileUsage / 1024));
+   }
+#endif
+
+   // Send response
    SendMessage(&msg);
 }

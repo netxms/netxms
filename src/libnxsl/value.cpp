@@ -40,9 +40,14 @@ NXSL_Value::NXSL_Value(NXSL_Value *pValue)
    {
       m_dwFlags = pValue->m_dwFlags;
       if (pValue->m_dwFlags & VALUE_STRING_IS_VALID)
-         m_pszValStr = _tcsdup(pValue->m_pszValStr);
+      {
+         m_dwStrLen = pValue->m_dwStrLen;
+         m_pszValStr = (char *)nx_memdup(pValue->m_pszValStr, m_dwStrLen + 1);
+      }
       else
+      {
          m_pszValStr = NULL;
+      }
       m_iValInt = pValue->m_iValInt;
       m_dValFloat = pValue->m_dValFloat;
    }
@@ -63,14 +68,17 @@ NXSL_Value::NXSL_Value(int nValue)
 
 NXSL_Value::NXSL_Value(double dValue)
 {
-   m_dwFlags = VALUE_IS_NUMERIC | VALUE_IS_REAL;
    m_pszValStr = NULL;
    m_iValInt = (int)dValue;
    m_dValFloat = dValue;
+   m_dwFlags = VALUE_IS_NUMERIC;
+   if ((double)m_iValInt != m_dValFloat)
+      m_dwFlags |= VALUE_IS_REAL;
 }
 
 NXSL_Value::NXSL_Value(char *pszValue)
 {
+   m_dwStrLen = strlen(pszValue);
    m_pszValStr = strdup(pszValue);
    UpdateNumbers();
 }
@@ -96,7 +104,7 @@ void NXSL_Value::UpdateNumbers(void)
 
    m_dwFlags = VALUE_STRING_IS_VALID;
    m_iValInt = strtol(m_pszValStr, &eptr, 0);
-   if (*eptr == 0)
+   if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
    {
       m_dwFlags |= VALUE_IS_NUMERIC;
       m_dValFloat = m_iValInt;
@@ -104,12 +112,14 @@ void NXSL_Value::UpdateNumbers(void)
    else
    {
       m_dValFloat = strtod(m_pszValStr, &eptr);
-      if (*eptr == 0)
+      if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
       {
-         m_dwFlags |= VALUE_IS_NUMERIC | VALUE_IS_REAL;
+         m_dwFlags |= VALUE_IS_NUMERIC;
          m_iValInt = (int)m_dValFloat;
       }
    }
+   if ((double)m_iValInt != m_dValFloat)
+      m_dwFlags |= VALUE_IS_REAL;
 }
 
 
@@ -128,8 +138,24 @@ void NXSL_Value::UpdateString(void)
       sprintf(szBuffer, "%d", m_iValInt);
    else
       szBuffer[0] = 0;
+   m_dwStrLen = strlen(szBuffer);
    m_pszValStr = strdup(szBuffer);
    m_dwFlags |= VALUE_STRING_IS_VALID;
+}
+
+
+//
+// Get value as ASCIIZ string
+//
+
+char *NXSL_Value::GetValueAsCString(void)
+{
+   if (m_dwFlags & VALUE_IS_NULL)
+      return NULL;
+
+   if (!(m_dwFlags & VALUE_STRING_IS_VALID))
+      UpdateString();
+   return m_pszValStr;
 }
 
 
@@ -137,13 +163,14 @@ void NXSL_Value::UpdateString(void)
 // Get value as string
 //
 
-char *NXSL_Value::GetValueAsString(void)
+char *NXSL_Value::GetValueAsString(DWORD *pdwLen)
 {
    if (m_dwFlags & VALUE_IS_NULL)
-      return "";
+      return NULL;
 
    if (!(m_dwFlags & VALUE_STRING_IS_VALID))
       UpdateString();
+   *pdwLen = m_dwStrLen;
    return m_pszValStr;
 }
 
@@ -162,14 +189,29 @@ int NXSL_Value::GetValueAsInt(void)
 
 
 //
+// Get value as real number
+//
+
+double NXSL_Value::GetValueAsReal(void)
+{
+   if (m_dwFlags & VALUE_IS_NULL)
+      return 0;
+
+   return (m_dwFlags & VALUE_IS_NUMERIC) ? m_dValFloat : 0;
+}
+
+
+//
 // Concatenate string value
 //
 
-void NXSL_Value::Concatenate(char *pszString)
+void NXSL_Value::Concatenate(char *pszString, DWORD dwLen)
 {
    if (!(m_dwFlags & VALUE_STRING_IS_VALID))
       UpdateString();
-   m_pszValStr = (char *)realloc(m_pszValStr, strlen(m_pszValStr) + strlen(pszString) + 1);
-   strcat(m_pszValStr, pszString);
+   m_pszValStr = (char *)realloc(m_pszValStr, m_dwStrLen + dwLen + 1);
+   memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen);
+   m_dwStrLen += dwLen;
+   m_pszValStr[m_dwStrLen] = 0;
    UpdateNumbers();
 }

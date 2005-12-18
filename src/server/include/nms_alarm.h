@@ -61,6 +61,8 @@ public:
    NetObj *GetAlarmSourceObject(DWORD dwAlarmId);
 
    int GetMostCriticalStatusForObject(DWORD dwObjectId);
+
+   void GetAlarmStats(CSCPMessage *pMsg);
 };
 
 

@@ -278,3 +278,20 @@ void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData)
          m_pSessionList[i]->Notify(dwCode, dwData);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
+
+
+//
+// Get number of active sessions
+//
+
+int GetSessionCount(void)
+{
+   int i, nCount;
+
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if (m_pSessionList[i] != NULL)
+         nCount++;
+   RWLockUnlock(m_rwlockSessionListAccess);
+   return nCount;
+}

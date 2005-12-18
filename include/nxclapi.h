@@ -1223,6 +1223,25 @@ typedef struct
 
 
 //
+// Server stats
+//
+
+typedef struct
+{
+   DWORD dwNumAlarms;
+   DWORD dwAlarmsBySeverity[5];
+   DWORD dwNumObjects;
+   DWORD dwNumNodes;
+   DWORD dwNumDCI;
+   DWORD dwNumClientSessions;
+   DWORD dwServerUptime;
+   DWORD dwServerProcessVMSize;
+   DWORD dwServerProcessWorkSet;
+   TCHAR szServerVersion[MAX_DB_STRING];
+} NXC_SERVER_STATS;
+
+
+//
 // Functions
 //
 
@@ -1392,6 +1411,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
                                           DWORD dwNumObjects, DWORD *pdwObjectList,
                                           DWORD *pdwRqId);
 
+DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats);
 DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
                                                NXC_SERVER_VARIABLE **ppVarList, 
                                                DWORD *pdwNumVars);

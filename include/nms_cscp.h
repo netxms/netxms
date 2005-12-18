@@ -381,6 +381,7 @@ typedef struct
 #define CMD_DELETE_OBJECT_TOOL      0x0094
 #define CMD_SETUP_PROXY_CONNECTION  0x0095
 #define CMD_GENERATE_OBJECT_TOOL_ID 0x0096
+#define CMD_GET_SERVER_STATS        0x0097
 
 
 //
@@ -586,6 +587,12 @@ typedef struct
 #define VID_TOOL_DATA               ((DWORD)197)
 #define VID_ACL                     ((DWORD)198)
 #define VID_TOOL_OID                ((DWORD)199)
+#define VID_SERVER_UPTIME           ((DWORD)200)
+#define VID_NUM_ALARMS              ((DWORD)201)
+#define VID_ALARMS_BY_SEVERITY      ((DWORD)202)
+#define VID_NETXMSD_PROCESS_WKSET   ((DWORD)203)
+#define VID_NETXMSD_PROCESS_VMSIZE  ((DWORD)204)
+#define VID_NUM_SESSIONS            ((DWORD)205)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

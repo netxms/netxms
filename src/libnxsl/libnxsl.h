@@ -131,7 +131,8 @@ class NXSL_Value
 {
 protected:
    DWORD m_dwFlags;
-   TCHAR *m_pszValStr;
+   DWORD m_dwStrLen;
+   char *m_pszValStr;
    int m_iValInt;
    double m_dValFloat;
 
@@ -148,10 +149,13 @@ public:
 
    BOOL IsNull(void) { return (m_dwFlags & VALUE_IS_NULL) ? TRUE : FALSE; }
    BOOL IsNumeric(void) { return (m_dwFlags & VALUE_IS_NUMERIC) ? TRUE : FALSE; }
-   char *GetValueAsString(void);
+   BOOL IsReal(void) { return (m_dwFlags & VALUE_IS_REAL) ? TRUE : FALSE; }
+   char *GetValueAsString(DWORD *pdwLen);
+   char *GetValueAsCString(void);
    int GetValueAsInt(void);
+   double GetValueAsReal(void);
 
-   void Concatenate(char *pszString);
+   void Concatenate(char *pszString, DWORD dwLen);
 };
 
 

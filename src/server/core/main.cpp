@@ -74,6 +74,7 @@ char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
+time_t g_tServerStartTime = 0;
 
 //
 // Static data
@@ -267,7 +268,8 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    DWORD dwAddr;
    char szInfo[256];
 
-   srand(time(NULL));
+   g_tServerStartTime = time(NULL);
+   srand(g_tServerStartTime);
    InitLog(g_dwFlags & AF_USE_EVENT_LOG, g_szLogFile, g_dwFlags & AF_STANDALONE);
 
 #ifdef _WIN32

@@ -389,6 +389,7 @@ private:
    void SendLogPoliciesList(DWORD dwRqId);
    void CreateNewLPPID(DWORD dwRqId);
    void OpenLPP(CSCPMessage *pRequest);
+   void SendServerStats(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -491,6 +492,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
+int GetSessionCount(void);
 
 void GetSysInfoStr(char *pszBuffer);
 DWORD GetLocalIpAddr(void);
@@ -566,6 +568,7 @@ extern char g_szDataDir[];
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
 extern DWORD g_dwPingSize;
+extern time_t g_tServerStartTime;
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;

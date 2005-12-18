@@ -28,7 +28,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         8
+#define MAX_ERROR_NUMBER         10
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -62,7 +62,9 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Invalid operation with NULL value"),
    _T("Internal error"),
    _T("main() function not presented"),
-   _T("Control stack overflow")
+   _T("Control stack overflow"),
+   _T("Divide by zero"),
+   _T("Invalid operation with real numbers")
 };
 
 
@@ -234,7 +236,7 @@ void NXSL_Program::Dump(FILE *pFile)
                fprintf(pFile, "<null>\n");
             else
                fprintf(pFile, "\"%s\"\n", 
-                       m_ppInstructionSet[i]->m_operand.m_pConstant->GetValueAsString());
+                       m_ppInstructionSet[i]->m_operand.m_pConstant->GetValueAsCString());
             break;
          case OPCODE_POP:
             fprintf(pFile, "%d\n", m_ppInstructionSet[i]->m_nStackItems);
@@ -447,7 +449,14 @@ void NXSL_Program::Execute(void)
          pValue = (NXSL_Value *)m_pDataStack->Pop();
          if (pValue != NULL)
          {
-            fputs(pValue->GetValueAsString(), stdout);
+            char *pszText;
+            DWORD dwLen;
+
+            pszText = pValue->GetValueAsString(&dwLen);
+            if (pszText != NULL)
+               fwrite(pszText, dwLen, 1, stdout);
+            else
+               fputs("(null)", stdout);
             delete pValue;
          }
          else
@@ -497,6 +506,11 @@ void NXSL_Program::Execute(void)
 void NXSL_Program::DoBinaryOperation(int nOpCode)
 {
    NXSL_Value *pVal1, *pVal2, *pRes = NULL;
+   char *pszText1, *pszText2;
+   DWORD dwLen1, dwLen2;
+   BOOL bRealOp;
+   double dVal;
+   int nVal;
    int nResult;
 
    pVal2 = (NXSL_Value *)m_pDataStack->Pop();
@@ -509,12 +523,135 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
       {
          if (pVal1->IsNumeric() && pVal2->IsNumeric())
          {
+            bRealOp = (pVal1->IsReal() || pVal2->IsReal());
             switch(nOpCode)
             {
+               case OPCODE_ADD:
+                  if (bRealOp)
+                  {
+                     dVal = pVal1->GetValueAsReal() + pVal2->GetValueAsReal();
+                     pRes = new NXSL_Value(dVal);
+                  }
+                  else
+                  {
+                     nVal = pVal1->GetValueAsInt() + pVal2->GetValueAsInt();
+                     pRes = new NXSL_Value(nVal);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_SUB:
+                  if (bRealOp)
+                  {
+                     dVal = pVal1->GetValueAsReal() - pVal2->GetValueAsReal();
+                     pRes = new NXSL_Value(dVal);
+                  }
+                  else
+                  {
+                     nVal = pVal1->GetValueAsInt() - pVal2->GetValueAsInt();
+                     pRes = new NXSL_Value(nVal);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_MUL:
+                  if (bRealOp)
+                  {
+                     dVal = pVal1->GetValueAsReal() * pVal2->GetValueAsReal();
+                     pRes = new NXSL_Value(dVal);
+                  }
+                  else
+                  {
+                     nVal = pVal1->GetValueAsInt() * pVal2->GetValueAsInt();
+                     pRes = new NXSL_Value(nVal);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_DIV:
+                  if (pVal2->GetValueAsReal() != 0)
+                  {
+                     dVal = pVal1->GetValueAsReal() / pVal2->GetValueAsReal();
+                     pRes = new NXSL_Value(dVal);
+                  }
+                  else
+                  {
+                     Error(9);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
+               case OPCODE_REM:
+                  if (!bRealOp)
+                  {
+                     if (pVal2->GetValueAsInt() != 0)
+                     {
+                        nVal = pVal1->GetValueAsInt() % pVal2->GetValueAsInt();
+                        pRes = new NXSL_Value(nVal);
+                     }
+                     else
+                     {
+                        Error(9);
+                     }
+                  }
+                  else
+                  {
+                     Error(10);
+                  }
+                  delete pVal1;
+                  delete pVal2;
+                  break;
                case OPCODE_CONCAT:
                   pRes = pVal1;
-                  pRes->Concatenate(pVal2->GetValueAsString());
+                  pszText2 = pVal2->GetValueAsString(&dwLen2);
+                  pRes->Concatenate(pszText2, dwLen2);
                   delete pVal2;
+                  break;
+               case OPCODE_EQ:
+               case OPCODE_NE:
+                  if (bRealOp)
+                     nResult = (pVal1->GetValueAsReal() == pVal2->GetValueAsReal());
+                  else
+                     nResult = (pVal1->GetValueAsInt() == pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value((nOpCode == OPCODE_EQ) ? nResult : !nResult);
+                  break;
+               case OPCODE_LT:
+                  if (bRealOp)
+                     nResult = (pVal1->GetValueAsReal() < pVal2->GetValueAsReal());
+                  else
+                     nResult = (pVal1->GetValueAsInt() < pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value(nResult);
+                  break;
+               case OPCODE_LE:
+                  if (bRealOp)
+                     nResult = (pVal1->GetValueAsReal() <= pVal2->GetValueAsReal());
+                  else
+                     nResult = (pVal1->GetValueAsInt() <= pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value(nResult);
+                  break;
+               case OPCODE_GT:
+                  if (bRealOp)
+                     nResult = (pVal1->GetValueAsReal() > pVal2->GetValueAsReal());
+                  else
+                     nResult = (pVal1->GetValueAsInt() > pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value(nResult);
+                  break;
+               case OPCODE_GE:
+                  if (bRealOp)
+                     nResult = (pVal1->GetValueAsReal() >= pVal2->GetValueAsReal());
+                  else
+                     nResult = (pVal1->GetValueAsInt() >= pVal2->GetValueAsInt());
+                  delete pVal1;
+                  delete pVal2;
+                  pRes = new NXSL_Value(nResult);
                   break;
                default:
                   Error(6);
@@ -537,7 +674,12 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                   }
                   else
                   {
-                     nResult = !strcmp(pVal1->GetValueAsString(), pVal2->GetValueAsString());
+                     pszText1 = pVal1->GetValueAsString(&dwLen1);
+                     pszText2 = pVal2->GetValueAsString(&dwLen2);
+                     if (dwLen1 == dwLen2)
+                        nResult = !memcmp(pszText1, pszText2, dwLen1);
+                     else
+                        nResult = 0;
                   }
                   delete pVal1;
                   delete pVal2;
@@ -551,7 +693,8 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                   else
                   {
                      pRes = pVal1;
-                     pRes->Concatenate(pVal2->GetValueAsString());
+                     pszText2 = pVal2->GetValueAsString(&dwLen2);
+                     pRes->Concatenate(pszText2, dwLen2);
                      delete pVal2;
                   }
                   break;

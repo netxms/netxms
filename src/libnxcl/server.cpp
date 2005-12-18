@@ -115,3 +115,46 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *ps
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Get server statistics
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwRetCode;
+
+   memset(pStats, 0, sizeof(NXC_SERVER_STATS));
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_SERVER_STATS);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         pStats->dwNumAlarms = pResponse->GetVariableLong(VID_NUM_ALARMS);
+         pResponse->GetVariableInt32Array(VID_ALARMS_BY_SEVERITY, 5, pStats->dwAlarmsBySeverity);
+         pStats->dwNumClientSessions = pResponse->GetVariableLong(VID_NUM_SESSIONS);
+         pStats->dwNumDCI = pResponse->GetVariableLong(VID_NUM_ITEMS);
+         pStats->dwNumNodes = pResponse->GetVariableLong(VID_NUM_NODES);
+         pStats->dwNumObjects = pResponse->GetVariableLong(VID_NUM_OBJECTS);
+         pStats->dwServerProcessVMSize = pResponse->GetVariableLong(VID_NETXMSD_PROCESS_VMSIZE);
+         pStats->dwServerProcessWorkSet = pResponse->GetVariableLong(VID_NETXMSD_PROCESS_WKSET);
+         pStats->dwServerUptime = pResponse->GetVariableLong(VID_SERVER_UPTIME);
+         pResponse->GetVariableStr(VID_SERVER_VERSION, pStats->szServerVersion, MAX_DB_STRING);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}

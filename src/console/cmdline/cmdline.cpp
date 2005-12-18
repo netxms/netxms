@@ -46,7 +46,22 @@ static void Prompt(DWORD dwLastError)
 
 static BOOL ProcessCommand(char *pszCmdLine, DWORD *pdwResult)
 {
-   *pdwResult = RCC_SUCCESS;
+   if (!stricmp(pszCmdLine, "stats"))
+   {
+      NXC_SERVER_STATS stats;
+
+      *pdwResult = NXCGetServerStats(g_hSession, &stats);
+      if (*pdwResult == RCC_SUCCESS)
+      {
+         printf("Server version: %s\n", stats.szServerVersion);
+         printf("Server uptime:  %d seconds\n", stats.dwServerUptime);
+         printf("Memory used by server process: %d KBytes\n", stats.dwServerProcessVMSize);
+      }
+   }
+   else
+   {
+      *pdwResult = RCC_SUCCESS;
+   }
    return FALSE;
 }
 

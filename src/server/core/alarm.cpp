@@ -441,3 +441,21 @@ void AlarmManager::UpdateObjectStatus(DWORD dwObjectId)
    if (pObject != NULL)
       pObject->CalculateCompoundStatus();
 }
+
+
+//
+// Fill message with alarm stats
+//
+
+void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
+{
+   DWORD i, dwCount[5];
+
+   Lock();
+   pMsg->SetVariable(VID_NUM_ALARMS, m_dwNumAlarms);
+   memset(dwCount, 0, sizeof(DWORD) * 5);
+   for(i = 0; i < m_dwNumAlarms; i++)
+      dwCount[m_pAlarmList[i].wSeverity]++;
+   Unlock();
+   pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
+}
