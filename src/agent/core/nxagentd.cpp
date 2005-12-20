@@ -365,7 +365,7 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 
-static void SignalHandler(void)
+static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 {
    sigset_t signals;
    int nSignal;
@@ -410,6 +410,7 @@ static void SignalHandler(void)
 
 stop_handler:
    sigprocmask(SIG_UNBLOCK, &signals, NULL);
+   return THREAD_OK;
 }
 
 #endif
@@ -772,7 +773,7 @@ void Main(void)
 #if defined(_WIN32) || defined(_NETWARE)
       ConditionWait(m_hCondShutdown, INFINITE);
 #else
-      SignalHandler();
+      StartMainLoop(SignalHandler, NULL);
 #endif
    }
    else
@@ -804,7 +805,7 @@ void Main(void)
       ConditionWait(m_hCondShutdown, INFINITE);
 #else
       printf("Agent running. Press Ctrl+C to shutdown.\n");
-      SignalHandler();
+      StartMainLoop(SignalHandler, NULL);
       printf("\nStopping agent...\n");
 #endif
    }

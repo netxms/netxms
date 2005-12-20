@@ -36,6 +36,7 @@
 
 #include <nms_common.h>
 #include <nms_cscp.h>
+#include <nms_threads.h>
 #include <time.h>
 
 #if HAVE_BYTESWAP_H
@@ -291,6 +292,11 @@ extern "C"
    int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...);
    int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes);
    int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
+#endif
+
+#if !defined(_WIN32) && !defined(_NETWARE)
+void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
+                                        THREAD_RESULT (THREAD_CALL * pfMain)(void *))
 #endif
 
 #ifdef __cplusplus
