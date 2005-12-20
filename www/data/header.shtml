@@ -14,6 +14,7 @@
 	<meta name="DESCRIPTION" content="NetXMS: Open Source Monitoring System" />
 	<meta name="KEYWORDS" content="netxms, network monitor, system monitor, monitoring, linux, unix, freebsd, windows, free network monitor" />
 </head>
+<body>
 <div id="header">
     <div class="midHeader">
         <h1 class="headerTitle">NetXMS</h1>
