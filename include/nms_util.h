@@ -294,7 +294,7 @@ extern "C"
    int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
 #endif
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
 void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
                                         THREAD_RESULT (THREAD_CALL * pfMain)(void *));
 #endif

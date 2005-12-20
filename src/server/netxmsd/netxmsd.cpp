@@ -23,10 +23,6 @@
 
 #include "netxmsd.h"
 
-#ifndef _WIN32
-#include <signal.h>
-#endif
-
 
 //
 // Help text
@@ -328,14 +324,6 @@ int main(int argc, char *argv[])
       fclose(fp);
    }
 
-   // Setup signal handlers
-   //for(i = 0; i < 32; i++)
-      //signal(i, SIG_IGN);
-   signal(SIGINT, SIG_IGN);
-   signal(SIGTERM, OnSignal);
-   signal(SIGSEGV, OnSignal);
-   signal(SIGCHLD, OnSignal);
-
    // Initialize server
    if (!Initialize())
    {
@@ -349,7 +337,7 @@ int main(int argc, char *argv[])
    }
 
    // Everything is OK, start common main loop
-   Main();
+   StartMainLoop(SignalHandler, Main);
 #endif   /* _WIN32 */
    return 0;
 }

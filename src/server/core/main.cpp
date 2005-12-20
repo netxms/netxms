@@ -80,11 +80,15 @@ time_t g_tServerStartTime = 0;
 // Static data
 //
 
-static CONDITION m_hEventShutdown = INVALID_CONDITION_HANDLE;
+static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thNodePollMgr = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
+
+#ifndef _WIN32
+static pid_t m_pid = -1;     // Server process ID
+#endif
 
 
 //
@@ -94,7 +98,7 @@ static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds)
 {
-   return ConditionWait(m_hEventShutdown, iSeconds * 1000);
+   return ConditionWait(m_condShutdown, iSeconds * 1000);
 }
 
 
@@ -377,7 +381,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    UpdateImageHashes();
 
    // Create synchronization stuff
-   m_hEventShutdown = ConditionCreate(TRUE);
+   m_condShutdown = ConditionCreate(TRUE);
 
    // Setup unique identifiers table
    if (!InitIdTable())
@@ -477,7 +481,12 @@ void NXCORE_EXPORTABLE Shutdown(void)
 
    WriteLog(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
-   ConditionSet(m_hEventShutdown);
+   ConditionSet(m_condShutdown);
+
+#ifndef _WIN32
+   if (IsStandalone())
+      kill(m_pid, SIGUSR1);   // Terminate signal handler
+#endif
 
    // Stop event processor(s)
    g_pEventQueue->Clear();
@@ -833,24 +842,64 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 
 #ifndef _WIN32
 
-void NXCORE_EXPORTABLE OnSignal(int iSignal)
+THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE SignalHandler(void *pArg)
 {
-   //WriteLog(MSG_SIGNAL_RECEIVED, EVENTLOG_WARNING_TYPE, "d", iSignal);
-   switch(iSignal)
+   sigset_t signals;
+   int nSignal;
+   BOOL bCallShutdown = FALSE;
+
+   m_pid = getpid();
+
+   sigemptyset(&signals);
+   sigaddset(&signals, SIGTERM);
+   sigaddset(&signals, SIGINT);
+   sigaddset(&signals, SIGPIPE);
+   sigaddset(&signals, SIGSEGV);
+   sigaddset(&signals, SIGCHLD);
+   sigaddset(&signals, SIGHUP);
+   sigaddset(&signals, SIGUSR1);
+   sigaddset(&signals, SIGUSR2);
+
+   sigprocmask(SIG_BLOCK, &signals, NULL);
+
+   while(1)
    {
-      case SIGTERM:
-         if (!IsStandalone())
-            ConditionSet(m_hEventShutdown);
-         break;
-      case SIGSEGV:
-         abort();
-         break;
-		case SIGCHLD:
-			while (waitpid(-1, NULL, WNOHANG) > 0)
-				;
-      default:
-         break;
+      if (sigwait(&signals, &nSignal) == 0)
+      {
+         switch(nSignal)
+         {
+            case SIGTERM:
+            case SIGINT:
+               if (IsStandalone())
+                  bCallShutdown = TRUE;
+               ConditionSet(m_condShutdown);
+               goto stop_handler;
+            case SIGSEGV:
+               abort();
+               break;
+            case SIGCHLD:
+               while (waitpid(-1, NULL, WNOHANG) > 0)
+                  ;
+               break;
+            case SIGUSR1:
+               if (g_dwFlags & AF_SHUTDOWN)
+                  goto stop_handler;
+               break;
+            default:
+               break;
+         }
+      }
+      else
+      {
+         ThreadSleepMs(100);
+      }
    }
+
+stop_handler:
+   sigprocmask(SIG_UNBLOCK, &signals, NULL);
+   if (bCallShutdown)
+      Shutdown();
+   return THREAD_OK;
 }
 
 #endif
@@ -860,7 +909,7 @@ void NXCORE_EXPORTABLE OnSignal(int iSignal)
 // Common main()
 //
 
-void NXCORE_EXPORTABLE Main(void)
+THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE Main(void *)
 {
    WriteLog(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
@@ -927,7 +976,7 @@ void NXCORE_EXPORTABLE Main(void)
    }
    else
    {
-		ConditionWait(m_hEventShutdown, INFINITE);
+		ConditionWait(m_condShutdown, INFINITE);
       // On Win32, Shutdown() will be called by service control handler
 #ifndef _WIN32
       Shutdown();
@@ -951,7 +1000,7 @@ void InitiateShutdown(void)
    }
    else
    {
-      ConditionSet(m_hEventShutdown);
+      kill(m_pid, SIGTERM);
    }
 #endif
 }

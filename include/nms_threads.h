@@ -23,6 +23,10 @@
 #ifndef _nms_threads_h_
 #define _nms_threads_h_
 
+#ifdef __cplusplus
+
+#define NMS_THREADS_H_INCLUDED
+
 #ifdef _WIN32
 
 #ifndef UNDER_CE
@@ -469,5 +473,7 @@ inline DWORD GetCurrentProcessId(void)
 }
 
 #endif   /* _WIN32 */
+
+#endif   /* __cplusplus */
 
 #endif   /* _nms_threads_h_ */

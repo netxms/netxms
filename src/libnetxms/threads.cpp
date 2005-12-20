@@ -43,7 +43,12 @@ void LIBNETXMS_EXPORTABLE
 
    if (uname(&un) != -1)
    {
-      if (!stricmp(un.sysname, "FreeBSD") && (un.version >=5))
+      char *ptr;
+
+      ptr = strchr(un.release, '.');
+      if (ptr != NULL)
+         *ptr = 0;
+      if (!stricmp(un.sysname, "FreeBSD") && (atoi(un.release) >= 5))
          nModel = 1;
    }
 
