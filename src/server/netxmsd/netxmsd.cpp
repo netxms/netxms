@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
          }
          return 3;
       }
-      Main();
+      Main(NULL);
    }
 #else    /* not _WIN32 */
    if (!IsStandalone())

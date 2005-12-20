@@ -842,7 +842,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 
 #ifndef _WIN32
 
-THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE SignalHandler(void *pArg)
+THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 {
    sigset_t signals;
    int nSignal;
@@ -909,7 +909,7 @@ stop_handler:
 // Common main()
 //
 
-THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE Main(void *)
+THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 {
    WriteLog(MSG_SERVER_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
@@ -982,6 +982,7 @@ THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE Main(void *)
       Shutdown();
 #endif
    }
+   return THREAD_OK;
 }
 
 

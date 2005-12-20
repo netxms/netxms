@@ -442,7 +442,7 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void);
 
 void NXCORE_EXPORTABLE Shutdown(void);
 BOOL NXCORE_EXPORTABLE Initialize(void);
-THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE Main(void *);
+THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB(void);
 void InitiateShutdown(void);
 
@@ -540,7 +540,7 @@ char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error);
 
 #else
 
-THREAD_RESULT THREAD_CALL NXCORE_EXPORTABLE SignalHandler(void *);
+THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 
 #endif   /* _WIN32 */
 

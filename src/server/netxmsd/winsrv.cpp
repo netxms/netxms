@@ -110,7 +110,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    status.dwWaitHint = 0;
    SetServiceStatus(serviceHandle, &status);
 
-   Main();
+   Main(NULL);
 }
 
 
