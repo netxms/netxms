@@ -296,7 +296,7 @@ extern "C"
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
-                                        THREAD_RESULT (THREAD_CALL * pfMain)(void *))
+                                        THREAD_RESULT (THREAD_CALL * pfMain)(void *));
 #endif
 
 #ifdef __cplusplus
