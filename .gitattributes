@@ -163,6 +163,7 @@ include/nxlog.h -text
 include/nxnt.h -text
 include/nxqueue.h -text
 include/nxsl.h -text
+include/nxsm_ext.h -text
 include/nxsnmp.h -text
 include/nxtools.h -text
 include/nxwinui.h -text
