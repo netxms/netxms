@@ -1,4 +1,4 @@
-/* $Id: nxsm_ext.h,v 1.2 2005-12-21 03:05:40 alk Exp $ */
+/* $Id: nxsm_ext.h,v 1.3 2005-12-21 22:42:00 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Session Manager
@@ -64,12 +64,32 @@ typedef struct t_W_NXSM_ALARM
 	NXSM_ALARM *data;
 } W_NXSM_ALARM;
 
+typedef struct
+{
+   DWORD dwNumAlarms;
+   DWORD dwAlarmsBySeverity[5];
+   DWORD dwNumObjects;
+   DWORD dwNumNodes;
+   DWORD dwNumDCI;
+   DWORD dwNumClientSessions;
+   DWORD dwServerUptime;
+   DWORD dwServerProcessVMSize;
+   DWORD dwServerProcessWorkSet;
+   TCHAR szServerVersion[MAX_DB_STRING];
+} NXSM_SERVER_STATS;
+
+
 #endif // __NXSM_EXT__H__
 
 //////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/12/21 03:05:40  alk
+1) nxsmcl added to configure
+2) Makefile.PL+autoconf -- looks like it works, but...
+3) building on linux
+
 Revision 1.1  2005/12/20 23:14:07  alk
 nxsm_ext.h moved to global includes
 
