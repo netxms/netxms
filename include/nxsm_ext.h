@@ -1,4 +1,4 @@
-/* $Id: nxsm_ext.h,v 1.1 2005-12-20 23:14:07 alk Exp $ */
+/* $Id: nxsm_ext.h,v 1.2 2005-12-21 03:05:40 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Session Manager
@@ -32,6 +32,8 @@ enum
 	CMD_NXSM_GET_OBJECTS,
 	CMD_NXSM_GET_ALARMS,
 	CMD_NXSM_ALARM_ACK,
+
+	CMD_NXSM_STATUS,
 
 	CMD_NXSM_LAST
 };
@@ -68,6 +70,9 @@ typedef struct t_W_NXSM_ALARM
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/12/20 23:14:07  alk
+nxsm_ext.h moved to global includes
+
 Revision 1.4  2005/12/15 00:01:50  alk
 session manager(and sm client) can handle login/logout/alarms list/alarm ack
 
