@@ -24,6 +24,13 @@
 
 
 //
+// Receive buffer size
+//
+
+#define SMTP_BUFFER_SIZE            1024
+
+
+//
 // Sender errors
 //
 
@@ -72,23 +79,69 @@ static THREAD m_hThread = INVALID_THREAD_HANDLE;
 
 
 //
-// Receive bytes from network or fail on timeout
+// Find end-of-line character
 //
 
-int RecvWithTimeout(SOCKET hSocket, char *pszBuffer, int iBufSize)
+static char *FindEOL(char *pszBuffer, int nLen)
 {
-   fd_set rdfs;
-   struct timeval timeout;
+   int i;
 
-   // Wait for data
-   FD_ZERO(&rdfs);
-   FD_SET(hSocket, &rdfs);
-   timeout.tv_sec = 10;
-   timeout.tv_usec = 0;
-	if (select(hSocket + 1, &rdfs, NULL, NULL, &timeout) == 0)
-      return 0;     // Timeout
+   for(i = 0; i < nLen; i++)
+      if (pszBuffer[i] == '\n')
+         return &pszBuffer[i];
+   return NULL;
+}
 
-   return recv(hSocket, pszBuffer, iBufSize, 0);
+
+//
+// Read line from socket
+//
+
+static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, char *pszLine)
+{
+   char *ptr;
+   int nRet;
+
+   do
+   {
+      ptr = FindEOL(pszBuffer, *pnBufPos);
+      if (ptr == NULL)
+      {
+         nRet = RecvEx(hSocket, &pszBuffer[*pnBufPos], SMTP_BUFFER_SIZE - *pnBufPos, 0, 30000);
+         if (nRet <= 0)
+            return FALSE;
+         *pnBufPos += nRet;
+      }
+   } while(ptr == NULL);
+   *ptr = 0;
+   strcpy(pszLine, pszBuffer);
+   *pnBufPos -= (ptr - pszBuffer + 1);
+   memmove(pszBuffer, ptr + 1, *pnBufPos);
+   return TRUE;
+}
+
+
+//
+// Read SMTP response code from socket
+//
+
+static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
+{
+   char szLine[SMTP_BUFFER_SIZE];
+
+   while(1)
+   {
+      if (!ReadLineFromSocket(hSocket, pszBuffer, pnBufPos, szLine))
+         return -1;
+      if (strlen(szLine) < 4)
+         return -1;
+      if (szLine[3] == ' ')
+      {
+         szLine[3] = 0;
+         break;
+      }
+   }
+   return atoi(szLine);
 }
 
 
@@ -101,8 +154,8 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
    SOCKET hSocket;
    struct hostent *hs;
    struct sockaddr_in sa;
-   char szBuffer[256];
-   int iErr, iState = STATE_INITIAL;
+   char szBuffer[SMTP_BUFFER_SIZE];
+   int iResp, iState = STATE_INITIAL, nBufPos = 0;
    DWORD dwRetCode;
 
    // Fill in address structure
@@ -134,17 +187,14 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
    {
       while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
       {
-         iErr = RecvWithTimeout(hSocket, szBuffer, 255);
-         if (iErr > 0)
+         iResp = GetSMTPResponse(hSocket, szBuffer, &nBufPos);
+         if (iResp > 0)
          {
-            szBuffer[iErr] = 0;
-            DbgPrintf(AF_DEBUG_ACTIONS, "SMTP: %s", szBuffer);
-         
             switch(iState)
             {
                case STATE_INITIAL:
                   // Server should send 220 text after connect
-                  if (!memcmp(szBuffer,"220",3))
+                  if (iResp == 220)
                   {
                      iState = STATE_HELLO;
                      SendEx(hSocket, "HELO netxms\r\n", 13, 0);
@@ -156,7 +206,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   break;
                case STATE_HELLO:
                   // Server should respond with 250 text to our HELO command
-                  if (!memcmp(szBuffer,"250",3))
+                  if (iResp == 250)
                   {
                      iState = STATE_FROM;
                      sprintf(szBuffer, "MAIL FROM: <%s>\r\n", m_szFromAddr);
@@ -169,7 +219,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   break;
                case STATE_FROM:
                   // Server should respond with 250 text to our MAIL FROM command
-                  if (!memcmp(szBuffer,"250",3))
+                  if (iResp == 250)
                   {
                      iState = STATE_RCPT;
                      sprintf(szBuffer, "RCPT TO: <%s>\r\n", pszRcpt);
@@ -182,7 +232,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   break;
                case STATE_RCPT:
                   // Server should respond with 250 text to our RCPT TO command
-                  if (!memcmp(szBuffer,"250",3))
+                  if (iResp == 250)
                   {
                      iState = STATE_DATA;
                      SendEx(hSocket, "DATA\r\n", 6, 0);
@@ -194,7 +244,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   break;
                case STATE_DATA:
                   // Server should respond with 354 text to our DATA command
-                  if (!memcmp(szBuffer,"354",3))
+                  if (iResp == 354)
                   {
                      iState = STATE_MAIL_BODY;
 
@@ -203,7 +253,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
-                     sprintf(szBuffer, "Subject: <%s>\r\n\r\n", pszSubject);
+                     sprintf(szBuffer, "Subject: %s\r\n\r\n", pszSubject);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
 
                      // Mail body
@@ -217,7 +267,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   break;
                case STATE_MAIL_BODY:
                   // Server should respond with 250 to our mail body
-                  if (!memcmp(szBuffer,"250",3))
+                  if (iResp == 250)
                   {
                      iState = STATE_QUIT;
                      SendEx(hSocket, "QUIT\r\n", 6, 0);
@@ -229,7 +279,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   break;
                case STATE_QUIT:
                   // Server should respond with 221 text to our QUIT command
-                  if (!memcmp(szBuffer,"221",3))
+                  if (iResp == 221)
                   {
                      iState = STATE_FINISHED;
                   }
@@ -286,6 +336,10 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
 
+      ConfigReadStr("SMTPServer", m_szSmtpServer, MAX_PATH, "localhost");
+      ConfigReadStr("SMTPFromAddr", m_szFromAddr, MAX_PATH, "netxms@localhost");
+      m_wSmtpPort = (WORD)ConfigReadInt("SMTPPort", 25);
+
       dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
       if (dwResult != SMTP_ERR_SUCCESS)
          PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsss", dwResult, 
@@ -304,12 +358,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 
 void InitMailer(void)
 {
-   ConfigReadStr("SMTPServer", m_szSmtpServer, MAX_PATH, "localhost");
-   ConfigReadStr("SMTPFromAddr", m_szFromAddr, MAX_PATH, "netxms@localhost");
-   m_wSmtpPort = (WORD)ConfigReadInt("SMTPPort", 25);
-
    m_pMailerQueue = new Queue;
-
    m_hThread = ThreadCreateEx(MailerThread, 0, NULL);
 }
 

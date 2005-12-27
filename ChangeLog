@@ -15,6 +15,7 @@
 - Added support for Windows authentication in Microsoft SQL driver
 - Server configuration wizard: added possibility to configure service account
 - Added support for transactions in database manager
+- Fixed bugs in server's SMTP sender
 - Fixed issues: #57, #61, #63, #65, #66
 
 
