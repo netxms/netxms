@@ -4,6 +4,7 @@
 
 - Implemented agent proxy
 - Object tools fully implemented (including configuration)
+- Added web session manager and very basic web interface
 - Added "node capability expiration" feature
 - Windows console:
 	- Fixed inconsistencies in object access control configuration
