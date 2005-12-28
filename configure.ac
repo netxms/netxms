@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.123 2005-12-28 14:38:34 victor Exp $
+# $Id: configure.ac,v 1.124 2005-12-28 18:00:44 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -267,7 +267,7 @@ AC_ARG_WITH(dist,
 AC_ARG_WITH(nxsm,
 [AS_HELP_STRING(--with-nxsm,build session manager for web interface)],
 [
-	MODULES="$MODULES www"
+	MODULES="$MODULES libnxcl www"
 	BUILD_CLIENT="yes"
    DYNAMIC_COMPONENTS="yes"
 ])
