@@ -24,6 +24,7 @@ if [ `uname -s` = "FreeBSD" ]; then
 fi
 
 mkdir -p config
+touch README
 
 rm -f config.cache &&
 [ ! -f config/ltmain.sh ] && $LIBTOOLIZE
