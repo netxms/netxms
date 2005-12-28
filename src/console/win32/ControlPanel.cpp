@@ -105,7 +105,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("SNMP Traps", 4, ID_CONTROLPANEL_SNMPTRAPS);
    AddItem("Agent Packages", 5, ID_CONTROLPANEL_AGENTPKG);
    AddItem("Server Configuration", 6, ID_CONTROLPANEL_SERVERCFG);
-   AddItem("Log Processing", 7, ID_CONTROLPANEL_LOGPROCESSING);
+   //AddItem("Log Processing", 7, ID_CONTROLPANEL_LOGPROCESSING);
    AddItem("Object Tools", 8, ID_CONTROLPANEL_OBJECTTOOLS);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
