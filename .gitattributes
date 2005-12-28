@@ -6,7 +6,6 @@
 /INSTALL -text
 /Makefile.am -text
 /NEWS -text
-/README -text
 /README.NetWare -text
 /README.in -text
 /THANKS -text
