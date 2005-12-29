@@ -1,4 +1,27 @@
 *
+* 0.2.8
+*
+
+- Implemented agent proxy
+- Object tools fully implemented (including configuration)
+- Added web session manager and very basic web interface
+- Added "node capability expiration" feature
+- Windows console:
+	- Fixed inconsistencies in object access control configuration
+	- Now can play sounds when new alarm arrives
+	- Added voice notifications for alarms (using SAPI)
+- Alarm viewer: 
+	- The same audio notification options added
+	- Current time display added
+- Added support for Windows authentication in Microsoft SQL driver
+- Server configuration wizard: added possibility to configure service account
+- Added support for transactions in database manager
+- Fixed bugs in server's SMTP sender
+- Fixed bug in SMS driver
+- Fixed issues: #57, #61, #63, #65, #66
+
+
+*
 * 0.2.7
 *
 
