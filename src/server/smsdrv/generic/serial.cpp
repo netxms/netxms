@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.1 2005-06-16 13:19:38 alk Exp $ */
+/* $Id: serial.cpp,v 1.2 2005-12-29 18:35:15 alk Exp $ */
 
 #include "main.h"
 
@@ -122,6 +122,9 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 
 	tcgetattr(m_hPort, &newTio);
 
+	newTio.c_cflag = 0;
+
+	//newTio.c_cflag &= ~(CBAUD | CBAUDEX);
 	switch(nSpeed)
 	{
 		case 50:     newTio.c_cflag |= B50;     break;
@@ -145,6 +148,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		default:     newTio.c_cflag |= B38400;  break;
 	}
 
+	//newTio.c_cflag &= ~(CSIZE);
 	switch(nDataBits)
 	{
 		case 5:
@@ -162,6 +166,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 			break;
 	}
 
+	//newTio.c_cflag &= ~(PARODD | PARENB);
 	switch(nParity)
 	{
 		case ODDPARITY:
@@ -174,6 +179,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 			break;
 	}
 
+	//newTio.c_cflag &= CSTOPB;
 	if (nStopBits != ONESTOPBIT)
 	{
 		newTio.c_cflag |= CSTOPB;
@@ -333,5 +339,8 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/06/16 13:19:38  alk
+added sms-driver for generic gsm modem
+
 
 */
