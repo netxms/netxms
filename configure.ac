@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.124 2005-12-28 18:00:44 alk Exp $
+# $Id: configure.ac,v 1.125 2005-12-29 15:53:11 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -610,6 +610,11 @@ AC_CONFIG_FILES([
 	src/www/Makefile
 	src/www/iis/Makefile
 	src/www/nxsm/Makefile
+	src/www/frontend-perl/Makefile
+	src/www/frontend-perl/cgi/Makefile
+	src/www/frontend-perl/cgi/forms/Makefile
+	src/www/frontend-perl/data/Makefile
+	src/www/frontend-perl/data/images/Makefile
 	src/www/nxsmcl/Makefile
 	tools/Makefile
 ])
