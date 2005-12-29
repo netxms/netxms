@@ -108,6 +108,42 @@ struct NXSL_Function
 
 
 //
+// External function structure
+//
+
+class NXSL_Value;
+
+struct NXSL_ExtFunction
+{
+   char m_szName[MAX_FUNCTION_NAME];
+   int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+};
+
+
+//
+// Environment for NXSL program
+//
+
+class NXSL_Environment
+{
+private:
+   DWORD m_dwNumFunctions;
+   NXSL_ExtFunction *m_pFunctionList;
+
+   FILE *m_pStdIn;
+   FILE *m_pStdOut;
+
+public:
+   NXSL_Environment();
+   ~NXSL_Environment();
+
+   void SetIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }
+   FILE *GetStdIn(void) { return m_pStdIn; }
+   FILE *GetStdOut(void) { return m_pStdOut; }
+};
+
+
+//
 // Simple stack class
 //
 
@@ -245,6 +281,8 @@ public:
 class NXSL_Program
 {
 protected:
+   NXSL_Environment *m_pEnv;
+
    NXSL_Instruction **m_ppInstructionSet;
    DWORD m_dwCodeSize;
    DWORD m_dwCurrPos;
@@ -280,7 +318,7 @@ public:
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
 
-   int Run(void);
+   int Run(NXSL_Environment *pEnv);
 
    void Dump(FILE *pFile);
    TCHAR *GetErrorText(void) { return m_pszErrorText; }

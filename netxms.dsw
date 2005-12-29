@@ -3,6 +3,24 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "NXSMClient"=.\src\www\nxsmcl\NXSMClient\NXSMClient.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "generic"=.\src\server\smsdrv\generic\generic.dsp - Package Owner=<4>
 
 Package=<5>
@@ -379,6 +397,27 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxsm"=.\src\www\nxsm\nxsm.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
     End Project Dependency
 }}}
 

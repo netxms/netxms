@@ -101,6 +101,10 @@ SOURCE=.\compiler.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\env.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\instruction.cpp
 # End Source File
 # Begin Source File

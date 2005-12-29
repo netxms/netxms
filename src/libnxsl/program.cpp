@@ -273,9 +273,15 @@ void NXSL_Program::Error(int nError)
 // Run program
 //
 
-int NXSL_Program::Run(void)
+int NXSL_Program::Run(NXSL_Environment *pEnv)
 {
    DWORD i;
+
+   // Use provided environment or create default
+   if (pEnv != NULL)
+      m_pEnv = pEnv;
+   else
+      m_pEnv = new NXSL_Environment;
 
    // Create stacks
    m_pDataStack = new NXSL_Stack;
