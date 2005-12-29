@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.126 2005-12-29 18:23:11 alk Exp $
+# $Id: configure.ac,v 1.127 2005-12-29 18:31:20 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -333,9 +333,9 @@ if test "x$BUILD_STATIC_AGENT" = "xyes" ; then
    if test "x$DYNAMIC_COMPONENTS" = "xyes" ; then
       AC_MSG_ERROR(Static agent and other components are mutally exclusive.)
    fi
-   ${enable_shared=no}
+   enable_shared=no
 else
-   ${enable_static=no}
+   enable_static=no
 fi
 
 AC_LIBTOOL_DLOPEN
