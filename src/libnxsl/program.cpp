@@ -28,7 +28,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         10
+#define MAX_ERROR_NUMBER         12
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -65,7 +65,9 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("main() function not presented"),
    _T("Control stack overflow"),
    _T("Divide by zero"),
-   _T("Invalid operation with real numbers")
+   _T("Invalid operation with real numbers"),
+   _T("Function not found"),
+   _T("Invalid number of function's arguments")
 };
 
 
@@ -88,6 +90,7 @@ NXSL_Program::NXSL_Program(void)
    m_dwNumFunctions = 0;
    m_pFunctionList = NULL;
    m_dwSubLevel = 0;    // Level of current subroutine
+   m_pEnv = NULL;
 }
 
 
@@ -109,6 +112,8 @@ NXSL_Program::~NXSL_Program(void)
    delete m_pConstants;
    delete m_pGlobals;
    delete m_pLocals;
+
+   delete m_pEnv;
 
    safe_free(m_pFunctionList);
 
@@ -276,6 +281,7 @@ void NXSL_Program::Error(int nError)
 int NXSL_Program::Run(NXSL_Environment *pEnv)
 {
    DWORD i;
+   NXSL_VariableSystem *pSavedGlobals;
 
    // Use provided environment or create default
    if (pEnv != NULL)
@@ -290,6 +296,9 @@ int NXSL_Program::Run(NXSL_Environment *pEnv)
    // Create local variable system for main()
    m_pLocals = new NXSL_VariableSystem;
 
+   // Preserve original global variables
+   pSavedGlobals = new NXSL_VariableSystem(m_pGlobals);
+
    // Locate main()
    for(i = 0; i < m_dwNumFunctions; i++)
       if (!strcmp(m_pFunctionList[i].m_szName, "main"))
@@ -303,8 +312,16 @@ int NXSL_Program::Run(NXSL_Environment *pEnv)
    else
    {
       Error(7);
-      m_dwCurrPos = INVALID_ADDRESS;
    }
+
+   // Restore global variables
+   delete m_pGlobals;
+   m_pGlobals = pSavedGlobals;
+
+   // Cleanup
+   delete_and_null(m_pEnv);
+   delete_and_null(m_pDataStack);
+   delete_and_null(m_pCodeStack);
 
    return (m_dwCurrPos == INVALID_ADDRESS) ? -1 : 0;
 }
@@ -344,9 +361,10 @@ void NXSL_Program::Execute(void)
    NXSL_Instruction *cp;
    NXSL_Value *pValue;
    NXSL_Variable *pVar;
+   NXSL_ExtFunction *pFunc;
    DWORD dwNext = m_dwCurrPos + 1;
    char szBuffer[256];
-   int i;
+   int i, nRet;
 
    cp = m_ppInstructionSet[m_dwCurrPos];
    switch(cp->m_nOpCode)
@@ -367,7 +385,7 @@ void NXSL_Program::Execute(void)
          }
          else
          {
-            Error(1);
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       case OPCODE_POP:
@@ -394,7 +412,7 @@ void NXSL_Program::Execute(void)
          }
          else
          {
-            Error(1);
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       case OPCODE_CALL:
@@ -418,14 +436,53 @@ void NXSL_Program::Execute(void)
                }
                else
                {
-                  Error(1);
+                  Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
                   break;
                }
             }
          }
          else
          {
-            Error(8);
+            Error(NXSL_ERR_CONTROL_STACK_OVERFLOW);
+         }
+         break;
+      case OPCODE_CALL_EXTERNAL:
+         pFunc = m_pEnv->FindFunction(cp->m_operand.m_pszString);
+         if (pFunc != NULL)
+         {
+            if ((cp->m_nStackItems == pFunc->m_iNumArgs) ||
+                (pFunc->m_iNumArgs == -1))
+            {
+               if (m_pDataStack->Size() >= cp->m_nStackItems)
+               {
+                  nRet = pFunc->m_pfHandler(cp->m_nStackItems,
+                                            (NXSL_Value **)m_pDataStack->PeekList(cp->m_nStackItems),
+                                            &pValue);
+                  if (nRet == 0)
+                  {
+                     for(i = 0; i < cp->m_nStackItems; i++)
+                        m_pDataStack->Pop();
+                     m_pDataStack->Push(pValue);
+                  }
+                  else
+                  {
+                     // Execution error inside function
+                     Error(nRet);
+                  }
+               }
+               else
+               {
+                  Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               }
+            }
+            else
+            {
+               Error(NXSL_ERR_INVALID_ARGUMENT_COUNT);
+            }
+         }
+         else
+         {
+            Error(NXSL_ERR_NO_FUNCTION);
          }
          break;
       case OPCODE_RET_NULL:
@@ -470,7 +527,7 @@ void NXSL_Program::Execute(void)
          }
          else
          {
-            Error(1);
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       case OPCODE_EXIT:
@@ -482,7 +539,7 @@ void NXSL_Program::Execute(void)
          }
          else
          {
-            Error(1);
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       case OPCODE_ADD:

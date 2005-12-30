@@ -7,6 +7,7 @@
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
 integer		\-?(0x)?[0-9]+
+real		\-?[0-9]+\.[0-9]+
 escape		\\[bnrt0\"]
 
 %{
@@ -32,6 +33,7 @@ escape		\\[bnrt0\"]
 
 <INITIAL>{identifier}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
 <INITIAL>{integer}	{ m_plval->valInt = strtoul(yytext, NULL, 0); return T_INTEGER; }
+<INITIAL>{real}		{ m_plval->valReal = strtod(yytext, NULL); return T_REAL; }
 
 <INITIAL>"=="	return T_EQ;
 <INITIAL>"!="	return T_NE;

@@ -105,6 +105,10 @@ SOURCE=.\env.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\functions.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\instruction.cpp
 # End Source File
 # Begin Source File

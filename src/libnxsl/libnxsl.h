@@ -117,6 +117,7 @@ struct NXSL_ExtFunction
 {
    char m_szName[MAX_FUNCTION_NAME];
    int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+   int m_iNumArgs;   // Number of arguments or -1 fo variable number
 };
 
 
@@ -140,6 +141,8 @@ public:
    void SetIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }
    FILE *GetStdIn(void) { return m_pStdIn; }
    FILE *GetStdOut(void) { return m_pStdOut; }
+
+   NXSL_ExtFunction *FindFunction(char *pszName);
 };
 
 
@@ -161,6 +164,9 @@ public:
    void Push(void *pData);
    void *Pop(void);
    void *Peek(void);
+   void **PeekList(int nLevel) { return &m_ppData[m_nStackPos - nLevel]; }
+
+   int Size(void) { return m_nStackPos; }
 };
 
 
@@ -217,6 +223,7 @@ protected:
 public:
    NXSL_Variable(TCHAR *pszName);
    NXSL_Variable(TCHAR *pszName, NXSL_Value *pValue);
+   NXSL_Variable(NXSL_Variable *pSrc);
    ~NXSL_Variable();
 
    TCHAR *Name(void) { return m_pszName; }
@@ -237,6 +244,7 @@ protected:
 
 public:
    NXSL_VariableSystem(void);
+   NXSL_VariableSystem(NXSL_VariableSystem *pSrc);
    ~NXSL_VariableSystem();
 
    NXSL_Variable *Find(TCHAR *pszName);

@@ -26,6 +26,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 {
 	int valInt;
 	char *valStr;
+	double valReal;
 	NXSL_Value *pConstant;
 	NXSL_Instruction *pInstruction;
 }
@@ -41,6 +42,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token <valStr> T_IDENTIFIER
 %token <valInt> T_INTEGER
 %token <valStr> T_STRING
+%token <valReal> T_REAL
 
 %right '='
 %left '.'
@@ -374,6 +376,10 @@ Constant:
 	free($1);
 }
 |	T_INTEGER
+{
+	$$ = new NXSL_Value($1);
+}
+|	T_REAL
 {
 	$$ = new NXSL_Value($1);
 }

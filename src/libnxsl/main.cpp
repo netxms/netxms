@@ -50,7 +50,7 @@ NXSL_SCRIPT LIBNXSL_EXPORTABLE NXSLCompile(TCHAR *pszSource,
 int LIBNXSL_EXPORTABLE NXSLRun(NXSL_SCRIPT hScript)
 {
    if (hScript != NULL)
-      return ((NXSL_Program *)hScript)->Run();
+      return ((NXSL_Program *)hScript)->Run(NULL);
    return -1;
 }
 
