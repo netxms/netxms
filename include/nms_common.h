@@ -491,6 +491,13 @@ typedef struct tagICMPHDR
 
 
 //
+// delete object and nullify pointer
+//
+
+#define delete_and_null(x) { delete x; x = NULL; }
+
+
+//
 // Convert half-byte's value to hex digit and vice versa
 //
 

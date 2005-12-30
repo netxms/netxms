@@ -35,6 +35,24 @@
 
 
 //
+// Script execution errors
+//
+
+#define NXSL_ERR_DATA_STACK_UNDERFLOW     1
+#define NXSL_ERR_CONTROL_STACK_UNDERFLOW  2
+#define NXSL_ERR_BAD_CONDITION            3
+#define NXSL_ERR_NOT_NUMBER               4
+#define NXSL_ERR_NULL_VALUE               5
+#define NXSL_ERR_INTERNAL                 6
+#define NXSL_ERR_NO_MAIN                  7
+#define NXSL_ERR_CONTROL_STACK_OVERFLOW   8
+#define NXSL_ERR_DIVIDE_BY_ZERO           9
+#define NXSL_ERR_REAL_VALUE               10
+#define NXSL_ERR_NO_FUNCTION              11
+#define NXSL_ERR_INVALID_ARGUMENT_COUNT   12
+
+
+//
 // Script handle
 //
 
