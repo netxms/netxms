@@ -129,6 +129,10 @@ SOURCE=..\..\include\nxsl.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\include\nxsl_classes.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\include\unicode.h
 # End Source File
 # End Group

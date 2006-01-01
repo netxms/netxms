@@ -65,7 +65,8 @@ int main(int argc, char *argv[])
 {
    char *pszSource, szError[1024];
    DWORD dwSize;
-   NXSL_SCRIPT hScript;
+   NXSL_Program *pScript;
+   NXSL_Environment *pEnv;
 
    printf("NetXMS Scripting Host  Version " NETXMS_VERSION_STRING "\n"
           "Copyright (c) 2005 Victor Kirhenshtein\n\n");
@@ -77,15 +78,17 @@ int main(int argc, char *argv[])
    }
 
    pszSource = LoadFile(argv[1], &dwSize);
-   hScript = NXSLCompile(pszSource, szError, 1024);
-   if (hScript != NULL)
+   pScript = (NXSL_Program *)NXSLCompile(pszSource, szError, 1024);
+   if (pScript != NULL)
    {
-      NXSLDump(hScript, stdout);
-      if (NXSLRun(hScript) == -1)
+      pScript->Dump(stdout);
+      pEnv = new NXSL_Environment;
+      pEnv->SetIO(stdin, stdout);
+      if (pScript->Run(pEnv) == -1)
       {
-         printf("%s\n", NXSLGetRuntimeError(hScript));
+         printf("%s\n", pScript->GetErrorText());
       }
-      NXSLDestroy(hScript);
+      delete pScript;
    }
    else
    {

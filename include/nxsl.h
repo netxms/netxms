@@ -35,6 +35,13 @@
 
 
 //
+// Various defines
+//
+
+#define MAX_FUNCTION_NAME  64
+
+
+//
 // Script execution errors
 //
 
@@ -50,6 +57,15 @@
 #define NXSL_ERR_REAL_VALUE               10
 #define NXSL_ERR_NO_FUNCTION              11
 #define NXSL_ERR_INVALID_ARGUMENT_COUNT   12
+
+
+//
+// Exportable classes
+//
+
+#ifdef __cplusplus
+#include <nxsl_classes.h>
+#endif
 
 
 //

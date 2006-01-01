@@ -518,11 +518,14 @@ void NXSL_Program::Execute(void)
             char *pszText;
             DWORD dwLen;
 
-            pszText = pValue->GetValueAsString(&dwLen);
-            if (pszText != NULL)
-               fwrite(pszText, dwLen, 1, stdout);
-            else
-               fputs("(null)", stdout);
+            if (m_pEnv->GetStdOut() != NULL)
+            {
+               pszText = pValue->GetValueAsString(&dwLen);
+               if (pszText != NULL)
+                  fwrite(pszText, dwLen, 1, m_pEnv->GetStdOut());
+               else
+                  fputs("(null)", m_pEnv->GetStdOut());
+            }
             delete pValue;
          }
          else

@@ -181,6 +181,10 @@ SOURCE=..\..\include\nxsl.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\include\nxsl_classes.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\parser.tab.hpp
 # End Source File
 # Begin Source File
