@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.21 2005-12-29 20:07:50 alk Exp $ -->
+<!-- $Id: body.shtml,v 1.22 2006-01-02 16:22:26 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -7,17 +7,17 @@
 	<a href="changelog.shtml">Current Changelog</a>
 	</p>
 
-	<h2>Current Release version 0.2.8 &ndash; Dec 29, 2005</h2>
+	<h2>Current Release version 0.2.8-hf1 &ndash; Jan 02, 2006</h2>
 	<p>
-	<a href="netxms-0.2.8.tar.gz">Source code</a>
-	<a href="netxms-0.2.8.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.8.tar.gz.asc">(PGP sign)</a>
+	<a href="netxms-0.2.8-hf1.tar.gz">Source code</a>
+	<a href="netxms-0.2.8-hf1.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.8-hf1.tar.gz.asc">(PGP sign)</a>
 	</p>
 	<p>
-	<a href="agent_packages/nxagent-0.2.8.sh">Agent upgrade package for UNIX systems</a>
-	<a href="agent_packages/nxagent-0.2.8.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.8.sh.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.8.sh.asc">(PGP sign)</a><br />
+	<a href="agent_packages/nxagent-0.2.8-hf1.sh">Agent upgrade package for UNIX systems</a>
+	<a href="agent_packages/nxagent-0.2.8-hf1.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.8-hf1.sh.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.8-hf1.sh.asc">(PGP sign)</a><br />
 	</p>
 	<p>
 	<a href="netxms-0.2.8.exe">WIN32 Installer</a>
@@ -25,10 +25,10 @@
 	<a href="netxms-0.2.8.exe.asc">(PGP sign)</a>
 	</p>
 	<p>
-	<a href="agent_packages/nxagent-0.2.8.exe">WIN32 Agent Installer</a>
-	<a href="agent_packages/nxagent-0.2.8-win32.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.8.exe.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.8.exe.asc">(PGP sign)</a><br />
+	<a href="agent_packages/nxagent-0.2.8-hf1.exe">WIN32 Agent Installer</a>
+	<a href="agent_packages/nxagent-0.2.8-hf1-win32.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.8-hf1.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.8-hf1.exe.asc">(PGP sign)</a><br />
 	NB! We strongly recommended to use this installer if you are planning on using centralised upgrade feature.
 	</p>
 	<p>
