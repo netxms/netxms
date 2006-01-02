@@ -176,7 +176,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
          // Socket should be closed on successful exec
 #ifndef _WIN32
-         fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+         fcntl(hClientSocket, F_SETFD, fcntl(hClientSocket, F_GETFD) | FD_CLOEXEC);
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter

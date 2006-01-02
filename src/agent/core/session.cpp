@@ -97,6 +97,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
    m_hSocket = hSocket;
+   m_hProxySocket = -1;
    m_dwIndex = INVALID_INDEX;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
