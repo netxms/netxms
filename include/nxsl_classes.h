@@ -25,16 +25,24 @@
 
 
 //
+// Constants
+//
+
+#define MAX_CLASS_NAME     64
+
+
+//
 // Data types
 //
 
 #define NXSL_DT_NULL       0
-#define NXSL_DT_STRING     1
-#define NXSL_DT_REAL       2
-#define NXSL_DT_INT32      3
-#define NXSL_DT_INT64      4
-#define NXSL_DT_UINT32     5
-#define NXSL_DT_UINT64     6
+#define NXSL_DT_OBJECT     1
+#define NXSL_DT_STRING     2
+#define NXSL_DT_REAL       3
+#define NXSL_DT_INT32      4
+#define NXSL_DT_INT64      5
+#define NXSL_DT_UINT32     6
+#define NXSL_DT_UINT64     7
 
 
 //
@@ -62,6 +70,45 @@ public:
 
 
 //
+// Class representing NXSL class
+//
+
+class NXSL_Value;
+class NXSL_Object;
+
+class LIBNXSL_EXPORTABLE NXSL_Class
+{
+protected:
+   char m_szName[MAX_CLASS_NAME];
+
+public:
+   NXSL_Class();
+   virtual ~NXSL_Class();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual BOOL SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
+
+   char *Name(void) { return m_szName; }
+};
+
+
+//
+// Object instance
+//
+
+class LIBNXSL_EXPORTABLE NXSL_Object
+{
+private:
+   NXSL_Class *m_pClass;
+   void *m_pData;
+
+public:
+   NXSL_Object(NXSL_Class *pClass, void *pData);
+   ~NXSL_Object();
+};
+
+
+//
 // Variable or constant value
 //
 
@@ -79,7 +126,8 @@ protected:
       INT64 nInt64;
       QWORD uInt64;
       double dReal;
-   } m_number;
+      NXSL_Object *pObject;
+   } m_value;
 
    void UpdateNumber(void);
    void UpdateString(void);

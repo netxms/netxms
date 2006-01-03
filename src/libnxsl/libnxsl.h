@@ -83,6 +83,7 @@ union YYSTYPE;
 #define OPCODE_NEG            35
 #define OPCODE_NOT            36
 #define OPCODE_BIT_NOT        37
+#define OPCODE_CAST           38
 
 
 //
@@ -142,6 +143,13 @@ public:
 
    TCHAR *GetErrorText(void) { return CHECK_NULL(m_pszErrorText); }
 };
+
+
+//
+// Global variables
+//
+
+extern char *g_szTypeNames[];
 
 
 #endif

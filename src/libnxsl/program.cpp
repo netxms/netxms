@@ -46,7 +46,7 @@ static char *m_szCommandMnemonic[] =
    "AND", "OR", "LSHIFT", "RSHIFT",
    "NRET", "JZ", "PRINT", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
-   "BITNOT"
+   "BITNOT", "CAST"
 };
 
 
@@ -295,6 +295,9 @@ void NXSL_Program::Dump(FILE *pFile)
          case OPCODE_POP:
             fprintf(pFile, "%d\n", m_ppInstructionSet[i]->m_nStackItems);
             break;
+         case OPCODE_CAST:
+            fprintf(pFile, "[%s]\n", g_szTypeNames[m_ppInstructionSet[i]->m_nStackItems]);
+            break;
          default:
             fprintf(pFile, "\n");
             break;
@@ -428,6 +431,20 @@ void NXSL_Program::Execute(void)
          if (pValue != NULL)
          {
             pVar->Set(new NXSL_Value(pValue));
+         }
+         else
+         {
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_CAST:
+         pValue = (NXSL_Value *)m_pDataStack->Peek();
+         if (pValue != NULL)
+         {
+            if (!pValue->Convert(cp->m_nStackItems))
+            {
+               Error(NXSL_ERR_TYPE_CAST);
+            }
          }
          else
          {

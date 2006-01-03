@@ -33,19 +33,19 @@
    switch(m_nDataType) \
    { \
       case NXSL_DT_INT32: \
-         m_number.nInt32 = (x); \
+         m_value.nInt32 = (x); \
          break; \
       case NXSL_DT_UINT32: \
-         m_number.uInt32 = (x); \
+         m_value.uInt32 = (x); \
          break; \
       case NXSL_DT_INT64: \
-         m_number.nInt64 = (x); \
+         m_value.nInt64 = (x); \
          break; \
       case NXSL_DT_UINT64: \
-         m_number.uInt64 = (x); \
+         m_value.uInt64 = (x); \
          break; \
       case NXSL_DT_REAL: \
-         m_number.dReal = (x); \
+         m_value.dReal = (x); \
          break; \
       default: \
          break; \
@@ -62,19 +62,19 @@
    switch(m_nDataType) \
    { \
       case NXSL_DT_INT32: \
-         x = (dt)m_number.nInt32; \
+         x = (dt)m_value.nInt32; \
          break; \
       case NXSL_DT_UINT32: \
-         x = (dt)m_number.uInt32; \
+         x = (dt)m_value.uInt32; \
          break; \
       case NXSL_DT_INT64: \
-         x = (dt)m_number.nInt64; \
+         x = (dt)m_value.nInt64; \
          break; \
       case NXSL_DT_UINT64: \
-         x = (dt)m_number.uInt64; \
+         x = (dt)m_value.uInt64; \
          break; \
       case NXSL_DT_REAL: \
-         x = (dt)m_number.dReal; \
+         x = (dt)m_value.dReal; \
          break; \
       default: \
          x = 0; \
@@ -99,7 +99,7 @@ NXSL_Value::NXSL_Value(NXSL_Value *pValue)
    if (pValue != NULL)
    {
       m_nDataType = pValue->m_nDataType;
-      memcpy(&m_number, &pValue->m_number, sizeof(m_number));
+      memcpy(&m_value, &pValue->m_value, sizeof(m_value));
       m_bStringIsValid = pValue->m_bStringIsValid;
       if (m_bStringIsValid)
       {
@@ -123,7 +123,7 @@ NXSL_Value::NXSL_Value(LONG nValue)
    m_nDataType = NXSL_DT_INT32;
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
-   m_number.nInt32 = nValue;
+   m_value.nInt32 = nValue;
 }
 
 NXSL_Value::NXSL_Value(DWORD uValue)
@@ -131,7 +131,7 @@ NXSL_Value::NXSL_Value(DWORD uValue)
    m_nDataType = NXSL_DT_UINT32;
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
-   m_number.uInt32 = uValue;
+   m_value.uInt32 = uValue;
 }
 
 NXSL_Value::NXSL_Value(INT64 nValue)
@@ -139,7 +139,7 @@ NXSL_Value::NXSL_Value(INT64 nValue)
    m_nDataType = NXSL_DT_INT64;
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
-   m_number.nInt64 = nValue;
+   m_value.nInt64 = nValue;
 }
 
 NXSL_Value::NXSL_Value(QWORD uValue)
@@ -147,7 +147,7 @@ NXSL_Value::NXSL_Value(QWORD uValue)
    m_nDataType = NXSL_DT_UINT64;
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
-   m_number.uInt64 = uValue;
+   m_value.uInt64 = uValue;
 }
 
 NXSL_Value::NXSL_Value(double dValue)
@@ -155,7 +155,7 @@ NXSL_Value::NXSL_Value(double dValue)
    m_nDataType = NXSL_DT_REAL;
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
-   m_number.dReal = dValue;
+   m_value.dReal = dValue;
 }
 
 NXSL_Value::NXSL_Value(char *pszValue)
@@ -188,7 +188,7 @@ void NXSL_Value::Set(LONG nValue)
    safe_free(m_pszValStr);
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
-   m_number.nInt32 = nValue;
+   m_value.nInt32 = nValue;
 }
 
 
@@ -208,12 +208,12 @@ void NXSL_Value::UpdateNumber(void)
       if (nVal > 0x7FFFFFFF)
       {
          m_nDataType = NXSL_DT_INT64;
-         m_number.nInt64 = nVal;
+         m_value.nInt64 = nVal;
       }
       else
       {
          m_nDataType = NXSL_DT_INT32;
-         m_number.nInt32 = (LONG)nVal;
+         m_value.nInt32 = (LONG)nVal;
       }
    }
    else
@@ -222,7 +222,7 @@ void NXSL_Value::UpdateNumber(void)
       if ((*eptr == 0) && ((DWORD)(eptr - m_pszValStr) == m_dwStrLen))
       {
          m_nDataType = NXSL_DT_REAL;
-         m_number.dReal = dVal;
+         m_value.dReal = dVal;
       }
    }
 }
@@ -240,19 +240,19 @@ void NXSL_Value::UpdateString(void)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         sprintf(szBuffer, "%d", m_number.nInt32);
+         sprintf(szBuffer, "%d", m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         sprintf(szBuffer, "%u", m_number.uInt32);
+         sprintf(szBuffer, "%u", m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         sprintf(szBuffer, INT64_FMT, m_number.nInt64);
+         sprintf(szBuffer, INT64_FMT, m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         sprintf(szBuffer, UINT64_FMT, m_number.uInt64);
+         sprintf(szBuffer, UINT64_FMT, m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         sprintf(szBuffer, "%f", m_number.dReal);
+         sprintf(szBuffer, "%f", m_value.dReal);
          break;
       default:
          szBuffer[0] = 0;
@@ -285,22 +285,22 @@ BOOL NXSL_Value::Convert(int nDataType)
       case NXSL_DT_INT32:
          RETRIEVE_NUMERIC_VALUE(nInt32, LONG);
          m_nDataType = nDataType;
-         m_number.nInt32 = nInt32;
+         m_value.nInt32 = nInt32;
          break;
       case NXSL_DT_UINT32:
          RETRIEVE_NUMERIC_VALUE(uInt32, DWORD);
          m_nDataType = nDataType;
-         m_number.uInt32 = uInt32;
+         m_value.uInt32 = uInt32;
          break;
       case NXSL_DT_INT64:
          RETRIEVE_NUMERIC_VALUE(nInt64, INT64);
          m_nDataType = nDataType;
-         m_number.nInt64 = nInt64;
+         m_value.nInt64 = nInt64;
          break;
       case NXSL_DT_UINT64:
          RETRIEVE_NUMERIC_VALUE(uInt64, QWORD);
          m_nDataType = nDataType;
-         m_number.uInt64 = uInt64;
+         m_value.uInt64 = uInt64;
          break;
       case NXSL_DT_REAL:
          if (m_nDataType == NXSL_DT_UINT64)
@@ -311,7 +311,7 @@ BOOL NXSL_Value::Convert(int nDataType)
          {
             dReal = GetValueAsReal();
             m_nDataType = nDataType;
-            m_number.dReal = dReal;
+            m_value.dReal = dReal;
          }
          break;
       default:
@@ -416,19 +416,19 @@ double NXSL_Value::GetValueAsReal(void)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         dVal = (double)m_number.nInt32;
+         dVal = (double)m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         dVal = (double)m_number.uInt32;
+         dVal = (double)m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         dVal = (double)m_number.nInt64;
+         dVal = (double)m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         dVal = (double)((INT64)m_number.uInt64);
+         dVal = (double)((INT64)m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         dVal = m_number.dReal;
+         dVal = m_value.dReal;
          break;
       default:
          dVal = 0;
@@ -465,19 +465,19 @@ void NXSL_Value::Increment(void)
       switch(m_nDataType)
       {
          case NXSL_DT_INT32:
-            m_number.nInt32++;
+            m_value.nInt32++;
             break;
          case NXSL_DT_UINT32:
-            m_number.uInt32++;
+            m_value.uInt32++;
             break;
          case NXSL_DT_INT64:
-            m_number.nInt64++;
+            m_value.nInt64++;
             break;
          case NXSL_DT_UINT64:
-            m_number.uInt64++;
+            m_value.uInt64++;
             break;
          case NXSL_DT_REAL:
-            m_number.dReal++;
+            m_value.dReal++;
             break;
          default:
             break;
@@ -500,19 +500,19 @@ void NXSL_Value::Decrement(void)
       switch(m_nDataType)
       {
          case NXSL_DT_INT32:
-            m_number.nInt32++;
+            m_value.nInt32++;
             break;
          case NXSL_DT_UINT32:
-            m_number.uInt32++;
+            m_value.uInt32++;
             break;
          case NXSL_DT_INT64:
-            m_number.nInt64++;
+            m_value.nInt64++;
             break;
          case NXSL_DT_UINT64:
-            m_number.uInt64++;
+            m_value.uInt64++;
             break;
          case NXSL_DT_REAL:
-            m_number.dReal++;
+            m_value.dReal++;
             break;
          default:
             break;
@@ -535,21 +535,21 @@ void NXSL_Value::Negate(void)
       switch(m_nDataType)
       {
          case NXSL_DT_INT32:
-            m_number.nInt32 = -m_number.nInt32;
+            m_value.nInt32 = -m_value.nInt32;
             break;
          case NXSL_DT_UINT32:
-            m_number.nInt32 = -((LONG)m_number.uInt32);
+            m_value.nInt32 = -((LONG)m_value.uInt32);
             m_nDataType = NXSL_DT_INT32;
             break;
          case NXSL_DT_INT64:
-            m_number.nInt64 = -m_number.nInt64;
+            m_value.nInt64 = -m_value.nInt64;
             break;
          case NXSL_DT_UINT64:
-            m_number.nInt64 = -((INT64)m_number.uInt64);
+            m_value.nInt64 = -((INT64)m_value.uInt64);
             m_nDataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_REAL:
-            m_number.dReal = -m_number.dReal;
+            m_value.dReal = -m_value.dReal;
             break;
          default:
             break;
@@ -572,16 +572,16 @@ void NXSL_Value::BitNot(void)
       switch(m_nDataType)
       {
          case NXSL_DT_INT32:
-            m_number.nInt32 = ~m_number.nInt32;
+            m_value.nInt32 = ~m_value.nInt32;
             break;
          case NXSL_DT_UINT32:
-            m_number.nInt32 = ~m_number.uInt32;
+            m_value.nInt32 = ~m_value.uInt32;
             break;
          case NXSL_DT_INT64:
-            m_number.nInt64 = ~m_number.nInt64;
+            m_value.nInt64 = ~m_value.nInt64;
             break;
          case NXSL_DT_UINT64:
-            m_number.nInt64 = ~m_number.uInt64;
+            m_value.nInt64 = ~m_value.uInt64;
             break;
          default:
             break;
@@ -604,19 +604,19 @@ BOOL NXSL_Value::IsZero(void)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 == 0);
+         bVal = (m_value.nInt32 == 0);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 == 0);
+         bVal = (m_value.uInt32 == 0);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 == 0);
+         bVal = (m_value.nInt64 == 0);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 == 0);
+         bVal = (m_value.uInt64 == 0);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal == 0);
+         bVal = (m_value.dReal == 0);
          break;
       default:
          break;
@@ -636,19 +636,19 @@ BOOL NXSL_Value::IsNonZero(void)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 != 0);
+         bVal = (m_value.nInt32 != 0);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 != 0);
+         bVal = (m_value.uInt32 != 0);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 != 0);
+         bVal = (m_value.nInt64 != 0);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 != 0);
+         bVal = (m_value.uInt64 != 0);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal != 0);
+         bVal = (m_value.dReal != 0);
          break;
       default:
          break;
@@ -669,19 +669,19 @@ BOOL NXSL_Value::EQ(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 == pVal->m_number.nInt32);
+         bVal = (m_value.nInt32 == pVal->m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 == pVal->m_number.uInt32);
+         bVal = (m_value.uInt32 == pVal->m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 == pVal->m_number.nInt64);
+         bVal = (m_value.nInt64 == pVal->m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 == pVal->m_number.uInt64);
+         bVal = (m_value.uInt64 == pVal->m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal == pVal->m_number.dReal);
+         bVal = (m_value.dReal == pVal->m_value.dReal);
          break;
       default:
          break;
@@ -696,19 +696,19 @@ BOOL NXSL_Value::LT(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 < pVal->m_number.nInt32);
+         bVal = (m_value.nInt32 < pVal->m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 < pVal->m_number.uInt32);
+         bVal = (m_value.uInt32 < pVal->m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 < pVal->m_number.nInt64);
+         bVal = (m_value.nInt64 < pVal->m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 < pVal->m_number.uInt64);
+         bVal = (m_value.uInt64 < pVal->m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal < pVal->m_number.dReal);
+         bVal = (m_value.dReal < pVal->m_value.dReal);
          break;
       default:
          break;
@@ -723,19 +723,19 @@ BOOL NXSL_Value::LE(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 <= pVal->m_number.nInt32);
+         bVal = (m_value.nInt32 <= pVal->m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 <= pVal->m_number.uInt32);
+         bVal = (m_value.uInt32 <= pVal->m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 <= pVal->m_number.nInt64);
+         bVal = (m_value.nInt64 <= pVal->m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 <= pVal->m_number.uInt64);
+         bVal = (m_value.uInt64 <= pVal->m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal <= pVal->m_number.dReal);
+         bVal = (m_value.dReal <= pVal->m_value.dReal);
          break;
       default:
          break;
@@ -750,19 +750,19 @@ BOOL NXSL_Value::GT(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 > pVal->m_number.nInt32);
+         bVal = (m_value.nInt32 > pVal->m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 > pVal->m_number.uInt32);
+         bVal = (m_value.uInt32 > pVal->m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 > pVal->m_number.nInt64);
+         bVal = (m_value.nInt64 > pVal->m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 > pVal->m_number.uInt64);
+         bVal = (m_value.uInt64 > pVal->m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal > pVal->m_number.dReal);
+         bVal = (m_value.dReal > pVal->m_value.dReal);
          break;
       default:
          break;
@@ -777,19 +777,19 @@ BOOL NXSL_Value::GE(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_number.nInt32 >= pVal->m_number.nInt32);
+         bVal = (m_value.nInt32 >= pVal->m_value.nInt32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_number.uInt32 >= pVal->m_number.uInt32);
+         bVal = (m_value.uInt32 >= pVal->m_value.uInt32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_number.nInt64 >= pVal->m_number.nInt64);
+         bVal = (m_value.nInt64 >= pVal->m_value.nInt64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_number.uInt64 >= pVal->m_number.uInt64);
+         bVal = (m_value.uInt64 >= pVal->m_value.uInt64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_number.dReal >= pVal->m_number.dReal);
+         bVal = (m_value.dReal >= pVal->m_value.dReal);
          break;
       default:
          break;
@@ -808,19 +808,19 @@ void NXSL_Value::Add(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 += pVal->m_number.nInt32;
+         m_value.nInt32 += pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 += pVal->m_number.uInt32;
+         m_value.uInt32 += pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 += pVal->m_number.nInt64;
+         m_value.nInt64 += pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 += pVal->m_number.uInt64;
+         m_value.uInt64 += pVal->m_value.uInt64;
          break;
       case NXSL_DT_REAL:
-         m_number.dReal += pVal->m_number.dReal;
+         m_value.dReal += pVal->m_value.dReal;
          break;
       default:
          break;
@@ -832,19 +832,19 @@ void NXSL_Value::Sub(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 -= pVal->m_number.nInt32;
+         m_value.nInt32 -= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 -= pVal->m_number.uInt32;
+         m_value.uInt32 -= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 -= pVal->m_number.nInt64;
+         m_value.nInt64 -= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 -= pVal->m_number.uInt64;
+         m_value.uInt64 -= pVal->m_value.uInt64;
          break;
       case NXSL_DT_REAL:
-         m_number.dReal -= pVal->m_number.dReal;
+         m_value.dReal -= pVal->m_value.dReal;
          break;
       default:
          break;
@@ -856,19 +856,19 @@ void NXSL_Value::Mul(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 *= pVal->m_number.nInt32;
+         m_value.nInt32 *= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 *= pVal->m_number.uInt32;
+         m_value.uInt32 *= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 *= pVal->m_number.nInt64;
+         m_value.nInt64 *= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 *= pVal->m_number.uInt64;
+         m_value.uInt64 *= pVal->m_value.uInt64;
          break;
       case NXSL_DT_REAL:
-         m_number.dReal *= pVal->m_number.dReal;
+         m_value.dReal *= pVal->m_value.dReal;
          break;
       default:
          break;
@@ -880,19 +880,19 @@ void NXSL_Value::Div(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 /= pVal->m_number.nInt32;
+         m_value.nInt32 /= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 /= pVal->m_number.uInt32;
+         m_value.uInt32 /= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 /= pVal->m_number.nInt64;
+         m_value.nInt64 /= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 /= pVal->m_number.uInt64;
+         m_value.uInt64 /= pVal->m_value.uInt64;
          break;
       case NXSL_DT_REAL:
-         m_number.dReal /= pVal->m_number.dReal;
+         m_value.dReal /= pVal->m_value.dReal;
          break;
       default:
          break;
@@ -904,16 +904,16 @@ void NXSL_Value::Rem(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 %= pVal->m_number.nInt32;
+         m_value.nInt32 %= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 %= pVal->m_number.uInt32;
+         m_value.uInt32 %= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 %= pVal->m_number.nInt64;
+         m_value.nInt64 %= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 %= pVal->m_number.uInt64;
+         m_value.uInt64 %= pVal->m_value.uInt64;
          break;
       default:
          break;
@@ -925,16 +925,16 @@ void NXSL_Value::BitAnd(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 &= pVal->m_number.nInt32;
+         m_value.nInt32 &= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 &= pVal->m_number.uInt32;
+         m_value.uInt32 &= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 &= pVal->m_number.nInt64;
+         m_value.nInt64 &= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 &= pVal->m_number.uInt64;
+         m_value.uInt64 &= pVal->m_value.uInt64;
          break;
       default:
          break;
@@ -946,16 +946,16 @@ void NXSL_Value::BitOr(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 |= pVal->m_number.nInt32;
+         m_value.nInt32 |= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 |= pVal->m_number.uInt32;
+         m_value.uInt32 |= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 |= pVal->m_number.nInt64;
+         m_value.nInt64 |= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 |= pVal->m_number.uInt64;
+         m_value.uInt64 |= pVal->m_value.uInt64;
          break;
       default:
          break;
@@ -967,16 +967,16 @@ void NXSL_Value::BitXor(NXSL_Value *pVal)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 ^= pVal->m_number.nInt32;
+         m_value.nInt32 ^= pVal->m_value.nInt32;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 ^= pVal->m_number.uInt32;
+         m_value.uInt32 ^= pVal->m_value.uInt32;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 ^= pVal->m_number.nInt64;
+         m_value.nInt64 ^= pVal->m_value.nInt64;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 ^= pVal->m_number.uInt64;
+         m_value.uInt64 ^= pVal->m_value.uInt64;
          break;
       default:
          break;
@@ -993,16 +993,16 @@ void NXSL_Value::LShift(int nBits)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 <<= nBits;
+         m_value.nInt32 <<= nBits;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 <<= nBits;
+         m_value.uInt32 <<= nBits;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 <<= nBits;
+         m_value.nInt64 <<= nBits;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 <<= nBits;
+         m_value.uInt64 <<= nBits;
          break;
       default:
          break;
@@ -1014,16 +1014,16 @@ void NXSL_Value::RShift(int nBits)
    switch(m_nDataType)
    {
       case NXSL_DT_INT32:
-         m_number.nInt32 >>= nBits;
+         m_value.nInt32 >>= nBits;
          break;
       case NXSL_DT_UINT32:
-         m_number.uInt32 >>= nBits;
+         m_value.uInt32 >>= nBits;
          break;
       case NXSL_DT_INT64:
-         m_number.nInt64 >>= nBits;
+         m_value.nInt64 >>= nBits;
          break;
       case NXSL_DT_UINT64:
-         m_number.uInt64 >>= nBits;
+         m_value.uInt64 >>= nBits;
          break;
       default:
          break;

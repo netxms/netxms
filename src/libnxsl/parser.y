@@ -41,6 +41,12 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token T_PRINT
 %token T_RETURN
 %token T_SUB
+%token T_TYPE_INT32
+%token T_TYPE_INT64
+%token T_TYPE_REAL
+%token T_TYPE_STRING
+%token T_TYPE_UINT32
+%token T_TYPE_UINT64
 
 %token <valStr> T_IDENTIFIER
 %token <valStr> T_STRING
@@ -67,6 +73,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 
 %type <pConstant> Constant
 %type <valStr> FunctionName
+%type <valInt32> BuiltinType
 %type <valInt32> ParameterList
 %type <pInstruction> SimpleStatementKeyword
 
@@ -282,6 +289,7 @@ Expression:
 
 Operand:
 	FunctionCall
+|	TypeCast
 |	T_IDENTIFIER
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_VARIABLE, $1));
@@ -289,6 +297,40 @@ Operand:
 |	Constant
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_CONSTANT, $1));
+}
+;
+
+TypeCast:
+	BuiltinType '(' Expression ')'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CAST, $1));
+}
+;
+
+BuiltinType:
+	T_TYPE_INT32
+{
+	$$ = NXSL_DT_INT32;
+}
+|	T_TYPE_INT64
+{
+	$$ = NXSL_DT_INT64;
+}
+|	T_TYPE_UINT32
+{
+	$$ = NXSL_DT_INT32;
+}
+|	T_TYPE_UINT64
+{
+	$$ = NXSL_DT_UINT64;
+}
+|	T_TYPE_REAL
+{
+	$$ = NXSL_DT_REAL;
+}
+|	T_TYPE_STRING
+{
+	$$ = NXSL_DT_STRING;
 }
 ;
 

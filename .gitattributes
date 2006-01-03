@@ -794,6 +794,7 @@ src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
+src/libnxsl/class.cpp -text
 src/libnxsl/compiler.cpp -text
 src/libnxsl/env.cpp -text
 src/libnxsl/functions.cpp -text

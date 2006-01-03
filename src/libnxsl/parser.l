@@ -29,10 +29,16 @@ escape		\\[bnrt0\"]
 <INITIAL>"else"		return T_ELSE;
 <INITIAL>"exit"		return T_EXIT;
 <INITIAL>"if"		return T_IF;
+<INITIAL>"int32"	return T_TYPE_INT32;
+<INITIAL>"int64"	return T_TYPE_INT64;
 <INITIAL>"NULL"		return T_NULL;
 <INITIAL>"print"	return T_PRINT;
+<INITIAL>"real"		return T_TYPE_REAL;
 <INITIAL>"return"	return T_RETURN;
+<INITIAL>"string"	return T_TYPE_STRING;
 <INITIAL>"sub"		return T_SUB;
+<INITIAL>"uint32"	return T_TYPE_UINT32;
+<INITIAL>"uint64"	return T_TYPE_UINT64;
 
 <INITIAL>{identifier}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
 <INITIAL>{integer}	{

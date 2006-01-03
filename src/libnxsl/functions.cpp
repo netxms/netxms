@@ -26,15 +26,21 @@
 
 
 //
+// Global data
+//
+
+char *g_szTypeNames[] = { "null", "object", "string", "real", "int32",
+                          "int64", "uint32", "uint64" };
+
+
+
+//
 // Type of value
 //
 
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
-   static char *dt[] = { "null", "string", "real", "int32",
-                         "int64", "uint32", "uint64" };
-   
-   *ppResult = new NXSL_Value(dt[argv[0]->DataType()]);
+   *ppResult = new NXSL_Value(g_szTypeNames[argv[0]->DataType()]);
    return 0;
 }
 
