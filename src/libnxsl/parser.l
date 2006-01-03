@@ -7,6 +7,9 @@
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
 integer		\-?(0x)?[0-9]+
+uint32		{integer}U
+int64		{integer}L
+uint64		{integer}(UL|LU)
 real		\-?[0-9]+\.[0-9]+
 escape		\\[bnrt0\"]
 
@@ -32,7 +35,24 @@ escape		\\[bnrt0\"]
 <INITIAL>"sub"		return T_SUB;
 
 <INITIAL>{identifier}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
-<INITIAL>{integer}	{ m_plval->valInt = strtoul(yytext, NULL, 0); return T_INTEGER; }
+<INITIAL>{integer}	{
+				INT64 nVal;
+
+				nVal = strtoll(yytext, NULL, 0);
+				if ((nVal < -2147483647) || (nVal > 2147483647))
+				{
+					m_plval->valInt64 = nVal;
+					return T_INT64;
+				}
+				else
+				{
+					m_plval->valInt32 = (LONG)nVal;
+					return T_INT32;
+				}
+			}
+<INITIAL>{uint32}	{ m_plval->valUInt32 = strtoul(yytext, NULL, 0); return T_UINT32; }
+<INITIAL>{int64}	{ m_plval->valInt64 = strtoll(yytext, NULL, 0); return T_INT64; }
+<INITIAL>{uint64}	{ m_plval->valUInt64 = strtoull(yytext, NULL, 0); return T_UINT64; }
 <INITIAL>{real}		{ m_plval->valReal = strtod(yytext, NULL); return T_REAL; }
 
 <INITIAL>"=="	return T_EQ;

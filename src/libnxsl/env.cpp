@@ -30,6 +30,7 @@
 
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 
 
 //
@@ -39,7 +40,8 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
    { "abs", F_abs, 1 },
-   { "pow", F_pow, 2 }
+   { "pow", F_pow, 2 },
+   { "typeof", F_typeof, 1 }
 };
 
 

@@ -57,6 +57,7 @@
 #define NXSL_ERR_REAL_VALUE               10
 #define NXSL_ERR_NO_FUNCTION              11
 #define NXSL_ERR_INVALID_ARGUMENT_COUNT   12
+#define NXSL_ERR_TYPE_CAST                13
 
 
 //

@@ -24,7 +24,10 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 
 %union
 {
-	int valInt;
+	LONG valInt32;
+	DWORD valUInt32;
+	INT64 valInt64;
+	QWORD valUInt64;
 	char *valStr;
 	double valReal;
 	NXSL_Value *pConstant;
@@ -40,8 +43,11 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token T_SUB
 
 %token <valStr> T_IDENTIFIER
-%token <valInt> T_INTEGER
 %token <valStr> T_STRING
+%token <valInt32> T_INT32
+%token <valUInt32> T_UINT32
+%token <valInt64> T_INT64
+%token <valUInt64> T_UINT64
 %token <valReal> T_REAL
 
 %right '='
@@ -61,7 +67,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 
 %type <pConstant> Constant
 %type <valStr> FunctionName
-%type <valInt> ParameterList
+%type <valInt32> ParameterList
 %type <pInstruction> SimpleStatementKeyword
 
 %start Script
@@ -375,7 +381,19 @@ Constant:
 	$$ = new NXSL_Value($1);
 	free($1);
 }
-|	T_INTEGER
+|	T_INT32
+{
+	$$ = new NXSL_Value($1);
+}
+|	T_UINT32
+{
+	$$ = new NXSL_Value($1);
+}
+|	T_INT64
+{
+	$$ = new NXSL_Value($1);
+}
+|	T_UINT64
 {
 	$$ = new NXSL_Value($1);
 }

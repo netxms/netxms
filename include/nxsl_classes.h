@@ -25,13 +25,16 @@
 
 
 //
-// Value flags
+// Data types
 //
 
-#define VALUE_IS_NULL         ((DWORD)0x0001)
-#define VALUE_STRING_IS_VALID ((DWORD)0x0002)
-#define VALUE_IS_NUMERIC      ((DWORD)0x0004)
-#define VALUE_IS_REAL         ((DWORD)0x0008)
+#define NXSL_DT_NULL       0
+#define NXSL_DT_STRING     1
+#define NXSL_DT_REAL       2
+#define NXSL_DT_INT32      3
+#define NXSL_DT_INT64      4
+#define NXSL_DT_UINT32     5
+#define NXSL_DT_UINT64     6
 
 
 //
@@ -65,36 +68,77 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_Value
 {
 protected:
-   DWORD m_dwFlags;
    DWORD m_dwStrLen;
    char *m_pszValStr;
-   int m_iValInt;
-   double m_dValFloat;
+   BYTE m_nDataType;
+   BYTE m_bStringIsValid;
+   union
+   {
+      LONG nInt32;
+      DWORD uInt32;
+      INT64 nInt64;
+      QWORD uInt64;
+      double dReal;
+   } m_number;
 
-   void UpdateNumbers(void);
+   void UpdateNumber(void);
    void UpdateString(void);
 
 public:
    NXSL_Value(void);
    NXSL_Value(NXSL_Value *);
-   NXSL_Value(int nValue);
+   NXSL_Value(LONG nValue);
+   NXSL_Value(INT64 nValue);
+   NXSL_Value(DWORD uValue);
+   NXSL_Value(QWORD uValue);
    NXSL_Value(double dValue);
    NXSL_Value(char *pszValue);
    ~NXSL_Value();
 
-   BOOL IsNull(void) { return (m_dwFlags & VALUE_IS_NULL) ? TRUE : FALSE; }
-   BOOL IsNumeric(void) { return (m_dwFlags & VALUE_IS_NUMERIC) ? TRUE : FALSE; }
-   BOOL IsReal(void) { return (m_dwFlags & VALUE_IS_REAL) ? TRUE : FALSE; }
+   void Set(LONG nValue);
+
+   BOOL Convert(int nDataType);
+   int DataType(void) { return m_nDataType; }
+
+   BOOL IsNull(void) { return (m_nDataType == NXSL_DT_NULL); }
+   BOOL IsNumeric(void) { return (m_nDataType > NXSL_DT_STRING); }
+   BOOL IsReal(void) { return (m_nDataType == NXSL_DT_REAL); }
+   BOOL IsInteger(void) { return (m_nDataType > NXSL_DT_REAL); }
+   BOOL IsUnsigned(void) { return (m_nDataType >= NXSL_DT_UINT32); }
+   BOOL IsZero(void);
+   BOOL IsNonZero(void);
+
    char *GetValueAsString(DWORD *pdwLen);
    char *GetValueAsCString(void);
-   int GetValueAsInt(void);
+   LONG GetValueAsInt32(void);
+   DWORD GetValueAsUInt32(void);
+   INT64 GetValueAsInt64(void);
+   QWORD GetValueAsUInt64(void);
    double GetValueAsReal(void);
 
    void Concatenate(char *pszString, DWORD dwLen);
+   
    void Increment(void);
    void Decrement(void);
    void Negate(void);
-   void Set(int nValue);
+   void BitNot(void);
+
+   void Add(NXSL_Value *pVal);
+   void Sub(NXSL_Value *pVal);
+   void Mul(NXSL_Value *pVal);
+   void Div(NXSL_Value *pVal);
+   void Rem(NXSL_Value *pVal);
+   void BitAnd(NXSL_Value *pVal);
+   void BitOr(NXSL_Value *pVal);
+   void BitXor(NXSL_Value *pVal);
+   void LShift(int nBits);
+   void RShift(int nBits);
+
+   BOOL EQ(NXSL_Value *pVal);
+   BOOL LT(NXSL_Value *pVal);
+   BOOL LE(NXSL_Value *pVal);
+   BOOL GT(NXSL_Value *pVal);
+   BOOL GE(NXSL_Value *pVal);
 };
 
 

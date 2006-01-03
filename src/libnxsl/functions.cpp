@@ -26,6 +26,20 @@
 
 
 //
+// Type of value
+//
+
+int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   static char *dt[] = { "null", "string", "real", "int32",
+                         "int64", "uint32", "uint64" };
+   
+   *ppResult = new NXSL_Value(dt[argv[0]->DataType()]);
+   return 0;
+}
+
+
+//
 // Absolute value
 //
 
@@ -36,9 +50,16 @@ int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    if (argv[0]->IsNumeric())
    {
       if (argv[0]->IsReal())
+      {
          *ppResult = new NXSL_Value(fabs(argv[0]->GetValueAsReal()));
+      }
       else
-         *ppResult = new NXSL_Value(abs(argv[0]->GetValueAsInt()));
+      {
+         *ppResult = new NXSL_Value(argv[0]);
+         if (!argv[0]->IsUnsigned())
+            if ((*ppResult)->GetValueAsInt64() < 0)
+               (*ppResult)->Negate();
+      }
       nRet = 0;
    }
    else
