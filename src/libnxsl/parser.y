@@ -69,7 +69,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %left '+' '-'
 %left '*' '/' '%'
 %right T_INC T_DEC '!' '~' NEGATE
-%left T_POST_INC T_POST_DEC
+%left T_POST_INC T_POST_DEC T_REF
 
 %type <pConstant> Constant
 %type <valStr> FunctionName
@@ -179,6 +179,10 @@ Expression:
 |	T_IDENTIFIER '=' Expression
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SET, $1));
+}
+|	Expression T_REF T_IDENTIFIER
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_REFERENCE, $3));
 }
 |	'-' Expression		%prec NEGATE
 {

@@ -30,6 +30,7 @@
 
 NXSL_Class::NXSL_Class(void)
 {
+   strcpy(m_szName, "generic");
 }
 
 
@@ -61,4 +62,30 @@ NXSL_Value *NXSL_Class::GetAttr(NXSL_Object *pObject, char *pszAttr)
 BOOL NXSL_Class::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
 {
    return FALSE;
+}
+
+
+//
+// Object constructors
+//
+
+NXSL_Object::NXSL_Object(NXSL_Class *pClass, void *pData)
+{
+   m_pClass = pClass;
+   m_pData = pData;
+}
+
+NXSL_Object::NXSL_Object(NXSL_Object *pObject)
+{
+   m_pClass = pObject->m_pClass;
+   m_pData = pObject->m_pData;
+}
+
+
+//
+// Object destructor
+//
+
+NXSL_Object::~NXSL_Object()
+{
 }

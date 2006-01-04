@@ -2,6 +2,8 @@
 * 0.2.9
 *
 
+- Added built-in scripting language
+- Implemented DCI transformations
 - Fixed issues: #68
 
 

@@ -84,6 +84,7 @@ union YYSTYPE;
 #define OPCODE_NOT            36
 #define OPCODE_BIT_NOT        37
 #define OPCODE_CAST           38
+#define OPCODE_REFERENCE      39
 
 
 //

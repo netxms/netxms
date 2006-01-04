@@ -78,6 +78,7 @@
 #include <nxqueue.h>
 #include <nxsnmp.h>
 #include <nxmodule.h>
+#include <nxsl.h>
 
 
 //
@@ -104,6 +105,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_locks.h"
 #include "nms_pkg.h"
 #include "nms_topo.h"
+#include "nms_script.h"
 
 
 //

@@ -81,3 +81,15 @@ NXSL_ExtFunction *NXSL_Environment::FindFunction(char *pszName)
          return &m_pFunctionList[i];
    return NULL;
 }
+
+
+//
+// Register function set
+//
+
+void NXSL_Environment::RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList)
+{
+   m_pFunctionList = (NXSL_ExtFunction *)realloc(m_pFunctionList, sizeof(NXSL_ExtFunction) * (m_dwNumFunctions + dwNumFunctions));
+   memcpy(&m_pFunctionList[m_dwNumFunctions], pList, sizeof(NXSL_ExtFunction) * dwNumFunctions);
+   m_dwNumFunctions += dwNumFunctions;
+}

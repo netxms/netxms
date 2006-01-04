@@ -99,7 +99,14 @@ NXSL_Value::NXSL_Value(NXSL_Value *pValue)
    if (pValue != NULL)
    {
       m_nDataType = pValue->m_nDataType;
-      memcpy(&m_value, &pValue->m_value, sizeof(m_value));
+      if (m_nDataType == NXSL_DT_OBJECT)
+      {
+         m_value.pObject = new NXSL_Object(pValue->m_value.pObject);
+      }
+      else
+      {
+         memcpy(&m_value, &pValue->m_value, sizeof(m_value));
+      }
       m_bStringIsValid = pValue->m_bStringIsValid;
       if (m_bStringIsValid)
       {
@@ -116,6 +123,14 @@ NXSL_Value::NXSL_Value(NXSL_Value *pValue)
       m_nDataType = NXSL_DT_NULL;
       m_pszValStr = NULL;
    }
+}
+
+NXSL_Value::NXSL_Value(NXSL_Object *pObject)
+{
+   m_nDataType = NXSL_DT_OBJECT;
+   m_value.pObject = pObject;
+   m_pszValStr = NULL;
+   m_bStringIsValid = FALSE;
 }
 
 NXSL_Value::NXSL_Value(LONG nValue)
@@ -175,6 +190,8 @@ NXSL_Value::NXSL_Value(char *pszValue)
 NXSL_Value::~NXSL_Value()
 {
    safe_free(m_pszValStr);
+   if (m_nDataType == NXSL_DT_OBJECT)
+      delete m_value.pObject;
 }
 
 
@@ -318,6 +335,8 @@ BOOL NXSL_Value::Convert(int nDataType)
          bRet = FALSE;
          break;
    }
+   if (bRet)
+      InvalidateString();
    return bRet;
 }
 
@@ -328,7 +347,7 @@ BOOL NXSL_Value::Convert(int nDataType)
 
 char *NXSL_Value::GetValueAsCString(void)
 {
-   if (IsNull())
+   if (IsNull() || IsObject())
       return NULL;
 
    if (!m_bStringIsValid)
@@ -343,7 +362,7 @@ char *NXSL_Value::GetValueAsCString(void)
 
 char *NXSL_Value::GetValueAsString(DWORD *pdwLen)
 {
-   if (IsNull())
+   if (IsNull() || IsObject())
       return NULL;
 
    if (!m_bStringIsValid)
@@ -482,9 +501,7 @@ void NXSL_Value::Increment(void)
          default:
             break;
       }
-      safe_free(m_pszValStr);
-      m_pszValStr = NULL;
-      m_bStringIsValid = FALSE;
+      InvalidateString();
    }
 }
 
@@ -517,9 +534,7 @@ void NXSL_Value::Decrement(void)
          default:
             break;
       }
-      safe_free(m_pszValStr);
-      m_pszValStr = NULL;
-      m_bStringIsValid = FALSE;
+      InvalidateString();
    }
 }
 
@@ -554,9 +569,7 @@ void NXSL_Value::Negate(void)
          default:
             break;
       }
-      safe_free(m_pszValStr);
-      m_pszValStr = NULL;
-      m_bStringIsValid = FALSE;
+      InvalidateString();
    }
 }
 
@@ -586,9 +599,7 @@ void NXSL_Value::BitNot(void)
          default:
             break;
       }
-      safe_free(m_pszValStr);
-      m_pszValStr = NULL;
-      m_bStringIsValid = FALSE;
+      InvalidateString();
    }
 }
 
@@ -825,6 +836,7 @@ void NXSL_Value::Add(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::Sub(NXSL_Value *pVal)
@@ -849,6 +861,7 @@ void NXSL_Value::Sub(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::Mul(NXSL_Value *pVal)
@@ -873,6 +886,7 @@ void NXSL_Value::Mul(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::Div(NXSL_Value *pVal)
@@ -897,6 +911,7 @@ void NXSL_Value::Div(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::Rem(NXSL_Value *pVal)
@@ -918,6 +933,7 @@ void NXSL_Value::Rem(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::BitAnd(NXSL_Value *pVal)
@@ -939,6 +955,7 @@ void NXSL_Value::BitAnd(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::BitOr(NXSL_Value *pVal)
@@ -960,6 +977,7 @@ void NXSL_Value::BitOr(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::BitXor(NXSL_Value *pVal)
@@ -981,6 +999,7 @@ void NXSL_Value::BitXor(NXSL_Value *pVal)
       default:
          break;
    }
+   InvalidateString();
 }
 
 
@@ -1007,6 +1026,7 @@ void NXSL_Value::LShift(int nBits)
       default:
          break;
    }
+   InvalidateString();
 }
 
 void NXSL_Value::RShift(int nBits)
@@ -1028,4 +1048,5 @@ void NXSL_Value::RShift(int nBits)
       default:
          break;
    }
+   InvalidateString();
 }

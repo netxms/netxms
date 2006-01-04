@@ -71,6 +71,7 @@ escape		\\[bnrt0\"]
 <INITIAL>"||"	return T_OR;
 <INITIAL>"++"	return T_INC;
 <INITIAL>"--"	return T_DEC;
+<INITIAL>"->"	return T_REF;
 <INITIAL>"."	return '.';
 <INITIAL>"{"	return '{';
 <INITIAL>"}"	return '}';

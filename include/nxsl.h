@@ -58,6 +58,8 @@
 #define NXSL_ERR_NO_FUNCTION              11
 #define NXSL_ERR_INVALID_ARGUMENT_COUNT   12
 #define NXSL_ERR_TYPE_CAST                13
+#define NXSL_ERR_NOT_OBJECT               14
+#define NXSL_ERR_NO_SUCH_ATTRIBUTE        15
 
 
 //

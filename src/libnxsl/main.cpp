@@ -37,7 +37,8 @@ NXSL_SCRIPT LIBNXSL_EXPORTABLE NXSLCompile(TCHAR *pszSource,
    pResult = compiler.Compile(pszSource);
    if (pResult == NULL)
    {
-      nx_strncpy(pszError, compiler.GetErrorText(), nBufSize);
+      if (pszError != NULL)
+         nx_strncpy(pszError, compiler.GetErrorText(), nBufSize);
    }
    return pResult;
 }

@@ -24,6 +24,9 @@
 #include "nxscript.h"
 
 
+static NXSL_TestClass *m_pTestClass;
+
+
 static char *LoadFile(char *pszFileName, DWORD *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;
@@ -57,6 +60,13 @@ static char *LoadFile(char *pszFileName, DWORD *pdwFileSize)
 }
 
 
+int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, NULL));
+   return 0;
+}
+
+
 //
 // main()
 //
@@ -67,6 +77,15 @@ int main(int argc, char *argv[])
    DWORD dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
+   NXSL_Value **ppArgs;
+   NXSL_ExtFunction func;
+   int i;
+
+   func.m_iNumArgs = 0;
+   func.m_pfHandler = F_new;
+   strcpy(func.m_szName, "new");
+
+   m_pTestClass = new NXSL_TestClass;
 
    printf("NetXMS Scripting Host  Version " NETXMS_VERSION_STRING "\n"
           "Copyright (c) 2005 Victor Kirhenshtein\n\n");
@@ -84,11 +103,26 @@ int main(int argc, char *argv[])
       pScript->Dump(stdout);
       pEnv = new NXSL_Environment;
       pEnv->SetIO(stdin, stdout);
-      if (pScript->Run(pEnv) == -1)
+      pEnv->RegisterFunctionSet(1, &func);
+
+      // Prepare arguments
+      if (argc > 2)
+      {
+         ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - 2));
+         for(i = 2; i < argc; i++)
+            ppArgs[i - 2] = new NXSL_Value(argv[i]);
+      }
+      else
+      {
+         ppArgs = NULL;
+      }
+
+      if (pScript->Run(pEnv, argc - 2, ppArgs) == -1)
       {
          printf("%s\n", pScript->GetErrorText());
       }
       delete pScript;
+      safe_free(ppArgs);
    }
    else
    {

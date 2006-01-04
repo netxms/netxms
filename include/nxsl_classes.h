@@ -103,8 +103,12 @@ private:
    void *m_pData;
 
 public:
+   NXSL_Object(NXSL_Object *pObject);
    NXSL_Object(NXSL_Class *pClass, void *pData);
    ~NXSL_Object();
+
+   NXSL_Class *Class(void) { return m_pClass; }
+   void *Data(void) { return m_pData; }
 };
 
 
@@ -132,9 +136,17 @@ protected:
    void UpdateNumber(void);
    void UpdateString(void);
 
+   void InvalidateString(void)
+   {
+      safe_free(m_pszValStr);
+      m_pszValStr = NULL;
+      m_bStringIsValid = FALSE;
+   }
+
 public:
    NXSL_Value(void);
    NXSL_Value(NXSL_Value *);
+   NXSL_Value(NXSL_Object *pObject);
    NXSL_Value(LONG nValue);
    NXSL_Value(INT64 nValue);
    NXSL_Value(DWORD uValue);
@@ -149,6 +161,7 @@ public:
    int DataType(void) { return m_nDataType; }
 
    BOOL IsNull(void) { return (m_nDataType == NXSL_DT_NULL); }
+   BOOL IsObject(void) { return (m_nDataType == NXSL_DT_OBJECT); }
    BOOL IsNumeric(void) { return (m_nDataType > NXSL_DT_STRING); }
    BOOL IsReal(void) { return (m_nDataType == NXSL_DT_REAL); }
    BOOL IsInteger(void) { return (m_nDataType > NXSL_DT_REAL); }
@@ -163,6 +176,7 @@ public:
    INT64 GetValueAsInt64(void);
    QWORD GetValueAsUInt64(void);
    double GetValueAsReal(void);
+   NXSL_Object *GetValueAsObject(void) { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
 
    void Concatenate(char *pszString, DWORD dwLen);
    
@@ -235,6 +249,7 @@ public:
    FILE *GetStdOut(void) { return m_pStdOut; }
 
    NXSL_ExtFunction *FindFunction(char *pszName);
+   void RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
 };
 
 
@@ -335,6 +350,7 @@ protected:
    DWORD m_dwNumFunctions;
    NXSL_Function *m_pFunctionList;
 
+   NXSL_Value *m_pRetValue;
    int m_nErrorCode;
    TCHAR *m_pszErrorText;
 
@@ -354,10 +370,11 @@ public:
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
 
-   int Run(NXSL_Environment *pEnv);
+   int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0, NXSL_Value **argv = NULL);
 
    void Dump(FILE *pFile);
    TCHAR *GetErrorText(void) { return m_pszErrorText; }
+   NXSL_Value *GetResult(void) { return m_pRetValue; }
 };
 
 

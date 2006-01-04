@@ -28,4 +28,18 @@
 #include <getopt.h>
 #include <nxsl.h>
 
+
+//
+// Test class
+//
+
+class NXSL_TestClass : public NXSL_Class
+{
+public:
+   NXSL_TestClass();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+   virtual BOOL SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
+};
+
 #endif

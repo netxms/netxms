@@ -28,7 +28,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         13
+#define MAX_ERROR_NUMBER         15
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -46,7 +46,7 @@ static char *m_szCommandMnemonic[] =
    "AND", "OR", "LSHIFT", "RSHIFT",
    "NRET", "JZ", "PRINT", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
-   "BITNOT", "CAST"
+   "BITNOT", "CAST", "REF"
 };
 
 
@@ -68,7 +68,9 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Invalid operation with real numbers"),
    _T("Function not found"),
    _T("Invalid number of function's arguments"),
-   _T("Cannot do automatic type cast")
+   _T("Cannot do automatic type cast"),
+   _T("Left argument of -> must be a reference to object"),
+   _T("Unknown object's attribute")
 };
 
 
@@ -137,6 +139,7 @@ NXSL_Program::NXSL_Program(void)
    m_pFunctionList = NULL;
    m_dwSubLevel = 0;    // Level of current subroutine
    m_pEnv = NULL;
+   m_pRetValue = NULL;
 }
 
 
@@ -160,6 +163,7 @@ NXSL_Program::~NXSL_Program(void)
    delete m_pLocals;
 
    delete m_pEnv;
+   delete m_pRetValue;
 
    safe_free(m_pFunctionList);
 
@@ -283,6 +287,7 @@ void NXSL_Program::Dump(FILE *pFile)
          case OPCODE_BIND:
          case OPCODE_INC:
          case OPCODE_DEC:
+         case OPCODE_REFERENCE:
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
@@ -327,10 +332,16 @@ void NXSL_Program::Error(int nError)
 // Run program
 //
 
-int NXSL_Program::Run(NXSL_Environment *pEnv)
+int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)
 {
    DWORD i;
    NXSL_VariableSystem *pSavedGlobals;
+   NXSL_Value *pValue;
+   char szBuffer[32];
+
+   // Delete previous return value
+   delete m_pRetValue;
+   m_pRetValue = NULL;
 
    // Use provided environment or create default
    if (pEnv != NULL)
@@ -342,8 +353,13 @@ int NXSL_Program::Run(NXSL_Environment *pEnv)
    m_pDataStack = new NXSL_Stack;
    m_pCodeStack = new NXSL_Stack;
 
-   // Create local variable system for main()
+   // Create local variable system for main() and bind arguments
    m_pLocals = new NXSL_VariableSystem;
+   for(i = 0; i < argc; i++)
+   {
+      sprintf(szBuffer, "$%d", i + 1);
+      m_pLocals->Create(szBuffer, argv[i]);
+   }
 
    // Preserve original global variables
    pSavedGlobals = new NXSL_VariableSystem(m_pGlobals);
@@ -357,10 +373,12 @@ int NXSL_Program::Run(NXSL_Environment *pEnv)
       m_dwCurrPos = m_pFunctionList[i].m_dwAddr;
       while(m_dwCurrPos < m_dwCodeSize)
          Execute();
+      if (m_dwCurrPos != INVALID_ADDRESS)
+         m_pRetValue = (NXSL_Value *)m_pDataStack->Pop();
    }
    else
    {
-      Error(7);
+      Error(NXSL_ERR_NO_MAIN);
    }
 
    // Restore global variables
@@ -368,7 +386,16 @@ int NXSL_Program::Run(NXSL_Environment *pEnv)
    m_pGlobals = pSavedGlobals;
 
    // Cleanup
+   while((pValue = (NXSL_Value *)m_pDataStack->Pop()) != NULL)
+      delete pValue;
+   while(m_dwSubLevel > 0)
+   {
+      m_dwSubLevel--;
+      delete (NXSL_VariableSystem *)m_pCodeStack->Pop();
+      m_pCodeStack->Pop();
+   }
    delete_and_null(m_pEnv);
+   delete_and_null(m_pLocals);
    delete_and_null(m_pDataStack);
    delete_and_null(m_pCodeStack);
 
@@ -648,7 +675,45 @@ void NXSL_Program::Execute(void)
          }
          else
          {
-            Error(4);
+            Error(NXSL_ERR_NOT_NUMBER);
+         }
+         break;
+      case OPCODE_REFERENCE:
+         pValue = (NXSL_Value *)m_pDataStack->Pop();
+         if (pValue != NULL)
+         {
+            if (pValue->DataType() == NXSL_DT_OBJECT)
+            {
+               NXSL_Object *pObj;
+               NXSL_Value *pAttr;
+
+               pObj = pValue->GetValueAsObject();
+               if (pObj != NULL)
+               {
+                  pAttr = pObj->Class()->GetAttr(pObj, cp->m_operand.m_pszString);
+                  if (pAttr != NULL)
+                  {
+                     m_pDataStack->Push(pAttr);
+                  }
+                  else
+                  {
+                     Error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
+                  }
+               }
+               else
+               {
+                  Error(NXSL_ERR_INTERNAL);
+               }
+            }
+            else
+            {
+               Error(NXSL_ERR_NOT_OBJECT);
+            }
+            delete pValue;
+         }
+         else
+         {
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       default:
@@ -827,7 +892,7 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                case OPCODE_CONCAT:
                   if (pVal1->IsNull() || pVal2->IsNull())
                   {
-                     Error(5);
+                     Error(NXSL_ERR_NULL_VALUE);
                   }
                   else
                   {
@@ -853,22 +918,22 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                case OPCODE_BIT_XOR:
                case OPCODE_LSHIFT:
                case OPCODE_RSHIFT:
-                  Error(4);
+                  Error(NXSL_ERR_NOT_NUMBER);
                   break;
                default:
-                  Error(6);
+                  Error(NXSL_ERR_INTERNAL);
                   break;
             }
          }
       }
       else
       {
-         Error(5);
+         Error(NXSL_ERR_NULL_VALUE);
       }
    }
    else
    {
-      Error(1);
+      Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
    }
 
    if (pRes != NULL)

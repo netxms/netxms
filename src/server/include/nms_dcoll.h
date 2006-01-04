@@ -163,6 +163,7 @@ private:
    Threshold **m_ppThresholdList;
    Template *m_pNode;             // Pointer to node or template object this item related to
    char *m_pszFormula;        // Transformation formula
+   NXSL_Program *m_pScript;   // Compiled transformation script
    MUTEX m_hMutex;
    DWORD m_dwCacheSize;       // Number of items in cache
    ItemValue **m_ppValueCache;
@@ -179,6 +180,8 @@ private:
    void Transform(ItemValue &value, time_t nElapsedTime);
    void CheckThresholds(ItemValue &value);
    void ClearCache(void);
+
+   void NewFormula(TCHAR *pszFormula);
 
 public:
    DCItem();
