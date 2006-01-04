@@ -372,6 +372,8 @@ public:
 
    int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0, NXSL_Value **argv = NULL);
 
+   DWORD CodeSize(void) { return m_dwCodeSize; }
+
    void Dump(FILE *pFile);
    TCHAR *GetErrorText(void) { return m_pszErrorText; }
    NXSL_Value *GetResult(void) { return m_pRetValue; }

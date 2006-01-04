@@ -40,6 +40,7 @@ NXSL_Compiler::NXSL_Compiler(void)
 {
    m_pszErrorText = NULL;
    m_pLexer = NULL;
+   m_pAddrStack = new NXSL_Stack;
 }
 
 
@@ -51,6 +52,7 @@ NXSL_Compiler::~NXSL_Compiler()
 {
    safe_free(m_pszErrorText);
    delete m_pLexer;
+   delete m_pAddrStack;
 }
 
 
@@ -109,4 +111,17 @@ void yyerror(NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
              NXSL_Program *pScript, char *pszText)
 {
    pCompiler->Error(pszText);
+}
+
+
+//
+// Pop address
+//
+
+DWORD NXSL_Compiler::PopAddr(void)
+{
+   void *pAddr;
+
+   pAddr = m_pAddrStack->Pop();
+   return pAddr ? (DWORD)pAddr : INVALID_ADDRESS;
 }

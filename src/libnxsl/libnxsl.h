@@ -134,6 +134,7 @@ class NXSL_Compiler
 protected:
    TCHAR *m_pszErrorText;
    NXSL_Lexer *m_pLexer;
+   NXSL_Stack *m_pAddrStack;
 
 public:
    NXSL_Compiler(void);
@@ -143,6 +144,9 @@ public:
    void Error(const char *pszMsg);
 
    TCHAR *GetErrorText(void) { return CHECK_NULL(m_pszErrorText); }
+
+   void PushAddr(DWORD dwAddr) { m_pAddrStack->Push((void *)dwAddr); }
+   DWORD PopAddr(void);
 };
 
 

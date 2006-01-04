@@ -47,6 +47,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token T_TYPE_STRING
 %token T_TYPE_UINT32
 %token T_TYPE_UINT64
+%token T_WHILE
 
 %token <valStr> T_IDENTIFIER
 %token <valStr> T_STRING
@@ -341,6 +342,7 @@ BuiltinType:
 BuiltinStatement:
 	SimpleStatement ';'
 |	IfStatement
+|	WhileStatement
 ;
 
 SimpleStatement:
@@ -372,7 +374,7 @@ SimpleStatementKeyword:
 
 IfStatement:
 	T_IF '(' Expression ')' 
-	{ 
+	{
 		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
 	} 
 	IfBody
@@ -386,6 +388,23 @@ IfBody:
 |	StatementOrBlock ElseStatement
 {
 	pScript->ResolveLastJump(OPCODE_JMP);
+}
+;
+
+WhileStatement:
+	T_WHILE
+	{
+		pCompiler->PushAddr(pScript->CodeSize());
+	}
+	'(' Expression ')'
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+	}
+	StatementOrBlock
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), 
+				OPCODE_JMP, pCompiler->PopAddr()));
+	pScript->ResolveLastJump(OPCODE_JZ);
 }
 ;
 
