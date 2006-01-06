@@ -71,8 +71,7 @@ static void SpeakerThread(void *pArg)
             free(pszText);
          }
          pVoice->Release();
-         delete m_pSpeakerQueue;
-         m_pSpeakerQueue = NULL;
+         delete_and_null(m_pSpeakerQueue);
       }
       CoUninitialize();
    }
@@ -95,8 +94,11 @@ void NXUILIB_EXPORTABLE SpeakerInit(void)
 
 void NXUILIB_EXPORTABLE SpeakerShutdown(void)
 {
-   m_pSpeakerQueue->Clear();
-   m_pSpeakerQueue->Put(INVALID_POINTER_VALUE);
+   if (m_pSpeakerQueue != NULL)
+   {
+      m_pSpeakerQueue->Clear();
+      m_pSpeakerQueue->Put(INVALID_POINTER_VALUE);
+   }
 }
 
 
