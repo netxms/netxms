@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.131 2006-01-06 15:41:24 victor Exp $
+# $Id: configure.ac,v 1.132 2006-01-06 23:31:25 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -176,7 +176,7 @@ fi ])
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	MODULES="$MODULES libnxsnmp server nxmibc"
+	MODULES="$MODULES libnxsnmp libnxsl server nxmibc"
    TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
    CONTRIB_MODULES="$CONTRIB_MODULES mibs"
 	BUILD_SERVER="yes"
@@ -522,6 +522,7 @@ LIBNXSRV_LIBRARY_VERSION=0:2:0
 LIBNXCORE_LIBRARY_VERSION=0:2:0
 DBDRV_LIBRARY_VERSION=0:2:0
 SMSDRV_LIBRARY_VERSION=0:2:0
+LIBNXSL_LIBRARY_VERSION=0:2:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
 AC_SUBST(LIBNXCSCP_LIBRARY_VERSION)
 AC_SUBST(LIBNXSNMP_LIBRARY_VERSION)
@@ -529,6 +530,7 @@ AC_SUBST(LIBNXSRV_LIBRARY_VERSION)
 AC_SUBST(LIBNXCORE_LIBRARY_VERSION)
 AC_SUBST(DBDRV_LIBRARY_VERSION)
 AC_SUBST(SMSDRV_LIBRARY_VERSION)
+AC_SUBST(LIBNXSL_LIBRARY_VERSION)
 
 # --------------------------------------------------------------------------
 
@@ -552,6 +554,7 @@ AC_CONFIG_FILES([
 	src/libnxcscp/Makefile
 	src/libnxsnmp/Makefile
 	src/libnxcl/Makefile
+	src/libnxsl/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/console/Makefile

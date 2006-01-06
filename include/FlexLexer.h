@@ -1,4 +1,4 @@
-// $Header: /cvs/nms/include/FlexLexer.h,v 1.1 2005-12-12 09:08:26 victor Exp $
+// $Header: /cvs/nms/include/FlexLexer.h,v 1.2 2006-01-06 23:31:25 alk Exp $
 
 // FlexLexer.h -- define interfaces for lexical analyzer classes generated
 //		  by flex
@@ -44,7 +44,9 @@
 #ifndef __FLEX_LEXER_H
 // Never included before - need to define base class.
 #define __FLEX_LEXER_H
-#include <iostream.h>
+#include <iostream>
+
+using namespace std;
 
 extern "C++" {
 
