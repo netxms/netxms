@@ -365,52 +365,65 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 
+void SignalHandlerStub(int nSignal)
+{
+	// should be unused, but JIC...
+	if (nSignal == SIGCHLD)
+	{
+		while (waitpid(-1, NULL, WNOHANG) > 0)
+			;
+	}
+}
+
 static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 {
-   sigset_t signals;
-   int nSignal;
+	sigset_t signals;
+	int nSignal;
 
-   sigemptyset(&signals);
-   sigaddset(&signals, SIGTERM);
-   sigaddset(&signals, SIGINT);
-   sigaddset(&signals, SIGPIPE);
-   sigaddset(&signals, SIGSEGV);
-   sigaddset(&signals, SIGCHLD);
-   sigaddset(&signals, SIGHUP);
-   sigaddset(&signals, SIGUSR1);
-   sigaddset(&signals, SIGUSR2);
+	// default for SIGCHLD: ignore
+	signal(SIGCHLD, &SignalHandlerStub);
 
-   sigprocmask(SIG_BLOCK, &signals, NULL);
+	sigemptyset(&signals);
+	sigaddset(&signals, SIGTERM);
+	sigaddset(&signals, SIGINT);
+	sigaddset(&signals, SIGPIPE);
+	sigaddset(&signals, SIGSEGV);
+	sigaddset(&signals, SIGCHLD);
+	sigaddset(&signals, SIGHUP);
+	sigaddset(&signals, SIGUSR1);
+	sigaddset(&signals, SIGUSR2);
 
-   while(1)
-   {
-      if (sigwait(&signals, &nSignal) == 0)
-      {
-         switch(nSignal)
-         {
-            case SIGTERM:
-            case SIGINT:
-               goto stop_handler;
-	   	   case SIGSEGV:
-		   	   abort();
-			      break;
-   		   case SIGCHLD:
-	   		   while (waitpid(-1, NULL, WNOHANG) > 0)
-		   		   ;
-			      break;
-            default:
-               break;
-         }
-      }
-      else
-      {
-         ThreadSleepMs(100);
-      }
-   }
+	sigprocmask(SIG_BLOCK, &signals, NULL);
+
+	while(1)
+	{
+		if (sigwait(&signals, &nSignal) == 0)
+		{
+			switch(nSignal)
+			{
+				case SIGTERM:
+				case SIGINT:
+					goto stop_handler;
+				case SIGSEGV:
+					abort();
+					break;
+				case SIGCHLD:
+					while (waitpid(-1, NULL, WNOHANG) > 0)
+						;
+					break;
+				default:
+					break;
+			}
+		}
+		else
+		{
+			ThreadSleepMs(100);
+		}
+	}
 
 stop_handler:
-   sigprocmask(SIG_UNBLOCK, &signals, NULL);
-   return THREAD_OK;
+	sigprocmask(SIG_UNBLOCK, &signals, NULL);
+	return THREAD_OK;
 }
 
 #endif
