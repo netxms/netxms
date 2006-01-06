@@ -1,0 +1,20 @@
+#!/sbin/runscript
+# Copyright 1999-2006 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /cvs/nms/contrib/startup/gentoo/nxagentd,v 1.1 2006-01-06 15:41:25 victor Exp $
+
+depend() {
+	need net
+}
+
+start() {
+	ebegin "Starting NetXMS agent"
+	eval start-stop-daemon --start --quiet --pidfile /var/run/nxagentd.pid --exec /usr/local/bin/nxagentd -- -d -p /var/run/nxagentd.pid
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping NetXMS agent"
+	start-stop-daemon --stop --quiet --pidfile /var/run/nxagentd.pid
+	eend $?
+}

@@ -106,6 +106,9 @@ contrib/mibs/WF-COM.txt -text
 contrib/netxmsd.conf-dist -text
 contrib/nxagentd.conf-dist -text
 contrib/startup/Makefile.am -text
+contrib/startup/gentoo/Makefile.am -text
+contrib/startup/gentoo/netxmsd -text
+contrib/startup/gentoo/nxagentd -text
 contrib/startup/redhat/Makefile.am -text
 contrib/startup/redhat/netxmsd -text
 contrib/startup/redhat/nxagentd -text
