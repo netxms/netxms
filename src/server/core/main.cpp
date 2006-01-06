@@ -842,6 +842,16 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 
 #ifndef _WIN32
 
+void SignalHandlerStub(int nSignal)
+{
+	// should be unused, but JIC...
+	if (nSignal == SIGCHLD)
+	{
+		while (waitpid(-1, NULL, WNOHANG) > 0)
+			;
+	}
+}
+
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 {
    sigset_t signals;
@@ -849,6 +859,9 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
    BOOL bCallShutdown = FALSE;
 
    m_pid = getpid();
+
+   // default for SIGCHLD: ignore
+   signal(SIGCHLD, &SignalHandlerStub);
 
    sigemptyset(&signals);
    sigaddset(&signals, SIGTERM);
