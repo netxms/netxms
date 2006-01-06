@@ -46,7 +46,8 @@ static char *m_szCommandMnemonic[] =
    "AND", "OR", "LSHIFT", "RSHIFT",
    "NRET", "JZ", "PRINT", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
-   "BITNOT", "CAST", "REF"
+   "BITNOT", "CAST", "REF", "INCP", "DECP",
+   "JNZ"
 };
 
 
@@ -280,6 +281,7 @@ void NXSL_Program::Dump(FILE *pFile)
             break;
          case OPCODE_JMP:
          case OPCODE_JZ:
+         case OPCODE_JNZ:
             fprintf(pFile, "%04X\n", m_ppInstructionSet[i]->m_operand.m_dwAddr);
             break;
          case OPCODE_PUSH_VARIABLE:
@@ -287,6 +289,8 @@ void NXSL_Program::Dump(FILE *pFile)
          case OPCODE_BIND:
          case OPCODE_INC:
          case OPCODE_DEC:
+         case OPCODE_INCP:
+         case OPCODE_DECP:
          case OPCODE_REFERENCE:
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
@@ -486,12 +490,13 @@ void NXSL_Program::Execute(void)
          dwNext = cp->m_operand.m_dwAddr;
          break;
       case OPCODE_JZ:
+      case OPCODE_JNZ:
          pValue = (NXSL_Value *)m_pDataStack->Pop();
          if (pValue != NULL)
          {
             if (pValue->IsNumeric())
             {
-               if (pValue->IsZero())
+               if (cp->m_nOpCode == OPCODE_JZ ? pValue->IsZero() : pValue->IsNonZero())
                   dwNext = cp->m_operand.m_dwAddr;
             }
             else
@@ -661,8 +666,25 @@ void NXSL_Program::Execute(void)
       case OPCODE_BIT_NOT:
          DoUnaryOperation(cp->m_nOpCode);
          break;
-      case OPCODE_INC:
+      case OPCODE_INC:  // Post increment/decrement
       case OPCODE_DEC:
+         pVar = FindOrCreateVariable(cp->m_operand.m_pszString);
+         pValue = pVar->Value();
+         if (pValue->IsNumeric())
+         {
+            m_pDataStack->Push(new NXSL_Value(pValue));
+            if (cp->m_nOpCode == OPCODE_INC)
+               pValue->Increment();
+            else
+               pValue->Decrement();
+         }
+         else
+         {
+            Error(NXSL_ERR_NOT_NUMBER);
+         }
+         break;
+      case OPCODE_INCP: // Pre increment/decrement
+      case OPCODE_DECP:
          pVar = FindOrCreateVariable(cp->m_operand.m_pszString);
          pValue = pVar->Value();
          if (pValue->IsNumeric())

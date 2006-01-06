@@ -85,6 +85,9 @@ union YYSTYPE;
 #define OPCODE_BIT_NOT        37
 #define OPCODE_CAST           38
 #define OPCODE_REFERENCE      39
+#define OPCODE_INCP           40
+#define OPCODE_DECP           41
+#define OPCODE_JNZ            42
 
 
 //
@@ -147,6 +150,7 @@ public:
 
    void PushAddr(DWORD dwAddr) { m_pAddrStack->Push((void *)dwAddr); }
    DWORD PopAddr(void);
+   DWORD PeekAddr(void);
 };
 
 

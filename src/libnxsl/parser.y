@@ -34,8 +34,12 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 	NXSL_Instruction *pInstruction;
 }
 
+%token T_BREAK
+%token T_CONTINUE
+%token T_DO
 %token T_ELSE
 %token T_EXIT
+%token T_FOR
 %token T_IF
 %token T_NULL
 %token T_PRINT
@@ -199,11 +203,11 @@ Expression:
 }
 |	T_INC T_IDENTIFIER
 {
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_INC, $2));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_INCP, $2));
 }
 |	T_DEC T_IDENTIFIER
 {
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_DEC, $2));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_DECP, $2));
 }
 |	T_IDENTIFIER T_INC	%prec T_POST_INC
 {
@@ -342,7 +346,21 @@ BuiltinType:
 BuiltinStatement:
 	SimpleStatement ';'
 |	IfStatement
+|	DoStatement
 |	WhileStatement
+|	T_CONTINUE ';'
+{
+	DWORD dwAddr = pCompiler->PeekAddr();
+	if (dwAddr != INVALID_ADDRESS)
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(),
+					OPCODE_JMP, dwAddr));
+	}
+	else
+	{
+		pCompiler->Error("\"continue\" statement must be within loop");
+	}
+}
 ;
 
 SimpleStatement:
@@ -391,6 +409,15 @@ IfBody:
 }
 ;
 
+ElseStatement:
+	T_ELSE
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+		pScript->ResolveLastJump(OPCODE_JZ);
+	}
+	StatementOrBlock
+;
+
 WhileStatement:
 	T_WHILE
 	{
@@ -408,13 +435,16 @@ WhileStatement:
 }
 ;
 
-ElseStatement:
-	T_ELSE
+DoStatement:
+	T_DO
 	{
-		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
-		pScript->ResolveLastJump(OPCODE_JZ);
+		pCompiler->PushAddr(pScript->CodeSize());
 	}
-	StatementOrBlock
+	StatementOrBlock T_WHILE '(' Expression ')' ';'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(),
+				OPCODE_JNZ, pCompiler->PopAddr()));
+}
 ;
 
 FunctionCall:

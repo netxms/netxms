@@ -26,8 +26,12 @@ escape		\\[bnrt0\"]
 
 %%
 
+<INITIAL>"break"	return T_BREAK;
+<INITIAL>"continue"	return T_CONTINUE;
+<INITIAL>"do"		return T_DO;
 <INITIAL>"else"		return T_ELSE;
 <INITIAL>"exit"		return T_EXIT;
+<INITIAL>"for"		return T_FOR;
 <INITIAL>"if"		return T_IF;
 <INITIAL>"int32"	return T_TYPE_INT32;
 <INITIAL>"int64"	return T_TYPE_INT64;

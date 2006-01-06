@@ -125,3 +125,16 @@ DWORD NXSL_Compiler::PopAddr(void)
    pAddr = m_pAddrStack->Pop();
    return pAddr ? (DWORD)pAddr : INVALID_ADDRESS;
 }
+
+
+//
+// Peek address
+//
+
+DWORD NXSL_Compiler::PeekAddr(void)
+{
+   void *pAddr;
+
+   pAddr = m_pAddrStack->Peek();
+   return pAddr ? (DWORD)pAddr : INVALID_ADDRESS;
+}
