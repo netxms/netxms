@@ -1,5 +1,7 @@
 /*
 ** Default SNMP trap handling
+**
+** ex: syntax=sql
 */
 
 INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description)

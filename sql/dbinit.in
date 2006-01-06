@@ -80,6 +80,7 @@ BEGIN TRANSACTION;
 #include "policy.in"
 #include "traps.in"
 #include "objtools.in"
+#include "scripts.in"
 
 // End transaction
 #if defined(DB_POSTGRESQL) || defined(DB_SQLITE)

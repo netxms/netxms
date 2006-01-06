@@ -190,6 +190,7 @@ sql/images.in -text
 sql/objtools.in -text
 sql/policy.in -text
 sql/schema.in -text
+sql/scripts.in -text
 sql/setup.in -text
 sql/traps.in -text
 src/Makefile.am -text

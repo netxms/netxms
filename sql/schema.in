@@ -756,6 +756,19 @@ CREATE TABLE syslog
 
 
 /*
+** Script library
+*/
+
+CREATE TABLE script_library
+(
+	script_id integer not null,
+	script_name varchar(63) not null,
+	script_code SQL_TEXT not null,
+	PRIMARY KEY(script_id)
+) TABLE_TYPE;
+
+
+/*
 ** Log processing policy
 */
 
