@@ -328,6 +328,7 @@
 #define IDC_COMBO_DELTA                 1163
 #define IDC_EDIT_FORMULA                1164
 #define IDC_BUTTON_CREATE               1166
+#define IDC_BUTTON_CHECK                1166
 #define IDC_EDIT_EVENT                  1167
 #define IDC_POLL_PROGRESS               1169
 #define IDC_EDIT_MSG                    1170

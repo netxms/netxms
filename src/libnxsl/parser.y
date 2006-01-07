@@ -51,6 +51,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token T_TYPE_STRING
 %token T_TYPE_UINT32
 %token T_TYPE_UINT64
+%token T_USE
 %token T_WHILE
 
 %token <valStr> T_IDENTIFIER
@@ -112,6 +113,14 @@ Module:
 
 ModuleComponent:
 	Function
+|	UseStatement
+;
+
+UseStatement:
+	T_USE T_IDENTIFIER ';'
+{
+	pScript->AddPreload($2);
+}
 ;
 
 Function:

@@ -1535,12 +1535,13 @@ BEGIN
     LTEXT           "Step 1 - Delta processing",IDC_STATIC,7,7,80,8
     COMBOBOX        IDC_COMBO_DELTA,7,17,214,120,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Step 2 - Formula",IDC_STATIC,7,39,52,8
-    EDITTEXT        IDC_EDIT_FORMULA,7,50,214,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Create...",IDC_BUTTON_CREATE,171,68,50,14
-    ICON            IDI_SEVERITY_MINOR,IDC_STATIC_WARNING_ICON,7,91,21,20
+    LTEXT           "Step 2 - Transformation Script",IDC_STATIC,7,35,94,8
+    EDITTEXT        IDC_EDIT_FORMULA,7,46,214,99,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "&Check...",IDC_BUTTON_CHECK,171,150,50,14
+    ICON            IDI_SEVERITY_MINOR,IDC_STATIC_WARNING_ICON,7,166,20,20
     LTEXT           "WARNING! Delta calculation will produce incorrect results for polling interval less than 60 seconds.",
-                    IDC_STATIC_WARNING_TEXT,33,93,188,18
+                    IDC_STATIC_WARNING_TEXT,33,168,188,18
 END
 
 IDD_CREATE_TG DIALOG DISCARDABLE  0, 0, 229, 126

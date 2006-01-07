@@ -60,6 +60,7 @@
 #define NXSL_ERR_TYPE_CAST                13
 #define NXSL_ERR_NOT_OBJECT               14
 #define NXSL_ERR_NO_SUCH_ATTRIBUTE        15
+#define NXSL_ERR_MODULE_NOT_FOUND         16
 
 
 //
@@ -92,6 +93,7 @@ int LIBNXSL_EXPORTABLE NXSLRun(NXSL_SCRIPT hScript);
 TCHAR LIBNXSL_EXPORTABLE *NXSLGetRuntimeError(NXSL_SCRIPT hScript);
 void LIBNXSL_EXPORTABLE NXSLDestroy(NXSL_SCRIPT hScript);
 void LIBNXSL_EXPORTABLE NXSLDump(NXSL_SCRIPT hScript, FILE *pFile);
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(TCHAR *pszFileName, DWORD *pdwFileSize);
 
 #ifdef __cplusplus
 }

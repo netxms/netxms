@@ -5,7 +5,7 @@
 - Added built-in scripting language
 - Implemented DCI transformations
 - Added startup scripts for Gentoo Linux
-- Fixed issues: #68
+- Fixed issues: #68, #71
 
 
 *

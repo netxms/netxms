@@ -27,39 +27,6 @@
 static NXSL_TestClass *m_pTestClass;
 
 
-static char *LoadFile(char *pszFileName, DWORD *pdwFileSize)
-{
-   int fd, iBufPos, iNumBytes, iBytesRead;
-   char *pBuffer = NULL;
-   struct stat fs;
-
-   fd = open(pszFileName, O_RDONLY | O_BINARY);
-   if (fd != -1)
-   {
-      if (fstat(fd, &fs) != -1)
-      {
-         pBuffer = (char *)malloc(fs.st_size + 1);
-         if (pBuffer != NULL)
-         {
-            *pdwFileSize = fs.st_size;
-            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
-            {
-               iNumBytes = min(16384, fs.st_size - iBufPos);
-               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
-               {
-                  free(pBuffer);
-                  pBuffer = NULL;
-                  break;
-               }
-            }
-         }
-      }
-      close(fd);
-   }
-   return pBuffer;
-}
-
-
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
    *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, NULL));
@@ -96,7 +63,7 @@ int main(int argc, char *argv[])
       return 127;
    }
 
-   pszSource = LoadFile(argv[1], &dwSize);
+   pszSource = NXSLLoadFile(argv[1], &dwSize);
    pScript = (NXSL_Program *)NXSLCompile(pszSource, szError, 1024);
    if (pScript != NULL)
    {

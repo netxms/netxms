@@ -89,6 +89,43 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLGetRuntimeError(NXSL_SCRIPT hScript)
 
 
 //
+// Load file into memory
+//
+
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
+{
+   int fd, iBufPos, iNumBytes, iBytesRead;
+   TCHAR *pBuffer = NULL;
+   struct stat fs;
+
+   fd = open(pszFileName, O_RDONLY | O_BINARY);
+   if (fd != -1)
+   {
+      if (fstat(fd, &fs) != -1)
+      {
+         pBuffer = (TCHAR *)malloc(fs.st_size + 1);
+         if (pBuffer != NULL)
+         {
+            *pdwFileSize = fs.st_size;
+            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
+            {
+               iNumBytes = min(16384, fs.st_size - iBufPos);
+               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+               {
+                  free(pBuffer);
+                  pBuffer = NULL;
+                  break;
+               }
+            }
+         }
+      }
+      close(fd);
+   }
+   return pBuffer;
+}
+
+
+//
 // DLL entry point
 //
 

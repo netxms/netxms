@@ -28,7 +28,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         15
+#define MAX_ERROR_NUMBER         16
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -71,7 +71,8 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Invalid number of function's arguments"),
    _T("Cannot do automatic type cast"),
    _T("Left argument of -> must be a reference to object"),
-   _T("Unknown object's attribute")
+   _T("Unknown object's attribute"),
+   _T("Requested module not found or cannot be loaded")
 };
 
 
@@ -141,6 +142,10 @@ NXSL_Program::NXSL_Program(void)
    m_dwSubLevel = 0;    // Level of current subroutine
    m_pEnv = NULL;
    m_pRetValue = NULL;
+   m_dwNumModules = 0;
+   m_pModuleList = NULL;
+   m_dwNumPreloads = 0;
+   m_ppszPreloadList = NULL;
 }
 
 
@@ -167,6 +172,11 @@ NXSL_Program::~NXSL_Program(void)
    delete m_pRetValue;
 
    safe_free(m_pFunctionList);
+   safe_free(m_pModuleList);
+
+   for(i = 0; i < m_dwNumPreloads; i++)
+      safe_free(m_ppszPreloadList[i]);
+   safe_free(m_ppszPreloadList);
 
    safe_free(m_pszErrorText);
 }
@@ -226,6 +236,18 @@ BOOL NXSL_Program::AddFunction(char *pszName, DWORD dwAddr, char *pszError)
    nx_strncpy(m_pFunctionList[i].m_szName, pszName, MAX_FUNCTION_NAME);
    m_pFunctionList[i].m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_dwCodeSize : dwAddr;
    return TRUE;
+}
+
+
+//
+// Add preload information
+//
+
+void NXSL_Program::AddPreload(char *pszName)
+{
+   m_ppszPreloadList = (char **)realloc(m_ppszPreloadList, sizeof(char *) * (m_dwNumPreloads + 1));
+   m_ppszPreloadList[m_dwNumPreloads] = pszName;
+   m_dwNumPreloads++;
 }
 
 
@@ -338,10 +360,14 @@ void NXSL_Program::Error(int nError)
 
 int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)
 {
-   DWORD i;
+   DWORD i, dwOrigCodeSize, dwOrigNumFn;
    NXSL_VariableSystem *pSavedGlobals;
    NXSL_Value *pValue;
    char szBuffer[32];
+
+   // Save original code size and number of functions
+   dwOrigCodeSize = m_dwCodeSize;
+   dwOrigNumFn = m_dwNumFunctions;
 
    // Delete previous return value
    delete m_pRetValue;
@@ -368,21 +394,34 @@ int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)
    // Preserve original global variables
    pSavedGlobals = new NXSL_VariableSystem(m_pGlobals);
 
-   // Locate main()
-   for(i = 0; i < m_dwNumFunctions; i++)
-      if (!strcmp(m_pFunctionList[i].m_szName, "main"))
+   // Preload modules
+   for(i = 0; i < m_dwNumPreloads; i++)
+   {
+      if (!pEnv->UseModule(this, m_ppszPreloadList[i]))
+      {
+         Error(NXSL_ERR_MODULE_NOT_FOUND);
          break;
-   if (i < m_dwNumFunctions)
-   {
-      m_dwCurrPos = m_pFunctionList[i].m_dwAddr;
-      while(m_dwCurrPos < m_dwCodeSize)
-         Execute();
-      if (m_dwCurrPos != INVALID_ADDRESS)
-         m_pRetValue = (NXSL_Value *)m_pDataStack->Pop();
+      }
    }
-   else
+
+   // Locate main() and run
+   if (i == m_dwNumPreloads)
    {
-      Error(NXSL_ERR_NO_MAIN);
+      for(i = 0; i < m_dwNumFunctions; i++)
+         if (!strcmp(m_pFunctionList[i].m_szName, "main"))
+            break;
+      if (i < m_dwNumFunctions)
+      {
+         m_dwCurrPos = m_pFunctionList[i].m_dwAddr;
+         while(m_dwCurrPos < m_dwCodeSize)
+            Execute();
+         if (m_dwCurrPos != INVALID_ADDRESS)
+            m_pRetValue = (NXSL_Value *)m_pDataStack->Pop();
+      }
+      else
+      {
+         Error(NXSL_ERR_NO_MAIN);
+      }
    }
 
    // Restore global variables
@@ -402,6 +441,15 @@ int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)
    delete_and_null(m_pLocals);
    delete_and_null(m_pDataStack);
    delete_and_null(m_pCodeStack);
+   safe_free(m_pModuleList);
+   m_pModuleList = NULL;
+   m_dwNumModules = 0;
+
+   // Restore original code size and number of functions
+   for(i = dwOrigCodeSize; i < m_dwCodeSize; i++)
+      delete m_ppInstructionSet[i];
+   m_dwCodeSize = dwOrigCodeSize;
+   m_dwNumFunctions = dwOrigNumFn;
 
    return (m_dwCurrPos == INVALID_ADDRESS) ? -1 : 0;
 }
@@ -511,35 +559,8 @@ void NXSL_Program::Execute(void)
          }
          break;
       case OPCODE_CALL:
-         if (m_dwSubLevel < CONTROL_STACK_LIMIT)
-         {
-            m_dwSubLevel++;
-            dwNext = cp->m_operand.m_dwAddr;
-            m_pCodeStack->Push((void *)(m_dwCurrPos + 1));
-            m_pCodeStack->Push(m_pLocals);
-            m_pLocals = new NXSL_VariableSystem;
-            m_nBindPos = 1;
-
-            // Bind arguments
-            for(i = cp->m_nStackItems; i > 0; i--)
-            {
-               pValue = (NXSL_Value *)m_pDataStack->Pop();
-               if (pValue != NULL)
-               {
-                  sprintf(szBuffer, "$%d", i);
-                  m_pLocals->Create(szBuffer, pValue);
-               }
-               else
-               {
-                  Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
-                  break;
-               }
-            }
-         }
-         else
-         {
-            Error(NXSL_ERR_CONTROL_STACK_OVERFLOW);
-         }
+         dwNext = cp->m_operand.m_dwAddr;
+         CallFunction(cp->m_nStackItems);
          break;
       case OPCODE_CALL_EXTERNAL:
          pFunc = m_pEnv->FindFunction(cp->m_operand.m_pszString);
@@ -577,7 +598,18 @@ void NXSL_Program::Execute(void)
          }
          else
          {
-            Error(NXSL_ERR_NO_FUNCTION);
+            DWORD dwAddr;
+
+            dwAddr = GetFunctionAddress(cp->m_operand.m_pszString);
+            if (dwAddr != INVALID_ADDRESS)
+            {
+               dwNext = dwAddr;
+               CallFunction(cp->m_nStackItems);
+            }
+            else
+            {
+               Error(NXSL_ERR_NO_FUNCTION);
+            }
          }
          break;
       case OPCODE_RET_NULL:
@@ -1015,4 +1047,123 @@ void NXSL_Program::DoUnaryOperation(int nOpCode)
    {
       Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
    }
+}
+
+
+//
+// Relocate code block
+//
+
+void NXSL_Program::RelocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
+{
+   DWORD i, dwLast;
+
+   dwLast = min(dwStart + dwLen, m_dwCodeSize);
+   for(i = dwStart; i < dwLast; i++)
+      if ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
+          (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
+          (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ) ||
+          (m_ppInstructionSet[i]->m_nOpCode == OPCODE_CALL))
+      {
+         m_ppInstructionSet[i]->m_operand.m_dwAddr += dwShift;
+      }
+}
+
+
+//
+// Use external module
+//
+
+void NXSL_Program::UseModule(NXSL_Program *pModule, char *pszName)
+{
+   DWORD i, j, dwStart;
+
+   // Check if module already loaded
+   for(i = 0; i < m_dwNumModules; i++)
+      if (!stricmp(pszName, m_pModuleList[i].m_szName))
+         return;  // Already loaded
+
+   // Add code from module
+   dwStart = m_dwCodeSize;
+   m_dwCodeSize += pModule->m_dwCodeSize;
+   m_ppInstructionSet = (NXSL_Instruction **)realloc(m_ppInstructionSet,
+         sizeof(NXSL_Instruction *) * m_dwCodeSize);
+   for(i = dwStart, j = 0; i < m_dwCodeSize; i++, j++)
+      m_ppInstructionSet[i] = new NXSL_Instruction(pModule->m_ppInstructionSet[j]);
+   RelocateCode(dwStart, pModule->m_dwCodeSize, dwStart);
+   
+   // Add function names from module
+   m_pFunctionList = (NXSL_Function *)realloc(m_pFunctionList,
+         sizeof(NXSL_Function) * (m_dwNumFunctions + pModule->m_dwNumFunctions));
+   memcpy(&m_pFunctionList[m_dwNumFunctions], pModule->m_pFunctionList,
+          sizeof(NXSL_Function) * pModule->m_dwNumFunctions);
+   for(i = m_dwNumFunctions, j = 0; j < pModule->m_dwNumFunctions; i++, j++)
+      m_pFunctionList[i].m_dwAddr += dwStart;
+
+   // Register module as loaded
+   m_pModuleList = (NXSL_Module *)malloc(sizeof(NXSL_Module) * (m_dwNumModules + 1));
+   strncpy(m_pModuleList[m_dwNumModules].m_szName, pszName, MAX_PATH);
+   m_pModuleList[m_dwNumModules].m_dwCodeStart = dwStart;
+   m_pModuleList[m_dwNumModules].m_dwCodeSize = pModule->m_dwCodeSize;
+   m_pModuleList[m_dwNumModules].m_dwFunctionStart = m_dwNumFunctions;
+   m_pModuleList[m_dwNumModules].m_dwNumFunctions = pModule->m_dwNumFunctions;
+   m_dwNumModules++;
+
+   m_dwNumFunctions += pModule->m_dwNumFunctions;
+}
+
+
+//
+// Call function at given address
+//
+
+void NXSL_Program::CallFunction(int nArgCount)
+{
+   int i;
+   NXSL_Value *pValue;
+   char szBuffer[32];
+
+   if (m_dwSubLevel < CONTROL_STACK_LIMIT)
+   {
+      m_dwSubLevel++;
+      m_pCodeStack->Push((void *)(m_dwCurrPos + 1));
+      m_pCodeStack->Push(m_pLocals);
+      m_pLocals = new NXSL_VariableSystem;
+      m_nBindPos = 1;
+
+      // Bind arguments
+      for(i = nArgCount; i > 0; i--)
+      {
+         pValue = (NXSL_Value *)m_pDataStack->Pop();
+         if (pValue != NULL)
+         {
+            sprintf(szBuffer, "$%d", i);
+            m_pLocals->Create(szBuffer, pValue);
+         }
+         else
+         {
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            break;
+         }
+      }
+   }
+   else
+   {
+      Error(NXSL_ERR_CONTROL_STACK_OVERFLOW);
+   }
+}
+
+
+//
+// Find function address by name
+//
+
+DWORD NXSL_Program::GetFunctionAddress(char *pszName)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumFunctions; i++)
+      if (!strcmp(m_pFunctionList[i].m_szName, pszName))
+         return m_pFunctionList[i].m_dwAddr;
+   return INVALID_ADDRESS;
 }

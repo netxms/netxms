@@ -43,6 +43,7 @@ escape		\\[bnrt0\"]
 <INITIAL>"sub"		return T_SUB;
 <INITIAL>"uint32"	return T_TYPE_UINT32;
 <INITIAL>"uint64"	return T_TYPE_UINT64;
+<INITIAL>"use"		return T_USE;
 <INITIAL>"while"	return T_WHILE;
 
 <INITIAL>{identifier}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }

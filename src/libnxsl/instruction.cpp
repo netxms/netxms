@@ -73,6 +73,33 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, int nStackItems)
    m_nStackItems = nStackItems;
 }
 
+NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
+{
+   m_nOpCode = pSrc->m_nOpCode;
+   m_nSourceLine = pSrc->m_nSourceLine;
+   m_nStackItems = pSrc->m_nStackItems;
+   switch(m_nOpCode)
+   {
+      case OPCODE_PUSH_CONSTANT:
+         m_operand.m_pConstant = new NXSL_Value(pSrc->m_operand.m_pConstant);
+         break;
+      case OPCODE_PUSH_VARIABLE:
+      case OPCODE_SET:
+      case OPCODE_CALL_EXTERNAL:
+      case OPCODE_BIND:
+      case OPCODE_INC:
+      case OPCODE_DEC:
+      case OPCODE_INCP:
+      case OPCODE_DECP:
+      case OPCODE_REFERENCE:
+         m_operand.m_pszString = strdup(pSrc->m_operand.m_pszString);
+         break;
+      default:
+         m_operand.m_dwAddr = pSrc->m_operand.m_dwAddr;
+         break;
+   }
+}
+
 
 //
 // Destructor
@@ -85,6 +112,12 @@ NXSL_Instruction::~NXSL_Instruction()
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_CALL_EXTERNAL:
       case OPCODE_SET:
+      case OPCODE_BIND:
+      case OPCODE_INC:
+      case OPCODE_DEC:
+      case OPCODE_INCP:
+      case OPCODE_DECP:
+      case OPCODE_REFERENCE:
          safe_free(m_operand.m_pszString);
          break;
       case OPCODE_PUSH_CONSTANT:

@@ -93,3 +93,31 @@ void NXSL_Environment::RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunctio
    memcpy(&m_pFunctionList[m_dwNumFunctions], pList, sizeof(NXSL_ExtFunction) * dwNumFunctions);
    m_dwNumFunctions += dwNumFunctions;
 }
+
+
+//
+// Find module by name
+//
+
+BOOL NXSL_Environment::UseModule(NXSL_Program *pMain, TCHAR *pszName)
+{
+   TCHAR *pData, szBuffer[MAX_PATH];
+   DWORD dwSize;
+   NXSL_Program *pScript;
+   BOOL bRet = FALSE;
+
+   _sntprintf(szBuffer, MAX_PATH, "%s.nxsl", pszName);
+   pData = NXSLLoadFile(szBuffer, &dwSize);
+   if (pData != NULL)
+   {
+      pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
+      if (pScript != NULL)
+      {
+         pMain->UseModule(pScript, pszName);
+         delete pScript;
+         bRet = TRUE;
+      }
+      free(pData);
+   }
+   return bRet;
+}

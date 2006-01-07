@@ -231,6 +231,8 @@ struct NXSL_ExtFunction
 // Environment for NXSL program
 //
 
+class NXSL_Program;
+
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
@@ -250,6 +252,8 @@ public:
 
    NXSL_ExtFunction *FindFunction(char *pszName);
    void RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
+
+   BOOL UseModule(NXSL_Program *pMain, char *pszName);
 };
 
 
@@ -321,7 +325,22 @@ public:
    NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems);
    NXSL_Instruction(int nLine, int nOpCode, DWORD dwAddr);
    NXSL_Instruction(int nLine, int nOpCode, int nStackItems);
+   NXSL_Instruction(NXSL_Instruction *pSrc);
    ~NXSL_Instruction();
+};
+
+
+//
+// Used module information
+//
+
+struct NXSL_Module
+{
+   char m_szName[MAX_PATH];
+   DWORD m_dwCodeStart;
+   DWORD m_dwCodeSize;
+   DWORD m_dwFunctionStart;
+   DWORD m_dwNumFunctions;
 };
 
 
@@ -338,6 +357,9 @@ protected:
    DWORD m_dwCodeSize;
    DWORD m_dwCurrPos;
 
+   DWORD m_dwNumPreloads;
+   char **m_ppszPreloadList;
+
    DWORD m_dwSubLevel;
    NXSL_Stack *m_pDataStack;
    NXSL_Stack *m_pCodeStack;
@@ -350,16 +372,23 @@ protected:
    DWORD m_dwNumFunctions;
    NXSL_Function *m_pFunctionList;
 
+   DWORD m_dwNumModules;
+   NXSL_Module *m_pModuleList;
+
    NXSL_Value *m_pRetValue;
    int m_nErrorCode;
    TCHAR *m_pszErrorText;
 
    void Execute(void);
+   void CallFunction(int nArgCount);
    void DoUnaryOperation(int nOpCode);
    void DoBinaryOperation(int nOpCode);
    void Error(int nError);
 
    NXSL_Variable *FindOrCreateVariable(TCHAR *pszName);
+
+   DWORD GetFunctionAddress(char *pszName);
+   void RelocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
 
 public:
    NXSL_Program(void);
@@ -369,6 +398,8 @@ public:
    void ResolveFunctions(void);
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
+   void AddPreload(char *pszName);
+   void UseModule(NXSL_Program *pModule, char *pszName);
 
    int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0, NXSL_Value **argv = NULL);
 
@@ -377,6 +408,25 @@ public:
    void Dump(FILE *pFile);
    TCHAR *GetErrorText(void) { return m_pszErrorText; }
    NXSL_Value *GetResult(void) { return m_pRetValue; }
+};
+
+
+//
+// Script library
+//
+
+class NXSL_Library
+{
+private:
+   DWORD m_dwNumScripts;
+   NXSL_Program **m_ppScriptList;
+
+public:
+   NXSL_Library(void);
+   ~NXSL_Library();
+
+   BOOL AddScript(NXSL_Program *pScript);
+   
 };
 
 
