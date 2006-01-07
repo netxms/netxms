@@ -901,6 +901,7 @@ src/server/core/objtools.cpp -text
 src/server/core/package.cpp -text
 src/server/core/poll.cpp -text
 src/server/core/rootobj.cpp -text
+src/server/core/script.cpp -text
 src/server/core/session.cpp -text
 src/server/core/sms.cpp -text
 src/server/core/snmp.cpp -text
