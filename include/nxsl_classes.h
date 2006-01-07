@@ -232,12 +232,15 @@ struct NXSL_ExtFunction
 //
 
 class NXSL_Program;
+class NXSL_Library;
 
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
    DWORD m_dwNumFunctions;
    NXSL_ExtFunction *m_pFunctionList;
+
+   NXSL_Library *m_pLibrary;
 
    FILE *m_pStdIn;
    FILE *m_pStdOut;
@@ -249,6 +252,8 @@ public:
    void SetIO(FILE *pIn, FILE *pOut) { m_pStdIn = pIn; m_pStdOut = pOut; }
    FILE *GetStdIn(void) { return m_pStdIn; }
    FILE *GetStdOut(void) { return m_pStdOut; }
+
+   void SetLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
 
    NXSL_ExtFunction *FindFunction(char *pszName);
    void RegisterFunctionSet(DWORD dwNumFunctions, NXSL_ExtFunction *pList);
@@ -415,18 +420,28 @@ public:
 // Script library
 //
 
-class NXSL_Library
+class LIBNXSL_EXPORTABLE NXSL_Library
 {
 private:
    DWORD m_dwNumScripts;
    NXSL_Program **m_ppScriptList;
+   char **m_ppszNames;
+   DWORD *m_pdwIdList;
+   MUTEX m_mutex;
+
+   void Delete(int nIndex);
 
 public:
    NXSL_Library(void);
    ~NXSL_Library();
 
-   BOOL AddScript(NXSL_Program *pScript);
-   
+   void Lock(void) { MutexLock(m_mutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutex); }
+
+   BOOL AddScript(DWORD dwId, char *pszName, NXSL_Program *pScript);
+   void DeleteScript(char *pszName);
+   void DeleteScript(DWORD dwId);
+   NXSL_Program *FindScript(char *pszName);
 };
 
 

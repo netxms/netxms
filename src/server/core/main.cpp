@@ -388,6 +388,9 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
       return FALSE;
    DbgPrintf(AF_DEBUG_MISC, "ID table created");
 
+   // Load and compile scripts
+   LoadScripts();
+
    // Initialize mailer and SMS sender
    InitMailer();
    InitSMSSender();
@@ -529,6 +532,8 @@ void NXCORE_EXPORTABLE Shutdown(void)
    // Delete all objects
    for(i = 0; i < g_dwIdIndexSize; i++)
       delete g_pIndexById[i].pObject;
+
+   delete g_pScriptLibrary;
 
    CloseLog();
 

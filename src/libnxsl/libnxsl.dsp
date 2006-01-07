@@ -125,6 +125,10 @@ SOURCE=.\lexer.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\library.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File

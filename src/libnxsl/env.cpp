@@ -55,6 +55,7 @@ NXSL_Environment::NXSL_Environment()
    m_pFunctionList = (NXSL_ExtFunction *)nx_memdup(m_builtinFunctions, sizeof(m_builtinFunctions));
    m_pStdIn = NULL;
    m_pStdOut = NULL;
+   m_pLibrary = NULL;
 }
 
 
@@ -106,18 +107,34 @@ BOOL NXSL_Environment::UseModule(NXSL_Program *pMain, TCHAR *pszName)
    NXSL_Program *pScript;
    BOOL bRet = FALSE;
 
-   _sntprintf(szBuffer, MAX_PATH, "%s.nxsl", pszName);
-   pData = NXSLLoadFile(szBuffer, &dwSize);
-   if (pData != NULL)
+   // First, try to find module in library
+   if (m_pLibrary != NULL)
    {
-      pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
+      pScript = m_pLibrary->FindScript(pszName);
       if (pScript != NULL)
       {
          pMain->UseModule(pScript, pszName);
-         delete pScript;
          bRet = TRUE;
       }
-      free(pData);
    }
+
+   // If failed, try to load it from file
+   if (!bRet)
+   {
+      _sntprintf(szBuffer, MAX_PATH, "%s.nxsl", pszName);
+      pData = NXSLLoadFile(szBuffer, &dwSize);
+      if (pData != NULL)
+      {
+         pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
+         if (pScript != NULL)
+         {
+            pMain->UseModule(pScript, pszName);
+            delete pScript;
+            bRet = TRUE;
+         }
+         free(pData);
+      }
+   }
+
    return bRet;
 }

@@ -500,4 +500,10 @@ Language=English
 Inconsistent database: %3 %1 linked to non-existing node %2
 .
 
+MessageId=
+SymbolicName=MSG_SCRIPT_COMPILATION_ERROR
+Language=English
+Error compiling library script %2 (ID: %1): %3
+.
+
 ;#endif

@@ -38,4 +38,18 @@ public:
 };
 
 
+//
+// Functions
+//
+
+void LoadScripts(void);
+
+
+//
+// Global variables
+//
+
+extern NXSL_Library *g_pScriptLibrary;
+
+
 #endif
