@@ -1,0 +1,17 @@
+# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+INCLUDES=-I@top_srcdir@/include
+
+bin_PROGRAMS = nxscript
+nxscript_SOURCES = class.cpp nxscript.cpp
+nxscript_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxcscp/libnxcscp.la ../libnxsl/libnxsl.la
+
+EXTRA_DIST = nxscript.dsp nxscript.dsw nxscript.h
