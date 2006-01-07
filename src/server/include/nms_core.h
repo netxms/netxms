@@ -153,6 +153,7 @@ typedef void * HSNMPSESSION;
 #define IDG_PACKAGE           13
 #define IDG_LPP               14
 #define IDG_OBJECT_TOOL       15
+#define IDG_SCRIPT            16
 
 
 //

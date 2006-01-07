@@ -382,6 +382,7 @@ typedef struct
 #define CMD_SETUP_PROXY_CONNECTION  0x0095
 #define CMD_GENERATE_OBJECT_TOOL_ID 0x0096
 #define CMD_GET_SERVER_STATS        0x0097
+#define CMD_GET_SCRIPT_LIST         0x0098
 
 
 //
@@ -593,6 +594,7 @@ typedef struct
 #define VID_NETXMSD_PROCESS_WKSET   ((DWORD)203)
 #define VID_NETXMSD_PROCESS_VMSIZE  ((DWORD)204)
 #define VID_NUM_SESSIONS            ((DWORD)205)
+#define VID_NUM_SCRIPTS             ((DWORD)206)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -672,6 +674,9 @@ typedef struct
 
 // Base value for syslog records
 #define VID_SYSLOG_MSG_BASE         ((DWORD)0x10000000)
+
+// Base value for script list
+#define VID_SCRIPT_LIST_BASE        ((DWORD)0x10000000)
 
 
 //

@@ -809,6 +809,7 @@ src/libnxsl/lexer.cpp -text
 src/libnxsl/libnxsl.dsp -text
 src/libnxsl/libnxsl.dsw -text
 src/libnxsl/libnxsl.h -text
+src/libnxsl/library.cpp -text
 src/libnxsl/main.cpp -text
 src/libnxsl/parser.l -text
 src/libnxsl/parser.y -text

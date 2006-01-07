@@ -442,6 +442,8 @@ public:
    void DeleteScript(char *pszName);
    void DeleteScript(DWORD dwId);
    NXSL_Program *FindScript(char *pszName);
+
+   void FillMessage(CSCPMessage *pMsg);
 };
 
 
