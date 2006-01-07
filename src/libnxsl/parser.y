@@ -321,7 +321,8 @@ Operand:
 TypeCast:
 	BuiltinType '(' Expression ')'
 {
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CAST, $1));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(),
+				OPCODE_CAST, (int)$1));
 }
 ;
 

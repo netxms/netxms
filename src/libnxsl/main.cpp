@@ -25,6 +25,16 @@
 
 
 //
+// For unknown reasons, min() becames undefined on Linux, despite the fact
+// that it is defined in nms_common.h
+//
+
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+
+//
 // Interface to compiler
 //
 
@@ -84,7 +94,7 @@ void LIBNXSL_EXPORTABLE NXSLDump(NXSL_SCRIPT hScript, FILE *pFile)
 
 TCHAR LIBNXSL_EXPORTABLE *NXSLGetRuntimeError(NXSL_SCRIPT hScript)
 {
-   return (hScript == NULL) ? _T("Invalid script handle") : ((NXSL_Program *)hScript)->GetErrorText();
+   return (hScript == NULL) ? (TCHAR *)_T("Invalid script handle") : ((NXSL_Program *)hScript)->GetErrorText();
 }
 
 
