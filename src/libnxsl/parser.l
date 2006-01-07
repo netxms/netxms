@@ -6,6 +6,7 @@
 
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
+compound_ident	{identifier}(::{identifier})+
 integer		\-?(0x)?[0-9]+
 uint32		{integer}U
 int64		{integer}L
@@ -47,6 +48,7 @@ escape		\\[bnrt0\"]
 <INITIAL>"while"	return T_WHILE;
 
 <INITIAL>{identifier}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
+<INITIAL>{compound_ident} { m_plval->valStr = strdup(yytext); return T_COMPOUND_IDENTIFIER; }
 <INITIAL>{integer}	{
 				INT64 nVal;
 

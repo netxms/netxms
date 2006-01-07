@@ -789,8 +789,8 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
    if (m_pScript != NULL)
    {
       NXSL_Value *pValue;
+      NXSL_Environment *pEnv;
 
-printf("RUNNING SCRIPT\n");
       switch(m_iDataType)
       {
          case DCI_DT_INT:
@@ -815,13 +815,15 @@ printf("RUNNING SCRIPT\n");
             pValue = new NXSL_Value;
             break;
       }
-      if (m_pScript->Run(NULL, 1, &pValue) == 0)
+
+      pEnv = new NXSL_Environment;
+      pEnv->SetLibrary(g_pScriptLibrary);
+
+      if (m_pScript->Run(pEnv, 1, &pValue) == 0)
       {
-printf("SCRIPT OK\n");
          pValue = m_pScript->GetResult();
          if (pValue != NULL)
          {
-printf("Value: %s\n", pValue->GetValueAsCString());
             switch(m_iDataType)
             {
                case DCI_DT_INT:

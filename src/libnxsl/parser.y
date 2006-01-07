@@ -54,6 +54,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token T_USE
 %token T_WHILE
 
+%token <valStr> T_COMPOUND_IDENTIFIER
 %token <valStr> T_IDENTIFIER
 %token <valStr> T_STRING
 %token <valInt32> T_INT32
@@ -78,6 +79,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %left T_POST_INC T_POST_DEC T_REF
 
 %type <pConstant> Constant
+%type <valStr> AnyIdentifier
 %type <valStr> FunctionName
 %type <valInt32> BuiltinType
 %type <valInt32> ParameterList
@@ -117,10 +119,15 @@ ModuleComponent:
 ;
 
 UseStatement:
-	T_USE T_IDENTIFIER ';'
+	T_USE AnyIdentifier ';'
 {
 	pScript->AddPreload($2);
 }
+;
+
+AnyIdentifier:
+	T_IDENTIFIER
+|	T_COMPOUND_IDENTIFIER
 ;
 
 Function:

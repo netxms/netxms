@@ -6,3 +6,5 @@
 
 INSERT INTO script_library (script_id,script_name,script_code)
 	VALUES (1,'Filter::SNMP','sub main()#0D#0A{#0D#0A   return 1;#0D#0A}#0D#0A');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (2,'DCI::Test','sub dci_test()#0D#0A{#0D#0A   return $1 + 1;#0D#0A}#0D#0A');
