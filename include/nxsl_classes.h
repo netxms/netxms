@@ -23,6 +23,10 @@
 #ifndef _nxsl_classes_h_
 #define _nxsl_classes_h_
 
+#include <nms_threads.h>
+#include <nms_util.h>
+#include <nxcscpapi.h>
+
 
 //
 // Constants
