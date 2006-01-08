@@ -134,7 +134,7 @@ void GetSysInfoStr(char *pszBuffer)
 	struct utsname uName;
 	if (uname(&uName) == 0)
 	{
-		sprintf(pszBuffer, "%s %s Release %d", uName.nodename, uName.sysname, uName.release);
+		sprintf(pszBuffer, "%s %s Release %s", uName.nodename, uName.sysname, uName.release);
 	}
 	else
 	{
