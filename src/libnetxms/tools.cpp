@@ -493,6 +493,18 @@ BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName)
 
 
 //
+// Check if given name is a valid script name
+//
+
+BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(TCHAR *pszName)
+{
+   static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_:");
+   return (pszName[0] != 0) && (!isdigit(pszName[0])) && (pszName[0] != ':') &&
+          (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName));
+}
+
+
+//
 // Convert byte array to text representation
 //
 

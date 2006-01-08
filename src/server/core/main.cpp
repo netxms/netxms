@@ -500,7 +500,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
    ShutdownMailer();
    ShutdownSMSSender();
 
-   ThreadSleep(2);     // Give other threads a chance to terminate in a safe way
+   ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
    DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown");
 
    // Wait for critical threads
@@ -530,8 +530,8 @@ void NXCORE_EXPORTABLE Shutdown(void)
    DbgPrintf(AF_DEBUG_MISC, "Event processing stopped");
 
    // Delete all objects
-   for(i = 0; i < g_dwIdIndexSize; i++)
-      delete g_pIndexById[i].pObject;
+   //for(i = 0; i < g_dwIdIndexSize; i++)
+   //   delete g_pIndexById[i].pObject;
 
    delete g_pScriptLibrary;
 

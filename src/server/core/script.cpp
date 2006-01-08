@@ -106,3 +106,42 @@ void LoadScripts(void)
       DBFreeResult(hResult);
    }
 }
+
+
+//
+// Reload script from database
+//
+
+void ReloadScript(DWORD dwScriptId)
+{
+   TCHAR *pszCode, szQuery[256], szError[1024];
+   DB_RESULT hResult;
+   NXSL_Program *pScript;
+
+   g_pScriptLibrary->Lock();
+   g_pScriptLibrary->DeleteScript(dwScriptId);
+   
+   _stprintf(szQuery, _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         pszCode = _tcsdup(DBGetField(hResult, 0, 1));
+         DecodeSQLString(pszCode);
+         pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024);
+         free(pszCode);
+         if (pScript != NULL)
+         {
+            g_pScriptLibrary->AddScript(dwScriptId, DBGetField(hResult, 0, 0), pScript);
+         }
+         else
+         {
+            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss",
+                     dwScriptId, DBGetField(hResult, 0, 0), szError);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   g_pScriptLibrary->Unlock();
+}

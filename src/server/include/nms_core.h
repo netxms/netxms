@@ -393,6 +393,9 @@ private:
    void CreateNewLPPID(DWORD dwRqId);
    void OpenLPP(CSCPMessage *pRequest);
    void SendServerStats(DWORD dwRqId);
+   void SendScriptList(DWORD dwRqId);
+   void SendScript(CSCPMessage *pRequest);
+   void UpdateScript(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

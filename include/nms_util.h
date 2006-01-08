@@ -223,6 +223,7 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName);
+   BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(TCHAR *pszName);
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer);

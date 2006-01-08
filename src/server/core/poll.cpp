@@ -33,7 +33,6 @@ struct __poller_state
    time_t timestamp;
    char szMsg[128];
    char szInfo[128];
-   THREAD handle;
 };
 
 
@@ -366,19 +365,19 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
 
    // Start status pollers
    for(i = 0, nIndex = 0; i < iNumStatusPollers; i++, nIndex++)
-      m_pPollerState[nIndex].handle = ThreadCreateEx(StatusPoller, 0, (void *)nIndex);
+      ThreadCreate(StatusPoller, 0, (void *)nIndex);
 
    // Start configuration pollers
    for(i = 0; i < iNumConfigPollers; i++, nIndex++)
-      m_pPollerState[nIndex].handle = ThreadCreateEx(ConfigurationPoller, 0, (void *)nIndex);
+      ThreadCreate(ConfigurationPoller, 0, (void *)nIndex);
 
    // Start routing table pollers
    for(i = 0; i < iNumRoutePollers; i++, nIndex++)
-      m_pPollerState[nIndex].handle = ThreadCreateEx(RoutePoller, 0, (void *)nIndex);
+      ThreadCreate(RoutePoller, 0, (void *)nIndex);
 
    // Start discovery pollers
    for(i = 0; i < iNumDiscoveryPollers; i++, nIndex++)
-      m_pPollerState[nIndex].handle = ThreadCreateEx(DiscoveryPoller, 0, (void *)nIndex);
+      ThreadCreate(DiscoveryPoller, 0, (void *)nIndex);
 
    dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
    iCounter = 0;
@@ -443,14 +442,6 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       g_routePollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumDiscoveryPollers; i++)
       g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
-
-   // Wait for all pollers
-   DbgPrintf(AF_DEBUG_MISC, "NodePollManager: waiting for poller threads");
-   for(i = 0; i < m_iNumPollers; i++)
-      ThreadJoin(m_pPollerState[i].handle);
-
-   m_iNumPollers = 0;
-   safe_free(m_pPollerState);
 
    DbgPrintf(AF_DEBUG_MISC, "NodePollManager: main thread terminated");
    return THREAD_OK;

@@ -383,6 +383,8 @@ typedef struct
 #define CMD_GENERATE_OBJECT_TOOL_ID 0x0096
 #define CMD_GET_SERVER_STATS        0x0097
 #define CMD_GET_SCRIPT_LIST         0x0098
+#define CMD_GET_SCRIPT              0x0099
+#define CMD_UPDATE_SCRIPT           0x009A
 
 
 //
@@ -595,6 +597,8 @@ typedef struct
 #define VID_NETXMSD_PROCESS_VMSIZE  ((DWORD)204)
 #define VID_NUM_SESSIONS            ((DWORD)205)
 #define VID_NUM_SCRIPTS             ((DWORD)206)
+#define VID_SCRIPT_ID               ((DWORD)207)
+#define VID_SCRIPT_CODE             ((DWORD)208)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

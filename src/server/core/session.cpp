@@ -892,6 +892,15 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_SERVER_STATS:
             SendServerStats(pMsg->GetId());
             break;
+         case CMD_GET_SCRIPT_LIST:
+            SendScriptList(pMsg->GetId());
+            break;
+         case CMD_GET_SCRIPT:
+            SendScript(pMsg);
+            break;
+         case CMD_UPDATE_SCRIPT:
+            UpdateScript(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -5819,5 +5828,142 @@ void ClientSession::SendServerStats(DWORD dwRqId)
 #endif
 
    // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Send script list
+//
+
+void ClientSession::SendScriptList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   {
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      g_pScriptLibrary->Lock();
+      g_pScriptLibrary->FillMessage(&msg);
+      g_pScriptLibrary->Unlock();
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Send script
+//
+
+void ClientSession::SendScript(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD dwScriptId;
+   TCHAR *pszCode, szQuery[256];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   {
+      dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
+      _sntprintf(szQuery, 256, _T("SELECT script_code FROM script_library WHERE script_id=%d"), dwScriptId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            pszCode = _tcsdup(DBGetField(hResult, 0, 0));
+            DecodeSQLString(pszCode);
+            msg.SetVariable(VID_SCRIPT_CODE, pszCode);
+            free(pszCode);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_ID);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Update script
+//
+
+void ClientSession::UpdateScript(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR *pszCode, *pszEscCode, *pszQuery, szName[MAX_OBJECT_NAME];
+   DWORD dwScriptId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   {
+      dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
+      pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
+      if (IsValidScriptName(szName))
+      {
+         pszCode = pRequest->GetVariableStr(VID_SCRIPT_CODE);
+         if (pszCode != NULL)
+         {
+            pszEscCode = EncodeSQLString(pszCode);
+            free(pszCode);
+            pszQuery = (TCHAR *)malloc((_tcslen(pszEscCode) + 256) * sizeof(TCHAR));
+            if (dwScriptId == 0)
+            {
+               // New script
+               dwScriptId = CreateUniqueId(IDG_SCRIPT);
+               _stprintf(pszQuery, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,'%s','%s')"),
+                         dwScriptId, szName, pszEscCode);
+            }
+            else
+            {
+               _stprintf(pszQuery, _T("UPDATE script_library SET script_name='%s',script_code='%s' WHERE script_id=%d"),
+                         szName, pszEscCode, dwScriptId);
+            }
+            free(pszEscCode);
+            if (DBQuery(g_hCoreDB, pszQuery))
+            {
+               ReloadScript(dwScriptId);
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+            free(pszQuery);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_REQUEST);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_NAME);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
    SendMessage(&msg);
 }

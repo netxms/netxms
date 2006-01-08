@@ -305,6 +305,8 @@ typedef void * NXC_SESSION;
 #define RCC_CORRUPTED_MIB_FILE      ((DWORD)53)
 #define RCC_TRANSFER_IN_PROGRESS    ((DWORD)54)
 #define RCC_INVALID_LPP_ID          ((DWORD)55)
+#define RCC_INVALID_SCRIPT_ID       ((DWORD)56)
+#define RCC_INVALID_SCRIPT_NAME     ((DWORD)57)
 
 
 //
@@ -364,8 +366,9 @@ typedef void * NXC_SESSION;
 #define SYSTEM_ACCESS_MANAGE_PACKAGES     0x0200
 #define SYSTEM_ACCESS_MANAGE_LPP          0x0400
 #define SYSTEM_ACCESS_MANAGE_TOOLS        0x0800
+#define SYSTEM_ACCESS_MANAGE_SCRIPTS      0x1000
 
-#define SYSTEM_ACCESS_FULL                0x0FFF
+#define SYSTEM_ACCESS_FULL                0x1FFF
 
 
 //
