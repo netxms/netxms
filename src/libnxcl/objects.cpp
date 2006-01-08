@@ -312,6 +312,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject, *pNewObject;
+	TCHAR *pTmp;
 
    switch(pMsg->GetCode())
    {
@@ -325,8 +326,10 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
          CompleteSync(RCC_SUCCESS);
          break;
       case CMD_OBJECT:
+			pTmp = pMsg->GetVariableStr(VID_OBJECT_NAME);
          DebugPrintf(_T("RECV_OBJECT: ID=%d Name=\"%s\" Class=%d"), pMsg->GetVariableLong(VID_OBJECT_ID),
-                     pMsg->GetVariableStr(VID_OBJECT_NAME), pMsg->GetVariableShort(VID_OBJECT_CLASS));
+                     pTmp, pMsg->GetVariableShort(VID_OBJECT_CLASS));
+			free(pTmp);
       
          // Create new object from message and add it to list
          pNewObject = NewObjectFromMsg(pMsg);
