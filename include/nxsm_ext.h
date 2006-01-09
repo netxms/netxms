@@ -1,4 +1,4 @@
-/* $Id: nxsm_ext.h,v 1.3 2005-12-21 22:42:00 alk Exp $ */
+/* $Id: nxsm_ext.h,v 1.4 2006-01-09 07:40:35 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Session Manager
@@ -67,7 +67,11 @@ typedef struct t_W_NXSM_ALARM
 typedef struct
 {
    DWORD dwNumAlarms;
-   DWORD dwAlarmsBySeverity[5];
+	DWORD dwNumAlarmsNormal;
+	DWORD dwNumAlarmsWarning;
+	DWORD dwNumAlarmsMinor;
+	DWORD dwNumAlarmsMajor;
+	DWORD dwNumAlarmsCritical;
    DWORD dwNumObjects;
    DWORD dwNumNodes;
    DWORD dwNumDCI;
@@ -85,6 +89,9 @@ typedef struct
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2005/12/21 22:42:00  alk
++ get server stats
+
 Revision 1.2  2005/12/21 03:05:40  alk
 1) nxsmcl added to configure
 2) Makefile.PL+autoconf -- looks like it works, but...
