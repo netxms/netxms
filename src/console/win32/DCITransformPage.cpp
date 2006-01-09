@@ -47,6 +47,7 @@ void CDCITransformPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDCITransformPage)
+	DDX_Control(pDX, IDC_EDIT_FORMULA, m_wndEditScript);
 	DDX_Control(pDX, IDC_COMBO_DELTA, m_wndDeltaList);
 	DDX_CBIndex(pDX, IDC_COMBO_DELTA, m_iDeltaProc);
 	DDX_Text(pDX, IDC_EDIT_FORMULA, m_strFormula);
@@ -74,6 +75,8 @@ BOOL CDCITransformPage::OnInitDialog()
    for(i = 0; m_pszMethodList[i] != NULL; i++)
       m_wndDeltaList.AddString(m_pszMethodList[i]);
    m_wndDeltaList.SelectString(-1, m_pszMethodList[m_iDeltaProc]);
+
+   m_wndEditScript.SetFont(&g_fontCode);
 
    EnableWarning();
 	return TRUE;

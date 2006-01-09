@@ -1245,6 +1245,17 @@ typedef struct
 
 
 //
+// Script info
+//
+
+typedef struct
+{
+   DWORD dwId;
+   TCHAR szName[MAX_DB_STRING];
+} NXC_SCRIPT_INFO;
+
+
+//
 // Functions
 //
 
@@ -1444,6 +1455,12 @@ void LIBNXCL_EXPORTABLE NXCDestroyLPPList(NXC_LPP_LIST *pList);
 DWORD LIBNXCL_EXPORTABLE NXCRequestNewLPPID(NXC_SESSION hSession, DWORD *pdwId);
 DWORD LIBNXCL_EXPORTABLE NXCOpenLPP(NXC_SESSION hSession, NXC_LPP **ppPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyLPP(NXC_LPP *pPolicy);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScrpts,
+                                          NXC_SCRIPT_INFO **ppList);
+DWORD LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, DWORD dwId, TCHAR **ppszCode);
+DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD dwId,
+                                         TCHAR *pszName, TCHAR *pszCode);
 
 #ifdef __cplusplus
 }

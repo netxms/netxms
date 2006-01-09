@@ -239,6 +239,12 @@ BOOL CConsoleApp::InitInstance()
    if (!m_ctxMenu.LoadMenu(IDM_CONTEXT))
       MessageBox(NULL, "FAILED", "", 0);
 
+   // Create global fonts
+   g_fontCode.CreateFont(-MulDiv(10, GetDeviceCaps(GetDC(m_pMainWnd->m_hWnd), LOGPIXELSY), 72),
+                         0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                         FIXED_PITCH | FF_DONTCARE, "Courier");
+	
 	// Load shared MDI menus and accelerator table
 	HINSTANCE hInstance = AfxGetResourceHandle();
 

@@ -795,6 +795,7 @@ src/libnxcl/mib.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/objtools.cpp -text
 src/libnxcl/package.cpp -text
+src/libnxcl/script.cpp -text
 src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text

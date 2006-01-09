@@ -60,9 +60,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPa
    msg.SetId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    *pdwNumPackages = 0;
    *ppList = NULL;
+
+   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwResult == RCC_SUCCESS)
    {
       *pdwNumPackages = 0;

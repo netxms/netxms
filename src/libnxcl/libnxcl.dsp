@@ -157,6 +157,10 @@ SOURCE=.\package.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\script.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\server.cpp
 # End Source File
 # Begin Source File

@@ -22,6 +22,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CDCITransformPage)
 	enum { IDD = IDD_DCI_TRANSFORM };
+	CEdit	m_wndEditScript;
 	CComboBox	m_wndDeltaList;
 	int		m_iDeltaProc;
 	CString	m_strFormula;
