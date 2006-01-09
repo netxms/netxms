@@ -26,6 +26,8 @@ int g_nSoundId[] = { IDR_SND_ALARM1, IDR_SND_ALARM2, IDR_SND_BEEP,
                      IDR_SND_MISC4, IDR_SND_MISC5, IDR_SND_RING1,
                      IDR_SND_RING2, IDR_SND_SIREN1, IDR_SND_SIREN2, 0 };
 HINSTANCE g_hInstance;
+COLORREF g_rgbInfoLineButtons = RGB(130, 70, 210);
+COLORREF g_rgbInfoLineBackground = RGB(255, 255, 255);
 
 
 //

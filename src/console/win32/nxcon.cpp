@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_SYSLOG, OnViewSyslog)
 	ON_COMMAND(ID_CONTROLPANEL_LOGPROCESSING, OnControlpanelLogprocessing)
 	ON_COMMAND(ID_CONTROLPANEL_OBJECTTOOLS, OnControlpanelObjecttools)
+	ON_COMMAND(ID_CONTROLPANEL_SCRIPTLIBRARY, OnControlpanelScriptlibrary)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -97,6 +98,7 @@ CConsoleApp::CConsoleApp()
    m_bPackageMgrActive = FALSE;
    m_bServerCfgEditorActive = FALSE;
    m_bObjToolsEditorActive = FALSE;
+   m_bScriptManagerActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
    m_hwndEventBrowser = NULL;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
@@ -329,6 +331,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), "&Object tools");
 
+   m_hScriptManagerMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   //InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), "&Script");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -347,6 +353,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hAgentCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
 	m_hLPPEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjToolsEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_TOOLS_EDITOR));
+	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -425,6 +432,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hAgentCfgEditorAccel);
    SafeFreeResource(m_hLPPEditorMenu);
    SafeFreeResource(m_hLPPEditorAccel);
+   SafeFreeResource(m_hScriptManagerMenu);
+   SafeFreeResource(m_hScriptManagerAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -600,6 +609,10 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_bLPPEditorActive = TRUE;
          m_pwndLPPEditor = (CLPPList *)pWnd;
          break;
+      case IDR_SCRIPT_MANAGER:
+         m_bScriptManagerActive = TRUE;
+         m_pwndScriptManager = (CScriptManager *)pWnd;
+         break;
       default:
          break;
    }
@@ -676,6 +689,9 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          break;
       case IDR_LPP_EDITOR:
          m_bLPPEditorActive = FALSE;
+         break;
+      case IDR_SCRIPT_MANAGER:
+         m_bScriptManagerActive = FALSE;
          break;
       default:
          break;
@@ -993,6 +1009,28 @@ void CConsoleApp::OnControlpanelObjecttools()
       {
          ErrorBox(dwResult, _T("Unable to lock object tools: %s"));
       }
+   }
+}
+
+
+//
+// Handler for WM_COMMAND::ID_CONTROLPANEL_SCRIPTLIBRARY message
+//
+
+void CConsoleApp::OnControlpanelScriptlibrary() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_bScriptManagerActive)
+   {
+      m_pwndScriptManager->BringWindowToTop();
+   }
+   else
+   {
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CScriptManager),
+                             IDR_SCRIPT_MANAGER,
+                             m_hScriptManagerMenu, m_hScriptManagerAccel);
    }
 }
 

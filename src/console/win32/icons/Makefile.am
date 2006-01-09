@@ -20,4 +20,5 @@ EXTRA_DIST = \
 	SeverityNormal.ico SeverityWarning.ico sms.ico sortdown.ico \
 	sort_up.ico tree.ico unsupported.ico user.ico users.ico \
 	nack.ico running.ico pending.ico Tips.ico objtools.ico \
-	command.ico
+	command.ico script_library.ico script.ico folder_c.ico \
+	folder_o.ico

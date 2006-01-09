@@ -106,6 +106,10 @@ SOURCE=.\AlarmSoundDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\FlatButton.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\LoginDialog.cpp
 # End Source File
 # Begin Source File
@@ -140,6 +144,10 @@ SOURCE=.\tools.cpp
 # Begin Source File
 
 SOURCE=.\AlarmSoundDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FlatButton.h
 # End Source File
 # Begin Source File
 

@@ -287,6 +287,7 @@ DWORD ExtractWindowParamULong(TCHAR *pszStr, TCHAR *pszParam, DWORD dwDefault);
 void CopyMenuItems(CMenu *pDst, CMenu *pSrc);
 TCHAR **CopyStringList(TCHAR **ppList, DWORD dwSize);
 void DestroyStringList(TCHAR **ppList, DWORD dwSize);
+HTREEITEM FindTreeCtrlItem(CTreeCtrl &ctrl, HTREEITEM hRoot, TCHAR *pszText);
 
 
 //

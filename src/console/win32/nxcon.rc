@@ -120,6 +120,10 @@ IDI_DOCUMENT            ICON    DISCARDABLE     "icons\\document.ico"
 IDI_LPP                 ICON    DISCARDABLE     "icons\\lpp.ico"
 IDI_OBJTOOLS            ICON    DISCARDABLE     "icons\\objtools.ico"
 IDI_COMMAND             ICON    DISCARDABLE     "icons\\command.ico"
+IDI_SCRIPT_LIBRARY      ICON    DISCARDABLE     "icons\\script_library.ico"
+IDI_SCRIPT              ICON    DISCARDABLE     "icons\\script.ico"
+IDI_CLOSED_FOLDER       ICON    DISCARDABLE     "icons\\folder_c.ico"
+IDI_OPEN_FOLDER         ICON    DISCARDABLE     "icons\\folder_o.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -348,6 +352,8 @@ BEGIN
         MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
 
         MENUITEM "&Object Tools",               ID_CONTROLPANEL_OBJECTTOOLS
+        MENUITEM "Script &Library",             ID_CONTROLPANEL_SCRIPTLIBRARY
+
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
@@ -2821,6 +2827,7 @@ BEGIN
     IDR_SYSLOG_BROWSER      "\nSyslog\nSyslog"
     IDR_LPP_EDITOR          "\nLog Processing Configuration\nLog Processing Configuration"
     IDR_OBJECT_TOOLS_EDITOR "\nObject Tools\nObject Tools"
+    IDR_SCRIPT_MANAGER      "\nScript Library\nScript Library"
     IDR_EVENT_EDITOR        "\nEvent Editor\nEvent Editor"
     IDR_USER_EDITOR         "\nUsers and Groups\nUsers and Groups"
     IDR_NETWORK_SUMMARY     "\nNetwork Summary\nNetwork Summary"

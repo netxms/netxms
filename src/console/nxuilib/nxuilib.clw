@@ -2,15 +2,16 @@
 
 [General Info]
 Version=1
-ClassCount=2
+ClassCount=3
 ResourceCount=2
 NewFileInclude1=#include "stdafx.h"
 Class1=CLoginDialog
-LastClass=CAlarmSoundDlg
+LastClass=CFlatButton
 Resource1=IDD_LOGIN (English (U.S.))
 Class2=CAlarmSoundDlg
 LastTemplate=CDialog
 Resource2=IDD_ALARM_SOUNDS (English (U.S.))
+Class3=CFlatButton
 
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
@@ -77,4 +78,13 @@ BaseClass=CDialog
 Filter=D
 LastObject=CAlarmSoundDlg
 VirtualFilter=dWC
+
+[CLS:CFlatButton]
+Type=0
+HeaderFile=FlatButton.h
+ImplementationFile=FlatButton.cpp
+BaseClass=CWnd
+Filter=W
+VirtualFilter=WC
+LastObject=CFlatButton
 

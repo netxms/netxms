@@ -110,10 +110,6 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\FlatButton.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\globals.cpp
 # End Source File
 # Begin Source File
@@ -156,10 +152,6 @@ SOURCE=.\tools.cpp
 # Begin Source File
 
 SOURCE=.\AlarmBrowser.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\FlatButton.h
 # End Source File
 # Begin Source File
 

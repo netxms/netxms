@@ -384,8 +384,6 @@ src/console/cmdline/nxcmd.dsw -text
 src/console/cmdline/nxcmd.h -text
 src/console/nxav/AlarmBrowser.cpp -text
 src/console/nxav/AlarmBrowser.h -text
-src/console/nxav/FlatButton.cpp -text
-src/console/nxav/FlatButton.h -text
 src/console/nxav/InfoLine.cpp -text
 src/console/nxav/InfoLine.h -text
 src/console/nxav/MainFrm.cpp -text
@@ -427,6 +425,8 @@ src/console/nxav/resource.h -text
 src/console/nxav/tools.cpp -text
 src/console/nxuilib/AlarmSoundDlg.cpp -text
 src/console/nxuilib/AlarmSoundDlg.h -text
+src/console/nxuilib/FlatButton.cpp -text
+src/console/nxuilib/FlatButton.h -text
 src/console/nxuilib/LoginDialog.cpp -text
 src/console/nxuilib/LoginDialog.h -text
 src/console/nxuilib/Makefile.am -text
@@ -632,6 +632,10 @@ src/console/win32/RuleSeverityDlg.cpp -text
 src/console/win32/RuleSeverityDlg.h -text
 src/console/win32/SaveDesktopDlg.cpp -text
 src/console/win32/SaveDesktopDlg.h -text
+src/console/win32/ScriptManager.cpp -text
+src/console/win32/ScriptManager.h -text
+src/console/win32/ScriptView.cpp -text
+src/console/win32/ScriptView.h -text
 src/console/win32/ServerCfgEditor.cpp -text
 src/console/win32/ServerCfgEditor.h -text
 src/console/win32/StdAfx.cpp -text
@@ -692,6 +696,8 @@ src/console/win32/icons/document.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/editor.ico -text
 src/console/win32/icons/exec.ico -text
+src/console/win32/icons/folder_c.ico -text
+src/console/win32/icons/folder_o.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/iexplore.ico -text
 src/console/win32/icons/log.ico -text
@@ -712,6 +718,8 @@ src/console/win32/icons/pending.ico -text
 src/console/win32/icons/question.ico -text
 src/console/win32/icons/rexec.ico -text
 src/console/win32/icons/running.ico -text
+src/console/win32/icons/script.ico -text
+src/console/win32/icons/script_library.ico -text
 src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text

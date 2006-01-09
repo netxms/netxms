@@ -171,6 +171,10 @@
 #define IDD_NEW_OBJECT_TOOL             294
 #define IDI_COMMAND                     295
 #define IDD_OBJTOOL_OPTIONS             296
+#define IDI_SCRIPT_LIBRARY              297
+#define IDI_SCRIPT                      298
+#define IDI_CLOSED_FOLDER               299
+#define IDI_OPEN_FOLDER                 300
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -473,6 +477,7 @@
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
 #define IDR_OBJECT_TOOLS_EDITOR         8103
+#define IDR_SCRIPT_MANAGER              8104
 #define IDR_EVENT_EDITOR                8105
 #define IDR_USER_EDITOR                 8106
 #define IDR_NETWORK_SUMMARY             8107
@@ -627,6 +632,7 @@
 #define ID_OBJECTTOOLS_DELETE           32962
 #define ID_ALARM_ENABLE_SPEAKER         32966
 #define ID_ALARM_SOUNDCONFIGURATION     32967
+#define ID_CONTROLPANEL_SCRIPTLIBRARY   32968
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -635,8 +641,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        297
-#define _APS_NEXT_COMMAND_VALUE         32968
+#define _APS_NEXT_RESOURCE_VALUE        301
+#define _APS_NEXT_COMMAND_VALUE         32969
 #define _APS_NEXT_CONTROL_VALUE         1337
 #define _APS_NEXT_SYMED_VALUE           126
 #endif

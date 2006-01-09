@@ -8,7 +8,7 @@ NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxav.h"
 LastPage=0
 
-ClassCount=10
+ClassCount=9
 Class1=CAlarmViewApp
 Class3=CMainFrame
 Class4=CAboutDlg
@@ -22,8 +22,7 @@ Class6=CInfoLine
 Class7=CRequestProcessingDlg
 Resource3=IDD_ABOUTBOX (English (U.S.))
 Resource4=IDR_MAINFRAME
-Class9=CFlatButton
-Class10=CSettingsDlg
+Class9=CSettingsDlg
 Resource5=IDM_CONTEXT
 Resource7=IDD_REQUEST_WAIT (English (U.S.))
 Resource8=IDR_MAINFRAME (English (U.S.))
@@ -134,15 +133,6 @@ ImplementationFile=AlarmBrowser.cpp
 BaseClass=CHtmlView
 Filter=W
 VirtualFilter=7VWC
-
-[CLS:CFlatButton]
-Type=0
-HeaderFile=FlatButton.h
-ImplementationFile=FlatButton.cpp
-BaseClass=CWnd
-Filter=W
-VirtualFilter=WC
-LastObject=CFlatButton
 
 [ACL:IDR_MAINFRAME (English (U.S.))]
 Type=1

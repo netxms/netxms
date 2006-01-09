@@ -672,3 +672,22 @@ void DestroyStringList(TCHAR **ppList, DWORD dwSize)
       free(ppList[i]);
    safe_free(ppList);
 }
+
+
+//
+// Find item by text in tree control's subtree
+//
+
+HTREEITEM FindTreeCtrlItem(CTreeCtrl &ctrl, HTREEITEM hRoot, TCHAR *pszText)
+{
+   HTREEITEM hItem;
+
+   hItem = ctrl.GetChildItem(hRoot);
+   while(hItem != NULL)
+   {
+      if (!_tcsicmp(ctrl.GetItemText(hItem), pszText))
+         return hItem;
+      hItem = ctrl.GetNextItem(hItem, TVGN_NEXT);
+   }
+   return NULL;
+}

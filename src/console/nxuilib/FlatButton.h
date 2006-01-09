@@ -7,10 +7,14 @@
 // FlatButton.h : header file
 //
 
+extern NXUILIB_EXPORTABLE COLORREF g_rgbInfoLineButtons;
+extern NXUILIB_EXPORTABLE COLORREF g_rgbInfoLineBackground;
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CFlatButton window
 
-class CFlatButton : public CWnd
+class NXUILIB_EXPORTABLE CFlatButton : public CWnd
 {
 // Construction
 public:

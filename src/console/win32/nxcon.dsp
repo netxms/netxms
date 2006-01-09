@@ -465,6 +465,14 @@ SOURCE=.\SaveDesktopDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ScriptManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScriptView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ServerCfgEditor.cpp
 # End Source File
 # Begin Source File
@@ -918,6 +926,14 @@ SOURCE=.\SaveDesktopDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ScriptManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScriptView.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ServerCfgEditor.h
 # End Source File
 # Begin Source File
@@ -1074,6 +1090,14 @@ SOURCE=.\icons\exec.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\folder_c.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\folder_o.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\graph.ico
 # End Source File
 # Begin Source File
@@ -1191,6 +1215,14 @@ SOURCE=.\icons\RuleManager.ico
 # Begin Source File
 
 SOURCE=.\icons\running.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\script.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\script_library.ico
 # End Source File
 # Begin Source File
 

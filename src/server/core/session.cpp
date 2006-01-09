@@ -5910,7 +5910,7 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
 void ClientSession::UpdateScript(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR *pszCode, *pszEscCode, *pszQuery, szName[MAX_OBJECT_NAME];
+   TCHAR *pszCode, *pszEscCode, *pszQuery, szName[MAX_DB_STRING];
    DWORD dwScriptId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5918,7 +5918,7 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
-      pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
+      pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
       if (IsValidScriptName(szName))
       {
          pszCode = pRequest->GetVariableStr(VID_SCRIPT_CODE);
@@ -5926,7 +5926,7 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
          {
             pszEscCode = EncodeSQLString(pszCode);
             free(pszCode);
-            pszQuery = (TCHAR *)malloc((_tcslen(pszEscCode) + 256) * sizeof(TCHAR));
+            pszQuery = (TCHAR *)malloc((_tcslen(pszEscCode) + MAX_DB_STRING + 256) * sizeof(TCHAR));
             if (dwScriptId == 0)
             {
                // New script

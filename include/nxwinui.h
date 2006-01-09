@@ -67,6 +67,7 @@ typedef struct
 
 #include "../src/console/nxuilib/resource.h"
 #include "../src/console/nxuilib/LoginDialog.h"
+#include "../src/console/nxuilib/FlatButton.h"
 
 
 //

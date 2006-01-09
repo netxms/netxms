@@ -57,6 +57,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "ObjectToolsEditor.h"
 #include "SyslogBrowser.h"
 #include "LPPList.h"
+#include "ScriptManager.h"
 
 
 //
@@ -138,6 +139,7 @@ protected:
    CPackageMgr *m_pwndPackageMgr;
    CServerCfgEditor *m_pwndServerCfgEditor;
    CObjectToolsEditor *m_pwndObjToolsEditor;
+   CScriptManager *m_pwndScriptManager;
    CLPPList *m_pwndLPPEditor;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
@@ -176,6 +178,8 @@ protected:
 	HACCEL m_hAgentCfgEditorAccel;// Accelerator for agent configuration editor
 	HMENU m_hObjToolsEditorMenu;  // Menu for object tools editor
 	HACCEL m_hObjToolsEditorAccel;// Accelerator for object tools editor
+	HMENU m_hScriptManagerMenu;   // Menu for script manager
+	HACCEL m_hScriptManagerAccel; // Accelerator for script manager
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
@@ -205,6 +209,7 @@ public:
 	afx_msg void OnViewSyslog();
 	afx_msg void OnControlpanelLogprocessing();
 	afx_msg void OnControlpanelObjecttools();
+	afx_msg void OnControlpanelScriptlibrary();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -224,6 +229,7 @@ private:
    BOOL m_bPackageMgrActive;
    BOOL m_bServerCfgEditorActive;
    BOOL m_bObjToolsEditorActive;
+   BOOL m_bScriptManagerActive;
 
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 

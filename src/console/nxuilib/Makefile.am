@@ -11,6 +11,7 @@
 SUBDIRS = res sounds
 EXTRA_DIST = \
 	AlarmSoundDlg.cpp AlarmSoundDlg.h \
+	FlatButton.cpp FlatButton.h \
 	LoginDialog.cpp LoginDialog.h \
 	nxuilib.clw \
 	nxuilib.cpp \

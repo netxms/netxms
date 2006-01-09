@@ -95,6 +95,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SETUP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LPP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_OBJTOOLS));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -107,6 +108,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("Server Configuration", 6, ID_CONTROLPANEL_SERVERCFG);
    //AddItem("Log Processing", 7, ID_CONTROLPANEL_LOGPROCESSING);
    AddItem("Object Tools", 8, ID_CONTROLPANEL_OBJECTTOOLS);
+   AddItem("Script Library", 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 
