@@ -633,6 +633,9 @@
 #define ID_ALARM_ENABLE_SPEAKER         32966
 #define ID_ALARM_SOUNDCONFIGURATION     32967
 #define ID_CONTROLPANEL_SCRIPTLIBRARY   32968
+#define ID_SCRIPT_NEW                   32969
+#define ID_SCRIPT_EDIT                  32970
+#define ID_SCRIPT_SAVE                  32971
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 
@@ -642,7 +645,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        301
-#define _APS_NEXT_COMMAND_VALUE         32969
+#define _APS_NEXT_COMMAND_VALUE         32972
 #define _APS_NEXT_CONTROL_VALUE         1337
 #define _APS_NEXT_SYMED_VALUE           126
 #endif

@@ -25,16 +25,24 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CScriptView)
+	protected:
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 public:
-	void SetEditMode(DWORD dwScriptId);
+	BOOL ValidateClose(void);
+	void SetEditMode(DWORD dwScriptId, LPCTSTR pszScriptName);
 	void SetListMode(CTreeCtrl &wndTreeCtrl, HTREEITEM hRoot);
 	virtual ~CScriptView();
 
 	// Generated message map functions
 protected:
+	CFont m_fontStatus;
+	CString m_strScriptName;
+	BOOL m_bIsModified;
+	DWORD m_dwScriptId;
+	CFlatButton m_wndButton;
 	int m_nMode;
 	CImageList m_imageList;
 	CEdit m_wndEditor;
@@ -42,7 +50,11 @@ protected:
 	//{{AFX_MSG(CScriptView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnScriptEdit();
+	afx_msg void OnUpdateScriptEdit(CCmdUI* pCmdUI);
+	afx_msg void OnPaint();
 	//}}AFX_MSG
+   afx_msg void OnEditorChange();
 	DECLARE_MESSAGE_MAP()
 };
 

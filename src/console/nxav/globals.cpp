@@ -61,4 +61,5 @@ TCHAR g_szWorkDir[MAX_PATH];
 // Colors
 //
 
+COLORREF g_rgbInfoLineBackground = RGB(255, 255, 255);
 COLORREF g_rgbInfoLineTimer = RGB(0, 0, 0);

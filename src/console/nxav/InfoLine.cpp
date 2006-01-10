@@ -41,7 +41,8 @@ END_MESSAGE_MAP()
 
 BOOL CInfoLine::PreCreateWindow(CREATESTRUCT& cs) 
 {
-   cs.lpszClass = AfxRegisterWndClass(0, LoadCursor(NULL, IDC_ARROW), CreateSolidBrush(g_rgbInfoLineBackground));
+   cs.lpszClass = AfxRegisterWndClass(0, LoadCursor(NULL, IDC_ARROW),
+                                      CreateSolidBrush(g_rgbInfoLineBackground));
 	
 	return CWnd::PreCreateWindow(cs);
 }

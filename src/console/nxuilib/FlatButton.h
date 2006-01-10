@@ -7,8 +7,8 @@
 // FlatButton.h : header file
 //
 
-extern NXUILIB_EXPORTABLE COLORREF g_rgbInfoLineButtons;
-extern NXUILIB_EXPORTABLE COLORREF g_rgbInfoLineBackground;
+extern COLORREF NXUILIB_EXPORTABLE g_rgbFlatButtonColor;
+extern COLORREF NXUILIB_EXPORTABLE g_rgbFlatButtonBackground;
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(CScriptManager, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_NOTIFY(TVN_SELCHANGING, AFX_IDW_PANE_FIRST, OnTreeViewSelChanging)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
 END_MESSAGE_MAP()
 
@@ -136,11 +137,11 @@ void CScriptManager::OnViewRefresh()
 {
    DWORD i, dwResult, dwNumScripts;
    TCHAR *pszCurr, *pszNext;
-   HTREEITEM hRoot, hItem, hNextItem;
+   HTREEITEM hItem, hNextItem;
    NXC_SCRIPT_INFO *pList;
 
    m_wndTreeCtrl.DeleteAllItems();
-   hRoot = m_wndTreeCtrl.InsertItem(_T("[root]"), 0, 0);
+   m_hRootItem = m_wndTreeCtrl.InsertItem(_T("[root]"), 0, 0);
 
    dwResult = DoRequestArg3(NXCGetScriptList, g_hSession, &dwNumScripts,
                             &pList, _T("Loading list of scripts..."));
@@ -148,7 +149,7 @@ void CScriptManager::OnViewRefresh()
    {
       for(i = 0; i < dwNumScripts; i++)
       {
-         for(pszCurr = pList[i].szName, hItem = hRoot; ;
+         for(pszCurr = pList[i].szName, hItem = m_hRootItem; ;
              pszCurr = pszNext + 2, hItem = hNextItem)
          {
             pszNext = _tcsstr(pszCurr, _T("::"));
@@ -181,15 +182,70 @@ void CScriptManager::OnViewRefresh()
 void CScriptManager::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
    DWORD dwId;
+   CString strName;
 
    dwId = m_wndTreeCtrl.GetItemData(lpnmt->itemNew.hItem);
    if (dwId != 0)
    {
-      m_wndScriptView.SetEditMode(dwId);
+      BuildScriptName(lpnmt->itemNew.hItem, strName);
+      m_wndScriptView.SetEditMode(dwId, (LPCTSTR)strName);
    }
    else
    {
       m_wndScriptView.SetListMode(m_wndTreeCtrl, lpnmt->itemNew.hItem);
    }
    *pResult = 0;
+}
+
+
+//
+// WM_NOTIFY::TVN_SELCHANGING message handler
+//
+
+void CScriptManager::OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+{
+   DWORD dwId;
+
+   *pResult = 0;
+   if (lpnmt->itemOld.hItem != NULL)
+   {
+      dwId = m_wndTreeCtrl.GetItemData(lpnmt->itemOld.hItem);
+      if (dwId != 0)
+      {
+         if (!m_wndScriptView.ValidateClose())
+            *pResult = 1;
+      }
+   }
+}
+
+
+//
+// Advanced command routing
+//
+
+BOOL CScriptManager::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+{
+   if (m_wndScriptView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+      return TRUE;
+	
+	return CMDIChildWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+}
+
+
+//
+// Build full script name
+//
+
+void CScriptManager::BuildScriptName(HTREEITEM hLast, CString &strName)
+{
+   HTREEITEM hItem;
+
+   strName = m_wndTreeCtrl.GetItemText(hLast);
+   hItem = m_wndTreeCtrl.GetParentItem(hLast);
+   while(hItem != m_hRootItem)
+   {
+      strName.Insert(0, _T("::"));
+      strName.Insert(0, (LPCTSTR)m_wndTreeCtrl.GetItemText(hItem));
+      hItem = m_wndTreeCtrl.GetParentItem(hItem);
+   }
 }

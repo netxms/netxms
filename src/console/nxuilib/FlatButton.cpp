@@ -42,7 +42,8 @@ END_MESSAGE_MAP()
 
 BOOL CFlatButton::PreCreateWindow(CREATESTRUCT& cs) 
 {
-   cs.lpszClass = AfxRegisterWndClass(0, LoadCursor(NULL, IDC_HAND), CreateSolidBrush(g_rgbInfoLineBackground));
+   cs.lpszClass = AfxRegisterWndClass(0, LoadCursor(NULL, IDC_HAND),
+                                      CreateSolidBrush(g_rgbFlatButtonBackground));
 	
 	return CWnd::PreCreateWindow(cs);
 }
@@ -61,10 +62,10 @@ void CFlatButton::OnPaint()
    RECT rect;
 	
    // Setup DC
-   brLines.CreateSolidBrush(g_rgbInfoLineButtons);
-   brBkgnd.CreateSolidBrush(m_bPressed ? g_rgbInfoLineButtons : g_rgbInfoLineBackground);
-   dc.SetTextColor(m_bPressed ? g_rgbInfoLineBackground : g_rgbInfoLineButtons);
-   dc.SetBkColor(m_bPressed ? g_rgbInfoLineButtons : g_rgbInfoLineBackground);
+   brLines.CreateSolidBrush(g_rgbFlatButtonColor);
+   brBkgnd.CreateSolidBrush(m_bPressed ? g_rgbFlatButtonColor : g_rgbFlatButtonBackground);
+   dc.SetTextColor(m_bPressed ? g_rgbFlatButtonBackground : g_rgbFlatButtonColor);
+   dc.SetBkColor(m_bPressed ? g_rgbFlatButtonColor : g_rgbFlatButtonBackground);
    pFont = dc.SelectObject(m_bMouseHover ? &m_fontFocused : &m_fontNormal);
 
    // Draw frame

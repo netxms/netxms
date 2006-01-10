@@ -25,6 +25,9 @@
 #include "TableView.h"
 #include "WebBrowser.h"
 #include "ObjectPropsStatus.h"
+#include "ServerCfgEditor.h"
+#include "ScriptManager.h"
+#include "TrapEditor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -333,7 +336,8 @@ BOOL CConsoleApp::InitInstance()
 
    m_hScriptManagerMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   //InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), "&Script");
+   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
+   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 20), "&Script");
 
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));

@@ -690,6 +690,10 @@ SOURCE=.\EventSelDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\nxuilib\FlatButton.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.h
 # End Source File
 # Begin Source File
@@ -727,6 +731,10 @@ SOURCE=.\LastValuesPropDlg.h
 # Begin Source File
 
 SOURCE=.\LastValuesView.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nxuilib\LoginDialog.h
 # End Source File
 # Begin Source File
 
@@ -815,6 +823,10 @@ SOURCE=..\..\..\include\nxlog.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxsnmp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxwinui.h
 # End Source File
 # Begin Source File
 

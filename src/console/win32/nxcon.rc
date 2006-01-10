@@ -490,6 +490,12 @@ BEGIN
         MENUITEM "&Edit...\tAlt+Enter",         ID_OBJECTTOOLS_EDIT
         MENUITEM "&Delete\tDel",                ID_OBJECTTOOLS_DELETE
     END
+    POPUP "Script"
+    BEGIN
+        MENUITEM "&New...\tCtrl+N",             ID_SCRIPT_NEW
+        MENUITEM "&Edit\tCtrl+E",               ID_SCRIPT_EDIT
+        MENUITEM "&Save\tCtrl+S",               ID_SCRIPT_SAVE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 

@@ -51,13 +51,19 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "AlarmBrowser.h"
 #include "ConsolePropsGeneral.h"
 #include "ActionEditor.h"
-#include "TrapEditor.h"
 #include "PackageMgr.h"
-#include "ServerCfgEditor.h"
 #include "ObjectToolsEditor.h"
 #include "SyslogBrowser.h"
 #include "LPPList.h"
-#include "ScriptManager.h"
+
+
+//
+// Forward class definition
+//
+
+class CServerCfgEditor;
+class CScriptManager;
+class CTrapEditor;
 
 
 //

@@ -27,12 +27,16 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CScriptManager)
+	public:
+	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
 	protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
+	HTREEITEM m_hRootItem;
+	void BuildScriptName(HTREEITEM hItem, CString &strName);
 	CImageList m_imageList;
 	CScriptView m_wndScriptView;
 	CTreeCtrl m_wndTreeCtrl;
@@ -48,6 +52,7 @@ protected:
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
+   afx_msg void OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 
