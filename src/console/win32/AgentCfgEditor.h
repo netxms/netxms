@@ -39,14 +39,7 @@ protected:
 	CStatusBarCtrl m_wndStatusBar;
 	BOOL SaveConfig(BOOL bApply);
 	CMenu *m_pCtxMenu;
-	CHARRANGE m_crSavedSelection;
-	void OnStopParsing(void);
-	void OnStartParsing(void);
-	BOOL m_bParserActive;
-	void ParseLine(int nLine);
-	void ParseFile(void);
-	void HighlightText(int nStartPos, int nEndPos, COLORREF rgbColor);
-	CRichEditCtrl m_wndEdit;
+	CScintillaCtrl m_wndEditor;
 	DWORD m_dwNodeId;
 	virtual ~CAgentCfgEditor();
 
@@ -72,10 +65,10 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnDestroy();
+	afx_msg void OnEditRedo();
+	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnEditCtrlChange();
-	afx_msg void OnEditCtrlUpdate();
-   afx_msg void OnEditCtrlMsgFilter(NMHDR *pNotifyStruct, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

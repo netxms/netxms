@@ -194,6 +194,12 @@ BOOL CConsoleApp::InitInstance()
 		return FALSE;
 	}
 
+	if (!ScintillaInit())
+	{
+		AfxMessageBox(IDS_SCINTILLA_INIT_FAILED, MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
+
    if (!NXCInitialize())
    {
 		AfxMessageBox(IDS_NXC_INIT_FAILED, MB_OK | MB_ICONSTOP);
@@ -357,7 +363,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hAgentCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
 	m_hLPPEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjToolsEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_TOOLS_EDITOR));
-	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
+	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SCRIPT_MANAGER));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)

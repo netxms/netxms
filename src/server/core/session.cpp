@@ -5839,15 +5839,30 @@ void ClientSession::SendServerStats(DWORD dwRqId)
 void ClientSession::SendScriptList(DWORD dwRqId)
 {
    CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD i, dwNumScripts, dwId;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      g_pScriptLibrary->Lock();
-      g_pScriptLibrary->FillMessage(&msg);
-      g_pScriptLibrary->Unlock();
+      hResult = DBSelect(g_hCoreDB, _T("SELECT script_id,script_name FROM script_library"));
+      if (hResult != NULL)
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         dwNumScripts = DBGetNumRows(hResult);
+         msg.SetVariable(VID_NUM_SCRIPTS, dwNumScripts);
+         for(i = 0, dwId = VID_SCRIPT_LIST_BASE; i < dwNumScripts; i++)
+         {
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
    }
    else
    {
@@ -5944,6 +5959,7 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
             {
                ReloadScript(dwScriptId);
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               msg.SetVariable(VID_SCRIPT_ID, dwScriptId);
             }
             else
             {

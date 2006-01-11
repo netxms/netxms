@@ -29,6 +29,19 @@ static char THIS_FILE[] = __FILE__;
 #define PANE_MODIFY        3
 
 
+//
+// Configuration file keywords
+//
+
+static TCHAR m_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
+                                    "EnableProxy EnableSubagentAutoload ExternalParameter "
+                                    "FileStore ListenPort LogFile LogUnresolvedSymbols "
+                                    "MasterServers MaxSessions PlatformSuffix "
+                                    "RequireAuthentication RequireEncryption Servers "
+                                    "SessionIdleTimeout SharedSecret StartupDelay "
+                                    "SubAgent Timeout";
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CAgentCfgEditor
 
@@ -37,7 +50,6 @@ IMPLEMENT_DYNCREATE(CAgentCfgEditor, CMDIChildWnd)
 CAgentCfgEditor::CAgentCfgEditor()
 {
    m_dwNodeId = 0;
-   m_bParserActive = FALSE;
    m_pCtxMenu = NULL;
 }
 
@@ -79,9 +91,10 @@ BEGIN_MESSAGE_MAP(CAgentCfgEditor, CMDIChildWnd)
 	ON_WM_CLOSE()
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
+	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
 	//}}AFX_MSG_MAP
 	ON_EN_CHANGE(ID_EDIT_CTRL, OnEditCtrlChange)
-	ON_NOTIFY(EN_MSGFILTER, ID_EDIT_CTRL, OnEditCtrlMsgFilter)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -105,7 +118,6 @@ BOOL CAgentCfgEditor::PreCreateWindow(CREATESTRUCT& cs)
 int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   CHARFORMAT cf;
    static int widths[4] = { 60, 120, 220, -1 };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
@@ -126,18 +138,10 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    rect.bottom -= m_iStatusBarHeight;
 
    // Create edit control
-   m_wndEdit.Create(WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOHSCROLL | 
-                    ES_AUTOVSCROLL | ES_WANTRETURN | WS_HSCROLL | WS_VSCROLL,
-                    rect, this, ID_EDIT_CTRL);
-
-   cf.cbSize = sizeof(CHARFORMAT);
-   cf.dwMask = CFM_FACE | CFM_BOLD | CFM_COLOR;
-   cf.dwEffects = CFE_AUTOCOLOR;
-   cf.bPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
-   _tcscpy(cf.szFaceName, _T("Courier New"));
-   m_wndEdit.SetDefaultCharFormat(cf);
-
-   m_wndEdit.SetEventMask(m_wndEdit.GetEventMask() | ENM_CHANGE | ENM_KEYEVENTS | ENM_MOUSEEVENTS);
+   m_wndEditor.Create(_T("Edit"), WS_CHILD | WS_VISIBLE, rect, this, ID_EDIT_CTRL);
+   m_wndEditor.LoadLexer(_T("nxlexer.dll"));
+   m_wndEditor.SetLexer(_T("nxconfig"));
+   m_wndEditor.SetKeywords(0, m_szConfigKeywords);
 
    m_dwTimer = SetTimer(1, 1000, NULL);
 
@@ -167,7 +171,7 @@ void CAgentCfgEditor::OnViewRefresh()
    DWORD dwResult;
    TCHAR *pszConfig;
 
-   if (m_wndEdit.GetModify())
+   if (m_wndEditor.GetModify())
    {
       if (MessageBox(_T("All changes made since last save will be discarded. Are you sure?"),
                      _T("Warning"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
@@ -180,18 +184,15 @@ void CAgentCfgEditor::OnViewRefresh()
                             &pszConfig, _T("Requesting agent's configuration file..."));
    if (dwResult == RCC_SUCCESS)
    {
-      OnStartParsing();
-      m_wndEdit.SetWindowText(pszConfig);
+      m_wndEditor.SetText(pszConfig);
+      m_wndEditor.EmptyUndoBuffer();
       free(pszConfig);
-      ParseFile();
-      OnStopParsing();
-      m_wndEdit.SetModify(FALSE);
       m_wndStatusBar.SetText(_T(""), PANE_MODIFY, 0);
       WriteStatusMsg(_T("Loaded successfully"));
    }
    else
    {
-      m_wndEdit.SetWindowText(_T(""));
+      m_wndEditor.SetWindowText(_T(""));
       theApp.ErrorBox(dwResult, _T("Error getting agent's configuration file: %s"));
       WriteStatusMsg(_T("Error loading configuration file"));
    }
@@ -210,7 +211,7 @@ void CAgentCfgEditor::OnSize(UINT nType, int cx, int cy)
 	CMDIChildWnd::OnSize(nType, cx, cy);
 
    m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
-   m_wndEdit.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
+   m_wndEditor.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
    
    nShift = GetSystemMetrics(SM_CXVSCROLL);
    m_wndStatusBar.GetClientRect(&rect);
@@ -227,7 +228,7 @@ void CAgentCfgEditor::OnSize(UINT nType, int cx, int cy)
 void CAgentCfgEditor::OnSetFocus(CWnd* pOldWnd) 
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
-   m_wndEdit.SetFocus();	
+   m_wndEditor.SetFocus();	
 }
 
 
@@ -237,22 +238,27 @@ void CAgentCfgEditor::OnSetFocus(CWnd* pOldWnd)
 
 void CAgentCfgEditor::OnUpdateEditUndo(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndEdit.CanUndo());
+   pCmdUI->Enable(m_wndEditor.CanUndo());
+}
+
+void CAgentCfgEditor::OnUpdateEditRedo(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndEditor.CanRedo());
 }
 
 void CAgentCfgEditor::OnUpdateEditPaste(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndEdit.CanPaste(CF_TEXT));
+   pCmdUI->Enable(m_wndEditor.CanPaste());
 }
 
 void CAgentCfgEditor::OnUpdateEditCut(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable((m_wndEdit.GetSelectionType() & (SEL_TEXT | SEL_MULTICHAR)) ? TRUE : FALSE);
+   //pCmdUI->Enable((m_wndEditor.GetSelectionType() & (SEL_TEXT | SEL_MULTICHAR)) ? TRUE : FALSE);
 }
 
 void CAgentCfgEditor::OnUpdateEditCopy(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable((m_wndEdit.GetSelectionType() & (SEL_TEXT | SEL_MULTICHAR)) ? TRUE : FALSE);
+   //pCmdUI->Enable((m_wndEditor.GetSelectionType() & (SEL_TEXT | SEL_MULTICHAR)) ? TRUE : FALSE);
 }
 
 
@@ -262,7 +268,17 @@ void CAgentCfgEditor::OnUpdateEditCopy(CCmdUI* pCmdUI)
 
 void CAgentCfgEditor::OnEditUndo() 
 {
-   m_wndEdit.Undo();
+   m_wndEditor.Undo();
+}
+
+
+//
+// WM_COMMAND::ID_EDIT_REDO message handler
+//
+
+void CAgentCfgEditor::OnEditRedo() 
+{
+   m_wndEditor.Redo();
 }
 
 
@@ -272,7 +288,7 @@ void CAgentCfgEditor::OnEditUndo()
 
 void CAgentCfgEditor::OnEditCopy() 
 {
-   m_wndEdit.Copy();
+   m_wndEditor.Copy();
 }
 
 
@@ -282,7 +298,7 @@ void CAgentCfgEditor::OnEditCopy()
 
 void CAgentCfgEditor::OnEditCut() 
 {
-   m_wndEdit.Cut();
+   m_wndEditor.Cut();
 }
 
 
@@ -292,7 +308,7 @@ void CAgentCfgEditor::OnEditCut()
 
 void CAgentCfgEditor::OnEditDelete() 
 {
-   m_wndEdit.Clear();
+   m_wndEditor.Clear();
 }
 
 
@@ -302,7 +318,7 @@ void CAgentCfgEditor::OnEditDelete()
 
 void CAgentCfgEditor::OnEditPaste() 
 {
-   m_wndEdit.PasteSpecial(CF_TEXT);
+   m_wndEditor.Paste();
 }
 
 
@@ -312,92 +328,7 @@ void CAgentCfgEditor::OnEditPaste()
 
 void CAgentCfgEditor::OnEditSelectAll() 
 {
-   m_wndEdit.SetSel(0, -1);
-}
-
-
-//
-// Highlight text
-//
-
-void CAgentCfgEditor::HighlightText(int nStartPos, int nEndPos, COLORREF rgbColor)
-{
-   CHARFORMAT cf;
-
-   m_wndEdit.SetSel(nStartPos, nEndPos);
-   cf.cbSize = sizeof(CHARFORMAT);
-   cf.dwMask = CFM_COLOR;
-   cf.dwEffects = (rgbColor == COLOR_AUTO) ? CFE_AUTOCOLOR : 0;
-   cf.crTextColor = rgbColor;
-   m_wndEdit.SetSelectionCharFormat(cf);
-   m_wndEdit.SetSel(-1, -1);
-}
-
-
-//
-// Parse entire file
-//
-
-void CAgentCfgEditor::ParseFile()
-{
-   int i, nLineCount;
-
-   nLineCount = m_wndEdit.GetLineCount();
-   for(i = 0; i < nLineCount; i++)
-      ParseLine(i);
-}
-
-
-//
-// Parse specific line
-//
-
-void CAgentCfgEditor::ParseLine(int nLine)
-{
-   int nCurrPos, nEndPos, nIndex, nElementStart = -1;
-   COLORREF rgbElementColor;
-   TCHAR szLine[MAX_LINE_SIZE];
-   BOOL bFirstChar;
-
-   m_wndEdit.GetLine(nLine, szLine, MAX_LINE_SIZE);
-   nCurrPos = m_wndEdit.LineIndex(nLine);
-   nEndPos = nCurrPos + m_wndEdit.LineLength(nCurrPos);
-
-   // Reset line to default color
-   HighlightText(nCurrPos, nEndPos, COLOR_AUTO);
-
-   // Skip leading spaces and tabs
-   for(nIndex = 0; 
-       (nCurrPos < nEndPos) && 
-       ((szLine[nIndex] == _T(' ')) || 
-        (szLine[nIndex] == _T('\t'))); nIndex++, nCurrPos++);
-
-   for(bFirstChar = TRUE; nCurrPos < nEndPos; nIndex++, nCurrPos++)
-   {
-      switch(szLine[nIndex])
-      {
-         case _T('#'):
-            if (nElementStart != -1)
-               HighlightText(nElementStart, nCurrPos - 1, rgbElementColor);
-            HighlightText(nCurrPos, nEndPos, COLOR_COMMENT);
-            nCurrPos = nEndPos;
-            nElementStart = -1;
-            break;
-         case _T('*'):
-            if (bFirstChar)
-            {
-               nElementStart = nCurrPos;
-               rgbElementColor = COLOR_SECTION;
-            }
-            break;
-         default:
-            break;
-      }
-      bFirstChar = FALSE;
-   }
-
-   if (nElementStart != -1)
-      HighlightText(nElementStart, nEndPos, rgbElementColor);
+   m_wndEditor.SelectAll();
 }
 
 
@@ -407,49 +338,7 @@ void CAgentCfgEditor::ParseLine(int nLine)
 
 void CAgentCfgEditor::OnEditCtrlChange()
 {
-   int nCurrLine;
-
-   if (!m_bParserActive)
-   {
-      OnStartParsing();
-
-      nCurrLine = m_wndEdit.LineFromChar(-1);
-      if (nCurrLine > 0)
-         ParseLine(nCurrLine - 1);
-      ParseLine(nCurrLine);
-      if (nCurrLine < m_wndEdit.GetLineCount() - 1)
-         ParseLine(nCurrLine + 1);
-
-      OnStopParsing();
-      m_wndStatusBar.SetText(_T("Modified"), PANE_MODIFY, 0);
-   }
-}
-
-
-//
-// Handle start of parsing process
-//
-
-void CAgentCfgEditor::OnStartParsing()
-{
-   m_bParserActive = TRUE;
-   m_wndEdit.SetEventMask(m_wndEdit.GetEventMask() & ~ENM_CHANGE);
-   m_wndEdit.SetRedraw(FALSE);
-   m_wndEdit.GetSel(m_crSavedSelection);
-}
-
-
-//
-// Handle termination of parsing process
-//
-
-void CAgentCfgEditor::OnStopParsing()
-{
-   m_wndEdit.SetSel(m_crSavedSelection);
-   m_wndEdit.SetRedraw(TRUE);
-   m_wndEdit.SetEventMask(m_wndEdit.GetEventMask() | ENM_CHANGE);
-   m_wndEdit.Invalidate(FALSE);
-   m_bParserActive = FALSE;
+   m_wndStatusBar.SetText(_T("Modified"), PANE_MODIFY, 0);
 }
 
 
@@ -502,14 +391,14 @@ BOOL CAgentCfgEditor::SaveConfig(BOOL bApply)
       }
    }
 
-   dwLength = m_wndEdit.GetWindowTextLength();
+   dwLength = m_wndEditor.GetWindowTextLength();
    pszText = (TCHAR *)malloc(sizeof(TCHAR) * (dwLength + 2));
-   m_wndEdit.GetWindowText(pszText, dwLength + 1);
+   m_wndEditor.GetWindowText(pszText, dwLength + 1);
    dwResult = DoRequestArg4(NXCUpdateAgentConfig, g_hSession, (void *)m_dwNodeId,
                             pszText, (void *)bApply, _T("Updating agent's configuration file..."));
    if (dwResult == RCC_SUCCESS)
    {
-      m_wndEdit.SetModify(FALSE);
+      m_wndEditor.SetSavePoint();
       m_wndStatusBar.SetText(_T(""), PANE_MODIFY, 0);
       bResult = TRUE;
       WriteStatusMsg(_T("Saved successfully"));
@@ -531,7 +420,7 @@ void CAgentCfgEditor::OnClose()
 {
    BOOL bAllowClose = TRUE;
 
-   if (m_wndEdit.GetModify())
+   if (m_wndEditor.GetModify())
    {
       CModifiedAgentCfgDlg dlg;
       int iAction;
@@ -578,27 +467,4 @@ void CAgentCfgEditor::OnTimer(UINT nIDEvent)
    m_iMsgTimer++;
    if (m_iMsgTimer == 60)
       m_wndStatusBar.SetText(_T(""), PANE_MESSAGE, 0);
-}
-
-
-//
-// Mouse and keyboard message filter for edit control
-//
-
-void CAgentCfgEditor::OnEditCtrlMsgFilter(NMHDR *pNotifyStruct, LRESULT *pResult)
-{
-   CHARRANGE cr;
-   TCHAR szBuffer[32];
-   int nLine;
-
-   m_wndEdit.GetSel(cr);
-   nLine = m_wndEdit.LineFromChar(cr.cpMin);
-
-   _stprintf(szBuffer, _T("L: %d"), nLine + 1);
-   m_wndStatusBar.SetText(szBuffer, PANE_LINE, 0);
-
-   _stprintf(szBuffer, _T("C: %d"), cr.cpMin - m_wndEdit.LineIndex(nLine) + 1);
-   m_wndStatusBar.SetText(szBuffer, PANE_COLUMN, 0);
-
-   *pResult = 0;
 }

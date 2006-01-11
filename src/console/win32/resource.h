@@ -175,6 +175,7 @@
 #define IDI_SCRIPT                      298
 #define IDI_CLOSED_FOLDER               299
 #define IDI_OPEN_FOLDER                 300
+#define IDA_SCRIPT_MANAGER              301
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -636,16 +637,19 @@
 #define ID_SCRIPT_NEW                   32969
 #define ID_SCRIPT_EDIT                  32970
 #define ID_SCRIPT_SAVE                  32971
+#define ID_SCRIPT_VIEWASLIST            32974
+#define ID_SCRIPT_VIEWASTREE            32975
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
+#define IDS_SCINTILLA_INIT_FAILED       61218
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        301
-#define _APS_NEXT_COMMAND_VALUE         32972
+#define _APS_NEXT_RESOURCE_VALUE        302
+#define _APS_NEXT_COMMAND_VALUE         32976
 #define _APS_NEXT_CONTROL_VALUE         1337
 #define _APS_NEXT_SYMED_VALUE           126
 #endif

@@ -38,21 +38,35 @@ public:
 
 	// Generated message map functions
 protected:
-	CFont m_fontStatus;
+	int m_iStatusBarHeight;
+	CStatusBarCtrl m_wndStatusBar;
 	CString m_strScriptName;
-	BOOL m_bIsModified;
 	DWORD m_dwScriptId;
 	CFlatButton m_wndButton;
 	int m_nMode;
 	CImageList m_imageList;
-	CEdit m_wndEditor;
+   CScintillaCtrl m_wndEditor;
 	CListCtrl m_wndListCtrl;
 	//{{AFX_MSG(CScriptView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnScriptEdit();
 	afx_msg void OnUpdateScriptEdit(CCmdUI* pCmdUI);
-	afx_msg void OnPaint();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnEditCopy();
+	afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
+	afx_msg void OnEditCut();
+	afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
+	afx_msg void OnEditDelete();
+	afx_msg void OnUpdateEditDelete(CCmdUI* pCmdUI);
+	afx_msg void OnEditPaste();
+	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
+	afx_msg void OnEditRedo();
+	afx_msg void OnUpdateEditRedo(CCmdUI* pCmdUI);
+	afx_msg void OnEditSelectAll();
+	afx_msg void OnUpdateEditSelectAll(CCmdUI* pCmdUI);
+	afx_msg void OnEditUndo();
+	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnEditorChange();
 	DECLARE_MESSAGE_MAP()

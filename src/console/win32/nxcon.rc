@@ -471,6 +471,7 @@ BEGIN
     POPUP "Edit"
     BEGIN
         MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+Y",               ID_EDIT_REDO
         MENUITEM SEPARATOR
         MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
@@ -495,6 +496,9 @@ BEGIN
         MENUITEM "&New...\tCtrl+N",             ID_SCRIPT_NEW
         MENUITEM "&Edit\tCtrl+E",               ID_SCRIPT_EDIT
         MENUITEM "&Save\tCtrl+S",               ID_SCRIPT_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "View as &list",               ID_SCRIPT_VIEWASLIST
+        MENUITEM "View as &tree",               ID_SCRIPT_VIEWASTREE
     END
 END
 
@@ -740,6 +744,7 @@ BEGIN
     POPUP "Edit"
     BEGIN
         MENUITEM "&Undo",                       ID_EDIT_UNDO
+        MENUITEM "&Redo",                       ID_EDIT_REDO
         MENUITEM SEPARATOR
         MENUITEM "Cu&t",                        ID_EDIT_CUT
         MENUITEM "&Copy",                       ID_EDIT_COPY
@@ -926,6 +931,11 @@ BEGIN
     VK_DELETE,      ID_OBJECTTOOLS_DELETE,  VIRTKEY, NOINVERT
     VK_INSERT,      ID_OBJECTTOOLS_NEW,     VIRTKEY, NOINVERT
     VK_RETURN,      ID_OBJECTTOOLS_EDIT,    VIRTKEY, ALT, NOINVERT
+END
+
+IDA_SCRIPT_MANAGER ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
 END
 
 
@@ -2811,6 +2821,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_GETFOLDERPATH_FAILED "Call to SHGetFolderPath() failed."
     IDS_WORKDIR_CREATION_FAILED "Failed to create working directory tree."
+    IDS_SCINTILLA_INIT_FAILED 
+                            "Failed to initialize Scintilla Edit Control library"
 END
 
 STRINGTABLE DISCARDABLE 

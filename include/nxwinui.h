@@ -68,6 +68,8 @@ typedef struct
 #include "../src/console/nxuilib/resource.h"
 #include "../src/console/nxuilib/LoginDialog.h"
 #include "../src/console/nxuilib/FlatButton.h"
+#include "../src/console/nxuilib/ScintillaCtrl.h"
+#include "../src/console/nxuilib/SimpleListCtrl.h"
 
 
 //
@@ -86,5 +88,6 @@ BOOL NXUILIB_EXPORTABLE LoadAlarmSoundCfg(ALARM_SOUND_CFG *pCfg, TCHAR *pszKey);
 void NXUILIB_EXPORTABLE PlayAlarmSound(NXC_ALARM *pAlarm, BOOL bNewAlarm,
                                        NXC_SESSION hSession, ALARM_SOUND_CFG *pCfg);
 
+BOOL NXUILIB_EXPORTABLE ScintillaInit(void);
 
 #endif

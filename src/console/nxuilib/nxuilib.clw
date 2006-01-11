@@ -2,16 +2,18 @@
 
 [General Info]
 Version=1
-ClassCount=3
+ClassCount=5
 ResourceCount=2
 NewFileInclude1=#include "stdafx.h"
 Class1=CLoginDialog
-LastClass=CFlatButton
+LastClass=CSimpleListCtrl
 Resource1=IDD_LOGIN (English (U.S.))
 Class2=CAlarmSoundDlg
-LastTemplate=CDialog
-Resource2=IDD_ALARM_SOUNDS (English (U.S.))
+LastTemplate=CListCtrl
 Class3=CFlatButton
+Class4=CScintillaCtrl
+Class5=CSimpleListCtrl
+Resource2=IDD_ALARM_SOUNDS (English (U.S.))
 
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
@@ -87,4 +89,19 @@ BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
 LastObject=CFlatButton
+
+[CLS:CScintillaCtrl]
+Type=0
+HeaderFile=ScintillaCtrl.h
+ImplementationFile=ScintillaCtrl.cpp
+BaseClass=generic CWnd
+Filter=W
+
+[CLS:CSimpleListCtrl]
+Type=0
+HeaderFile=SimpleListCtrl.h
+ImplementationFile=SimpleListCtrl.cpp
+BaseClass=CListCtrl
+Filter=W
+VirtualFilter=FWC
 

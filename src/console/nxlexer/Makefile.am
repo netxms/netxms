@@ -8,19 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = res sounds
-EXTRA_DIST = \
-	AlarmSoundDlg.cpp AlarmSoundDlg.h \
-	FlatButton.cpp FlatButton.h \
-	LoginDialog.cpp LoginDialog.h \
-	nxuilib.clw \
-	nxuilib.cpp \
-	nxuilib.def \
-	nxuilib.dsp nxuilib.dsw \
-	nxuilib.h \
-	nxuilib.rc resource.h \
-	ScintillaCtrl.cpp ScintillaCtrl.h \
-	SimpleListCtrl.cpp SimpleListCtrl.h \
-	speaker.cpp \
-	StdAfx.cpp StdAfx.h \
-	tools.cpp
+EXTRA_DIST = config.cpp nxlexer.cpp nxlexer.def nxlexer.dsp nxlexer.dsw nxlexer.h

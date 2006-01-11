@@ -163,6 +163,7 @@ include/nxclapi.h -text
 include/nxcscpapi.h -text
 include/nxevent.h -text
 include/nximage.h -text
+include/nxlexer_styles.h -text
 include/nxlog.h -text
 include/nxnt.h -text
 include/nxqueue.h -text
@@ -423,6 +424,13 @@ src/console/nxav/res/small_logo.bmp -text
 src/console/nxav/res/warning.ico -text
 src/console/nxav/resource.h -text
 src/console/nxav/tools.cpp -text
+src/console/nxlexer/Makefile.am -text
+src/console/nxlexer/config.cpp -text
+src/console/nxlexer/nxlexer.cpp -text
+src/console/nxlexer/nxlexer.def -text
+src/console/nxlexer/nxlexer.dsp -text
+src/console/nxlexer/nxlexer.dsw -text
+src/console/nxlexer/nxlexer.h -text
 src/console/nxuilib/AlarmSoundDlg.cpp -text
 src/console/nxuilib/AlarmSoundDlg.h -text
 src/console/nxuilib/FlatButton.cpp -text
@@ -430,6 +438,10 @@ src/console/nxuilib/FlatButton.h -text
 src/console/nxuilib/LoginDialog.cpp -text
 src/console/nxuilib/LoginDialog.h -text
 src/console/nxuilib/Makefile.am -text
+src/console/nxuilib/ScintillaCtrl.cpp -text
+src/console/nxuilib/ScintillaCtrl.h -text
+src/console/nxuilib/SimpleListCtrl.cpp -text
+src/console/nxuilib/SimpleListCtrl.h -text
 src/console/nxuilib/StdAfx.cpp -text
 src/console/nxuilib/StdAfx.h -text
 src/console/nxuilib/nxuilib.clw -text

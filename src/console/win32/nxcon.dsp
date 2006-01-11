@@ -938,6 +938,10 @@ SOURCE=.\SaveDesktopDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\nxuilib\ScintillaCtrl.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ScriptManager.h
 # End Source File
 # Begin Source File

@@ -35,6 +35,10 @@ public:
 
 // Implementation
 protected:
+	void InsertScript(DWORD dwId, TCHAR *pszName);
+	void SetMode(int nMode);
+	int m_nMode;
+	CSimpleListCtrl m_wndListCtrl;
 	HTREEITEM m_hRootItem;
 	void BuildScriptName(HTREEITEM hItem, CString &strName);
 	CImageList m_imageList;
@@ -50,6 +54,11 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnScriptViewaslist();
+	afx_msg void OnUpdateScriptViewaslist(CCmdUI* pCmdUI);
+	afx_msg void OnScriptViewastree();
+	afx_msg void OnUpdateScriptViewastree(CCmdUI* pCmdUI);
+	afx_msg void OnScriptNew();
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult);

@@ -126,6 +126,14 @@ SOURCE=.\nxuilib.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\ScintillaCtrl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SimpleListCtrl.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\speaker.cpp
 # End Source File
 # Begin Source File
@@ -155,6 +163,10 @@ SOURCE=.\LoginDialog.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nxlexer_styles.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxuilib.h
 # End Source File
 # Begin Source File
@@ -164,6 +176,14 @@ SOURCE=..\..\..\include\nxwinui.h
 # Begin Source File
 
 SOURCE=.\Resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScintillaCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SimpleListCtrl.h
 # End Source File
 # Begin Source File
 

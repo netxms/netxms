@@ -31,6 +31,16 @@ COLORREF NXUILIB_EXPORTABLE g_rgbFlatButtonBackground = RGB(255, 255, 255);
 
 
 //
+// Initialize Scintilla
+//
+
+BOOL NXUILIB_EXPORTABLE ScintillaInit(void)
+{
+   return LoadLibrary(_T("SciLexer.dll")) != NULL;
+}
+
+
+//
 // MFC DLL code
 //
 

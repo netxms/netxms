@@ -13,13 +13,6 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
-// Constants
-//
-
-#define STATUS_LINE_HEIGHT       25
-
-
-//
 // Operation modes
 //
 
@@ -46,7 +39,21 @@ BEGIN_MESSAGE_MAP(CScriptView, CWnd)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_SCRIPT_EDIT, OnScriptEdit)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_EDIT, OnUpdateScriptEdit)
-	ON_WM_PAINT()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
+	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
+	ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditDelete)
+	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
+	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
+	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
+	ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	//}}AFX_MSG_MAP
    ON_EN_CHANGE(ID_EDIT_BOX, OnEditorChange)
 END_MESSAGE_MAP()
@@ -71,17 +78,12 @@ BOOL CScriptView::PreCreateWindow(CREATESTRUCT& cs)
 int CScriptView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   static int widths[4] = { 60, 120, 220, -1 };
 
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
    GetClientRect(&rect);
-
-   // Create font
-   m_fontStatus.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                           0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                           VARIABLE_PITCH | FF_DONTCARE, "Verdana");
 
    // Create image list
    m_imageList.Create(32, 32, ILC_COLOR8 | ILC_MASK, 4, 4);
@@ -93,9 +95,19 @@ int CScriptView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_NORMAL);
    m_wndListCtrl.InsertColumn(0, _T("Name"));
 
+   // Create status bar
+	m_wndStatusBar.Create(WS_CHILD | SBARS_SIZEGRIP, rect, this, IDC_STATUS_BAR);
+   m_wndStatusBar.SetParts(4, widths);
+   m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
+   rect.bottom -= m_iStatusBarHeight;
+
    // Create editor
-   m_wndEditor.Create(WS_CHILD | ES_MULTILINE, rect, this, ID_EDIT_BOX);
-   m_wndEditor.SetFont(&g_fontCode);
+   m_wndEditor.Create(_T("Edit"), WS_CHILD, rect, this, ID_EDIT_BOX);
+   //m_wndEditor.SetFont(&g_fontCode);
+   m_wndEditor.LoadLexer(_T("nxlexer.dll"));
+   m_wndEditor.SetLexer(_T("nxsl"));
+
+   // Create status bar
 
    // Create "Edit" button
    rect.left += 20;
@@ -114,9 +126,20 @@ int CScriptView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CScriptView::OnSize(UINT nType, int cx, int cy) 
 {
+   RECT rect;
+   int nShift;
+
 	CWnd::OnSize(nType, cx, cy);
+
+   m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
    m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
-   m_wndEditor.SetWindowPos(NULL, 0, STATUS_LINE_HEIGHT, cx, cy - STATUS_LINE_HEIGHT, SWP_NOZORDER);
+   m_wndEditor.SetWindowPos(NULL, 0, 0, cx, cy - m_iStatusBarHeight, SWP_NOZORDER);
+
+   nShift = GetSystemMetrics(SM_CXVSCROLL);
+   m_wndStatusBar.GetClientRect(&rect);
+   int widths[4] = { rect.right - 170 - nShift, rect.right - 120 - nShift, 
+                     rect.right - 70 - nShift, rect.right -  nShift };
+   m_wndStatusBar.SetParts(4, widths);
 }
 
 
@@ -143,6 +166,7 @@ void CScriptView::SetListMode(CTreeCtrl &wndTreeCtrl, HTREEITEM hRoot)
 
    m_wndListCtrl.ShowWindow(SW_SHOW);
    m_wndEditor.ShowWindow(SW_HIDE);
+   m_wndStatusBar.ShowWindow(SW_HIDE);
    m_wndButton.ShowWindow(SW_HIDE);
 }
 
@@ -159,6 +183,7 @@ void CScriptView::SetEditMode(DWORD dwScriptId, LPCTSTR pszScriptName)
 
    m_wndButton.ShowWindow(SW_SHOW);
    m_wndEditor.ShowWindow(SW_HIDE);
+   m_wndStatusBar.ShowWindow(SW_HIDE);
    m_wndListCtrl.ShowWindow(SW_HIDE);
 }
 
@@ -171,7 +196,6 @@ void CScriptView::OnScriptEdit()
 {
    DWORD dwResult;
    TCHAR *pszText;
-   RECT rect;
 
    if (m_nMode != MODE_VIEW)
       return;
@@ -181,15 +205,13 @@ void CScriptView::OnScriptEdit()
    if (dwResult == RCC_SUCCESS)
    {
       m_nMode = MODE_EDIT;
-      m_bIsModified = FALSE;
-      m_wndEditor.SetWindowText(pszText);
+      m_wndEditor.SetText(pszText);
+      m_wndEditor.EmptyUndoBuffer();
       free(pszText);
       m_wndEditor.ShowWindow(SW_SHOW);
+      m_wndStatusBar.ShowWindow(SW_SHOW);
       m_wndButton.ShowWindow(SW_HIDE);
       m_wndEditor.SetFocus();
-      GetClientRect(&rect);
-      rect.bottom = STATUS_LINE_HEIGHT;
-      InvalidateRect(&rect);
    }
    else
    {
@@ -214,7 +236,7 @@ BOOL CScriptView::ValidateClose(void)
    CString strText;
    DWORD dwResult;
 
-   if ((m_nMode != MODE_EDIT) || (!m_bIsModified))
+   if ((m_nMode != MODE_EDIT) || (!m_wndEditor.GetModify()))
       return TRUE;
 
    nRet = MessageBox(_T("Script is modified. Do you want to save changes?"),
@@ -222,7 +244,7 @@ BOOL CScriptView::ValidateClose(void)
    switch(nRet)
    {
       case IDYES:
-         m_wndEditor.GetWindowText(strText);
+         m_wndEditor.GetText(strText);
          dwResult = DoRequestArg4(NXCUpdateScript, g_hSession,
                                   (void *)m_dwScriptId, (void *)((LPCTSTR)m_strScriptName),
                                   (void *)((LPCTSTR)strText), _T("Updating script..."));
@@ -249,41 +271,99 @@ BOOL CScriptView::ValidateClose(void)
 
 void CScriptView::OnEditorChange()
 {
-   RECT rect;
-
-   if (!m_bIsModified)
-   {
-      m_bIsModified = TRUE;
-      GetClientRect(&rect);
-      rect.bottom = STATUS_LINE_HEIGHT;
-      InvalidateRect(&rect);
-   }
 }
 
 
 //
-// WM_PAINT message handler
+// WM_CONTEXTMENU message handler
 //
 
-void CScriptView::OnPaint() 
+void CScriptView::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
-	CPaintDC dc(this); // device context for painting
-   CFont *pOldFont;
-   RECT rect;
+   CMenu *pMenu;
 
-   if (m_nMode != MODE_EDIT)
-      return;
+   pMenu = theApp.GetContextMenu(16);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
 
-   pOldFont = dc.SelectObject(&m_fontStatus);
-   dc.SetTextColor(RGB(0, 0, 128));
-   dc.TextOut(4, 4, m_strScriptName);
 
-   if (m_bIsModified)
-   {
-      GetClientRect(&rect);
-      dc.SetTextColor(RGB(200, 0, 0));
-      dc.TextOut(rect.right - 100, 4, _T("  Modified"), 10);
-   }
+//
+// Editor commands
+//
 
-   dc.SelectObject(pOldFont);
+void CScriptView::OnEditCopy() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.Copy();
+}
+
+void CScriptView::OnUpdateEditCopy(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_nMode == MODE_EDIT);
+}
+
+void CScriptView::OnEditCut() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.Copy();
+}
+
+void CScriptView::OnUpdateEditCut(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_nMode == MODE_EDIT);
+}
+
+void CScriptView::OnEditDelete() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.Clear();
+}
+
+void CScriptView::OnUpdateEditDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_nMode == MODE_EDIT);
+}
+
+void CScriptView::OnEditPaste() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.Paste();
+}
+
+void CScriptView::OnUpdateEditPaste(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable((m_nMode == MODE_EDIT) && m_wndEditor.CanPaste());
+}
+
+void CScriptView::OnEditRedo() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.Redo();
+}
+
+void CScriptView::OnUpdateEditRedo(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable((m_nMode == MODE_EDIT) && m_wndEditor.CanRedo());
+}
+
+void CScriptView::OnEditSelectAll() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.SelectAll();
+}
+
+void CScriptView::OnUpdateEditSelectAll(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_nMode == MODE_EDIT);
+}
+
+void CScriptView::OnEditUndo() 
+{
+   if (m_nMode == MODE_EDIT)
+      m_wndEditor.Undo();
+}
+
+void CScriptView::OnUpdateEditUndo(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable((m_nMode == MODE_EDIT) && m_wndEditor.CanUndo());
 }
