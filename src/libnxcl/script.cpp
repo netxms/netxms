@@ -136,3 +136,45 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD *pdwId,
    }
    return dwResult;
 }
+
+
+//
+// Rename script
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCRenameScript(NXC_SESSION hSession, DWORD dwId,
+                                         TCHAR *pszName)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_RENAME_SCRIPT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_SCRIPT_ID, dwId);
+   msg.SetVariable(VID_NAME, pszName);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Delete script
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, DWORD dwId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_DELETE_SCRIPT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_SCRIPT_ID, dwId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

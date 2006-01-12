@@ -901,6 +901,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_UPDATE_SCRIPT:
             UpdateScript(pMsg);
             break;
+         case CMD_RENAME_SCRIPT:
+            RenameScript(pMsg);
+            break;
+         case CMD_DELETE_SCRIPT:
+            DeleteScript(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -5975,6 +5981,99 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_NAME);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Rename script
+//
+
+void ClientSession::RenameScript(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szQuery[4096], szName[MAX_DB_STRING];
+   DWORD dwScriptId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   {
+      dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
+      pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
+      if (IsValidScriptName(szName))
+      {
+         if (IsValidScriptId(dwScriptId))
+         {
+            _stprintf(szQuery, _T("UPDATE script_library SET script_name='%s' WHERE script_id=%d"),
+                      szName, dwScriptId);
+            if (DBQuery(g_hCoreDB, szQuery))
+            {
+               ReloadScript(dwScriptId);
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_ID);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_NAME);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Delete script
+//
+
+void ClientSession::DeleteScript(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szQuery[256];
+   DWORD dwScriptId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
+   {
+      dwScriptId = pRequest->GetVariableLong(VID_SCRIPT_ID);
+      if (IsValidScriptId(dwScriptId))
+      {
+         _stprintf(szQuery, _T("DELETE FROM script_library WHERE script_id=%d"), dwScriptId);
+         if (DBQuery(g_hCoreDB, szQuery))
+         {
+            g_pScriptLibrary->Lock();
+            g_pScriptLibrary->DeleteScript(dwScriptId);
+            g_pScriptLibrary->Unlock();
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_ID);
       }
    }
    else

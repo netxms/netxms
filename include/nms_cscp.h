@@ -385,6 +385,8 @@ typedef struct
 #define CMD_GET_SCRIPT_LIST         0x0098
 #define CMD_GET_SCRIPT              0x0099
 #define CMD_UPDATE_SCRIPT           0x009A
+#define CMD_DELETE_SCRIPT           0x009B
+#define CMD_RENAME_SCRIPT           0x009C
 
 
 //

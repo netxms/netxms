@@ -145,3 +145,25 @@ void ReloadScript(DWORD dwScriptId)
    }
    g_pScriptLibrary->Unlock();
 }
+
+
+//
+// Check if script ID is valid
+//
+
+BOOL IsValidScriptId(DWORD dwId)
+{
+   TCHAR szQuery[256];
+   DB_RESULT hResult;
+   BOOL bRet = FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT script_id FROM script_library WHERE script_id=%d"), dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bRet = TRUE;
+      DBFreeResult(hResult);
+   }
+   return bRet;
+}

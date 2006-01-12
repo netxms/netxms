@@ -44,6 +44,7 @@ public:
 
 void LoadScripts(void);
 void ReloadScript(DWORD dwScriptId);
+BOOL IsValidScriptId(DWORD dwId);
 
 
 //

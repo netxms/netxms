@@ -436,6 +436,8 @@ private:
    void SendScriptList(DWORD dwRqId);
    void SendScript(CSCPMessage *pRequest);
    void UpdateScript(CSCPMessage *pRequest);
+   void RenameScript(CSCPMessage *pRequest);
+   void DeleteScript(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

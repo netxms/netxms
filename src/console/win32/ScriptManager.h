@@ -60,6 +60,7 @@ protected:
 	afx_msg void OnUpdateScriptViewastree(CCmdUI* pCmdUI);
 	afx_msg void OnScriptNew();
 	afx_msg void OnClose();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult);

@@ -493,9 +493,11 @@ BEGIN
     END
     POPUP "Script"
     BEGIN
-        MENUITEM "&New...\tCtrl+N",             ID_SCRIPT_NEW
-        MENUITEM "&Edit\tCtrl+E",               ID_SCRIPT_EDIT
-        MENUITEM "&Save\tCtrl+S",               ID_SCRIPT_SAVE
+        MENUITEM "&New...\tCtrl+Alt+N",         ID_SCRIPT_NEW
+        MENUITEM "&Edit\tCtrl+Alt+E",           ID_SCRIPT_EDIT
+        MENUITEM "&Save\tCtrl+Alt+S",           ID_SCRIPT_SAVE
+        MENUITEM "&Rename\tCtrl+Alt+R",         ID_SCRIPT_RENAME
+        MENUITEM "&Delete\tCtrl+Alt+D",         ID_SCRIPT_DELETE
         MENUITEM SEPARATOR
         POPUP "&View"
         BEGIN
@@ -767,6 +769,20 @@ BEGIN
         MENUITEM "&Edit...",                    ID_OBJECTTOOLS_EDIT
         MENUITEM "&Delete",                     ID_OBJECTTOOLS_DELETE
     END
+    POPUP "Script"
+    BEGIN
+        MENUITEM "&New...",                     ID_SCRIPT_NEW
+        MENUITEM "&Edit",                       ID_SCRIPT_EDIT
+        MENUITEM "&Save",                       ID_SCRIPT_SAVE
+        MENUITEM "&Rename",                     ID_SCRIPT_RENAME
+        MENUITEM "&Delete",                     ID_SCRIPT_DELETE
+        MENUITEM SEPARATOR
+        POPUP "&View"
+        BEGIN
+            MENUITEM "View as &list",               ID_SCRIPT_VIEWASLIST
+            MENUITEM "View as &tree",               ID_SCRIPT_VIEWASTREE
+        END
+    END
 END
 
 
@@ -938,7 +954,12 @@ END
 
 IDA_SCRIPT_MANAGER ACCELERATORS DISCARDABLE 
 BEGIN
+    "D",            ID_SCRIPT_DELETE,       VIRTKEY, CONTROL, ALT, NOINVERT
+    "E",            ID_SCRIPT_EDIT,         VIRTKEY, CONTROL, ALT, NOINVERT
     "L",            ID_SCRIPT_VIEWASLIST,   VIRTKEY, CONTROL, ALT, NOINVERT
+    "N",            ID_SCRIPT_NEW,          VIRTKEY, CONTROL, ALT, NOINVERT
+    "R",            ID_SCRIPT_RENAME,       VIRTKEY, CONTROL, ALT, NOINVERT
+    "S",            ID_SCRIPT_SAVE,         VIRTKEY, CONTROL, ALT, NOINVERT
     "T",            ID_SCRIPT_VIEWASTREE,   VIRTKEY, CONTROL, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
 END

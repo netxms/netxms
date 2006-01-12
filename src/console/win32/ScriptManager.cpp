@@ -44,6 +44,7 @@ BEGIN_MESSAGE_MAP(CScriptManager, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_VIEWASTREE, OnUpdateScriptViewastree)
 	ON_COMMAND(ID_SCRIPT_NEW, OnScriptNew)
 	ON_WM_CLOSE()
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGING, AFX_IDW_PANE_FIRST, OnTreeViewSelChanging)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
@@ -511,4 +512,17 @@ void CScriptManager::OnClose()
 {
    if (m_wndScriptView.ValidateClose())
 	   CMDIChildWnd::OnClose();
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CScriptManager::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(19);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }
