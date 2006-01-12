@@ -233,6 +233,46 @@ typedef void * HSNMPSESSION;
 
 
 //
+// New node information
+//
+
+typedef struct
+{
+   DWORD dwIpAddr;
+   DWORD dwNetMask;
+   DWORD dwFlags;
+} NEW_NODE;
+
+
+//
+// New node flags
+//
+
+#define NNF_IS_SNMP     0x0001
+#define NNF_IS_AGENT    0x0002
+#define NNF_IS_ROUTER   0x0004
+#define NNF_IS_BRIDGE   0x0008
+#define NNF_IS_PRINTER  0x0010
+
+
+//
+// Node information for autodiscovery filter
+//
+
+typedef struct
+{
+   DWORD dwIpAddr;
+   DWORD dwNetMask;
+   DWORD dwSubnetAddr;
+   DWORD dwFlags;
+   int nSNMPVersion;
+   char szObjectId[MAX_OID_LEN * 4];    // SNMP OID
+   char szAgentVersion[MAX_AGENT_VERSION_LEN];
+   char szPlatform[MAX_PLATFORM_NAME_LEN];
+} DISCOVERY_FILTER_DATA;
+
+
+//
 // Data update structure for client sessions
 //
 

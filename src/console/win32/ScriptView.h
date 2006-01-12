@@ -31,6 +31,7 @@ public:
 
 // Implementation
 public:
+	void SetEmptyMode(void);
 	BOOL ValidateClose(void);
 	void SetEditMode(DWORD dwScriptId, LPCTSTR pszScriptName);
 	void SetListMode(CTreeCtrl &wndTreeCtrl, HTREEITEM hRoot);

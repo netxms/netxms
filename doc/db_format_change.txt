@@ -10,6 +10,10 @@
 		script_code SQL_TEXT not null,
 		PRIMARY KEY(script_id)
 	) TABLE_TYPE;
+- Added configuration parameter "DefaultCommunityString"
+- Added configuration parameter "DiscoveryFilter"
+- Removed table "new_nodes"
+- Removed configuration parameter "NewNodePollingInterval"
 
 
 *************

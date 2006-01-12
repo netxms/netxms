@@ -954,6 +954,10 @@ SOURCE=.\ServerCfgEditor.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\nxuilib\SimpleListCtrl.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.h
 # End Source File
 # Begin Source File

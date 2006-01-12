@@ -1459,7 +1459,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyLPP(NXC_LPP *pPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScrpts,
                                           NXC_SCRIPT_INFO **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, DWORD dwId, TCHAR **ppszCode);
-DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD dwId,
+DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD *pdwId,
                                          TCHAR *pszName, TCHAR *pszCode);
 
 #ifdef __cplusplus

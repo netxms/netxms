@@ -44,6 +44,7 @@ Queue g_statusPollQueue;
 Queue g_configPollQueue;
 Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
+Queue g_nodePollerQueue;
 
 
 //
@@ -279,7 +280,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 {
    Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[16], szNetMask[16];
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[16];
    ARP_CACHE *pArpCache;
 
    // Initialize state info
@@ -315,12 +316,13 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
                   if (!IsBroadcastAddress(pArpCache->pEntries[j].dwIpAddr,
                                           pInterface->IpNetMask()))
                   {
-                     TCHAR szQuery[256];
+                     NEW_NODE *pInfo;
 
-                     _sntprintf(szQuery, 256, _T("INSERT INTO new_nodes (id,ip_addr,ip_netmask,discovery_flags) VALUES (%d,'%s','%s',%d)"),
-                                m_dwNewNodeId++, IpToStr(pArpCache->pEntries[j].dwIpAddr, szIpAddr),
-                                IpToStr(pInterface->IpNetMask(), szNetMask), DF_DEFAULT);
-                     DBQuery(g_hCoreDB, szQuery);
+                     pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+                     pInfo->dwIpAddr = pArpCache->pEntries[j].dwIpAddr;
+                     pInfo->dwNetMask = pInterface->IpNetMask();
+                     pInfo->dwFlags = DF_DEFAULT;
+                     g_nodePollerQueue.Put(pInfo);
                   }
             }
          }
@@ -332,6 +334,8 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       pNode->SetDiscoveryPollTimeStamp();
       pNode->DecRefCount();
    }
+   g_nodePollerQueue.Clear();
+   g_nodePollerQueue.Put(INVALID_POINTER_VALUE);
    SetPollerState((int)arg, "finished");
    return THREAD_OK;
 }

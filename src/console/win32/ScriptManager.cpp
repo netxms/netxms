@@ -43,9 +43,13 @@ BEGIN_MESSAGE_MAP(CScriptManager, CMDIChildWnd)
 	ON_COMMAND(ID_SCRIPT_VIEWASTREE, OnScriptViewastree)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_VIEWASTREE, OnUpdateScriptViewastree)
 	ON_COMMAND(ID_SCRIPT_NEW, OnScriptNew)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGING, AFX_IDW_PANE_FIRST, OnTreeViewSelChanging)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
+   ON_NOTIFY(LVN_ITEMCHANGING, AFX_IDW_PANE_FIRST, OnListViewItemChanging)
+   ON_NOTIFY(LVN_ITEMCHANGED, AFX_IDW_PANE_FIRST, OnListViewItemChange)
+   ON_NOTIFY(NM_DBLCLK, AFX_IDW_PANE_FIRST, OnViewDblClk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -91,7 +95,7 @@ int CScriptManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndTreeCtrl.SetImageList(&m_imageList, TVSIL_NORMAL);
 
    // Create list control
-   m_wndListCtrl.Create(WS_CHILD | LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | LVS_SINGLESEL,
+   m_wndListCtrl.Create(WS_CHILD | LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | LVS_SINGLESEL | LVS_SORTASCENDING,
                         rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
    m_wndListCtrl.InsertColumn(0, _T("Script"));
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
@@ -101,11 +105,11 @@ int CScriptManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 1));
 	
    // Finish splitter setup
-   m_wndSplitter.SetColumnInfo(0, 150, 150);
+   m_wndSplitter.SetColumnInfo(0, 200, 0);
    m_wndSplitter.InitComplete();
    m_wndSplitter.RecalcLayout();
 
-   SetMode(MODE_TREE);
+   SetMode(MODE_LIST);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -167,7 +171,7 @@ void CScriptManager::OnViewRefresh()
    {
       for(i = 0; i < dwNumScripts; i++)
       {
-         InsertScript(pList[i].dwId, pList[i].szName);
+         InsertScript(pList[i].dwId, pList[i].szName, FALSE);
       }
       safe_free(pList);
    }
@@ -260,11 +264,44 @@ void CScriptManager::BuildScriptName(HTREEITEM hLast, CString &strName)
 
 void CScriptManager::SetMode(int nMode)
 {
+   DWORD dwId;
+   HTREEITEM hItem;
+   int iItem;
+
    if (m_nMode != nMode)
    {
       m_nMode = nMode;
       if (m_nMode == MODE_LIST)
       {
+         hItem = m_wndTreeCtrl.GetSelectedItem();
+         if (hItem != NULL)
+         {
+            dwId = m_wndTreeCtrl.GetItemData(hItem);
+            if (dwId != NULL)
+            {
+               LVFINDINFO lvfi;
+
+               lvfi.flags = LVFI_PARAM;
+               lvfi.lParam = dwId;
+               iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+            }
+            else
+            {
+               iItem = -1;
+            }
+         }
+         else
+         {
+            iItem = -1;
+         }
+
+         SelectListViewItem(&m_wndListCtrl, iItem);
+         if (iItem == -1)
+         {
+            if (m_wndScriptView.ValidateClose())
+               m_wndScriptView.SetEmptyMode();
+         }
+
          m_wndListCtrl.ShowWindow(SW_SHOW);
          m_wndTreeCtrl.ShowWindow(SW_HIDE);
  
@@ -273,6 +310,24 @@ void CScriptManager::SetMode(int nMode)
       }
       else
       {
+         iItem = m_wndListCtrl.GetSelectionMark();
+         if (iItem != -1)
+         {
+            dwId = m_wndListCtrl.GetItemData(iItem);
+            hItem = FindTreeCtrlItemEx(m_wndTreeCtrl, TVI_ROOT, dwId);
+         }
+         else
+         {
+            hItem = NULL;
+         }
+
+         m_wndTreeCtrl.SelectItem(hItem);
+         if (hItem == NULL)
+         {
+            if (m_wndScriptView.ValidateClose())
+               m_wndScriptView.SetEmptyMode();
+         }
+
          m_wndTreeCtrl.ShowWindow(SW_SHOW);
          m_wndListCtrl.ShowWindow(SW_HIDE);
  
@@ -316,20 +371,32 @@ void CScriptManager::OnUpdateScriptViewastree(CCmdUI* pCmdUI)
 void CScriptManager::OnScriptNew() 
 {
    CInputBox dlg;
-   DWORD dwResult;
+   DWORD dwResult, dwId;
+   TCHAR szBuffer[MAX_DB_STRING];
 
-   if (m_wndScriptView.ValidateClose())
+   dlg.m_strTitle = _T("Create New Script");
+   dlg.m_strHeader = _T("Script name");
+   if (dlg.DoModal() == IDOK)
    {
-      dlg.m_strTitle = _T("Create New Script");
-      dlg.m_strHeader = _T("Scrip name");
-      if (dlg.DoModal() == IDOK)
+      // Ask to save currently open script if needed
+      if (m_wndScriptView.ValidateClose())
       {
+         m_wndScriptView.SetEmptyMode();
+         dwId = 0;
          dwResult = DoRequestArg4(NXCUpdateScript, g_hSession,
-                                  (void *)0, (void *)((LPCTSTR)dlg.m_strText),
+                                  &dwId, (void *)((LPCTSTR)dlg.m_strText),
                                   _T(""), _T("Updating script..."));
          if (dwResult == RCC_SUCCESS)
          {
-            InsertScript(0, (LPCTSTR)dlg.m_strText);
+            nx_strncpy(szBuffer, (LPCTSTR)dlg.m_strText, MAX_DB_STRING);
+            InsertScript(dwId, szBuffer, TRUE);
+            PostMessage(WM_COMMAND, ID_SCRIPT_EDIT, 0);
+         }
+         else
+         {
+            // Clear selection on failure
+            m_wndTreeCtrl.SelectItem(NULL);
+            SelectListViewItem(&m_wndListCtrl, -1);
          }
       }
    }
@@ -340,7 +407,7 @@ void CScriptManager::OnScriptNew()
 // Insert script into list/tree
 //
 
-void CScriptManager::InsertScript(DWORD dwId, TCHAR *pszName)
+void CScriptManager::InsertScript(DWORD dwId, LPTSTR pszName, BOOL bSelect)
 {
    TCHAR *pszCurr, *pszNext;
    HTREEITEM hItem, hNextItem;
@@ -361,8 +428,87 @@ void CScriptManager::InsertScript(DWORD dwId, TCHAR *pszName)
       {
          hNextItem = m_wndTreeCtrl.InsertItem(pszCurr, 1, 1, hItem);
          m_wndTreeCtrl.SetItemData(hNextItem, 0);
+         m_wndTreeCtrl.SortChildren(hItem);
       }
    }
-   hItem = m_wndTreeCtrl.InsertItem(pszCurr, 3, 3, hItem);
-   m_wndTreeCtrl.SetItemData(hItem, dwId);
+   hNextItem = m_wndTreeCtrl.InsertItem(pszCurr, 3, 3, hItem);
+   m_wndTreeCtrl.SetItemData(hNextItem, dwId);
+   m_wndTreeCtrl.SortChildren(hItem);
+
+   if (bSelect)
+   {
+      SelectListViewItem(&m_wndListCtrl, iItem);
+      m_wndTreeCtrl.SelectItem(hNextItem);
+   }
+}
+
+
+//
+// WM_NOTIFY::LVN_ITEMCHANGED message handler
+//
+
+void CScriptManager::OnListViewItemChange(LPNMLISTVIEW pItem, LRESULT *pResult)
+{
+   DWORD dwId;
+   TCHAR szName[MAX_DB_STRING];
+
+   if (pItem->iItem != -1)
+   {
+      if ((pItem->uChanged & LVIF_STATE) &&
+          (pItem->uNewState & LVIS_FOCUSED))
+      {
+         dwId = m_wndListCtrl.GetItemData(pItem->iItem);
+         if (dwId != 0)
+         {
+            m_wndListCtrl.GetItemText(pItem->iItem, 0, szName, MAX_DB_STRING);
+            m_wndScriptView.SetEditMode(dwId, szName);
+         }
+      }
+   }
+   *pResult = 0;
+}
+
+
+//
+// WM_NOTIFY::LVN_ITEMCHANGING message handler
+//
+
+void CScriptManager::OnListViewItemChanging(LPNMLISTVIEW pItem, LRESULT *pResult)
+{
+   DWORD dwId;
+
+   *pResult = 0;
+   if (pItem->uChanged & LVIF_STATE)
+   {
+      if ((pItem->uOldState & LVIS_FOCUSED) && (!(pItem->uNewState & LVIS_FOCUSED)))
+      {
+         dwId = m_wndListCtrl.GetItemData(pItem->iItem);
+         if (dwId != 0)
+         {
+            if (!m_wndScriptView.ValidateClose())
+               *pResult = 1;
+         }
+      }
+   }
+}
+
+
+//
+// Handler for double click in list or tree view
+//
+
+void CScriptManager::OnViewDblClk(LPNMHDR pHdr, LRESULT *pResult)
+{
+   m_wndScriptView.PostMessage(WM_COMMAND, ID_SCRIPT_EDIT, 0);
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CScriptManager::OnClose() 
+{
+   if (m_wndScriptView.ValidateClose())
+	   CMDIChildWnd::OnClose();
 }

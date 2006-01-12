@@ -96,19 +96,6 @@ CREATE TABLE user_profiles
 
 
 /*
-** Nodes to be added
-*/
-
-CREATE TABLE new_nodes
-(
-	id integer not null,
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
-	discovery_flags integer not null
-) TABLE_TYPE;
-
-
-/*
 ** Common object properties
 */
 

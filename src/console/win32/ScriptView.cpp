@@ -16,9 +16,10 @@ static char THIS_FILE[] = __FILE__;
 // Operation modes
 //
 
-#define MODE_LIST    0
-#define MODE_VIEW    1
-#define MODE_EDIT    2
+#define MODE_INITIAL    -1
+#define MODE_LIST       0
+#define MODE_VIEW       1
+#define MODE_EDIT       2
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -26,6 +27,7 @@ static char THIS_FILE[] = __FILE__;
 
 CScriptView::CScriptView()
 {
+   m_nMode = MODE_INITIAL;
 }
 
 CScriptView::~CScriptView()
@@ -189,6 +191,20 @@ void CScriptView::SetEditMode(DWORD dwScriptId, LPCTSTR pszScriptName)
 
 
 //
+// Switch script view to empty mode
+//
+
+void CScriptView::SetEmptyMode()
+{
+   m_nMode = MODE_INITIAL;
+   m_wndButton.ShowWindow(SW_HIDE);
+   m_wndEditor.ShowWindow(SW_HIDE);
+   m_wndStatusBar.ShowWindow(SW_HIDE);
+   m_wndListCtrl.ShowWindow(SW_HIDE);
+}
+
+
+//
 // WM_COMMAND::ID_SCRIPT_EDIT
 //
 
@@ -235,18 +251,20 @@ BOOL CScriptView::ValidateClose(void)
    BOOL bRet = FALSE;
    CString strText;
    DWORD dwResult;
+   TCHAR szMessage[1024];
 
    if ((m_nMode != MODE_EDIT) || (!m_wndEditor.GetModify()))
       return TRUE;
 
-   nRet = MessageBox(_T("Script is modified. Do you want to save changes?"),
-                     _T("Warning"), MB_YESNOCANCEL | MB_ICONEXCLAMATION);
+   _sntprintf(szMessage, 1024, _T("Script %s is modified. Do you want to save changes?"),
+              (LPCTSTR)m_strScriptName);
+   nRet = MessageBox(szMessage, _T("Warning"), MB_YESNOCANCEL | MB_ICONEXCLAMATION);
    switch(nRet)
    {
       case IDYES:
          m_wndEditor.GetText(strText);
          dwResult = DoRequestArg4(NXCUpdateScript, g_hSession,
-                                  (void *)m_dwScriptId, (void *)((LPCTSTR)m_strScriptName),
+                                  &m_dwScriptId, (void *)((LPCTSTR)m_strScriptName),
                                   (void *)((LPCTSTR)strText), _T("Updating script..."));
          if (dwResult == RCC_SUCCESS)
          {

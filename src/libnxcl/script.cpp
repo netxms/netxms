@@ -107,20 +107,32 @@ DWORD LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, DWORD dwId, TCHAR **
 // Update script
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD dwId,
+DWORD LIBNXCL_EXPORTABLE NXCUpdateScript(NXC_SESSION hSession, DWORD *pdwId,
                                          TCHAR *pszName, TCHAR *pszCode)
 {
-   CSCPMessage msg;
-   DWORD dwRqId;
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_UPDATE_SCRIPT);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_SCRIPT_ID, dwId);
+   msg.SetVariable(VID_SCRIPT_ID, *pdwId);
    msg.SetVariable(VID_NAME, pszName);
    msg.SetVariable(VID_SCRIPT_CODE, pszCode);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+         *pdwId = pResponse->GetVariableLong(VID_SCRIPT_ID);
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
 }

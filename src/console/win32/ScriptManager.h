@@ -35,7 +35,7 @@ public:
 
 // Implementation
 protected:
-	void InsertScript(DWORD dwId, TCHAR *pszName);
+	void InsertScript(DWORD dwId, LPTSTR pszName, BOOL bSelect);
 	void SetMode(int nMode);
 	int m_nMode;
 	CSimpleListCtrl m_wndListCtrl;
@@ -59,9 +59,13 @@ protected:
 	afx_msg void OnScriptViewastree();
 	afx_msg void OnUpdateScriptViewastree(CCmdUI* pCmdUI);
 	afx_msg void OnScriptNew();
+	afx_msg void OnClose();
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult);
+   afx_msg void OnListViewItemChange(LPNMLISTVIEW pItem, LRESULT *pResult);
+   afx_msg void OnListViewItemChanging(LPNMLISTVIEW pItem, LRESULT *pResult);
+   afx_msg void OnViewDblClk(LPNMHDR pHdr, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -83,8 +83,11 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem)
       pListCtrl->SetItemState(i, 0, LVIS_SELECTED | LVIS_FOCUSED);
       i = pListCtrl->GetNextItem(i, LVIS_SELECTED);
    }
-   pListCtrl->SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
-   pListCtrl->SetSelectionMark(iItem);
+   if (iItem != -1)
+   {
+      pListCtrl->SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+      pListCtrl->SetSelectionMark(iItem);
+   }
 }
 
 
@@ -687,6 +690,40 @@ HTREEITEM FindTreeCtrlItem(CTreeCtrl &ctrl, HTREEITEM hRoot, TCHAR *pszText)
    {
       if (!_tcsicmp(ctrl.GetItemText(hItem), pszText))
          return hItem;
+      hItem = ctrl.GetNextItem(hItem, TVGN_NEXT);
+   }
+   return NULL;
+}
+
+
+//
+// Find item by LPARAM in tree control's subtree (all levels)
+//
+
+HTREEITEM FindTreeCtrlItemEx(CTreeCtrl &ctrl, HTREEITEM hRoot, DWORD dwData)
+{
+   HTREEITEM hItem, hResult;
+
+   if (hRoot != TVI_ROOT)
+   {
+      if (ctrl.GetItemData(hRoot) == dwData)
+         return hRoot;
+   }
+
+   hItem = ctrl.GetChildItem(hRoot);
+   while(hItem != NULL)
+   {
+      if (ctrl.ItemHasChildren(hItem))
+      {
+         hResult = FindTreeCtrlItemEx(ctrl, hItem, dwData);
+         if (hResult != NULL)
+            return hResult;
+      }
+      else
+      {
+         if (ctrl.GetItemData(hItem) == dwData)
+            return hItem;
+      }
       hItem = ctrl.GetNextItem(hItem, TVGN_NEXT);
    }
    return NULL;

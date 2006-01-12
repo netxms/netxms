@@ -497,8 +497,11 @@ BEGIN
         MENUITEM "&Edit\tCtrl+E",               ID_SCRIPT_EDIT
         MENUITEM "&Save\tCtrl+S",               ID_SCRIPT_SAVE
         MENUITEM SEPARATOR
-        MENUITEM "View as &list",               ID_SCRIPT_VIEWASLIST
-        MENUITEM "View as &tree",               ID_SCRIPT_VIEWASTREE
+        POPUP "&View"
+        BEGIN
+            MENUITEM "View as &list\tCtrl+Alt+L",   ID_SCRIPT_VIEWASLIST
+            MENUITEM "View as &tree\tCtrl+Alt+T",   ID_SCRIPT_VIEWASTREE
+        END
     END
 END
 
@@ -935,6 +938,8 @@ END
 
 IDA_SCRIPT_MANAGER ACCELERATORS DISCARDABLE 
 BEGIN
+    "L",            ID_SCRIPT_VIEWASLIST,   VIRTKEY, CONTROL, ALT, NOINVERT
+    "T",            ID_SCRIPT_VIEWASTREE,   VIRTKEY, CONTROL, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
 END
 
@@ -944,17 +949,17 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 274, 55
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "About NetXMS Console"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,12,20,20
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,12,21,20
     LTEXT           "-version-",IDC_VERSION,40,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2003, 2004 NetXMS Team",IDC_STATIC,40,25,
-                    132,8
-    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+    LTEXT           "Copyright (C) 2003, 2004, 2005, 2006 NetXMS Team",
+                    IDC_STATIC,40,25,168,8
+    DEFPUSHBUTTON   "OK",IDOK,217,7,50,14,WS_GROUP
 END
 
 IDD_EDIT_EVENT DIALOG DISCARDABLE  0, 0, 270, 190
@@ -2212,6 +2217,18 @@ BEGIN
                     IDC_STATIC_SNMP_INDEX,13,99,160,8
 END
 
+IDD_CHANGE_IP DIALOG DISCARDABLE  0, 0, 172, 46
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change IP Address"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "IPAddress1",IDC_IP_ADDR,"SysIPAddress32",WS_TABSTOP,7,
+                    18,100,15
+    DEFPUSHBUTTON   "OK",IDOK,115,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,115,24,50,14
+    LTEXT           "Enter new IP address for node:",IDC_STATIC,7,7,98,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2267,7 +2284,7 @@ BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 228
+        RIGHTMARGIN, 267
         TOPMARGIN, 7
         BOTTOMMARGIN, 48
     END
@@ -2711,6 +2728,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
     END
+
+    IDD_CHANGE_IP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 165
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 39
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -2901,18 +2926,6 @@ BEGIN
     ICON            IDI_SEVERITY_MINOR,IDC_STATIC,7,7,21,20
 END
 
-IDD_CHANGE_IP DIALOG DISCARDABLE  0, 0, 172, 46
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Change IP Address"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "IPAddress1",IDC_IP_ADDR,"SysIPAddress32",WS_TABSTOP,7,
-                    18,100,15
-    DEFPUSHBUTTON   "OK",IDOK,115,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,115,24,50,14
-    LTEXT           "Enter new IP address for node:",IDC_STATIC,7,7,98,8
-END
-
 IDD_OBJTOOL_COLUMNS DIALOGEX 0, 0, 257, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Columns"
@@ -2941,14 +2954,6 @@ BEGIN
         RIGHTMARGIN, 193
         TOPMARGIN, 7
         BOTTOMMARGIN, 79
-    END
-
-    IDD_CHANGE_IP, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 165
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 39
     END
 
     IDD_OBJTOOL_COLUMNS, DIALOG
