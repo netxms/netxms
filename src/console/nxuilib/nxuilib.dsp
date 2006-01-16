@@ -126,6 +126,10 @@ SOURCE=.\nxuilib.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\popup.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ScintillaCtrl.cpp
 # End Source File
 # Begin Source File
@@ -252,6 +256,26 @@ SOURCE=.\sounds\ring1.wav
 # Begin Source File
 
 SOURCE=.\sounds\ring2.wav
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\SeverityCritical.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\SeverityMajor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\SeverityMinor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\SeverityNormal.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\SeverityWarning.ico
 # End Source File
 # Begin Source File
 

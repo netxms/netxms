@@ -3,7 +3,7 @@
 [General Info]
 Version=1
 ClassCount=5
-ResourceCount=2
+ResourceCount=3
 NewFileInclude1=#include "stdafx.h"
 Class1=CLoginDialog
 LastClass=CSimpleListCtrl
@@ -14,6 +14,7 @@ Class3=CFlatButton
 Class4=CScintillaCtrl
 Class5=CSimpleListCtrl
 Resource2=IDD_ALARM_SOUNDS (English (U.S.))
+Resource3=IDD_NOTIFY (English (U.S.))
 
 [DLG:IDD_LOGIN (English (U.S.))]
 Type=1
@@ -104,4 +105,9 @@ ImplementationFile=SimpleListCtrl.cpp
 BaseClass=CListCtrl
 Filter=W
 VirtualFilter=FWC
+
+[DLG:IDD_NOTIFY (English (U.S.))]
+Type=1
+Class=?
+ControlCount=0
 

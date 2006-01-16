@@ -75,7 +75,7 @@ END
 IDD_LOGIN DIALOGEX 0, 0, 215, 217
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connect to server"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_SERVER,52,71,156,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_LOGIN,52,92,156,14,ES_AUTOHSCROLL
@@ -144,6 +144,13 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,182,179,1
 END
 
+IDD_NOTIFY DIALOGEX 0, 0, 144, 110
+STYLE WS_POPUP | WS_BORDER
+EXSTYLE WS_EX_NOPARENTNOTIFY
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -175,6 +182,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 208
     END
+
+    IDD_NOTIFY, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 141
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 107
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -205,6 +220,11 @@ IDR_SND_SIREN1          WAVE    DISCARDABLE     "sounds\\siren1.wav"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_PLAY                ICON    DISCARDABLE     "res\\play.ico"
+IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "res\\SeverityWarning.ico"
+IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "res\\SeverityCritical.ico"
+IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "res\\SeverityMajor.ico"
+IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "res\\SeverityMinor.ico"
+IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "res\\SeverityNormal.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

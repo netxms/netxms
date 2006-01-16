@@ -28,7 +28,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         16
+#define MAX_ERROR_NUMBER         17
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -47,7 +47,7 @@ static char *m_szCommandMnemonic[] =
    "NRET", "JZ", "PRINT", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "REF", "INCP", "DECP",
-   "JNZ"
+   "JNZ", "LIKE", "ILIKE"
 };
 
 
@@ -72,7 +72,8 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Cannot do automatic type cast"),
    _T("Left argument of -> must be a reference to object"),
    _T("Unknown object's attribute"),
-   _T("Requested module not found or cannot be loaded")
+   _T("Requested module not found or cannot be loaded"),
+   _T("Argument is not of string type and cannot be converted to string")
 };
 
 
@@ -678,6 +679,8 @@ void NXSL_Program::Execute(void)
       case OPCODE_DIV:
       case OPCODE_REM:
       case OPCODE_CONCAT:
+      case OPCODE_LIKE:
+      case OPCODE_ILIKE:
       case OPCODE_EQ:
       case OPCODE_NE:
       case OPCODE_LT:
@@ -799,7 +802,8 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
       if ((!pVal1->IsNull() && !pVal2->IsNull()) ||
           (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE))
       {
-         if (pVal1->IsNumeric() && pVal2->IsNumeric() && (nOpCode != OPCODE_CONCAT))
+         if (pVal1->IsNumeric() && pVal2->IsNumeric() &&
+             (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_LIKE))
          {
             nType = SelectResultType(pVal1->DataType(), pVal2->DataType(), nOpCode);
             if (nType != NXSL_DT_NULL)
@@ -954,6 +958,21 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                      pszText2 = pVal2->GetValueAsString(&dwLen2);
                      pRes->Concatenate(pszText2, dwLen2);
                      delete pVal2;
+                  }
+                  break;
+               case OPCODE_LIKE:
+               case OPCODE_ILIKE:
+                  if (pVal1->IsString() && pVal2->IsString())
+                  {
+                     pRes = new NXSL_Value((LONG)MatchString(pVal2->GetValueAsCString(),
+                                                             pVal1->GetValueAsCString(),
+                                                             nOpCode == OPCODE_LIKE));
+                     delete pVal1;
+                     delete pVal2;
+                  }
+                  else
+                  {
+                     Error(NXSL_ERR_NOT_STRING);
                   }
                   break;
                case OPCODE_ADD:

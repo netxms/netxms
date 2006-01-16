@@ -34,8 +34,10 @@ escape		\\[bnrt0\"]
 <INITIAL>"exit"		return T_EXIT;
 <INITIAL>"for"		return T_FOR;
 <INITIAL>"if"		return T_IF;
+<INITIAL>"ilike"	return T_ILIKE;
 <INITIAL>"int32"	return T_TYPE_INT32;
 <INITIAL>"int64"	return T_TYPE_INT64;
+<INITIAL>"like"		return T_LIKE;
 <INITIAL>"NULL"		return T_NULL;
 <INITIAL>"print"	return T_PRINT;
 <INITIAL>"real"		return T_TYPE_REAL;

@@ -485,7 +485,7 @@ int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 // Check if given name is a valid object name
 //
 
-BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName)
+BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName)
 {
    static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./");
    return (pszName[0] != 0) && (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName));
@@ -496,7 +496,7 @@ BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(TCHAR *pszName)
 // Check if given name is a valid script name
 //
 
-BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(TCHAR *pszName)
+BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
 {
    static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_:");
    return (pszName[0] != 0) && (!isdigit(pszName[0])) && (pszName[0] != ':') &&

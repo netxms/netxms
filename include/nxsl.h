@@ -61,6 +61,7 @@
 #define NXSL_ERR_NOT_OBJECT               14
 #define NXSL_ERR_NO_SUCH_ATTRIBUTE        15
 #define NXSL_ERR_MODULE_NOT_FOUND         16
+#define NXSL_ERR_NOT_STRING               17
 
 
 //

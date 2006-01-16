@@ -35,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	DWORD GetSelectedScriptID(void);
 	void InsertScript(DWORD dwId, LPTSTR pszName, BOOL bSelect);
 	void SetMode(int nMode);
 	int m_nMode;
@@ -61,6 +62,10 @@ protected:
 	afx_msg void OnScriptNew();
 	afx_msg void OnClose();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnScriptDelete();
+	afx_msg void OnUpdateScriptDelete(CCmdUI* pCmdUI);
+	afx_msg void OnScriptRename();
+	afx_msg void OnUpdateScriptRename(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult);

@@ -26,6 +26,12 @@
 #define IDR_SND_RING2                   5021
 #define IDR_SND_SIREN1                  5022
 #define IDI_PLAY                        5024
+#define IDI_SEVERITY_WARNING            5025
+#define IDI_SEVERITY_CRITICAL           5026
+#define IDI_SEVERITY_MAJOR              5027
+#define IDI_SEVERITY_MINOR              5028
+#define IDI_SEVERITY_NORMAL             5029
+#define IDD_NOTIFY                      5030
 #define IDC_RADIO_NO_SOUND              5200
 #define IDC_RADIO_SOUND                 5201
 #define IDC_COMBO_SOUND1                5202
@@ -40,14 +46,13 @@
 #define IDC_CHECK_ACK                   5211
 #define IDC_STATIC_NEW_ALARM            5212
 #define IDC_STATIC_ALARM_ACK            5213
-#define IDC_BUTTON_PLAY                 5214
 #define IDC_BUTTON_PLAY_2               5215
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        5025
+#define _APS_NEXT_RESOURCE_VALUE        5030
 #define _APS_NEXT_COMMAND_VALUE         28000
 #define _APS_NEXT_CONTROL_VALUE         5215
 #define _APS_NEXT_SYMED_VALUE           5700

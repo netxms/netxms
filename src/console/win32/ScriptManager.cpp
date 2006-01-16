@@ -45,6 +45,10 @@ BEGIN_MESSAGE_MAP(CScriptManager, CMDIChildWnd)
 	ON_COMMAND(ID_SCRIPT_NEW, OnScriptNew)
 	ON_WM_CLOSE()
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_SCRIPT_DELETE, OnScriptDelete)
+	ON_UPDATE_COMMAND_UI(ID_SCRIPT_DELETE, OnUpdateScriptDelete)
+	ON_COMMAND(ID_SCRIPT_RENAME, OnScriptRename)
+	ON_UPDATE_COMMAND_UI(ID_SCRIPT_RENAME, OnUpdateScriptRename)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGING, AFX_IDW_PANE_FIRST, OnTreeViewSelChanging)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
@@ -311,7 +315,7 @@ void CScriptManager::SetMode(int nMode)
       }
       else
       {
-         iItem = m_wndListCtrl.GetSelectionMark();
+         iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED | LVNI_FOCUSED);
          if (iItem != -1)
          {
             dwId = m_wndListCtrl.GetItemData(iItem);
@@ -377,6 +381,8 @@ void CScriptManager::OnScriptNew()
 
    dlg.m_strTitle = _T("Create New Script");
    dlg.m_strHeader = _T("Script name");
+   dlg.m_pfTextValidator = IsValidScriptName;
+   dlg.m_strErrorMsg = _T("Invalid script name entered");
    if (dlg.DoModal() == IDOK)
    {
       // Ask to save currently open script if needed
@@ -523,6 +529,144 @@ void CScriptManager::OnContextMenu(CWnd* pWnd, CPoint point)
 {
    CMenu *pMenu;
 
+   if (m_nMode == MODE_TREE)
+   {
+      HTREEITEM hItem;
+      UINT uFlags;
+      CPoint pt;
+
+      pt = point;
+      m_wndListCtrl.ScreenToClient(&pt);
+
+      hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
+      if ((hItem != NULL) && (uFlags & TVHT_ONITEM))
+         m_wndTreeCtrl.Select(hItem, TVGN_CARET);
+   }
    pMenu = theApp.GetContextMenu(19);
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Delete selected script
+//
+
+void CScriptManager::OnScriptDelete() 
+{
+   DWORD dwScriptId, dwResult;
+   HTREEITEM hItem;
+   int iItem;
+   LVFINDINFO lvfi;
+
+   dwScriptId = GetSelectedScriptID();
+   if (dwScriptId != 0)
+   {
+      dwResult = DoRequestArg2(NXCDeleteScript, g_hSession, (void *)dwScriptId,
+                               _T("Deleting script..."));
+      if (dwResult == RCC_SUCCESS)
+      {
+         m_wndScriptView.SetEmptyMode();
+
+         hItem = FindTreeCtrlItemEx(m_wndTreeCtrl, TVI_ROOT, dwScriptId);
+         if (hItem != NULL)
+            m_wndTreeCtrl.DeleteItem(hItem);
+
+         lvfi.flags = LVFI_PARAM;
+         lvfi.lParam = dwScriptId;
+         iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+         if (iItem != -1)
+            m_wndListCtrl.DeleteItem(iItem);
+      }
+      else
+      {
+         theApp.ErrorBox(dwResult, _T("Cannot delete script: %s"));
+      }
+   }
+}
+
+void CScriptManager::OnUpdateScriptDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(GetSelectedScriptID() != 0);
+}
+
+
+//
+// Get ID of currently selected script
+//
+
+DWORD CScriptManager::GetSelectedScriptID()
+{
+   DWORD dwId = 0;
+
+   if (m_nMode == MODE_LIST)
+   {
+      int iItem;
+
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED | LVNI_FOCUSED);
+      if (iItem != -1)
+         dwId = m_wndListCtrl.GetItemData(iItem);
+   }
+   else
+   {
+      HTREEITEM hItem;
+
+      hItem = m_wndTreeCtrl.GetSelectedItem();
+      if (hItem != NULL)
+         dwId = m_wndTreeCtrl.GetItemData(hItem);
+   }
+   return dwId;
+}
+
+
+//
+// Rename selected script
+//
+
+void CScriptManager::OnScriptRename() 
+{
+   DWORD dwScriptId, dwResult;
+   HTREEITEM hItem;
+   int iItem;
+   LVFINDINFO lvfi;
+   CInputBox dlg;
+
+   dwScriptId = GetSelectedScriptID();
+   if (dwScriptId != 0)
+   {
+      hItem = FindTreeCtrlItemEx(m_wndTreeCtrl, TVI_ROOT, dwScriptId);
+
+      lvfi.flags = LVFI_PARAM;
+      lvfi.lParam = dwScriptId;
+      iItem = m_wndListCtrl.FindItem(&lvfi, -1);
+
+      if (iItem != -1)
+         dlg.m_strText = m_wndListCtrl.GetItemText(iItem, 0);
+
+      dlg.m_strTitle = _T("Rename Script");
+      dlg.m_strHeader = _T("Script name");
+      dlg.m_pfTextValidator = IsValidScriptName;
+      dlg.m_strErrorMsg = _T("Invalid script name entered");
+      if (dlg.DoModal() == IDOK)
+      {
+         dwResult = DoRequestArg3(NXCRenameScript, g_hSession, (void *)dwScriptId,
+                                  (void *)((LPCTSTR)dlg.m_strText),
+                                  _T("Changing script name..."));
+         if (dwResult == RCC_SUCCESS)
+         {
+            if (iItem != -1)
+               m_wndListCtrl.SetItemText(iItem, 0, (LPCTSTR)dlg.m_strText);
+            if (hItem != NULL)
+               m_wndTreeCtrl.SetItemText(hItem, (LPCTSTR)dlg.m_strText);
+         }
+         else
+         {
+            theApp.ErrorBox(dwResult, _T("Cannot rename script: %s"));
+         }
+      }
+   }
+}
+
+void CScriptManager::OnUpdateScriptRename(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(GetSelectedScriptID() != 0);
 }

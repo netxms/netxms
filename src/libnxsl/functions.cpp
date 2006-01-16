@@ -95,3 +95,78 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    }
    return nRet;
 }
+
+
+//
+// Convert string to uppercase
+//
+
+int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   int nRet;
+   DWORD i, dwLen;
+   char *pStr;
+
+   if (argv[0]->IsString())
+   {
+      *ppResult = new NXSL_Value(argv[0]);
+      pStr = (*ppResult)->GetValueAsString(&dwLen);
+      for(i = 0; i < dwLen; i++, pStr++)
+         *pStr = toupper(*pStr);
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_STRING;
+   }
+   return nRet;
+}
+
+
+//
+// Convert string to lowercase
+//
+
+int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   int nRet;
+   DWORD i, dwLen;
+   char *pStr;
+
+   if (argv[0]->IsString())
+   {
+      *ppResult = new NXSL_Value(argv[0]);
+      pStr = (*ppResult)->GetValueAsString(&dwLen);
+      for(i = 0; i < dwLen; i++, pStr++)
+         *pStr = tolower(*pStr);
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_STRING;
+   }
+   return nRet;
+}
+
+
+//
+// String length
+//
+
+int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   int nRet;
+   DWORD dwLen;
+
+   if (argv[0]->IsString())
+   {
+      argv[0]->GetValueAsString(&dwLen);
+      *ppResult = new NXSL_Value(dwLen);
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_STRING;
+   }
+   return nRet;
+}

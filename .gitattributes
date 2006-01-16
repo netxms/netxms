@@ -451,7 +451,13 @@ src/console/nxuilib/nxuilib.dsp -text
 src/console/nxuilib/nxuilib.dsw -text
 src/console/nxuilib/nxuilib.h -text
 src/console/nxuilib/nxuilib.rc -text
+src/console/nxuilib/popup.cpp -text
 src/console/nxuilib/res/Makefile.am -text
+src/console/nxuilib/res/SeverityCritical.ico -text
+src/console/nxuilib/res/SeverityMajor.ico -text
+src/console/nxuilib/res/SeverityMinor.ico -text
+src/console/nxuilib/res/SeverityNormal.ico -text
+src/console/nxuilib/res/SeverityWarning.ico -text
 src/console/nxuilib/res/login.bmp -text
 src/console/nxuilib/res/nxuilib.rc2 -text
 src/console/nxuilib/res/play.ico -text

@@ -25,6 +25,8 @@ CInputBox::CInputBox(CWnd* pParent /*=NULL*/)
 
    m_strTitle = _T("Input data");
    m_strHeader = _T("Enter data:");
+   m_strErrorMsg = _T("Invalid text entered");
+   m_pfTextValidator = NULL;
 }
 
 
@@ -52,3 +54,32 @@ BOOL CInputBox::OnInitDialog()
    SetWindowText(m_strTitle);
 	return TRUE;
 }
+
+
+//
+// "OK" button handler
+//
+
+void CInputBox::OnOK() 
+{
+   if (m_pfTextValidator != NULL)
+   {
+      CString strText;
+
+      GetDlgItemText(IDC_EDIT_TEXT, strText);
+      if (m_pfTextValidator((LPCTSTR)strText))
+      {
+      	CDialog::OnOK();
+      }
+      else
+      {
+         MessageBox(m_strErrorMsg, _T("Error"), MB_OK | MB_ICONSTOP);
+         ::SetFocus(::GetDlgItem(m_hWnd, IDC_EDIT_TEXT));
+      }
+   }
+   else
+   {
+	   CDialog::OnOK();
+   }
+}
+

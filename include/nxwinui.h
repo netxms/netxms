@@ -65,18 +65,24 @@ typedef struct
 // Exportable classes
 //
 
+#ifndef NXWINUI_NO_MFC
+
 #include "../src/console/nxuilib/resource.h"
 #include "../src/console/nxuilib/LoginDialog.h"
 #include "../src/console/nxuilib/FlatButton.h"
 #include "../src/console/nxuilib/ScintillaCtrl.h"
 #include "../src/console/nxuilib/SimpleListCtrl.h"
 
+#endif
+
 
 //
 // Functions
 //
 
+#ifndef NXWINUI_NO_MFC
 void NXUILIB_EXPORTABLE EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);
+#endif
 
 void NXUILIB_EXPORTABLE SpeakerInit(void);
 void NXUILIB_EXPORTABLE SpeakerShutdown(void);
@@ -89,5 +95,8 @@ void NXUILIB_EXPORTABLE PlayAlarmSound(NXC_ALARM *pAlarm, BOOL bNewAlarm,
                                        NXC_SESSION hSession, ALARM_SOUND_CFG *pCfg);
 
 BOOL NXUILIB_EXPORTABLE ScintillaInit(void);
+
+void NXUILIB_EXPORTABLE ShowNetXMSPopUp(int priority, int showTime,
+                                        TCHAR *title, TCHAR *text);
 
 #endif

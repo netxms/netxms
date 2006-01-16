@@ -14,6 +14,8 @@ class CInputBox : public CDialog
 {
 // Construction
 public:
+	CString m_strErrorMsg;
+   BOOL (* m_pfTextValidator)(const TCHAR *);
 	CString m_strTitle;
 	CInputBox(CWnd* pParent = NULL);   // standard constructor
 
@@ -38,6 +40,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CInputBox)
 	virtual BOOL OnInitDialog();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

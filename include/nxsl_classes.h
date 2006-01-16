@@ -166,6 +166,7 @@ public:
 
    BOOL IsNull(void) { return (m_nDataType == NXSL_DT_NULL); }
    BOOL IsObject(void) { return (m_nDataType == NXSL_DT_OBJECT); }
+   BOOL IsString(void) { return (m_nDataType >= NXSL_DT_STRING); }
    BOOL IsNumeric(void) { return (m_nDataType > NXSL_DT_STRING); }
    BOOL IsReal(void) { return (m_nDataType == NXSL_DT_REAL); }
    BOOL IsInteger(void) { return (m_nDataType > NXSL_DT_REAL); }
