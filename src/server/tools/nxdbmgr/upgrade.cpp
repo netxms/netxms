@@ -78,6 +78,53 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V36 to V37
+//
+
+static BOOL H_UpgradeFromV36(void)
+{
+   static TCHAR m_szBatch[] =
+      "DROP TABLE new_nodes\n"
+      "DELETE FROM config WHERE var_name='NewNodePollingInterval'\n"
+      "INSERT INTO script_library (script_id,script_name,script_code) "
+	      "VALUES (1,'Filter::SNMP','sub main()#0D#0A{#0D#0A   return $1->isSNMP;#0D#0A}#0D#0A')\n"
+      "INSERT INTO script_library (script_id,script_name,script_code) "
+	      "VALUES (2,'Filter::Agent','sub main()#0D#0A{#0D#0A   return $1->isAgent;#0D#0A}#0D#0A')\n"
+      "INSERT INTO script_library (script_id,script_name,script_code) "
+	      "VALUES (3,'Filter::AgentOrSNMP','sub main()#0D#0A{#0D#0A   return $1->isAgent || $1->isSNMP;#0D#0A}#0D#0A')\n"
+      "INSERT INTO script_library (script_id,script_name,script_code) "
+	      "VALUES (4,'DCI::SampleTransform','sub dci_transform()#0D#0A{#0D#0A   return $1 + 1;#0D#0A}#0D#0A')\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE script_library ("
+		                 "script_id integer not null,"
+		                 "script_name varchar(63) not null,"
+		                 "script_code $SQL:TEXT not null,"
+		                 "PRIMARY KEY(script_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DefaultCommunityString"), _T("public"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DiscoveryFilter"), _T("none"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='37' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V35 to V36
 //
 
@@ -1534,6 +1581,7 @@ static struct
    { 33, H_UpgradeFromV33 },
    { 34, H_UpgradeFromV34 },
    { 35, H_UpgradeFromV35 },
+   { 36, H_UpgradeFromV36 },
    { 0, NULL }
 };
 
