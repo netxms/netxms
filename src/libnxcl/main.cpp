@@ -141,6 +141,26 @@ DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels)
 
 
 //
+// Set client data
+//
+
+void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
+{
+   ((NXCL_Session *)hSession)->SetClientData(pData);
+}
+
+
+//
+// Get client data
+//
+
+void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->GetClientData();
+}
+
+
+//
 // Get text for error
 //
 

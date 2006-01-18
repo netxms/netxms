@@ -105,6 +105,7 @@ private:
    DWORD m_dwReceiverBufferSize;
    NXC_DCI_LIST *m_pItemList;
    THREAD m_hRecvThread;
+   void *m_pClientData;      // Client-defined data
 
    int m_hCurrFile;
    DWORD m_dwFileRqId;
@@ -201,6 +202,9 @@ public:
    DWORD PrepareFileTransfer(TCHAR *pszFile, DWORD dwRqId);
    DWORD WaitForFileTransfer(DWORD dwTimeout);
    void AbortFileTransfer(void);
+
+   void SetClientData(void *pData) { m_pClientData = pData; }
+   void *GetClientData(void) { return m_pClientData; }
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

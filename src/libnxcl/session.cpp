@@ -43,6 +43,7 @@ NXCL_Session::NXCL_Session()
    m_dwReceiverBufferSize = 4194304;     // 4MB
    m_hSocket = -1;
    m_pItemList = NULL;
+   m_pClientData = NULL;
 
    m_ppEventTemplates = NULL;
    m_dwNumTemplates = 0;

@@ -558,6 +558,7 @@ typedef struct
    WORD wSeverity;         // Alarm's severity
    WORD wIsAck;            // Non-zero if acknowleged
    DWORD dwAckByUser;      // Id of user who acknowleges this alarm (0 for system)
+   void *pUserData;        // Can be freely used by client application
 } NXC_ALARM;
 
 
@@ -1280,6 +1281,9 @@ void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeo
 void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId);
 DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels);
 DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels);
+
+void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession);
+void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile);
