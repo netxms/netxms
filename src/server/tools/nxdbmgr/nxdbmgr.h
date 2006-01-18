@@ -55,6 +55,7 @@
 void CheckDatabase(void);
 void InitDatabase(TCHAR *pszInitFile);
 void UpgradeDatabase(void);
+void UnlockDatabase(void);
 DB_RESULT SQLSelect(TCHAR *pszQuery);
 BOOL SQLQuery(TCHAR *pszQuery);
 BOOL SQLBatch(TCHAR *pszBatch);

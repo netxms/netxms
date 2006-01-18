@@ -295,6 +295,7 @@ int main(int argc, char *argv[])
                         "Valid commands are:\n"
                         "   check        : Check database for errors\n"
                         "   init <file>  : Initialize database\n"
+                        "   unlock       : Forced database unlock\n"
                         "   upgrade      : Upgrade database to new version\n"
                         "Valid options are:\n"
                         "   -c <config>  : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
@@ -336,6 +337,7 @@ int main(int argc, char *argv[])
    }
    if (strcmp(argv[optind], "check") && 
        strcmp(argv[optind], "upgrade") &&
+       strcmp(argv[optind], "unlock") &&
        strcmp(argv[optind], "init"))
    {
       _tprintf(_T("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
@@ -432,6 +434,8 @@ int main(int argc, char *argv[])
          CheckDatabase();
       else if (!strcmp(argv[optind], "upgrade"))
          UpgradeDatabase();
+      else if (!strcmp(argv[optind], "unlock"))
+         UnlockDatabase();
    }
 
    // Shutdown

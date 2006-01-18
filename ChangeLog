@@ -3,11 +3,11 @@
 *
 
 - Added built-in scripting language (NXSL - NetXMS Scripting Language)
-- Implemented DCI transformations
+- Implemented DCI transformations (using NXSL)
 - Implemeted auto discovery filters (using NXSL)
 - Added startup scripts for Gentoo Linux
 - Windows console: agent configuration editor improved
-- Fixed issues: #68, #71
+- Fixed issues: #68, #69, #71
 
 
 *

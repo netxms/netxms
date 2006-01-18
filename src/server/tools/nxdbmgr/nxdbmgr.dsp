@@ -109,6 +109,10 @@ SOURCE=.\nxdbmgr.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\unlock.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\upgrade.cpp
 # End Source File
 # End Group

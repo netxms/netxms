@@ -29,6 +29,69 @@
 
 static int m_iNumErrors = 0;
 static int m_iNumFixes = 0;
+static int m_iStageErrors;
+static int m_iStageFixes;
+static TCHAR *m_pszStageMsg = NULL;
+
+
+//
+// Start stage
+//
+
+static void StartStage(TCHAR *pszMsg)
+{
+   if (pszMsg != NULL)
+   {
+      safe_free(m_pszStageMsg);
+      m_pszStageMsg = _tcsdup(pszMsg);
+   }
+#ifdef _WIN32
+   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
+   _puttc(_T('*'), stdout);
+   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+   _tprintf(_T(" %-68s"), m_pszStageMsg, stdout);
+#else
+   _tprintf(_T("* %-68s"), m_pszStageMsg, stdout);
+   fflush(stdout);
+#endif
+   m_iStageErrors = m_iNumErrors;
+   m_iStageFixes = m_iNumFixes;
+}
+
+
+//
+// End stage
+//
+
+static void EndStage(void)
+{
+   static TCHAR *pszStatus[] = { _T("PASSED"), _T("FIXED "), _T("ERROR ") };
+   static int nColor[] = { 0x0A, 0x0E, 0x0C };
+   int nCode, nErrors;
+
+   nErrors = m_iNumErrors - m_iStageErrors;
+   if (nErrors > 0)
+   {
+      nCode = (m_iNumFixes - m_iStageFixes == nErrors) ? 1 : 2;
+      StartStage(NULL); // redisplay stage message
+   }
+   else
+   {
+      nCode = 0;
+   }
+#ifdef _WIN32
+   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
+   _puttc(_T('['), stdout);
+   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), nColor[nCode]);
+   _tprintf(_T("%s"), pszStatus[nCode]);
+   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
+   _puttc(_T(']'), stdout);
+   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+   _tprintf("\n");
+#else
+   _tprintf(_T("   [%s]\n"), pszStatus(nCode));
+#endif
+}
 
 
 //
@@ -42,7 +105,7 @@ static void CheckNodes(void)
    TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
    BOOL bResult, bIsDeleted;
 
-   _tprintf(_T("Checking node objects...\n"));
+   StartStage(_T("Checking node objects..."));
    hResult = SQLSelect(_T("SELECT id,primary_ip FROM nodes"));
    if (hResult != NULL)
    {
@@ -59,7 +122,7 @@ static void CheckNodes(void)
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Missing node object %d properties. Create? (Y/N) "), dwId);
+               _tprintf(_T("\rMissing node object %d properties. Create? (Y/N) "), dwId);
                if (GetYesNo())
                {
                   _sntprintf(szQuery, 256, 
@@ -87,7 +150,7 @@ static void CheckNodes(void)
                if ((DBGetNumRows(hResult2) == 0) && (DBGetFieldIPAddr(hResult, i, 1) != 0))
                {
                   m_iNumErrors++;
-                  _tprintf(_T("Unlinked node object %d (\"%s\"). Delete? (Y/N) "),
+                  _tprintf(_T("\rUnlinked node object %d (\"%s\"). Delete? (Y/N) "),
                            dwId, szName);
                   if (GetYesNo())
                   {
@@ -106,6 +169,7 @@ static void CheckNodes(void)
       }
       DBFreeResult(hResult);
    }
+   EndStage();
 }
 
 
@@ -120,7 +184,9 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
    TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
    BOOL bIsDeleted;
 
-   _tprintf(_T("Checking %s objects...\n"), pszDisplayName);
+   _stprintf(szQuery, _T("Checking %s objects..."), pszDisplayName);
+   StartStage(szQuery);
+
    _stprintf(szQuery, _T("SELECT id,node_id FROM %s"), pszTable);
    hResult = SQLSelect(szQuery);
    if (hResult != NULL)
@@ -138,7 +204,7 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
             if (DBGetNumRows(hResult2) == 0)
             {
                m_iNumErrors++;
-               _tprintf(_T("Missing %s object %d properties. Create? (Y/N) "),
+               _tprintf(_T("\rMissing %s object %d properties. Create? (Y/N) "),
                         pszDisplayName, dwId);
                if (GetYesNo())
                {
@@ -174,7 +240,7 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
             {
                m_iNumErrors++;
                dwId = DBGetFieldULong(hResult, i, 0);
-               _tprintf(_T("Unlinked %s object %d (\"%s\"). Delete? (Y/N) "),
+               _tprintf(_T("\rUnlinked %s object %d (\"%s\"). Delete? (Y/N) "),
                         pszDisplayName, dwId, szName);
                if (GetYesNo())
                {
@@ -192,6 +258,7 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
       }
       DBFreeResult(hResult);
    }
+   EndStage();
 }
 
 
@@ -205,7 +272,7 @@ static void CheckObjectProperties(void)
    TCHAR szQuery[1024];
    DWORD i, dwNumRows, dwObjectId;
 
-   _tprintf(_T("Checking object properties...\n"));
+   StartStage(_T("Checking object properties..."));
    hResult = SQLSelect(_T("SELECT object_id,name,last_modified FROM object_properties"));
    if (hResult != NULL)
    {
@@ -218,7 +285,7 @@ static void CheckObjectProperties(void)
          if (DBGetFieldULong(hResult, i, 2) == 0)
          {
             m_iNumErrors++;
-            _tprintf(_T("Object %d [%s] has invalid timestamp. Correct? (Y/N) "),
+            _tprintf(_T("\rObject %d [%s] has invalid timestamp. Correct? (Y/N) "),
                      dwObjectId, DBGetField(hResult, i, 1));
             if (GetYesNo())
             {
@@ -231,6 +298,7 @@ static void CheckObjectProperties(void)
       }
       DBFreeResult(hResult);
    }
+   EndStage();
 }
 
 
@@ -264,7 +332,7 @@ static void CheckEPP(void)
    int i, iNumRows;
    DWORD dwId;
 
-   _tprintf(_T("Checking event processing policy...\n"));
+   StartStage(_T("Checking event processing policy..."));
    
    // Check source object ID's
    hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
@@ -278,7 +346,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("Invalid object ID %d used. Correct? (Y/N) "), dwId);
+            _tprintf(_T("\rInvalid object ID %d used. Correct? (Y/N) "), dwId);
             if (GetYesNo())
             {
                _stprintf(szQuery, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
@@ -305,7 +373,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("Invalid event%s ID 0x%08X used. Correct? (Y/N) "),
+            _tprintf(_T("\rInvalid event%s ID 0x%08X used. Correct? (Y/N) "),
                      (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId);
             if (GetYesNo())
             {
@@ -330,7 +398,7 @@ static void CheckEPP(void)
          if (!CheckResultSet(szQuery))
          {
             m_iNumErrors++;
-            _tprintf(_T("Invalid action ID %d used. Correct? (Y/N) "), dwId);
+            _tprintf(_T("\rInvalid action ID %d used. Correct? (Y/N) "), dwId);
             if (GetYesNo())
             {
                _stprintf(szQuery, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
@@ -341,6 +409,8 @@ static void CheckEPP(void)
       }
       DBFreeResult(hResult);
    }
+
+   EndStage();
 }
 
 
@@ -354,7 +424,7 @@ void CheckDatabase(void)
    LONG iVersion = 0;
    BOOL bCompleted = FALSE;
 
-   _tprintf(_T("Checking database...\n"));
+   _tprintf(_T("Checking database:\n"));
 
    // Get database format version
    hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
