@@ -5,6 +5,10 @@
 */
 
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (1,'Filter::SNMP','sub main()#0D#0A{#0D#0A   return 1;#0D#0A}#0D#0A');
+	VALUES (1,'Filter::SNMP','sub main()#0D#0A{#0D#0A   return $1->isSNMP;#0D#0A}#0D#0A');
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (2,'DCI::Test','sub dci_test()#0D#0A{#0D#0A   return $1 + 1;#0D#0A}#0D#0A');
+	VALUES (2,'Filter::Agent','sub main()#0D#0A{#0D#0A   return $1->isAgent;#0D#0A}#0D#0A');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (3,'Filter::AgentOrSNMP','sub main()#0D#0A{#0D#0A   return $1->isAgent || $1->isSNMP;#0D#0A}#0D#0A');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (4,'DCI::SampleTransform','sub dci_transform()#0D#0A{#0D#0A   return $1 + 1;#0D#0A}#0D#0A');
