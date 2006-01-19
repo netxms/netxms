@@ -33,6 +33,13 @@ NXC_SESSION g_hSession = NULL;
 
 
 //
+// Global settings
+//
+
+BOOL g_bRepeatSound = FALSE;
+
+
+//
 // Login parameters
 //
 

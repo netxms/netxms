@@ -32,6 +32,7 @@
 #define WM_REQUEST_COMPLETED     (WM_USER + 1)
 #define WM_SET_INFO_TEXT         (WM_USER + 2)
 #define WM_ALARM_UPDATE          (WM_USER + 3)
+#define WM_DISABLE_ALARM_SOUND   (WM_USER + 4)
 
 
 //
@@ -74,6 +75,7 @@ extern COLORREF g_rgbInfoLineTimer;
 extern DWORD g_dwOptions;
 extern MONITORINFOEX *g_pMonitorList;
 extern DWORD g_dwNumMonitors;
+extern BOOL g_bRepeatSound;
 
 
 #endif

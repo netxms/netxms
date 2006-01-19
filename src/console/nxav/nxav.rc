@@ -68,11 +68,6 @@ END
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\nxav.ico"
 IDI_PROCESSING          ICON    DISCARDABLE     "res\\processing.ico"
-IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "res\\SeverityWarning.ico"
-IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "res\\SeverityCritical.ico"
-IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "res\\SeverityMajor.ico"
-IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "res\\SeverityMinor.ico"
-IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "res\\SeverityNormal.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -119,7 +114,7 @@ BEGIN
     LTEXT           "Static",IDC_INFO_TEXT,35,13,207,8
 END
 
-IDD_SETTINGS DIALOG DISCARDABLE  0, 0, 233, 170
+IDD_SETTINGS DIALOG DISCARDABLE  0, 0, 233, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Settings"
 FONT 8, "MS Sans Serif"
@@ -130,14 +125,17 @@ BEGIN
     EDITTEXT        IDC_EDIT_USER,13,70,146,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_PASSWD,13,97,146,14,ES_PASSWORD | 
                     ES_AUTOHSCROLL
-    PUSHBUTTON      "Configure &sounds...",IDC_CONFIGURE_SOUNDS,13,138,84,14
+    CONTROL         "&Repeat sound for active alarms until it turned off manually",
+                    IDC_CHECK_REPEAT,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,13,134,145,19
+    PUSHBUTTON      "Configure &sounds...",IDC_CONFIGURE_SOUNDS,13,156,84,14
     DEFPUSHBUTTON   "OK",IDOK,176,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
     GROUPBOX        "Automatic login",IDC_STATIC,7,7,159,112
     LTEXT           "Server",IDC_STATIC_SERVER,13,33,22,8
     LTEXT           "User name",IDC_STATIC_USER,13,60,35,8
     LTEXT           "Password",IDC_STATIC_PASSWORD,13,88,32,8
-    GROUPBOX        "Alarm sounds",IDC_STATIC,7,123,159,40
+    GROUPBOX        "Alarm sounds",IDC_STATIC,7,121,159,57
 END
 
 
@@ -213,7 +211,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 226
         TOPMARGIN, 7
-        BOTTOMMARGIN, 163
+        BOTTOMMARGIN, 179
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -257,6 +255,8 @@ IDF_MAJOR               FILE    DISCARDABLE     "res\\major.ico"
 IDF_MINOR               FILE    DISCARDABLE     "res\\minor.ico"
 IDF_NORMAL              FILE    DISCARDABLE     "res\\normal.ico"
 IDF_ACK                 FILE    DISCARDABLE     "res\\ack.png"
+IDF_NOSOUND             FILE    DISCARDABLE     "res\\nosound.png"
+IDF_SOUND               FILE    DISCARDABLE     "res\\sound.png"
 
 /////////////////////////////////////////////////////////////////////////////
 //

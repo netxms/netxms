@@ -26,11 +26,11 @@
 #define IDR_SND_RING2                   5021
 #define IDR_SND_SIREN1                  5022
 #define IDI_PLAY                        5024
-#define IDI_SEVERITY_WARNING            5025
-#define IDI_SEVERITY_CRITICAL           5026
-#define IDI_SEVERITY_MAJOR              5027
-#define IDI_SEVERITY_MINOR              5028
-#define IDI_SEVERITY_NORMAL             5029
+#define IDI_ICON_WARNING                5025
+#define IDI_ICON_CRITICAL               5026
+#define IDI_ICON_MAJOR                  5027
+#define IDI_ICON_MINOR                  5028
+#define IDI_ICON_NORMAL                 5029
 #define IDD_NOTIFY                      5030
 #define IDC_RADIO_NO_SOUND              5200
 #define IDC_RADIO_SOUND                 5201

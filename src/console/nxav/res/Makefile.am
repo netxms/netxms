@@ -9,19 +9,16 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	SeverityCritical.ico \
-	SeverityMajor.ico \
-	SeverityMinor.ico \
-	SeverityNormal.ico \
-	SeverityWarning.ico \
 	ack.png \
 	background.jpg \
 	critical.ico \
 	major.ico \
 	minor.ico \
 	normal.ico \
+	nosound.png \
 	nxav.ico \
 	nxav.rc2 \
 	processing.ico \
 	small_logo.bmp \
+	sound.png \
 	warning.ico

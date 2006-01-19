@@ -23,6 +23,7 @@ CSettingsDlg::CSettingsDlg(CWnd* pParent /*=NULL*/)
 	m_strPassword = _T("");
 	m_strServer = _T("");
 	m_strUser = _T("");
+	m_bRepeatSound = FALSE;
 	//}}AFX_DATA_INIT
    memset(&m_soundCfg, 0, sizeof(ALARM_SOUND_CFG));
 }
@@ -39,6 +40,7 @@ void CSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strServer, 63);
 	DDX_Text(pDX, IDC_EDIT_USER, m_strUser);
 	DDV_MaxChars(pDX, m_strUser, 63);
+	DDX_Check(pDX, IDC_CHECK_REPEAT, m_bRepeatSound);
 	//}}AFX_DATA_MAP
 }
 

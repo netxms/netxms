@@ -220,11 +220,11 @@ IDR_SND_SIREN1          WAVE    DISCARDABLE     "sounds\\siren1.wav"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_PLAY                ICON    DISCARDABLE     "res\\play.ico"
-IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "res\\SeverityWarning.ico"
-IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "res\\SeverityCritical.ico"
-IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "res\\SeverityMajor.ico"
-IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "res\\SeverityMinor.ico"
-IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "res\\SeverityNormal.ico"
+IDI_ICON_WARNING        ICON    DISCARDABLE     "res\\SeverityWarning.ico"
+IDI_ICON_CRITICAL       ICON    DISCARDABLE     "res\\SeverityCritical.ico"
+IDI_ICON_MAJOR          ICON    DISCARDABLE     "res\\SeverityMajor.ico"
+IDI_ICON_MINOR          ICON    DISCARDABLE     "res\\SeverityMinor.ico"
+IDI_ICON_NORMAL         ICON    DISCARDABLE     "res\\SeverityNormal.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

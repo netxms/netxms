@@ -7,7 +7,8 @@
 - Implemeted auto discovery filters (using NXSL)
 - Added startup scripts for Gentoo Linux
 - Windows console: agent configuration editor improved
-- Fixed issues: #68, #69, #71
+- Alarm Viewer: repeated alarm sounds added
+- Fixed issues: #64, #68, #69, #70, #71
 
 
 *

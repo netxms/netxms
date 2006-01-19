@@ -33,24 +33,24 @@ typedef struct t_NotifyData
 
 static HANDLE LoadIconForPriority(int p)
 {
-	int iconId = IDI_SEVERITY_CRITICAL;
+	int iconId = IDI_ICON_CRITICAL;
 
 	switch(p)
 	{
 	case 0: // normal
-		iconId = IDI_SEVERITY_NORMAL;
+		iconId = IDI_ICON_NORMAL;
 		break;
 	case 1: // warning
-		iconId = IDI_SEVERITY_WARNING;
+		iconId = IDI_ICON_WARNING;
 		break;
 	case 2: // minor
-		iconId = IDI_SEVERITY_MINOR;
+		iconId = IDI_ICON_MINOR;
 		break;
 	case 3: // major
-		iconId = IDI_SEVERITY_MAJOR;
+		iconId = IDI_ICON_MAJOR;
 		break;
 	case 4: // critical
-		iconId = IDI_SEVERITY_CRITICAL;
+		iconId = IDI_ICON_CRITICAL;
 		break;
 	}
 

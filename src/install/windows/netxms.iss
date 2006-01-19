@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.8
-AppVersion=0.2.8
+AppVerName=NetXMS 0.2.9
+AppVersion=0.2.9
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.8
+OutputBaseFilename=netxms-0.2.9
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -55,6 +55,7 @@ Source: "..\..\server\tools\nxsnmpset\Release\nxsnmpset.exe"; DestDir: "{app}\bi
 Source: "..\..\server\tools\nxupload\Release\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\nxmibc\Release\nxmibc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\console\nxuilib\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\console\nxlexer\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\win32\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxav\Release\nxav.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\agent\core\Release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -75,6 +76,7 @@ Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignor
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\ChangeLog"; DestDir: "{app}\doc"; Flags: ignoreversion; Components: base
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "Files\ntwdblib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mssql
 Source: "Files\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql

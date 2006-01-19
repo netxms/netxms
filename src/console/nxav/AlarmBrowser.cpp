@@ -111,7 +111,11 @@ void CAlarmBrowser::OnBeforeNavigate2(LPCTSTR lpszURL, DWORD nFlags, LPCTSTR lps
       {
          case 'A':   // Acknowlege
             dwId = _tcstoul(&lpszURL[7], NULL, 10);
-            AcknowlegeAlarm(dwId);
+            AcknowledgeAlarm(dwId);
+            break;
+         case 'S':   // Disable repeated sound
+            dwId = _tcstoul(&lpszURL[7], NULL, 10);
+            AfxGetMainWnd()->PostMessage(WM_DISABLE_ALARM_SOUND, dwId, 0);
             break;
          default:
             break;
@@ -124,7 +128,7 @@ void CAlarmBrowser::OnBeforeNavigate2(LPCTSTR lpszURL, DWORD nFlags, LPCTSTR lps
 // Acknowlege alarm by ID
 //
 
-BOOL CAlarmBrowser::AcknowlegeAlarm(DWORD dwAlarmId)
+BOOL CAlarmBrowser::AcknowledgeAlarm(DWORD dwAlarmId)
 {
    DWORD dwResult;
 

@@ -96,6 +96,7 @@ public:
 
 // Implementation
 protected:
+	void OpenObject(DWORD dwObjectId);
 	DWORD AdjustIndex(DWORD dwIndex, DWORD dwObjectId);
 	void AddObjectEntryToHash(NXC_OBJECT *pObject, HTREEITEM hItem);
 	BOOL m_bRestoredDesktop;

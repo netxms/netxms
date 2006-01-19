@@ -25,6 +25,7 @@ public:
 	CString	m_strPassword;
 	CString	m_strServer;
 	CString	m_strUser;
+	BOOL	m_bRepeatSound;
 	//}}AFX_DATA
 
 

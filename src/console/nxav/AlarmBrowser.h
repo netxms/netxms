@@ -44,7 +44,7 @@ public:
 
 // Implementation
 protected:
-	BOOL AcknowlegeAlarm(DWORD dwAlarmId);
+	BOOL AcknowledgeAlarm(DWORD dwAlarmId);
 	virtual ~CAlarmBrowser();
 #ifdef _DEBUG
 	virtual void AssertValid() const;

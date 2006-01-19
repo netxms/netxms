@@ -393,7 +393,6 @@ void CObjectBrowser::OnViewRefresh()
    DWORD i, j, dwNumObjects, dwNumRootObj;
    
    // Populate object's list and select root objects
-
    m_wndListCtrl.DeleteAllItems();
    NXCLockObjectIndex(g_hSession);
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
@@ -990,10 +989,26 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
 
             dwIndex = FindObjectInTree(pObject->dwId);
             if (dwIndex != INVALID_INDEX)
+            {
                m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
+            }
             else
-               MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
-                          "Find", MB_OK | MB_ICONEXCLAMATION);
+            {
+               if (pObject->dwNumParents > 0)
+               {
+                  OpenObject(pObject->pdwParentList[0]);
+                  dwIndex = FindObjectInTree(pObject->dwId);
+                  if (dwIndex != INVALID_INDEX)
+                  {
+                     m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
+                  }
+               }
+               else
+               {
+                  MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
+                             "Find", MB_OK | MB_ICONEXCLAMATION);
+               }
+            }
             m_wndTreeCtrl.SetFocus();
          }
          else
@@ -2020,3 +2035,35 @@ DWORD CObjectBrowser::AdjustIndex(DWORD dwIndex, DWORD dwObjectId)
       return dwIndex + 1;
 }
 
+
+//
+// Open object in tree
+//
+
+void CObjectBrowser::OpenObject(DWORD dwObjectId)
+{
+   DWORD dwIndex;
+   NXC_OBJECT *pObject;
+
+   dwIndex = FindObjectInTree(dwObjectId);
+   if (dwIndex != INVALID_INDEX)
+   {
+      m_wndTreeCtrl.Expand(m_pTreeHash[dwIndex].phTreeItemList[0], TVE_EXPAND);
+   }
+   else
+   {
+      pObject = NXCFindObjectById(g_hSession, dwObjectId);
+      if (pObject != NULL)
+      {
+         if (pObject->dwNumParents > 0)
+         {
+            OpenObject(pObject->pdwParentList[0]);
+            dwIndex = FindObjectInTree(dwObjectId);
+            if (dwIndex != INVALID_INDEX)
+            {
+               m_wndTreeCtrl.Expand(m_pTreeHash[dwIndex].phTreeItemList[0], TVE_EXPAND);
+            }
+         }
+      }
+   }
+}

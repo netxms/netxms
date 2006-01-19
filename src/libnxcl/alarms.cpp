@@ -39,6 +39,7 @@ static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->GetVariableStr(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_DB_STRING);
    pAlarm->wIsAck = pMsg->GetVariableShort(VID_IS_ACK);
    pAlarm->wSeverity = pMsg->GetVariableShort(VID_SEVERITY);
+   pAlarm->pUserData = NULL;
 }
 
 

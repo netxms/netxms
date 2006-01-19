@@ -81,6 +81,7 @@ BOOL CAlarmViewApp::InitInstance()
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    _tcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
    g_dwOptions = GetProfileInt(_T("Connection"), _T("Options"), 0);
+   g_bRepeatSound = GetProfileInt(_T("Settings"), _T("RepeatSound"), FALSE);
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
@@ -148,6 +149,8 @@ BOOL CAlarmViewApp::InitInstance()
    FileFromResource(IDF_MAJOR, _T("major.ico"));
    FileFromResource(IDF_CRITICAL, _T("critical.ico"));
    FileFromResource(IDF_ACK, _T("ack.png"));
+   FileFromResource(IDF_SOUND, _T("sound.png"));
+   FileFromResource(IDF_NOSOUND, _T("nosound.png"));
 
    // Place main window to correct monitor
    CreateMonitorList();
@@ -354,6 +357,7 @@ void CAlarmViewApp::OnCmdSettings()
    CSettingsDlg dlg;
 
    dlg.m_bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
+   dlg.m_bRepeatSound = g_bRepeatSound;
    dlg.m_strServer = (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost"));
    dlg.m_strUser = (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL);
    dlg.m_strPassword = (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL);
@@ -370,5 +374,7 @@ void CAlarmViewApp::OnCmdSettings()
       }
       WriteProfileString(_T("Connection"), _T("Password"), 
                          dlg.m_bAutoLogin ? (LPCTSTR)dlg.m_strPassword : _T(""));
+      g_bRepeatSound = dlg.m_bRepeatSound;
+      WriteProfileInt(_T("Settings"), _T("RepeatSound"), g_bRepeatSound);
    }
 }

@@ -26,8 +26,11 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_COMMAND(ID_CMD_EXIT, OnCmdExit)
+	ON_WM_DESTROY()
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
+   ON_MESSAGE(WM_DISABLE_ALARM_SOUND, OnDisableAlarmSound)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -65,6 +68,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pwndAlarmView = (CAlarmBrowser *)RUNTIME_CLASS(CAlarmBrowser)->CreateObject();
    m_pwndAlarmView->Create(NULL, _T("Alarm View"), WS_VISIBLE | WS_CHILD, 
                            rect, this, IDC_ALARM_LIST);
+
+   m_nTimer = SetTimer(1, 1000, NULL);
 
 	return 0;
 }
@@ -178,11 +183,13 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine)
                         "<td><b>%s</b></td></tr></table></td>"
                         "<td><b>%s</b></td>"
                         "<td><font size=-1>%s</font></td><td><font size=-1>%s</font></td>"
-                        "<td align=center><a href=\"nxav:A?%d\"><img src=\"ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n",
+                        "<td align=center><a href=\"nxav:S?%d\"><img src=\"%ssound.png\" alt=\"NOSOUND\" border=0/></a> "
+                        "<a href=\"nxav:A?%d\"><img src=\"ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n",
            bColoredLine ? "#EFEFEF" : "#FFFFFF", 
            g_szStatusTextSmall[pAlarm->wSeverity],
            g_szStatusTextSmall[pAlarm->wSeverity], pObject->szName,
-           pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId);
+           pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId,
+           pAlarm->pUserData != 0 ? "" : "no", pAlarm->dwAlarmId);
 }
 
 
@@ -241,6 +248,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          {
             m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
             memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
+            m_pAlarmList[m_dwNumAlarms].pUserData = (void *)time(NULL);
             m_dwNumAlarms++;
             SortAlarms();
             PlayAlarmSound(pAlarm, TRUE, g_hSession, &theApp.m_soundCfg);
@@ -285,4 +293,57 @@ static int CompareAlarms(const NXC_ALARM *p1, const NXC_ALARM *p2)
 void CMainFrame::SortAlarms()
 {
    qsort(m_pAlarmList, m_dwNumAlarms, sizeof(NXC_ALARM), (int (*)(const void *,const void *))CompareAlarms);
+}
+
+
+//
+// WM_DISABLE_ALARM_SOUND message handler
+//
+
+void CMainFrame::OnDisableAlarmSound(WPARAM wParam, LPARAM lParam)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == wParam)
+      {
+         m_pAlarmList[i].pUserData = 0;
+         GenerateHtml();
+         m_pwndAlarmView->Refresh();
+         break;
+      }
+}
+
+
+//
+// WM_DESTROY message handler
+//
+
+void CMainFrame::OnDestroy() 
+{
+   KillTimer(m_nTimer);
+	CFrameWnd::OnDestroy();	
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CMainFrame::OnTimer(UINT nIDEvent) 
+{
+   DWORD i;
+   time_t now;
+
+   if (g_bRepeatSound)
+   {
+      now = time(NULL);
+      for(i = 0; i < m_dwNumAlarms; i++)
+         if ((m_pAlarmList[i].pUserData != 0) &&
+             (now - (time_t)m_pAlarmList[i].pUserData > 60))
+         {
+            PlayAlarmSound(&m_pAlarmList[i], TRUE, g_hSession, &theApp.m_soundCfg);
+            m_pAlarmList[i].pUserData = (void *)now;
+         }
+   }
 }

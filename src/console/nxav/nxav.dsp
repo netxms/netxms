@@ -270,5 +270,13 @@ SOURCE=.\res\small_logo.bmp
 SOURCE=.\res\warning.ico
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\res\nosound.png
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sound.png
+# End Source File
 # End Target
 # End Project
