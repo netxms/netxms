@@ -1,4 +1,4 @@
-/* $Id: nxsm_ext.h,v 1.4 2006-01-09 07:40:35 alk Exp $ */
+/* $Id: nxsm_ext.h,v 1.5 2006-01-19 03:25:16 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Session Manager
@@ -35,6 +35,8 @@ enum
 
 	CMD_NXSM_STATUS,
 
+	CMD_NXSM_GET_OBJECT_INFO,
+
 	CMD_NXSM_LAST
 };
 
@@ -66,22 +68,37 @@ typedef struct t_W_NXSM_ALARM
 
 typedef struct
 {
-   DWORD dwNumAlarms;
+	DWORD dwNumAlarms;
 	DWORD dwNumAlarmsNormal;
 	DWORD dwNumAlarmsWarning;
 	DWORD dwNumAlarmsMinor;
 	DWORD dwNumAlarmsMajor;
 	DWORD dwNumAlarmsCritical;
-   DWORD dwNumObjects;
-   DWORD dwNumNodes;
-   DWORD dwNumDCI;
-   DWORD dwNumClientSessions;
-   DWORD dwServerUptime;
-   DWORD dwServerProcessVMSize;
-   DWORD dwServerProcessWorkSet;
-   TCHAR szServerVersion[MAX_DB_STRING];
+	DWORD dwNumObjects;
+	DWORD dwNumNodes;
+	DWORD dwNumDCI;
+	DWORD dwNumClientSessions;
+	DWORD dwServerUptime;
+	DWORD dwServerProcessVMSize;
+	DWORD dwServerProcessWorkSet;
+	TCHAR szServerVersion[MAX_DB_STRING];
 } NXSM_SERVER_STATS;
 
+
+typedef struct t_NXSM_OBJECT
+{
+	DWORD dwId;
+	TCHAR szName[MAX_DB_STRING];
+	DWORD dwClass;
+	DWORD dwNumChilds;
+	DWORD dwStatus;
+} NXSM_OBJECT;
+
+typedef struct t_W_NXSM_OBJECT
+{
+	int count;
+	NXSM_OBJECT *data;
+} W_NXSM_OBJECT;
 
 #endif // __NXSM_EXT__H__
 
@@ -89,6 +106,9 @@ typedef struct
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/01/09 07:40:35  alk
+alarms weight distr. graph added to overview page
+
 Revision 1.3  2005/12/21 22:42:00  alk
 + get server stats
 
