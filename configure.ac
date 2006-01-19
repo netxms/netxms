@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.134 2006-01-12 10:41:35 victor Exp $
+# $Id: configure.ac,v 1.135 2006-01-19 04:57:44 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.9-dev], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.9], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -257,7 +257,7 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
-	MODULES="libnxsnmp server agent libnxcl nxevent nxreport nxmibc console www"
+	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console www nxscript"
 	SUBAGENT_DIRS="linux freebsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
@@ -362,10 +362,20 @@ fi
 AC_HEADER_STDC
 AC_HEADER_STAT
 AC_HEADER_TIME
-AC_CHECK_HEADERS([sys/int_types.h])
+AC_CHECK_HEADERS([sys/int_types.h sys/time.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h])
-AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h])
+AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
+[[#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+]])
 AC_CHECK_HEADERS([readline/readline.h])
 AC_CHECK_HEADERS([byteswap.h])
 AC_CHECK_HEADERS([sys/mman.h])

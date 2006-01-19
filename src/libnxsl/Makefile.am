@@ -8,7 +8,7 @@ libnxsl_la_SOURCES = lex.yy.cpp parser.tab.cpp class.cpp compiler.cpp \
 libnxsl_la_LDFLAGS = -version-info $(LIBNXSL_LIBRARY_VERSION) $(PTHREAD_LIBS)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 
-EXTRA_DIST = libnxsl.dsp libnxsl.dsw libnxsl.h parser.l parser.y parser.tab.h
+EXTRA_DIST = libnxsl.dsp libnxsl.dsw libnxsl.h parser.l parser.y parser.tab.hpp
 
 lex.yy.cpp: parser.l parser.tab.cpp parser.tab.hpp
 	$(LEX) -Bf8+ -olex.yy.cpp parser.l
