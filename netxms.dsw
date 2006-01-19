@@ -81,6 +81,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libnxsl"=.\src\libnxsl\libnxsl.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libnxsnmp"=.\src\libnxsnmp\libnxsnmp.dsp - Package Owner=<4>
 
 Package=<5>
@@ -320,6 +338,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnxsrv
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsl
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -412,6 +433,24 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxscript"=.\src\nxscript\nxscript.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxsl
     End Project Dependency
 }}}
 

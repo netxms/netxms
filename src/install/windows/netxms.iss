@@ -35,6 +35,7 @@ Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeIns
 Source: "..\..\libnxcscp\Release\libnxcscp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\libnxsnmp\Release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
+Source: "..\..\libnxsl\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\server\libnxsrv\Release\libnxsrv.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\core\Release\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\netxmsd\Release\netxmsd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -54,6 +55,7 @@ Source: "..\..\server\tools\nxsnmpwalk\Release\nxsnmpwalk.exe"; DestDir: "{app}\
 Source: "..\..\server\tools\nxsnmpset\Release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxupload\Release\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\nxmibc\Release\nxmibc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\nxscript\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\console\nxuilib\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxlexer\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\win32\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
