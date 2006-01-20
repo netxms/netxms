@@ -167,11 +167,12 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		case 9600:   newTio.c_cflag |= B9600;   break;
 		case 19200:  newTio.c_cflag |= B19200;  break;
 		case 38400:  newTio.c_cflag |= B38400;  break;
-#ifndef _NETWARE
+/*
+#if !defined(_NETWARE)
 		case 57600:  newTio.c_cflag |= B57600;  break;
 		case 115200: newTio.c_cflag |= B115200; break;
 #endif
-
+*/
 		default:     newTio.c_cflag |= B38400;  break;
 	}
 
