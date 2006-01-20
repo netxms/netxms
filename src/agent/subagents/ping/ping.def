@@ -19,8 +19,8 @@ EXIT _LibCPostlude
 # NLM header
 OUTPUT ping.nsm
 TYPE 0
-VERSION 0,2,8
-COPYRIGHT "Copyright (c) 2004, 2005 NetXMS Team"
+VERSION 0,2,9
+COPYRIGHT "Copyright (c) 2004, 2005, 2006 NetXMS Team"
 DESCRIPTION "NetXMS PING Subagent"
 SCREENNAME "System Console"
 
