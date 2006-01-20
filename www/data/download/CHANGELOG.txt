@@ -1,4 +1,17 @@
 *
+* 0.2.9
+*
+
+- Added built-in scripting language (NXSL - NetXMS Scripting Language)
+- Implemented DCI transformations (using NXSL)
+- Implemeted auto discovery filters (using NXSL)
+- Added startup scripts for Gentoo Linux
+- Windows console: agent configuration editor improved
+- Alarm Viewer: repeated alarm sounds added
+- Fixed issues: #64, #68, #69, #70, #71
+
+
+*
 * 0.2.8
 *
 
