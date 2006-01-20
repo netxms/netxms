@@ -49,66 +49,64 @@ esac
 cd `dirname $0`
 name=`ls netxms-*.tar.gz 2>/dev/null|sed s',\.tar\.gz$,,'`
 if [ "x$name" = "x" ]; then
-	echo invalid package >> $log
+	echo invalid package >>$log
 	exit 1
 fi
 
 gzip -dc $name.tar.gz | tar xf - 2>/dev/null
 if [ $? != 0 ]; then
-	echo invalid package >> $log
+	echo invalid package >>$log
 	exit 2
 fi
 cd $name
 if [ $? != 0 ]; then
-	echo invalid package >> $log
+	echo invalid package >>$log
 	exit 3
 fi
 
 # ask nxagentd gently
-$pkill nxagentd 2>/dev/null
+$pkill nxagentd >>$log 2>&1
 # wait a few seconds and smash it down
-sleep 15 && $pkill -9 nxagentd 2>/dev/null
+sleep 15 && $pkill -9 nxagentd >>$log 2>&1
 
 # do configure
-./configure --prefix=$prefix --with-agent $configureAdd 2>/dev/null >/dev/null
+./configure --prefix=$prefix --with-agent $configureAdd >>$log 2>&1
 if [ $? != 0 ]; then
-	echo configure failed, duh >> $log
+	echo configure failed, restarting old agent  >>$log
    # Try to restart existing agent
-   $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
+   $prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 4
 fi
 
 # build
-$make >/dev/null 2>/dev/null
+$make >>$log 2>&1
 if [ $? != 0 ]; then
-	echo build failed, duh >> $log
+	echo build failed, restarting olf agent >>$log
    # Try to restart existing agent
-   $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
+   $prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 4
 fi
 
 # now we can install it...
-$make install >/dev/null 2>/dev/null
+$make install >>$log 2>&1
 if [ $? != 0 ]; then
-	echo install failed >> $log
+	echo install failed, restarting old agent >>$log
    # Try to restart existing agent
-   $prefix/bin/nxagentd -d -c $config >/dev/null 2>/dev/null
+   $prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 5
 fi
 
 # show config
-echo "config ($config):" >> $log
-cat $config >> $log 2>&1
-echo "---------------" >> $log
+echo "config ($config):" >>$log
+cat $config >>$log 2>&1
+echo "---------------" >>$log
 
 # and restart
-echo "Starting agent: $prefix/bin/nxagentd -d -c $config" >> $log
-$prefix/bin/nxagentd -d -c $config > $log.tmp 2>&1
+echo "Starting agent: $prefix/bin/nxagentd -d -c $config" >>$log
+$prefix/bin/nxagentd -d -c $config >>$log 2>&1
 ret=$?
 if [ $ret != 0 ]; then
-	cat $log.tmp >> $log
-	rm -f $log.tmp
-	echo nxagentd not started \($ret\) >> $log
+	echo nxagentd not started \($ret\) >>$log
 	exit 5
 fi
 rm -f $log.tmp
