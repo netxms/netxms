@@ -22,7 +22,7 @@
 
 #include "libnetxms.h"
 
-#ifdef _NETWARE
+#if HAVE_TERMIO_H
 #include <termio.h>
 #endif
 
