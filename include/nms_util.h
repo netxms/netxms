@@ -82,6 +82,60 @@
 
 
 //
+// Class for serial communications
+//
+
+#ifdef __cplusplus
+
+#ifndef _WIN32
+enum
+{
+	NOPARITY,
+	ODDPARITY,
+	EVENPARITY,
+	ONESTOPBIT,
+	TWOSTOPBITS
+};
+
+#ifndef INVALID_HANDLE_VALUE
+#define INVALID_HANDLE_VALUE (-1)
+#endif
+#endif   /* _WIN32 */
+
+class LIBNETXMS_EXPORTABLE Serial
+{
+public:
+	Serial(void);
+	~Serial(void);
+
+	bool Open(TCHAR *pszPort);
+	void Close(void);
+	void SetTimeout(int nTimeout);
+	bool Read(char *pBuff, int nSize);
+	bool Write(char *pBuff, int nSize);
+	void Flush(void);
+	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits);
+	bool Restart(void);
+
+private:
+	TCHAR *m_pszPort;
+	int m_nTimeout;
+	int m_nSpeed;
+	int m_nDataBits;
+	int m_nStopBits;
+	int m_nParity;
+
+#ifndef _WIN32
+	int m_hPort;
+#else
+	HANDLE m_hPort;
+#endif
+};
+
+#endif   /* __cplusplus */
+
+
+//
 // Configuration item template for configuration loader
 //
 

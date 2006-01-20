@@ -789,8 +789,10 @@ src/libnetxms/main.cpp -text
 src/libnetxms/md5.cpp -text
 src/libnetxms/md5.h -text
 src/libnetxms/netxms.def -text
+src/libnetxms/queue.cpp -text
 src/libnetxms/regex.c -text
 src/libnetxms/scandir.c -text
+src/libnetxms/serial.cpp -text
 src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text
 src/libnetxms/strtoll.c -text
@@ -1012,8 +1014,6 @@ src/server/smsdrv/generic/generic.sln -text
 src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/main.cpp -text
 src/server/smsdrv/generic/main.h -text
-src/server/smsdrv/generic/serial.cpp -text
-src/server/smsdrv/generic/serial.h -text
 src/server/tools/Makefile.am -text
 src/server/tools/nxaction/.cvsignore -text
 src/server/tools/nxaction/Makefile.am -text

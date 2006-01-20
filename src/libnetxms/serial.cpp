@@ -1,48 +1,71 @@
-/* $Id: serial.cpp,v 1.2 2005-12-29 18:35:15 alk Exp $ */
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2005, 2006 Alex Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: serial.cpp
+**
+**/
 
-#include "main.h"
+#include "libnetxms.h"
 
-using namespace std;
+#ifdef _NETWARE
+#include <termio.h>
+#endif
 
 Serial::Serial(void)
 {
 	m_nTimeout = 0;
 	m_hPort = INVALID_HANDLE_VALUE;
+   m_pszPort = NULL;
 }
 
 Serial::~Serial(void)
 {
+   safe_free(m_pszPort);
 }
 
-bool Serial::Open(std::string sPort)
+bool Serial::Open(TCHAR *pszPort)
 {
 	bool bRet = false;
 
-	m_sPort = sPort;
+   safe_free(m_pszPort);
+	m_pszPort = _tcsdup(pszPort);
 
 #ifdef _WIN32
-	m_hPort = CreateFile(sPort.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
-			OPEN_EXISTING, 0, NULL);
+	m_hPort = CreateFile(pszPort, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			               OPEN_EXISTING, 0, NULL);
 	if (m_hPort != INVALID_HANDLE_VALUE)
 	{
-		Set(CBR_38400, 8, NOPARITY, ONESTOPBIT);
-
-#ifdef _WIN32
 		COMMTIMEOUTS ct;
+
+		Set(CBR_38400, 8, NOPARITY, ONESTOPBIT);
 
 		memset(&ct, 0, sizeof(COMMTIMEOUTS));
 		ct.ReadTotalTimeoutConstant = m_nTimeout;
 		ct.WriteTotalTimeoutConstant = m_nTimeout;
 
 		SetCommTimeouts(m_hPort, &ct);
-#endif
 
 		bRet = true;
 	}
 #else // UNIX
 	struct termios newTio;
 
-	m_hPort = open(sPort.c_str(), O_RDWR | O_NOCTTY); 
+	m_hPort = open(pszPort, O_RDWR | O_NOCTTY); 
 	if (m_hPort < 0)
 	{
 		return false;
@@ -70,7 +93,9 @@ bool Serial::Open(std::string sPort)
 	// JIC
 	newTio.c_lflag &= ~ICANON;
 
+#ifndef _NETWARE
 	tcflush(m_hPort, TCIFLUSH);
+#endif
 	if (tcsetattr(m_hPort, TCSANOW, &newTio) == -1)
 	{
 		close(m_hPort);
@@ -142,8 +167,10 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		case 9600:   newTio.c_cflag |= B9600;   break;
 		case 19200:  newTio.c_cflag |= B19200;  break;
 		case 38400:  newTio.c_cflag |= B38400;  break;
+#ifndef _NETWARE
 		case 57600:  newTio.c_cflag |= B57600;  break;
 		case 115200: newTio.c_cflag |= B115200; break;
+#endif
 
 		default:     newTio.c_cflag |= B38400;  break;
 	}
@@ -226,7 +253,7 @@ void Serial::SetTimeout(int nTimeout) // milliseconds
 bool Serial::Restart(void)
 {
 	Close();
-	Open(m_sPort);
+	Open(m_pszPort);
 	Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits);
 
 	return true;
@@ -245,7 +272,7 @@ bool Serial::Read(char *pBuff, int nSize)
 	DWORD nDone;
 	if (ReadFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
 	{
-		if (nDone == nSize)
+		if (nDone == (DWORD)nSize)
 		{
 			bRet = true;
 		}
@@ -295,7 +322,7 @@ bool Serial::Write(char *pBuff, int nSize)
 	DWORD nDone;
 	if (WriteFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
 	{
-		if (nDone == nSize)
+		if (nDone == (DWORD)nSize)
 		{
 			bRet = true;
 		}
@@ -330,17 +357,9 @@ void Serial::Flush(void)
 
 #else // UNIX
 
+#ifndef _NETWARE
 	tcflush(m_hPort, TCIOFLUSH);
+#endif
 
 #endif // _WIN32
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.1  2005/06/16 13:19:38  alk
-added sms-driver for generic gsm modem
-
-
-*/

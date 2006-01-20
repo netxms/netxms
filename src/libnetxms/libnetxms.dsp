@@ -138,11 +138,19 @@ SOURCE=.\md5.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\queue.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\regex.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\scandir.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\serial.cpp
 # End Source File
 # Begin Source File
 
@@ -203,6 +211,10 @@ SOURCE=..\..\include\nms_threads.h
 # Begin Source File
 
 SOURCE=..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxqueue.h
 # End Source File
 # Begin Source File
 
