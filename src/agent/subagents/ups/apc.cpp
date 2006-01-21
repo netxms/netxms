@@ -35,14 +35,12 @@ BOOL APCInterface::Open(void)
    if (!UPSInterface::Open())
       return FALSE;
 
-   m_serial.SetTimeout(1);
+   m_serial.SetTimeout(1000);
    m_serial.Set(2400, 8, NOPARITY, ONESTOPBIT);
-printf("serial set\n");
 
    // Turn on "smart" mode
    m_serial.Write("Y", 1);
    bRet = ReadLineFromSerial(szLine, 256);
-printf("line read: %d '%s'\n",bRet,szLine);
    if (bRet && !strcmp(szLine, "SM"))
    {
       bRet = TRUE;

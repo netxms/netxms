@@ -50,18 +50,14 @@ UPSInterface::~UPSInterface()
 BOOL UPSInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
 {
    int nPos = 0, nRet;
-   BOOL bRet = TRUE;
 
-printf("READ DEVICE: %s\n",m_pszDevice);
    memset(pszBuffer, 0, nBufLen);
    do
    {
       nRet = m_serial.Read(&pszBuffer[nPos], 1);
-printf("nPos=%d ret=%d ch=%c\n",nPos,nRet,pszBuffer[nPos]);
       if (nRet > 0)
          nPos += nRet;
    } while((nRet > 0) && (pszBuffer[nPos - 1] != '\n') && (nPos < nBufLen));
-printf("nRet=%d\n",nRet);
    if (nRet != -1)
    {
       if (pszBuffer[nPos - 2] == '\r')
@@ -69,7 +65,7 @@ printf("nRet=%d\n",nRet);
       else
          pszBuffer[nPos - 1] = 0;
    }
-   return bRet;
+   return nRet != -1;
 }
 
 
