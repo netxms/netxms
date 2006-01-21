@@ -49,6 +49,9 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    if (m_deviceInfo[nDev] == NULL)
       return SYSINFO_RC_UNSUPPORTED;
 
+   if (!m_deviceInfo[nDev]->Open())
+      return SYSINFO_RC_ERROR;
+
    switch(*((char *)pArg))
    {
       case 'F':   // Firmware version
@@ -66,6 +69,7 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
          nRet = SYSINFO_RC_UNSUPPORTED;
          break;
    }
+   m_deviceInfo[nDev]->Close();
    return nRet;
 }
 
