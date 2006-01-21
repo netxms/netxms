@@ -292,6 +292,16 @@ src/agent/subagents/sunos/net.cpp -text
 src/agent/subagents/sunos/process.cpp -text
 src/agent/subagents/sunos/sunos_subagent.h -text
 src/agent/subagents/sunos/system.cpp -text
+src/agent/subagents/ups/Makefile.am -text
+src/agent/subagents/ups/apc.cpp -text
+src/agent/subagents/ups/doc/apc_protocol.htm -text
+src/agent/subagents/ups/doc/apc_protocol_files/nut-banner.png -text
+src/agent/subagents/ups/doc/apc_protocol_files/vh401.png -text
+src/agent/subagents/ups/main.cpp -text
+src/agent/subagents/ups/ups.cpp -text
+src/agent/subagents/ups/ups.dsp -text
+src/agent/subagents/ups/ups.dsw -text
+src/agent/subagents/ups/ups.h -text
 src/agent/subagents/win9x/Makefile.am -text
 src/agent/subagents/win9x/main.cpp -text
 src/agent/subagents/win9x/procinfo.cpp -text
