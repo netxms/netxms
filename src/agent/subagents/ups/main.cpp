@@ -31,16 +31,36 @@ static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 
 
 //
-// Universal handler for string results
+// Universal handler
 //
 
-static LONG H_StringParam(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
-   LONG nRet;
+   LONG nRet, nDev, nValue;
+   TCHAR *pErr, szArg[256];
+
+   if (!NxGetParameterArg(pszParam, 1, szArg, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   nDev = _tcstol(szArg, &pErr, 0);
+   if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (m_deviceInfo[nDev] == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
    switch(*((char *)pArg))
    {
+      case 'F':   // Firmware version
+         nRet = m_deviceInfo[nDev]->GetFirmwareVersion(pValue);
+         break;
+      case 'I':   // Input voltage
+         nRet = m_deviceInfo[nDev]->GetInputVoltage(&nValue);
+         if (nRet == SYSINFO_RC_SUCCESS)
+            ret_int(pValue, nValue);
+         break;
       case 'M':   // Model
+         nRet = m_deviceInfo[nDev]->GetModel(pValue);
          break;
       default:
          nRet = SYSINFO_RC_UNSUPPORTED;
@@ -87,7 +107,9 @@ static BOOL AddDeviceFromConfig(TCHAR *pszCfg)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("UPS.Model(*)"), H_StringParam, "M", DCI_DT_STRING, _T("UPS model") }
+   { _T("UPS.Firmware(*)"), H_UPSData, "F", DCI_DT_STRING, _T("UPS firmware version") },
+   { _T("UPS.InputVoltage(*)"), H_UPSData, "I", DCI_DT_INT, _T("Input voltage") },
+   { _T("UPS.Model(*)"), H_UPSData, "M", DCI_DT_STRING, _T("UPS model") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {

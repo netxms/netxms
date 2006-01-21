@@ -61,7 +61,7 @@ BOOL APCInterface::Open(void)
 LONG APCInterface::GetModel(TCHAR *pszBuffer)
 {
    m_serial.Write("\x01", 1);
-   return ReadLineFromSerial(pszBuffer, 256) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
+   return ReadLineFromSerial(pszBuffer, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
 }
 
 
@@ -81,4 +81,15 @@ LONG APCInterface::GetInputVoltage(LONG *pnVoltage)
       nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
    }
    return nRet;
+}
+
+
+//
+// Get UPS firmware version
+//
+
+LONG APCInterface::GetFirmwareVersion(TCHAR *pszBuffer)
+{
+   m_serial.Write("V", 1);
+   return ReadLineFromSerial(pszBuffer, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
 }

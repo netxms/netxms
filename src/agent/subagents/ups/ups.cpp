@@ -97,7 +97,7 @@ LONG UPSInterface::GetModel(TCHAR *pszBuffer)
    return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG UPSInterface::GetFirmware(TCHAR *pszBuffer)
+LONG UPSInterface::GetFirmwareVersion(TCHAR *pszBuffer)
 {
    return SYSINFO_RC_UNSUPPORTED;
 }

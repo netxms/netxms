@@ -58,7 +58,7 @@ public:
    virtual void Close(void);
 
    virtual LONG GetModel(TCHAR *pszBuffer);
-   virtual LONG GetFirmware(TCHAR *pszBuffer);
+   virtual LONG GetFirmwareVersion(TCHAR *pszBuffer);
    virtual LONG GetMfgDate(TCHAR *pszBuffer);
    virtual LONG GetSerialNumber(TCHAR *pszBuffer);
    virtual LONG GetTemperature(LONG *pnTemp);
@@ -87,6 +87,7 @@ public:
    virtual BOOL Open(void);
 
    virtual LONG GetModel(TCHAR *pszBuffer);
+   virtual LONG GetFirmwareVersion(TCHAR *pszBuffer);
    virtual LONG GetInputVoltage(LONG *pnVoltage);
 };
 
