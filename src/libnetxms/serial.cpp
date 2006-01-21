@@ -67,12 +67,13 @@ bool Serial::Open(TCHAR *pszPort)
 #else // UNIX
 	struct termios newTio;
 
-	m_hPort = open(pszPort, O_RDWR | O_NOCTTY); 
+	m_hPort = open(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
 	if (m_hPort < 0)
 	{
 		return false;
 	}
 
+	/*
 	memset(&newTio, 0, sizeof(newTio));
 
 	// control modes
@@ -90,7 +91,7 @@ bool Serial::Open(TCHAR *pszPort)
 
 	// control chars
 	newTio.c_cc[VTIME] = m_nTimeout;
-	newTio.c_cc[VMIN] = 0;
+	newTio.c_cc[VMIN] = 1;
 
 	// JIC
 	newTio.c_lflag &= ~ICANON;
@@ -104,6 +105,7 @@ bool Serial::Open(TCHAR *pszPort)
 		m_hPort = -1;
 		return false;
 	}
+	*/
 
 	bRet = true;
 #endif // _WIN32
@@ -149,9 +151,11 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 
 	tcgetattr(m_hPort, &newTio);
 
-	newTio.c_cflag = 0;
+	newTio.c_cflag |= CLOCAL | CREAD;
+	newTio.c_cc[VTIME] = m_nTimeout;
+	newTio.c_cc[VMIN] = 1;
 
-	//newTio.c_cflag &= ~(CBAUD | CBAUDEX);
+	newTio.c_cflag &= ~(CBAUD | CBAUDEX);
 	switch(nSpeed)
 	{
 		case 50:     newTio.c_cflag |= B50;     break;
@@ -178,7 +182,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		default:     newTio.c_cflag |= B38400;  break;
 	}
 
-	//newTio.c_cflag &= ~(CSIZE);
+	newTio.c_cflag &= ~(CSIZE);
 	switch(nDataBits)
 	{
 		case 5:
@@ -196,7 +200,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 			break;
 	}
 
-	//newTio.c_cflag &= ~(PARODD | PARENB);
+	newTio.c_cflag &= ~(PARODD | PARENB);
 	switch(nParity)
 	{
 		case ODDPARITY:
@@ -209,12 +213,13 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 			break;
 	}
 
-	//newTio.c_cflag &= CSTOPB;
+	newTio.c_cflag &= ~(CSTOPB);
 	if (nStopBits != ONESTOPBIT)
 	{
 		newTio.c_cflag |= CSTOPB;
 	}
 
+	newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
 	/*switch (nFlowControl)
 	{
 		case CTSRTS: // hardware, set on *CONTROL*
@@ -226,6 +231,10 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		default: // none
 			break;
 	} */
+
+	newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+        newTio.c_iflag &= ~(IXON | IXOFF | IXANY);
+        newTio.c_oflag &= ~(OPOST);
 
 	tcsetattr(m_hPort, TCSANOW, &newTio);
 
@@ -262,9 +271,9 @@ bool Serial::Restart(void)
 	return true;
 }
 
-bool Serial::Read(char *pBuff, int nSize)
+int Serial::Read(char *pBuff, int nSize)
 {
-	bool bRet = false;
+	int nRet;
 
 	memset(pBuff, 0, nSize);
 
@@ -286,32 +295,20 @@ bool Serial::Read(char *pBuff, int nSize)
 	}
 
 #else // UNIX
-	usleep(100);
-	int nDone = 0;
-	int nGot = 0;
+	fd_set rdfs;
+	struct timeval tv;
 
-	do
-	{
-		if ((nGot = read(m_hPort, pBuff + nDone, nSize - nDone)) <= 0)
-		{
-			break;
-		}
-
-		nDone += nGot;
-	} while(nDone != nSize);
-
-	if (nDone == nSize)
-	{
-		bRet = true;
-	}
-	else
-	{
-		Restart();
-	}
+	FD_ZERO(&rdfs);
+	FD_SET(m_hPort, &rdfs);
+	tv.tv_sec = m_nTimeout / 10;
+	tv.tv_usec = 0;
+	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
+	if (nRet > 0)
+		nRet = read(m_hPort, pBuff, nSize);
 
 #endif // _WIN32
 
-	return bRet;
+	return nRet;
 }
 
 bool Serial::Write(char *pBuff, int nSize)

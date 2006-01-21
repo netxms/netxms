@@ -37,20 +37,24 @@ static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
    LONG nRet, nDev, nValue;
+   double dValue;
    TCHAR *pErr, szArg[256];
 
    if (!NxGetParameterArg(pszParam, 1, szArg, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    nDev = _tcstol(szArg, &pErr, 0);
+printf("DEVICE: %d\n", nDev);
    if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (m_deviceInfo[nDev] == NULL)
       return SYSINFO_RC_UNSUPPORTED;
+printf("DEVICE: %d NOT NULL\n", nDev);
 
    if (!m_deviceInfo[nDev]->Open())
       return SYSINFO_RC_ERROR;
+printf("DEVICE: %d OPEN\n", nDev);
 
    switch(*((char *)pArg))
    {
@@ -58,9 +62,9 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
          nRet = m_deviceInfo[nDev]->GetFirmwareVersion(pValue);
          break;
       case 'I':   // Input voltage
-         nRet = m_deviceInfo[nDev]->GetInputVoltage(&nValue);
+         nRet = m_deviceInfo[nDev]->GetInputVoltage(&dValue);
          if (nRet == SYSINFO_RC_SUCCESS)
-            ret_int(pValue, nValue);
+            ret_double(pValue, dValue);
          break;
       case 'M':   // Model
          nRet = m_deviceInfo[nDev]->GetModel(pValue);

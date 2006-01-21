@@ -111,7 +111,7 @@ public:
 	bool Open(TCHAR *pszPort);
 	void Close(void);
 	void SetTimeout(int nTimeout);
-	bool Read(char *pBuff, int nSize);
+	int Read(char *pBuff, int nSize);
 	bool Write(char *pBuff, int nSize);
 	void Flush(void);
 	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits);

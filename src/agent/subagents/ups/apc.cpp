@@ -35,12 +35,14 @@ BOOL APCInterface::Open(void)
    if (!UPSInterface::Open())
       return FALSE;
 
-   m_serial.Set(2400, 8, NOPARITY, ONESTOPBIT);
    m_serial.SetTimeout(1);
+   m_serial.Set(2400, 8, NOPARITY, ONESTOPBIT);
+printf("serial set\n");
 
    // Turn on "smart" mode
    m_serial.Write("Y", 1);
    bRet = ReadLineFromSerial(szLine, 256);
+printf("line read: %d '%s'\n",bRet,szLine);
    if (bRet && !strcmp(szLine, "SM"))
    {
       bRet = TRUE;
@@ -69,7 +71,7 @@ LONG APCInterface::GetModel(TCHAR *pszBuffer)
 // Get input line voltage
 //
 
-LONG APCInterface::GetInputVoltage(LONG *pnVoltage)
+LONG APCInterface::GetInputVoltage(double *pdVoltage)
 {
    char *pErr, szLine[256];
    LONG nRet = SYSINFO_RC_UNSUPPORTED;
@@ -77,7 +79,7 @@ LONG APCInterface::GetInputVoltage(LONG *pnVoltage)
    m_serial.Write("L", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      *pnVoltage = strtol(szLine, &pErr, 10);
+      *pdVoltage = strtod(szLine, &pErr);
       nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
    }
    return nRet;

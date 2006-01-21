@@ -49,18 +49,23 @@ UPSInterface::~UPSInterface()
 
 BOOL UPSInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
 {
-   int nPos = 0;
-   BOOL bRet;
+   int nPos = 0, nRet;
+   BOOL bRet = TRUE;
 
+printf("READ DEVICE: %s\n",m_pszDevice);
    memset(pszBuffer, 0, nBufLen);
    do
    {
-      bRet = m_serial.Read(&pszBuffer[nPos++], 1);
-   } while(bRet && (pszBuffer[nPos - 1] != '\n') && (nPos < nBufLen));
-   if (bRet)
+      nRet = m_serial.Read(&pszBuffer[nPos], 1);
+printf("nPos=%d ret=%d ch=%c\n",nPos,nRet,pszBuffer[nPos]);
+      if (nRet > 0)
+         nPos += nRet;
+   } while((nRet > 0) && (pszBuffer[nPos - 1] != '\n') && (nPos < nBufLen));
+printf("nRet=%d\n",nRet);
+   if (nRet != -1)
    {
       if (pszBuffer[nPos - 2] == '\r')
-         pszBuffer[nPos - 2];
+         pszBuffer[nPos - 2] = 0;
       else
          pszBuffer[nPos - 1] = 0;
    }
@@ -132,7 +137,7 @@ LONG UPSInterface::GetBatteryLevel(LONG *pnLevel)
    return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG UPSInterface::GetInputVoltage(LONG *pnVoltage)
+LONG UPSInterface::GetInputVoltage(double *pdVoltage)
 {
    return SYSINFO_RC_UNSUPPORTED;
 }

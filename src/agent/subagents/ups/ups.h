@@ -65,7 +65,7 @@ public:
    virtual LONG GetBatteryVoltage(LONG *pnVoltage);
    virtual LONG GetNominalBatteryVoltage(LONG *pnVoltage);
    virtual LONG GetBatteryLevel(LONG *pnLevel);
-   virtual LONG GetInputVoltage(LONG *pnVoltage);
+   virtual LONG GetInputVoltage(double *pdVoltage);
    virtual LONG GetOutputVoltage(LONG *pnVoltage);
    virtual LONG GetLineFrequency(LONG *pnFrequency);
    virtual LONG GetPowerLoad(LONG *pnLoad);
@@ -88,7 +88,7 @@ public:
 
    virtual LONG GetModel(TCHAR *pszBuffer);
    virtual LONG GetFirmwareVersion(TCHAR *pszBuffer);
-   virtual LONG GetInputVoltage(LONG *pnVoltage);
+   virtual LONG GetInputVoltage(double *pdVoltage);
 };
 
 

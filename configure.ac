@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.137 2006-01-21 00:20:03 victor Exp $
+# $Id: configure.ac,v 1.138 2006-01-21 16:11:02 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.9], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.10-dev], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -623,6 +623,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/ping/Makefile
+	src/agent/subagents/ups/Makefile
 	src/www/Makefile
 	src/www/iis/Makefile
 	src/www/nxsm/Makefile

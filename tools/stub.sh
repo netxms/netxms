@@ -18,6 +18,7 @@ trap '
 ' INT EXIT
 
 rm -f $log
+echo "WD = $wd" >> $log
 
 _PATH=$PATH
 PATH=$PATH:`echo /opt/openssl*/bin | tr ' ' ':'`
