@@ -27,7 +27,6 @@
 // Static data
 //
 
-static TCHAR *m_pszDeviceList = NULL;
 static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 
 
@@ -112,7 +111,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Configuration file template
 //
 
-static TCHAR *m_pszTargetList = NULL;
+static TCHAR *m_pszDeviceList = NULL;
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
    { _T("Device"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszDeviceList },
@@ -131,7 +130,7 @@ DECLARE_SUBAGENT_INIT(APC)
    memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
 
    // Load configuration
-   dwResult = NxLoadConfig(pszConfigFile, _T("APC"), cfgTemplate, FALSE);
+   dwResult = NxLoadConfig(pszConfigFile, _T("UPS"), cfgTemplate, FALSE);
    if (dwResult == NXCFG_ERR_OK)
    {
       TCHAR *pItem, *pEnd;
@@ -139,7 +138,7 @@ DECLARE_SUBAGENT_INIT(APC)
       // Parse device list
       if (m_pszDeviceList != NULL)
       {
-         for(pItem = m_pszTargetList; *pItem != 0; pItem = pEnd + 1)
+         for(pItem = m_pszDeviceList; *pItem != 0; pItem = pEnd + 1)
          {
             pEnd = _tcschr(pItem, _T('\n'));
             if (pEnd != NULL)
