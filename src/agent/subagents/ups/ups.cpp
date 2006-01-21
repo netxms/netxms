@@ -122,12 +122,12 @@ LONG UPSInterface::GetTemperature(LONG *pnTemp)
    return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG UPSInterface::GetBatteryVoltage(LONG *pnVoltage)
+LONG UPSInterface::GetBatteryVoltage(double *pdVoltage)
 {
    return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG UPSInterface::GetNominalBatteryVoltage(LONG *pnVoltage)
+LONG UPSInterface::GetNominalBatteryVoltage(double *pdVoltage)
 {
    return SYSINFO_RC_UNSUPPORTED;
 }
@@ -142,7 +142,7 @@ LONG UPSInterface::GetInputVoltage(double *pdVoltage)
    return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG UPSInterface::GetOutputVoltage(LONG *pnVoltage)
+LONG UPSInterface::GetOutputVoltage(double *pdVoltage)
 {
    return SYSINFO_RC_UNSUPPORTED;
 }

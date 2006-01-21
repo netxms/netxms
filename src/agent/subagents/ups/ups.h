@@ -62,11 +62,11 @@ public:
    virtual LONG GetMfgDate(TCHAR *pszBuffer);
    virtual LONG GetSerialNumber(TCHAR *pszBuffer);
    virtual LONG GetTemperature(LONG *pnTemp);
-   virtual LONG GetBatteryVoltage(LONG *pnVoltage);
-   virtual LONG GetNominalBatteryVoltage(LONG *pnVoltage);
+   virtual LONG GetBatteryVoltage(double *pdVoltage);
+   virtual LONG GetNominalBatteryVoltage(double *pdVoltage);
    virtual LONG GetBatteryLevel(LONG *pnLevel);
    virtual LONG GetInputVoltage(double *pdVoltage);
-   virtual LONG GetOutputVoltage(LONG *pnVoltage);
+   virtual LONG GetOutputVoltage(double *pdVoltage);
    virtual LONG GetLineFrequency(LONG *pnFrequency);
    virtual LONG GetPowerLoad(LONG *pnLoad);
    virtual LONG GetEstimatedRuntime(LONG *pnMinutes);
@@ -88,7 +88,17 @@ public:
 
    virtual LONG GetModel(TCHAR *pszBuffer);
    virtual LONG GetFirmwareVersion(TCHAR *pszBuffer);
+   virtual LONG GetMfgDate(TCHAR *pszBuffer);
+   virtual LONG GetSerialNumber(TCHAR *pszBuffer);
+   virtual LONG GetTemperature(LONG *pnTemp);
+   virtual LONG GetBatteryVoltage(double *pdVoltage);
+   virtual LONG GetNominalBatteryVoltage(double *pdVoltage);
+   virtual LONG GetBatteryLevel(LONG *pnLevel);
    virtual LONG GetInputVoltage(double *pdVoltage);
+   virtual LONG GetOutputVoltage(double *pdVoltage);
+   virtual LONG GetLineFrequency(LONG *pnFrequency);
+   virtual LONG GetPowerLoad(LONG *pnLoad);
+   virtual LONG GetEstimatedRuntime(LONG *pnMinutes);
 };
 
 
