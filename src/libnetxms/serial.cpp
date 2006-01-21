@@ -24,6 +24,8 @@
 
 #if HAVE_TERMIO_H
 #include <termio.h>
+#elif HAVE_TERMIOS_H
+#include <termios.h>
 #endif
 
 Serial::Serial(void)
