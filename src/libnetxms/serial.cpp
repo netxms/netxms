@@ -95,6 +95,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 #ifdef _WIN32
 	DCB dcb;
 
+   dcb.DCBlength = sizeof(DCB);
 	if (GetCommState(m_hPort, &dcb))
 	{
 		dcb.BaudRate = nSpeed;
@@ -102,6 +103,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		dcb.Parity = nParity;
 		dcb.StopBits = nStopBits;
 		dcb.fDtrControl = DTR_CONTROL_DISABLE;
+      dcb.fBinary = TRUE;
 		dcb.fParity = FALSE;
 		dcb.fOutxCtsFlow = FALSE;
 		dcb.fOutxDsrFlow = FALSE;
