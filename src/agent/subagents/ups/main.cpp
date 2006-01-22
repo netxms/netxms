@@ -127,7 +127,17 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
 static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   TCHAR szBuffer[256];
+   int i;
+
+   for(i = 0; i < MAX_UPS_DEVICES; i++)
+      if (m_deviceInfo[i] != NULL)
+      {
+         _sntprintf(szBuffer, 256, _T("%d %s %s"), i,
+                    m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type());
+         NxAddResultString(pValue, szBuffer);
+      }
+   return SYSINFO_RC_SUCCESS;
 }
 
 
@@ -145,10 +155,115 @@ static void UnloadHandler(void)
 // Parameter value should be <device_id>:<port>:<protocol>
 //
 
-static BOOL AddDeviceFromConfig(TCHAR *pszCfg)
+static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 {
-   m_deviceInfo[0] = new APCInterface("/dev/ttyS0");
-   return TRUE;
+   TCHAR *ptr, *eptr, *pszCurrField;
+   TCHAR szPort[MAX_PATH];
+   int nState, nField, nDev, nPos, nProto;
+
+   // Parse line
+   pszCurrField = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
+   for(ptr = pszStr, nState = 0, nField = 0, nPos = 0;
+       (nState != -1) && (nState != 255); ptr++)
+   {
+      switch(nState)
+      {
+         case 0:  // Normal text
+            switch(*ptr)
+            {
+               case '\'':
+                  nState = 1;
+                  break;
+               case '"':
+                  nState = 2;
+                  break;
+               case ':':   // New field
+               case 0:
+                  pszCurrField[nPos] = 0;
+                  switch(nField)
+                  {
+                     case 0:  // Device number
+                        nDev = _tcstol(pszCurrField, &eptr, 0);
+                        if ((*eptr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+                           nState = 255;  // Error
+                        break;
+                     case 1:  // Serial port
+                        nx_strncpy(szPort, pszCurrField, MAX_PATH);
+                        break;
+                     case 2:  // Protocol
+                        if (!_tcsicmp(pszCurrField, _T("APC")))
+                        {
+                           nProto = UPS_PROTOCOL_APC;
+                        }
+                        else
+                        {
+                           nState = 255;  // Error
+                        }
+                        break;
+                     default:
+                        nState = 255;  // Error
+                        break;
+                  }
+                  nField++;
+                  nPos = 0;
+                  if ((nState != 255) && (*ptr == 0))
+                     nState = -1;   // Finish
+                  break;
+               default:
+                  pszCurrField[nPos++] = *ptr;
+                  break;
+            }
+            break;
+         case 1:  // Single quotes
+            switch(*ptr)
+            {
+               case '\'':
+                  nState = 0;
+                  break;
+               case 0:  // Unexpected end of line
+                  nState = 255;
+                  break;
+               default:
+                  pszCurrField[nPos++] = *ptr;
+                  break;
+            }
+            break;
+         case 2:  // Double quotes
+            switch(*ptr)
+            {
+               case '"':
+                  nState = 0;
+                  break;
+               case 0:  // Unexpected end of line
+                  nState = 255;
+                  break;
+               default:
+                  pszCurrField[nPos++] = *ptr;
+                  break;
+            }
+            break;
+         default:
+            break;
+      }
+   }
+   free(pszCurrField);
+
+   // Add new device if parsing was successful
+   if ((nState == -1) && (nField == 3))
+   {
+      if (m_deviceInfo[nDev] != NULL)
+         delete m_deviceInfo[nDev];
+      switch(nProto)
+      {
+         case UPS_PROTOCOL_APC:
+            m_deviceInfo[nDev] = new APCInterface(szPort);
+            break;
+         default:
+            break;
+      }
+   }
+
+   return ((nState == -1) && (nField == 3));
 }
 
 

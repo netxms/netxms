@@ -35,6 +35,8 @@
 
 #define MAX_UPS_DEVICES    128
 
+#define UPS_PROTOCOL_APC   1
+
 
 //
 // Abstract UPS interface class
@@ -52,6 +54,7 @@ public:
    UPSInterface(TCHAR *pszDevice);
    virtual ~UPSInterface();
 
+   const TCHAR *Device(void) { return m_pszDevice; }
    virtual TCHAR *Type(void) { return _T("GENERIC"); }
 
    virtual BOOL Open(void);
