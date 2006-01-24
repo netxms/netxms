@@ -5,6 +5,7 @@
 /ChangeLog -text
 /INSTALL -text
 /Makefile.am -text
+/Makefile.nw -text
 /NEWS -text
 /README.NetWare -text
 /README.in -text

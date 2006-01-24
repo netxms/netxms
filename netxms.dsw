@@ -696,6 +696,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "ups"=.\src\agent\subagents\ups\ups.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "win9x"=.\src\agent\subagents\win9x\win9x.dsp - Package Owner=<4>
 
 Package=<5>

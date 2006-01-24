@@ -1,0 +1,16 @@
+#
+# Makefile for building all NetXMS for NetWare binaries
+# Copyright (c) 2006 Victor Kirhenshtein
+#
+
+SUBDIRS = src/libnetxms src/libnxcscp src/agent/core \
+          src/agent/subagents/netware src/agent/subagents/ping \
+          src/agent/subagents/ups
+COMMAND = for dir in $(SUBDIRS); do \
+          if ! make -C $$dir -f Makefile.nw $@; then exit $$?; fi; done
+
+all:
+	$(COMMAND)
+
+clean:
+	$(COMMAND)

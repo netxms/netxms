@@ -71,8 +71,23 @@ LONG APCInterface::GetModel(TCHAR *pszBuffer)
 
 LONG APCInterface::GetFirmwareVersion(TCHAR *pszBuffer)
 {
+   char szRev[256], szVer[256];
+
    m_serial.Write("V", 1);
-   return ReadLineFromSerial(pszBuffer, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
+   if (!ReadLineFromSerial(szVer, 256))
+   {
+      szVer[0] = 0;
+   }
+
+   m_serial.Write("b", 1);
+   if (!ReadLineFromSerial(szRev, 256))
+   {
+      szRev[0] = 0;
+   }
+      
+   snprintf(pszBuffer, MAX_RESULT_LENGTH, "%s%s%s", szVer,
+            ((szVer[0] != 0) && (szRev[0] != 0)) ? " " : "", szRev);
+   return ((szVer[0] != 0) || (szRev[0] != 0)) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
 }
 
 
@@ -110,11 +125,14 @@ LONG APCInterface::GetTemperature(LONG *pnTemp)
    m_serial.Write("C", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      pErr = strchr(szLine, '.');
-      if (pErr != NULL)
-         *pErr = 0;
-      *pnTemp = strtol(szLine, &pErr, 10);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         pErr = strchr(szLine, '.');
+         if (pErr != NULL)
+            *pErr = 0;
+         *pnTemp = strtol(szLine, &pErr, 10);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -132,8 +150,11 @@ LONG APCInterface::GetBatteryVoltage(double *pdVoltage)
    m_serial.Write("B", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      *pdVoltage = strtod(szLine, &pErr);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         *pdVoltage = strtod(szLine, &pErr);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -151,8 +172,11 @@ LONG APCInterface::GetNominalBatteryVoltage(double *pdVoltage)
    m_serial.Write("g", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      *pdVoltage = strtod(szLine, &pErr);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         *pdVoltage = strtod(szLine, &pErr);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -170,11 +194,14 @@ LONG APCInterface::GetBatteryLevel(LONG *pnLevel)
    m_serial.Write("f", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      pErr = strchr(szLine, '.');
-      if (pErr != NULL)
-         *pErr = 0;
-      *pnLevel = strtol(szLine, &pErr, 10);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         pErr = strchr(szLine, '.');
+         if (pErr != NULL)
+            *pErr = 0;
+         *pnLevel = strtol(szLine, &pErr, 10);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -192,8 +219,11 @@ LONG APCInterface::GetInputVoltage(double *pdVoltage)
    m_serial.Write("L", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      *pdVoltage = strtod(szLine, &pErr);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         *pdVoltage = strtod(szLine, &pErr);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -211,8 +241,11 @@ LONG APCInterface::GetOutputVoltage(double *pdVoltage)
    m_serial.Write("O", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      *pdVoltage = strtod(szLine, &pErr);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         *pdVoltage = strtod(szLine, &pErr);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -230,11 +263,14 @@ LONG APCInterface::GetLineFrequency(LONG *pnFrequency)
    m_serial.Write("F", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      pErr = strchr(szLine, '.');
-      if (pErr != NULL)
-         *pErr = 0;
-      *pnFrequency = strtol(szLine, &pErr, 10);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         pErr = strchr(szLine, '.');
+         if (pErr != NULL)
+            *pErr = 0;
+         *pnFrequency = strtol(szLine, &pErr, 10);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -252,11 +288,14 @@ LONG APCInterface::GetPowerLoad(LONG *pnLoad)
    m_serial.Write("P", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      pErr = strchr(szLine, '.');
-      if (pErr != NULL)
-         *pErr = 0;
-      *pnLoad = strtol(szLine, &pErr, 10);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         pErr = strchr(szLine, '.');
+         if (pErr != NULL)
+            *pErr = 0;
+         *pnLoad = strtol(szLine, &pErr, 10);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
@@ -274,11 +313,14 @@ LONG APCInterface::GetEstimatedRuntime(LONG *pnMinutes)
    m_serial.Write("j", 1);
    if (ReadLineFromSerial(szLine, 256))
    {
-      pErr = strchr(szLine, ':');
-      if (pErr != NULL)
-         *pErr = 0;
-      *pnMinutes = strtol(szLine, &pErr, 10);
-      nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      if (strcmp(szLine, "NA"))
+      {
+         pErr = strchr(szLine, ':');
+         if (pErr != NULL)
+            *pErr = 0;
+         *pnMinutes = strtol(szLine, &pErr, 10);
+         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
+      }
    }
    return nRet;
 }
