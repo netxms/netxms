@@ -195,6 +195,10 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
                         {
                            nProto = UPS_PROTOCOL_APC;
                         }
+                        else if (!_tcsicmp(pszCurrField, _T("USB")))
+                        {
+                           nProto = UPS_PROTOCOL_USB;
+                        }
                         else
                         {
                            nState = 255;  // Error
@@ -257,6 +261,9 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
       {
          case UPS_PROTOCOL_APC:
             m_deviceInfo[nDev] = new APCInterface(szPort);
+            break;
+         case UPS_PROTOCOL_USB:
+            m_deviceInfo[nDev] = new USBInterface(szPort);
             break;
          default:
             break;

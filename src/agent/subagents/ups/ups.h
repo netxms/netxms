@@ -28,6 +28,20 @@
 #include <nms_agent.h>
 #include <nms_util.h>
 
+#ifdef _WIN32
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <hidsdi.h>
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
 
 //
 // Constants
@@ -36,6 +50,7 @@
 #define MAX_UPS_DEVICES    128
 
 #define UPS_PROTOCOL_APC   1
+#define UPS_PROTOCOL_USB   2
 
 
 //
@@ -46,9 +61,6 @@ class UPSInterface
 {
 protected:
    TCHAR *m_pszDevice;
-   Serial m_serial;
-
-   BOOL ReadLineFromSerial(char *pszBuffer, int nBufLen);
 
 public:
    UPSInterface(TCHAR *pszDevice);
@@ -77,13 +89,32 @@ public:
 
 
 //
+// UPS with serial interface
+//
+
+class SerialInterface : public UPSInterface
+{
+protected:
+   Serial m_serial;
+
+   BOOL ReadLineFromSerial(char *pszBuffer, int nBufLen);
+
+public:
+   SerialInterface(TCHAR *pszDevice) : UPSInterface(pszDevice) { }
+
+   virtual BOOL Open(void);
+   virtual void Close(void);
+};
+
+
+//
 // APC UPS interface
 //
 
-class APCInterface : public UPSInterface
+class APCInterface : public SerialInterface
 {
 public:
-   APCInterface(TCHAR *pszDevice) : UPSInterface(pszDevice) { }
+   APCInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
 
    virtual TCHAR *Type(void) { return _T("APC"); }
 
@@ -103,6 +134,40 @@ public:
    virtual LONG GetPowerLoad(LONG *pnLoad);
    virtual LONG GetEstimatedRuntime(LONG *pnMinutes);
 };
+
+
+//
+// UPS with USB interface
+//
+
+#ifdef _WIN32
+
+class USBInterface : public UPSInterface
+{
+protected:
+   HANDLE m_hDev;
+   HIDP_CAPS m_deviceCaps;
+   PHIDP_PREPARSED_DATA m_pPreparsedData;
+   HIDP_VALUE_CAPS *m_pFeatureValueCaps;
+
+   LONG ReadIndexedString(USAGE nPage, USAGE uUsage, TCHAR *pszBuffer, int nBufLen);
+   LONG ReadInt(USAGE nPage, USAGE nUsage, LONG *pnValue);
+
+public:
+   USBInterface(TCHAR *pszDevice);
+   virtual ~USBInterface();
+
+   virtual TCHAR *Type(void) { return _T("USB"); }
+
+   virtual BOOL Open(void);
+   virtual void Close(void);
+
+   virtual LONG GetModel(TCHAR *pszBuffer);
+   virtual LONG GetSerialNumber(TCHAR *pszBuffer);
+   virtual LONG GetBatteryLevel(LONG *pnLevel);
+};
+
+#endif
 
 
 #endif

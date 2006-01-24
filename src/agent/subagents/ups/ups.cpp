@@ -44,38 +44,12 @@ UPSInterface::~UPSInterface()
 
 
 //
-// Read line from serial port
-//
-
-BOOL UPSInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
-{
-   int nPos = 0, nRet;
-
-   memset(pszBuffer, 0, nBufLen);
-   do
-   {
-      nRet = m_serial.Read(&pszBuffer[nPos], 1);
-      if (nRet > 0)
-         nPos += nRet;
-   } while((nRet > 0) && (pszBuffer[nPos - 1] != '\n') && (nPos < nBufLen));
-   if (nRet != -1)
-   {
-      if (pszBuffer[nPos - 2] == '\r')
-         pszBuffer[nPos - 2] = 0;
-      else
-         pszBuffer[nPos - 1] = 0;
-   }
-   return nRet != -1;
-}
-
-
-//
 // Open communication to UPS
 //
 
 BOOL UPSInterface::Open(void)
 {
-   return m_serial.Open(m_pszDevice);
+   return FALSE;
 }
 
 
@@ -85,7 +59,6 @@ BOOL UPSInterface::Open(void)
 
 void UPSInterface::Close(void)
 {
-   m_serial.Close();
 }
 
 

@@ -32,7 +32,7 @@ BOOL APCInterface::Open(void)
    char szLine[256];
    BOOL bRet;
 
-   if (!UPSInterface::Open())
+   if (!SerialInterface::Open())
       return FALSE;
 
    m_serial.SetTimeout(1000);

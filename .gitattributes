@@ -299,10 +299,12 @@ src/agent/subagents/ups/doc/apc_protocol.htm -text
 src/agent/subagents/ups/doc/apc_protocol_files/nut-banner.png -text
 src/agent/subagents/ups/doc/apc_protocol_files/vh401.png -text
 src/agent/subagents/ups/main.cpp -text
+src/agent/subagents/ups/serial.cpp -text
 src/agent/subagents/ups/ups.cpp -text
 src/agent/subagents/ups/ups.dsp -text
 src/agent/subagents/ups/ups.dsw -text
 src/agent/subagents/ups/ups.h -text
+src/agent/subagents/ups/usb.cpp -text
 src/agent/subagents/win9x/Makefile.am -text
 src/agent/subagents/win9x/main.cpp -text
 src/agent/subagents/win9x/procinfo.cpp -text

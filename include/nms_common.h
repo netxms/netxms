@@ -488,6 +488,7 @@ typedef struct tagICMPHDR
 //
 
 #define safe_free(x) { if ((x) != NULL) free(x); }
+#define safe_free_and_null(x) { if ((x) != NULL) { free(x); x = NULL; } }
 
 
 //
