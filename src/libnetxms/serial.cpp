@@ -193,9 +193,10 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 	}
 
 	newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
-	newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-   newTio.c_iflag &= ~(IXON | IXOFF | IXANY);
-   newTio.c_oflag &= ~(OPOST);
+	newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ISIG | IEXTEN);
+   newTio.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
+   newTio.c_iflag |= IGNBRK;
+   newTio.c_oflag &= ~(OPOST | ONLCR);
 
 	tcsetattr(m_hPort, TCSANOW, &newTio);
 
