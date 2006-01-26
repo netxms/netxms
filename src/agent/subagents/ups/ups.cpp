@@ -30,6 +30,7 @@
 UPSInterface::UPSInterface(TCHAR *pszDevice)
 {
    m_pszDevice = _tcsdup(pszDevice);
+   m_bIsConnected = FALSE;
 }
 
 
@@ -59,6 +60,7 @@ BOOL UPSInterface::Open(void)
 
 void UPSInterface::Close(void)
 {
+   m_bIsConnected = FALSE;
 }
 
 

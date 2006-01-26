@@ -25,6 +25,31 @@
 
 
 //
+// Get serial number of USB device
+// Buffer provided to this function should be 256 characters long
+//
+
+static BOOL GetDeviceSerialNumber(HANDLE hDev, TCHAR *pszSerial)
+{
+#ifdef UNICODE
+   return HidD_GetSerialNumberString(hDev, pszSerial, 256 * sizeof(WCHAR));
+#else
+   BOOL bRet = FALSE;
+   WCHAR wszSerial[256];
+
+   if (HidD_GetSerialNumberString(hDev, wszSerial, 256 * sizeof(WCHAR)))
+   {
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                          wszSerial, -1, pszSerial, 256, NULL, NULL);
+      pszSerial[255] = 0;
+      bRet = TRUE;
+   }
+   return bRet;
+#endif
+}
+
+
+//
 // Find appropriate report for given usage
 //
 
@@ -127,9 +152,19 @@ BOOL USBInterface::Open(void)
          // Get device capabilities
          if (HidP_GetCaps(m_pPreparsedData, &m_deviceCaps) == HIDP_STATUS_SUCCESS)
          {
-            // Check if device is a UPS
+            TCHAR szSerial[256];
+
+            // Get device serial number
+            if (!GetDeviceSerialNumber(m_hDev, szSerial))
+            {
+               szSerial[0] = 0;
+            }
+
+            // Check if device is a UPS and that serial number matched
             if ((m_deviceCaps.UsagePage == 0x84) &&
-                (m_deviceCaps.Usage == 0x04))
+                (m_deviceCaps.Usage == 0x04) &&
+                ((!_tcsicmp(m_pszDevice, szSerial)) ||
+                 (!_tcsicmp(m_pszDevice, _T("ANY")))))
             {
                // Get value capabilities
                wSize = m_deviceCaps.NumberFeatureValueCaps;
@@ -149,6 +184,8 @@ BOOL USBInterface::Open(void)
       }
       SetupDiDestroyDeviceInfoList(hInfo);
    }
+   if (bSuccess)
+      SetConnected();
    return bSuccess;
 }
 
@@ -170,6 +207,7 @@ void USBInterface::Close(void)
       m_pPreparsedData = NULL;
    }
    safe_free_and_null(m_pFeatureValueCaps);
+   UPSInterface::Close();
 }
 
 
@@ -272,10 +310,58 @@ LONG USBInterface::GetSerialNumber(TCHAR *pszBuffer)
 
 
 //
+// Get battery voltage
+//
+
+LONG USBInterface::GetBatteryVoltage(double *pdVoltage)
+{
+   LONG nVal, nRet;
+   nRet = ReadInt(0x84, 0x30, &nVal);
+   if (nRet == SYSINFO_RC_SUCCESS)
+      *pdVoltage = (double)nVal / 100;
+   return nRet;
+}
+
+
+//
+// Get nominal battery voltage
+//
+
+LONG USBInterface::GetNominalBatteryVoltage(double *pdVoltage)
+{
+   LONG nVal, nRet;
+   nRet = ReadInt(0x84, 0x40, &nVal);
+   if (nRet == SYSINFO_RC_SUCCESS)
+      *pdVoltage = (double)nVal / 100;
+   return nRet;
+}
+
+
+//
 // Battery level
 //
 
 LONG USBInterface::GetBatteryLevel(LONG *pnLevel)
 {
    return ReadInt(0x85, 0x66, pnLevel);
+}
+
+
+//
+// UPS load (in percents)
+//
+
+LONG USBInterface::GetPowerLoad(LONG *pnLoad)
+{
+   return ReadInt(0x84, 0x35, pnLoad);
+}
+
+
+//
+// Estimated on-battery run time
+//
+
+LONG USBInterface::GetEstimatedRuntime(LONG *pnMinutes)
+{
+   return ReadInt(0x85, 0x68, pnMinutes);
 }

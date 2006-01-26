@@ -61,6 +61,9 @@ class UPSInterface
 {
 protected:
    TCHAR *m_pszDevice;
+   BOOL m_bIsConnected;
+
+   void SetConnected(void) { m_bIsConnected = TRUE; }
 
 public:
    UPSInterface(TCHAR *pszDevice);
@@ -68,6 +71,7 @@ public:
 
    const TCHAR *Device(void) { return m_pszDevice; }
    virtual TCHAR *Type(void) { return _T("GENERIC"); }
+   BOOL IsConnected(void) { return m_bIsConnected; }
 
    virtual BOOL Open(void);
    virtual void Close(void);
@@ -164,7 +168,11 @@ public:
 
    virtual LONG GetModel(TCHAR *pszBuffer);
    virtual LONG GetSerialNumber(TCHAR *pszBuffer);
+   virtual LONG GetBatteryVoltage(double *pdVoltage);
+   virtual LONG GetNominalBatteryVoltage(double *pdVoltage);
    virtual LONG GetBatteryLevel(LONG *pnLevel);
+   virtual LONG GetPowerLoad(LONG *pnLoad);
+   virtual LONG GetEstimatedRuntime(LONG *pnMinutes);
 };
 
 #endif

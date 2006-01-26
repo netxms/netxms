@@ -39,6 +39,7 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    LONG nRet, nDev, nValue;
    double dValue;
    TCHAR *pErr, szArg[256];
+   BOOL bFirstTry = TRUE;
 
    if (!NxGetParameterArg(pszParam, 1, szArg, 256))
       return SYSINFO_RC_UNSUPPORTED;
@@ -50,9 +51,11 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    if (m_deviceInfo[nDev] == NULL)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!m_deviceInfo[nDev]->Open())
-      return SYSINFO_RC_ERROR;
+   if (!m_deviceInfo[nDev]->IsConnected())
+      if (!m_deviceInfo[nDev]->Open())
+         return SYSINFO_RC_ERROR;
 
+restart_query:
    switch(*((char *)pArg))
    {
       case 'B':   // Battery voltage
@@ -116,7 +119,14 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
          nRet = SYSINFO_RC_UNSUPPORTED;
          break;
    }
-   m_deviceInfo[nDev]->Close();
+
+   if ((nRet == SYSINFO_RC_ERROR) && bFirstTry)
+   {
+      // Try to re-connect in case of error
+      m_deviceInfo[nDev]->Close();
+      if (m_deviceInfo[nDev]->Open())
+         goto restart_query;
+   }
    return nRet;
 }
 
@@ -147,6 +157,15 @@ static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
 static void UnloadHandler(void)
 {
+   int i;
+
+   // Close all devices
+   for(i = 0; i < MAX_UPS_DEVICES; i++)
+      if (m_deviceInfo[i] != NULL)
+      {
+         m_deviceInfo[i]->Close();
+         delete_and_null(m_deviceInfo[i]);
+      }
 }
 
 
@@ -330,7 +349,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 
 DECLARE_SUBAGENT_INIT(APC)
 {
-   DWORD dwResult;
+   DWORD i, dwResult;
 
    memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
 
@@ -351,10 +370,20 @@ DECLARE_SUBAGENT_INIT(APC)
             StrStrip(pItem);
             if (!AddDeviceFromConfig(pItem))
                NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
-                               _T("Unable to add device from configuration file. ")
+                               _T("Unable to add UPS device from configuration file. ")
                                _T("Original configuration record: %s"), pItem);
          }
          free(m_pszDeviceList);
+
+         // Open configured devices
+         for(i = 0; i < MAX_UPS_DEVICES; i++)
+         {
+            if (m_deviceInfo[i] != NULL)
+               if (!m_deviceInfo[i]->Open())
+               {
+                  NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("UPS: Unable to open device %d"), i);
+               }
+         }
       }
    }
    else

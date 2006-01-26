@@ -66,4 +66,5 @@ BOOL SerialInterface::Open(void)
 void SerialInterface::Close(void)
 {
    m_serial.Close();
+   UPSInterface::Close();
 }

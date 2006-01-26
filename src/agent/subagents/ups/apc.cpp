@@ -44,6 +44,7 @@ BOOL APCInterface::Open(void)
    if (bRet && !strcmp(szLine, "SM"))
    {
       bRet = TRUE;
+      SetConnected();
    }
    else
    {
