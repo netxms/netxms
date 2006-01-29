@@ -151,7 +151,7 @@ void DumpProcess(void)
 {
    HANDLE hFile;
 
-   hFile = CreateFile(_T("C:\\netxmsd.core"), GENERIC_WRITE, 0, NULL,
+   hFile = CreateFile(_T("C:\\netxmsd.mdmp"), GENERIC_WRITE, 0, NULL,
                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
    if (hFile != INVALID_HANDLE_VALUE)
    {

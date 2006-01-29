@@ -573,6 +573,41 @@ static BOOL IsCommand(char *pszTemplate, char *pszString, int iMinChars)
 
 
 //
+// Dump index
+//
+
+static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSize,
+                      BOOL bIndexByIp)
+{
+   DWORD i;
+   char szIpAddr[16];
+
+   if (!RWLockReadLock(hLock, 5000))
+   {
+      ConsolePrintf(pCtx, "ERROR: unable to obtain index lock in 5 seconds\n");
+      return;
+   }
+
+   for(i = 0; i < dwSize; i++)
+   {
+      if (bIndexByIp)
+      {
+         printf("%08X [%-15s] %p %s\n", pIndex[i].dwKey,
+                IpToStr(pIndex[i].dwKey, szIpAddr),
+                pIndex[i].pObject, pIndex[i].pObject->Name());
+      }
+      else
+      {
+         printf("%08X %p %s\n", pIndex[i].dwKey, pIndex[i].pObject,
+                pIndex[i].pObject->Name());
+      }
+   }
+
+   RWLockUnlock(hLock);
+}
+
+
+//
 // Process command entered from command line in standalone mode
 // Return TRUE if command was "down"
 //
@@ -651,6 +686,39 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, "\n");
+      }
+      else if (IsCommand("INDEX", szBuffer, 1))
+      {
+         // Get argument
+         pArg = ExtractWord(pArg, szBuffer);
+
+         if (IsCommand("ID", szBuffer, 2))
+         {
+            DumpIndex(pCtx, g_rwlockIdIndex, g_pIndexById, g_dwIdIndexSize, FALSE);
+         }
+         else if (IsCommand("INTERFACE", szBuffer, 2))
+         {
+            DumpIndex(pCtx, g_rwlockInterfaceIndex, g_pInterfaceIndexByAddr,
+                      g_dwInterfaceAddrIndexSize, TRUE);
+         }
+         else if (IsCommand("NODE", szBuffer, 1))
+         {
+            DumpIndex(pCtx, g_rwlockNodeIndex, g_pNodeIndexByAddr,
+                      g_dwNodeAddrIndexSize, TRUE);
+         }
+         else if (IsCommand("SUBNET", szBuffer, 1))
+         {
+            DumpIndex(pCtx, g_rwlockSubnetIndex, g_pSubnetIndexByAddr,
+                      g_dwSubnetAddrIndexSize, TRUE);
+         }
+         else
+         {
+            if (szBuffer[0] == 0)
+               ConsolePrintf(pCtx, "ERROR: Missing index name\n"
+                                   "Valid names are: ID, INTERFACE, NODE, SUBNET\n\n");
+            else
+               ConsolePrintf(pCtx, "ERROR: Invalid index name\n\n");
+         }
       }
       else if (IsCommand("MUTEX", szBuffer, 1))
       {
@@ -820,6 +888,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                           "   exit                      - Exit from remote session\n"
                           "   help                      - Display this help\n"
                           "   show flags                - Show internal server flags\n"
+                          "   show index <index>        - Show internal index\n"
                           "   show mutex                - Display mutex status\n"
                           "   show objects              - Dump network objects to screen\n"
                           "   show pollers              - Show poller threads state information\n"

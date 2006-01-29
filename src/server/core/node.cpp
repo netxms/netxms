@@ -931,7 +931,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
 void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
-   DWORD dwOldFlags = m_dwFlags;
+   DWORD i, dwOldFlags = m_dwFlags;
+   Interface **ppDeleteList;
+   int j, iDelCount;
    AgentConnection *pAgentConn;
    INTERFACE_LIST *pIfList;
    char szBuffer[4096];
@@ -943,6 +945,18 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    SendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
    DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
+   // Check for forced capabilities recheck
+   if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
+   {
+      m_dwDynamicFlags &= ~(NDF_UNREACHEABLE | NDF_SNMP_UNREACHEABLE |
+                            NDF_CPSNMP_UNREACHEABLE | NDF_AGENT_UNREACHEABLE);
+      m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
+                     NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF);
+      m_szObjectId[0] = 0;
+      m_szPlatformName[0] = 0;
+      m_szAgentVersion[0] = 0;
+   }
+
    // Check if node is marked as unreacheable
    if (m_dwDynamicFlags & NDF_UNREACHEABLE)
    {
@@ -952,8 +966,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    }
    else
    {
-//      Hide();  // Prevent multiple updates
-
       // Check node's capabilities
       SetPollerInfo(nPoller, "capability check");
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
@@ -1120,10 +1132,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       pIfList = GetInterfaceList();
       if (pIfList != NULL)
       {
-         DWORD i;
-         Interface **ppDeleteList;
-         int j, iDelCount;
-
          // Find non-existing interfaces
          LockChildList(FALSE);
          ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
@@ -1156,7 +1164,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          // Delete non-existent interfaces
          if (iDelCount > 0)
          {
-//            Unhide();
             for(j = 0; j < iDelCount; j++)
             {
                SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
@@ -1165,7 +1172,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                          ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->IpNetMask());
                DeleteInterface(ppDeleteList[j]);
             }
-//            Hide();
             bHasChanges = TRUE;
          }
          safe_free(ppDeleteList);
@@ -1294,11 +1300,35 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       else     /* pIfList == NULL */
       {
          Interface *pInterface;
+         DWORD dwCount;
 
          SendPollerMsg(dwRqId, _T("   Unable to get interface list from node\r\n"));
 
+         // Delete all existing interfaces in case of forced capability recheck
+         if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
+         {
+            LockChildList(FALSE);
+            ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
+            for(i = 0, iDelCount = 0; i < m_dwChildCount; i++)
+            {
+               if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+                  ppDeleteList[iDelCount++] = (Interface *)m_pChildList[i];
+            }
+            UnlockChildList();
+            for(j = 0; j < iDelCount; j++)
+            {
+               SendPollerMsg(dwRqId, _T("   Interface \"%s\" is no longer exist\r\n"), 
+                             ppDeleteList[j]->Name());
+               PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->IfIndex(),
+                         ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->IpNetMask());
+               DeleteInterface(ppDeleteList[j]);
+            }
+            safe_free(ppDeleteList);
+         }
+
          // Check if we have pseudo-interface object
-         if (GetInterfaceCount(&pInterface) == 1)
+         dwCount = GetInterfaceCount(&pInterface);
+         if (dwCount == 1)
          {
             if (pInterface->IsFake())
             {
@@ -1310,6 +1340,11 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                }
             }
          }
+         else if (dwCount == 0)
+         {
+            // No interfaces at all, create pseudo-interface
+            CreateNewInterface(m_dwIpAddr, 0);
+         }
       }
 
       m_tLastConfigurationPoll = time(NULL);
@@ -1317,13 +1352,13 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                                "Finished configuration poll for node %s\r\n"
                                "Node configuration was%schanged after poll\r\n"),
                     m_szName, bHasChanges ? _T(" ") : _T(" not "));
-//      Unhide();
    }
 
    // Finish configuration poll
    SetPollerInfo(nPoller, "cleanup");
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
+   m_dwDynamicFlags &= ~NDF_RECHECK_CAPABILITIES;
    PollerUnlock();
    DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
@@ -2122,11 +2157,13 @@ void Node::ChangeIPAddress(DWORD dwIpAddr)
 {
    DWORD i;
 
+   PollerLock();
+
    LockData();
 
    UpdateNodeIndex(m_dwIpAddr, dwIpAddr, this);
    m_dwIpAddr = dwIpAddr;
-   m_dwDynamicFlags |= NDF_FORCE_STATUS_POLL | NDF_FORCE_CONFIGURATION_POLL;
+   m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 
    // Change status of node and all it's childs to UNKNOWN
    m_iStatus = STATUS_UNKNOWN;
@@ -2146,6 +2183,12 @@ void Node::ChangeIPAddress(DWORD dwIpAddr)
 
    Modify();
    UnlockData();
+
+   AgentLock();
+   delete_and_null(m_pAgentConnection);
+   AgentUnlock();
+
+   PollerUnlock();
 }
 
 
