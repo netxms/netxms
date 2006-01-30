@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,6 +203,84 @@ static int CompareElements(const void *p1, const void *p2)
 
 
 //
+// Execute remote action
+//
+
+static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
+{
+   Node *pNode;
+   AgentConnection *pConn;
+   DWORD dwAddr, dwError;
+   int i, nLen, nState, nCount = 0;
+   TCHAR *pCmd[128], *pTmp;
+
+   // Resolve hostname
+   dwAddr = ResolveHostName(pszTarget);
+   if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
+      return FALSE;
+
+   pNode = FindNodeByIP(ntohl(dwAddr));
+   if (pNode != NULL)
+   {
+      pConn = pNode->CreateAgentConnection();
+      if (pConn == NULL)
+         return FALSE;
+   }
+   else
+   {
+      // Target node is not in our database, try default communication settings
+      pConn = new AgentConnection(dwAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+      if (!pConn->Connect(g_pServerKey))
+      {
+         delete pConn;
+         return NULL;
+      }
+   }
+
+	pTmp = _tcsdup(pszAction);
+	pCmd[0] = pTmp;
+	nLen = _tcslen(pTmp);
+	for(i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
+	{
+		switch(pTmp[i])
+		{
+			case _T(' '):
+				if (nState == 0)
+				{
+					pTmp[i] = 0;
+					if (pTmp[i + 1] != 0)
+					{
+						pCmd[nCount++] = pTmp + i + 1;
+					}
+				}
+				break;
+			case _T('"'):
+				nState == 0 ? nState++ : nState--;
+
+				memmove(pTmp + i, pTmp + i + 1, (nLen - i) * sizeof(TCHAR));
+				i--;
+				break;
+			case _T('\\'):
+				if (pTmp[i + 1] == _T('"'))
+				{
+					memmove(pTmp + i, pTmp + i + 1, (nLen - i) * sizeof(TCHAR));
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	pCmd[nCount] = NULL;
+
+   dwError = pConn->ExecAction(pCmd[0], nCount - 1, &pCmd[1]);
+   pConn->Disconnect();
+   delete pConn;
+   free(pTmp);
+   return dwError == ERR_SUCCESS;
+}
+
+
+//
 // Execute action on specific event
 //
 
@@ -245,10 +323,12 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
                PostSMS(pAction->szRcptAddr, pszExpandedData);
+               bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"",
                          pAction->szRcptAddr, pszExpandedData);
+               bSuccess = ExecuteRemoteAction(pAction->szRcptAddr, pszExpandedData);
                break;
             default:
                break;

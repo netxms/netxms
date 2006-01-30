@@ -129,7 +129,6 @@ void GetSysInfoStr(char *pszBuffer)
 
    sprintf(pszBuffer, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
 #else
-   /* TODO: add UNIX code here */
 # ifdef HAVE_SYS_UTSNAME_H
 	struct utsname uName;
 	if (uname(&uName) == 0)
@@ -226,7 +225,7 @@ BOOL ExecCommand(char *pszCommand)
 		{
 			pCmd[nCount++] = pTmp;
 			int nLen = strlen(pTmp);
-			for (int i = 0; i < nLen; i++)
+			for (int i = 0; (i < nLen) && (nCount < 127); i++)
 			{
 				switch(pTmp[i])
 				{
