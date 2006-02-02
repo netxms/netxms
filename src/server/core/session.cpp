@@ -907,6 +907,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_SCRIPT:
             DeleteScript(pMsg);
             break;
+         case CMD_GET_SESSION_LIST:
+            SendSessionList(pMsg->GetId());
+            break;
+         case CMD_KILL_SESSION:
+            KillSession(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6075,6 +6081,66 @@ void ClientSession::DeleteScript(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_INVALID_SCRIPT_ID);
       }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Copy session data to message
+//
+
+static void CopySessionData(ClientSession *pSession, void *pArg)
+{
+   DWORD dwId;
+
+   dwId = VID_SESSION_DATA_BASE + pSession->GetIndex() * 100;
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, pSession->GetIndex());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetClientInfo());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (WORD)pSession->GetCipher());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetUserName());
+}
+
+
+//
+// Send list of connected client sessions
+//
+
+void ClientSession::SendSessionList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
+   {
+      EnumerateClientSessions(CopySessionData, &msg);
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Forcibly terminate client's session
+//
+
+void ClientSession::KillSession(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
+   {
    }
    else
    {

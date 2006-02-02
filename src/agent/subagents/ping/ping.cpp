@@ -52,7 +52,8 @@ static DWORD m_dwPollsPerMinute = 4;
 static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 {
    QWORD qwStartTime;
-   DWORD i, dwSum, dwElapsedTime;
+   DWORD i, dwSum, dwCount, dwInterval, dwElapsedTime;
+   BOOL bUnreacheable = FALSE;
 
    while(!m_bShutdown)
    {
@@ -60,18 +61,35 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
       if (IcmpPing(((PING_TARGET *)pArg)->dwIpAddr, 3, m_dwTimeout,
                    &((PING_TARGET *)pArg)->dwLastRTT, 
                    ((PING_TARGET *)pArg)->dwPacketSize) != ICMP_SUCCESS)
+      {
          ((PING_TARGET *)pArg)->dwLastRTT = 10000;
+         bUnreacheable = TRUE;
+      }
 
       ((PING_TARGET *)pArg)->pdwHistory[((PING_TARGET *)pArg)->iBufPos++] = ((PING_TARGET *)pArg)->dwLastRTT;
       if (((PING_TARGET *)pArg)->iBufPos == (int)m_dwPollsPerMinute)
          ((PING_TARGET *)pArg)->iBufPos = 0;
-      for(i = 0, dwSum = 0; i < m_dwPollsPerMinute; i++)
-         dwSum += ((PING_TARGET *)pArg)->pdwHistory[i];
-      ((PING_TARGET *)pArg)->dwAvgRTT = dwSum / m_dwPollsPerMinute;
+      if (bUnreacheable)
+      {
+         ((PING_TARGET *)pArg)->dwAvgRTT = 10000;
+      }
+      else
+      {
+         for(i = 0, dwSum = 0, dwCount = 0; i < m_dwPollsPerMinute; i++)
+         {
+            if (((PING_TARGET *)pArg)->pdwHistory[i] < 10000)
+            {
+               dwSum += ((PING_TARGET *)pArg)->pdwHistory[i];
+               dwCount++;
+            }
+         }
+         ((PING_TARGET *)pArg)->dwAvgRTT = dwSum / dwCount;
+      }
 
       dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
 
-      if (ConditionWait(m_hCondShutdown, 60000 / m_dwPollsPerMinute - dwElapsedTime))
+      dwInterval = 60000 / m_dwPollsPerMinute;
+      if (ConditionWait(m_hCondShutdown, (dwInterval > dwElapsedTime + 1000) ? dwInterval - dwElapsedTime : 1000))
          break;
    }
    return THREAD_OK;

@@ -387,6 +387,8 @@ typedef struct
 #define CMD_UPDATE_SCRIPT           0x009A
 #define CMD_DELETE_SCRIPT           0x009B
 #define CMD_RENAME_SCRIPT           0x009C
+#define CMD_GET_SESSION_LIST        0x009D
+#define CMD_KILL_SESSION            0x009E
 
 
 //
@@ -683,6 +685,9 @@ typedef struct
 
 // Base value for script list
 #define VID_SCRIPT_LIST_BASE        ((DWORD)0x10000000)
+
+// Base value for session data
+#define VID_SESSION_DATA_BASE       ((DWORD)0x10000000)
 
 
 //

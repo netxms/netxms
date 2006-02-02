@@ -353,7 +353,12 @@ LONG USBInterface::GetBatteryLevel(LONG *pnLevel)
 
 LONG USBInterface::GetPowerLoad(LONG *pnLoad)
 {
-   return ReadInt(0x84, 0x35, pnLoad);
+   LONG nRet;
+
+   nRet = ReadInt(0x84, 0x35, pnLoad);
+   if (nRet == SYSINFO_RC_SUCCESS)
+      *pnLoad /= 10;
+   return nRet;
 }
 
 
@@ -363,5 +368,10 @@ LONG USBInterface::GetPowerLoad(LONG *pnLoad)
 
 LONG USBInterface::GetEstimatedRuntime(LONG *pnMinutes)
 {
-   return ReadInt(0x85, 0x68, pnMinutes);
+   LONG nRet;
+
+   nRet = ReadInt(0x85, 0x68, pnMinutes);
+   if (nRet == SYSINFO_RC_SUCCESS)
+      *pnMinutes /= 60;
+   return nRet;
 }

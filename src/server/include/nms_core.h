@@ -438,6 +438,8 @@ private:
    void UpdateScript(CSCPMessage *pRequest);
    void RenameScript(CSCPMessage *pRequest);
    void DeleteScript(CSCPMessage *pRequest);
+   void SendSessionList(DWORD dwRqId);
+   void KillSession(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
