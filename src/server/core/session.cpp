@@ -6096,13 +6096,16 @@ void ClientSession::DeleteScript(CSCPMessage *pRequest)
 
 static void CopySessionData(ClientSession *pSession, void *pArg)
 {
-   DWORD dwId;
+   DWORD dwId, dwIndex;
 
-   dwId = VID_SESSION_DATA_BASE + pSession->GetIndex() * 100;
+   dwIndex = ((CSCPMessage *)pArg)->GetVariableLong(VID_NUM_SESSIONS);
+   ((CSCPMessage *)pArg)->SetVariable(VID_NUM_SESSIONS, dwIndex + 1);
+
+   dwId = VID_SESSION_DATA_BASE + dwIndex * 100;
    ((CSCPMessage *)pArg)->SetVariable(dwId++, pSession->GetIndex());
-   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetClientInfo());
    ((CSCPMessage *)pArg)->SetVariable(dwId++, (WORD)pSession->GetCipher());
    ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetUserName());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetClientInfo());
 }
 
 
@@ -6118,6 +6121,7 @@ void ClientSession::SendSessionList(DWORD dwRqId)
    msg.SetId(dwRqId);
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
+      msg.SetVariable(VID_NUM_SESSIONS, (DWORD)0);
       EnumerateClientSessions(CopySessionData, &msg);
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
    }

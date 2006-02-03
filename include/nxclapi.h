@@ -1257,6 +1257,19 @@ typedef struct
 
 
 //
+// Client session information
+//
+
+typedef struct
+{
+   DWORD dwSessionId;
+   int nCipher;
+   TCHAR szUserName[MAX_USER_NAME];
+   TCHAR szClientApp[MAX_DB_STRING];
+} NXC_CLIENT_SESSION_INFO;
+
+
+//
 // Functions
 //
 
@@ -1359,6 +1372,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarN
 DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPattern,
                                               DWORD *pdwNumVars, TCHAR ***pppszVarList);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszVarName);
+DWORD LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, DWORD *pdwNumSessions,
+                                           NXC_CLIENT_SESSION_INFO **ppList);
+DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList);

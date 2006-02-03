@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -343,4 +343,74 @@ DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPa
    }
 
    return dwResult;
+}
+
+
+//
+// Get session list
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, DWORD *pdwNumSessions,
+                                           NXC_CLIENT_SESSION_INFO **ppList)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, dwId, dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_SESSION_LIST);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   *pdwNumSessions = 0;
+   *ppList = NULL;
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pdwNumSessions = pResponse->GetVariableLong(VID_NUM_SESSIONS);
+         if (*pdwNumSessions > 0)
+         {
+            *ppList = (NXC_CLIENT_SESSION_INFO *)malloc(sizeof(NXC_CLIENT_SESSION_INFO) * (*pdwNumSessions));
+            for(i = 0; i < *pdwNumSessions; i++)
+            {
+               dwId = i * 100;
+               (*ppList)[i].dwSessionId = pResponse->GetVariableLong(dwId++);
+               (*ppList)[i].nCipher = pResponse->GetVariableShort(dwId++);
+               pResponse->GetVariableStr(dwId++, (*ppList)[i].szUserName, MAX_USER_NAME);
+               pResponse->GetVariableStr(dwId++, (*ppList)[i].szClientApp, MAX_DB_STRING);
+            }
+         }
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+
+   return dwResult;
+}
+
+
+//
+// Forcibly close client session
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_KILL_SESSION);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_SESSION_ID, dwSessionId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

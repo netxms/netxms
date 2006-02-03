@@ -603,6 +603,7 @@ typedef struct
 #define VID_NUM_SCRIPTS             ((DWORD)206)
 #define VID_SCRIPT_ID               ((DWORD)207)
 #define VID_SCRIPT_CODE             ((DWORD)208)
+#define VID_SESSION_ID              ((DWORD)209)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
