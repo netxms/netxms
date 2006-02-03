@@ -354,7 +354,7 @@ void CUserEditor::OnUserProperties()
             dlg.m_strName = pUser->szName;
             dlg.m_strDescription = pUser->szDescription;
             dlg.m_bDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
-            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS) ? TRUE : FALSE;
+            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
             dlg.m_bManageConfig = (pUser->wSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
             dlg.m_bConfigureTraps = (pUser->wSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
             dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
@@ -370,7 +370,7 @@ void CUserEditor::OnUserProperties()
                strcpy(userInfo.szName, (LPCTSTR)dlg.m_strName);
                strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
                userInfo.wFlags = dlg.m_bDisabled ? UF_DISABLED : 0;
-               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_DROP_CONNECTIONS : 0) |
+               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
                                         (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
                                         (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
@@ -399,7 +399,7 @@ void CUserEditor::OnUserProperties()
             dlg.m_strDescription = pUser->szDescription;
             dlg.m_bAccountDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
             dlg.m_bChangePassword = (pUser->wFlags & UF_CHANGE_PASSWORD) ? TRUE : FALSE;
-            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_DROP_CONNECTIONS) ? TRUE : FALSE;
+            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
             dlg.m_bManageConfig = (pUser->wSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
             dlg.m_bConfigureTraps = (pUser->wSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
             dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
@@ -417,7 +417,7 @@ void CUserEditor::OnUserProperties()
                strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
                userInfo.wFlags = (dlg.m_bAccountDisabled ? UF_DISABLED : 0) |
                                  (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
-               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_DROP_CONNECTIONS : 0) |
+               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
                                         (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
                                         (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
