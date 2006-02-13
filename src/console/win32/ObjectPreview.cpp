@@ -29,7 +29,7 @@ BEGIN_MESSAGE_MAP(CObjectPreview, CWnd)
 	ON_WM_CREATE()
 	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_FIND_OBJECT, OnFindObject)
+   ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
 END_MESSAGE_MAP()
 
 
@@ -122,5 +122,5 @@ void CObjectPreview::Refresh()
 
 void CObjectPreview::OnFindObject(WPARAM wParam, LPARAM lParam)
 {
-   GetParent()->SendMessage(WM_FIND_OBJECT, wParam, lParam);
+   GetParent()->SendMessage(NXCM_FIND_OBJECT, wParam, lParam);
 }

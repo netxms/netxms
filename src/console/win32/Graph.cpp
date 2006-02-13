@@ -29,6 +29,7 @@ CGraph::CGraph()
    m_dMaxValue = 100;
    m_bAutoScale = TRUE;
    m_bShowGrid = TRUE;
+   m_bShowRuler = TRUE;
    m_dwNumItems = 0;
    m_rgbBkColor = RGB(0,0,0);
    m_rgbGridColor = RGB(64, 64, 64);
@@ -383,6 +384,22 @@ void CGraph::OnMouseMove(UINT nFlags, CPoint point)
       SetMouseTracking();
       InvalidateRect(&m_rectInfo, FALSE);
       memset(&m_rectInfo, 0, sizeof(RECT));
+   }
+
+   if (PtInRect(&m_rectGraph, point))
+   {
+      DWORD dwTimeStamp;
+      double dValue;
+
+      dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
+      dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
+                  (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) * 
+                  (m_rectGraph.bottom - point.y);
+      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
+   }
+   else
+   {
+      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, 0, 0);
    }
 }
 

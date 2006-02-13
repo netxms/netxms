@@ -92,6 +92,7 @@ protected:
 	afx_msg void OnGraphPresetsLast30minutes();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;

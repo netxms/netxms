@@ -46,7 +46,7 @@ static BOOL m_bClearCache = FALSE;
 
 inline void SetInfoText(HWND hWnd, char *pszText)
 {
-   SendMessage(hWnd, WM_SET_INFO_TEXT, 0, (LPARAM)pszText);
+   SendMessage(hWnd, NXCM_SET_INFO_TEXT, 0, (LPARAM)pszText);
 }
 
 
@@ -148,7 +148,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
-      theApp.GetMainWnd()->PostMessage(WM_STATE_CHANGE, TRUE, 0);
+      theApp.GetMainWnd()->PostMessage(NXCM_STATE_CHANGE, TRUE, 0);
       NXCSetEventHandler(g_hSession, ClientEventHandler);
 
       SetInfoText(hWnd, "Loading container categories...");
@@ -288,12 +288,12 @@ static DWORD WINAPI LoginThread(void *pArg)
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
    {
-      theApp.GetMainWnd()->PostMessage(WM_STATE_CHANGE, FALSE, 0);
+      theApp.GetMainWnd()->PostMessage(NXCM_STATE_CHANGE, FALSE, 0);
       NXCDisconnect(g_hSession);
       g_hSession = NULL;
    }
 
-   PostMessage(hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
+   PostMessage(hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;
 }
 
@@ -370,7 +370,7 @@ static DWORD WINAPI RequestThread(void *pArg)
          break;
    }
    if (pData->hWnd != NULL)
-      PostMessage(pData->hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
+      PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;
 }
 
@@ -575,7 +575,7 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 static void PollerCallback(TCHAR *pszMsg, void *pArg)
 {
    if (((RqData *)pArg)->hWnd != NULL)
-      PostMessage(((RqData *)pArg)->hWnd, WM_POLLER_MESSAGE, 0, (LPARAM)_tcsdup(pszMsg));
+      PostMessage(((RqData *)pArg)->hWnd, NXCM_POLLER_MESSAGE, 0, (LPARAM)_tcsdup(pszMsg));
 }
 
 
@@ -591,6 +591,6 @@ DWORD WINAPI PollerThread(void *pArg)
    dwResult = NXCPollNode(g_hSession, (DWORD)pData->pArg1, (int)pData->pArg2, 
                           PollerCallback, pArg);
    if (pData->hWnd != NULL)
-      PostMessage(pData->hWnd, WM_REQUEST_COMPLETED, 0, dwResult);
+      PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;
 }

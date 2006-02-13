@@ -35,7 +35,7 @@ END_MESSAGE_MAP()
 void CEditBox::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
 {
    if ((nChar == VK_RETURN) && (nRepCnt == 1))
-      GetParent()->PostMessage(WM_EDITBOX_EVENT, GetDlgCtrlID(), EDITBOX_ENTER_PRESSED);
+      GetParent()->PostMessage(NXCM_EDITBOX_EVENT, GetDlgCtrlID(), EDITBOX_ENTER_PRESSED);
    else
 	   CEdit::OnKeyDown(nChar, nRepCnt, nFlags);
 }

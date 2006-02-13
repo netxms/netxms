@@ -32,13 +32,13 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_DESKTOP_NEW, OnDesktopNew)
 	//}}AFX_MSG_MAP
 //   ON_UPDATE_COMMAND_UI(ID_INDICATOR_CONNECT, OnUpdateConnState)
-   ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
-   ON_MESSAGE(WM_USERDB_CHANGE, OnUserDBChange)
-   ON_MESSAGE(WM_STATE_CHANGE, OnStateChange)
-   ON_MESSAGE(WM_ALARM_UPDATE, OnAlarmUpdate)
-   ON_MESSAGE(WM_DEPLOYMENT_INFO, OnDeploymentInfo)
-   ON_MESSAGE(WM_UPDATE_EVENT_LIST, OnUpdateEventList)
-   ON_MESSAGE(WM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
+   ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(NXCM_USERDB_CHANGE, OnUserDBChange)
+   ON_MESSAGE(NXCM_STATE_CHANGE, OnStateChange)
+   ON_MESSAGE(NXCM_ALARM_UPDATE, OnAlarmUpdate)
+   ON_MESSAGE(NXCM_DEPLOYMENT_INFO, OnDeploymentInfo)
+   ON_MESSAGE(NXCM_UPDATE_EVENT_LIST, OnUpdateEventList)
+   ON_MESSAGE(NXCM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -176,7 +176,7 @@ void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam, BOOL b
 
 void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   BroadcastMessage(WM_OBJECT_CHANGE, wParam, lParam, TRUE);
+   BroadcastMessage(NXCM_OBJECT_CHANGE, wParam, lParam, TRUE);
 }
 
 
@@ -186,7 +186,7 @@ void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 {
-   BroadcastMessage(WM_USERDB_CHANGE, wParam, lParam, TRUE);
+   BroadcastMessage(NXCM_USERDB_CHANGE, wParam, lParam, TRUE);
 }
 
 
@@ -196,7 +196,7 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
 {
-   BroadcastMessage(WM_DEPLOYMENT_INFO, wParam, lParam, FALSE);
+   BroadcastMessage(NXCM_DEPLOYMENT_INFO, wParam, lParam, FALSE);
    safe_free(((NXC_DEPLOYMENT_STATUS *)lParam)->pszErrorMessage)
    free((void *)lParam);
 }
@@ -374,7 +374,7 @@ void CMainFrame::OnDesktopSave()
       pWnd = MDIGetActive();
       while(pWnd != NULL)
       {
-         if (pWnd->SendMessage(WM_GET_SAVE_INFO, 0, (LPARAM)&pWndSaveInfo[dwWindowCount]) != 0)
+         if (pWnd->SendMessage(NXCM_GET_SAVE_INFO, 0, (LPARAM)&pWndSaveInfo[dwWindowCount]) != 0)
          {
             dwWindowCount++;
          }

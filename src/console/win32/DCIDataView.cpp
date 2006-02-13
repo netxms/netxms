@@ -53,7 +53,7 @@ BEGIN_MESSAGE_MAP(CDCIDataView, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
-   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

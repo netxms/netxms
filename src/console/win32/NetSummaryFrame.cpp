@@ -34,8 +34,8 @@ BEGIN_MESSAGE_MAP(CNetSummaryFrame, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_OBJECT_CHANGE, OnObjectChange)
-   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

@@ -263,7 +263,7 @@ BOOL ExecCommand(char *pszCommand)
 				switch ((nPid = fork()))
 				{
 					case -1:
-						perror("fork()");
+                  WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, errno);
 						break;
 					case 0: // child
 						{

@@ -41,7 +41,8 @@ Node::Node()
    m_iStatusPollType = POLL_ICMP_PING;
    m_iSNMPVersion = SNMP_VERSION_1;
    m_wSNMPPort = SNMP_DEFAULT_PORT;
-   strcpy(m_szCommunityString, "public");
+   ConfigReadStr("DefaultCommunityString", m_szCommunityString,
+                 MAX_COMMUNITY_LENGTH, "public");
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;
    m_tLastStatusPoll = 0;
@@ -81,7 +82,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_iStatusPollType = POLL_ICMP_PING;
    m_iSNMPVersion = SNMP_VERSION_1;
    m_wSNMPPort = SNMP_DEFAULT_PORT;
-   strcpy(m_szCommunityString, "public");
+   ConfigReadStr("DefaultCommunityString", m_szCommunityString,
+                 MAX_COMMUNITY_LENGTH, "public");
    IpToStr(dwAddr, m_szName);    // Make default name from IP address
    m_szObjectId[0] = 0;
    m_tLastDiscoveryPoll = 0;

@@ -44,9 +44,9 @@ BEGIN_MESSAGE_MAP(CDeploymentView, CMDIChildWnd)
 	ON_WM_PAINT()
 	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_START_DEPLOYMENT, OnStartDeployment)
-   ON_MESSAGE(WM_DEPLOYMENT_INFO, OnDeploymentInfo)
-   ON_MESSAGE(WM_DEPLOYMENT_FINISHED, OnDeploymentFinished)
+   ON_MESSAGE(NXCM_START_DEPLOYMENT, OnStartDeployment)
+   ON_MESSAGE(NXCM_DEPLOYMENT_INFO, OnDeploymentInfo)
+   ON_MESSAGE(NXCM_DEPLOYMENT_FINISHED, OnDeploymentFinished)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ static DWORD WINAPI DeploymentThread(DEPLOYMENT_JOB *pJob)
 
    dwResult = NXCDeployPackage(g_hSession, pJob->dwPkgId, pJob->dwNumObjects,
                                pJob->pdwObjectList, pJob->pdwRqId);
-   PostMessage(pJob->hWnd, WM_DEPLOYMENT_FINISHED, 0, dwResult);
+   PostMessage(pJob->hWnd, NXCM_DEPLOYMENT_FINISHED, 0, dwResult);
    safe_free(pJob->pdwObjectList);
    free(pJob);
    return 0;

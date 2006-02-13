@@ -38,7 +38,7 @@ BEGIN_MESSAGE_MAP(CObjectSearchBox, CToolBox)
 	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
 	ON_COMMAND(ID_FIND_OBJECT, OnFindObject)
-   ON_MESSAGE(WM_EDITBOX_EVENT, OnEditBoxEvent)
+   ON_MESSAGE(NXCM_EDITBOX_EVENT, OnEditBoxEvent)
 END_MESSAGE_MAP()
 
 
@@ -117,7 +117,7 @@ void CObjectSearchBox::OnFindObject()
    szBuffer[0] = _T('*');
    m_wndEditBox.GetWindowText(&szBuffer[1], 255);
    _tcscat(szBuffer, _T("*"));
-   GetParent()->SendMessage(WM_FIND_OBJECT, 0, (LPARAM)szBuffer);
+   GetParent()->SendMessage(NXCM_FIND_OBJECT, 0, (LPARAM)szBuffer);
 }
 
 

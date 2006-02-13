@@ -223,7 +223,7 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity
 
 DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
                     const char *szRootOid,
-                    void (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
+                    DWORD (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose)
 {
    DWORD pdwRootName[MAX_OID_LEN], dwRootLen, pdwName[MAX_OID_LEN], dwNameLen, dwResult;
@@ -284,7 +284,12 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCom
                      dwNameLen = pVar->GetName()->Length();
 
                      // Call user's callback function for processing
-                     pHandler(dwVersion, dwAddr, wPort, szCommunity, pVar, pTransport, pUserArg);
+                     dwResult = pHandler(dwVersion, dwAddr, wPort, szCommunity, pVar,
+                                         pTransport, pUserArg);
+                     if (dwResulr != SNMP_ERR_SUCCESS)
+                     {
+                        bRunning = FALSE;
+                     }
                   }
                   else
                   {
@@ -346,7 +351,7 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, WORD wPort,
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
    oidName[dwNameLen - 5] = 3;  // Retrieve network mask for this IP
    if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen,
-                &dwNetMask, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
+               &dwNetMask, sizeof(DWORD), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return;
 
    oidName[dwNameLen - 5] = 2;  // Retrieve interface index for this IP
@@ -367,7 +372,7 @@ static void HandlerIpAddr(DWORD dwVersion, DWORD dwAddr, WORD wPort,
                      sizeof(INTERFACE_INFO) * ((INTERFACE_LIST *)pArg)->iNumEntries);
                memcpy(&(((INTERFACE_LIST *)pArg)->pInterfaces[((INTERFACE_LIST *)pArg)->iNumEntries - 1]), 
                       &(((INTERFACE_LIST *)pArg)->pInterfaces[i]), sizeof(INTERFACE_INFO));
-               if (strlen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 4)
+               if (strlen(((INTERFACE_LIST *)pArg)->pInterfaces[i].szName) < MAX_OBJECT_NAME - 6)
                {
                   char szBuffer[8];
 
@@ -478,22 +483,26 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
 // Handler for ARP enumeration
 //
 
-static void HandlerArp(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
-                       SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static DWORD HandlerArp(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity, 
+                        SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    DWORD oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
    BYTE bMac[64];
+   DWORD dwResult;
 
    dwNameLen = pVar->GetName()->Length();
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
 
    oidName[dwNameLen - 6] = 1;  // Retrieve interface index
-   SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen, &dwIndex,
-           sizeof(DWORD), FALSE, FALSE);
+   dwResult = SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen, &dwIndex,
+                      sizeof(DWORD), FALSE, FALSE);
+   if (dwResult != SNMP_ERR_SUCCESS)
+      return dwResult;
 
    oidName[dwNameLen - 6] = 2;  // Retrieve MAC address for this IP
-   if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen, bMac,
-               64, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+   dwResult = SnmpGet(dwVersion, dwAddr, wPort, szCommunity, NULL, oidName, dwNameLen, bMac,
+                      64, FALSE, FALSE);
+   if (dwResult == SNMP_ERR_SUCCESS)
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
@@ -502,6 +511,7 @@ static void HandlerArp(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *sz
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }
+   return dwResult;
 }
 
 

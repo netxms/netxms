@@ -33,8 +33,8 @@ BEGIN_MESSAGE_MAP(CNodePoller, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
-   ON_MESSAGE(WM_POLLER_MESSAGE, OnPollerMessage)
+   ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_MESSAGE(NXCM_POLLER_MESSAGE, OnPollerMessage)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

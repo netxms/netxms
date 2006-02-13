@@ -43,6 +43,7 @@ public:
 
 // Implementation
 public:
+	BOOL m_bShowRuler;
 	void SetData(DWORD dwIndex, NXC_DCI_DATA *pData);
 	void SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo);
 	BOOL Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, int nId);

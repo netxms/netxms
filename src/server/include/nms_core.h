@@ -513,7 +513,7 @@ DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity
               const char *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
               DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
 DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity,
-                    const char *szRootOid, void (* pHandler)(DWORD, DWORD, WORD,
+                    const char *szRootOid, DWORD (* pHandler)(DWORD, DWORD, WORD,
                     const char *, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose);
 void StrToMac(char *pszStr, BYTE *pBuffer);

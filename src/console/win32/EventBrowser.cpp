@@ -37,8 +37,8 @@ BEGIN_MESSAGE_MAP(CEventBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
    ON_COMMAND(ID_REQUEST_COMPLETED, OnRequestCompleted)
-   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
-   ON_MESSAGE(WM_NETXMS_EVENT, OnNetXMSEvent)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_NETXMS_EVENT, OnNetXMSEvent)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

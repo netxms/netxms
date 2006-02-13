@@ -125,7 +125,10 @@ restart_query:
       // Try to re-connect in case of error
       m_deviceInfo[nDev]->Close();
       if (m_deviceInfo[nDev]->Open())
+      {
+         bFirstTry = FALSE;
          goto restart_query;
+      }
    }
    return nRet;
 }

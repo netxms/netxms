@@ -125,7 +125,7 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
-   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

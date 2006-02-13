@@ -868,7 +868,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             void *pData;
 
             pData = nx_memdup(pArg, sizeof(NXC_EVENT));
-            if (!PostMessage(m_hwndEventBrowser, WM_NETXMS_EVENT, 0, (LPARAM)pData))
+            if (!PostMessage(m_hwndEventBrowser, NXCM_NETXMS_EVENT, 0, (LPARAM)pData))
                free(pData);
          }
          break;
@@ -879,7 +879,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
             pRec = (NXC_SYSLOG_RECORD *)nx_memdup(pArg, sizeof(NXC_SYSLOG_RECORD));
             pRec->pszText = _tcsdup(((NXC_SYSLOG_RECORD *)pArg)->pszText);
-            if (!PostMessage(m_hwndSyslogBrowser, WM_SYSLOG_RECORD, 0, (LPARAM)pRec))
+            if (!PostMessage(m_hwndSyslogBrowser, NXCM_SYSLOG_RECORD, 0, (LPARAM)pRec))
             {
                safe_free(pRec->pszText);
                free(pRec);
@@ -887,15 +887,15 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          }
          break;
       case NXC_EVENT_OBJECT_CHANGED:
-         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
+         ((CMainFrame *)m_pMainWnd)->PostMessage(NXCM_OBJECT_CHANGE, dwCode, (LPARAM)pArg);
          break;
       case NXC_EVENT_USER_DB_CHANGED:
-         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_USERDB_CHANGE, dwCode, (LPARAM)pArg);
+         ((CMainFrame *)m_pMainWnd)->PostMessage(NXCM_USERDB_CHANGE, dwCode, (LPARAM)pArg);
          break;
       case NXC_EVENT_DEPLOYMENT_STATUS:
          pStatus = (NXC_DEPLOYMENT_STATUS *)nx_memdup(pArg, sizeof(NXC_DEPLOYMENT_STATUS));
          pStatus->pszErrorMessage = _tcsdup(pStatus->pszErrorMessage);
-         ((CMainFrame *)m_pMainWnd)->PostMessage(WM_DEPLOYMENT_INFO, dwCode, (LPARAM)pStatus);
+         ((CMainFrame *)m_pMainWnd)->PostMessage(NXCM_DEPLOYMENT_INFO, dwCode, (LPARAM)pStatus);
          break;
       case NXC_EVENT_NOTIFICATION:
          switch(dwCode)
@@ -905,15 +905,15 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
                break;
             case NX_NOTIFY_EVENTDB_CHANGED:
-               m_pMainWnd->PostMessage(WM_UPDATE_EVENT_LIST);
+               m_pMainWnd->PostMessage(NXCM_UPDATE_EVENT_LIST);
                break;
             case NX_NOTIFY_OBJTOOLS_CHANGED:
-               m_pMainWnd->PostMessage(WM_UPDATE_OBJECT_TOOLS);
+               m_pMainWnd->PostMessage(NXCM_UPDATE_OBJECT_TOOLS);
                break;
             case NX_NOTIFY_NEW_ALARM:
             case NX_NOTIFY_ALARM_DELETED:
             case NX_NOTIFY_ALARM_ACKNOWLEGED:
-               m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
+               m_pMainWnd->PostMessage(NXCM_ALARM_UPDATE, dwCode, 
                                        (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
                break;
             case NX_NOTIFY_ACTION_CREATED:
@@ -1860,7 +1860,7 @@ void CConsoleApp::DeployPackage(DWORD dwPkgId, DWORD dwNumObjects, DWORD *pdwObj
       pJob->dwPkgId = dwPkgId;
       pJob->dwNumObjects = dwNumObjects;
       pJob->pdwObjectList = (DWORD *)nx_memdup(pdwObjectList, sizeof(DWORD) * dwNumObjects);
-      pWnd->PostMessage(WM_START_DEPLOYMENT, 0, (LPARAM)pJob);
+      pWnd->PostMessage(NXCM_START_DEPLOYMENT, 0, (LPARAM)pJob);
    }
 }
 

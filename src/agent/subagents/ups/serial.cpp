@@ -45,7 +45,7 @@ BOOL SerialInterface::ReadLineFromSerial(char *pszBuffer, int nBufLen)
       else
          pszBuffer[nPos - 1] = 0;
    }
-   return nRet != -1;
+   return nRet > 0;
 }
 
 

@@ -42,7 +42,7 @@ BEGIN_MESSAGE_MAP(CTableView, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_TABLE_DATA, OnTableData)
+   ON_MESSAGE(NXCM_TABLE_DATA, OnTableData)
 END_MESSAGE_MAP()
 
 
@@ -69,7 +69,7 @@ void CTableView::RequestData()
    dwResult = NXCExecuteTableTool(g_hSession, m_dwNodeId, m_dwToolId, &pData);
    theApp.DebugPrintf(_T("CTableView::RequestData(): Execution result: %d (%s)"),
                       dwResult, NXCGetErrorText(dwResult));
-   if (!::PostMessage(hWnd, WM_TABLE_DATA, dwResult, (LPARAM)pData))
+   if (!::PostMessage(hWnd, NXCM_TABLE_DATA, dwResult, (LPARAM)pData))
    {
       theApp.DebugPrintf(_T("CTableView::RequestData(): Failed to post message to window %08X"), hWnd);
       if (dwResult == RCC_SUCCESS)

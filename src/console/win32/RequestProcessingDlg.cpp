@@ -39,8 +39,8 @@ void CRequestProcessingDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CRequestProcessingDlg, CDialog)
 	//{{AFX_MSG_MAP(CRequestProcessingDlg)
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_REQUEST_COMPLETED, OnRequestCompleted)
-   ON_MESSAGE(WM_SET_INFO_TEXT, OnSetInfoText)
+   ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_MESSAGE(NXCM_SET_INFO_TEXT, OnSetInfoText)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ BOOL CRequestProcessingDlg::OnInitDialog()
 
       // Finished, get it's exit code and close status window
       GetExitCodeThread(m_hThread, &dwResult);
-      PostMessage(WM_REQUEST_COMPLETED, 0, dwResult);
+      PostMessage(NXCM_REQUEST_COMPLETED, 0, dwResult);
    }
    else
    {

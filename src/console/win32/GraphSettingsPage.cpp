@@ -36,6 +36,7 @@ CGraphSettingsPage::CGraphSettingsPage() : CPropertyPage(CGraphSettingsPage::IDD
 	m_dateTo = 0;
 	m_timeFrom = 0;
 	m_timeTo = 0;
+	m_bRuler = FALSE;
 	//}}AFX_DATA_INIT
 
    m_iTimeUnit = 0;
@@ -62,6 +63,7 @@ void CGraphSettingsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_DateTimeCtrl(pDX, IDC_DATE_TO, m_dateTo);
 	DDX_DateTimeCtrl(pDX, IDC_TIME_FROM, m_timeFrom);
 	DDX_DateTimeCtrl(pDX, IDC_TIME_TO, m_timeTo);
+	DDX_Check(pDX, IDC_CHECK_RULER, m_bRuler);
 	//}}AFX_DATA_MAP
 }
 

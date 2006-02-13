@@ -46,11 +46,11 @@ struct VLAN_LIST
 // Handler for VLAN enumeration on Passport
 //
 
-static void HandlerVlanList(DWORD dwVersion, DWORD dwAddr, WORD wPort, 
-                            const char *pszCommunity, SNMP_Variable *pVar,
-                            SNMP_Transport *pTransport, void *pArg)
+static DWORD HandlerVlanList(DWORD dwVersion, DWORD dwAddr, WORD wPort, 
+                             const char *pszCommunity, SNMP_Variable *pVar,
+                             SNMP_Transport *pTransport, void *pArg)
 {
-   DWORD dwIndex, oidName[MAX_OID_LEN], dwNameLen;
+   DWORD dwIndex, oidName[MAX_OID_LEN], dwNameLen, dwResult;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pArg;
    BYTE szBuffer[256];
 
@@ -65,21 +65,27 @@ static void HandlerVlanList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
    // Get VLAN name
    memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
    oidName[dwNameLen - 2] = 2;
-   SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen, 
-           pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, FALSE, FALSE);
+   dwResult = SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen, 
+                      pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME, FALSE, FALSE);
+   if (dwResult != SNMP_ERR_SUCCESS)
+      return dwResult;
 
    // Get VLAN interface index
    oidName[dwNameLen - 2] = 6;
-   SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen, 
-           &pVlanList->pList[dwIndex].dwIfIndex, sizeof(DWORD), FALSE, FALSE);
+   dwResult = SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen, 
+                      &pVlanList->pList[dwIndex].dwIfIndex, sizeof(DWORD), FALSE, FALSE);
+   if (dwResult != SNMP_ERR_SUCCESS)
+      return dwResult;
 
    // Get VLAN MAC address
    oidName[dwNameLen - 2] = 19;
    memset(pVlanList->pList[dwIndex].bMacAddr, 0, MAC_ADDR_LENGTH);
    memset(szBuffer, 0, MAC_ADDR_LENGTH);
-   SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen, 
-           szBuffer, 256, FALSE, FALSE);
-   memcpy(pVlanList->pList[dwIndex].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+   dwResult = SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen, 
+                      szBuffer, 256, FALSE, FALSE);
+   if (dwResult == SNMP_ERR_SUCCESS)
+      memcpy(pVlanList->pList[dwIndex].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+   return dwResult;
 }
 
 

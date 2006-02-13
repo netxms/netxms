@@ -89,7 +89,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_PRESETS_LAST10MINUTES, OnGraphPresetsLast10minutes)
 	ON_COMMAND(ID_GRAPH_PRESETS_LAST30MINUTES, OnGraphPresetsLast30minutes)
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -553,4 +554,25 @@ void CGraphFrame::Preset(int nTimeUnit, DWORD dwNumUnits)
    m_dwNumTimeUnits = dwNumUnits;
    m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+}
+
+
+//
+// NXCM_UPDATE_GRAPH_POINT message handler
+//
+
+void CGraphFrame::OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue)
+{
+   if (pdValue != NULL)
+   {
+      TCHAR szTimeStamp[64], szText[256];
+
+      FormatTimeStamp(dwTimeStamp, szTimeStamp, TS_LONG_DATE_TIME);
+      _sntprintf(szText, 256, _T("Time: %s  Value: %.3f"), szTimeStamp, *pdValue);
+      m_wndStatusBar.SetText(szText, 2, 0);
+   }
+   else
+   {
+      m_wndStatusBar.SetText(_T(""), 2, 0);
+   }
 }
