@@ -217,10 +217,12 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
                         {
                            nProto = UPS_PROTOCOL_APC;
                         }
+#ifdef _WIN32
                         else if (!_tcsicmp(pszCurrField, _T("USB")))
                         {
                            nProto = UPS_PROTOCOL_USB;
                         }
+#endif
                         else
                         {
                            nState = 255;  // Error
@@ -284,9 +286,11 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
          case UPS_PROTOCOL_APC:
             m_deviceInfo[nDev] = new APCInterface(szPort);
             break;
+#ifdef _WIN32
          case UPS_PROTOCOL_USB:
             m_deviceInfo[nDev] = new USBInterface(szPort);
             break;
+#endif
          default:
             break;
       }
