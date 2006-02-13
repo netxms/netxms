@@ -126,9 +126,10 @@ void CGraph::OnPaint()
    CSize textSize;
    DWORD i, dwTimeStamp;
    int iLeftMargin, iBottomMargin, iRightMargin = 5, iTopMargin = 5;
-   int x, y, iTimeLen, iStep, iGraphLen;
+   int x, y, iTimeLen, iStep, iGraphLen, nDivider;
    double dStep, dMark;
-   char szBuffer[256];
+   char szBuffer[256], szModifier[4];
+   BOOL bIntMarks;
 
    GetClientRect(&rect);
 
@@ -243,11 +244,53 @@ void CGraph::OnPaint()
    dc.SelectObject(pOldPen);
    pen.DeleteObject();
 
+   // Select appropriate style for ordinate marks
+   if (m_dCurrMaxValue > 100000000000)
+   {
+      szModifier[0] = 'G';
+      szModifier[1] = 0;
+      nDivider = 1000000000;
+      bIntMarks = TRUE;
+   }
+   else if (m_dCurrMaxValue > 100000000)
+   {
+      szModifier[0] = 'M';
+      szModifier[1] = 0;
+      nDivider = 1000000;
+      bIntMarks = TRUE;
+   }
+   else if (m_dCurrMaxValue > 100000)
+   {
+      szModifier[0] = 'K';
+      szModifier[1] = 0;
+      nDivider = 1000;
+      bIntMarks = TRUE;
+   }
+   else
+   {
+      szModifier[0] = 0;
+      nDivider = 1;
+      for(i = 0, bIntMarks = TRUE; i < MAX_GRAPH_ITEMS; i++)
+      {
+         if (m_pData[i] != NULL)
+         {
+            if (m_pData[i]->wDataType == DCI_DT_FLOAT)
+            {
+               bIntMarks = FALSE;
+               break;
+            }
+         }
+      }
+   }
+
    // Display ordinate marks
    dStep = m_dCurrMaxValue / ((rect.bottom - iBottomMargin - iTopMargin) / m_iGridSize);
    for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= m_iGridSize * 2, dMark += dStep * 2)
    {
-      sprintf(szBuffer, "%5.3f", dMark);
+      if (bIntMarks)
+         sprintf(szBuffer, INT64_FMT "%s", (INT64)dMark / nDivider, szModifier);
+      else
+         sprintf(szBuffer, "%5.3f%s", dMark, szModifier);
       CSize cz = dc.GetTextExtent(szBuffer);
       dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
    }
