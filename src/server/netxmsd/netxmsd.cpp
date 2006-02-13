@@ -25,6 +25,13 @@
 
 
 //
+// Static data
+//
+
+static BOOL m_bCheckDB = FALSE;
+
+
+//
 // Help text
 //
 
@@ -32,6 +39,7 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "Copyright (c) 2003, 2004, 2005 NetXMS Team\n\n"
                         "Usage: netxmsd [<options>] <command>\n\n"
                         "Valid options are:\n"
+                        "   --check-db          : Run database check on startup\n"
                         "   --config <file>     : Set non-default configuration file\n"
                         "                       : Default is " DEFAULT_CONFIG_FILE "\n"
                         "   --debug-all         : Turn on all possible debug output\n"
@@ -75,6 +83,46 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
 
 
 //
+// Execute command and wait
+//
+
+static BOOL ExecAndWait(TCHAR *pszCommand)
+{
+   BOOL bSuccess = TRUE;
+
+#ifdef _WIN32
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   // Fill in process startup info structure
+   memset(&si, 0, sizeof(STARTUPINFO));
+   si.cb = sizeof(STARTUPINFO);
+   si.dwFlags = 0;
+
+   // Create new process
+   if (!CreateProcess(NULL, pszCommand, NULL, NULL, FALSE,
+                      IsStandalone() ? 0 : CREATE_NO_WINDOW | DETACHED_PROCESS,
+                      NULL, NULL, &si, &pi))
+   {
+      bSuccess = FALSE;
+   }
+   else
+   {
+      WaitForSingleObject(pi.hProcess, INFINITE);
+
+      // Close all handles
+      CloseHandle(pi.hThread);
+      CloseHandle(pi.hProcess);
+   }
+#else
+   bSuccess = (system(pszCommand) != -1);
+#endif
+
+   return bSuccess;
+}
+
+
+//
 // Parse command line
 // Returns TRUE on success and FALSE on failure
 //
@@ -100,6 +148,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       {
          i++;
          nx_strncpy(g_szConfigFile, argv[i], MAX_PATH);     // Next word should contain name of the config file
+      }
+      else if (!strcmp(argv[i], "--check-db"))
+      {
+         m_bCheckDB = TRUE;
       }
 #ifdef _WIN32
       else if (!strcmp(argv[i], "--login"))
@@ -283,6 +335,23 @@ int main(int argc, char *argv[])
       if (IsStandalone())
          printf("Error loading configuration file\n");
       return 1;
+   }
+
+   // Check database before start if requested
+   if (m_bCheckDB)
+   {
+      char szCmd[MAX_PATH + 128], *pszSep;
+
+      strncpy(szCmd, argv[0], MAX_PATH);
+      pszSep = strrchr(szCmd, FS_PATH_SEPARATOR[0]);
+      if (pszSep != NULL)
+         pszSep++;
+      else
+         pszSep = szCmd;
+      sprintf(pszSep, "nxdbmgr -c \"%s\" -f check", g_szConfigFile);
+      if (!ExecAndWait(szCmd))
+         if (IsStandalone())
+            printf("ERROR: Failed to execute command \"%s\"\n", szCmd);
    }
 
 #ifdef _WIN32
