@@ -39,4 +39,6 @@ void RemoveEventSource(void);
 
 #endif   /* _WIN32 */
 
+extern BOOL g_bCheckDB;
+
 #endif   /* _netxmsd_h_ */

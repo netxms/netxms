@@ -25,10 +25,10 @@
 
 
 //
-// Static data
+// Global data
 //
 
-static BOOL m_bCheckDB = FALSE;
+BOOL g_bCheckDB = FALSE;
 
 
 //
@@ -151,7 +151,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       }
       else if (!strcmp(argv[i], "--check-db"))
       {
-         m_bCheckDB = TRUE;
+         g_bCheckDB = TRUE;
       }
 #ifdef _WIN32
       else if (!strcmp(argv[i], "--login"))
@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
    }
 
    // Check database before start if requested
-   if (m_bCheckDB)
+   if (g_bCheckDB)
    {
       char szCmd[MAX_PATH + 128], *pszSep;
 

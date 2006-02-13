@@ -145,7 +145,8 @@ void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
       return;
    }
 
-   sprintf(szCmdLine, "\"%s\" --config \"%s\"", pszExecName, g_szConfigFile);
+   sprintf(szCmdLine, "\"%s\" --config \"%s\"%s", pszExecName, g_szConfigFile,
+           g_bCheckDB ? " --check-db" : "");
    hService = CreateService(hMgr, CORE_SERVICE_NAME, "NetXMS Core",
                             GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
