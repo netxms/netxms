@@ -276,9 +276,9 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar, LONG
 // Handler for SNMP table enumeration
 //
 
-static void TableHandler(DWORD dwVersion, DWORD dwAddr, WORD wPort,
-                         const char *szCommunity, SNMP_Variable *pVar,
-                         SNMP_Transport *pTransport, void *pArg)
+static DWORD TableHandler(DWORD dwVersion, DWORD dwAddr, WORD wPort,
+                          const char *szCommunity, SNMP_Variable *pVar,
+                          SNMP_Transport *pTransport, void *pArg)
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
    SNMP_PDU *pRqPDU, *pRespPDU;
@@ -331,6 +331,7 @@ static void TableHandler(DWORD dwVersion, DWORD dwAddr, WORD wPort,
       }
       delete pRespPDU;
    }
+   return dwResult;
 }
 
 

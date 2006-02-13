@@ -93,14 +93,14 @@ static DWORD HandlerVlanList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
 // Handler for VLAN enumeration on Passport
 //
 
-static void HandlerPassportIfList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
+static DWORD HandlerPassportIfList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
                                   const char *pszCommunity, SNMP_Variable *pVar,
                                   SNMP_Transport *pTransport, void *pArg)
 {
    INTERFACE_LIST *pIfList = (INTERFACE_LIST *)pArg;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pIfList->pArg;
    int iIndex;
-   DWORD oidName[MAX_OID_LEN], dwVlanIndex, dwIfIndex, dwNameLen;
+   DWORD oidName[MAX_OID_LEN], dwVlanIndex, dwIfIndex, dwNameLen, dwResult;
 
    dwIfIndex = pVar->GetValueAsUInt();
    for(dwVlanIndex = 0; dwVlanIndex < pVlanList->dwNumVlans; dwVlanIndex++)
@@ -125,14 +125,22 @@ static void HandlerPassportIfList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
       // Get IP address
       memcpy(oidName, pVar->GetName()->GetValue(), dwNameLen * sizeof(DWORD));
       oidName[dwNameLen - 6] = 2;
-      SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen,
-              &pIfList->pInterfaces[iIndex].dwIpAddr, sizeof(DWORD), FALSE, FALSE);
+      dwResult = SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen,
+                         &pIfList->pInterfaces[iIndex].dwIpAddr, sizeof(DWORD), FALSE, FALSE);
 
-      // Get netmask
-      oidName[dwNameLen - 6] = 3;
-      SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen,
-              &pIfList->pInterfaces[iIndex].dwIpNetMask, sizeof(DWORD), FALSE, FALSE);
+      if (dwResult == SNMP_ERR_SUCCESS)
+      {
+         // Get netmask
+         oidName[dwNameLen - 6] = 3;
+         dwResult = SnmpGet(dwVersion, dwAddr, wPort, pszCommunity, NULL, oidName, dwNameLen,
+                            &pIfList->pInterfaces[iIndex].dwIpNetMask, sizeof(DWORD), FALSE, FALSE);
+      }
    }
+   else
+   {
+      dwResult = SNMP_ERR_SUCCESS;  // Ignore interfaces without matching VLANs
+   }
+   return dwResult;
 }
 
 

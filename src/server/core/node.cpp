@@ -2334,7 +2334,7 @@ void Node::UpdateRoutingTable(void)
 //
 
 DWORD Node::CallSnmpEnumerate(char *pszRootOid, 
-                              void (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
+                              DWORD (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg)
 {
    if ((m_dwFlags & NF_IS_SNMP) && 
