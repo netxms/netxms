@@ -642,6 +642,7 @@
 #define ID_SCRIPT_VIEWASTREE            32975
 #define ID_SCRIPT_RENAME                32976
 #define ID_SCRIPT_DELETE                32977
+#define ID_GRAPH_RULER                  32978
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -652,7 +653,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        302
-#define _APS_NEXT_COMMAND_VALUE         32978
+#define _APS_NEXT_COMMAND_VALUE         32979
 #define _APS_NEXT_CONTROL_VALUE         1338
 #define _APS_NEXT_SYMED_VALUE           126
 #endif

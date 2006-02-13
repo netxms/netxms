@@ -443,7 +443,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Autoscale\tAlt+A",           ID_GRAPH_AUTOSCALE
-        MENUITEM "&Freeze\tPause",              ID_GRAPH_FREEZE
+        MENUITEM "R&uler\tAlt+R",               ID_GRAPH_RULER
         MENUITEM SEPARATOR
         MENUITEM "&Properties...\tAlt+P",       ID_GRAPH_PROPERTIES
     END
@@ -721,7 +721,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Autoscale",                  ID_GRAPH_AUTOSCALE
-        MENUITEM "&Freeze",                     ID_GRAPH_FREEZE
+        MENUITEM "R&uler",                      ID_GRAPH_RULER
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_GRAPH_PROPERTIES
     END
@@ -903,7 +903,7 @@ IDA_GRAPH ACCELERATORS DISCARDABLE
 BEGIN
     "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, ALT, NOINVERT
     "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, ALT, NOINVERT
-    VK_PAUSE,       ID_GRAPH_FREEZE,        VIRTKEY, NOINVERT
+    "R",            ID_GRAPH_RULER,         VIRTKEY, ALT, NOINVERT
 END
 
 IDA_PACKAGE_MGR ACCELERATORS DISCARDABLE 

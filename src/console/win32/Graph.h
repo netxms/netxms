@@ -43,6 +43,7 @@ public:
 
 // Implementation
 public:
+	void Update(void);
 	BOOL m_bShowRuler;
 	void SetData(DWORD dwIndex, NXC_DCI_DATA *pData);
 	void SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo);
@@ -51,21 +52,20 @@ public:
 
 	// Generated message map functions
 protected:
+	BOOL m_bIsActive;
+	void DrawGraphOnBitmap(void);
+	CBitmap m_bmpGraph;
+	CPoint m_ptCurrMousePos;
 	//{{AFX_MSG(CGraph)
 	afx_msg void OnPaint();
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnKillFocus(CWnd* pNewWnd);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	//}}AFX_MSG
-   afx_msg int OnMouseHover(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
-	CPoint m_ptLastHoverPoint;
 	RECT m_rectGraph;
-	RECT m_rectInfo;
-	void DrawInfoRect(POINTS pt);
-	BOOL m_bIsActive;
-	void SetMouseTracking(void);
 	double m_dCurrMaxValue;
 	double m_dSecondsPerPixel;
 	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor);

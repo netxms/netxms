@@ -46,7 +46,6 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "NetSummaryFrame.h"
 #include "DataCollectionEditor.h"
 #include "DCIDataView.h"
-#include "GraphFrame.h"
 #include "EventPolicyEditor.h"
 #include "AlarmBrowser.h"
 #include "ConsolePropsGeneral.h"

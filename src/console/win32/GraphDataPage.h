@@ -6,6 +6,7 @@
 #endif // _MSC_VER > 1000
 // GraphDataPage.h : header file
 //
+#include "GraphFrame.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CGraphDataPage dialog

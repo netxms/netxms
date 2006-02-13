@@ -88,6 +88,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_PRESETS_LASTWEEK, OnGraphPresetsLastweek)
 	ON_COMMAND(ID_GRAPH_PRESETS_LAST10MINUTES, OnGraphPresetsLast10minutes)
 	ON_COMMAND(ID_GRAPH_PRESETS_LAST30MINUTES, OnGraphPresetsLast30minutes)
+	ON_COMMAND(ID_GRAPH_RULER, OnGraphRuler)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_RULER, OnUpdateGraphRuler)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -216,7 +218,7 @@ void CGraphFrame::OnViewRefresh()
          theApp.ErrorBox(dwResult, "Unable to retrieve colected data: %s");
       }
    }
-   m_wndGraph.Invalidate(FALSE);
+   m_wndGraph.Update();
 }
 
 
@@ -247,6 +249,7 @@ void CGraphFrame::OnGraphProperties()
    // Create "Settings" page
    pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
    pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
+   pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
    pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
    pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
    pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
@@ -295,6 +298,7 @@ void CGraphFrame::OnGraphProperties()
 
       m_wndGraph.m_bAutoScale = pgSettings.m_bAutoscale;
       m_wndGraph.m_bShowGrid = pgSettings.m_bShowGrid;
+      m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
 
       m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
       m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
@@ -384,13 +388,14 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
               _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F" "A:%d\x7F"
                  "TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F"
-                 "CA:%u\x7F" "CB:%u\x7F" "CG:%u\x7F" "CK:%u\x7F" "CL:%u\x7F" "CT:%u"),
+                 "CA:%u\x7F" "CB:%u\x7F" "CG:%u\x7F" "CK:%u\x7F" "CL:%u\x7F"
+                 "CT:%u\x7FR:%d\x7FG:%d"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
               m_wndGraph.m_rgbBkColor, m_wndGraph.m_rgbGridColor,
               m_wndGraph.m_rgbLabelBkColor, m_wndGraph.m_rgbLabelTextColor,
-              m_wndGraph.m_rgbTextColor);
+              m_wndGraph.m_rgbTextColor, m_wndGraph.m_bShowRuler, m_wndGraph.m_bShowGrid);
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
@@ -434,6 +439,8 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
    m_dwTimeTo = ExtractWindowParamULong(pszParams, _T("TF"), 0);
    m_dwRefreshInterval = ExtractWindowParamULong(pszParams, _T("A"), 30);
    m_wndGraph.m_bAutoScale = (BOOL)ExtractWindowParamLong(pszParams, _T("S"), TRUE);
+   m_wndGraph.m_bShowGrid = (BOOL)ExtractWindowParamLong(pszParams, _T("G"), TRUE);
+   m_wndGraph.m_bShowRuler = (BOOL)ExtractWindowParamLong(pszParams, _T("R"), TRUE);
    m_wndGraph.m_rgbAxisColor = ExtractWindowParamULong(pszParams, _T("CA"), m_wndGraph.m_rgbAxisColor);
    m_wndGraph.m_rgbBkColor = ExtractWindowParamULong(pszParams, _T("CB"), m_wndGraph.m_rgbBkColor);
    m_wndGraph.m_rgbGridColor = ExtractWindowParamULong(pszParams, _T("CG"), m_wndGraph.m_rgbGridColor);
@@ -575,4 +582,20 @@ void CGraphFrame::OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue)
    {
       m_wndStatusBar.SetText(_T(""), 2, 0);
    }
+}
+
+
+//
+// WM_COMMAND::ID_GRAPH_RULER message handlers
+//
+
+void CGraphFrame::OnGraphRuler() 
+{
+   m_wndGraph.m_bShowRuler = !m_wndGraph.m_bShowRuler;
+   m_wndGraph.Invalidate(FALSE);
+}
+
+void CGraphFrame::OnUpdateGraphRuler(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_wndGraph.m_bShowRuler);
 }

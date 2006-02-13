@@ -6,6 +6,7 @@
 #endif // _MSC_VER > 1000
 // GraphSettingsPage.h : header file
 //
+#include "GraphFrame.h"
 #include "ColorSelector.h"
 
 

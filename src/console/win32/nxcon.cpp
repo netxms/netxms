@@ -28,6 +28,7 @@
 #include "ServerCfgEditor.h"
 #include "ScriptManager.h"
 #include "TrapEditor.h"
+#include "GraphFrame.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

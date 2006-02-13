@@ -56,8 +56,8 @@ CGraph::CGraph()
    m_rgbLineColors[15] = RGB(192, 192, 192);
 
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
+   
    m_bIsActive = FALSE;
-   memset(&m_rectInfo, 0, sizeof(RECT));
 }
 
 CGraph::~CGraph()
@@ -74,10 +74,10 @@ BEGIN_MESSAGE_MAP(CGraph, CWnd)
 	//{{AFX_MSG_MAP(CGraph)
 	ON_WM_PAINT()
 	ON_WM_MOUSEMOVE()
-	ON_WM_SETFOCUS()
 	ON_WM_KILLFOCUS()
+	ON_WM_SIZE()
+	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
-   ON_MESSAGE(WM_MOUSEHOVER, OnMouseHover)
 END_MESSAGE_MAP()
 
 
@@ -117,7 +117,196 @@ void CGraph::OnPaint()
 {
 	CPaintDC sdc(this);  // original device context for painting
    CDC dc;              // In-memory dc
-   CBitmap bitmap;         // Bitmap for in-memory drawing
+   CBitmap *pOldBitmap;
+   RECT rect;
+
+   GetClientRect(&rect);
+
+   dc.CreateCompatibleDC(&sdc);
+   pOldBitmap = dc.SelectObject(&m_bmpGraph);
+
+   // Draw ruler
+   if (m_bShowRuler && m_bIsActive && PtInRect(&m_rectGraph, m_ptCurrMousePos))
+   {
+      CPen pen, *pOldPen;
+      CBitmap bitmap;         // Bitmap for in-memory drawing
+      CBitmap *pOldBitmap2;
+      CDC dc2;
+
+      // Create another one in-memory DC to draw ruler on top of graph image
+      dc2.CreateCompatibleDC(&sdc);
+      bitmap.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
+      pOldBitmap2 = dc2.SelectObject(&bitmap);
+
+      // Move drawing from in-memory DC to in-memory DC #2
+      dc2.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+
+      pen.CreatePen(PS_DOT, 1, m_rgbAxisColor);
+      pOldPen = dc2.SelectObject(&pen);
+
+      dc2.SetBkColor(m_rgbBkColor);
+      dc2.MoveTo(m_rectGraph.left, m_ptCurrMousePos.y);
+      dc2.LineTo(m_rectGraph.right, m_ptCurrMousePos.y);
+      dc2.MoveTo(m_ptCurrMousePos.x, m_rectGraph.top);
+      dc2.LineTo(m_ptCurrMousePos.x, m_rectGraph.bottom);
+
+      dc2.SelectObject(pOldPen);
+      pen.DeleteObject();
+
+      // Move drawing from in-memory DC #2 to screen
+      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc2, 0, 0, SRCCOPY);
+
+      dc2.SelectObject(pOldBitmap2);
+      bitmap.DeleteObject();
+      dc2.DeleteDC();
+   }
+   else
+   {
+      // Move drawing from in-memory DC to screen
+      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+   }
+
+   // Cleanup
+   dc.SelectObject(pOldBitmap);
+   dc.DeleteDC();
+}
+
+
+//
+// Set time frame this graph covers
+//
+
+void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
+{
+   m_dwTimeFrom = dwTimeFrom;
+   m_dwTimeTo = dwTimeTo;
+}
+
+
+//
+// Set data for specific item
+//
+
+void CGraph::SetData(DWORD dwIndex, NXC_DCI_DATA *pData)
+{
+   if (dwIndex < MAX_GRAPH_ITEMS)
+   {
+      if (m_pData[dwIndex] != NULL)
+         NXCDestroyDCIData(m_pData[dwIndex]);
+      m_pData[dwIndex] = pData;
+   }
+}
+
+
+//
+// Draw single line
+//
+
+void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor)
+{
+   DWORD i;
+   int x;
+   CPen pen, *pOldPen;
+   NXC_DCI_ROW *pRow;
+   double dScale;
+
+   if (pData->dwNumRows < 2)
+      return;  // Nothing to draw
+
+   pen.CreatePen(PS_SOLID, 2, rgbColor);
+   pOldPen = dc.SelectObject(&pen);
+
+   // Calculate scale factor for values
+   dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
+               (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) / m_dCurrMaxValue;
+
+   // Move to first position
+   pRow = pData->pRows;
+   dc.MoveTo(m_rectGraph.right, 
+             (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+   inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+
+   for(i = 1; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
+   {
+      // Calculate timestamp position on graph
+      x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
+      dc.LineTo(x, (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+   }
+
+   dc.SelectObject(pOldPen);
+}
+
+
+//
+// WM_MOUSEMOVE message handler
+//
+
+void CGraph::OnMouseMove(UINT nFlags, CPoint point) 
+{
+   BOOL bChanged;
+
+   CWnd::OnMouseMove(nFlags, point);
+   if (!m_bIsActive)
+      return;
+
+   if (PtInRect(&m_rectGraph, point))
+   {
+      DWORD dwTimeStamp;
+      double dValue;
+
+      dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
+      dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
+                  (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) * 
+                  (m_rectGraph.bottom - point.y);
+      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
+      bChanged = TRUE;
+   }
+   else
+   {
+      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, 0, 0);
+      bChanged = PtInRect(&m_rectGraph, m_ptCurrMousePos);
+   }
+   m_ptCurrMousePos = point;
+   if (bChanged)
+      InvalidateRect(&m_rectGraph, FALSE);
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CGraph::OnSetFocus(CWnd* pOldWnd) 
+{
+	CWnd::OnSetFocus(pOldWnd);
+   m_bIsActive = TRUE;
+}
+
+
+//
+// WM_KILLFOCUS message handler
+//
+
+void CGraph::OnKillFocus(CWnd* pNewWnd) 
+{
+	CWnd::OnKillFocus(pNewWnd);
+   m_bIsActive = FALSE;
+   if (m_bShowRuler && PtInRect(&m_rectGraph, m_ptCurrMousePos))
+   {
+      m_ptCurrMousePos = CPoint(0, 0);
+      InvalidateRect(&m_rectGraph, FALSE);
+   }
+}
+
+
+//
+// Draw entire graph on bitmap in memory
+//
+
+void CGraph::DrawGraphOnBitmap()
+{
+   CDC *pdc, dc;           // Window dc and in-memory dc
    CBitmap *pOldBitmap;
    CPen pen, *pOldPen;
    CFont font, *pOldFont;
@@ -133,9 +322,15 @@ void CGraph::OnPaint()
 
    GetClientRect(&rect);
 
-   dc.CreateCompatibleDC(&sdc);
-   bitmap.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
-   pOldBitmap = dc.SelectObject(&bitmap);
+   // Create compatible DC and bitmap for painting
+   pdc = GetDC();
+   dc.CreateCompatibleDC(pdc);
+   m_bmpGraph.DeleteObject();
+   m_bmpGraph.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
+   ReleaseDC(pdc);
+
+   // Initial DC setup
+   pOldBitmap = dc.SelectObject(&m_bmpGraph);
    dc.SetBkColor(m_rgbBkColor);
 
    // Fill background
@@ -305,207 +500,31 @@ void CGraph::OnPaint()
       dc.TextOut(x, y, szBuffer);
    }
 
-   // Move drawing from in-memory DC to screen
-   sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
-
    // Cleanup
    dc.SelectObject(pOldFont);
    dc.SelectObject(pOldBitmap);
-   bitmap.DeleteObject();
    font.DeleteObject();
    dc.DeleteDC();
 }
 
 
 //
-// Set time frame this graph covers
+// Repaint graph entirely
 //
 
-void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
+void CGraph::Update()
 {
-   m_dwTimeFrom = dwTimeFrom;
-   m_dwTimeTo = dwTimeTo;
+   DrawGraphOnBitmap();
+   Invalidate(FALSE);
 }
 
 
 //
-// Set data for specific item
+// WM_SIZE message handler
 //
 
-void CGraph::SetData(DWORD dwIndex, NXC_DCI_DATA *pData)
+void CGraph::OnSize(UINT nType, int cx, int cy) 
 {
-   if (dwIndex < MAX_GRAPH_ITEMS)
-   {
-      if (m_pData[dwIndex] != NULL)
-         NXCDestroyDCIData(m_pData[dwIndex]);
-      m_pData[dwIndex] = pData;
-   }
-}
-
-
-//
-// Draw single line
-//
-
-void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor)
-{
-   DWORD i;
-   int x;
-   CPen pen, *pOldPen;
-   NXC_DCI_ROW *pRow;
-   double dScale;
-
-   if (pData->dwNumRows < 2)
-      return;  // Nothing to draw
-
-   pen.CreatePen(PS_SOLID, 2, rgbColor);
-   pOldPen = dc.SelectObject(&pen);
-
-   // Calculate scale factor for values
-   dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
-               (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) / m_dCurrMaxValue;
-
-   // Move to first position
-   pRow = pData->pRows;
-   dc.MoveTo(m_rectGraph.right, 
-             (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
-   inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
-
-   for(i = 1; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
-   {
-      // Calculate timestamp position on graph
-      x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
-      dc.LineTo(x, (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
-      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
-   }
-
-   dc.SelectObject(pOldPen);
-}
-
-
-//
-// Set mouse tracking parameters
-//
-
-void CGraph::SetMouseTracking()
-{
-   TRACKMOUSEEVENT tme;
-
-   tme.cbSize = sizeof(TRACKMOUSEEVENT);
-   tme.dwFlags = TME_HOVER;
-   tme.hwndTrack = m_hWnd;
-   tme.dwHoverTime = 1000;
-   _TrackMouseEvent(&tme);
-}
-
-
-//
-// WM_MOUSEHOVER message handler
-//
-
-int CGraph::OnMouseHover(WPARAM wParam, LPARAM lParam)
-{
-   POINTS pt;
-   
-   pt = MAKEPOINTS(lParam);
-   m_ptLastHoverPoint = CPoint(pt.x, pt.y);
-   if (PtInRect(&m_rectGraph, m_ptLastHoverPoint))
-      DrawInfoRect(pt);
-   return 0;
-}
-
-
-//
-// WM_MOUSEMOVE message handler
-//
-
-void CGraph::OnMouseMove(UINT nFlags, CPoint point) 
-{
-	CWnd::OnMouseMove(nFlags, point);
-   if ((m_bIsActive) && (m_ptLastHoverPoint != point))
-   {
-      SetMouseTracking();
-      InvalidateRect(&m_rectInfo, FALSE);
-      memset(&m_rectInfo, 0, sizeof(RECT));
-   }
-
-   if (PtInRect(&m_rectGraph, point))
-   {
-      DWORD dwTimeStamp;
-      double dValue;
-
-      dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
-      dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
-                  (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) * 
-                  (m_rectGraph.bottom - point.y);
-      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
-   }
-   else
-   {
-      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, 0, 0);
-   }
-}
-
-
-//
-// WM_SETFOCUS message handler
-//
-
-void CGraph::OnSetFocus(CWnd* pOldWnd) 
-{
-	CWnd::OnSetFocus(pOldWnd);
-   m_bIsActive = TRUE;
-   SetMouseTracking();
-}
-
-
-//
-// WM_KILLFOCUS message handler
-//
-
-void CGraph::OnKillFocus(CWnd* pNewWnd) 
-{
-	CWnd::OnKillFocus(pNewWnd);
-   m_bIsActive = FALSE;
-   InvalidateRect(&m_rectInfo, FALSE);
-   memset(&m_rectInfo, 0, sizeof(RECT));
-}
-
-
-//
-// Draw information rectangle at mouse coordinates
-//
-
-void CGraph::DrawInfoRect(POINTS pt)
-{
-   CDC *pDC;
-   CSize size;
-   char szBuffer[256], szTime[32];
-   DWORD dwTimeStamp;
-   double dValue;
-
-   // Prepare text for output
-   dwTimeStamp = m_dwTimeFrom + (DWORD)((pt.x - m_rectGraph.left) * m_dSecondsPerPixel);
-   dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
-               (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) * 
-               (m_rectGraph.bottom - pt.y);
-   sprintf(szBuffer, "%s  %5.3f", FormatTimeStamp(dwTimeStamp, szTime, TS_LONG_TIME), dValue);
-
-   // Prepare for drawing
-   pDC = GetDC();
-   pDC->SetTextColor(m_rgbLabelTextColor);
-   pDC->SetBkColor(m_rgbLabelBkColor);
-
-   // Calculate text size and draw it
-   size = pDC->GetTextExtent(szBuffer, strlen(szBuffer));
-   pDC->TextOut(pt.x, pt.y - size.cy - 1, szBuffer, strlen(szBuffer));
-
-   // Fill rectangle to be invalidated
-   m_rectInfo.left = pt.x;
-   m_rectInfo.top = pt.y - size.cy - 1;
-   m_rectInfo.right = pt.x + size.cx + 1;
-   m_rectInfo.bottom = pt.y;
-
-   // Cleanup
-   ReleaseDC(pDC);
+   DrawGraphOnBitmap();
+	CWnd::OnSize(nType, cx, cy);
 }

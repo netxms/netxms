@@ -90,6 +90,8 @@ protected:
 	afx_msg void OnGraphPresetsLastweek();
 	afx_msg void OnGraphPresetsLast10minutes();
 	afx_msg void OnGraphPresetsLast30minutes();
+	afx_msg void OnGraphRuler();
+	afx_msg void OnUpdateGraphRuler(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
