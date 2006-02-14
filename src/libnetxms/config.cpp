@@ -23,10 +23,26 @@
 
 #include "libnetxms.h"
 
+/**
+ * @defgroup libnetxms NetXMS utility library
+ * @ingroup  libnetxms
+ * @brief Provides config-file manipulation functions
+ *
+ * @{
+ */
 
-//
-// Universal configuration loader
-//
+
+/**
+ * Loads config file in format name = value, complete or one section.
+ * Comments started with '#', sections - with '*'
+ *
+ * @param pszFileName	Config file name.
+ * @param pszSection	Section name, can be NULL.
+ * @param pTemplateList	Array of template structures describing each config item to be read. NX_CFG_TEMPLATE.iType of last element should be set to CT_END_OF_LIST
+ * @param bPrint	Enable/disable debug output.
+ *
+ * @return Error code (NXCFG_ERR_OK/NXCFG_ERR_NOFILE/NXCFG_ERR_SYNTAX)
+ */
 
 DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
                                         NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint)
@@ -168,3 +184,5 @@ DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
 
    return (iErrors > 0) ? NXCFG_ERR_SYNTAX : NXCFG_ERR_OK;
 }
+
+/** @} */ /* End of public API */
