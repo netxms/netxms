@@ -170,3 +170,20 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    }
    return nRet;
 }
+
+
+//
+// Check if IP address is within given range
+//
+
+int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   if (argv[0]->IsString())
+   {
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_STRING;
+   }
+   return nRet;
+}
