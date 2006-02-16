@@ -1,0 +1,137 @@
+-- This module defines enterprise MIBs for monitoring resources
+-- 
+-- Copyright (c) 1999-2004, Juniper Networks, Inc.
+-- All rights reserved.
+
+NETSCREEN-RESOURCE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    netscreenResource
+        FROM NETSCREEN-SMI
+    Integer32, MODULE-IDENTITY, OBJECT-TYPE
+        FROM SNMPv2-SMI
+    ;
+
+netscreenResourceMibModule MODULE-IDENTITY
+    LAST-UPDATED  "200405032022Z" -- May 03, 2004
+    ORGANIZATION
+        "Juniper Networks, Inc."
+    CONTACT-INFO
+        "Customer Support
+
+         1194 North Mathilda Avenue 
+         Sunnyvale, California 94089-1206
+         USA
+
+         Tel: 1-800-638-8296
+         E-mail: customerservice@juniper.net
+         HTTP://www.juniper.net"
+    DESCRIPTION
+        "This module defines the object that are used to monitor
+         resource in netscreen box"
+    REVISION      "200405030000Z" -- May 03, 2004
+    DESCRIPTION
+        "Modified copyright and contact information"
+    REVISION      "200403030000Z" -- March 03, 2004
+    DESCRIPTION
+        "Converted to SMIv2 by Longview Software"
+    REVISION      "200311100000Z" -- November 10, 2003
+    DESCRIPTION
+        "Correct spelling mistake"
+    REVISION      "200205050000Z" -- May 05, 2002
+    DESCRIPTION
+        "Remove active session"
+    REVISION      "200104300000Z" -- April 30, 2001
+    DESCRIPTION
+        "Creation Date"
+    ::= { netscreenResource 0 }
+
+nsResCPU OBJECT IDENTIFIER ::= { netscreenResource 1 }
+
+nsResCpuAvg OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Average System CPU utilization in percentage."
+    ::= { nsResCPU 1 }
+
+nsResCpuLast1Min OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Last one minute CPU utilization in percentage."
+    ::= { nsResCPU 2 }
+
+nsResCpuLast5Min OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Last five minutes CPU utilization in percentage."
+    ::= { nsResCPU 3 }
+
+nsResCpuLast15Min OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Last fifteen minutes CPU utilization in percentage."
+    ::= { nsResCPU 4 }
+
+nsResMem OBJECT IDENTIFIER ::= { netscreenResource 2 }
+
+nsResMemAllocate OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Memory allocated."
+    ::= { nsResMem 1 }
+
+nsResMemLeft OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Memory left."
+    ::= { nsResMem 2 }
+
+nsResMemFrag OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Memory fragment."
+    ::= { nsResMem 3 }
+
+nsResSession OBJECT IDENTIFIER ::= { netscreenResource 3 }
+
+nsResSessAllocate OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Allocate session number."
+    ::= { nsResSession 2 }
+
+nsResSessMaxium OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Maxium session number system can afford."
+    ::= { nsResSession 3 }
+
+nsResSessFailed OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Failed session allocation counters."
+    ::= { nsResSession 4 }
+
+END
+
+
