@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.139 2006-02-13 10:57:20 victor Exp $
+# $Id: configure.ac,v 1.140 2006-02-16 10:27:16 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -257,7 +257,7 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
-	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console www nxscript"
+	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
 	SUBAGENT_DIRS="linux freebsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
@@ -265,11 +265,11 @@ AC_ARG_WITH(dist,
 )
 
 AC_ARG_WITH(nxsm,
-[AS_HELP_STRING(--with-nxsm,build session manager for web interface)],
+[AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
-	MODULES="$MODULES libnxcl www"
+	MODULES="$MODULES libnxcl nxhttpd"
 	BUILD_CLIENT="yes"
-   DYNAMIC_COMPONENTS="yes"
+	DYNAMIC_COMPONENTS="yes"
 ])
 
 AC_ARG_WITH(openssl,
@@ -624,16 +624,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/ups/Makefile
-	src/www/Makefile
-	src/www/iis/Makefile
-	src/www/nxsm/Makefile
-	src/www/frontend-perl/Makefile
-	src/www/frontend-perl/cgi/Makefile
-	src/www/frontend-perl/cgi/forms/Makefile
-	src/www/frontend-perl/data/Makefile
-	src/www/frontend-perl/data/images/Makefile
-	src/www/nxsmcl/Makefile
-	src/www/nxsmcl/NXSMClient/Makefile
+	src/nxhttpd/Makefile
+	src/nxhttpd/static/Makefile
 	tools/Makefile
 ])
 
