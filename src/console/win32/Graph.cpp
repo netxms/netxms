@@ -8,7 +8,7 @@
 
 #define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? strtod(row->value.szString, NULL) : \
                             (((dt == DCI_DT_INT) || (dt == DCI_DT_UINT)) ? row->value.dwInt32 : \
-                             (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? row->value.qwInt64 : \
+                             (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 : \
                               ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
                              ) \
                             ) \
@@ -25,7 +25,6 @@ static char THIS_FILE[] = __FILE__;
 
 CGraph::CGraph()
 {
-   m_iGridSize = 40;
    m_dMaxValue = 100;
    m_bAutoScale = TRUE;
    m_bShowGrid = TRUE;
@@ -202,7 +201,7 @@ void CGraph::SetData(DWORD dwIndex, NXC_DCI_DATA *pData)
 // Draw single line
 //
 
-void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor)
+void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize)
 {
    DWORD i;
    int x;
@@ -218,7 +217,7 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor)
 
    // Calculate scale factor for values
    dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
-               (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) / m_dCurrMaxValue;
+               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / m_dCurrMaxValue;
 
    // Move to first position
    pRow = pData->pRows;
@@ -257,7 +256,7 @@ void CGraph::OnMouseMove(UINT nFlags, CPoint point)
 
       dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
       dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
-                  (m_rectGraph.bottom - m_rectGraph.top) % m_iGridSize) * 
+                  (m_rectGraph.bottom - m_rectGraph.top) % m_nLastGridSizeY) * 
                   (m_rectGraph.bottom - point.y);
       GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
       bChanged = TRUE;
@@ -304,6 +303,46 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
 // Draw entire graph on bitmap in memory
 //
 
+/* Select appropriate style for ordinate marks */
+#define SELECT_ORDINATE_MARKS \
+   if (m_dCurrMaxValue > 100000000000) \
+   { \
+      szModifier[0] = 'G'; \
+      szModifier[1] = 0; \
+      nDivider = 1000000000; \
+      bIntMarks = TRUE; \
+   } \
+   else if (m_dCurrMaxValue > 100000000) \
+   { \
+      szModifier[0] = 'M'; \
+      szModifier[1] = 0; \
+      nDivider = 1000000; \
+      bIntMarks = TRUE; \
+   } \
+   else if (m_dCurrMaxValue > 100000) \
+   { \
+      szModifier[0] = 'K'; \
+      szModifier[1] = 0; \
+      nDivider = 1000; \
+      bIntMarks = TRUE; \
+   } \
+   else \
+   { \
+      szModifier[0] = 0; \
+      nDivider = 1; \
+      for(i = 0, bIntMarks = TRUE; i < MAX_GRAPH_ITEMS; i++) \
+      { \
+         if (m_pData[i] != NULL) \
+         { \
+            if (m_pData[i]->wDataType == DCI_DT_FLOAT) \
+            { \
+               bIntMarks = FALSE; \
+               break; \
+            } \
+         } \
+      } \
+   }
+
 void CGraph::DrawGraphOnBitmap()
 {
    CDC *pdc, dc;           // Window dc and in-memory dc
@@ -316,6 +355,7 @@ void CGraph::DrawGraphOnBitmap()
    DWORD i, dwTimeStamp;
    int iLeftMargin, iBottomMargin, iRightMargin = 5, iTopMargin = 5;
    int x, y, iTimeLen, iStep, iGraphLen, nDivider;
+   int nGridSizeX, nGridSizeY, nGrids, nDataAreaHeight;
    double dStep, dMark;
    char szBuffer[256], szModifier[4];
    BOOL bIntMarks;
@@ -351,25 +391,6 @@ void CGraph::DrawGraphOnBitmap()
    iLeftMargin = textSize.cx + 10;
    iBottomMargin = textSize.cy + 8;
 
-   // Draw grid
-   if (m_bShowGrid)
-   {
-      pen.CreatePen(PS_ALTERNATE | PS_COSMETIC, 0, m_rgbGridColor);
-      pOldPen = dc.SelectObject(&pen);
-      for(x = iLeftMargin + m_iGridSize; x < rect.right - iRightMargin; x += m_iGridSize)
-      {
-         dc.MoveTo(x, rect.bottom - iBottomMargin);
-         dc.LineTo(x, iTopMargin);
-      }
-      for(y = rect.bottom - iBottomMargin - m_iGridSize; y > iTopMargin; y -= m_iGridSize)
-      {
-         dc.MoveTo(iLeftMargin, y);
-         dc.LineTo(rect.right - iRightMargin, y);
-      }
-      dc.SelectObject(pOldPen);
-      pen.DeleteObject();
-   }
-
    // Draw all parameters
    ///////////////////////////////////
 
@@ -381,6 +402,7 @@ void CGraph::DrawGraphOnBitmap()
    m_rectGraph.bottom -= iBottomMargin;
    iGraphLen = m_rectGraph.right - m_rectGraph.left + 1;   // Actual data area length in pixels
    m_dSecondsPerPixel = (double)(m_dwTimeTo - m_dwTimeFrom) / (double)iGraphLen;
+   nDataAreaHeight = rect.bottom - iBottomMargin - textSize.cy / 2 - iTopMargin - textSize.cy / 2;
 
    // Calculate max graph value
    if (m_bAutoScale)
@@ -406,17 +428,74 @@ void CGraph::DrawGraphOnBitmap()
          m_dCurrMaxValue = 1;
 
       // Round max value
-      for(double d = 0.0001; d < 1000000; d *= 10)
+      for(double d = 0.00001; d < 10000000000000000000; d *= 10)
          if ((m_dCurrMaxValue >= d) && (m_dCurrMaxValue <= d * 10))
          {
             m_dCurrMaxValue -= fmod(m_dCurrMaxValue, d);
             m_dCurrMaxValue += d;
+
+            SELECT_ORDINATE_MARKS;
+   
+            // For integer values, Y axis step cannot be less than 1
+            if (bIntMarks && (d < 1))
+               d = 1;
+
+            // Calculate grid size for Y axis
+            nGridSizeY = (int)(nDataAreaHeight / (m_dCurrMaxValue / d));
+            if (nGridSizeY > 2)
+            {
+               if (bIntMarks)
+               {
+                  nGrids = nDataAreaHeight / (nGridSizeY / 2);
+                  while((nGridSizeY >= 50) && ((INT64)m_dCurrMaxValue % nGrids == 0))
+                  {
+                     nGridSizeY /= 2;
+                     nGrids = nDataAreaHeight / (nGridSizeY / 2);
+                  }
+               }
+               else
+               {
+                  while(nGridSizeY >= 50)
+                     nGridSizeY /= 2;
+               }
+            }
+            else
+            {
+               nGridSizeY = 2;
+            }
             break;
          }
    }
    else
    {
       m_dCurrMaxValue = m_dMaxValue;
+
+      SELECT_ORDINATE_MARKS;
+      
+      nGridSizeY = 40;
+   }
+
+   // Calculate grid size for X axis
+   //for(nGridSizeX = 25; (nGridSizeX < 50) && (fmod(m_dSecondsPerPixel * nGridSizeX, 15) != 0); nGridSizeX++);
+   nGridSizeX = 40;
+
+   // Draw grid
+   if (m_bShowGrid)
+   {
+      pen.CreatePen(PS_ALTERNATE | PS_COSMETIC, 0, m_rgbGridColor);
+      pOldPen = dc.SelectObject(&pen);
+      for(x = iLeftMargin + nGridSizeX; x < rect.right - iRightMargin; x += nGridSizeX)
+      {
+         dc.MoveTo(x, rect.bottom - iBottomMargin);
+         dc.LineTo(x, iTopMargin);
+      }
+      for(y = rect.bottom - iBottomMargin - nGridSizeY; y > iTopMargin; y -= nGridSizeY)
+      {
+         dc.MoveTo(iLeftMargin, y);
+         dc.LineTo(rect.right - iRightMargin, y);
+      }
+      dc.SelectObject(pOldPen);
+      pen.DeleteObject();
    }
 
    // Draw each parameter
@@ -425,7 +504,7 @@ void CGraph::DrawGraphOnBitmap()
    dc.SelectClipRgn(&rgn);
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
       if (m_pData[i] != NULL)
-         DrawLineGraph(dc, m_pData[i], m_rgbLineColors[i]);
+         DrawLineGraph(dc, m_pData[i], m_rgbLineColors[i], nGridSizeY);
    dc.SelectClipRgn(NULL);
    rgn.DeleteObject();
 
@@ -439,48 +518,9 @@ void CGraph::DrawGraphOnBitmap()
    dc.SelectObject(pOldPen);
    pen.DeleteObject();
 
-   // Select appropriate style for ordinate marks
-   if (m_dCurrMaxValue > 100000000000)
-   {
-      szModifier[0] = 'G';
-      szModifier[1] = 0;
-      nDivider = 1000000000;
-      bIntMarks = TRUE;
-   }
-   else if (m_dCurrMaxValue > 100000000)
-   {
-      szModifier[0] = 'M';
-      szModifier[1] = 0;
-      nDivider = 1000000;
-      bIntMarks = TRUE;
-   }
-   else if (m_dCurrMaxValue > 100000)
-   {
-      szModifier[0] = 'K';
-      szModifier[1] = 0;
-      nDivider = 1000;
-      bIntMarks = TRUE;
-   }
-   else
-   {
-      szModifier[0] = 0;
-      nDivider = 1;
-      for(i = 0, bIntMarks = TRUE; i < MAX_GRAPH_ITEMS; i++)
-      {
-         if (m_pData[i] != NULL)
-         {
-            if (m_pData[i]->wDataType == DCI_DT_FLOAT)
-            {
-               bIntMarks = FALSE;
-               break;
-            }
-         }
-      }
-   }
-
    // Display ordinate marks
-   dStep = m_dCurrMaxValue / ((rect.bottom - iBottomMargin - iTopMargin) / m_iGridSize);
-   for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= m_iGridSize * 2, dMark += dStep * 2)
+   dStep = m_dCurrMaxValue / ((rect.bottom - iBottomMargin - iTopMargin) / nGridSizeY);
+   for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
       if (bIntMarks)
          sprintf(szBuffer, INT64_FMT "%s", (INT64)dMark / nDivider, szModifier);
@@ -492,8 +532,8 @@ void CGraph::DrawGraphOnBitmap()
 
    // Display absciss marks
    y = rect.bottom - iBottomMargin + 3;
-   iStep = iTimeLen / m_iGridSize + 1;    // How many grid lines we should skip
-   for(x = iLeftMargin; x < rect.right - iRightMargin; x += m_iGridSize * iStep)
+   iStep = iTimeLen / nGridSizeX + 1;    // How many grid lines we should skip
+   for(x = iLeftMargin; x < rect.right - iRightMargin; x += nGridSizeX * iStep)
    {
       dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel);
       FormatTimeStamp(dwTimeStamp, szBuffer, TS_LONG_TIME);
@@ -505,6 +545,9 @@ void CGraph::DrawGraphOnBitmap()
    dc.SelectObject(pOldBitmap);
    font.DeleteObject();
    dc.DeleteDC();
+
+   // Save used grid size
+   m_nLastGridSizeY = nGridSizeY;
 }
 
 

@@ -336,6 +336,8 @@ void NetObj::Delete(BOOL bIndexLocked)
 
    DbgPrintf(AF_DEBUG_OBJECTS, "Deleting object %d [%s]", m_dwId, m_szName);
 
+   PrepareForDeletion();
+
    LockData();
 
    // Remove references to this object from parent objects
@@ -1063,4 +1065,14 @@ int NetObj::PropagatedStatus(void)
       }
    }
    return iStatus;
+}
+
+
+//
+// Prepare object for deletion. Function should return only
+// when object deletion is safe
+//
+
+void NetObj::PrepareForDeletion(void)
+{
 }

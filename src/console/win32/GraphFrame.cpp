@@ -90,6 +90,7 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_PRESETS_LAST30MINUTES, OnGraphPresetsLast30minutes)
 	ON_COMMAND(ID_GRAPH_RULER, OnGraphRuler)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_RULER, OnUpdateGraphRuler)
+	ON_WM_GETMINMAXINFO()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -598,4 +599,16 @@ void CGraphFrame::OnGraphRuler()
 void CGraphFrame::OnUpdateGraphRuler(CCmdUI* pCmdUI) 
 {
    pCmdUI->SetCheck(m_wndGraph.m_bShowRuler);
+}
+
+
+//
+// WM_GETMINMAXINFO message handler
+//
+
+void CGraphFrame::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
+{
+   lpMMI->ptMinTrackSize.x = 300;
+   lpMMI->ptMinTrackSize.y = 200;
+	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
 }

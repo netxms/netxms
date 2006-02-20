@@ -2365,3 +2365,31 @@ void Node::SetAgentProxy(AgentConnection *pConn)
       }
    }
 }
+
+
+//
+// Prepare node object for deletion
+//
+
+void Node::PrepareForDeletion(void)
+{
+   // Prevent node from being queued for polling
+   LockData();
+   m_dwDynamicFlags |= NDF_POLLING_DISABLED;
+   UnlockData();
+
+   // Wait for all pending polls
+   while(1)
+   {
+      LockData();
+      if ((m_dwDynamicFlags & 
+            (NDF_QUEUED_FOR_STATUS_POLL | NDF_QUEUED_FOR_CONFIG_POLL |
+             NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL)) == 0)
+      {
+         UnlockData();
+         break;
+      }
+      UnlockData();
+      ThreadSleepMs(100);
+   }
+}

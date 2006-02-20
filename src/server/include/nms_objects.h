@@ -97,6 +97,7 @@ extern DWORD g_dwRoutingTableUpdateInterval;
 #define NDF_QUEUED_FOR_ROUTE_POLL      0x0100
 #define NDF_CPSNMP_UNREACHEABLE        0x0200
 #define NDF_RECHECK_CAPABILITIES       0x0400
+#define NDF_POLLING_DISABLED           0x0800
 
 
 //
@@ -207,6 +208,7 @@ protected:
 
    void SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...);
 
+   virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
@@ -534,6 +536,7 @@ protected:
 
    DWORD GetInterfaceCount(Interface **ppInterface);
 
+   virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
 
 public:
@@ -645,6 +648,7 @@ inline BOOL Node::ReadyForStatusPoll(void)
    }
    return ((m_iStatus != STATUS_UNMANAGED) && 
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
+           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval))
                ? TRUE : FALSE;
 }
@@ -658,6 +662,7 @@ inline BOOL Node::ReadyForConfigurationPoll(void)
    }
    return ((m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
+           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval))
                ? TRUE : FALSE;
 }
@@ -666,6 +671,7 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
 { 
    return ((m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
+           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))
                ? TRUE : FALSE; 
 }
@@ -674,6 +680,7 @@ inline BOOL Node::ReadyForRoutePoll(void)
 { 
    return ((m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
+           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval))
                ? TRUE : FALSE; 
 }

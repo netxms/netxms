@@ -92,6 +92,7 @@ protected:
 	afx_msg void OnGraphPresetsLast30minutes();
 	afx_msg void OnGraphRuler();
 	afx_msg void OnUpdateGraphRuler(CCmdUI* pCmdUI);
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
