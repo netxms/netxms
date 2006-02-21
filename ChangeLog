@@ -4,7 +4,7 @@
 
 - Added UPS monitoring subagent
 - Netscreen (now Juniper) MIBs added
-- Fixed issues: #78
+- Fixed issues: #72, #78
 
 
 *

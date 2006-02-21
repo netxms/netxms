@@ -157,6 +157,15 @@ typedef void * HSNMPSESSION;
 
 
 //
+// Exit codes for console commands
+//
+
+#define CMD_EXIT_CONTINUE        0
+#define CMD_EXIT_CLOSE_SESSION   1
+#define CMD_EXIT_SHUTDOWN        2
+
+
+//
 // Application flags
 //
 
@@ -499,7 +508,7 @@ void InitiateShutdown(void);
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
 void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...);
-BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
+int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
 

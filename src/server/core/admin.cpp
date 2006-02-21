@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.14 2005-12-05 20:28:47 victor Exp $ */
+/* $Id: admin.cpp,v 1.15 2006-02-21 13:54:10 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -40,7 +40,7 @@
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
    SOCKET sock = (SOCKET)pArg;
-   int iError;
+   int iError, nExitCode;
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
    CSCPMessage *pRequest, response;
@@ -68,9 +68,16 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
       response.SetCode(CMD_ADM_MESSAGE);
       response.SetId(pRequest->GetId());
-      if (ProcessConsoleCommand(szCmd, &ctx))
+      nExitCode = ProcessConsoleCommand(szCmd, &ctx);
+      switch(nExitCode)
       {
-         InitiateShutdown();
+         case CMD_EXIT_SHUTDOWN:
+            InitiateShutdown();
+            break;
+         case CMD_EXIT_CLOSE_SESSION:
+            goto close_session;
+         default:
+            break;
       }
 
       response.SetCode(CMD_REQUEST_COMPLETED);
@@ -81,6 +88,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       delete pRequest;
    }
 
+close_session:
    shutdown(sock, 2);
    closesocket(sock);
    return THREAD_OK;
@@ -164,6 +172,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2005/12/05 20:28:47  victor
+Infinite timeout in RecvCSCPMessage presented by INFINITE
+
 Revision 1.13  2005/12/03 22:53:04  victor
 - Added function RecvEx
 - Added timeout parameter to RecvCSCPMessage

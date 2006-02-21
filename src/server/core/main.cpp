@@ -612,11 +612,11 @@ static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSiz
 // Return TRUE if command was "down"
 //
 
-BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
+int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 {
    char *pArg;
    char szBuffer[256];
-   BOOL bExitCode = FALSE;
+   int nExitCode = CMD_EXIT_CONTINUE;
 
    // Get command
    pArg = ExtractWord(pszCmdLine, szBuffer);
@@ -647,13 +647,25 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
    else if (IsCommand("DOWN", szBuffer, 4))
    {
       ConsolePrintf(pCtx, "Proceeding with server shutdown...\n");
-      bExitCode = TRUE;
+      nExitCode = CMD_EXIT_SHUTDOWN;
    }
    else if (IsCommand("DUMP", szBuffer, 4))
    {
       ConsolePrintf(pCtx, "Dumping process to disk...\n");
       DumpProcess();
       ConsolePrintf(pCtx, "Done.\n");
+   }
+   else if (IsCommand("EXIT", szBuffer, 4))
+   {
+      if (pCtx->hSocket != -1)
+      {
+         ConsolePrintf(pCtx, "Closing session...\n");
+         nExitCode = CMD_EXIT_CLOSE_SESSION;
+      }
+      else
+      {
+         ConsolePrintf(pCtx, "Cannot exit from local server console\n");
+      }
    }
    else if (IsCommand("SHOW", szBuffer, 2))
    {
@@ -906,7 +918,7 @@ BOOL ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       ConsolePrintf(pCtx, "UNKNOWN COMMAND\n\n");
    }
    
-   return bExitCode;
+   return nExitCode;
 }
 
 
@@ -1040,7 +1052,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
             StrStrip(ptr);
             if (*ptr != 0)
             {
-               if (ProcessConsoleCommand(ptr, &ctx))
+               if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)
                   break;
 #if USE_READLINE
                add_history(ptr);
