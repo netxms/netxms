@@ -1,0 +1,476 @@
+#LyX 1.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 221
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single 
+\papersize Default
+\paperpackage a4
+\use_geometry 1
+\use_amsmath 0
+\use_natbib 0
+\use_numerical_citations 0
+\paperorientation portrait
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 5cm
+\headheight 3cm
+\headsep 3cm
+\footskip 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\quotes_times 2
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+
+\layout Title
+
+NetXMS User Guide
+\layout Author
+
+NetXMS Team
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+thispagestyle{empty}
+\end_inset 
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\begin_inset LatexCommand \tableofcontents{}
+
+\end_inset 
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+Introduction
+\layout Subsection
+
+What is NetXMS
+\layout Subsection
+
+History
+\layout Subsection
+
+Features
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+Basic Concepts
+\layout Subsection
+
+Overview of System Architecture
+\layout Subsection
+
+Objects
+\layout Subsection
+
+DCI (Data Collection Items)
+\layout Standard
+
+Every node can have many parameters, like CPU utilization or amount of free
+ memory, which can be collected by management server, checked for threshold
+ violations, and stored in the database.
+ In NetXMS, parameters configured for collection are called 
+\emph on 
+Data Collection Items
+\emph default 
+, or DCI for short.
+ One DCI represents one node's parameter, and unlimited number of DCIs can
+ be configured for any node.
+ Each data collection item has various attributes controlling its handling:
+\layout Itemize
+
+
+\emph on 
+Description
+\emph default 
+ - a free-form text string describing DCI.
+ It is not used by the server, but inteded for better information understanding
+ by operators.
+\layout Itemize
+
+
+\emph on 
+Origin
+\emph default 
+ - origin of data (or method of obtaining data).
+ Possible origins are NetXMS agent, SNMP agent, CheckPoint SNMP agent, or
+ Internal (data generated inside NetXMS server process).
+\layout Itemize
+
+
+\emph on 
+Name
+\emph default 
+ - name of the parameter of interest, used for making a request to target
+ node.
+ For NetXMS agent it will be the name of parameter, and for SNMP agent it
+ will be an SNMP OID.
+\layout Itemize
+
+
+\emph on 
+Data Type
+\emph default 
+ - data type for parameter.
+ Can be one of the following: 
+\emph on 
+Integer
+\emph default 
+, 
+\emph on 
+Unsigned Integer
+\emph default 
+, 
+\emph on 
+64 bit Integer
+\emph default 
+, 
+\emph on 
+64 bit Unsigned Integer
+\emph default 
+, 
+\emph on 
+Float
+\emph default 
+ (floating point number), or 
+\emph on 
+String
+\emph default 
+.
+ Selected data type affects processing of collected data - for example,
+ you cannot use operations like 
+\begin_inset Quotes eld
+\end_inset 
+
+less than
+\begin_inset Quotes erd
+\end_inset 
+
+ or 
+\begin_inset Quotes eld
+\end_inset 
+
+greater than
+\begin_inset Quotes erd
+\end_inset 
+
+ on strings.
+\layout Itemize
+
+
+\emph on 
+Retention Time
+\emph default 
+ - this attribute specifies, in days, how long collected data should be
+ kept in database.
+ Minimum retention time is 1 day, and maximum is not limited.
+ However, keeping too many collected values for too long will lead to significan
+t increase of your database size and possible performance degradation.
+\layout Itemize
+
+
+\emph on 
+Schedule Type
+\emph default 
+ - type of the collection schedule used, can be either simple or advanced.
+ In simple mode, values taken from target at fixed intervals.
+ In advanced mode, cron-like scheduling table can be used to specify exact
+ time for polling.
+ This can be useful if, for example, you wish to check the size of file
+ every Monday and Friday at 7:00.
+\layout Itemize
+
+
+\emph on 
+Polling Interval
+\emph default 
+ - interval in seconds between two polls.
+ Applicable only if simple schedule type selected.
+\layout Itemize
+
+
+\emph on 
+Scheduling Table
+\emph default 
+ - cron-like scheduling table for data collection polls.
+ Applicable only if advanced schedule type selected.
+\layout Subsection
+
+Thresholds
+\layout Standard
+
+Thresholds let you take a proactive approach to network management.
+ You can define thresholds for any data collection items that you are monitoring.
+ You can configure events to be posted when the specified thresholds are
+ exceeded.
+ If setting thresholds, first determine what would constitute reasonable
+ thresholds.
+ To decide on a threshold value, you need to know what is normal and what
+ is out of range.
+ Only you can decide what is normal behavior for a device on your network.
+ Generally, we recommend that you collect information about a device throughout
+ one complete business cycle before determining the normal high/low range.
+ Consider collecting values such as error rates, retry limits, collisions,
+ throughput, relation rates, and many more.
+ You also have the possibility to define more than one threshold for single
+ DCI, which allows you to distinguish between different severity conditions.
+\layout Subsection
+
+Events and Alarms
+\layout Standard
+
+Many services within NetXMS gather information and generate 
+\emph on 
+events
+\emph default 
+ that are forwarded to NetXMS Event Queue.
+ Events can also be emitted from agents on managed nodes, or from management
+ applications residing on the management station or on specific network
+ nodes.
+ All events are processed one-by-one by NetXMS Event Processor, according
+ to the processing rules defined in Event Processing Policy.
+ As a result of event processing, some actions can be taken, and event can
+ be show up as 
+\emph on 
+alarm
+\emph default 
+.
+ NetXMS provides one centralized location, the Alarm Browser, where the
+ alarms are visible to your team.
+ You can control which events are considered important enough to show up
+ as alarms.
+ You and your team can easily monitor the posted alarms and take appropriate
+ action to preserve the health of your network.
+ Examples of alarms include:
+\layout Itemize
+
+A critical router exceeded its threshold of traffic volume that you configured
+ in Data Collection.
+\layout Itemize
+
+The shell script that you wrote gathered the specific information you needed
+ and posted it to the NetXMS as an event.
+\layout Itemize
+
+One of your mission-critical servers is using its UPS battery power.
+\layout Itemize
+
+An SNMP agent on a managed critical server forwarded a trap to NetXMS because
+ it was overheating and about to fail.
+\layout Subsection
+
+Alarms
+\layout Subsection
+
+Actions
+\layout Subsection
+
+Event Processing Policy
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+Administration
+\layout Subsection
+
+Common Administartive Tasks
+\layout Subsection
+
+Administrator's Console
+\layout Subsection
+
+Agent Configuration
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+NetXMS Utilities
+\layout Subsection
+
+nxaction
+\layout Subsection
+
+nxadm
+\layout Subsection
+
+nxconfig
+\layout Subsection
+
+nxdbmgr
+\layout Subsection
+
+nxevent
+\layout Subsection
+
+nxget
+\layout Subsection
+
+nxsnmpget
+\layout Subsection
+
+nxsnmpwalk
+\layout Subsection
+
+nxupload
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+Guided Tour
+\layout Subsection
+
+Server
+\layout Subsection
+
+Agent
+\layout Subsection
+
+Administrator Console
+\layout Subsection
+
+Web Interface
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+NetXMS Architecture
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+Complete Reference
+\layout Subsection
+
+Server Config
+\layout Subsubsection
+
+File: netxmsd.conf
+\layout Subsubsection
+
+Table in Database: config
+\layout Subsection
+
+Agent Config
+\layout Subsubsection
+
+File: nxagentd.conf
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+clearpage
+\end_inset 
+
+
+\layout Section
+
+Troubleshooting
+\the_end

@@ -130,6 +130,8 @@ doc/Makefile.am -text
 doc/client_library.doc -text
 doc/db_format_change.txt -text
 doc/internals.rtf -text
+doc/netxms_install_guide.lyx -text
+doc/netxms_user_guide.lyx -text
 doc/ping_subagent.txt -text
 doc/snmp.txt -text
 images/Makefile.am -text
