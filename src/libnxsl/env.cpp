@@ -34,6 +34,8 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 
 
 //
@@ -47,7 +49,9 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { "lower", F_lower, 1 },
    { "pow", F_pow, 2 },
    { "typeof", F_typeof, 1 },
-   { "upper", F_upper, 1 }
+   { "upper", F_upper, 1 },
+   { "AddrInRange", F_AddrInRange, 3 },
+   { "AddrInSubnet", F_AddrInSubnet, 3 }
 };
 
 

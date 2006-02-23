@@ -178,8 +178,41 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
-   if (argv[0]->IsString())
+   int nRet;
+   DWORD dwAddr, dwStart, dwEnd;
+
+   if (argv[0]->IsString() && argv[1]->IsString() && argv[2]->IsString())
    {
+      dwAddr = ntohl(inet_addr(argv[0]->GetValueAsCString()));
+      dwStart = ntohl(inet_addr(argv[1]->GetValueAsCString()));
+      dwEnd = ntohl(inet_addr(argv[2]->GetValueAsCString()));
+      *ppResult = new NXSL_Value((LONG)(((dwAddr >= dwStart) && (dwAddr <= dwEnd)) ? 1 : 0));
+      nRet = 0;
+   }
+   else
+   {
+      nRet = NXSL_ERR_NOT_STRING;
+   }
+   return nRet;
+}
+
+
+//
+// Check if IP address is within given subnet
+//
+
+int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   int nRet;
+   DWORD dwAddr, dwSubnet, dwMask;
+
+   if (argv[0]->IsString() && argv[1]->IsString() && argv[2]->IsString())
+   {
+      dwAddr = ntohl(inet_addr(argv[0]->GetValueAsCString()));
+      dwSubnet = ntohl(inet_addr(argv[1]->GetValueAsCString()));
+      dwMask = ntohl(inet_addr(argv[2]->GetValueAsCString()));
+      *ppResult = new NXSL_Value((LONG)(((dwAddr & dwMask) == dwSubnet) ? 1 : 0));
+      nRet = 0;
    }
    else
    {
