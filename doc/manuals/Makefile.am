@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = manuals internal misc
+EXTRA_DIST = client_library.doc netxms_install_guide.lyx netxms_user_guide.lyx
