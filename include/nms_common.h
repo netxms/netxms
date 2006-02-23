@@ -89,10 +89,8 @@
 
 #define FS_PATH_SEPARATOR  _T("\\")
 
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <stdlib.h>
 
 #ifndef UNDER_CE
