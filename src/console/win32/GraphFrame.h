@@ -93,6 +93,8 @@ protected:
 	afx_msg void OnGraphRuler();
 	afx_msg void OnUpdateGraphRuler(CCmdUI* pCmdUI);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
+	afx_msg void OnGraphLegend();
+	afx_msg void OnUpdateGraphLegend(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);

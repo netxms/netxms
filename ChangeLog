@@ -2,8 +2,10 @@
 * 0.2.10
 *
 
+- Web interface redesigned
 - Added UPS monitoring subagent
 - Netscreen (now Juniper) MIBs added
+- Windows console: graphs improved
 - Fixed issues: #58, #72, #76, #78
 
 

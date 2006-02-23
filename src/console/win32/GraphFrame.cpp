@@ -91,6 +91,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_RULER, OnGraphRuler)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_RULER, OnUpdateGraphRuler)
 	ON_WM_GETMINMAXINFO()
+	ON_COMMAND(ID_GRAPH_LEGEND, OnGraphLegend)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_LEGEND, OnUpdateGraphLegend)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -121,6 +123,7 @@ int CGraphFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    rect.bottom -= m_iStatusBarHeight;
    m_wndGraph.SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
    m_wndGraph.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_GRAPH);
+   m_wndGraph.SetDCIInfo(m_ppItems);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
    if (m_dwFlags & GF_AUTOUPDATE)
@@ -168,8 +171,6 @@ void CGraphFrame::AddItem(DWORD dwNodeId, NXC_DCI *pItem)
 {
    if (m_dwNumItems < MAX_GRAPH_ITEMS)
    {
-//      m_pdwNodeId[m_dwNumItems] = dwNodeId;
-//      m_pdwItemId[m_dwNumItems] = dwItemId;
       m_ppItems[m_dwNumItems] = new DCIInfo(dwNodeId, pItem);
       m_dwNumItems++;
    }
@@ -251,6 +252,7 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
    pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
    pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
+   pgSettings.m_bShowLegend = m_wndGraph.m_bShowLegend;
    pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
    pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
    pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
@@ -299,6 +301,7 @@ void CGraphFrame::OnGraphProperties()
 
       m_wndGraph.m_bAutoScale = pgSettings.m_bAutoscale;
       m_wndGraph.m_bShowGrid = pgSettings.m_bShowGrid;
+      m_wndGraph.m_bShowLegend = pgSettings.m_bShowLegend;
       m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
 
       m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
@@ -390,13 +393,14 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
               _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F" "A:%d\x7F"
                  "TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F"
                  "CA:%u\x7F" "CB:%u\x7F" "CG:%u\x7F" "CK:%u\x7F" "CL:%u\x7F"
-                 "CT:%u\x7FR:%d\x7FG:%d"),
+                 "CT:%u\x7FR:%d\x7FG:%d\x7FL:%d"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
               m_wndGraph.m_rgbBkColor, m_wndGraph.m_rgbGridColor,
               m_wndGraph.m_rgbLabelBkColor, m_wndGraph.m_rgbLabelTextColor,
-              m_wndGraph.m_rgbTextColor, m_wndGraph.m_bShowRuler, m_wndGraph.m_bShowGrid);
+              m_wndGraph.m_rgbTextColor, m_wndGraph.m_bShowRuler,
+              m_wndGraph.m_bShowGrid, m_wndGraph.m_bShowLegend);
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
@@ -407,7 +411,7 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    
    for(i = 0; i < m_dwNumItems; i++)
    {
-      _sntprintf(szBuffer, 512, _T("\x7FN%d:%d\x7FI%d:%d\x7FIS%d:%d\x7FIT%d:%d\x7FIN%d:%d\x7FID%d:%d"),
+      _sntprintf(szBuffer, 512, _T("\x7FN%d:%d\x7FI%d:%d\x7FIS%d:%d\x7FIT%d:%d\x7FIN%d:%s\x7FID%d:%s"),
                  i, m_ppItems[i]->m_dwNodeId, i, m_ppItems[i]->m_dwItemId,
                  i, m_ppItems[i]->m_iSource, i, m_ppItems[i]->m_iDataType,
                  i, m_ppItems[i]->m_pszParameter, i, m_ppItems[i]->m_pszDescription);
@@ -441,6 +445,7 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
    m_dwRefreshInterval = ExtractWindowParamULong(pszParams, _T("A"), 30);
    m_wndGraph.m_bAutoScale = (BOOL)ExtractWindowParamLong(pszParams, _T("S"), TRUE);
    m_wndGraph.m_bShowGrid = (BOOL)ExtractWindowParamLong(pszParams, _T("G"), TRUE);
+   m_wndGraph.m_bShowLegend = (BOOL)ExtractWindowParamLong(pszParams, _T("L"), TRUE);
    m_wndGraph.m_bShowRuler = (BOOL)ExtractWindowParamLong(pszParams, _T("R"), TRUE);
    m_wndGraph.m_rgbAxisColor = ExtractWindowParamULong(pszParams, _T("CA"), m_wndGraph.m_rgbAxisColor);
    m_wndGraph.m_rgbBkColor = ExtractWindowParamULong(pszParams, _T("CB"), m_wndGraph.m_rgbBkColor);
@@ -611,4 +616,20 @@ void CGraphFrame::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
    lpMMI->ptMinTrackSize.x = 300;
    lpMMI->ptMinTrackSize.y = 200;
 	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
+}
+
+
+//
+// WM_COMMAND::ID_GRAPH_LEGEND message handlers
+//
+
+void CGraphFrame::OnGraphLegend() 
+{
+   m_wndGraph.m_bShowLegend = !m_wndGraph.m_bShowLegend;
+   m_wndGraph.Update();
+}
+
+void CGraphFrame::OnUpdateGraphLegend(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_wndGraph.m_bShowLegend);
 }

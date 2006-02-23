@@ -475,6 +475,7 @@
 #define IDC_STATIC_SNMP_OPTIONS         1335
 #define IDC_STATIC_TEMPLATE             1336
 #define IDC_CHECK_RULER                 1337
+#define IDC_CHECK_LEGEND                1338
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -643,6 +644,7 @@
 #define ID_SCRIPT_RENAME                32976
 #define ID_SCRIPT_DELETE                32977
 #define ID_GRAPH_RULER                  32978
+#define ID_GRAPH_LEGEND                 32980
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -653,8 +655,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        302
-#define _APS_NEXT_COMMAND_VALUE         32979
-#define _APS_NEXT_CONTROL_VALUE         1338
+#define _APS_NEXT_COMMAND_VALUE         32982
+#define _APS_NEXT_CONTROL_VALUE         1339
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

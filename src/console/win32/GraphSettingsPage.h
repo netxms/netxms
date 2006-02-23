@@ -49,6 +49,7 @@ public:
 	CTime	m_timeFrom;
 	CTime	m_timeTo;
 	BOOL	m_bRuler;
+	BOOL	m_bShowLegend;
 	//}}AFX_DATA
 
 

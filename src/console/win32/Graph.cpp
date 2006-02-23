@@ -13,6 +13,7 @@
                              ) \
                             ) \
                            )
+#define LEGEND_TEXT_SPACING   4
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,6 +30,7 @@ CGraph::CGraph()
    m_bAutoScale = TRUE;
    m_bShowGrid = TRUE;
    m_bShowRuler = TRUE;
+   m_bShowLegend = TRUE;
    m_dwNumItems = 0;
    m_rgbBkColor = RGB(0,0,0);
    m_rgbGridColor = RGB(64, 64, 64);
@@ -55,6 +57,7 @@ CGraph::CGraph()
    m_rgbLineColors[15] = RGB(192, 192, 192);
 
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
+   m_ppItems = NULL;
    
    m_bIsActive = FALSE;
 }
@@ -349,13 +352,14 @@ void CGraph::DrawGraphOnBitmap()
    CBitmap *pOldBitmap;
    CPen pen, *pOldPen;
    CFont font, *pOldFont;
-   CBrush brush;
+   CBrush brush, *pOldBrush;
    RECT rect;
    CSize textSize;
    DWORD i, dwTimeStamp;
    int iLeftMargin, iBottomMargin, iRightMargin = 5, iTopMargin = 5;
    int x, y, iTimeLen, iStep, iGraphLen, nDivider;
    int nGridSizeX, nGridSizeY, nGrids, nDataAreaHeight;
+   int nColSize, nCols, nCurrCol;
    double dStep, dMark;
    char szBuffer[256], szModifier[4];
    BOOL bIntMarks;
@@ -376,6 +380,7 @@ void CGraph::DrawGraphOnBitmap()
    // Fill background
    brush.CreateSolidBrush(m_rgbBkColor);
    dc.FillRect(&rect, &brush);
+   brush.DeleteObject();
 
    // Setup text parameters
    font.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
@@ -389,7 +394,41 @@ void CGraph::DrawGraphOnBitmap()
    textSize = dc.GetTextExtent("00000.000");
    iTimeLen = dc.GetTextExtent("00:00:00").cx;
    iLeftMargin = textSize.cx + 10;
-   iBottomMargin = textSize.cy + 8;
+   if (m_bShowLegend)
+   {
+      CSize size;
+
+      for(i = 0, nColSize = 0; i < MAX_GRAPH_ITEMS; i++)
+      {
+         if (m_ppItems != NULL)
+            if (m_ppItems[i] != NULL)
+            {
+               size = dc.GetTextExtent(m_ppItems[i]->m_pszDescription,
+                                       _tcslen(m_ppItems[i]->m_pszDescription));
+               if (size.cx > nColSize)
+                  nColSize = size.cx;
+            }
+      }
+      nColSize += textSize.cy + 20;
+      nCols = (rect.right - rect.left - iLeftMargin - iRightMargin) / nColSize;
+      if (nCols == 0)
+         nCols = 1;
+
+      iBottomMargin = textSize.cy + 12;
+      for(i = 0, nCurrCol = 0; i < MAX_GRAPH_ITEMS; i++)
+         if (m_pData[i] != NULL)
+         {
+            if (nCurrCol == 0)
+               iBottomMargin += textSize.cy + LEGEND_TEXT_SPACING;
+            nCurrCol++;
+            if (nCurrCol == nCols)
+               nCurrCol = 0;
+         }
+   }
+   else
+   {
+      iBottomMargin = textSize.cy + 8;
+   }
 
    // Draw all parameters
    ///////////////////////////////////
@@ -538,6 +577,44 @@ void CGraph::DrawGraphOnBitmap()
       dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel);
       FormatTimeStamp(dwTimeStamp, szBuffer, TS_LONG_TIME);
       dc.TextOut(x, y, szBuffer);
+   }
+
+   // Draw legend
+   if (m_bShowLegend)
+   {
+      pen.CreatePen(PS_SOLID, 0, m_rgbTextColor);
+      pOldPen = dc.SelectObject(&pen);
+      for(i = 0, nCurrCol = 0, x = m_rectGraph.left,
+               y = m_rectGraph.bottom + textSize.cy + 8;
+          i < MAX_GRAPH_ITEMS; i++)
+         if (m_pData[i] != NULL)
+         {
+            brush.CreateSolidBrush(m_rgbLineColors[i]);
+            pOldBrush = dc.SelectObject(&brush);
+            dc.Rectangle(x, y, x + textSize.cy, y + textSize.cy);
+            dc.SelectObject(pOldBrush);
+            brush.DeleteObject();
+
+            if (m_ppItems != NULL)
+               if (m_ppItems[i] != NULL)
+               {
+                  dc.TextOut(x + 14, y, m_ppItems[i]->m_pszDescription,
+                             _tcslen(m_ppItems[i]->m_pszDescription));
+                  nCurrCol++;
+                  if (nCurrCol == nCols)
+                  {
+                     nCurrCol = 0;
+                     x = m_rectGraph.left;
+                     y += textSize.cy + LEGEND_TEXT_SPACING;
+                  }
+                  else
+                  {
+                     x += nColSize;
+                  }
+               }
+         }
+      dc.SelectObject(pOldPen);
+      pen.DeleteObject();
    }
 
    // Cleanup
