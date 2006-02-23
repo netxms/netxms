@@ -401,7 +401,7 @@ public:
                               (m_dwIfType == IFTYPE_OTHER) &&
                               (!_tcscmp(m_szName, _T("lan0"))) &&
                               (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
-   void SetIpAddr(DWORD dwNewAddr) { LockData(); m_dwIpAddr = dwNewAddr; Modify(); UnlockData(); }
+   void SetIpAddr(DWORD dwNewAddr);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue);
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -930,6 +930,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
 void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
+void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);

@@ -361,3 +361,17 @@ Node *Interface::GetParentNode(void)
    UnlockParentList();
    return pNode;
 }
+
+
+//
+// Change interface's IP address
+//
+
+void Interface::SetIpAddr(DWORD dwNewAddr) 
+{
+   UpdateInterfaceIndex(m_dwIpAddr, dwNewAddr, this);
+   LockData();
+   m_dwIpAddr = dwNewAddr;
+   Modify();
+   UnlockData();
+}

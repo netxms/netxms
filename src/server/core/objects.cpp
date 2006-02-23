@@ -1030,6 +1030,29 @@ void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
 
 
 //
+// Update interface index when IP address changes
+//
+
+void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
+{
+   DWORD dwPos;
+
+   RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
+   dwPos = SearchIndex(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, dwOldIpAddr);
+   if (dwPos != INVALID_INDEX)
+   {
+      g_pInterfaceIndexByAddr[dwPos].dwKey = dwNewIpAddr;
+      qsort(g_pInterfaceIndexByAddr, g_dwInterfaceAddrIndexSize, sizeof(INDEX), IndexCompare);
+   }
+   else
+   {
+      AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, dwNewIpAddr, pObject);
+   }
+   RWLockUnlock(g_rwlockInterfaceIndex);
+}
+
+
+//
 // Calculate propagated status for object using default algorithm
 //
 
