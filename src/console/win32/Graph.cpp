@@ -21,6 +21,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Get month from timestamp
+//
+
+static int MonthFromTS(DWORD dwTimeStamp)
+{
+   time_t t = dwTimeStamp;
+
+   return localtime(&t)->tm_mon; 
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CGraph
 
@@ -180,8 +193,38 @@ void CGraph::OnPaint()
 
 void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
 {
-   m_dwTimeFrom = dwTimeFrom;
+   struct tm lt;
+   time_t t = dwTimeFrom;
+
    m_dwTimeTo = dwTimeTo;
+
+   // Round boundaries
+   memcpy(&lt, localtime(&t), sizeof(struct tm));
+   if (dwTimeTo - dwTimeFrom >= 5184000)   // 60 days
+   {
+      // Align to month boundary
+      lt.tm_mday = 1;
+      lt.tm_hour = 0;
+      lt.tm_min = 0;
+      lt.tm_sec = 0;
+   }
+   else if (dwTimeTo - dwTimeFrom >= 432000)   // 5 days
+   {
+      // Align to day boundary
+      lt.tm_hour = 0;
+      lt.tm_min = 0;
+      lt.tm_sec = 0;
+   }
+   else if (dwTimeTo - dwTimeFrom >= 86400)
+   {
+      lt.tm_min = 0;
+      lt.tm_sec = 0;
+   }
+   else
+   {
+      lt.tm_sec = 0;
+   }
+   m_dwTimeFrom = mktime(&lt);
 }
 
 
@@ -346,6 +389,22 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
       } \
    }
 
+/* Correct next month offset */
+#define CORRECT_MONTH_OFFSET \
+   { \
+      int nMonth; \
+\
+      dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel); \
+      nMonth = MonthFromTS(dwTimeStamp); \
+      while(1) \
+      { \
+         dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin - 1) * m_dSecondsPerPixel); \
+         if (MonthFromTS(dwTimeStamp) != nMonth) \
+            break; \
+         x--; \
+      } \
+   }
+
 void CGraph::DrawGraphOnBitmap()
 {
    CDC *pdc, dc;           // Window dc and in-memory dc
@@ -359,10 +418,13 @@ void CGraph::DrawGraphOnBitmap()
    int iLeftMargin, iBottomMargin, iRightMargin = 5, iTopMargin = 5;
    int x, y, iTimeLen, iStep, iGraphLen, nDivider;
    int nGridSizeX, nGridSizeY, nGrids, nDataAreaHeight;
-   int nColSize, nCols, nCurrCol;
+   int nColSize, nCols, nCurrCol, nTimeLabel;
    double dStep, dMark;
    char szBuffer[256], szModifier[4];
    BOOL bIntMarks;
+   static double nSecPerMonth[12] = { 2678400, 2419200, 2678400, 2592000,
+                                      2678400, 2592000, 2678400, 2678400,
+                                      2592000, 2678400, 2592000, 2678400 };
 
    GetClientRect(&rect);
 
@@ -392,7 +454,6 @@ void CGraph::DrawGraphOnBitmap()
 
    // Calculate text size and left margin
    textSize = dc.GetTextExtent("00000.000");
-   iTimeLen = dc.GetTextExtent("00:00:00").cx;
    iLeftMargin = textSize.cx + 10;
    if (m_bShowLegend)
    {
@@ -430,9 +491,6 @@ void CGraph::DrawGraphOnBitmap()
       iBottomMargin = textSize.cy + 8;
    }
 
-   // Draw all parameters
-   ///////////////////////////////////
-
    // Calculate data rectangle
    memcpy(&m_rectGraph, &rect, sizeof(RECT));
    m_rectGraph.left += iLeftMargin;
@@ -440,8 +498,29 @@ void CGraph::DrawGraphOnBitmap()
    m_rectGraph.right -= iRightMargin;
    m_rectGraph.bottom -= iBottomMargin;
    iGraphLen = m_rectGraph.right - m_rectGraph.left + 1;   // Actual data area length in pixels
-   m_dSecondsPerPixel = (double)(m_dwTimeTo - m_dwTimeFrom) / (double)iGraphLen;
    nDataAreaHeight = rect.bottom - iBottomMargin - textSize.cy / 2 - iTopMargin - textSize.cy / 2;
+
+   // Calculate how many seconds represent each pixel
+   // and select time stamp label's style
+   m_dSecondsPerPixel = (double)(m_dwTimeTo - m_dwTimeFrom) / (double)iGraphLen;
+   if (m_dwTimeTo - m_dwTimeFrom >= 10368000)   // 120 days
+   {
+      iTimeLen = dc.GetTextExtent("MMM").cx;
+      nTimeLabel = TS_MONTH;
+//      nGridSizeX = (int)(2592000 / m_dSecondsPerPixel);
+   }
+   else if (m_dwTimeTo - m_dwTimeFrom >= 432000)   // 5 days
+   {
+      iTimeLen = dc.GetTextExtent("MMM/00").cx;
+      nTimeLabel = TS_DAY_AND_MONTH;
+      nGridSizeX = (int)ceil(86400.0 / m_dSecondsPerPixel);
+   }
+   else
+   {
+      iTimeLen = dc.GetTextExtent("00:00:00").cx;
+      nTimeLabel = TS_LONG_TIME;
+      nGridSizeX = 40;
+   }
 
    // Calculate max graph value
    if (m_bAutoScale)
@@ -514,19 +593,33 @@ void CGraph::DrawGraphOnBitmap()
       nGridSizeY = 40;
    }
 
-   // Calculate grid size for X axis
-   //for(nGridSizeX = 25; (nGridSizeX < 50) && (fmod(m_dSecondsPerPixel * nGridSizeX, 15) != 0); nGridSizeX++);
-   nGridSizeX = 40;
-
    // Draw grid
    if (m_bShowGrid)
    {
       pen.CreatePen(PS_ALTERNATE | PS_COSMETIC, 0, m_rgbGridColor);
       pOldPen = dc.SelectObject(&pen);
-      for(x = iLeftMargin + nGridSizeX; x < rect.right - iRightMargin; x += nGridSizeX)
+      if (nTimeLabel == TS_MONTH)
+      {
+         x = iLeftMargin + NextMonthOffset(m_dwTimeFrom);
+      }
+      else
+      {
+         x = iLeftMargin + nGridSizeX;
+      }
+      while(x < rect.right - iRightMargin)
       {
          dc.MoveTo(x, rect.bottom - iBottomMargin);
          dc.LineTo(x, iTopMargin);
+         if (nTimeLabel == TS_MONTH)
+         {
+            dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel);
+            x += NextMonthOffset(dwTimeStamp);
+            CORRECT_MONTH_OFFSET;
+         }
+         else
+         {
+            x += nGridSizeX;
+         }
       }
       for(y = rect.bottom - iBottomMargin - nGridSizeY; y > iTopMargin; y -= nGridSizeY)
       {
@@ -572,11 +665,20 @@ void CGraph::DrawGraphOnBitmap()
    // Display absciss marks
    y = rect.bottom - iBottomMargin + 3;
    iStep = iTimeLen / nGridSizeX + 1;    // How many grid lines we should skip
-   for(x = iLeftMargin; x < rect.right - iRightMargin; x += nGridSizeX * iStep)
+   for(x = iLeftMargin; x < rect.right - iRightMargin;)
    {
       dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel);
-      FormatTimeStamp(dwTimeStamp, szBuffer, TS_LONG_TIME);
+      FormatTimeStamp(dwTimeStamp, szBuffer, nTimeLabel);
       dc.TextOut(x, y, szBuffer);
+      if (nTimeLabel == TS_MONTH)
+      {
+         x += NextMonthOffset(dwTimeStamp);
+         CORRECT_MONTH_OFFSET;
+      }
+      else
+      {
+         x += nGridSizeX * iStep;
+      }
    }
 
    // Draw legend
@@ -647,4 +749,24 @@ void CGraph::OnSize(UINT nType, int cx, int cy)
 {
    DrawGraphOnBitmap();
 	CWnd::OnSize(nType, cx, cy);
+}
+
+
+//
+// Calculate offset (in pixels) of next month start
+//
+
+int CGraph::NextMonthOffset(DWORD dwTimeStamp)
+{
+   static double nSecPerMonth[12] = { 2678400, 2419200, 2678400, 2592000,
+                                      2678400, 2592000, 2678400, 2678400,
+                                      2592000, 2678400, 2592000, 2678400 };
+   struct tm *plt;
+   time_t t = dwTimeStamp;
+
+   plt = localtime(&t);
+   if ((plt->tm_year % 4 == 0) && (plt->tm_mon == 1))
+      return (int)ceil(2505600.0 / m_dSecondsPerPixel) + 1;
+   else
+      return (int)ceil(nSecPerMonth[plt->tm_mon] / m_dSecondsPerPixel) + 1;
 }

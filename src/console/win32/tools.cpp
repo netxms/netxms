@@ -33,7 +33,7 @@
 char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer, int iType)
 {
    struct tm *pTime;
-   static char *pFormat[] = { "%d-%b-%Y %H:%M:%S", "%H:%M:%S" };
+   static char *pFormat[] = { "%d-%b-%Y %H:%M:%S", "%H:%M:%S", "%b/%d", "%b" };
 
    pTime = localtime((const time_t *)&dwTimeStamp);
    strftime(pszBuffer, 32, pFormat[iType], pTime);

@@ -122,6 +122,8 @@ extern CConsoleApp theApp;
 
 #define TS_LONG_DATE_TIME  0
 #define TS_LONG_TIME       1
+#define TS_DAY_AND_MONTH   2
+#define TS_MONTH           3
 
 
 //

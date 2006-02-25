@@ -93,6 +93,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_WM_GETMINMAXINFO()
 	ON_COMMAND(ID_GRAPH_LEGEND, OnGraphLegend)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_LEGEND, OnUpdateGraphLegend)
+	ON_COMMAND(ID_GRAPH_PRESETS_LASTMONTH, OnGraphPresetsLastmonth)
+	ON_COMMAND(ID_GRAPH_PRESETS_LASTYEAR, OnGraphPresetsLastyear)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -553,6 +555,16 @@ void CGraphFrame::OnGraphPresetsLastday()
 void CGraphFrame::OnGraphPresetsLastweek() 
 {
    Preset(TIME_UNIT_DAY, 7);
+}
+
+void CGraphFrame::OnGraphPresetsLastmonth() 
+{
+   Preset(TIME_UNIT_DAY, 30);
+}
+
+void CGraphFrame::OnGraphPresetsLastyear() 
+{
+   Preset(TIME_UNIT_DAY, 365);
 }
 
 

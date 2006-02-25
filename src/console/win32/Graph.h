@@ -54,6 +54,7 @@ public:
 
 	// Generated message map functions
 protected:
+	int NextMonthOffset(DWORD dwTimeStamp);
 	BOOL m_bIsActive;
 	void DrawGraphOnBitmap(void);
 	CBitmap m_bmpGraph;

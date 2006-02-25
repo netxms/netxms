@@ -440,6 +440,10 @@ BEGIN
             MENUITEM "Last &day",                   ID_GRAPH_PRESETS_LASTDAY
             MENUITEM "Last &week",                  ID_GRAPH_PRESETS_LASTWEEK
 
+            MENUITEM "Last &month",                 ID_GRAPH_PRESETS_LASTMONTH
+
+            MENUITEM "Last &year",                  ID_GRAPH_PRESETS_LASTYEAR
+
         END
         MENUITEM SEPARATOR
         MENUITEM "&Autoscale\tAlt+A",           ID_GRAPH_AUTOSCALE
@@ -718,6 +722,10 @@ BEGIN
 
             MENUITEM "Last &day",                   ID_GRAPH_PRESETS_LASTDAY
             MENUITEM "Last &week",                  ID_GRAPH_PRESETS_LASTWEEK
+
+            MENUITEM "Last &month",                 ID_GRAPH_PRESETS_LASTMONTH
+
+            MENUITEM "Last &year",                  ID_GRAPH_PRESETS_LASTYEAR
 
         END
         MENUITEM SEPARATOR
