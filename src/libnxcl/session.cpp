@@ -35,7 +35,7 @@ NXCL_Session::NXCL_Session()
    m_dwTimeStamp = 0;
    m_pEventHandler = NULL;
    m_dwState = STATE_DISCONNECTED;
-   m_dwCommandTimeout = 10000;    // Default timeout is 10 seconds
+   m_dwCommandTimeout = 30000;    // Default timeout is 30 seconds
    m_dwNumObjects = 0;
    m_pIndexById = NULL;
    m_mutexIndexAccess = MutexCreate();
