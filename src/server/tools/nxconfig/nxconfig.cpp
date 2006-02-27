@@ -94,7 +94,7 @@ BOOL CNxconfigApp::InitInstance()
    // installation directory
    if ((dwData != 0) || (m_szInstallDir[0] == 0))
    {
-      if (dwData != 0)
+      if ((dwData != 0) && (_tcsicmp(m_lpCmdLine, _T("--configure-if-needed"))))
          AfxMessageBox(_T("Server already configured"));
       return FALSE;
    }
