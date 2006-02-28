@@ -217,7 +217,6 @@ sql/traps.in -text
 src/Makefile.am -text
 src/PPC_libs.vcw -text
 src/README.libs -text
-src/WIN32_libs.sln -text
 src/agent/Makefile.am -text
 src/agent/core/.cvsignore -text
 src/agent/core/Makefile.am -text

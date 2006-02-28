@@ -10,4 +10,4 @@
 
 SUBDIRS = libnetxms libnxcscp install
 SUBDIRS += @MODULES@
-EXTRA_DIST = PPC_libs.vcw WIN32_libs.sln
+EXTRA_DIST = PPC_libs.vcw
