@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.22 2005-09-15 21:47:02 victor Exp $ */
+/* $Id: linux.cpp,v 1.23 2006-03-01 22:13:09 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -29,6 +29,13 @@
 #include "system.h"
 #include "disk.h"
 
+//
+// Cleanup callback
+//
+static void Cleanup(void)
+{
+	ShutdownCpuUsageCollector();
+}
 
 //
 // Externals
@@ -99,12 +106,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
    { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
 			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
-/*   { "System.CPU.Usage",             H_CpuUsage,        NULL,
+   { "System.CPU.Usage",             H_CpuUsage,        NULL,
 			DCI_DT_FLOAT,	"" },
+/*
    { "System.CPU.Usage5",            H_CpuUsage,        NULL,
 			DCI_DT_FLOAT,	"" },
    { "System.CPU.Usage15",           H_CpuUsage,        NULL,
-			DCI_DT_FLOAT,	"" }, */
+			DCI_DT_FLOAT,	"" },
+*/
    { "System.Hostname",              H_Hostname,        NULL,
 			DCI_DT_STRING,	"Host name" },
    { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
@@ -147,7 +156,8 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
 	"Linux",
 	NETXMS_VERSION_STRING,
-	NULL, NULL,
+	&Cleanup, /* unload handler */
+	NULL, /* command handler */
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -160,6 +170,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 DECLARE_SUBAGENT_INIT(LINUX)
 {
+	StartCpuUsageCollector();
+
    *ppInfo = &m_info;
    return TRUE;
 }
@@ -168,6 +180,9 @@ DECLARE_SUBAGENT_INIT(LINUX)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.22  2005/09/15 21:47:02  victor
+Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
+
 Revision 1.21  2005/09/15 21:24:54  victor
 Minor changes
 
