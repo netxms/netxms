@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.4 2006-03-01 22:13:09 alk Exp $ */
+/* $Id: system.cpp,v 1.5 2006-03-01 23:26:21 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -292,8 +292,8 @@ static void CpuUsageCollector()
 
 	if (hStat != NULL)
 	{
-		int user, nice, system, idle;
-		if (fscanf(hStat, "cpu %d %d %d %d", &user, &nice, &system, &idle) == 4)
+		unsigned int user, nice, system, idle;
+		if (fscanf(hStat, "cpu %u %u %u %u", &user, &nice, &system, &idle) == 4)
 		{
 			long total = (user - m_user) + (system - m_system) + (idle - m_idle);
 
@@ -302,17 +302,23 @@ static void CpuUsageCollector()
 				m_currentSlot = 0;
 			}
 
-			printf(">>> %d-%d-%d ||| %d-%d-%d\n",
-					user, system, idle,
-					m_user, m_system, m_idle);
-			printf("--- {{%ld}} ---\n", total);
-
-			m_cpuUsage[m_currentSlot++] =
-				100 - ((float)((idle - m_idle) * 100) / total);
-			printf("usage[%02d] == (%f) %f\n",
-					m_currentSlot - 1,
-					((float)((idle - m_idle) * 100) / total),
-					m_cpuUsage[m_currentSlot - 1]);
+			if (total > 0)
+			{
+				m_cpuUsage[m_currentSlot++] =
+					100 - ((float)((idle - m_idle) * 100) / total);
+			}
+			else
+			{
+				if (m_currentSlot == 0)
+				{
+					m_cpuUsage[m_currentSlot++] = m_cpuUsage[59];
+				}
+				else
+				{
+					m_cpuUsage[m_currentSlot] = m_cpuUsage[m_currentSlot - 1];
+					m_currentSlot++;
+				}
+			}
 
 			m_user = user;
 			m_system = system;
@@ -325,7 +331,6 @@ static void CpuUsageCollector()
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 {
 	setlocale(LC_NUMERIC, "C");
-	printf("Collector started\n"); fflush(stdout);
 	while (m_stopCollectorThread == false)
 	{
 		MutexLock(m_cpuUsageMutex, INFINITE);
@@ -343,7 +348,6 @@ void StartCpuUsageCollector(void)
 {
 	int i;
 
-	printf("GO UP\n"); fflush(stdout);
 	m_cpuUsageMutex = MutexCreate();
 
 	for (i = 0; i < 60; i++)
@@ -353,13 +357,11 @@ void StartCpuUsageCollector(void)
 
 	m_currentSlot = 0;
 	CpuUsageCollector();
-	printf("2: %f\n", m_cpuUsage[0]);
 
 	sleep(1);
 
 	m_currentSlot = 0;
 	CpuUsageCollector();
-	printf("3: %f\n", m_cpuUsage[0]);
 
 	for (i = 1; i < 60; i++)
 	{
@@ -371,7 +373,6 @@ void StartCpuUsageCollector(void)
 
 void ShutdownCpuUsageCollector(void)
 {
-	printf("GO DOWN\n"); fflush(stdout);
 	MutexLock(m_cpuUsageMutex, INFINITE);
 	m_stopCollectorThread = true;
 	MutexUnlock(m_cpuUsageMutex);
@@ -379,7 +380,6 @@ void ShutdownCpuUsageCollector(void)
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
 
-	printf("DIED\n"); fflush(stdout);
 }
 
 LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
@@ -389,11 +389,11 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 	MutexLock(m_cpuUsageMutex, INFINITE);
 	for (int i = 0; i < 60; i++)
 	{
-		printf("usage[%0d]=%f\n", i, usage);
 		usage += m_cpuUsage[i];
 	}
 
-	ret_double(pValue, usage);
+
+	ret_double(pValue, usage / 60);
 
 	MutexUnlock(m_cpuUsageMutex);
 
@@ -405,6 +405,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/03/01 22:13:09  alk
+added System.CPU.Usage [broken]
+
 Revision 1.3  2005/01/24 19:40:31  alk
 return type/comments added for command list
 
