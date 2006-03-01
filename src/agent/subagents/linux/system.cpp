@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.5 2006-03-01 23:26:21 alk Exp $ */
+/* $Id: system.cpp,v 1.6 2006-03-01 23:38:57 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -280,9 +280,9 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool m_stopCollectorThread = false;
-static int m_user = 0;
-static int m_system = 0;
-static int m_idle = 0;
+static uint64_t m_user = 0;
+static uint64_t m_system = 0;
+static uint64_t m_idle = 0;
 static float m_cpuUsage[60];
 static int m_currentSlot = 0;
 
@@ -292,10 +292,13 @@ static void CpuUsageCollector()
 
 	if (hStat != NULL)
 	{
-		unsigned int user, nice, system, idle;
-		if (fscanf(hStat, "cpu %u %u %u %u", &user, &nice, &system, &idle) == 4)
+		uint64_t user, nice, system, idle;
+		if (fscanf(hStat, "cpu %llu %llu %llu %llu", &user, &nice, &system, &idle) == 4)
 		{
-			long total = (user - m_user) + (system - m_system) + (idle - m_idle);
+			uint64_t total =
+				(user - m_user) +
+				(system - m_system) +
+				(idle - m_idle);
 
 			if (m_currentSlot == 60)
 			{
@@ -405,6 +408,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/03/01 23:26:21  alk
+System.CPU.Usage fixed
+
 Revision 1.4  2006/03/01 22:13:09  alk
 added System.CPU.Usage [broken]
 
