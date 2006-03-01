@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="generic"
-	ProjectGUID="{9D5A0812-6D82-4B7B-A005-42B99DA3AF6C}"
+	Name="libnxsnmp"
+	ProjectGUID="{E93D3191-F482-4682-8F46-18B63AACCAD1}"
 	>
 	<Platforms>
 		<Platform
@@ -44,19 +44,19 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/libnxsnmp.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXSNMP_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/libnxsnmp.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -76,13 +76,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib"
+				OutputFile=".\Release/libnxsnmp.dll"
+				Version="0.1"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="..\libnetxms\Release"
+				ProgramDatabaseFile=".\Release/libnxsnmp.pdb"
+				ImportLibrary=".\Release/libnxsnmp.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -97,7 +98,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/libnxsnmp.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -111,7 +112,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\libnxsnmp.dll C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -142,18 +143,18 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/libnxsnmp.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXSNMP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/libnxsnmp.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -174,14 +175,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib"
+				OutputFile=".\Debug/libnxsnmp.dll"
+				Version="0.1"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="..\libnetxms\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/libnxsnmp.pdb"
+				ImportLibrary=".\Debug/libnxsnmp.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -196,7 +198,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/libnxsnmp.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -210,7 +212,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\libnxsnmp.dll ..\..\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -241,19 +243,19 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/libnxsnmp.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXSNMP_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/libnxsnmp.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -273,13 +275,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib"
+				OutputFile=".\Release/libnxsnmp.dll"
+				Version="0.1"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="..\libnetxms\Release"
+				ProgramDatabaseFile=".\Release/libnxsnmp.pdb"
+				ImportLibrary=".\Release/libnxsnmp.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -294,7 +297,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/libnxsnmp.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -308,7 +311,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\libnxsnmp.dll C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -339,18 +342,18 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/libnxsnmp.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXSNMP_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/libnxsnmp.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -371,14 +374,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib"
+				OutputFile=".\Debug/libnxsnmp.dll"
+				Version="0.1"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="..\libnetxms\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/libnxsnmp.pdb"
+				ImportLibrary=".\Debug/libnxsnmp.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -393,7 +397,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/libnxsnmp.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -407,7 +411,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\libnxsnmp.dll ..\..\bin"
 			/>
 		</Configuration>
 	</Configurations>
@@ -419,7 +423,247 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath="ber.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="main.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="mib.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="oid.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="pdu.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="transport.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="variable.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -464,11 +708,35 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="main.h"
+				RelativePath="..\..\include\getopt.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxsrvapi.h"
+				RelativePath="libnxsnmp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\netxms-version.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\nms_common.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\nms_util.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\nxsnmp.h"
+				>
+			</File>
+			<File
+				RelativePath="sha1.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>

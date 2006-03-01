@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="generic"
-	ProjectGUID="{9D5A0812-6D82-4B7B-A005-42B99DA3AF6C}"
+	Name="sqlite"
+	ProjectGUID="{3A728D3A-54C8-472C-92A8-EE441F7C9D0D}"
 	>
 	<Platforms>
 		<Platform
@@ -44,7 +44,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/sqlite.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -52,11 +52,11 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;sqlite_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/sqlite.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -69,20 +69,20 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib sqlite.lib"
+				OutputFile="Release/sqlite.ddr"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="C:\SQLite\Release"
+				ProgramDatabaseFile=".\Release/sqlite.pdb"
+				ImportLibrary=".\Release/sqlite.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -97,7 +97,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/sqlite.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -111,7 +111,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\sqlite.ddr C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -142,18 +142,18 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/sqlite.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;sqlite_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/sqlite.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -167,21 +167,21 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib sqlite.lib"
+				OutputFile="Debug/sqlite.ddr"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="C:\SQLite\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/sqlite.pdb"
+				ImportLibrary=".\Debug/sqlite.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -196,7 +196,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/sqlite.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -210,7 +210,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\sqlite.ddr ..\..\..\..\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -241,7 +241,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/sqlite.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -249,11 +249,11 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;sqlite_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/sqlite.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -266,20 +266,20 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib sqlite.lib"
+				OutputFile="Release/sqlite.ddr"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="C:\SQLite\Release"
+				ProgramDatabaseFile=".\Release/sqlite.pdb"
+				ImportLibrary=".\Release/sqlite.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -294,7 +294,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/sqlite.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -308,7 +308,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\sqlite.ddr C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
@@ -339,18 +339,18 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/sqlite.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;sqlite_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/sqlite.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -364,21 +364,21 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib sqlite.lib"
+				OutputFile="Debug/sqlite.ddr"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="C:\SQLite\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/sqlite.pdb"
+				ImportLibrary=".\Debug/sqlite.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -393,7 +393,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/sqlite.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -407,7 +407,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\sqlite.ddr ..\..\..\..\bin"
 			/>
 		</Configuration>
 	</Configurations>
@@ -419,7 +419,7 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="main.cpp"
+				RelativePath="sqlite.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -464,11 +464,15 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="main.h"
+				RelativePath="..\..\include\dbdrv.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxsrvapi.h"
+				RelativePath="..\..\..\..\include\nms_threads.h"
+				>
+			</File>
+			<File
+				RelativePath="sqlitedrv.h"
 				>
 			</File>
 		</Filter>

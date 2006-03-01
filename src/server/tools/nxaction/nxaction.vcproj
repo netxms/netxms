@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="generic"
-	ProjectGUID="{9D5A0812-6D82-4B7B-A005-42B99DA3AF6C}"
+	Name="nxaction"
+	ProjectGUID="{D2814819-28C5-4D17-A139-242C5C9E3AEA}"
 	>
 	<Platforms>
 		<Platform
@@ -20,7 +20,7 @@
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -40,11 +40,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
-				TargetEnvironment="1"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/nxaction.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -52,11 +48,11 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/nxaction.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -76,13 +72,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib ws2_32.lib"
+				OutputFile=".\Release/nxaction.exe"
+				Version="0.1"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\..\libnxcscp\Release,..\..\libnxsrv\Release"
+				ProgramDatabaseFile=".\Release/nxaction.pdb"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -97,7 +94,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/nxaction.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -111,14 +108,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\nxaction.exe C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -138,22 +135,18 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
-				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/nxaction.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/nxaction.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -174,14 +167,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib ws2_32.lib"
+				OutputFile=".\Debug/nxaction.exe"
+				Version="0.1"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\..\libnxcscp\Debug,..\..\libnxsrv\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/nxaction.pdb"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -196,7 +190,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/nxaction.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -210,14 +204,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\nxaction.exe ..\..\..\..\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -237,11 +231,8 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/nxaction.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -249,11 +240,11 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/nxaction.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -273,13 +264,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib ws2_32.lib"
+				OutputFile=".\Release/nxaction.exe"
+				Version="0.1"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\..\libnxcscp\Release,..\..\libnxsrv\Release"
+				ProgramDatabaseFile=".\Release/nxaction.pdb"
+				SubSystem="1"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -294,7 +286,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/nxaction.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -308,14 +300,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\nxaction.exe C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -335,22 +327,19 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/nxaction.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/nxaction.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -371,14 +360,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib ws2_32.lib"
+				OutputFile=".\Debug/nxaction.exe"
+				Version="0.1"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\..\libnxcscp\Debug,..\..\libnxsrv\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/nxaction.pdb"
+				SubSystem="1"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -393,7 +383,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/nxaction.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -407,7 +397,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\nxaction.exe ..\..\..\..\bin"
 			/>
 		</Configuration>
 	</Configurations>
@@ -419,7 +409,7 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="main.cpp"
+				RelativePath="nxaction.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -463,14 +453,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
-			<File
-				RelativePath="main.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\nxsrvapi.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

@@ -139,7 +139,7 @@ void CFlatButton::SetMouseTracking()
 // WM_MOUSEHOVER message handler
 //
 
-int CFlatButton::OnMouseHover(WPARAM wParam, LPARAM lParam)
+LRESULT CFlatButton::OnMouseHover(WPARAM wParam, LPARAM lParam)
 {
    if (!m_bMouseHover)
    {
@@ -154,7 +154,7 @@ int CFlatButton::OnMouseHover(WPARAM wParam, LPARAM lParam)
 // WM_MOUSELEAVE message handler
 //
 
-int CFlatButton::OnMouseLeave(WPARAM wParam, LPARAM lParam)
+LRESULT CFlatButton::OnMouseLeave(WPARAM wParam, LPARAM lParam)
 {
    if (m_bMouseHover || m_bPressed)
    {

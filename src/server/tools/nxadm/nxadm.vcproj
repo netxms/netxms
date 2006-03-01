@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="generic"
-	ProjectGUID="{9D5A0812-6D82-4B7B-A005-42B99DA3AF6C}"
+	Name="nxadm"
+	ProjectGUID="{F4CEEE75-50CF-4C4D-BC14-12B7489FAA46}"
 	>
 	<Platforms>
 		<Platform
@@ -20,7 +20,7 @@
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -40,11 +40,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
-				TargetEnvironment="1"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/nxadm.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -52,11 +48,11 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/nxadm.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -69,20 +65,20 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib"
+				OutputFile=".\Release/nxadm.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\..\libnxcscp\Release"
+				ProgramDatabaseFile=".\Release/nxadm.pdb"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -97,7 +93,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/nxadm.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -111,14 +107,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\nxadm.exe C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -138,22 +134,18 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
-				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/nxadm.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/nxadm.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -167,21 +159,21 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib"
+				OutputFile=".\Debug/nxadm.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\..\libnxcscp\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/nxadm.pdb"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -196,7 +188,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/nxadm.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -210,14 +202,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\nxadm.exe ..\..\..\..\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -237,11 +229,8 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Release/generic.tlb"
+				TypeLibraryName=".\Release/nxadm.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -249,11 +238,11 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/generic.pch"
+				PrecompiledHeaderFile=".\Release/nxadm.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -266,20 +255,20 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Release/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib"
+				OutputFile=".\Release/nxadm.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\libnxsrv\Release"
-				ProgramDatabaseFile=".\Release/generic.pdb"
-				ImportLibrary=".\Release/generic.lib"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Release,..\..\..\libnxcscp\Release"
+				ProgramDatabaseFile=".\Release/nxadm.pdb"
+				SubSystem="1"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -294,7 +283,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/generic.bsc"
+				OutputFile=".\Release/nxadm.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -308,14 +297,14 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Release\generic.sms C:\NetXMS\bin"
+				CommandLine="copy Release\nxadm.exe C:\NetXMS\bin"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -335,22 +324,19 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="true"
-				SuppressStartupBanner="true"
 				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/generic.tlb"
+				TypeLibraryName=".\Debug/nxadm.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include,..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;generic_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/generic.pch"
+				PrecompiledHeaderFile=".\Debug/nxadm.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -364,21 +350,21 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libnxsrv.lib libnetxms.lib"
-				OutputFile="Debug/generic.sms"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib"
+				OutputFile=".\Debug/nxadm.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\libnxsrv\Debug"
+				AdditionalLibraryDirectories="..\..\..\libnetxms\Debug,..\..\..\libnxcscp\Debug"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/generic.pdb"
-				ImportLibrary=".\Debug/generic.lib"
+				ProgramDatabaseFile=".\Debug/nxadm.pdb"
+				SubSystem="1"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -393,7 +379,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/generic.bsc"
+				OutputFile=".\Debug/nxadm.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -407,7 +393,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copy files"
-				CommandLine="copy Debug\generic.sms ..\..\..\..\bin"
+				CommandLine="copy Debug\nxadm.exe ..\..\..\..\bin"
 			/>
 		</Configuration>
 	</Configurations>
@@ -419,7 +405,47 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="main.cpp"
+				RelativePath="comm.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="nxadm.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -464,11 +490,35 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="main.h"
+				RelativePath="..\..\include\local_admin.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxsrvapi.h"
+				RelativePath="..\..\..\..\include\netxms-version.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\nms_common.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\nms_cscp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\nms_util.h"
+				>
+			</File>
+			<File
+				RelativePath="nxadm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\nxcscpapi.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>

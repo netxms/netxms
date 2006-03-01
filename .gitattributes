@@ -199,6 +199,7 @@ netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
 /netxms.dsw -text
+/netxms.sln -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text
@@ -236,6 +237,7 @@ src/agent/core/nxagentd.dsp -text
 src/agent/core/nxagentd.dsw -text
 src/agent/core/nxagentd.h -text
 src/agent/core/nxagentd.rc -text
+src/agent/core/nxagentd.vcproj -text
 src/agent/core/resource.h -text
 src/agent/core/service.cpp -text
 src/agent/core/session.cpp -text
@@ -284,6 +286,7 @@ src/agent/subagents/ping/ping.def -text
 src/agent/subagents/ping/ping.dsp -text
 src/agent/subagents/ping/ping.dsw -text
 src/agent/subagents/ping/ping.h -text
+src/agent/subagents/ping/ping.vcproj -text
 src/agent/subagents/portCheck/Makefile.am -text
 src/agent/subagents/portCheck/custom.cpp -text
 src/agent/subagents/portCheck/http.cpp -text
@@ -294,6 +297,7 @@ src/agent/subagents/portCheck/net.h -text
 src/agent/subagents/portCheck/pop3.cpp -text
 src/agent/subagents/portCheck/portcheck.dsp -text
 src/agent/subagents/portCheck/portcheck.dsw -text
+src/agent/subagents/portCheck/portcheck.vcproj -text
 src/agent/subagents/portCheck/smtp.cpp -text
 src/agent/subagents/portCheck/ssh.cpp -text
 src/agent/subagents/python/main.cpp -text
@@ -302,6 +306,7 @@ src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
+src/agent/subagents/skeleton/skeleton.vcproj -text
 src/agent/subagents/sunos/Makefile.am -text
 src/agent/subagents/sunos/cpu.cpp -text
 src/agent/subagents/sunos/disk.cpp -text
@@ -322,12 +327,14 @@ src/agent/subagents/ups/ups.cpp -text
 src/agent/subagents/ups/ups.dsp -text
 src/agent/subagents/ups/ups.dsw -text
 src/agent/subagents/ups/ups.h -text
+src/agent/subagents/ups/ups.vcproj -text
 src/agent/subagents/ups/usb.cpp -text
 src/agent/subagents/win9x/Makefile.am -text
 src/agent/subagents/win9x/main.cpp -text
 src/agent/subagents/win9x/procinfo.cpp -text
 src/agent/subagents/win9x/win9x.dsp -text
 src/agent/subagents/win9x/win9x.dsw -text
+src/agent/subagents/win9x/win9x.vcproj -text
 src/agent/subagents/win9x/win9x_subagent.h -text
 src/agent/subagents/winnt/Makefile.am -text
 src/agent/subagents/winnt/main.cpp -text
@@ -335,6 +342,7 @@ src/agent/subagents/winnt/procinfo.cpp -text
 src/agent/subagents/winnt/system.cpp -text
 src/agent/subagents/winnt/winnt.dsp -text
 src/agent/subagents/winnt/winnt.dsw -text
+src/agent/subagents/winnt/winnt.vcproj -text
 src/agent/subagents/winnt/winnt_subagent.h -text
 src/agent/subagents/winperf/Makefile.am -text
 src/agent/subagents/winperf/collect.cpp -text
@@ -343,6 +351,7 @@ src/agent/subagents/winperf/winperf.cpp -text
 src/agent/subagents/winperf/winperf.dsp -text
 src/agent/subagents/winperf/winperf.dsw -text
 src/agent/subagents/winperf/winperf.h -text
+src/agent/subagents/winperf/winperf.vcproj -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text
 src/console/PocketPC/AlarmView.h -text
@@ -436,6 +445,7 @@ src/console/nxav/nxav.dsp -text
 src/console/nxav/nxav.dsw -text
 src/console/nxav/nxav.h -text
 src/console/nxav/nxav.rc -text
+src/console/nxav/nxav.vcproj -text
 src/console/nxav/res/Makefile.am -text
 src/console/nxav/res/ack.png -text
 src/console/nxav/res/background.jpg -text
@@ -459,6 +469,7 @@ src/console/nxlexer/nxlexer.def -text
 src/console/nxlexer/nxlexer.dsp -text
 src/console/nxlexer/nxlexer.dsw -text
 src/console/nxlexer/nxlexer.h -text
+src/console/nxlexer/nxlexer.vcproj -text
 src/console/nxuilib/AlarmSoundDlg.cpp -text
 src/console/nxuilib/AlarmSoundDlg.h -text
 src/console/nxuilib/FlatButton.cpp -text
@@ -479,6 +490,7 @@ src/console/nxuilib/nxuilib.dsp -text
 src/console/nxuilib/nxuilib.dsw -text
 src/console/nxuilib/nxuilib.h -text
 src/console/nxuilib/nxuilib.rc -text
+src/console/nxuilib/nxuilib.vcproj -text
 src/console/nxuilib/popup.cpp -text
 src/console/nxuilib/res/Makefile.am -text
 src/console/nxuilib/res/SeverityCritical.ico -text
@@ -781,6 +793,7 @@ src/console/win32/nxcon.dsp -text
 src/console/win32/nxcon.dsw -text
 src/console/win32/nxcon.h -text
 src/console/win32/nxcon.rc -text
+src/console/win32/nxcon.vcproj -text
 src/console/win32/res/Makefile.am -text
 src/console/win32/res/Toolbar.bmp -text
 src/console/win32/res/any.bmp -text
@@ -815,6 +828,7 @@ src/libnetxms/libnetxms.dsp -text
 src/libnetxms/libnetxms.dsw -text
 src/libnetxms/libnetxms.h -text
 src/libnetxms/libnetxms.vcp -text
+src/libnetxms/libnetxms.vcproj -text
 src/libnetxms/libnetxms.vcw -text
 src/libnetxms/main.cpp -text
 src/libnetxms/md5.cpp -text
@@ -866,6 +880,7 @@ src/libnxsl/lexer.cpp -text
 src/libnxsl/libnxsl.dsp -text
 src/libnxsl/libnxsl.dsw -text
 src/libnxsl/libnxsl.h -text
+src/libnxsl/libnxsl.vcproj -text
 src/libnxsl/library.cpp -text
 src/libnxsl/main.cpp -text
 src/libnxsl/parser.l -text
@@ -879,6 +894,7 @@ src/libnxsnmp/ber.cpp -text
 src/libnxsnmp/libnxsnmp.dsp -text
 src/libnxsnmp/libnxsnmp.dsw -text
 src/libnxsnmp/libnxsnmp.h -text
+src/libnxsnmp/libnxsnmp.vcproj -text
 src/libnxsnmp/main.cpp -text
 src/libnxsnmp/mib.cpp -text
 src/libnxsnmp/oid.cpp -text
@@ -890,6 +906,7 @@ src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
 src/nxevent/nxevent.h -text
+src/nxevent/nxevent.vcproj -text
 src/nxmibc/.cvsignore -text
 src/nxmibc/Makefile.am -text
 src/nxmibc/array.cpp -text
@@ -899,6 +916,7 @@ src/nxmibc/nxmibc.cpp -text
 src/nxmibc/nxmibc.dsp -text
 src/nxmibc/nxmibc.dsw -text
 src/nxmibc/nxmibc.h -text
+src/nxmibc/nxmibc.vcproj -text
 src/nxmibc/parser.l -text
 src/nxmibc/parser.y -text
 src/nxreport/Makefile.am -text
@@ -914,6 +932,7 @@ src/nxscript/nxscript.cpp -text
 src/nxscript/nxscript.dsp -text
 src/nxscript/nxscript.dsw -text
 src/nxscript/nxscript.h -text
+src/nxscript/nxscript.vcproj -text
 src/server/Makefile.am -text
 src/server/core/.cvsignore -text
 src/server/core/Makefile.am -text
@@ -953,6 +972,7 @@ src/server/core/np.cpp -text
 src/server/core/nxcore.dsp -text
 src/server/core/nxcore.dsw -text
 src/server/core/nxcore.h -text
+src/server/core/nxcore.vcproj -text
 src/server/core/objects.cpp -text
 src/server/core/objtools.cpp -text
 src/server/core/package.cpp -text
@@ -979,26 +999,31 @@ src/server/dbdrv/mssql/Makefile.am -text
 src/server/dbdrv/mssql/mssql.cpp -text
 src/server/dbdrv/mssql/mssql.dsp -text
 src/server/dbdrv/mssql/mssql.dsw -text
+src/server/dbdrv/mssql/mssql.vcproj -text
 src/server/dbdrv/mssql/mssqldrv.h -text
 src/server/dbdrv/mysql/Makefile.am -text
 src/server/dbdrv/mysql/mysql.cpp -text
 src/server/dbdrv/mysql/mysql.dsp -text
 src/server/dbdrv/mysql/mysql.dsw -text
+src/server/dbdrv/mysql/mysql.vcproj -text
 src/server/dbdrv/mysql/mysqldrv.h -text
 src/server/dbdrv/odbc/Makefile.am -text
 src/server/dbdrv/odbc/odbc.cpp -text
 src/server/dbdrv/odbc/odbc.dsp -text
 src/server/dbdrv/odbc/odbc.dsw -text
+src/server/dbdrv/odbc/odbc.vcproj -text
 src/server/dbdrv/odbc/odbcdrv.h -text
 src/server/dbdrv/pgsql/Makefile.am -text
 src/server/dbdrv/pgsql/pgsql.cpp -text
 src/server/dbdrv/pgsql/pgsql.dsp -text
 src/server/dbdrv/pgsql/pgsql.dsw -text
+src/server/dbdrv/pgsql/pgsql.vcproj -text
 src/server/dbdrv/pgsql/pgsqldrv.h -text
 src/server/dbdrv/sqlite/Makefile.am -text
 src/server/dbdrv/sqlite/sqlite.cpp -text
 src/server/dbdrv/sqlite/sqlite.dsp -text
 src/server/dbdrv/sqlite/sqlite.dsw -text
+src/server/dbdrv/sqlite/sqlite.vcproj -text
 src/server/dbdrv/sqlite/sqlitedrv.h -text
 src/server/include/.cvsignore -text
 src/server/include/dbdrv.h -text
@@ -1025,6 +1050,7 @@ src/server/libnxsrv/libnxsrv.dsp -text
 src/server/libnxsrv/libnxsrv.dsw -text
 src/server/libnxsrv/libnxsrv.h -text
 src/server/libnxsrv/libnxsrv.rc -text
+src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/libnxsrv/log.cpp -text
 src/server/libnxsrv/main.cpp -text
 src/server/libnxsrv/messages.mc -text
@@ -1036,6 +1062,7 @@ src/server/netxmsd/netxmsd.cpp -text
 src/server/netxmsd/netxmsd.dsp -text
 src/server/netxmsd/netxmsd.dsw -text
 src/server/netxmsd/netxmsd.h -text
+src/server/netxmsd/netxmsd.vcproj -text
 src/server/netxmsd/winsrv.cpp -text
 src/server/smsdrv/Makefile.am -text
 src/server/smsdrv/generic/Makefile.am -text
@@ -1051,6 +1078,7 @@ src/server/tools/nxaction/Makefile.am -text
 src/server/tools/nxaction/nxaction.cpp -text
 src/server/tools/nxaction/nxaction.dsp -text
 src/server/tools/nxaction/nxaction.dsw -text
+src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/.cvsignore -text
 src/server/tools/nxadm/Makefile.am -text
 src/server/tools/nxadm/comm.cpp -text
@@ -1058,6 +1086,7 @@ src/server/tools/nxadm/nxadm.cpp -text
 src/server/tools/nxadm/nxadm.dsp -text
 src/server/tools/nxadm/nxadm.dsw -text
 src/server/tools/nxadm/nxadm.h -text
+src/server/tools/nxadm/nxadm.vcproj -text
 src/server/tools/nxconfig/ChildView.cpp -text
 src/server/tools/nxconfig/ChildView.h -text
 src/server/tools/nxconfig/ConfigFilePage.cpp -text
@@ -1097,6 +1126,7 @@ src/server/tools/nxconfig/nxconfig.dsp -text
 src/server/tools/nxconfig/nxconfig.dsw -text
 src/server/tools/nxconfig/nxconfig.h -text
 src/server/tools/nxconfig/nxconfig.rc -text
+src/server/tools/nxconfig/nxconfig.vcproj -text
 src/server/tools/nxconfig/res/Makefile.am -text
 src/server/tools/nxconfig/res/failed.ico -text
 src/server/tools/nxconfig/res/nxconfig.ico -text
@@ -1116,6 +1146,7 @@ src/server/tools/nxdbmgr/nxdbmgr.cpp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsw -text
 src/server/tools/nxdbmgr/nxdbmgr.h -text
+src/server/tools/nxdbmgr/nxdbmgr.vcproj -text
 src/server/tools/nxdbmgr/unlock.cpp -text
 src/server/tools/nxdbmgr/upgrade.cpp -text
 src/server/tools/nxget/.cvsignore -text
@@ -1123,25 +1154,30 @@ src/server/tools/nxget/Makefile.am -text
 src/server/tools/nxget/nxget.cpp -text
 src/server/tools/nxget/nxget.dsp -text
 src/server/tools/nxget/nxget.dsw -text
+src/server/tools/nxget/nxget.vcproj -text
 src/server/tools/nxsnmpget/.cvsignore -text
 src/server/tools/nxsnmpget/Makefile.am -text
 src/server/tools/nxsnmpget/nxsnmpget.cpp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsw -text
+src/server/tools/nxsnmpget/nxsnmpget.vcproj -text
 src/server/tools/nxsnmpset/Makefile.am -text
 src/server/tools/nxsnmpset/nxsnmpset.cpp -text
 src/server/tools/nxsnmpset/nxsnmpset.dsp -text
 src/server/tools/nxsnmpset/nxsnmpset.dsw -text
+src/server/tools/nxsnmpset/nxsnmpset.vcproj -text
 src/server/tools/nxsnmpwalk/.cvsignore -text
 src/server/tools/nxsnmpwalk/Makefile.am -text
 src/server/tools/nxsnmpwalk/nxsnmpwalk.cpp -text
 src/server/tools/nxsnmpwalk/nxsnmpwalk.dsp -text
 src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw -text
+src/server/tools/nxsnmpwalk/nxsnmpwalk.vcproj -text
 src/server/tools/nxupload/.cvsignore -text
 src/server/tools/nxupload/Makefile.am -text
 src/server/tools/nxupload/nxupload.cpp -text
 src/server/tools/nxupload/nxupload.dsp -text
 src/server/tools/nxupload/nxupload.dsw -text
+src/server/tools/nxupload/nxupload.vcproj -text
 tools/Makefile.am -text
 tools/create_ssa_list.sh -text
 tools/mc.pl -text

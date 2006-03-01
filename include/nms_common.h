@@ -42,6 +42,7 @@
 #ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
 #endif
+#define _CRT_SECURE_NO_DEPRECATE
 #endif
 
 #include <unicode.h>

@@ -26,6 +26,7 @@
 
 #ifdef _WIN32
 
+#define _CRT_SECURE_NO_DEPRECATE
 #define STDC_HEADERS
 #pragma warning(disable:4018)
 #include <malloc.h>
@@ -5354,8 +5355,8 @@ regexec (preg, string, nmatch, pmatch, eflags)
    from either regcomp or regexec.   We don't use PREG here.  */
 
 size_t
-regerror (errcode, preg, errbuf, errbuf_size)
-    int errcode;
+regerror (err_code, preg, errbuf, errbuf_size)
+    int err_code;
     const regex_t *preg;
     char *errbuf;
     size_t errbuf_size;
@@ -5363,15 +5364,15 @@ regerror (errcode, preg, errbuf, errbuf_size)
   const char *msg;
   size_t msg_size;
 
-  if (errcode < 0
-	 || errcode >= (sizeof (re_error_msgid) / sizeof (re_error_msgid[0])))
+  if (err_code < 0
+	 || err_code >= (sizeof (re_error_msgid) / sizeof (re_error_msgid[0])))
     /* Only error codes returned by the rest of the code should be passed 
 	  to this routine.  If we are given anything else, or if other regex
 	  code generates an invalid error code, then the program has a bug.
 	  Dump core so we can fix it.  */
     abort ();
 
-  msg = gettext (re_error_msgid[errcode]);
+  msg = gettext (re_error_msgid[err_code]);
 
   msg_size = strlen (msg) + 1; /* Includes the null.  */
   

@@ -68,7 +68,7 @@ static HANDLE LoadIconForPriority(int p)
 // Dialog procedure for popup window
 //
 
-static BOOL CALLBACK DlgFunc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK DlgFunc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static RECT dialogRect;
 	static RECT screenRect;

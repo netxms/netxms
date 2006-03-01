@@ -90,7 +90,7 @@ static LONG H_InterfaceListW2K(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
          // Get network connection name from adapter name, if possible
          if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
          {
-            WORD wGUID[256], wName[256];
+            WCHAR wGUID[256], wName[256];
 
             // Resolve GUID to network connection name
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
@@ -242,7 +242,7 @@ static DWORD AdapterNameToIndex(char *pszName)
          // Get network connection name from adapter name, if possible
          if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
          {
-            WORD wGUID[256], wName[256];
+            WCHAR wGUID[256], wName[256];
 
             // Resolve GUID to network connection name
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);

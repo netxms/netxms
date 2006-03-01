@@ -51,8 +51,8 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	//}}AFX_MSG
-   afx_msg int OnMouseHover(WPARAM wParam, LPARAM lParam);
-   afx_msg int OnMouseLeave(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnMouseHover(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnMouseLeave(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 };
