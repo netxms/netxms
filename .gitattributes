@@ -858,6 +858,7 @@ src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text
 src/libnxcl/libnxcl.vcp -text
+src/libnxcl/libnxcl.vcproj -text
 src/libnxcl/libnxcl.vcw -text
 src/libnxcl/lpp.cpp -text
 src/libnxcl/main.cpp -text
