@@ -44,6 +44,7 @@ LINUX AGENT:
 
 - Return correct interface type in Net.InterfaceList
 - Implement Net.IP.NextHop and Net.IP.RoutingTable
+- Check data format in /proc/stat for 2.4 (%llu?) [linux/fs/proc/proc_misc.c]
 
 
 FREEBSD AGENT:
