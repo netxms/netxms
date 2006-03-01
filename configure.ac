@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.141 2006-02-23 11:10:20 victor Exp $
+# $Id: configure.ac,v 1.142 2006-03-01 22:07:22 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -257,17 +257,18 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
-	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
+	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript nxhttpd"
 	SUBAGENT_DIRS="linux freebsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
    CONTRIB_MODULES="mibs"
 )
 
-AC_ARG_WITH(nxsm,
+AC_ARG_WITH(nxhttpd,
 [AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
 	MODULES="$MODULES libnxcl nxhttpd"
+	BUILD_WEB_CLIENT="yes"
 	BUILD_CLIENT="yes"
 	DYNAMIC_COMPONENTS="yes"
 ])
@@ -629,6 +630,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/nxhttpd/Makefile
 	src/nxhttpd/static/Makefile
+	src/nxhttpd/static/images/Makefile
 	tools/Makefile
 ])
 
@@ -678,6 +680,11 @@ if test "x${BUILD_CLIENT}" = "xyes"; then
 	echo "Build Clients       : YES"
 else
 	echo "Build Clients       : NO"
+fi
+if test "x${BUILD_WEB_CLIENT}" = "xyes"; then
+	echo "Build Web Interface : YES"
+else
+	echo "Build Web Interface : YES"
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent         : YES"
