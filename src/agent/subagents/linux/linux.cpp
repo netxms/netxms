@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.23 2006-03-01 22:13:09 alk Exp $ */
+/* $Id: linux.cpp,v 1.24 2006-03-02 21:08:20 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -106,14 +106,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
    { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
 			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
-   { "System.CPU.Usage",             H_CpuUsage,        NULL,
+   { "System.CPU.Usage",             H_CpuUsage,        (char *)0,
 			DCI_DT_FLOAT,	"" },
-/*
-   { "System.CPU.Usage5",            H_CpuUsage,        NULL,
+   { "System.CPU.Usage5",            H_CpuUsage,        (char *)5,
 			DCI_DT_FLOAT,	"" },
-   { "System.CPU.Usage15",           H_CpuUsage,        NULL,
+   { "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
 			DCI_DT_FLOAT,	"" },
-*/
    { "System.Hostname",              H_Hostname,        NULL,
 			DCI_DT_STRING,	"Host name" },
    { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
@@ -180,6 +178,9 @@ DECLARE_SUBAGENT_INIT(LINUX)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.23  2006/03/01 22:13:09  alk
+added System.CPU.Usage [broken]
+
 Revision 1.22  2005/09/15 21:47:02  victor
 Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
 

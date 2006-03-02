@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.7 2006-03-02 12:17:05 victor Exp $ */
+/* $Id: system.cpp,v 1.8 2006-03-02 21:08:21 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -273,17 +273,15 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 // CPU Usage
 //
 
-//
-// CPU Usage data
-//
-
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool m_stopCollectorThread = false;
 static uint64_t m_user = 0;
 static uint64_t m_system = 0;
 static uint64_t m_idle = 0;
-static float m_cpuUsage[60];
+// 60 sec * 15 min => 900 sec
+#define CPU_USAGE_SLOTS 900
+static float m_cpuUsage[CPU_USAGE_SLOTS];
 static int m_currentSlot = 0;
 
 static void CpuUsageCollector()
@@ -293,14 +291,16 @@ static void CpuUsageCollector()
 	if (hStat != NULL)
 	{
 		uint64_t user, nice, system, idle;
-		if (fscanf(hStat, "cpu %llu %llu %llu %llu", &user, &nice, &system, &idle) == 4)
+		if (fscanf(hStat,
+					"cpu %llu %llu %llu %llu",
+					&user, &nice, &system, &idle) == 4)
 		{
 			uint64_t total =
 				(user - m_user) +
 				(system - m_system) +
 				(idle - m_idle);
 
-			if (m_currentSlot == 60)
+			if (m_currentSlot == CPU_USAGE_SLOTS)
 			{
 				m_currentSlot = 0;
 			}
@@ -314,7 +314,7 @@ static void CpuUsageCollector()
 			{
 				if (m_currentSlot == 0)
 				{
-					m_cpuUsage[m_currentSlot++] = m_cpuUsage[59];
+					m_cpuUsage[m_currentSlot++] = m_cpuUsage[CPU_USAGE_SLOTS - 1];
 				}
 				else
 				{
@@ -353,24 +353,28 @@ void StartCpuUsageCollector(void)
 
 	m_cpuUsageMutex = MutexCreate();
 
-	for (i = 0; i < 60; i++)
+	for (i = 0; i < CPU_USAGE_SLOTS; i++)
 	{
 		m_cpuUsage[i] = 0;
 	}
 
+	// get initial count of user/system/idle time
 	m_currentSlot = 0;
 	CpuUsageCollector();
 
 	sleep(1);
 
+	// fill first slot with u/s/i delta
 	m_currentSlot = 0;
 	CpuUsageCollector();
 
-	for (i = 1; i < 60; i++)
+	// fill all slots with current cpu usage
+	for (i = 1; i < CPU_USAGE_SLOTS; i++)
 	{
 		m_cpuUsage[i] = m_cpuUsage[0];
 	}
 
+	// start collector
 	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
 }
 
@@ -388,15 +392,39 @@ void ShutdownCpuUsageCollector(void)
 LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 {
 	float usage = 0;
+	int i;
+	int count;
 
 	MutexLock(m_cpuUsageMutex, INFINITE);
-	for (int i = 0; i < 60; i++)
+
+	switch ((int)pArg)
 	{
-		usage += m_cpuUsage[i];
+		case 5: // last 5 min
+			count = 5 * 60;
+			break;
+		case 15: // last 15 min
+			count = 15 * 60;
+			break;
+		default: // should be 0, but jic
+			count = 60;
+			break;
 	}
 
+	for (i = 0; i < count; i++)
+	{
+		int position = m_currentSlot - i - 1;
 
-	ret_double(pValue, usage / 60);
+		if (position < 0)
+		{
+			position += CPU_USAGE_SLOTS;
+		}
+
+		usage += m_cpuUsage[position];
+	}
+
+	usage /= count;
+
+	ret_double(pValue, usage);
 
 	MutexUnlock(m_cpuUsageMutex);
 
@@ -408,6 +436,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/03/02 12:17:05  victor
+Removed various warnings related to 64bit platforms
+
 Revision 1.6  2006/03/01 23:38:57  alk
 times switched to cputime64_t -> u64 -> uint64_t (and %llu in sscanf)
 
