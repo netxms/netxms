@@ -199,7 +199,6 @@ netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
 /netxms.dsw -text
-/netxms.sln -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text
@@ -237,7 +236,6 @@ src/agent/core/nxagentd.dsp -text
 src/agent/core/nxagentd.dsw -text
 src/agent/core/nxagentd.h -text
 src/agent/core/nxagentd.rc -text
-src/agent/core/nxagentd.vcproj -text
 src/agent/core/resource.h -text
 src/agent/core/service.cpp -text
 src/agent/core/session.cpp -text
@@ -286,7 +284,6 @@ src/agent/subagents/ping/ping.def -text
 src/agent/subagents/ping/ping.dsp -text
 src/agent/subagents/ping/ping.dsw -text
 src/agent/subagents/ping/ping.h -text
-src/agent/subagents/ping/ping.vcproj -text
 src/agent/subagents/portCheck/Makefile.am -text
 src/agent/subagents/portCheck/custom.cpp -text
 src/agent/subagents/portCheck/http.cpp -text
@@ -297,7 +294,6 @@ src/agent/subagents/portCheck/net.h -text
 src/agent/subagents/portCheck/pop3.cpp -text
 src/agent/subagents/portCheck/portcheck.dsp -text
 src/agent/subagents/portCheck/portcheck.dsw -text
-src/agent/subagents/portCheck/portcheck.vcproj -text
 src/agent/subagents/portCheck/smtp.cpp -text
 src/agent/subagents/portCheck/ssh.cpp -text
 src/agent/subagents/python/main.cpp -text
@@ -306,7 +302,6 @@ src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
-src/agent/subagents/skeleton/skeleton.vcproj -text
 src/agent/subagents/sunos/Makefile.am -text
 src/agent/subagents/sunos/cpu.cpp -text
 src/agent/subagents/sunos/disk.cpp -text
@@ -327,14 +322,12 @@ src/agent/subagents/ups/ups.cpp -text
 src/agent/subagents/ups/ups.dsp -text
 src/agent/subagents/ups/ups.dsw -text
 src/agent/subagents/ups/ups.h -text
-src/agent/subagents/ups/ups.vcproj -text
 src/agent/subagents/ups/usb.cpp -text
 src/agent/subagents/win9x/Makefile.am -text
 src/agent/subagents/win9x/main.cpp -text
 src/agent/subagents/win9x/procinfo.cpp -text
 src/agent/subagents/win9x/win9x.dsp -text
 src/agent/subagents/win9x/win9x.dsw -text
-src/agent/subagents/win9x/win9x.vcproj -text
 src/agent/subagents/win9x/win9x_subagent.h -text
 src/agent/subagents/winnt/Makefile.am -text
 src/agent/subagents/winnt/main.cpp -text
@@ -342,7 +335,6 @@ src/agent/subagents/winnt/procinfo.cpp -text
 src/agent/subagents/winnt/system.cpp -text
 src/agent/subagents/winnt/winnt.dsp -text
 src/agent/subagents/winnt/winnt.dsw -text
-src/agent/subagents/winnt/winnt.vcproj -text
 src/agent/subagents/winnt/winnt_subagent.h -text
 src/agent/subagents/winperf/Makefile.am -text
 src/agent/subagents/winperf/collect.cpp -text
@@ -351,7 +343,6 @@ src/agent/subagents/winperf/winperf.cpp -text
 src/agent/subagents/winperf/winperf.dsp -text
 src/agent/subagents/winperf/winperf.dsw -text
 src/agent/subagents/winperf/winperf.h -text
-src/agent/subagents/winperf/winperf.vcproj -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text
 src/console/PocketPC/AlarmView.h -text
@@ -828,7 +819,6 @@ src/libnetxms/libnetxms.dsp -text
 src/libnetxms/libnetxms.dsw -text
 src/libnetxms/libnetxms.h -text
 src/libnetxms/libnetxms.vcp -text
-src/libnetxms/libnetxms.vcproj -text
 src/libnetxms/libnetxms.vcw -text
 src/libnetxms/main.cpp -text
 src/libnetxms/md5.cpp -text
@@ -895,7 +885,6 @@ src/libnxsnmp/ber.cpp -text
 src/libnxsnmp/libnxsnmp.dsp -text
 src/libnxsnmp/libnxsnmp.dsw -text
 src/libnxsnmp/libnxsnmp.h -text
-src/libnxsnmp/libnxsnmp.vcproj -text
 src/libnxsnmp/main.cpp -text
 src/libnxsnmp/mib.cpp -text
 src/libnxsnmp/oid.cpp -text
@@ -933,7 +922,6 @@ src/nxscript/nxscript.cpp -text
 src/nxscript/nxscript.dsp -text
 src/nxscript/nxscript.dsw -text
 src/nxscript/nxscript.h -text
-src/nxscript/nxscript.vcproj -text
 src/server/Makefile.am -text
 src/server/core/.cvsignore -text
 src/server/core/Makefile.am -text
