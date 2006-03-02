@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.2 2005-08-19 15:23:50 victor Exp $ */
+/* $Id: disk.cpp,v 1.3 2006-03-02 12:17:05 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -38,7 +38,7 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
-		switch((int)pArg)
+		switch((long)pArg)
 		{
 		case DISK_FREE:
 			ret_uint64(pValue, (QWORD)s.f_bfree * (QWORD)s.f_bsize);
@@ -74,6 +74,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/08/19 15:23:50  victor
+Added new parameters
+
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:

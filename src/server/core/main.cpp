@@ -445,7 +445,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
    for(i = 0; i < iNumThreads; i++)
-      ThreadCreate(EventProcessor, 0, (void *)(i + 1));
+      ThreadCreate(EventProcessor, 0, CAST_TO_POINTER((i + 1), void *));
 
    // Start SNMP trapper
    InitTraps();

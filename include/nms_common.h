@@ -261,18 +261,26 @@ typedef int SOCKET;
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
 typedef long LONG;
+typedef unsigned long DWORD;
+#define __64BIT__	0
 #else
 typedef int LONG;
-#endif
-#if (SIZEOF_LONG == 4)
-typedef unsigned long DWORD;
-#else
 typedef unsigned int DWORD;
+#define __64BIT__	1
 #endif
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
 typedef void * HMODULE;
+
+// Casting between pointer and 32-bit integer
+#if __64BIT__
+#define CAST_FROM_POINTER(p, t) ((t)((QWORD)p))
+#define CAST_TO_POINTER(v, t) ((t)((QWORD)v))
+#else
+#define CAST_FROM_POINTER(p, t) ((t)p)
+#define CAST_TO_POINTER(v, t) ((t)v)
+#endif
 
 #if HAVE_INT64_T
 typedef int64_t INT64;

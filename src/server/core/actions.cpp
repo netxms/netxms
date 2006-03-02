@@ -186,8 +186,8 @@ static void SaveActionToDB(NXC_ACTION *pAction)
 
 static int CompareId(const void *key, const void *elem)
 {
-   return (DWORD)key < ((NXC_ACTION *)elem)->dwId ? -1 : 
-            ((DWORD)key > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
+   return CAST_FROM_POINTER(key, DWORD) < ((NXC_ACTION *)elem)->dwId ? -1 : 
+            (CAST_FROM_POINTER(key, DWORD) > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
 }
 
 
@@ -233,7 +233,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
       if (!pConn->Connect(g_pServerKey))
       {
          delete pConn;
-         return NULL;
+         return FALSE;
       }
    }
 
@@ -290,7 +290,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
    BOOL bSuccess = FALSE;
 
    RWLockReadLock(m_rwlockActionListAccess, INFINITE);
-   pAction = (NXC_ACTION *)bsearch((void *)dwActionId, m_pActionList, 
+   pAction = (NXC_ACTION *)bsearch(CAST_TO_POINTER(dwActionId, void *), m_pActionList, 
                                    m_dwNumActions, sizeof(NXC_ACTION), CompareId);
    if (pAction != NULL)
    {

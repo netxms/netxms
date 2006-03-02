@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.10 2005-10-17 20:45:46 victor Exp $ */
+/* $Id: net.cpp,v 1.11 2006-03-02 12:17:05 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -23,7 +23,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 
-#include <linux/sysctl.h>
+//#include <linux/sysctl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>
@@ -37,7 +37,7 @@
 
 LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 {
-	int nVer = (int)pArg;
+	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
 	char *pFileName = NULL;
@@ -367,7 +367,7 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
    // Get interface information
    if (nRet == SYSINFO_RC_SUCCESS)
    {
-      switch((int)pArg)
+      switch((long)pArg)
       {
          case IF_INFO_ADMIN_STATUS:
             if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
@@ -492,7 +492,7 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
       if (nRet == SYSINFO_RC_SUCCESS)
       {
          StrStrip(ptr);
-         switch((int)pArg)
+         switch((long)pArg)
          {
             case IF_INFO_BYTES_IN:
                nRet = ValueFromLine(ptr, 0, pValue);
@@ -526,6 +526,9 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2005/10/17 20:45:46  victor
+Fixed incorrect usage of strncpy
+
 Revision 1.9  2005/09/08 16:26:31  alk
 Net.InterfaceList now use alternative way and works with virtual
 interfaces under 2.6

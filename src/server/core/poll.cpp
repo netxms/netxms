@@ -184,24 +184,24 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
    char szBuffer[MAX_OBJECT_NAME + 64];
 
    // Initialize state info
-   m_pPollerState[(int)arg].iType = 'S';
-   SetPollerState((int)arg, "init");
+   m_pPollerState[(long)arg].iType = 'S';
+   SetPollerState((long)arg, "init");
 
    // Main loop
    while(!ShutdownInProgress())
    {
-      SetPollerState((int)arg, "wait");
+      SetPollerState((long)arg, "wait");
       pNode = (Node *)g_statusPollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
-      SetPollerState((int)arg, szBuffer);
-      pNode->StatusPoll(NULL, 0, (int)arg);
+      SetPollerState((long)arg, szBuffer);
+      pNode->StatusPoll(NULL, 0, (long)arg);
       pNode->DecRefCount();
    }
-   SetPollerState((int)arg, "finished");
+   SetPollerState((long)arg, "finished");
    return THREAD_OK;
 }
 
@@ -216,8 +216,8 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
    char szBuffer[MAX_OBJECT_NAME + 64];
 
    // Initialize state info
-   m_pPollerState[(int)arg].iType = 'C';
-   SetPollerState((int)arg, "init");
+   m_pPollerState[(long)arg].iType = 'C';
+   SetPollerState((long)arg, "init");
 
    // Wait one minute to give status pollers chance to run first
    ThreadSleep(60);
@@ -225,18 +225,18 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
    // Main loop
    while(!ShutdownInProgress())
    {
-      SetPollerState((int)arg, "wait");
+      SetPollerState((long)arg, "wait");
       pNode = (Node *)g_configPollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
-      SetPollerState((int)arg, szBuffer);
-      pNode->ConfigurationPoll(NULL, 0, (int)arg);
+      SetPollerState((long)arg, szBuffer);
+      pNode->ConfigurationPoll(NULL, 0, (long)arg);
       pNode->DecRefCount();
    }
-   SetPollerState((int)arg, "finished");
+   SetPollerState((long)arg, "finished");
    return THREAD_OK;
 }
 
@@ -251,24 +251,24 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
    char szBuffer[MAX_OBJECT_NAME + 64];
 
    // Initialize state info
-   m_pPollerState[(int)arg].iType = 'R';
-   SetPollerState((int)arg, "init");
+   m_pPollerState[(long)arg].iType = 'R';
+   SetPollerState((long)arg, "init");
 
    // Main loop
    while(!ShutdownInProgress())
    {
-      SetPollerState((int)arg, "wait");
+      SetPollerState((long)arg, "wait");
       pNode = (Node *)g_routePollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
-      SetPollerState((int)arg, szBuffer);
+      SetPollerState((long)arg, szBuffer);
       pNode->UpdateRoutingTable();
       pNode->DecRefCount();
    }
-   SetPollerState((int)arg, "finished");
+   SetPollerState((long)arg, "finished");
    return THREAD_OK;
 }
 
@@ -284,20 +284,20 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    ARP_CACHE *pArpCache;
 
    // Initialize state info
-   m_pPollerState[(int)arg].iType = 'D';
-   SetPollerState((int)arg, "init");
+   m_pPollerState[(long)arg].iType = 'D';
+   SetPollerState((long)arg, "init");
 
    // Main loop
    while(!ShutdownInProgress())
    {
-      SetPollerState((int)arg, "wait");
+      SetPollerState((long)arg, "wait");
       pNode = (Node *)g_discoveryPollQueue.GetOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
-      SetPollerState((int)arg, szBuffer);
+      SetPollerState((long)arg, szBuffer);
 
       DbgPrintf(AF_DEBUG_DISCOVERY, _T("Starting discovery poll for node %s (%s)"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
@@ -336,7 +336,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    }
    g_nodePollerQueue.Clear();
    g_nodePollerQueue.Put(INVALID_POINTER_VALUE);
-   SetPollerState((int)arg, "finished");
+   SetPollerState((long)arg, "finished");
    return THREAD_OK;
 }
 
@@ -369,19 +369,19 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
 
    // Start status pollers
    for(i = 0, nIndex = 0; i < iNumStatusPollers; i++, nIndex++)
-      ThreadCreate(StatusPoller, 0, (void *)nIndex);
+      ThreadCreate(StatusPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start configuration pollers
    for(i = 0; i < iNumConfigPollers; i++, nIndex++)
-      ThreadCreate(ConfigurationPoller, 0, (void *)nIndex);
+      ThreadCreate(ConfigurationPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start routing table pollers
    for(i = 0; i < iNumRoutePollers; i++, nIndex++)
-      ThreadCreate(RoutePoller, 0, (void *)nIndex);
+      ThreadCreate(RoutePoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start discovery pollers
    for(i = 0; i < iNumDiscoveryPollers; i++, nIndex++)
-      ThreadCreate(DiscoveryPoller, 0, (void *)nIndex);
+      ThreadCreate(DiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
    iCounter = 0;

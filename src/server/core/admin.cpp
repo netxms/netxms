@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.15 2006-02-21 13:54:10 victor Exp $ */
+/* $Id: admin.cpp,v 1.16 2006-03-02 12:17:06 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -39,7 +39,7 @@
 
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
-   SOCKET sock = (SOCKET)pArg;
+   SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
    int iError, nExitCode;
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
@@ -161,7 +161,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      ThreadCreate(ProcessingThread, 0, (void *)sockClient);
+      ThreadCreate(ProcessingThread, 0, CAST_TO_POINTER(sockClient, void *));
    }
 
    closesocket(sock);
@@ -172,6 +172,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/02/21 13:54:10  victor
+Issue 72 fixed ("exit" command was not working in nxadm -i)
+
 Revision 1.14  2005/12/05 20:28:47  victor
 Infinite timeout in RecvCSCPMessage presented by INFINITE
 

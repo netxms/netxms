@@ -403,7 +403,7 @@ static void CountNewlines(char *pszStr, int len)
    INT64 nInt64 = strtoull(mptext, NULL, 0);
    LONG nInt32 = strtol(mptext, NULL, 0);
 
-   if (nInt32 == LONG_MAX)
+   if ((INT64)nInt32 != nInt64)
    {
       mplval.number.nType = 1;
       mplval.number.value.nInt64 = nInt64;

@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.6 2006-03-01 23:38:57 alk Exp $ */
+/* $Id: system.cpp,v 1.7 2006-03-02 12:17:05 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -197,7 +197,7 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 		fclose(hFile);
 
 		nRet = SYSINFO_RC_SUCCESS;
-		switch((int)pArg)
+		switch((long)pArg)
 		{
 		case PHYSICAL_FREE: // ph-free
 			ret_uint64(pValue, ((int64_t)nMemFree) * 1024);
@@ -408,6 +408,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/03/01 23:38:57  alk
+times switched to cputime64_t -> u64 -> uint64_t (and %llu in sscanf)
+
 Revision 1.5  2006/03/01 23:26:21  alk
 System.CPU.Usage fixed
 
