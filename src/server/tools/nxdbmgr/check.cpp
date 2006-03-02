@@ -89,7 +89,7 @@ static void EndStage(void)
    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
    _tprintf("\n");
 #else
-   _tprintf(_T("   [%s]\n"), pszStatus[nCode]);
+   _tprintf(_T("  [%s]\n"), pszStatus[nCode]);
 #endif
 }
 
