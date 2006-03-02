@@ -34,15 +34,15 @@
 DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 {
    char *pszCmdLine, *sptr;
-   DWORD i, iSize, dwRetCode = ERR_SUCCESS;
+   DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
 
    DebugPrintf("EXEC: Expanding command \"%s\"", pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (pArgs != NULL)
    {
-      iSize = strlen(pszCommand) + 1;
-      pszCmdLine = (char *)malloc(iSize);
+      dwSize = (DWORD)strlen(pszCommand) + 1;
+      pszCmdLine = (char *)malloc(dwSize);
       for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
          if (*sptr == '$')
          {
@@ -58,9 +58,9 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
                   int iArgLength;
 
                   // Extend resulting line
-                  iArgLength = strlen(pArgs->ppStringList[dwArg]);
-                  iSize += iArgLength;
-                  pszCmdLine = (char *)realloc(pszCmdLine, iSize);
+                  iArgLength = (int)strlen(pArgs->ppStringList[dwArg]);
+                  dwSize += iArgLength;
+                  pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
                   strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
                   i += iArgLength;
                }
@@ -208,7 +208,7 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
    int i, iSize, iStatus;
 
    // Substitute $1 .. $9 with actual arguments
-   iSize = strlen(pszArg) + 1;
+   iSize = (int)strlen(pszArg) + 1;
    pszCmdLine = (char *)malloc(iSize);
    for(sptr = pszArg, i = 0; *sptr != 0; sptr++)
       if (*sptr == '$')
@@ -223,7 +223,7 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
                int iArgLength;
 
                // Extend resulting line
-               iArgLength = strlen(szBuffer);
+               iArgLength = (int)strlen(szBuffer);
                iSize += iArgLength;
                pszCmdLine = (char *)realloc(pszCmdLine, iSize);
                strcpy(&pszCmdLine[i], szBuffer);

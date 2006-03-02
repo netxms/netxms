@@ -187,7 +187,7 @@ static void WriteStringToFile(FILE *pFile, TCHAR *pszStr)
    char *pszBuffer;
 #endif
 
-   wLen = _tcslen(pszStr);
+   wLen = (WORD)_tcslen(pszStr);
    wTemp = htons(wLen);
    fwrite(&wTemp, 2, 1, pFile);
 #ifdef UNICODE
@@ -291,7 +291,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot
       memcpy(header.chMagic, MIB_FILE_MAGIC, 6);
       header.bVersion = MIB_FILE_VERSION;
       header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
-      header.dwTimeStamp = htonl(time(NULL));
+      header.dwTimeStamp = htonl((DWORD)time(NULL));
       memset(header.bReserved, 0, sizeof(header.bReserved));
       fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
       pRoot->WriteToFile(pFile, dwFlags);

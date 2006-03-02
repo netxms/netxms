@@ -367,7 +367,7 @@ void SNMP_Variable::SetValueFromString(DWORD dwType, TCHAR *pszValue)
          }
          break;
       case ASN_OCTET_STRING:
-         m_dwValueLength = _tcslen(pszValue);
+         m_dwValueLength = (DWORD)_tcslen(pszValue);
 #ifdef UNICODE
          m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
          WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,

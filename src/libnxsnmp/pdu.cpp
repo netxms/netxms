@@ -572,8 +572,9 @@ DWORD SNMP_PDU::Encode(BYTE **ppBuffer)
       dwPacketSize += dwBytes;
       pbCurrPos += dwBytes;
 
-      dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)m_pszCommunity, strlen(m_pszCommunity),
-                           pbCurrPos, dwBufferSize - dwPacketSize);
+      dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)m_pszCommunity,
+                           (DWORD)strlen(m_pszCommunity), pbCurrPos,
+                           dwBufferSize - dwPacketSize);
       dwPacketSize += dwBytes;
       pbCurrPos += dwBytes;
 

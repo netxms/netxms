@@ -150,7 +150,7 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, BYT
 
 BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
 {
-	int iSize;
+	size_t iSize;
 	md5_state_t state;
 	char szBuffer[FILE_BLOCK_SIZE];
 	BOOL bSuccess = FALSE;
@@ -165,7 +165,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
          iSize = fread(szBuffer, 1, FILE_BLOCK_SIZE, fileHandle);
          if (iSize <= 0)
             break;
-      	I_md5_append(&state, (const md5_byte_t *)szBuffer, iSize);
+      	I_md5_append(&state, (const md5_byte_t *)szBuffer, (int)iSize);
       }
       fclose(fileHandle);
       if (iSize == 0)
@@ -183,7 +183,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
 
 BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
 {
-   int iSize;
+   size_t iSize;
    FILE *fileHandle;
    SHA1_CTX context;
    char szBuffer[FILE_BLOCK_SIZE];
@@ -198,7 +198,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
          iSize = fread(szBuffer, 1, FILE_BLOCK_SIZE, fileHandle);
          if (iSize <= 0)
             break;
-         I_SHA1Update(&context, (BYTE *)szBuffer, iSize);
+         I_SHA1Update(&context, (BYTE *)szBuffer, (uint32)iSize);
       }
       fclose(fileHandle);
       if (iSize == 0)
@@ -216,7 +216,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
 
 BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(TCHAR *pszFileName, DWORD *pResult)
 {
-	int iSize;
+	size_t iSize;
 	unsigned char szBuffer[FILE_BLOCK_SIZE];
 	BOOL bSuccess = FALSE;
 	FILE *fileHandle;

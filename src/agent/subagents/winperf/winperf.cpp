@@ -488,8 +488,8 @@ extern "C" BOOL __declspec(dllexport) __cdecl
             StrStrip(pItem);
             if (!AddCounterFromConfig(pItem))
                NxWriteAgentLog(EVENTLOG_WARNING_TYPE, 
-                               _T("Unable to add counter from configuration file. "
-                                  "Original configuration record: %s",), pItem);
+                               _T("Unable to add counter from configuration file. ")
+                               _T("Original configuration record: %s"), pItem);
          }
          free(m_pszCounterList);
       }

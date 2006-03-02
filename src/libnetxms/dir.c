@@ -55,7 +55,8 @@ DIR *opendir(const char *filename)
     /*
      * check to see if filename is a directory 
      */
-    if ((stat(filename, &sbuf) < 0) || (sbuf.st_mode & S_IFDIR == 0)) {
+    if ((stat(filename, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
+    {
         return NULL;
     }
 
@@ -88,7 +89,7 @@ DIR *opendir(const char *filename)
      * now allocate the first part of the string table for
      * * the filenames that we find.
      */
-    idx = strlen(FindData.cFileName) + 1;
+    idx = (int)strlen(FindData.cFileName) + 1;
     p->start = (char *) malloc(idx);
     /*
      * New(1304, p->start, idx, char);
@@ -110,8 +111,9 @@ DIR *opendir(const char *filename)
      * * the variable idx should point one past the null terminator
      * * of the previous string found.
      */
-    while (FindNextFile(fh, &FindData)) {
-        len = strlen(FindData.cFileName);
+    while (FindNextFile(fh, &FindData))
+    {
+        len = (int)strlen(FindData.cFileName);
         /*
          * bump the string table size by enough for the
          * * new name and it's null terminator
@@ -148,11 +150,12 @@ struct dirent *readdir(DIR * dirp)
     int             len;
     static int      dummy = 0;
 
-    if (dirp->curr) {
+    if (dirp->curr)
+    {
         /*
          * first set up the structure to return 
          */
-        len = strlen(dirp->curr);
+        len = (int)strlen(dirp->curr);
         strcpy(dirp->dirstr.d_name, dirp->curr);
         dirp->dirstr.d_namlen = len;
 
