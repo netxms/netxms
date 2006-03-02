@@ -262,11 +262,13 @@ typedef int BOOL;
 #if (SIZEOF_LONG == 4)
 typedef long LONG;
 typedef unsigned long DWORD;
-#define __64BIT__	0
+# undef __64BIT__
 #else
 typedef int LONG;
 typedef unsigned int DWORD;
-#define __64BIT__	1
+# ifndef __64BIT__
+#  define __64BIT__
+# endif
 #endif
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
