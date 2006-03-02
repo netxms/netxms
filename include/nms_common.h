@@ -262,13 +262,13 @@ typedef int BOOL;
 #if (SIZEOF_LONG == 4)
 typedef long LONG;
 typedef unsigned long DWORD;
-# undef __64BIT__
+#undef __64BIT__
 #else
 typedef int LONG;
 typedef unsigned int DWORD;
-# ifndef __64BIT__
-#  define __64BIT__
-# endif
+#ifndef __64BIT__
+#define __64BIT__
+#endif
 #endif
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
@@ -276,7 +276,7 @@ typedef void * HANDLE;
 typedef void * HMODULE;
 
 // Casting between pointer and 32-bit integer
-#if __64BIT__
+#ifdef __64BIT__
 #define CAST_FROM_POINTER(p, t) ((t)((QWORD)p))
 #define CAST_TO_POINTER(v, t) ((t)((QWORD)v))
 #else
