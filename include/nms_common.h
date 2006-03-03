@@ -116,6 +116,11 @@ typedef int socklen_t;
 
 #define INT64_FMT    _T("%I64d")
 #define UINT64_FMT   _T("%I64u")
+#ifdef __64BIT__
+#define TIME_T_FMT   _T("%I64u")
+#else
+#define TIME_T_FMT   _T("%u")
+#endif
 
 // Socket compatibility
 #define SHUT_RD      0
@@ -184,6 +189,7 @@ typedef X_UINT64_X QWORD;
 
 #define INT64_FMT    _T("%lld")
 #define UINT64_FMT   _T("%llu")
+#define TIME_T_FMT   _T("%u")
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
@@ -291,6 +297,11 @@ typedef u_int64_t QWORD;
 
 #define INT64_FMT    _T("%lld")
 #define UINT64_FMT   _T("%llu")
+#ifdef __64BIT__
+#define TIME_T_FMT   _T("%llu")
+#else
+#define TIME_T_FMT   _T("%u")
+#endif
 
 #define TRUE   1
 #define FALSE  0

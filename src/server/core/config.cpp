@@ -139,7 +139,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(char *pszVar, int *pnArray, int nSize
    if (ConfigReadStr(pszVar, szBuffer, 256, ""))
    {
       StrToBin(szBuffer, (BYTE *)pbBytes, 128);
-      nLen = strlen(szBuffer) / 2;
+      nLen = (int)strlen(szBuffer) / 2;
       for(i = 0; (i < nSize) && (i < nLen); i++)
          pnArray[i] = pbBytes[i];
       for(; i < nSize; i++)

@@ -49,6 +49,10 @@ extern char *mptext;
 extern char mptext[];
 #endif
 
+#ifdef __64BIT__
+#define YYSIZE_T  INT64
+#endif
+
 extern FILE *mpin, *mpout;
 extern int g_nCurrLine;
 

@@ -55,7 +55,7 @@ static Queue *m_pSyslogQueue = NULL;
 // Parse timestamp field
 //
 
-static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, DWORD *pdwTime)
+static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptmTime)
 {
    static char psMonth[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
                                   "May ", "Jun ", "Jul ", "Aug ",
@@ -120,8 +120,8 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, DWORD *pdwT
    pCurr++;
 
    // Convert to system time
-   *pdwTime = mktime(&timestamp);
-   if (*pdwTime == 0xFFFFFFFF)
+   *ptmTime = mktime(&timestamp);
+   if (*ptmTime == ((time_t)-1))
       return FALSE;
 
    // Adjust current position
@@ -172,7 +172,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
    }
 
    // Parse HEADER part
-   if (ParseTimeStamp(&pCurr, nMsgLen, &nPos, &pRec->dwTimeStamp))
+   if (ParseTimeStamp(&pCurr, nMsgLen, &nPos, &pRec->tmTimeStamp))
    {
       // Hostname
       for(i = 0; isalnum(*pCurr) && (i < MAX_SYSLOG_HOSTNAME_LEN) && (nPos < nMsgLen); i++, nPos++, pCurr++)
@@ -191,7 +191,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_LOG_RECORD *pRec)
    }
    else
    {
-      pRec->dwTimeStamp = time(NULL);
+      pRec->tmTimeStamp = time(NULL);
    }
 
    // Parse MSG part
@@ -279,8 +279,8 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       _sntprintf(szQuery, 4096, 
                  _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,")
                  _T("source_object_id,hostname,msg_tag,msg_text) VALUES ")
-                 _T("(" UINT64_FMT ",%d,%d,%d,%d,'%s','%s','%s')"),
-                 record.qwMsgId, record.dwTimeStamp, record.nFacility,
+                 _T("(" UINT64_FMT "," TIME_T_FMT ",%d,%d,%d,'%s','%s','%s')"),
+                 record.qwMsgId, record.tmTimeStamp, record.nFacility,
                  record.nSeverity, record.dwSourceObject,
                  record.szHostName, record.szTag, pszEscMsg);
       free(pszEscMsg);
@@ -398,7 +398,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
       FD_SET(hSocket, &rdfs);
       tv.tv_sec = 1;
       tv.tv_usec = 0;
-      nRet = select(hSocket + 1, &rdfs, NULL, NULL, &tv);
+      nRet = select((int)hSocket + 1, &rdfs, NULL, NULL, &tv);
       if (nRet > 0)
       {
          nAddrLen = sizeof(struct sockaddr_in);
@@ -441,7 +441,7 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec)
 
    pMsg->SetVariable(VID_NUM_RECORDS, (DWORD)1);
    pMsg->SetVariable(dwId++, pRec->qwMsgId);
-   pMsg->SetVariable(dwId++, pRec->dwTimeStamp);
+   pMsg->SetVariable(dwId++, (DWORD)pRec->tmTimeStamp);
    pMsg->SetVariable(dwId++, (WORD)pRec->nFacility);
    pMsg->SetVariable(dwId++, (WORD)pRec->nSeverity);
    pMsg->SetVariable(dwId++, pRec->dwSourceObject);

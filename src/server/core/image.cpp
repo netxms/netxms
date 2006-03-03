@@ -39,7 +39,7 @@ void UpdateImageHashes(void)
    strcpy(szPath, g_szDataDir);
    strcat(szPath, DDIR_IMAGES);
    strcat(szPath, FS_PATH_SEPARATOR);
-   iPathLen = strlen(szPath);
+   iPathLen = (int)_tcslen(szPath);
 
    hResult = DBSelect(g_hCoreDB, "SELECT image_id,file_name_png,file_name_ico FROM images");
    if (hResult != NULL)

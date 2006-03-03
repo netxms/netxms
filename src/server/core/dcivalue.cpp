@@ -35,7 +35,7 @@ ItemValue::ItemValue()
    m_dwInt32 = 0;
    m_qwInt64 = 0;
    m_dFloat = 0;
-   m_dwTimeStamp = time(NULL);
+   m_dwTimeStamp = (DWORD)time(NULL);
 }
 
 
@@ -53,7 +53,7 @@ ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
    m_dFloat = strtod(m_szString, NULL);
 
    if (dwTimeStamp == 0)
-      m_dwTimeStamp = time(NULL);
+      m_dwTimeStamp = (DWORD)time(NULL);
    else
       m_dwTimeStamp = dwTimeStamp;
 }

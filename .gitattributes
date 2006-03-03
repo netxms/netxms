@@ -896,7 +896,6 @@ src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
 src/nxevent/nxevent.h -text
-src/nxevent/nxevent.vcproj -text
 src/nxmibc/.cvsignore -text
 src/nxmibc/Makefile.am -text
 src/nxmibc/array.cpp -text
@@ -906,7 +905,6 @@ src/nxmibc/nxmibc.cpp -text
 src/nxmibc/nxmibc.dsp -text
 src/nxmibc/nxmibc.dsw -text
 src/nxmibc/nxmibc.h -text
-src/nxmibc/nxmibc.vcproj -text
 src/nxmibc/parser.l -text
 src/nxmibc/parser.y -text
 src/nxreport/Makefile.am -text
@@ -961,7 +959,6 @@ src/server/core/np.cpp -text
 src/server/core/nxcore.dsp -text
 src/server/core/nxcore.dsw -text
 src/server/core/nxcore.h -text
-src/server/core/nxcore.vcproj -text
 src/server/core/objects.cpp -text
 src/server/core/objtools.cpp -text
 src/server/core/package.cpp -text
@@ -988,13 +985,11 @@ src/server/dbdrv/mssql/Makefile.am -text
 src/server/dbdrv/mssql/mssql.cpp -text
 src/server/dbdrv/mssql/mssql.dsp -text
 src/server/dbdrv/mssql/mssql.dsw -text
-src/server/dbdrv/mssql/mssql.vcproj -text
 src/server/dbdrv/mssql/mssqldrv.h -text
 src/server/dbdrv/mysql/Makefile.am -text
 src/server/dbdrv/mysql/mysql.cpp -text
 src/server/dbdrv/mysql/mysql.dsp -text
 src/server/dbdrv/mysql/mysql.dsw -text
-src/server/dbdrv/mysql/mysql.vcproj -text
 src/server/dbdrv/mysql/mysqldrv.h -text
 src/server/dbdrv/odbc/Makefile.am -text
 src/server/dbdrv/odbc/odbc.cpp -text
@@ -1005,13 +1000,11 @@ src/server/dbdrv/pgsql/Makefile.am -text
 src/server/dbdrv/pgsql/pgsql.cpp -text
 src/server/dbdrv/pgsql/pgsql.dsp -text
 src/server/dbdrv/pgsql/pgsql.dsw -text
-src/server/dbdrv/pgsql/pgsql.vcproj -text
 src/server/dbdrv/pgsql/pgsqldrv.h -text
 src/server/dbdrv/sqlite/Makefile.am -text
 src/server/dbdrv/sqlite/sqlite.cpp -text
 src/server/dbdrv/sqlite/sqlite.dsp -text
 src/server/dbdrv/sqlite/sqlite.dsw -text
-src/server/dbdrv/sqlite/sqlite.vcproj -text
 src/server/dbdrv/sqlite/sqlitedrv.h -text
 src/server/include/.cvsignore -text
 src/server/include/dbdrv.h -text
@@ -1038,7 +1031,6 @@ src/server/libnxsrv/libnxsrv.dsp -text
 src/server/libnxsrv/libnxsrv.dsw -text
 src/server/libnxsrv/libnxsrv.h -text
 src/server/libnxsrv/libnxsrv.rc -text
-src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/libnxsrv/log.cpp -text
 src/server/libnxsrv/main.cpp -text
 src/server/libnxsrv/messages.mc -text
@@ -1050,14 +1042,12 @@ src/server/netxmsd/netxmsd.cpp -text
 src/server/netxmsd/netxmsd.dsp -text
 src/server/netxmsd/netxmsd.dsw -text
 src/server/netxmsd/netxmsd.h -text
-src/server/netxmsd/netxmsd.vcproj -text
 src/server/netxmsd/winsrv.cpp -text
 src/server/smsdrv/Makefile.am -text
 src/server/smsdrv/generic/Makefile.am -text
 src/server/smsdrv/generic/generic.dsp -text
 src/server/smsdrv/generic/generic.dsw -text
 src/server/smsdrv/generic/generic.sln -text
-src/server/smsdrv/generic/generic.vcproj -text
 src/server/smsdrv/generic/main.cpp -text
 src/server/smsdrv/generic/main.h -text
 src/server/tools/Makefile.am -text

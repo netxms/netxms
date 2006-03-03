@@ -128,7 +128,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    while(!ShutdownInProgress())
    {
       currTime = time(NULL);
-      if (SleepAndCheckForShutdown(dwInterval - (currTime % dwInterval)))
+      if (SleepAndCheckForShutdown(dwInterval - (DWORD)(currTime % dwInterval)))
          break;      // Shutdown has arrived
 
       // Remove outdated event log records

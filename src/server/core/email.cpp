@@ -115,7 +115,7 @@ static BOOL ReadLineFromSocket(SOCKET hSocket, char *pszBuffer, int *pnBufPos, c
    } while(ptr == NULL);
    *ptr = 0;
    strcpy(pszLine, pszBuffer);
-   *pnBufPos -= (ptr - pszBuffer + 1);
+   *pnBufPos -= (int)(ptr - pszBuffer + 1);
    memmove(pszBuffer, ptr + 1, *pnBufPos);
    return TRUE;
 }

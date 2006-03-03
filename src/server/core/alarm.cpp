@@ -133,7 +133,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    alarm.qwSourceEventId = pEvent->Id();
    alarm.dwSourceEventCode = pEvent->Code();
    alarm.dwSourceObject = pEvent->SourceId();
-   alarm.dwTimeStamp = time(NULL);
+   alarm.dwTimeStamp = (DWORD)time(NULL);
    alarm.dwAckByUser = 0;
    alarm.wIsAck = bIsAck;
    alarm.wSeverity = iSeverity;

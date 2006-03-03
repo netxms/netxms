@@ -63,7 +63,7 @@
 typedef struct
 {
    QWORD qwMsgId;       // NetXMS internal message ID
-   DWORD dwTimeStamp;
+   time_t tmTimeStamp;
    int nFacility;
    int nSeverity;
    DWORD dwSourceObject;

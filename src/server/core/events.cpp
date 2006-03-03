@@ -83,7 +83,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
    {
       DWORD i;
 
-      m_dwNumParameters = strlen(szFormat);
+      m_dwNumParameters = (DWORD)_tcslen(szFormat);
       m_ppszParameters = (char **)malloc(sizeof(char *) * m_dwNumParameters);
 
       for(i = 0; i < m_dwNumParameters; i++)
@@ -167,7 +167,7 @@ void Event::ExpandMessageText(void)
 // Substitute % macros in given text with actual values
 //
 
-char *Event::ExpandText(char *szTemplate)
+char *Event::ExpandText(char *pszTemplate)
 {
    char *pCurr;
    DWORD dwPos, dwSize, dwParam;
@@ -180,9 +180,9 @@ char *Event::ExpandText(char *szTemplate)
    {
       pObject = g_pEntireNet;
    }
-   dwSize = strlen(szTemplate) + 1;
+   dwSize = (DWORD)_tcslen(pszTemplate) + 1;
    pText = (char *)malloc(dwSize);
-   for(pCurr = szTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
       switch(*pCurr)
       {
@@ -199,67 +199,67 @@ char *Event::ExpandText(char *szTemplate)
                   pText[dwPos++] = '%';
                   break;
                case 'n':   // Name of event source
-                  dwSize += strlen(pObject->Name());
+                  dwSize += (DWORD)_tcslen(pObject->Name());
                   pText = (char *)realloc(pText, dwSize);
                   strcpy(&pText[dwPos], pObject->Name());
-                  dwPos += strlen(pObject->Name());
+                  dwPos += (DWORD)_tcslen(pObject->Name());
                   break;
                case 'a':   // IP address of event source
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
                   IpToStr(pObject->IpAddr(), &pText[dwPos]);
-                  dwPos = strlen(pText);
+                  dwPos += (DWORD)_tcslen(pText);
                   break;
                case 'i':   // Source object identifier
                   dwSize += 10;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "0x%08X", m_dwSource);
-                  dwPos = strlen(pText);
+                  dwPos += (DWORD)_tcslen(pText);
                   break;
                case 't':   // Event's timestamp
                   dwSize += 32;
                   pText = (char *)realloc(pText, dwSize);
                   lt = localtime(&m_tTimeStamp);
                   strftime(&pText[dwPos], 32, "%d-%b-%Y %H:%M:%S", lt);
-                  dwPos = strlen(pText);
+                  dwPos += (DWORD)_tcslen(pText);
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%lu", m_tTimeStamp);
-                  dwPos = strlen(pText);
+                  dwPos += (DWORD)_tcslen(pText);
                   break;
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%u", m_dwCode);
-                  dwPos = strlen(pText);
+                  dwPos += (DWORD)_tcslen(pText);
                   break;
                case 's':   // Severity code
                   dwSize += 3;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%d", (int)m_dwSeverity);
-                  dwPos = strlen(pText);
+                  dwPos += (DWORD)_tcslen(pText);
                   break;
                case 'S':   // Severity text
-                  dwSize += strlen(g_szStatusTextSmall[m_dwSeverity]);
+                  dwSize += (DWORD)_tcslen(g_szStatusTextSmall[m_dwSeverity]);
                   pText = (char *)realloc(pText, dwSize);
                   strcpy(&pText[dwPos], g_szStatusTextSmall[m_dwSeverity]);
-                  dwPos += strlen(g_szStatusTextSmall[m_dwSeverity]);
+                  dwPos += (DWORD)_tcslen(g_szStatusTextSmall[m_dwSeverity]);
                   break;
                case 'v':   // NetXMS server version
-                  dwSize += strlen(NETXMS_VERSION_STRING);
+                  dwSize += (DWORD)_tcslen(NETXMS_VERSION_STRING);
                   pText = (char *)realloc(pText, dwSize);
                   strcpy(&pText[dwPos], NETXMS_VERSION_STRING);
-                  dwPos += strlen(NETXMS_VERSION_STRING);
+                  dwPos += (DWORD)_tcslen(NETXMS_VERSION_STRING);
                   break;
                case 'm':
                   if (m_pszMessageText != NULL)
                   {
-                     dwSize += strlen(m_pszMessageText);
+                     dwSize += (DWORD)_tcslen(m_pszMessageText);
                      pText = (char *)realloc(pText, dwSize);
                      strcpy(&pText[dwPos], m_pszMessageText);
-                     dwPos += strlen(m_pszMessageText);
+                     dwPos += (DWORD)_tcslen(m_pszMessageText);
                   }
                   break;
                case '0':
@@ -287,10 +287,10 @@ char *Event::ExpandText(char *szTemplate)
                   if ((dwParam > 0) && (dwParam <= m_dwNumParameters))
                   {
                      dwParam--;
-                     dwSize += strlen(m_ppszParameters[dwParam]);
+                     dwSize += (DWORD)_tcslen(m_ppszParameters[dwParam]);
                      pText = (char *)realloc(pText, dwSize);
                      strcpy(&pText[dwPos], m_ppszParameters[dwParam]);
-                     dwPos += strlen(m_ppszParameters[dwParam]);
+                     dwPos += (DWORD)_tcslen(m_ppszParameters[dwParam]);
                   }
                   break;
                default:    // All other characters are invalid, ignore
@@ -335,7 +335,7 @@ char *Event::ExpandText(char *szTemplate)
 void Event::PrepareMessage(NXC_EVENT *pEventData)
 {
    pEventData->qwEventId = htonq(m_qwId);
-   pEventData->dwTimeStamp = htonl(m_tTimeStamp);
+   pEventData->dwTimeStamp = htonl((DWORD)m_tTimeStamp);
    pEventData->dwEventCode = htonl(m_dwCode);
    pEventData->dwSeverity = htonl(m_dwSeverity);
    pEventData->dwSourceId = htonl(m_dwSource);

@@ -273,7 +273,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    char szInfo[256];
 
    g_tServerStartTime = time(NULL);
-   srand(g_tServerStartTime);
+   srand((unsigned int)g_tServerStartTime);
    InitLog(g_dwFlags & AF_USE_EVENT_LOG, g_szLogFile, g_dwFlags & AF_STANDALONE);
 
 #ifdef _WIN32

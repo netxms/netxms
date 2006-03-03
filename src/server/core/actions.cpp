@@ -239,7 +239,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 
 	pTmp = _tcsdup(pszAction);
 	pCmd[0] = pTmp;
-	nLen = _tcslen(pTmp);
+	nLen = (int)_tcslen(pTmp);
 	for(i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
 	{
 		switch(pTmp[i])

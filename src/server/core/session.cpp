@@ -2551,7 +2551,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
          if (dwTimeFrom != 0)
          {
             sprintf(szCond, " AND idata_timestamp>=%d", dwTimeFrom);
-            iPos = strlen(szCond);
+            iPos = (int)_tcslen(szCond);
          }
          if (dwTimeTo != 0)
          {

@@ -657,7 +657,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 // Process new value
 //
 
-void DCItem::NewValue(time_t nTimeStamp, const char *pszOriginalValue)
+void DCItem::NewValue(time_t tmTimeStamp, const char *pszOriginalValue)
 {
    char *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
@@ -674,24 +674,24 @@ void DCItem::NewValue(time_t nTimeStamp, const char *pszOriginalValue)
 
    // Save raw value into database
    pszEscValue = EncodeSQLString(pszOriginalValue);
-   sprintf(szQuery, "UPDATE raw_dci_values SET raw_value='%s',last_poll_time=%ld WHERE item_id=%d",
-           pszEscValue, nTimeStamp, m_dwId);
+   sprintf(szQuery, "UPDATE raw_dci_values SET raw_value='%s',last_poll_time=" TIME_T_FMT " WHERE item_id=%d",
+           pszEscValue, tmTimeStamp, m_dwId);
    free(pszEscValue);
    QueueSQLRequest(szQuery);
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue(pszOriginalValue, nTimeStamp);
+   pValue = new ItemValue(pszOriginalValue, (DWORD)tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
-   Transform(*pValue, nTimeStamp - m_tPrevValueTimeStamp);
+   Transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
    m_prevRawValue = rawValue;
-   m_tPrevValueTimeStamp = nTimeStamp;
+   m_tPrevValueTimeStamp = tmTimeStamp;
 
    // Save transformed value to database
    pszEscValue = EncodeSQLString(pValue->String());
    sprintf(szQuery, "INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)"
-                    " VALUES (%d,%ld,'%s')", m_pNode->Id(), m_dwId, nTimeStamp, pszEscValue);
+                    " VALUES (%d," TIME_T_FMT ",'%s')", m_pNode->Id(), m_dwId, tmTimeStamp, pszEscValue);
    free(pszEscValue);
    QueueSQLRequest(szQuery);
 

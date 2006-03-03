@@ -699,7 +699,7 @@ void NetObj::Modify(void)
       return;
 
    m_bIsModified = TRUE;
-   m_dwTimeStamp = time(NULL);
+   m_dwTimeStamp = (DWORD)time(NULL);
 
    // Send event to all connected clients
    if (!m_bIsHidden)
