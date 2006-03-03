@@ -340,7 +340,7 @@ BOOL LIBNXSRV_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iC
    if (pszVal != NULL)
    {
       StrToBin(pszVal, (BYTE *)pbBytes, 128);
-      nLen = strlen(pszVal) / 2;
+      nLen = (int)strlen(pszVal) / 2;
       for(i = 0; (i < nSize) && (i < nLen); i++)
          pnArray[i] = pbBytes[i];
       for(; i < nSize; i++)
@@ -541,7 +541,7 @@ TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
    if (*pszIn != 0)
    {
       // Allocate destination buffer
-      iStrSize = _tcslen(pszIn) + 1;
+      iStrSize = (int)_tcslen(pszIn) + 1;
       for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
          if (_tcschr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
             iStrSize += 2;

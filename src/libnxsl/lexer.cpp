@@ -39,7 +39,7 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, TCHAR *pszCode)
                        -1, m_pszSourceCode, m_nSourceSize + 1, NULL, NULL);
 #else
    m_pszSourceCode = strdup(pszCode);
-   m_nSourceSize = strlen(pszCode);
+   m_nSourceSize = (int)strlen(pszCode);
 #endif
    m_nCurrLine = 1;
    m_nSourcePos = 0;

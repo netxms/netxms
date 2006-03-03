@@ -812,11 +812,11 @@ DWORD AgentConnection::Authenticate(BOOL bProxyData)
 #endif
          break;
       case AUTH_MD5_HASH:
-         CalculateMD5Hash((BYTE *)pszSecret, strlen(pszSecret), hash);
+         CalculateMD5Hash((BYTE *)pszSecret, (int)strlen(pszSecret), hash);
          msg.SetVariable(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
          break;
       case AUTH_SHA1_HASH:
-         CalculateSHA1Hash((BYTE *)pszSecret, strlen(pszSecret), hash);
+         CalculateSHA1Hash((BYTE *)pszSecret, (int)strlen(pszSecret), hash);
          msg.SetVariable(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
          break;
       default:
@@ -874,7 +874,7 @@ DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 
    msg.SetCode(CMD_TRANSFER_FILE);
    msg.SetId(dwRqId);
-   for(i = _tcslen(pszFile) - 1; 
+   for(i = (int)_tcslen(pszFile) - 1; 
        (i >= 0) && (pszFile[i] != '\\') && (pszFile[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszFile[i + 1]);
 
@@ -916,7 +916,7 @@ DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
 
    msg.SetCode(CMD_UPGRADE_AGENT);
    msg.SetId(dwRqId);
-   for(i = _tcslen(pszPkgName) - 1; 
+   for(i = (int)_tcslen(pszPkgName) - 1; 
        (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszPkgName[i + 1]);
 
@@ -1193,7 +1193,7 @@ DWORD AgentConnection::UpdateConfigFile(TCHAR *pszConfig)
    msg.SetVariable(VID_CONFIG_FILE, pBuffer, nChars);
    free(pBuffer);
 #else
-   msg.SetVariable(VID_CONFIG_FILE, (BYTE *)pszConfig, strlen(pszConfig));
+   msg.SetVariable(VID_CONFIG_FILE, (BYTE *)pszConfig, (DWORD)strlen(pszConfig));
 #endif
 
    if (SendMessage(&msg))

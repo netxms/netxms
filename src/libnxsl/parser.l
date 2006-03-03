@@ -20,6 +20,7 @@ escape		\\[bnrt0\"]
 #include "parser.tab.hpp"
 
 #ifdef _WIN32
+#pragma warning(disable: 4244)
 #define isatty __declspec(dllimport) _isatty
 #endif
 

@@ -176,7 +176,7 @@ NXSL_Value::NXSL_Value(double dValue)
 NXSL_Value::NXSL_Value(char *pszValue)
 {
    m_nDataType = NXSL_DT_STRING;
-   m_dwStrLen = strlen(pszValue);
+   m_dwStrLen = (DWORD)strlen(pszValue);
    m_pszValStr = strdup(pszValue);
    m_bStringIsValid = TRUE;
    UpdateNumber();
@@ -275,7 +275,7 @@ void NXSL_Value::UpdateString(void)
          szBuffer[0] = 0;
          break;
    }
-   m_dwStrLen = strlen(szBuffer);
+   m_dwStrLen = (DWORD)strlen(szBuffer);
    m_pszValStr = strdup(szBuffer);
    m_bStringIsValid = TRUE;
 }
