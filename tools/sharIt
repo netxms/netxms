@@ -41,7 +41,12 @@ case `uname -s` in
 		exit;
 		;;
 esac
-skip1=`let $skip+1`
+if [ "x$BASH" == "x" ]; then
+	skip1=`let $skip+1`
+else
+	skip1=$skip
+	let skip1++
+fi
 
 sed "s,__SKIP__,$skip,g" < stub.sh |
 	sed "s,__SKIP1__,$skip1,g" |
