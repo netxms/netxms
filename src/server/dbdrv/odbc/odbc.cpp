@@ -156,7 +156,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery)
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
    short wNumCols;
-   SQLINTEGER iDataSize;
+   SQLLEN iDataSize;
    BYTE *pDataBuffer;
 
    pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
@@ -319,7 +319,7 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 
 extern "C" char EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn, char *pBuffer, int iBufSize)
 {
-   SQLINTEGER iDataSize;
+   SQLLEN iDataSize;
    long iResult;
 
    // Check if we have valid result handle
