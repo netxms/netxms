@@ -77,6 +77,7 @@ private:
 
 public:
    CSCPMessage();
+   CSCPMessage(CSCPMessage *pMsg);
    CSCPMessage(CSCP_MESSAGE *pMsg);
    ~CSCPMessage();
 
@@ -90,6 +91,7 @@ public:
 
    BOOL IsVariableExist(DWORD dwVarId) { return (FindVariable(dwVarId) != INVALID_INDEX) ? TRUE : FALSE; }
    BOOL IsEndOfSequence(void) { return (m_wFlags & MF_END_OF_SEQUENCE) ? TRUE : FALSE; }
+   BOOL IsReverseOrder(void) { return (m_wFlags & MF_REVERSE_ORDER) ? TRUE : FALSE; }
 
    void SetVariable(DWORD dwVarId, WORD wValue) { Set(dwVarId, CSCP_DT_INT16, &wValue); }
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
@@ -113,6 +115,7 @@ public:
 
    void DisableEncryption(void) { m_wFlags |= MF_DONT_ENCRYPT; }
    void SetEndOfSequence(void) { m_wFlags |= MF_END_OF_SEQUENCE; }
+   void SetReverseOrderFlag(void) { m_wFlags |= MF_REVERSE_ORDER; }
 };
 
 
@@ -184,7 +187,7 @@ int LIBNXCSCP_EXPORTABLE RecvCSCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
                                          CSCP_ENCRYPTION_CONTEXT **ppCtx,
                                          BYTE *pDecryptionBuffer, DWORD dwTimeout);
-CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId,
+CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawCSCPMessage(WORD wCode, DWORD dwId, WORD wFlags,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
 TCHAR LIBNXCSCP_EXPORTABLE *CSCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);

@@ -510,6 +510,10 @@ SOURCE=.\TrapEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TrapLogBrowser.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\TrapParamDlg.cpp
 # End Source File
 # Begin Source File
@@ -983,6 +987,10 @@ SOURCE=.\TrapEditDlg.h
 # Begin Source File
 
 SOURCE=.\TrapEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TrapLogBrowser.h
 # End Source File
 # Begin Source File
 

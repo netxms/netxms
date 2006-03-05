@@ -323,7 +323,7 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
             qsort(m_pIndexById, m_dwNumObjects, sizeof(INDEX), IndexCompare);
             UnlockObjectIndex();
          }
-         CompleteSync(RCC_SUCCESS);
+         CompleteSync(SYNC_OBJECTS, RCC_SUCCESS);
          break;
       case CMD_OBJECT:
 			pTmp = pMsg->GetVariableStr(VID_OBJECT_NAME);
@@ -383,7 +383,7 @@ DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
-   PrepareForSync();
+   PrepareForSync(SYNC_OBJECTS);
 
    DestroyAllObjects();
 
@@ -400,9 +400,9 @@ DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
 
    // If request was successful, wait for object list end or for disconnection
    if (dwRetCode == RCC_SUCCESS)
-      dwRetCode = WaitForSync(INFINITE);
+      dwRetCode = WaitForSync(SYNC_OBJECTS, INFINITE);
    else
-      UnlockSyncOp();
+      UnlockSyncOp(SYNC_OBJECTS);
 
    return dwRetCode;
 }

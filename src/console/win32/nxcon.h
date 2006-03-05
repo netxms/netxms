@@ -129,6 +129,7 @@ protected:
 	DWORD m_dwClientState;
    HWND m_hwndEventBrowser;
    HWND m_hwndSyslogBrowser;
+   HWND m_hwndTrapLogBrowser;
    CActionEditor *m_pwndActionEditor;
    CTrapEditor *m_pwndTrapEditor;
 	CAlarmBrowser *m_pwndAlarmBrowser;
@@ -223,6 +224,7 @@ private:
 	BOOL m_bAlarmBrowserActive;
 	BOOL m_bEventBrowserActive;
 	BOOL m_bSyslogBrowserActive;
+	BOOL m_bTrapLogBrowserActive;
 	BOOL m_bEventEditorActive;
 	BOOL m_bUserEditorActive;
 	BOOL m_bObjectBrowserActive;

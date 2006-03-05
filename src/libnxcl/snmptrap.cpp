@@ -235,3 +235,65 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY 
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Process SNMP trap log records coming from server
+//
+
+void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
+{
+   DWORD i, dwNumRecords, dwId;
+   NXC_SNMP_TRAP_LOG_RECORD rec;
+   int nOrder;
+
+   dwNumRecords = pMsg->GetVariableLong(VID_NUM_RECORDS);
+   nOrder = (int)pMsg->GetVariableShort(VID_RECORDS_ORDER);
+   DebugPrintf(_T("ProcessTrapLogRecords(): %d records in message, in %s order"),
+               dwNumRecords, (nOrder == RECORD_ORDER_NORMAL) ? _T("normal") : _T("reversed"));
+   for(i = 0, dwId = VID_TRAP_LOG_MSG_BASE; i < dwNumRecords; i++)
+   {
+      rec.qwId = pMsg->GetVariableInt64(dwId++);
+      rec.dwTimeStamp = pMsg->GetVariableLong(dwId++);
+      rec.dwIpAddr = pMsg->GetVariableShort(dwId++);
+      rec.dwObjectId = pMsg->GetVariableLong(dwId++);
+      pMsg->GetVariableStr(dwId++, rec.szTrapOID, MAX_DB_STRING);
+      rec.pszTrapVarbinds = pMsg->GetVariableStr(dwId++);
+
+      // Call client's callback to handle new record
+      pSession->CallEventHandler(NXC_EVENT_NEW_SNMP_TRAP, nOrder, &rec);
+      free(rec.pszTrapVarbinds);
+   }
+
+   // Notify requestor thread if all messages was received
+   if (pMsg->IsEndOfSequence())
+      pSession->CompleteSync(SYNC_TRAP_LOG, RCC_SUCCESS);
+}
+
+
+//
+// Synchronize trap log
+// This function is NOT REENTRANT
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, DWORD dwMaxRecords)
+{
+   CSCPMessage msg;
+   DWORD dwRetCode, dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+   ((NXCL_Session *)hSession)->PrepareForSync(SYNC_TRAP_LOG);
+
+   msg.SetCode(CMD_GET_TRAP_LOG);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_MAX_RECORDS, dwMaxRecords);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   if (dwRetCode == RCC_SUCCESS)
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(SYNC_TRAP_LOG, INFINITE);
+   else
+      ((NXCL_Session *)hSession)->UnlockSyncOp(SYNC_TRAP_LOG);
+
+   return dwRetCode;
+}

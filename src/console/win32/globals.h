@@ -114,6 +114,7 @@ extern CConsoleApp theApp;
 #define NXCM_UPDATE_EVENT_LIST     (WM_USER + 118)
 #define NXCM_UPDATE_OBJECT_TOOLS   (WM_USER + 119)
 #define NXCM_UPDATE_GRAPH_POINT    (WM_USER + 120)
+#define NXCM_TRAP_LOG_RECORD       (WM_USER + 121)
 
 
 //

@@ -56,11 +56,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef _WIN32
-#define _GETOPT_H_ 1    /* Prevent including getopt.h from net-snmp */
-#define HAVE_SOCKLEN_T  /* Prevent defining socklen_t in net-snmp */
-#endif   /* _WIN32 */
-
 #define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_dwFlags & x) ? 1 : 0
 
 
@@ -230,6 +225,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_ALARM           3
 #define INFO_CAT_ACTION          4
 #define INFO_CAT_SYSLOG_MSG      5
+#define INFO_CAT_SNMP_TRAP       6
 
 
 //
@@ -317,6 +313,7 @@ private:
    THREAD m_hUpdateThread;
    MUTEX m_mutexSendEvents;
    MUTEX m_mutexSendSyslog;
+   MUTEX m_mutexSendTrapLog;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
@@ -449,6 +446,7 @@ private:
    void DeleteScript(CSCPMessage *pRequest);
    void SendSessionList(DWORD dwRqId);
    void KillSession(CSCPMessage *pRequest);
+   void SendTrapLog(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -469,6 +467,7 @@ public:
    const TCHAR *GetClientInfo(void) { return m_szClientInfo; }
    DWORD GetUserId(void) { return m_dwUserId; }
    BOOL IsAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
+   BOOL IsSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? TRUE : FALSE; }
    WORD GetCurrentCmd(void) { return m_wCurrentCmd; }
    int GetCipher(void) { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
 
@@ -477,6 +476,7 @@ public:
 
    void OnNewEvent(Event *pEvent);
    void OnSyslogMessage(NX_LOG_RECORD *pRec);
+   void OnNewSNMPTrap(CSCPMessage *pMsg);
    void OnObjectChange(NetObj *pObject);
    void OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);

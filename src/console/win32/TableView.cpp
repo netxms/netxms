@@ -114,6 +114,7 @@ int CTableView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
    // Create wait view
+   m_wndWaitView.SetText(_T("Receiving data from server..."));
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 	
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);

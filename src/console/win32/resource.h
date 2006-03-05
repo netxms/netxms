@@ -487,6 +487,7 @@
 #define IDR_DC_EDITOR                   8108
 #define IDR_DCI_DATA_VIEW               8109
 #define IDR_TABLE_VIEW                  8110
+#define IDR_TRAP_LOG_BROWSER            8111
 #define IDR_DCI_HISTORY_GRAPH           8113
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
@@ -657,7 +658,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        302
-#define _APS_NEXT_COMMAND_VALUE         32984
+#define _APS_NEXT_COMMAND_VALUE         32986
 #define _APS_NEXT_CONTROL_VALUE         1339
 #define _APS_NEXT_SYMED_VALUE           126
 #endif

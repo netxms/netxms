@@ -44,6 +44,9 @@
 #define EVP_MAX_IV_LENGTH              16
 #endif
 
+#define RECORD_ORDER_NORMAL            0
+#define RECORD_ORDER_REVERSED          1
+
 
 //
 // Ciphers
@@ -225,6 +228,7 @@ typedef struct
 #define MF_END_OF_FILE     0x0002
 #define MF_DONT_ENCRYPT    0x0004
 #define MF_END_OF_SEQUENCE 0x0008
+#define MF_REVERSE_ORDER   0x0010
 
 
 //
@@ -389,6 +393,8 @@ typedef struct
 #define CMD_RENAME_SCRIPT           0x009C
 #define CMD_GET_SESSION_LIST        0x009D
 #define CMD_KILL_SESSION            0x009E
+#define CMD_GET_TRAP_LOG            0x009F
+#define CMD_TRAP_LOG_RECORDS        0x00A0
 
 
 //
@@ -604,6 +610,7 @@ typedef struct
 #define VID_SCRIPT_ID               ((DWORD)207)
 #define VID_SCRIPT_CODE             ((DWORD)208)
 #define VID_SESSION_ID              ((DWORD)209)
+#define VID_RECORDS_ORDER           ((DWORD)210)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -683,6 +690,9 @@ typedef struct
 
 // Base value for syslog records
 #define VID_SYSLOG_MSG_BASE         ((DWORD)0x10000000)
+
+// Base value for trap log records
+#define VID_TRAP_LOG_MSG_BASE       ((DWORD)0x10000000)
 
 // Base value for script list
 #define VID_SCRIPT_LIST_BASE        ((DWORD)0x10000000)

@@ -363,6 +363,7 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
    else
       iNumDiscoveryPollers = 0;
    m_iNumPollers = iNumStatusPollers + iNumConfigPollers + iNumDiscoveryPollers + iNumRoutePollers;
+   DbgPrintf(AF_DEBUG_MISC, "NodePollManager: %d pollers to start", m_iNumPollers);
 
    // Prepare static data
    m_pPollerState = (__poller_state *)malloc(sizeof(__poller_state) * m_iNumPollers);

@@ -1,4 +1,26 @@
 *************
+* 37 ==> 38 *
+*************
+
+- Added table "snmp_trap_log":
+	CREATE TABLE snmp_trap_log
+	(
+		trap_id SQL_INT64 not null,
+		trap_timestamp integer not null,
+		ip_addr varchar(15) not null,
+		object_id integer not null,
+		trap_oid varchar(255) not null,
+		trap_varlist SQL_TEXT not null,
+		PRIMARY KEY(trap_id)
+	) TABLE_TYPE;
+        CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp);
+- Indexes added to existing log tables:
+	CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
+	CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
+- Added configuration parameter "LogAllSNMPTraps"
+
+
+*************
 * 36 ==> 37 *
 *************
 

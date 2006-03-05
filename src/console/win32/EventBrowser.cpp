@@ -85,6 +85,7 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(3, "Message", LVCFMT_LEFT, 500);
 	
    // Create wait view
+   m_wndWaitView.SetText(_T("Loading event log..."));
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENTS, this);
@@ -144,7 +145,7 @@ void CEventBrowser::OnSetFocus(CWnd* pOldWnd)
 // Add new event record (normally received from the server) to the list
 //
 
-void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
+void CEventBrowser::AddEvent(NXC_EVENT *pEvent, BOOL bAppend)
 {
    int iIdx;
    struct tm *ptm;
@@ -152,7 +153,7 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent)
 
    ptm = localtime((const time_t *)&pEvent->dwTimeStamp);
    strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pEvent->dwSeverity);
+   iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer, pEvent->dwSeverity);
    if (iIdx != -1)
    {
       NXC_OBJECT *pObject;
@@ -231,6 +232,6 @@ LRESULT CEventBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 
 void CEventBrowser::OnNetXMSEvent(WPARAM wParam, NXC_EVENT *pEvent)
 {
-   AddEvent(pEvent);
+   AddEvent(pEvent, wParam == RECORD_ORDER_NORMAL);
    free(pEvent);
 }

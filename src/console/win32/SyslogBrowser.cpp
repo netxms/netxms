@@ -87,6 +87,7 @@ int CSyslogBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(5, "Message", LVCFMT_LEFT, 500);
 	
    // Create wait view
+   m_wndWaitView.SetText(_T("Loading syslog..."));
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 
    ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_SYSLOG_BROWSER, this);
@@ -206,7 +207,7 @@ LRESULT CSyslogBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 
 void CSyslogBrowser::OnSyslogRecord(WPARAM wParam, NXC_SYSLOG_RECORD *pRec)
 {
-   AddRecord(pRec);
+   AddRecord(pRec, wParam == RECORD_ORDER_NORMAL);
    safe_free(pRec->pszText);
    free(pRec);
 }
@@ -216,7 +217,7 @@ void CSyslogBrowser::OnSyslogRecord(WPARAM wParam, NXC_SYSLOG_RECORD *pRec)
 // Add new record to list
 //
 
-void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec)
+void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec, BOOL bAppend)
 {
    int iIdx;
    struct tm *ptm;
@@ -225,7 +226,7 @@ void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec)
 
    ptm = localtime((const time_t *)&pRec->dwTimeStamp);
    strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, nImage[pRec->wSeverity]);
+   iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer, nImage[pRec->wSeverity]);
    if (iIdx != -1)
    {
       m_wndListCtrl.SetItemText(iIdx, 1, g_szSyslogSeverity[pRec->wSeverity]);
@@ -242,6 +243,7 @@ void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec)
       m_wndListCtrl.SetItemText(iIdx, 4, pRec->szTag);
       m_wndListCtrl.SetItemText(iIdx, 5, pRec->pszText);
 
-      m_wndListCtrl.EnsureVisible(iIdx, FALSE);
+      if (bAppend)
+         m_wndListCtrl.EnsureVisible(iIdx, FALSE);
    }
 }

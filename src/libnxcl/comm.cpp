@@ -34,7 +34,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    CSCP_MESSAGE *pRawMsg;
    CSCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
-   int iErr;
+   int i, iErr;
    BOOL bMsgNotNeeded;
    TCHAR szBuffer[128];
 
@@ -205,7 +205,8 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       }
    }
 
-   pSession->CompleteSync(RCC_COMM_FAILURE);    // Abort active sync operation
+   for(i = 0; i < SYNC_OP_COUNT; i++)
+      pSession->CompleteSync(i, RCC_COMM_FAILURE);    // Abort active sync operation
    DebugPrintf(_T("Network receiver thread stopped"));
    free(pRawMsg);
    free(pMsgBuffer);

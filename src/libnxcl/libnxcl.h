@@ -52,8 +52,22 @@
 //
 
 #define NXC_SF_USERDB_LOADED     0x0001
-#define NXC_SF_SYNC_FINISHED     0x0002
-#define NXC_SF_HAS_OBJECT_CACHE  0x0004
+#define NXC_SF_HAS_OBJECT_CACHE  0x0002
+
+
+//
+// Sync operations
+//
+
+#define SYNC_EVENTS     0
+#define SYNC_OBJECTS    1
+#define SYNC_SYSLOG     2
+#define SYNC_TRAP_LOG   3
+#define SYNC_EVENT_DB   4
+#define SYNC_USER_DB    5
+#define SYNC_DCI_LIST   6
+
+#define SYNC_OP_COUNT   7
 
 
 //
@@ -98,7 +112,6 @@ private:
    DWORD m_dwNumObjects;
    INDEX *m_pIndexById;
    MUTEX m_mutexIndexAccess;
-   MUTEX m_mutexSyncOpAccess;
    SOCKET m_hSocket;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
    MsgWaitQueue m_msgWaitQueue;
@@ -120,13 +133,15 @@ private:
    DWORD m_dwNumUsers;
    NXC_USER *m_pUserList;
 
+   MUTEX m_mutexSyncOpAccess[SYNC_OP_COUNT];
+   DWORD m_dwSyncExitCode[SYNC_OP_COUNT];
 #ifdef _WIN32
-   HANDLE m_condSyncOp;
+   HANDLE m_condSyncOp[SYNC_OP_COUNT];
 #else
-   pthread_cond_t m_condSyncOp;
-   pthread_mutex_t m_mutexSyncOp;
+   pthread_cond_t m_condSyncOp[SYNC_OP_COUNT];
+   pthread_mutex_t m_mutexSyncOp[SYNC_OP_COUNT];
+   BOOL m_bSyncFinished[SYNC_OP_COUNT];
 #endif
-   DWORD m_dwSyncExitCode;
 
 public:
    DWORD m_dwCommandTimeout;
@@ -165,10 +180,10 @@ public:
 
    void CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 
-   DWORD WaitForSync(DWORD dwTimeOut);
-   void PrepareForSync(void);
-   void CompleteSync(DWORD dwRetCode);
-   void UnlockSyncOp(void) { MutexUnlock(m_mutexSyncOpAccess); }
+   DWORD WaitForSync(int nSyncOp, DWORD dwTimeOut);
+   void PrepareForSync(int nSyncOp);
+   void CompleteSync(int nSyncOp, DWORD dwRetCode);
+   void UnlockSyncOp(int nSyncOp) { MutexUnlock(m_mutexSyncOpAccess[nSyncOp]); }
 
    DWORD OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 

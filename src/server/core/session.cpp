@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: session.cpp
+** File: session.cpp
 **
 **/
 
@@ -190,6 +190,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_hUpdateThread = INVALID_THREAD_HANDLE;
    m_mutexSendEvents = MutexCreate();
    m_mutexSendSyslog = MutexCreate();
+   m_mutexSendTrapLog = MutexCreate();
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
@@ -224,6 +225,7 @@ ClientSession::~ClientSession()
    safe_free(m_pMsgBuffer);
    MutexDestroy(m_mutexSendEvents);
    MutexDestroy(m_mutexSendSyslog);
+   MutexDestroy(m_mutexSendTrapLog);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
@@ -526,7 +528,7 @@ void ClientSession::UpdateThread(void)
       {
          case INFO_CAT_EVENT:
             MutexLock(m_mutexSendEvents, INFINITE);
-            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
             MutexUnlock(m_mutexSendEvents);
             free(pUpdate->pData);
             break;
@@ -537,6 +539,12 @@ void ClientSession::UpdateThread(void)
             SendMessage(&msg);
             MutexUnlock(m_mutexSendSyslog);
             free(pUpdate->pData);
+            break;
+         case INFO_CAT_SNMP_TRAP:
+            MutexLock(m_mutexSendTrapLog, INFINITE);
+            SendMessage((CSCPMessage *)pUpdate->pData);
+            MutexUnlock(m_mutexSendTrapLog);
+            delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_OBJECT_CHANGE:
             MutexLock(m_mutexSendObjects, INFINITE);
@@ -912,6 +920,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_KILL_SESSION:
             KillSession(pMsg);
+            break;
+         case CMD_GET_TRAP_LOG:
+            SendTrapLog(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -1402,6 +1413,7 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
    NXC_EVENT event;
    DWORD dwRqId, dwMaxRecords, dwNumRows;
    TCHAR szQuery[1024];
+   WORD wFlags;
 #ifndef UNICODE
    char szBuffer[MAX_EVENT_MSG_LENGTH];
 #endif
@@ -1440,19 +1452,27 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          _sntprintf(szQuery, 1024,
                     _T("SELECT event_id,event_code,event_timestamp,event_source,")
                     _T("event_severity,event_message FROM event_log ")
-                    _T("ORDER BY event_timestamp LIMIT %u OFFSET %u"),
+                    _T("ORDER BY event_id LIMIT %u OFFSET %u"),
                     dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
+         wFlags = 0;
          break;
       case DB_SYNTAX_MSSQL:
          _sntprintf(szQuery, 1024,
                     _T("SELECT TOP %u event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message INTO temp_log_%d FROM event_log ")
-                    _T("ORDER BY event_timestamp DESC"), dwMaxRecords, m_dwIndex);
-         DBQuery(g_hCoreDB, szQuery);
-         _sntprintf(szQuery, 1024, _T("SELECT * FROM temp_log_%d ORDER BY event_timestamp"), m_dwIndex);
+                    _T("event_severity,event_message FROM event_log ")
+                    _T("ORDER BY event_id DESC"), dwMaxRecords);
+         wFlags = MF_REVERSE_ORDER;
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
+                    _T("event_severity,event_message FROM event_log ")
+                    _T("WHERE ROWNUM <= %u ORDER BY event_id DESC"), dwMaxRecords);
+         wFlags = MF_REVERSE_ORDER;
          break;
       default:
          szQuery[0] = 0;
+         wFlags = 0;
          break;
    }
    hResult = DBAsyncSelect(g_hCoreDB, szQuery);
@@ -1477,7 +1497,8 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          ((WCHAR *)event.szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
          SwapWideString((WCHAR *)event.szMessage);
-         m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, sizeof(NXC_EVENT), &event, NULL));
+         m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, wFlags,
+                                                sizeof(NXC_EVENT), &event, NULL));
       }
       DBFreeAsyncResult(hResult);
    }
@@ -1487,12 +1508,6 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
    SendMessage(&msg);
 
    MutexUnlock(m_mutexSendEvents);
-
-   if (g_dwDBSyntax == DB_SYNTAX_MSSQL)
-   {
-      _stprintf(szQuery, _T("DROP TABLE temp_log_%d"), m_dwIndex);
-      DBQuery(g_hCoreDB, szQuery);
-   }
 }
 
 
@@ -1635,24 +1650,6 @@ void ClientSession::OnNewEvent(Event *pEvent)
       pUpdate->dwCategory = INFO_CAT_EVENT;
       pUpdate->pData = malloc(sizeof(NXC_EVENT));
       pEvent->PrepareMessage((NXC_EVENT *)pUpdate->pData);
-      m_pUpdateQueue->Put(pUpdate);
-   }
-}
-
-
-//
-// Handler for new syslog messages
-//
-
-void ClientSession::OnSyslogMessage(NX_LOG_RECORD *pRec)
-{
-   UPDATE_INFO *pUpdate;
-
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SYSLOG))
-   {
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
-      pUpdate->pData = nx_memdup(pRec, sizeof(NX_LOG_RECORD));
       m_pUpdateQueue->Put(pUpdate);
    }
 }
@@ -2646,7 +2643,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 
             // Prepare and send raw message with fetched data
             m_pSendQueue->Put(
-               CreateRawCSCPMessage(CMD_DCI_DATA, pRequest->GetId(), 
+               CreateRawCSCPMessage(CMD_DCI_DATA, pRequest->GetId(), 0,
                                     dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER),
                                     pData, NULL));
             free(pData);
@@ -5512,114 +5509,6 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
 
 
 //
-// Get latest syslog records
-//
-
-void ClientSession::SendSyslog(CSCPMessage *pRequest)
-{
-   CSCPMessage msg;
-   DWORD dwRqId, dwMaxRecords, dwNumRows, dwId;
-   DB_RESULT hTempResult;
-   DB_ASYNC_RESULT hResult;
-   TCHAR szQuery[1024], szBuffer[1024];
-
-   dwRqId = pRequest->GetId();
-   dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
-
-   // Send confirmation message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
-   msg.DeleteAllVariables();
-   msg.SetCode(CMD_SYSLOG_RECORDS);
-
-   MutexLock(m_mutexSendSyslog, INFINITE);
-
-   // Retrieve events from database
-   switch(g_dwDBSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM syslog"));
-         if (hTempResult != NULL)
-         {
-            if (DBGetNumRows(hTempResult) > 0)
-            {
-               dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-            }
-            else
-            {
-               dwNumRows = 0;
-            }
-            DBFreeResult(hTempResult);
-         }
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
-                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
-                    _T("ORDER BY msg_timestamp LIMIT %u OFFSET %u"),
-                    dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
-         break;
-      case DB_SYNTAX_MSSQL:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT TOP %d msg_id,msg_timestamp,facility,severity,")
-                    _T("source_object_id,hostname,msg_tag,msg_text ")
-                    _T("INTO temp_syslog_%d FROM syslog ")
-                    _T("ORDER BY msg_timestamp DESC"), dwMaxRecords, m_dwIndex);
-         DBQuery(g_hCoreDB, szQuery);
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT * FROM temp_syslog_%d ORDER BY msg_timestamp"), m_dwIndex);
-         break;
-      default:
-         szQuery[0] = 0;
-         break;
-   }
-   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
-   {
-      // Send events, one per message
-      for(dwId = VID_SYSLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
-      {
-         if (dwNumRows == 10)
-         {
-            msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
-            SendMessage(&msg);
-            msg.DeleteAllVariables();
-            dwNumRows = 0;
-            dwId = VID_SYSLOG_MSG_BASE;
-         }
-         msg.SetVariable(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
-         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 1));
-         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 2));
-         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 3));
-         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 4));
-         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
-         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 6, szBuffer, 1024));
-         DBGetFieldAsync(hResult, 7, szBuffer, 1024);
-         DecodeSQLString(szBuffer);
-         msg.SetVariable(dwId++, szBuffer);
-      }
-      DBFreeAsyncResult(hResult);
-
-      // Send remaining records with End-Of-Sequence notification
-      msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
-      msg.SetEndOfSequence();
-      SendMessage(&msg);
-      msg.DeleteAllVariables();
-   }
-
-   MutexUnlock(m_mutexSendSyslog);
-
-   if (g_dwDBSyntax == DB_SYNTAX_MSSQL)
-   {
-      _stprintf(szQuery, _T("DROP TABLE temp_syslog_%d"), m_dwIndex);
-      DBQuery(g_hCoreDB, szQuery);
-   }
-}
-
-
-//
 // Send list of log policies
 //
 
@@ -6145,6 +6034,261 @@ void ClientSession::KillSession(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SESSIONS)
    {
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// Handler for new syslog messages
+//
+
+void ClientSession::OnSyslogMessage(NX_LOG_RECORD *pRec)
+{
+   UPDATE_INFO *pUpdate;
+
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SYSLOG))
+   {
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
+      pUpdate->pData = nx_memdup(pRec, sizeof(NX_LOG_RECORD));
+      m_pUpdateQueue->Put(pUpdate);
+   }
+}
+
+
+//
+// Get latest syslog records
+//
+
+void ClientSession::SendSyslog(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwMaxRecords, dwNumRows, dwId;
+   DB_RESULT hTempResult;
+   DB_ASYNC_RESULT hResult;
+   TCHAR szQuery[1024], szBuffer[1024];
+   WORD wRecOrder;
+
+   wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
+
+   // Send confirmation message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
+   msg.DeleteAllVariables();
+   msg.SetCode(CMD_SYSLOG_RECORDS);
+
+   MutexLock(m_mutexSendSyslog, INFINITE);
+
+   // Retrieve events from database
+   switch(g_dwDBSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM syslog"));
+         if (hTempResult != NULL)
+         {
+            if (DBGetNumRows(hTempResult) > 0)
+            {
+               dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
+            }
+            else
+            {
+               dwNumRows = 0;
+            }
+            DBFreeResult(hTempResult);
+         }
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
+                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
+                    _T("ORDER BY msg_id LIMIT %u OFFSET %u"),
+                    dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT TOP %d msg_id,msg_timestamp,facility,severity,")
+                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
+                    _T("ORDER BY msg_id DESC"), dwMaxRecords);
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(szQuery, 1024,
+                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
+                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
+                    _T("WHERE ROWNUM <= %u ORDER BY msg_id DESC"), dwMaxRecords);
+         break;
+      default:
+         szQuery[0] = 0;
+         break;
+   }
+   hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      // Send events, one per message
+      for(dwId = VID_SYSLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
+      {
+         if (dwNumRows == 10)
+         {
+            msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+            msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
+            SendMessage(&msg);
+            msg.DeleteAllVariables();
+            dwNumRows = 0;
+            dwId = VID_SYSLOG_MSG_BASE;
+         }
+         msg.SetVariable(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 1));
+         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 2));
+         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 3));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 4));
+         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
+         msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 6, szBuffer, 1024));
+         DBGetFieldAsync(hResult, 7, szBuffer, 1024);
+         DecodeSQLString(szBuffer);
+         msg.SetVariable(dwId++, szBuffer);
+      }
+      DBFreeAsyncResult(hResult);
+
+      // Send remaining records with End-Of-Sequence notification
+      msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+      msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
+      msg.SetEndOfSequence();
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+   }
+
+   MutexUnlock(m_mutexSendSyslog);
+}
+
+
+//
+// Handler for new traps
+//
+
+void ClientSession::OnNewSNMPTrap(CSCPMessage *pMsg)
+{
+   UPDATE_INFO *pUpdate;
+
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SNMP_TRAPS))
+   {
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
+      pUpdate->pData = new CSCPMessage(pMsg);
+      m_pUpdateQueue->Put(pUpdate);
+   }
+}
+
+
+//
+// Send collected trap log
+//
+
+void ClientSession::SendTrapLog(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szBuffer[4096], szQuery[1024];
+   DWORD dwId, dwNumRows, dwMaxRecords;
+   DB_RESULT hTempResult;
+   DB_ASYNC_RESULT hResult;
+   WORD wRecOrder;
+
+   wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG)
+   {
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      SendMessage(&msg);
+      msg.DeleteAllVariables();
+      msg.SetCode(CMD_TRAP_LOG_RECORDS);
+
+      MutexLock(m_mutexSendTrapLog, INFINITE);
+
+      // Retrieve trap log records from database
+      switch(g_dwDBSyntax)
+      {
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+            hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM snmp_trap_log"));
+            if (hTempResult != NULL)
+            {
+               if (DBGetNumRows(hTempResult) > 0)
+               {
+                  dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
+               }
+               else
+               {
+                  dwNumRows = 0;
+               }
+               DBFreeResult(hTempResult);
+            }
+            _sntprintf(szQuery, 1024,
+                       _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
+                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
+                       _T("ORDER BY trap_id LIMIT %u OFFSET %u"),
+                       dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
+            break;
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(szQuery, 1024,
+                       _T("SELECT TOP %u trap_id,trap_timestamp,ip_addr,object_id,")
+                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
+                       _T("ORDER BY trap_id DESC"), dwMaxRecords);
+            break;
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(szQuery, 1024,
+                       _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
+                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
+                       _T("WHERE ROWNUM <= %u ORDER BY msg_id DESC"),
+                       dwMaxRecords);
+            break;
+         default:
+            szQuery[0] = 0;
+            break;
+      }
+      hResult = DBAsyncSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         // Send events, one per message
+         for(dwId = VID_TRAP_LOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
+         {
+            if (dwNumRows == 10)
+            {
+               msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+               msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
+               SendMessage(&msg);
+               msg.DeleteAllVariables();
+               dwNumRows = 0;
+               dwId = VID_TRAP_LOG_MSG_BASE;
+            }
+            msg.SetVariable(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
+            msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 1));
+            msg.SetVariable(dwId++, DBGetFieldAsyncIPAddr(hResult, 2));
+            msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 3));
+            msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 4, szBuffer, 256));
+            DBGetFieldAsync(hResult, 7, szBuffer, 4096);
+            DecodeSQLString(szBuffer);
+            msg.SetVariable(dwId++, szBuffer);
+         }
+         DBFreeAsyncResult(hResult);
+
+         // Send remaining records with End-Of-Sequence notification
+         msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+         msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
+         msg.SetEndOfSequence();
+      }
+
+      MutexUnlock(m_mutexSendTrapLog);
    }
    else
    {

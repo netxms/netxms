@@ -37,16 +37,26 @@ public:
 
 	// Generated message map functions
 protected:
-	int m_iStageDir;
-	int m_iStage;
+	int m_nThreshold;
+	int m_nMaxPos;
+	int m_nCurrPos;
+	int m_nTextHeight;
+	CFont m_font;
+	TCHAR m_szText[MAX_DB_STRING];
+	CProgressCtrl m_wndProgressBar;
+	CStatic m_wndText;
 	UINT m_nTimer;
-	int m_iActiveBox;
 	//{{AFX_MSG(CWaitView)
-	afx_msg void OnPaint();
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+public:
+   void SetText(TCHAR *pszText) { nx_strncpy(m_szText, pszText, MAX_DB_STRING); }
 };
 
 /////////////////////////////////////////////////////////////////////////////

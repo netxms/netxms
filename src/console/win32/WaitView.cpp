@@ -11,29 +11,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define BOX_COUNT          10
-#define BOX_SIZE           10
-#define BOX_MARGIN         25
-#define MAX_STAGES         10
-
-
-//
-// Static data
-//
-
-static COLORREF m_rgbBoxColors[MAX_STAGES] =
-{
-   RGB(53, 128, 21),
-   RGB(61, 147, 23),
-   RGB(68, 165, 27),
-   RGB(75, 183, 30),
-   RGB(83, 201, 33),
-   RGB(90, 220, 35),
-   RGB(104, 222, 54),
-   RGB(118, 225, 72),
-   RGB(132, 228, 90),
-   RGB(146, 232, 108)
-};
+#define ID_PROGRESS_BAR    100
+#define ID_STATIC_TEXT     101
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -41,9 +20,7 @@ static COLORREF m_rgbBoxColors[MAX_STAGES] =
 
 CWaitView::CWaitView()
 {
-   m_iActiveBox = 0;
-   m_iStage = 0;
-   m_iStageDir = 1;
+   _tcscpy(m_szText, _T("Loading..."));
 }
 
 CWaitView::~CWaitView()
@@ -53,9 +30,11 @@ CWaitView::~CWaitView()
 
 BEGIN_MESSAGE_MAP(CWaitView, CWnd)
 	//{{AFX_MSG_MAP(CWaitView)
-	ON_WM_PAINT()
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
+	ON_WM_CREATE()
+	ON_WM_SIZE()
+	ON_WM_CTLCOLOR()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -68,9 +47,43 @@ BOOL CWaitView::PreCreateWindow(CREATESTRUCT& cs)
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          ::LoadCursor(NULL, IDC_WAIT), 
-                                         GetSysColorBrush(COLOR_3DSHADOW), 
+                                         GetSysColorBrush(COLOR_WINDOW), 
                                          NULL);
 	return CWnd::PreCreateWindow(cs);
+}
+
+
+//
+// WM_CREATE message handler
+//
+
+int CWaitView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+{
+   RECT rect;
+   CDC *pdc;
+
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+   pdc = GetDC();
+   m_font.CreateFont(-MulDiv(8, GetDeviceCaps(pdc->m_hDC, LOGPIXELSY), 72),
+                     0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                     VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+   m_nTextHeight = pdc->GetTextExtent(_T("TEXT"), 4).cy;
+   ReleaseDC(pdc);
+
+   rect.left = 0;
+   rect.top = 0;
+   rect.right = 100;
+   rect.bottom = 20;
+   m_wndText.Create(m_szText, WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, rect, this, ID_STATIC_TEXT);
+   m_wndText.SetFont(&m_font);
+   m_wndProgressBar.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | PBS_SMOOTH, rect, this, ID_PROGRESS_BAR);
+   m_wndProgressBar.SendMessage(PBM_SETBKCOLOR, 0, (LPARAM)GetSysColor(COLOR_WINDOW));
+   m_wndProgressBar.ModifyStyleEx(WS_EX_CLIENTEDGE | WS_EX_STATICEDGE, 0, 0);
+	
+	return 0;
 }
 
 
@@ -87,27 +100,18 @@ void CWaitView::OnDestroy()
 
 
 //
-// WM_PAINT message handler
+// WM_SIZE message handler
 //
 
-void CWaitView::OnPaint() 
+void CWaitView::OnSize(UINT nType, int cx, int cy) 
 {
-	CPaintDC dc(this); // device context for painting
-   RECT rect;
-   int i, x, y;
+   int x, y;
 
-   GetClientRect(&rect);
-
-   // Draw boxes
-   y = (rect.bottom - BOX_SIZE) / 2;
-   x = (rect.right - (BOX_COUNT * BOX_SIZE + (BOX_COUNT - 1) * BOX_MARGIN)) / 2;
-   for(i = 0; i < BOX_COUNT; i++)
-   {
-      dc.Draw3dRect(x, y, BOX_SIZE, BOX_SIZE, RGB(46, 109, 18), RGB(159, 234, 128));
-      dc.FillSolidRect(x + 1, y + 1, BOX_SIZE - 2, BOX_SIZE - 2,
-                       (i == m_iActiveBox) ? m_rgbBoxColors[m_iStage] : m_rgbBoxColors[0]);
-      x += BOX_SIZE + BOX_MARGIN;
-   }
+	CWnd::OnSize(nType, cx, cy);
+   x = cx / 2 - 150;
+   y = cy / 2;
+   m_wndText.SetWindowPos(NULL, x, y - m_nTextHeight - 3, 300, m_nTextHeight + 2, SWP_NOZORDER);
+   m_wndProgressBar.SetWindowPos(NULL, x, y + 1, 300, 12, SWP_NOZORDER);
 }
 
 
@@ -117,19 +121,16 @@ void CWaitView::OnPaint()
 
 void CWaitView::OnTimer(UINT nIDEvent) 
 {
-   m_iStage += m_iStageDir;
-   if (m_iStage == MAX_STAGES - 1)
+   m_nCurrPos++;
+   m_wndProgressBar.SetPos(m_nCurrPos);
+   if (m_nCurrPos > m_nThreshold)
    {
-      m_iStageDir = -1;
+      m_nMaxPos *= 2;
+      m_nCurrPos *= 2;
+      m_wndProgressBar.SetRange32(0, m_nMaxPos);
+      m_wndProgressBar.SetPos(m_nCurrPos);
+      m_nThreshold = m_nCurrPos + (m_nMaxPos - m_nCurrPos) / 2;
    }
-   else if (m_iStage == 0)
-   {
-      m_iStageDir = 1;
-      m_iActiveBox++;
-      if (m_iActiveBox == BOX_COUNT)
-         m_iActiveBox = 0;
-   }
-   InvalidateRect(NULL, FALSE);
 }
 
 
@@ -142,12 +143,12 @@ void CWaitView::Start()
    if (m_nTimer != 0)
       KillTimer(m_nTimer);
 
-   m_iActiveBox = 0;
-   m_iStage = 0;
-   m_iStageDir = 1;
-
-   m_nTimer = SetTimer(1, 100, NULL);
-   InvalidateRect(NULL, FALSE);
+   m_nCurrPos = 0;
+   m_nMaxPos = 100;
+   m_nThreshold = 50;
+   m_wndProgressBar.SetRange32(0, m_nMaxPos);
+   m_wndProgressBar.SetPos(0);
+   m_nTimer = SetTimer(1, 1000, NULL);
 }
 
 
@@ -162,4 +163,27 @@ void CWaitView::Stop()
       KillTimer(m_nTimer);
       m_nTimer = 0;
    }
+}
+
+
+//
+// WM_CTLCOLOR message handler
+//
+
+HBRUSH CWaitView::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) 
+{
+   HBRUSH hbr;
+
+   switch(pWnd->GetDlgCtrlID())
+   {
+      case ID_STATIC_TEXT:
+         pDC->SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
+         pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+         hbr = GetSysColorBrush(COLOR_WINDOW);
+         break;
+      default:
+      	hbr = CWnd::OnCtlColor(pDC, pWnd, nCtlColor);
+         break;
+   }
+	return hbr;
 }

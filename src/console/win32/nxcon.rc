@@ -2912,6 +2912,7 @@ BEGIN
     IDR_DC_EDITOR           "\nData Collection Configuration\nData Collection Configuration"
     IDR_DCI_DATA_VIEW       "\nCollected Data\nCollected Data"
     IDR_TABLE_VIEW          "\nTable View\nTable View"
+    IDR_TRAP_LOG_BROWSER    "\nSNMP Traps Log\nSNMP Traps Log"
 END
 
 STRINGTABLE DISCARDABLE 

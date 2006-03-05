@@ -78,6 +78,46 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V37 to V38
+//
+
+static BOOL H_UpgradeFromV37(void)
+{
+   static TCHAR m_szBatch[] =
+	   "CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp)\n"
+	   "CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp)\n"
+      "CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp)\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE snmp_trap_log ("
+		                 "trap_id $SQL:INT64 not null,"
+		                 "trap_timestamp integer not null,"
+		                 "ip_addr varchar(15) not null,"
+		                 "object_id integer not null,"
+		                 "trap_oid varchar(255) not null,"
+		                 "trap_varlist $SQL:TEXT not null,"
+		                 "PRIMARY KEY(trap_id))")))
+
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("LogAllSNMPTraps"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='38' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V36 to V37
 //
 
@@ -1582,6 +1622,7 @@ static struct
    { 34, H_UpgradeFromV34 },
    { 35, H_UpgradeFromV35 },
    { 36, H_UpgradeFromV36 },
+   { 37, H_UpgradeFromV37 },
    { 0, NULL }
 };
 

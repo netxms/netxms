@@ -22,8 +22,6 @@ public:
 
 // Operations
 public:
-	void AddEvent(NXC_EVENT *pEvent);
-
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CEventBrowser)
@@ -38,6 +36,8 @@ protected:
 	CImageList *m_pImageList;
 	CListCtrl m_wndListCtrl;
 	virtual ~CEventBrowser();
+
+	void AddEvent(NXC_EVENT *pEvent, BOOL bAppend);
 
 	// Generated message map functions
 	//{{AFX_MSG(CEventBrowser)

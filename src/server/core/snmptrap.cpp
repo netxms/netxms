@@ -189,13 +189,23 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
 
 
 //
+// Handler for EnumerateSessions()
+//
+
+static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
+{
+   pSession->OnNewSNMPTrap((CSCPMessage *)pArg);
+}
+
+
+//
 // Process trap
 //
 
 static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 {
    DWORD i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
-   TCHAR *pszTrapArgs, *pszEscTrapArgs, szBuffer[4096], szQuery[8192];
+   TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
    Node *pNode;
    int iResult;
@@ -210,6 +220,10 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    // Write trap to log if required
    if (m_bLogAllTraps)
    {
+      CSCPMessage msg;
+      TCHAR *pszEscTrapArgs, szQuery[8192];
+      DWORD dwTimeStamp = (DWORD)time(NULL);
+
       dwBufSize = pdu->GetNumVariables() * 4096 + 16;
       pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
       pszTrapArgs[0] = 0;
@@ -222,16 +236,31 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
                                 pVar->GetValueAsString(szBuffer, 3000));
       }
 
+      // Write new trap to database
       pszEscTrapArgs = EncodeSQLString(pszTrapArgs);
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,timestamp,")
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s','%s')"),
-                 m_qnTrapId++, (DWORD)time(NULL), IpToStr(dwOriginAddr, szBuffer),
-                 (pNode != NULL) ? pNode->Id() : 0, pdu->GetTrapId()->GetValueAsText(),
+                 m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
+                 (pNode != NULL) ? pNode->Id() : (DWORD)0, pdu->GetTrapId()->GetValueAsText(),
                  pszEscTrapArgs);
-      free(pszTrapArgs);
       free(pszEscTrapArgs);
       QueueSQLRequest(szQuery);
+
+      // Notify connected clients
+      msg.SetCode(CMD_TRAP_LOG_RECORDS);
+      msg.SetVariable(VID_NUM_RECORDS, (DWORD)1);
+      msg.SetVariable(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE, (QWORD)m_qnTrapId);
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 2, dwOriginAddr);
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->Id() : (DWORD)0);
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->GetTrapId()->GetValueAsText());
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
+      EnumerateClientSessions(BroadcastNewTrap, &msg);
+      free(pszTrapArgs);
+
+      m_qnTrapId++;
    }
 
    // Process trap if it is coming from host registered in database

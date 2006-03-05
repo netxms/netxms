@@ -92,6 +92,7 @@ CConsoleApp::CConsoleApp()
    m_bAlarmBrowserActive = FALSE;
    m_bEventBrowserActive = FALSE;
    m_bSyslogBrowserActive = FALSE;
+   m_bTrapLogBrowserActive = FALSE;
    m_bEventEditorActive = FALSE;
    m_bUserEditorActive = FALSE;
    m_bObjectBrowserActive = FALSE;
@@ -869,7 +870,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             void *pData;
 
             pData = nx_memdup(pArg, sizeof(NXC_EVENT));
-            if (!PostMessage(m_hwndEventBrowser, NXCM_NETXMS_EVENT, 0, (LPARAM)pData))
+            if (!PostMessage(m_hwndEventBrowser, NXCM_NETXMS_EVENT, dwCode, (LPARAM)pData))
                free(pData);
          }
          break;
@@ -880,9 +881,23 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
             pRec = (NXC_SYSLOG_RECORD *)nx_memdup(pArg, sizeof(NXC_SYSLOG_RECORD));
             pRec->pszText = _tcsdup(((NXC_SYSLOG_RECORD *)pArg)->pszText);
-            if (!PostMessage(m_hwndSyslogBrowser, NXCM_SYSLOG_RECORD, 0, (LPARAM)pRec))
+            if (!PostMessage(m_hwndSyslogBrowser, NXCM_SYSLOG_RECORD, dwCode, (LPARAM)pRec))
             {
                safe_free(pRec->pszText);
+               free(pRec);
+            }
+         }
+         break;
+      case NXC_EVENT_NEW_SNMP_TRAP:
+         if (m_bTrapLogBrowserActive)
+         {
+            NXC_SNMP_TRAP_LOG_RECORD *pRec;
+
+            pRec = (NXC_SNMP_TRAP_LOG_RECORD *)nx_memdup(pArg, sizeof(NXC_SNMP_TRAP_LOG_RECORD));
+            pRec->pszTrapVarbinds = _tcsdup(((NXC_SNMP_TRAP_LOG_RECORD *)pArg)->pszTrapVarbinds);
+            if (!PostMessage(m_hwndTrapLogBrowser, NXCM_TRAP_LOG_RECORD, dwCode, (LPARAM)pRec))
+            {
+               safe_free(pRec->pszTrapVarbinds);
                free(pRec);
             }
          }

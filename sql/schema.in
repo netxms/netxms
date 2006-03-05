@@ -434,6 +434,8 @@ CREATE TABLE event_log
 	PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
+
 
 /*
 ** Actions on events
@@ -741,6 +743,8 @@ CREATE TABLE syslog
 	PRIMARY KEY(msg_id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
+
 
 /*
 ** Script library
@@ -762,13 +766,15 @@ CREATE TABLE script_library
 CREATE TABLE snmp_trap_log
 (
 	trap_id SQL_INT64 not null,
-	timestamp integer not null,
+	trap_timestamp integer not null,
 	ip_addr varchar(15) not null,
 	object_id integer not null,
 	trap_oid varchar(255) not null,
 	trap_varlist SQL_TEXT not null,
 	PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
+
+CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp);
 
 
 /*

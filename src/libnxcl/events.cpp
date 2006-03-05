@@ -40,7 +40,7 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
    switch(wCode)
    {
       case CMD_EVENT_LIST_END:
-         pSession->CompleteSync(RCC_SUCCESS);
+         pSession->CompleteSync(SYNC_EVENTS, RCC_SUCCESS);
          break;
       case CMD_EVENT:
          if (pRawMsg != NULL)    // We should receive events as raw data
@@ -74,7 +74,10 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
 #endif
 
             // Call client's callback to handle new record
-            pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 0, &event);
+            pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 
+                                       (pRawMsg->wFlags & MF_REVERSE_ORDER) ? 
+                                               RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL,
+                                       &event);
          }
          break;
       default:
@@ -94,7 +97,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-   ((NXCL_Session *)hSession)->PrepareForSync();
+   ((NXCL_Session *)hSession)->PrepareForSync(SYNC_EVENTS);
 
    msg.SetCode(CMD_GET_EVENTS);
    msg.SetId(dwRqId);
@@ -103,9 +106,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
-      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(INFINITE);
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(SYNC_EVENTS, INFINITE);
    else
-      ((NXCL_Session *)hSession)->UnlockSyncOp();
+      ((NXCL_Session *)hSession)->UnlockSyncOp(SYNC_EVENTS);
 
    return dwRetCode;
 }
@@ -145,9 +148,12 @@ void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    DWORD i, dwNumRecords, dwId;
    NXC_SYSLOG_RECORD rec;
+   int nOrder;
 
    dwNumRecords = pMsg->GetVariableLong(VID_NUM_RECORDS);
-   DebugPrintf(_T("ProcessSyslogRecords(): %d records in message"), dwNumRecords);
+   nOrder = (int)pMsg->GetVariableShort(VID_RECORDS_ORDER);
+   DebugPrintf(_T("ProcessSyslogRecords(): %d records in message, in %s order"),
+               dwNumRecords, (nOrder == RECORD_ORDER_NORMAL) ? _T("normal") : _T("reversed"));
    for(i = 0, dwId = VID_SYSLOG_MSG_BASE; i < dwNumRecords; i++)
    {
       rec.qwMsgId = pMsg->GetVariableInt64(dwId++);
@@ -160,13 +166,13 @@ void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
       rec.pszText = pMsg->GetVariableStr(dwId++);
 
       // Call client's callback to handle new record
-      pSession->CallEventHandler(NXC_EVENT_NEW_SYSLOG_RECORD, 0, &rec);
+      pSession->CallEventHandler(NXC_EVENT_NEW_SYSLOG_RECORD, nOrder, &rec);
       free(rec.pszText);
    }
 
    // Notify requestor thread if all messages was received
    if (pMsg->IsEndOfSequence())
-      pSession->CompleteSync(RCC_SUCCESS);
+      pSession->CompleteSync(SYNC_SYSLOG, RCC_SUCCESS);
 }
 
 
@@ -181,7 +187,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-   ((NXCL_Session *)hSession)->PrepareForSync();
+   ((NXCL_Session *)hSession)->PrepareForSync(SYNC_SYSLOG);
 
    msg.SetCode(CMD_GET_SYSLOG);
    msg.SetId(dwRqId);
@@ -190,9 +196,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords)
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    if (dwRetCode == RCC_SUCCESS)
-      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(INFINITE);
+      dwRetCode = ((NXCL_Session *)hSession)->WaitForSync(SYNC_SYSLOG, INFINITE);
    else
-      ((NXCL_Session *)hSession)->UnlockSyncOp();
+      ((NXCL_Session *)hSession)->UnlockSyncOp(SYNC_SYSLOG);
 
    return dwRetCode;
 }

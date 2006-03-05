@@ -85,7 +85,7 @@ void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
       }
       else
       {
-         pSession->CompleteSync(RCC_SUCCESS);
+         pSession->CompleteSync(SYNC_EVENT_DB, RCC_SUCCESS);
       }
    }
 }

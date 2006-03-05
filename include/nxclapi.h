@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,18 +17,9 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxclapi.h
+** File: nxclapi.h
 **
 **/
-
-/*
-** WARNING !!!
-**
-** If structures in this file being changed, don't forget to change
-** NXSM wrapper files accordingly!
-**
-*/
-
 
 #ifndef _nxclapi_h_
 #define _nxclapi_h_
@@ -211,6 +202,7 @@ typedef void * NXC_SESSION;
 #define NXC_EVENT_NOTIFICATION         5
 #define NXC_EVENT_DEPLOYMENT_STATUS    6
 #define NXC_EVENT_NEW_SYSLOG_RECORD    7
+#define NXC_EVENT_NEW_SNMP_TRAP        8
 
 
 //
@@ -367,8 +359,9 @@ typedef void * NXC_SESSION;
 #define SYSTEM_ACCESS_MANAGE_LPP          0x0400
 #define SYSTEM_ACCESS_MANAGE_TOOLS        0x0800
 #define SYSTEM_ACCESS_MANAGE_SCRIPTS      0x1000
+#define SYSTEM_ACCESS_VIEW_TRAP_LOG       0x2000
 
-#define SYSTEM_ACCESS_FULL                0x1FFF
+#define SYSTEM_ACCESS_FULL                0x3FFF
 
 
 //
@@ -501,6 +494,7 @@ typedef void * NXC_SESSION;
 #define NXC_CHANNEL_SYSLOG       0x0002
 #define NXC_CHANNEL_ALARMS       0x0004
 #define NXC_CHANNEL_OBJECTS      0x0008
+#define NXC_CHANNEL_SNMP_TRAPS   0x0010
 
 
 //
@@ -1267,6 +1261,21 @@ typedef struct
    TCHAR szUserName[MAX_USER_NAME];
    TCHAR szClientApp[MAX_DB_STRING];
 } NXC_CLIENT_SESSION_INFO;
+
+
+//
+// Trap log records
+//
+
+typedef struct
+{
+   QWORD qwId;
+   DWORD dwTimeStamp;
+   DWORD dwIpAddr;
+   DWORD dwObjectId;
+   TCHAR szTrapOID[MAX_DB_STRING];
+   TCHAR *pszTrapVarbinds;
+} NXC_SNMP_TRAP_LOG_RECORD;
 
 
 //

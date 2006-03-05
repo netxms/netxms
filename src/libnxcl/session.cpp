@@ -30,6 +30,8 @@
 
 NXCL_Session::NXCL_Session()
 {
+   int i;
+
    m_dwFlags = 0;
    m_dwMsgId = 0;
    m_dwTimeStamp = 0;
@@ -39,7 +41,6 @@ NXCL_Session::NXCL_Session()
    m_dwNumObjects = 0;
    m_pIndexById = NULL;
    m_mutexIndexAccess = MutexCreate();
-   m_mutexSyncOpAccess = MutexCreate();
    m_dwReceiverBufferSize = 4194304;     // 4MB
    m_hSocket = -1;
    m_pItemList = NULL;
@@ -60,12 +61,18 @@ NXCL_Session::NXCL_Session()
    m_condFileRq = ConditionCreate(FALSE);
    m_mutexFileRq = MutexCreate();
 
+   for(i = 0; i < SYNC_OP_COUNT; i++)
+   {
+      m_mutexSyncOpAccess[i] = MutexCreate();
+      m_dwSyncExitCode[i] = 0;
 #ifdef _WIN32
-   m_condSyncOp = CreateEvent(NULL, FALSE, FALSE, NULL);
+      m_condSyncOp[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
 #else
-   pthread_mutex_init(&m_mutexSyncOp, NULL);
-   pthread_cond_init(&m_condSyncOp, NULL);
+      pthread_mutex_init(&m_mutexSyncOp[i], NULL);
+      pthread_cond_init(&m_condSyncOp[i], NULL);
+      m_bSyncFinished[i] = FALSE;
 #endif
+   }
 }
 
 
@@ -75,6 +82,8 @@ NXCL_Session::NXCL_Session()
 
 NXCL_Session::~NXCL_Session()
 {
+   int i;
+
    Disconnect();
 
    // Wait for receiver thread termination
@@ -82,7 +91,6 @@ NXCL_Session::~NXCL_Session()
       ThreadJoin(m_hRecvThread);
 
    MutexDestroy(m_mutexIndexAccess);
-   MutexDestroy(m_mutexSyncOpAccess);
 
    MutexLock(m_mutexEventAccess, INFINITE);
    MutexUnlock(m_mutexEventAccess);
@@ -94,12 +102,16 @@ NXCL_Session::~NXCL_Session()
    MutexDestroy(m_mutexFileRq);
    ConditionDestroy(m_condFileRq);
 
+   for(i = 0; i < SYNC_OP_COUNT; i++)
+   {
+      MutexDestroy(m_mutexSyncOpAccess[i]);
 #ifdef _WIN32
-   CloseHandle(m_condSyncOp);
+      CloseHandle(m_condSyncOp[i]);
 #else
-   pthread_mutex_destroy(&m_mutexSyncOp);
-   pthread_cond_destroy(&m_condSyncOp);
+      pthread_mutex_destroy(&m_mutexSyncOp[i]);
+      pthread_cond_destroy(&m_condSyncOp[i]);
 #endif
+   }
 
    DestroyEncryptionContext(m_pCtx);
 }
@@ -232,20 +244,20 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
 // Wait for synchronization operation completion
 //
 
-DWORD NXCL_Session::WaitForSync(DWORD dwTimeOut)
+DWORD NXCL_Session::WaitForSync(int nSyncOp, DWORD dwTimeOut)
 {
 #ifdef _WIN32
    DWORD dwRetCode;
 
-   dwRetCode = WaitForSingleObject(m_condSyncOp, dwTimeOut);
-   MutexUnlock(m_mutexSyncOpAccess);
-   return (dwRetCode == WAIT_TIMEOUT) ? RCC_TIMEOUT : m_dwSyncExitCode;
+   dwRetCode = WaitForSingleObject(m_condSyncOp[nSyncOp], dwTimeOut);
+   MutexUnlock(m_mutexSyncOpAccess[nSyncOp]);
+   return (dwRetCode == WAIT_TIMEOUT) ? RCC_TIMEOUT : m_dwSyncExitCode[nSyncOp];
 #else
    int iRetCode;
    DWORD dwResult;
 
-   pthread_mutex_lock(&m_mutexSyncOp);
-   if (!(m_dwFlags & NXC_SF_SYNC_FINISHED))
+   pthread_mutex_lock(&m_mutexSyncOp[nSyncOp]);
+   if (!m_bSyncFinished[nSyncOp])
    {
       if (dwTimeOut != INFINITE)
 	   {
@@ -254,29 +266,29 @@ DWORD NXCL_Session::WaitForSync(DWORD dwTimeOut)
 
 		   timeout.tv_sec = dwTimeOut / 1000;
 		   timeout.tv_nsec = (dwTimeOut % 1000) * 1000000;
-		   iRetCode = pthread_cond_reltimedwait_np(&m_condSyncOp, &m_mutexSyncOp, &timeout);
+		   iRetCode = pthread_cond_reltimedwait_np(&m_condSyncOp[nSyncOp], &m_mutexSyncOp[nSyncOp], &timeout);
 #else
 		   struct timeval now;
 		   struct timespec timeout;
 
 		   gettimeofday(&now, NULL);
 		   timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
-		   timeout.tv_nsec = ( now.tv_usec + ( dwTimeOut % 1000 ) * 1000) * 1000;
-		   iRetCode = pthread_cond_timedwait(&m_condSyncOp, &m_mutexSyncOp, &timeout);
+		   timeout.tv_nsec = (now.tv_usec + (dwTimeOut % 1000) * 1000) * 1000;
+		   iRetCode = pthread_cond_timedwait(&m_condSyncOp[nSyncOp], &m_mutexSyncOp[nSyncOp], &timeout);
 #endif
 	   }
 	   else
       {
-         iRetCode = pthread_cond_wait(&m_condSyncOp, &m_mutexSyncOp);
+         iRetCode = pthread_cond_wait(&m_condSyncOp[nSyncOp], &m_mutexSyncOp[nSyncOp]);
       }
-      dwResult = (iRetCode == 0) ? m_dwSyncExitCode : RCC_TIMEOUT;
+      dwResult = (iRetCode == 0) ? m_dwSyncExitCode[nSyncOp] : RCC_TIMEOUT;
    }
    else
    {
-      dwResult = m_dwSyncExitCode;
+      dwResult = m_dwSyncExitCode[nSyncOp];
    }
-   pthread_mutex_unlock(&m_mutexSyncOp);
-   MutexUnlock(m_mutexSyncOpAccess);
+   pthread_mutex_unlock(&m_mutexSyncOp[nSyncOp]);
+   MutexUnlock(m_mutexSyncOpAccess[nSyncOp]);
    return dwResult;
 #endif
 }
@@ -286,14 +298,14 @@ DWORD NXCL_Session::WaitForSync(DWORD dwTimeOut)
 // Prepare for synchronization operation
 //
 
-void NXCL_Session::PrepareForSync(void)
+void NXCL_Session::PrepareForSync(int nSyncOp)
 {
-   MutexLock(m_mutexSyncOpAccess, INFINITE);
-   m_dwSyncExitCode = RCC_SYSTEM_FAILURE;
+   MutexLock(m_mutexSyncOpAccess[nSyncOp], INFINITE);
+   m_dwSyncExitCode[nSyncOp] = RCC_SYSTEM_FAILURE;
 #ifdef _WIN32
-   ResetEvent(m_condSyncOp);
+   ResetEvent(m_condSyncOp[nSyncOp]);
 #else
-   m_dwFlags &= ~NXC_SF_SYNC_FINISHED;
+   m_bSyncFinished[nSyncOp] = FALSE;
 #endif
 }
 
@@ -302,17 +314,17 @@ void NXCL_Session::PrepareForSync(void)
 // Complete synchronization operation
 //
 
-void NXCL_Session::CompleteSync(DWORD dwRetCode)
+void NXCL_Session::CompleteSync(int nSyncOp, DWORD dwRetCode)
 {
 #ifdef _WIN32
-   m_dwSyncExitCode = dwRetCode;
-   SetEvent(m_condSyncOp);
+   m_dwSyncExitCode[nSyncOp] = dwRetCode;
+   SetEvent(m_condSyncOp[nSyncOp]);
 #else
    pthread_mutex_lock(&m_mutexSyncOp);
-   m_dwSyncExitCode = dwRetCode;
-   m_dwFlags |= NXC_SF_SYNC_FINISHED;
-   pthread_cond_signal(&m_condSyncOp);
-   pthread_mutex_unlock(&m_mutexSyncOp);
+   m_dwSyncExitCode[nSyncOp] = dwRetCode;
+   m_bSyncFinished[nSyncOp] = TRUE;
+   pthread_cond_signal(&m_condSyncOp[nSyncOp]);
+   pthread_mutex_unlock(&m_mutexSyncOp[nSyncOp]);
 #endif
 }
 
@@ -326,7 +338,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_NODE_DCI_LIST_END:
-         CompleteSync(RCC_SUCCESS);
+         CompleteSync(SYNC_DCI_LIST, RCC_SUCCESS);
          break;
       case CMD_NODE_DCI:
          if (m_pItemList != NULL)
@@ -408,7 +420,7 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
-   PrepareForSync();
+   PrepareForSync(SYNC_DCI_LIST);
 
    m_pItemList = (NXC_DCI_LIST *)malloc(sizeof(NXC_DCI_LIST));
    m_pItemList->dwNodeId = dwNodeId;
@@ -425,7 +437,7 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
    if (dwRetCode == RCC_SUCCESS)
    {
       // Wait for DCI list end or for disconnection
-      dwRetCode = WaitForSync(INFINITE);
+      dwRetCode = WaitForSync(SYNC_DCI_LIST, INFINITE);
       if (dwRetCode == RCC_SUCCESS)
       {
          *ppItemList = m_pItemList;
@@ -437,7 +449,7 @@ DWORD NXCL_Session::OpenNodeDCIList(DWORD dwNodeId, NXC_DCI_LIST **ppItemList)
    }
    else
    {
-      UnlockSyncOp();
+      UnlockSyncOp(SYNC_DCI_LIST);
       free(m_pItemList);
    }
 
@@ -456,7 +468,7 @@ DWORD NXCL_Session::LoadEventDB(void)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
-   PrepareForSync();
+   PrepareForSync(SYNC_EVENT_DB);
 
    DestroyEventDB();
    MutexLock(m_mutexEventAccess, INFINITE);
@@ -469,9 +481,9 @@ DWORD NXCL_Session::LoadEventDB(void)
 
    /* TODO: this probably should be recoded as loop with calls to WaitForMessage() */
    if (dwRetCode == RCC_SUCCESS)
-      dwRetCode = WaitForSync(INFINITE);
+      dwRetCode = WaitForSync(SYNC_EVENT_DB, INFINITE);
    else
-      UnlockSyncOp();
+      UnlockSyncOp(SYNC_EVENT_DB);
 
    MutexUnlock(m_mutexEventAccess);
    return dwRetCode;
@@ -662,7 +674,7 @@ void NXCL_Session::ProcessUserDBRecord(CSCPMessage *pMsg)
    switch(pMsg->GetCode())
    {
       case CMD_USER_DB_EOF:
-         CompleteSync(RCC_SUCCESS);
+         CompleteSync(SYNC_USER_DB, RCC_SUCCESS);
          break;
       case CMD_USER_DATA:
       case CMD_GROUP_DATA:
@@ -780,7 +792,7 @@ DWORD NXCL_Session::LoadUserDB(void)
    DWORD dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
-   PrepareForSync();
+   PrepareForSync(SYNC_USER_DB);
    DestroyUserDB();
 
    msg.SetCode(CMD_LOAD_USER_DB);
@@ -791,13 +803,13 @@ DWORD NXCL_Session::LoadUserDB(void)
 
    if (dwRetCode == RCC_SUCCESS)
    {
-      dwRetCode = WaitForSync(INFINITE);
+      dwRetCode = WaitForSync(SYNC_USER_DB, INFINITE);
       if (dwRetCode == RCC_SUCCESS)
          m_dwFlags |= NXC_SF_USERDB_LOADED;
    }
    else
    {
-      UnlockSyncOp();
+      UnlockSyncOp(SYNC_USER_DB);
    }
 
    return dwRetCode;

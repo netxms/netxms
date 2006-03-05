@@ -1,21 +1,21 @@
-#if !defined(AFX_SYSLOGBROWSER_H__743A897E_9FF2_4815_BE2F_B66A2E6436B8__INCLUDED_)
-#define AFX_SYSLOGBROWSER_H__743A897E_9FF2_4815_BE2F_B66A2E6436B8__INCLUDED_
+#if !defined(AFX_TRAPLOGBROWSER_H__4BF65716_21B1_42CB_AAD4_37E933410142__INCLUDED_)
+#define AFX_TRAPLOGBROWSER_H__4BF65716_21B1_42CB_AAD4_37E933410142__INCLUDED_
 
 #include "WaitView.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// SyslogBrowser.h : header file
+// TrapLogBrowser.h : header file
 //
 
 /////////////////////////////////////////////////////////////////////////////
-// CSyslogBrowser frame
+// CTrapLogBrowser frame
 
-class CSyslogBrowser : public CMDIChildWnd
+class CTrapLogBrowser : public CMDIChildWnd
 {
-	DECLARE_DYNCREATE(CSyslogBrowser)
+	DECLARE_DYNCREATE(CTrapLogBrowser)
 protected:
-	CSyslogBrowser();           // protected constructor used by dynamic creation
+	CTrapLogBrowser();           // protected constructor used by dynamic creation
 
 // Attributes
 public:
@@ -25,31 +25,26 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CSyslogBrowser)
+	//{{AFX_VIRTUAL(CTrapLogBrowser)
 	protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
-	void AddRecord(NXC_SYSLOG_RECORD *pRec, BOOL bAppend);
-	CImageList *m_pImageList;
-	BOOL m_bIsBusy;
 	CWaitView m_wndWaitView;
+	BOOL m_bIsBusy;
 	CListCtrl m_wndListCtrl;
-	virtual ~CSyslogBrowser();
+	virtual ~CTrapLogBrowser();
 
 	// Generated message map functions
-	//{{AFX_MSG(CSyslogBrowser)
+	//{{AFX_MSG(CTrapLogBrowser)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
-	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
-   afx_msg void OnRequestCompleted(void);
-   afx_msg void OnSyslogRecord(WPARAM wParam, NXC_SYSLOG_RECORD *pRec);
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -58,4 +53,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_SYSLOGBROWSER_H__743A897E_9FF2_4815_BE2F_B66A2E6436B8__INCLUDED_)
+#endif // !defined(AFX_TRAPLOGBROWSER_H__4BF65716_21B1_42CB_AAD4_37E933410142__INCLUDED_)
