@@ -756,6 +756,22 @@ CREATE TABLE script_library
 
 
 /*
+** Extended SNMP trap log
+*/
+
+CREATE TABLE snmp_trap_log
+(
+	trap_id SQL_INT64 not null,
+	timestamp integer not null,
+	ip_addr varchar(15) not null,
+	object_id integer not null,
+	trap_oid varchar(255) not null,
+	trap_varlist SQL_TEXT not null,
+	PRIMARY KEY(trap_id)
+) TABLE_TYPE;
+
+
+/*
 ** Log processing policy
 */
 

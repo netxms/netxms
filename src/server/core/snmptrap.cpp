@@ -37,6 +37,8 @@
 static MUTEX m_mutexTrapCfgAccess = NULL;
 static NXC_TRAP_CFG_ENTRY *m_pTrapCfg = NULL;
 static DWORD m_dwNumTraps = 0;
+static BOOL m_bLogAllTraps = FALSE;
+static INT64 m_qnTrapId = 1;
 
 
 //
@@ -125,8 +127,19 @@ static BOOL LoadTrapCfg(void)
 
 void InitTraps(void)
 {
+   DB_RESULT hResult;
+
    m_mutexTrapCfgAccess = MutexCreate();
    LoadTrapCfg();
+   m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
+
+   hResult = DBSelect(g_hCoreDB, "SELECT max(trap_id) FROM snmp_trap_log");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_qnTrapId = DBGetFieldInt64(hResult, 0, 0) + 1;
+      DBFreeResult(hResult);
+   }
 }
 
 
@@ -182,7 +195,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
 static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 {
    DWORD i, dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
-   TCHAR *pszTrapArgs, szBuffer[512];
+   TCHAR *pszTrapArgs, *pszEscTrapArgs, szBuffer[4096], szQuery[8192];
    SNMP_Variable *pVar;
    Node *pNode;
    int iResult;
@@ -193,6 +206,35 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 
    // Match IP address to object
    pNode = FindNodeByIP(dwOriginAddr);
+
+   // Write trap to log if required
+   if (m_bLogAllTraps)
+   {
+      dwBufSize = pdu->GetNumVariables() * 4096 + 16;
+      pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
+      pszTrapArgs[0] = 0;
+      for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+      {
+         pVar = pdu->GetVariable(i);
+         dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
+                                (i == 0) ? _T("") : _T("; "),
+                                pVar->GetName()->GetValueAsText(), 
+                                pVar->GetValueAsString(szBuffer, 3000));
+      }
+
+      pszEscTrapArgs = EncodeSQLString(pszTrapArgs);
+      _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,timestamp,")
+                                _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
+                                _T("(") INT64_FMT _T(",%d,'%s',%d,'%s','%s')"),
+                 m_qnTrapId++, (DWORD)time(NULL), IpToStr(dwOriginAddr, szBuffer),
+                 (pNode != NULL) ? pNode->Id() : 0, pdu->GetTrapId()->GetValueAsText(),
+                 pszEscTrapArgs);
+      free(pszTrapArgs);
+      free(pszEscTrapArgs);
+      QueueSQLRequest(szQuery);
+   }
+
+   // Process trap if it is coming from host registered in database
    if (pNode != NULL)
    {
       // Find if we have this trap in our list

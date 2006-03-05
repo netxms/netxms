@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=nxconfig - Win32 Debug
+CFG=nxconfig - Win32 Debug AMD64
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,14 @@ CFG=nxconfig - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "nxconfig.mak" CFG="nxconfig - Win32 Debug"
+!MESSAGE NMAKE /f "nxconfig.mak" CFG="nxconfig - Win32 Debug AMD64"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "nxconfig - Win32 Release" (based on "Win32 (x86) Application")
 !MESSAGE "nxconfig - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "nxconfig - Win32 Release AMD64" (based on "Win32 (x86) Application")
+!MESSAGE "nxconfig - Win32 Debug AMD64" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -43,7 +45,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GX- /O2 /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x809 /d "NDEBUG" /d "_AFXDLL"
@@ -74,7 +76,7 @@ PostBuild_Cmds=copy Release\nxconfig.exe C:\NetXMS\bin
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX- /ZI /Od /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x809 /d "_DEBUG" /d "_AFXDLL"
@@ -91,12 +93,80 @@ PostBuild_Desc=Copy files
 PostBuild_Cmds=copy Debug\nxconfig.exe ..\..\..\..\bin
 # End Special Build Tool
 
+!ELSEIF  "$(CFG)" == "nxconfig - Win32 Release AMD64"
+
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "nxconfig___Win32_Release_AMD64"
+# PROP BASE Intermediate_Dir "nxconfig___Win32_Release_AMD64"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release64"
+# PROP Intermediate_Dir "Release64"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MD /W3 /GX /O2 /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GX- /O2 /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "__64BIT__" /Yu"stdafx.h" /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x809 /d "NDEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x809 /d "NDEBUG" /d "_AFXDLL"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 libnetxms.lib libnxsrv.lib iphlpapi.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\..\libnetxms\Release" /libpath:"..\..\libnxsrv\Release"
+# ADD LINK32 libnetxms.lib libnxsrv.lib iphlpapi.lib bufferoverflowU.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\..\libnetxms\Release64" /libpath:"..\..\libnxsrv\Release64" /machine:AMD64
+# SUBTRACT LINK32 /pdb:none
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Release64\nxconfig.exe C:\NetXMS\bin64
+# End Special Build Tool
+
+!ELSEIF  "$(CFG)" == "nxconfig - Win32 Debug AMD64"
+
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "nxconfig___Win32_Debug_AMD64"
+# PROP BASE Intermediate_Dir "nxconfig___Win32_Debug_AMD64"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug64"
+# PROP Intermediate_Dir "Debug64"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX- /Zi /Od /I "..\..\..\..\include" /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "__64BIT__" /Yu"stdafx.h" /FD /GZ /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x809 /d "_DEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x809 /d "_DEBUG" /d "_AFXDLL"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 libnetxms.lib libnxsrv.lib iphlpapi.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug" /libpath:"..\..\libnxsrv\Debug"
+# ADD LINK32 libnetxms.lib libnxsrv.lib iphlpapi.lib bufferoverflowU.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug64" /libpath:"..\..\libnxsrv\Debug64" /machine:AMD64
+# SUBTRACT LINK32 /pdb:none
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Debug64\nxconfig.exe ..\..\..\..\bin64
+# End Special Build Tool
+
 !ENDIF 
 
 # Begin Target
 
 # Name "nxconfig - Win32 Release"
 # Name "nxconfig - Win32 Debug"
+# Name "nxconfig - Win32 Release AMD64"
+# Name "nxconfig - Win32 Debug AMD64"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"

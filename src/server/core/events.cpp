@@ -208,38 +208,38 @@ char *Event::ExpandText(char *pszTemplate)
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
                   IpToStr(pObject->IpAddr(), &pText[dwPos]);
-                  dwPos += (DWORD)_tcslen(pText);
+                  dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'i':   // Source object identifier
                   dwSize += 10;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "0x%08X", m_dwSource);
-                  dwPos += (DWORD)_tcslen(pText);
+                  dwPos = (DWORD)_tcslen(pText);
                   break;
                case 't':   // Event's timestamp
                   dwSize += 32;
                   pText = (char *)realloc(pText, dwSize);
                   lt = localtime(&m_tTimeStamp);
                   strftime(&pText[dwPos], 32, "%d-%b-%Y %H:%M:%S", lt);
-                  dwPos += (DWORD)_tcslen(pText);
+                  dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%lu", m_tTimeStamp);
-                  dwPos += (DWORD)_tcslen(pText);
+                  dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%u", m_dwCode);
-                  dwPos += (DWORD)_tcslen(pText);
+                  dwPos = (DWORD)_tcslen(pText);
                   break;
                case 's':   // Severity code
                   dwSize += 3;
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%d", (int)m_dwSeverity);
-                  dwPos += (DWORD)_tcslen(pText);
+                  dwPos = (DWORD)_tcslen(pText);
                   break;
                case 'S':   // Severity text
                   dwSize += (DWORD)_tcslen(g_szStatusTextSmall[m_dwSeverity]);

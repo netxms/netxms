@@ -302,7 +302,7 @@ void InstallEventSource(char *path)
    }
 
    RegSetValueEx(hKey, "TypesSupported", 0, REG_DWORD,(BYTE *)&dwTypes, sizeof(DWORD));
-   RegSetValueEx(hKey, "EventMessageFile", 0, REG_EXPAND_SZ,(BYTE *)path, strlen(path) + 1);
+   RegSetValueEx(hKey, "EventMessageFile", 0, REG_EXPAND_SZ,(BYTE *)path, (DWORD)_tcslen(path) + 1);
 
    RegCloseKey(hKey);
    printf("Event source \"" CORE_EVENT_SOURCE "\" installed successfully\n");

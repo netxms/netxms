@@ -1104,7 +1104,6 @@ src/server/tools/nxconfig/nxconfig.dsp -text
 src/server/tools/nxconfig/nxconfig.dsw -text
 src/server/tools/nxconfig/nxconfig.h -text
 src/server/tools/nxconfig/nxconfig.rc -text
-src/server/tools/nxconfig/nxconfig.vcproj -text
 src/server/tools/nxconfig/res/Makefile.am -text
 src/server/tools/nxconfig/res/failed.ico -text
 src/server/tools/nxconfig/res/nxconfig.ico -text

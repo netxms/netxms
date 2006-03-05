@@ -82,6 +82,11 @@ BOOL CNxconfigApp::InitInstance()
 
       RegCloseKey(hKey);
    }
+   else
+   {
+      AfxMessageBox(_T("Unable to determine NetXMS installation directory"));
+      m_szInstallDir[0] = 0;
+   }
 
    // Parse command line
    if (!_tcsicmp(m_lpCmdLine, _T("--create-agent-config")))
@@ -129,9 +134,6 @@ BOOL CNxconfigApp::InitInstance()
 	pFrame->LoadFrame(IDR_MAINFRAME,
 		WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL,
 		NULL);
-
-
-
 
 	// The one and only window has been initialized, so show and update it.
 	//pFrame->ShowWindow(SW_SHOW);

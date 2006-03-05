@@ -62,7 +62,7 @@ static BOOL InstallEventSource(TCHAR *pszPath)
 
    RegSetValueEx(hKey, _T("TypesSupported"), 0, REG_DWORD,(BYTE *)&dwTypes, sizeof(DWORD));
    RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ,
-                 (BYTE *)pszPath, (_tcslen(pszPath) + 1) * sizeof(TCHAR));
+                 (BYTE *)pszPath, ((DWORD)_tcslen(pszPath) + 1) * sizeof(TCHAR));
 
    RegCloseKey(hKey);
    return TRUE;

@@ -56,7 +56,7 @@ static void AddParam(TCHAR *pszBuffer, TCHAR *pszText, void *pValue)
 {
    int iLen;
 
-   iLen = _tcslen(pszBuffer);
+   iLen = (int)_tcslen(pszBuffer);
    _sntprintf(&pszBuffer[iLen], BUFFER_SIZE - iLen, pszText, pValue);
 }
 
