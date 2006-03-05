@@ -76,6 +76,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_LOGPROCESSING, OnControlpanelLogprocessing)
 	ON_COMMAND(ID_CONTROLPANEL_OBJECTTOOLS, OnControlpanelObjecttools)
 	ON_COMMAND(ID_CONTROLPANEL_SCRIPTLIBRARY, OnControlpanelScriptlibrary)
+	ON_COMMAND(ID_VIEW_SNMPTRAPLOG, OnViewSnmptraplog)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -562,6 +563,11 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
          m_pwndSyslogBrowser = (CSyslogBrowser *)pWnd;
          m_hwndSyslogBrowser = pWnd->m_hWnd;
          break;
+      case IDR_TRAP_LOG_BROWSER:
+         m_bTrapLogBrowserActive = TRUE;
+         m_pwndTrapLogBrowser = (CTrapLogBrowser *)pWnd;
+         m_hwndTrapLogBrowser = pWnd->m_hWnd;
+         break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = TRUE;
          m_pwndObjectBrowser = (CObjectBrowser *)pWnd;
@@ -654,6 +660,10 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
       case IDR_SYSLOG_BROWSER:
          m_bSyslogBrowserActive = FALSE;
          m_hwndSyslogBrowser = NULL;
+         break;
+      case IDR_TRAP_LOG_BROWSER:
+         m_bTrapLogBrowserActive = FALSE;
+         m_hwndTrapLogBrowser = NULL;
          break;
       case IDR_OBJECTS:
          m_bObjectBrowserActive = FALSE;
@@ -760,6 +770,30 @@ CMDIChildWnd *CConsoleApp::ShowSyslogBrowser(void)
 
 
 //
+// Show syslog browser window
+//
+
+CMDIChildWnd *CConsoleApp::ShowTrapLogBrowser(void)
+{
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CMDIChildWnd *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_bTrapLogBrowserActive)
+   {
+      m_pwndTrapLogBrowser->BringWindowToTop();
+      pWnd = m_pwndTrapLogBrowser;
+   }
+   else
+   {
+	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CTrapLogBrowser), IDR_TRAP_LOG_BROWSER,
+                                    m_hMDIMenu, m_hMDIAccel);
+   }
+   return pWnd;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_EVENTS message handler
 //
 
@@ -776,6 +810,16 @@ void CConsoleApp::OnViewEvents()
 void CConsoleApp::OnViewSyslog() 
 {
    ShowSyslogBrowser();
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_SNMPTRAPLOG message handler
+//
+
+void CConsoleApp::OnViewSnmptraplog() 
+{
+   ShowTrapLogBrowser();
 }
 
 

@@ -220,11 +220,13 @@ void CSyslogBrowser::OnSyslogRecord(WPARAM wParam, NXC_SYSLOG_RECORD *pRec)
 void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec, BOOL bAppend)
 {
    int iIdx;
+   time_t t;
    struct tm *ptm;
    char szBuffer[64];
    static int nImage[8] = { 4, 4, 3, 3, 2, 1, 0, 0 };
 
-   ptm = localtime((const time_t *)&pRec->dwTimeStamp);
+   t = pRec->dwTimeStamp;
+   ptm = localtime(&t);
    strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
    iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer, nImage[pRec->wSeverity]);
    if (iIdx != -1)

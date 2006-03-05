@@ -37,6 +37,8 @@ protected:
 	CListCtrl m_wndListCtrl;
 	virtual ~CTrapLogBrowser();
 
+   void AddRecord(NXC_SNMP_TRAP_LOG_RECORD *pRec, BOOL bAppend);
+
 	// Generated message map functions
 	//{{AFX_MSG(CTrapLogBrowser)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -45,6 +47,9 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnRequestCompleted(void);
+   afx_msg void OnTrapLogRecord(WPARAM wParam, NXC_SNMP_TRAP_LOG_RECORD *pRec);
 	DECLARE_MESSAGE_MAP()
 };
 

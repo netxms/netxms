@@ -53,6 +53,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "PackageMgr.h"
 #include "ObjectToolsEditor.h"
 #include "SyslogBrowser.h"
+#include "TrapLogBrowser.h"
 #include "LPPList.h"
 
 
@@ -135,6 +136,7 @@ protected:
 	CAlarmBrowser *m_pwndAlarmBrowser;
 	CEventBrowser *m_pwndEventBrowser;
 	CSyslogBrowser *m_pwndSyslogBrowser;
+	CTrapLogBrowser *m_pwndTrapLogBrowser;
    CEventEditor *m_pwndEventEditor;
    CUserEditor *m_pwndUserEditor;
 	CObjectBrowser *m_pwndObjectBrowser;
@@ -216,6 +218,7 @@ public:
 	afx_msg void OnControlpanelLogprocessing();
 	afx_msg void OnControlpanelObjecttools();
 	afx_msg void OnControlpanelScriptlibrary();
+	afx_msg void OnViewSnmptraplog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -252,6 +255,7 @@ public:
 	void BindObject(NXC_OBJECT *pObject);
 	CMDIChildWnd *ShowEventBrowser(void);
 	CMDIChildWnd *ShowSyslogBrowser(void);
+	CMDIChildWnd *ShowTrapLogBrowser(void);
 	CMDIChildWnd *ShowAlarmBrowser(TCHAR *pszParams = NULL);
 	CMDIChildWnd *ShowNetworkSummary(void);
 	void ApplyTemplate(NXC_OBJECT *pObject);

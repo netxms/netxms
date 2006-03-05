@@ -64,6 +64,7 @@ extern CConsoleApp theApp;
 #define WNDC_EVENT_BROWSER    6
 #define WNDC_OBJECT_BROWSER   7
 #define WNDC_SYSLOG_BROWSER   8
+#define WNDC_TRAP_LOG_BROWSER 9
 
 
 //

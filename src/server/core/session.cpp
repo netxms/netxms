@@ -6279,6 +6279,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             DBGetFieldAsync(hResult, 7, szBuffer, 4096);
             DecodeSQLString(szBuffer);
             msg.SetVariable(dwId++, szBuffer);
+            dwNumRows++;
          }
          DBFreeAsyncResult(hResult);
 

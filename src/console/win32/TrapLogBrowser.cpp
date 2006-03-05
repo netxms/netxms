@@ -34,6 +34,9 @@ BEGIN_MESSAGE_MAP(CTrapLogBrowser, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_COMMAND(ID_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_MESSAGE(NXCM_TRAP_LOG_RECORD, OnTrapLogRecord)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -131,11 +134,100 @@ void CTrapLogBrowser::OnSize(UINT nType, int cx, int cy)
 
 
 //
+// Trap loading thread
+//
+
+static void LoadTraps(void *pArg)
+{
+   NXCSyncSNMPTrapLog(g_hSession, g_dwMaxLogRecords);
+   PostMessage((HWND)pArg, WM_COMMAND, ID_REQUEST_COMPLETED, 0);
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_REFRESH message handler
 //
 
 void CTrapLogBrowser::OnViewRefresh() 
 {
-	// TODO: Add your command handler code here
-	
+   if (!m_bIsBusy)
+   {
+      m_bIsBusy = TRUE;
+      m_wndWaitView.ShowWindow(SW_SHOW);
+      m_wndListCtrl.ShowWindow(SW_HIDE);
+      m_wndWaitView.Start();
+      m_wndListCtrl.DeleteAllItems();
+      _beginthread(LoadTraps, 0, m_hWnd);
+   }
+}
+
+
+//
+// NXCM_REQUEST_COMPLETED message handler
+//
+
+void CTrapLogBrowser::OnRequestCompleted(void)
+{
+   if (m_bIsBusy)
+   {
+      m_bIsBusy = FALSE;
+      m_wndListCtrl.ShowWindow(SW_SHOW);
+      m_wndWaitView.ShowWindow(SW_HIDE);
+      m_wndWaitView.Stop();
+   }
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CTrapLogBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_TRAP_LOG_BROWSER;
+   GetWindowPlacement(&pInfo->placement);
+   pInfo->szParameters[0] = 0;
+   return 1;
+}
+
+
+//
+// NXCM_TRAP_LOG_RECORD message handler
+//
+
+void CTrapLogBrowser::OnTrapLogRecord(WPARAM wParam, NXC_SNMP_TRAP_LOG_RECORD *pRec)
+{
+   AddRecord(pRec, wParam == RECORD_ORDER_NORMAL);
+   safe_free(pRec->pszTrapVarbinds);
+   free(pRec);
+}
+
+
+//
+// Add new record to list
+//
+
+void CTrapLogBrowser::AddRecord(NXC_SNMP_TRAP_LOG_RECORD *pRec, BOOL bAppend)
+{
+   int iIdx;
+   time_t t;
+   struct tm *ptm;
+   char szBuffer[64];
+   NXC_OBJECT *pNode;
+
+   t = pRec->dwTimeStamp;
+   ptm = localtime(&t);
+   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
+   iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer);
+   if (iIdx != -1)
+   {
+      m_wndListCtrl.SetItemText(iIdx, 1, IpToStr(pRec->dwIpAddr, szBuffer));
+      pNode = NXCFindObjectById(g_hSession, pRec->dwObjectId);
+      m_wndListCtrl.SetItemText(iIdx, 2, (pNode != NULL) ? pNode->szName : _T(""));
+      m_wndListCtrl.SetItemText(iIdx, 3, pRec->szTrapOID);
+      m_wndListCtrl.SetItemText(iIdx, 4, pRec->pszTrapVarbinds);
+
+      if (bAppend)
+         m_wndListCtrl.EnsureVisible(iIdx, FALSE);
+   }
 }
