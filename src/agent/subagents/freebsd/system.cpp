@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.8 2005-05-30 14:39:32 alk Exp $ */
+/* $Id: system.cpp,v 1.9 2006-03-05 20:50:18 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -162,17 +162,17 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 //	struct statvfs s;
-   char szArg[128] = {0};
+	char szArg[128] = {0};
 	int nCount;
 	int nResult = -1;
 	int i;
 	kvm_t *kd;
 	struct kinfo_proc *kp;
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
-	if (kd != 0)
+	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
+	if (kd != NULL)
 	{
 		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
 
@@ -180,16 +180,17 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		{
 			if (szArg[0] != 0)
 			{
+				nResult = 0;
 				for (i = 0; i < nCount; i++)
 				{
 #if __FreeBSD__ >= 5
 					if (strcasecmp(kp[i].ki_comm, szArg) == 0)
 #else
-						if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
+					if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
 #endif
-						{
-							nResult++;
-						}
+					{
+						nResult++;
+					}
 				}
 			}
 			else
@@ -201,9 +202,9 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		kvm_close(kd);
 	}
 
-	if (nCount >= 0)
+	if (nResult >= 0)
 	{
-		ret_int(pValue, nCount);
+		ret_int(pValue, nResult);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
@@ -229,7 +230,7 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	nPageCount = nFreeCount = 0;
 	nSwapTotal = nSwapUsed = 0;
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 #define DOIT(x, y) { \
 	nSize = sizeof(mib); \
@@ -381,6 +382,9 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/05/30 14:39:32  alk
+* process list now works via kvm, compatible with freebsd 5+
+
 Revision 1.7  2005/05/29 22:44:59  alk
 * configure: pthreads & fbsd5+; detection code should be rewriten!
 * another ugly hack: agent's process info disabled for fbsd5+: struct kinfo_proc changed; m/b fix it tomorow
