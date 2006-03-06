@@ -6249,7 +6249,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             _sntprintf(szQuery, 1024,
                        _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
                        _T("trap_oid,trap_varlist FROM snmp_trap_log ")
-                       _T("WHERE ROWNUM <= %u ORDER BY msg_id DESC"),
+                       _T("WHERE ROWNUM <= %u ORDER BY trap_id DESC"),
                        dwMaxRecords);
             break;
          default:
@@ -6279,7 +6279,6 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             DBGetFieldAsync(hResult, 7, szBuffer, 4096);
             DecodeSQLString(szBuffer);
             msg.SetVariable(dwId++, szBuffer);
-            dwNumRows++;
          }
          DBFreeAsyncResult(hResult);
 

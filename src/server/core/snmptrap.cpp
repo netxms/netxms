@@ -238,7 +238,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 
       // Write new trap to database
       pszEscTrapArgs = EncodeSQLString(pszTrapArgs);
-      _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,timestamp,")
+      _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s','%s')"),
                  m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
