@@ -320,7 +320,7 @@ void NXCL_Session::CompleteSync(int nSyncOp, DWORD dwRetCode)
    m_dwSyncExitCode[nSyncOp] = dwRetCode;
    SetEvent(m_condSyncOp[nSyncOp]);
 #else
-   pthread_mutex_lock(&m_mutexSyncOp);
+   pthread_mutex_lock(&m_mutexSyncOp[nSyncOp]);
    m_dwSyncExitCode[nSyncOp] = dwRetCode;
    m_bSyncFinished[nSyncOp] = TRUE;
    pthread_cond_signal(&m_condSyncOp[nSyncOp]);

@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.145 2006-03-07 13:31:17 alk Exp $
+# $Id: configure.ac,v 1.146 2006-03-07 19:46:38 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.10-rc1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.10], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -19,7 +19,6 @@ AC_PROG_INSTALL
 AC_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
-AC_PROG_SWIG
 
 # --------------------------------------------------------------------------
 # disable C++ exceptions
