@@ -11,7 +11,7 @@ libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 EXTRA_DIST = libnxsl.dsp libnxsl.dsw libnxsl.h parser.l parser.y parser.tab.hpp
 
 lex.yy.cpp: parser.l parser.tab.cpp parser.tab.hpp
-	$(LEX) -Bf8+ -olex.yy.cpp parser.l
+	$(LEX) -B -f -8 -+ -olex.yy.cpp parser.l
 
 parser.tab.cpp: parser.y
 	$(YACC) -b parser -o parser.tab.cpp -d -t -v parser.y

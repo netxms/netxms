@@ -277,6 +277,14 @@ src/agent/subagents/netware/Makefile.nw -text
 src/agent/subagents/netware/netware.cpp -text
 src/agent/subagents/netware/netware.def -text
 src/agent/subagents/netware/nwagent.h -text
+src/agent/subagents/openbsd/Makefile.am -text
+src/agent/subagents/openbsd/disk.cpp -text
+src/agent/subagents/openbsd/disk.h -text
+src/agent/subagents/openbsd/net.cpp -text
+src/agent/subagents/openbsd/net.h -text
+src/agent/subagents/openbsd/openbsd.cpp -text
+src/agent/subagents/openbsd/system.cpp -text
+src/agent/subagents/openbsd/system.h -text
 src/agent/subagents/ping/Makefile.am -text
 src/agent/subagents/ping/Makefile.nw -text
 src/agent/subagents/ping/ping.cpp -text

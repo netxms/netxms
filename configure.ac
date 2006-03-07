@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.143 2006-03-03 10:15:17 victor Exp $
+# $Id: configure.ac,v 1.144 2006-03-07 09:42:47 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -206,6 +206,9 @@ AC_ARG_WITH(agent,
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
 			;;
+		OpenBSD)
+			SUBAGENT_DIRS="openbsd"
+			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
 			;;
@@ -238,6 +241,11 @@ AC_ARG_WITH(static-agent,
 			SUBAGENT_LIBS="../subagents/freebsd/libnsm_freebsd.la"
 			STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
 			;;
+		OpenBSD)
+			SUBAGENT_DIRS="openbsd"
+			SUBAGENT_LIBS="../subagents/openbsd/libnsm_openbsd.la"
+			STATIC_SUBAGENT_LIST="openbsd $STATIC_SUBAGENT_LIST"
+			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
 			SUBAGENT_LIBS="../subagents/sunos/libnsm_sunos.la"
@@ -258,7 +266,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
 	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript nxhttpd"
-	SUBAGENT_DIRS="linux freebsd sunos aix"
+	SUBAGENT_DIRS="linux freebsd openbsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
    CONTRIB_MODULES="mibs"
@@ -621,6 +629,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
+	src/agent/subagents/openbsd/Makefile
 	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/win9x/Makefile
