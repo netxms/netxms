@@ -24,8 +24,9 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CNodePropsPolling)
 	enum { IDD = IDD_OBJECT_NODE_POLL };
-		// NOTE - ClassWizard will add data members here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
+	BOOL	m_bDisableAgent;
+	BOOL	m_bDisableICMP;
+	BOOL	m_bDisableSNMP;
 	//}}AFX_DATA
 
 
@@ -44,6 +45,9 @@ protected:
 	//{{AFX_MSG(CNodePropsPolling)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelectPoller();
+	afx_msg void OnCheckDisableAgent();
+	afx_msg void OnCheckDisableIcmp();
+	afx_msg void OnCheckDisableSnmp();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

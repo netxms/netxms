@@ -98,6 +98,10 @@ BOOL CLoginDialog::OnInitDialog()
    {
       EnableDlgItem(this, IDC_CHECK_ENCRYPT, FALSE);
    }
+   if (m_bNoCache)
+   {
+      EnableDlgItem(this, IDC_CHECK_CACHE, FALSE);
+   }
 	
    if (m_szLogin.IsEmpty() || m_szServer.IsEmpty())
 		return TRUE;

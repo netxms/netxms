@@ -44,8 +44,11 @@ END_MESSAGE_MAP()
 
 BOOL CTrapLogBrowser::PreCreateWindow(CREATESTRUCT& cs) 
 {
-	// TODO: Add your specialized code here and/or call the base class
-	
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
+                                         NULL, 
+                                         GetSysColorBrush(COLOR_WINDOW), 
+                                         AfxGetApp()->LoadIcon(IDI_LOG));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
 

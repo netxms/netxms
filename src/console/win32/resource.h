@@ -476,6 +476,9 @@
 #define IDC_STATIC_TEMPLATE             1336
 #define IDC_CHECK_RULER                 1337
 #define IDC_CHECK_LEGEND                1338
+#define IDC_CHECK_DISABLE_AGENT         1339
+#define IDC_CHECK_DISABLE_SNMP          1340
+#define IDC_CHECK_DISABLE_ICMP          1341
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -660,7 +663,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        302
 #define _APS_NEXT_COMMAND_VALUE         32987
-#define _APS_NEXT_CONTROL_VALUE         1339
+#define _APS_NEXT_CONTROL_VALUE         1342
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
 #endif

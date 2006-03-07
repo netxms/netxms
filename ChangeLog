@@ -7,7 +7,7 @@
 - Added UPS monitoring subagent
 - Netscreen (now Juniper) MIBs added
 - Windows console: graphs improved
-- Fixed issues: #58, #72, #76, #78, #81
+- Fixed issues: #58, #72, #73, #76, #78, #81
 
 
 *

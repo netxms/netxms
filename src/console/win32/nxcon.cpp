@@ -232,7 +232,7 @@ BOOL CConsoleApp::InitInstance()
    dwBytes = sizeof(WINDOWPLACEMENT);
    bSetWindowPos = GetProfileBinary(_T("General"), _T("WindowPlacement"), 
                                     &pData, (UINT *)&dwBytes);
-   g_dwOptions = GetProfileInt(_T("General"), _T("Options"), 0);
+   g_dwOptions = GetProfileInt(_T("General"), _T("Options"), g_dwOptions);
    strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    LoadAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
@@ -848,8 +848,16 @@ void CConsoleApp::OnConnectToServer()
    dlgLogin.m_szServer = g_szServer;
    dlgLogin.m_szLogin = g_szLogin;
    dlgLogin.m_bEncrypt = (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE;
-   dlgLogin.m_bNoCache = FALSE;
-   dlgLogin.m_bClearCache = FALSE;
+   if (g_dwOptions & OPT_DONT_CACHE_OBJECTS)
+   {
+      dlgLogin.m_bNoCache = TRUE;
+      dlgLogin.m_bClearCache = TRUE;
+   }
+   else
+   {
+      dlgLogin.m_bNoCache = FALSE;
+      dlgLogin.m_bClearCache = (g_dwOptions & OPT_CLEAR_OBJECT_CACHE) ? TRUE : FALSE;
+   }
    dlgLogin.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
    do
    {
@@ -873,6 +881,10 @@ void CConsoleApp::OnConnectToServer()
          g_dwOptions |= OPT_DONT_CACHE_OBJECTS;
       else
          g_dwOptions &= ~OPT_DONT_CACHE_OBJECTS;
+      if (dlgLogin.m_bClearCache)
+         g_dwOptions |= OPT_CLEAR_OBJECT_CACHE;
+      else
+         g_dwOptions &= ~OPT_CLEAR_OBJECT_CACHE;
 
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
@@ -1182,6 +1194,9 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 
             // Create "Polling" tab
             wndNodePolling.m_dwPollerNode = pObject->node.dwPollerNode;
+            wndNodePolling.m_bDisableAgent = (pObject->node.dwFlags & NF_DISABLE_NXCP) ? TRUE : FALSE;
+            wndNodePolling.m_bDisableICMP = (pObject->node.dwFlags & NF_DISABLE_ICMP) ? TRUE : FALSE;
+            wndNodePolling.m_bDisableSNMP = (pObject->node.dwFlags & NF_DISABLE_SNMP) ? TRUE : FALSE;
             wndPropSheet.AddPage(&wndNodePolling);
 
             // Create "Capabilities" tab

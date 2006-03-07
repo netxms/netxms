@@ -1823,10 +1823,20 @@ FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        IDC_EDIT_POLLER,13,27,84,14,ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "...",IDC_SELECT_POLLER,100,27,14,14
+    CONTROL         "Disable access to NetXMS &agent for all polls",
+                    IDC_CHECK_DISABLE_AGENT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,65,155,10
+    CONTROL         "Disable usage of &SNMP for all polls",
+                    IDC_CHECK_DISABLE_SNMP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,78,126,10
+    CONTROL         "Disable usage of &ICMP pings for status polling",
+                    IDC_CHECK_DISABLE_ICMP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,91,159,10
     GROUPBOX        "Network Service Poller",IDC_STATIC,7,7,278,42
     LTEXT           "Poller node:",IDC_STATIC,13,17,38,8
     LTEXT           "All network services of this node will be polled from poller node specified here, if not overrided by network service settings.",
                     IDC_STATIC,126,17,153,25
+    GROUPBOX        "Options",IDC_STATIC,7,53,278,54
 END
 
 IDD_OBJECT_RELATIONS DIALOGEX 0, 0, 292, 194
