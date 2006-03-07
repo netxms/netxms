@@ -58,6 +58,7 @@ BOOL CNxconfigApp::InitInstance()
 {
    HKEY hKey;
    DWORD dwSize, dwData = 0;
+   TCHAR *pszArg, szCmd[1024];
 
 	if (!AfxSocketInit())
 	{
@@ -92,6 +93,12 @@ BOOL CNxconfigApp::InitInstance()
    if (!_tcsicmp(m_lpCmdLine, _T("--create-agent-config")))
    {
       CreateAgentConfig();
+      return FALSE;
+   }
+   pszArg = ExtractWord(m_lpCmdLine, szCmd);
+   if (!_tcsicmp(szCmd, _T("--create-nxhttpd-config")))
+   {
+      CreateWebConfig(pszArg);
       return FALSE;
    }
 
@@ -205,7 +212,8 @@ void CNxconfigApp::CreateAgentConfig()
    IP_ADDR_STRING *pAddr;
    TCHAR szAddrList[4096], szFile[MAX_PATH];
 
-   if (_taccess(_T("nxagentd.conf"), 0) == 0)
+   _sntprintf(szFile, MAX_PATH, _T("%s\\etc\\nxagentd.conf"), m_szInstallDir);
+   if (_taccess(szFile, 0) == 0)
       return;  // File already exist, we shouldn't overwrite it
 
    // Get local interface list
@@ -232,7 +240,6 @@ void CNxconfigApp::CreateAgentConfig()
       free(pBuffer);
    }
 
-   _sntprintf(szFile, MAX_PATH, _T("%s\\etc\\nxagentd.conf"), m_szInstallDir);
    fp = _tfopen(szFile, _T("w"));
    if (fp != NULL)
    {
@@ -245,6 +252,33 @@ void CNxconfigApp::CreateAgentConfig()
       _ftprintf(fp, _T("FileStore = %s\\var\n"), m_szInstallDir);
       _ftprintf(fp, _T("RequireAuthentication = no\n"));
       _ftprintf(fp, _T("SubAgent = winperf.nsm\nSubAgent = portcheck.nsm\n"));
+      fclose(fp);
+   }
+}
+
+
+//
+// Create configuration file for nxhttpd
+//
+
+void CNxconfigApp::CreateWebConfig(TCHAR *pszServer)
+{
+   FILE *fp;
+   time_t currTime;
+   TCHAR szFile[MAX_PATH];
+
+   _sntprintf(szFile, MAX_PATH, _T("%s\\etc\\nxhttpd.conf"), m_szInstallDir);
+   if (_taccess(szFile, 0) == 0)
+      return;  // File already exist, we shouldn't overwrite it
+
+   fp = _tfopen(szFile, _T("w"));
+   if (fp != NULL)
+   {
+      currTime = time(NULL);
+      _ftprintf(fp, _T("#\n# NetXMS web server configuration file\n# Created by server installer at %s#\n\n"),
+                _tctime(&currTime));
+      _ftprintf(fp, _T("LogFile = {syslog}\nMasterServer = %s\n"), pszServer);
+      _ftprintf(fp, _T("DocumentRoot = %s\\var\\www\n"), m_szInstallDir);
       fclose(fp);
    }
 }

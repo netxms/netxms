@@ -41,6 +41,7 @@ Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignore
 Source: "..\..\libnxsnmp\Release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\libnxsl\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\nxscript\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
+Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
 ; Server files
 Source: "..\..\server\libnxsrv\Release\libnxsrv.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\core\Release\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -53,7 +54,6 @@ Source: "..\..\server\dbdrv\sqlite\Release\sqlite.ddr"; DestDir: "{app}\bin"; Fl
 Source: "..\..\server\smsdrv\generic\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxaction\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxadm\Release\nxadm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
-Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxdbmgr\Release\nxdbmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxget\Release\nxget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\tools\nxsnmpget\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -116,9 +116,9 @@ Name: "{app}\database"
 Name: "{app}\var\packages"
 
 [Registry]
-Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty; Components: server
-Root: HKLM; Subkey: "Software\NetXMS\Server"; Flags: uninsdeletekey; Components: server
-Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Components: server
+Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty; Components: server websrv
+Root: HKLM; Subkey: "Software\NetXMS\Server"; Flags: uninsdeletekey; Components: server websrv
+Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Components: server websrv
 Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\netxmsd.conf"; Components: server
 
 [Run]
@@ -129,14 +129,22 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; S
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server
 ;Filename: "{app}\bin\netxmsd.exe"; Parameters: "--config ""{app}\etc\netxmsd.conf"" install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "start"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-nxhttpd-config {code:GetMasterServer}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating web server's configuration file..."; Components: websrv
+Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-c ""{app}\etc\nxhttpd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing web server service..."; Flags: runhidden; Components: websrv
+Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting web server service..."; Flags: runhidden; Components: websrv
 
 [UninstallRun]
+Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-S"; StatusMsg: "Stopping web server service..."; RunOnceId: "StopWebService"; Flags: runhidden; Components: websrv
+Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling web server service..."; RunOnceId: "DelWebService"; Flags: runhidden; Components: websrv
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "stop"; StatusMsg: "Stopping core service..."; RunOnceId: "StopCoreService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "remove"; StatusMsg: "Uninstalling core service..."; RunOnceId: "DelCoreService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-S"; StatusMsg: "Stopping agent service..."; RunOnceId: "StopAgentService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling agent service..."; RunOnceId: "DelAgentService"; Flags: runhidden; Components: server
 
 [Code]
+Var
+  HttpdSettingsPage: TInputQueryWizardPage;
+
 Procedure StopAllServices;
 Var
   strExecName : String;
@@ -153,5 +161,32 @@ Begin
   Begin
     Exec(strExecName, '-S', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   End;
+End;
+
+Procedure InitializeWizard;
+Begin
+  HttpdSettingsPage := CreateInputQueryPage(wpSelectTasks,
+    'Select Master Server', 'Where is master server for web interface?',
+    'Please enter host name or IP address of NetXMS master server. NetXMS web interface you are installing will provide connectivity to that server.');
+  HttpdSettingsPage.Add('NetXMS server:', False);
+  HttpdSettingsPage.Values[0] := GetPreviousData('MasterServer', 'localhost');
+End;
+
+Procedure RegisterPreviousData(PreviousDataKey: Integer);
+Begin
+  SetPreviousData(PreviousDataKey, 'MasterServer', HttpdSettingsPage.Values[0]);
+End;
+
+Function ShouldSkipPage(PageID: Integer): Boolean;
+Begin
+  If PageID = HttpdSettingsPage.ID Then
+    Result := not IsComponentSelected('websrv')
+  Else
+    Result := False;
+End;
+
+Function GetMasterServer(Param: String): String;
+Begin
+  Result := HttpdSettingsPage.Values[0];
 End;
 
