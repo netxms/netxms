@@ -28,6 +28,12 @@
 #include <termios.h>
 #endif
 
+#ifndef CBAUD
+# define CBAUD 0010017
+#endif 
+#ifndef CBAUDEX
+# define CBAUDEX 0010000
+#endif 
 
 //
 // Constructor

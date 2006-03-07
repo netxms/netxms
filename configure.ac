@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.144 2006-03-07 09:42:47 alk Exp $
+# $Id: configure.ac,v 1.145 2006-03-07 13:31:17 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -265,7 +265,7 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
-	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript nxhttpd"
+	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
@@ -275,10 +275,11 @@ AC_ARG_WITH(dist,
 AC_ARG_WITH(nxhttpd,
 [AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
-	MODULES="$MODULES libnxcl nxhttpd"
-	BUILD_WEB_CLIENT="yes"
-	BUILD_CLIENT="yes"
-	DYNAMIC_COMPONENTS="yes"
+	if test "x$withval" != "xno" ; then
+		MODULES="$MODULES libnxcl nxhttpd"
+		BUILD_WEB_CLIENT="yes"
+		DYNAMIC_COMPONENTS="yes"
+	fi
 ])
 
 AC_ARG_WITH(openssl,
