@@ -9,4 +9,4 @@ EXTRA_DIST = \
 	libnetxms.vcp libnetxms.vcw \
 	Makefile.nw netxms.def \
 	libnetxms.h md5.h sha1.h \
-	regex.c c_lgcc3.cpp
+	regex.c c_lgcc3.cpp dir.c getopt.c
