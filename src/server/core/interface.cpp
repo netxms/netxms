@@ -256,7 +256,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQ
    // Poll interface using different methods
    if (m_dwIfType != IFTYPE_NETXMS_NAT_ADAPTER)
    {
-      if (pNode->Flags() & NF_IS_NATIVE_AGENT)
+      if ((pNode->Flags() & NF_IS_NATIVE_AGENT) &&
+          (!(pNode->Flags() & NF_DISABLE_NXCP)))
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
          m_iStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
@@ -264,7 +265,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQ
             bNeedPoll = FALSE;
       }
    
-      if ((pNode->Flags() & NF_IS_SNMP) && bNeedPoll)
+      if (bNeedPoll && (pNode->Flags() & NF_IS_SNMP) &&
+          (!(pNode->Flags() & NF_DISABLE_SNMP)))
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
          m_iStatus = pNode->GetInterfaceStatusFromSNMP(m_dwIfIndex);
@@ -275,21 +277,28 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQ
    
    if (bNeedPoll)
    {
-      // Use ICMP ping as a last option
-      if ((m_dwIpAddr != 0) && 
-           ((!(pNode->Flags() & NF_BEHIND_NAT)) || 
-            (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
+      if (pNode->Flags() & NF_DISABLE_ICMP)
       {
-         SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
-         dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
-         if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
-            WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
-         m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+         m_iStatus = STATUS_UNKNOWN;
       }
       else
       {
-         // Interface doesn't have an IP address, so we can't ping it
-         m_iStatus = STATUS_UNKNOWN;
+         // Use ICMP ping as a last option
+         if ((m_dwIpAddr != 0) && 
+              ((!(pNode->Flags() & NF_BEHIND_NAT)) || 
+               (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
+         {
+            SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
+            dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
+            if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+               WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+            m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+         }
+         else
+         {
+            // Interface doesn't have an IP address, so we can't ping it
+            m_iStatus = STATUS_UNKNOWN;
+         }
       }
    }
 

@@ -152,15 +152,22 @@ typedef void * NXC_SESSION;
 // Node flags
 //
 
-#define NF_IS_SNMP         0x0001
-#define NF_IS_NATIVE_AGENT 0x0002
-#define NF_IS_BRIDGE       0x0004
-#define NF_IS_ROUTER       0x0008
-#define NF_IS_LOCAL_MGMT   0x0010
-#define NF_IS_PRINTER      0x0020
-#define NF_IS_OSPF         0x0040
-#define NF_BEHIND_NAT      0x0080
-#define NF_IS_CPSNMP       0x0100   /* CheckPoint SNMP agent on port 260 */
+#define NF_SYSTEM_FLAGS    0x0000FFFF
+#define NF_USER_FLAGS      0xFFFF0000
+
+#define NF_IS_SNMP         0x00000001
+#define NF_IS_NATIVE_AGENT 0x00000002
+#define NF_IS_BRIDGE       0x00000004
+#define NF_IS_ROUTER       0x00000008
+#define NF_IS_LOCAL_MGMT   0x00000010
+#define NF_IS_PRINTER      0x00000020
+#define NF_IS_OSPF         0x00000040
+#define NF_BEHIND_NAT      0x00000080
+#define NF_IS_CPSNMP       0x00000100   /* CheckPoint SNMP agent on port 260 */
+
+#define NF_DISABLE_SNMP    0x01000000
+#define NF_DISABLE_NXCP    0x02000000
+#define NF_DISABLE_ICMP    0x04000000
 
 
 //
@@ -337,8 +344,9 @@ typedef void * NXC_SESSION;
 #define OBJ_UPDATE_NETWORK_LIST     ((DWORD)0x020000)
 #define OBJ_UPDATE_STATUS_ALG       ((DWORD)0x040000)
 #define OBJ_UPDATE_PROXY_NODE       ((DWORD)0x080000)
+#define OBJ_UPDATE_NODE_FLAGS       ((DWORD)0x100000)
 
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x0C41FF)
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x1C41FF)
 #define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x04FEC1)
 
 
@@ -849,6 +857,7 @@ typedef struct
    int iStatusSingleTh;
    int iStatusThresholds[4];
    DWORD dwProxyNode;
+   DWORD dwNodeFlags;
 } NXC_OBJECT_UPDATE;
 
 

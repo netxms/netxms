@@ -637,6 +637,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->dwFlags & OBJ_UPDATE_PEER_GATEWAY)
       msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
+   if (pUpdate->dwFlags & OBJ_UPDATE_NODE_FLAGS)
+      msg.SetVariable(VID_FLAGS, pUpdate->dwNodeFlags);
    if (pUpdate->dwFlags & OBJ_UPDATE_STATUS_ALG)
    {
       msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);

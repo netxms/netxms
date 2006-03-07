@@ -513,7 +513,8 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    {
       pIfList = GetLocalInterfaceList();
    }
-   if ((pIfList == NULL) && (m_dwFlags & NF_IS_NATIVE_AGENT))
+   if ((pIfList == NULL) && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
+       (!(m_dwFlags & NF_DISABLE_NXCP)))
    {
       AgentLock();
       if (ConnectToAgent())
@@ -523,7 +524,8 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
       }
       AgentUnlock();
    }
-   if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))
+   if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP) &&
+       (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
       pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
                                      m_szCommunityString, m_dwNodeType);
@@ -728,7 +730,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    tNow = time(NULL);
 
    // Check SNMP agent connectivity
-   if (m_dwFlags & NF_IS_SNMP)
+   if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
       TCHAR szBuffer[256];
       DWORD dwResult;
@@ -771,7 +773,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    }
 
    // Check native agent connectivity
-   if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)))
    {
       AgentConnection *pAgentConn;
 
@@ -980,7 +982,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       // Check node's capabilities
       SetPollerInfo(nPoller, "capability check");
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-      if (!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)))
+      if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))) &&
+          (!(m_dwFlags & NF_DISABLE_SNMP)))
       {
          if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
                      ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
@@ -1074,7 +1077,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          }
       }
 
-      if (!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)))
+      if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))) &&
+          (!(m_dwFlags & NF_DISABLE_NXCP)))
       {
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
                                           m_wAuthMethod, m_szSharedSecret);
@@ -1781,6 +1785,13 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_PROXY_NODE))
       m_dwProxyNode = pRequest->GetVariableLong(VID_PROXY_NODE);
 
+   // Change flags
+   if (pRequest->IsVariableExist(VID_FLAGS))
+   {
+      m_dwFlags &= NF_SYSTEM_FLAGS;
+      m_dwFlags |= pRequest->GetVariableLong(VID_FLAGS) & NF_USER_FLAGS;
+   }
+
    return Template::ModifyFromMessage(pRequest, TRUE);
 }
 
@@ -2245,7 +2256,7 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
 {
    ROUTING_TABLE *pRT = NULL;
 
-   if (m_dwFlags & NF_IS_NATIVE_AGENT)
+   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)))
    {
       AgentLock();
       if (ConnectToAgent())
@@ -2254,7 +2265,7 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
       }
       AgentUnlock();
    }
-   if ((pRT == NULL) && (m_dwFlags & NF_IS_SNMP))
+   if ((pRT == NULL) && (m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
       pRT = SnmpGetRoutingTable(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString);
    }
