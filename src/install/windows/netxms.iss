@@ -156,6 +156,12 @@ Begin
     Exec(strExecName, 'stop', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   End;
 
+  strExecName := ExpandConstant('{app}\bin\nxhttpd.exe');
+  If FileExists(strExecName) Then
+  Begin
+    Exec(strExecName, '-S', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
+  End;
+
   strExecName := ExpandConstant('{app}\bin\nxagentd.exe');
   If FileExists(strExecName) Then
   Begin
