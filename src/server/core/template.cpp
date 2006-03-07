@@ -28,12 +28,30 @@
 //
 
 Template::Template()
+         :NetObj()
 {
    m_dwNumItems = 0;
    m_ppItems = NULL;
    m_dwDCILockStatus = INVALID_INDEX;
    m_pszDescription = NULL;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
+}
+
+
+//
+// Constructor for new template object
+//
+
+Template::Template(TCHAR *pszName)
+         :NetObj()
+{
+   nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
+   m_dwNumItems = 0;
+   m_ppItems = NULL;
+   m_dwDCILockStatus = INVALID_INDEX;
+   m_pszDescription = NULL;
+   m_dwVersion = 0x00010000;  // Initial version is 1.0
+   m_bIsHidden = TRUE;
 }
 
 

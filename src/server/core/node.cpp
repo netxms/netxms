@@ -138,7 +138,10 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwId = dwId;
 
    if (!LoadCommonProperties())
+   {
+      DbgPrintf(AF_DEBUG_OBJECTS, "Cannot load common properties for node object %d", dwId);
       return FALSE;
+   }
 
    _sntprintf(szQuery, 512, "SELECT primary_ip,node_flags,"
                             "snmp_version,discovery_flags,auth_method,secret,"
@@ -153,6 +156,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    if (DBGetNumRows(hResult) == 0)
    {
       DBFreeResult(hResult);
+      DbgPrintf(AF_DEBUG_OBJECTS, "Missing record in \"nodes\" table for node object %d", dwId);
       return FALSE;
    }
 
@@ -191,6 +195,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
       if (iNumRows == 0)
       {
          DBFreeResult(hResult);
+         DbgPrintf(AF_DEBUG_OBJECTS, "Unbound node object %d (%s)", dwId, m_szName);
          return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
       }
 
@@ -223,7 +228,11 @@ BOOL Node::CreateFromDB(DWORD dwId)
       // Walk through all items in the node and load appropriate thresholds
       for(i = 0; i < (int)m_dwNumItems; i++)
          if (!m_ppItems[i]->LoadThresholdsFromDB())
+         {
+            DbgPrintf(AF_DEBUG_OBJECTS, "Cannot load thresholds for DCI %d of node %d (%s)",
+                      m_ppItems[i]->Id(), dwId, m_szName);
             bResult = FALSE;
+         }
    }
    else
    {

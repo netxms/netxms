@@ -323,6 +323,7 @@ protected:
 
 public:
    Template();
+   Template(TCHAR *pszName);
    virtual ~Template();
 
    virtual int Type(void) { return OBJECT_TEMPLATE; }

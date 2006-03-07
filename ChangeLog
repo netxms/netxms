@@ -3,6 +3,7 @@
 *
 
 - Web interface redesigned
+- Added OpenBSD platform subagent
 - Added UPS monitoring subagent
 - Netscreen (now Juniper) MIBs added
 - Windows console: graphs improved

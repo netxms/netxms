@@ -3007,8 +3007,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_TEMPLATE:
-                     pObject = new Template;
-                     pObject->SetName(szObjectName);
+                     pObject = new Template(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_NETWORKSERVICE:
