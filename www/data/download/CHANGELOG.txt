@@ -7,6 +7,8 @@
 - Added UPS monitoring subagent
 - Netscreen (now Juniper) MIBs added
 - Windows console: graphs improved
+- Added possibility to log all incoming SNMP traps
+- Fixed problems with very long opening time of event log
 - Fixed issues: #58, #72, #73, #76, #78, #81
 
 
