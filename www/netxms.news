@@ -1,3 +1,6 @@
+21-Jan-2006|0.2.10 released|Version 0.2.10 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
+26-Jan-2006|Windows management console is working under Wine|management console version 0.2.9 (nxcon.exe) was successfully tested under Wine version 0.9.5
+21-Jan-2006|0.2.9 released|Version 0.2.9 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 02-Jan-2006|0.2.8-hf1 released|HotFix for version 0.2.8: broken freebsd agent.
 29-Dev-2005|0.2.8 released|Version 0.2.8 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 24-Nov-2005|Windows installer 0.2.7-r1 published|Windows installer repacked, the only change: added scheme file for sqlite that was missing in the 0.2.7 release.

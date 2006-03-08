@@ -1,4 +1,16 @@
 *
+* 0.2.10
+*
+
+- Web interface redesigned
+- Added OpenBSD platform subagent
+- Added UPS monitoring subagent
+- Netscreen (now Juniper) MIBs added
+- Windows console: graphs improved
+- Fixed issues: #58, #72, #73, #76, #78, #81
+
+
+*
 * 0.2.9
 *
 
@@ -8,7 +20,7 @@
 - Added startup scripts for Gentoo Linux
 - Windows console: agent configuration editor improved
 - Alarm Viewer: repeated alarm sounds added
-- Fixed issues: #64, #68, #69, #70, #71
+- Fixed issues: #64, #68, #69, #70, #71, #75
 
 
 *
