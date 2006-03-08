@@ -255,7 +255,7 @@ void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
    {
       rec.qwId = pMsg->GetVariableInt64(dwId++);
       rec.dwTimeStamp = pMsg->GetVariableLong(dwId++);
-      rec.dwIpAddr = pMsg->GetVariableShort(dwId++);
+      rec.dwIpAddr = pMsg->GetVariableLong(dwId++);
       rec.dwObjectId = pMsg->GetVariableLong(dwId++);
       pMsg->GetVariableStr(dwId++, rec.szTrapOID, MAX_DB_STRING);
       rec.pszTrapVarbinds = pMsg->GetVariableStr(dwId++);

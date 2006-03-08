@@ -6275,7 +6275,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             msg.SetVariable(dwId++, DBGetFieldAsyncIPAddr(hResult, 2));
             msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 3));
             msg.SetVariable(dwId++, DBGetFieldAsync(hResult, 4, szBuffer, 256));
-            DBGetFieldAsync(hResult, 7, szBuffer, 4096);
+            DBGetFieldAsync(hResult, 5, szBuffer, 4096);
             DecodeSQLString(szBuffer);
             msg.SetVariable(dwId++, szBuffer);
          }
