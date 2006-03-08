@@ -13,6 +13,7 @@
 /TODO -text
 /UPGRADE -text
 /acinclude.m4 -text
+/clean -text
 /configure.ac -text
 contrib/Makefile.am -text
 contrib/dct/Makefile.am -text
