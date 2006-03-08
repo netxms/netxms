@@ -198,6 +198,7 @@ m4/Makefile.am -text
 netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
+netware/version.inc -text
 /netxms.dsw -text
 /reconf -text
 sql/.cvsignore -text
@@ -858,7 +859,6 @@ src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text
 src/libnxcl/libnxcl.vcp -text
-src/libnxcl/libnxcl.vcproj -text
 src/libnxcl/libnxcl.vcw -text
 src/libnxcl/lpp.cpp -text
 src/libnxcl/main.cpp -text

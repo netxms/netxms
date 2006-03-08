@@ -1,0 +1,2 @@
+VERSION 0,2,10
+COPYRIGHT "Copyright (c) 2004, 2005, 2006 NetXMS Team"
