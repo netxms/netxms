@@ -1,4 +1,4 @@
-/* $Id: logscan.cpp,v 1.1 2006-03-09 11:14:55 alk Exp $ */
+/* $Id: logscan.cpp,v 1.2 2006-03-09 11:44:42 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -118,7 +118,8 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 				tmp[0] = 0;
 				while (fgets(tmp,sizeof(tmp), f) != NULL)
 				{
-					if (strcasestr(tmp, subString) != NULL)
+					// TODO: change to strcasestr?
+					if (strstr(tmp, subString) != NULL)
 					{
 						ret_string(pValue, tmp);
 						ret = SYSINFO_RC_SUCCESS;
@@ -151,5 +152,8 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/03/09 11:14:55  alk
+simple log scanner added
+
 
 */
