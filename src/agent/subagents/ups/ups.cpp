@@ -29,6 +29,7 @@
 
 UPSInterface::UPSInterface(TCHAR *pszDevice)
 {
+   m_pszName = NULL;
    m_pszDevice = _tcsdup(pszDevice);
    m_bIsConnected = FALSE;
 }
@@ -41,6 +42,28 @@ UPSInterface::UPSInterface(TCHAR *pszDevice)
 UPSInterface::~UPSInterface()
 {
    safe_free(m_pszDevice);
+   safe_free(m_pszName);
+}
+
+
+//
+// Set name
+//
+
+void UPSInterface::SetName(TCHAR *pszName)
+{
+   safe_free(m_pszName);
+   if (pszName[0] == 0)
+   {
+      TCHAR szBuffer[MAX_DB_STRING];
+
+      _sntprintf(szBuffer, MAX_DB_STRING, _T("%s-%s"), Type(), m_pszDevice);
+      m_pszName = _tcsdup(szBuffer);
+   }
+   else
+   {
+      m_pszName = _tcsdup(pszName);
+   }
 }
 
 

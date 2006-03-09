@@ -146,8 +146,9 @@ static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
    for(i = 0; i < MAX_UPS_DEVICES; i++)
       if (m_deviceInfo[i] != NULL)
       {
-         _sntprintf(szBuffer, 256, _T("%d %s %s"), i,
-                    m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type());
+         _sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
+                    m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type(),
+                    m_deviceInfo[i]->Name());
          NxAddResultString(pValue, szBuffer);
       }
    return SYSINFO_RC_SUCCESS;
@@ -180,7 +181,7 @@ static void UnloadHandler(void)
 static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 {
    TCHAR *ptr, *eptr, *pszCurrField;
-   TCHAR szPort[MAX_PATH];
+   TCHAR szPort[MAX_PATH], szName[MAX_DB_STRING] = _T("");
    int nState, nField, nDev, nPos, nProto;
 
    // Parse line
@@ -227,6 +228,9 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
                         {
                            nState = 255;  // Error
                         }
+                        break;
+                     case 3:  // Name
+                        nx_strncpy(szName, pszCurrField, MAX_DB_STRING);
                         break;
                      default:
                         nState = 255;  // Error
@@ -277,7 +281,7 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
    free(pszCurrField);
 
    // Add new device if parsing was successful
-   if ((nState == -1) && (nField == 3))
+   if ((nState == -1) && (nField >= 3))
    {
       if (m_deviceInfo[nDev] != NULL)
          delete m_deviceInfo[nDev];
@@ -294,9 +298,10 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
          default:
             break;
       }
+      m_deviceInfo[nDev]->SetName(szName);
    }
 
-   return ((nState == -1) && (nField == 3));
+   return ((nState == -1) && (nField >= 3));
 }
 
 

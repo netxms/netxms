@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_core.h
+** File: nms_core.h
 **
 **/
 
@@ -287,6 +287,24 @@ typedef struct
    DWORD dwCode;        // Data-specific update code
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
+
+
+//
+// Extended agent connection
+//
+
+class AgentConnectionEx : public AgentConnection
+{
+protected:
+   virtual void OnTrap(CSCPMessage *pMsg);
+
+public:
+   AgentConnectionEx() : AgentConnection() { }
+   AgentConnectionEx(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+                     int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL) :
+            AgentConnection(dwAddr, wPort, iAuthMethod, pszSecret) { }
+   virtual ~AgentConnectionEx();
+};
 
 
 //

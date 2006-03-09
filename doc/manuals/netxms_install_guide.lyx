@@ -80,7 +80,7 @@ clearpage
 
 \layout Section
 
-Server(agent) installation and initial configuration
+Server installation and initial configuration
 \layout Subsection
 
 On Windows
@@ -589,19 +589,11 @@ Installation troubleshooting
 Agent troubleshooting
 \layout Itemize
 
-Check 
-\emph on 
-Servers
-\emph default 
-, 
-\emph on 
-ControlServers
-\emph default 
- and 
+Check parameter 
 \emph on 
 MasterServers
 \emph default 
- in nxagentd.conf, it should match server's address.
+ in nxagentd.conf, it should match your management server's address.
 \layout Itemize
 
 Start in debug mode:
@@ -692,9 +684,6 @@ On Windows
 Stop NetXMS Core
 \layout Enumerate
 
-Stop NetXMS Agent
-\layout Enumerate
-
 Run database integrity checker:
 \begin_deeper 
 \layout LyX-Code
@@ -712,9 +701,6 @@ Start database upgrade procedure:
 
 nxdbmgr upgrade
 \end_deeper 
-\layout Enumerate
-
-Start NetXMS Agent
 \layout Enumerate
 
 Start NetXMS Core

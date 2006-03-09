@@ -1394,7 +1394,7 @@ BOOL Node::ConnectToAgent(void)
 {
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
-      m_pAgentConnection = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+      m_pAgentConnection = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 
    // Check if we already connected
    if (m_pAgentConnection->Nop() == ERR_SUCCESS)

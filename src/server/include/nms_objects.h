@@ -32,6 +32,7 @@
 //
 
 class AgentConnection;
+class AgentConnectionEx;
 class ClientSession;
 class Queue;
 
@@ -517,7 +518,7 @@ protected:
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_mutexRTAccess;
-   AgentConnection *m_pAgentConnection;
+   AgentConnectionEx *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
    DWORD m_dwProxyNode;       // Node used as proxy for agent connection
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];

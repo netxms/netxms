@@ -61,6 +61,7 @@ class UPSInterface
 {
 protected:
    TCHAR *m_pszDevice;
+   TCHAR *m_pszName;
    BOOL m_bIsConnected;
 
    void SetConnected(void) { m_bIsConnected = TRUE; }
@@ -70,8 +71,11 @@ public:
    virtual ~UPSInterface();
 
    const TCHAR *Device(void) { return m_pszDevice; }
+   const TCHAR *Name(void) { return CHECK_NULL(m_pszName); }
    virtual TCHAR *Type(void) { return _T("GENERIC"); }
    BOOL IsConnected(void) { return m_bIsConnected; }
+
+   void SetName(TCHAR *pszName);
 
    virtual BOOL Open(void);
    virtual void Close(void);

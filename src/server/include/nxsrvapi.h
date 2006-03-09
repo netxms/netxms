@@ -245,7 +245,7 @@ public:
    AgentConnection();
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                    int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
-   ~AgentConnection();
+   virtual ~AgentConnection();
 
    BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
    void Disconnect(void);
