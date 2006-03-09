@@ -274,6 +274,8 @@ src/agent/subagents/linux/proc.cpp -text
 src/agent/subagents/linux/proc.h -text
 src/agent/subagents/linux/system.cpp -text
 src/agent/subagents/linux/system.h -text
+src/agent/subagents/logscan/Makefile.am -text
+src/agent/subagents/logscan/logscan.cpp -text
 src/agent/subagents/netware/Makefile.am -text
 src/agent/subagents/netware/Makefile.nw -text
 src/agent/subagents/netware/netware.cpp -text
