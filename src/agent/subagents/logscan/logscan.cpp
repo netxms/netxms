@@ -1,4 +1,4 @@
-/* $Id: logscan.cpp,v 1.3 2006-03-09 12:25:26 victor Exp $ */
+/* $Id: logscan.cpp,v 1.4 2006-03-09 15:18:49 alk Exp $ */
 /*
 ** NetXMS LogScan subagent
 ** Copyright (C) 2006 Alex Kirhenshtein
@@ -134,6 +134,14 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 				tmp[0] = 0;
 				while (fgets(tmp,sizeof(tmp), f) != NULL)
 				{
+					for (int i = 0; i < strlen(tmp); i++)
+					{
+						if (tmp[i] == 0x0D || tmp[i] == 0x0A)
+						{
+							tmp[i] = 0;
+							break;
+						}
+					}
 					// TODO: change to strcasestr?
 					if (strstr(tmp, subString) != NULL)
 					{
@@ -168,6 +176,9 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/09 12:25:26  victor
+Windows port
+
 Revision 1.2  2006/03/09 11:44:42  alk
 *** empty log message ***
 
