@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.1 2006-03-07 09:42:48 alk Exp $ */
+/* $Id: system.cpp,v 1.2 2006-03-12 22:16:44 alk Exp $ */
 
 /* 
 ** NetXMS subagent for OpenBSD
@@ -80,7 +80,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 				utsName.machine);
 		// TODO: processor & platform
 
-   	ret_string(pValue, szBuff);
+   		ret_string(pValue, szBuff);
 
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -110,7 +110,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	double dLoad[3];
 
 	// get processor
-   //NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{
@@ -157,17 +157,16 @@ LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-//	struct statvfs s;
-   char szArg[128] = {0};
-	int nCount;
+   	char szArg[128] = {0};
+	int nCount = -1;
 	int nResult = -1;
 	int i;
 	kvm_t *kd;
 	struct kinfo_proc *kp;
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
 	{
 		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
@@ -176,13 +175,9 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		{
 			if (szArg[0] != 0)
 			{
-				for (i = 0; i < nCount; i++)
+				for (nResult = 0, i = 0; i < nCount; i++)
 				{
-#if __FreeBSD__ >= 5
-					if (strcasecmp(kp[i].ki_comm, szArg) == 0)
-#else
 						if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
-#endif
 						{
 							nResult++;
 						}
@@ -197,9 +192,9 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		kvm_close(kd);
 	}
 
-	if (nCount >= 0)
+	if (nResult >= 0)
 	{
-		ret_int(pValue, nCount);
+		ret_int(pValue, nResult);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
@@ -315,7 +310,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 
 
-	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
 	{
 		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
@@ -327,11 +322,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				char szBuff[128];
 
 				snprintf(szBuff, sizeof(szBuff), "%d %s",
-#if __FreeBSD__ >= 5
-						kp[i].ki_pid, kp[i].ki_comm
-#else
 						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
-#endif
 						);
 				NxAddResultString(pValue, szBuff);
 			}
