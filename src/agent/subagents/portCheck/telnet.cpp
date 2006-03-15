@@ -1,4 +1,4 @@
-/* $Id: telnet.cpp,v 1.2 2006-03-15 12:00:39 alk Exp $ */
+/* $Id: telnet.cpp,v 1.3 2006-03-15 13:28:18 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -35,7 +35,7 @@ LONG H_CheckTelnet(char *pszParam, char *pArg, char *pValue)
 int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass)
 {
 	int nRet = 0;
-	int nSd;
+	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
@@ -98,5 +98,8 @@ int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szP
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/03/15 12:00:39  alk
+*** empty log message ***
+
 
 */

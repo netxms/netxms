@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.3 2006-03-15 12:00:10 alk Exp $ */
+/* $Id: net.h,v 1.4 2006-03-15 13:28:18 victor Exp $ */
 
 #ifndef __NET__H__
 #define __NET__H__
@@ -9,8 +9,8 @@ enum
 	PROTOCOL_TCP
 };
 
-int NetConnectTCP(char *, DWORD, unsigned short);
-bool NetCanRead(int, int);
+SOCKET NetConnectTCP(char *, DWORD, unsigned short);
+bool NetCanRead(SOCKET, int);
 int NetRead(int, char *, int);
 int NetWrite(int, char *, int);
 void NetClose(int);
@@ -21,6 +21,10 @@ void NetClose(int);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/15 12:00:10  alk
+simple telnet service checker added: it connects, response WON'T/DON'T to
+all offers and disconnects (this prevents from "peer died" in logs)
+
 Revision 1.2  2005/01/28 02:50:32  alk
 added support for CMD_CHECK_NETWORK_SERVICE
 suported:

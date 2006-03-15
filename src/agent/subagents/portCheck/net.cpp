@@ -1,13 +1,13 @@
-/* $Id: net.cpp,v 1.5 2006-03-15 12:00:10 alk Exp $ */
+/* $Id: net.cpp,v 1.6 2006-03-15 13:28:18 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 
 #include "net.h"
 
-int NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
+SOCKET NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
 {
-	int nSocket;
+	SOCKET nSocket;
 
 	nSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (nSocket > 0)
@@ -35,7 +35,7 @@ int NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
 	return nSocket;
 }
 
-bool NetCanRead(int nSocket, int nTimeout /* ms */)
+bool NetCanRead(SOCKET nSocket, int nTimeout /* ms */)
 {
 	bool ret = false;
 	struct timeval timeout;
@@ -74,6 +74,10 @@ void NetClose(int nSocket)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/03/15 12:00:10  alk
+simple telnet service checker added: it connects, response WON'T/DON'T to
+all offers and disconnects (this prevents from "peer died" in logs)
+
 Revision 1.4  2005/11/16 22:40:18  victor
 close() replaced with closesocket()
 
