@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.4 2005-11-16 22:40:18 victor Exp $ */
+/* $Id: net.cpp,v 1.5 2006-03-15 12:00:10 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -35,6 +35,25 @@ int NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
 	return nSocket;
 }
 
+bool NetCanRead(int nSocket, int nTimeout /* ms */)
+{
+	bool ret = false;
+	struct timeval timeout;
+	fd_set rdfs;
+
+	FD_ZERO(&rdfs);
+	FD_SET(nSocket, &rdfs);
+	timeout.tv_sec = nTimeout / 1000;
+	timeout.tv_usec = (nTimeout % 1000) * 1000;
+
+	if (select(nSocket + 1, &rdfs, NULL, NULL, &timeout) > 0)
+	{
+		ret = true;
+	}
+
+	return ret;
+}
+
 int NetRead(int nSocket, char *pBuff, int nSize)
 {
 	return recv(nSocket, pBuff, nSize, 0);
@@ -55,6 +74,9 @@ void NetClose(int nSocket)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/11/16 22:40:18  victor
+close() replaced with closesocket()
+
 Revision 1.3  2005/01/29 21:24:03  victor
 Fixed some Windows compatibility issues
 

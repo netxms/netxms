@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.12 2005-10-18 09:01:16 alk Exp $ */
+/* $Id: main.cpp,v 1.13 2006-03-15 12:00:10 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -47,6 +47,12 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 		break;
 	case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL);
+
+			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
+			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+		break;
+	case NETSRV_TELNET:
+			nRet = CheckTelnet(NULL, dwAddress, wPort, NULL, NULL);
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
 			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
@@ -128,6 +134,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "ServiceCheck.SSH(*)",          H_CheckSSH,        NULL },
    { "ServiceCheck.HTTP(*)",         H_CheckHTTP,       NULL },
    { "ServiceCheck.Custom(*)",       H_CheckCustom,     NULL },
+   { "ServiceCheck.Telnet(*)",       H_CheckTelnet,     NULL },
 };
 
 /*static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -164,6 +171,12 @@ DECLARE_SUBAGENT_INIT(PORTCHECK)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2005/10/18 09:01:16  alk
+Added commands (ServiceCheck.*) for
+	http
+	smtp
+	custom
+
 Revision 1.11  2005/09/15 21:47:03  victor
 Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
 

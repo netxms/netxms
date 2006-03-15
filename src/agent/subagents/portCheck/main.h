@@ -19,5 +19,7 @@ LONG H_CheckHTTP(char *, char *, char *);
 int CheckHTTP(char *, DWORD, short, char *, char *, char *);
 LONG H_CheckCustom(char *, char *, char *);
 int CheckCustom(char *, DWORD, short, char *, char *);
+LONG H_CheckTelnet(char *, char *, char *);
+int CheckTelnet(char *, DWORD, short, char *, char *);
 
 #endif // __MAIN__H__
