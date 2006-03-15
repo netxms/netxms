@@ -54,11 +54,11 @@ void InitStaticSubagents(void);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEhHIRsSUvX:"
+#define VALID_OPTIONS   "c:CdDEhHIRsSUvX:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDhvX:"
+#define VALID_OPTIONS   "c:CDhvX:Z:"
 #else
-#define VALID_OPTIONS   "c:CdDhp:vX:"
+#define VALID_OPTIONS   "c:CdDhp:vX:Z:"
 #endif
 
 
@@ -75,6 +75,7 @@ void InitStaticSubagents(void);
 #define ACTION_CHECK_CONFIG            6
 #define ACTION_INSTALL_EVENT_SOURCE    7
 #define ACTION_REMOVE_EVENT_SOURCE     8
+#define ACTION_CREATE_CONFIG           9
 
 
 //
@@ -881,6 +882,32 @@ static void ExitHandler(int nSig)
 
 
 //
+// Create configuration file
+//
+
+static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore)
+{
+   FILE *fp;
+   time_t currTime;
+
+   if (_taccess(g_szConfigFile, 0) == 0)
+      return 0;  // File already exist, we shouldn't overwrite it
+
+   fp = _tfopen(g_szConfigFile, _T("w"));
+   if (fp != NULL)
+   {
+      currTime = time(NULL);
+      _ftprintf(fp, _T("#\n# NetXMS agent configuration file\n# Created by agent installer at %s#\n\n"),
+                _tctime(&currTime));
+      _ftprintf(fp, _T("MasterServers = %s\nLogFile = %s\nFileStore = %s\n"),
+                pszServer, pszLogFile, pszFileStore);
+      fclose(fp);
+   }
+   return (fp != NULL) ? 0 : 2;
+}
+
+
+//
 // Startup
 //
 
@@ -923,11 +950,11 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_DEBUG;
             break;
          case 'c':   // Configuration file
-            nx_strncpy(g_szConfigFile, optarg, MAX_PATH - 1);
+            nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
             break;
 #if !defined(_WIN32) && !defined(_NETWARE)
          case 'p':   // PID file
-            nx_strncpy(g_szPidFile, optarg, MAX_PATH - 1);
+            nx_strncpy(g_szPidFile, optarg, MAX_PATH);
             break;
 #endif
          case 'C':   // Configuration check only
@@ -940,6 +967,10 @@ int main(int argc, char *argv[])
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
             dwOldPID = strtoul(optarg, NULL, 10);
+            break;
+         case 'Z':   // Create configuration file
+            iAction = ACTION_CREATE_CONFIG;
+            nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
             break;
 #ifdef _WIN32
          case 'H':   // Hide window
@@ -1062,6 +1093,10 @@ int main(int argc, char *argv[])
             ConsolePrintf("Configuration file check failed\n");
             iExitCode = 2;
          }
+         break;
+      case ACTION_CREATE_CONFIG:
+         iExitCode = CreateConfig(CHECK_NULL(argv[optind]), CHECK_NULL(argv[optind + 1]),
+                                  CHECK_NULL(argv[optind + 2]));
          break;
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:

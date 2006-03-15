@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.10
-AppVersion=0.2.10
+AppVerName=NetXMS Agent 0.2.11-dev
+AppVersion=0.2.11-dev
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.10
+OutputBaseFilename=nxagent-0.2.11-dev
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -37,6 +37,7 @@ Name: "{app}\etc"
 Name: "{app}\var"
 
 [Run]
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetMasterServer} {{syslog} ""{app}\var"""; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
 
@@ -45,6 +46,10 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-S"; StatusMsg: "Stopping servi
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling service..."; RunOnceId: "DelService"; Flags: runhidden
 
 [Code]
+Var
+  ServerSelectionPage: TInputQueryWizardPage;
+  SubagentSelectionPage: TInputOptionWizardPage;
+
 Procedure StopService;
 Var
   strExecName : String;
@@ -55,5 +60,69 @@ Begin
   Begin
     Exec(strExecName, '-S', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   End;
+End;
+
+Function BoolToStr(Val: Boolean): String;
+Begin
+  If Val Then
+    Result := 'TRUE'
+  Else
+    Result := 'FALSE';
+End;
+
+Function StrToBool(Val: String): Boolean;
+Begin
+  If Val = 'TRUE' Then
+    Result := TRUE
+  Else
+    Result := FALSE;
+End;
+
+Procedure InitializeWizard;
+Begin
+  ServerSelectionPage := CreateInputQueryPage(wpSelectTasks,
+    'NetXMS Server', 'Select your management server.',
+    'Please enter host name or IP address of your NetXMS server.');
+  ServerSelectionPage.Add('NetXMS server:', False);
+  ServerSelectionPage.Values[0] := GetPreviousData('MasterServer', '');
+
+  SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
+    'Subagent Selection', 'Select desired subagents.',
+    'Please select additional subagents you wish to load.', False, False);
+  SubagentSelectionPage.Add('ICMP Pinger Subagent - ping.nsm');
+  SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
+  SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
+  SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
+  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent0', 'FALSE'));
+  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent0', 'FALSE'));
+  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent0', 'TRUE'));
+  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent0', 'FALSE'));
+End;
+
+Procedure RegisterPreviousData(PreviousDataKey: Integer);
+Begin
+  SetPreviousData(PreviousDataKey, 'MasterServer', ServerSelectionPage.Values[0]);
+  SetPreviousData(PreviousDataKey, 'Subagent0', BoolToStr(SubagentSelectionPage.Values[0]));
+  SetPreviousData(PreviousDataKey, 'Subagent1', BoolToStr(SubagentSelectionPage.Values[1]));
+  SetPreviousData(PreviousDataKey, 'Subagent2', BoolToStr(SubagentSelectionPage.Values[2]));
+  SetPreviousData(PreviousDataKey, 'Subagent3', BoolToStr(SubagentSelectionPage.Values[3]));
+End;
+
+Function GetMasterServer(Param: String): String;
+Begin
+  Result := ServerSelectionPage.Values[0];
+End;
+
+Function GetSubagentList(Param: String): String;
+Begin
+  Result := '';
+  If SubagentSelectionPage.Values[0] Then
+    Result := Result + 'ping.nsm ';
+  If SubagentSelectionPage.Values[1] Then
+    Result := Result + 'portcheck.nsm ';
+  If SubagentSelectionPage.Values[2] Then
+    Result := Result + 'winperf.nsm ';
+  If SubagentSelectionPage.Values[3] Then
+    Result := Result + 'ups.nsm ';
 End;
 

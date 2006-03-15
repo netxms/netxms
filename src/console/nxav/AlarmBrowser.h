@@ -32,6 +32,7 @@ public:
 
 // Operations
 public:
+	BOOL SetHTML(CString &strHTML);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

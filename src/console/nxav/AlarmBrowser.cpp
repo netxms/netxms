@@ -137,3 +137,38 @@ BOOL CAlarmBrowser::AcknowledgeAlarm(DWORD dwAlarmId)
    return (dwResult == RCC_SUCCESS);
 }
 
+
+//
+// Set content from string
+//
+
+BOOL CAlarmBrowser::SetHTML(CString &strHTML)
+{
+   CComPtr<IDispatch> pDisp2 = GetHtmlDocument();
+   if (pDisp2 == NULL)
+      return FALSE;
+
+   CComPtr<IHTMLDocument2> pDoc;
+   pDisp2->QueryInterface(IID_IHTMLDocument2, (void* *)&pDoc);
+
+   BSTR bstr = strHTML.AllocSysString();
+   HRESULT hresult = S_OK;
+   SAFEARRAY *sfArray = SafeArrayCreateVector(VT_VARIANT, 0, 1);
+   if (sfArray != NULL)
+   {
+      VARIANT *param;
+
+      hresult = SafeArrayAccessData(sfArray, (LPVOID *)&param);
+      param->vt = VT_BSTR;
+      param->bstrVal = bstr;
+      hresult = SafeArrayUnaccessData(sfArray);
+      hresult = pDoc->write(sfArray);
+      hresult = pDoc->close();
+   }
+
+   SysFreeString(bstr);
+   if (sfArray != NULL)
+      SafeArrayDestroy(sfArray);
+
+   return TRUE;
+}

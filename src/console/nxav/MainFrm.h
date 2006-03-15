@@ -47,9 +47,9 @@ protected:
 	int m_iNumAlarms[5];
 	DWORD m_dwNumAlarms;
 	NXC_ALARM *m_pAlarmList;
-	void GenerateHtml(void);
+	void GenerateHtml(CString &strHTML);
 	CAlarmBrowser *m_pwndAlarmView;
-	void AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine);
+	void AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine);
 	CInfoLine m_wndInfoLine;
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -63,8 +63,6 @@ protected:
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
    afx_msg void OnDisableAlarmSound(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
-private:
-	FILE *m_pHtmlFile;
 };
 
 /////////////////////////////////////////////////////////////////////////////

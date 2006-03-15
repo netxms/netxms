@@ -205,7 +205,6 @@ private:
    char m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
    SOCKET m_hSocket;
-   WORD m_wPort;
    DWORD m_dwNumDataLines;
    DWORD m_dwRequestId;
    DWORD m_dwCommandTimeout;
@@ -219,6 +218,7 @@ private:
    int m_iEncryptionPolicy;
    BOOL m_bUseProxy;
    DWORD m_dwProxyAddr;
+   WORD m_wPort;
    WORD m_wProxyPort;
    int m_iProxyAuth;
    char m_szProxySecret[MAX_SECRET_LENGTH];
@@ -234,6 +234,7 @@ protected:
    DWORD SetupEncryption(RSA *pServerKey);
    DWORD Authenticate(BOOL bProxyData);
    DWORD SetupProxyConnection(void);
+   DWORD GetIpAddr(void) { return m_dwAddr; }
 
    virtual void PrintMsg(TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);

@@ -140,7 +140,7 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 void CMainFrame::OnViewRefresh() 
 {
    DWORD i, dwRetCode;
-   TCHAR szFileName[MAX_PATH];
+   CString strHTML;
 
    safe_free(m_pAlarmList);
    m_pAlarmList = NULL;
@@ -159,9 +159,11 @@ void CMainFrame::OnViewRefresh()
       theApp.ErrorBox(dwRetCode, _T("Error loading alarm list: %s"));
    }
 
-   GenerateHtml();
-   _sntprintf(szFileName, MAX_PATH, _T("file://%s\\alarms.html"), g_szWorkDir);
-   m_pwndAlarmView->Navigate(szFileName);
+   GenerateHtml(strHTML);
+//   _sntprintf(szFileName, MAX_PATH, _T("file://%s\\alarms.html"), g_szWorkDir);
+//   m_pwndAlarmView->Navigate(szFileName);
+   m_pwndAlarmView->Navigate(_T("about:blank"));
+   m_pwndAlarmView->SetHTML(strHTML);
 }
 
 
@@ -169,27 +171,29 @@ void CMainFrame::OnViewRefresh()
 // Add new alarm to list
 //
 
-void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, BOOL bColoredLine)
+void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine)
 {
    struct tm *ptm;
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
+   CString strBuf;
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
    ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
    strftime(szBuffer, 64, "%d-%b-%Y<br>%H:%M:%S", ptm);
-   fprintf(m_pHtmlFile, "<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>"
-                        "<td><img src=\"%s.ico\" border=0/></td>"
-                        "<td><b>%s</b></td></tr></table></td>"
-                        "<td><b>%s</b></td>"
-                        "<td><font size=-1>%s</font></td><td><font size=-1>%s</font></td>"
-                        "<td align=center><a href=\"nxav:S?%d\"><img src=\"%ssound.png\" alt=\"NOSOUND\" border=0/></a> "
-                        "<a href=\"nxav:A?%d\"><img src=\"ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n",
-           bColoredLine ? "#EFEFEF" : "#FFFFFF", 
-           g_szStatusTextSmall[pAlarm->wSeverity],
-           g_szStatusTextSmall[pAlarm->wSeverity], pObject->szName,
-           pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId,
-           pAlarm->pUserData != 0 ? "" : "no", pAlarm->dwAlarmId);
+   strBuf.Format("<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>"
+                 "<td><img src=\"file:%s/%s.ico\" border=0/></td>"
+                 "<td><b>%s</b></td></tr></table></td>"
+                 "<td><b>%s</b></td>"
+                 "<td><font size=-1>%s</font></td><td><font size=-1>%s</font></td>"
+                 "<td align=center><a href=\"nxav:S?%d\"><img src=\"file:%s/%ssound.png\" alt=\"NOSOUND\" border=0/></a> "
+                 "<a href=\"nxav:A?%d\"><img src=\"file:%s/ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n",
+                 bColoredLine ? "#EFEFEF" : "#FFFFFF", 
+                 g_szWorkDir, g_szStatusTextSmall[pAlarm->wSeverity],
+                 g_szStatusTextSmall[pAlarm->wSeverity], pObject->szName,
+                 pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId, g_szWorkDir,
+                 pAlarm->pUserData != 0 ? "" : "no", pAlarm->dwAlarmId, g_szWorkDir);
+   strHTML += strBuf;
 }
 
 
@@ -207,28 +211,23 @@ void CMainFrame::OnCmdExit()
 // Generate HTML file
 //
 
-void CMainFrame::GenerateHtml()
+void CMainFrame::GenerateHtml(CString &strHTML)
 {
-   TCHAR szFileName[MAX_PATH];
    DWORD i;
 
-   // Create HTML header
-   _sntprintf(szFileName, MAX_PATH, _T("%s\\alarms.html"), g_szWorkDir);
-   m_pHtmlFile = fopen(szFileName, "w");
-   if (m_pHtmlFile != NULL)
-   {
-      fprintf(m_pHtmlFile, "<html><head><title>NetXMS Active Alarm List</title></head>\n"
-                           "<body background=\"background.jpg\">\n"
-                           "<font face=verdana,helvetica size=+1>\n"
-                           "<table width=\"99%%\" align=center cellspacing=0 cellpadding=2 border=1>\n"
-                           "<tr bgcolor=#9AAABA><td><b>Severity</b></td>"
-                           "<td><b>Source</b></td><td><b>Message</b></td>"
-                           "<td><b>Timestamp</b></td><td width=40 align=center><b>Ack</b></td></tr>");
-      for(i = 0; i < m_dwNumAlarms; i++)
-         AddAlarm(&m_pAlarmList[i], i & 1);
-      fprintf(m_pHtmlFile, "</table></font></body></html>\n");
-      fclose(m_pHtmlFile);
-   }
+   strHTML.Empty();
+
+   strHTML.Format("<html><head><title>NetXMS Active Alarm List</title></head>\n"
+                  "<body background=\"file:%s/background.jpg\">\n"
+                  "<font face=verdana,helvetica size=+1>\n"
+                  "<table width=\"99%%\" align=center cellspacing=0 cellpadding=2 border=1>\n"
+                  "<tr bgcolor=#9AAABA><td><b>Severity</b></td>"
+                  "<td><b>Source</b></td><td><b>Message</b></td>"
+                  "<td><b>Timestamp</b></td><td width=40 align=center><b>Ack</b></td></tr>",
+                  g_szWorkDir);
+   for(i = 0; i < m_dwNumAlarms; i++)
+      AddAlarm(&m_pAlarmList[i], strHTML, i & 1);
+   strHTML += _T("</table></font></body></html>\n");
 }
 
 
@@ -240,6 +239,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 {
    NXC_ALARM *pAlarm = (NXC_ALARM *)lParam;
    DWORD i;
+   CString strHTML;
 
    switch(wParam)
    {
@@ -270,8 +270,9 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
       default:
          break;
    }
-   GenerateHtml();
-   m_pwndAlarmView->Refresh();
+   GenerateHtml(strHTML);
+   //m_pwndAlarmView->Refresh();
+   m_pwndAlarmView->SetHTML(strHTML);
    free(pAlarm);
 }
 
@@ -303,13 +304,14 @@ void CMainFrame::SortAlarms()
 void CMainFrame::OnDisableAlarmSound(WPARAM wParam, LPARAM lParam)
 {
    DWORD i;
+   CString strHTML;
 
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == wParam)
       {
          m_pAlarmList[i].pUserData = 0;
-         GenerateHtml();
-         m_pwndAlarmView->Refresh();
+         GenerateHtml(strHTML);
+         m_pwndAlarmView->SetHTML(strHTML);
          break;
       }
 }
