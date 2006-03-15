@@ -190,12 +190,16 @@ typedef void * NXC_SESSION;
 // Service types
 //
 
-#define NETSRV_CUSTOM         0
-#define NETSRV_SSH            1
-#define NETSRV_POP3           2
-#define NETSRV_SMTP           3
-#define NETSRV_FTP            4
-#define NETSRV_HTTP           5
+enum
+{
+	NETSRV_CUSTOM,
+	NETSRV_SSH,
+	NETSRV_POP3,
+	NETSRV_SMTP,
+	NETSRV_FTP,
+	NETSRV_HTTP,
+	NETSRV_TELNET,
+};
 
 
 //
