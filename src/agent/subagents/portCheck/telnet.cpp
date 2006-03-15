@@ -1,3 +1,5 @@
+/* $Id: telnet.cpp,v 1.2 2006-03-15 12:00:39 alk Exp $ */
+
 #include <nms_common.h>
 #include <nms_agent.h>
 
@@ -91,3 +93,10 @@ int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szP
 
 	return nRet;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/
