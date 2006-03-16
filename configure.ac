@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.147 2006-03-08 15:28:15 victor Exp $
+# $Id: configure.ac,v 1.148 2006-03-16 13:37:20 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -635,6 +635,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/win9x/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/portCheck/Makefile
+	src/agent/subagents/logscan/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/ups/Makefile
 	src/nxhttpd/Makefile
