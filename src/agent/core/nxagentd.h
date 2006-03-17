@@ -29,6 +29,7 @@
 #include <nms_agent.h>
 #include <nms_cscp.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <nxqueue.h>
 #include <nxlog.h>
 #include "messages.h"
