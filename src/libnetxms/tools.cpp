@@ -803,6 +803,10 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
       {
          memcpy(&dwAddr, hs->h_addr, sizeof(DWORD));
       }
+      else
+      {
+         dwAddr = INADDR_NONE;
+      }
    }
 
    return dwAddr;

@@ -244,34 +244,31 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
    DWORD dwRetCode = RCC_COMM_FAILURE;
    SOCKET hSocket;
    THREAD hThread;
-   char *pServer;
-   TCHAR szBuffer[64];
-#ifdef UNICODE
-   char szMHost[64];
+   TCHAR  *pszPort, szBuffer[64], szHostName[128];
+   WORD wPort = SERVER_LISTEN_PORT;
 
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-		pszServer, -1, szMHost, sizeof(szMHost), NULL, NULL);
-   szMHost[63] = 0;
-	pServer = szMHost;
-#else
-	pServer = pszServer;
-#endif
+   nx_strncpy(szHostName, pszServer, 128);
+
+   // Check if server given in form host:port
+   pszPort = _tcschr(szHostName, _T(':'));
+   if (pszPort != NULL)
+   {
+      TCHAR *pErr;
+      int nTemp;
+
+      *pszPort = 0;
+      pszPort++;
+      nTemp = _tcstol(pszPort, &pErr, 10);
+      if ((*pErr != 0) || (nTemp < 1) || (nTemp > 65535))
+         return RCC_INVALID_ARGUMENT;
+      wPort = (WORD)nTemp;
+   }
 
    // Prepare address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_port = htons((WORD)SERVER_LISTEN_PORT);
-
-   servAddr.sin_addr.s_addr = inet_addr(pServer);
-
-   if (servAddr.sin_addr.s_addr == INADDR_NONE)
-   {
-      struct hostent *hs;
-
-      hs = gethostbyname(pServer);
-      if (hs != NULL)
-         memcpy(&servAddr.sin_addr, hs->h_addr, hs->h_length);
-   }
+   servAddr.sin_port = htons(wPort);
+   servAddr.sin_addr.s_addr = ResolveHostName(szHostName);;
 
    if (servAddr.sin_addr.s_addr != INADDR_NONE)
    {

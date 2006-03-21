@@ -1,4 +1,12 @@
 *
+* 0.2.11
+*
+
+- Non-standart (other than 4701) ports now can be used for client-server
+  communications
+
+
+*
 * 0.2.10
 *
 
