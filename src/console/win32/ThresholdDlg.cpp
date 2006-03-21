@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "ThresholdDlg.h"
+#include "EventSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

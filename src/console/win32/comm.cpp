@@ -24,6 +24,7 @@
 
 #include "stdafx.h"
 #include "nxcon.h"
+#include "RequestProcessingDlg.h"
 
 
 //

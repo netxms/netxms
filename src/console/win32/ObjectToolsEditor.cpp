@@ -119,7 +119,7 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_OBJECT_TOOLS_EDITOR, this);
+   theApp.OnViewCreate(VIEW_OBJECT_TOOLS, this);
 	
    // Create list view control
    GetClientRect(&rect);
@@ -166,7 +166,7 @@ int CObjectToolsEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CObjectToolsEditor::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_OBJECT_TOOLS_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_OBJECT_TOOLS, this);
 	CMDIChildWnd::OnDestroy();
 }
 

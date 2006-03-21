@@ -3,16 +3,22 @@
 
 #include "stdafx.h"
 #include "nxcon.h"
-
 #include "MainFrm.h"
+#include "ActionEditor.h"
+#include "ConsolePropsGeneral.h"
+#include "ControlPanel.h"
 #include "CreateContainerDlg.h"
 #include "CreateNodeDlg.h"
 #include "CreateTemplateDlg.h"
 #include "CreateTGDlg.h"
 #include "CreateNetSrvDlg.h"
 #include "CreateVPNConnDlg.h"
+#include "EventBrowser.h"
+#include "EventEditor.h"
+#include "EventPolicyEditor.h"
 #include "NodePoller.h"
 #include "MIBBrowserDlg.h"
+#include "NetSummaryFrame.h"
 #include "NetSrvPropsGeneral.h"
 #include "NodePropsPolling.h"
 #include "DeploymentView.h"
@@ -28,7 +34,23 @@
 #include "ServerCfgEditor.h"
 #include "ScriptManager.h"
 #include "TrapEditor.h"
+#include "TrapLogBrowser.h"
 #include "GraphFrame.h"
+#include "SyslogBrowser.h"
+#include "MapFrame.h"
+#include "UserEditor.h"
+#include "ObjectToolsEditor.h"
+#include "ObjectPropSheet.h"
+#include "NodePropsGeneral.h"
+#include "ObjectPropsGeneral.h"
+#include "ObjectPropsSecurity.h"
+#include "ObjectPropsPresentation.h"
+#include "ObjectPropCaps.h"
+#include "DCIDataView.h"
+#include "LPPList.h"
+#include "ObjectBrowser.h"
+#include "ViewEditor.h"
+#include "PackageMgr.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -77,6 +99,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_OBJECTTOOLS, OnControlpanelObjecttools)
 	ON_COMMAND(ID_CONTROLPANEL_SCRIPTLIBRARY, OnControlpanelScriptlibrary)
 	ON_COMMAND(ID_VIEW_SNMPTRAPLOG, OnViewSnmptraplog)
+	ON_COMMAND(ID_CONTROLPANEL_VIEWBUILDER, OnControlpanelViewbuilder)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -87,27 +110,9 @@ END_MESSAGE_MAP()
 
 CConsoleApp::CConsoleApp()
 {
-   m_bActionEditorActive = FALSE;
-   m_bTrapEditorActive = FALSE;
-   m_bCtrlPanelActive = FALSE;
-   m_bAlarmBrowserActive = FALSE;
-   m_bEventBrowserActive = FALSE;
-   m_bSyslogBrowserActive = FALSE;
-   m_bTrapLogBrowserActive = FALSE;
-   m_bEventEditorActive = FALSE;
-   m_bUserEditorActive = FALSE;
-   m_bObjectBrowserActive = FALSE;
-   m_bDebugWindowActive = FALSE;
-   m_bNetSummaryActive = FALSE;
-   m_bEventPolicyEditorActive = FALSE;
-   m_bLPPEditorActive = FALSE;
-   m_bPackageMgrActive = FALSE;
-   m_bServerCfgEditorActive = FALSE;
-   m_bObjToolsEditorActive = FALSE;
-   m_bScriptManagerActive = FALSE;
    m_dwClientState = STATE_DISCONNECTED;
-   m_hwndEventBrowser = NULL;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
+   memset(m_viewState, 0, sizeof(CONSOLE_VIEW) * MAX_VIEW_ID);
 }
 
 
@@ -527,11 +532,11 @@ void CConsoleApp::OnViewControlpanel()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bCtrlPanelActive)
-      m_pwndCtrlPanel->BringWindowToTop();
+   if (m_viewState[VIEW_CTRLPANEL].bActive)
+      m_viewState[VIEW_CTRLPANEL].pWnd->BringWindowToTop();
    else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CControlPanel), IDR_CTRLPANEL, m_hMDIMenu, m_hMDIAccel);	
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CControlPanel), IDR_CTRLPANEL,
+                             m_hMDIMenu, m_hMDIAccel);
 }
 
 
@@ -539,64 +544,12 @@ void CConsoleApp::OnViewControlpanel()
 // This method called when new view is created
 //
 
-void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
+void CConsoleApp::OnViewCreate(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 {
    DWORD i;
 
    switch(dwView)
    {
-      case IDR_CTRLPANEL:
-         m_bCtrlPanelActive = TRUE;
-         m_pwndCtrlPanel = pWnd;
-         break;
-      case IDR_ALARMS:
-         m_bAlarmBrowserActive = TRUE;
-         m_pwndAlarmBrowser = (CAlarmBrowser *)pWnd;
-         break;
-      case IDR_EVENTS:
-         m_bEventBrowserActive = TRUE;
-         m_pwndEventBrowser = (CEventBrowser *)pWnd;
-         m_hwndEventBrowser = pWnd->m_hWnd;
-         break;
-      case IDR_SYSLOG_BROWSER:
-         m_bSyslogBrowserActive = TRUE;
-         m_pwndSyslogBrowser = (CSyslogBrowser *)pWnd;
-         m_hwndSyslogBrowser = pWnd->m_hWnd;
-         break;
-      case IDR_TRAP_LOG_BROWSER:
-         m_bTrapLogBrowserActive = TRUE;
-         m_pwndTrapLogBrowser = (CTrapLogBrowser *)pWnd;
-         m_hwndTrapLogBrowser = pWnd->m_hWnd;
-         break;
-      case IDR_OBJECTS:
-         m_bObjectBrowserActive = TRUE;
-         m_pwndObjectBrowser = (CObjectBrowser *)pWnd;
-         break;
-      case IDR_EVENT_EDITOR:
-         m_bEventEditorActive = TRUE;
-         m_pwndEventEditor = (CEventEditor *)pWnd;
-         break;
-      case IDR_ACTION_EDITOR:
-         m_bActionEditorActive = TRUE;
-         m_pwndActionEditor = (CActionEditor *)pWnd;
-         break;
-      case IDR_TRAP_EDITOR:
-         m_bTrapEditorActive = TRUE;
-         m_pwndTrapEditor = (CTrapEditor *)pWnd;
-         break;
-      case IDR_USER_EDITOR:
-         m_bUserEditorActive = TRUE;
-         m_pwndUserEditor = (CUserEditor *)pWnd;
-         break;
-      case IDR_DEBUG_WINDOW:
-         m_bDebugWindowActive = TRUE;
-         m_pwndDebugWindow = (CDebugFrame *)pWnd;
-         NXCSetDebugCallback(ClientDebugCallback);
-         break;
-      case IDR_NETWORK_SUMMARY:
-         m_bNetSummaryActive = TRUE;
-         m_pwndNetSummary = (CNetSummaryFrame *)pWnd;
-         break;
       case IDR_DC_EDITOR:
          // Register new DC editor
          for(i = 0; i < MAX_DC_EDITORS; i++)
@@ -607,31 +560,13 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
                break;
             }
          break;
-      case IDR_EPP_EDITOR:
-         m_bEventPolicyEditorActive = TRUE;
-         m_pwndEventPolicyEditor = (CEventPolicyEditor *)pWnd;
-         break;
-      case IDR_PACKAGE_MGR:
-         m_bPackageMgrActive = TRUE;
-         m_pwndPackageMgr = (CPackageMgr *)pWnd;
-         break;
-      case IDR_SERVER_CFG_EDITOR:
-         m_bServerCfgEditorActive = TRUE;
-         m_pwndServerCfgEditor = (CServerCfgEditor *)pWnd;
-         break;
-      case IDR_OBJECT_TOOLS_EDITOR:
-         m_bObjToolsEditorActive = TRUE;
-         m_pwndObjToolsEditor = (CObjectToolsEditor *)pWnd;
-         break;
-      case IDR_LPP_EDITOR:
-         m_bLPPEditorActive = TRUE;
-         m_pwndLPPEditor = (CLPPList *)pWnd;
-         break;
-      case IDR_SCRIPT_MANAGER:
-         m_bScriptManagerActive = TRUE;
-         m_pwndScriptManager = (CScriptManager *)pWnd;
-         break;
       default:
+         if (dwView < MAX_VIEW_ID)
+         {
+            m_viewState[dwView].bActive = TRUE;
+            m_viewState[dwView].pWnd = pWnd;
+            m_viewState[dwView].hWnd = pWnd->m_hWnd;
+         }
          break;
    }
 }
@@ -641,52 +576,12 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg)
 // This method called when view is destroyed
 //
 
-void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
+void CConsoleApp::OnViewDestroy(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 {
    DWORD i;
 
    switch(dwView)
    {
-      case IDR_CTRLPANEL:
-         m_bCtrlPanelActive = FALSE;
-         break;
-      case IDR_ALARMS:
-         m_bAlarmBrowserActive = FALSE;
-         break;
-      case IDR_EVENTS:
-         m_bEventBrowserActive = FALSE;
-         m_hwndEventBrowser = NULL;
-         break;
-      case IDR_SYSLOG_BROWSER:
-         m_bSyslogBrowserActive = FALSE;
-         m_hwndSyslogBrowser = NULL;
-         break;
-      case IDR_TRAP_LOG_BROWSER:
-         m_bTrapLogBrowserActive = FALSE;
-         m_hwndTrapLogBrowser = NULL;
-         break;
-      case IDR_OBJECTS:
-         m_bObjectBrowserActive = FALSE;
-         break;
-      case IDR_EVENT_EDITOR:
-         m_bEventEditorActive = FALSE;
-         break;
-      case IDR_ACTION_EDITOR:
-         m_bActionEditorActive = FALSE;
-         break;
-      case IDR_TRAP_EDITOR:
-         m_bTrapEditorActive = FALSE;
-         break;
-      case IDR_USER_EDITOR:
-         m_bUserEditorActive = FALSE;
-         break;
-      case IDR_DEBUG_WINDOW:
-         m_bDebugWindowActive = FALSE;
-         NXCSetDebugCallback(NULL);
-         break;
-      case IDR_NETWORK_SUMMARY:
-         m_bNetSummaryActive = FALSE;
-         break;
       case IDR_DC_EDITOR:
          // Unregister DC editor
          for(i = 0; i < MAX_DC_EDITORS; i++)
@@ -697,25 +592,13 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg)
                break;
             }
          break;
-      case IDR_EPP_EDITOR:
-         m_bEventPolicyEditorActive = FALSE;
-         break;
-      case IDR_PACKAGE_MGR:
-         m_bPackageMgrActive = FALSE;
-         break;
-      case IDR_SERVER_CFG_EDITOR:
-         m_bServerCfgEditorActive = FALSE;
-         break;
-      case IDR_OBJECT_TOOLS_EDITOR:
-         m_bObjToolsEditorActive = FALSE;
-         break;
-      case IDR_LPP_EDITOR:
-         m_bLPPEditorActive = FALSE;
-         break;
-      case IDR_SCRIPT_MANAGER:
-         m_bScriptManagerActive = FALSE;
-         break;
       default:
+         if (dwView < MAX_VIEW_ID)
+         {
+            m_viewState[dwView].bActive = FALSE;
+            m_viewState[dwView].pWnd = NULL;
+            m_viewState[dwView].hWnd = NULL;
+         }
          break;
    }
 }
@@ -731,10 +614,10 @@ CMDIChildWnd *CConsoleApp::ShowEventBrowser(void)
    CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
-   if (m_bEventBrowserActive)
+   if (m_viewState[VIEW_EVENT_LOG].bActive)
    {
-      m_pwndEventBrowser->BringWindowToTop();
-      pWnd = m_pwndEventBrowser;
+      m_viewState[VIEW_EVENT_LOG].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_EVENT_LOG].pWnd;
    }
    else
    {
@@ -755,10 +638,10 @@ CMDIChildWnd *CConsoleApp::ShowSyslogBrowser(void)
    CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
-   if (m_bSyslogBrowserActive)
+   if (m_viewState[VIEW_SYSLOG].bActive)
    {
-      m_pwndSyslogBrowser->BringWindowToTop();
-      pWnd = m_pwndSyslogBrowser;
+      m_viewState[VIEW_SYSLOG].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_SYSLOG].pWnd;
    }
    else
    {
@@ -779,10 +662,10 @@ CMDIChildWnd *CConsoleApp::ShowTrapLogBrowser(void)
    CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
-   if (m_bTrapLogBrowserActive)
+   if (m_viewState[VIEW_TRAP_LOG].bActive)
    {
-      m_pwndTrapLogBrowser->BringWindowToTop();
-      pWnd = m_pwndTrapLogBrowser;
+      m_viewState[VIEW_TRAP_LOG].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_TRAP_LOG].pWnd;
    }
    else
    {
@@ -921,23 +804,23 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
    switch(dwEvent)
    {
       case NXC_EVENT_NEW_ELOG_RECORD:
-         if (m_bEventBrowserActive)
+         if (m_viewState[VIEW_EVENT_LOG].bActive)
          {
             void *pData;
 
             pData = nx_memdup(pArg, sizeof(NXC_EVENT));
-            if (!PostMessage(m_hwndEventBrowser, NXCM_NETXMS_EVENT, dwCode, (LPARAM)pData))
+            if (!PostMessage(m_viewState[VIEW_EVENT_LOG].hWnd, NXCM_NETXMS_EVENT, dwCode, (LPARAM)pData))
                free(pData);
          }
          break;
       case NXC_EVENT_NEW_SYSLOG_RECORD:
-         if (m_bSyslogBrowserActive)
+         if (m_viewState[VIEW_SYSLOG].bActive)
          {
             NXC_SYSLOG_RECORD *pRec;
 
             pRec = (NXC_SYSLOG_RECORD *)nx_memdup(pArg, sizeof(NXC_SYSLOG_RECORD));
             pRec->pszText = _tcsdup(((NXC_SYSLOG_RECORD *)pArg)->pszText);
-            if (!PostMessage(m_hwndSyslogBrowser, NXCM_SYSLOG_RECORD, dwCode, (LPARAM)pRec))
+            if (!PostMessage(m_viewState[VIEW_SYSLOG].hWnd, NXCM_SYSLOG_RECORD, dwCode, (LPARAM)pRec))
             {
                safe_free(pRec->pszText);
                free(pRec);
@@ -945,13 +828,13 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          }
          break;
       case NXC_EVENT_NEW_SNMP_TRAP:
-         if (m_bTrapLogBrowserActive)
+         if (m_viewState[VIEW_TRAP_LOG].bActive)
          {
             NXC_SNMP_TRAP_LOG_RECORD *pRec;
 
             pRec = (NXC_SNMP_TRAP_LOG_RECORD *)nx_memdup(pArg, sizeof(NXC_SNMP_TRAP_LOG_RECORD));
             pRec->pszTrapVarbinds = _tcsdup(((NXC_SNMP_TRAP_LOG_RECORD *)pArg)->pszTrapVarbinds);
-            if (!PostMessage(m_hwndTrapLogBrowser, NXCM_TRAP_LOG_RECORD, dwCode, (LPARAM)pRec))
+            if (!PostMessage(m_viewState[VIEW_TRAP_LOG].hWnd, NXCM_TRAP_LOG_RECORD, dwCode, (LPARAM)pRec))
             {
                safe_free(pRec->pszTrapVarbinds);
                free(pRec);
@@ -1012,8 +895,10 @@ void CConsoleApp::OnControlpanelEvents()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bEventEditorActive)
-      m_pwndEventEditor->BringWindowToTop();
+   if (m_viewState[VIEW_EVENT_EDITOR].bActive)
+   {
+      m_viewState[VIEW_EVENT_EDITOR].pWnd->BringWindowToTop();
+   }
    else
    {
       DWORD dwResult;
@@ -1021,8 +906,8 @@ void CConsoleApp::OnControlpanelEvents()
       dwResult = DoRequestArg1(NXCLockEventDB, g_hSession, "Locking event configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
-	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR, m_hEventEditorMenu, m_hEventEditorAccel);
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR,
+                                m_hEventEditorMenu, m_hEventEditorAccel);
       }
       else
       {
@@ -1041,9 +926,9 @@ void CConsoleApp::OnControlpanelUsers()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bUserEditorActive)
+   if (m_viewState[VIEW_USER_MANAGER].bActive)
    {
-      m_pwndUserEditor->BringWindowToTop();
+      m_viewState[VIEW_USER_MANAGER].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1052,8 +937,8 @@ void CConsoleApp::OnControlpanelUsers()
       dwResult = DoRequestArg1(NXCLockUserDB, g_hSession, "Locking user database...");
       if (dwResult == RCC_SUCCESS)
       {
-	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CUserEditor), IDR_USER_EDITOR, m_hUserEditorMenu, m_hUserEditorAccel);
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CUserEditor), IDR_USER_EDITOR,
+                                m_hUserEditorMenu, m_hUserEditorAccel);
       }
       else
       {
@@ -1072,9 +957,9 @@ void CConsoleApp::OnControlpanelObjecttools()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bObjToolsEditorActive)
+   if (m_viewState[VIEW_OBJECT_TOOLS].bActive)
    {
-      m_pwndObjToolsEditor->BringWindowToTop();
+      m_viewState[VIEW_OBJECT_TOOLS].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1104,9 +989,9 @@ void CConsoleApp::OnControlpanelScriptlibrary()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bScriptManagerActive)
+   if (m_viewState[VIEW_SCRIPT_MANAGER].bActive)
    {
-      m_pwndScriptManager->BringWindowToTop();
+      m_viewState[VIEW_SCRIPT_MANAGER].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1126,11 +1011,15 @@ void CConsoleApp::OnViewDebug()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bDebugWindowActive)
-      m_pwndDebugWindow->BringWindowToTop();
+   if (m_viewState[VIEW_DEBUG].bActive)
+   {
+      m_viewState[VIEW_DEBUG].pWnd->BringWindowToTop();
+   }
    else
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CDebugFrame), IDR_DEBUG_WINDOW, m_hMDIMenu, m_hMDIAccel);	
+   {
+      pFrame->CreateNewChild(RUNTIME_CLASS(CDebugFrame), IDR_DEBUG_WINDOW,
+                             m_hMDIMenu, m_hMDIAccel);
+   }
 }
 
 
@@ -1140,7 +1029,7 @@ void CConsoleApp::OnViewDebug()
 
 void CConsoleApp::DebugPrintf(char *szFormat, ...)
 {
-   if (m_bDebugWindowActive)
+   if (m_viewState[VIEW_DEBUG].bActive)
    {
       char szBuffer[1024];
       va_list args;
@@ -1149,7 +1038,7 @@ void CConsoleApp::DebugPrintf(char *szFormat, ...)
       vsprintf(szBuffer, szFormat, args);
       va_end(args);
 
-      m_pwndDebugWindow->AddMessage(szBuffer);
+      ((CDebugFrame *)m_viewState[VIEW_DEBUG].pWnd)->AddMessage(szBuffer);
    }
 }
 
@@ -1450,9 +1339,9 @@ void CConsoleApp::OnToolsMibbrowser()
 void CConsoleApp::OnControlpanelEventpolicy() 
 {
 	// create a new MDI child window or open existing
-   if (m_bEventPolicyEditorActive)
+   if (m_viewState[VIEW_EPP_EDITOR].bActive)
    {
-      m_pwndEventPolicyEditor->BringWindowToTop();
+      m_viewState[VIEW_EPP_EDITOR].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1481,9 +1370,9 @@ void CConsoleApp::OnControlpanelEventpolicy()
 void CConsoleApp::OnControlpanelLogprocessing() 
 {
 	// create a new MDI child window or open existing
-   if (m_bLPPEditorActive)
+   if (m_viewState[VIEW_LPP_EDITOR].bActive)
    {
-      m_pwndLPPEditor->BringWindowToTop();
+      m_viewState[VIEW_LPP_EDITOR].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1491,6 +1380,27 @@ void CConsoleApp::OnControlpanelLogprocessing()
 
 	   pFrame->CreateNewChild(RUNTIME_CLASS(CLPPList), IDR_LPP_EDITOR,
                              m_hLPPEditorMenu, m_hLPPEditorAccel);
+   }
+}
+
+
+//
+// Open view builder
+//
+
+void CConsoleApp::OnControlpanelViewbuilder() 
+{
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_BUILDER].bActive)
+   {
+      m_viewState[VIEW_BUILDER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CViewEditor), IDR_VIEW_BUILDER,
+                             m_hViewBuilderMenu, m_hViewBuilderAccel);
    }
 }
 
@@ -1504,10 +1414,10 @@ CMDIChildWnd *CConsoleApp::ShowAlarmBrowser(TCHAR *pszParams)
    CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
-   if (m_bAlarmBrowserActive)
+   if (m_viewState[VIEW_ALARMS].bActive)
    {
-      m_pwndAlarmBrowser->BringWindowToTop();
-      pWnd = m_pwndAlarmBrowser;
+      m_viewState[VIEW_ALARMS].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_ALARMS].pWnd;
    }
    else
    {
@@ -1576,9 +1486,9 @@ void CConsoleApp::OnControlpanelActions()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bActionEditorActive)
+   if (m_viewState[VIEW_ACTION_EDITOR].bActive)
    {
-      m_pwndActionEditor->BringWindowToTop();
+      m_viewState[VIEW_ACTION_EDITOR].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1587,8 +1497,8 @@ void CConsoleApp::OnControlpanelActions()
       dwResult = DoRequestArg1(NXCLockActionDB, g_hSession, "Locking action configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
-	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR, m_hActionEditorMenu, m_hActionEditorAccel);
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR,
+                                m_hActionEditorMenu, m_hActionEditorAccel);
       }
       else
       {
@@ -1607,9 +1517,9 @@ void CConsoleApp::OnControlpanelSnmptraps()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bTrapEditorActive)
+   if (m_viewState[VIEW_TRAP_EDITOR].bActive)
    {
-      m_pwndTrapEditor->BringWindowToTop();
+      m_viewState[VIEW_TRAP_EDITOR].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1618,8 +1528,8 @@ void CConsoleApp::OnControlpanelSnmptraps()
       dwResult = DoRequestArg1(NXCLockTrapCfg, g_hSession, "Locking SNMP trap configuration database...");
       if (dwResult == RCC_SUCCESS)
       {
-	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR, m_hTrapEditorMenu, m_hTrapEditorAccel);
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR,
+                                m_hTrapEditorMenu, m_hTrapEditorAccel);
       }
       else
       {
@@ -1638,9 +1548,9 @@ void CConsoleApp::OnControlpanelAgentpkg()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bPackageMgrActive)
+   if (m_viewState[VIEW_PACKAGE_MANAGER].bActive)
    {
-      m_pwndPackageMgr->BringWindowToTop();
+      m_viewState[VIEW_PACKAGE_MANAGER].pWnd->BringWindowToTop();
    }
    else
    {
@@ -1649,8 +1559,8 @@ void CConsoleApp::OnControlpanelAgentpkg()
       dwResult = DoRequestArg1(NXCLockPackageDB, g_hSession, "Locking package database...");
       if (dwResult == RCC_SUCCESS)
       {
-	      pFrame->CreateNewChild(
-		      RUNTIME_CLASS(CPackageMgr), IDR_PACKAGE_MGR, m_hPackageMgrMenu, m_hPackageMgrAccel);
+	      pFrame->CreateNewChild(RUNTIME_CLASS(CPackageMgr), IDR_PACKAGE_MGR,
+                                m_hPackageMgrMenu, m_hPackageMgrAccel);
       }
       else
       {
@@ -2052,10 +1962,10 @@ CMDIChildWnd *CConsoleApp::ShowNetworkSummary(void)
    CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
-   if (m_bNetSummaryActive)
+   if (m_viewState[VIEW_NETWORK_SUMMARY].bActive)
    {
-      m_pwndNetSummary->BringWindowToTop();
-      pWnd = m_pwndNetSummary;
+      m_viewState[VIEW_NETWORK_SUMMARY].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_NETWORK_SUMMARY].pWnd;
    }
    else
    {
@@ -2189,15 +2099,20 @@ void CConsoleApp::ChangeNodeAddress(DWORD dwNodeId)
    }
 }
 
+
+//
+// Show or create object browser window
+//
+
 CMDIChildWnd *CConsoleApp::ShowObjectBrowser(TCHAR *pszParams)
 {
    CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
-   if (m_bObjectBrowserActive)
+   if (m_viewState[VIEW_OBJECTS].bActive)
    {
-      m_pwndObjectBrowser->BringWindowToTop();
-      pWnd = m_pwndObjectBrowser;
+      m_viewState[VIEW_OBJECTS].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_OBJECTS].pWnd;
    }
    else
    {
@@ -2347,14 +2262,15 @@ void CConsoleApp::OnControlpanelServercfg()
 	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
 	// create a new MDI child window or open existing
-   if (m_bServerCfgEditorActive)
+   if (m_viewState[VIEW_SERVER_CONFIG].bActive)
    {
-      m_pwndServerCfgEditor->BringWindowToTop();
+      m_viewState[VIEW_SERVER_CONFIG].pWnd->BringWindowToTop();
    }
    else
    {
-	   pFrame->CreateNewChild(
-		   RUNTIME_CLASS(CServerCfgEditor), IDR_SERVER_CFG_EDITOR, m_hServerCfgEditorMenu, m_hServerCfgEditorAccel);
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CServerCfgEditor),
+                             IDR_SERVER_CFG_EDITOR,
+                             m_hServerCfgEditorMenu, m_hServerCfgEditorAccel);
    }
 }
 

@@ -82,7 +82,7 @@ int CScriptManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_SCRIPT_MANAGER, this);
+   theApp.OnViewCreate(VIEW_SCRIPT_MANAGER, this);
 
    // Create image list
    m_imageList.Create(16, 16, ILC_COLOR8 | ILC_MASK, 4, 4);
@@ -128,7 +128,7 @@ int CScriptManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CScriptManager::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_SCRIPT_MANAGER, this);
+   theApp.OnViewDestroy(VIEW_SCRIPT_MANAGER, this);
 	CMDIChildWnd::OnDestroy();
 }
 

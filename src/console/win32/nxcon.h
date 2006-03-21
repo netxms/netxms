@@ -29,32 +29,9 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include <nxwinui.h>
 #include "resource.h"      // Main symbols
 #include "globals.h"       // Global symbols
-#include "ControlPanel.h"
-#include "EventBrowser.h"
-#include "EventEditor.h"
-#include "ObjectBrowser.h"
-#include "MapFrame.h"
-#include "DebugFrame.h"
-#include "NodePropsGeneral.h"
-#include "ObjectPropCaps.h"
-#include "ObjectPropSheet.h"
-#include "RequestProcessingDlg.h"
-#include "ObjectPropsGeneral.h"
-#include "ObjectPropsSecurity.h"
-#include "ObjectPropsPresentation.h"
-#include "UserEditor.h"
-#include "NetSummaryFrame.h"
 #include "DataCollectionEditor.h"
-#include "DCIDataView.h"
-#include "EventPolicyEditor.h"
+#include "DebugFrame.h"
 #include "AlarmBrowser.h"
-#include "ConsolePropsGeneral.h"
-#include "ActionEditor.h"
-#include "PackageMgr.h"
-#include "ObjectToolsEditor.h"
-#include "SyslogBrowser.h"
-#include "TrapLogBrowser.h"
-#include "LPPList.h"
 
 
 //
@@ -81,6 +58,47 @@ class CTrapEditor;
 #define KS_SHIFT_PRESSED   0x0001
 #define KS_ALT_PRESSED     0x0002
 #define KS_CTRL_PRESSED    0x0004
+
+
+//
+// View ID
+//
+
+enum
+{
+   VIEW_ALARMS = 0,
+   VIEW_EVENT_LOG,
+   VIEW_SYSLOG,
+   VIEW_CTRLPANEL,
+   VIEW_TRAP_LOG,
+   VIEW_OBJECTS,
+   VIEW_EVENT_EDITOR,
+   VIEW_ACTION_EDITOR,
+   VIEW_TRAP_EDITOR,
+   VIEW_USER_MANAGER,
+   VIEW_DEBUG,
+   VIEW_NETWORK_SUMMARY,
+   VIEW_EPP_EDITOR,
+   VIEW_PACKAGE_MANAGER,
+   VIEW_SERVER_CONFIG,
+   VIEW_OBJECT_TOOLS,
+   VIEW_LPP_EDITOR,
+   VIEW_SCRIPT_MANAGER,
+   VIEW_BUILDER,
+   MAX_VIEW_ID
+};
+
+
+//
+// View activity information
+//
+
+struct CONSOLE_VIEW
+{
+   BOOL bActive;
+   CMDIChildWnd *pWnd;
+   HWND hWnd;
+};
 
 
 //
@@ -128,27 +146,6 @@ protected:
 	CWnd * FindOpenDCEditor(DWORD dwNodeId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
-   HWND m_hwndEventBrowser;
-   HWND m_hwndSyslogBrowser;
-   HWND m_hwndTrapLogBrowser;
-   CActionEditor *m_pwndActionEditor;
-   CTrapEditor *m_pwndTrapEditor;
-	CAlarmBrowser *m_pwndAlarmBrowser;
-	CEventBrowser *m_pwndEventBrowser;
-	CSyslogBrowser *m_pwndSyslogBrowser;
-	CTrapLogBrowser *m_pwndTrapLogBrowser;
-   CEventEditor *m_pwndEventEditor;
-   CUserEditor *m_pwndUserEditor;
-	CObjectBrowser *m_pwndObjectBrowser;
-	CWnd *m_pwndCtrlPanel;
-   CDebugFrame *m_pwndDebugWindow;
-   CNetSummaryFrame *m_pwndNetSummary;
-   CEventPolicyEditor *m_pwndEventPolicyEditor;
-   CPackageMgr *m_pwndPackageMgr;
-   CServerCfgEditor *m_pwndServerCfgEditor;
-   CObjectToolsEditor *m_pwndObjToolsEditor;
-   CScriptManager *m_pwndScriptManager;
-   CLPPList *m_pwndLPPEditor;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -188,11 +185,13 @@ protected:
 	HACCEL m_hObjToolsEditorAccel;// Accelerator for object tools editor
 	HMENU m_hScriptManagerMenu;   // Menu for script manager
 	HACCEL m_hScriptManagerAccel; // Accelerator for script manager
+	HMENU m_hViewBuilderMenu;     // Menu for view builder
+	HACCEL m_hViewBuilderAccel;   // Accelerator for view builder
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
-	void OnViewDestroy(DWORD dwView, CWnd *pWnd, DWORD dwArg = 0);
-	void OnViewCreate(DWORD dwView, CWnd *pWnd, DWORD dwArg = 0);
+	void OnViewDestroy(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg = 0);
+	void OnViewCreate(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg = 0);
    DWORD GetClientState(void) { return m_dwClientState; }
 	//{{AFX_MSG(CConsoleApp)
 	afx_msg void OnAppAbout();
@@ -219,28 +218,11 @@ public:
 	afx_msg void OnControlpanelObjecttools();
 	afx_msg void OnControlpanelScriptlibrary();
 	afx_msg void OnViewSnmptraplog();
+	afx_msg void OnControlpanelViewbuilder();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
-	BOOL m_bActionEditorActive;
-	BOOL m_bTrapEditorActive;
-	BOOL m_bAlarmBrowserActive;
-	BOOL m_bEventBrowserActive;
-	BOOL m_bSyslogBrowserActive;
-	BOOL m_bTrapLogBrowserActive;
-	BOOL m_bEventEditorActive;
-	BOOL m_bUserEditorActive;
-	BOOL m_bObjectBrowserActive;
-	BOOL m_bCtrlPanelActive;
-   BOOL m_bDebugWindowActive;
-   BOOL m_bNetSummaryActive;
-   BOOL m_bEventPolicyEditorActive;
-   BOOL m_bLPPEditorActive;
-   BOOL m_bPackageMgrActive;
-   BOOL m_bServerCfgEditorActive;
-   BOOL m_bObjToolsEditorActive;
-   BOOL m_bScriptManagerActive;
-
+   CONSOLE_VIEW m_viewState[MAX_VIEW_ID];
    DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
 
 public:
@@ -283,10 +265,10 @@ public:
 	void DebugPrintf(char *szFormat, ...);
    void DebugCallback(char *pszMsg)
    {
-      if (m_bDebugWindowActive)
-         m_pwndDebugWindow->AddMessage(pszMsg);
+      if (m_viewState[VIEW_DEBUG].bActive)
+         ((CDebugFrame *)m_viewState[VIEW_ALARMS].pWnd)->AddMessage(pszMsg);
    }
-   CAlarmBrowser *GetAlarmBrowser(void) { return m_bAlarmBrowserActive ? m_pwndAlarmBrowser : NULL; }
+   CAlarmBrowser *GetAlarmBrowser(void) { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
 };
 
 

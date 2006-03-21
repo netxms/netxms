@@ -58,7 +58,7 @@ int CLPPList::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_LPP_EDITOR, this);
+   theApp.OnViewCreate(VIEW_LPP_EDITOR, this);
 	
    // Create list view control
    GetClientRect(&rect);
@@ -105,7 +105,7 @@ void CLPPList::OnSize(UINT nType, int cx, int cy)
 
 void CLPPList::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_LPP_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_LPP_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
 

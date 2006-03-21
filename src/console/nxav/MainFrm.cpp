@@ -271,7 +271,6 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          break;
    }
    GenerateHtml(strHTML);
-   //m_pwndAlarmView->Refresh();
    m_pwndAlarmView->SetHTML(strHTML);
    free(pAlarm);
 }

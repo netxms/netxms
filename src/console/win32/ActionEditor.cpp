@@ -71,7 +71,7 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_ACTION_EDITOR, this);
+   theApp.OnViewCreate(VIEW_ACTION_EDITOR, this);
 	
    // Create list view control
    GetClientRect(&rect);
@@ -106,7 +106,7 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CActionEditor::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_ACTION_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_ACTION_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
 

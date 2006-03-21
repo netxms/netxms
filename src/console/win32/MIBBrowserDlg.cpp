@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "MIBBrowserDlg.h"
 #include "DataQueryDlg.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

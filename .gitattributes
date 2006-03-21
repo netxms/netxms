@@ -731,6 +731,8 @@ src/console/win32/VPNCPropsGeneral.cpp -text
 src/console/win32/VPNCPropsGeneral.h -text
 src/console/win32/ValueList.cpp -text
 src/console/win32/ValueList.h -text
+src/console/win32/ViewEditor.cpp -text
+src/console/win32/ViewEditor.h -text
 src/console/win32/WaitView.cpp -text
 src/console/win32/WaitView.h -text
 src/console/win32/WebBrowser.cpp -text

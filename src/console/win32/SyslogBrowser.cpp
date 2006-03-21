@@ -90,7 +90,7 @@ int CSyslogBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndWaitView.SetText(_T("Loading syslog..."));
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_SYSLOG_BROWSER, this);
+   theApp.OnViewCreate(VIEW_SYSLOG, this);
    dwResult = DoRequestArg2(NXCSubscribe, g_hSession,
                             (void *)NXC_CHANNEL_SYSLOG,
                             _T("Subscribing to SYSLOG channel..."));
@@ -110,7 +110,7 @@ void CSyslogBrowser::OnDestroy()
 {
    DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_SYSLOG,
                  _T("Unsubscribing from SYSLOG channel..."));
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_SYSLOG_BROWSER, this);
+   theApp.OnViewDestroy(VIEW_SYSLOG, this);
 	CMDIChildWnd::OnDestroy();
 }
 

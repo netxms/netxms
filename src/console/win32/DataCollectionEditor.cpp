@@ -9,6 +9,7 @@
 #include "DCIThresholdsPage.h"
 #include "DCITransformPage.h"
 #include "DataExportDlg.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -206,7 +207,7 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_DC_EDITOR, this, m_pItemList->dwNodeId);
+   theApp.OnViewCreate(IDR_DC_EDITOR, this, m_pItemList->dwNodeId);
 
 	return 0;
 }

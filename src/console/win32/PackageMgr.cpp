@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "PackageMgr.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,7 +71,7 @@ int CPackageMgr::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_PACKAGE_MGR, this);
+   theApp.OnViewCreate(VIEW_PACKAGE_MANAGER, this);
 	
    // Create image list
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
@@ -117,7 +118,7 @@ void CPackageMgr::OnClose()
 
 void CPackageMgr::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_PACKAGE_MGR, this);
+   theApp.OnViewDestroy(VIEW_PACKAGE_MANAGER, this);
 	CMDIChildWnd::OnDestroy();
 }
 

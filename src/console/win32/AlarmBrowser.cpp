@@ -238,7 +238,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
       }
    }
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_ALARMS, this);
+   theApp.OnViewCreate(VIEW_ALARMS, this);
    dwResult = DoRequestArg2(NXCSubscribe, g_hSession, (void *)NXC_CHANNEL_ALARMS,
                             _T("Subscribing to ALARMS channel..."));
    if (dwResult != RCC_SUCCESS)
@@ -257,7 +257,7 @@ void CAlarmBrowser::OnDestroy()
 {
    DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_ALARMS,
                  _T("Unsubscribing from ALARMS channel..."));
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_ALARMS, this);
+   theApp.OnViewDestroy(VIEW_ALARMS, this);
 	CMDIChildWnd::OnDestroy();
 }
 

@@ -68,7 +68,7 @@ int CServerCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_SERVER_CFG_EDITOR, this);
+   theApp.OnViewCreate(VIEW_SERVER_CONFIG, this);
 	
    // Create list view control
    GetClientRect(&rect);
@@ -95,7 +95,7 @@ int CServerCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CServerCfgEditor::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_SERVER_CFG_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_SERVER_CONFIG, this);
 	CMDIChildWnd::OnDestroy();
 }
 

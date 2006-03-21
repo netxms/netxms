@@ -234,7 +234,7 @@ END_MESSAGE_MAP()
 
 void CObjectBrowser::OnDestroy() 
 {
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_OBJECTS, this);
+   theApp.OnViewDestroy(VIEW_OBJECTS, this);
 	CMDIChildWnd::OnDestroy();
 }
 
@@ -337,7 +337,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
       delete pwp;
    }
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_OBJECTS, this);
+   theApp.OnViewCreate(VIEW_OBJECTS, this);
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	return 0;
 }

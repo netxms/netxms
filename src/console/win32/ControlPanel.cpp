@@ -96,6 +96,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LPP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_OBJTOOLS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -109,10 +110,11 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    //AddItem("Log Processing", 7, ID_CONTROLPANEL_LOGPROCESSING);
    AddItem("Object Tools", 8, ID_CONTROLPANEL_OBJECTTOOLS);
    AddItem("Script Library", 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
+   AddItem("View Builder", 10, ID_CONTROLPANEL_VIEWBUILDER);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 
-   theApp.OnViewCreate(IDR_CTRLPANEL, this);
+   theApp.OnViewCreate(VIEW_CTRLPANEL, this);
 	return 0;
 }
 
@@ -123,7 +125,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CControlPanel::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_CTRLPANEL, this);
+   theApp.OnViewDestroy(VIEW_CTRLPANEL, this);
 	CMDIChildWnd::OnDestroy();
 }
 

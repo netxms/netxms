@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "CreateObjectDlg.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

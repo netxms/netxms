@@ -59,7 +59,7 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-   theApp.OnViewCreate(IDR_EVENT_EDITOR, this);
+   theApp.OnViewCreate(VIEW_EVENT_EDITOR, this);
 
    // Create list view control
    GetClientRect(&rect);
@@ -118,7 +118,7 @@ void CEventEditor::UpdateItem(int iItem, NXC_EVENT_TEMPLATE *pData)
 
 void CEventEditor::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_EVENT_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_EVENT_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
 

@@ -5,6 +5,8 @@
 #include "nxcon.h"
 #include "VPNCPropsGeneral.h"
 #include "EditSubnetDlg.h"
+#include "ObjectPropSheet.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

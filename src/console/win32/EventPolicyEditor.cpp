@@ -159,7 +159,7 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
          m_wndRuleList.EnableRow(i, FALSE);
    }      
 
-   theApp.OnViewCreate(IDR_EPP_EDITOR, this);
+   theApp.OnViewCreate(VIEW_EPP_EDITOR, this);
 	return 0;
 }
 
@@ -171,7 +171,7 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CEventPolicyEditor::OnDestroy() 
 {
    NXCDestroyEventPolicy(theApp.m_pEventPolicy);
-   theApp.OnViewDestroy(IDR_EPP_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_EPP_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
 

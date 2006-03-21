@@ -57,7 +57,7 @@ int CDebugFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 120);
    m_wndListCtrl.InsertColumn(1, "Message", LVCFMT_LEFT, 600);
 	
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_DEBUG_WINDOW, this);
+   theApp.OnViewCreate(VIEW_DEBUG, this);
 
 	return 0;
 }
@@ -69,7 +69,7 @@ int CDebugFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CDebugFrame::OnDestroy() 
 {
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_DEBUG_WINDOW, this);
+   theApp.OnViewDestroy(VIEW_DEBUG, this);
 	CMDIChildWnd::OnDestroy();
 }
 

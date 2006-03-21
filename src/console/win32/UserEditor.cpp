@@ -80,7 +80,7 @@ void CUserEditor::OnClose()
 
 void CUserEditor::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_USER_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_USER_MANAGER, this);
 	CMDIChildWnd::OnDestroy();
 }
 
@@ -97,7 +97,7 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_USER_EDITOR, this);
+   theApp.OnViewCreate(VIEW_USER_MANAGER, this);
 	
    // Create list view control
    GetClientRect(&rect);

@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "NodePropsGeneral.h"
+#include "ObjectPropSheet.h"
+#include "ObjectSelDlg.h"
 #include <nxsnmp.h>
 
 #ifdef _DEBUG

@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "NodePropsPolling.h"
+#include "ObjectPropSheet.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

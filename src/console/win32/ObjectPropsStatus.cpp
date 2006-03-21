@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "ObjectPropsStatus.h"
+#include "ObjectPropSheet.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

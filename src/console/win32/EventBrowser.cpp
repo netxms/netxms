@@ -88,7 +88,7 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndWaitView.SetText(_T("Loading event log..."));
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_EVENTS, this);
+   theApp.OnViewCreate(VIEW_EVENT_LOG, this);
    dwResult = DoRequestArg2(NXCSubscribe, g_hSession,
                             (void *)NXC_CHANNEL_EVENTS,
                             _T("Changing event subscription..."));
@@ -108,7 +108,7 @@ void CEventBrowser::OnDestroy()
 {
    DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_EVENTS,
                  _T("Changing event subscription..."));
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_EVENTS, this);
+   theApp.OnViewDestroy(VIEW_EVENT_LOG, this);
 	CMDIChildWnd::OnDestroy();
 }
 

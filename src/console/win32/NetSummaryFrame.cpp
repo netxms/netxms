@@ -81,7 +81,7 @@ int CNetSummaryFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
       }
       delete pwp;
    }
-   theApp.OnViewCreate(IDR_NETWORK_SUMMARY, this);
+   theApp.OnViewCreate(VIEW_NETWORK_SUMMARY, this);
 	return 0;
 }
 
@@ -92,7 +92,7 @@ int CNetSummaryFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CNetSummaryFrame::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_NETWORK_SUMMARY, this);
+   theApp.OnViewDestroy(VIEW_NETWORK_SUMMARY, this);
 	CMDIChildWnd::OnDestroy();
 }
 

@@ -83,7 +83,7 @@ int CTrapLogBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndWaitView.SetText(_T("Loading SNMP trap log..."));
    m_wndWaitView.Create(NULL, NULL, WS_CHILD, rect, this, ID_WAIT_VIEW);
 
-   ((CConsoleApp *)AfxGetApp())->OnViewCreate(IDR_TRAP_LOG_BROWSER, this);
+   theApp.OnViewCreate(VIEW_TRAP_LOG, this);
    dwResult = DoRequestArg2(NXCSubscribe, g_hSession,
                             (void *)NXC_CHANNEL_SNMP_TRAPS,
                             _T("Subscribing to SNMPTRAPS channel..."));
@@ -103,7 +103,7 @@ void CTrapLogBrowser::OnDestroy()
 {
    DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_SNMP_TRAPS,
                  _T("Unsubscribing from SNMPTRAPS channel..."));
-   ((CConsoleApp *)AfxGetApp())->OnViewDestroy(IDR_TRAP_LOG_BROWSER, this);
+   theApp.OnViewDestroy(VIEW_TRAP_LOG, this);
 	CMDIChildWnd::OnDestroy();
 }
 

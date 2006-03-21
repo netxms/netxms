@@ -59,18 +59,6 @@ struct OBJ_TREE_HASH
 };
 
 
-//
-// libnxcl object index structure
-//
-
-struct NXC_OBJECT_INDEX
-{
-   DWORD dwKey;
-   NXC_OBJECT *pObject;
-};
-
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CObjectBrowser frame
 

@@ -6,6 +6,7 @@
 #include "TrapEditDlg.h"
 #include "MIBBrowserDlg.h"
 #include "TrapParamDlg.h"
+#include "EventSelDlg.h"
 
 #define NXSNMP_WITH_NET_SNMP
 #include <nxsnmp.h>

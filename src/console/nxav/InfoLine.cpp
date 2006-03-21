@@ -74,7 +74,7 @@ int CInfoLine::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndTimer.Create(_T(""), WS_CHILD | WS_VISIBLE, rect, this, IDC_STATIC_TIMER);
    m_wndTimer.SetFont(&m_fontSmall);
 
-   m_nTimer = SetTimer(1, 1000, NULL);
+   m_nTimer = SetTimer(2, 1000, NULL);
 	return 0;
 }
 

@@ -358,6 +358,7 @@ BEGIN
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
+        MENUITEM "&View Builder",               ID_CONTROLPANEL_VIEWBUILDER
     END
     POPUP "&Object (map)"
     BEGIN
@@ -2930,6 +2931,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDR_VIEW_BUILDER        "\nView Builder\nView Builder"
     IDR_DCI_HISTORY_GRAPH   "\nHistory Graph\nHistory Graph"
 END
 

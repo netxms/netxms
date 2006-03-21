@@ -83,7 +83,7 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   theApp.OnViewCreate(IDR_TRAP_EDITOR, this);
+   theApp.OnViewCreate(VIEW_TRAP_EDITOR, this);
 
    // Create image list
    m_pImageList = CreateEventImageList();
@@ -118,7 +118,7 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CTrapEditor::OnDestroy() 
 {
-   theApp.OnViewDestroy(IDR_TRAP_EDITOR, this);
+   theApp.OnViewDestroy(VIEW_TRAP_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
 

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "GroupPropDlg.h"
+#include "UserSelectDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

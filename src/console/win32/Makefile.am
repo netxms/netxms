@@ -111,6 +111,7 @@ EXTRA_DIST = \
 	UserPropDlg.cpp UserPropDlg.h \
 	UserSelectDlg.cpp UserSelectDlg.h \
 	ValueList.cpp ValueList.h \
+	ViewEditor.cpp ViewEditor.h \
 	VPNCPropsGeneral.cpp VPNCPropsGeneral.h \
 	WaitView.cpp WaitView.h \
 	WebBrowser.cpp WebBrowser.h

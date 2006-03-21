@@ -139,6 +139,17 @@ extern CConsoleApp theApp;
 
 
 //
+// libnxcl object index structure
+//
+
+struct NXC_OBJECT_INDEX
+{
+   DWORD dwKey;
+   NXC_OBJECT *pObject;
+};
+
+
+//
 // Request parameters structure
 //
 

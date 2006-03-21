@@ -491,6 +491,7 @@
 #define IDR_DCI_DATA_VIEW               8109
 #define IDR_TABLE_VIEW                  8110
 #define IDR_TRAP_LOG_BROWSER            8111
+#define IDR_VIEW_BUILDER                8112
 #define IDR_DCI_HISTORY_GRAPH           8113
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
@@ -652,6 +653,7 @@
 #define ID_GRAPH_PRESETS_LASTMONTH      32982
 #define ID_GRAPH_PRESETS_LASTYEAR       32983
 #define ID_VIEW_SNMPTRAPLOG             32986
+#define ID_CONTROLPANEL_VIEWBUILDER     32987
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -662,7 +664,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        302
-#define _APS_NEXT_COMMAND_VALUE         32987
+#define _APS_NEXT_COMMAND_VALUE         32988
 #define _APS_NEXT_CONTROL_VALUE         1342
 #define _APS_NEXT_SYMED_VALUE           126
 #endif
