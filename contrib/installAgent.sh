@@ -55,12 +55,12 @@ fi
 
 gzip -dc $name.tar.gz | tar xf - 2>/dev/null
 if [ $? != 0 ]; then
-	echo invalid package >>$log
+	echo Unable to unpack >>$log
 	exit 2
 fi
 cd $name
 if [ $? != 0 ]; then
-	echo invalid package >>$log
+	echo Unable to change working dir >>$log
 	exit 3
 fi
 
