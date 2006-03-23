@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.10 2005-10-29 17:52:44 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.11 2006-03-23 08:00:09 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -380,7 +380,8 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT pConn)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   DisableThreadLibraryCalls(hInstance);
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 
