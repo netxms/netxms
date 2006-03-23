@@ -63,6 +63,7 @@
 #define _tcsncmp  strncmp
 #define _tprintf  printf
 #define _stprintf sprintf
+#define _ftprintf fprintf
 #define _sntprintf snprintf
 #define _vtprintf vprintf
 #define _vstprintf vsprintf
@@ -80,6 +81,7 @@
 #define _taccess  access
 #define _tunlink  unlink
 #define _tcsftime strftime
+#define _tctime   ctime
 
 #endif
 
