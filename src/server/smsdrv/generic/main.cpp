@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.4 2006-01-22 16:08:14 victor Exp $ */
+/* $Id: main.cpp,v 1.5 2006-03-23 07:53:16 victor Exp $ */
 
 #include "main.h"
 
@@ -83,10 +83,30 @@ extern "C" void EXPORT SMSDriverUnload(void)
 	m_serial.Close();
 }
 
+
+//
+// DLL Entry point
+//
+
+#ifdef _WIN32
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
+}
+
+#endif
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/01/22 16:08:14  victor
+Minor changes
+
 Revision 1.3  2005/06/16 20:54:26  victor
 Modem hardware ID written to server log
 
