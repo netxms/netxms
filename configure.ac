@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.148 2006-03-16 13:37:20 alk Exp $
+# $Id: configure.ac,v 1.149 2006-03-24 14:20:24 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -22,8 +22,8 @@ AC_PROG_LN_S
 
 # --------------------------------------------------------------------------
 # disable C++ exceptions
-CFLAGS="$CFLAGS -fno-exceptions"
-CPPFLAGS="$CPPFLAGS -fno-exceptions"
+CFLAGS="$CFLAGS -fno-exceptions -D_POSIX_PTHREAD_SEMANTICS"
+CPPFLAGS="$CPPFLAGS -fno-exceptions -D_POSIX_PTHREAD_SEMANTICS"
 LDFLAGS="$LDFLAGS"
 SUBAGENT_LIBS=""
 
