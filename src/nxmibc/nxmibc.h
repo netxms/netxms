@@ -30,6 +30,7 @@
 #include <nms_util.h>
 #include <getopt.h>
 #include <nxsnmp.h>
+#include <stdarg.h>
 
 #endif
 
