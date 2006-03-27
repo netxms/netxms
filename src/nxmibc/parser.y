@@ -853,6 +853,7 @@ SnmpNotificationTypeAssignment:
     ENTERPRISE_SYM LCidentifier
     SnmpTrapVariablePart
     SnmpDescriptionPart
+    SnmpReferencePart
     AssignedIdentifier
 {
    MP_SUBID *pSubId;
@@ -874,8 +875,8 @@ SnmpNotificationTypeAssignment:
    pSubId->bResolved = TRUE;
    da_add($$->pOID, pSubId);
 
-   da_join($$->pOID, $7);
-   da_destroy($7);
+   da_join($$->pOID, $8);
+   da_destroy($8);
 }
 ;
 
