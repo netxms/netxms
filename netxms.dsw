@@ -63,6 +63,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libnxmap"=.\src\libnxmap\libnxmap.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libnxsl"=.\src\libnxsl\libnxsl.dsp - Package Owner=<4>
 
 Package=<5>
@@ -292,6 +310,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name nxuilib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxmap
     End Project Dependency
 }}}
 

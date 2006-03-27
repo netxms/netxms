@@ -182,6 +182,7 @@ include/config-netware.h -text
 include/getopt.h -text
 include/netxms-regex.h -text
 include/netxms-version.h -text
+include/netxms_maps.h -text
 include/netxmsdb.h -text
 include/nms_agent.h -text
 include/nms_common.h -text
@@ -888,6 +889,12 @@ src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
+src/libnxmap/libnxmap.dsp -text
+src/libnxmap/libnxmap.dsw -text
+src/libnxmap/libnxmap.h -text
+src/libnxmap/main.cpp -text
+src/libnxmap/map.cpp -text
+src/libnxmap/submap.cpp -text
 src/libnxsl/Makefile.am -text
 src/libnxsl/class.cpp -text
 src/libnxsl/compiler.cpp -text

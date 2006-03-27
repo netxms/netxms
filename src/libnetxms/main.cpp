@@ -111,6 +111,8 @@ void LIBNETXMS_EXPORTABLE strupr(char *in)
 #ifndef UNDER_CE // FIXME
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 #endif // UNDER_CE

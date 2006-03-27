@@ -7,6 +7,22 @@
 // ViewEditor.h : header file
 //
 
+
+//
+// View element
+//
+
+class ViewElement
+{
+public:
+   POINT m_pos;
+   SIZE m_size;
+
+   ViewElement() {};
+   ~ViewElement() {};
+};
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CViewEditor frame
 
@@ -31,6 +47,7 @@ public:
 
 // Implementation
 protected:
+	void DrawElement(CDC &dc, RECT &clRect, ViewElement *pElement);
 	virtual ~CViewEditor();
 
 	// Generated message map functions

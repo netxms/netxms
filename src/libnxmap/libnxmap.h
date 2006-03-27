@@ -1,6 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Network Map Library
+** Copyright (C) 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,13 +17,17 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netxmsdb.h
+** File: libnxmap.h
 **
 **/
 
-#ifndef _netxms_db_h
-#define _netxms_db_h
+#ifndef _libnxmap_h_
+#define _libnxmap_h_
 
-#define DB_FORMAT_VERSION	39
+#include <nms_common.h>
+#include <nms_util.h>
+#include <nms_threads.h>
+#include <nxcscpapi.h>
+#include <netxms_maps.h>
 
-#endif
+#endif   /* _libnxmap_h_ */

@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\nxuilib\Release"
+# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib libnxmap.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -84,7 +84,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\nxuilib\Debug"
+# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib libnxmap.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
@@ -1135,6 +1135,10 @@ SOURCE=.\icons\folder_o.ico
 # Begin Source File
 
 SOURCE=.\icons\graph.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\idt_map.bmp
 # End Source File
 # Begin Source File
 

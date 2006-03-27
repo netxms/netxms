@@ -778,65 +778,42 @@ CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp);
 
 
 /*
-** Log processing policy
+** Network maps
 */
 
-/*
-CREATE TABLE lpp
+CREATE TABLE network_maps
 (
-	lpp_id integer not null,
-	lpp_name varchar(63) not null,
-	lpp_version integer not null,
-	lpp_flags integer not null,
-	PRIMARY KEY(lpp_id)
+	map_id integer not null,
+	map_name varchar(255) not null,
+	description SQL_TEXT not null,
+	root_object_id integer not null,
+	PRIMARY KEY(map_id)
 ) TABLE_TYPE;
-*/
 
 
 /*
-** Nodes associated with log processing policy
+** Submaps of network maps
 */
 
-/*
-CREATE TABLE lpp_associations
+CREATE TABLE submaps
 (
-	lpp_id integer not null,
-	node_id integer not null,
-	log_file varchar(255) not null
+	map_id integer not null,
+	submap_id integer not null,	// Equal to object id
+	attributes integer not null,	
+	PRIMARY KEY(map_id,submap_id)
 ) TABLE_TYPE;
-*/
 
 
 /*
-** Rulesets for log processing policies
+** Object positioning on submap
 */
 
-/*
-CREATE TABLE lpp_rulesets
+CREATE TABLE submap_object_positions
 (
-	ruleset_id integer not null,
-	ruleset_name varchar(63),
-	PRIMARY KEY(ruleset_id)
+	map_id integer not null,
+	submap_id integer not null,
+	object_id integer not null,
+	x integer not null,
+	y integer not null,
+	PRIMARY KEY(map_id,submap_id)
 ) TABLE_TYPE;
-*/
-
-
-/*
-** Matching rules for log processing policies
-*/
-
-/*
-CREATE TABLE lpp_rules
-(
-	lpp_id integer not null,
-	rule_number integer not null,
-	ruleset_id integer not null,	// 0 - matching rule, >0 - ruleset id
-	msg_id_start integer not null,
-	msg_id_end integer not null,
-	severity integer not null,
-	source_name varchar(255) not null,
-	msg_text_regexp varchar(255) not null,
-	event_code integer not null,
-	PRIMARY KEY(lpp_id,rule_number)
-) TABLE_TYPE;
-*/

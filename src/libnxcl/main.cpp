@@ -236,6 +236,8 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 

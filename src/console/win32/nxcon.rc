@@ -135,6 +135,7 @@ IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 IDB_ANY                 BITMAP  DISCARDABLE     "res\\any.bmp"
 IDB_NONE                BITMAP  DISCARDABLE     "res\\none.bmp"
+IDT_MAP                 BITMAP  DISCARDABLE     "res\\idt_map.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -152,6 +153,14 @@ BEGIN
     BUTTON      ID_FILE_PRINT
     SEPARATOR
     BUTTON      ID_APP_ABOUT
+END
+
+IDT_MAP TOOLBAR DISCARDABLE  18, 18
+BEGIN
+    BUTTON      ID_BUTTON32988
+    BUTTON      ID_BUTTON32989
+    BUTTON      ID_BUTTON32992
+    BUTTON      ID_BUTTON32990
 END
 
 

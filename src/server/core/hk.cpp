@@ -97,6 +97,17 @@ static void DeleteEmptySubnets(void)
 
 
 //
+// Maintenance tasks specific to PostgreSQL
+//
+
+static void PGSQLMaintenance(void)
+{
+   if (!ConfigReadInt("DisableVacuum", 0))
+      DBQuery(m_hdb, "VACUUM ANALYZE");
+}
+
+
+//
 // Housekeeper thread
 //
 
@@ -159,6 +170,10 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
          ((Node *)g_pNodeIndexByAddr[i].pObject)->CleanDCIData();
       RWLockUnlock(g_rwlockNodeIndex);
+
+      // Run DB-specific maintenance tasks
+      if (g_dwDBSyntax == DB_SYNTAX_PGSQL)
+         PGSQLMaintenance();
    }
 
    // Disconnect from database if using separate connection

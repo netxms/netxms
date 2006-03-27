@@ -81,6 +81,7 @@ BEGIN TRANSACTION;
 #include "traps.in"
 #include "objtools.in"
 #include "scripts.in"
+#include "maps.in"
 
 // End transaction
 #if defined(DB_POSTGRESQL) || defined(DB_SQLITE)

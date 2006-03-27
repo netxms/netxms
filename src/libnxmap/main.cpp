@@ -1,6 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Network Maps Library
+** Copyright (C) 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,13 +17,24 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netxmsdb.h
+** File: main.cpp
 **
 **/
 
-#ifndef _netxms_db_h
-#define _netxms_db_h
+#include "libnxmap.h"
 
-#define DB_FORMAT_VERSION	39
 
-#endif
+//
+// DLL entry point
+//
+
+#if defined(_WIN32) && !defined(UNDER_CE)
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
+}
+
+#endif   /* _WIN32 */

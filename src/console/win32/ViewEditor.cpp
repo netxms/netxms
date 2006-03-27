@@ -56,7 +56,7 @@ int CViewEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-	// TODO: Add your specialized creation code here
+   theApp.OnViewCreate(VIEW_BUILDER, this);
 	
 	return 0;
 }
@@ -68,10 +68,8 @@ int CViewEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CViewEditor::OnDestroy() 
 {
+   theApp.OnViewDestroy(VIEW_BUILDER, this);
 	CMDIChildWnd::OnDestroy();
-	
-	// TODO: Add your message handler code here
-	
 }
 
 
@@ -82,8 +80,35 @@ void CViewEditor::OnDestroy()
 void CViewEditor::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
+   RECT rect;
 
-   dc.SetMapMode(MM_ISOTROPIC);
-   dc.SetWindowExt(100, 100);
-   dc.Rectangle(0, 0, 20, 20);
+   GetClientRect(&rect);
+
+ViewElement e;
+e.m_pos.x = 0;
+e.m_pos.y = 0;
+e.m_size.cx = 80;
+e.m_size.cy = 80;
+DrawElement(dc, rect, &e);
+}
+
+
+//
+// Draw single view element
+//
+
+void CViewEditor::DrawElement(CDC &dc, RECT &clRect, ViewElement *pElement)
+{
+   CBrush brush, *pBrush;
+   RECT rect;
+
+   rect.left = clRect.right * pElement->m_pos.x / 100;
+   rect.top = clRect.bottom * pElement->m_pos.y / 100;
+   rect.right = clRect.right * (pElement->m_pos.x + pElement->m_size.cx) / 100;
+   rect.bottom = clRect.bottom * (pElement->m_pos.y + pElement->m_size.cy) / 100;
+
+   brush.CreateSolidBrush(RGB(0, 0, 200));
+   pBrush = dc.SelectObject(&brush);
+   dc.Rectangle(&rect);
+   dc.SelectObject(pBrush);
 }

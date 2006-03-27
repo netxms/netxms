@@ -18,14 +18,10 @@ IMPLEMENT_DYNCREATE(CMapFrame, CMDIChildWnd)
 
 CMapFrame::CMapFrame()
 {
-   m_pRootObject = NULL;
-   m_pImageList = NULL;
-   m_dwHistoryPos = 0;
 }
 
 CMapFrame::~CMapFrame()
 {
-   delete m_pImageList;
 }
 
 
@@ -35,10 +31,7 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
-	ON_COMMAND(ID_OBJECT_OPEN, OnObjectOpen)
-	ON_COMMAND(ID_OBJECT_OPENPARENT, OnObjectOpenparent)
 	//}}AFX_MSG_MAP
-	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -60,32 +53,31 @@ BOOL CMapFrame::PreCreateWindow(CREATESTRUCT& cs)
 int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   int i;
+   static TBBUTTON tbButtons[] =
+   {
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 1, 0, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 }
+   };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
+   EnableDocking(CBRS_ALIGN_ANY);
+
+   // Create toolbar
+   m_wndToolBar.CreateEx(this);
+   m_wndToolBar.LoadToolBar(IDT_MAP);
+   //FloatControlBar(&m_wndToolBar, TRUE, FALSE);
+/*   m_wndToolBar.Create(WS_CHILD | WS_VISIBLE | CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT, rect, this, ID_TOOLBAR_CTRL);
+   m_wndToolBar.SetExtendedStyle(WS_EX_WINDOWEDGE);
+   m_wndToolBar.SetButtonSize(CSize(20, 20));
+   m_wndToolBar.LoadImages(IDB_HIST_SMALL_COLOR, HINST_COMMCTRL);
+   m_wndToolBar.AddButtons(2, tbButtons);*/
+
    // Create and initialize map view
    GetClientRect(&rect);
-   //m_wndMapView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, this, 0);
-   m_wndMapView.Create(WS_CHILD | WS_VISIBLE | LVS_ICON | LVS_SHOWSELALWAYS, rect, this, IDC_LIST_VIEW);
+   m_wndMapView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, this, 0);
    
-   // Create image list
-   m_pImageList = new CImageList;
-   m_pImageList->Create(g_pObjectNormalImageList);
-   m_iStatusImageBase = m_pImageList->GetImageCount();
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_WARNING));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MINOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MAJOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_CRITICAL));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNKNOWN));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNMANAGED));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_DISABLED));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_TESTING));
-   for(i = STATUS_WARNING; i <= STATUS_TESTING; i++)
-      m_pImageList->SetOverlayImage(m_iStatusImageBase + i - 1, i);
-   m_wndMapView.SetImageList(m_pImageList, LVSIL_NORMAL);
-
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
    return 0;
@@ -98,9 +90,12 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CMapFrame::OnSize(UINT nType, int cx, int cy) 
 {
+   int nToolBarHeight;
+
 	CMDIChildWnd::OnSize(nType, cx, cy);
-	
-   m_wndMapView.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);	
+//   m_wndToolBar.AutoSize();
+   nToolBarHeight = GetWindowSize(&m_wndToolBar).cy;
+   m_wndMapView.SetWindowPos(NULL, 0, nToolBarHeight, cx, cy - nToolBarHeight, SWP_NOZORDER);	
 }
 
 
@@ -111,7 +106,6 @@ void CMapFrame::OnSize(UINT nType, int cx, int cy)
 void CMapFrame::OnSetFocus(CWnd* pOldWnd) 
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
-
    m_wndMapView.SetFocus();
 }
 
@@ -122,7 +116,8 @@ void CMapFrame::OnSetFocus(CWnd* pOldWnd)
 
 void CMapFrame::OnViewRefresh() 
 {
-   NXC_OBJECT *pObject;
+   m_wndMapView.SetMap(new nxMap(1, _T("Default"), _T("Default map")));
+/*   NXC_OBJECT *pObject;
    DWORD i;
    CString strFullString, strTitle;
 
@@ -163,100 +158,5 @@ void CMapFrame::OnViewRefresh()
       strTitle += "]";
    }
 
-   ::SetWindowText(m_hWnd, strTitle);
-}
-
-
-//
-// Add object to view
-//
-
-void CMapFrame::AddObjectToView(NXC_OBJECT *pObject)
-{
-   LVITEM item;
-
-   item.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_TEXT | LVIF_STATE;
-   item.iItem = 0x7FFFFFFF;
-   item.iSubItem = 0;
-   item.pszText = pObject->szName;
-   item.iImage = GetObjectImageIndex(pObject);
-   item.lParam = (LPARAM)pObject;
-   item.stateMask = LVIS_OVERLAYMASK;
-   item.state = INDEXTOOVERLAYMASK(pObject->iStatus);
-   m_wndMapView.InsertItem(&item);
-}
-
-
-//
-// Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
-//
-
-void CMapFrame::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
-{
-   PostMessage(WM_COMMAND, ID_OBJECT_OPEN, 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_OPEN message handler
-//
-
-void CMapFrame::OnObjectOpen() 
-{
-   NXC_OBJECT *pObject;
-
-   pObject = GetSelectedObject();
-   if (pObject != NULL)
-   {
-      if (m_dwHistoryPos < OBJECT_HISTORY_SIZE)
-         m_pObjectHistory[m_dwHistoryPos++] = m_pRootObject;
-      m_pRootObject = pObject;
-      PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_OPENPARENT message handler
-//
-
-void CMapFrame::OnObjectOpenparent() 
-{
-   if (m_pRootObject != NULL)
-   {
-      if (m_dwHistoryPos > 0)
-      {
-         m_pRootObject = m_pObjectHistory[--m_dwHistoryPos];
-      }
-      else
-      {
-         if (m_pRootObject->dwNumParents > 0)
-         {
-            m_pRootObject = NXCFindObjectById(g_hSession, m_pRootObject->pdwParentList[0]);
-         }
-         else
-         {
-            m_pRootObject = NULL;
-         }
-      }
-      PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
-   }
-}
-
-
-//
-// Get currently selected object, if any
-//
-
-NXC_OBJECT *CMapFrame::GetSelectedObject()
-{
-   int iItem;
-   NXC_OBJECT *pObject = NULL;
-
-   if (m_wndMapView.GetSelectedCount() == 1)
-   {
-      iItem = m_wndMapView.GetSelectionMark();
-      pObject = (NXC_OBJECT *)m_wndMapView.GetItemData(iItem);
-   }
-   return pObject;
+   ::SetWindowText(m_hWnd, strTitle);*/
 }

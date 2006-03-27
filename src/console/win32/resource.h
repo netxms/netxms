@@ -26,6 +26,7 @@
 #define IDC_SPLITTER                    122
 #define ID_WAIT_VIEW                    123
 #define ID_BROWSER_CTRL                 124
+#define ID_TOOLBAR_CTRL                 126
 #define IDR_MAINFRAME                   128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
@@ -176,6 +177,7 @@
 #define IDI_CLOSED_FOLDER               299
 #define IDI_OPEN_FOLDER                 300
 #define IDA_SCRIPT_MANAGER              301
+#define IDT_MAP                         302
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -654,6 +656,11 @@
 #define ID_GRAPH_PRESETS_LASTYEAR       32983
 #define ID_VIEW_SNMPTRAPLOG             32986
 #define ID_CONTROLPANEL_VIEWBUILDER     32987
+#define ID_BUTTON32988                  32988
+#define ID_BUTTON32989                  32989
+#define ID_BUTTON32990                  32990
+#define ID_BUTTON32991                  32991
+#define ID_BUTTON32992                  32992
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -663,9 +670,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        302
-#define _APS_NEXT_COMMAND_VALUE         32988
+#define _APS_NEXT_RESOURCE_VALUE        304
+#define _APS_NEXT_COMMAND_VALUE         32995
 #define _APS_NEXT_CONTROL_VALUE         1342
-#define _APS_NEXT_SYMED_VALUE           126
+#define _APS_NEXT_SYMED_VALUE           127
 #endif
 #endif
