@@ -1,0 +1,731 @@
+    USEC-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+--        MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32, UInteger32
+	snmpModules
+            FROM SNMPv2-SMI
+        RowStatus, TestAndIncr, RowPointer
+             FROM SNMPv2-TC
+        KeyChange, MemoryType, TransportLabel, AuthName, SnmpID
+             FROM V2ADMIN-MIB
+        MODULE-COMPLIANCE, OBJECT-GROUP
+            FROM SNMPv2-CONF;
+
+
+    usecMIB MODULE-IDENTITY
+        LAST-UPDATED "9508121700"
+        ORGANIZATION "IETF SNMPv2 Working Group"
+        CONTACT-INFO "snmpv2@tis.com
+                     Complete contact information to be provided."
+        DESCRIPTION
+              "The MIB module for configuring the USEC security and privacy
+              services."
+        ::= { snmpModules 1135 }
+
+    --
+    -- The usecScalars group.  This group contains objects which provide
+    -- time synchronization for the USEC authentication service.
+    --
+    usecScalars OBJECT IDENTIFIER ::= { usecMIB 1 }
+
+    snmpBoots OBJECT-TYPE
+        SYNTAX       Integer32 (-1..2147483647)
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+              "The number of times the management system on a device has
+              been re-initialized since its initial configuration."
+        ::= { usecScalars 1 }
+
+    snmpTime OBJECT-TYPE
+        SYNTAX       Integer32 (0..2147483647)
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+
+
+
+
+
+
+
+
+
+
+
+              "The number of seconds since the SNMPv2 protocol entity
+              last incremented the snmpBoots object."
+        ::= { usecScalars 2 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    --
+    -- The usecStats group.  This group contains objects which provide
+    -- statistics for the USEC security and privacy services.
+    --
+
+    usecStats OBJECT IDENTIFIER ::= { usecMIB 2 }
+
+    usecStatsNotInTimeWindows OBJECT-TYPE
+        SYNTAX       Counter32
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+              "A count of the number of packets that were deemed
+              unauthentic due to the authSnmpBoots or authSnmpTime values
+              being out of lifetime."
+        ::= { usecStats 1 }
+
+    usecStatsUnknownUserNames OBJECT-TYPE
+        SYNTAX       Counter32
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+              "A count of the number of packets containing an SPI
+              associated with usecNoAuth(4), usecAuth(5), or usecPriv(6),
+              but whose userNames were not found in the
+              userNameTable."
+        ::= { usecStats 2 }
+
+    usecStatsWrongDigestValues OBJECT-TYPE
+        SYNTAX       Counter32
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+              "A count of the number of packets that were deemed
+              unauthentic due to the digest value being incorrect."
+        ::= { usecStats 3 }
+
+    usecStatsBadPrivacys OBJECT-TYPE
+        SYNTAX       Counter32
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+              "A count of the number of packets received which were
+              encrypted incorrectly."
+        ::= { usecStats 4 }
+
+
+
+
+
+
+
+
+
+
+
+    --
+    -- The usecUser group
+    --
+
+    usecUser OBJECT IDENTIFIER ::= { usecMIB 3 }
+
+    userSpinLock OBJECT-TYPE
+        SYNTAX       TestAndIncr
+        MAX-ACCESS   read-write
+        STATUS       current
+        DESCRIPTION
+              "An advisory lock used to allow several cooperating SNMPv2
+              entities, all acting in a manager role, to coordinate their
+              use of SNMPv2 set operations to entries in the userNameTable.
+              A manager application should include the value of
+              userSpinLock in every set operation which accesses the
+              userNameTable.  Since this is an advisory lock, entities
+              acting in an agent role do not enforce the use of
+              userSpinLock."
+        ::= { usecUser 1 }
+
+    maxUserNameLength OBJECT-TYPE
+        SYNTAX       Integer32 (0..255)
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+              "The maximum length of userName allowed by this implementation.
+              This value can be probed by a management application prior
+              to attempting a row creation operation in the userNameTable.
+              A value of 0 indicates that the userNameTable does not allow
+              row creation or deletion operations."
+        ::= { usecUser 2 }
+
+    --
+    -- The userNameTable contains the database of users who are configured to
+    -- perform SNMP communications via the Usec authentication and privacy service.
+    -- These users are organized into 'groups'.
+    -- The group to which a user belongs is specified in the userGroupName
+    -- object.
+    --
+    -- Access privileges are assigned in the acTable [@ref adminmib] by group.
+    -- This allows groups of users to share the same privileges, or for individual
+    -- users to have their own unique privileges.
+    --
+    -- In order to ease the task of configuring SNMPv2 entities, many of the
+
+
+
+
+
+
+
+
+
+
+
+    -- indices used in the following table are textual (human-readable) strings.
+    -- Experience has shown that it is often necessary for a network administrator
+    -- to manually edit the configuration datastore for an SNMPv2 entities.
+    -- Use of textual strings for indices makes the configuration datastore much
+    -- easier for an administrator to maintain.
+    -- An implementation may restrict the lengths of userName and userGroupName
+    -- entries to less than the maximum value.
+    -- The maxUserNameLength variable and maxGroupNameLength [@ref adminmib]
+    -- variables can be used to detect the maximum length of name strings
+    -- supported by a particular implementation.
+
+    userNameTable OBJECT-TYPE
+        SYNTAX       SEQUENCE OF UserNameEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+              "The SNMPv2 database for usecNoAuth(4), usecAuth(5), and
+              usecPriv(6) users."
+        ::= { usecUser 3 }
+
+    userNameEntry OBJECT-TYPE
+        SYNTAX       UserNameEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+              "Information about a particular SNMPv2 user."
+        INDEX { userAuthSnmpID, IMPLIED userName }
+        ::= { userNameTable 1 }
+
+    UserNameEntry ::= SEQUENCE {
+        userAuthSnmpID       SnmpID,
+        userName             AuthName,
+        userGroupName        AuthName,
+        userAuthChange       KeyChange,
+        userPrivChange       KeyChange,
+        userNovel            OCTET STRING,
+        userTransportLabel   TransportLabel,
+        userCloneFrom        RowPointer,
+        userMemoryType       MemoryType,
+        userStatus           RowStatus
+    }
+
+    userAuthSnmpID OBJECT-TYPE
+        SYNTAX       SnmpID
+        MAX-ACCESS   not-accessible
+
+
+
+
+
+
+
+
+
+
+
+        STATUS       current
+        DESCRIPTION
+              "The node's administratively-unique identifier.
+
+              In a simple agent, this value will always be equal to the
+              agent's snmpID object.
+
+              In a manager which does not send or receive inform requests,
+              this value will be equal to the snmpID object of the
+              agent with which this user can communicate.
+
+              In a manager which sends or receives inform requests, this
+              object will be equal to one of three things:
+                  - The snmpID of the agent with which this user
+                    can communicate.
+                  - The snmpID of the manager's local protocol engine.
+                  - The snmpID of a remote manager which this user
+                    can send inform requests to or receive inform requests
+                    from.
+
+              In a dual-role entity, this value will be some combination
+              of those specified for agents and managers above."
+        ::= { userNameEntry 1 }
+
+    userName OBJECT-TYPE
+        SYNTAX       AuthName (SIZE(1..32))
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+              "This variable contains the textual name of a user."
+        ::= { userNameEntry 2 }
+
+    userGroupName OBJECT-TYPE
+        SYNTAX       AuthName (SIZE(0..32))
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "This variable contains the textual name of the group to
+              which a user belongs."
+        ::= { userNameEntry 3 }
+
+    userAuthChange OBJECT-TYPE
+        SYNTAX       KeyChange
+        MAX-ACCESS   read-create
+        STATUS       current
+
+
+
+
+
+
+
+
+
+
+
+        DESCRIPTION
+              "An object, which when modified, causes the user's secret
+              authentication key to be modified via a one-way function.
+
+              When creating a new user, it is an 'inconsistentName' error
+              for a set operation to refer to this object unless it is
+              previously or concurrently initialized through a set
+              operation on the corresponding value of userCloneFrom."
+         DEFVAL { ''H }     -- the empty string
+         ::= { userNameEntry 4 }
+
+    userPrivChange OBJECT-TYPE
+        SYNTAX       KeyChange
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "An object, which when modified, causes the user's secret
+              privacy key to be modified via a one-way function.
+
+              When creating a new user, it is a 'inconsistentName' error
+              for a set operation to refer to this object unless it is
+              previously or concurrently initialized through a set
+              operation on the corresponding value of userCloneFrom."
+         DEFVAL { ''H }     -- the empty string
+        ::= { userNameEntry 5 }
+
+    userNovel OBJECT-TYPE
+        SYNTAX       OCTET STRING (SIZE(0..20))
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "This object may be used by a manager as a part of its
+              procedure for altering secret information about a user.
+              By altering the value of an instance of this object in
+              the same SNMPv2 Set-Request used to update secret information,
+              a subsequent Get-Request can determine if the Set-Request
+              was successful in the event that no response to the
+              Set-Request is received.
+
+              When an instance of this object is created, its value is
+              initialized to a random value.
+
+              This object need not be stored in non-volatile storage and
+              should be initialized to an unpredictable value upon system
+              re-initialization."
+
+
+
+
+
+
+
+
+
+
+
+         DEFVAL { ''H }     -- the empty string
+        ::= { userNameEntry 6 }
+
+    userTransportLabel OBJECT-TYPE
+        SYNTAX       TransportLabel
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "This object specifies a set of transport endpoints from which
+              an agent will accept management requests.  If a management
+              request generated by this user is received on a transport
+              endpoint other than the transport endpoints identified
+              by this object, the request is deemed unauthentic.
+
+              The transports identified by this object are specified in
+              the transportTable.  Entries in the transportTable whose
+              transportLabel value are equal to this object are identified.
+
+              If the value of this object has zero-length, or if the
+              transportTable is not implemented, then transport endpoints
+              are not checked when authenticating messages generated
+              by this user."
+         DEFVAL { ''H }     -- the empty string
+        ::= { userNameEntry 7 }
+
+    userCloneFrom OBJECT-TYPE
+        SYNTAX       RowPointer (SIZE(14..268))
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "An indication of the user to clone authentication and privacy
+              parameters from.  When read, the value { 0 0 } is returned.
+
+              This object must be written exactly once, when the associated
+              instance of userStatus either does not exist or has the
+              value `notReady'.  Subsequent set operations to this object
+              will succeed, but will not cause the agent to take any action.
+              When first written, the value identifies an instance of
+              a user, the cloning user, whose status column has the value
+              'active' or 'not in service'.
+
+              For implementations which support both authentication and
+              privacy, the authentication and privacy secrets of the cloning
+              user are copied to the corresponding authentication and
+              privacy secrets of the user being created.
+
+
+
+
+
+
+
+
+
+
+
+              For implementations which support only authentication, the
+              authentication secret of the cloning user is copied to the
+              corresponding authentication secret of the user being created.
+
+              For implementations which support neither authentication nor
+              privacy, this object has no effect (and need not be
+              implemented)."
+        ::= { userNameEntry 8 }
+
+    userMemoryType OBJECT-TYPE
+        SYNTAX       MemoryType
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "The storage type for this conceptual row in the userNameTable.
+
+              Conceptual rows having the value 'permanent' must allow
+              write-access at a minimum to:
+              userAuthChange and userNovel for users employing
+              authentication; and userPrivChange and userNovel
+              for users employing privacy.
+
+              Note that any user which employs authentication or privacy
+              must allow its secrets to be updated and thus
+              cannot be 'readOnly'."
+        ::= { userNameEntry 9 }
+
+    userStatus OBJECT-TYPE
+        SYNTAX       RowStatus
+        MAX-ACCESS   read-create
+        STATUS       current
+        DESCRIPTION
+              "The status of this conceptual row in the userNameTable.
+
+              A user is not qualified for activation until instances of
+              all columns of its userNameEntry row have an appropriate
+              value.  In particular, one or more management set operations
+              are required to configure the entry:
+
+                  a value must be written to the user's userCloneFrom
+                  object, and ... update of secrets
+
+              Until instances of all corresponding columns and secrets are
+              appropriately configured, the value of the corresponding
+              instance of the userStatus column is `notReady'."
+
+
+
+
+
+
+
+
+
+
+
+        ::= { userNameEntry 10 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -- conformance information
+
+    usecMIBConformance
+                   OBJECT IDENTIFIER ::= { usecMIB 4 }
+    usecMIBCompliances
+                   OBJECT IDENTIFIER ::= { usecMIBConformance 1 }
+    usecMIBGroups
+                   OBJECT IDENTIFIER ::= { usecMIBConformance 2 }
+
+
+    -- compliance statements
+
+    usecMIBNoAuthCompliance MODULE-COMPLIANCE
+        STATUS    current
+        DESCRIPTION
+              "The compliance statement for SNMPv2 entities which
+              implement the SNMPv2 USEC MIB with no authentication
+              or privacy protocols."
+
+        MODULE  -- this module
+            MANDATORY-GROUPS { usecNoAuthGroup }
+        ::= { usecMIBCompliances 1 }
+
+    usecMIBAuthCompliance MODULE-COMPLIANCE
+        STATUS    current
+        DESCRIPTION
+              "The compliance statement for SNMPv2 entities which
+              implement the SNMPv2 USEC MIB with authentication and
+              no privacy protocols."
+
+        MODULE  -- this module
+            MANDATORY-GROUPS { usecNoAuthGroup, usecAuthGroup }
+
+            OBJECT           userAuthChange
+            MIN-ACCESS       read-only
+            DESCRIPTION
+                  "Write access is not required."
+
+        ::= { usecMIBCompliances 2 }
+
+    usecMIBPrivCompliance MODULE-COMPLIANCE
+        STATUS    current
+        DESCRIPTION
+              "The compliance statement for SNMPv2 entities which
+              implement the SNMPv2 USEC MIB with both authentication
+
+
+
+
+
+
+
+
+
+
+
+              and privacy protocols."
+
+        MODULE  -- this module
+            MANDATORY-GROUPS { usecNoAuthGroup, usecAuthGroup, usecPrivGroup }
+
+            OBJECT           userAuthChange
+            MIN-ACCESS       read-only
+            DESCRIPTION
+                  "Write access is not required."
+
+            OBJECT           userPrivChange
+            MIN-ACCESS       read-only
+            DESCRIPTION
+                  "Write access is not required."
+
+        ::= { usecMIBCompliances 3 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    -- units of conformance
+
+    usecNoAuthGroup OBJECT-GROUP
+        OBJECTS {
+                 usecStatsNotInTimeWindows,
+                 usecStatsUnknownUserNames,
+                 usecStatsWrongDigestValues,
+                 usecStatsBadPrivacys,
+                 userSpinLock,
+                 userAuthSnmpID,
+                 userName,
+                 userGroupName,
+                 userTransportLabel,
+                 userCloneFrom,
+                 userMemoryType,
+                 userStatus
+                }
+        STATUS    current
+        DESCRIPTION
+
+                "A collection of objects providing for configuration of an
+                SNMPv2 agent which implements the SNMPv2 User-based Security
+                Model."
+        ::= { usecMIBGroups 1 }
+
+    usecAuthGroup OBJECT-GROUP
+        OBJECTS {
+                 userAuthChange,
+                 userNovel
+                }
+        STATUS    current
+        DESCRIPTION
+              "A collection of objects providing for configuration of an
+              SNMPv2 agent which implements the SNMPv2 User-based Security
+              Model."
+        ::= { usecMIBGroups 2 }
+
+    usecPrivGroup OBJECT-GROUP
+        OBJECTS {
+                 userPrivChange
+                }
+        STATUS    current
+        DESCRIPTION
+              "A collection of objects providing for configuration of an
+              SNMPv2 agent which implements the SNMPv2 User-based Security
+
+
+
+
+
+
+
+
+
+
+
+              Model."
+        ::= { usecMIBGroups 3 }
+
+END

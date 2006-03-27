@@ -77,6 +77,7 @@ mibs_DATA = \
 	RFC-1212.txt \
 	RFC1213-MIB.txt \
 	RMON-MIB.txt \
+	RS-232-MIB.txt \
 	S5-CHASSIS-MIB.txt \
 	S5-CHASSIS-TRAP-MIB.txt \
 	S5-ETH-REDUNDANT-LINKS-MIB.txt \
@@ -87,7 +88,11 @@ mibs_DATA = \
 	S5-ROOT-MIB.txt \
 	S5-SWITCH-BAYSECURE-MIB.txt \
 	S5-TCS-MIB.txt \
+	SNMP-COMMUNITY-MIB.txt \
 	SNMP-FRAMEWORK-MIB.txt \
+	SNMP-PROXY-MIB.txt \
+	SNMP-REPEATER-MIB.txt \
+	SNMP-TARGET-MIB.txt \
 	SNMPv2-CONF.txt \
 	SNMPv2-MIB.txt \
 	SNMPv2-SMI.txt \
@@ -105,6 +110,9 @@ mibs_DATA = \
 	UCD-SNMP-MIB.txt \
 	UDP-MIB.txt \
 	UPS-MIB.txt \
-	WF-COM.txt
+	USEC-MIB.txt \
+	V2ADMIN-MIB.txt \
+	WF-COM.txt \
+	WWW-MIB.txt
 
 EXTRA_DIST=$(mibs_DATA)

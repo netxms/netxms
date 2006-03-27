@@ -88,6 +88,7 @@ contrib/mibs/RFC-1215.txt -text
 contrib/mibs/RFC1155-SMI.txt -text
 contrib/mibs/RFC1213-MIB.txt -text
 contrib/mibs/RMON-MIB.txt -text
+contrib/mibs/RS-232-MIB.txt -text
 contrib/mibs/S5-CHASSIS-MIB.txt -text
 contrib/mibs/S5-CHASSIS-TRAP-MIB.txt -text
 contrib/mibs/S5-ETH-REDUNDANT-LINKS-MIB.txt -text
@@ -98,7 +99,11 @@ contrib/mibs/S5-REG-MIB.txt -text
 contrib/mibs/S5-ROOT-MIB.txt -text
 contrib/mibs/S5-SWITCH-BAYSECURE-MIB.txt -text
 contrib/mibs/S5-TCS-MIB.txt -text
+contrib/mibs/SNMP-COMMUNITY-MIB.txt -text
 contrib/mibs/SNMP-FRAMEWORK-MIB.txt -text
+contrib/mibs/SNMP-PROXY-MIB.txt -text
+contrib/mibs/SNMP-REPEATER-MIB.txt -text
+contrib/mibs/SNMP-TARGET-MIB.txt -text
 contrib/mibs/SNMPv2-CONF.txt -text
 contrib/mibs/SNMPv2-MIB.txt -text
 contrib/mibs/SNMPv2-SMI.txt -text
@@ -116,7 +121,10 @@ contrib/mibs/UCD-IPFWACC-MIB.txt -text
 contrib/mibs/UCD-SNMP-MIB.txt -text
 contrib/mibs/UDP-MIB.txt -text
 contrib/mibs/UPS-MIB.txt -text
+contrib/mibs/USEC-MIB.txt -text
+contrib/mibs/V2ADMIN-MIB.txt -text
 contrib/mibs/WF-COM.txt -text
+contrib/mibs/WWW-MIB.txt -text
 contrib/netxmsd.conf-dist -text
 contrib/nxagentd.conf-dist -text
 contrib/startup/Makefile.am -text
