@@ -104,6 +104,7 @@ contrib/mibs/SNMP-FRAMEWORK-MIB.txt -text
 contrib/mibs/SNMP-PROXY-MIB.txt -text
 contrib/mibs/SNMP-REPEATER-MIB.txt -text
 contrib/mibs/SNMP-TARGET-MIB.txt -text
+contrib/mibs/SNMP-USER-BASED-SM-MIB.txt -text
 contrib/mibs/SNMPv2-CONF.txt -text
 contrib/mibs/SNMPv2-MIB.txt -text
 contrib/mibs/SNMPv2-SMI.txt -text

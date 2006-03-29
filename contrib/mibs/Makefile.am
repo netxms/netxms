@@ -93,6 +93,7 @@ mibs_DATA = \
 	SNMP-PROXY-MIB.txt \
 	SNMP-REPEATER-MIB.txt \
 	SNMP-TARGET-MIB.txt \
+	SNMP-USER-BASED-SM-MIB.txt \
 	SNMPv2-CONF.txt \
 	SNMPv2-MIB.txt \
 	SNMPv2-SMI.txt \
