@@ -169,11 +169,11 @@ SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\snmptrap.cpp
+SOURCE=.\snmp.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\snmpwalk.cpp
+SOURCE=.\snmptrap.cpp
 # End Source File
 # Begin Source File
 

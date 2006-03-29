@@ -477,6 +477,10 @@ SOURCE=.\ServerCfgEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SNMPWalkDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -963,6 +967,10 @@ SOURCE=.\ServerCfgEditor.h
 # Begin Source File
 
 SOURCE=..\nxuilib\SimpleListCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SNMPWalkDlg.h
 # End Source File
 # Begin Source File
 

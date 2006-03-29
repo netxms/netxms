@@ -94,6 +94,7 @@ EXTRA_DIST = \
 	RuleHeader.cpp RuleHeader.h \
 	RuleList.cpp RuleList.h \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
+	SNMPWalkDlg.cpp SNMPWalkDlg.h \
 	ScriptManager.cpp ScriptManager.h \
 	ScriptView.cpp ScriptView.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \

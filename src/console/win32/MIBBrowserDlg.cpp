@@ -6,6 +6,7 @@
 #include "MIBBrowserDlg.h"
 #include "DataQueryDlg.h"
 #include "ObjectSelDlg.h"
+#include "SNMPWalkDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,6 +71,7 @@ BEGIN_MESSAGE_MAP(CMIBBrowserDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_OID, OnChangeEditOid)
 	ON_EN_CHANGE(IDC_EDIT_INSTANCE, OnChangeEditInstance)
 	ON_BN_CLICKED(IDC_BUTTON_GET, OnButtonGet)
+	ON_BN_CLICKED(IDC_BUTTON_WALK, OnButtonWalk)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -439,4 +441,47 @@ void CMIBBrowserDlg::OnOK()
    }
 	
 	CDialog::OnOK();
+}
+
+
+//
+// Walk target's MIB
+//
+
+void CMIBBrowserDlg::OnButtonWalk() 
+{
+   // Select node object if none selected
+   if (m_pNode == NULL)
+   {
+      CObjectSelDlg dlg;
+
+      dlg.m_dwAllowedClasses = SCL_NODE;
+      if (dlg.DoModal() == IDOK)
+      {
+         m_pNode = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[0]);
+         if (m_pNode != NULL)
+         {
+            CString strTitle;
+
+            GetWindowText(strTitle);
+            strTitle += " (";
+            strTitle += m_pNode->szName;
+            strTitle += ")";
+            SetWindowText(strTitle);
+         }
+      }
+   }
+
+   // If node is selected, continue
+   if (m_pNode != NULL)
+   {
+      CSNMPWalkDlg dlg;
+      TCHAR szBuffer[1024];
+
+      m_wndEditOID.GetWindowText(szBuffer, 1024);
+      dlg.m_dwObjectId = m_pNode->dwId;
+      dlg.m_strNode = (LPCTSTR)m_pNode->szName;
+      dlg.m_strRootOID = (LPCTSTR)szBuffer;
+      dlg.DoModal();
+   }
 }

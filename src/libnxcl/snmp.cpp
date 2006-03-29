@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: snmpwalk.cpp
+** File: snmp.cpp
 **
 **/
 
@@ -72,4 +72,15 @@ DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
    }
 
    return dwRetCode;
+}
+
+
+//
+// Set SNMP variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, DWORD dwNode,
+                                    TCHAR *pszVarName, DWORD dwType, void *pValue)
+{
+   return 0;
 }

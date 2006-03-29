@@ -705,6 +705,8 @@ src/console/win32/RuleList.cpp -text
 src/console/win32/RuleList.h -text
 src/console/win32/RuleSeverityDlg.cpp -text
 src/console/win32/RuleSeverityDlg.h -text
+src/console/win32/SNMPWalkDlg.cpp -text
+src/console/win32/SNMPWalkDlg.h -text
 src/console/win32/SaveDesktopDlg.cpp -text
 src/console/win32/SaveDesktopDlg.h -text
 src/console/win32/ScriptManager.cpp -text
@@ -888,8 +890,8 @@ src/libnxcl/package.cpp -text
 src/libnxcl/script.cpp -text
 src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
+src/libnxcl/snmp.cpp -text
 src/libnxcl/snmptrap.cpp -text
-src/libnxcl/snmpwalk.cpp -text
 src/libnxcl/users.cpp -text
 src/libnxmap/libnxmap.dsp -text
 src/libnxmap/libnxmap.dsw -text

@@ -178,6 +178,7 @@
 #define IDI_OPEN_FOLDER                 300
 #define IDA_SCRIPT_MANAGER              301
 #define IDT_MAP                         302
+#define IDD_SNMP_WALK                   304
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -217,6 +218,7 @@
 #define IDC_LIST_LOCAL                  1024
 #define IDC_LIST_SCHEDULES              1024
 #define IDC_LIST_COLUMNS                1024
+#define IDC_LIST_DATA                   1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -481,6 +483,7 @@
 #define IDC_CHECK_DISABLE_AGENT         1339
 #define IDC_CHECK_DISABLE_SNMP          1340
 #define IDC_CHECK_DISABLE_ICMP          1341
+#define IDC_BUTTON_WALK                 1342
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -659,8 +662,8 @@
 #define ID_BUTTON32988                  32988
 #define ID_BUTTON32989                  32989
 #define ID_BUTTON32990                  32990
-#define ID_BUTTON32991                  32991
 #define ID_BUTTON32992                  32992
+#define ID_TOOLS_SNMPWALK               32995
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -670,9 +673,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        304
-#define _APS_NEXT_COMMAND_VALUE         32995
-#define _APS_NEXT_CONTROL_VALUE         1342
+#define _APS_NEXT_RESOURCE_VALUE        305
+#define _APS_NEXT_COMMAND_VALUE         32996
+#define _APS_NEXT_CONTROL_VALUE         1343
 #define _APS_NEXT_SYMED_VALUE           127
 #endif
 #endif

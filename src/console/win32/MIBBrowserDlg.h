@@ -60,6 +60,7 @@ protected:
 	afx_msg void OnChangeEditInstance();
 	afx_msg void OnButtonGet();
 	virtual void OnOK();
+	afx_msg void OnButtonWalk();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
