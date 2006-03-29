@@ -465,6 +465,7 @@ private:
    void SendSessionList(DWORD dwRqId);
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);
+   void StartSnmpWalk(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -924,6 +924,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_TRAP_LOG:
             SendTrapLog(pMsg);
             break;
+         case CMD_START_SNMP_WALK:
+            StartSnmpWalk(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6292,6 +6295,138 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   SendMessage(&msg);
+}
+
+
+//
+// SNMP walker thread's startup parameters
+//
+
+typedef struct
+{
+   ClientSession *pSession;
+   DWORD dwRqId;
+   NetObj *pObject;
+   TCHAR szBaseOID[MAX_OID_LEN * 4];
+} WALKER_THREAD_ARGS;
+
+
+//
+// Arguments for SnmpEnumerate callback
+//
+
+typedef struct
+{
+   CSCPMessage *pMsg;
+   DWORD dwId;
+   DWORD dwNumVars;
+   ClientSession *pSession;
+} WALKER_ENUM_CALLBACK_ARGS;
+
+
+//
+// SNMP walker enumeration callback
+//
+
+static DWORD WalkerCallback(DWORD dwVersion, DWORD dwAddr, WORD wPort, 
+                            const char *pszCommunity, SNMP_Variable *pVar,
+                            SNMP_Transport *pTransport, void *pArg)
+{
+   CSCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;
+   TCHAR szBuffer[4096];
+
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->GetValueAsText());
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, pVar->GetType());
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, pVar->GetValueAsString(szBuffer, 4096));
+   ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
+   if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)
+   {
+      pMsg->SetVariable(VID_NUM_VARIABLES, ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars);
+      ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pSession->SendMessage(pMsg);
+      ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars = 0;
+      ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId = VID_SNMP_WALKER_DATA_BASE;
+      pMsg->DeleteAllVariables();
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+
+//
+// SNMP walker thread
+//
+
+static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
+{
+   CSCPMessage msg;
+   WALKER_ENUM_CALLBACK_ARGS args;
+
+   msg.SetCode(CMD_SNMP_WALK_DATA);
+   msg.SetId(((WALKER_THREAD_ARGS *)pArg)->dwRqId);
+
+   args.pMsg = &msg;
+   args.dwId = VID_SNMP_WALKER_DATA_BASE;
+   args.dwNumVars = 0;
+   ((Node *)(((WALKER_THREAD_ARGS *)pArg)->pObject))->CallSnmpEnumerate(
+         ((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
+   msg.SetVariable(VID_NUM_VARIABLES, args.dwNumVars);
+   msg.SetEndOfSequence();
+   ((WALKER_THREAD_ARGS *)pArg)->pSession->SendMessage(&msg);
+
+   ((WALKER_THREAD_ARGS *)pArg)->pSession->DecRefCount();
+   ((WALKER_THREAD_ARGS *)pArg)->pObject->DecRefCount();
+   free(pArg);
+   return THREAD_OK;
+}
+
+
+//
+// Start SNMP walk
+//
+
+void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   WALKER_THREAD_ARGS *pArg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            
+            pObject->IncRefCount();
+            m_dwRefCount++;
+
+            pArg = (WALKER_THREAD_ARGS *)malloc(sizeof(WALKER_THREAD_ARGS));
+            pArg->pSession = this;
+            pArg->pObject = pObject;
+            pArg->dwRqId = pRequest->GetId();
+            pRequest->GetVariableStr(VID_SNMP_OID, pArg->szBaseOID, MAX_OID_LEN * 4);
+            
+            ThreadCreate(WalkerThread, 0, pArg);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
    SendMessage(&msg);
 }

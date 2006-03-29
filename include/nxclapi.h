@@ -1508,6 +1508,10 @@ DWORD LIBNXCL_EXPORTABLE NXCRenameScript(NXC_SESSION hSession, DWORD dwId,
                                          TCHAR *pszName);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, DWORD dwId);
 
+DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
+                                     TCHAR *pszRootOID, void *pUserData,
+                                     void (* pfCallback)(TCHAR *, DWORD, TCHAR *, void *));
+
 #ifdef __cplusplus
 }
 #endif

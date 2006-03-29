@@ -395,6 +395,8 @@ typedef struct
 #define CMD_KILL_SESSION            0x009E
 #define CMD_GET_TRAP_LOG            0x009F
 #define CMD_TRAP_LOG_RECORDS        0x00A0
+#define CMD_START_SNMP_WALK         0x00A1
+#define CMD_SNMP_WALK_DATA          0x00A2
 
 
 //
@@ -628,12 +630,6 @@ typedef struct
 #define VID_DCI_SCHEDULE_BASE       ((DWORD)0x0000A000)
 #define VID_DCI_SCHEDULE_LAST       ((DWORD)0x0000AFFF)
 
-// Variable range for MIB list
-#define VID_MIB_NAME_BASE           ((DWORD)0x00006000)
-#define VID_MIB_NAME_LAST           ((DWORD)0x00006FFF)
-#define VID_MIB_HASH_BASE           ((DWORD)0x00007000)
-#define VID_MIB_HASH_LAST           ((DWORD)0x00007FFF)
-
 // Variable range for event argument list
 #define VID_EVENT_ARG_BASE          ((DWORD)0x00008000)
 #define VID_EVENT_ARG_LAST          ((DWORD)0x00008FFF)
@@ -699,6 +695,9 @@ typedef struct
 
 // Base value for session data
 #define VID_SESSION_DATA_BASE       ((DWORD)0x10000000)
+
+// Base value for SNMP walker data
+#define VID_SNMP_WALKER_DATA_BASE   ((DWORD)0x10000000)
 
 
 //

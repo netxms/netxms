@@ -173,6 +173,10 @@ SOURCE=.\snmptrap.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\snmpwalk.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\users.cpp
 # End Source File
 # End Group
