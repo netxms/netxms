@@ -781,7 +781,7 @@ CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp);
 ** Network maps
 */
 
-CREATE TABLE network_maps
+/*CREATE TABLE network_maps
 (
 	map_id integer not null,
 	map_name varchar(255) not null,
@@ -789,26 +789,28 @@ CREATE TABLE network_maps
 	root_object_id integer not null,
 	PRIMARY KEY(map_id)
 ) TABLE_TYPE;
+*/
 
 
 /*
 ** Submaps of network maps
 */
 
-CREATE TABLE submaps
+/*CREATE TABLE submaps
 (
 	map_id integer not null,
 	submap_id integer not null,	// Equal to object id
 	attributes integer not null,	
 	PRIMARY KEY(map_id,submap_id)
 ) TABLE_TYPE;
+*/
 
 
 /*
 ** Object positioning on submap
 */
 
-CREATE TABLE submap_object_positions
+/*CREATE TABLE submap_object_positions
 (
 	map_id integer not null,
 	submap_id integer not null,
@@ -817,3 +819,4 @@ CREATE TABLE submap_object_positions
 	y integer not null,
 	PRIMARY KEY(map_id,submap_id)
 ) TABLE_TYPE;
+*/

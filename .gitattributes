@@ -1160,7 +1160,6 @@ src/server/tools/nxdbmgr/nxdbmgr.cpp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsw -text
 src/server/tools/nxdbmgr/nxdbmgr.h -text
-src/server/tools/nxdbmgr/nxdbmgr.vcproj -text
 src/server/tools/nxdbmgr/unlock.cpp -text
 src/server/tools/nxdbmgr/upgrade.cpp -text
 src/server/tools/nxget/.cvsignore -text
