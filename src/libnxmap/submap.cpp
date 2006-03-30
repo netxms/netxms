@@ -64,8 +64,8 @@ void nxSubmap::CommonInit(void)
 {
    m_dwId = 0;
    m_dwAttr = 0;
-   m_dwPosListSize = 0;
-   m_pPosList = NULL;
+   m_dwNumObjects = 0;
+   m_pObjectList = NULL;
 }
 
 
@@ -75,7 +75,7 @@ void nxSubmap::CommonInit(void)
 
 nxSubmap::~nxSubmap()
 {
-   safe_free(m_pPosList);
+   safe_free(m_pObjectList);
 }
 
 
@@ -98,6 +98,41 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
 
 
 //
+// Set object's state
+//
+
+void nxSubmap::SetObjectState(DWORD dwObjectId, DWORD dwState)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pObjectList[i].dwId == dwObjectId)
+      {
+         m_pObjectList[i].dwState = dwState;
+         break;
+      }
+}
+
+
+//
+// Set object's state
+//
+
+DWORD nxSubmap::GetObjectState(DWORD dwObjectId)
+{
+   DWORD i, dwState = 0;
+
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pObjectList[i].dwId == dwObjectId)
+      {
+         dwState = m_pObjectList[i].dwState;
+         break;
+      }
+   return dwState;
+}
+
+
+//
 // Returns position of given object or (-1,-1) if object's position is undefined
 //
 
@@ -108,13 +143,35 @@ POINT nxSubmap::GetObjectPosition(DWORD dwObjectId)
 
    pt.x = -1;
    pt.y = -1;
-   for(i = 0; i < m_dwPosListSize; i++)
-      if (m_pPosList[i].dwId == dwObjectId)
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pObjectList[i].dwId == dwObjectId)
       {
-         pt.x = m_pPosList[i].x;
-         pt.y = m_pPosList[i].y;
+         pt.x = m_pObjectList[i].x;
+         pt.y = m_pObjectList[i].y;
          break;
       }
+   return pt;
+}
+
+
+//
+// Returns position of given object or (-1,-1) if object's position is undefined
+//
+
+POINT nxSubmap::GetObjectPositionByIndex(DWORD dwIndex)
+{
+   POINT pt;
+
+   if (dwIndex < m_dwNumObjects)
+   {
+      pt.x = m_pObjectList[dwIndex].x;
+      pt.y = m_pObjectList[dwIndex].y;
+   }
+   else
+   {
+      pt.x = -1;
+      pt.y = -1;
+   }
    return pt;
 }
 
@@ -127,21 +184,22 @@ void nxSubmap::SetObjectPosition(DWORD dwObjectId, int x, int y)
 {
    DWORD i;
 
-   for(i = 0; i < m_dwPosListSize; i++)
-      if (m_pPosList[i].dwId == dwObjectId)
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pObjectList[i].dwId == dwObjectId)
       {
-         m_pPosList[i].x = x;
-         m_pPosList[i].y = y;
+         m_pObjectList[i].x = x;
+         m_pObjectList[i].y = y;
          break;
       }
-   if (i == m_dwPosListSize)
+   if (i == m_dwNumObjects)
    {
       // New element
-      m_dwPosListSize++;
-      m_pPosList = (OBJPOS *)realloc(m_pPosList, m_dwPosListSize * sizeof(OBJPOS));
-      m_pPosList[i].dwId = dwObjectId;
-      m_pPosList[i].x = x;
-      m_pPosList[i].y = y;
+      m_dwNumObjects++;
+      m_pObjectList = (MAP_OBJECT *)realloc(m_pObjectList, m_dwNumObjects * sizeof(MAP_OBJECT));
+      m_pObjectList[i].dwId = dwObjectId;
+      m_pObjectList[i].x = x;
+      m_pObjectList[i].y = y;
+      m_pObjectList[i].dwState = 0;
    }
 }
 
@@ -157,8 +215,8 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
    DWORD i;
    int x, y;
 
-   safe_free_and_null(m_pPosList);
-   m_dwPosListSize = 0;
+   safe_free_and_null(m_pObjectList);
+   m_dwNumObjects = 0;
 
    for(i = 0, x = MAP_LEFT_MARGIN, y = MAP_TOP_MARGIN; i < dwNumObjects; i++)
    {

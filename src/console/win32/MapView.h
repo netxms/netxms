@@ -13,6 +13,13 @@
 
 
 //
+// Map object states
+//
+
+#define MOS_SELECTED    0x01
+
+
+//
 // Scale-dependent elements
 //
 
@@ -64,17 +71,21 @@ public:
 
 // Implementation
 public:
+	DWORD PointInObject(POINT pt);
 	void Update(void);
 	void SetMap(nxMap *pMap);
 	virtual ~CMapView();
 
 	// Generated message map functions
 protected:
+	void SetObjectRect(DWORD dwObjectId, RECT *pRect, BOOL bTextRect);
+   OBJINFO *m_pObjectInfo;
+   DWORD m_dwNumObjects;
 	CFont m_fontList[2];
 	int m_nScale;
 	void DoSubmapLayout(void);
 	COLORREF m_rgbBkColor;
-	void DrawObject(CDC &dc, DWORD dwObjectId, CImageList *pImageList);
+	void DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList);
 	void DrawOnBitmap(void);
 	CBitmap m_bmpMap;
 	nxSubmap *m_pSubmap;
@@ -82,6 +93,9 @@ protected:
 	//{{AFX_MSG(CMapView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnPaint();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -54,14 +54,15 @@
 
 
 //
-// Object position structure
+// Object-on-map structure
 //
 
-struct OBJPOS
+struct MAP_OBJECT
 {
    DWORD dwId;
-   LONG x; 
-   LONG y; 
+   LONG x;
+   LONG y;
+   DWORD dwState;    // Runtime field, can be used freely by application
 };
 
 
@@ -96,8 +97,8 @@ class LIBNXMAP_EXPORTABLE nxSubmap
 protected:
    DWORD m_dwId;
    DWORD m_dwAttr;
-   DWORD m_dwPosListSize;
-   OBJPOS *m_pPosList;
+   DWORD m_dwNumObjects;
+   MAP_OBJECT *m_pObjectList;
 
    void CommonInit(void);
 
@@ -117,7 +118,15 @@ public:
                  DWORD dwNumLinks, OBJLINK *pLinkList,
                  int nIdealX, int nIdealY);
    POINT GetObjectPosition(DWORD dwObjectId);
+   POINT GetObjectPositionByIndex(DWORD dwIndex);
    void SetObjectPosition(DWORD dwObjectId, int x, int y);
+
+   DWORD GetNumObjects(void) { return m_dwNumObjects; }
+   DWORD GetObjectIdFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwId; }
+
+   void SetObjectState(DWORD dwObjectId, DWORD dwState);
+   DWORD GetObjectState(DWORD dwObjectId);
+   DWORD GetObjectStateFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwState; }
 };
 
 

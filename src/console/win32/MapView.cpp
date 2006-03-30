@@ -33,10 +33,13 @@ CMapView::CMapView()
    m_pMap = NULL;
    m_pSubmap = NULL;
    m_rgbBkColor = RGB(224, 224, 224);
+   m_pObjectInfo = NULL;
+   m_dwNumObjects = 0;
 }
 
 CMapView::~CMapView()
 {
+   safe_free(m_pObjectInfo);
 }
 
 
@@ -44,6 +47,9 @@ BEGIN_MESSAGE_MAP(CMapView, CWnd)
 	//{{AFX_MSG_MAP(CMapView)
 	ON_WM_CREATE()
 	ON_WM_PAINT()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -156,8 +162,8 @@ void CMapView::DrawOnBitmap()
          else
             pImageList = NULL;
 
-         for(i = 0; i < pObject->dwNumChilds; i++)
-            DrawObject(dc, pObject->pdwChildList[i], pImageList);
+         for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
+            DrawObject(dc, i, pImageList);
       }
       else
       {
@@ -182,17 +188,20 @@ void CMapView::DrawOnBitmap()
 // Draw single object on map
 //
 
-void CMapView::DrawObject(CDC &dc, DWORD dwObjectId, CImageList *pImageList)
+void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList)
 {
    NXC_OBJECT *pObject;
    POINT pt, ptIcon;
    RECT rect;
+   DWORD dwState;
 
-   pObject = NXCFindObjectById(g_hSession, dwObjectId);
+   pObject = NXCFindObjectById(g_hSession, m_pSubmap->GetObjectIdFromIndex(dwIndex));
    if (pObject != NULL)
    {
+      dwState = m_pSubmap->GetObjectStateFromIndex(dwIndex);
+
       // Get and scale object's position
-      pt = m_pSubmap->GetObjectPosition(dwObjectId);
+      pt = m_pSubmap->GetObjectPositionByIndex(dwIndex);
       if (m_scaleInfo[m_nScale].nFactor > 0)
       {
          pt.x *= m_scaleInfo[m_nScale].nFactor;
@@ -205,6 +214,11 @@ void CMapView::DrawObject(CDC &dc, DWORD dwObjectId, CImageList *pImageList)
       }
 
       // Draw background and icon
+      rect.left = pt.x;
+      rect.top = pt.y;
+      rect.right = rect.left + m_scaleInfo[m_nScale].ptObjectSize.x;
+      rect.bottom = rect.top + m_scaleInfo[m_nScale].ptObjectSize.y;
+      SetObjectRect(pObject->dwId, &rect, FALSE);
       dc.FillSolidRect(pt.x, pt.y, m_scaleInfo[m_nScale].ptObjectSize.x, 
                        m_scaleInfo[m_nScale].ptObjectSize.y,
                        g_statusColorTable[pObject->iStatus]);
@@ -212,8 +226,8 @@ void CMapView::DrawObject(CDC &dc, DWORD dwObjectId, CImageList *pImageList)
       ptIcon.y = pt.y + m_scaleInfo[m_nScale].ptIconOffset.y;
       if (pImageList != NULL)
       {
-         pImageList->Draw(&dc, GetObjectImageIndex(pObject),
-                          ptIcon, ILD_TRANSPARENT);
+         pImageList->Draw(&dc, GetObjectImageIndex(pObject), ptIcon,
+                          (dwState & MOS_SELECTED) ? ILD_BLEND50 : ILD_TRANSPARENT);
       }
 
       // Draw object name
@@ -226,6 +240,7 @@ void CMapView::DrawObject(CDC &dc, DWORD dwObjectId, CImageList *pImageList)
          dc.SetBkColor(m_rgbBkColor);
          dc.DrawText(pObject->szName, -1, &rect,
                      DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK | DT_CENTER);
+         SetObjectRect(pObject->dwId, &rect, TRUE);
       }
    }
 }
@@ -278,4 +293,94 @@ void CMapView::DoSubmapLayout()
       MessageBox(_T("Internal error: cannot find root object for the current submap"),
                  _T("Error"), MB_OK | MB_ICONSTOP);
    }
+}
+
+
+//
+// Save information about rectangle occupied by object
+//
+
+void CMapView::SetObjectRect(DWORD dwObjectId, RECT *pRect, BOOL bTextRect)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pObjectInfo[i].dwObjectId == dwObjectId)
+      {
+         memcpy(bTextRect ? &m_pObjectInfo[i].rcText : &m_pObjectInfo[i].rcObject,
+                pRect, sizeof(RECT));
+         break;
+      }
+   if (i == m_dwNumObjects)
+   {
+      m_dwNumObjects++;
+      m_pObjectInfo = (OBJINFO *)realloc(m_pObjectInfo, sizeof(OBJINFO) * m_dwNumObjects);
+      memset(&m_pObjectInfo[i], 0, sizeof(OBJINFO));
+      m_pObjectInfo[i].dwObjectId = dwObjectId;
+      memcpy(bTextRect ? &m_pObjectInfo[i].rcText : &m_pObjectInfo[i].rcObject,
+             pRect, sizeof(RECT));
+   }
+}
+
+
+//
+// Check if given point is withing object
+// Will return object id on success or 0 otherwise
+//
+
+DWORD CMapView::PointInObject(POINT pt)
+{
+   DWORD i, j, dwId;
+
+   for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
+   {
+      dwId = m_pSubmap->GetObjectIdFromIndex(i - 1);
+      for(j = 0; j < m_dwNumObjects; j++)
+      {
+         if (m_pObjectInfo[j].dwObjectId == dwId)
+         {
+            if (PtInRect(&m_pObjectInfo[j].rcObject, pt) ||
+                PtInRect(&m_pObjectInfo[j].rcText, pt))
+            {
+               return dwId;
+            }
+         }
+      }
+   }
+   return 0;
+}
+
+
+//
+// WM_LBUTTONDOWN message handler
+//
+
+void CMapView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+   DWORD dwObjectId;
+
+   dwObjectId = PointInObject(point);
+   if (dwObjectId != 0)
+   {
+      m_pSubmap->SetObjectState(dwObjectId, MOS_SELECTED);
+      Update();
+   }
+}
+
+
+//
+// WM_LBUTTONUP message handler
+//
+
+void CMapView::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+}
+
+
+//
+// WM_MOUSEMOVE message handler
+//
+
+void CMapView::OnMouseMove(UINT nFlags, CPoint point) 
+{
 }
