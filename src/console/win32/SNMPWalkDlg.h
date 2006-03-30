@@ -42,6 +42,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
+   afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

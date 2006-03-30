@@ -11,6 +11,20 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Walker arguments
+//
+
+typedef struct
+{
+   HWND hWnd;
+   CListCtrl *pListCtrl;
+   DWORD dwObjectId;
+   TCHAR *pszRootOID;
+} WALKER_ARGS;
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CSNMPWalkDlg dialog
 
@@ -38,6 +52,7 @@ BEGIN_MESSAGE_MAP(CSNMPWalkDlg, CDialog)
 	//{{AFX_MSG_MAP(CSNMPWalkDlg)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -49,10 +64,12 @@ BOOL CSNMPWalkDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 	
+
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, _T("OID"), LVCFMT_LEFT, 200);
    m_wndListCtrl.InsertColumn(1, _T("Type"), LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(2, _T("Value"), LVCFMT_LEFT, rect.right - GetSystemMetrics(SM_CXVSCROLL));
+   m_wndListCtrl.InsertColumn(2, _T("Value"), LVCFMT_LEFT, rect.right - 270 - GetSystemMetrics(SM_CXVSCROLL));
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	return TRUE;
@@ -71,6 +88,7 @@ static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *
    if (iItem != -1)
    {
       ((CListCtrl *)pArg)->SetItemText(iItem, 2, pszValue);
+      ((CListCtrl *)pArg)->EnsureVisible(iItem, FALSE);
    }
 }
 
@@ -79,12 +97,17 @@ static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *
 // Walker thread
 //
 
-/*static void WalkerThread(void *pArg)
+static void WalkerThread(void *pArg)
 {
    DWORD dwResult;
 
-   dwResult = NXCSnmpWalk(g_hSession, 
-}*/
+   dwResult = NXCSnmpWalk(g_hSession, ((WALKER_ARGS *)pArg)->dwObjectId,
+                          ((WALKER_ARGS *)pArg)->pszRootOID,
+                          ((WALKER_ARGS *)pArg)->pListCtrl, WalkerCallback);
+   PostMessage(((WALKER_ARGS *)pArg)->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
+   free(((WALKER_ARGS *)pArg)->pszRootOID);
+   free(pArg);
+}
 
 
 //
@@ -93,10 +116,27 @@ static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *
 
 void CSNMPWalkDlg::OnViewRefresh() 
 {
-   //EnableDlgItem(this, IDCANCEL, FALSE);
-   //m_wndStatus.SetWindowText(_T("Processing..."));
-  // _beginthread(WalkerThread, 0, &m_wndListCtrl);
-   DoRequestArg5(NXCSnmpWalk, g_hSession, CAST_TO_POINTER(m_dwObjectId, void *),
-                 (void *)((LPCTSTR)m_strRootOID), &m_wndListCtrl, WalkerCallback,
-                 _T("Retrieving data..."));
+   WALKER_ARGS *pArgs;
+
+   pArgs = (WALKER_ARGS *)malloc(sizeof(WALKER_ARGS));
+   pArgs->hWnd = m_hWnd;
+   pArgs->dwObjectId = m_dwObjectId;
+   pArgs->pListCtrl = &m_wndListCtrl;
+   pArgs->pszRootOID = _tcsdup((LPCTSTR)m_strRootOID);
+   EnableDlgItem(this, IDCANCEL, FALSE);
+   m_wndStatus.SetWindowText(_T("Retrieving data..."));
+   _beginthread(WalkerThread, 0, pArgs);
+   BeginWaitCursor();
+}
+
+
+//
+// WM_REQUEST_COMPLETED message handler
+//
+
+void CSNMPWalkDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+{
+   EnableDlgItem(this, IDCANCEL, TRUE);
+   m_wndStatus.SetWindowText(_T("Completed"));
+   EndWaitCursor();
 }
