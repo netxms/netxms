@@ -117,6 +117,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL)
    {
       if (m_bWriteLog)
          WriteLog(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
+      DLClose(m_hDriver);
+      m_hDriver = NULL;
       return FALSE;
    }
 

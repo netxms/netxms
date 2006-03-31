@@ -127,21 +127,21 @@ void GetSysInfoStr(char *pszBuffer)
          break;
    }
 
-   sprintf(pszBuffer, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
+   _snprintf(pszBuffer, 256, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
 #else
 # ifdef HAVE_SYS_UTSNAME_H
 	struct utsname uName;
 	if (uname(&uName) == 0)
 	{
-		sprintf(pszBuffer, "%s %s Release %s", uName.nodename, uName.sysname, uName.release);
+		snprintf(pszBuffer, 256, "%s %s Release %s", uName.nodename, uName.sysname, uName.release);
 	}
 	else
 	{
-		// size=512 was taken from locks.cpp
+		// size=256 was taken from locks.cpp
 #if HAVE_STRERROR_R
-		strerror_r(errno, pszBuffer, 512);
+		strerror_r(errno, pszBuffer, 256);
 #else
-		nx_strncpy(pszBuffer, strerror(errno), 512);
+		nx_strncpy(pszBuffer, strerror(errno), 256);
 #endif
 	}
 # else
