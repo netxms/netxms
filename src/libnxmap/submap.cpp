@@ -133,6 +133,21 @@ DWORD nxSubmap::GetObjectState(DWORD dwObjectId)
 
 
 //
+// Get index of object with given ID
+//
+
+DWORD nxSubmap::GetObjectIndex(DWORD dwObjectId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pObjectList[i].dwId == dwObjectId)
+         return i;
+   return INVALID_INDEX;
+}
+
+
+//
 // Returns position of given object or (-1,-1) if object's position is undefined
 //
 
@@ -201,6 +216,17 @@ void nxSubmap::SetObjectPosition(DWORD dwObjectId, int x, int y)
       m_pObjectList[i].y = y;
       m_pObjectList[i].dwState = 0;
    }
+}
+
+
+//
+// Set object's position using index
+//
+
+void nxSubmap::SetObjectPositionByIndex(DWORD dwIndex, int x, int y)
+{
+   m_pObjectList[dwIndex].x = x;
+   m_pObjectList[dwIndex].y = y;
 }
 
 

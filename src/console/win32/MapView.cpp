@@ -20,7 +20,7 @@ static SCALE_INFO m_scaleInfo[] =
 {
    { -4, { 10, 10 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, -1, -1 },
    { -2, { 20, 20 }, { 2, 2 }, { -2, 21 }, { 24, 9 }, 1, 1 },
-   { 0, { 40, 40 }, { 3, 3 }, { -10, 42 }, { 60, 18 }, 0, 0 }   // Neutral scale
+   { 0, { 40, 40 }, { 3, 3 }, { -10, 42 }, { 60, 18 }, 0, 0 }   // Neutral scale (1:1)
 };
 
 
@@ -29,17 +29,24 @@ static SCALE_INFO m_scaleInfo[] =
 
 CMapView::CMapView()
 {
+   m_nState = STATE_NORMAL;
    m_nScale = NEUTRAL_SCALE;
    m_pMap = NULL;
    m_pSubmap = NULL;
    m_rgbBkColor = RGB(224, 224, 224);
+   m_rgbTextColor = RGB(0, 0, 0);
+   m_rgbSelBkColor = GetSysColor(COLOR_HIGHLIGHT);
+   m_rgbSelTextColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
+   m_rgbSelRectColor = RGB(0, 0, 128);
    m_pObjectInfo = NULL;
    m_dwNumObjects = 0;
+   m_pDragImageList = NULL;
 }
 
 CMapView::~CMapView()
 {
    safe_free(m_pObjectInfo);
+   delete m_pDragImageList;
 }
 
 
@@ -103,11 +110,77 @@ void CMapView::OnPaint()
    RECT rect;
 
    GetClientRect(&rect);
-   
-   // Move drawing from in-memory bitmap to screen
+
+   // Create in-memory DC containig map image
    dc.CreateCompatibleDC(&sdc);
    pOldBitmap = dc.SelectObject(&m_bmpMap);
-   sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+
+   // Draw map with selection rectangle
+   if (m_nState == STATE_SELECTING)
+   {
+      CPen pen, *pOldPen;
+      CBrush brush, *pOldBrush;
+      CDC dcTemp, dcMap;
+      CBitmap bitmap, bmpMap, *pOldTempBitmap, *pOldMapBitmap;
+      int cx, cy;
+      BLENDFUNCTION bf;
+
+      // Create map copy
+      dcMap.CreateCompatibleDC(&sdc);
+      bmpMap.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
+      pOldMapBitmap = dcMap.SelectObject(&bmpMap);
+      dcMap.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+
+      // Calculate selection width and height
+      cx = m_rcSelection.right - m_rcSelection.left - 1;
+      cy = m_rcSelection.bottom - m_rcSelection.top - 1;
+
+      // Create temporary bitmap
+      dcTemp.CreateCompatibleDC(&sdc);
+      bitmap.CreateCompatibleBitmap(&sdc, cx, cy);
+      pOldTempBitmap = dcTemp.SelectObject(&bitmap);
+
+      // Fill temporary bitmap with selection color
+      brush.DeleteObject();
+      brush.CreateSolidBrush(m_rgbSelRectColor);
+      pen.CreatePen(PS_SOLID, 1, m_rgbSelRectColor);
+      pOldBrush = dcTemp.SelectObject(&brush);
+      pOldPen = dcTemp.SelectObject(&pen);
+      dcTemp.Rectangle(0, 0, cx + 1, cy + 1);
+      dcTemp.SelectObject(pOldPen);
+      dcTemp.SelectObject(pOldBrush);
+
+      // Copy temporary bitmap to main bitmap with transparency
+      bf.AlphaFormat = 0;
+      bf.BlendFlags = 0;
+      bf.BlendOp = AC_SRC_OVER;
+      bf.SourceConstantAlpha = 16;
+      AlphaBlend(dcMap.m_hDC, m_rcSelection.left, m_rcSelection.top, cx, cy,
+                 dcTemp.m_hDC, 0, 0, cx, cy, bf);
+      
+      // Draw solid rectangle around selection area
+      brush.DeleteObject();
+      brush.CreateStockObject(NULL_BRUSH);
+      pOldBrush = dcMap.SelectObject(&brush);
+      pOldPen = dcMap.SelectObject(&pen);
+      dcMap.Rectangle(&m_rcSelection);
+      dcMap.SelectObject(pOldPen);
+      dcMap.SelectObject(pOldBrush);
+
+      dcTemp.SelectObject(pOldTempBitmap);
+      dcTemp.DeleteDC();
+
+      // Move drawing from in-memory bitmap to screen
+      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dcMap, 0, 0, SRCCOPY);
+
+      dcMap.SelectObject(pOldMapBitmap);
+      dcMap.DeleteDC();
+   }
+   else
+   {
+      // Move drawing from in-memory bitmap to screen
+      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+   }
 
    // Cleanup
    dc.SelectObject(pOldBitmap);
@@ -119,28 +192,40 @@ void CMapView::OnPaint()
 // Draw entire map on bitmap in memory
 //
 
-void CMapView::DrawOnBitmap()
+void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
 {
    CDC *pdc, dc;           // Window dc and in-memory dc
    CBitmap *pOldBitmap;
    CBrush brush;
-   NXC_OBJECT *pObject;
    RECT rect;
    DWORD i;
    CImageList *pImageList;
    CFont *pOldFont;
+   POINT ptOffset;
    
    GetClientRect(&rect);
 
    // Create compatible DC and bitmap for painting
    pdc = GetDC();
    dc.CreateCompatibleDC(pdc);
-   m_bmpMap.DeleteObject();
-   m_bmpMap.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
+   bitmap.DeleteObject();
+   if (bSelectionOnly)
+   {
+      bitmap.CreateCompatibleBitmap(pdc, prcSel->right - prcSel->left,
+                                    prcSel->bottom - prcSel->top);
+      ptOffset.x = prcSel->left;
+      ptOffset.y = prcSel->top;
+   }
+   else
+   {
+      bitmap.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
+      ptOffset.x = 0;
+      ptOffset.y = 0;
+   }
    ReleaseDC(pdc);
 
    // Initial DC setup
-   pOldBitmap = dc.SelectObject(&m_bmpMap);
+   pOldBitmap = dc.SelectObject(&bitmap);
    dc.SetBkColor(m_rgbBkColor);
    brush.CreateSolidBrush(m_rgbBkColor);
    dc.FillRect(&rect, &brush);
@@ -151,23 +236,23 @@ void CMapView::DrawOnBitmap()
 
    if (m_pSubmap != NULL)
    {
-      // Get current object
-      pObject = NXCFindObjectById(g_hSession, m_pSubmap->Id());
-      if (pObject != NULL)
-      {
-         if (m_scaleInfo[m_nScale].nImageList == 0)
-            pImageList = g_pObjectNormalImageList;
-         else if (m_scaleInfo[m_nScale].nImageList == 1)
-            pImageList = g_pObjectSmallImageList;
-         else
-            pImageList = NULL;
+      if (m_scaleInfo[m_nScale].nImageList == 0)
+         pImageList = g_pObjectNormalImageList;
+      else if (m_scaleInfo[m_nScale].nImageList == 1)
+         pImageList = g_pObjectSmallImageList;
+      else
+         pImageList = NULL;
 
+      if (bSelectionOnly)
+      {
          for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
-            DrawObject(dc, i, pImageList);
+            if (m_pSubmap->GetObjectStateFromIndex(i) & MOS_SELECTED)
+               DrawObject(dc, i, pImageList, ptOffset, FALSE);
       }
       else
       {
-         dc.TextOut(0, 0, _T("NULL object"), 11);
+         for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
+            DrawObject(dc, i, pImageList, ptOffset, TRUE);
       }
    }
    else
@@ -179,7 +264,6 @@ void CMapView::DrawOnBitmap()
    if (pOldFont != NULL)
       dc.SelectObject(pOldFont);
    dc.SelectObject(pOldBitmap);
-   //font.DeleteObject();
    dc.DeleteDC();
 }
 
@@ -188,7 +272,8 @@ void CMapView::DrawOnBitmap()
 // Draw single object on map
 //
 
-void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList)
+void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
+                          POINT ptOffset, BOOL bUpdateInfo)
 {
    NXC_OBJECT *pObject;
    POINT pt, ptIcon;
@@ -213,12 +298,17 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList)
          pt.y /= -m_scaleInfo[m_nScale].nFactor;
       }
 
+      // Apply offset
+      pt.x += ptOffset.x;
+      pt.y += ptOffset.y;
+
       // Draw background and icon
       rect.left = pt.x;
       rect.top = pt.y;
       rect.right = rect.left + m_scaleInfo[m_nScale].ptObjectSize.x;
       rect.bottom = rect.top + m_scaleInfo[m_nScale].ptObjectSize.y;
-      SetObjectRect(pObject->dwId, &rect, FALSE);
+      if (bUpdateInfo)
+         SetObjectRect(pObject->dwId, &rect, FALSE);
       dc.FillSolidRect(pt.x, pt.y, m_scaleInfo[m_nScale].ptObjectSize.x, 
                        m_scaleInfo[m_nScale].ptObjectSize.y,
                        g_statusColorTable[pObject->iStatus]);
@@ -237,10 +327,12 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList)
          rect.top = pt.y + m_scaleInfo[m_nScale].ptTextOffset.y;
          rect.right = rect.left + m_scaleInfo[m_nScale].ptTextSize.x;
          rect.bottom = rect.top + m_scaleInfo[m_nScale].ptTextSize.y;
-         dc.SetBkColor(m_rgbBkColor);
+         dc.SetBkColor((dwState & MOS_SELECTED) ? m_rgbSelBkColor : m_rgbBkColor);
+         dc.SetTextColor((dwState & MOS_SELECTED) ? m_rgbSelTextColor : m_rgbTextColor);
          dc.DrawText(pObject->szName, -1, &rect,
                      DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK | DT_CENTER);
-         SetObjectRect(pObject->dwId, &rect, TRUE);
+         if (bUpdateInfo)
+            SetObjectRect(pObject->dwId, &rect, TRUE);
       }
    }
 }
@@ -267,7 +359,7 @@ void CMapView::SetMap(nxMap *pMap)
 
 void CMapView::Update()
 {
-   DrawOnBitmap();
+   DrawOnBitmap(m_bmpMap, FALSE, NULL);
    Invalidate(FALSE);
 }
 
@@ -357,14 +449,24 @@ DWORD CMapView::PointInObject(POINT pt)
 
 void CMapView::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-   DWORD dwObjectId;
-
-   dwObjectId = PointInObject(point);
-   if (dwObjectId != 0)
+   m_dwFocusedObject = PointInObject(point);
+   if (m_dwFocusedObject != 0)
    {
-      m_pSubmap->SetObjectState(dwObjectId, MOS_SELECTED);
+      m_ptLastMousePos = point;
+      m_dwFocusedObjectIndex = m_pSubmap->GetObjectIndex(m_dwFocusedObject);
+      m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, MOS_SELECTED);
       Update();
+      m_nState = STATE_OBJECT_LCLICK;
    }
+   else
+   {
+      ClearSelection();
+      m_ptSelStart = point;
+      m_rcSelection.left = m_rcSelection.right = point.x;
+      m_rcSelection.top = m_rcSelection.bottom = point.y;
+      m_nState = STATE_SELECTING;
+   }
+   SetCapture();
 }
 
 
@@ -374,6 +476,26 @@ void CMapView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CMapView::OnLButtonUp(UINT nFlags, CPoint point) 
 {
+   ReleaseCapture();
+   switch(m_nState)
+   {
+      case STATE_OBJECT_LCLICK:
+         ClearSelection(FALSE);
+         m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, MOS_SELECTED);
+         Update();
+         break;
+      case STATE_DRAGGING:
+         m_pDragImageList->DragLeave(this);
+         m_pDragImageList->EndDrag();
+         delete_and_null(m_pDragImageList);
+         break;
+      case STATE_SELECTING:
+         InvalidateRect(&m_rcSelection, FALSE);
+         break;
+      default:
+         break;
+   }
+   m_nState = STATE_NORMAL;
 }
 
 
@@ -383,4 +505,164 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CMapView::OnMouseMove(UINT nFlags, CPoint point) 
 {
+   RECT rcOldSel, rcUpdate, rcClient;
+
+   switch(m_nState)
+   {
+      case STATE_OBJECT_LCLICK:
+         m_nState = STATE_DRAGGING;
+         CreateDragImageList();
+         m_pDragImageList->BeginDrag(0, CPoint(0, 0));
+         m_pDragImageList->DragEnter(this, point);
+         //break;
+      case STATE_DRAGGING:
+         //MoveSelectedObjects(point.x - m_ptLastMousePos.x, point.y - m_ptLastMousePos.y);
+         //m_ptLastMousePos = point;
+         m_pDragImageList->DragMove(point);
+         break;
+      case STATE_SELECTING:
+         CopyRect(&rcOldSel, &m_rcSelection);
+
+         // Calculate normalized selection rectangle
+         if (point.x < m_ptSelStart.x)
+         {
+            m_rcSelection.left = point.x;
+            m_rcSelection.right = m_ptSelStart.x;
+         }
+         else
+         {
+            m_rcSelection.left = m_ptSelStart.x;
+            m_rcSelection.right = point.x;
+         }
+         if (point.y < m_ptSelStart.y)
+         {
+            m_rcSelection.top = point.y;
+            m_rcSelection.bottom = m_ptSelStart.y;
+         }
+         else
+         {
+            m_rcSelection.top = m_ptSelStart.y;
+            m_rcSelection.bottom = point.y;
+         }
+
+         // Validate selection rectangle
+         GetClientRect(&rcClient);
+         if (m_rcSelection.left < 0)
+            m_rcSelection.left = 0;
+         if (m_rcSelection.top < 0)
+            m_rcSelection.top = 0;
+         if (m_rcSelection.right > rcClient.right)
+            m_rcSelection.right = rcClient.right;
+         if (m_rcSelection.bottom > rcClient.bottom)
+            m_rcSelection.bottom = rcClient.bottom;
+         
+         // Update changed region
+         UnionRect(&rcUpdate, &rcOldSel, &m_rcSelection);
+         InvalidateRect(&rcUpdate, FALSE);
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// Clear current object(s) selection
+//
+
+void CMapView::ClearSelection(BOOL bRedraw)
+{
+   DWORD i;
+
+   for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
+      m_pSubmap->SetObjectStateByIndex(i - 1, m_pSubmap->GetObjectStateFromIndex(i - 1) & ~MOS_SELECTED);
+   if (bRedraw)
+      Update();
+}
+
+
+//
+// Get number of currently selected objects
+//
+
+int CMapView::GetSelectionCount()
+{
+   int nCount;
+   DWORD i;
+
+   for(i = 0, nCount = 0; i < m_pSubmap->GetNumObjects(); i++)
+      if (m_pSubmap->GetObjectStateFromIndex(i) & MOS_SELECTED)
+         nCount++;
+   return nCount;
+}
+
+
+//
+// Move selected objects by given offset
+//
+
+void CMapView::MoveSelectedObjects(int nOffsetX, int nOffsetY)
+{
+   DWORD i;
+   POINT pt;
+
+   for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
+      if (m_pSubmap->GetObjectStateFromIndex(i) & MOS_SELECTED)
+      {
+         pt = m_pSubmap->GetObjectPositionByIndex(i);
+         m_pSubmap->SetObjectPositionByIndex(i, pt.x + nOffsetX, pt.y + nOffsetY);
+      }
+   Update();
+}
+
+
+//
+// Get minimal rectangle which covers all selected objects
+//
+
+void CMapView::GetMinimalSelectionRect(RECT *pRect)
+{
+   DWORD i, j, dwId;
+   RECT rect, rcPrev;
+
+   SetRectEmpty(pRect);
+   for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
+      if (m_pSubmap->GetObjectStateFromIndex(i) & MOS_SELECTED)
+      {
+         dwId = m_pSubmap->GetObjectIdFromIndex(i);
+         for(j = 0; j < m_dwNumObjects; j++)
+         {
+            if (m_pObjectInfo[j].dwObjectId == dwId)
+            {
+               UnionRect(&rect, &m_pObjectInfo[j].rcObject, &m_pObjectInfo[j].rcText);
+               CopyRect(&rcPrev, pRect);
+               UnionRect(pRect, &rcPrev, &rect);
+               break;
+            }
+         }
+      }
+}
+
+
+//
+// Create image list for object dragging
+//
+
+void CMapView::CreateDragImageList()
+{
+   RECT rcSel;
+//   int cx, cy;
+   CBitmap bitmap;
+
+   GetMinimalSelectionRect(&rcSel);
+//   cx = rcSel.right - rcSel.left + 1;
+//   cy = rcSel.bottom - rcSel.top + 1;
+
+   DrawOnBitmap(bitmap, TRUE, &rcSel);
+   m_pDragImageList = new CImageList;
+   m_pDragImageList->Create(rcSel.right - rcSel.left, rcSel.bottom - rcSel.top,
+                            ILC_COLOR32 | ILC_MASK, 1, 1);
+   m_pDragImageList->Add(&bitmap, m_rgbBkColor);
+   //m_pDragImageList->Create(32, 32, ILC_COLOR32 | ILC_MASK, 1, 1);
+   //m_pDragImageList->Add(theApp.LoadIcon(IDI_NETWORK));
 }

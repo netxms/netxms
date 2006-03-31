@@ -20,6 +20,16 @@
 
 
 //
+// Map view states
+//
+
+#define STATE_NORMAL          0
+#define STATE_OBJECT_LCLICK   1
+#define STATE_DRAGGING        2
+#define STATE_SELECTING       3
+
+
+//
 // Scale-dependent elements
 //
 
@@ -71,6 +81,9 @@ public:
 
 // Implementation
 public:
+	void GetMinimalSelectionRect(RECT *pRect);
+	int GetSelectionCount(void);
+	void ClearSelection(BOOL  bRedraw = TRUE);
 	DWORD PointInObject(POINT pt);
 	void Update(void);
 	void SetMap(nxMap *pMap);
@@ -78,15 +91,29 @@ public:
 
 	// Generated message map functions
 protected:
+	void CreateDragImageList(void);
+	CImageList *m_pDragImageList;
+	void MoveSelectedObjects(int nOffsetX, int nOffsetY);
+	POINT m_ptLastMousePos;
+	DWORD m_dwFocusedObjectIndex;
+	DWORD m_dwFocusedObject;
+	POINT m_ptSelStart;
+   RECT m_rcSelection;
+	int m_nState;
+	COLORREF m_rgbSelBkColor;
+	COLORREF m_rgbSelTextColor;
+	COLORREF m_rgbSelRectColor;
+	COLORREF m_rgbBkColor;
+	COLORREF m_rgbTextColor;
 	void SetObjectRect(DWORD dwObjectId, RECT *pRect, BOOL bTextRect);
    OBJINFO *m_pObjectInfo;
    DWORD m_dwNumObjects;
 	CFont m_fontList[2];
 	int m_nScale;
 	void DoSubmapLayout(void);
-	COLORREF m_rgbBkColor;
-	void DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList);
-	void DrawOnBitmap(void);
+	void DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
+                   POINT ptOffset, BOOL bUpdateInfo);
+	void DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel);
 	CBitmap m_bmpMap;
 	nxSubmap *m_pSubmap;
 	nxMap *m_pMap;

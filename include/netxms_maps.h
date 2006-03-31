@@ -120,11 +120,14 @@ public:
    POINT GetObjectPosition(DWORD dwObjectId);
    POINT GetObjectPositionByIndex(DWORD dwIndex);
    void SetObjectPosition(DWORD dwObjectId, int x, int y);
+   void SetObjectPositionByIndex(DWORD dwIndex, int x, int y);
 
    DWORD GetNumObjects(void) { return m_dwNumObjects; }
    DWORD GetObjectIdFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwId; }
+   DWORD GetObjectIndex(DWORD dwObjectId);
 
    void SetObjectState(DWORD dwObjectId, DWORD dwState);
+   void SetObjectStateByIndex(DWORD dwIndex, DWORD dwState) { m_pObjectList[dwIndex].dwState = dwState; }
    DWORD GetObjectState(DWORD dwObjectId);
    DWORD GetObjectStateFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwState; }
 };
