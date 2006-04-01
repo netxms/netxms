@@ -66,6 +66,8 @@ void nxSubmap::CommonInit(void)
    m_dwAttr = 0;
    m_dwNumObjects = 0;
    m_pObjectList = NULL;
+   m_dwNumLinks = 0;
+   m_pLinkList = NULL;
 }
 
 
@@ -76,6 +78,7 @@ void nxSubmap::CommonInit(void)
 nxSubmap::~nxSubmap()
 {
    safe_free(m_pObjectList);
+   safe_free(m_pLinkList);
 }
 
 
@@ -240,6 +243,10 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
 {
    DWORD i;
    int x, y;
+
+   safe_free(m_pLinkList);
+   m_dwNumLinks = dwNumLinks;
+   m_pLinkList = (pLinkList != NULL) ? (OBJLINK *)nx_memdup(pLinkList, sizeof(OBJLINK) * dwNumLinks) : NULL;
 
    safe_free_and_null(m_pObjectList);
    m_dwNumObjects = 0;

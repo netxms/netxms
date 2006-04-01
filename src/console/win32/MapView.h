@@ -81,6 +81,7 @@ public:
 
 // Implementation
 public:
+	void OpenSubmap(DWORD dwId);
 	void GetMinimalSelectionRect(RECT *pRect);
 	int GetSelectionCount(void);
 	void ClearSelection(BOOL  bRedraw = TRUE);
@@ -91,6 +92,7 @@ public:
 
 	// Generated message map functions
 protected:
+	void ScalePosition(POINT *pt);
 	POINT m_ptDragOffset;
 	void SelectObjectsInRect(RECT &rcSelection);
 	void StartObjectDragging(POINT point);
@@ -124,6 +126,7 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -99,6 +99,8 @@ protected:
    DWORD m_dwAttr;
    DWORD m_dwNumObjects;
    MAP_OBJECT *m_pObjectList;
+   DWORD m_dwNumLinks;
+   OBJLINK *m_pLinkList;
 
    void CommonInit(void);
 
@@ -130,6 +132,9 @@ public:
    void SetObjectStateByIndex(DWORD dwIndex, DWORD dwState) { m_pObjectList[dwIndex].dwState = dwState; }
    DWORD GetObjectState(DWORD dwObjectId);
    DWORD GetObjectStateFromIndex(DWORD dwIndex) { return m_pObjectList[dwIndex].dwState; }
+
+   DWORD GetNumLinks(void) { return m_dwNumLinks; }
+   OBJLINK *GetLinkByIndex(DWORD dwIndex) { return &m_pLinkList[dwIndex]; }
 };
 
 

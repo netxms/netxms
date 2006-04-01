@@ -57,6 +57,7 @@ BEGIN_MESSAGE_MAP(CMapView, CWnd)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
+	ON_WM_LBUTTONDBLCLK()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -84,7 +85,7 @@ int CMapView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontList[0].CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                            VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                            VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
    m_fontList[1].CreateFont(-MulDiv(5, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
@@ -201,7 +202,7 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
    DWORD i;
    CImageList *pImageList;
    CFont *pOldFont;
-   POINT ptOffset;
+   POINT ptOffset, ptLinkStart, ptLinkEnd;
    
    GetClientRect(&rect);
 
@@ -251,6 +252,25 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
       }
       else
       {
+         // Draw links between objects
+         for(i = 0; i < m_pSubmap->GetNumLinks(); i++)
+         {
+            ptLinkStart = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId1);
+            ptLinkEnd = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId2);
+
+            ScalePosition(&ptLinkStart);
+            ptLinkStart.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
+            ptLinkStart.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
+
+            ScalePosition(&ptLinkEnd);
+            ptLinkEnd.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
+            ptLinkEnd.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
+
+            dc.MoveTo(ptLinkStart);
+            dc.LineTo(ptLinkEnd);
+         }
+
+         // Draw objects
          for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
             DrawObject(dc, i, pImageList, ptOffset, TRUE);
       }
@@ -287,16 +307,7 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
 
       // Get and scale object's position
       pt = m_pSubmap->GetObjectPositionByIndex(dwIndex);
-      if (m_scaleInfo[m_nScale].nFactor > 0)
-      {
-         pt.x *= m_scaleInfo[m_nScale].nFactor;
-         pt.y *= m_scaleInfo[m_nScale].nFactor;
-      }
-      else if (m_scaleInfo[m_nScale].nFactor < 0)
-      {
-         pt.x /= -m_scaleInfo[m_nScale].nFactor;
-         pt.y /= -m_scaleInfo[m_nScale].nFactor;
-      }
+      ScalePosition(&pt);
 
       // Apply offset
       pt.x += ptOffset.x;
@@ -377,8 +388,65 @@ void CMapView::DoSubmapLayout()
    if (pObject != NULL)
    {
       GetClientRect(&rect);
-      m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
-                          0, NULL, rect.right, rect.bottom);
+      if (pObject->dwId == 1)    // "Entire Network" object
+      {
+         DWORD i, j, k, dwNumObjects, dwObjListSize, *pdwObjectList, dwNumLinks = 0;
+         DWORD dwNumSubnets, *pdwSubnetList = NULL;
+         OBJLINK *pLinkList = NULL;
+         NXC_OBJECT_INDEX *pIndex;
+         NXC_OBJECT *pParent;
+         
+         dwObjListSize = pObject->dwNumChilds;
+         pdwObjectList = (DWORD *)nx_memdup(pObject->pdwChildList, sizeof(DWORD) * dwObjListSize);
+
+         NXCLockObjectIndex(g_hSession);
+         pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
+         for(i = 0; i < dwNumObjects; i++)
+         {
+            if (pIndex[i].pObject->iClass == OBJECT_NODE)
+            {
+               pdwSubnetList = (DWORD *)realloc(pdwSubnetList, sizeof(DWORD) * pIndex[i].pObject->dwNumParents);
+               for(j = 0, dwNumSubnets = 0; j < pIndex[i].pObject->dwNumParents; j++)
+               {
+                  pParent = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]);
+                  if ((pParent != NULL) &&
+                      (pParent->iClass == OBJECT_SUBNET))
+                  {
+                     pdwSubnetList[dwNumSubnets] = pIndex[i].pObject->pdwParentList[j];
+                     dwNumSubnets++;
+                  }
+               }
+               if (dwNumSubnets > 1)
+               {
+                  // Node connected to more than one subnet, add it to the map
+                  pdwObjectList = (DWORD *)realloc(pdwObjectList, sizeof(DWORD) * (dwObjListSize + 1));
+                  pdwObjectList[dwObjListSize] = pIndex[i].dwKey;
+                  dwObjListSize++;
+
+                  j = dwNumLinks;
+                  dwNumLinks += dwNumSubnets;
+                  pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
+                  for(k = 0; k < dwNumSubnets; j++, k++)
+                  {
+                     pLinkList[j].dwId1 = pIndex[i].dwKey;
+                     pLinkList[j].dwId2 = pdwSubnetList[k];
+                  }
+               }
+            }
+         }
+         NXCUnlockObjectIndex(g_hSession);
+         safe_free(pdwSubnetList);
+
+         m_pSubmap->DoLayout(dwObjListSize, pdwObjectList,
+                             dwNumLinks, pLinkList, rect.right, rect.bottom);
+         safe_free(pdwObjectList);
+         safe_free(pLinkList);
+      }
+      else
+      {
+         m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
+                             0, NULL, rect.right, rect.bottom);
+      }
    }
    else
    {
@@ -444,6 +512,20 @@ DWORD CMapView::PointInObject(POINT pt)
 
 
 //
+// WM_LBUTTONDBLCLK message handler
+//
+
+void CMapView::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+   DWORD dwId;
+
+   dwId = PointInObject(point);
+   if (dwId != 0)
+      OpenSubmap(dwId);
+}
+
+
+//
 // WM_LBUTTONDOWN message handler
 //
 
@@ -454,17 +536,31 @@ void CMapView::OnLButtonDown(UINT nFlags, CPoint point)
    if (m_dwFocusedObject != 0)
    {
       m_dwFocusedObjectIndex = m_pSubmap->GetObjectIndex(m_dwFocusedObject);
-      if (!(m_pSubmap->GetObjectStateFromIndex(m_dwFocusedObjectIndex) & MOS_SELECTED))
+      if (m_pSubmap->GetObjectStateFromIndex(m_dwFocusedObjectIndex) & MOS_SELECTED)
       {
-         ClearSelection(FALSE);
+         if (nFlags & (MK_CONTROL | MK_SHIFT))
+         {
+            m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, 0);
+            Update();
+         }
+         else
+         {
+            m_nState = STATE_OBJECT_LCLICK;
+         }
+      }
+      else
+      {
+         if ((nFlags & (MK_CONTROL | MK_SHIFT)) == 0)
+            ClearSelection(FALSE);
          m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, MOS_SELECTED);
          Update();
+         m_nState = STATE_OBJECT_LCLICK;
       }
-      m_nState = STATE_OBJECT_LCLICK;
    }
    else
    {
-      ClearSelection();
+      if ((nFlags & (MK_CONTROL | MK_SHIFT)) == 0)
+         ClearSelection();
       m_rcSelection.left = m_rcSelection.right = point.x;
       m_rcSelection.top = m_rcSelection.bottom = point.y;
       m_nState = STATE_SELECTING;
@@ -482,11 +578,6 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
    ReleaseCapture();
    switch(m_nState)
    {
-      case STATE_OBJECT_LCLICK:
-         ClearSelection(FALSE);
-         m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, MOS_SELECTED);
-         Update();
-         break;
       case STATE_DRAGGING:
          m_pDragImageList->DragLeave(this);
          m_pDragImageList->EndDrag();
@@ -494,7 +585,8 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
          MoveSelectedObjects(point.x - m_ptMouseOpStart.x, point.y - m_ptMouseOpStart.y);
          break;
       case STATE_SELECTING:
-         ClearSelection(FALSE);
+         if ((nFlags & (MK_CONTROL | MK_SHIFT)) == 0)
+            ClearSelection(FALSE);
          SelectObjectsInRect(m_rcSelection);
          Update();
          break;
@@ -682,5 +774,43 @@ void CMapView::SelectObjectsInRect(RECT &rcSelection)
       {
          m_pSubmap->SetObjectState(m_pObjectInfo[i].dwObjectId, MOS_SELECTED);
       }
+   }
+}
+
+
+//
+// Open submap with given ID
+//
+
+void CMapView::OpenSubmap(DWORD dwId)
+{
+   nxSubmap *pSubmap;
+
+   pSubmap = m_pMap->GetSubmap(dwId);
+   if (pSubmap != NULL)
+   {
+      m_pSubmap = pSubmap;
+      if (!m_pSubmap->IsLayoutCompleted())
+         DoSubmapLayout();
+      Update();
+   }
+}
+
+
+//
+// Scale coordinates of given point according to current scale factor
+//
+
+void CMapView::ScalePosition(POINT *pt)
+{
+   if (m_scaleInfo[m_nScale].nFactor > 0)
+   {
+      pt->x *= m_scaleInfo[m_nScale].nFactor;
+      pt->y *= m_scaleInfo[m_nScale].nFactor;
+   }
+   else if (m_scaleInfo[m_nScale].nFactor < 0)
+   {
+      pt->x /= -m_scaleInfo[m_nScale].nFactor;
+      pt->y /= -m_scaleInfo[m_nScale].nFactor;
    }
 }
