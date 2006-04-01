@@ -213,8 +213,8 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
    {
       bitmap.CreateCompatibleBitmap(pdc, prcSel->right - prcSel->left,
                                     prcSel->bottom - prcSel->top);
-      ptOffset.x = prcSel->left;
-      ptOffset.y = prcSel->top;
+      ptOffset.x = -prcSel->left;
+      ptOffset.y = -prcSel->top;
    }
    else
    {
@@ -449,19 +449,22 @@ DWORD CMapView::PointInObject(POINT pt)
 
 void CMapView::OnLButtonDown(UINT nFlags, CPoint point) 
 {
+   m_ptMouseOpStart = point;
    m_dwFocusedObject = PointInObject(point);
    if (m_dwFocusedObject != 0)
    {
-      m_ptLastMousePos = point;
       m_dwFocusedObjectIndex = m_pSubmap->GetObjectIndex(m_dwFocusedObject);
-      m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, MOS_SELECTED);
-      Update();
+      if (!(m_pSubmap->GetObjectStateFromIndex(m_dwFocusedObjectIndex) & MOS_SELECTED))
+      {
+         ClearSelection(FALSE);
+         m_pSubmap->SetObjectStateByIndex(m_dwFocusedObjectIndex, MOS_SELECTED);
+         Update();
+      }
       m_nState = STATE_OBJECT_LCLICK;
    }
    else
    {
       ClearSelection();
-      m_ptSelStart = point;
       m_rcSelection.left = m_rcSelection.right = point.x;
       m_rcSelection.top = m_rcSelection.bottom = point.y;
       m_nState = STATE_SELECTING;
@@ -488,9 +491,12 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
          m_pDragImageList->DragLeave(this);
          m_pDragImageList->EndDrag();
          delete_and_null(m_pDragImageList);
+         MoveSelectedObjects(point.x - m_ptMouseOpStart.x, point.y - m_ptMouseOpStart.y);
          break;
       case STATE_SELECTING:
-         InvalidateRect(&m_rcSelection, FALSE);
+         ClearSelection(FALSE);
+         SelectObjectsInRect(m_rcSelection);
+         Update();
          break;
       default:
          break;
@@ -511,37 +517,33 @@ void CMapView::OnMouseMove(UINT nFlags, CPoint point)
    {
       case STATE_OBJECT_LCLICK:
          m_nState = STATE_DRAGGING;
-         CreateDragImageList();
-         m_pDragImageList->BeginDrag(0, CPoint(0, 0));
-         m_pDragImageList->DragEnter(this, point);
+         StartObjectDragging(point);
          //break;
       case STATE_DRAGGING:
-         //MoveSelectedObjects(point.x - m_ptLastMousePos.x, point.y - m_ptLastMousePos.y);
-         //m_ptLastMousePos = point;
          m_pDragImageList->DragMove(point);
          break;
       case STATE_SELECTING:
          CopyRect(&rcOldSel, &m_rcSelection);
 
          // Calculate normalized selection rectangle
-         if (point.x < m_ptSelStart.x)
+         if (point.x < m_ptMouseOpStart.x)
          {
             m_rcSelection.left = point.x;
-            m_rcSelection.right = m_ptSelStart.x;
+            m_rcSelection.right = m_ptMouseOpStart.x;
          }
          else
          {
-            m_rcSelection.left = m_ptSelStart.x;
+            m_rcSelection.left = m_ptMouseOpStart.x;
             m_rcSelection.right = point.x;
          }
-         if (point.y < m_ptSelStart.y)
+         if (point.y < m_ptMouseOpStart.y)
          {
             m_rcSelection.top = point.y;
-            m_rcSelection.bottom = m_ptSelStart.y;
+            m_rcSelection.bottom = m_ptMouseOpStart.y;
          }
          else
          {
-            m_rcSelection.top = m_ptSelStart.y;
+            m_rcSelection.top = m_ptMouseOpStart.y;
             m_rcSelection.bottom = point.y;
          }
 
@@ -648,21 +650,37 @@ void CMapView::GetMinimalSelectionRect(RECT *pRect)
 // Create image list for object dragging
 //
 
-void CMapView::CreateDragImageList()
+void CMapView::StartObjectDragging(POINT point)
 {
    RECT rcSel;
-//   int cx, cy;
    CBitmap bitmap;
 
    GetMinimalSelectionRect(&rcSel);
-//   cx = rcSel.right - rcSel.left + 1;
-//   cy = rcSel.bottom - rcSel.top + 1;
-
    DrawOnBitmap(bitmap, TRUE, &rcSel);
    m_pDragImageList = new CImageList;
    m_pDragImageList->Create(rcSel.right - rcSel.left, rcSel.bottom - rcSel.top,
                             ILC_COLOR32 | ILC_MASK, 1, 1);
    m_pDragImageList->Add(&bitmap, m_rgbBkColor);
-   //m_pDragImageList->Create(32, 32, ILC_COLOR32 | ILC_MASK, 1, 1);
-   //m_pDragImageList->Add(theApp.LoadIcon(IDI_NETWORK));
+
+   m_pDragImageList->BeginDrag(0, CPoint(point.x - rcSel.left, point.y - rcSel.top));
+   m_pDragImageList->DragEnter(this, point);
+}
+
+
+//
+// Select all objects within given rectangle
+//
+
+void CMapView::SelectObjectsInRect(RECT &rcSelection)
+{
+   DWORD i;
+   RECT rect;
+   
+   for(i = 0; i < m_dwNumObjects; i++)
+   {
+      if (IntersectRect(&rect, &m_pObjectInfo[i].rcObject, &rcSelection))
+      {
+         m_pSubmap->SetObjectState(m_pObjectInfo[i].dwObjectId, MOS_SELECTED);
+      }
+   }
 }

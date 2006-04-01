@@ -91,13 +91,14 @@ public:
 
 	// Generated message map functions
 protected:
-	void CreateDragImageList(void);
+	POINT m_ptDragOffset;
+	void SelectObjectsInRect(RECT &rcSelection);
+	void StartObjectDragging(POINT point);
 	CImageList *m_pDragImageList;
 	void MoveSelectedObjects(int nOffsetX, int nOffsetY);
-	POINT m_ptLastMousePos;
 	DWORD m_dwFocusedObjectIndex;
 	DWORD m_dwFocusedObject;
-	POINT m_ptSelStart;
+	POINT m_ptMouseOpStart;
    RECT m_rcSelection;
 	int m_nState;
 	COLORREF m_rgbSelBkColor;
