@@ -9,6 +9,7 @@
 
 #include <netxms_maps.h>
 
+#define MAX_ZOOM        3
 #define NEUTRAL_SCALE   2
 
 
@@ -81,6 +82,10 @@ public:
 
 // Implementation
 public:
+	BOOL CanZoomOut(void);
+	void ZoomOut(void);
+	BOOL CanZoomIn(void);
+	void ZoomIn(void);
 	void OpenSubmap(DWORD dwId);
 	void GetMinimalSelectionRect(RECT *pRect);
 	int GetSelectionCount(void);
@@ -92,7 +97,13 @@ public:
 
 	// Generated message map functions
 protected:
-	void ScalePosition(POINT *pt);
+	POINT m_ptMapSize;
+	int CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos);
+	int m_iYOrg;
+	int m_iXOrg;
+	void UpdateScrollBars(BOOL bForceUpdate);
+	void ScalePosMapToScreen(POINT *pt);
+	void ScalePosScreenToMap(POINT *pt);
 	POINT m_ptDragOffset;
 	void SelectObjectsInRect(RECT &rcSelection);
 	void StartObjectDragging(POINT point);
@@ -111,7 +122,7 @@ protected:
 	void SetObjectRect(DWORD dwObjectId, RECT *pRect, BOOL bTextRect);
    OBJINFO *m_pObjectInfo;
    DWORD m_dwNumObjects;
-	CFont m_fontList[2];
+	CFont m_fontList[3];
 	int m_nScale;
 	void DoSubmapLayout(void);
 	void DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
@@ -127,6 +138,9 @@ protected:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

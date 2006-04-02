@@ -124,6 +124,11 @@ IDI_SCRIPT_LIBRARY      ICON    DISCARDABLE     "icons\\script_library.ico"
 IDI_SCRIPT              ICON    DISCARDABLE     "icons\\script.ico"
 IDI_CLOSED_FOLDER       ICON    DISCARDABLE     "icons\\folder_c.ico"
 IDI_OPEN_FOLDER         ICON    DISCARDABLE     "icons\\folder_o.ico"
+IDI_ZOOMIN              ICON    DISCARDABLE     "icons\\ZoomIn.ico"
+IDI_ZOOMOUT             ICON    DISCARDABLE     "icons\\ZoomOut.ico"
+IDI_SAVE                ICON    DISCARDABLE     "icons\\save.ico"
+IDI_PRINT               ICON    DISCARDABLE     "icons\\print.ico"
+IDI_REFRESH             ICON    DISCARDABLE     "icons\\refresh.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -135,7 +140,6 @@ IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 IDB_ANY                 BITMAP  DISCARDABLE     "res\\any.bmp"
 IDB_NONE                BITMAP  DISCARDABLE     "res\\none.bmp"
-IDT_MAP                 BITMAP  DISCARDABLE     "res\\idt_map.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -153,14 +157,6 @@ BEGIN
     BUTTON      ID_FILE_PRINT
     SEPARATOR
     BUTTON      ID_APP_ABOUT
-END
-
-IDT_MAP TOOLBAR DISCARDABLE  18, 18
-BEGIN
-    BUTTON      ID_BUTTON32988
-    BUTTON      ID_BUTTON32989
-    BUTTON      ID_BUTTON32992
-    BUTTON      ID_BUTTON32990
 END
 
 
@@ -209,7 +205,7 @@ BEGIN
     POPUP "&Tools"
     BEGIN
         MENUITEM "&Add node...\tF11",           ID_TOOLS_ADDNODE
-        MENUITEM "&MIB Browser\tAlt+M",         ID_TOOLS_MIBBROWSER
+        MENUITEM "&MIB Browser\tCtrl+Alt+M",    ID_TOOLS_MIBBROWSER
         MENUITEM "SNMP &walk...\tCtrl+Shift+F11", ID_TOOLS_SNMPWALK
     END
     POPUP "&Help"
@@ -522,6 +518,20 @@ BEGIN
             MENUITEM "View as &tree\tCtrl+Alt+T",   ID_SCRIPT_VIEWASTREE
         END
     END
+    POPUP "Map"
+    BEGIN
+        POPUP "S&how"
+        BEGIN
+            MENUITEM "Tool&box",                    ID_MAP_SHOW_TOOLBOX
+            MENUITEM "&Toolbar",                    ID_MAP_SHOW_TOOLBAR
+            MENUITEM "&Status bar",                 ID_MAP_SHOW_STATUSBAR
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Zoom &in\tGray +",            ID_MAP_ZOOMIN
+        MENUITEM "Zoom &out\tGray -",           ID_MAP_ZOOMOUT
+        MENUITEM SEPARATOR
+        MENUITEM "&Save\tCtrl+S",               ID_MAP_SAVE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -817,7 +827,7 @@ IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE
 BEGIN
     "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
-    "M",            ID_TOOLS_MIBBROWSER,    VIRTKEY, ALT, NOINVERT
+    "M",            ID_TOOLS_MIBBROWSER,    VIRTKEY, CONTROL, ALT, NOINVERT
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
@@ -899,7 +909,10 @@ END
 
 IDA_NETMAP ACCELERATORS DISCARDABLE 
 BEGIN
+    "S",            ID_MAP_SAVE,            VIRTKEY, CONTROL, NOINVERT
+    VK_ADD,         ID_MAP_ZOOMIN,          VIRTKEY, NOINVERT
     VK_BACK,        ID_OBJECT_OPENPARENT,   VIRTKEY, NOINVERT
+    VK_SUBTRACT,    ID_MAP_ZOOMOUT,         VIRTKEY, NOINVERT
 END
 
 IDA_EVENT_EDITOR ACCELERATORS DISCARDABLE 

@@ -11,6 +11,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define SCROLL_STEP     40
+
 
 //
 // Static data
@@ -19,8 +21,9 @@ static char THIS_FILE[] = __FILE__;
 static SCALE_INFO m_scaleInfo[] =
 {
    { -4, { 10, 10 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, -1, -1 },
-   { -2, { 20, 20 }, { 2, 2 }, { -2, 21 }, { 24, 9 }, 1, 1 },
-   { 0, { 40, 40 }, { 3, 3 }, { -10, 42 }, { 60, 18 }, 0, 0 }   // Neutral scale (1:1)
+   { -2, { 20, 20 }, { 2, 2 }, { -2, 21 }, { 24, 12 }, 1, 1 },
+   { 0, { 40, 40 }, { 3, 3 }, { -15, 42 }, { 70, 24 }, 0, 0 },   // Neutral scale (1:1)
+   { 2, { 80, 80 }, { 6, 6 }, { -30, 84 }, { 140, 48 }, 0, 2 }
 };
 
 
@@ -41,6 +44,8 @@ CMapView::CMapView()
    m_pObjectInfo = NULL;
    m_dwNumObjects = 0;
    m_pDragImageList = NULL;
+   m_iXOrg = 0;
+   m_iYOrg = 0;
 }
 
 CMapView::~CMapView()
@@ -58,6 +63,9 @@ BEGIN_MESSAGE_MAP(CMapView, CWnd)
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDBLCLK()
+	ON_WM_SIZE()
+	ON_WM_HSCROLL()
+	ON_WM_VSCROLL()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -89,7 +97,11 @@ int CMapView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontList[1].CreateFont(-MulDiv(5, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                            VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                            VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
+   m_fontList[2].CreateFont(-MulDiv(11, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                            0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                            VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
 	
    // Disable scroll bars
    SetScrollRange(SB_HORZ, 0, 0);
@@ -130,7 +142,7 @@ void CMapView::OnPaint()
       dcMap.CreateCompatibleDC(&sdc);
       bmpMap.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
       pOldMapBitmap = dcMap.SelectObject(&bmpMap);
-      dcMap.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+      dcMap.BitBlt(0, 0, rect.right, rect.bottom, &dc, m_iXOrg, m_iYOrg, SRCCOPY);
 
       // Calculate selection width and height
       cx = m_rcSelection.right - m_rcSelection.left - 1;
@@ -156,8 +168,8 @@ void CMapView::OnPaint()
       bf.BlendFlags = 0;
       bf.BlendOp = AC_SRC_OVER;
       bf.SourceConstantAlpha = 16;
-      AlphaBlend(dcMap.m_hDC, m_rcSelection.left, m_rcSelection.top, cx, cy,
-                 dcTemp.m_hDC, 0, 0, cx, cy, bf);
+      AlphaBlend(dcMap.m_hDC, m_rcSelection.left, m_rcSelection.top,
+                 cx, cy, dcTemp.m_hDC, 0, 0, cx, cy, bf);
       
       // Draw solid rectangle around selection area
       brush.DeleteObject();
@@ -180,7 +192,7 @@ void CMapView::OnPaint()
    else
    {
       // Move drawing from in-memory bitmap to screen
-      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, m_iXOrg, m_iYOrg, SRCCOPY);
    }
 
    // Cleanup
@@ -198,38 +210,42 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
    CDC *pdc, dc;           // Window dc and in-memory dc
    CBitmap *pOldBitmap;
    CBrush brush;
-   RECT rect;
+   RECT rcClient, rcBitmap;
    DWORD i;
    CImageList *pImageList;
    CFont *pOldFont;
    POINT ptOffset, ptLinkStart, ptLinkEnd;
    
-   GetClientRect(&rect);
+   GetClientRect(&rcClient);
 
    // Create compatible DC and bitmap for painting
    pdc = GetDC();
    dc.CreateCompatibleDC(pdc);
    bitmap.DeleteObject();
+   rcBitmap.left = 0;
+   rcBitmap.top = 0;
    if (bSelectionOnly)
    {
-      bitmap.CreateCompatibleBitmap(pdc, prcSel->right - prcSel->left,
-                                    prcSel->bottom - prcSel->top);
+      rcBitmap.right = prcSel->right - prcSel->left;
+      rcBitmap.bottom = prcSel->bottom - prcSel->top;
       ptOffset.x = -prcSel->left;
       ptOffset.y = -prcSel->top;
    }
    else
    {
-      bitmap.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
+      rcBitmap.right = max(m_ptMapSize.x, rcClient.right);
+      rcBitmap.bottom = max(m_ptMapSize.y, rcClient.bottom);
       ptOffset.x = 0;
       ptOffset.y = 0;
    }
+   bitmap.CreateCompatibleBitmap(pdc, rcBitmap.right, rcBitmap.bottom);
    ReleaseDC(pdc);
 
    // Initial DC setup
    pOldBitmap = dc.SelectObject(&bitmap);
    dc.SetBkColor(m_rgbBkColor);
    brush.CreateSolidBrush(m_rgbBkColor);
-   dc.FillRect(&rect, &brush);
+   dc.FillRect(&rcBitmap, &brush);
    if (m_scaleInfo[m_nScale].nFontIndex != -1)
       pOldFont = dc.SelectObject(&m_fontList[m_scaleInfo[m_nScale].nFontIndex]);
    else
@@ -258,11 +274,11 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
             ptLinkStart = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId1);
             ptLinkEnd = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId2);
 
-            ScalePosition(&ptLinkStart);
+            ScalePosMapToScreen(&ptLinkStart);
             ptLinkStart.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
             ptLinkStart.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
 
-            ScalePosition(&ptLinkEnd);
+            ScalePosMapToScreen(&ptLinkEnd);
             ptLinkEnd.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
             ptLinkEnd.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
 
@@ -297,6 +313,7 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
 {
    NXC_OBJECT *pObject;
    POINT pt, ptIcon;
+   CBrush brush, *pOldBrush;
    RECT rect;
    DWORD dwState;
 
@@ -307,7 +324,7 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
 
       // Get and scale object's position
       pt = m_pSubmap->GetObjectPositionByIndex(dwIndex);
-      ScalePosition(&pt);
+      ScalePosMapToScreen(&pt);
 
       // Apply offset
       pt.x += ptOffset.x;
@@ -320,9 +337,10 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
       rect.bottom = rect.top + m_scaleInfo[m_nScale].ptObjectSize.y;
       if (bUpdateInfo)
          SetObjectRect(pObject->dwId, &rect, FALSE);
-      dc.FillSolidRect(pt.x, pt.y, m_scaleInfo[m_nScale].ptObjectSize.x, 
-                       m_scaleInfo[m_nScale].ptObjectSize.y,
-                       g_statusColorTable[pObject->iStatus]);
+      brush.CreateSolidBrush(g_statusColorTable[pObject->iStatus]);
+      pOldBrush = dc.SelectObject(&brush);
+      dc.RoundRect(&rect, CPoint(6, 6));
+      dc.SelectObject(pOldBrush);
       ptIcon.x = pt.x + m_scaleInfo[m_nScale].ptIconOffset.x;
       ptIcon.y = pt.y + m_scaleInfo[m_nScale].ptIconOffset.y;
       if (pImageList != NULL)
@@ -360,6 +378,7 @@ void CMapView::SetMap(nxMap *pMap)
    m_pSubmap = m_pMap->GetSubmap(m_pMap->ObjectId());
    if (!m_pSubmap->IsLayoutCompleted())
       DoSubmapLayout();
+   m_ptMapSize = m_pSubmap->GetMinSize();
    Update();
 }
 
@@ -371,7 +390,8 @@ void CMapView::SetMap(nxMap *pMap)
 void CMapView::Update()
 {
    DrawOnBitmap(m_bmpMap, FALSE, NULL);
-   Invalidate(FALSE);
+   UpdateScrollBars(TRUE);
+   //Invalidate(FALSE);
 }
 
 
@@ -492,6 +512,8 @@ DWORD CMapView::PointInObject(POINT pt)
 {
    DWORD i, j, dwId;
 
+   pt.x += m_iXOrg;
+   pt.y += m_iYOrg;
    for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
    {
       dwId = m_pSubmap->GetObjectIdFromIndex(i - 1);
@@ -582,11 +604,15 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
          m_pDragImageList->DragLeave(this);
          m_pDragImageList->EndDrag();
          delete_and_null(m_pDragImageList);
-         MoveSelectedObjects(point.x - m_ptMouseOpStart.x, point.y - m_ptMouseOpStart.y);
+         point.x -= m_ptMouseOpStart.x;
+         point.y -= m_ptMouseOpStart.y;
+         ScalePosScreenToMap(&point);
+         MoveSelectedObjects(point.x, point.y);
          break;
       case STATE_SELECTING:
          if ((nFlags & (MK_CONTROL | MK_SHIFT)) == 0)
             ClearSelection(FALSE);
+         OffsetRect(&m_rcSelection, m_iXOrg, m_iYOrg);
          SelectObjectsInRect(m_rcSelection);
          Update();
          break;
@@ -706,6 +732,7 @@ void CMapView::MoveSelectedObjects(int nOffsetX, int nOffsetY)
          pt = m_pSubmap->GetObjectPositionByIndex(i);
          m_pSubmap->SetObjectPositionByIndex(i, pt.x + nOffsetX, pt.y + nOffsetY);
       }
+   m_ptMapSize = m_pSubmap->GetMinSize();
    Update();
 }
 
@@ -754,7 +781,7 @@ void CMapView::StartObjectDragging(POINT point)
                             ILC_COLOR32 | ILC_MASK, 1, 1);
    m_pDragImageList->Add(&bitmap, m_rgbBkColor);
 
-   m_pDragImageList->BeginDrag(0, CPoint(point.x - rcSel.left, point.y - rcSel.top));
+   m_pDragImageList->BeginDrag(0, CPoint(point.x - rcSel.left + m_iXOrg, point.y - rcSel.top + m_iYOrg));
    m_pDragImageList->DragEnter(this, point);
 }
 
@@ -792,16 +819,17 @@ void CMapView::OpenSubmap(DWORD dwId)
       m_pSubmap = pSubmap;
       if (!m_pSubmap->IsLayoutCompleted())
          DoSubmapLayout();
+      m_ptMapSize = m_pSubmap->GetMinSize();
       Update();
    }
 }
 
 
 //
-// Scale coordinates of given point according to current scale factor
+// Convert map coordinates to screen coordinates according to current scale factor
 //
 
-void CMapView::ScalePosition(POINT *pt)
+void CMapView::ScalePosMapToScreen(POINT *pt)
 {
    if (m_scaleInfo[m_nScale].nFactor > 0)
    {
@@ -813,4 +841,244 @@ void CMapView::ScalePosition(POINT *pt)
       pt->x /= -m_scaleInfo[m_nScale].nFactor;
       pt->y /= -m_scaleInfo[m_nScale].nFactor;
    }
+}
+
+
+//
+// Convert screen coordinates to map coordinates according to current scale factor
+//
+
+void CMapView::ScalePosScreenToMap(POINT *pt)
+{
+   if (m_scaleInfo[m_nScale].nFactor > 0)
+   {
+      pt->x /= m_scaleInfo[m_nScale].nFactor;
+      pt->y /= m_scaleInfo[m_nScale].nFactor;
+   }
+   else if (m_scaleInfo[m_nScale].nFactor < 0)
+   {
+      pt->x *= -m_scaleInfo[m_nScale].nFactor;
+      pt->y *= -m_scaleInfo[m_nScale].nFactor;
+   }
+}
+
+
+//
+// Update scroll bars state and position
+//
+
+void CMapView::UpdateScrollBars(BOOL bForceUpdate)
+{
+   SCROLLINFO si;
+   RECT rect;
+   BOOL bUpdateWindow = bForceUpdate;
+
+   GetClientRect(&rect);
+   si.cbSize = sizeof(SCROLLINFO);
+   si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+   si.nMin = 0;
+
+   // Set scroll bars ranges
+   si.nMax = (rect.right < m_ptMapSize.x) ? m_ptMapSize.x : 0;
+   si.nPage = rect.right;
+   if (si.nMax == 0)
+   {
+      // Set X origin to 0 if there are no horizontal scroll bar anymore
+      if (m_iXOrg > 0)
+      {
+         m_iXOrg = 0;
+         bUpdateWindow = TRUE;
+      }
+   }
+   else
+   {
+      // Adjust X origin so map will fully occupy window
+      if (m_iXOrg > (int)(si.nMax - si.nPage))
+      {
+         m_iXOrg = si.nMax - si.nPage;
+         bUpdateWindow = TRUE;
+      }
+   }
+   si.nPos = m_iXOrg;
+   SetScrollInfo(SB_HORZ, &si);
+
+   si.nMax = (rect.bottom < m_ptMapSize.y) ? m_ptMapSize.y : 0;
+   si.nPage = rect.bottom;
+   if (si.nMax == 0)
+   {
+      // Set Y origin to 0 if there are no vertical scroll bar anymore
+      if (m_iYOrg > 0)
+      {
+         m_iYOrg = 0;
+         bUpdateWindow = TRUE;
+      }
+   }
+   else
+   {
+      // Adjust Y origin so map will fully occupy window
+      if (m_iYOrg > (int)(si.nMax - si.nPage))
+      {
+         m_iYOrg = si.nMax - si.nPage;
+         bUpdateWindow = TRUE;
+      }
+   }
+   si.nPos = m_iYOrg;
+   SetScrollInfo(SB_VERT, &si);
+
+   if (bUpdateWindow)
+      Invalidate(FALSE);
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CMapView::OnSize(UINT nType, int cx, int cy) 
+{
+	CWnd::OnSize(nType, cx, cy);
+   Update();
+}
+
+
+//
+// WM_HSCROLL message handler
+//
+
+void CMapView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+{
+   int iNewPos;
+
+   // Calculate new position
+   iNewPos = CalculateNewScrollPos(SB_HORZ, nSBCode, nPos);
+
+   // Update X origin
+   if (iNewPos != -1)
+   {
+      SetScrollPos(SB_HORZ, iNewPos);
+      m_iXOrg = iNewPos;
+      Invalidate(FALSE);
+   }
+}
+
+
+//
+// WM_VSCROLL message handler
+//
+
+void CMapView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+{
+   int iNewPos;
+
+   // Calculate new position
+   iNewPos = CalculateNewScrollPos(SB_VERT, nSBCode, nPos);
+
+   // Update Y origin
+   if (iNewPos != -1)
+   {
+      SetScrollPos(SB_VERT, iNewPos);
+      m_iYOrg = iNewPos;
+      Invalidate(FALSE);
+   }
+}
+
+
+//
+// Calculate new scroll bar position
+//
+
+int CMapView::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
+{
+   int iNewPos;
+   RECT rect;
+
+   GetClientRect(&rect);
+   switch(nSBCode)
+   {
+      case SB_THUMBPOSITION:
+         iNewPos = nPos;
+         break;
+      case SB_TOP:
+         iNewPos = 0;
+         break;
+      case SB_BOTTOM:
+         iNewPos = (nScrollBar == SB_HORZ) ? m_ptMapSize.x - rect.right :
+                        m_ptMapSize.y - rect.bottom;
+         break;
+      case SB_PAGEUP:
+         iNewPos = (nScrollBar == SB_HORZ) ? m_iXOrg - rect.right : m_iYOrg - rect.bottom;
+         if (iNewPos < 0)
+            iNewPos = 0;
+         break;
+      case SB_PAGEDOWN:
+         iNewPos = (nScrollBar == SB_HORZ) ? 
+               min(m_iXOrg + rect.right, m_ptMapSize.x - rect.right) :
+               min(m_iYOrg + rect.bottom, m_ptMapSize.y - rect.bottom);
+         break;
+      case SB_LINEUP:
+         if (nScrollBar == SB_HORZ)
+            iNewPos = (m_iXOrg > SCROLL_STEP) ? m_iXOrg - SCROLL_STEP : 0;
+         else
+            iNewPos = (m_iYOrg > SCROLL_STEP) ? m_iYOrg - SCROLL_STEP : 0;
+         break;
+      case SB_LINEDOWN:
+         if (nScrollBar == SB_HORZ)
+            iNewPos = (m_iXOrg + SCROLL_STEP < m_ptMapSize.x - rect.right) ? 
+               (m_iXOrg + SCROLL_STEP) : (m_ptMapSize.x - rect.right);
+         else
+            iNewPos = (m_iYOrg + SCROLL_STEP < m_ptMapSize.y - rect.bottom) ? 
+               (m_iYOrg + SCROLL_STEP) : (m_ptMapSize.y - rect.bottom);
+         break;
+      default:
+         iNewPos = -1;  // Ignore other codes
+   }
+   return iNewPos;
+}
+
+
+//
+// Zoom in
+//
+
+void CMapView::ZoomIn()
+{
+   if (m_nScale < MAX_ZOOM)
+   {
+      m_nScale++;
+      Update();
+   }
+}
+
+
+//
+// Check if zoom in can be applied
+//
+
+BOOL CMapView::CanZoomIn()
+{
+   return m_nScale < MAX_ZOOM;
+}
+
+
+//
+// Zoom out
+//
+
+void CMapView::ZoomOut()
+{
+   if (m_nScale > 0)
+   {
+      m_nScale--;
+      Update();
+   }
+}
+
+
+//
+// Check if zoom out can be applied
+//
+
+BOOL CMapView::CanZoomOut()
+{
+   return m_nScale > 0;
 }

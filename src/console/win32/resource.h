@@ -179,6 +179,11 @@
 #define IDA_SCRIPT_MANAGER              301
 #define IDT_MAP                         302
 #define IDD_SNMP_WALK                   304
+#define IDI_ZOOMIN                      305
+#define IDI_ZOOMOUT                     306
+#define IDI_SAVE                        307
+#define IDI_PRINT                       308
+#define IDI_REFRESH                     309
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -664,6 +669,12 @@
 #define ID_BUTTON32990                  32990
 #define ID_BUTTON32992                  32992
 #define ID_TOOLS_SNMPWALK               32995
+#define ID_MAP_ZOOMIN                   32996
+#define ID_MAP_ZOOMOUT                  32997
+#define ID_MAP_SAVE                     32998
+#define ID_MAP_SHOW_TOOLBOX             33001
+#define ID_MAP_SHOW_TOOLBAR             33002
+#define ID_MAP_SHOW_STATUSBAR           33003
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -673,8 +684,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        305
-#define _APS_NEXT_COMMAND_VALUE         32996
+#define _APS_NEXT_RESOURCE_VALUE        310
+#define _APS_NEXT_COMMAND_VALUE         33004
 #define _APS_NEXT_CONTROL_VALUE         1343
 #define _APS_NEXT_SYMED_VALUE           127
 #endif

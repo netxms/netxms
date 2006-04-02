@@ -51,7 +51,7 @@ BOOL CToolBox::PreCreateWindow(CREATESTRUCT& cs)
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          LoadCursor(NULL, IDC_ARROW),
-                                         CreateSolidBrush(RGB(255, 255, 255)), NULL);
+                                         (HBRUSH)(COLOR_WINDOW + 1), NULL);
 	return CWnd::PreCreateWindow(cs);
 }
 
@@ -68,22 +68,20 @@ BOOL CToolBox::Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, C
 
 void CToolBox::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp) 
 {
+   int iBorderWidth = 0;
+
    if (bCalcValidRects)
    {
 	   CWnd::OnNcCalcSize(bCalcValidRects, lpncsp);
    }
-   else
-   {
-      int iBorderWidth = 0;
 
-      if (GetWindowLong(m_hWnd, GWL_STYLE) & WS_BORDER)
-         iBorderWidth++;
+   if (GetWindowLong(m_hWnd, GWL_STYLE) & WS_BORDER)
+      iBorderWidth++;
 
-      lpncsp->rgrc[0].left += iBorderWidth;
-      lpncsp->rgrc[0].right -= iBorderWidth;
-      lpncsp->rgrc[0].top += 19 + iBorderWidth;
-      lpncsp->rgrc[0].bottom -= iBorderWidth;
-   }
+   lpncsp->rgrc[0].left += iBorderWidth;
+   lpncsp->rgrc[0].right -= iBorderWidth;
+   lpncsp->rgrc[0].top += 19 + iBorderWidth;
+   lpncsp->rgrc[0].bottom -= iBorderWidth;
 }
 
 

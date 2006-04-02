@@ -9,6 +9,7 @@
 
 #include "MapView.h"
 #include "netxms_maps.h"
+#include "MapToolbox.h"	// Added by ClassView
 
 #define OBJECT_HISTORY_SIZE      512
 
@@ -37,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	CMapToolbox m_wndToolBox;
 	CToolBar m_wndToolBar;
 	CMapView m_wndMapView;
 	virtual ~CMapFrame();
@@ -47,6 +49,10 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnMapZoomin();
+	afx_msg void OnUpdateMapZoomin(CCmdUI* pCmdUI);
+	afx_msg void OnMapZoomout();
+	afx_msg void OnUpdateMapZoomout(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

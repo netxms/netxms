@@ -31,6 +31,10 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_COMMAND(ID_MAP_ZOOMIN, OnMapZoomin)
+	ON_UPDATE_COMMAND_UI(ID_MAP_ZOOMIN, OnUpdateMapZoomin)
+	ON_COMMAND(ID_MAP_ZOOMOUT, OnMapZoomout)
+	ON_UPDATE_COMMAND_UI(ID_MAP_ZOOMOUT, OnUpdateMapZoomout)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -62,11 +66,15 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-   EnableDocking(CBRS_ALIGN_ANY);
+   GetClientRect(&rect);
+
+   m_wndToolBox.Create(NULL, _T(""), WS_CHILD | WS_VISIBLE, rect, this, 0);
+
+   //EnableDocking(CBRS_ALIGN_ANY);
 
    // Create toolbar
-   m_wndToolBar.CreateEx(this);
-   m_wndToolBar.LoadToolBar(IDT_MAP);
+   //m_wndToolBar.CreateEx(this);
+   //m_wndToolBar.LoadToolBar(IDT_MAP);
    //FloatControlBar(&m_wndToolBar, TRUE, FALSE);
 /*   m_wndToolBar.Create(WS_CHILD | WS_VISIBLE | CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT, rect, this, ID_TOOLBAR_CTRL);
    m_wndToolBar.SetExtendedStyle(WS_EX_WINDOWEDGE);
@@ -75,7 +83,6 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndToolBar.AddButtons(2, tbButtons);*/
 
    // Create and initialize map view
-   GetClientRect(&rect);
    m_wndMapView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, this, 0);
    
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
@@ -90,12 +97,16 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CMapFrame::OnSize(UINT nType, int cx, int cy) 
 {
-   int nToolBarHeight;
+   int nToolBarHeight = 0;
+   int nToolBoxWidth;
 
 	CMDIChildWnd::OnSize(nType, cx, cy);
 //   m_wndToolBar.AutoSize();
-   nToolBarHeight = GetWindowSize(&m_wndToolBar).cy;
-   m_wndMapView.SetWindowPos(NULL, 0, nToolBarHeight, cx, cy - nToolBarHeight, SWP_NOZORDER);	
+   //nToolBarHeight = GetWindowSize(&m_wndToolBar).cy;
+   nToolBoxWidth = 200;
+   m_wndToolBox.SetWindowPos(NULL, 0, 0, nToolBoxWidth, cy, SWP_NOZORDER);
+   m_wndMapView.SetWindowPos(NULL, nToolBoxWidth, nToolBarHeight,
+                             cx - nToolBoxWidth, cy - nToolBarHeight, SWP_NOZORDER);	
 }
 
 
@@ -159,4 +170,34 @@ void CMapFrame::OnViewRefresh()
    }
 
    ::SetWindowText(m_hWnd, strTitle);*/
+}
+
+
+//
+// WM_COMMAND::ID_MAP_ZOOMIN message handlers
+//
+
+void CMapFrame::OnMapZoomin() 
+{
+   m_wndMapView.ZoomIn();
+}
+
+void CMapFrame::OnUpdateMapZoomin(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.CanZoomIn());
+}
+
+
+//
+// WM_COMMAND::ID_MAP_ZOOMIN message handlers
+//
+
+void CMapFrame::OnMapZoomout() 
+{
+   m_wndMapView.ZoomOut();
+}
+
+void CMapFrame::OnUpdateMapZoomout(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.CanZoomOut());
 }

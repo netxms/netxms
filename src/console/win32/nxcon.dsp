@@ -301,7 +301,15 @@ SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapControlBox.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MapFrame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapToolbox.cpp
 # End Source File
 # Begin Source File
 
@@ -758,7 +766,15 @@ SOURCE=.\MainFrm.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapControlBox.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\MapFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapToolbox.h
 # End Source File
 # Begin Source File
 
@@ -1146,10 +1162,6 @@ SOURCE=.\icons\graph.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\idt_map.bmp
-# End Source File
-# Begin Source File
-
 SOURCE=.\icons\iexplore.ico
 # End Source File
 # Begin Source File
@@ -1246,11 +1258,19 @@ SOURCE=.\icons\pending.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\print.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\psym_any.bmp
 # End Source File
 # Begin Source File
 
 SOURCE=.\icons\question.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\refresh.ico
 # End Source File
 # Begin Source File
 
@@ -1263,6 +1283,10 @@ SOURCE=.\icons\RuleManager.ico
 # Begin Source File
 
 SOURCE=.\icons\running.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\save.ico
 # End Source File
 # Begin Source File
 
@@ -1347,6 +1371,14 @@ SOURCE=.\icons\user.ico
 # Begin Source File
 
 SOURCE=.\icons\users.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ZoomIn.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\ZoomOut.ico
 # End Source File
 # End Group
 # End Target

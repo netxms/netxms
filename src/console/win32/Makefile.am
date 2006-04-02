@@ -53,7 +53,9 @@ EXTRA_DIST = \
 	LastValuesView.cpp LastValuesView.h \
 	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \
+	MapControlBox.cpp MapControlBox.h \
 	MapFrame.cpp MapFrame.h \
+	MapToolbox.cpp MapToolbox.h \
 	MapView.cpp MapView.h \
 	MIBBrowserDlg.cpp MIBBrowserDlg.h \
 	ModifiedAgentCfgDlg.cpp ModifiedAgentCfgDlg.h \

@@ -631,8 +631,12 @@ src/console/win32/MIBBrowserDlg.h -text
 src/console/win32/MainFrm.cpp -text
 src/console/win32/MainFrm.h -text
 src/console/win32/Makefile.am -text
+src/console/win32/MapControlBox.cpp -text
+src/console/win32/MapControlBox.h -text
 src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
+src/console/win32/MapToolbox.cpp -text
+src/console/win32/MapToolbox.h -text
 src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
 src/console/win32/ModifiedAgentCfgDlg.cpp -text
@@ -762,6 +766,8 @@ src/console/win32/icons/SeverityMinor.ico -text
 src/console/win32/icons/SeverityNormal.ico -text
 src/console/win32/icons/SeverityWarning.ico -text
 src/console/win32/icons/Tips.ico -text
+src/console/win32/icons/ZoomIn.ico -text
+src/console/win32/icons/ZoomOut.ico -text
 src/console/win32/icons/ack.ico -text
 src/console/win32/icons/active.ico -text
 src/console/win32/icons/alarm.ico -text
@@ -796,9 +802,12 @@ src/console/win32/icons/ovl_status_warning.ico -text
 src/console/win32/icons/package.ico -text
 src/console/win32/icons/passwd.ico -text
 src/console/win32/icons/pending.ico -text
+src/console/win32/icons/print.ico -text
 src/console/win32/icons/question.ico -text
+src/console/win32/icons/refresh.ico -text
 src/console/win32/icons/rexec.ico -text
 src/console/win32/icons/running.ico -text
+src/console/win32/icons/save.ico -text
 src/console/win32/icons/script.ico -text
 src/console/win32/icons/script_library.ico -text
 src/console/win32/icons/setup.ico -text

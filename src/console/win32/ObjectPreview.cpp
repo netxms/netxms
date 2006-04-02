@@ -41,7 +41,7 @@ BOOL CObjectPreview::PreCreateWindow(CREATESTRUCT& cs)
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          LoadCursor(NULL, IDC_ARROW),
-                                         CreateSolidBrush(RGB(255, 255, 255)), NULL);
+                                         (HBRUSH)(COLOR_WINDOW + 1), NULL);
 	return CWnd::PreCreateWindow(cs);
 }
 
@@ -88,20 +88,18 @@ void CObjectPreview::SetCurrentObject(NXC_OBJECT *pObject)
    m_wndObjectPreview.SetCurrentObject(pObject);
 }
 
+
+//
+// WM_PAINT message handler
+//
+
 void CObjectPreview::OnPaint() 
 {
-   CPaintDC dc(this); // device context for painting
+	CPaintDC dc(this); // device context for painting
    RECT rect;
-   CPen pen, *pOldPen;
-
-   pen.CreatePen(PS_SOLID, 0, RGB(127, 127, 127));
-   pOldPen = dc.SelectObject(&pen);
 
    GetClientRect(&rect);
-   dc.MoveTo(rect.right - 1, 0);
-   dc.LineTo(rect.right - 1, rect.bottom);
-
-   dc.SelectObject(pOldPen);
+   dc.DrawEdge(&rect, EDGE_BUMP, BF_RIGHT);
 }
 
 

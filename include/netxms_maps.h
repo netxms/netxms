@@ -40,10 +40,13 @@
 
 #define MAP_OBJECT_SIZE_X     40
 #define MAP_OBJECT_SIZE_Y     40
-#define MAP_OBJECT_INTERVAL   30
-#define MAP_TEXT_BOX_HEIGHT   20
+#define MAP_OBJECT_INTERVAL_X 40
+#define MAP_OBJECT_INTERVAL_Y 20
+#define MAP_TEXT_BOX_HEIGHT   24
 #define MAP_TOP_MARGIN        10
-#define MAP_LEFT_MARGIN       15
+#define MAP_LEFT_MARGIN       20
+#define MAP_BOTTOM_MARGIN     10
+#define MAP_RIGHT_MARGIN      20
 
 
 //
@@ -114,6 +117,8 @@ public:
 
    void CreateMessage(CSCPMessage *pMsg);
    void ModifyFromMessage(CSCPMessage *pMsg);
+
+   POINT GetMinSize(void);
 
    BOOL IsLayoutCompleted(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
    void DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,

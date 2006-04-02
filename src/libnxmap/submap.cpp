@@ -234,6 +234,33 @@ void nxSubmap::SetObjectPositionByIndex(DWORD dwIndex, int x, int y)
 
 
 //
+// Get minimal required size
+//
+
+POINT nxSubmap::GetMinSize(void)
+{
+   POINT pt;
+   DWORD i;
+
+   pt.x = 0;
+   pt.y = 0;
+
+   for(i = 0; i < m_dwNumObjects; i++)
+   {
+      if (m_pObjectList[i].x > pt.x)
+         pt.x = m_pObjectList[i].x;
+      if (m_pObjectList[i].y > pt.y)
+         pt.y = m_pObjectList[i].y;
+   }
+
+   pt.x += MAP_OBJECT_SIZE_X + MAP_RIGHT_MARGIN;
+   pt.y += MAP_OBJECT_SIZE_Y + MAP_TEXT_BOX_HEIGHT + MAP_BOTTOM_MARGIN;
+
+   return pt;
+}
+
+
+//
 // Layout objects on map
 //
 
@@ -254,11 +281,11 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
    for(i = 0, x = MAP_LEFT_MARGIN, y = MAP_TOP_MARGIN; i < dwNumObjects; i++)
    {
       SetObjectPosition(pdwObjectList[i], x, y);
-      x += MAP_OBJECT_SIZE_X + MAP_OBJECT_INTERVAL;
-      if (x >= nIdealX - MAP_OBJECT_SIZE_X - MAP_OBJECT_INTERVAL / 2)
+      x += MAP_OBJECT_SIZE_X + MAP_OBJECT_INTERVAL_X;
+      if (x >= nIdealX - MAP_OBJECT_SIZE_X - MAP_OBJECT_INTERVAL_X / 2)
       {
          x = MAP_LEFT_MARGIN;
-         y += MAP_OBJECT_SIZE_X + MAP_TEXT_BOX_HEIGHT + MAP_OBJECT_INTERVAL;
+         y += MAP_OBJECT_SIZE_Y + MAP_TEXT_BOX_HEIGHT + MAP_OBJECT_INTERVAL_Y;
       }
    }
    
