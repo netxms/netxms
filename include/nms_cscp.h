@@ -613,6 +613,7 @@ typedef struct
 #define VID_SCRIPT_CODE             ((DWORD)208)
 #define VID_SESSION_ID              ((DWORD)209)
 #define VID_RECORDS_ORDER           ((DWORD)210)
+#define VID_NUM_SUBMAPS             ((DWORD)211)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

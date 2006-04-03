@@ -1034,6 +1034,7 @@ int CMapView::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
          break;
       default:
          iNewPos = -1;  // Ignore other codes
+         break;
    }
    return iNewPos;
 }

@@ -133,6 +133,27 @@ nxSubmap *nxMap::GetSubmap(DWORD dwObjectId)
 
 void nxMap::CreateMessage(CSCPMessage *pMsg)
 {
+   DWORD i, j, *pdwACL;
+
+   Lock();
+
+   pdwACL = (DWORD *)malloc(sizeof(DWORD) * m_dwACLSize * 2);
+   for(i = 0, j = 0; i < m_dwACLSize; i++)
+   {
+      pdwACL[j++] = m_pACL[i].dwUserId;
+      pdwACL[j++] = m_pACL[i].dwAccess;
+   }
+   
+   pMsg->SetVariable(VID_NAME, m_pszName);
+   pMsg->SetVariable(VID_DESCRIPTION, m_pszDescription);
+   pMsg->SetVariable(VID_OBJECT_ID, m_dwObjectId);
+   pMsg->SetVariable(VID_NUM_SUBMAPS, m_dwNumSubmaps);
+   pMsg->SetVariable(VID_ACL_SIZE, m_dwACLSize);
+   pMsg->SetVariableToInt32Array(VID_ACL, m_dwACLSize * 2, pdwACL);
+
+   Unlock();
+
+   safe_free(pdwACL);
 }
 
 
@@ -142,4 +163,7 @@ void nxMap::CreateMessage(CSCPMessage *pMsg)
 
 void nxMap::ModifyFromMessage(CSCPMessage *pMsg)
 {
+   Lock();
+
+   Unlock();
 }
