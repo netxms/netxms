@@ -888,9 +888,12 @@ void CDataCollectionEditor::RefreshItemList()
    DWORD i;
 
    m_wndListCtrl.DeleteAllItems();
-   for(i = 0; i < m_pItemList->dwNumItems; i++)
-      AddListItem(&m_pItemList->pItems[i]);
-   m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+   if (m_pItemList != NULL)
+   {
+      for(i = 0; i < m_pItemList->dwNumItems; i++)
+         AddListItem(&m_pItemList->pItems[i]);
+      m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+   }
 }
 
 
@@ -909,6 +912,7 @@ void CDataCollectionEditor::OnViewRefresh()
                             _T("Unlocking node's data collection information..."));
    if (dwResult != RCC_SUCCESS)
       theApp.ErrorBox(dwResult, "Unable to close data collection configuration:\n%s");
+   m_pItemList = NULL;
 
    dwResult = DoRequestArg3(NXCOpenNodeDCIList, g_hSession, (void *)dwObjectId, 
                             &m_pItemList, "Loading node's data collection information...");

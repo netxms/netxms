@@ -99,8 +99,7 @@ public:
 protected:
 	POINT m_ptMapSize;
 	int CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos);
-	int m_iYOrg;
-	int m_iXOrg;
+   POINT m_ptOrg;
 	void UpdateScrollBars(BOOL bForceUpdate);
 	void ScalePosMapToScreen(POINT *pt);
 	void ScalePosScreenToMap(POINT *pt);

@@ -44,8 +44,8 @@ CMapView::CMapView()
    m_pObjectInfo = NULL;
    m_dwNumObjects = 0;
    m_pDragImageList = NULL;
-   m_iXOrg = 0;
-   m_iYOrg = 0;
+   m_ptOrg.x = 0;
+   m_ptOrg.y = 0;
 }
 
 CMapView::~CMapView()
@@ -142,7 +142,7 @@ void CMapView::OnPaint()
       dcMap.CreateCompatibleDC(&sdc);
       bmpMap.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
       pOldMapBitmap = dcMap.SelectObject(&bmpMap);
-      dcMap.BitBlt(0, 0, rect.right, rect.bottom, &dc, m_iXOrg, m_iYOrg, SRCCOPY);
+      dcMap.BitBlt(0, 0, rect.right, rect.bottom, &dc, m_ptOrg.x, m_ptOrg.y, SRCCOPY);
 
       // Calculate selection width and height
       cx = m_rcSelection.right - m_rcSelection.left - 1;
@@ -192,7 +192,7 @@ void CMapView::OnPaint()
    else
    {
       // Move drawing from in-memory bitmap to screen
-      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, m_iXOrg, m_iYOrg, SRCCOPY);
+      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, m_ptOrg.x, m_ptOrg.y, SRCCOPY);
    }
 
    // Cleanup
@@ -379,6 +379,7 @@ void CMapView::SetMap(nxMap *pMap)
    if (!m_pSubmap->IsLayoutCompleted())
       DoSubmapLayout();
    m_ptMapSize = m_pSubmap->GetMinSize();
+   ScalePosMapToScreen(&m_ptMapSize);
    Update();
 }
 
@@ -512,8 +513,8 @@ DWORD CMapView::PointInObject(POINT pt)
 {
    DWORD i, j, dwId;
 
-   pt.x += m_iXOrg;
-   pt.y += m_iYOrg;
+   pt.x += m_ptOrg.x;
+   pt.y += m_ptOrg.y;
    for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
    {
       dwId = m_pSubmap->GetObjectIdFromIndex(i - 1);
@@ -612,7 +613,7 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
       case STATE_SELECTING:
          if ((nFlags & (MK_CONTROL | MK_SHIFT)) == 0)
             ClearSelection(FALSE);
-         OffsetRect(&m_rcSelection, m_iXOrg, m_iYOrg);
+         OffsetRect(&m_rcSelection, m_ptOrg.x, m_ptOrg.y);
          SelectObjectsInRect(m_rcSelection);
          Update();
          break;
@@ -733,6 +734,7 @@ void CMapView::MoveSelectedObjects(int nOffsetX, int nOffsetY)
          m_pSubmap->SetObjectPositionByIndex(i, pt.x + nOffsetX, pt.y + nOffsetY);
       }
    m_ptMapSize = m_pSubmap->GetMinSize();
+   ScalePosMapToScreen(&m_ptMapSize);
    Update();
 }
 
@@ -781,7 +783,7 @@ void CMapView::StartObjectDragging(POINT point)
                             ILC_COLOR32 | ILC_MASK, 1, 1);
    m_pDragImageList->Add(&bitmap, m_rgbBkColor);
 
-   m_pDragImageList->BeginDrag(0, CPoint(point.x - rcSel.left + m_iXOrg, point.y - rcSel.top + m_iYOrg));
+   m_pDragImageList->BeginDrag(0, CPoint(point.x - rcSel.left + m_ptOrg.x, point.y - rcSel.top + m_ptOrg.y));
    m_pDragImageList->DragEnter(this, point);
 }
 
@@ -820,6 +822,7 @@ void CMapView::OpenSubmap(DWORD dwId)
       if (!m_pSubmap->IsLayoutCompleted())
          DoSubmapLayout();
       m_ptMapSize = m_pSubmap->GetMinSize();
+      ScalePosMapToScreen(&m_ptMapSize);
       Update();
    }
 }
@@ -884,22 +887,22 @@ void CMapView::UpdateScrollBars(BOOL bForceUpdate)
    if (si.nMax == 0)
    {
       // Set X origin to 0 if there are no horizontal scroll bar anymore
-      if (m_iXOrg > 0)
+      if (m_ptOrg.x > 0)
       {
-         m_iXOrg = 0;
+         m_ptOrg.x = 0;
          bUpdateWindow = TRUE;
       }
    }
    else
    {
       // Adjust X origin so map will fully occupy window
-      if (m_iXOrg > (int)(si.nMax - si.nPage))
+      if (m_ptOrg.x > (int)(si.nMax - si.nPage))
       {
-         m_iXOrg = si.nMax - si.nPage;
+         m_ptOrg.x = si.nMax - si.nPage;
          bUpdateWindow = TRUE;
       }
    }
-   si.nPos = m_iXOrg;
+   si.nPos = m_ptOrg.x;
    SetScrollInfo(SB_HORZ, &si);
 
    si.nMax = (rect.bottom < m_ptMapSize.y) ? m_ptMapSize.y : 0;
@@ -907,22 +910,22 @@ void CMapView::UpdateScrollBars(BOOL bForceUpdate)
    if (si.nMax == 0)
    {
       // Set Y origin to 0 if there are no vertical scroll bar anymore
-      if (m_iYOrg > 0)
+      if (m_ptOrg.y > 0)
       {
-         m_iYOrg = 0;
+         m_ptOrg.y = 0;
          bUpdateWindow = TRUE;
       }
    }
    else
    {
       // Adjust Y origin so map will fully occupy window
-      if (m_iYOrg > (int)(si.nMax - si.nPage))
+      if (m_ptOrg.y > (int)(si.nMax - si.nPage))
       {
-         m_iYOrg = si.nMax - si.nPage;
+         m_ptOrg.y = si.nMax - si.nPage;
          bUpdateWindow = TRUE;
       }
    }
-   si.nPos = m_iYOrg;
+   si.nPos = m_ptOrg.y;
    SetScrollInfo(SB_VERT, &si);
 
    if (bUpdateWindow)
@@ -956,7 +959,7 @@ void CMapView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
    if (iNewPos != -1)
    {
       SetScrollPos(SB_HORZ, iNewPos);
-      m_iXOrg = iNewPos;
+      m_ptOrg.x = iNewPos;
       Invalidate(FALSE);
    }
 }
@@ -977,7 +980,7 @@ void CMapView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
    if (iNewPos != -1)
    {
       SetScrollPos(SB_VERT, iNewPos);
-      m_iYOrg = iNewPos;
+      m_ptOrg.y = iNewPos;
       Invalidate(FALSE);
    }
 }
@@ -1006,28 +1009,28 @@ int CMapView::CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos)
                         m_ptMapSize.y - rect.bottom;
          break;
       case SB_PAGEUP:
-         iNewPos = (nScrollBar == SB_HORZ) ? m_iXOrg - rect.right : m_iYOrg - rect.bottom;
+         iNewPos = (nScrollBar == SB_HORZ) ? m_ptOrg.x - rect.right : m_ptOrg.y - rect.bottom;
          if (iNewPos < 0)
             iNewPos = 0;
          break;
       case SB_PAGEDOWN:
          iNewPos = (nScrollBar == SB_HORZ) ? 
-               min(m_iXOrg + rect.right, m_ptMapSize.x - rect.right) :
-               min(m_iYOrg + rect.bottom, m_ptMapSize.y - rect.bottom);
+               min(m_ptOrg.x + rect.right, m_ptMapSize.x - rect.right) :
+               min(m_ptOrg.y + rect.bottom, m_ptMapSize.y - rect.bottom);
          break;
       case SB_LINEUP:
          if (nScrollBar == SB_HORZ)
-            iNewPos = (m_iXOrg > SCROLL_STEP) ? m_iXOrg - SCROLL_STEP : 0;
+            iNewPos = (m_ptOrg.x > SCROLL_STEP) ? m_ptOrg.x - SCROLL_STEP : 0;
          else
-            iNewPos = (m_iYOrg > SCROLL_STEP) ? m_iYOrg - SCROLL_STEP : 0;
+            iNewPos = (m_ptOrg.y > SCROLL_STEP) ? m_ptOrg.y - SCROLL_STEP : 0;
          break;
       case SB_LINEDOWN:
          if (nScrollBar == SB_HORZ)
-            iNewPos = (m_iXOrg + SCROLL_STEP < m_ptMapSize.x - rect.right) ? 
-               (m_iXOrg + SCROLL_STEP) : (m_ptMapSize.x - rect.right);
+            iNewPos = (m_ptOrg.x + SCROLL_STEP < m_ptMapSize.x - rect.right) ? 
+               (m_ptOrg.x + SCROLL_STEP) : (m_ptMapSize.x - rect.right);
          else
-            iNewPos = (m_iYOrg + SCROLL_STEP < m_ptMapSize.y - rect.bottom) ? 
-               (m_iYOrg + SCROLL_STEP) : (m_ptMapSize.y - rect.bottom);
+            iNewPos = (m_ptOrg.y + SCROLL_STEP < m_ptMapSize.y - rect.bottom) ? 
+               (m_ptOrg.y + SCROLL_STEP) : (m_ptMapSize.y - rect.bottom);
          break;
       default:
          iNewPos = -1;  // Ignore other codes
@@ -1044,7 +1047,11 @@ void CMapView::ZoomIn()
 {
    if (m_nScale < MAX_ZOOM)
    {
+      ScalePosScreenToMap(&m_ptOrg);
       m_nScale++;
+      ScalePosMapToScreen(&m_ptOrg);
+      m_ptMapSize = m_pSubmap->GetMinSize();
+      ScalePosMapToScreen(&m_ptMapSize);
       Update();
    }
 }
@@ -1068,7 +1075,11 @@ void CMapView::ZoomOut()
 {
    if (m_nScale > 0)
    {
+      ScalePosScreenToMap(&m_ptOrg);
       m_nScale--;
+      ScalePosMapToScreen(&m_ptOrg);
+      m_ptMapSize = m_pSubmap->GetMinSize();
+      ScalePosMapToScreen(&m_ptMapSize);
       Update();
    }
 }
