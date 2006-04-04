@@ -151,7 +151,7 @@ public:
 
    TCHAR *GetErrorText(void) { return CHECK_NULL(m_pszErrorText); }
 
-   void PushAddr(DWORD dwAddr) { m_pAddrStack->Push((void *)dwAddr); }
+   void PushAddr(DWORD dwAddr) { m_pAddrStack->Push(CAST_TO_POINTER(dwAddr, void *)); }
    DWORD PopAddr(void);
    DWORD PeekAddr(void);
 };

@@ -123,7 +123,7 @@ DWORD NXSL_Compiler::PopAddr(void)
    void *pAddr;
 
    pAddr = m_pAddrStack->Pop();
-   return pAddr ? (DWORD)pAddr : INVALID_ADDRESS;
+   return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
 }
 
 
@@ -136,5 +136,5 @@ DWORD NXSL_Compiler::PeekAddr(void)
    void *pAddr;
 
    pAddr = m_pAddrStack->Peek();
-   return pAddr ? (DWORD)pAddr : INVALID_ADDRESS;
+   return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
 }
