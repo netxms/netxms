@@ -892,6 +892,7 @@ src/libnxcl/libnxcl.vcp -text
 src/libnxcl/libnxcl.vcw -text
 src/libnxcl/lpp.cpp -text
 src/libnxcl/main.cpp -text
+src/libnxcl/map.cpp -text
 src/libnxcl/mib.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/objtools.cpp -text

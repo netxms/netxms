@@ -141,6 +141,10 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\map.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\mib.cpp
 # End Source File
 # Begin Source File
