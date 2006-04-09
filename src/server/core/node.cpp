@@ -60,6 +60,8 @@ Node::Node()
    m_dwProxyNode = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_pRoutingTable = NULL;
+   m_tFailTimeSNMP = 0;
+   m_tFailTimeAgent = 0;
 }
 
 
@@ -103,6 +105,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_bIsHidden = TRUE;
    m_pRoutingTable = NULL;
+   m_tFailTimeSNMP = 0;
+   m_tFailTimeAgent = 0;
 }
 
 
@@ -880,7 +884,8 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
-          (m_pChildList[i]->Status() != STATUS_UNKNOWN))
+          (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
+          (m_pChildList[i]->Status() != STATUS_DISABLED))
       {
          bAllDown = FALSE;
          break;
