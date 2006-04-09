@@ -160,8 +160,6 @@ protected:
    MUTEX m_mutex;
 
    void CommonInit(void);
-   void Lock(void) { MutexLock(m_mutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutex); }
 
 public:
    nxMap();
@@ -169,11 +167,15 @@ public:
    nxMap(CSCPMessage *pMsg);
    virtual ~nxMap();
 
+   void Lock(void) { MutexLock(m_mutex, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutex); }
+
    DWORD ObjectId(void) { return m_dwObjectId; }
 
    DWORD GetSubmapCount(void) { return m_dwNumSubmaps; }
    nxSubmap *GetSubmap(DWORD dwObjectId);
    nxSubmap *GetSubmapByIndex(DWORD dwIndex) { return dwIndex < m_dwNumSubmaps ? m_ppSubmaps[dwIndex] : NULL; }
+   BOOL IsSubmapExist(DWORD dwObjectId);
 
    void CreateMessage(CSCPMessage *pMsg);
    void ModifyFromMessage(CSCPMessage *pMsg);

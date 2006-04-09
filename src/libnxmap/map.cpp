@@ -128,14 +128,37 @@ nxSubmap *nxMap::GetSubmap(DWORD dwObjectId)
 
 
 //
+// Check if submap for given object exists
+//
+
+BOOL nxMap::IsSubmapExist(DWORD dwObjectId)
+{
+   BOOL bRet = FALSE;
+   DWORD i;
+
+   Lock();
+
+   for(i = 0; i < m_dwNumSubmaps; i++)
+   {
+      if (m_ppSubmaps[i]->Id() == dwObjectId)
+      {
+         bRet = TRUE;
+         break;
+      }
+   }
+
+   Unlock();
+   return bRet;
+}
+
+
+//
 // Fill NXCP message with map data
 //
 
 void nxMap::CreateMessage(CSCPMessage *pMsg)
 {
-   DWORD i, j, *pdwACL;
-
-   Lock();
+   DWORD i, j, *pdwACL, *pdwSubmapList;
 
    pdwACL = (DWORD *)malloc(sizeof(DWORD) * m_dwACLSize * 2);
    for(i = 0, j = 0; i < m_dwACLSize; i++)
@@ -143,17 +166,21 @@ void nxMap::CreateMessage(CSCPMessage *pMsg)
       pdwACL[j++] = m_pACL[i].dwUserId;
       pdwACL[j++] = m_pACL[i].dwAccess;
    }
+
+   pdwSubmapList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumSubmaps);
+   for(i = 0; i < m_dwNumSubmaps; i++)
+      pdwSubmapList[i] = m_ppSubmaps[i]->Id();
    
    pMsg->SetVariable(VID_NAME, m_pszName);
    pMsg->SetVariable(VID_DESCRIPTION, m_pszDescription);
    pMsg->SetVariable(VID_OBJECT_ID, m_dwObjectId);
    pMsg->SetVariable(VID_NUM_SUBMAPS, m_dwNumSubmaps);
+   pMsg->SetVariableToInt32Array(VID_SUBMAP_LIST, m_dwNumSubmaps, pdwSubmapList);
    pMsg->SetVariable(VID_ACL_SIZE, m_dwACLSize);
    pMsg->SetVariableToInt32Array(VID_ACL, m_dwACLSize * 2, pdwACL);
 
-   Unlock();
-
    safe_free(pdwACL);
+   safe_free(pdwSubmapList);
 }
 
 
@@ -163,7 +190,42 @@ void nxMap::CreateMessage(CSCPMessage *pMsg)
 
 void nxMap::ModifyFromMessage(CSCPMessage *pMsg)
 {
-   Lock();
+   DWORD i, j, dwNumSubmaps, *pdwTemp;
 
-   Unlock();
+   // Update simple attributes
+   safe_free(m_pszName);
+   m_pszName = pMsg->GetVariableStr(VID_NAME);
+   safe_free(m_pszDescription);
+   m_pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
+
+   // Delete submaps which are no longer exist
+   dwNumSubmaps = pMsg->GetVariableLong(VID_NUM_SUBMAPS);
+   pdwTemp = (DWORD *)malloc(sizeof(DWORD) * dwNumSubmaps);
+   pMsg->GetVariableInt32Array(VID_SUBMAP_LIST, dwNumSubmaps, pdwTemp);
+   for(i = 0; i < m_dwNumSubmaps; i++)
+   {
+      for(j = 0; j < dwNumSubmaps; j++)
+         if (pdwTemp[j] == m_ppSubmaps[i]->Id())
+            break;
+      if (j == dwNumSubmaps)
+      {
+         delete m_ppSubmaps[i];
+         m_dwNumSubmaps--;
+         memmove(&m_ppSubmaps[i], &m_ppSubmaps[i + 1], sizeof(nxSubmap *) * (m_dwNumSubmaps - i));
+         i--;
+      }
+   }
+   safe_free(pdwTemp);
+
+   // Update ACL
+   m_dwACLSize = pMsg->GetVariableLong(VID_ACL_SIZE);
+   pdwTemp = (DWORD *)malloc(sizeof(DWORD) * m_dwACLSize * 2);
+   pMsg->GetVariableInt32Array(VID_ACL, m_dwACLSize * 2, pdwTemp);
+   safe_free(m_pACL);
+   m_pACL = (MAP_ACL_ENTRY *)malloc(sizeof(MAP_ACL_ENTRY) * m_dwACLSize);
+   for(i = 0, j = 0; i < m_dwACLSize; i++)
+   {
+      m_pACL[i].dwUserId = pdwTemp[j++];
+      m_pACL[i].dwAccess = pdwTemp[j++];
+   }
 }

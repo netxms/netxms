@@ -88,6 +88,36 @@ nxSubmap::~nxSubmap()
 
 void nxSubmap::CreateMessage(CSCPMessage *pMsg)
 {
+   DWORD i, j, *pdwList;
+
+   pMsg->SetVariable(VID_OBJECT_ID, m_dwId);
+   pMsg->SetVariable(VID_SUBMAP_ATTR, m_dwAttr);
+   pMsg->SetVariable(VID_NUM_OBJECTS, m_dwNumObjects);
+   if (m_dwNumObjects > 0)
+   {
+      pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumObjects * 3);
+      for(i = 0, j = 0; i < m_dwNumObjects; i++)
+      {
+         pdwList[j++] = m_pObjectList[i].dwId;
+         pdwList[j++] = m_pObjectList[i].x;
+         pdwList[j++] = m_pObjectList[i].y;
+      }
+      pMsg->SetVariableToInt32Array(VID_OBJECT_LIST, m_dwNumObjects * 3, pdwList);
+      free(pdwList);
+   }
+   
+   pMsg->SetVariable(VID_NUM_LINKS, m_dwNumLinks);
+   if (m_dwNumLinks > 0)
+   {
+      pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumLinks * 2);
+      for(i = 0, j = 0; i < m_dwNumLinks; i++)
+      {
+         pdwList[j++] = m_pLinkList[i].dwId1;
+         pdwList[j++] = m_pLinkList[i].dwId2;
+      }
+      pMsg->SetVariableToInt32Array(VID_LINK_LIST, m_dwNumLinks * 2, pdwList);
+      free(pdwList);
+   }
 }
 
 
@@ -97,6 +127,40 @@ void nxSubmap::CreateMessage(CSCPMessage *pMsg)
 
 void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
 {
+   DWORD i, j, *pdwList;
+
+   safe_free_and_null(m_pObjectList);
+   safe_free_and_null(m_pLinkList);
+
+   m_dwId = pMsg->GetVariableLong(VID_OBJECT_ID);
+   m_dwAttr = pMsg->GetVariableLong(VID_SUBMAP_ATTR);
+
+   m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
+   if (m_dwNumObjects > 0)
+   {
+      pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumObjects * 3);
+      pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects * 3, pdwList);
+      for(i = 0, j = 0; i < m_dwNumObjects; i++)
+      {
+         m_pObjectList[i].dwId = pdwList[j++];
+         m_pObjectList[i].x = pdwList[j++];
+         m_pObjectList[i].y = pdwList[j++];
+      }
+      free(pdwList);
+   }
+
+   m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
+   if (m_dwNumLinks > 0)
+   {
+      pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumLinks * 2);
+      pMsg->GetVariableInt32Array(VID_LINK_LIST, m_dwNumLinks * 2, pdwList);
+      for(i = 0, j = 0; i < m_dwNumLinks; i++)
+      {
+         m_pLinkList[i].dwId1 = pdwList[j++];
+         m_pLinkList[i].dwId2 = pdwList[j++];
+      }
+      free(pdwList);
+   }
 }
 
 
