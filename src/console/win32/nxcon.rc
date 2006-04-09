@@ -129,6 +129,8 @@ IDI_ZOOMOUT             ICON    DISCARDABLE     "icons\\ZoomOut.ico"
 IDI_SAVE                ICON    DISCARDABLE     "icons\\save.ico"
 IDI_PRINT               ICON    DISCARDABLE     "icons\\print.ico"
 IDI_REFRESH             ICON    DISCARDABLE     "icons\\refresh.ico"
+IDI_BACK                ICON    DISCARDABLE     "icons\\back.ico"
+IDI_FORWARD             ICON    DISCARDABLE     "icons\\forward.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -520,15 +522,19 @@ BEGIN
     END
     POPUP "Map"
     BEGIN
+        MENUITEM "&Back\tBksp",                 ID_MAP_BACK
+        MENUITEM "&Forward\tCtrl+Right Arrow",  ID_MAP_FORWARD
+        MENUITEM "&Home\tCtrl+Home",            ID_MAP_HOME
+        MENUITEM SEPARATOR
+        MENUITEM "Zoom &in\tGray +",            ID_MAP_ZOOMIN
+        MENUITEM "Zoom &out\tGray -",           ID_MAP_ZOOMOUT
+        MENUITEM SEPARATOR
         POPUP "S&how"
         BEGIN
             MENUITEM "Tool&box",                    ID_MAP_SHOW_TOOLBOX
             MENUITEM "&Toolbar",                    ID_MAP_SHOW_TOOLBAR
             MENUITEM "&Status bar",                 ID_MAP_SHOW_STATUSBAR
         END
-        MENUITEM SEPARATOR
-        MENUITEM "Zoom &in\tGray +",            ID_MAP_ZOOMIN
-        MENUITEM "Zoom &out\tGray -",           ID_MAP_ZOOMOUT
         MENUITEM SEPARATOR
         MENUITEM "&Save\tCtrl+S",               ID_MAP_SAVE
     END

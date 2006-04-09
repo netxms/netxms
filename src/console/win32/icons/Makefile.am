@@ -21,4 +21,5 @@ EXTRA_DIST = \
 	sort_up.ico tree.ico unsupported.ico user.ico users.ico \
 	nack.ico running.ico pending.ico Tips.ico objtools.ico \
 	command.ico script_library.ico script.ico folder_c.ico \
-	folder_o.ico ZoomIn.ico ZoomOut.ico print.ico refresh.ico save.ico
+	folder_o.ico ZoomIn.ico ZoomOut.ico print.ico refresh.ico save.ico \
+	back.ico forward.ico

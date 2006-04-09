@@ -53,7 +53,15 @@ protected:
 	afx_msg void OnUpdateMapZoomin(CCmdUI* pCmdUI);
 	afx_msg void OnMapZoomout();
 	afx_msg void OnUpdateMapZoomout(CCmdUI* pCmdUI);
+	afx_msg void OnObjectOpenparent();
+	afx_msg void OnUpdateObjectOpenparent(CCmdUI* pCmdUI);
+	afx_msg void OnMapBack();
+	afx_msg void OnUpdateMapBack(CCmdUI* pCmdUI);
+	afx_msg void OnMapForward();
+	afx_msg void OnUpdateMapForward(CCmdUI* pCmdUI);
+	afx_msg void OnMapHome();
 	//}}AFX_MSG
+   afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
 	DECLARE_MESSAGE_MAP()
 };
 

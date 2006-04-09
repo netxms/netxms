@@ -62,8 +62,14 @@ int CMapControlBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_SAVE));
    m_imageList.Add(theApp.LoadIcon(IDI_REFRESH));
    m_imageList.Add(theApp.LoadIcon(IDI_PRINT));
+   m_imageList.Add(theApp.LoadIcon(IDI_BACK));
+   m_imageList.Add(theApp.LoadIcon(IDI_FORWARD));
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
    
+   AddCommand(_T("Back"), 5, ID_MAP_BACK);
+   AddCommand(_T("Forward"), 6, ID_MAP_FORWARD);
+   AddCommand(_T("Home"), 0, ID_MAP_HOME);
+   AddCommand(_T(""), -1, 0);
    AddCommand(_T("Refresh"), 3, ID_VIEW_REFRESH);
    AddCommand(_T(""), -1, 0);
    AddCommand(_T("Zoom in"), 0, ID_MAP_ZOOMIN);

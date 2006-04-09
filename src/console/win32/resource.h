@@ -184,6 +184,8 @@
 #define IDI_SAVE                        307
 #define IDI_PRINT                       308
 #define IDI_REFRESH                     309
+#define IDI_BACK                        310
+#define IDI_FORWARD                     311
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -675,6 +677,9 @@
 #define ID_MAP_SHOW_TOOLBOX             33001
 #define ID_MAP_SHOW_TOOLBAR             33002
 #define ID_MAP_SHOW_STATUSBAR           33003
+#define ID_MAP_BACK                     33004
+#define ID_MAP_FORWARD                  33005
+#define ID_MAP_HOME                     33006
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -684,8 +689,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        310
-#define _APS_NEXT_COMMAND_VALUE         33004
+#define _APS_NEXT_RESOURCE_VALUE        312
+#define _APS_NEXT_COMMAND_VALUE         33007
 #define _APS_NEXT_CONTROL_VALUE         1343
 #define _APS_NEXT_SYMED_VALUE           127
 #endif

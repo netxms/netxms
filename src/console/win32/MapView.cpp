@@ -46,6 +46,8 @@ CMapView::CMapView()
    m_pDragImageList = NULL;
    m_ptOrg.x = 0;
    m_ptOrg.y = 0;
+   m_dwHistoryPos = 0;
+   m_dwHistorySize = 0;
 }
 
 CMapView::~CMapView()
@@ -373,6 +375,8 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
 
 void CMapView::SetMap(nxMap *pMap)
 {
+   m_dwHistorySize = 0;
+   m_dwHistoryPos = 0;
    delete m_pMap;
    m_pMap = pMap;
    m_pSubmap = m_pMap->GetSubmap(m_pMap->ObjectId());
@@ -392,7 +396,6 @@ void CMapView::Update()
 {
    DrawOnBitmap(m_bmpMap, FALSE, NULL);
    UpdateScrollBars(TRUE);
-   //Invalidate(FALSE);
 }
 
 
@@ -811,19 +814,25 @@ void CMapView::SelectObjectsInRect(RECT &rcSelection)
 // Open submap with given ID
 //
 
-void CMapView::OpenSubmap(DWORD dwId)
+void CMapView::OpenSubmap(DWORD dwId, BOOL bAddToHistory)
 {
    nxSubmap *pSubmap;
 
    pSubmap = m_pMap->GetSubmap(dwId);
    if (pSubmap != NULL)
    {
+      if (bAddToHistory)
+         AddToHistory(m_pSubmap->Id());
       m_pSubmap = pSubmap;
       if (!m_pSubmap->IsLayoutCompleted())
          DoSubmapLayout();
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
       Update();
+   }
+   else
+   {
+      MessageBox(_T("Unable to get submap object"), _T("Internal error"), MB_OK | MB_ICONSTOP);
    }
 }
 
@@ -1093,4 +1102,168 @@ void CMapView::ZoomOut()
 BOOL CMapView::CanZoomOut()
 {
    return m_nScale > 0;
+}
+
+
+//
+// Go to parent object from the current
+//
+
+void CMapView::GoToParentObject()
+{
+   NXC_OBJECT *pObject;
+   DWORD i;
+
+   if (m_pSubmap != NULL)
+   {
+      pObject = NXCFindObjectById(g_hSession, m_pSubmap->Id());
+      if (pObject != NULL)
+      {
+         for(i = 0; i < pObject->dwNumParents; i++)
+         {
+            if (m_pMap->IsSubmapExist(pObject->pdwParentList[i]))
+            {
+               OpenSubmap(pObject->pdwParentList[i]);
+               break;
+            }
+         }
+      }
+      else
+      {
+         MessageBox(_T("Unable to find object for current submap"), _T("Internal error"), MB_OK | MB_ICONSTOP);
+      }
+   }
+}
+
+
+//
+// Return TRUE if it's possible to go to parent object
+//
+
+BOOL CMapView::CanGoToParent()
+{
+   if ((m_pMap == NULL) || (m_pSubmap == NULL))
+      return FALSE;
+   return m_pMap->ObjectId() != m_pSubmap->Id();
+}
+
+
+//
+// Add submap id to history
+//
+
+void CMapView::AddToHistory(DWORD dwId)
+{
+   if (m_dwHistoryPos == MAX_HISTORY_SIZE - 1)
+   {
+      memmove(m_dwHistory, &m_dwHistory[1], sizeof(DWORD) * (MAX_HISTORY_SIZE - 1));
+      m_dwHistoryPos--;
+   }
+
+   m_dwHistory[m_dwHistoryPos] = dwId;
+   m_dwHistoryPos++;
+   m_dwHistorySize = m_dwHistoryPos;
+}
+
+
+//
+// Go back through submaps (to the previous one)
+//
+
+void CMapView::GoBack()
+{
+   if (m_dwHistoryPos > 0)
+   {
+      m_dwHistory[m_dwHistoryPos] = m_pSubmap->Id();
+      m_dwHistoryPos--;
+      OpenSubmap(m_dwHistory[m_dwHistoryPos], FALSE);
+   }
+}
+
+
+//
+// Check if we can go back now
+//
+
+BOOL CMapView::CanGoBack()
+{
+   return m_dwHistoryPos > 0;
+}
+
+//
+// Go forward through visited submaps history
+//
+
+void CMapView::GoForward()
+{
+   if (m_dwHistoryPos < m_dwHistorySize)
+   {
+      m_dwHistoryPos++;
+      OpenSubmap(m_dwHistory[m_dwHistoryPos], FALSE);
+   }
+}
+
+
+//
+// Check if we can go forward now
+//
+
+BOOL CMapView::CanGoForward()
+{
+   return m_dwHistoryPos < m_dwHistorySize;
+}
+
+
+//
+// Open root submap
+//
+
+void CMapView::OpenRoot()
+{
+   if (m_pSubmap->Id() != m_pMap->ObjectId())
+      OpenSubmap(m_pMap->ObjectId());
+}
+
+
+//
+// Handler for object changes
+//
+
+void CMapView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
+{
+   DWORD i, dwNumSubnets;
+   NXC_OBJECT *pParent;
+   BOOL bUpdate = FALSE;
+
+   // Check if updated object should be presented on current submap
+   for(i = 0; i < pObject->dwNumParents; i++)
+      if (pObject->pdwParentList[i] == m_pSubmap->Id())
+      {
+         bUpdate = TRUE;
+         break;
+      }
+
+   if ((!bUpdate) && (m_pSubmap->Id() == 1))
+   {
+      for(i = 0, dwNumSubnets = 0; i < pObject->dwNumParents; i++)
+      {
+         pParent = NXCFindObjectById(g_hSession, pObject->pdwParentList[i]);
+         if ((pParent != NULL) &&
+             (pParent->iClass == OBJECT_SUBNET))
+         {
+            dwNumSubnets++;
+         }
+      }
+      if (dwNumSubnets > 1)
+         bUpdate = TRUE;
+   }
+
+   if (bUpdate)
+   {
+      // Check if object already presented on current submap
+      if (m_pSubmap->GetObjectIndex(dwObjectId) == INVALID_INDEX)
+      {
+      }
+      Update();
+   }
 }

@@ -9,8 +9,9 @@
 
 #include <netxms_maps.h>
 
-#define MAX_ZOOM        3
-#define NEUTRAL_SCALE   2
+#define MAX_ZOOM           3
+#define NEUTRAL_SCALE      2
+#define MAX_HISTORY_SIZE   256
 
 
 //
@@ -82,11 +83,19 @@ public:
 
 // Implementation
 public:
+	void OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject);
+	BOOL CanGoForward(void);
+	BOOL CanGoBack(void);
+	void OpenRoot(void);
+	void GoForward(void);
+	void GoBack(void);
+	BOOL CanGoToParent(void);
+	void GoToParentObject(void);
 	BOOL CanZoomOut(void);
 	void ZoomOut(void);
 	BOOL CanZoomIn(void);
 	void ZoomIn(void);
-	void OpenSubmap(DWORD dwId);
+	void OpenSubmap(DWORD dwId, BOOL bAddToHistory = TRUE);
 	void GetMinimalSelectionRect(RECT *pRect);
 	int GetSelectionCount(void);
 	void ClearSelection(BOOL  bRedraw = TRUE);
@@ -97,6 +106,10 @@ public:
 
 	// Generated message map functions
 protected:
+	void AddToHistory(DWORD dwId);
+	DWORD m_dwHistory[MAX_HISTORY_SIZE];
+	DWORD m_dwHistoryPos;
+	DWORD m_dwHistorySize;
 	POINT m_ptMapSize;
 	int CalculateNewScrollPos(UINT nScrollBar, UINT nSBCode, UINT nPos);
    POINT m_ptOrg;

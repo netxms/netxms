@@ -1078,6 +1078,10 @@ SOURCE=.\res\any.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\back.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\bitmap1.bmp
 # End Source File
 # Begin Source File
@@ -1155,6 +1159,10 @@ SOURCE=.\icons\folder_c.ico
 # Begin Source File
 
 SOURCE=.\icons\folder_o.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\forward.ico
 # End Source File
 # Begin Source File
 

@@ -35,7 +35,15 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_MAP_ZOOMIN, OnUpdateMapZoomin)
 	ON_COMMAND(ID_MAP_ZOOMOUT, OnMapZoomout)
 	ON_UPDATE_COMMAND_UI(ID_MAP_ZOOMOUT, OnUpdateMapZoomout)
+	ON_COMMAND(ID_OBJECT_OPENPARENT, OnObjectOpenparent)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_OPENPARENT, OnUpdateObjectOpenparent)
+	ON_COMMAND(ID_MAP_BACK, OnMapBack)
+	ON_UPDATE_COMMAND_UI(ID_MAP_BACK, OnUpdateMapBack)
+	ON_COMMAND(ID_MAP_FORWARD, OnMapForward)
+	ON_UPDATE_COMMAND_UI(ID_MAP_FORWARD, OnUpdateMapForward)
+	ON_COMMAND(ID_MAP_HOME, OnMapHome)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -103,7 +111,7 @@ void CMapFrame::OnSize(UINT nType, int cx, int cy)
 	CMDIChildWnd::OnSize(nType, cx, cy);
 //   m_wndToolBar.AutoSize();
    //nToolBarHeight = GetWindowSize(&m_wndToolBar).cy;
-   nToolBoxWidth = 200;
+   nToolBoxWidth = 150;
    m_wndToolBox.SetWindowPos(NULL, 0, 0, nToolBoxWidth, cy, SWP_NOZORDER);
    m_wndMapView.SetWindowPos(NULL, nToolBoxWidth, nToolBarHeight,
                              cx - nToolBoxWidth, cy - nToolBarHeight, SWP_NOZORDER);	
@@ -200,4 +208,70 @@ void CMapFrame::OnMapZoomout()
 void CMapFrame::OnUpdateMapZoomout(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndMapView.CanZoomOut());
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_OPENPARENT message handlers
+//
+
+void CMapFrame::OnObjectOpenparent() 
+{
+   m_wndMapView.GoToParentObject();
+}
+
+void CMapFrame::OnUpdateObjectOpenparent(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.CanGoToParent());
+}
+
+
+//
+// WM_COMMAND::ID_MAP_BACK message handlers
+//
+
+void CMapFrame::OnMapBack() 
+{
+   m_wndMapView.GoBack();
+}
+
+void CMapFrame::OnUpdateMapBack(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.CanGoBack());
+}
+
+
+//
+// WM_COMMAND::ID_MAP_FORWARD message handlers
+//
+
+void CMapFrame::OnMapForward() 
+{
+   m_wndMapView.GoForward();
+}
+
+void CMapFrame::OnUpdateMapForward(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.CanGoForward());
+}
+
+
+//
+// WM_COMMAND::ID_MAP_HOME message handlers
+//
+
+void CMapFrame::OnMapHome()
+{
+   m_wndMapView.OpenRoot();
+}
+
+
+//
+// NXCM_OBJECT_CHANGE message handler
+// wParam contains object's ID, and lParam pointer to corresponding NXC_OBJECT structure
+//
+
+void CMapFrame::OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject)
+{
+   m_wndMapView.OnObjectChange(wParam, pObject);
 }
