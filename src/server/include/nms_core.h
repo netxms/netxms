@@ -101,6 +101,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_pkg.h"
 #include "nms_topo.h"
 #include "nms_script.h"
+#include "nxcore_maps.h"
 
 
 //
@@ -205,6 +206,7 @@ typedef void * HSNMPSESSION;
 #define CSF_TRAP_CFG_LOCKED      ((DWORD)0x0040)
 #define CSF_AUTHENTICATED        ((DWORD)0x0080)
 #define CSF_OBJECT_TOOLS_LOCKED  ((DWORD)0x0100)
+#define CSF_RECEIVING_MAP_DATA   ((DWORD)0x0200)
 
 
 //
@@ -354,6 +356,8 @@ private:
    DWORD m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
    DWORD m_dwActiveChannels;     // Active data channels
+   DWORD m_dwMapSaveRqId;        // ID of currently active map saving request
+   nxMapSrv *m_pActiveMap;       // Map currenly being saved
 
    static THREAD_RESULT THREAD_CALL ReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL WriteThreadStarter(void *);
@@ -466,6 +470,10 @@ private:
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);
    void StartSnmpWalk(CSCPMessage *pRequest);
+   void ResolveMapName(CSCPMessage *pRequest);
+   void SaveMap(CSCPMessage *pRequest);
+   void ProcessSubmapData(CSCPMessage *pRequest);
+   void LoadMap(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -647,6 +655,7 @@ extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
 extern DWORD g_dwPingSize;
 extern time_t g_tServerStartTime;
+extern DWORD g_dwLockTimeout;
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;

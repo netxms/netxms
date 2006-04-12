@@ -138,6 +138,7 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
    m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
    if (m_dwNumObjects > 0)
    {
+      m_pObjectList = (MAP_OBJECT *)realloc(m_pObjectList, sizeof(MAP_OBJECT) * m_dwNumObjects);
       pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumObjects * 3);
       pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects * 3, pdwList);
       for(i = 0, j = 0; i < m_dwNumObjects; i++)
@@ -148,10 +149,15 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
       }
       free(pdwList);
    }
+   else
+   {
+      safe_free_and_null(m_pObjectList);
+   }
 
    m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
    if (m_dwNumLinks > 0)
    {
+      m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
       pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumLinks * 2);
       pMsg->GetVariableInt32Array(VID_LINK_LIST, m_dwNumLinks * 2, pdwList);
       for(i = 0, j = 0; i < m_dwNumLinks; i++)
@@ -160,6 +166,10 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
          m_pLinkList[i].dwId2 = pdwList[j++];
       }
       free(pdwList);
+   }
+   else
+   {
+      safe_free_and_null(m_pLinkList);
    }
 }
 

@@ -310,6 +310,8 @@ enum
 #define RCC_INVALID_LPP_ID          ((DWORD)55)
 #define RCC_INVALID_SCRIPT_ID       ((DWORD)56)
 #define RCC_INVALID_SCRIPT_NAME     ((DWORD)57)
+#define RCC_UNKNOWN_MAP_NAME        ((DWORD)58)
+#define RCC_INVALID_MAP_ID          ((DWORD)59)
 
 
 //
@@ -1292,6 +1294,19 @@ typedef struct
 
 
 //
+// Map information
+//
+
+typedef struct
+{
+   DWORD dwMapId;
+   DWORD dwObjectId;
+   DWORD dwAccess;      // Access rights to the map for current user
+   TCHAR szName[MAX_DB_STRING];
+} NXC_MAP_INFO;
+
+
+//
 // Functions
 //
 
@@ -1511,6 +1526,14 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
                                      TCHAR *pszRootOID, void *pUserData,
                                      void (* pfCallback)(TCHAR *, DWORD, TCHAR *, void *));
+
+DWORD LIBNXCL_EXPORTABLE NXCGetMapList(NXC_SESSION hSession, DWORD *pdwNumMaps,
+                                       NXC_MAP_INFO **ppMapList);
+DWORD LIBNXCL_EXPORTABLE NXCSaveMap(NXC_SESSION hSession, void *pMap);
+DWORD LIBNXCL_EXPORTABLE NXCLoadMap(NXC_SESSION hSession, DWORD dwMapId, void **ppMap);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
+DWORD LIBNXCL_EXPORTABLE NXCResolveMapName(NXC_SESSION hSession, TCHAR *pszMapName,
+                                           DWORD *pdwMapId);
 
 #ifdef __cplusplus
 }

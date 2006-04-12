@@ -155,6 +155,9 @@ protected:
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+public:
+   nxMap *GetMap(void) { return m_pMap; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

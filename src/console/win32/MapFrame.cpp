@@ -42,6 +42,7 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_COMMAND(ID_MAP_FORWARD, OnMapForward)
 	ON_UPDATE_COMMAND_UI(ID_MAP_FORWARD, OnUpdateMapForward)
 	ON_COMMAND(ID_MAP_HOME, OnMapHome)
+	ON_COMMAND(ID_MAP_SAVE, OnMapSave)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
@@ -130,12 +131,41 @@ void CMapFrame::OnSetFocus(CWnd* pOldWnd)
 
 
 //
+// Map (re)loading function
+//
+
+static DWORD LoadMap(TCHAR *pszName, nxMap **ppMap)
+{
+   DWORD dwResult, dwMapId;
+
+   dwResult = NXCResolveMapName(g_hSession, pszName, &dwMapId);
+   if (dwResult == RCC_SUCCESS)
+   {
+      dwResult = NXCLoadMap(g_hSession, dwMapId, (void **)ppMap);
+   }
+   return dwResult;
+}
+
+
+//
 // WM_COMMAND::ID_VIEW_REFRESH message handler
 //
 
 void CMapFrame::OnViewRefresh() 
 {
-   m_wndMapView.SetMap(new nxMap(1, _T("Default"), _T("Default map")));
+   DWORD dwResult;
+   nxMap *pMap;
+
+   dwResult = DoRequestArg2(LoadMap, _T("Default"), &pMap, _T("Loading map..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      m_wndMapView.SetMap(pMap);
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot load map from server: %s"));
+   }
+   //m_wndMapView.SetMap(new nxMap(1, _T("Default"), _T("Default map")));
 /*   NXC_OBJECT *pObject;
    DWORD i;
    CString strFullString, strTitle;
@@ -274,4 +304,20 @@ void CMapFrame::OnMapHome()
 void CMapFrame::OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject)
 {
    m_wndMapView.OnObjectChange(wParam, pObject);
+}
+
+
+//
+// WM_COMMAND::ID_MAP_SAVE message handlers
+//
+
+void CMapFrame::OnMapSave() 
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg2(NXCSaveMap, g_hSession, m_wndMapView.GetMap(), _T("Saving map..."));
+   if (dwResult != RCC_SUCCESS)
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot save map on server: %s"));
+   }
 }

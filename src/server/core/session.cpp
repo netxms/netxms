@@ -927,6 +927,18 @@ void ClientSession::ProcessingThread(void)
          case CMD_START_SNMP_WALK:
             StartSnmpWalk(pMsg);
             break;
+         case CMD_RESOLVE_MAP_NAME:
+            ResolveMapName(pMsg);
+            break;
+         case CMD_SAVE_MAP:
+            SaveMap(pMsg);
+            break;
+         case CMD_SUBMAP_DATA:
+            ProcessSubmapData(pMsg);
+            break;
+         case CMD_LOAD_MAP:
+            LoadMap(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6429,5 +6441,167 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
+   SendMessage(&msg);
+}
+
+
+//
+// Resolve map name to ID
+//
+
+void ClientSession::ResolveMapName(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szName[MAX_DB_STRING];
+   DWORD dwMapId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
+   msg.SetVariable(VID_RCC, GetMapIdFromName(szName, &dwMapId));
+   msg.SetVariable(VID_MAP_ID, dwMapId);
+
+   SendMessage(&msg);
+}
+
+
+//
+// Save map
+//
+
+void ClientSession::SaveMap(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwMapId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (!(m_dwFlags & CSF_RECEIVING_MAP_DATA))
+   {
+      dwMapId = pRequest->GetVariableLong(VID_MAP_ID);
+      LockMaps();
+      m_pActiveMap = FindMapByID(dwMapId);
+      if (m_pActiveMap != NULL)
+      {
+         if (m_pActiveMap->CheckUserRights(m_dwUserId, MAP_ACCESS_WRITE))
+         {
+            m_pActiveMap->IncRefCount();
+            m_pActiveMap->Lock();
+            m_pActiveMap->ModifyFromMessage(pRequest);
+            m_pActiveMap->Unlock();
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            m_dwFlags |= CSF_RECEIVING_MAP_DATA;
+            m_dwMapSaveRqId = pRequest->GetId();
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
+      }
+      UnlockMaps();
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Process incoming submap data
+//
+
+void ClientSession::ProcessSubmapData(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwId;
+   nxSubmapSrv *pSubmap;
+   BOOL bSend = FALSE;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if ((m_dwFlags & CSF_RECEIVING_MAP_DATA) &&
+       (m_dwMapSaveRqId == pRequest->GetId()))
+   {
+      dwId = pRequest->GetVariableLong(VID_OBJECT_ID);
+      pSubmap = (nxSubmapSrv *)m_pActiveMap->GetSubmap(dwId);
+      if (pSubmap != NULL)
+      {
+         pSubmap->ModifyFromMessage(pRequest);
+      }
+      if (pRequest->IsEndOfSequence())
+      {
+         m_pActiveMap->DecRefCount();
+         m_dwFlags &= ~CSF_RECEIVING_MAP_DATA;
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         bSend = TRUE;
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      bSend = TRUE;
+   }
+
+   if (bSend)
+      SendMessage(&msg);
+}
+
+
+//
+// Load map
+//
+
+void ClientSession::LoadMap(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD i, dwMapId;
+   nxMapSrv *pMap;
+   nxSubmap *pSubmap;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   dwMapId = pRequest->GetVariableLong(VID_MAP_ID);
+   LockMaps();
+   pMap = FindMapByID(dwMapId);
+   if (pMap != NULL)
+   {
+      if (pMap->CheckUserRights(m_dwUserId, MAP_ACCESS_READ))
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         pMap->CreateMessage(&msg);
+
+         for(i = 0; i < pMap->GetSubmapCount(); i++)
+         {
+            SendMessage(&msg);
+            msg.SetCode(CMD_SUBMAP_DATA);
+            msg.DeleteAllVariables();
+            pSubmap = pMap->GetSubmapByIndex(i);
+            if (pSubmap != NULL)
+               pSubmap->CreateMessage(&msg);
+         }
+         msg.SetEndOfSequence();
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
+   }
+   UnlockMaps();
+
    SendMessage(&msg);
 }

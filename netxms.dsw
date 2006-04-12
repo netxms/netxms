@@ -44,6 +44,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnxcscp
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxmap
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -358,6 +361,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxmap
     End Project Dependency
 }}}
 

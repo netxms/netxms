@@ -75,6 +75,8 @@ DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
+DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
+
 
 //
 // Static data
@@ -194,6 +196,7 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
    g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
+   g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
 }
 
 
@@ -407,6 +410,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    ObjectsInit();
    if (!LoadObjects())
       return FALSE;
+   LoadMaps();
    DbgPrintf(AF_DEBUG_MISC, "Objects loaded and initialized");
 
    // Initialize and load event actions

@@ -549,26 +549,36 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 {
    DWORD i;
 
-   switch(dwView)
+   if (dwView == IDR_DC_EDITOR)
    {
-      case IDR_DC_EDITOR:
-         // Register new DC editor
-         for(i = 0; i < MAX_DC_EDITORS; i++)
-            if (m_openDCEditors[i].pWnd == NULL)
-            {
-               m_openDCEditors[i].pWnd = pWnd;
-               m_openDCEditors[i].dwNodeId = dwArg;
-               break;
-            }
-         break;
-      default:
-         if (dwView < MAX_VIEW_ID)
+      // Register new DC editor
+      for(i = 0; i < MAX_DC_EDITORS; i++)
+         if (m_openDCEditors[i].pWnd == NULL)
          {
-            m_viewState[dwView].bActive = TRUE;
-            m_viewState[dwView].pWnd = pWnd;
-            m_viewState[dwView].hWnd = pWnd->m_hWnd;
+            m_openDCEditors[i].pWnd = pWnd;
+            m_openDCEditors[i].dwNodeId = dwArg;
+            break;
          }
-         break;
+   }
+   else
+   {
+      // Regitesr view
+      if (dwView < MAX_VIEW_ID)
+      {
+         m_viewState[dwView].bActive = TRUE;
+         m_viewState[dwView].pWnd = pWnd;
+         m_viewState[dwView].hWnd = pWnd->m_hWnd;
+      }
+
+      // Some view-specific processing
+      switch(dwView)
+      {
+         case VIEW_DEBUG:
+            NXCSetDebugCallback(ClientDebugCallback);
+            break;
+         default:
+            break;
+      }
    }
 }
 
@@ -581,26 +591,36 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 {
    DWORD i;
 
-   switch(dwView)
+   if (dwView == IDR_DC_EDITOR)
    {
-      case IDR_DC_EDITOR:
-         // Unregister DC editor
-         for(i = 0; i < MAX_DC_EDITORS; i++)
-            if (m_openDCEditors[i].pWnd == pWnd)
-            {
-               m_openDCEditors[i].pWnd = NULL;
-               m_openDCEditors[i].dwNodeId = 0;
-               break;
-            }
-         break;
-      default:
-         if (dwView < MAX_VIEW_ID)
+      // Unregister DC editor
+      for(i = 0; i < MAX_DC_EDITORS; i++)
+         if (m_openDCEditors[i].pWnd == pWnd)
          {
-            m_viewState[dwView].bActive = FALSE;
-            m_viewState[dwView].pWnd = NULL;
-            m_viewState[dwView].hWnd = NULL;
+            m_openDCEditors[i].pWnd = NULL;
+            m_openDCEditors[i].dwNodeId = 0;
+            break;
          }
-         break;
+   }
+   else
+   {
+      // Unregister view
+      if (dwView < MAX_VIEW_ID)
+      {
+         m_viewState[dwView].bActive = FALSE;
+         m_viewState[dwView].pWnd = NULL;
+         m_viewState[dwView].hWnd = NULL;
+      }
+
+      // Some view-specific processing
+      switch(dwView)
+      {
+         case VIEW_DEBUG:
+            NXCSetDebugCallback(NULL);
+            break;
+         default:
+            break;
+      }
    }
 }
 

@@ -266,7 +266,7 @@ public:
    void DebugCallback(char *pszMsg)
    {
       if (m_viewState[VIEW_DEBUG].bActive)
-         ((CDebugFrame *)m_viewState[VIEW_ALARMS].pWnd)->AddMessage(pszMsg);
+         ((CDebugFrame *)m_viewState[VIEW_DEBUG].pWnd)->AddMessage(pszMsg);
    }
    CAlarmBrowser *GetAlarmBrowser(void) { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
 };

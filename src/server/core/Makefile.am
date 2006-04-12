@@ -8,13 +8,13 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp actions.cpp admin.cpp alarm.cpp client.
 			dbwrite.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			debug.cpp email.cpp entirenet.cpp epp.cpp events.cpp \
 			evproc.cpp hk.cpp id.cpp image.cpp interface.cpp \
-			locks.cpp lpp.cpp main.cpp modules.cpp netinfo.cpp \
-			netobj.cpp netsrv.cpp node.cpp nortel.cpp np.cpp \
-			objects.cpp objtools.cpp package.cpp poll.cpp \
+			locks.cpp lpp.cpp main.cpp map.cpp modules.cpp \
+			netinfo.cpp netobj.cpp netsrv.cpp node.cpp nortel.cpp \
+			np.cpp objects.cpp objtools.cpp package.cpp poll.cpp \
 			rootobj.cpp script.cpp session.cpp sms.cpp snmp.cpp \
-			snmptrap.cpp subnet.cpp syncer.cpp syslogd.cpp template.cpp \
-			tools.cpp tracert.cpp uniroot.cpp users.cpp vpnconn.cpp \
-			watchdog.cpp zone.cpp
+			snmptrap.cpp subnet.cpp syncer.cpp syslogd.cpp \
+			template.cpp tools.cpp tracert.cpp uniroot.cpp \
+			users.cpp vpnconn.cpp watchdog.cpp zone.cpp
 libnxcore_la_LDFLAGS = -version-info $(LIBNXCORE_LIBRARY_VERSION)
 
 EXTRA_DIST = \

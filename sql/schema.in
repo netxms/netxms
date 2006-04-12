@@ -836,7 +836,7 @@ CREATE TABLE submap_object_positions
 ** Object links on submap
 */
 
-CREATE TABLE submap_object_positions
+CREATE TABLE submap_links
 (
 	map_id integer not null,
 	submap_id integer not null,

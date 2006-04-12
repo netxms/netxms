@@ -57,6 +57,16 @@
 
 
 //
+// User access rights
+//
+
+#define MAP_ACCESS_READ       0x0001
+#define MAP_ACCESS_WRITE      0x0002
+#define MAP_ACCESS_ACL        0x0004
+#define MAP_ACCESS_DELETE     0x0008
+
+
+//
 // Object-on-map structure
 //
 
@@ -77,6 +87,7 @@ struct OBJLINK
 {
    DWORD dwId1;
    DWORD dwId2;
+   LONG nType;
 };
 
 
@@ -105,7 +116,7 @@ protected:
    DWORD m_dwNumLinks;
    OBJLINK *m_pLinkList;
 
-   void CommonInit(void);
+   virtual void CommonInit(void);
 
 public:
    nxSubmap();
@@ -144,12 +155,21 @@ public:
 
 
 //
+// Callback type for submap creation
+//
+
+class nxMap;
+typedef nxSubmap * (* SUBMAP_CREATION_CALLBACK)(DWORD, nxMap *);
+
+
+//
 // Map class
 //
 
 class LIBNXMAP_EXPORTABLE nxMap
 {
 protected:
+   DWORD m_dwMapId;
    TCHAR *m_pszName;
    TCHAR *m_pszDescription;
    DWORD m_dwObjectId;
@@ -158,19 +178,22 @@ protected:
    DWORD m_dwACLSize;
    MAP_ACL_ENTRY *m_pACL;
    MUTEX m_mutex;
+   SUBMAP_CREATION_CALLBACK m_pfCreateSubmap;
 
-   void CommonInit(void);
+   virtual void CommonInit(void);
 
 public:
    nxMap();
-   nxMap(DWORD dwObjectId, TCHAR *pszName, TCHAR *pszDescription);
+   nxMap(DWORD dwMapId, DWORD dwObjectId, TCHAR *pszName, TCHAR *pszDescription);
    nxMap(CSCPMessage *pMsg);
    virtual ~nxMap();
 
    void Lock(void) { MutexLock(m_mutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutex); }
 
+   DWORD MapId(void) { return m_dwMapId; }
    DWORD ObjectId(void) { return m_dwObjectId; }
+   TCHAR *Name(void) { return CHECK_NULL(m_pszName); }
 
    DWORD GetSubmapCount(void) { return m_dwNumSubmaps; }
    nxSubmap *GetSubmap(DWORD dwObjectId);

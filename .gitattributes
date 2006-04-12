@@ -997,6 +997,7 @@ src/server/core/interface.cpp -text
 src/server/core/locks.cpp -text
 src/server/core/lpp.cpp -text
 src/server/core/main.cpp -text
+src/server/core/map.cpp -text
 src/server/core/modules.cpp -text
 src/server/core/netinfo.cpp -text
 src/server/core/netobj.cpp -text
@@ -1068,6 +1069,7 @@ src/server/include/nms_pkg.h -text
 src/server/include/nms_script.h -text
 src/server/include/nms_topo.h -text
 src/server/include/nms_users.h -text
+src/server/include/nxcore_maps.h -text
 src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text
 src/server/include/rwlock.h -text

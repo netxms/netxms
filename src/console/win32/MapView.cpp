@@ -409,6 +409,7 @@ void CMapView::DoSubmapLayout()
    RECT rect;
 
    pObject = NXCFindObjectById(g_hSession, m_pSubmap->Id());
+   ASSERT(pObject != NULL);
    if (pObject != NULL)
    {
       GetClientRect(&rect);

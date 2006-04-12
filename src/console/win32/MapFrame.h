@@ -60,6 +60,7 @@ protected:
 	afx_msg void OnMapForward();
 	afx_msg void OnUpdateMapForward(CCmdUI* pCmdUI);
 	afx_msg void OnMapHome();
+	afx_msg void OnMapSave();
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
 	DECLARE_MESSAGE_MAP()

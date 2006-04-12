@@ -222,9 +222,14 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Parameter is not supported by agent"),
       _T("File I/O operation failed"),
       _T("MIB file is corrupted"),
-      _T("File transfer operation already in progress")
+      _T("File transfer operation already in progress"),
+      _T("Invalid log processing policy ID"),
+      _T("Invalid script ID"),
+      _T("Invalid script name"),
+      _T("Unknown map name"),
+      _T("Invalid map ID")
    };
-   return ((dwError >= 0) && (dwError <= RCC_TRANSFER_IN_PROGRESS)) ? pszErrorText[dwError] : _T("Unknown error code");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_MAP_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

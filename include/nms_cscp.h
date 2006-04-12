@@ -397,6 +397,12 @@ typedef struct
 #define CMD_TRAP_LOG_RECORDS        0x00A0
 #define CMD_START_SNMP_WALK         0x00A1
 #define CMD_SNMP_WALK_DATA          0x00A2
+#define CMD_GET_MAP_LIST            0x00A3
+#define CMD_LOAD_MAP                0x00A4
+#define CMD_SAVE_MAP                0x00A5
+#define CMD_DELETE_MAP              0x00A6
+#define CMD_RESOLVE_MAP_NAME        0x00A7
+#define CMD_SUBMAP_DATA             0x00A8
 
 
 //
@@ -618,6 +624,8 @@ typedef struct
 #define VID_SUBMAP_ATTR             ((DWORD)213)
 #define VID_NUM_LINKS               ((DWORD)214)
 #define VID_LINK_LIST               ((DWORD)215)
+#define VID_MAP_ID                  ((DWORD)216)
+#define VID_NUM_MAPS                ((DWORD)217)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -703,6 +711,9 @@ typedef struct
 
 // Base value for SNMP walker data
 #define VID_SNMP_WALKER_DATA_BASE   ((DWORD)0x10000000)
+
+// Base value for map list
+#define VID_MAP_LIST_BASE           ((DWORD)0x10000000)
 
 
 //

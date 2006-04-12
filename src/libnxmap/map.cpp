@@ -25,6 +25,16 @@
 
 
 //
+// Default submap creation function
+//
+
+static nxSubmap *CreateSubmap(DWORD dwObjectId, nxMap *pMap)
+{
+   return new nxSubmap(dwObjectId);
+}
+
+
+//
 // Default map object constructor
 //
 
@@ -38,9 +48,10 @@ nxMap::nxMap()
 // Constructor for new map object
 //
 
-nxMap::nxMap(DWORD dwObjectId, TCHAR *pszName, TCHAR *pszDescription)
+nxMap::nxMap(DWORD dwMapId, DWORD dwObjectId, TCHAR *pszName, TCHAR *pszDescription)
 {
    CommonInit();
+   m_dwMapId = dwMapId;
    m_dwObjectId = dwObjectId;
    m_pszName = _tcsdup(pszName);
    m_pszDescription = _tcsdup(pszDescription);
@@ -64,6 +75,7 @@ nxMap::nxMap(CSCPMessage *pMsg)
 
 void nxMap::CommonInit(void)
 {
+   m_dwMapId = 0;
    m_pszName = NULL;
    m_pszDescription = NULL;
    m_dwObjectId = 0;
@@ -72,6 +84,7 @@ void nxMap::CommonInit(void)
    m_dwACLSize = 0;
    m_pACL = NULL;
    m_mutex = MutexCreate();
+   m_pfCreateSubmap = CreateSubmap;
 }
 
 
@@ -116,7 +129,7 @@ nxSubmap *nxMap::GetSubmap(DWORD dwObjectId)
    if (i == m_dwNumSubmaps)
    {
       // Create new submap
-      pSubmap = new nxSubmap(dwObjectId);
+      pSubmap = m_pfCreateSubmap(dwObjectId, this);
       m_dwNumSubmaps++;
       m_ppSubmaps = (nxSubmap **)realloc(m_ppSubmaps, sizeof(nxSubmap *) * m_dwNumSubmaps);
       m_ppSubmaps[i] = pSubmap;
@@ -171,6 +184,7 @@ void nxMap::CreateMessage(CSCPMessage *pMsg)
    for(i = 0; i < m_dwNumSubmaps; i++)
       pdwSubmapList[i] = m_ppSubmaps[i]->Id();
    
+   pMsg->SetVariable(VID_MAP_ID, m_dwMapId);
    pMsg->SetVariable(VID_NAME, m_pszName);
    pMsg->SetVariable(VID_DESCRIPTION, m_pszDescription);
    pMsg->SetVariable(VID_OBJECT_ID, m_dwObjectId);
@@ -193,6 +207,8 @@ void nxMap::ModifyFromMessage(CSCPMessage *pMsg)
    DWORD i, j, dwNumSubmaps, *pdwTemp;
 
    // Update simple attributes
+   m_dwMapId = pMsg->GetVariableLong(VID_MAP_ID);
+   m_dwObjectId = pMsg->GetVariableLong(VID_OBJECT_ID);
    safe_free(m_pszName);
    m_pszName = pMsg->GetVariableStr(VID_NAME);
    safe_free(m_pszDescription);

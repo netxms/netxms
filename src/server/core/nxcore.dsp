@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib minidump.lib version.lib psapi.lib libnxsl.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\libnxsrv\Release" /libpath:"..\..\libnxsl\Release"
+# ADD LINK32 minidump.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib libnxmap.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\libnxsrv\Release" /libpath:"..\..\libnxsl\Release" /libpath:"..\..\libnxmap\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib minidump.lib version.lib psapi.lib libnxsl.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\libnxsrv\Debug" /libpath:"..\..\libnxsl\Debug"
+# ADD LINK32 minidump.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib libnxmap.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\libnxsrv\Debug" /libpath:"..\..\libnxsl\Debug" /libpath:"..\..\libnxmap\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -119,7 +119,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib minidump.lib version.lib psapi.lib libnxsl.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\libnxsrv\Release" /libpath:"..\..\libnxsl\Release"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib bufferoverflowU.lib dbghelp.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release64" /libpath:"..\..\libnxcscp\Release64" /libpath:"..\..\libnxsnmp\Release64" /libpath:"..\libnxsrv\Release64" /libpath:"..\..\libnxsl\Release64" /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib dbghelp.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib libnxmap.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release64" /libpath:"..\..\libnxcscp\Release64" /libpath:"..\..\libnxsnmp\Release64" /libpath:"..\libnxsrv\Release64" /libpath:"..\..\libnxsl\Release64" /libpath:"..\..\libnxmap\Release64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -153,7 +153,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib minidump.lib version.lib psapi.lib libnxsl.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\libnxsrv\Debug" /libpath:"..\..\libnxsl\Debug"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib bufferoverflowU.lib dbghelp.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug64" /libpath:"..\..\libnxcscp\Debug64" /libpath:"..\..\libnxsnmp\Debug64" /libpath:"..\libnxsrv\Debug64" /libpath:"..\..\libnxsl\Debug64" /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib dbghelp.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxcscp.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib libnxmap.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug64" /libpath:"..\..\libnxcscp\Debug64" /libpath:"..\..\libnxsnmp\Debug64" /libpath:"..\libnxsrv\Debug64" /libpath:"..\..\libnxsl\Debug64" /libpath:"..\..\libnxmap\Debug64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -279,6 +279,10 @@ SOURCE=.\lpp.cpp
 # Begin Source File
 
 SOURCE=.\main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\map.cpp
 # End Source File
 # Begin Source File
 
@@ -491,6 +495,10 @@ SOURCE=..\..\..\include\nxclapi.h
 # Begin Source File
 
 SOURCE=.\nxcore.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\nxcore_maps.h
 # End Source File
 # Begin Source File
 
