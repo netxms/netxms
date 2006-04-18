@@ -83,6 +83,7 @@ public:
 
 // Implementation
 public:
+	void DoSubmapLayout(void);
 	void OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject);
 	BOOL CanGoForward(void);
 	BOOL CanGoBack(void);
@@ -106,6 +107,8 @@ public:
 
 	// Generated message map functions
 protected:
+	void OnMouseButtonDown(UINT nFlags, POINT point);
+	void OnMouseButtonUp(UINT nFlags, POINT point);
 	void AddToHistory(DWORD dwId);
 	DWORD m_dwHistory[MAX_HISTORY_SIZE];
 	DWORD m_dwHistoryPos;
@@ -136,7 +139,6 @@ protected:
    DWORD m_dwNumObjects;
 	CFont m_fontList[3];
 	int m_nScale;
-	void DoSubmapLayout(void);
 	void DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
                    POINT ptOffset, BOOL bUpdateInfo);
 	void DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel);
@@ -153,10 +155,13 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 public:
+	DWORD * GetSelectedObjects(DWORD *pdwNumObjects);
    nxMap *GetMap(void) { return m_pMap; }
 };
 

@@ -68,9 +68,9 @@ BOOL CProcessingPage::OnInitDialog()
 
    // Create image list
    m_imageList.Create(16, 16, ILC_MASK | ILC_COLOR24, 4, 1);
-   m_imageList.Add(theApp.LoadIcon(IDI_RUNNING));
-   m_imageList.Add(theApp.LoadIcon(IDI_OK));
-   m_imageList.Add(theApp.LoadIcon(IDI_FAILED));
+   m_imageList.Add(appNxConfig.LoadIcon(IDI_RUNNING));
+   m_imageList.Add(appNxConfig.LoadIcon(IDI_OK));
+   m_imageList.Add(appNxConfig.LoadIcon(IDI_FAILED));
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
 	return TRUE;

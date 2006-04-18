@@ -156,7 +156,7 @@ void CMainFrame::OnViewRefresh()
    }
    else
    {
-      theApp.ErrorBox(dwRetCode, _T("Error loading alarm list: %s"));
+      appAlarmViewer.ErrorBox(dwRetCode, _T("Error loading alarm list: %s"));
    }
 
    GenerateHtml(strHTML);
@@ -251,7 +251,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
             m_pAlarmList[m_dwNumAlarms].pUserData = (void *)time(NULL);
             m_dwNumAlarms++;
             SortAlarms();
-            PlayAlarmSound(pAlarm, TRUE, g_hSession, &theApp.m_soundCfg);
+            PlayAlarmSound(pAlarm, TRUE, g_hSession, &appAlarmViewer.m_soundCfg);
          }
          break;
       case NX_NOTIFY_ALARM_DELETED:
@@ -259,7 +259,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          for(i = 0; i < m_dwNumAlarms; i++)
             if (m_pAlarmList[i].dwAlarmId == pAlarm->dwAlarmId)
             {
-               PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &theApp.m_soundCfg);
+               PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &appAlarmViewer.m_soundCfg);
                m_iNumAlarms[m_pAlarmList[i].wSeverity]--;
                m_dwNumAlarms--;
                if (m_dwNumAlarms > 0)
@@ -343,7 +343,7 @@ void CMainFrame::OnTimer(UINT nIDEvent)
          if ((m_pAlarmList[i].pUserData != 0) &&
              (now - (time_t)m_pAlarmList[i].pUserData > 60))
          {
-            PlayAlarmSound(&m_pAlarmList[i], TRUE, g_hSession, &theApp.m_soundCfg);
+            PlayAlarmSound(&m_pAlarmList[i], TRUE, g_hSession, &appAlarmViewer.m_soundCfg);
             m_pAlarmList[i].pUserData = (void *)now;
          }
    }

@@ -47,11 +47,11 @@ BOOL FileFromResource(UINT nResId, TCHAR *pszFileName)
    HANDLE hFile;
    BOOL bResult = FALSE;
 
-   hResource = FindResource(theApp.m_hInstance, MAKEINTRESOURCE(nResId), _T("File"));
+   hResource = FindResource(appAlarmViewer.m_hInstance, MAKEINTRESOURCE(nResId), _T("File"));
    if (hResource != NULL)
    {
-      dwSize = SizeofResource(theApp.m_hInstance, hResource);
-      hMem = LoadResource(theApp.m_hInstance, hResource);
+      dwSize = SizeofResource(appAlarmViewer.m_hInstance, hResource);
+      hMem = LoadResource(appAlarmViewer.m_hInstance, hResource);
       if (hMem != NULL)
       {
          pData = (BYTE *)LockResource(hMem);

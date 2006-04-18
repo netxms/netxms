@@ -68,7 +68,7 @@ inline void SetInfoText(HWND hWnd, char *pszText)
 
 static void __EventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
 {
-   theApp.EventHandler(dwEvent, dwCode, pArg);
+   appAlarmViewer.EventHandler(dwEvent, dwCode, pArg);
 }
 
 

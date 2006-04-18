@@ -134,7 +134,7 @@ BOOL ExecSQLBatch(DB_HANDLE hConn, TCHAR *pszFile);
 // Global variables
 //
 
-extern CNxconfigApp theApp;
+extern CNxconfigApp appNxConfig;
 extern TCHAR *g_pszDBEngines[];
 extern TCHAR g_szWizardErrorText[];
 

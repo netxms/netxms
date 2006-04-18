@@ -144,12 +144,13 @@ nxSubmap *nxMap::GetSubmap(DWORD dwObjectId)
 // Check if submap for given object exists
 //
 
-BOOL nxMap::IsSubmapExist(DWORD dwObjectId)
+BOOL nxMap::IsSubmapExist(DWORD dwObjectId, BOOL bLock)
 {
    BOOL bRet = FALSE;
    DWORD i;
 
-   Lock();
+   if (bLock)
+      Lock();
 
    for(i = 0; i < m_dwNumSubmaps; i++)
    {
@@ -160,7 +161,8 @@ BOOL nxMap::IsSubmapExist(DWORD dwObjectId)
       }
    }
 
-   Unlock();
+   if (bLock)
+      Unlock();
    return bRet;
 }
 

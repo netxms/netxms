@@ -537,6 +537,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Save\tCtrl+S",               ID_MAP_SAVE
+        MENUITEM "&Redo layout",                ID_MAP_REDOLAYOUT
     END
 END
 
@@ -691,10 +692,11 @@ BEGIN
     BEGIN
         MENUITEM "&Restart",                    ID_POLL_RESTART
     END
-    POPUP "Object"
+    POPUP "Object (map)"
     BEGIN
-        MENUITEM "&Open",                       ID_OBJECT_OPEN
-        MENUITEM "Open parent",                 ID_OBJECT_OPENPARENT
+        MENUITEM "&Back",                       ID_MAP_BACK
+        MENUITEM "&Forward",                    ID_MAP_FORWARD
+        MENUITEM "&Home",                       ID_MAP_HOME
         MENUITEM SEPARATOR
         POPUP "&Create"
         BEGIN
@@ -705,10 +707,17 @@ BEGIN
 
             MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
+
         END
         MENUITEM "&Bind...",                    ID_OBJECT_BIND
+        MENUITEM "U&nbind...",                  ID_OBJECT_UNBIND
         MENUITEM "&Rename",                     ID_OBJECT_RENAME
         MENUITEM "&Delete",                     ID_OBJECT_DELETE
+        MENUITEM "Change &IP address...",       ID_OBJECT_CHANGEIPADDRESS
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit agent's configuration", ID_OBJECT_AGENTCFG
         MENUITEM SEPARATOR
         MENUITEM "&Manage",                     ID_OBJECT_MANAGE
         MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
@@ -720,6 +729,8 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
+        MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
+        MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
     POPUP "Event"
@@ -2973,6 +2984,17 @@ BEGIN
     IDR_EVENTS              "\nEvent Browser\nEvent Browser"
     IDR_MAPFRAME            "\nNetwork Map\nNetwork Map"
     IDR_ALARMS              "\nAlarm Browser\nAlarm Browser"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_MAP_ZOOMIN           "Zoom in\nZoom in"
+    ID_MAP_ZOOMOUT          "Zoom out\nZoom out"
+    ID_MAP_SAVE             "Save current map layout on server\nSave map"
+    ID_MAP_BACK             "Back\nBack"
+    ID_MAP_FORWARD          "Forward\nForward"
+    ID_MAP_HOME             "Open root submap\nOpen root submap"
+    ID_MAP_REDOLAYOUT       "Redo submap layout\nRedo submap layout"
 END
 
 #endif    // English (U.S.) resources

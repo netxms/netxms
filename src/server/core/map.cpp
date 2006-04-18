@@ -43,6 +43,17 @@ static nxSubmap *CreateSubmapSrv(DWORD dwObjectId, nxMap *pMap)
 
 
 //
+// Constructor for new empty nxSubmapSrv object
+//
+
+nxSubmapSrv::nxSubmapSrv(DWORD dwObjectId, DWORD dwMapId)
+            :nxSubmap(dwObjectId)
+{
+   m_dwMapId = dwMapId;
+}
+
+
+//
 // Constructor for creating submap object from database
 // Expected field order:
 //     submap_id,attributes
@@ -103,13 +114,67 @@ nxSubmapSrv::nxSubmapSrv(DB_RESULT hData, int nRow, DWORD dwMapId)
 
 
 //
-// Constructor for new empty nxSubmapSrv object
+// Save submap to database
+// Will return appropriate RCC, ready for sending to client
+// Intended to be called only from nxMapSrv::SaveToDB()
 //
 
-nxSubmapSrv::nxSubmapSrv(DWORD dwObjectId, DWORD dwMapId)
-            :nxSubmap(dwObjectId)
+DWORD nxSubmapSrv::SaveToDB(void)
 {
-   m_dwMapId = dwMapId;
+   TCHAR szQuery[256];
+   DB_RESULT hResult;
+   BOOL bExist;
+   DWORD i, dwResult = RCC_DB_FAILURE;
+
+   // Check if submap record exist in database
+   _sntprintf(szQuery, 256, _T("SELECT submap_id FROM submaps WHERE map_id=%d AND submap_id=%d"),
+              m_dwMapId, m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == NULL)
+      goto exit_save;
+
+   bExist = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+
+   if (bExist)
+   {
+      _sntprintf(szQuery, 256, _T("UPDATE submaps SET attributes=%d WHERE map_id=%d AND submap_id=%d"),
+                 m_dwAttr, m_dwMapId, m_dwId);
+   }
+   else
+   {
+      _sntprintf(szQuery, 256, _T("INSERT INTO submaps (map_id,submap_id,attributes) VALUES (%d,%d,%d)"),
+                 m_dwMapId, m_dwId, m_dwAttr);
+   }
+   if (!DBQuery(g_hCoreDB, szQuery))
+      goto exit_save;
+
+   // Save object positions
+   // INSERT is used because old records was deleted by nxMapSrv::SaveToDB()
+   for(i = 0; i < m_dwNumObjects; i++)
+   {
+      _sntprintf(szQuery, 256, _T("INSERT INTO submap_object_positions (map_id,submap_id,object_id,x,y) VALUES (%d,%d,%d,%d,%d)"),
+                 m_dwMapId, m_dwId, m_pObjectList[i].dwId, m_pObjectList[i].x,
+                 m_pObjectList[i].y);
+      if (!DBQuery(g_hCoreDB, szQuery))
+         goto exit_save;
+   }
+
+   // Save links between objects
+   // INSERT is used because old records was deleted by nxMapSrv::SaveToDB()
+   for(i = 0; i < m_dwNumLinks; i++)
+   {
+      _sntprintf(szQuery, 256, _T("INSERT INTO submap_links (map_id,submap_id,object_id1,object_id2,link_type) VALUES (%d,%d,%d,%d,%d)"),
+                 m_dwMapId, m_dwId, m_pLinkList[i].dwId1, m_pLinkList[i].dwId2,
+                 m_pLinkList[i].nType);
+      if (!DBQuery(g_hCoreDB, szQuery))
+         goto exit_save;
+   }
+
+   dwResult = RCC_SUCCESS;
+
+exit_save:
+   return dwResult;
 }
 
 
@@ -163,6 +228,94 @@ nxMapSrv::nxMapSrv(DB_RESULT hData, int nRow)
       }
       DBFreeResult(hResult);
    }
+}
+
+
+//
+// Save map to database
+// Will return appropriate RCC, ready for sending to client
+//
+
+DWORD nxMapSrv::SaveToDB(void)
+{
+   DWORD i, dwNumRows, dwId, dwResult = RCC_DB_FAILURE;
+   DB_RESULT hResult;
+   TCHAR szQuery[1024], *pszEscName, *pszEscDescr;
+   BOOL bExist;
+
+   Lock();
+
+   // Check if map record exist in database
+   _sntprintf(szQuery, 256, _T("SELECT map_id FROM maps WHERE map_id=%d"), m_dwMapId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == NULL)
+      goto exit_save;
+
+   bExist = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+
+   pszEscName = EncodeSQLString(m_pszName);
+   pszEscDescr = EncodeSQLString(m_pszDescription);
+   if (bExist)
+   {
+      _sntprintf(szQuery, 1024, _T("UPDATE maps SET map_name='%s',description='%s',root_object_id=%d WHERE map_id=%d"),
+                 pszEscName, pszEscDescr, m_dwObjectId, m_dwMapId);
+   }
+   else
+   {
+      _sntprintf(szQuery, 1024, _T("INSERT INTO maps (map_id,map_name,description,root_object_id) VALUES (%d,'%s','%s',%d)"),
+                 m_dwMapId, pszEscName, pszEscDescr, m_dwObjectId);
+   }
+   free(pszEscName);
+   free(pszEscDescr);
+   if (!DBQuery(g_hCoreDB, szQuery))
+      goto exit_save;
+
+   // Save ACL
+   _sntprintf(szQuery, 256, _T("DELETE FROM map_access_lists WHERE map_id=%d"), m_dwMapId);
+   if (!DBQuery(g_hCoreDB, szQuery))
+      goto exit_save;
+
+   for(i = 0; i < m_dwACLSize; i++)
+   {
+      _sntprintf(szQuery, 1024, _T("INSERT INTO map_access_lists (map_id,user_id,access_rights) VALUES (%d,%d,%d)"),
+                 m_dwMapId, m_pACL[i].dwUserId, m_pACL[i].dwAccess);
+      if (!DBQuery(g_hCoreDB, szQuery))
+         goto exit_save;
+   }
+
+   // Delete non-existing submaps
+   _sntprintf(szQuery, 1024, _T("SELECT submap_id FROM submaps WHERE map_id=%d"), m_dwMapId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == NULL)
+      goto exit_save;
+   dwNumRows = DBGetNumRows(hResult);
+   for(i = 0; i < dwNumRows; i++)
+   {
+      dwId = DBGetFieldULong(hResult, i, 0);
+      if (!IsSubmapExist(dwId, FALSE))
+      {
+         _sntprintf(szQuery, 1024, _T("DELETE FROM submaps WHERE map_id=%d AND submap_id=%d"),
+                    m_dwMapId, dwId);
+         DBQuery(g_hCoreDB, szQuery);
+      }
+   }
+   DBFreeResult(hResult);
+
+   // Save submaps
+   _sntprintf(szQuery, 1024, _T("DELETE FROM submap_object_positions WHERE map_id=%d"), m_dwMapId);
+   DBQuery(g_hCoreDB, szQuery);
+
+   _sntprintf(szQuery, 1024, _T("DELETE FROM submap_links WHERE map_id=%d"), m_dwMapId);
+   DBQuery(g_hCoreDB, szQuery);
+
+   dwResult = RCC_SUCCESS;
+   for(i = 0; (i < m_dwNumSubmaps) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = ((nxSubmapSrv *)m_ppSubmaps[i])->SaveToDB();
+
+exit_save:
+   Unlock();
+   return dwResult;
 }
 
 

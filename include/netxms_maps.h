@@ -67,6 +67,14 @@
 
 
 //
+// Object link types
+//
+
+#define LINK_TYPE_NORMAL      0
+#define LINK_TYPE_VPN         1
+
+
+//
 // Object-on-map structure
 //
 
@@ -198,7 +206,7 @@ public:
    DWORD GetSubmapCount(void) { return m_dwNumSubmaps; }
    nxSubmap *GetSubmap(DWORD dwObjectId);
    nxSubmap *GetSubmapByIndex(DWORD dwIndex) { return dwIndex < m_dwNumSubmaps ? m_ppSubmaps[dwIndex] : NULL; }
-   BOOL IsSubmapExist(DWORD dwObjectId);
+   BOOL IsSubmapExist(DWORD dwObjectId, BOOL bLock = TRUE);
 
    void CreateMessage(CSCPMessage *pMsg);
    void ModifyFromMessage(CSCPMessage *pMsg);

@@ -50,7 +50,7 @@ CAlarmBrowser::CAlarmBrowser()
 	//}}AFX_DATA_INIT
 
    if (m_hHook == NULL)
-      m_hHook = SetWindowsHookEx(WH_MOUSE, MouseHookProc, theApp.m_hInstance, GetCurrentThreadId());
+      m_hHook = SetWindowsHookEx(WH_MOUSE, MouseHookProc, appAlarmViewer.m_hInstance, GetCurrentThreadId());
 }
 
 CAlarmBrowser::~CAlarmBrowser()

@@ -146,6 +146,7 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
          m_pObjectList[i].dwId = pdwList[j++];
          m_pObjectList[i].x = pdwList[j++];
          m_pObjectList[i].y = pdwList[j++];
+         m_pObjectList[i].dwState = 0;
       }
       free(pdwList);
    }

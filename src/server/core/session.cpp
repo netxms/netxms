@@ -6522,7 +6522,7 @@ void ClientSession::SaveMap(CSCPMessage *pRequest)
 void ClientSession::ProcessSubmapData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwId;
+   DWORD dwId, dwResult;
    nxSubmapSrv *pSubmap;
    BOOL bSend = FALSE;
 
@@ -6540,9 +6540,10 @@ void ClientSession::ProcessSubmapData(CSCPMessage *pRequest)
       }
       if (pRequest->IsEndOfSequence())
       {
+         dwResult = m_pActiveMap->SaveToDB();
          m_pActiveMap->DecRefCount();
          m_dwFlags &= ~CSF_RECEIVING_MAP_DATA;
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_RCC, dwResult);
          bSend = TRUE;
       }
    }

@@ -68,6 +68,8 @@ BEGIN_MESSAGE_MAP(CMapView, CWnd)
 	ON_WM_SIZE()
 	ON_WM_HSCROLL()
 	ON_WM_VSCROLL()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -455,6 +457,7 @@ void CMapView::DoSubmapLayout()
                   {
                      pLinkList[j].dwId1 = pIndex[i].dwKey;
                      pLinkList[j].dwId2 = pdwSubnetList[k];
+                     pLinkList[j].nType = LINK_TYPE_NORMAL;
                   }
                }
             }
@@ -539,24 +542,10 @@ DWORD CMapView::PointInObject(POINT pt)
 
 
 //
-// WM_LBUTTONDBLCLK message handler
+// Generic processing for mouse button down message (either left or right)
 //
 
-void CMapView::OnLButtonDblClk(UINT nFlags, CPoint point) 
-{
-   DWORD dwId;
-
-   dwId = PointInObject(point);
-   if (dwId != 0)
-      OpenSubmap(dwId);
-}
-
-
-//
-// WM_LBUTTONDOWN message handler
-//
-
-void CMapView::OnLButtonDown(UINT nFlags, CPoint point) 
+void CMapView::OnMouseButtonDown(UINT nFlags, POINT point)
 {
    m_ptMouseOpStart = point;
    m_dwFocusedObject = PointInObject(point);
@@ -597,10 +586,10 @@ void CMapView::OnLButtonDown(UINT nFlags, CPoint point)
 
 
 //
-// WM_LBUTTONUP message handler
+// Generic processing for mouse button up message (either left or right)
 //
 
-void CMapView::OnLButtonUp(UINT nFlags, CPoint point) 
+void CMapView::OnMouseButtonUp(UINT nFlags, POINT point)
 {
    ReleaseCapture();
    switch(m_nState)
@@ -625,6 +614,62 @@ void CMapView::OnLButtonUp(UINT nFlags, CPoint point)
          break;
    }
    m_nState = STATE_NORMAL;
+}
+
+
+//
+// WM_LBUTTONDBLCLK message handler
+//
+
+void CMapView::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+   DWORD dwId;
+
+   dwId = PointInObject(point);
+   if (dwId != 0)
+      OpenSubmap(dwId);
+}
+
+
+//
+// WM_LBUTTONDOWN message handler
+//
+
+void CMapView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+   OnMouseButtonDown(nFlags, point);
+}
+
+
+//
+// WM_LBUTTONUP message handler
+//
+
+void CMapView::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+   OnMouseButtonUp(nFlags, point);
+}
+
+
+//
+// WM_RBUTTONDOWN message handler
+//
+
+void CMapView::OnRButtonDown(UINT nFlags, CPoint point) 
+{
+   OnMouseButtonDown(nFlags, point);
+}
+
+
+//
+// WM_RBUTTONUP message handler
+//
+
+void CMapView::OnRButtonUp(UINT nFlags, CPoint point) 
+{
+   OnMouseButtonUp(nFlags, point);
+   ClientToScreen(&point);
+   GetParent()->SendMessage(WM_CONTEXTMENU, (WPARAM)m_hWnd, MAKELONG(point.x, point.y));
 }
 
 
@@ -827,6 +872,7 @@ void CMapView::OpenSubmap(DWORD dwId, BOOL bAddToHistory)
       m_pSubmap = pSubmap;
       if (!m_pSubmap->IsLayoutCompleted())
          DoSubmapLayout();
+      ClearSelection(FALSE);
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
       Update();
@@ -1267,4 +1313,29 @@ void CMapView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
       }
       Update();
    }
+}
+
+
+//
+// Get list of selected objects
+//
+
+DWORD *CMapView::GetSelectedObjects(DWORD *pdwNumObjects)
+{
+   DWORD i, dwCount, *pdwList;
+
+   pdwList = (DWORD *)malloc(sizeof(DWORD) * m_pSubmap->GetNumObjects());
+   for(i = 0, dwCount = 0; i < m_pSubmap->GetNumObjects(); i++)
+      if (m_pSubmap->GetObjectStateFromIndex(i) & MOS_SELECTED)
+      {
+         pdwList[dwCount] = m_pSubmap->GetObjectIdFromIndex(i);
+         dwCount++;
+      }
+   *pdwNumObjects = dwCount;
+   if (dwCount == 0)
+   {
+      free(pdwList);
+      pdwList = NULL;
+   }
+   return pdwList;
 }

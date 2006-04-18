@@ -11,6 +11,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define MAP_SECTION     _T("MapFrame")
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CMapFrame
 
@@ -18,10 +21,16 @@ IMPLEMENT_DYNCREATE(CMapFrame, CMDIChildWnd)
 
 CMapFrame::CMapFrame()
 {
+   m_bShowToolBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBar"), TRUE);
+   m_bShowToolBox = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBox"), FALSE);
+   m_bShowStatusBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowStatusBar"), TRUE);
 }
 
 CMapFrame::~CMapFrame()
 {
+   theApp.WriteProfileInt(MAP_SECTION, _T("ShowToolBar"), m_bShowToolBar);
+   theApp.WriteProfileInt(MAP_SECTION, _T("ShowToolBox"), m_bShowToolBox);
+   theApp.WriteProfileInt(MAP_SECTION, _T("ShowStatusBar"), m_bShowStatusBar);
 }
 
 
@@ -43,6 +52,19 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_MAP_FORWARD, OnUpdateMapForward)
 	ON_COMMAND(ID_MAP_HOME, OnMapHome)
 	ON_COMMAND(ID_MAP_SAVE, OnMapSave)
+	ON_COMMAND(ID_MAP_REDOLAYOUT, OnMapRedolayout)
+	ON_WM_PAINT()
+	ON_COMMAND(ID_MAP_SHOW_STATUSBAR, OnMapShowStatusbar)
+	ON_UPDATE_COMMAND_UI(ID_MAP_SHOW_STATUSBAR, OnUpdateMapShowStatusbar)
+	ON_COMMAND(ID_MAP_SHOW_TOOLBAR, OnMapShowToolbar)
+	ON_UPDATE_COMMAND_UI(ID_MAP_SHOW_TOOLBAR, OnUpdateMapShowToolbar)
+	ON_COMMAND(ID_MAP_SHOW_TOOLBOX, OnMapShowToolbox)
+	ON_UPDATE_COMMAND_UI(ID_MAP_SHOW_TOOLBOX, OnUpdateMapShowToolbox)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_OBJECT_PROPERTIES, OnObjectProperties)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_PROPERTIES, OnUpdateObjectProperties)
+	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
@@ -68,8 +90,19 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    RECT rect;
    static TBBUTTON tbButtons[] =
    {
-      { 0, 0, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
-      { 1, 0, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 }
+      { 5, ID_MAP_BACK, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 6, ID_MAP_FORWARD, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 5, ID_MAP_HOME, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
+      { 0, ID_MAP_ZOOMIN, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 1, ID_MAP_ZOOMOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
+      { 2, ID_MAP_SAVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 4, ID_FILE_PRINT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
+      { 3, ID_VIEW_REFRESH, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 3, ID_MAP_REDOLAYOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 }
    };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
@@ -77,19 +110,24 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    GetClientRect(&rect);
 
-   m_wndToolBox.Create(NULL, _T(""), WS_CHILD | WS_VISIBLE, rect, this, 0);
+   m_wndToolBox.Create(NULL, _T(""),
+                       m_bShowToolBox ? (WS_CHILD | WS_VISIBLE) : WS_CHILD,
+                       rect, this, 0);
 
-   //EnableDocking(CBRS_ALIGN_ANY);
+   // Create image list for toolbar
+   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
+   m_imageList.Add(theApp.LoadIcon(IDI_ZOOMIN));
+   m_imageList.Add(theApp.LoadIcon(IDI_ZOOMOUT));
+   m_imageList.Add(theApp.LoadIcon(IDI_SAVE));
+   m_imageList.Add(theApp.LoadIcon(IDI_REFRESH));
+   m_imageList.Add(theApp.LoadIcon(IDI_PRINT));
+   m_imageList.Add(theApp.LoadIcon(IDI_BACK));
+   m_imageList.Add(theApp.LoadIcon(IDI_FORWARD));
 
    // Create toolbar
-   //m_wndToolBar.CreateEx(this);
-   //m_wndToolBar.LoadToolBar(IDT_MAP);
-   //FloatControlBar(&m_wndToolBar, TRUE, FALSE);
-/*   m_wndToolBar.Create(WS_CHILD | WS_VISIBLE | CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT, rect, this, ID_TOOLBAR_CTRL);
-   m_wndToolBar.SetExtendedStyle(WS_EX_WINDOWEDGE);
-   m_wndToolBar.SetButtonSize(CSize(20, 20));
-   m_wndToolBar.LoadImages(IDB_HIST_SMALL_COLOR, HINST_COMMCTRL);
-   m_wndToolBar.AddButtons(2, tbButtons);*/
+   m_wndToolBar.Create(WS_CHILD | (m_bShowToolBar ? WS_VISIBLE : 0) | CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT, rect, this, ID_TOOLBAR_CTRL);
+   m_wndToolBar.SetImageList(&m_imageList);
+   m_wndToolBar.AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
 
    // Create and initialize map view
    m_wndMapView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, this, 0);
@@ -101,21 +139,35 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 
 //
+// Redo map frame layout after resize or configuration change
+//
+
+void CMapFrame::RedoLayout()
+{
+   int nToolBarHeight, nToolBoxWidth;
+   RECT rect;
+
+   GetClientRect(&rect);
+
+   m_wndToolBar.AutoSize();
+   nToolBarHeight = m_bShowToolBar ? (GetWindowSize(&m_wndToolBar).cy + 1) : 0;
+   nToolBoxWidth = m_bShowToolBox ? 150 : 0;
+
+   m_wndToolBox.SetWindowPos(NULL, 0, nToolBarHeight, nToolBoxWidth, rect.bottom, SWP_NOZORDER);
+   m_wndMapView.SetWindowPos(NULL, nToolBoxWidth, nToolBarHeight,
+                             rect.right - nToolBoxWidth, rect.bottom - nToolBarHeight,
+                             SWP_NOZORDER);	
+}
+
+
+//
 // WM_SIZE message handler
 //
 
 void CMapFrame::OnSize(UINT nType, int cx, int cy) 
 {
-   int nToolBarHeight = 0;
-   int nToolBoxWidth;
-
 	CMDIChildWnd::OnSize(nType, cx, cy);
-//   m_wndToolBar.AutoSize();
-   //nToolBarHeight = GetWindowSize(&m_wndToolBar).cy;
-   nToolBoxWidth = 150;
-   m_wndToolBox.SetWindowPos(NULL, 0, 0, nToolBoxWidth, cy, SWP_NOZORDER);
-   m_wndMapView.SetWindowPos(NULL, nToolBoxWidth, nToolBarHeight,
-                             cx - nToolBoxWidth, cy - nToolBarHeight, SWP_NOZORDER);	
+   RedoLayout();
 }
 
 
@@ -320,4 +372,167 @@ void CMapFrame::OnMapSave()
    {
       theApp.ErrorBox(dwResult, _T("Cannot save map on server: %s"));
    }
+}
+
+
+//
+// WM_COMMAND::ID_MAP_REDOLAYOUT message handlers
+//
+
+void CMapFrame::OnMapRedolayout() 
+{
+   m_wndMapView.DoSubmapLayout();
+   m_wndMapView.Update();
+}
+
+
+//
+// WM_PAINT message handler
+//
+
+void CMapFrame::OnPaint() 
+{
+	CPaintDC dc(this); // device context for painting
+   RECT rect;
+
+   if (m_bShowToolBar)
+   {
+      GetClientRect(&rect);
+      rect.top = GetWindowSize(&m_wndToolBar).cy;
+      dc.DrawEdge(&rect, EDGE_ETCHED, BF_TOP);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_MAP_SHOW_STATUSBAR message handlers
+//
+
+void CMapFrame::OnMapShowStatusbar() 
+{
+	// TODO: Add your command handler code here
+	
+}
+
+void CMapFrame::OnUpdateMapShowStatusbar(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_bShowStatusBar);
+}
+
+
+//
+// WM_COMMAND::ID_MAP_SHOW_TOOLBAR message handlers
+//
+
+void CMapFrame::OnMapShowToolbar() 
+{
+   m_bShowToolBar = !m_bShowToolBar;
+   m_wndToolBar.ShowWindow(m_bShowToolBar ? SW_SHOWNOACTIVATE : SW_HIDE);
+   RedoLayout();
+}
+
+void CMapFrame::OnUpdateMapShowToolbar(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_bShowToolBar);
+}
+
+
+//
+// WM_COMMAND::ID_MAP_SHOW_TOOLBOX message handlers
+//
+
+void CMapFrame::OnMapShowToolbox() 
+{
+   m_bShowToolBox = !m_bShowToolBox;
+   m_wndToolBox.ShowWindow(m_bShowToolBox ? SW_SHOWNOACTIVATE : SW_HIDE);
+   RedoLayout();
+}
+
+void CMapFrame::OnUpdateMapShowToolbox(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck(m_bShowToolBox);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CMapFrame::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(9);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_PROPERTIES message handlers
+//
+
+void CMapFrame::OnObjectProperties() 
+{
+   DWORD dwCount, *pdwList;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   if (dwCount == 1)
+      theApp.ObjectProperties(*pdwList);
+   safe_free(pdwList);
+}
+
+void CMapFrame::OnUpdateObjectProperties(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.GetSelectionCount() == 1);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_LASTDCIVALUES message handlers
+//
+
+void CMapFrame::OnObjectLastdcivalues() 
+{
+   DWORD i, dwCount, *pdwList;
+   NXC_OBJECT *pObject;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   for(i = 0; i < dwCount; i++)
+   {
+      pObject = NXCFindObjectById(g_hSession, pdwList[i]);
+      if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+         theApp.ShowLastValues(pObject);
+   }
+   safe_free(pdwList);
+}
+
+void CMapFrame::OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode());
+}
+
+
+//
+// Determine if currenly selected object on map is node
+//
+
+BOOL CMapFrame::CurrObjectIsNode()
+{
+   DWORD i, dwCount, *pdwList;
+   NXC_OBJECT *pObject;
+   BOOL bRet = FALSE;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   for(i = 0; i < dwCount; i++)
+   {
+      pObject = NXCFindObjectById(g_hSession, pdwList[i]);
+      if (pObject != NULL)
+      {
+         bRet = (pObject->iClass == OBJECT_NODE);
+         if (!bRet)
+            break;
+      }
+   }
+   safe_free(pdwList);
+   return bRet;
 }
