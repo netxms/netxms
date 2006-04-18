@@ -401,6 +401,21 @@ typedef int SOCKET;
 
 
 //
+// Windows-specific structures for non-Windows platforms
+// 
+
+#ifndef _WIN32
+
+typedef struct tagPOINT
+{
+   int x;
+   int y;
+} POINT;
+
+#endif
+
+
+//
 // Event log severity codes (UNIX only)
 //
 

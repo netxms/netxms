@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.149 2006-03-24 14:20:24 alk Exp $
+# $Id: configure.ac,v 1.150 2006-04-18 16:20:49 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -175,7 +175,7 @@ fi ])
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	MODULES="$MODULES libnxsnmp libnxsl server nxmibc nxscript"
+	MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
    TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
    CONTRIB_MODULES="$CONTRIB_MODULES mibs"
 	BUILD_SERVER="yes"
@@ -186,7 +186,7 @@ AC_ARG_WITH(server,
 AC_ARG_WITH(client,
 [AS_HELP_STRING(--with-client,build client library and tools)],
 [
-	MODULES="$MODULES libnxcl nxevent nxreport console"
+	MODULES="$MODULES libnxmap libnxcl nxevent nxreport console"
 	BUILD_CLIENT="yes"
    DYNAMIC_COMPONENTS="yes"
 ])
@@ -264,7 +264,7 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
-	MODULES="libnxsnmp libnxsl server agent libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
+	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
@@ -275,7 +275,7 @@ AC_ARG_WITH(nxhttpd,
 [AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
 	if test "x$withval" != "xno" ; then
-		MODULES="$MODULES libnxcl nxhttpd"
+		MODULES="$MODULES libnxmap libnxcl nxhttpd"
 		BUILD_WEB_CLIENT="yes"
 		DYNAMIC_COMPONENTS="yes"
 	fi
@@ -536,6 +536,8 @@ CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\"
 
 LIBNETXMS_LIBRARY_VERSION=0:2:0
 LIBNXCSCP_LIBRARY_VERSION=0:2:0
+LIBNXMAP_LIBRARY_VERSION=0:2:0
+LIBNXCL_LIBRARY_VERSION=0:2:0
 LIBNXSNMP_LIBRARY_VERSION=0:2:0
 LIBNXSRV_LIBRARY_VERSION=0:2:0
 LIBNXCORE_LIBRARY_VERSION=0:2:0
@@ -544,6 +546,8 @@ SMSDRV_LIBRARY_VERSION=0:2:0
 LIBNXSL_LIBRARY_VERSION=0:2:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
 AC_SUBST(LIBNXCSCP_LIBRARY_VERSION)
+AC_SUBST(LIBNXMAP_LIBRARY_VERSION)
+AC_SUBST(LIBNXCL_LIBRARY_VERSION)
 AC_SUBST(LIBNXSNMP_LIBRARY_VERSION)
 AC_SUBST(LIBNXSRV_LIBRARY_VERSION)
 AC_SUBST(LIBNXCORE_LIBRARY_VERSION)
@@ -577,6 +581,7 @@ AC_CONFIG_FILES([
 	src/libnxsnmp/Makefile
 	src/libnxcl/Makefile
 	src/libnxsl/Makefile
+	src/libnxmap/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/console/Makefile

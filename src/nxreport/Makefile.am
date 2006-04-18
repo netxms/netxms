@@ -12,7 +12,7 @@ INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxreport
 nxreport_SOURCES = nxreport.cpp nx_strict_tree.cpp
-nxreport_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxcscp/libnxcscp.la ../libnxcl/libnxcl.la
+nxreport_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxcscp/libnxcscp.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
 EXTRA_DIST = nxreport.dsp nxreport.dsw nxreport.h nx_strict_tree.h
 

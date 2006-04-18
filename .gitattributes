@@ -903,6 +903,7 @@ src/libnxcl/session.cpp -text
 src/libnxcl/snmp.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
+src/libnxmap/Makefile.am -text
 src/libnxmap/libnxmap.dsp -text
 src/libnxmap/libnxmap.dsw -text
 src/libnxmap/libnxmap.h -text
