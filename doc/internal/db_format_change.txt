@@ -3,6 +3,56 @@
 *************
 
 - Added configuration parameter "DisableVacuum"
+- Added configuration parameter "LockTimeout"
+- Added table "maps":
+	CREATE TABLE maps
+	(
+		map_id integer not null,
+		map_name varchar(255) not null,
+		description SQL_TEXT not null,
+		root_object_id integer not null,
+		PRIMARY KEY(map_id)
+	) TABLE_TYPE;
+- Added table "map_access_lists":
+	CREATE TABLE map_access_lists
+	(
+		map_id integer not null,
+		user_id integer not null,
+		access_rights integer not null,
+		PRIMARY KEY(map_id,user_id)
+	) TABLE_TYPE;
+- Added table "submaps":
+	CREATE TABLE submaps
+	(
+		map_id integer not null,
+		submap_id integer not null,
+		attributes integer not null,	
+		PRIMARY KEY(map_id,submap_id)
+	) TABLE_TYPE;
+- Added table "submap_object_positions":
+	CREATE TABLE submap_object_positions
+	(
+		map_id integer not null,
+		submap_id integer not null,
+		object_id integer not null,
+		x integer not null,
+		y integer not null,
+		PRIMARY KEY(map_id,submap_id,object_id)
+	) TABLE_TYPE;
+- Added table "submap_links":
+	CREATE TABLE submap_links
+	(
+		map_id integer not null,
+		submap_id integer not null,
+		object_id1 integer not null,
+		object_id2 integer not null,
+		link_type integer not null,
+		PRIMARY KEY(map_id,submap_id,object_id1,object_id2)
+	) TABLE_TYPE;
+- Added default map configuration:
+	INSERT INTO maps (map_id,map_name,description,root_object_id)
+		VALUES (1,'Default','Default network map',1);
+	INSERT INTO map_access_lists (map_id,user_id,access_rights) VALUES (1,-2147483648,1);
 
 
 *************

@@ -78,6 +78,83 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V38 to V39
+//
+
+static BOOL H_UpgradeFromV38(void)
+{
+   static TCHAR m_szBatch[] =
+	   "INSERT INTO maps (map_id,map_name,description,root_object_id) "
+		   "VALUES (1,'Default','Default network map',1)\n"
+	   "INSERT INTO map_access_lists (map_id,user_id,access_rights) VALUES (1,-2147483648,1)\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE maps	("
+		                 "map_id integer not null,"
+		                 "map_name varchar(255) not null,"
+		                 "description $SQL:TEXT not null,"
+		                 "root_object_id integer not null,"
+		                 "PRIMARY KEY(map_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE map_access_lists ("
+		                 "map_id integer not null,"
+		                 "user_id integer not null,"
+		                 "access_rights integer not null,"
+		                 "PRIMARY KEY(map_id,user_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE submaps ("
+		                 "map_id integer not null,"
+		                 "submap_id integer not null,"
+		                 "attributes integer not null,"	
+		                 "PRIMARY KEY(map_id,submap_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE submap_object_positions ("
+		                 "map_id integer not null,"
+		                 "submap_id integer not null,"
+		                 "object_id integer not null,"
+		                 "x integer not null,"
+		                 "y integer not null,"
+		                 "PRIMARY KEY(map_id,submap_id,object_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE submap_links ("
+		                 "map_id integer not null,"
+		                 "submap_id integer not null,"
+		                 "object_id1 integer not null,"
+		                 "object_id2 integer not null,"
+		                 "link_type integer not null,"
+		                 "PRIMARY KEY(map_id,submap_id,object_id1,object_id2))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("LockTimeout"), _T("60000"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DisableVacuum"), _T("0"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='39' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V37 to V38
 //
 
@@ -1623,6 +1700,7 @@ static struct
    { 35, H_UpgradeFromV35 },
    { 36, H_UpgradeFromV36 },
    { 37, H_UpgradeFromV37 },
+   { 38, H_UpgradeFromV38 },
    { 0, NULL }
 };
 
