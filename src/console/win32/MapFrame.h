@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	CStatusBarCtrl m_wndStatusBar;
 	BOOL CurrObjectIsNode(void);
 	void RedoLayout(void);
 	BOOL m_bShowToolBox;
@@ -80,6 +81,7 @@ protected:
 	afx_msg void OnUpdateObjectProperties(CCmdUI* pCmdUI);
 	afx_msg void OnObjectLastdcivalues();
 	afx_msg void OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI);
+	afx_msg void OnMapSetbackground();
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
 	DECLARE_MESSAGE_MAP()

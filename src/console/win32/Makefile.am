@@ -101,6 +101,7 @@ EXTRA_DIST = \
 	ScriptView.cpp ScriptView.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \
 	StdAfx.cpp StdAfx.h \
+	SubmapBkgndDlg.cpp SubmapBkgndDlg.h \
 	SyslogBrowser.cpp SyslogBrowser.h \
 	TableView.cpp TableView.h \
 	ThresholdDlg.cpp ThresholdDlg.h \

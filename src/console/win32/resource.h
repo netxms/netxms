@@ -186,6 +186,7 @@
 #define IDI_REFRESH                     309
 #define IDI_BACK                        310
 #define IDI_FORWARD                     311
+#define IDD_SUBMAP_BKGND                312
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -332,6 +333,7 @@
 #define IDC_RADIO_SEMICOLON             1150
 #define IDC_RADIO_MOST_CRITICAL         1150
 #define IDC_RADIO_AGENT                 1150
+#define IDC_RADIO_SCALE                 1150
 #define IDC_LIST_ACTIONS                1152
 #define IDC_COMBO_CATEGORY              1154
 #define IDC_ICON_PARENT                 1155
@@ -491,6 +493,9 @@
 #define IDC_CHECK_DISABLE_SNMP          1340
 #define IDC_CHECK_DISABLE_ICMP          1341
 #define IDC_BUTTON_WALK                 1342
+#define IDC_RADIO_NBK                   1343
+#define IDC_RADIO_BITMAP                1344
+#define IDC_RADIO_NO_SCALE              1346
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -681,6 +686,7 @@
 #define ID_MAP_FORWARD                  33005
 #define ID_MAP_HOME                     33006
 #define ID_MAP_REDOLAYOUT               33007
+#define ID_MAP_SETBACKGROUND            33008
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -690,9 +696,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        312
-#define _APS_NEXT_COMMAND_VALUE         33008
-#define _APS_NEXT_CONTROL_VALUE         1343
+#define _APS_NEXT_RESOURCE_VALUE        313
+#define _APS_NEXT_COMMAND_VALUE         33009
+#define _APS_NEXT_CONTROL_VALUE         1348
 #define _APS_NEXT_SYMED_VALUE           127
 #endif
 #endif

@@ -494,6 +494,10 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SubmapBkgndDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\SyslogBrowser.cpp
 # End Source File
 # Begin Source File
@@ -991,6 +995,10 @@ SOURCE=.\SNMPWalkDlg.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SubmapBkgndDlg.h
 # End Source File
 # Begin Source File
 

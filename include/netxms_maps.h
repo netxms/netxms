@@ -54,6 +54,7 @@
 //
 
 #define SUBMAP_ATTR_LAYOUT_COMPLETED      0x00010000
+#define SUBMAP_ATTR_HAS_BK_IMAGE          0x00020000
 
 
 //
@@ -159,6 +160,9 @@ public:
 
    DWORD GetNumLinks(void) { return m_dwNumLinks; }
    OBJLINK *GetLinkByIndex(DWORD dwIndex) { return &m_pLinkList[dwIndex]; }
+
+   BOOL GetBkImageFlag(void) { return (m_dwAttr & SUBMAP_ATTR_HAS_BK_IMAGE) ? TRUE : FALSE; }
+   void SetBkImageFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_HAS_BK_IMAGE; else m_dwAttr &= ~SUBMAP_ATTR_HAS_BK_IMAGE; }
 };
 
 

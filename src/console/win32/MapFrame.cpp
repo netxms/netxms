@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "MapFrame.h"
+#include "SubmapBkgndDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -12,6 +13,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define MAP_SECTION     _T("MapFrame")
+
+#define STATUS_PANE_SCALE  2
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -65,6 +68,7 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_PROPERTIES, OnUpdateObjectProperties)
 	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
+	ON_COMMAND(ID_MAP_SETBACKGROUND, OnMapSetbackground)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
@@ -129,6 +133,9 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndToolBar.SetImageList(&m_imageList);
    m_wndToolBar.AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
 
+   // Create status bar
+   m_wndStatusBar.Create(WS_CHILD | (m_bShowStatusBar ? WS_VISIBLE : 0) | CCS_BOTTOM | SBARS_SIZEGRIP, rect, this, -1);
+
    // Create and initialize map view
    m_wndMapView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, this, 0);
    
@@ -144,19 +151,29 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CMapFrame::RedoLayout()
 {
-   int nToolBarHeight, nToolBoxWidth;
+   int nToolBarHeight, nStatusBarHeight, nToolBoxWidth, nShift;
    RECT rect;
+
+   m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
+   m_wndStatusBar.GetClientRect(&rect);
+   nShift = GetSystemMetrics(SM_CXVSCROLL);
+   int widths[3] = { rect.right - 130 - nShift, 
+                     rect.right - 30 - nShift, rect.right -  nShift };
+   m_wndStatusBar.SetParts(3, widths);
+   nStatusBarHeight = m_bShowStatusBar ? GetWindowSize(&m_wndStatusBar).cy : 0;
 
    GetClientRect(&rect);
 
    m_wndToolBar.AutoSize();
    nToolBarHeight = m_bShowToolBar ? (GetWindowSize(&m_wndToolBar).cy + 1) : 0;
+
    nToolBoxWidth = m_bShowToolBox ? 150 : 0;
 
-   m_wndToolBox.SetWindowPos(NULL, 0, nToolBarHeight, nToolBoxWidth, rect.bottom, SWP_NOZORDER);
+   m_wndToolBox.SetWindowPos(NULL, 0, nToolBarHeight, nToolBoxWidth,
+                             rect.bottom - nToolBarHeight - nStatusBarHeight, SWP_NOZORDER);
    m_wndMapView.SetWindowPos(NULL, nToolBoxWidth, nToolBarHeight,
-                             rect.right - nToolBoxWidth, rect.bottom - nToolBarHeight,
-                             SWP_NOZORDER);	
+                             rect.right - nToolBoxWidth,
+                             rect.bottom - nToolBarHeight - nStatusBarHeight, SWP_NOZORDER);
 }
 
 
@@ -212,10 +229,12 @@ void CMapFrame::OnViewRefresh()
    if (dwResult == RCC_SUCCESS)
    {
       m_wndMapView.SetMap(pMap);
+      m_wndStatusBar.SetText(m_wndMapView.GetScaleText(), STATUS_PANE_SCALE, 0);
    }
    else
    {
       theApp.ErrorBox(dwResult, _T("Cannot load map from server: %s"));
+      m_wndStatusBar.SetText(_T(""), STATUS_PANE_SCALE, 0);
    }
    //m_wndMapView.SetMap(new nxMap(1, _T("Default"), _T("Default map")));
 /*   NXC_OBJECT *pObject;
@@ -270,6 +289,7 @@ void CMapFrame::OnViewRefresh()
 void CMapFrame::OnMapZoomin() 
 {
    m_wndMapView.ZoomIn();
+   m_wndStatusBar.SetText(m_wndMapView.GetScaleText(), STATUS_PANE_SCALE, 0);
 }
 
 void CMapFrame::OnUpdateMapZoomin(CCmdUI* pCmdUI) 
@@ -285,6 +305,7 @@ void CMapFrame::OnUpdateMapZoomin(CCmdUI* pCmdUI)
 void CMapFrame::OnMapZoomout() 
 {
    m_wndMapView.ZoomOut();
+   m_wndStatusBar.SetText(m_wndMapView.GetScaleText(), STATUS_PANE_SCALE, 0);
 }
 
 void CMapFrame::OnUpdateMapZoomout(CCmdUI* pCmdUI) 
@@ -535,4 +556,18 @@ BOOL CMapFrame::CurrObjectIsNode()
    }
    safe_free(pdwList);
    return bRet;
+}
+
+
+//
+// WM_COMMAND::ID_MAP_SETBACKGROUND message handlers
+//
+
+void CMapFrame::OnMapSetbackground() 
+{
+   CSubmapBkgndDlg dlg;
+   
+   if (dlg.DoModal() == IDOK)
+   {
+   }
 }

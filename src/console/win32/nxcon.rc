@@ -538,6 +538,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Save\tCtrl+S",               ID_MAP_SAVE
         MENUITEM "&Redo layout",                ID_MAP_REDOLAYOUT
+        MENUITEM "S&et background...",          ID_MAP_SETBACKGROUND
     END
 END
 
@@ -697,6 +698,7 @@ BEGIN
         MENUITEM "&Back",                       ID_MAP_BACK
         MENUITEM "&Forward",                    ID_MAP_FORWARD
         MENUITEM "&Home",                       ID_MAP_HOME
+        MENUITEM "S&et map background...",      ID_MAP_SETBACKGROUND
         MENUITEM SEPARATOR
         POPUP "&Create"
         BEGIN
@@ -2321,6 +2323,27 @@ BEGIN
     LTEXT           "Enter new IP address for node:",IDC_STATIC,7,7,98,8
 END
 
+IDD_SUBMAP_BKGND DIALOG DISCARDABLE  0, 0, 241, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Set Submap Background"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&No background",IDC_RADIO_NBK,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,65,10
+    CONTROL         "&Bitmap on the background",IDC_RADIO_BITMAP,"Button",
+                    BS_AUTORADIOBUTTON,7,19,99,10
+    EDITTEXT        IDC_EDIT_FILE,13,53,137,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BROWSE,155,53,15,14
+    CONTROL         "Use &original bitmap size",IDC_RADIO_NO_SCALE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,72,89,10
+    CONTROL         "&Scale bitmap to fit current map size",IDC_RADIO_SCALE,
+                    "Button",BS_AUTORADIOBUTTON,13,85,125,10
+    DEFPUSHBUTTON   "OK",IDOK,184,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,184,24,50,14
+    LTEXT           "File name:",IDC_STATIC,13,42,33,8
+    GROUPBOX        "Bitmap",IDC_STATIC,7,32,170,68
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2827,6 +2850,14 @@ BEGIN
         RIGHTMARGIN, 165
         TOPMARGIN, 7
         BOTTOMMARGIN, 39
+    END
+
+    IDD_SUBMAP_BKGND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 234
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 99
     END
 END
 #endif    // APSTUDIO_INVOKED

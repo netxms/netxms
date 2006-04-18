@@ -44,6 +44,7 @@ struct SCALE_INFO
    POINT ptTextSize;
    int nImageList;
    int nFontIndex;
+   TCHAR *pszText;
 };
 
 
@@ -83,6 +84,7 @@ public:
 
 // Implementation
 public:
+   const TCHAR *GetScaleText(void);
 	void DoSubmapLayout(void);
 	void OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject);
 	BOOL CanGoForward(void);
