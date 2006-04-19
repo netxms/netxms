@@ -165,6 +165,7 @@ protected:
 public:
 	DWORD * GetSelectedObjects(DWORD *pdwNumObjects);
    nxMap *GetMap(void) { return m_pMap; }
+   nxSubmap *GetSubmap(void) { return m_pSubmap; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

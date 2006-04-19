@@ -474,6 +474,8 @@ private:
    void SaveMap(CSCPMessage *pRequest);
    void ProcessSubmapData(CSCPMessage *pRequest);
    void LoadMap(CSCPMessage *pRequest);
+   void SendSubmapBkImage(CSCPMessage *pRequest);
+   void RecvSubmapBkImage(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

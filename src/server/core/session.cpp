@@ -939,6 +939,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOAD_MAP:
             LoadMap(pMsg);
             break;
+         case CMD_UPLOAD_SUBMAP_BK_IMAGE:
+            RecvSubmapBkImage(pMsg);
+            break;
+         case CMD_GET_SUBMAP_BK_IMAGE:
+            SendSubmapBkImage(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6604,5 +6610,130 @@ void ClientSession::LoadMap(CSCPMessage *pRequest)
    }
    UnlockMaps();
 
+   SendMessage(&msg);
+}
+
+
+//
+// Send submap's background image to client
+//
+
+void ClientSession::SendSubmapBkImage(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwMapId, dwSubmapId;
+   TCHAR szBuffer[MAX_PATH];
+   nxMapSrv *pMap;
+   BOOL bSuccess = FALSE;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   dwMapId = pRequest->GetVariableLong(VID_MAP_ID);
+   dwSubmapId = pRequest->GetVariableLong(VID_OBJECT_ID);
+
+   LockMaps();
+
+   pMap = FindMapByID(dwMapId);
+   if (pMap != NULL)
+   {
+      if (pMap->CheckUserRights(m_dwUserId, MAP_ACCESS_READ))
+      {
+         _sntprintf(szBuffer, MAX_PATH, 
+                    _T("%s") DDIR_BACKGROUNDS FS_PATH_SEPARATOR _T("%08X_%08X.png"),
+                    g_szDataDir, dwMapId, dwSubmapId);
+         if (_taccess(szBuffer, 4) == 0)
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            bSuccess = TRUE;
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
+   }
+
+   UnlockMaps();
+
+   // Send response message
+   SendMessage(&msg);
+
+   // Send bitmap file
+   if (bSuccess)
+   {
+      SendFileOverCSCP(m_hSocket, pRequest->GetId(), szBuffer, m_pCtx);
+   }
+}
+
+
+//
+// Receive submap's background image from client
+//
+
+void ClientSession::RecvSubmapBkImage(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwMapId, dwSubmapId;
+   nxMapSrv *pMap;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   dwMapId = pRequest->GetVariableLong(VID_MAP_ID);
+   dwSubmapId = pRequest->GetVariableLong(VID_OBJECT_ID);
+
+   LockMaps();
+
+   pMap = FindMapByID(dwMapId);
+   if (pMap != NULL)
+   {
+      if (pMap->CheckUserRights(m_dwUserId, MAP_ACCESS_WRITE))
+      {
+         // Prepare for file receive
+         if (m_hCurrFile == -1)
+         {
+            _sntprintf(m_szCurrFileName, MAX_PATH, 
+                       _T("%s") DDIR_BACKGROUNDS FS_PATH_SEPARATOR _T("%08X_%08X.png"),
+                       g_szDataDir, dwMapId, dwSubmapId);
+            m_hCurrFile = _topen(m_szCurrFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+            if (m_hCurrFile != -1)
+            {
+               m_dwFileRqId = pRequest->GetId();
+               m_dwUploadCommand = CMD_UPLOAD_SUBMAP_BK_IMAGE;
+               m_dwUploadData = 0;
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_RESOURCE_BUSY);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
+   }
+
+   UnlockMaps();
+
+   // Send response message
    SendMessage(&msg);
 }

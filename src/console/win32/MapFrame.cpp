@@ -566,8 +566,22 @@ BOOL CMapFrame::CurrObjectIsNode()
 void CMapFrame::OnMapSetbackground() 
 {
    CSubmapBkgndDlg dlg;
+   DWORD dwResult;
    
    if (dlg.DoModal() == IDOK)
    {
+      dwResult = DoRequestArg4(NXCUploadSubmapBkImage, g_hSession,
+                               (void *)m_wndMapView.GetMap()->MapId(),
+                               (void *)m_wndMapView.GetSubmap()->Id(),
+                               (void *)((LPCTSTR)dlg.m_strFileName),
+                               _T("Uploading new background image to server..."));
+      if (dwResult == RCC_SUCCESS)
+      {
+      }
+      else
+      {
+         theApp.ErrorBox(dwResult, _T("Canot upload background image to server: %s"));
+      }
    }
 }
+CImage

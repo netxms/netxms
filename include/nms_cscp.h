@@ -403,6 +403,8 @@ typedef struct
 #define CMD_DELETE_MAP              0x00A6
 #define CMD_RESOLVE_MAP_NAME        0x00A7
 #define CMD_SUBMAP_DATA             0x00A8
+#define CMD_UPLOAD_SUBMAP_BK_IMAGE  0x00A9
+#define CMD_GET_SUBMAP_BK_IMAGE     0x00AA
 
 
 //

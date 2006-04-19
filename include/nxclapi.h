@@ -1534,6 +1534,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadMap(NXC_SESSION hSession, DWORD dwMapId, void **
 DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
 DWORD LIBNXCL_EXPORTABLE NXCResolveMapName(NXC_SESSION hSession, TCHAR *pszMapName,
                                            DWORD *pdwMapId);
+DWORD LIBNXCL_EXPORTABLE NXCUploadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
+                                                DWORD dwSubmapId, TCHAR *pszFile);
+DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
+                                                  DWORD dwSubmapId, TCHAR *pszFile);
 
 #ifdef __cplusplus
 }

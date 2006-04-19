@@ -237,3 +237,62 @@ DWORD LIBNXCL_EXPORTABLE NXCResolveMapName(NXC_SESSION hSession, TCHAR *pszMapNa
    }
    return dwResult;
 }
+
+
+//
+// Upload background image to server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUploadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
+                                                DWORD dwSubmapId, TCHAR *pszFile)
+{
+   CSCPMessage msg;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_UPLOAD_SUBMAP_BK_IMAGE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_MAP_ID, dwMapId);
+   msg.SetVariable(VID_OBJECT_ID, dwSubmapId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   if (dwResult == RCC_SUCCESS)
+   {
+      dwResult = ((NXCL_Session *)hSession)->SendFile(dwRqId, pszFile);
+      if (dwResult == RCC_SUCCESS)
+      {
+         // Wait for final confirmation
+         dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+      }
+   }
+   return dwResult;
+}
+
+
+//
+// Retrieve background image from server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
+                                                  DWORD dwSubmapId, TCHAR *pszFile)
+{
+   CSCPMessage msg;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+   dwResult = ((NXCL_Session *)hSession)->PrepareFileTransfer(pszFile, dwRqId);
+   if (dwResult == RCC_SUCCESS)
+   {
+      msg.SetCode(CMD_GET_SUBMAP_BK_IMAGE);
+      msg.SetId(dwRqId);
+      msg.SetVariable(VID_MAP_ID, dwMapId);
+      msg.SetVariable(VID_OBJECT_ID, dwSubmapId);
+      ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+      // Loading file may take time, so timeout is 300 sec. instead of default
+      dwResult = ((NXCL_Session *)hSession)->WaitForFileTransfer(300000);
+   }
+   return dwResult;
+}

@@ -60,6 +60,7 @@
 # define DDIR_MIBS             "\\mibs"
 # define DDIR_IMAGES           "\\images"
 # define DDIR_PACKAGES         "\\packages"
+# define DDIR_BACKGROUNDS      "\\backgrounds"
 # define DFILE_KEYS            "\\server_key"
 # define DFILE_COMPILED_MIB    "\\mibs\\netxms.mib"
 
@@ -79,6 +80,7 @@
 # define DDIR_MIBS             "/mibs"
 # define DDIR_IMAGES           "/images"
 # define DDIR_PACKAGES         "/packages"
+# define DDIR_BACKGROUNDS      "/backgrounds"
 # define DFILE_KEYS            "/.server_key"
 # define DFILE_COMPILED_MIB    "/mibs/netxms.mib"
 
