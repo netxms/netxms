@@ -728,3 +728,65 @@ HTREEITEM FindTreeCtrlItemEx(CTreeCtrl &ctrl, HTREEITEM hRoot, DWORD dwData)
    }
    return NULL;
 }
+
+
+//
+// Load graphic file using IPicture interface
+// Will return NULL on error or valid bitmap handle on success
+//
+
+#define HIMETRIC_INCH   2540
+
+HBITMAP LoadPicture(TCHAR *pszFile)
+{
+	IPicture *pPicture = NULL;
+	HBITMAP hBitmap = NULL;
+	HRESULT hRes;
+ 
+#ifdef UNICODE
+   hRes = OleLoadPicturePath(pszFile, NULL, 0,
+                             -1, IID_IPicture, (LPVOID *)&pPicture);
+#else
+   WCHAR wszFile[MAX_PATH];
+
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszFile, -1, wszFile, MAX_PATH);
+   hRes = OleLoadPicturePath(wszFile, NULL, 0,
+                             -1, IID_IPicture, (LPVOID *)&pPicture);
+#endif
+			
+	if (pPicture != NULL)
+	{
+   	CBitmap bmMem, *pOldBM;
+	   CDC dcMem, *pDC;
+      
+      pDC = theApp.m_pMainWnd->GetDC();
+	   if (dcMem.CreateCompatibleDC(pDC))
+	   {
+		   long hmWidth;
+		   long hmHeight;
+
+		   pPicture->get_Width(&hmWidth);
+		   pPicture->get_Height(&hmHeight);
+		   
+		   int nWidth = MulDiv(hmWidth, pDC->GetDeviceCaps(LOGPIXELSX), HIMETRIC_INCH);
+		   int nHeight = MulDiv(hmHeight, pDC->GetDeviceCaps(LOGPIXELSY), HIMETRIC_INCH);
+
+		   if (bmMem.CreateCompatibleBitmap(pDC, nWidth, nHeight))
+		   {
+            // Looks like an overkill, but I've seen that without following
+            // line bitmap of zero size was created
+            bmMem.SetBitmapDimension(nWidth, nHeight);
+            pOldBM = dcMem.SelectObject(&bmMem);
+			   hRes = pPicture->Render(dcMem.m_hDC, 0, 0, nWidth, nHeight, 0,
+                                    hmHeight, hmWidth, -hmHeight, NULL);
+			   dcMem.SelectObject(pOldBM);
+		   }
+	   }
+
+	   theApp.m_pMainWnd->ReleaseDC(pDC);
+	   hBitmap = (HBITMAP)bmMem.Detach();
+      pPicture->Release();
+	}
+
+	return hBitmap;
+}

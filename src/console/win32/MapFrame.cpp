@@ -577,11 +577,19 @@ void CMapFrame::OnMapSetbackground()
                                _T("Uploading new background image to server..."));
       if (dwResult == RCC_SUCCESS)
       {
+         HBITMAP hBitmap;
+
+         hBitmap = LoadPicture((TCHAR *)((LPCTSTR)dlg.m_strFileName));
+         if (hBitmap != NULL)
+         {
+         }
+         else
+         {
+         }
       }
       else
       {
-         theApp.ErrorBox(dwResult, _T("Canot upload background image to server: %s"));
+         theApp.ErrorBox(dwResult, _T("Cannot upload background image to server: %s"));
       }
    }
 }
-CImage

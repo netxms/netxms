@@ -249,7 +249,7 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
       ptOffset.y = 0;
    }
    bitmap.CreateCompatibleBitmap(pdc, rcBitmap.right, rcBitmap.bottom);
-   ReleaseDC(pdc);
+   //ReleaseDC(pdc);
 
    // Initial DC setup
    pOldBitmap = dc.SelectObject(&bitmap);

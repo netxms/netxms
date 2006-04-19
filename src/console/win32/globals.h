@@ -277,6 +277,7 @@ int GetObjectImageIndex(NXC_OBJECT *pObject);
 int GetClassDefaultImageIndex(int iClass);
 CImageList *CreateEventImageList(void);
 void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
+HBITMAP LoadPicture(TCHAR *pszFile);
 
 
 //

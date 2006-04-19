@@ -6640,7 +6640,7 @@ void ClientSession::SendSubmapBkImage(CSCPMessage *pRequest)
       if (pMap->CheckUserRights(m_dwUserId, MAP_ACCESS_READ))
       {
          _sntprintf(szBuffer, MAX_PATH, 
-                    _T("%s") DDIR_BACKGROUNDS FS_PATH_SEPARATOR _T("%08X_%08X.png"),
+                    _T("%s") DDIR_BACKGROUNDS FS_PATH_SEPARATOR _T("%08X.%08X"),
                     g_szDataDir, dwMapId, dwSubmapId);
          if (_taccess(szBuffer, 4) == 0)
          {
@@ -6702,7 +6702,7 @@ void ClientSession::RecvSubmapBkImage(CSCPMessage *pRequest)
          if (m_hCurrFile == -1)
          {
             _sntprintf(m_szCurrFileName, MAX_PATH, 
-                       _T("%s") DDIR_BACKGROUNDS FS_PATH_SEPARATOR _T("%08X_%08X.png"),
+                       _T("%s") DDIR_BACKGROUNDS FS_PATH_SEPARATOR _T("%08X.%08X"),
                        g_szDataDir, dwMapId, dwSubmapId);
             m_hCurrFile = _topen(m_szCurrFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
             if (m_hCurrFile != -1)
