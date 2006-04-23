@@ -737,7 +737,7 @@ HTREEITEM FindTreeCtrlItemEx(CTreeCtrl &ctrl, HTREEITEM hRoot, DWORD dwData)
 
 #define HIMETRIC_INCH   2540
 
-HBITMAP LoadPicture(TCHAR *pszFile)
+HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor)
 {
 	IPicture *pPicture = NULL;
 	HBITMAP hBitmap = NULL;
@@ -770,6 +770,16 @@ HBITMAP LoadPicture(TCHAR *pszFile)
 		   
 		   int nWidth = MulDiv(hmWidth, pDC->GetDeviceCaps(LOGPIXELSX), HIMETRIC_INCH);
 		   int nHeight = MulDiv(hmHeight, pDC->GetDeviceCaps(LOGPIXELSY), HIMETRIC_INCH);
+         if (nScaleFactor < 0)
+         {
+            nWidth /= -nScaleFactor;
+            nHeight /= -nScaleFactor;
+         }
+         else if (nScaleFactor > 0)
+         {
+            nWidth *= nScaleFactor;
+            nHeight *= nScaleFactor;
+         }
 
 		   if (bmMem.CreateCompatibleBitmap(pDC, nWidth, nHeight))
 		   {

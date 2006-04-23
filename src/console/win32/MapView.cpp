@@ -48,12 +48,15 @@ CMapView::CMapView()
    m_ptOrg.y = 0;
    m_dwHistoryPos = 0;
    m_dwHistorySize = 0;
+   m_hBkImage = NULL;
 }
 
 CMapView::~CMapView()
 {
    safe_free(m_pObjectInfo);
    delete m_pDragImageList;
+   if (m_hBkImage != NULL)
+      DeleteObject(m_hBkImage);
 }
 
 
@@ -217,7 +220,7 @@ void CMapView::OnPaint()
 
 void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
 {
-   CDC *pdc, dc;           // Window dc and in-memory dc
+   CDC *pdc, dc, dcBmp;           // Window dc and in-memory dc
    CBitmap *pOldBitmap;
    CBrush brush;
    RECT rcClient, rcBitmap;
@@ -249,17 +252,31 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
       ptOffset.y = 0;
    }
    bitmap.CreateCompatibleBitmap(pdc, rcBitmap.right, rcBitmap.bottom);
-   //ReleaseDC(pdc);
 
    // Initial DC setup
    pOldBitmap = dc.SelectObject(&bitmap);
    dc.SetBkColor(m_rgbBkColor);
    brush.CreateSolidBrush(m_rgbBkColor);
-   dc.FillRect(&rcBitmap, &brush);
    if (m_scaleInfo[m_nScale].nFontIndex != -1)
       pOldFont = dc.SelectObject(&m_fontList[m_scaleInfo[m_nScale].nFontIndex]);
    else
       pOldFont = NULL;
+
+   // Draw background
+   dc.FillRect(&rcBitmap, &brush);
+   if ((m_hBkImage != NULL) && (!bSelectionOnly))
+   {
+      CBitmap bmpBkImage, *pOldBkImage;
+
+      dcBmp.CreateCompatibleDC(pdc);
+      bmpBkImage.Attach(m_hBkImage);
+      pOldBkImage = dcBmp.SelectObject(&bmpBkImage);
+      dc.BitBlt(0, 0, rcBitmap.right, rcBitmap.bottom, &dcBmp, 0, 0, SRCCOPY);
+      dcBmp.SelectObject(pOldBkImage);
+      bmpBkImage.Detach();
+      dcBmp.DeleteDC();
+   }
+   ReleaseDC(pdc);
 
    if (m_pSubmap != NULL)
    {
@@ -387,12 +404,7 @@ void CMapView::SetMap(nxMap *pMap)
    m_dwHistoryPos = 0;
    delete m_pMap;
    m_pMap = pMap;
-   m_pSubmap = m_pMap->GetSubmap(m_pMap->ObjectId());
-   if (!m_pSubmap->IsLayoutCompleted())
-      DoSubmapLayout();
-   m_ptMapSize = m_pSubmap->GetMinSize();
-   ScalePosMapToScreen(&m_ptMapSize);
-   Update();
+   OpenSubmap(m_pMap->ObjectId(), FALSE);
 }
 
 
@@ -873,14 +885,33 @@ void CMapView::OpenSubmap(DWORD dwId, BOOL bAddToHistory)
    pSubmap = m_pMap->GetSubmap(dwId);
    if (pSubmap != NULL)
    {
-      if (bAddToHistory)
+      // Update history and change current submap
+      if ((bAddToHistory) && (m_pSubmap != NULL))
          AddToHistory(m_pSubmap->Id());
       m_pSubmap = pSubmap;
+
+      // Prepare objects on submap
       if (!m_pSubmap->IsLayoutCompleted())
          DoSubmapLayout();
       ClearSelection(FALSE);
+
+      // Change background image
+      if (m_hBkImage != NULL)
+         DeleteObject(m_hBkImage);
+      if (m_pSubmap->GetBkImageFlag())
+      {
+         m_hBkImage = GetBkImage(m_pMap->MapId(), dwId, m_scaleInfo[m_nScale].nFactor);
+      }
+      else
+      {
+         m_hBkImage = NULL;
+      }
+
+      // Update map size in pixels
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
+      
+      // Redraw everything
       Update();
    }
    else
@@ -1113,6 +1144,11 @@ void CMapView::ZoomIn()
       ScalePosScreenToMap(&m_ptOrg);
       m_nScale++;
       ScalePosMapToScreen(&m_ptOrg);
+      if (m_hBkImage != NULL)
+      {
+         DeleteObject(m_hBkImage);
+         m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale].nFactor);
+      }
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
       Update();
@@ -1141,6 +1177,11 @@ void CMapView::ZoomOut()
       ScalePosScreenToMap(&m_ptOrg);
       m_nScale--;
       ScalePosMapToScreen(&m_ptOrg);
+      if (m_hBkImage != NULL)
+      {
+         DeleteObject(m_hBkImage);
+         m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale].nFactor);
+      }
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
       Update();
@@ -1344,4 +1385,78 @@ DWORD *CMapView::GetSelectedObjects(DWORD *pdwNumObjects)
       pdwList = NULL;
    }
    return pdwList;
+}
+
+
+//
+// Set new background image for current submap
+// To clear background image, hBitmap must be set to NULL
+//
+
+void CMapView::SetBkImage(HBITMAP hBitmap)
+{
+   TCHAR szFileName[MAX_PATH], szServerId[32];
+   BYTE bsId[8];
+   
+   if (m_pSubmap != NULL)
+   {
+      // Delete cached file, if any
+      NXCGetServerID(g_hSession, bsId);
+      BinToStr(bsId, 8, szServerId);
+      _sntprintf(szFileName, MAX_PATH, _T("%s") WORKDIR_BKIMAGECACHE _T("\\%s.%08X.%08X"),
+                 g_szWorkDir, szServerId, m_pMap->MapId(), m_pSubmap->Id());
+      DeleteFile(szFileName);
+
+      // Replace in-memory image
+      if (m_hBkImage != NULL)
+         DeleteObject(m_hBkImage);
+      m_hBkImage = hBitmap;
+      m_pSubmap->SetBkImageFlag(hBitmap != NULL);
+      Update();
+   }
+   else
+   {
+      DeleteObject(hBitmap);
+   }
+}
+
+
+//
+// Get background image for submap (from local cache or server)
+//
+
+HBITMAP CMapView::GetBkImage(DWORD dwMapId, DWORD dwSubmapId, int nScaleFactor)
+{
+   TCHAR szFileName[MAX_PATH], szServerId[32];
+   BYTE bsId[8];
+   DWORD dwResult;
+
+   NXCGetServerID(g_hSession, bsId);
+   BinToStr(bsId, 8, szServerId);
+   _sntprintf(szFileName, MAX_PATH, _T("%s") WORKDIR_BKIMAGECACHE _T("\\%s.%08X.%08X"),
+              g_szWorkDir, szServerId, dwMapId, dwSubmapId);
+   
+   // Download file if needed
+   if (access(szFileName, 4) != 0)
+   {
+      dwResult = DoRequestArg4(NXCDownloadSubmapBkImage, g_hSession, (void *)dwMapId,
+                               (void *)dwSubmapId, szFileName,
+                               _T("Downloading background image from server..."));
+      if (dwResult != RCC_SUCCESS)
+      {
+         theApp.ErrorBox(dwResult, _T("Cannot download background image: %s"));
+      }
+   }
+
+   return LoadPicture(szFileName, nScaleFactor);
+}
+
+
+//
+// Returns current scale factor
+//
+
+int CMapView::GetScaleFactor(void)
+{
+   return m_scaleInfo[m_nScale].nFactor;
 }

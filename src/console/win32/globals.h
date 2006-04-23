@@ -135,6 +135,7 @@ extern CConsoleApp theApp;
 
 #define WORKDIR_MIBCACHE      _T("\\MIBCache")
 #define WORKDIR_IMAGECACHE    _T("\\ImageCache")
+#define WORKDIR_BKIMAGECACHE  _T("\\BkImageCache")
 #define WORKFILE_OBJECTCACHE  _T("\\objects.cache.")
 
 
@@ -277,7 +278,7 @@ int GetObjectImageIndex(NXC_OBJECT *pObject);
 int GetClassDefaultImageIndex(int iClass);
 CImageList *CreateEventImageList(void);
 void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
-HBITMAP LoadPicture(TCHAR *pszFile);
+HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor);
 
 
 //

@@ -109,6 +109,8 @@ public:
 
 	// Generated message map functions
 protected:
+	HBITMAP GetBkImage(DWORD dwMapId, DWORD dwSubmapId, int nScaleFactor);
+	HBITMAP m_hBkImage;
 	void OnMouseButtonDown(UINT nFlags, POINT point);
 	void OnMouseButtonUp(UINT nFlags, POINT point);
 	void AddToHistory(DWORD dwId);
@@ -163,6 +165,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+   int GetScaleFactor(void);
+	void SetBkImage(HBITMAP hBitmap);
 	DWORD * GetSelectedObjects(DWORD *pdwNumObjects);
    nxMap *GetMap(void) { return m_pMap; }
    nxSubmap *GetSubmap(void) { return m_pSubmap; }

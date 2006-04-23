@@ -34,10 +34,14 @@ public:
 
 // Implementation
 protected:
+	void EnableItems(void);
 
 	// Generated message map functions
 	//{{AFX_MSG(CSubmapBkgndDlg)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnRadioBitmap();
+	afx_msg void OnRadioNbk();
+	afx_msg void OnBrowse();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

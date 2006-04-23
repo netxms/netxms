@@ -496,6 +496,8 @@
 #define IDC_RADIO_NBK                   1343
 #define IDC_RADIO_BITMAP                1344
 #define IDC_RADIO_NO_SCALE              1346
+#define IDC_STATIC_FRAME                1348
+#define IDC_STATIC_FILE                 1349
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -698,7 +700,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        313
 #define _APS_NEXT_COMMAND_VALUE         33009
-#define _APS_NEXT_CONTROL_VALUE         1348
+#define _APS_NEXT_CONTROL_VALUE         1350
 #define _APS_NEXT_SYMED_VALUE           127
 #endif
 #endif

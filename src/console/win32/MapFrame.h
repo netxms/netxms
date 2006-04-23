@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	NXC_OBJECT * GetFirstSelectedObject(void);
 	CStatusBarCtrl m_wndStatusBar;
 	BOOL CurrObjectIsNode(void);
 	void RedoLayout(void);
@@ -82,6 +83,16 @@ protected:
 	afx_msg void OnObjectLastdcivalues();
 	afx_msg void OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI);
 	afx_msg void OnMapSetbackground();
+	afx_msg void OnObjectDatacollection();
+	afx_msg void OnUpdateObjectDatacollection(CCmdUI* pCmdUI);
+	afx_msg void OnObjectManage();
+	afx_msg void OnUpdateObjectManage(CCmdUI* pCmdUI);
+	afx_msg void OnObjectUnbind();
+	afx_msg void OnUpdateObjectUnbind(CCmdUI* pCmdUI);
+	afx_msg void OnObjectUnmanage();
+	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
+	afx_msg void OnObjectBind();
+	afx_msg void OnUpdateObjectBind(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
 	DECLARE_MESSAGE_MAP()

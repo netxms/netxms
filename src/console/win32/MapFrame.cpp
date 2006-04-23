@@ -69,6 +69,16 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
 	ON_COMMAND(ID_MAP_SETBACKGROUND, OnMapSetbackground)
+	ON_COMMAND(ID_OBJECT_DATACOLLECTION, OnObjectDatacollection)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_DATACOLLECTION, OnUpdateObjectDatacollection)
+	ON_COMMAND(ID_OBJECT_MANAGE, OnObjectManage)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_MANAGE, OnUpdateObjectManage)
+	ON_COMMAND(ID_OBJECT_UNBIND, OnObjectUnbind)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNBIND, OnUpdateObjectUnbind)
+	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
+	ON_COMMAND(ID_OBJECT_BIND, OnObjectBind)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
 END_MESSAGE_MAP()
@@ -567,29 +577,195 @@ void CMapFrame::OnMapSetbackground()
 {
    CSubmapBkgndDlg dlg;
    DWORD dwResult;
-   
+   HBITMAP hBitmap;
+
+   dlg.m_nBkType = 0;
+   dlg.m_nScaleMethod = 0;
    if (dlg.DoModal() == IDOK)
    {
-      dwResult = DoRequestArg4(NXCUploadSubmapBkImage, g_hSession,
-                               (void *)m_wndMapView.GetMap()->MapId(),
-                               (void *)m_wndMapView.GetSubmap()->Id(),
-                               (void *)((LPCTSTR)dlg.m_strFileName),
-                               _T("Uploading new background image to server..."));
-      if (dwResult == RCC_SUCCESS)
+      if (dlg.m_nBkType == 0)
       {
-         HBITMAP hBitmap;
-
-         hBitmap = LoadPicture((TCHAR *)((LPCTSTR)dlg.m_strFileName));
-         if (hBitmap != NULL)
-         {
-         }
-         else
-         {
-         }
+         m_wndMapView.SetBkImage(NULL);
       }
       else
       {
-         theApp.ErrorBox(dwResult, _T("Cannot upload background image to server: %s"));
+         hBitmap = LoadPicture((TCHAR *)((LPCTSTR)dlg.m_strFileName), m_wndMapView.GetScaleFactor());
+         if (hBitmap != NULL)
+         {
+            dwResult = DoRequestArg4(NXCUploadSubmapBkImage, g_hSession,
+                                     (void *)m_wndMapView.GetMap()->MapId(),
+                                     (void *)m_wndMapView.GetSubmap()->Id(),
+                                     (void *)((LPCTSTR)dlg.m_strFileName),
+                                     _T("Uploading new background image to server..."));
+            if (dwResult == RCC_SUCCESS)
+            {
+               m_wndMapView.SetBkImage(hBitmap);
+            }
+            else
+            {
+               theApp.ErrorBox(dwResult, _T("Cannot upload background image to server: %s"));
+               DeleteObject(hBitmap);
+            }
+         }
+         else
+         {
+            MessageBox(_T("Cannot load image file (possibly unsupported file format)"),
+                       _T("Error"), MB_OK | MB_ICONSTOP);
+         }
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_DATACOLLECTION message handlers
+//
+
+void CMapFrame::OnObjectDatacollection() 
+{
+   DWORD i, dwCount, *pdwList;
+   NXC_OBJECT *pObject;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   for(i = 0; i < dwCount; i++)
+   {
+      pObject = NXCFindObjectById(g_hSession, pdwList[i]);
+      if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+         theApp.StartObjectDCEditor(pObject);
+   }
+   safe_free(pdwList);
+}
+
+void CMapFrame::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode());
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_MANAGE message handlers
+//
+
+void CMapFrame::OnObjectManage() 
+{
+   DWORD i, dwCount, *pdwList;
+   NXC_OBJECT *pObject;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   for(i = 0; i < dwCount; i++)
+   {
+      pObject = NXCFindObjectById(g_hSession, pdwList[i]);
+      if (pObject != NULL)
+         theApp.SetObjectMgmtStatus(pObject, TRUE);
+   }
+   safe_free(pdwList);
+}
+
+void CMapFrame::OnUpdateObjectManage(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.GetSelectionCount() > 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_UNMANAGE message handlers
+//
+
+void CMapFrame::OnObjectUnmanage() 
+{
+   DWORD i, dwCount, *pdwList;
+   NXC_OBJECT *pObject;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   for(i = 0; i < dwCount; i++)
+   {
+      pObject = NXCFindObjectById(g_hSession, pdwList[i]);
+      if (pObject != NULL)
+         theApp.SetObjectMgmtStatus(pObject, FALSE);
+   }
+   safe_free(pdwList);
+}
+
+void CMapFrame::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.GetSelectionCount() > 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_BIND message handlers
+//
+
+void CMapFrame::OnObjectBind() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if (pObject != NULL)
+      theApp.BindObject(pObject);
+}
+
+void CMapFrame::OnUpdateObjectBind(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable((pObject->iClass == OBJECT_CONTAINER) ||
+                     (pObject->iClass == OBJECT_SERVICEROOT));
+   }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_UNBIND message handlers
+//
+
+void CMapFrame::OnObjectUnbind() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if (pObject != NULL)
+      theApp.UnbindObject(pObject);
+}
+
+void CMapFrame::OnUpdateObjectUnbind(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable((pObject->iClass == OBJECT_CONTAINER) ||
+                     (pObject->iClass == OBJECT_SERVICEROOT));
+   }
+}
+
+
+//
+// Get first selected object
+//
+
+NXC_OBJECT * CMapFrame::GetFirstSelectedObject()
+{
+   DWORD dwCount, *pdwList;
+   NXC_OBJECT *pObject = NULL;
+
+   pdwList = m_wndMapView.GetSelectedObjects(&dwCount);
+   if (dwCount > 0)
+   {
+      pObject = NXCFindObjectById(g_hSession, *pdwList);
+   }
+   safe_free(pdwList);
+   return pObject;
 }
