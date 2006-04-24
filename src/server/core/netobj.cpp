@@ -853,6 +853,9 @@ void NetObj::SetMgmtStatus(BOOL bIsManaged)
    if (Type() == OBJECT_NODE)
       PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_dwId, "d", iOldStatus);
 
+   Modify();
+   UnlockData();
+
    // Change status for child objects also
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
@@ -864,9 +867,6 @@ void NetObj::SetMgmtStatus(BOOL bIsManaged)
    for(i = 0; i < m_dwParentCount; i++)
       m_pParentList[i]->CalculateCompoundStatus();
    UnlockParentList();
-
-   Modify();
-   UnlockData();
 }
 
 
