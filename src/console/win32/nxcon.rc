@@ -131,6 +131,7 @@ IDI_PRINT               ICON    DISCARDABLE     "icons\\print.ico"
 IDI_REFRESH             ICON    DISCARDABLE     "icons\\refresh.ico"
 IDI_BACK                ICON    DISCARDABLE     "icons\\back.ico"
 IDI_FORWARD             ICON    DISCARDABLE     "icons\\forward.ico"
+IDI_GO_ROOT             ICON    DISCARDABLE     "icons\\go_root.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -523,8 +524,9 @@ BEGIN
     POPUP "Map"
     BEGIN
         MENUITEM "&Back\tBksp",                 ID_MAP_BACK
-        MENUITEM "&Forward\tCtrl+Right Arrow",  ID_MAP_FORWARD
+        MENUITEM "&Forward\tCtrl+Right",        ID_MAP_FORWARD
         MENUITEM "&Home\tCtrl+Home",            ID_MAP_HOME
+        MENUITEM "&Parent\tCtrl+Up",            ID_MAP_PARENT
         MENUITEM SEPARATOR
         MENUITEM "Zoom &in\tGray +",            ID_MAP_ZOOMIN
         MENUITEM "Zoom &out\tGray -",           ID_MAP_ZOOMOUT
@@ -698,6 +700,7 @@ BEGIN
         MENUITEM "&Back",                       ID_MAP_BACK
         MENUITEM "&Forward",                    ID_MAP_FORWARD
         MENUITEM "&Home",                       ID_MAP_HOME
+        MENUITEM "Parent",                      ID_MAP_PARENT
         MENUITEM "S&et map background...",      ID_MAP_SETBACKGROUND
         MENUITEM SEPARATOR
         POPUP "&Create"
@@ -930,8 +933,11 @@ IDA_NETMAP ACCELERATORS DISCARDABLE
 BEGIN
     "S",            ID_MAP_SAVE,            VIRTKEY, CONTROL, NOINVERT
     VK_ADD,         ID_MAP_ZOOMIN,          VIRTKEY, NOINVERT
-    VK_BACK,        ID_OBJECT_OPENPARENT,   VIRTKEY, NOINVERT
+    VK_BACK,        ID_MAP_BACK,            VIRTKEY, NOINVERT
+    VK_LEFT,        ID_MAP_BACK,            VIRTKEY, CONTROL, NOINVERT
+    VK_RIGHT,       ID_MAP_FORWARD,         VIRTKEY, CONTROL, NOINVERT
     VK_SUBTRACT,    ID_MAP_ZOOMOUT,         VIRTKEY, NOINVERT
+    VK_UP,          ID_MAP_PARENT,          VIRTKEY, CONTROL, NOINVERT
 END
 
 IDA_EVENT_EDITOR ACCELERATORS DISCARDABLE 

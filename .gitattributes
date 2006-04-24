@@ -787,6 +787,7 @@ src/console/win32/icons/editor.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/folder_c.ico -text
 src/console/win32/icons/folder_o.ico -text
+src/console/win32/icons/go_root.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/iexplore.ico -text
 src/console/win32/icons/log.ico -text

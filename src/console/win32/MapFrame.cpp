@@ -106,7 +106,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    {
       { 5, ID_MAP_BACK, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 6, ID_MAP_FORWARD, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
-      { 5, ID_MAP_HOME, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 7, ID_MAP_HOME, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
       { 0, ID_MAP_ZOOMIN, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 1, ID_MAP_ZOOMOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
@@ -115,8 +115,8 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
       { 4, ID_FILE_PRINT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
       { 3, ID_VIEW_REFRESH, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
-      { 3, ID_MAP_REDOLAYOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
-      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 }
+      { 3, ID_MAP_REDOLAYOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 }
+      //{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 }
    };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
@@ -137,6 +137,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_PRINT));
    m_imageList.Add(theApp.LoadIcon(IDI_BACK));
    m_imageList.Add(theApp.LoadIcon(IDI_FORWARD));
+   m_imageList.Add(theApp.LoadIcon(IDI_GO_ROOT));
 
    // Create toolbar
    m_wndToolBar.Create(WS_CHILD | (m_bShowToolBar ? WS_VISIBLE : 0) | CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT, rect, this, ID_TOOLBAR_CTRL);

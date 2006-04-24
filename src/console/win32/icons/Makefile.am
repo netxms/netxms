@@ -22,4 +22,4 @@ EXTRA_DIST = \
 	nack.ico running.ico pending.ico Tips.ico objtools.ico \
 	command.ico script_library.ico script.ico folder_c.ico \
 	folder_o.ico ZoomIn.ico ZoomOut.ico print.ico refresh.ico save.ico \
-	back.ico forward.ico
+	back.ico forward.ico go_root.ico

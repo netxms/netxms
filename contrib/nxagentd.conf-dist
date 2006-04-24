@@ -30,7 +30,7 @@
 #
 # MasterServers
 #
-# List of management servers which have full access to agent. Hostss listed
+# List of management servers which have full access to agent. Hosts listed
 # in this group can  upload files to agent and initiate agent upgrade, as well
 # as perform any task allowed for hosts listed in Servers and ControlServers.
 # Both IP addresses and DNS names can be used. Multiple servers can be
