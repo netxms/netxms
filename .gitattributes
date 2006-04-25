@@ -1110,7 +1110,6 @@ src/server/tools/nxaction/Makefile.am -text
 src/server/tools/nxaction/nxaction.cpp -text
 src/server/tools/nxaction/nxaction.dsp -text
 src/server/tools/nxaction/nxaction.dsw -text
-src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/.cvsignore -text
 src/server/tools/nxadm/Makefile.am -text
 src/server/tools/nxadm/comm.cpp -text
